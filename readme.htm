@@ -1,0 +1,1265 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+
+<head>
+<meta http-equiv="Content-Language" content="en-us" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>The Weewx weather system</title>
+<style type="text/css">
+h1{
+	margin-top: 40pt;
+}
+h2{
+	margin-top: 25pt;
+}
+.code {
+	font-family: "Courier New", Courier, monospace;
+}
+table {
+	border-style: solid;
+	border-width: 1px;
+	border-collapse: collapse;
+}
+td {
+	border-style: solid;
+	border-width: 1px;
+}
+.indent {
+	margin-left: 40px;
+}
+.tty {
+	font-family: "Courier New", Courier, monospace;
+	margin-left: 40px;
+}
+.title {
+	text-align: center;
+}
+.config_option {
+	font-family: "Courier New", Courier, monospace;
+	font-weight: normal;
+}
+.config_section {
+	font-family: "Courier New", Courier, monospace;
+}
+.config_important {
+	font-family: "Courier New", Courier, monospace;
+	font-weight: bold;
+	color: #0000FF;
+}
+.bold_n_blue {
+	color: #0000FF;
+}
+.style1 {
+	border-style: solid;
+}
+</style>
+</head>
+
+<body>
+
+<h1 class="title">The <span class="code">weewx</span> weather system<br />
+Version 1.0</h1>
+<h1>Table of Contents</h1>
+<p class="indent"><a href="#Copyright">Copyright</a></p>
+<p class="indent"><a href="#About_weewx">About <span class="code">weewx</span></a></p>
+<p class="indent"><a href="#Prerequisites">Prerequisites</a></p>
+<p class="indent"><a href="#Installing_weewx">Installing <span class="code">weewx</span></a></p>
+<p class="indent"><a href="#Configuring_weewx">Configuring <span class="code">weewx</span></a></p>
+<p class="indent"><a href="#Running_weewx">Running <span class="code">weewx</span></a></p>
+<p class="indent"><a href="#Compatibility_with_wview">Compatibility with wview</a></p>
+<p class="indent"><a href="#Monitoring_weewx">Monitoring <span class="code">weewx</span></a></p>
+<p class="indent"><a href="#Architectural_notes">Architectural Notes</a></p>
+<p class="indent"><a href="#Table_of_Tested_Versions">Table of Tested Versions</a></p>
+<h1><a name="Copyright">Copyright</a>s</h1>
+<p>(c) 2009 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;</p>
+<p>This program is free software: you can redistribute it and/or modify it under 
+the terms of the GNU General Public License as published by the Free Software 
+Foundation, either version 3 of the License, or (at your option) any later 
+version. </p>
+<p>This program is distributed in the hope that it will be useful, but WITHOUT 
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+</p>
+<p>You should have received a copy of the GNU General Public License along with 
+this program. If not, see <http://www.gnu.org/licenses/>
+<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses</a>.</p>
+<h1><a name="About_weewx">About <span class="code">weewx</span></a></h1>
+<p>I wrote <span class="code">weewx</span> over the winter of 2008-2009 for two reasons: it was a wet and 
+miserable winter here in Oregon with not much else to do, so there was no good reason 
+not to, and because I wanted a simple, easy-to-understand server to run my Davis 
+VantagePro2 weather station on a Linux box. I had been using 
+<a href="http://www.wviewweather.com/">wview</a>, which is a 
+very high-performance, stable, and feature rich system authored by Michael Teele 
+with lots of users. Written in C, it&#39;s an amazingly efficient system that can run on very underpowered boxes. In exchange, it&#39;s huge 
+(55,000+ lines of code), tightly integrated in with its companion library, radlib (another 
+24,000+ lines), and so brittle that only Michael can reliably 
+make modifications to it. But, if you&#39;re looking to be in good company and you 
+want to run on inexpensive, featherweight machines such as the
+<a href="http://en.wikipedia.org/wiki/NSLU2">Linksys NSLU2</a>, you can&#39;t beat 
+it.</p>
+<p>Having made a career in C++ and Java, I was also interested in some more 
+modern languages, so I thought I&#39;d try either Python or Ruby (although, truth be 
+told, the roots of Python are nearly as old as C++!). I picked Python because 
+its libraries are more mature and there are many more choices for third party 
+libraries.</p>
+<p><span class="code">Weewx</span> weighs in at about 7,000 lines of code, 
+including its many comment lines although, to be fair, it is missing many 
+features such as support for other weather stations, support for metric units, 
+support for alarms, etc. On the other hand, it offers very powerful configuration 
+and templating options, making it easy to customize. It is also architecturally 
+very simple and easy to understand.</p>
+<h1><a name="Prerequisites">Prerequisites</a></h1>
+<h2>Python</h2>
+<p>Python V2.5 or V2.6 is required. The newer V3.0 
+distribution will not work.</p>
+<h2>Required packages</h2>
+<p>The following external packages are required to use <span class="code">weewx</span>.</p>
+<ol>
+	<li><a href="http://www.sqlite.org/">sqlite3</a> (Version 3.5 or greater) A 
+	SQL database written in C. Comes with Debian and many other Linux 
+	distributions.</li>
+	<li><a href="http://pypi.python.org/pypi/pysqlite/">pysqlite</a> (Version 2.5 or greater) 
+	The Python interface to sqlite3</li>
+	<li><a href="http://pypi.python.org/pypi/configobj/">configobj</a> 
+	(Version 4.5 or greater) Manages the configuration file <span class="code">weewx.conf</span>.</li>
+	<li><a href="http://pypi.python.org/pypi/pyserial/2.4">pyserial</a> 
+	(Version 1.35 or greater) Manages the serial connection to the weather 
+	station</li>
+	<li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or 
+	greater) The HTML templating engine</li>
+	<li><a href="http://pypi.python.org/pypi/PIL/1.1.6">Python 
+	Imaging Library</a> (Version 1.1.6 or greater) Also known as PIL, this is 
+	usually included in most Python distributions.</li>
+</ol>
+<p>Details on how to install these packages are below. </p>
+<p>Python eggs are available for all of them, making them very easy to install 
+using the Python setup tool &quot;<span class="code">easy_install</span>&quot;, part of the
+<a href="http://pypi.python.org/pypi/setuptools"><span class="code">python-setuptools</span> package</a>.</p>
+<p>To install <span class="code">python-setuptools</span> on Debian and derivatives:</p>
+<p class="indent"><span class="code">apt-get install python-setuptools</span></p>
+<p>Once this has been installed, installing the rest of the packages is very 
+easy</p>
+<h3>sqlite3</h3>
+<p><span class="code">Weewx</span> stores data pulled from the weather station in
+<a href="http://www.sqlite.org/">sqlite3</a> databases. A version of sqlite is included in many derivatives of Debian. My Ubuntu 8.10 system came with V3.5.9, which 
+works just fine.</p>
+<h3>pysqlite</h3>
+<p>While Version 2.3.X of <a href="http://pypi.python.org/pypi/pysqlite/">
+pysqlite</a> is included with many versions of Python, the more recent 2.5.X or 
+greater is required in order to take advantage of transaction contexts. Hence, 
+you may have to install or upgrade. Because pysqlite builds a C library, you may 
+have to install the Python development environment first, if you have not already done so (example shown for Python V2.5, the version I used. 
+Adjust as necessary):</p>
+<p class="tty">apt-get install python2.5-dev</p>
+<p>Having done that, you can build and install pysqlite:</p>
+<p class="tty">easy_install pysqlite</p>
+<p>If your system already has a version of pysqlite installed, but it is not a 
+high enough version, then you may have to force an upgrade:</p>
+<p class="tty">easy_install --upgrade pysqlite</p>
+<p>Note that at the time of this writing (24 Oct 2009), the hosting site for 
+pysqlite has changed and <span class="code">easy_install</span> could not find 
+it. You may have to find and give the URL explicitly to <span class="code">
+easy_install</span>:</p>
+<p class="tty">easy_install 
+http://pysqlite.googlecode.com/files/pysqlite-2.5.5.tar.gz</p>
+<p>(adjust version numbers as necessary)</p>
+<h3>configobj</h3>
+<p>Easily installed:</p>
+<p class="tty">easy_install configobj</p>
+<h3>pyserial</h3>
+<p class="indent"><span class="code">easy_install pyserial</span></p>
+<h3>Cheetah</h3>
+<p class="indent"><span class="code">easy_install Cheetah</span></p>
+<h3>PIL</h3>
+<p>My version of Python came with V1.1.6, which works great.</p>
+<h2>System requirements</h2>
+<h3>Processor</h3>
+<p>I run <span class="code">weewx</span> on a 500MHz system with an AMD Geode processor and 512 MB of 
+memory.&nbsp; Configured this way, it consumes about 5% of the CPU resources, so 
+I think it could run on something considerably smaller and slower.</p>
+<h2>Weather Station requirements</h2>
+<p>At this point, only the
+<a href="http://www.davisnet.com/weather/products/vantage2.asp">Davis 
+VantagePro2</a> is supported, and even then, only the &quot;Revision B&quot; version 
+(firmware dated on or after 22 April 2002). It would be very easy to port to a 
+&quot;Revision A&quot; station or even the original VantagePro, but I don&#39;t have access to 
+the hardware to test it.</p>
+<h1><a name="Installing_weewx">Installing <span class="code">weewx</span></a></h1>
+<h2>Directory structure</h2>
+<p>If <span class="code"><em>WEEWX_ROOT</em></span> symbolizes the root location of the 
+<span class="code">weewx </span>directory hierarchy, then</p>
+<ul>
+	<li><span class="code"><em>$WEEWX_ROOT</em>/bin</span> is where the Python packages 
+	and scripts are installed;</li>
+	<li><span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span> is the configuration 
+	file;</li>
+	<li><span class="code"><em>$WEEWX_ROOT</em>/templates</span> is where the html 
+	templates live;</li>
+	<li><span class="code"><em>$WEEWX_ROOT</em>/archive</span> is the directory where the sqlite3 database lives;</li>
+	<li><em>$</em><span class="code"><em>WEEWX_ROOT</em>/public_html</span> is where generated html and .png images are put.</li>
+</ul>
+<p>By default, the location for <span class="code"><em>WEEWX_ROOT</em></span> is
+<span class="code">/home/weewx</span> (instructions on how to change is below).</p>
+<p>Start by unpack the tar ball (substitute your version for X.Y.Z) in any 
+convenient directory where you have permission</p>
+<p class="tty">tar xvf weewx-X.Y.Z</p>
+<p>Then change directory into it:</p>
+<p class="tty">cd weewx-X.Y.Z</p>
+<p>Build the distribution</p>
+<p class="tty">./setup.py build</p>
+<p>Finally, install it. </p>
+<p class="tty">sudo ./setup.py install</p>
+<p>This will install with root directory <span class="code">WEEWX_ROOT=/home/weewx</span>. 
+If you wish to install someplace else, then edit the file <span class="code">
+weewx-X.Y.Z/setup.cfg</span> to whatever you prefer. If you do this, you will 
+also have to edit the <span class="code">weewx</span> configuration file <span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span> 
+to reflect your choice.</p>
+<p>If you are upgrading from a previous version of <span class="code">weewx</span>, the install process 
+will save your old template directories and will also merge any changes you&#39;ve 
+made to the configuration file into the new configuration file.</p>
+<h2>Permissions</h2>
+<p>Strictly speaking it is not necessary at all to install with root privileges. 
+Indeed, if you edit <span class="code">setup.cfg</span> to install into a 
+directory where you have write permissions, you can install and run 
+<span class="code">weewx</span> without any root 
+privileges.</p>
+<h1><a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
+<p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to the 
+<span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>.</p>
+<p>Virtually every conceivable configuration option is in the configuration file
+<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. Most of the important 
+ones are up near the front of the file.</p>
+<h2>Configuring the databases</h2>
+<p>Two main databases are created and populated by <span class="code">weewx</span></p>
+<ul>
+	<li><span class="code"><em>$WEEWX_ROOT/$archive_file</em></span> (nominally 
+	<span class="code">/home/weewx/archive/weewx.sdb</span>)</li>
+	<li><span class="code"><em>$WEEWX_ROOT/$stats_file</em></span> (nominally 
+	<span class="code">/home/weewx/archive/stats.sdb</span>)</li>
+</ul>
+<p>These are created automatically by the main program if they do not exist. If 
+you do not like their nominal locations, you can change them in the 
+configuration file.</p>
+<p>Alternatively, if you have an existing wview database, it can be used 
+instead, and then its data used to backfill the statistical database, using the 
+configuration script <span class="code">configure.py</span>. For example:</p>
+<p class="tty">mkdir <em>$WEEWX_ROOT</em>/archive<br />
+cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>
+$WEEWX_ROOT</em></span>/archive/weewx.sdb<br />
+<em>$WEEWX_ROOT</em>/bin/configure.py --create-stats <em>$WEEWX_ROOT</em>/weewx.conf<br />
+<em>$WEEWX_ROOT</em>/bin/configure.py --backfill-stats <em>$WEEWX_ROOT</em>/weewx.conf</p>
+<p>If your existing database is large, backfilling could take some time. On my 
+modest 500 MHz
+<a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC</a> 
+with 512 MB of memory it took a little over 4 minutes for a year and a half (25 
+MB) of data (while wview was running in the background).</p>
+<h2>Configuring your weather station</h2>
+<p>The only two variables <span class="code">weewx</span> tries to manage on the VantagePro is the time 
+and the archive interval. </p>
+<h3>Time</h3>
+<p>The time on the VP is automatically synchronized with the server every four 
+hours. However, you should run a NTP daemon on your server to insure that it is 
+synchronized with the correct time. Doing so will greatly reduce errors, 
+especially if you send data to services such as the Weather Underground.</p>
+<h3><a name="Archive_interval">Archive interval</a></h3>
+<p>The archive interval is set in the main configuration file <span class="code">
+<em>$WEEWX_ROOT</em>/weewx.conf. </span>Look for the entry <span class="code">
+archive_interval</span> in the <span class="code">VantagePro</span> section. Set 
+it to the number of seconds. Valid entries are 60, 300, 600, 900, 1800, 3600, 
+and 7200. However, if you are ftp&#39;ing lots of files to a server, setting it to 
+60 seconds may not give enough time to have them all uploaded before the next 
+archive record is due. If this is the case, you should pick an archive interval 
+of at least 300 seconds, or trim the number of files you are using.</p>
+<p>After setting to the desired interval, run the <span class="code">
+configure.py</span> script to set it on the VantagePro. If it differs from the 
+old archive interval, the main memory log of the VantagePro will be cleared. </p>
+<p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --configure-VantagePro 
+$WEEWX_ROOT/weewx.conf</p>
+<h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
+<p>There are many, many options that can be set in the configuration file, 
+<span class="code">weewx.conf</span>. They are all documented in this section, 
+although you can safely ignore most of them. The truly important ones, the ones 
+you are likely to have to customize for your station, are shown in
+<span class="bold_n_blue"><strong>bold face and in blue</strong></span>. </p>
+<p>Default values are provided for many of them, meaning that if they are not 
+listed in the configuration file <em>at all</em>, <span class="code">weewx</span> will pick sensible 
+values. When the documentation below gives a &quot;default value&quot; this is what it 
+means. However, all options have been given values in the configuration file 
+that ships with <span class="code">weewx</span>, so you can see what they look like. The value given in 
+this shipped configuration file is not necessarily the same as the &quot;default 
+value&quot;.</p>
+<p>What follows is organized by the different sections of the configuration 
+file.</p>
+<h2>General</h2>
+<p>The options declared at the top are not actually part of any section. 
+There are two:</p>
+<h4 class="config_option">debug</h4>
+<p>Set to 1 to have the program perform extra debug checks, as well as emit 
+extra information on the log file. Otherwise, set to 0. Default is 0 (no debug).</p>
+<h4 class="config_option">socket_timeout</h4>
+<p>Set to how long to wait before declaring a socket time out. This is used when 
+FTP&#39;ing data to a web server or sending data to the Weather Underground. 
+Twenty (20) seconds is reasonable. Default is 20.</p>
+<h3 class="config_section">[Station]</h3>
+<p>This section covers options relating to the entire weather station setup. </p>
+<h4 class="config_option">WEEWX_ROOT</h4>
+<p>Set to the root directory of the <span class="code">weewx</span> file hierarchy for this station. 
+Nominally <span class="code">&#39;/home/weewx&#39;</span>. Required. No default.</p>
+<h4 class="config_important">location</h4>
+<p>The station location should be a string that describes the geography of where 
+you weather station is located, such as &#39;Hood River, Oregon&#39;. Required. 
+No default.</p>
+<h4 class="config_important">latitude<br />
+longitude</h4>
+<p>The lat/lon should be set in decimal degrees, negative for southern and 
+eastern hemispheres, respectively. Required. No default.</p>
+<h4 class="config_important">altitude</h4>
+<p>Should be set to the altitude of the station. In this version, the only unit 
+accepted is feet. Required. No default.</p>
+<h4 class="config_important">rain_year_start</h4>
+<p>If your area uses a rain year that starts on something other than the first 
+of January, 
+you may want to set this variable. For example, set to 10 if your rain year 
+starts in October (as mine does). Default is 1.</p>
+<h4 class="config_important">radar_url</h4>
+<p>This variable is available in the HTML templates. Set it to an appropriate 
+URL to display a radar image for your area. No default.</p>
+<h4 class="config_option">heating_base<br />
+cooling_base</h4>
+<p>Set to the base temperature for calculating heating and cooling degree-days, 
+respectively. The default is 65.0 for both.</p>
+<h4 class="config_option">hemispheres</h4>
+<p>Set to suitable abbreviations for the four hemispheres. Default is &quot;N&quot;, &quot;S&quot;, 
+&quot;E&quot;, &quot;W&quot;</p>
+<h4 class="config_option">station_type</h4>
+<p>Set to the type of hardware you are using. For this version, only &#39;<span class="code">VantagePro</span>&#39; 
+is accepted. Required.</p>
+<h3 class="config_section">[VantagePro]</h3>
+<p>This section is for options relating to the VantagePro hardware.</p>
+<h4 class="config_important">port</h4>
+<p>Set to the port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
+is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
+for serial ports. Required. No default.</p>
+<h4 class="config_option">baudrate</h4>
+<p>Set to the baudrate of your station. The default is 19200.</p>
+<h4 class="config_important">archive_interval</h4>
+<p>Set to the desired archive interval of your station, in seconds. This 
+variable is only used when setting up your station. Otherwise, this value is 
+read directly from the station. Required if you <a href="#Archive_interval">
+configure your station</a>. No default.</p>
+<h4 class="config_option">iss_id</h4>
+<p>Set to the ID number of your Integrated Sensor Suite (ISS). This is used in the 
+formula to calculate reception quality for wireless stations. The default is 1.</p>
+<h4 class="config_option">archive_delay</h4>
+<p>How long to wait in seconds after the top of an archiving interval before 
+fetching new data off the station. For example, if your archive interval is 5 
+minutes and archive_delay is set to 15, then the data will be fetched at 
+00:00:15, 00:05:15, 00:10:15, etc. This delay is to give the station a few 
+seconds to archive the data internally, and in case your server has any other 
+tasks to do at the top of the minute. Default is 15 seconds.</p>
+<h4 class="config_option">timeout</h4>
+<p>How many seconds&nbsp; to wait for a response from the station before giving 
+up. Default is 5 seconds.</p>
+<h4 class="config_option">wait_before_retry</h4>
+<p>How many seconds to wait before retrying again. Unless you have a good reason 
+to, this value should not be changed from the default, as it is long enough for 
+the station to offer new data, but not so long as to go into a new loop packet 
+(which arrive every 2 seconds). Default is 1.2 seconds.</p>
+<h4 class="config_option">max_retries</h4>
+<p>How many times to try again before giving up. Default is 4.</p>
+<h4 class="config_option">clock_check</h4>
+<p>How often to check the VantagePro&#39;s onboard clock for drift, in seconds. 
+Default is 14400 (every 4 hours)</p>
+<h4 class="config_option">max_drift</h4>
+<p>The maximum amount of drift to tolerate, in seconds, in the VantagePro&#39;s 
+onbouard clock, before resetting the clock. Default is 5.</p>
+<h4 class="config_option">unit_system</h4>
+<p>What unit system is in use on your weather station hardware. Possible values are &#39;1&#39; 
+(Imperial) or &#39;2&#39; (Metric). As far as I know, all Davis instruments support only 
+Imperial. In any case, Imperial is the only system supported by 
+<span class="code">weewx</span>. Default 
+is 1.</p>
+<h3 class="config_section">[FTP]</h3>
+<p>If you FTP your images and HTML files to an external web server, 
+<span class="code">weewx</span> can 
+FTP them for you. It does an incremental update, that is, it only FTPs any files 
+that have changed, saving outgoing bandwidth with your Internet connection.</p>
+<p>If you do not use such a server, comment out the entire section, including 
+the &#39;<span class="code">[FTP]</span>&#39; heading.</p>
+<p class="config_important">user</p>
+<p>Set to the username you use for your FTP connection to your web server. 
+Required. No default.</p>
+<p class="config_important">password</p>
+<p>Set to the password you use for your FTP connection to your web server. 
+Required. No default.</p>
+<p class="config_important">server</p>
+<p>Set to the name of your web server (e.g., <a href="http://www.threefools.org">
+www.threefools.org</a>, in my case). Required. No default</p>
+<p class="config_important">path</p>
+<p>Set to the path where the weather data will be stored on your webserver 
+(e.g., &#39;<span class="code">weather</span>&#39;). Required. No default.</p>
+<h4 class="config_important">passive</h4>
+<p>Set to 1 if you wish to use the more modern, FTP passive mode, 0 if you wish 
+to use active mode. Passive mode generally works better through firewalls, but 
+not all FTP servers do a good job of supporting it. See
+<a href="http://slacksite.com/other/ftp.html">Active FTP vs. Passive FTP, a 
+Definitive Explanation</a> for a good explanation of the difference. Default is 
+0 (active mode).</p>
+<h4 class="config_option">max_retries</h4>
+<p><span class="code">Weewx</span> will try up to this many times to FTP a file up to your server before 
+giving up. Default is 3.</p>
+<h3 class="config_section">[Wunderground]</h3>
+<p><span class="code">Weewx </span>can send your current data to the Weather Underground. If you do not 
+wish to do this, comment out the entire section, including the &#39;<span class="code">[Wunderground]</span>&#39; heading.</p>
+<h4 class="config_option"><span class="config_important">station</span></h4>
+<p>Set to your Weather Underground station ID (e.g., <span class="code">
+KORHOODR3</span>). Required.</p>
+<h4 class="config_important">password</h4>
+<p>Set to your Weather Underground password. Required.</p>
+<h3 class="config_section">[Archive]</h3>
+<p>This section is for configuring the sqlite3 database on which the station 
+archive data is stored.</p>
+<h4 class="config_option">archive_file</h4>
+<p>The path, relative to the <span class="code">WEEWX_ROOT </span>directory, to 
+the database. Required</p>
+<h4 class="config_option">unit_system</h4>
+<p>What unit system to use inside the database. Required. The only one supported 
+right now is &#39;1&#39;, the Imperial (U.S.) system</p>
+<h3 class="config_section">[Stats]</h3>
+<p>This section is for configuring the sqlite3 database on which the station 
+statistics are stored.</p>
+<h4 class="config_option">stats_file</h4>
+<p>The path, relative to the <span class="code">WEEWX_ROOT </span>directory to 
+the statistical database. Required.</p>
+<h4 class="config_option"><a name="stats_types">stats_types</a></h4>
+<p>The list of types for which statistics will be kept. Types not listed will 
+not be available for generating HTML pages. Optional. The default is all types, 
+resulting in a possibly much bigger than necessary stats database (do you really 
+have four different soil moisture sensors?) The list that ships with the 
+configuration file will work for most stations and probably will not have to be 
+modified.</p>
+<h3 class="config_section">[Images]</h3>
+<p>This is by far the most complicated section and controls which images (plots) 
+get generated and with which options. It is extremely flexible and powerful.</p>
+<p>It consists of one or more sub-sections, one for each time period (day, week, 
+month, and year). These sub-sections define the nature of aggregation and plot types 
+for the time period. For example, here&#39;s a typical set of options for 
+sub-section <span class="code">[[month_images]]</span>, controlling how 
+images that cover a month period are generated:</p>
+<p class="tty">[[month_images]]<br />
+&nbsp;
+x_label_format = %d<br />
+&nbsp;
+bottom_label_format = %m/%d/%y %H:%M<br />
+&nbsp;
+time_length = 2592000 # == 30 days<br />
+&nbsp;
+aggregate_type = avg<br />
+&nbsp;
+aggregate_interval = 10800 # == 3 hours</p>
+<p>The option <span class="code">x_label_format</span> gives a
+<a href="http://docs.python.org/library/datetime.html#strftime-behavior">
+strftime()</a> type format for the x-axis that will only show days (format 
+option &quot;<span class="code">%d</span>&quot;). The <span class="code">bottom_label_format</span> will show time as (for 
+example) <span class="code">10/25/09 15:35</span>. A plot will cover a nominal 
+30 days, and all items included in it will use an aggregate type of averaging 
+over 3 hours. </p>
+<p>Within each sub-section is one final nesting (!), one for each image to 
+be generated. The title of each sub-sub-section is the filename to be used 
+for the image. Under this is each of the SQL types to be included in the image. 
+Values specified in the level above can be overridden. For example, here&#39;s a 
+typical set of options for sub-sub-section <span class="code">[[[monthrain]]]</span>: </p>
+<p class="tty">[[[monthrain]]]<br />
+&nbsp; [[[[rain]]]]<br />
+&nbsp; plot_type = bar<br />
+&nbsp; aggregate_type = sum<br />
+&nbsp; aggregate_interval = 86400<br />
+&nbsp; label = Rain (daily avg)</p>
+<p>This will generate an image file with name <span class="code">monthrain.png</span>. 
+In it will be a bar plot showing rain. The aggregation type will be summing (overriding 
+the averaging specified in sub-section <span class="code">[[month_images]]</span>, so 
+you get the total rain over the aggregate period rather than the average) over 
+an aggregation interval of 86,400 seconds (one day). It will also include the 
+indicated label.</p>
+<p>More than one SQL type can be included in a plot. For example, here&#39;s how to 
+generate a plot with the week&#39;s outside temperature as well as dewpoint:</p>
+<p class="tty">[[[monthtempdew]]]<br />
+&nbsp; [[[[outTemp]]]]<br />
+&nbsp; [[[[dewpoint]]]]</p>
+<p>This would create an image in file <span class="code">monthtempdew.png</span> 
+that includes a line plot of both outside temperature and dewpoint.</p>
+<p>Studying this section in the shipped version of weewx.conf will give you 
+ideas about the many different image plot configurations that are possible 
+without hacking the code. </p>
+<h3 class="config_section">[Labels]</h3>
+<p>This section controls how images are labeled. It consists of three 
+sub-sections:</p>
+<h4 class="config_option">[[Generic]]</h4>
+<p>This sub-sections specifies default labels to be used for each SQL type. For 
+example, options</p>
+<p class="tty">inTemp = Inside Temperature<br />
+outTemp = Outside Temperature</p>
+<p>would cause the given labels to be used for plots involving SQL types <span class="code">inTemp </span>and <span class="code">outTemp</span>..</p>
+<h4 class="config_option"><a name="Labels_ImperialFormats">[[ImperialFormats]]</a></h4>
+<p>This sub-section is used to specify what format to be used for y-axis labels 
+in image plots that use Imperial (U.S.) units. It is also used for unit labels in HTML file generation. For example, the options</p>
+<p class="tty">outTemp = %.1f<br />
+rain = %.2f/p>
+<p>would cause the given formats to be used when formatting outside temperature 
+and rain axes, respectively. The
+<a href="http://docs.python.org/library/string.html#format-specification-mini-language">
+formatting codes are those used by Python</a>, and are very similar to C&#39;s sprintf() codes.</p>
+<h4 class="config_option"><a name="Labels_ImperialUnits">[[ImperialUnits]]</a></h4>
+<p>This sub-section specifies what unit labels to be used for the y-axis in 
+image plots that use Imperial (U.S.) units. For example, the options</p>
+<p class="tty">outTemp = \xb0F<br />
+rain = &#39; in&#39;</p>
+<p>would cause outside temperature to have unit labels &#39;<span class="code">&deg;F</span>&#39; 
+and rain to have labels &#39;<span class="code"> in</span>&#39;. (NB: the code
+<span class="code">\xb0</span> is the hexadecimal value <span class="code">b0</span>, 
+which in many encodings encodes the degree sign.)</p>
+<h3 class="config_section">[HTML]</h3>
+<p>Section [HTML] has two options and two sub-sections. For additional 
+information on HTML generation <a href="#HTML_Generation">see the section below</a>.</p>
+<h4 class="config_option">template_root</h4>
+<p>This option specifies the directory, relative to <span class="code">
+WEEWX_ROOT</span>, where the HTML templates can be found. Required. No default.</p>
+<h4 class="config_option">html_root</h4>
+<p>This option specifies the directory, relative to <span class="code">
+WEEWX_ROOT</span>, where the generated HTML files should be put. Required. No 
+default.</p>
+<h4 class="config_option"><a name="HTML_ImperialUnits">[[ImperialUnits]]</a></h4>
+<p>This subsection is similar to its eponymous counterpart in section
+<span class="code">[Labels]</span> above, except it is used for HTML generation. 
+It is useful to have a separate section because HTML uses special &#39;entity&#39; codes 
+to code special characters, such as the degree sign. For example, the options</p>
+<p class="tty">outTemp = &amp;deg;F<br />
+rain = &#39; in&#39;</p>
+<p>would cause outside temperature and rain to have unit labels&nbsp; &#39;<span class="code">&deg;F</span>&#39; 
+and &#39;<span class="code"> in</span>&#39;, respectively.</p>
+<h4 class="config_option"><a name="HTML_Time">[[Time]]</a></h4>
+<p>This subsection is used for time labels in HTML generation. It uses
+<a href="http://docs.python.org/library/datetime.html#strftime-behavior">
+strftime()</a> formats. For example</p>
+<p class="tty">week = %H:%M on %A<br />
+month = %d-%b-%Y %H:%M</p>
+<p>would specify that week data should use a format such as &quot;<span class="code">15:20 
+on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
+15:20</span>&quot;</p>
+<h1><a name="Running_weewx">Running <span class="code">weewx</span></a></h1>
+<p><span class="code">Weewx</span> can be run either from the command line (useful for diagnostic purposes 
+because it will print out a summary of every LOOP data), or as a daemon.</p>
+<h2>Running from the command line</h2>
+<p><span class="code">Weewx</span> can easily be run from the command line. Start by making sure you have appropriate permissions to the serial port your weather 
+station uses. For example, if you are using a plain old serial port:</p>
+<p class="tty">sudo chmod 666 /dev/ttyS0</p>
+<p>Then run the main loop program, giving the configuration file as its only 
+parameter:</p>
+<p class="tty"><em>$WEEWX_ROOT</em>/bin/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</p>
+<p>It should start by downloading any archive data from your weather station 
+into the database <span class="code"><em>$WEEWX_ROOT</em>/archive/weewx.sdb</span>. 
+As the Davis VantagePro can store a couple thousand archive records internally, this could 
+take a minute or two.</p>
+<p>It will then start monitoring LOOP data, printing a short version of the 
+received data on standard output, about once every two seconds.</p>
+<h2>Running as a daemon</h2>
+<p>First, select the appropriate run script. They can be found under <span class="code"><em>$WEEWX_ROOT</em>/start_script</span>. Copy it to the 
+proper location for your system:</p>
+<table style="width: 100%" class="indent">
+	<tr>
+		<td>SuSE:</td>
+		<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/SuSE/weewx 
+		/etc/init.d</td>
+	</tr>
+	<tr>
+		<td>Debian/Ubuntu:</td>
+		<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/Debian/weewx /etc/init.d</td>
+	</tr>
+</table>
+<p>Make sure it is executable </p>
+<table style="width: 100%" class="indent">
+	<tr>
+		<td>SuSE:</td>
+		<td class="code">chmod +x /etc/init.d/weewx</td>
+	</tr>
+	<tr>
+		<td>Debian/Ubuntu:</td>
+		<td class="code">chmod +x /etc/init.d/weewx</td>
+	</tr>
+</table>
+<p>Create symbolic links in the run level directories:</p>
+<table style="width: 100%" class="indent">
+	<tr>
+		<td>SuSE:</td>
+		<td class="code">???</td>
+	</tr>
+	<tr>
+		<td>Debian/Ubuntu:</td>
+		<td class="code">update-rc.d weewx defaults 98</td>
+	</tr>
+</table>
+<p>Incidentally, a nice tool for setting run levels is
+<a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. It uses a 
+curses interface to allow you to change easily which run level any of your 
+daemons runs at.</p>
+<p><span class="code">Weewx</span> will now start automatically whenever your system is booted. You can 
+also manually start, stop, and restart the <span class="code">weewx</span> daemon:</p>
+<p class="tty">/etc/init.d/weewx start<br/>
+/etc/init.d/weewx stop<br/>
+/etc/init.d/weewx restart</p>
+<h1><a name="Compatibility_with_wview">Compatibility with wview</a></h1>
+<p>The sqlite3 archive database used by <span class="code">weewx</span> (nominally, <span class="code">weewx.sdb</span>) is completely compatible with the database 
+used by <a href="http://www.wviewweather.com">wview</a> (usually called
+<span class="code">wview-archive.sdb</span>), at least as of Version 5.2.X. The schema and its semantics is 
+identical. However, the statistical file <span class="code">stats.sdb</span> is 
+different, and must be rebuilt</p>
+
+<h1><a name="HTML_Generation">HTML Generation</a></h1>
+<p>HTML generation is done using the <a href="http://www.cheetahtemplate.org/">
+Cheetah</a> templating engine. This is a very powerful engine that, essentially, 
+lets you have the full semantics of Python available in your templates. As this 
+would make the templates incomprehensible to anyone but a Python programmer, 
+<span class="code">weewx</span> adopts a very small subset of its power. </p>
+<p>Generally, any value is specified 
+by using a &#39;dot&#39; code. For example:</p>
+<p class="tty">$month.outTemp.max<br />
+$month.outTemp.maxtime<br />
+$current.outTemp</p>
+<p>would code the max outside temperature for the month, the time it occurred, 
+and the current outside temperature, respectively. So, an HTML file that looks 
+like</p>
+<p class="tty">&lt;html&gt;<br />
+&nbsp; &lt;head&gt;<br />
+&nbsp;&nbsp;&nbsp; &lt;title&gt;Current conditions&lt;/title&gt;<br />
+&nbsp; &lt;/head&gt;<br />
+&nbsp; &lt;body&gt;<br />
+&nbsp; &lt;p&gt;Current temperature = $current.outTemp&lt;/p&gt;<br />
+&nbsp; &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at $month.outTemp.maxtime&lt;/p&gt;<br />
+&nbsp; &lt;/body&gt;<br />
+&lt;/html&gt;</p>
+<p>would be all you need for a very simple HTML page that looks something like 
+this:&nbsp;</p>
+<p class="indent">Current temperature = 51.0°F<br />
+Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15</p>
+<p>The format that was used to format the temperature (<span class="code">51.0</span>) 
+is specified in section <span class="code"><a href="#Labels_ImperialFormats">[Labels][[ImperialFormats]]</a></span>. 
+The unit label <span class="code">&deg;F</span> is from section 
+<span class="code"><a href="#HTML_ImperialUnits">[HTML][[ImperialUnits]]</a></span>, while the time format 
+is from <span class="code"><a href="#HTML_Time">[HTML][[Time]]</a></span>.</p>
+<p>The &quot;dot&quot; code has up to three parts. </p>
+<ol>
+	<li>The first part is the time period, and can be one of <span class="code">current</span>, 
+	<span class="code">day</span>, <span class="code">week</span>, 
+	<span class="code">month</span>, <span class="code">year</span>, or
+	<span class="code">rainyear</span>.</li>
+	<li>The second part is the &quot;SQL&quot; type. This is something like &#39;<span class="code">outTemp</span>&#39;, 
+	&#39;<span class="code">rain</span>&#39;, &#39;<span class="code">wind</span>&#39;, etc. 
+	It is called the &quot;SQL&quot; type because the identifier is identical to that used 
+	in the schema of the SQL databases with three exceptions. First, type &#39;<span class="code">wind</span>&#39; is 
+	a special hybrid type and 
+	does not appear in the SQL database. It brings together the several 
+	different SQL types &#39;<span class="code">windSpeed</span>&#39;, 
+	&#39;<span class="code">windDir</span>&#39;, <span class="code">windGust</span>&#39;, 
+	and &#39;<span class="code">windGustDir</span>&#39; under one roof (all are 
+	still available, should you wish to use them for a specialized application). 
+	Exceptions number two and three are &#39;<span class="code">heatdeg</span>&#39; and 
+	&#39;<span class="code">cooldeg</span>&#39;, heating and cooling degree-days, 
+	respectively, which are synthesized from average outside temperature and do 
+	not appear directly in the database.</li>
+	<li>The last position is the aggregation type, available for any time period 
+	except for &#39;<span class="code">current</span>&#39;. The table below shows what 
+	aggregation types are available for which types. </li>
+</ol>
+<h2>Types</h2>
+<p>The following types are available to be used in your template (assuming your 
+station supports them and you have specified that it be stored in your stats 
+database. See section <a href="#stats_types">stats_types</a> in the
+<span class="code">weewx.conf</span> configuration file).</p>
+<table style="width: 100%">
+	<tr>
+		<td><em>Type</em></td>
+		<td class="code">min</td>
+		<td class="code">mintime</td>
+		<td class="code">max</td>
+		<td class="code">maxtime</td>
+		<td class="code">avg</td>
+		<td class="code">sum</td>
+		<td class="code">rms</td>
+		<td class="code">vecavg</td>
+		<td class="code">vecdir</td>
+	</tr>
+	<tr>
+		<td class="code">barometer</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">inTemp</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">outTemp</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">inHumidity</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">outHumidity</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">wind</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+	</tr>
+	<tr>
+		<td class="code">rain</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">dewpoint</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">windchill</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">heatindex</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">heatdeg</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">cooldeg</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">ET</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">radiation</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">UV</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">extraTemp1<br />
+		extraTemp2<br />
+		extraTemp3</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">soilTemp1<br />
+		soilTemp2<br />
+		soilTemp3</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">leafTemp1<br />
+		leafTemp2</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">extraHumid1<br />
+		extraHumid2</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">soilMoist1<br />
+		soilMoist2<br />
+		soilMoist3<br />
+		soilMoist4</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">leafWet1<br />
+		leafWet2</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="code">rxCheckPercent</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>X</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+</table>
+<h1><a name="Monitoring_weewx">Monitoring <span class="code">weewx</span></a></h1>
+<p><span class="code">Weewx</span> logs many events to the system log. On Debian systems, this is
+<span class="code">/var/log/syslog</span>. When troubleshooting the system, be 
+sure to check it!</p>
+<p>Setting the option <span class="code">debug </span>in <span class="code">
+weewx.conf</span> to <span class="code">1</span> (one) will generate many more 
+checks and output and can be useful for debugging.</p>
+<h1><a name="Architectural_notes">Architectural notes</a></h1>
+<h2>Goals</h2>
+<p>The primary goals of <span class="code">weewx </span>are:</p>
+<ul>
+	<li>Architectural simplicity. No semaphores, no named pipes, no 
+	inter-process communications, no complex 
+	multi-threading to manage. </li>
+	<li>One code base. The same code base should be used 
+	for all platforms and any combination of features. 
+	Ample configuration options should be provided so the user doesn&#39;t feel 
+	tempted to start hacking code. At worse, the user may have to subclass, 
+	which is much easier to port to newer versions of the code base.</li>
+	<li>Minimal reliance on external packages, so the user doesn&#39;t have to go 
+	chase them down all over the Web.</li>
+	<li>&quot;Fast enough.&quot; In any design decision, architectural simplicity trumps speed. </li>
+	<li>Support only the Davis VantagePro2 initially (that&#39;s what I have), but 
+	make no architectural decisions that lock out other stations.</li>
+	<li>As &quot;pythonic&quot; as I know how to make it. I&#39;m a beginner Python 
+	programmer with two decades of experience in C++. I tried hard to not make 
+	the code base look like it was written by a C++ programmer who stumbled 
+	across a Python manual!</li>
+</ul>
+<h2>Strategies</h2>
+<p>To meet these goals, the following strategies were used:</p>
+<ul>
+	<li>A powerful configuration parser,
+	<a href="http://www.voidspace.org.uk/python/configobj.html">ConfigObj</a>, by 
+Michael Foord and Nicola Larosa, was chosen to read the configuration file. This 
+allows many options that might otherwise have to go in the code to go instead in 
+a configuration file.</li>
+	<li>A powerful templating engine, <a href="http://www.cheetahtemplate.org/">
+	Cheetah</a>, was used. This allows many variables that I may not have 
+	thought of to be accessed from within the HTML templates, without starting 
+	to modify the code.</li>
+	<li>A largely stateless design style. For example, many of the processing 
+	routines read their own data from the database, rather than caching it and 
+	sharing with other processing routines. While this means the same data may 
+	be read multiple times, it also means the only point of possible cache 
+	incoherence is through the database, where transactions are easily 
+	controlled. This greatly reduces the chances of corrupting the data, making 
+	it much easier to understand and modify the code base.</li>
+	<li>No static variables (except read only variables) to make it easy to 
+simultaneously support multiple weather stations and to allow some level of 
+multithreading.</li>
+	<li>Pure Python. The code base is 100% Python --- no underlying C 
+	libraries need be built to install <span class="code">weewx</span>. </li>
+</ul>
+<p>While <span class="code">weewx </span>is nowhere near as fast at generating images and HTML as its 
+predecessor, <span class="code">wview </span>(this is partially because it uses fancier fonts and a way more 
+powerful templating engine), it is &#39;fast enough&#39; for all platforms but the 
+slowest. I run it regularly on a 500 MHz machine where generating the 9 images 
+used in the &quot;Current Conditions&quot; page takes just under 2 seconds. Compare this 
+with <span class="code">wview</span>&#39;s 0.4 seconds.</p>
+<p>Unfortunately, the architectural goal of one code base is likely to be broken 
+with the arrival of Python V3.X. It has so many changes that are not backwards 
+compatible with V2.X, that a separate code base will most likely be needed. My 
+intention is to stick with the V2.5 and V2.6 versions until V3.X is so 
+widespread it cannot be ignored, then make a permanent switch. I doubt this will 
+affect the average <span class="code">weewx</span> user. </p>
+<h2>Run time</h2>
+<p>Three threads are used within <span class="code">weewx</span>:</p>
+<ol>
+	<li>The main thread of the program is used to monitor the
+	VantagePro and, by definition, is active the entire lifetime
+	of the program. All interactions with the hardware go through
+	it. On program startup, the main thread starts by downloading
+	any data from the VP that has been stored on board, but not
+	yet put in the
+	<span class="code">weewx</span> archive database. If the
+	statistical database doesn&#39;t exist (nominally located at
+	<span class="code"><em>$WEEWX_ROOT</em>/archive/stats.sdb</span>),
+	or is out of date, then it will repopulate the missing data
+	from the main database. Finally, it sets up a thread (thread
+	#2 below) to publish data to the Weather Underground (WU) and
+	other sites that interact through HTTP.
+
+	  <p>Once finished with these startup chores, the main thread
+	  then puts the VantagePro in LOOP mode. In this mode, the VP
+	  offers up data every 2 seconds, sleeping in between. This is
+	  a very energy saving mode. The thread monitors the port and
+	  when new data is available, it adds it to the running
+	  statistical tally, in particular highs, lows, and wind rms
+	  data, kept in the stats database. While in LOOP mode, very
+	  little processing is done so it doesn&#39;t miss any
+	  updates.</p>
+	  <p>When an archive interval is due, typically every 5
+	  minutes or so, then the main thread cancels the LOOP mode,
+	  and then downloads the new archive data, putting it in the
+	  main database. It also uses the archive data to update
+	  averages in the stats database. It puts the new record in a
+	  Queue to be sent to the Weather Underground. It then creates
+	  and starts thread #3 to do any processing of the data.</p>
+</li>
+<li><p>Thread #2 interacts with the Weather Underground. It is also
+active the entire lifetime of the program. It monitors a Queue. When
+new data appears in the Queue, it forms the necessary URL to send it
+to the WU and then sends it. It then goes back to monitoring the
+queue. This way, posting data on the WU can happen asynchronously with
+other processing.</p></li>
+<li><p>Thread #3 is responsible for generating HTML files, images, and
+NOAA monthly and yearly reports. Its lifetime is only as long as it
+takes to process a new archive record and then it dies. Because most
+of the tricky processing happens in this thread, this is the most
+likely place where an exception could occur. However, should this
+happen, it will only affect this short-lived thread, and not the much
+longer-lived main thread. Hopefully, this means that at least no data
+will be missed.</p></li>
+</ol>
+<p>All writes to the databases are protected by transactions. You can
+kill the program at any time (either Control-C if run from the command
+line or &quot;<span class="code">/etc/init.d/weewx stop</span>&quot;
+if a daemon) without fear of corrupting the database.</p>
+<p>The code makes ample use of exceptions, to insure graceful recovery
+from problems such as network outages. It also monitors socket and
+console timeouts, restarting whatever it was working on several times
+before giving up. In the case of an unrecoverable console error (such
+as the console not responding at all), the program waits 60 seconds
+then restarts the program from the top.</p>
+<p>Any &quot;hard&quot; exceptions, that is those that do not involve network and console 
+timeouts and are most likely due to a logic error, are not caught and cause 
+thread termination. If this happens in the main thread (not likely and hasn&#39;t 
+happened to me yet), then this causes program termination.</p>
+<h2>Terminology</h2>
+<p>This is a glossary of terminology used throughout the code.</p>
+<table style="width: 100%">
+	<tr>
+		<td>packet</td>
+		<td>Something obtained off the weather station. Frequently uses a 
+		complex internal encoding, so it requires some processing to be useful.</td>
+	</tr>
+	<tr>
+		<td>record</td>
+		<td>Something obtained off the SQL database. </td>
+	</tr>
+	<tr>
+		<td>archive packet</td>
+		<td>A packet obtained off the store on the weather 
+station. For example, with a Davis VantagePro, it&#39;s obtained using their 
+		<span class="code">DMPAFT</span> command. </td>
+	</tr>
+	<tr>
+		<td>loop packet</td>
+		<td>A packet with the current observations. For example, with a 
+Davis VantagePro, it&#39;s obtained using their <span class="code">LOOP</span> command.
+		</td>
+	</tr>
+	<tr>
+		<td>archive record</td>
+		<td>A record obtained off the SQL database</td>
+	</tr>
+	<tr>
+		<td>tuple-time</td>
+		<td>An instance of the Python object <span class="code">time.struct_time</span>. 
+		This is a 9-wise tuple that represent a time. It could be in either 
+local time or UTC, though usually the former. See module <span class="code">time</span> for more 
+information. They are useful because they are a little closer in format to what 
+the Davis VantagePro uses, although they still require a bit of processing. 
+		Variables carrying tuple time usually have a suffix &#39;<span class="code">_tt</span>&#39;.</td>
+	</tr>
+	<tr>
+		<td>epoch time</td>
+		<td>Sometimes referred to as &quot;unix time,&quot; or &quot;unix epoch 
+		time.&quot; The number of seconds since the epoch, which is 1 Jan 1970 
+		00:00:00 UTC. Hence, it always represents UTC (well.... after adding a 
+		few leap seconds. But, close enough). This is the time used on the 
+		sqlite archive and appears as type &#39;<span class="code">dateTime</span>&#39; 
+		in the SQL schema, perhaps an unfortunate name because of the similarity 
+		to the Python type &#39;datetime&#39;. Very easy to manipulate, but it&#39;s an opaque big 
+number. </td>
+	</tr>
+	<tr>
+		<td>time stamp</td>
+		<td>A variable in unix epoch time. Always in UTC. Variables carrying a 
+		time stamp usually have a suffix &#39;<span class="code">_ts</span>&#39;.</td>
+	</tr>
+	<tr>
+		<td>datetime</td>
+		<td>An instance of the Python object <span class="code">
+		datetime.datetime</span>. Variables of type datetime usually have a 
+		suffix &#39;<span class="code">_dt</span>&#39;.</td>
+	</tr>
+</table>
+
+<h2>Units</h2>
+<p>This package is imperial (U.S.) units only. However, it has been set 
+up to make it easy to extend to metric. </p>
+<p>In general, there are three different areas where the unit system makes a 
+difference.: </p>
+<ol>
+	<li>On the weather station. As far as I know, the Davis VantagePro series 
+supports only imperial units internally. So, any translation to metric must be 
+done in one of the other two areas: </li>
+	<li>In the database. The unit system of any individual record is indicated by 
+the &quot;usUnits&quot; field. The numerical value 1 indicates imperial. Other numbers 
+haven&#39;t been assigned (yet). Right now, only imperial units is supported.
+	</li>
+	<li>In the presentation (i.e., html and image files). Right now, whatever unit 
+system is in use in the database is carried through. </li>
+</ol>
+<p>The transition from 1 to 2, i.e., from data in the VantagePro to the 
+database, is handled by a translation function. Right now, only one is supplied, 
+<span class="code">weewx.VantagePro.translateArchiveToImperial</span>. Others could easily be introduced. </p>
+<h2>Value &quot;<span class="code">None</span>&quot;</h2>
+<p>The Python special value &#39;<span class="code">None</span>&#39; is used throughout to signal a missing data 
+point. All functions expect it.</p>
+<p>However, the time value must never be &#39;<span class="code">None</span>&#39;. This is because it is used as 
+the primary key in the SQL database. </p>
+<h2>Time</h2>
+<p><span class="code">Weewx </span>stores all data in UTC (roughly, &quot;Greenwich&quot; 
+or &quot;Zulu&quot;) time. However, usually one is interested in weather events in local 
+time and want image and HTML generation to reflect that. Furthermore, most weather stations are configured in 
+local time. This requires that many data times be converted back and forth 
+between UTC and local time. To avoid 
+tripping up over time zones and daylight savings time, <span class="code">weeewx</span> 
+generally uses Python routines to do this conversion. Nowhere in the code base 
+is there any explicit recognition of DST. Instead, its presence is implicit in 
+the conversions. At times, this can cause the code to be relatively inefficient. </p>
+<p>For example, if one wanted to plot something every 3 hours in UTC time, it 
+would be very simple: to get the next plot point, just add 10,800 to the epoch 
+time:</p>
+<p class="tty">next_ts = last_ts + 10800</p>
+<p>But, if one wanted to plot something for every 3 hours <em>in local time</em> 
+(that is, at 0000, 0300, 0600, etc.), despite a possible DST change in the 
+middle, one could modify the above to recognize whether a DST transition occurs 
+sometime between <span class="code">last_ts</span> and the next three hours and, 
+if so, make the necessary adjustments. This is generally what <span class="code">
+wview</span> does. <span class="code">Weewx </span>takes a different approach 
+and converts from UTC to local, does the arithmetic, then converts back. This is 
+inefficient, but bulletproof against changes in DST algorithms, etc:</p>
+<p class="tty">time_dt = datetime.datetime.fromtimestamp(last_ts)<br />
+delta = datetime.timedelta(seconds=10800)<br />
+next_dt = time_dt + delta<br />
+next_ts = int(time.mktime(next_dt.timetuple()))</p>
+<p>Other time conversion problems are handled in a similar manner.</p>
+
+<h1><a name="Table_of_Tested_Versions">Table of Tested Versions</a></h1>
+<p>Three different configurations were used to test weewx V1.X. Here are the 
+package versions used in each configuration:</p>
+<table style="width: 75%" class="style1">
+	<tr>
+		<td><strong>Package</strong></td>
+		<td><strong>Configuration 1</strong></td>
+		<td><strong>Configuration 2</strong></td>
+		<td><strong>Configuration 3</strong></td>
+	</tr>
+	<tr>
+		<td>Python</td>
+		<td>V2.5.2</td>
+		<td>V2.5.4</td>
+		<td>V2.6.2</td>
+	</tr>
+	<tr>
+		<td>sqlite3</td>
+		<td>V3.5.9</td>
+		<td>V3.6.10</td>
+		<td>V3.6.10</td>
+	</tr>
+	<tr>
+		<td>pysqlite</td>
+		<td>V2.5.5</td>
+		<td>V2.5.5</td>
+		<td>V2.5.0</td>
+	</tr>
+	<tr>
+		<td>configobj</td>
+		<td>V4.6.0</td>
+		<td>V4.6.0</td>
+		<td>V4.6.0</td>
+	</tr>
+	<tr>
+		<td>pyserial</td>
+		<td>V1.35</td>
+		<td>V1.35</td>
+		<td>V1.35</td>
+	</tr>
+	<tr>
+		<td>Cheetah</td>
+		<td>V2.0.1</td>
+		<td>V2.0.1</td>
+		<td>V2.2.2</td>
+	</tr>
+	<tr>
+		<td>Python Imaging<br />
+		Library (PIL)</td>
+		<td>V1.1.6</td>
+		<td>V1.1.6</td>
+		<td>V1.1.6</td>
+	</tr>
+</table>
+
+</body>
+
+</html>

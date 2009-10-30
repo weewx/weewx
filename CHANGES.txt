@@ -1,0 +1,84 @@
+CHANGE HISTORY
+--------------------------------
+
+1.0.0   10/26/09
+
+Took the module weewx.factory back out, as it was too complicated and
+hard to understand.
+
+Added support for generating NOAA monthly and yearly
+reports. Completely rewrote the genfiles.py module, to allow easy
+subclassing and specialization.
+
+Completely rewrote the stats.py module. All aggregate quantities
+are now calculated dynamically.
+
+LOOP mode now requests only 200 LOOP records (instead of the old
+2000). It then renews the request should it run out. This was to get
+around an (undocumented) limitation in the VP2 that limits the number
+of LOOP records that can be requested to something like 220. This was
+a problem when supporting VP2s that use long archive intervals.
+
+Cut down the amount of computing that went on before the processing
+thread was spawned, thus allowing the main thread to get back into
+LOOP mode more quickly.
+
+Added type 'rainRate' to the types decoded from a Davis archive
+record. For some reason it was left out.
+
+Added retries when doing FTP uploads. It will now attempt the upload
+several times before giving up.
+
+Much more extensive DEBUG analysis.
+
+Nipped and tucked here and there, trying to simplify.
+
+
+0.6.5  10/11/09
+
+Ported to Cheetah V2.2.X. Mostly, this is making sure that all strings that
+cannot be converted with the 'ascii' codec are converted to Unicode first
+before feeding to Cheetah.
+
+0.6.4   9/22/09
+
+Fixed an error in the calculation of heat index.
+
+0.6.3   8/25/09
+
+FTP transfers now default to ACTIVE mode, but a configuration file option allows
+PASSIVE mode. This was necessary to support Microsoft FTP servers.
+
+0.6.2   8/1/09
+
+Exception handling in weewx/ftpdata.py used socket.error but failed to declare
+it. Added 'import socket' to fix.
+
+Added more complete check for unused pages in weewx/VantagePro.py. Now the entire
+record must be filled with 0xff, not just the time field. This fixes a bug where
+certain time stamps could look like unused records.
+
+0.6.1   6/22/09
+
+Fixed minor ftp bug.
+
+0.6.0   5/20/09
+
+Changed the file, imaging, ftping functions into objects, so they can be more
+easily specialized by the user.
+
+Introduced a StationData object.
+
+Introduced module weewx.factory that produces these things, so the user has a
+place to inject his/her new types.
+
+0.5.1	5/13/09
+
+1. Weather Underground thread now run as daemon thread, allowing the program
+to exit even if it is running.
+
+2. WU queue now hold an instance of archive and the time to be published, rather
+than a record. This allows dailyrain to be published as well.
+
+3. WU date is now given in the format "2009-05-13+12%3A35%3A00" rather than
+"2009-05-13 12:35:00". Seems to be more reliable. But, maybe I'm imagining things...

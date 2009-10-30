@@ -1,0 +1,8 @@
+recursive-include templates *.tmpl
+recursive-include public_html *.gif *.css
+recursive-include start_scripts *
+include CHANGES.txt
+include LICENSE.txt
+include readme.htm
+include weewx.conf
+include NEW_FEATURES.txt

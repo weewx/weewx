@@ -1,0 +1,81 @@
+#errorCatcher Echo
+#import time
+#def showYM($ts)
+$time.strftime("%Y %m",$time.localtime($ts))#slurp
+#end def
+#def showDay($ts)
+$(" N/A" if $ts is None else $time.strftime("  %d", $time.localtime($ts)))#slurp
+#end def
+#def showMonth($ts)
+$(" N/A" if $ts is None else $time.strftime(" %b", $time.localtime($ts)))#slurp
+#end def
+#def showTemp($T)
+$("   N/A" if $T is None else "%6.1f" % $T)#slurp
+#end def
+#def showRain($r)
+$("   N/A" if $r is None else "%6.2f" % $r)#slurp
+#end def
+#def showWind($w)
+$("   N/A" if $w is None else "%6.1f" % $w)#slurp
+#end def
+#def showDir($d)
+$("   N/A" if $d is None else "%6.0f" % $d)#slurp
+#end def
+#def showCount($c)
+$("   N/A" if $c is None else "%6d" % $c)#slurp
+#end def
+                     CLIMATOLOGICAL SUMMARY for year $year_name
+
+
+NAME: $station.location                  
+ELEV: $station.altitude    LAT: $station.latitude[0]-$station.latitude[1] $station.latitude[2]    LONG: $station.longitude[0]-$station.longitude[1] $station.longitude[2]
+
+
+                                       TEMPERATURE (F)
+
+                              HEAT    COOL
+          MEAN   MEAN         DEG     DEG                               MAX    MAX    MIN    MIN
+ YR  MO   MAX    MIN    MEAN  DAYS    DAYS      HI  DAY     LOW  DAY   >=90   <=32   <=32    <=0
+------------------------------------------------------------------------------------------------
+#for $month in $year.months
+#if $month.barometer.count
+$showYM($month.dateTime) $showTemp($month.outTemp.meanmax) $showTemp($month.outTemp.meanmin) $showTemp($month.outTemp.avg) $showTemp($month.heatdeg.sum) $showTemp($month.cooldeg.sum)  $showTemp($month.outTemp.max) $showDay($month.outTemp.maxtime)  $showTemp($month.outTemp.min) $showDay($month.outTemp.mintime) $showCount($month.outTemp.max_ge(90.0)) $showCount($month.outTemp.max_le(32.0)) $showCount($month.outTemp.min_le(32.0)) $showCount($month.outTemp.min_le(0.0))
+#else
+$showYM($month.dateTime)
+#end if
+#end for
+------------------------------------------------------------------------------------------------
+        $showTemp($year.outTemp.meanmax) $showTemp($year.outTemp.meanmin) $showTemp($year.outTemp.avg) $showTemp($year.heatdeg.sum) $showTemp($year.cooldeg.sum)  $showTemp($year.outTemp.max) $showDay($year.outTemp.maxtime)  $showTemp($year.outTemp.min) $showDay($year.outTemp.mintime) $showCount($year.outTemp.max_ge(90.0)) $showCount($year.outTemp.max_le(32.0)) $showCount($year.outTemp.min_le(32.0)) $showCount($year.outTemp.min_le(0.0))
+
+
+                  PRECIPITATION (in)
+
+                  MAX         ---DAYS OF RAIN---
+                  OBS.               OVER
+ YR  MO  TOTAL    DAY  DATE   0.01   0.10   1.00
+------------------------------------------------
+#for $month in $year.months
+#if $month.barometer.count
+$showYM($month.dateTime) $showRain($month.rain.sum) $showRain($month.rain.maxsum)  $showDay($month.rain.maxsumtime) $showCount($month.rain.sum_ge(0.01)) $showCount($month.rain.sum_ge(0.10)) $showCount($month.rain.sum_ge(1.00))
+#else
+$showYM($month.dateTime)
+#end if
+#end for
+------------------------------------------------
+        $showRain($year.rain.sum) $showRain($year.rain.maxsum)  $showMonth($year.rain.maxsumtime) $showCount($year.rain.sum_ge(0.01)) $showCount($year.rain.sum_ge(0.10)) $showCount($year.rain.sum_ge(1.00))
+
+
+           WIND SPEED (mph)
+
+                                DOM
+ YR  MO    AVG     HI   DATE    DIR
+-----------------------------------
+#for $month in $year.months
+#if $month.barometer.count
+$showYM($month.dateTime) $showWind($month.wind.avg) $showWind($month.wind.max)   $showDay($month.wind.maxtime) $showDir($month.wind.vecdir) 
+#else
+$showYM($month.dateTime)
+#end if
+#end for
+-----------------------------------
+        $showWind($year.wind.avg) $showWind($year.wind.max)   $showMonth($year.wind.maxtime) $showDir($year.wind.vecdir)

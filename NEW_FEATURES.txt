@@ -1,0 +1,33 @@
+NEW FEATURES to be added in decreasing order of importance.
+
+Allow the same SQL type to be used more than once in the config
+spec of a plot. Right now, all leaf nodes of the parsed configobj
+must have a unique name. This isn't possible if the SQL type is used
+more than once.
+
+Add support for CWOP.
+
+Allow LOOP stats to be cached (rather than written to disk immediately),
+thus lessoning disk writes for solid-state disks.
+
+Allow rain-to-date to be added to a partial rainyear.
+
+Fix scaling for aggregate interval of a week, so it starts on a Sunday.
+
+Optional start-of-week besides Sunday.
+
+Better scaling for pond temperatures, rain, and wind direction
+
+Refactor the data collection and generation schemes so that they can be
+user extended. The dist_utils package has a pretty good strategy for 
+how to do this.
+
+User manual
+
+Ability to set parameters such as lat, lon, altitude on the VP2
+
+Better wind plots (progressive vector diagram? compass display?)
+
+Dynamic web updates, using AJAX.
+
+Port to Windows.

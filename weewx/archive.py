@@ -1,0 +1,391 @@
+#
+#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
+"""Classes and functions for interfacing with a weewx sqlite3 archive.
+
+Note that this archive uses a schema that is compatible with a wview V5.X.X 
+(see http://www.wviewweather.com) sqlite3 database.
+
+"""
+from __future__ import with_statement
+import time
+import datetime
+import syslog
+import os
+import os.path
+from pysqlite2 import dbapi2 as sqlite3
+        
+import weeutil.weeutil
+
+# This is a tuple containing the schema of the archive database. 
+# Although a type may be listed here, it may not necessarily be supported by a weather station
+sqltypes = (('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+            ('usUnits',              'INTEGER NOT NULL'),
+            ('interval',             'INTEGER NOT NULL'),
+            ('barometer',            'REAL'),
+            ('pressure',             'REAL'),
+            ('altimeter',            'REAL'),
+            ('inTemp',               'REAL'),
+            ('outTemp',              'REAL'),
+            ('inHumidity',           'REAL'),
+            ('outHumidity',          'REAL'),
+            ('windSpeed',            'REAL'),
+            ('windDir',              'REAL'),
+            ('windGust',             'REAL'),
+            ('windGustDir',          'REAL'),
+            ('rainRate',             'REAL'),
+            ('rain',                 'REAL'),
+            ('dewpoint',             'REAL'),
+            ('windchill',            'REAL'),
+            ('heatindex',            'REAL'),
+            ('ET',                   'REAL'),
+            ('radiation',            'REAL'),
+            ('UV',                   'REAL'),
+            ('extraTemp1',           'REAL'),
+            ('extraTemp2',           'REAL'),
+            ('extraTemp3',           'REAL'),
+            ('soilTemp1',            'REAL'),
+            ('soilTemp2',            'REAL'),
+            ('soilTemp3',            'REAL'),
+            ('soilTemp4',            'REAL'),
+            ('leafTemp1',            'REAL'),
+            ('leafTemp2',            'REAL'),
+            ('extraHumid1',          'REAL'),
+            ('extraHumid2',          'REAL'),
+            ('soilMoist1',           'REAL'),
+            ('soilMoist2',           'REAL'),
+            ('soilMoist3',           'REAL'),
+            ('soilMoist4',           'REAL'),
+            ('leafWet1',             'REAL'),
+            ('leafWet2',             'REAL'),
+            ('rxCheckPercent',       'REAL'),
+            ('txBatteryStatus',      'REAL'),
+            ('consBatteryVoltage',   'REAL'),
+            ('hail',                 'REAL'),
+            ('hailRate',             'REAL'),
+            ('heatingTemp',          'REAL'),
+            ('heatingVoltage',       'REAL'),
+            ('supplyVoltage',        'REAL'),
+            ('referenceVoltage',     'REAL'),
+            ('windBatteryStatus',    'REAL'),
+            ('rainBatteryStatus',    'REAL'),
+            ('outTempBatteryStatus', 'REAL'),
+            ('inTempBatteryStatus',  'REAL'))
+
+# This is just a list of the first value in each tuple above (i.e., the SQL keys):
+sqlkeys = [_tuple[0] for _tuple in sqltypes]
+
+# This is a SQL insert statement to be used to add a record. It will have the correct
+# number of placeholder question marks, separated by commas:
+sql_insert_stmt = "INSERT INTO archive VALUES ( %s );" % ','.join('?'*len(sqlkeys))
+
+
+
+        
+class Archive(object):
+    """Manages a sqlite archive file. Offers a number of convenient member functions
+    for managing the archive file. These functions encapsulate whatever sql statements
+    are needed.
+    
+    """
+    
+    def __init__(self, archiveFile):
+        """Initialize an object of type weewx.Archive. 
+        
+        archiveFile: The path name to the sqlite3 archive file.
+        
+        """
+        self.archiveFile = archiveFile
+
+    def lastGoodStamp(self):
+        """Retrieves the epoch time of the last good archive record.
+        
+        returns: Time of the last good archive record as an epoch time, or
+        None if there are no records."""
+        with sqlite3.connect(self.archiveFile) as _connection:
+            _row = _connection.execute("SELECT MAX(dateTime) FROM archive").fetchone()
+            _ts = _row[0]
+        return _ts
+    
+    def firstGoodStamp(self):
+        """Retrieves earliest timestamp in the archive.
+        
+        returns: Time of the first good archive record as an epoch time, or
+        None if there are no records."""
+        with sqlite3.connect(self.archiveFile) as _connection:
+            _row = _connection.execute("SELECT MIN(dateTime) FROM archive").fetchone()
+            _ts = _row[0]
+        return _ts
+
+    def addRecord(self, record):
+        """Commit an archive record to the sqlite3 database.
+        
+        This function commits the record after adding it to the DB. 
+        
+        record: A data record. It must look like a dictionary, where the keys
+        are the SQL types and the values are the values to be stored in the
+        database. 
+        
+        """
+        global sql_insert_stmt
+        global sqlkeys
+ 
+        # This will be a list of the values, in the order of the sqlkeys.
+        # A value will be replaced with None if it did not exist in the record
+        _vallist = [record.get(_key) for _key in sqlkeys]
+
+        with sqlite3.connect(self.archiveFile) as _connection:
+            _connection.execute(sql_insert_stmt, _vallist)
+        
+        syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(_vallist[0]))
+
+
+    def genBatchRecords(self, startstamp, stopstamp):
+        """Generator function that yields ArchiveRecords within a time interval.
+        
+        startstamp: Exclusive start of the interval in epoch time. If 'None', then
+        start at earliest archive record.
+        
+        stopstamp: Inclusive end of the interval in epoch time. If 'None', then
+        end at last archive record.
+        
+        yields: instances of ArchiveRecord between the two times. """
+        _connection = sqlite3.connect(self.archiveFile)
+        _connection.row_factory = sqlite3.Row
+        _cursor=_connection.cursor()
+        try:
+            if startstamp is None:
+                if stopstamp is None:
+                    _cursor.execute("SELECT * FROM archive")
+                else:
+                    _cursor.execute("SELECT * from archive where dateTime <= ?", (stopstamp,))
+            else:
+                if stopstamp is None:
+                    _cursor.execute("SELECT * from archive where dateTime > ?", (startstamp,))
+                else:
+                    _cursor.execute("SELECT * FROM archive WHERE dateTime > ? AND dateTime <= ?", (startstamp, stopstamp))
+            
+            for _row in _cursor :
+                yield ArchiveRecord(_row)
+        finally:
+            _cursor.close()
+            _connection.close()
+
+    def getRecord(self, timestamp):
+        """Get a single instance of ArchiveRecord with a given epoch time stamp.
+        
+        timestamp: The epoch time of the desired record.
+        
+        returns: an instance of weewx.archive.ArchiveRecord"""
+        with sqlite3.connect(self.archiveFile) as _connection:
+            _connection.row_factory = sqlite3.Row
+            _cursor = _connection.execute("SELECT * FROM archive WHERE dateTime=?;", (timestamp,))
+            _row = _cursor.fetchone()
+            return ArchiveRecord(_row)
+    
+    def getSql(self, sql, *sqlargs):
+        """Executes an arbitrary SQL statement on the database.
+        
+        sql: The SQL statement
+        
+        sqlargs: The arguments for the SQL statement
+        
+        returns: an instance of sqlite3.Row
+        """
+        with sqlite3.connect(self.archiveFile) as _connection:
+            _connection.row_factory = sqlite3.Row
+            _cursor = _connection.execute(sql, sqlargs)
+            _row = _cursor.fetchone()
+            return _row
+
+    def genSql(self, sql, *sqlargs):
+        """Generator function that executes an arbitrary SQL statement on the database."""
+        _connection = sqlite3.connect(self.archiveFile)
+        _connection.row_factory = sqlite3.Row
+        _cursor=_connection.cursor()
+        try:
+            _cursor.execute(sql, sqlargs)
+            for _row in _cursor:
+                yield _row
+        finally:
+            _cursor.close()
+            _connection.close()
+
+    def getSqlVectorsTS(self, sql_list, startstamp, stopstamp, interval=None):
+        """Get a time vector bounded by startstamp, stopstamp, with a given time interval
+        
+        The return value is a 2-way tuple. The first member is a vector of time
+        values. The second member is an N-way tuple, where N is the length of sql_list,
+        containing vectors of the desired variables. 
+        
+        An example of a returned value is: ( time_vec, (outTempVec, inTempVec)). 
+        
+        If aggregation is desired (interval is not None), then each element represents
+        a time interval exclusive on the left, inclusive on the right. The time
+        elements will all fall on the same local time boundary as startstamp. 
+        For example, if startstamp is 8-Mar-2009 18:00
+        and interval is 10800 (3 hours), then the returned time vector will be
+        (shown in local times):
+        
+        8-Mar-2009 21:00
+        9-Mar-2009 00:00
+        9-Mar-2009 03:00
+        9-Mar-2009 06:00 etc.
+        
+        Note that DST happens at 02:00 on 9-Mar, so the actual time deltas between the
+        elements is 3 hours between times #1 and #2, but only 2 hours between #2 and #3.
+        
+        NB: there is an algorithmic assumption here that all archived
+        time intervals are the same length. That is, the archive interval cannot change.
+        
+        sql_list: A list of sql types to be retrieved. If interval is not None, then
+        these should be aggregate types (i.e., max(outTemp), etc.)
+        
+        startstamp: Records with time stamp greater than this will be retrieved.
+        If interval is not None, then the first interval will be from this value,
+        exclusive. 
+        
+        stopstamp: Records with time stamp less than or equal to this will be retrieved.
+        If interval is not None, then the last interval will include this value.
+        
+        interval: If aggregation is desired, this is the time interval over which a
+        result will be aggregated. Default: None
+        
+        returns: A 2-way tuple. First element is the time vector, second element an
+        N-way tuple containing the N SQL variable vectors.
+        
+        """
+        from array import array
+        import weeutil.weeutil
+        
+        time_vec = array('i')
+        # An N-way tuple to contain the N SQL variables.
+        result_vecs = tuple([[] for i in xrange(len(sql_list))])       
+        sql_str = 'select dateTime, %s from archive where dateTime>? and dateTime <= ?' % ','.join(sql_list)
+        _connection = sqlite3.connect(self.archiveFile)
+        _cursor=_connection.cursor()
+
+        try:
+            if interval :
+                for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, interval):
+                    _cursor.execute(sql_str, stamp)
+                    for _rec in _cursor:
+                        # Don't accumulate any results where there wasn't a record
+                        # (signified by sqlite3 by a null key)
+                        if _rec[0] is not None:
+                            time_vec.append(_rec[0])
+                            for v, list in zip(_rec[1:], result_vecs) :
+                                list.append(v)
+            else:
+                _cursor.execute(sql_str, (startstamp, stopstamp))
+                for _rec in _cursor:
+                    # Don't accumulate any results where there wasn't a record
+                    # (signified by sqlite3 by a null key)
+                    if _rec[0] is not None:
+                        time_vec.append(_rec[0])
+                        for v, list in zip(_rec[1:], result_vecs):
+                            list.append(v)
+        finally:
+            _cursor.close()
+            _connection.close()
+
+        return (time_vec, result_vecs)
+    
+    def config(self):
+        """Configure a database for use with weewx. This will create the initial schema
+        if necessary.
+        
+        """
+    
+        # Check whether the database exists:
+        if os.path.exists(self.archiveFile):
+            syslog.syslog(syslog.LOG_INFO, "archive: archive database %s already exists." % self.archiveFile)
+        else:
+            # If it doesn't exist, create the parent directories
+            archiveDirectory = os.path.dirname(self.archiveFile)
+            if not os.path.exists(archiveDirectory):
+                syslog.syslog(syslog.LOG_NOTICE, "archive: making archive directory %s." % archiveDirectory)
+                os.makedirs(archiveDirectory)
+            
+        # If it has no schema, initialize it:
+        if not self._getCreate():
+       
+            # List comprehension of the types, joined together with commas:
+            _sqltypestr = ', '.join([' '.join(type) for type in sqltypes])
+            
+            _createstr ="CREATE TABLE archive (%s);" % _sqltypestr
+        
+            with sqlite3.connect(self.archiveFile) as _connection:
+                _connection.execute(_createstr)
+            
+            syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for archive file %s." % self.archiveFile)
+
+    def _getCreate(self):
+        """Returns the CREATE statement that created the archive.
+        
+        Useful for determining if the archive has been initialized.
+        
+        returns: the string used to CREATE the archive, or None if the archive
+        has not been initialized.
+        """
+        _connection = sqlite3.connect(self.archiveFile)
+        _cursor=_connection.cursor()
+        try:
+            _cursor.execute("""SELECT sql FROM sqlite_master where type='table';""")
+            _row = _cursor.fetchone()
+            res = str(_row[0]) if _row is not None else None
+        finally:
+            _cursor.close()
+            _connection.close() 
+        
+        return res
+
+class ArchiveRecord(dict) :
+    """A dictionary which represents a single archive record in the sqlite3 archive file
+    
+    It is no different from any other dictionary, except it has a special method of __str__ to
+    print out the most important contents nicely.
+    """
+    
+    # A dictionary. The key is the type, the value is a tuple containing the two formats
+    # to be used to print something out. The first format is for normal printing, the
+    # second if a 'None' value is encountered.
+    _format_dict = {'str_dateTime' : ('%s',              'YYYY-MM-DD HH:MM:SS'),
+                    'dateTime'     : ('(%10u);',         '(   N/A    );'),
+                    'barometer'    : ('%7.3f";',         '    N/A ;'),
+                    'outTemp'      : ('%6.1fF;',         '   N/A ;'),
+                    'outHumidity'  : ('%4.0f%%;',        ' N/A ;'),
+                    'windSpeed'    : ('%4.0f mph;',      ' N/A mph;'),
+                    'windDir'      : ('%4.0f deg;',      ' N/A deg;'),
+                    'windGust'     : ('%4.0f mph gust;', ' N/A mph gust;'),
+                    'rain'         : ('%5.2f" rain;',    '  N/A  rain;'),
+                    'dewpoint'     : ('%4.0fF dewpt;',   ' N/A  dewpt;')}
+    
+
+    def __init__(self, start_dict=None) :
+        """Initialize an instance of ArchiveRecord. It must at the least contain a valid
+        key for 'dateTime' """
+        if start_dict is not None :
+            super(ArchiveRecord, self).__init__(start_dict)
+    
+    def __str__(self):
+        _strlist = []
+        for _data_type in ArchiveRecord._format_dict.keys():
+            _val = self.get(_data_type)
+            if _val is None:
+                _strlist.append(ArchiveRecord._format_dict[_data_type][1])
+            else:
+                _strlist.append(ArchiveRecord._format_dict[_data_type][0] % _val)
+        # _strlist is a list of strings. Convert it into one long string:
+        _string_result = ''.join(_strlist)
+        return _string_result
+    
+    def __getitem__(self, key):
+        # Add formatted strings for local and UTC time:
+        if key == 'str_dateTime' :
+            return datetime.datetime.fromtimestamp(self['dateTime']).isoformat(' ')
+        elif key == 'str_dateTimeUTC' :
+            return datetime.datetime.utcfromtimestamp(self['dateTime']).isoformat('+')
+        return super(ArchiveRecord, self).__getitem__(key)
