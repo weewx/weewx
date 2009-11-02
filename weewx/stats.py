@@ -732,7 +732,14 @@ class StatsDb(object):
 
     coolbase: The base temperature for calculating cooling degree-days.
     """
-    def __init__(self, statsFilename, heatbase, coolbase):
+    
+    # In addition to the attributes listed above, if caching is used,
+    # each instance has a private attribute self.__dayCache. This is a two-way 
+    # tuple where the first member is an instance of DayStatsDict, and
+    # the second member is lastUpdate. If caching is not being used, then
+    # self.__dayCache equals None.
+    #
+    def __init__(self, statsFilename, heatbase, coolbase, cacheLoopData = False):
         """Create an instance of StatsDb to manage a database.
         
         statsFilename: Path to the stats database file.
@@ -744,6 +751,10 @@ class StatsDb(object):
         self.statsTypes    = StatsDb.__getTypes(statsFilename)
         self.heatbase      = heatbase
         self.coolbase      = coolbase
+        if cacheLoopData:
+            self.__dayCache  = (None, None)
+        else:
+            self.__dayCache  = None
         
     def addArchiveRecord(self, rec):
         """Add an archive record to the statistical database."""
@@ -760,7 +771,7 @@ class StatsDb(object):
 
         # Now write the results for all types back to the database
         # in a single transaction:
-        self._setDay(_allStatsDict, rec['dateTime'])
+        self._setDay(_allStatsDict, rec['dateTime'], writeThrough = True)
             
     def addLoopRecord(self, rec):
         """Add a LOOP record to the statistical database."""
@@ -777,7 +788,7 @@ class StatsDb(object):
 
         # Now write the results for all types back to the database
         # in a single transaction:
-        self._setDay(_allStatsDict, rec['dateTime'])
+        self._setDay(_allStatsDict, rec['dateTime'], writeThrough = False)
 
     def getTypeStats(self, type, sod_ts, cursor = None):
         """Get the statistics for a specific type for a specific day.
@@ -903,6 +914,10 @@ class StatsDb(object):
         cursor: A database cursor to be used for the
         retrieval. [Optional. If not given, one will be created and
         destroyed for this query.]"""
+        
+        if self.__dayCache and self.__dayCache[0] and self.__dayCache[0].timespan == daySpan:
+            return self.__dayCache[0]
+
         if cursor:
             _cursor = cursor
         else:
@@ -919,8 +934,12 @@ class StatsDb(object):
             if not cursor:
                 _cursor.close()
                 _connection.close()
-        return _allStats
         
+        if self.__dayCache:
+            self.__dayCache = (_allStats, None)
+
+        return _allStats
+    
     def week(self, weekSpan):
         """Return a weeks worth of statistics as a AggregateStatsDict.
 
@@ -970,7 +989,7 @@ class StatsDb(object):
 
         yearSpan: An instance of weeutil.timespan.Timespan with the
         time span for the desired year."""
-        #TODO: cache current year data because it gets used twice in processdata.py
+        #TODO: __dayCache current year data because it gets used twice in processdata.py
 
         # Strategy is to fill in the whole year data structure with default values,
         # then plug in the real values from the SQL search.
@@ -1065,17 +1084,36 @@ class StatsDb(object):
         return int(_row[0]) if _row else None
 
 
-    def _setDay(self, dayStatsDict, time_ts):
+    def _setDay(self, dayStatsDict, lastUpdate, writeThrough = True):
         """Write all statistics for a day to the database in a single transaction.
         
         dayStatsDict: A dictionary. Key is the type to be written, value is a
         StdDayStats or WindDayStats, as appropriate.  Class DayStatsDict
         satisfies this.
         
-        time_ts: the time of the last update will be set to this. Normally, this
+        lastUpdate: the time of the last update will be set to this. Normally, this
         is the timestamp of the last archive record added to the instance
         dayStatsDict."""
-        if dayStatsDict is None : return
+
+        assert(dayStatsDict)
+
+        if self.__dayCache:
+            if self.__dayCache[0] and self.__dayCache[0].timespan != dayStatsDict.timespan:
+                # Write the old data
+                self.__writeData(self.__dayCache[0], self.__dayCache[1])
+        
+            self.__dayCache = (dayStatsDict, lastUpdate)
+            if writeThrough:
+                self.__writeData(dayStatsDict, lastUpdate)
+        
+        else:
+            self.__writeData(dayStatsDict, lastUpdate)
+        
+        
+    def __writeData(self, dayStatsDict, lastUpdate):
+        
+        assert(dayStatsDict)
+        assert(lastUpdate)
         
         _sod = dayStatsDict.timespan.start
 
@@ -1090,17 +1128,17 @@ class StatsDb(object):
                     continue
                 # Slightly different SQL statement for wind
                 elif _stats_type == 'wind':
-                    replace_str = wind_replace_str
+                    _replace_str = wind_replace_str
                 else:
-                    replace_str = std_replace_str % _stats_type
+                    _replace_str = std_replace_str % _stats_type
                 
                 # Get the stats-tuple, then write the results
-                write_tuple = dayStatsDict[_stats_type].getStatsTuple()
-                assert(write_tuple[0] == _sod)
-                _connection.execute(replace_str, write_tuple)
+                _write_tuple = dayStatsDict[_stats_type].getStatsTuple()
+                assert(_write_tuple[0] == _sod)
+                _connection.execute(_replace_str,_write_tuple)
             # Update the time of the last stats update:
-            _connection.execute(meta_replace_str, ('lastUpdate', str(int(time_ts))))
-
+            _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
+            
     def __toHeatCool(self, type, outTempStats):
         """Calculates heating or cooling degree-day statistics from temperature
         
@@ -1297,7 +1335,7 @@ if __name__ == '__main__':
             # Now test all the aggregates:
             for aggregate in ('min', 'max', 'sum', 'count'):
                 # Compare to the main archive:
-                res = archive.getSql("SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, type), (start_ts, stop_ts))
+                res = archive.getSql("SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, type), start_ts, stop_ts)
                 # From StatsDb:
                 typeStats_res = typeStats.__getattribute__(aggregate)
                 allStats_res  = allStats[type].__getattribute__(aggregate)
@@ -1309,7 +1347,7 @@ if __name__ == '__main__':
                 
                 # Check the times of min and max as well:
                 if aggregate in ('min','max'):
-                    res2 = archive.getSql("SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % type, (res[0], start_ts, stop_ts))
+                    res2 = archive.getSql("SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (type,), res[0], start_ts, stop_ts)
                     stats_time =  typeStats.__getattribute__(aggregate+'time')
                     print aggregate+'time: from main archive:   ', weeutil.weeutil.timestamp_to_string(res2[0])
                     print aggregate+'time: from typeStats database: ', weeutil.weeutil.timestamp_to_string(stats_time)

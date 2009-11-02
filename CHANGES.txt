@@ -1,6 +1,12 @@
 CHANGE HISTORY
 --------------------------------
 
+1.1.0   10/31/09
+
+Added the ability to cache LOOP data. This can dramatically reduce the
+number of writes to the stats database, reducing wear on solid-state
+disk stores.
+
 1.0.0   10/26/09
 
 Took the module weewx.factory back out, as it was too complicated and
@@ -12,6 +18,10 @@ subclassing and specialization.
 
 Completely rewrote the stats.py module. All aggregate quantities
 are now calculated dynamically.
+
+Labels for HTML generation are now held separately from labels used
+for image generation. This allows entities such as '&deg;' to be used
+for the former.
 
 LOOP mode now requests only 200 LOOP records (instead of the old
 2000). It then renews the request should it run out. This was to get

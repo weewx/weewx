@@ -12,7 +12,6 @@ import urllib
 import urllib2
 
 import weewx
-import weewx.archive
 import weeutil.weeutil
 
 def postData(archive, time_ts, station, password) :
@@ -150,6 +149,7 @@ if __name__ == '__main__':
     import os.path
     
     import weewx
+    import weewx.archive
     import weeutil.weeutil
     
     def backfill_today(config_path):

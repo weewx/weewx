@@ -7,7 +7,7 @@
 
 """
 
-__version__="1.0.0"
+__version__="1.1a1"
 
 # Holds the program launch time in unix epoch seconds:
 launchtime_ts = 0

@@ -62,11 +62,14 @@ Version 1.0</h1>
 <h1>Table of Contents</h1>
 <p class="indent"><a href="#Copyright">Copyright</a></p>
 <p class="indent"><a href="#About_weewx">About <span class="code">weewx</span></a></p>
+<p class="indent"><a href="#Downloading_weewx">Downloading <span class="code">
+weewx</span></a></p>
 <p class="indent"><a href="#Prerequisites">Prerequisites</a></p>
 <p class="indent"><a href="#Installing_weewx">Installing <span class="code">weewx</span></a></p>
 <p class="indent"><a href="#Configuring_weewx">Configuring <span class="code">weewx</span></a></p>
 <p class="indent"><a href="#Running_weewx">Running <span class="code">weewx</span></a></p>
-<p class="indent"><a href="#Compatibility_with_wview">Compatibility with wview</a></p>
+<p class="indent"><a href="#Compatibility_with_wview">Compatibility with 
+<span class="code">wview</span></a></p>
 <p class="indent"><a href="#Monitoring_weewx">Monitoring <span class="code">weewx</span></a></p>
 <p class="indent"><a href="#Architectural_notes">Architectural Notes</a></p>
 <p class="indent"><a href="#Table_of_Tested_Versions">Table of Tested Versions</a></p>
@@ -108,6 +111,11 @@ features such as support for other weather stations, support for metric units,
 support for alarms, etc. On the other hand, it offers very powerful configuration 
 and templating options, making it easy to customize. It is also architecturally 
 very simple and easy to understand.</p>
+<h1><a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
+<p><span class="code">weewx</span> can be downloaded from its
+<a href="https://sourceforge.net">SourceForge</a> page:
+<a href="https://sourceforge.net/projects/weewx">
+https://sourceforge.net/projects/weewx</a>. </p>
 <h1><a name="Prerequisites">Prerequisites</a></h1>
 <h2>Python</h2>
 <p>Python V2.5 or V2.6 is required. The newer V3.0 
@@ -214,6 +222,10 @@ If you wish to install someplace else, then edit the file <span class="code">
 weewx-X.Y.Z/setup.cfg</span> to whatever you prefer. If you do this, you will 
 also have to edit the <span class="code">weewx</span> configuration file <span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span> 
 to reflect your choice.</p>
+<p>The install process will also install a startup script in <span class="code">
+/etc/init.d</span> to allow running <span class="code">weewx </span>as a startup 
+process. See <a href="#Running_as_a_daemon">Running as a Daemon</a> for more 
+information. This step of the install process may require root privileges. </p>
 <p>If you are upgrading from a previous version of <span class="code">weewx</span>, the install process 
 will save your old template directories and will also merge any changes you&#39;ve 
 made to the configuration file into the new configuration file.</p>
@@ -324,6 +336,19 @@ starts in October (as mine does). Default is 1.</p>
 <h4 class="config_important">radar_url</h4>
 <p>This variable is available in the HTML templates. Set it to an appropriate 
 URL to display a radar image for your area. No default.</p>
+<h4 class="config_important">cache_loop_data</h4>
+<p>Set to 1 (one) to cache LOOP data, otherwise, set to zero. By default,
+<span class="code">weewx </span>updates the statistical database with
+every LOOP update. This can be as often as every two seconds. If you
+are using a solid-state disk as your permanent store, this can result
+in a lot of wear in the device. By
+setting <span class="code">cache_loop_data </span>to one, the LOOP
+data will be cached, and the stats database will be updated only when
+new archive data is due. This results in many fewer writes to the
+database, but possible loss of data should your server go down between
+archive updates. (The only data actually lost would be any new
+High/Lows found during the archive period.) The default is 0 (no
+caching).</p>
 <h4 class="config_option">heating_base<br />
 cooling_base</h4>
 <p>Set to the base temperature for calculating heating and cooling degree-days, 
@@ -562,7 +587,7 @@ As the Davis VantagePro can store a couple thousand archive records internally, 
 take a minute or two.</p>
 <p>It will then start monitoring LOOP data, printing a short version of the 
 received data on standard output, about once every two seconds.</p>
-<h2>Running as a daemon</h2>
+<h2><a name="Running_as_a_daemon">Running as a daemon</a></h2>
 <p>First, select the appropriate run script. They can be found under <span class="code"><em>$WEEWX_ROOT</em>/start_script</span>. Copy it to the 
 proper location for your system:</p>
 <table style="width: 100%" class="indent">
@@ -607,7 +632,7 @@ also manually start, stop, and restart the <span class="code">weewx</span> daemo
 <p class="tty">/etc/init.d/weewx start<br/>
 /etc/init.d/weewx stop<br/>
 /etc/init.d/weewx restart</p>
-<h1><a name="Compatibility_with_wview">Compatibility with wview</a></h1>
+<h1><a name="Compatibility_with_wview">Compatibility with <span class="code">wview</span></a></h1>
 <p>The sqlite3 archive database used by <span class="code">weewx</span> (nominally, <span class="code">weewx.sdb</span>) is completely compatible with the database 
 used by <a href="http://www.wviewweather.com">wview</a> (usually called
 <span class="code">wview-archive.sdb</span>), at least as of Version 5.2.X. The schema and its semantics is 
