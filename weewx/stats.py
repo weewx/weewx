@@ -3,6 +3,10 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
+#    Revision: $Rev$
+#    Author:   $Author$
+#    Date:     $Date$
+#
 """Compute statistics, manage the statistical database
 
     Keeps a running tally in a database of the min, max, avg of weather data

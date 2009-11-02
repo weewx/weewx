@@ -23,7 +23,10 @@
 # SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #
 
-#
+#    Revision: $Rev$
+#    Author:   $Author$
+#    Date:     $Date$
+
 # HISTORY:
 #
 # 2002-12-20 -- Original

@@ -3,6 +3,10 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
+#    Revision: $Rev$
+#    Author:   $Author$
+#    Date:     $Date$
+#
 """Generate files from templates.
 
 This basically includes NOAA summary reports, and HTML files."""

@@ -16,7 +16,11 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+#
+#    Revision: $Rev$
+#    Author:   $Author$
+#    Date:     $Date$
+#
 """ Customized weewx setup script.
 
     In addition to the normal setup script duties, this script does the

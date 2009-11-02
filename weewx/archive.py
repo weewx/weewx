@@ -3,6 +3,10 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
+#    Revision: $Rev$
+#    Author:   $Author$
+#    Date:     $Date$
+#
 """Classes and functions for interfacing with a weewx sqlite3 archive.
 
 Note that this archive uses a schema that is compatible with a wview V5.X.X 

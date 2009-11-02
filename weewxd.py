@@ -4,6 +4,10 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
+#    Revision: $Rev$
+#    Author:   $Author$
+#    Date:     $Date$
+#
 """Main loop of the weewx weather system.
 
 There are three main threads in this program.

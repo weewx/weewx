@@ -1,4 +1,9 @@
 # -*- coding: iso-8859-1 -*-
+#
+#    Revision: $Rev$
+#    Author:   $Author$
+#    Date:     $Date$
+#
 '''
     This module is used to fork the current process into a daemon.
     Almost none of this is necessary (or advisable) if your daemon
