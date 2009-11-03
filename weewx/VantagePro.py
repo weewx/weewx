@@ -23,7 +23,7 @@ _ack    = chr(0x06)
 _resend = chr(0x21)
 
 
-class VantagePro (object) :
+class WxStation (object) :
     """Class that represents a connection to a VantagePro console.
     
     After initialization, the serial port (e.g., '/dev/ttyUSB0') specified in the 
@@ -393,6 +393,101 @@ class VantagePro (object) :
         _archive_interval = int(config_dict.get('archive_interval', '300'))
         self.setArchiveInterval(_archive_interval)
         
+    def translateLoopToImperial(self, packet):
+        """Translates a loop packet from the internal units used by Davis, into Imperial units.
+        
+        packet: An instance of DavisLoopPacket.
+        
+        returns: A dictionary with the values in Imperial units.
+        
+        """
+        # This dictionary maps a type key to a function. The function should be able to
+        # decode a sensor value held in the loop packet in the internal, Davis form into imperial
+        # units and return it. From the Davis documentation, it's not clear what the
+        # 'dash' value is for some of these, so I'm assuming it's the same as for an archive
+        # packet.
+    
+        _loop_map = {'dateTime'        : lambda v : v,
+                     'barometer'       : _val1000Zero, 
+                     'inTemp'          : _big_val10, 
+                     'inHumidity'      : _little_val, 
+                     'outTemp'         : _big_val10, 
+                     'windSpeed'       : _little_val, 
+                     'windSpeed10'     : _little_val, 
+                     'windDir'         : _big_val, 
+                     'extraTemp1'      : _little_temp, 
+                     'extraTemp2'      : _little_temp, 
+                     'extraTemp3'      : _little_temp, 
+                     'extraTemp4'      : _little_temp,
+                     'extraTemp5'      : _little_temp, 
+                     'extraTemp6'      : _little_temp, 
+                     'extraTemp7'      : _little_temp, 
+                     'soilTemp1'       : _little_temp, 
+                     'soilTemp2'       : _little_temp, 
+                     'soilTemp3'       : _little_temp, 
+                     'soilTemp4'       : _little_temp,
+                     'leafTemp1'       : _little_temp, 
+                     'leafTemp2'       : _little_temp, 
+                     'leafTemp3'       : _little_temp, 
+                     'leafTemp4'       : _little_temp,
+                     'outHumidity'     : _little_val, 
+                     'extraHumid1'     : _little_val, 
+                     'extraHumid2'     : _little_val, 
+                     'extraHumid3'     : _little_val,
+                     'extraHumid4'     : _little_val, 
+                     'extraHumid5'     : _little_val, 
+                     'extraHumid6'     : _little_val, 
+                     'extraHumid7'     : _little_val,
+                     'rainRate'        : _big_val100, 
+                     'UV'              : _little_val, 
+                     'radiation'       : _big_val, 
+                     'stormRain'       : _val100, 
+                     'stormStart'      : _loop_date,
+                     'dayRain'         : _val100, 
+                     'monthRain'       : _val100, 
+                     'yearRain'        : _val100, 
+                     'dayET'           : _val100, 
+                     'monthET'         : _val100, 
+                     'yearET'          : _val100,
+                     'soilMoist1'      : _little_val, 
+                     'soilMoist2'      : _little_val, 
+                     'soilMoist3'      : _little_val, 
+                     'soilMoist4'      : _little_val,
+                     'leafWet1'        : _little_val, 
+                     'leafWet2'        : _little_val, 
+                     'leafWet3'        : _little_val, 
+                     'leafWet4'        : _little_val,
+                     'transmitBattery' : _null, 
+                     'consoleBattery'  : lambda v : float((v * 300) >> 9) / 100.0
+                     }        
+    
+        if packet['imperial_units'] != weewx.IMPERIAL :
+            raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be imperial (U.S.) units only"
+    
+        record = {}
+        
+        for _type in _loop_map.keys() :    
+            # Get the mapping function needed for this key
+            func = _loop_map[_type]
+            # Call it, with the value as an argument
+            fv = func(packet[_type])
+            # Store the results
+            record[_type] = fv
+    
+        # Add a few derived values that are not in the packet itself.
+        T = record['outTemp']
+        R = record['outHumidity']
+        W = record['windSpeed']
+    
+        record['dewpoint']    = weewx.wxformulas.dewpointF(T, R)
+        record['heatindex']   = weewx.wxformulas.heatindexF(T, R)
+        record['windchill']   = weewx.wxformulas.windchillF(T, W)
+        
+        # This would be the place to do any processing for crazy numbers
+        # (e.g., temperatures in hundreds) and replace them with None.
+        
+        return record
+
         # TODO: If the new archive interval is different from the old, then the archive memory should be cleared
         
         # TODO: This would be the place to set latitude, longitude, and altitude
@@ -547,101 +642,6 @@ class DavisLoopPacket(dict) :
 
         # As far as I know, the Davis supports only Imperial units:
         self['imperial_units'] = weewx.IMPERIAL
-
-def translateLoopToImperial(packet):
-    """Translates a loop packet from the internal units used by Davis, into Imperial units.
-    
-    packet: An instance of DavisLoopPacket.
-    
-    returns: A dictionary with the values in Imperial units.
-    
-    """
-    # This dictionary maps a type key to a function. The function should be able to
-    # decode a sensor value held in the loop packet in the internal, Davis form into imperial
-    # units and return it. From the Davis documentation, it's not clear what the
-    # 'dash' value is for some of these, so I'm assuming it's the same as for an archive
-    # packet.
-
-    _loop_map = {'dateTime'        : lambda v : v,
-                 'barometer'       : _val1000Zero, 
-                 'inTemp'          : _big_val10, 
-                 'inHumidity'      : _little_val, 
-                 'outTemp'         : _big_val10, 
-                 'windSpeed'       : _little_val, 
-                 'windSpeed10'     : _little_val, 
-                 'windDir'         : _big_val, 
-                 'extraTemp1'      : _little_temp, 
-                 'extraTemp2'      : _little_temp, 
-                 'extraTemp3'      : _little_temp, 
-                 'extraTemp4'      : _little_temp,
-                 'extraTemp5'      : _little_temp, 
-                 'extraTemp6'      : _little_temp, 
-                 'extraTemp7'      : _little_temp, 
-                 'soilTemp1'       : _little_temp, 
-                 'soilTemp2'       : _little_temp, 
-                 'soilTemp3'       : _little_temp, 
-                 'soilTemp4'       : _little_temp,
-                 'leafTemp1'       : _little_temp, 
-                 'leafTemp2'       : _little_temp, 
-                 'leafTemp3'       : _little_temp, 
-                 'leafTemp4'       : _little_temp,
-                 'outHumidity'     : _little_val, 
-                 'extraHumid1'     : _little_val, 
-                 'extraHumid2'     : _little_val, 
-                 'extraHumid3'     : _little_val,
-                 'extraHumid4'     : _little_val, 
-                 'extraHumid5'     : _little_val, 
-                 'extraHumid6'     : _little_val, 
-                 'extraHumid7'     : _little_val,
-                 'rainRate'        : _big_val100, 
-                 'UV'              : _little_val, 
-                 'radiation'       : _big_val, 
-                 'stormRain'       : _val100, 
-                 'stormStart'      : _loop_date,
-                 'dayRain'         : _val100, 
-                 'monthRain'       : _val100, 
-                 'yearRain'        : _val100, 
-                 'dayET'           : _val100, 
-                 'monthET'         : _val100, 
-                 'yearET'          : _val100,
-                 'soilMoist1'      : _little_val, 
-                 'soilMoist2'      : _little_val, 
-                 'soilMoist3'      : _little_val, 
-                 'soilMoist4'      : _little_val,
-                 'leafWet1'        : _little_val, 
-                 'leafWet2'        : _little_val, 
-                 'leafWet3'        : _little_val, 
-                 'leafWet4'        : _little_val,
-                 'transmitBattery' : _null, 
-                 'consoleBattery'  : lambda v : float((v * 300) >> 9) / 100.0
-                 }        
-
-    if packet['imperial_units'] != weewx.IMPERIAL :
-        raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be imperial (U.S.) units only"
-
-    record = {}
-    
-    for _type in _loop_map.keys() :    
-        # Get the mapping function needed for this key
-        func = _loop_map[_type]
-        # Call it, with the value as an argument
-        fv = func(packet[_type])
-        # Store the results
-        record[_type] = fv
-
-    # Add a few derived values that are not in the packet itself.
-    T = record['outTemp']
-    R = record['outHumidity']
-    W = record['windSpeed']
-
-    record['dewpoint']    = weewx.wxformulas.dewpointF(T, R)
-    record['heatindex']   = weewx.wxformulas.heatindexF(T, R)
-    record['windchill']   = weewx.wxformulas.windchillF(T, W)
-    
-    # This would be the place to do any processing for crazy numbers
-    # (e.g., temperatures in hundreds) and replace them with None.
-    
-    return record
 
 
 
@@ -891,7 +891,7 @@ if __name__ == '__main__':
     ans = raw_input("about to configure VantagePro. OK (y/n)? ")
     if ans == 'y' :
         # Open up the weather station:
-        station = VantagePro(config_dict['VantagePro'])
+        station = WxStation(config_dict['VantagePro'])
         station.config(config_dict)
         print "Done."
     else :

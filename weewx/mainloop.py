@@ -81,7 +81,7 @@ class MainLoop(object):
             for loopPacket in self.station.getLoopPackets(200):
                 
                 # Translate to physical units in the Imperial (US) system:
-                physicalPacket = weewx.VantagePro.translateLoopToImperial(loopPacket)
+                physicalPacket = self.station.translateLoopToImperial(loopPacket)
     
                 print "LOOP:  ", weeutil.weeutil.timestamp_to_string(physicalPacket['dateTime']),\
                     physicalPacket['barometer'],\
