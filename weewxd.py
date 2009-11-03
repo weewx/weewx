@@ -54,14 +54,6 @@ import weewx.stats
 import weewx.wunderground
 import weeutil.weeutil
 
-# Holds the time stamp of when the program was started.
-# Useful for calculating 'uptime.'
-weewx.launchtime_ts = time.time()
-
-# If publishing to the Weather Underground is requested, data to be
-# published will be put in this queue. Otherwise, the queue is left as 'None'.
-wunderQueue = None
-
 def mainloop(config_dict):
     
     # Set a default socket time out, in case FTP or HTTP hang:
@@ -104,8 +96,8 @@ def mainloop(config_dict):
     # Open up the weather station:
     station = weewx.VantagePro.VantagePro(config_dict['VantagePro'])
 
-    # Catch up on any missing data queued in the weather station::
-    catchUpData(station, archive, statsDb)
+    # Do any preloop calculations (if any) required by the weather station:
+    station.preloop(archive, statsDb)
 
     # Now enter the main loop
     syslog.syslog(syslog.LOG_INFO, "mainloop: Starting main packet loop.")
@@ -137,49 +129,24 @@ def mainloop(config_dict):
             # Add the LOOP record to the stats database:
             statsDb.addLoopRecord(physicalPacket)
             
-            # Check to see if it's time to fetch new archive data. If so, cancel the loop
+            # Check to see if it's time to get new archive data. If so, cancel the loop
             if time.time() >= nextArchive_ts:
                 print "New archive record due. canceling loop"
                 syslog.syslog(syslog.LOG_DEBUG, "mainloop: new archive record due. Canceling loop")
                 station.cancelLoop()
-                # Catch up on any archive data:
-                catchUpData(station, archive, statsDb)
+                # Calculate/get new archive data:
+                station.calcArchiveData(archive, statsDb)
                 # Now process the data, using a separate thread
                 processThread = threading.Thread(target = weewx.processdata.processData, args=(config_dict, ))
                 processThread.start()
                 break
 
-def catchUpData(station, archive, statsDb):
-    """Add any archive data that has accumulated on the weather station
-    but not appeared in the database yet.
-    """
-    global httpQueue
-
-    lastgood_ts = archive.lastGoodStamp()
-    
-    nrec = 0
-    # Add all missed archive records since the last good record in the database
-    for rec in station.getArchivePacketsTS(lastgood_ts) :
-        print"REC:-> ", weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec['barometer'],\
-                                                            rec['outTemp'],   rec['windSpeed'], rec['windDir'], " <-"
-        archive.addRecord(rec)
-        statsDb.addArchiveRecord(rec)
-        if wunderQueue:
-            wunderQueue.put((archive, rec['dateTime']))
-        nrec += 1
-
-    if nrec != 0:
-        syslog.syslog(syslog.LOG_INFO, "mainloop: %d new archive packets added to database" % nrec)
-
 def setupWeatherUnderground(config_dict):
     """Set up the WU thread."""
-    global wunderQueue
     wunder_dict = config_dict.get('Wunderground')
     if wunder_dict :
-        wunderQueue = Queue.Queue()
         t = weewx.wunderground.WunderThread(wunder_dict['station'], 
-                                            wunder_dict['password'], 
-                                            wunderQueue)
+                                            wunder_dict['password'])
 
 def main(config_path):        
 

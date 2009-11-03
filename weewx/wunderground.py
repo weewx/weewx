@@ -12,139 +12,168 @@ import syslog
 import time
 import datetime
 import threading
+import Queue
 import urllib
 import urllib2
 
 import weewx
 import weeutil.weeutil
 
-def postData(archive, time_ts, station, password) :
-    """Posts a data record on the Weather Underground, using their upload protocol.
-    
-    archive: An instance of weewx.archive.Archive
-    
-    time_ts: The timestamp of the record to be submitted to the WU.
-    If 'None', then the last timestamp in the archive.
-    
-    station: The Weather Underground station name (e.g., 'KORHOODR3')
-    
-    password: Password for the station
+# If publishing to the Weather Underground is requested, data to be
+# published will be put in this queue:
+wunderQueue = Queue.Queue()
 
-    For details of the Weather Underground upload protocol,
-    see http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
-    
-    For details on how urllib2 works, see "urllib2 - The Missing Manual"
-    at http://www.voidspace.org.uk/python/articles/urllib2.shtml
-    """
+class WunderStation(object):
+    """Manages interactions with the Weather Underground"""
 
-    # Types and formats of the data to be published:
-    _formats = {'dateTime'    : 'dateutc=%s',
-                'barometer'   : 'baromin=%06.3f',
-                'outTemp'     : 'tempf=%05.1f',
-                'outHumidity' : 'humidity=%03.0f',
-                'windSpeed'   : 'windspeedmph=%03.0f',
-                'windDir'     : 'winddir=%03.0f',
-                'windGust'    : 'windgustmph=%03.0f',
-                'dewpoint'    : 'dewptf=%03.0f',
-                'rain'        : 'rainin=%04.2f',
-                'dailyrain'   : 'dailyrainin=%05.2f'
-                }
-
-    if not time_ts:
-        time_ts = archive.lastGoodStamp()
+    def __init__(self, station, password):
+        """Initialize with a given station.
         
-    sod_ts = weeutil.weeutil.startOfDay(time_ts)
-    
-    sqlrec = archive.getSql("SELECT dateTime, usUnits, interval, barometer, outTemp, outHumidity, "\
-                             "windSpeed, windDir, windGust, dewpoint "\
-                             "FROM archive WHERE dateTime=?", time_ts)
-    
-    datarec = dict(sqlrec)
+        station: The name of the Weather Underground station (e.g., "KORHOODR3") as a string
 
-    unitsystem = datarec['usUnits']
-    if unitsystem != weewx.IMPERIAL :
-        raise weewx.UnsupportedFeature, "Only Imperial Units are supported for the Weather Underground."
-    
-    # WU says rain should be "accumulated rainfall over the last 60 minutes". Presumably, this
-    # is exclusive of the archive record 60 minutes before, so the SQL statement is
-    # exclusive on the left, inclusive on the right. Strictly speaking, this may or may not
-    # be what they mean over a DST boundary.
-    datarec['rain'] = archive.getSql("SELECT SUM(rain) AS rain FROM archive WHERE dateTime>? AND dateTime<=?",
-                                     time_ts - 3600.0, time_ts)['rain']
-    
-    # NB: The WU considers the archive with time stamp 00:00 (midnight) as (wrongly) belonging to
-    # the current day (instead of the previous day). But, it's their site, so we'll do it their way.
-    # That means the SELECT statement is inclusive on both time ends:
-    datarec['dailyrain'] = archive.getSql("SELECT SUM(rain) AS dailyrain FROM archive WHERE dateTime>=? AND dateTime<=?", 
-                                          sod_ts, time_ts)['dailyrain']
-                                          
-    _liststr = ["action=updateraw", "ID=%s" % station, "PASSWORD=%s" % password ]
-    
-    # Go through each of the supported types, formatting it, then adding to _liststr:
-    for _key in _formats.keys() :
-        v = datarec[_key]
-        # Check to make sure the type is not null
-        if v is not None :
-            if _key == 'dateTime':
-                # For dates, convert from time stamp to a string, using what
-                # the Weather Underground calls "MySQL format." I've fiddled
-                # with formatting, and it seems that escaping the colons helps
-                # its reliability. But, I could be imagining things.
-                v = urllib.quote(datetime.datetime.utcfromtimestamp(v).isoformat('+'), '-+')
-            # Format the value, and accumulate in _liststr:
-            _liststr.append(_formats[_key] % v)
-    # Add the software type and version:
-    _liststr.append("softwaretype=weewx-%s" % weewx.__version__)
-    # Now stick all the little pieces together with an ampersand between them:
-    _urlquery='&'.join(_liststr)
-    # This will be the complete URL for the HTTP GET:
-    _url="http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?" + _urlquery
+        password: Password for the station"""
+        
+        self.station  = station
+        self.password = password
 
-    # This string is just used for logging:
-    time_str = weeutil.weeutil.timestamp_to_string(datarec['dateTime'])
+    def extractRecordFrom(self, archive, time_ts):
+        """Get a record from the archive database.
+        
+        archive: An instance of weewx.archive.Archive
+        
+        time_ts: The record desired as a unix epoch time.
+        
+        returns: A dictionary containing the values needed to post to the Weather Underground"""
+        
+        sod_ts = weeutil.weeutil.startOfDay(time_ts)
+        
+        sqlrec = archive.getSql("""SELECT dateTime, usUnits, barometer, outTemp, outHumidity, 
+                                windSpeed, windDir, windGust, dewpoint FROM archive WHERE dateTime=?""", time_ts)
 
-    try :
+        datadict = {}
+        for (i, _key) in enumerate(('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
+                                    'windSpeed', 'windDir', 'windGust', 'dewpoint')):
+            datadict[_key] = sqlrec[i]
+
+        if datadict['usUnits'] != 1:
+            raise NotImplementedError, "Only U.S. Units are supported for the Weather Underground."
+        
+        # WU says rain should be "accumulated rainfall over the last
+        # 60 minutes". Presumably, this is exclusive of the archive
+        # record 60 minutes before, so the SQL statement is exclusive
+        # on the left, inclusive on the right. Strictly speaking, this
+        # may or may not be what they mean over a DST boundary.
+        datadict['rain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
+                                         time_ts - 3600.0, time_ts)[0]
+        
+        # NB: The WU considers the archive with time stamp 00:00
+        # (midnight) as (wrongly) belonging to the current day
+        # (instead of the previous day). But, it's their site, so
+        # we'll do it their way.  That means the SELECT statement is
+        # inclusive on both time ends:
+        datadict['dailyrain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>=? AND dateTime<=?", 
+                                              sod_ts, time_ts)[0]
+        return datadict
+
+
+    def postData(self, record) :
+        """Posts a data record on the Weather Underground, using their upload protocol.
+        
+        record: A dictionary holding the data values.
+        
+        For details of the Weather Underground upload protocol,
+        see http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
+        
+        For details on how urllib2 works, see "urllib2 - The Missing Manual"
+        at http://www.voidspace.org.uk/python/articles/urllib2.shtml
+        """
+    
+        # Types and formats of the data to be published:
+        _formats = {'dateTime'    : 'dateutc=%s',
+                    'barometer'   : 'baromin=%06.3f',
+                    'outTemp'     : 'tempf=%05.1f',
+                    'outHumidity' : 'humidity=%03.0f',
+                    'windSpeed'   : 'windspeedmph=%03.0f',
+                    'windDir'     : 'winddir=%03.0f',
+                    'windGust'    : 'windgustmph=%03.0f',
+                    'dewpoint'    : 'dewptf=%03.0f',
+                    'rain'        : 'rainin=%04.2f',
+                    'dailyrain'   : 'dailyrainin=%05.2f'
+                    }
+
+        _liststr = ["action=updateraw", "ID=%s" % self.station, "PASSWORD=%s" % self.password ]
+        
+        # Go through each of the supported types, formatting it, then adding to _liststr:
+        for _key in _formats.keys() :
+            v = record[_key]
+            # Check to make sure the type is not null
+            if v is not None :
+                if _key == 'dateTime':
+                    # For dates, convert from time stamp to a string, using what
+                    # the Weather Underground calls "MySQL format." I've fiddled
+                    # with formatting, and it seems that escaping the colons helps
+                    # its reliability. But, I could be imagining things.
+                    v = urllib.quote(datetime.datetime.utcfromtimestamp(v).isoformat('+'), '-+')
+                # Format the value, and accumulate in _liststr:
+                _liststr.append(_formats[_key] % v)
+        # Add the software type and version:
+        _liststr.append("softwaretype=weewx-%s" % weewx.__version__)
+        # Now stick all the little pieces together with an ampersand between them:
+        _urlquery='&'.join(_liststr)
+        # This will be the complete URL for the HTTP GET:
+        _url="http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?" + _urlquery
+
         # Now use an HTTP GET to post the data on the Weather Underground
         _wudata = urllib2.urlopen(_url)
         moreinfo = _wudata.read()
         if moreinfo == 'success\n':
-            syslog.syslog(syslog.LOG_INFO, "wunderground: Published record %s to station %s" % (time_str, station))
+            return
         else:
-            syslog.syslog(syslog.LOG_INFO, "wunderground: Unable to publish record %s to station %s." % (time_str, station))
-            syslog.syslog(syslog.LOG_INFO, "wunderground: Reason: %s" % (moreinfo,))
-    except urllib2.URLError, e :
-        syslog.syslog(syslog.LOG_ERR, "wunderground: Unable to publish record %s to station %s" % (time_str, station))
-        if hasattr(e, 'reason'):
-            syslog.syslog(syslog.LOG_ERR, "wunderground: Failed to reach server. Reason: %s" % e.reason)
-        elif hasattr(e, 'code'):
-            syslog.syslog(syslog.LOG_ERR, "wunderground: Failed to reach server. Error code: %s" % e.code)
-
-
+            raise IOError, "Weather Underground returns: \"%s\"" % (moreinfo.strip(),)
+    
 class WunderThread(threading.Thread):
     """Dedicated thread for publishing weather data on the Weather Underground.
     
-    Inherits from threading.Thread. 
-    Basically, it watches a queue, and if anything appears it publishes it.
+    Inherits from threading.Thread.
+
+    Basically, it watches a queue, and if anything appears in it, it publishes it.
     The queue should be populated with a 2-way tuple, where the first member is
     an instance of weewx.archive.Archive, and the second is a timestamp with the
     time of the data record to be published.
     """
-    def __init__(self, station, password, queue):
+    def __init__(self, station, password):
         threading.Thread.__init__(self, name="WunderThread")
         # In the strange vocabulary of Python, declaring yourself a "daemon thread"
         # allows the program to exit even if this thread is running:
         self.setDaemon(True)
-        self.station  = station
-        self.password = password
-        self.queue    = queue
+        self.WUstation = WunderStation(station, password)
         self.start()
 
     def run(self):
         while 1 :
             # This will block until something appears in the queue:
-            archive, time_ts = self.queue.get()
-            # Post the data to WU:
-            postData(archive, time_ts, self.station, self.password)
+            (archive, time_ts) = wunderQueue.get()
+            
+            # Gp get the data from the archive for the requested time:
+            record = self.WUstation.extractRecordFrom(archive, time_ts)
+            
+            # This string is just used for logging:
+            time_str = weeutil.weeutil.timestamp_to_string(record['dateTime'])
+    
+            # Post the data to the WU. Be prepared to catch any exceptions:
+            try :
+                self.WUstation.postData(record)
+                syslog.syslog(syslog.LOG_INFO, "wunderground: Published record %s to station %s" % (time_str, self.WUstation.station))
+    
+            # The urllib2 library throws exceptions of type urllib2.URLError, a subclass
+            # of IOError. Hence all relevant exceptions are caught by catching IOError:
+            except IOError, e :
+                syslog.syslog(syslog.LOG_ERR, "wunderground: Unable to publish record %s to station %s" % (time_str, self.WUstation.station))
+                if hasattr(e, 'reason'):
+                    syslog.syslog(syslog.LOG_ERR, "wunderground: Failed to reach server. Reason: %s" % e.reason)
+                if hasattr(e, 'code'):
+                    syslog.syslog(syslog.LOG_ERR, "wunderground: Failed to reach server. Error code: %s" % e.code)
+
 
 if __name__ == '__main__':
            
@@ -157,6 +186,7 @@ if __name__ == '__main__':
     import weeutil.weeutil
     
     def backfill_today(config_path):
+        """Publishes all of today's records to the WU. Makes a useful test."""
         
         weewx.debug = 1
         try :
@@ -166,7 +196,10 @@ if __name__ == '__main__':
             exit()
             
         stationName = config_dict['Wunderground']['station']
+        password    = config_dict['Wunderground']['password']
         
+        wustation = WunderStation(stationName, password)
+
         # Open up the main database archive
         archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                        config_dict['Archive']['archive_file'])
@@ -178,7 +211,8 @@ if __name__ == '__main__':
         for row in archive.genSql("SELECT dateTime FROM archive WHERE dateTime >=? and dateTime <= ?", sod, time_ts):
             ts = row['dateTime']
             print "Posting station %s for time %s" % (stationName, weeutil.weeutil.timestamp_to_string(ts))
-            postData(archive, ts, **config_dict['Wunderground'])
+            record = wustation.extractRecordFrom(archive, ts)
+            wustation.postData(record)
 
         
     if len(sys.argv) < 2 :

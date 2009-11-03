@@ -7,6 +7,10 @@ Added the ability to cache LOOP data. This can dramatically reduce the
 number of writes to the stats database, reducing wear on solid-state
 disk stores.
 
+Refactored module weewx.wunderground so it more closely resembles the
+(better) logic in wunderfixer.
+
+
 1.0.0   10/26/09
 
 Took the module weewx.factory back out, as it was too complicated and

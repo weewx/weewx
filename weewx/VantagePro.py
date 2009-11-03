@@ -7,15 +7,15 @@
 #    Author:   $Author$
 #    Date:     $Date$
 #
-"""classes and functions for interfacing with a Davis VantagePro or VantagePro2
-
-"""
+"""classes and functions for interfacing with a Davis VantagePro or VantagePro2"""
 import syslog
 import time
 import struct
 import serial
 import weewx
 import weewx.wxformulas
+import weewx.wunderground
+import weeutil.weeutil
 from weewx.crc16 import crc16
     
 # A few handy constants:
@@ -148,7 +148,40 @@ class VantagePro (object) :
         return self.getArchivePackets(time_tuple)
  
 
+    def catchUpData(self, archive, statsDb):
+        """Add any archive data that has accumulated on the weather station
+        but not appeared in the database yet.
+        """
+    
+        lastgood_ts = archive.lastGoodStamp()
+        
+        nrec = 0
+        # Add all missed archive records since the last good record in the database
+        for rec in self.getArchivePacketsTS(lastgood_ts) :
+            print"REC:-> ", weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec['barometer'],\
+                                                                rec['outTemp'],   rec['windSpeed'], rec['windDir'], " <-"
+            archive.addRecord(rec)
+            statsDb.addArchiveRecord(rec)
+            if weewx.wunderground.wunderQueue:
+                weewx.wunderground.wunderQueue.put((archive, rec['dateTime']))
+            nrec += 1
+    
+        if nrec != 0:
+            syslog.syslog(syslog.LOG_INFO, "VantagePro: %d new archive packets added to database" % nrec)
 
+    def preloop(self, archive, statsDb):
+        """Perform any pre-loop calculations required by the weather station."""
+        # With the VP2, because of its internal store, we have the opportunity
+        # to catch up with any old data
+        self.catchUpData(archive, statsDb)
+        
+    def calcArchiveData(self, archive, statsDb):
+        """Time to calculate any accumulated archive data."""
+        # Because the VP has an internal archive store, there's no need
+        # to calculate anything. Just catch up from the last archived
+        # data:
+        self.catchUpData(archive, statsDb)
+        
     def getLoopPackets(self, N = 1):
         """Generator function to return N LoopPacket objects from a VantagePro console
         

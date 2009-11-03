@@ -10,11 +10,13 @@
 """Package weewx. A set of modules for supporting a weather station on a sqlite database.
 
 """
+import time
 
 __version__="1.1a1"
 
 # Holds the program launch time in unix epoch seconds:
-launchtime_ts = 0
+# Useful for calculating 'uptime.'
+launchtime_ts = time.time()
 
 # Set to true for extra debug information:
 debug = False
