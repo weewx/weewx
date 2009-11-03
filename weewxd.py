@@ -39,7 +39,6 @@ import os.path
 import time
 import syslog
 import threading
-import Queue
 import socket
 
 # Third party modules:
@@ -47,106 +46,8 @@ import configobj
 
 # weewx modules:
 import weewx
-import weewx.processdata
+import weewx.mainloop
 import weewx.VantagePro
-import weewx.archive
-import weewx.stats
-import weewx.wunderground
-import weeutil.weeutil
-
-def mainloop(config_dict):
-    
-    # Set a default socket time out, in case FTP or HTTP hang:
-    timeout = int(config_dict.get('socket_timeout', '20'))
-    socket.setdefaulttimeout(timeout)
-
-    # This will hold the time the clock on the VP was last synchronized.
-    # Setting it to zero will force a synchronization at the first opportunity.
-    last_synch_ts = 0
-    # How often to check the clock on the station:
-    clock_check = int(config_dict['VantagePro'].get('clock_check', '14400'))
-    
-    # Open up the main database archive
-    archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                   config_dict['Archive']['archive_file'])
-    archive = weewx.archive.Archive(archiveFilename)
-    # Configure it if necessary (this will do nothing if the database has
-    # already been configured):
-    archive.config()
-
-    # Prepare the stats database
-    statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                 config_dict['Stats']['stats_file'])
-    # statsDb is an instance of weewx.stats.StatsDb, which wraps the stats sqlite file
-    statsDb = weewx.stats.StatsDb(statsFilename,
-                                  int(config_dict['Station'].get('heating_base',   65)),
-                                  int(config_dict['Station'].get('cooling_base',   65)),
-                                  int(config_dict['Station'].get('cache_loop_data', 0)))
-
-    # Configure it if necessary (this will do nothing if the database has
-    # already been configured):
-    statsDb.config(config_dict['Stats'].get('stats_types'))
-    # Backfill it with data from the archive. This will do nothing if 
-    # the stats database is already up-to-date.
-    weewx.stats.backfill(archive, statsDb)
-
-    # Set up the Weather Underground thread:
-    setupWeatherUnderground(config_dict)
-    
-    # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(config_dict['VantagePro'])
-
-    # Do any preloop calculations (if any) required by the weather station:
-    station.preloop(archive, statsDb)
-
-    # Now enter the main loop
-    syslog.syslog(syslog.LOG_INFO, "mainloop: Starting main packet loop.")
-    while True:
-
-        # Synch up the station's clock if it's been more than 
-        # clock_check seconds since the last check:
-        now_ts = time.time()
-        if now_ts - last_synch_ts >= clock_check:
-            station.setTime()
-            last_synch_ts = now_ts
-            
-        # Next time to ask for archive records:
-        nextArchive_ts = (int(time.time() / station.archive_interval) + 1) * station.archive_interval + station.archive_delay
-
-        # Get LOOP packets in big batches, then cancel as necessary when it's time
-        # to request an archive record:
-        for loopPacket in station.getLoopPackets(200):
-            
-            # Translate to physical units in the Imperial (US) system:
-            physicalPacket = weewx.VantagePro.translateLoopToImperial(loopPacket)
-
-            print "LOOP:  ", weeutil.weeutil.timestamp_to_string(physicalPacket['dateTime']),\
-                physicalPacket['barometer'],\
-                physicalPacket['outTemp'],\
-                physicalPacket['windSpeed'],\
-                physicalPacket['windDir']
-
-            # Add the LOOP record to the stats database:
-            statsDb.addLoopRecord(physicalPacket)
-            
-            # Check to see if it's time to get new archive data. If so, cancel the loop
-            if time.time() >= nextArchive_ts:
-                print "New archive record due. canceling loop"
-                syslog.syslog(syslog.LOG_DEBUG, "mainloop: new archive record due. Canceling loop")
-                station.cancelLoop()
-                # Calculate/get new archive data:
-                station.calcArchiveData(archive, statsDb)
-                # Now process the data, using a separate thread
-                processThread = threading.Thread(target = weewx.processdata.processData, args=(config_dict, ))
-                processThread.start()
-                break
-
-def setupWeatherUnderground(config_dict):
-    """Set up the WU thread."""
-    wunder_dict = config_dict.get('Wunderground')
-    if wunder_dict :
-        t = weewx.wunderground.WunderThread(wunder_dict['station'], 
-                                            wunder_dict['password'])
 
 def main(config_path):        
 
@@ -167,14 +68,23 @@ def main(config_path):
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         # Set the global debug flag:
         weewx.debug = True
-        
+
+    # Set a default socket time out, in case FTP or HTTP hang:
+    timeout = int(config_dict.get('socket_timeout', '20'))
+    socket.setdefaulttimeout(timeout)
+    
+    # Open up the weather station:
+    station = weewx.VantagePro.VantagePro(config_dict['VantagePro'])
+    
+    mainloop = weewx.mainloop.MainLoop(config_dict, station)
         
     while True:
         # Start the main loop, wrapping it in an exception block to catch any 
         # recoverable I/O errors
         try:
             syslog.syslog(syslog.LOG_INFO, "main: Using configuration file %s." % os.path.abspath(config_path))
-            mainloop(config_dict)
+
+            mainloop.run()
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, 
