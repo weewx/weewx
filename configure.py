@@ -30,7 +30,7 @@ def main():
     parser.add_option("--create-database", action="store_true", dest="create_database", help="To create the SQL database wview-archive.sdb")
     parser.add_option("--create-stats",    action="store_true", dest="create_stats",    help="To create the statistical statistical database stats.sdb")
     parser.add_option("--backfill-stats",  action="store_true", dest="backfill_stats",  help="To backfill the statistical database from the main database")
-    parser.add_option("--configure-VantagePro", action="store_true", dest="configure_VP", help="To configure a VantagePro weather station")
+    parser.add_option("--configure-WxStation", action="store_true", dest="configure_VP", help="To configure a WxStation weather station")
     
     (options, args) = parser.parse_args()
     
@@ -105,19 +105,19 @@ def backfillStatsDatabase(config_dict):
     print "backfilled statistical database %s with archive data from %s" % (statsFilename, archiveFilename)
     
 def configureVP(config_dict):
-    """Configure a VantagePro as per the configuration file."""
+    """Configure a WxStation as per the configuration file."""
     
-    print "Configuring VantagePro..."
+    print "Configuring WxStation..."
     # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(config_dict['VantagePro'])
+    station = weewx.WxStation.WxStation(config_dict['WxStation'])
 
     old_archive_interval = station.archive_interval
-    new_archive_interval = config_dict['VantagePro'].as_int('archive_interval')
+    new_archive_interval = config_dict['WxStation'].as_int('archive_interval')
     
     if old_archive_interval == new_archive_interval:
         print "Old archive interval matches new archive interval (%d seconds). Nothing done" % old_archive_interval
     else:
-        print "VantagePro old archive interval is %d seconds, new one is %d" % (old_archive_interval, new_archive_interval)
+        print "WxStation old archive interval is %d seconds, new one is %d" % (old_archive_interval, new_archive_interval)
         print "Proceeding will erase old archive records."
         ans = raw_input("Are you sure you want to proceed? (y/n) ")
         if ans == 'y' :

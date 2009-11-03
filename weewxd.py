@@ -35,6 +35,7 @@ get back to monitoring the instrument as quickly as possible.
 
 """
 # Standard Python modules:
+import sys
 import os.path
 import time
 import syslog
@@ -47,7 +48,6 @@ import configobj
 # weewx modules:
 import weewx
 import weewx.mainloop
-import weewx.VantagePro
 
 def main(config_path):        
 
@@ -73,8 +73,17 @@ def main(config_path):
     timeout = int(config_dict.get('socket_timeout', '20'))
     socket.setdefaulttimeout(timeout)
     
-    # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(config_dict['VantagePro'])
+    # Get the hardware type from the configuration dictionary.
+    # This will be a string such as "VantagePro"
+    stationType = config_dict['Station']['station_type']
+    
+    # Look for and load the module that handles this hardware type:
+    _moduleName = "weewx." + stationType
+    __import__(_moduleName)
+    hardware_module = sys.modules[_moduleName]
+    
+    # Now open up the weather station:
+    station = hardware_module.WxStation(config_dict[stationType])
     
     mainloop = weewx.mainloop.MainLoop(config_dict, station)
         
