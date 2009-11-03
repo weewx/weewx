@@ -50,6 +50,8 @@ class VantagePro (object) :
         self.archive_delay    = int(config_dict.get('archive_delay', '15'))
         self.unit_system      = int(config_dict.get('unit_system'  , '1'))
         self.max_drift        = int(config_dict.get('max_drift'    , '5'))
+        self.clock_check      = int(config_dict.get('clock_check'  , '14400'))
+        
 
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
         
@@ -171,6 +173,7 @@ class VantagePro (object) :
 
     def preloop(self, archive, statsDb):
         """Perform any pre-loop calculations required by the weather station."""
+
         # With the VP2, because of its internal store, we have the opportunity
         # to catch up with any old data
         self.catchUpData(archive, statsDb)
