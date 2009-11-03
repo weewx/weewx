@@ -116,7 +116,7 @@ class WxStation (object) :
                         # Create a new instance to hold the data
                         _packet = DavisArchivePacket(_page[1+52*_index:53+52*_index], self)
                         if self.unit_system == weewx.IMPERIAL :
-                            _record = translateArchiveToImperial(_packet)
+                            _record = self.translateArchiveToImperial(_packet)
                         else :
                             raise weewx.UnsupportedFeature, "Only Imperial Units are supported on the Davis VP2."
                         # Check to see if the time stamps are declining, which would
@@ -399,7 +399,6 @@ class WxStation (object) :
         packet: An instance of DavisLoopPacket.
         
         returns: A dictionary with the values in Imperial units.
-        
         """
         # This dictionary maps a type key to a function. The function should be able to
         # decode a sensor value held in the loop packet in the internal, Davis form into imperial
@@ -483,11 +482,93 @@ class WxStation (object) :
         record['heatindex']   = weewx.wxformulas.heatindexF(T, R)
         record['windchill']   = weewx.wxformulas.windchillF(T, W)
         
+        final_record = self.errorCheck(record)
+        
+        return final_record
+
+    def errorCheck(self, record):
+        """Final (optional) sanity check of any data before being returned."""
+        
+        # This would be the place to do any processing for crazy numbers
+        # (e.g., temperatures in hundreds) and replace them with None.
+        return record
+    
+    def translateArchiveToImperial(self, packet):
+        """Translates an archive packet from the internal units used by Davis, into Imperial units.
+        
+        packet: An instance of DavisArchivePacket.
+        
+        returns: A dictionary with the values in Imperial units.
+        
+        """
+        # This dictionary maps a type key to a function. The function should be able to
+        # decode a sensor value held in the archive packet in the internal, Davis form into imperial
+        # units and return it. Some of these functions use a short hand 'lambda' form because 
+        # they are trivial and because I think lambda functions are cool.
+        _archive_map={'interval'       : lambda v : int(v),
+                      'barometer'      : _val1000Zero, 
+                      'inTemp'         : _big_val10,
+                      'outTemp'        : _big_val10,
+                      'inHumidity'     : _little_val,
+                      'outHumidity'    : _little_val,
+                      'windSpeed'      : _little_val,
+                      'windDir'        : _windDir,
+                      'windGust'       : _null,
+                      'windGustDir'    : _windDir,
+                      'rain'           : _val100,
+                      'rainRate'       : _val100,
+                      'ET'             : _val1000,
+                      'radiation'      : _big_val,
+                      'UV'             : _little_val10,
+                      'extraTemp1'     : _little_temp,
+                      'extraTemp2'     : _little_temp,
+                      'extraTemp3'     : _little_temp,
+                      'soilTemp1'      : _little_temp,
+                      'soilTemp2'      : _little_temp,
+                      'soilTemp3'      : _little_temp,
+                      'soilTemp4'      : _little_temp,
+                      'leafTemp1'      : _little_temp,
+                      'leafTemp2'      : _little_temp,
+                      'extraHumid1'    : _little_val,
+                      'extraHumid2'    : _little_val,
+                      'soilMoist1'     : _little_val,
+                      'soilMoist2'     : _little_val,
+                      'soilMoist3'     : _little_val,
+                      'soilMoist4'     : _little_val,
+                      'leafWet1'       : _little_val,
+                      'leafWet2'       : _little_val,
+                      'rxCheckPercent' : _null}
+    
+        if packet['imperial_units'] != weewx.IMPERIAL :
+            raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be imperial (U.S.) units only"
+    
+        record = {}
+        
+        for _type in _archive_map.keys() :    
+            # Get the mapping function needed for this key
+            func = _archive_map[_type]
+            # Call it, with the value as an argument
+            fv = func(packet[_type])
+            # Store the results
+            record[_type] = fv
+    
+        # Add a few derived values that are not in the packet itself.
+        T = record['outTemp']
+        R = record['outHumidity']
+        W = record['windSpeed']
+    
+        record['dewpoint']    = weewx.wxformulas.dewpointF(T, R)
+        record['heatindex']   = weewx.wxformulas.heatindexF(T, R)
+        record['windchill']   = weewx.wxformulas.windchillF(T, W)
+        record['dateTime']    = _archive_datetime(packet)
+        record['dateTimeStr'] = time.ctime(record['dateTime'])
+        record['usUnits']     = weewx.IMPERIAL
+        
         # This would be the place to do any processing for crazy numbers
         # (e.g., temperatures in hundreds) and replace them with None.
         
         return record
-
+        
         # TODO: If the new archive interval is different from the old, then the archive memory should be cleared
         
         # TODO: This would be the place to set latitude, longitude, and altitude
@@ -714,82 +795,6 @@ class DavisArchivePacket(dict):
             _frac = 100.0
         return _frac
 
-def translateArchiveToImperial(packet):
-    """Translates an archive packet from the internal units used by Davis, into Imperial units.
-    
-    packet: An instance of DavisArchivePacket.
-    
-    returns: A dictionary with the values in Imperial units.
-    
-    """
-    # This dictionary maps a type key to a function. The function should be able to
-    # decode a sensor value held in the archive packet in the internal, Davis form into imperial
-    # units and return it. Some of these functions use a short hand 'lambda' form because 
-    # they are trivial and because I think lambda functions are cool.
-    _archive_map={'interval'       : lambda v : int(v),
-                  'barometer'      : _val1000Zero, 
-                  'inTemp'         : _big_val10,
-                  'outTemp'        : _big_val10,
-                  'inHumidity'     : _little_val,
-                  'outHumidity'    : _little_val,
-                  'windSpeed'      : _little_val,
-                  'windDir'        : _windDir,
-                  'windGust'       : _null,
-                  'windGustDir'    : _windDir,
-                  'rain'           : _val100,
-                  'rainRate'       : _val100,
-                  'ET'             : _val1000,
-                  'radiation'      : _big_val,
-                  'UV'             : _little_val10,
-                  'extraTemp1'     : _little_temp,
-                  'extraTemp2'     : _little_temp,
-                  'extraTemp3'     : _little_temp,
-                  'soilTemp1'      : _little_temp,
-                  'soilTemp2'      : _little_temp,
-                  'soilTemp3'      : _little_temp,
-                  'soilTemp4'      : _little_temp,
-                  'leafTemp1'      : _little_temp,
-                  'leafTemp2'      : _little_temp,
-                  'extraHumid1'    : _little_val,
-                  'extraHumid2'    : _little_val,
-                  'soilMoist1'     : _little_val,
-                  'soilMoist2'     : _little_val,
-                  'soilMoist3'     : _little_val,
-                  'soilMoist4'     : _little_val,
-                  'leafWet1'       : _little_val,
-                  'leafWet2'       : _little_val,
-                  'rxCheckPercent' : _null}
-
-    if packet['imperial_units'] != weewx.IMPERIAL :
-        raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be imperial (U.S.) units only"
-
-    record = {}
-    
-    for _type in _archive_map.keys() :    
-        # Get the mapping function needed for this key
-        func = _archive_map[_type]
-        # Call it, with the value as an argument
-        fv = func(packet[_type])
-        # Store the results
-        record[_type] = fv
-
-    # Add a few derived values that are not in the packet itself.
-    T = record['outTemp']
-    R = record['outHumidity']
-    W = record['windSpeed']
-
-    record['dewpoint']    = weewx.wxformulas.dewpointF(T, R)
-    record['heatindex']   = weewx.wxformulas.heatindexF(T, R)
-    record['windchill']   = weewx.wxformulas.windchillF(T, W)
-    record['dateTime']    = _archive_datetime(packet)
-    record['dateTimeStr'] = time.ctime(record['dateTime'])
-    record['usUnits']     = weewx.IMPERIAL
-    
-    # This would be the place to do any processing for crazy numbers
-    # (e.g., temperatures in hundreds) and replace them with None.
-    
-    return record
-        
 def _archive_datetime(packet) :
     """Returns the epoch time of the archive packet.
     
