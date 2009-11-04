@@ -289,23 +289,17 @@
         <p>Monthly summary:&nbsp;
         <select NAME=noaaselect onchange="openNoaaFile(value)">
         #for $monthYear in $NOAA_month_list
-          #if $monthYear == $NOAA_month_list[-1]
-            <option value="$monthYear" selected>$monthYear</option>
-          #else
             <option value="$monthYear">$monthYear</option>
-          #end if
         #end for
+	    <option selected>-Select month-</option>
         </select>
         <br/>
         Yearly summary:&nbsp;
         <select NAME=noaaselect onchange="openNoaaFile(value)">
         #for $year in $NOAA_year_list
-          #if $year == $NOAA_year_list[-1]
-            <option value="$year" selected>$year</option>
-          #else
             <option value="$year">$year</option>
-          #end if
         #end for
+	    <option selected>-Select year-</option>
         </select>
         </p>
       </div>
