@@ -45,6 +45,7 @@ from distutils.command.sdist import sdist
 from distutils import log
 import os
 import os.path
+import re
 import time
 import tempfile
 import shutil
@@ -55,21 +56,25 @@ from weewx import __version__ as VERSION
 class My_install_data(install_data):
     """Specialized version of install_data 
     
-    This version merges an old configuration file into a new,
-    thus preserving any changes made by the user.
+    This version: 
     
-    It also sets WEEWX_ROOT to reflect the actual installation
-    root directory"""
+      - Sets WEEWX_ROOT in the configuration file to reflect the
+        actual installation root directory;
+      - Merges an old configuration file into a new,
+        thus preserving any changes made by the user;
+      - Massages the daemon start up script to reflect the choice
+        of WEEWX_ROOT        
+    """
+    
     def copy_file(self, f, install_dir, **kwargs):
         rv = None
         # If this is the configuration file, then merge it instead
         # of copying it
         if f == 'weewx.conf':
-            try:
-                rv = self.massageConfigFile(f, install_dir, **kwargs)
-            except:
-                pass
-        if not rv:
+            rv = self.massageConfigFile(f, install_dir, **kwargs)
+        elif f == 'start_scripts/Debian/weewx':
+            rv = self.massageStartFile(f, install_dir, **kwargs)
+        else:
             rv = install_data.copy_file(self, f, install_dir, **kwargs)
         return rv
     
@@ -86,44 +91,68 @@ class My_install_data(install_data):
         If an old configuration file exists, it will merge the contents
         into the new file. It also sets variable ['Station']['WEEWX_ROOT']
         to reflect the installation directory"""
+        
+        # The path name of the final output file:
+        outname = os.path.join(install_dir, os.path.basename(f))
+        
+        # Create a ConfigObj using the new contents:
         newconfig = configobj.ConfigObj(f)
         newconfig.indent_type = '    '
-        outfile = os.path.join(install_dir, f)
         
         # Check to see if there is an existing config file.
         # If so, merge its contents with the new one
-        if os.path.exists(outfile):
-            oldconfig = configobj.ConfigObj(outfile)
+        if os.path.exists(outname):
+            oldconfig = configobj.ConfigObj(outname)
             # Any user changes in oldconfig will overwrite values in newconfig
             # with this merge
             newconfig.merge(oldconfig)
 
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
-        newconfig['Station']['WEEWX_ROOT'] = install_dir
+        newconfig['Station']['WEEWX_ROOT'] = self.install_dir
         
-        # Time to write out the new config file
-        try:
-            # Get a temporary file
-            (fd, newconfig.filename) = tempfile.mkstemp(text=True)
-            # Write to it
-            newconfig.write()
-            # Backup the old config file if it exists:
-            if os.path.exists(outfile):
-                backup_path = backup(outfile)
-                print "Backed up old configuration file as %s" % backup_path
-            # Now install the temporary file (holding the merged config data)
-            # into the proper place:
-            rv = install_data.copy_file(self, newconfig.filename, outfile, **kwargs)
-            # Set the permission bits to the same as build copy of the file:
-            shutil.copymode(f, outfile)
+        # Get a temporary file:
+        tmpfile = tempfile.NamedTemporaryFile("w", 1)
+        
+        # Write the new configuration file to it:
+        newconfig.write(tmpfile)
+        
+        # Back up the old config file if it exists:
+        if os.path.exists(outname):
+            backup_path = backup(outname)
+            print "Backed up old configuration file as %s" % backup_path
             
-            print "Merged old configuration file %s into new file." % outfile
-            return rv
-        finally:
-            os.close(fd)
-            # Remove the temporary file:
-            os.remove(newconfig.filename)
-                
+        # Now install the temporary file (holding the merged config data)
+        # into the proper place:
+        rv = install_data.copy_file(self, tmpfile.name, outname, **kwargs)
+        
+        # Set the permission bits unless this is a dry run:
+        if not self.dry_run:
+            shutil.copymode(f, outname)
+
+        return rv
+        
+    def massageStartFile(self, f, install_dir, **kwargs):
+
+        outname = os.path.join(install_dir, os.path.basename(f))
+        sre = re.compile(r"WEEWX_ROOT\s*=")
+
+        infile = open(f, "r")
+        tmpfile = tempfile.NamedTemporaryFile("w", 1)
+        
+        for line in infile:
+            if sre.match(line):
+                tmpfile.writelines("WEEWX_ROOT=%s\n" % self.install_dir)
+            else:
+                tmpfile.writelines(line)
+        
+        rv = install_data.copy_file(self, tmpfile.name, outname, **kwargs)
+
+        # Set the permission bits unless this is a dry run:
+        if not self.dry_run:
+            shutil.copymode(f, outname)
+
+        return rv
+
 def backup(filepath):
     newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
     os.rename(filepath, newpath)
@@ -190,7 +219,8 @@ setup(name='weewx',
                      ('public_html',             ['public_html/weewx.css']),
                      ('public_html/backgrounds', ['public_html/backgrounds/band.gif',
                                                   'public_html/backgrounds/night.gif',
-                                                  'public_html/backgrounds/drops.gif'])],
+                                                  'public_html/backgrounds/drops.gif']),
+                     ('start_scripts/Debian',    ['start_scripts/Debian/weewx'])],
       requires    = ['configobj', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "sdist" :        My_sdist}
