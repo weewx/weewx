@@ -1063,7 +1063,8 @@ class StatsDb(object):
                     else:
                         _connection.execute(std_create_str % (_stats_type,))
                 _connection.execute(meta_create_str)
-                
+            
+            self.statsTypes = stats_types
             syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % self.statsFilename)
 
 
