@@ -12,7 +12,6 @@ import syslog
 import time
 import datetime
 import threading
-import Queue
 import urllib
 import urllib2
 
@@ -21,7 +20,7 @@ import weeutil.weeutil
 
 # If publishing to the Weather Underground is requested, data to be
 # published will be put in this queue:
-wunderQueue = Queue.Queue()
+wunderQueue = None
 
 class WunderStation(object):
     """Manages interactions with the Weather Underground"""
