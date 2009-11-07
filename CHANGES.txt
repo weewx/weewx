@@ -10,6 +10,12 @@ disk stores.
 Refactored module weewx.wunderground so it more closely resembles the
 (better) logic in wunderfixer.
 
+Introduced module weewx.mainloop. Introduced class weewx.mainloop.MainLoop
+This class offers many opportunities to customize weewx through subclassing,
+then overriding an appropriate member function. 
+
+setup.py no longer installed a startup script to /etc/init.d by default
+
 
 1.0.0   10/26/09
 
