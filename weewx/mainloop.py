@@ -41,6 +41,7 @@ import socket
 import sys
 import syslog
 import threading
+import Queue
 import time
 
 # weewx modules:
@@ -48,6 +49,7 @@ import weewx
 import weewx.archive
 import weewx.stats
 import weeutil.weeutil
+import weewx.wunderground
 import weewx.processdata
 
 def main(config_dict):
@@ -140,8 +142,8 @@ class MainLoop(object):
         # Set up the Weather Underground thread:
         self.setupWeatherUnderground(config_dict)
 
-        # Do any preloop calculations (if any) required by the weather station:
-        self.station.preloop(self.archive, self.statsDb)
+        # Catch up if possible
+        self.getArchiveData()
 
     def setupArchiveDatabase(self):
         """Setup the main database archive"""
@@ -174,14 +176,10 @@ class MainLoop(object):
         """Set up the WU thread."""
         wunder_dict = config_dict.get('Wunderground')
         if wunder_dict :
+            weewx.wunderground.wunderQueue = Queue.Queue()
             t = weewx.wunderground.WunderThread(wunder_dict['station'], 
                                                 wunder_dict['password'])
 
-    def translateLoopPacket(self, loopPacket):
-        """Given a LOOP packet in vendor units, this function translates to physical units."""
-        # Translate to physical units in the Imperial (US) system:
-        physicalPacket = self.station.translateLoopToImperial(loopPacket)
-        return physicalPacket
     
     def processLoopPacket(self, physicalPacket):
         """Given a LOOP packet with physical units, this function processes it."""
@@ -196,8 +194,21 @@ class MainLoop(object):
 
     def getArchiveData(self):
         """This function gets or calculates new archive data"""
-        # Calculate/get new archive data:
-        self.station.calcArchiveData(self.archive, self.statsDb)
+        lastgood_ts = self.archive.lastGoodStamp()
+        
+        nrec = 0
+        # Add all missed archive records since the last good record in the database
+        for rec in self.station.genArchivePacketsTS(lastgood_ts) :
+            print"REC:-> ", weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec['barometer'],\
+                                                                rec['outTemp'],   rec['windSpeed'], rec['windDir'], " <-"
+            self.archive.addRecord(rec)
+            self.statsDb.addArchiveRecord(rec)
+            if weewx.wunderground.wunderQueue:
+                weewx.wunderground.wunderQueue.put((self.archive, rec['dateTime']))
+            nrec += 1
+    
+        if nrec != 0:
+            syslog.syslog(syslog.LOG_INFO, "mainloop: %d new archive packets added to database" % nrec)
 
     def processArchiveData(self):
         """This function processes any new archive data"""
@@ -224,10 +235,7 @@ class MainLoop(object):
     
             # Get LOOP packets in big batches, then cancel as necessary when it's time
             # to request an archive record:
-            for loopPacket in self.station.getLoopPackets(200):
-                
-                # Translate the LOOP packet to one with physical units:
-                physicalPacket = self.translateLoopPacket(loopPacket)
+            for physicalPacket in self.station.genLoopPackets(200):
                 
                 # Process the physical LOOP packet:
                 self.processLoopPacket(physicalPacket)

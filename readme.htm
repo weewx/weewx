@@ -186,22 +186,25 @@ for both approaches are given below.</p>
 <p>&nbsp;</p>
 <h3>Installation on Debian distributions (including Ubuntu) using
 <span class="code">apt-get</span></h3>
+<p>The instructions that follow are for using the Debian tool <span class="code">
+apt_get</span>, but the same package names would be used should you chose to use 
+a graphical interface such as the Synaptic Package Manager.</p>
 <h4>sqlite3</h4>
 <p>My Ubuntu 8.10 system came with V3.5.9, which works just fine. However, if 
 you need to install:</p>
 <p class="tty">sudo apt-get install sqlite3</p>
 <h4>pysqlite</h4>
 <p>Easily installed:</p>
-<p class="tty">apt-get install python-pysqlite2</p>
+<p class="tty">sudo apt-get install python-pysqlite2</p>
 <h4>configobj</h4>
 <p>Easily installed:</p>
-<p class="tty">apt-get install python-configobj</p>
+<p class="tty">sudo apt-get install python-configobj</p>
 <h4>pyserial</h4>
 <p>Easily installed:</p>
-<p class="tty">apt-get install python-serial</p>
+<p class="tty">sudo apt-get install python-serial</p>
 <h4>Cheetah</h4>
 <p>Easily installed:</p>
-<p class="tty">apt-get install python-cheetah</p>
+<p class="tty">sudo apt-get install python-cheetah</p>
 <h4>Python Imaging Library (PIL)</h4>
 <p>My version of Python came with V1.1.6, which works great. Nothing needs to be 
 done.</p>
@@ -271,7 +274,7 @@ convenient directory where you have write permission</p>
 <p>Then change directory into it:</p>
 <p class="tty">cd weewx-X.Y.Z</p>
 <h2>5.1 Choosing the <span class="code">WEEWX_ROOT</span> directory</h2>
-<p>If <span class="code"><em>WEEWX_ROOT</em></span> symbolizes the root location of the 
+<p>Next step is figuring out where you want to install <span class="code">weewx</span>. If <span class="code"><em>WEEWX_ROOT</em></span> symbolizes the root location of the 
 <span class="code">weewx</span> directory hierarchy, then</p>
 <ul>
 	<li><span class="code"><em>$WEEWX_ROOT</em>/bin</span> is where the Python packages 
@@ -294,20 +297,40 @@ open up <span class="code">setup.cfg</span> and change the line</p>
 <p class="tty">./setup.py build</p>
 <p>(Because <span class="code">weewx</span> is pure Python this doesn&#39;t actually 
 build anything, but it does arrange files for the final installation)</p>
-<p>Then install it. If you have write permission in the installation directory, 
+<p>Then install it. If you have write permission in the directory where
+<span class="code">weewx</span> will go (<em>i.e.</em>, <span class="code"><em>$WEEWX_ROOT</em></span>), 
 then type</p>
 <p class="tty">./setup.py install</p>
 <p>Otherwise, if you do not have write permission, you will have to use sudo:</p>
 <p class="tty">sudo ./setup.py install</p>
+<h3>Upgrading</h3>
 <p>If you are upgrading from a previous version of <span class="code">weewx</span>, the install process 
-will save your old template directories and will also merge any changes you&#39;ve 
-made to the configuration file <span class="code">weewx.conf</span> into the new configuration file.</p>
-<h2>5.2 Permissions</h2>
+will </p>
+<ul>
+	<li>Save your old template directories as <span class="code"><em>$WEEWX_ROOT</em>/templates.YYYYMMDDHHMMSS</span> 
+	where YYYYMMDDHHMMSS is a timestamp;</li>
+	<li>Merge any changes you&#39;ve 
+made to your old configuration file <span class="code">weewx.conf</span> into 
+	the new configuration file, then install the merged copy (this effectively 
+	causes changes you&#39;ve made to override the values in the shipped version of
+	<span class="code">weewx.conf</span>);</li>
+	<li>Save a copy of your old <span class="code">weewx.conf</span> as
+	<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf.YYYYMMDDHHMMSS</span>.</li>
+</ul>
+<h2>5.3 Permissions</h2>
 <p>Strictly speaking it is not necessary at all to install with root privileges. 
 Indeed, if you edit <span class="code">setup.cfg</span> to install into a 
 directory where you have write permissions, you can install and run 
 <span class="code">weewx</span> without any root 
 privileges.</p>
+<h2>5.4 Final note on installation</h2>
+<p>Because <span class="code">weewx</span> is pure Python, it actually does not 
+have to be &quot;built&quot; and &quot;installed&quot; at all! You can just simply run it out of 
+whatever directory you unpack it into (after, of course, editing
+<span class="code">weewx.conf</span> to reflect your local environment). I do this all the time when testing. 
+However, the <span class="code">setup.py</span> script does include special 
+provisions for updating your configuration file <span class="code">weewx.conf</span>, 
+which can be handy when upgrading to a later version.</p>
 <hr />
 <h1>6. <a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
 <p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to the 
@@ -389,8 +412,11 @@ Twenty (20) seconds is reasonable. Default is 20.</p>
 <h3 class="config_section">[Station]</h3>
 <p>This section covers options relating to the entire weather station setup. </p>
 <h4 class="config_option">WEEWX_ROOT</h4>
-<p>Set to the root directory of the <span class="code">weewx</span> file hierarchy for this station. 
-Nominally <span class="code">&#39;/home/weewx&#39;</span>. Required. No default.</p>
+<p>Set to the root directory of the <span class="code">weewx</span> file hierarchy for this station, 
+nominally &#39;<span class="code">/home/weewx</span>&#39;. This value will be 
+set automatically by the setup script <span class="code">setup.py</span> to 
+reflect the choice you made in the configuration file <span class="code">
+setup.cfg</span>. Required. No default.</p>
 <h4 class="config_important">location</h4>
 <p>The station location should be a string that describes the geography of where 
 you weather station is located, such as &#39;Hood River, Oregon&#39;. Required. 
@@ -415,8 +441,8 @@ URL to display a radar image for your area. No default.</p>
 <span class="code">weewx </span>updates the statistical database with
 every LOOP update. This can be as often as every two seconds. If you
 are using a solid-state disk as your permanent store, this can result
-in a lot of wear in the device. By
-setting <span class="code">cache_loop_data </span>to one, the LOOP
+in a lot of wear on the device. By
+setting <span class="code">cache_loop_data </span>to 1, the LOOP
 data will be cached, and the stats database will be updated only when
 new archive data is due. This results in many fewer writes to the
 database, but possible loss of data should your server go down between
@@ -471,7 +497,7 @@ the station to offer new data, but not so long as to go into a new loop packet
 Default is 14400 (every 4 hours)</p>
 <h4 class="config_option">max_drift</h4>
 <p>The maximum amount of drift to tolerate, in seconds, in the VantagePro&#39;s 
-onbouard clock, before resetting the clock. Default is 5.</p>
+onboard clock, before resetting the clock. Default is 5.</p>
 <h4 class="config_option">unit_system</h4>
 <p>What unit system is in use on your weather station hardware. Possible values are &#39;1&#39; 
 (Imperial) or &#39;2&#39; (Metric). As far as I know, all Davis instruments support only 
@@ -538,8 +564,9 @@ have four different soil moisture sensors?) The list that ships with the
 configuration file will work for most stations and probably will not have to be 
 modified.</p>
 <h3 class="config_section">[Images]</h3>
-<p>This is by far the most complicated section and controls which images (plots) 
-get generated and with which options. It is extremely flexible and powerful.</p>
+<p>This section, which controls which images (plots) 
+get generated and with which options, is by far the most complicated. However, 
+it is extremely flexible and powerful.</p>
 <p>It consists of one or more sub-sections, one for each time period (day, week, 
 month, and year). These sub-sections define the nature of aggregation and plot types 
 for the time period. For example, here&#39;s a typical set of options for 
@@ -558,9 +585,10 @@ aggregate_type = avg<br />
 aggregate_interval = 10800 # == 3 hours</p>
 <p>The option <span class="code">x_label_format</span> gives a
 <a href="http://docs.python.org/library/datetime.html#strftime-behavior">
-strftime()</a> type format for the x-axis that will only show days (format 
-option &quot;<span class="code">%d</span>&quot;). The <span class="code">bottom_label_format</span> will show time as (for 
-example) <span class="code">10/25/09 15:35</span>. A plot will cover a nominal 
+strftime()</a> type format for the x-axis. In this example, it will only show days (format 
+option &quot;<span class="code">%d</span>&quot;). The <span class="code">bottom_label_format</span> 
+is the format used to time stamp the image at the bottom. In this example, it will 
+show the time as <span class="code">10/25/09 15:35</span>. A plot will cover a nominal 
 30 days, and all items included in it will use an aggregate type of averaging 
 over 3 hours. </p>
 <p>Within each sub-section is one final nesting (!), one for each image to 
@@ -575,7 +603,7 @@ typical set of options for sub-sub-section <span class="code">[[[monthrain]]]</s
 &nbsp; aggregate_interval = 86400<br />
 &nbsp; label = Rain (daily avg)</p>
 <p>This will generate an image file with name <span class="code">monthrain.png</span>. 
-In it will be a bar plot showing rain. The aggregation type will be summing (overriding 
+In it will be a bar plot showing SQL type &#39;rain&#39;. The aggregation type will be summing (overriding 
 the averaging specified in sub-section <span class="code">[[month_images]]</span>, so 
 you get the total rain over the aggregate period rather than the average) over 
 an aggregation interval of 86,400 seconds (one day). It will also include the 
@@ -587,7 +615,7 @@ generate a plot with the week&#39;s outside temperature as well as dewpoint:</p>
 &nbsp; [[[[dewpoint]]]]</p>
 <p>This would create an image in file <span class="code">monthtempdew.png</span> 
 that includes a line plot of both outside temperature and dewpoint.</p>
-<p>Studying this section in the shipped version of weewx.conf will give you 
+<p>Studying this section in the shipped version of <span class="code">weewx.conf</span> will give you 
 ideas about the many different image plot configurations that are possible 
 without hacking the code. </p>
 <h3 class="config_section">[Labels]</h3>
@@ -603,7 +631,7 @@ outTemp = Outside Temperature</p>
 <p>This sub-section is used to specify what format to be used for y-axis labels 
 in image plots that use Imperial (U.S.) units. It is also used for unit labels in HTML file generation. For example, the options</p>
 <p class="tty">outTemp = %.1f<br />
-rain = %.2f/p>
+rain =&nbsp;&nbsp;&nbsp; %.2f</p>
 <p>would cause the given formats to be used when formatting outside temperature 
 and rain axes, respectively. The
 <a href="http://docs.python.org/library/string.html#format-specification-mini-language">
@@ -622,10 +650,10 @@ which in many encodings encodes the degree sign.)</p>
 information on HTML generation <a href="#HTML_Generation">see the section below</a>.</p>
 <h4 class="config_option">template_root</h4>
 <p>This option specifies the directory, relative to <span class="code">
-WEEWX_ROOT</span>, where the HTML templates can be found. Required. No default.</p>
+<em>WEEWX_ROOT</em></span>, where the HTML templates can be found. Required. No default.</p>
 <h4 class="config_option">html_root</h4>
 <p>This option specifies the directory, relative to <span class="code">
-WEEWX_ROOT</span>, where the generated HTML files should be put. Required. No 
+<em>WEEWX_ROOT</em></span>, where the generated HTML files should be put. Required. No 
 default.</p>
 <h4 class="config_option"><a name="HTML_ImperialUnits">[[ImperialUnits]]</a></h4>
 <p>This subsection is similar to its eponymous counterpart in section
@@ -633,14 +661,14 @@ default.</p>
 It is useful to have a separate section because HTML uses special &#39;entity&#39; codes 
 to code special characters, such as the degree sign. For example, the options</p>
 <p class="tty">outTemp = &amp;deg;F<br />
-rain = &#39; in&#39;</p>
+rain =&nbsp;&nbsp;&nbsp; &#39; in&#39;</p>
 <p>would cause outside temperature and rain to have unit labels&nbsp; &#39;<span class="code">&deg;F</span>&#39; 
 and &#39;<span class="code"> in</span>&#39;, respectively.</p>
 <h4 class="config_option"><a name="HTML_Time">[[Time]]</a></h4>
 <p>This subsection is used for time labels in HTML generation. It uses
 <a href="http://docs.python.org/library/datetime.html#strftime-behavior">
 strftime()</a> formats. For example</p>
-<p class="tty">week = %H:%M on %A<br />
+<p class="tty">week&nbsp; = %H:%M on %A<br />
 month = %d-%b-%Y %H:%M</p>
 <p>would specify that week data should use a format such as &quot;<span class="code">15:20 
 on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
@@ -653,7 +681,7 @@ because it will print out a summary of every LOOP data), or as a daemon.</p>
 <p><span class="code">Weewx</span> can easily be run from the command line. Start by making sure you have appropriate permissions to the serial port your weather 
 station uses. For example, if you are using a plain old serial port:</p>
 <p class="tty">sudo chmod 666 /dev/ttyS0</p>
-<p>Then run the main loop program, giving the configuration file as its only 
+<p>Then run the main loop program, <span class="code">weewxd.py</span>, giving the configuration file as its only 
 parameter:</p>
 <p class="tty"><em>$WEEWX_ROOT</em>/bin/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</p>
 <p>It should start by downloading any archive data from your weather station 
@@ -663,7 +691,23 @@ take a minute or two.</p>
 <p>It will then start monitoring LOOP data, printing a short version of the 
 received data on standard output, about once every two seconds.</p>
 <h2>7.2 <a name="Running_as_a_daemon">Running as a daemon</a></h2>
-<p>First, select the appropriate run script. They can be found under <span class="code"><em>$WEEWX_ROOT</em>/start_script</span>. Copy it to the 
+<p>First, select the appropriate run script. They can be found under <span class="code"><em>$WEEWX_ROOT</em>/start_script</span>. </p>
+<table style="width: 100%" class="indent">
+	<tr>
+		<td>SuSE:</td>
+		<td class="code"><em>$WEEWX_ROOT</em>/start_script/SuSE/weewx</td>
+	</tr>
+	<tr>
+		<td>Debian/Ubuntu:</td>
+		<td class="code">&nbsp;<em>$WEEWX_ROOT</em>/start_script/Debian/weewx</td>
+	</tr>
+</table>
+<p>Check the chosen script to make sure the variable <span class="code">
+WEEWX_ROOT</span> 
+inside has been set to the proper root directory for your <span class="code">
+weewx</span> installation (it should have been set to the correct value 
+automatically by the install process, but it&#39;s worth checking). </p>
+<p>Copy it to the 
 proper location for your system:</p>
 <table style="width: 100%" class="indent">
 	<tr>
@@ -676,7 +720,7 @@ proper location for your system:</p>
 		<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/Debian/weewx /etc/init.d</td>
 	</tr>
 </table>
-<p>Make sure it is executable </p>
+<p>Make sure the script is executable </p>
 <table style="width: 100%" class="indent">
 	<tr>
 		<td>SuSE:</td>
@@ -719,7 +763,7 @@ different, and must be rebuilt</p>
 
 <h1>9. <a name="HTML_Generation">HTML Generation</a></h1>
 <p>HTML generation is done using the <a href="http://www.cheetahtemplate.org/">
-Cheetah</a> templating engine. This is a very powerful engine that, essentially, 
+Cheetah</a> templating engine. This is a very powerful engine, which essentially 
 lets you have the full semantics of Python available in your templates. As this 
 would make the templates incomprehensible to anyone but a Python programmer, 
 <span class="code">weewx</span> adopts a very small subset of its power. </p>
@@ -740,8 +784,7 @@ like</p>
 &nbsp; &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at $month.outTemp.maxtime&lt;/p&gt;<br />
 &nbsp; &lt;/body&gt;<br />
 &lt;/html&gt;</p>
-<p>would be all you need for a very simple HTML page that looks something like 
-this:&nbsp;</p>
+<p>would be all you need for a very simple HTML page that would display the text:&nbsp;</p>
 <p class="indent">Current temperature = 51.0°F<br />
 Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15</p>
 <p>The format that was used to format the temperature (<span class="code">51.0</span>) 
@@ -1119,7 +1162,7 @@ a configuration file.</li>
 	<li>No static variables (except read only variables) to make it easy to 
 simultaneously support multiple weather stations and to allow some level of 
 multithreading.</li>
-	<li>Pure Python. The code base is 100% Python --- no underlying C 
+	<li>Pure Python. The code base is 100% Python &mdash; no underlying C 
 	libraries need be built to install <span class="code">weewx</span>. </li>
 </ul>
 <p>While <span class="code">weewx </span>is nowhere near as fast at generating images and HTML as its 
@@ -1134,7 +1177,7 @@ compatible with V2.X, that a separate code base will most likely be needed. My
 intention is to stick with the V2.5 and V2.6 versions until V3.X is so 
 widespread it cannot be ignored, then make a permanent switch. I doubt this will 
 affect the average <span class="code">weewx</span> user. </p>
-<h2>11.3 Run time</h2>
+<h2>11.3 Run time internals</h2>
 <p>Three threads are used within <span class="code">weewx</span>:</p>
 <ol>
 	<li>The main thread of the program is used to monitor the
@@ -1168,9 +1211,9 @@ affect the average <span class="code">weewx</span> user. </p>
 	  Queue to be sent to the Weather Underground. It then creates
 	  and starts thread #3 to do any processing of the data.</p>
 </li>
-<li><p>Thread #2 interacts with the Weather Underground. It is also
-active the entire lifetime of the program. It monitors a Queue. When
-new data appears in the Queue, it forms the necessary URL to send it
+<li><p>Thread #2 interacts with the Weather Underground. It is also active the 
+entire lifetime of the program. It monitors a Queue. When new data appears in 
+the Queue, this thread forms the necessary URL to send it
 to the WU and then sends it. It then goes back to monitoring the
 queue. This way, posting data on the WU can happen asynchronously with
 other processing.</p></li>
@@ -1186,15 +1229,16 @@ will be missed.</p></li>
 <p>All writes to the databases are protected by transactions. You can
 kill the program at any time (either Control-C if run from the command
 line or &quot;<span class="code">/etc/init.d/weewx stop</span>&quot;
-if a daemon) without fear of corrupting the database.</p>
-<p>The code makes ample use of exceptions, to insure graceful recovery
+if a daemon) without fear of corrupting the databases.</p>
+<p>The code makes ample use of exceptions to insure graceful recovery
 from problems such as network outages. It also monitors socket and
 console timeouts, restarting whatever it was working on several times
 before giving up. In the case of an unrecoverable console error (such
 as the console not responding at all), the program waits 60 seconds
 then restarts the program from the top.</p>
 <p>Any &quot;hard&quot; exceptions, that is those that do not involve network and console 
-timeouts and are most likely due to a logic error, are not caught and cause 
+timeouts and are most likely due to a logic error, are logged, reraised, and 
+ultimately cause 
 thread termination. If this happens in the main thread (not likely and hasn&#39;t 
 happened to me yet), then this causes program termination.</p>
 <h2>11.4 Terminology</h2>
@@ -1313,7 +1357,7 @@ next_ts = int(time.mktime(next_dt.timetuple()))</p>
 <hr />
 
 <h1>12. <a name="Table_of_Tested_Versions">Table of Tested Versions</a></h1>
-<p>Three different configurations were used to test weewx V1.X. Here are the 
+<p>Three different configurations were used to test weewx V1.1.X. Here are the 
 package versions used in each configuration:</p>
 <table style="width: 75%" class="style1">
 	<tr>

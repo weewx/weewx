@@ -61,7 +61,59 @@ class WxStation (object) :
         syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up serial port '%s' baudrate=%d" % (self.port, self.baudrate))
 
 
-    def getArchivePackets(self, since_tt):
+    def preloop(self, archive, statsDb):
+        """Perform any pre-loop calculations required by the weather station."""
+        pass
+        
+    def genLoopPackets(self, N = 1):
+        """Generator function to return N loop packets in physical units.
+        
+        N: The number of packets to generate [default is 1]
+        
+        yields: up to N dictionary objects containing the LOOP data
+        """
+        for _loopPacket in self.genDavisLoopPackets(N):
+            # Translate the LOOP packet to one with physical units:
+            _physicalPacket = self.translateLoopPacket(_loopPacket)
+            yield _physicalPacket
+
+    def genDavisLoopPackets(self, N = 1):
+        """Generator function to return N LoopPacket objects from a VantagePro console
+        
+        N: The number of packets to generate [default is 1]
+        
+        yields: up to N DavisLoopPacket objects
+        """
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Requesting %d LOOP packets." % N)
+        self._wakeup_console()
+        
+        # Request N packets:
+        self._send_data("LOOP %d\n" % N)
+        
+        for loop in xrange(N) :
+            
+            for count in xrange(self.max_retries):
+                # Fetch a packet
+                #print "LOOP #%d; Try #%d" % (loop, count)
+                buffer = self.serial_port.read(99)
+                if len(buffer) != 99 :
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: LOOP #%d; buffer not full (%d)... retrying" % (loop,len(buffer)))
+                    continue
+                # ... decode it
+                pkt_dict = DavisLoopPacket(buffer[:89])
+                # Yield it
+                yield pkt_dict
+                break
+            else:
+                syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting LOOP packets")
+                raise weewx.RetriesExceeded, "While getting LOOP packets"
+            
+                
+    def cancelLoop(self):
+        """Cancel an active LOOP request."""
+        self._wakeup_console()
+        
+    def genArchivePackets(self, since_tt):
         """A generator function to return archive packets from a VantagePro station.
         
         since_tt: A time-tuple. All data since (but not including) this time will be returned.
@@ -115,10 +167,7 @@ class WxStation (object) :
                             return
                         # Create a new instance to hold the data
                         _packet = DavisArchivePacket(_page[1+52*_index:53+52*_index], self)
-                        if self.unit_system == weewx.IMPERIAL :
-                            _record = self.translateArchiveToImperial(_packet)
-                        else :
-                            raise weewx.UnsupportedFeature, "Only Imperial Units are supported on the Davis VP2."
+                        _record = self.translateArchivePacket(_packet)
                         # Check to see if the time stamps are declining, which would
                         # signal this is a wrap around record on the last page
                         if _record['dateTime'] <= _last_good_ts :
@@ -136,7 +185,7 @@ class WxStation (object) :
         raise weewx.RetriesExceeded, "While getting archive packets"
                 
     
-    def getArchivePacketsTS(self, timestamp) :
+    def genArchivePacketsTS(self, timestamp) :
         """A generator function to return archive data from a VantagePro station.
         
         timestamp: An epoch time. All data since (but not including) this time will be returned.
@@ -147,80 +196,9 @@ class WxStation (object) :
         
         time_tuple = time.localtime(timestamp) if timestamp else None
         
-        return self.getArchivePackets(time_tuple)
+        return self.genArchivePackets(time_tuple)
  
 
-    def catchUpData(self, archive, statsDb):
-        """Add any archive data that has accumulated on the weather station
-        but not appeared in the database yet.
-        """
-    
-        lastgood_ts = archive.lastGoodStamp()
-        
-        nrec = 0
-        # Add all missed archive records since the last good record in the database
-        for rec in self.getArchivePacketsTS(lastgood_ts) :
-            print"REC:-> ", weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec['barometer'],\
-                                                                rec['outTemp'],   rec['windSpeed'], rec['windDir'], " <-"
-            archive.addRecord(rec)
-            statsDb.addArchiveRecord(rec)
-            if weewx.wunderground.wunderQueue:
-                weewx.wunderground.wunderQueue.put((archive, rec['dateTime']))
-            nrec += 1
-    
-        if nrec != 0:
-            syslog.syslog(syslog.LOG_INFO, "VantagePro: %d new archive packets added to database" % nrec)
-
-    def preloop(self, archive, statsDb):
-        """Perform any pre-loop calculations required by the weather station."""
-
-        # With the VP2, because of its internal store, we have the opportunity
-        # to catch up with any old data
-        self.catchUpData(archive, statsDb)
-        
-    def calcArchiveData(self, archive, statsDb):
-        """Time to calculate any accumulated archive data."""
-        # Because the VP has an internal archive store, there's no need
-        # to calculate anything. Just catch up from the last archived
-        # data:
-        self.catchUpData(archive, statsDb)
-        
-    def getLoopPackets(self, N = 1):
-        """Generator function to return N LoopPacket objects from a VantagePro console
-        
-        N: The number of packets to generate [default is 1]
-        
-        yields: up to N DavisLoopPacket objects
-        """
-        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Requesting %d LOOP packets." % N)
-        self._wakeup_console()
-        
-        # Request N packets:
-        self._send_data("LOOP %d\n" % N)
-        
-        for loop in xrange(N) :
-            
-            for count in xrange(self.max_retries):
-                # Fetch a packet
-                #print "LOOP #%d; Try #%d" % (loop, count)
-                buffer = self.serial_port.read(99)
-                if len(buffer) != 99 :
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: LOOP #%d; buffer not full (%d)... retrying" % (loop,len(buffer)))
-                    continue
-                # ... decode it
-                pkt_dict = DavisLoopPacket(buffer[:89])
-                # Yield it
-                yield pkt_dict
-                break
-            else:
-                syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting LOOP packets")
-                raise weewx.RetriesExceeded, "While getting LOOP packets"
-            
-                
-    def cancelLoop(self):
-        """Cancel an active LOOP request."""
-        self._wakeup_console()
-        
     def getTime(self) :
         """Get the current time from the console and decode it, returning it as a time-tuple
         
@@ -393,6 +371,22 @@ class WxStation (object) :
         _archive_interval = int(config_dict.get('archive_interval', '300'))
         self.setArchiveInterval(_archive_interval)
         
+    def translateLoopPacket(self, loopPacket):
+        """Given a LOOP packet in vendor units, this function translates to physical units.
+        
+        loopPacket: An instance of DavisLoopPacket
+        
+        returns: A dictionary with the values in physical units.
+        """
+        # Right now, only Imperial units are supported
+        if self.unit_system == weewx.IMPERIAL :
+            _record = self.translateLoopToImperial(loopPacket)
+        else :
+            raise weewx.UnsupportedFeature, "Only Imperial Units are supported on the Davis VP2."
+        
+        return _record
+    
+
     def translateLoopToImperial(self, packet):
         """Translates a loop packet from the internal units used by Davis, into Imperial units.
         
@@ -492,6 +486,22 @@ class WxStation (object) :
         # This would be the place to do any processing for crazy numbers
         # (e.g., temperatures in hundreds) and replace them with None.
         return record
+    
+    def translateArchivePacket(self, packet):
+        """Translates an archive packet from the internal units used by Davis, into physical units.
+        
+        packet: An instance of DavisArchivePacket.
+        
+        returns: A dictionary with the values in physical units.
+        """
+        
+        # Right now, only Imperial units are supported
+        if self.unit_system == weewx.IMPERIAL :
+            _record = self.translateArchiveToImperial(packet)
+        else :
+            raise weewx.UnsupportedFeature, "Only Imperial Units are supported on the Davis VP2."
+        
+        return _record
     
     def translateArchiveToImperial(self, packet):
         """Translates an archive packet from the internal units used by Davis, into Imperial units.
