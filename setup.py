@@ -31,8 +31,12 @@
 
  2. It merges any existing weewx.conf configuration files into the new, thus
     preserving any user changes.
+    
+ 3. It sets the option ['Station']['WEEWX_ROOT'] in weewx.conf to reflect
+    the actual installation directory (as set in setup.cfg or specified
+    in the command line to setup.py install)
 
- 3. It backups up any pre-existing template subdirectory
+ 4. It backups up any pre-existing template subdirectory
 """
 
 from distutils.core import setup, Command
@@ -49,15 +53,22 @@ import configobj
 from weewx import __version__ as VERSION
 
 class My_install_data(install_data):
-    """Specialized version of install_data that merges an old configuration file into a new.
-
-    This preserves any changes made by the user."""
+    """Specialized version of install_data 
+    
+    This version merges an old configuration file into a new,
+    thus preserving any changes made by the user.
+    
+    It also sets WEEWX_ROOT to reflect the actual installation
+    root directory"""
     def copy_file(self, f, install_dir, **kwargs):
         rv = None
         # If this is the configuration file, then merge it instead
         # of copying it
         if f == 'weewx.conf':
-            rv = self.mergeConfigFiles(f, install_dir, **kwargs)
+            try:
+                rv = self.massageConfigFile(f, install_dir, **kwargs)
+            except:
+                pass
         if not rv:
             rv = install_data.copy_file(self, f, install_dir, **kwargs)
         return rv
@@ -69,38 +80,50 @@ class My_install_data(install_data):
             print "Backed up template subdirectory to %s" % backupdir
         install_data.run(self)
         
-    def mergeConfigFiles(self, f, install_dir, **kwargs):
-        # If there is an existing config file, merge its contents with the new one
+    def massageConfigFile(self, f, install_dir, **kwargs):
+        """Merges any old config file into the new one, and sets WEEWX_ROOT
+        
+        If an old configuration file exists, it will merge the contents
+        into the new file. It also sets variable ['Station']['WEEWX_ROOT']
+        to reflect the installation directory"""
+        newconfig = configobj.ConfigObj(f)
+        newconfig.indent_type = '    '
         outfile = os.path.join(install_dir, f)
+        
+        # Check to see if there is an existing config file.
+        # If so, merge its contents with the new one
         if os.path.exists(outfile):
             oldconfig = configobj.ConfigObj(outfile)
-            newconfig = configobj.ConfigObj(f)
-            newconfig.indent_type = '    '
             # Any user changes in oldconfig will overwrite values in newconfig
             # with this merge
             newconfig.merge(oldconfig)
-            try:
-                # Get a temporary file
-                (fd, newconfig.filename) = tempfile.mkstemp(text=True)
-                # Write to it
-                newconfig.write()
+
+        # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
+        newconfig['Station']['WEEWX_ROOT'] = install_dir
+        
+        # Time to write out the new config file
+        try:
+            # Get a temporary file
+            (fd, newconfig.filename) = tempfile.mkstemp(text=True)
+            # Write to it
+            newconfig.write()
+            # Backup the old config file if it exists:
+            if os.path.exists(outfile):
                 backup_path = backup(outfile)
                 print "Backed up old configuration file as %s" % backup_path
-                # Now install the temporary file (holding the merged config data)
-                # into the proper place:
-                rv = install_data.copy_file(self, newconfig.filename, outfile, **kwargs)
-                # Copy the permission bits of the old configuration file to the new file
-                shutil.copymode(backup_path, outfile)
-            finally:
-                os.close(fd)
-                # Remove the temporary file:
-                os.remove(newconfig.filename)
-                
+            # Now install the temporary file (holding the merged config data)
+            # into the proper place:
+            rv = install_data.copy_file(self, newconfig.filename, outfile, **kwargs)
+            # Set the permission bits to the same as build copy of the file:
+            shutil.copymode(f, outfile)
+            
             print "Merged old configuration file %s into new file." % outfile
             return rv
-        else:
-            return None
-    
+        finally:
+            os.close(fd)
+            # Remove the temporary file:
+            os.remove(newconfig.filename)
+                
 def backup(filepath):
     newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
     os.rename(filepath, newpath)
@@ -167,8 +190,7 @@ setup(name='weewx',
                      ('public_html',             ['public_html/weewx.css']),
                      ('public_html/backgrounds', ['public_html/backgrounds/band.gif',
                                                   'public_html/backgrounds/night.gif',
-                                                  'public_html/backgrounds/drops.gif']),
-                     ('/etc/init.d',             ['start_scripts/Debian/weewx'])],
+                                                  'public_html/backgrounds/drops.gif'])],
       requires    = ['configobj', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "sdist" :        My_sdist}

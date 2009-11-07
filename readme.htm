@@ -6,11 +6,13 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>The Weewx weather system</title>
 <style type="text/css">
-h1{
-	margin-top: 40pt;
-}
 h2{
 	margin-top: 25pt;
+	text-decoration: underline;
+}
+hr{
+	margin-top: 40pt;
+	margin-bottom: 40pt;
 }
 .code {
 	font-family: "Courier New", Courier, monospace;
@@ -58,22 +60,51 @@ td {
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.0</h1>
+Version 1.1</h1>
 <h1>Table of Contents</h1>
-<p class="indent"><a href="#Copyright">Copyright</a></p>
-<p class="indent"><a href="#About_weewx">About <span class="code">weewx</span></a></p>
-<p class="indent"><a href="#Downloading_weewx">Downloading <span class="code">
-weewx</span></a></p>
-<p class="indent"><a href="#Prerequisites">Prerequisites</a></p>
-<p class="indent"><a href="#Installing_weewx">Installing <span class="code">weewx</span></a></p>
-<p class="indent"><a href="#Configuring_weewx">Configuring <span class="code">weewx</span></a></p>
-<p class="indent"><a href="#Running_weewx">Running <span class="code">weewx</span></a></p>
-<p class="indent"><a href="#Compatibility_with_wview">Compatibility with 
-<span class="code">wview</span></a></p>
-<p class="indent"><a href="#Monitoring_weewx">Monitoring <span class="code">weewx</span></a></p>
-<p class="indent"><a href="#Architectural_notes">Architectural Notes</a></p>
-<p class="indent"><a href="#Table_of_Tested_Versions">Table of Tested Versions</a></p>
-<h1><a name="Copyright">Copyright</a>s</h1>
+<ol>
+	<li>
+	<p class="indent"><a href="#Copyright">Copyright</a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#About_weewx">About <span class="code">weewx</span></a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#Downloading_weewx">Downloading 
+	<span class="code">weewx</span></a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#Prerequisites">Prerequisites</a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#Installing_weewx">Installing <span class="code">weewx</span></a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#Configuring_weewx">Configuring 
+	<span class="code">weewx</span></a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#Running_weewx">Running <span class="code">weewx</span></a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#Compatibility_with_wview">Compatibility with 
+	<span class="code">wview</span></a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#HTML_Generation">HTML Generation</a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#Monitoring_weewx">Monitoring <span class="code">weewx</span></a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#Architectural_notes">Architectural Notes</a></p>
+	</li>
+	<li>
+	<p class="indent"><a href="#Table_of_Tested_Versions">Table of Tested Versions</a></p>
+	</li>
+</ol>
+<hr />
+<h1>1. <a name="Copyright">Copyright</a></h1>
 <p>(c) 2009 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;</p>
 <p>This program is free software: you can redistribute it and/or modify it under 
 the terms of the GNU General Public License as published by the Free Software 
@@ -86,7 +117,8 @@ FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 <p>You should have received a copy of the GNU General Public License along with 
 this program. If not, see <http://www.gnu.org/licenses/>
 <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses</a>.</p>
-<h1><a name="About_weewx">About <span class="code">weewx</span></a></h1>
+<hr />
+<h1>2. <a name="About_weewx">About <span class="code">weewx</span></a></h1>
 <p>I wrote <span class="code">weewx</span> over the winter of 2008-2009 for two reasons: it was a wet and 
 miserable winter here in Oregon with not much else to do, so there was no good reason 
 not to, and because I wanted a simple, easy-to-understand server to run my Davis 
@@ -111,91 +143,136 @@ features such as support for other weather stations, support for metric units,
 support for alarms, etc. On the other hand, it offers very powerful configuration 
 and templating options, making it easy to customize. It is also architecturally 
 very simple and easy to understand.</p>
-<h1><a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
+<hr />
+<h1>3. <a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
 <p><span class="code">weewx</span> can be downloaded from its
 <a href="https://sourceforge.net">SourceForge</a> page:
 <a href="https://sourceforge.net/projects/weewx">
 https://sourceforge.net/projects/weewx</a>. </p>
-<h1><a name="Prerequisites">Prerequisites</a></h1>
-<h2>Python</h2>
+<hr />
+<h1>4. <a name="Prerequisites">Prerequisites</a></h1>
+<h2>4.1 Python</h2>
 <p>Python V2.5 or V2.6 is required. The newer V3.0 
 distribution will not work.</p>
-<h2>Required packages</h2>
+<h2>4.2 Required packages</h2>
 <p>The following external packages are required to use <span class="code">weewx</span>.</p>
 <ol>
 	<li><a href="http://www.sqlite.org/">sqlite3</a> (Version 3.5 or greater) A 
-	SQL database written in C. Comes with Debian and many other Linux 
+	SQL database written in C, which <span class="code">weewx</span> uses to 
+	store data pulled from the weather station. Comes with Debian and many other Linux 
 	distributions.</li>
 	<li><a href="http://pypi.python.org/pypi/pysqlite/">pysqlite</a> (Version 2.5 or greater) 
-	The Python interface to sqlite3</li>
+	The Python interface to sqlite3.</li>
 	<li><a href="http://pypi.python.org/pypi/configobj/">configobj</a> 
 	(Version 4.5 or greater) Manages the configuration file <span class="code">weewx.conf</span>.</li>
 	<li><a href="http://pypi.python.org/pypi/pyserial/2.4">pyserial</a> 
 	(Version 1.35 or greater) Manages the serial connection to the weather 
-	station</li>
+	station.</li>
 	<li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or 
-	greater) The HTML templating engine</li>
-	<li><a href="http://pypi.python.org/pypi/PIL/1.1.6">Python 
+	greater) The HTML templating engine.</li>
+	<li><a href="http://pypi.python.org/pypi/PIL">Python 
 	Imaging Library</a> (Version 1.1.6 or greater) Also known as PIL, this is 
 	usually included in most Python distributions.</li>
 </ol>
-<p>Details on how to install these packages are below. </p>
-<p>Python eggs are available for all of them, making them very easy to install 
-using the Python setup tool &quot;<span class="code">easy_install</span>&quot;, part of the
-<a href="http://pypi.python.org/pypi/setuptools"><span class="code">python-setuptools</span> package</a>.</p>
-<p>To install <span class="code">python-setuptools</span> on Debian and derivatives:</p>
-<p class="indent"><span class="code">apt-get install python-setuptools</span></p>
-<p>Once this has been installed, installing the rest of the packages is very 
-easy</p>
-<h3>sqlite3</h3>
-<p><span class="code">Weewx</span> stores data pulled from the weather station in
-<a href="http://www.sqlite.org/">sqlite3</a> databases. A version of sqlite is included in many derivatives of Debian. My Ubuntu 8.10 system came with V3.5.9, which 
-works just fine.</p>
-<h3>pysqlite</h3>
+<p>There are two general strategies for installing these:</p>
+<ol>
+	<li>Use operating system tools, such as <span class="code">apt-get</span> or 
+	the Synaptic Package Manager for Debian/Ubuntu.</li>
+	<li>Use the Python tool <span class="code">easy_install</span>.</li>
+</ol>
+<p>Option #1 is easier, but if your Linux distribution does not come with such 
+tools, you may have to use <span class="code">easy_install</span>. Brief instructions 
+for both approaches are given below.</p>
+<p>&nbsp;</p>
+<h3>Installation on Debian distributions (including Ubuntu) using
+<span class="code">apt-get</span></h3>
+<h4>sqlite3</h4>
+<p>My Ubuntu 8.10 system came with V3.5.9, which works just fine. However, if 
+you need to install:</p>
+<p class="tty">sudo apt-get install sqlite3</p>
+<h4>pysqlite</h4>
+<p>Easily installed:</p>
+<p class="tty">apt-get install python-pysqlite2</p>
+<h4>configobj</h4>
+<p>Easily installed:</p>
+<p class="tty">apt-get install python-configobj</p>
+<h4>pyserial</h4>
+<p>Easily installed:</p>
+<p class="tty">apt-get install python-serial</p>
+<h4>Cheetah</h4>
+<p>Easily installed:</p>
+<p class="tty">apt-get install python-cheetah</p>
+<h4>Python Imaging Library (PIL)</h4>
+<p>My version of Python came with V1.1.6, which works great. Nothing needs to be 
+done.</p>
+<h3>&nbsp;</h3>
+<h3>Installation using <span class="code">easy_install</span></h3>
+<p>An alternative approach to installing the required packages is by using the Python setup tool &quot;<span class="code">easy_install</span>&quot;, part of the
+<a href="http://pypi.python.org/pypi/setuptools">python-setuptools package</a>. 
+Refer to their instructions on how to install this tool.</p>
+<p>Once installed, installing the rest of the packages is very 
+easy.</p>
+<h4>sqlite3</h4>
+<p>My Ubuntu 8.10 system came with V3.5.9, which 
+works just fine. If you do not have sqlite3, refer to
+<a href="http://www.sqlite.org">the sqlite webpage</a> for installation 
+instructions.</p>
+<h4>pysqlite</h4>
 <p>While Version 2.3.X of <a href="http://pypi.python.org/pypi/pysqlite/">
 pysqlite</a> is included with many versions of Python, the more recent 2.5.X or 
 greater is required in order to take advantage of transaction contexts. Hence, 
 you may have to install or upgrade. Because pysqlite builds a C library, you may 
-have to install the Python development environment first, if you have not already done so (example shown for Python V2.5, the version I used. 
-Adjust as necessary):</p>
-<p class="tty">apt-get install python2.5-dev</p>
-<p>Having done that, you can build and install pysqlite:</p>
+have to install the Python development environment first, if you have not 
+already done so. Generally, this means installing the gcc compiler. </p>
+<p>With the development environment in place, you can easily build and install pysqlite:</p>
 <p class="tty">easy_install pysqlite</p>
 <p>If your system already has a version of pysqlite installed, but it is not a 
-high enough version, then you may have to force an upgrade:</p>
+high enough version (<span class="code">easy_install</span> will tell you the 
+version you have), then you may have to force an upgrade:</p>
 <p class="tty">easy_install --upgrade pysqlite</p>
 <p>Note that at the time of this writing (24 Oct 2009), the hosting site for 
-pysqlite has changed and <span class="code">easy_install</span> could not find 
+pysqlite has changed to one on <a href="http://pysqlite.googlecode.com">
+googlecode</a>, and <span class="code">easy_install</span> could not find 
 it. You may have to find and give the URL explicitly to <span class="code">
-easy_install</span>:</p>
+easy_install</span> (adjust version numbers as necessary):</p>
 <p class="tty">easy_install 
 http://pysqlite.googlecode.com/files/pysqlite-2.5.5.tar.gz</p>
-<p>(adjust version numbers as necessary)</p>
-<h3>configobj</h3>
+<h4>configobj</h4>
 <p>Easily installed:</p>
 <p class="tty">easy_install configobj</p>
-<h3>pyserial</h3>
+<h4>pyserial</h4>
 <p class="indent"><span class="code">easy_install pyserial</span></p>
-<h3>Cheetah</h3>
+<h4>Cheetah</h4>
 <p class="indent"><span class="code">easy_install Cheetah</span></p>
-<h3>PIL</h3>
+<h4>Python Imaging Library (PIL)</h4>
 <p>My version of Python came with V1.1.6, which works great.</p>
-<h2>System requirements</h2>
+<h2>4.3 System requirements</h2>
 <h3>Processor</h3>
 <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD Geode processor and 512 MB of 
-memory.&nbsp; Configured this way, it consumes about 5% of the CPU resources, so 
-I think it could run on something considerably smaller and slower.</p>
-<h2>Weather Station requirements</h2>
+memory.&nbsp; Configured this way, it consumes about 5% of the CPU and about 
+75MB of total memory.</p>
+<h2>4.4 Weather Station requirements</h2>
 <p>At this point, only the
-<a href="http://www.davisnet.com/weather/products/vantage2.asp">Davis 
+<a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis 
 VantagePro2</a> is supported, and even then, only the &quot;Revision B&quot; version 
 (firmware dated on or after 22 April 2002). It would be very easy to port to a 
 &quot;Revision A&quot; station or even the original VantagePro, but I don&#39;t have access to 
 the hardware to test it.</p>
-<h1><a name="Installing_weewx">Installing <span class="code">weewx</span></a></h1>
-<h2>Directory structure</h2>
+<hr />
+<h1>5. <a name="Installing_weewx">Installing <span class="code">weewx</span></a></h1>
+<p>Because <span class="code">weewx</span> is &quot;Pure Python&quot;, that is it is 100% Python with no &quot;C&quot; modules 
+to compile, installing it is very easy. Furthermore, it uses the standard Python
+<a href="http://docs.python.org/install/index.html">distutils</a> install 
+method, which is very easy and flexible. Detailed instructions follow.</p>
+<h2>5.1 Unpacking</h2>
+<p>Start by unpack the tar ball (substitute your version for X.Y.Z) into any 
+convenient directory where you have write permission</p>
+<p class="tty">tar xvf weewx-X.Y.Z</p>
+<p>Then change directory into it:</p>
+<p class="tty">cd weewx-X.Y.Z</p>
+<h2>5.1 Choosing the <span class="code">WEEWX_ROOT</span> directory</h2>
 <p>If <span class="code"><em>WEEWX_ROOT</em></span> symbolizes the root location of the 
-<span class="code">weewx </span>directory hierarchy, then</p>
+<span class="code">weewx</span> directory hierarchy, then</p>
 <ul>
 	<li><span class="code"><em>$WEEWX_ROOT</em>/bin</span> is where the Python packages 
 	and scripts are installed;</li>
@@ -207,41 +284,38 @@ the hardware to test it.</p>
 	<li><em>$</em><span class="code"><em>WEEWX_ROOT</em>/public_html</span> is where generated html and .png images are put.</li>
 </ul>
 <p>By default, the location for <span class="code"><em>WEEWX_ROOT</em></span> is
-<span class="code">/home/weewx</span> (instructions on how to change is below).</p>
-<p>Start by unpack the tar ball (substitute your version for X.Y.Z) in any 
-convenient directory where you have permission</p>
-<p class="tty">tar xvf weewx-X.Y.Z</p>
-<p>Then change directory into it:</p>
-<p class="tty">cd weewx-X.Y.Z</p>
+<span class="code">/home/weewx</span>. However, it can be changed by editing the 
+file <span class="code">setup.cfg</span>. If you wish to install someplace else, 
+open up <span class="code">setup.cfg</span> and change the line</p>
+<p class="tty">home = /home/weewx</p>
+<p>to reflect your decision.</p>
+<h2>5.2 Build and install</h2>
 <p>Build the distribution</p>
 <p class="tty">./setup.py build</p>
-<p>Finally, install it. </p>
+<p>(Because <span class="code">weewx</span> is pure Python this doesn&#39;t actually 
+build anything, but it does arrange files for the final installation)</p>
+<p>Then install it. If you have write permission in the installation directory, 
+then type</p>
+<p class="tty">./setup.py install</p>
+<p>Otherwise, if you do not have write permission, you will have to use sudo:</p>
 <p class="tty">sudo ./setup.py install</p>
-<p>This will install with root directory <span class="code">WEEWX_ROOT=/home/weewx</span>. 
-If you wish to install someplace else, then edit the file <span class="code">
-weewx-X.Y.Z/setup.cfg</span> to whatever you prefer. If you do this, you will 
-also have to edit the <span class="code">weewx</span> configuration file <span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span> 
-to reflect your choice.</p>
-<p>The install process will also install a startup script in <span class="code">
-/etc/init.d</span> to allow running <span class="code">weewx </span>as a startup 
-process. See <a href="#Running_as_a_daemon">Running as a Daemon</a> for more 
-information. This step of the install process may require root privileges. </p>
 <p>If you are upgrading from a previous version of <span class="code">weewx</span>, the install process 
 will save your old template directories and will also merge any changes you&#39;ve 
-made to the configuration file into the new configuration file.</p>
-<h2>Permissions</h2>
+made to the configuration file <span class="code">weewx.conf</span> into the new configuration file.</p>
+<h2>5.2 Permissions</h2>
 <p>Strictly speaking it is not necessary at all to install with root privileges. 
 Indeed, if you edit <span class="code">setup.cfg</span> to install into a 
 directory where you have write permissions, you can install and run 
 <span class="code">weewx</span> without any root 
 privileges.</p>
-<h1><a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
+<hr />
+<h1>6. <a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
 <p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to the 
 <span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>.</p>
 <p>Virtually every conceivable configuration option is in the configuration file
 <span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. Most of the important 
 ones are up near the front of the file.</p>
-<h2>Configuring the databases</h2>
+<h2>6.1 Configuring the databases</h2>
 <p>Two main databases are created and populated by <span class="code">weewx</span></p>
 <ul>
 	<li><span class="code"><em>$WEEWX_ROOT/$archive_file</em></span> (nominally 
@@ -265,7 +339,7 @@ modest 500 MHz
 <a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC</a> 
 with 512 MB of memory it took a little over 4 minutes for a year and a half (25 
 MB) of data (while wview was running in the background).</p>
-<h2>Configuring your weather station</h2>
+<h2>6.2 Configuring your weather station</h2>
 <p>The only two variables <span class="code">weewx</span> tries to manage on the VantagePro is the time 
 and the archive interval. </p>
 <h3>Time</h3>
@@ -287,7 +361,7 @@ configure.py</span> script to set it on the VantagePro. If it differs from the
 old archive interval, the main memory log of the VantagePro will be cleared. </p>
 <p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --configure-VantagePro 
 $WEEWX_ROOT/weewx.conf</p>
-<h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
+<h2>6.3 Editing the configuration file <span class="code">weewx.conf</span></h2>
 <p>There are many, many options that can be set in the configuration file, 
 <span class="code">weewx.conf</span>. They are all documented in this section, 
 although you can safely ignore most of them. The truly important ones, the ones 
@@ -302,7 +376,7 @@ this shipped configuration file is not necessarily the same as the &quot;default
 value&quot;.</p>
 <p>What follows is organized by the different sections of the configuration 
 file.</p>
-<h2>General</h2>
+<h3>General</h3>
 <p>The options declared at the top are not actually part of any section. 
 There are two:</p>
 <h4 class="config_option">debug</h4>
@@ -571,10 +645,11 @@ month = %d-%b-%Y %H:%M</p>
 <p>would specify that week data should use a format such as &quot;<span class="code">15:20 
 on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
 15:20</span>&quot;</p>
-<h1><a name="Running_weewx">Running <span class="code">weewx</span></a></h1>
+<hr />
+<h1>7. <a name="Running_weewx">Running <span class="code">weewx</span></a></h1>
 <p><span class="code">Weewx</span> can be run either from the command line (useful for diagnostic purposes 
 because it will print out a summary of every LOOP data), or as a daemon.</p>
-<h2>Running from the command line</h2>
+<h2>7.1 Running from the command line</h2>
 <p><span class="code">Weewx</span> can easily be run from the command line. Start by making sure you have appropriate permissions to the serial port your weather 
 station uses. For example, if you are using a plain old serial port:</p>
 <p class="tty">sudo chmod 666 /dev/ttyS0</p>
@@ -587,7 +662,7 @@ As the Davis VantagePro can store a couple thousand archive records internally, 
 take a minute or two.</p>
 <p>It will then start monitoring LOOP data, printing a short version of the 
 received data on standard output, about once every two seconds.</p>
-<h2><a name="Running_as_a_daemon">Running as a daemon</a></h2>
+<h2>7.2 <a name="Running_as_a_daemon">Running as a daemon</a></h2>
 <p>First, select the appropriate run script. They can be found under <span class="code"><em>$WEEWX_ROOT</em>/start_script</span>. Copy it to the 
 proper location for your system:</p>
 <table style="width: 100%" class="indent">
@@ -632,14 +707,17 @@ also manually start, stop, and restart the <span class="code">weewx</span> daemo
 <p class="tty">/etc/init.d/weewx start<br/>
 /etc/init.d/weewx stop<br/>
 /etc/init.d/weewx restart</p>
-<h1><a name="Compatibility_with_wview">Compatibility with <span class="code">wview</span></a></h1>
+<hr />
+<h1>8. <a name="Compatibility_with_wview">Compatibility with <span class="code">wview</span></a></h1>
 <p>The sqlite3 archive database used by <span class="code">weewx</span> (nominally, <span class="code">weewx.sdb</span>) is completely compatible with the database 
 used by <a href="http://www.wviewweather.com">wview</a> (usually called
 <span class="code">wview-archive.sdb</span>), at least as of Version 5.2.X. The schema and its semantics is 
 identical. However, the statistical file <span class="code">stats.sdb</span> is 
 different, and must be rebuilt</p>
 
-<h1><a name="HTML_Generation">HTML Generation</a></h1>
+<hr />
+
+<h1>9. <a name="HTML_Generation">HTML Generation</a></h1>
 <p>HTML generation is done using the <a href="http://www.cheetahtemplate.org/">
 Cheetah</a> templating engine. This is a very powerful engine that, essentially, 
 lets you have the full semantics of Python available in your templates. As this 
@@ -695,7 +773,7 @@ is from <span class="code"><a href="#HTML_Time">[HTML][[Time]]</a></span>.</p>
 	except for &#39;<span class="code">current</span>&#39;. The table below shows what 
 	aggregation types are available for which types. </li>
 </ol>
-<h2>Types</h2>
+<h2>9.1 Types</h2>
 <p>The following types are available to be used in your template (assuming your 
 station supports them and you have specified that it be stored in your stats 
 database. See section <a href="#stats_types">stats_types</a> in the
@@ -988,15 +1066,17 @@ database. See section <a href="#stats_types">stats_types</a> in the
 		<td>&nbsp;</td>
 	</tr>
 </table>
-<h1><a name="Monitoring_weewx">Monitoring <span class="code">weewx</span></a></h1>
+<hr />
+<h1>10. <a name="Monitoring_weewx">Monitoring <span class="code">weewx</span></a></h1>
 <p><span class="code">Weewx</span> logs many events to the system log. On Debian systems, this is
 <span class="code">/var/log/syslog</span>. When troubleshooting the system, be 
 sure to check it!</p>
 <p>Setting the option <span class="code">debug </span>in <span class="code">
 weewx.conf</span> to <span class="code">1</span> (one) will generate many more 
 checks and output and can be useful for debugging.</p>
-<h1><a name="Architectural_notes">Architectural notes</a></h1>
-<h2>Goals</h2>
+<hr />
+<h1>11. <a name="Architectural_notes">Architectural notes</a></h1>
+<h2>11.1 Goals</h2>
 <p>The primary goals of <span class="code">weewx </span>are:</p>
 <ul>
 	<li>Architectural simplicity. No semaphores, no named pipes, no 
@@ -1017,7 +1097,7 @@ checks and output and can be useful for debugging.</p>
 	the code base look like it was written by a C++ programmer who stumbled 
 	across a Python manual!</li>
 </ul>
-<h2>Strategies</h2>
+<h2>11.2 Strategies</h2>
 <p>To meet these goals, the following strategies were used:</p>
 <ul>
 	<li>A powerful configuration parser,
@@ -1054,7 +1134,7 @@ compatible with V2.X, that a separate code base will most likely be needed. My
 intention is to stick with the V2.5 and V2.6 versions until V3.X is so 
 widespread it cannot be ignored, then make a permanent switch. I doubt this will 
 affect the average <span class="code">weewx</span> user. </p>
-<h2>Run time</h2>
+<h2>11.3 Run time</h2>
 <p>Three threads are used within <span class="code">weewx</span>:</p>
 <ol>
 	<li>The main thread of the program is used to monitor the
@@ -1117,7 +1197,7 @@ then restarts the program from the top.</p>
 timeouts and are most likely due to a logic error, are not caught and cause 
 thread termination. If this happens in the main thread (not likely and hasn&#39;t 
 happened to me yet), then this causes program termination.</p>
-<h2>Terminology</h2>
+<h2>11.4 Terminology</h2>
 <p>This is a glossary of terminology used throughout the code.</p>
 <table style="width: 100%">
 	<tr>
@@ -1178,7 +1258,7 @@ number. </td>
 	</tr>
 </table>
 
-<h2>Units</h2>
+<h2>11.5 Units</h2>
 <p>This package is imperial (U.S.) units only. However, it has been set 
 up to make it easy to extend to metric. </p>
 <p>In general, there are three different areas where the unit system makes a 
@@ -1197,12 +1277,12 @@ system is in use in the database is carried through. </li>
 <p>The transition from 1 to 2, i.e., from data in the VantagePro to the 
 database, is handled by a translation function. Right now, only one is supplied, 
 <span class="code">weewx.VantagePro.translateArchiveToImperial</span>. Others could easily be introduced. </p>
-<h2>Value &quot;<span class="code">None</span>&quot;</h2>
+<h2>11.6 Value &quot;<span class="code">None</span>&quot;</h2>
 <p>The Python special value &#39;<span class="code">None</span>&#39; is used throughout to signal a missing data 
 point. All functions expect it.</p>
 <p>However, the time value must never be &#39;<span class="code">None</span>&#39;. This is because it is used as 
 the primary key in the SQL database. </p>
-<h2>Time</h2>
+<h2>11.7 Time</h2>
 <p><span class="code">Weewx </span>stores all data in UTC (roughly, &quot;Greenwich&quot; 
 or &quot;Zulu&quot;) time. However, usually one is interested in weather events in local 
 time and want image and HTML generation to reflect that. Furthermore, most weather stations are configured in 
@@ -1230,7 +1310,9 @@ next_dt = time_dt + delta<br />
 next_ts = int(time.mktime(next_dt.timetuple()))</p>
 <p>Other time conversion problems are handled in a similar manner.</p>
 
-<h1><a name="Table_of_Tested_Versions">Table of Tested Versions</a></h1>
+<hr />
+
+<h1>12. <a name="Table_of_Tested_Versions">Table of Tested Versions</a></h1>
 <p>Three different configurations were used to test weewx V1.X. Here are the 
 package versions used in each configuration:</p>
 <table style="width: 75%" class="style1">
