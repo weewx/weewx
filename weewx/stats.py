@@ -1041,6 +1041,7 @@ class StatsDb(object):
                         _connection.execute(std_create_str % (_stats_type,))
                 _connection.execute(meta_create_str)
                 
+            self.statsTypes = stats_types
             syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % self.statsFilename)
 
 
@@ -1194,7 +1195,7 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
         _rec_time_ts = _rec['dateTime']
         _rec_sod_ts = weeutil.weeutil.startOfArchiveDay(_rec_time_ts)
         # Check whether this is the first day, or we have entered a new day:
-        if _allStats is None or _allStats.start != _rec_sod_ts:
+        if _allStats is None or _allStats.dateTime != _rec_sod_ts:
                 # If this is not the first day, then write it out:
                 if _allStats:
                     statsDb._setDay(_allStats, _lastTime)
