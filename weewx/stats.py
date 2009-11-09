@@ -1237,7 +1237,7 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
         _rec_time_ts = _rec['dateTime']
         _rec_sod_ts = weeutil.weeutil.startOfArchiveDay(_rec_time_ts)
         # Check whether this is the first day, or we have entered a new day:
-        if _allStats is None or _allStats.start != _rec_sod_ts:
+        if _allStats is None or _allStats.dateTime != _rec_sod_ts:
                 # If this is not the first day, then write it out:
                 if _allStats:
                     statsDb._setDay(_allStats, _lastTime)
