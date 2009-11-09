@@ -110,7 +110,8 @@ def main(config_dict):
         # Catch any non-recoverable errors. Log them, exit
         except Exception, ex:
             # Caught unrecoverable error. Log it, exit
-            syslog.syslog(syslog.LOG_CRIT, "main: Caught unrecoverable exception: %s" % ex)
+            syslog.syslog(syslog.LOG_CRIT, "main: Caught unrecoverable exception:")
+            syslog.syslog(syslog.LOG_CRIT, "main: %s" % ex)
             syslog.syslog(syslog.LOG_CRIT, "main: Exiting.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise
