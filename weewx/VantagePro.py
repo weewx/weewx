@@ -113,21 +113,22 @@ class WxStation (object) :
         """Cancel an active LOOP request."""
         self._wakeup_console()
         
-    def genArchivePackets(self, since_tt):
+    def genArchivePackets(self, since_ts):
         """A generator function to return archive packets from a VantagePro station.
         
-        since_tt: A time-tuple. All data since (but not including) this time will be returned.
+        since_ts: A timestamp. All data since (but not including) this time will be returned.
         Pass in None for all data
         
         yields: a sequence of DavisArchivePackets containing the data
         """
         
-        if since_tt :
+        if since_ts :
+            since_tt = time.localtime(since_ts)
             # NB: note that some of the Davis documentation gives the year offset as 1900.
             # From experimentation, 2000 seems to be right, at least for the newer models:
             _vantageDateStamp = since_tt[2] + (since_tt[1]<<5) + ((since_tt[0]-2000)<<9)
             _vantageTimeStamp = since_tt[3] *100 + since_tt[4]
-            syslog.syslog(syslog.LOG_DEBUG, 'VantagePro: Getting archive packets since %s' % time.asctime(since_tt))
+            syslog.syslog(syslog.LOG_DEBUG, 'VantagePro: Getting archive packets since %s' % weeutil.weeutil.timestamp_to_string(since_ts))
         else :
             _vantageDateStamp = _vantageTimeStamp = 0
             syslog.syslog(syslog.LOG_DEBUG, 'VantagePro: Getting all archive packets')
@@ -136,7 +137,7 @@ class WxStation (object) :
         _datestr = struct.pack("<HH", _vantageDateStamp, _vantageTimeStamp)
         
         # Save the last good time:
-        _last_good_ts = time.mktime(since_tt) if since_tt else 0
+        _last_good_ts = since_ts if since_ts else 0
 
         # Retry the dump up to max_retries times
         for _count in xrange(self.max_retries) :
@@ -182,23 +183,8 @@ class WxStation (object) :
                 # Caught an error. Keep retrying...
                 continue
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive packets")
-        raise weewx.RetriesExceeded, "While getting archive packets"
+        raise weewx.RetriesExceeded, "Max retries exceeded while getting archive packets"
                 
-    
-    def genArchivePacketsTS(self, timestamp) :
-        """A generator function to return archive data from a VantagePro station.
-        
-        timestamp: An epoch time. All data since (but not including) this time will be returned.
-        Pass in None for all data
-        
-        yields: a sequence of DavisArchivePackets containing the data
-        """
-        
-        time_tuple = time.localtime(timestamp) if timestamp else None
-        
-        return self.genArchivePackets(time_tuple)
- 
-
     def getTime(self) :
         """Get the current time from the console and decode it, returning it as a time-tuple
         
