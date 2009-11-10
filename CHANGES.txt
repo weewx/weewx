@@ -1,6 +1,11 @@
 CHANGE HISTORY
 --------------------------------
 
+1.0.1   11/09/09
+
+Fixed bug that preventing backfilling the stats database after modifying
+the main archive.
+
 1.0.0   10/26/09
 
 Took the module weewx.factory back out, as it was too complicated and
