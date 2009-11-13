@@ -7,8 +7,11 @@
 <title>The Weewx weather system</title>
 <style type="text/css">
 h2{
-	margin-top: 25pt;
+	margin-top: 30pt;
 	text-decoration: underline;
+}
+h3{
+	margin-top: 30pt;
 }
 hr{
 	margin-top: 40pt;
@@ -172,18 +175,19 @@ distribution will not work.</p>
 	greater) The HTML templating engine.</li>
 	<li><a href="http://pypi.python.org/pypi/PIL">Python 
 	Imaging Library</a> (Version 1.1.6 or greater) Also known as PIL, this is 
-	usually included in most Python distributions.</li>
+	included in many Python distributions.</li>
 </ol>
-<p>There are two general strategies for installing these:</p>
+<p>There are two general strategies for installing these prerequisites:</p>
 <ol>
-	<li>Use operating system tools, such as <span class="code">apt-get</span> or 
-	the Synaptic Package Manager for Debian/Ubuntu.</li>
-	<li>Use the Python tool <span class="code">easy_install</span>.</li>
+	<li>Use operating system tools, such as <span class="code">apt-get</span> (or 
+	its graphical equivalent Synaptic Package Manager) for Debian/Ubuntu or
+	<span class="code">yast</span> for SuSE; or</li>
+	<li>Use the Python tool <span class="code">
+	<a href="http://pypi.python.org/pypi/setuptools">easy_install</a></span>.</li>
 </ol>
 <p>Option #1 is easier, but if your Linux distribution does not come with such 
 tools, you may have to use <span class="code">easy_install</span>. Brief instructions 
 for both approaches are given below.</p>
-<p>&nbsp;</p>
 <h3>Installation on Debian distributions (including Ubuntu) using
 <span class="code">apt-get</span></h3>
 <p>The instructions that follow are for using the Debian tool <span class="code">
@@ -208,7 +212,49 @@ you need to install:</p>
 <h4>Python Imaging Library (PIL)</h4>
 <p>My version of Python came with V1.1.6, which works great. Nothing needs to be 
 done.</p>
-<h3>&nbsp;</h3>
+<h3>Installation on SuSE using <span class="code">yast</span></h3>
+<p>My SuSE 11.1 system came with some of the prerequisites installed, some 
+available through <span class="code">yast</span>, and three that required <span class="code">
+easy_install</span>. To start, you will have to install the gcc compiler:</p>
+<p class="tty">sudo yast -i gcc</p>
+<p>Then install <span class="code">easy_install</span>:</p>
+<p class="tty">sudo yast -i python-setuptools</p>
+<p>On my system, some scripts wanted to install themselves into
+<span class="code">/usr/local/lib/python2.6/site-packages</span>, which didn&#39;t 
+exist. If this is the case, you may have to create these directories before 
+running <span class="code">easy_install</span>:</p>
+<p class="tty">sudo mkdir /usr/local/lib/python2.6<br />
+sudo mkdir /usr/local/lib/python2.6/site-packages</p>
+<h4>sqlite3</h4>
+<p>My SuSE 11.1 system came with V3.6.4, which works just fine. However, if you 
+need to install:</p>
+<p class="tty">sudo yast -i sqlite3</p>
+<h4>pysqlite</h4>
+<p>Install using <span class="code">easy_install</span>. See
+<a href="#pysqlite_using_easy_install">comments below</a> about installing 
+pysqlite using <span class="code">easy_install</span>. On my SuSE 11.1 system, I 
+had to install the gcc compiler and the sqlite3 development environment first:</p>
+<p class="tty">sudo yast -i gcc<br />
+sudo yast -i sqlite-devel</p>
+<p>Then I was able to install pysqlite using <span class="code">easy_install</span>. 
+However, because the hosting site for pysqlite had changed recently, I had to 
+give the URL explicitly:</p>
+<p class="tty">sudo easy_install
+<a href="http://pysqlite.googlecode.com/files/pysqlite-2.5.5.tar.gz">
+http://pysqlite.googlecode.com/files/pysqlite-2.5.5.tar.gz</a></p>
+<h4>configobj</h4>
+<p>Install using <span class="code">easy_install</span>:</p>
+<p class="tty">sudo easy_install configobj</p>
+<h4>pyserial</h4>
+<p>Install using <span class="code">yast</span>:</p>
+<p class="tty">sudo yast-i python-serial</p>
+<h4>Cheetah</h4>
+<p>Install using <span class="code">easy_install</span> (My system emitted a 
+bunch of, apparently, benign warnings):</p>
+<p class="tty">sudo easy_install Cheetah</p>
+<h4>Python Imaging Library (PIL)</h4>
+<p>Install using <span class="code">yast</span></p>
+<p class="tty">sudo yast -i python-imaging</p>
 <h3>Installation using <span class="code">easy_install</span></h3>
 <p>An alternative approach to installing the required packages is by using the Python setup tool &quot;<span class="code">easy_install</span>&quot;, part of the
 <a href="http://pypi.python.org/pypi/setuptools">python-setuptools package</a>. 
@@ -220,13 +266,14 @@ easy.</p>
 works just fine. If you do not have sqlite3, refer to
 <a href="http://www.sqlite.org">the sqlite webpage</a> for installation 
 instructions.</p>
-<h4>pysqlite</h4>
+<h4><a name="pysqlite_using_easy_install">pysqlite</a></h4>
 <p>While Version 2.3.X of <a href="http://pypi.python.org/pypi/pysqlite/">
 pysqlite</a> is included with many versions of Python, the more recent 2.5.X or 
 greater is required in order to take advantage of transaction contexts. Hence, 
 you may have to install or upgrade. Because pysqlite builds a C library, you may 
 have to install the Python development environment first, if you have not 
-already done so. Generally, this means installing the gcc compiler. </p>
+already done so. Generally, this means installing the gcc compiler. You may also 
+have to install the sqlite3 development environment as well.</p>
 <p>With the development environment in place, you can easily build and install pysqlite:</p>
 <p class="tty">easy_install pysqlite</p>
 <p>If your system already has a version of pysqlite installed, but it is not a 
@@ -318,11 +365,14 @@ made to your old configuration file <span class="code">weewx.conf</span> into
 	<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf.YYYYMMDDHHMMSS</span>.</li>
 </ul>
 <h2>5.3 Permissions</h2>
-<p>Strictly speaking it is not necessary at all to install with root privileges. 
-Indeed, if you edit <span class="code">setup.cfg</span> to install into a 
+<p>Strictly speaking it is not necessary to install or run <span class="code">
+weewx</span> with root privileges. 
+You only need read/write access to the serial port for your hardware. For 
+example, if your hardware has a USB interface, on Ubuntu and SuSE:</p>
+<p class="tty">sudo chmod a+rw /dev/ttyUSB0</p>
+<p>Once done, if you edit <span class="code">setup.cfg</span> to install into a 
 directory where you have write permissions, you can install and run 
-<span class="code">weewx</span> without any root 
-privileges.</p>
+<span class="code">weewx</span> without any root privileges at all. </p>
 <h2>5.4 Final note on installation</h2>
 <p>Because <span class="code">weewx</span> is pure Python, it actually does not 
 have to be &quot;built&quot; and &quot;installed&quot; at all! You can just simply run it out of 
@@ -529,7 +579,7 @@ to use active mode. Passive mode generally works better through firewalls, but
 not all FTP servers do a good job of supporting it. See
 <a href="http://slacksite.com/other/ftp.html">Active FTP vs. Passive FTP, a 
 Definitive Explanation</a> for a good explanation of the difference. Default is 
-0 (active mode).</p>
+1 (passive mode).</p>
 <h4 class="config_option">max_retries</h4>
 <p><span class="code">Weewx</span> will try up to this many times to FTP a file up to your server before 
 giving up. Default is 3.</p>
@@ -1112,7 +1162,8 @@ database. See section <a href="#stats_types">stats_types</a> in the
 <hr />
 <h1>10. <a name="Monitoring_weewx">Monitoring <span class="code">weewx</span></a></h1>
 <p><span class="code">Weewx</span> logs many events to the system log. On Debian systems, this is
-<span class="code">/var/log/syslog</span>. When troubleshooting the system, be 
+<span class="code">/var/log/syslog</span>, on SuSE, <span class="code">/var/log/messages</span>. 
+Your system may use yet another place. When troubleshooting the system, be 
 sure to check it!</p>
 <p>Setting the option <span class="code">debug </span>in <span class="code">
 weewx.conf</span> to <span class="code">1</span> (one) will generate many more 
