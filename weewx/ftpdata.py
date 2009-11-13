@@ -18,7 +18,7 @@ import upload
 class FtpData(object):
     """Synchronize local files with the web server"""
 
-    def __init__(self, source_dir, server, user, password, path, passive = 0, max_retries = 3):
+    def __init__(self, source_dir, server, user, password, path, passive = 1, max_retries = 3):
         self.source_dir = source_dir
         self.server     = server
         self.user       = user

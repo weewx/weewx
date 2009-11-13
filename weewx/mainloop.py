@@ -217,7 +217,7 @@ class MainLoop(object):
         # Add all missed archive records since the last good record in the database
         for rec in self.station.genArchivePackets(lastgood_ts) :
             print"REC:-> ", weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec['barometer'],\
-                                                                rec['outTemp'],   rec['windSpeed'], 
+                                                                rec['outTemp'],   rec['windSpeed'],\
                                                                 rec['windDir'], " <-"
             self.archive.addRecord(rec)
             self.statsDb.addArchiveRecord(rec)
