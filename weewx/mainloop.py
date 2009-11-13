@@ -53,7 +53,10 @@ import weewx.wunderground
 import weewx.processdata
 
 def main(config_dict):
-    """Prepare the main loop"""
+    """Prepare the main loop and run it. 
+
+    Mostly consists of a bunch of high-level prepatory calls, protected
+    by try blocks in the case of an exception."""
 
     if int(config_dict.get('debug', '0')):
         # Get extra debug info. Set the logging mask for full debug info
@@ -75,8 +78,10 @@ def main(config_dict):
     hardware_module = sys.modules[_moduleName]
 
     try:
+
         # Now open up the weather station:
         station = hardware_module.WxStation(config_dict[stationType])
+
     except Exception, ex:
         # Caught unrecoverable error. Log it, exit
         syslog.syslog(syslog.LOG_CRIT, "main: Unable to open WX station hardware: %s" % ex)
@@ -84,9 +89,20 @@ def main(config_dict):
         # Reraise the exception (this will eventually cause the program to exit)
         raise
 
-    # Create and initialize the MainLoop object, using the dictionary
-    # and the hardware station:
-    mainloop = weewx.mainloop.MainLoop(config_dict, station)
+    try:
+
+        # Create and initialize the MainLoop object, using the dictionary
+        # and the hardware station:
+        mainloop = weewx.mainloop.MainLoop(config_dict, station)
+
+    except Exception, ex:
+        # Caught unrecoverable error. Log it, exit
+        syslog.syslog(syslog.LOG_CRIT, "main: Unable to initialize main loop:")
+        syslog.syslog(syslog.LOG_CRIT, "main: %s" % ex)
+        syslog.syslog(syslog.LOG_CRIT, "main: Exiting.")
+        # Reraise the exception (this will eventually cause the program to exit)
+        raise
+
 
     while True:
         # Start the main loop, wrapping it in an exception block.
@@ -110,7 +126,7 @@ def main(config_dict):
         # Catch any non-recoverable errors. Log them, exit
         except Exception, ex:
             # Caught unrecoverable error. Log it, exit
-            syslog.syslog(syslog.LOG_CRIT, "main: Caught unrecoverable exception:")
+            syslog.syslog(syslog.LOG_CRIT, "main: Caught unrecoverable exception in main loop:")
             syslog.syslog(syslog.LOG_CRIT, "main: %s" % ex)
             syslog.syslog(syslog.LOG_CRIT, "main: Exiting.")
             # Reraise the exception (this will eventually cause the program to exit)
@@ -201,7 +217,8 @@ class MainLoop(object):
         # Add all missed archive records since the last good record in the database
         for rec in self.station.genArchivePackets(lastgood_ts) :
             print"REC:-> ", weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec['barometer'],\
-                                                                rec['outTemp'],   rec['windSpeed'], rec['windDir'], " <-"
+                                                                rec['outTemp'],   rec['windSpeed'], 
+                                                                rec['windDir'], " <-"
             self.archive.addRecord(rec)
             self.statsDb.addArchiveRecord(rec)
             if weewx.wunderground.wunderQueue:
@@ -214,7 +231,8 @@ class MainLoop(object):
     def processArchiveData(self):
         """This function processes any new archive data"""
         # Now process the data, using a separate thread
-        processThread = threading.Thread(target = weewx.processdata.processData, args=(self.config_dict, ))
+        processThread = threading.Thread(target = weewx.processdata.processData,
+                                         args   =(self.config_dict, ))
         processThread.start()
 
     def run(self):

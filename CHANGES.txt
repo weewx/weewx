@@ -20,6 +20,10 @@ now be done by hand.
 setup.py now uses the 'home' value in setup.cfg to set WEEWX_ROOT in 
 weewx.conf and in the daemon start up scripts
 
+1.0.1   11/09/09
+
+Fixed bug that preventing backfilling the stats database after modifying
+the main archive.
 
 1.0.0   10/26/09
 
