@@ -19,8 +19,6 @@ Optional start-of-week besides Sunday.
 
 Better scaling for pond temperatures, rain, and wind direction
 
-User manual
-
 Ability to set parameters such as lat, lon, altitude on the VP2
 
 Better wind plots (progressive vector diagram? compass display?)

@@ -1,7 +1,7 @@
 CHANGE HISTORY
 --------------------------------
 
-1.1.0   10/31/09
+1.1.0   11/14/09
 
 Added the ability to cache LOOP data. This can dramatically reduce the
 number of writes to the stats database, reducing wear on solid-state
@@ -24,7 +24,7 @@ Now uses FTP passive mode by default.
 
 1.0.1   11/09/09
 
-Fixed bug that preventing backfilling the stats database after modifying
+Fixed bug that prevented backfilling the stats database after modifying
 the main archive.
 
 1.0.0   10/26/09
