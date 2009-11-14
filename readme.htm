@@ -726,7 +726,10 @@ on Sunday</span>&quot;, while month data should look like &quot;<span class="cod
 <hr />
 <h1>7. <a name="Running_weewx">Running <span class="code">weewx</span></a></h1>
 <p><span class="code">Weewx</span> can be run either from the command line (useful for diagnostic purposes 
-because it will print out a summary of every LOOP data), or as a daemon.</p>
+because it will print out a summary of every LOOP data), or as a daemon. When 
+first trying <span class="code">weewx</span>, it&#39;s probably best to run it from 
+the command line because you will be able to see command line diagnostics, as 
+well as log messages.</p>
 <h2>7.1 Running from the command line</h2>
 <p><span class="code">Weewx</span> can easily be run from the command line. Start by making sure you have appropriate permissions to the serial port your weather 
 station uses. For example, if you are using a plain old serial port:</p>
@@ -737,8 +740,9 @@ parameter:</p>
 <p>It should start by downloading any archive data from your weather station 
 into the database <span class="code"><em>$WEEWX_ROOT</em>/archive/weewx.sdb</span>. 
 As the Davis VantagePro can store a couple thousand archive records internally, this could 
-take a minute or two.</p>
-<p>It will then start monitoring LOOP data, printing a short version of the 
+take a minute or two. I&#39;ve found this process particularly slow on SuSE for some 
+reason.</p>
+<p><span class="code">Weewx</span> will then start monitoring LOOP data, printing a short version of the 
 received data on standard output, about once every two seconds.</p>
 <h2>7.2 <a name="Running_as_a_daemon">Running as a daemon</a></h2>
 <p>First, select the appropriate run script. They can be found under <span class="code"><em>$WEEWX_ROOT</em>/start_script</span>. </p>
@@ -785,22 +789,26 @@ proper location for your system:</p>
 <table style="width: 100%" class="indent">
 	<tr>
 		<td>SuSE:</td>
-		<td class="code">???</td>
+		<td class="code">/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
 	</tr>
 	<tr>
 		<td>Debian/Ubuntu:</td>
 		<td class="code">update-rc.d weewx defaults 98</td>
 	</tr>
 </table>
-<p>Incidentally, a nice tool for setting run levels is
-<a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. It uses a 
-curses interface to allow you to change easily which run level any of your 
-daemons runs at.</p>
 <p><span class="code">Weewx</span> will now start automatically whenever your system is booted. You can 
 also manually start, stop, and restart the <span class="code">weewx</span> daemon:</p>
 <p class="tty">/etc/init.d/weewx start<br/>
 /etc/init.d/weewx stop<br/>
 /etc/init.d/weewx restart</p>
+<p>By default, the scripts are designed to have <span class="code">weewx</span> 
+run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels 
+with Debian (Ubuntu) systems is
+<a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. It uses a 
+curses interface to allow you to change easily which run level any of your 
+daemons runs at. There is a similar tool on SuSE. From the start menu run the 
+YAST Control Center, then look for Systesm Services (Runlevel). Pick &quot;Expert&quot; 
+mode to see the run levels.</p>
 <hr />
 <h1>8. <a name="Compatibility_with_wview">Compatibility with <span class="code">wview</span></a></h1>
 <p>The sqlite3 archive database used by <span class="code">weewx</span> (nominally, <span class="code">weewx.sdb</span>) is completely compatible with the database 
