@@ -12,9 +12,13 @@ weewx.conf
 weewxd.py
 public_html/weewx.css
 public_html/backgrounds/band.gif
+public_html/backgrounds/butterfly.jpg
 public_html/backgrounds/drops.gif
+public_html/backgrounds/flower.jpg
+public_html/backgrounds/leaf.jpg
 public_html/backgrounds/night.gif
 start_scripts/Debian/weewx
+start_scripts/SuSE/weewx
 templates/NOAA_month.tmpl
 templates/NOAA_year.tmpl
 templates/index.tmpl
