@@ -72,7 +72,7 @@ class My_install_data(install_data):
         # of copying it
         if f == 'weewx.conf':
             rv = self.massageConfigFile(f, install_dir, **kwargs)
-        elif f == 'start_scripts/Debian/weewx':
+        elif f in ('start_scripts/Debian/weewx', 'start_scripts/SuSE/weewx'):
             rv = self.massageStartFile(f, install_dir, **kwargs)
         else:
             rv = install_data.copy_file(self, f, install_dir, **kwargs)

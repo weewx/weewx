@@ -1,8 +1,8 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          weewx
-# Required-Start:    $remote_fs
-# Required-Stop:     $remote_fs
+# Required-Start:    $local_fs $remote_fs $syslog $time
+# Required-Stop:     $local_fs $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: weewx weather system
