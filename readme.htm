@@ -424,25 +424,33 @@ the <span class="code">setup.py</span> script does include special provisions fo
 updating your configuration file <span class="code">weewx.conf</span>, which can 
 be handy when upgrading to a later version.</p>
 <h1>6. <a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
+<p>This section covers configuring your archive and statistical database (if 
+necessary; this step is required only if you are moving from
+<a href="http://www.wviewweather.com/">wview</a> to weewx), configuring your 
+weather station, and configuring the configuration file <span class="code">
+weewx.conf</span>.</p>
 <p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to the
-<span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>.</p>
-<p>Virtually every conceivable configuration option is in the configuration file
-<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. Most of the important 
-ones are up near the front of the file.</p>
+<span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>. </p>
 <h2>6.1 Configuring the databases</h2>
-<p>Two main databases are created and populated by <span class="code">weewx</span></p>
+<p>This section is necessary only if you are moving from
+<a href="http://www.wviewweather.com/">wview</a> to <span class="code">weewx</span> 
+and wish to transfer your old data over. If you are starting afresh, you do not 
+need to follow this section --- the two main databases are created and populated 
+automatically by <span class="code">weewx</span>.</p>
+<p>Two databases are maintained by weewx:</p>
 <ul>
 	<li><span class="code"><em>$WEEWX_ROOT/$archive_file</em></span> (nominally
 	<span class="code">/home/weewx/archive/weewx.sdb</span>)</li>
 	<li><span class="code"><em>$WEEWX_ROOT/$stats_file</em></span> (nominally
 	<span class="code">/home/weewx/archive/stats.sdb</span>)</li>
 </ul>
-<p>These are created automatically by the main program if they do not exist. If 
-you do not like their nominal locations, you can change them in the configuration 
-file.</p>
-<p>Alternatively, if you have an existing wview database, it can be used instead, 
-and then its data used to backfill the statistical database, using the configuration 
-script <span class="code">configure.py</span>. For example:</p>
+<p>Because wview and weewx use identical schema for the first of these (the 
+archive database), it can be just copied over. However, the second (the 
+statistical databases) are different --- the weewx statistical database must be 
+built manually and backfilled. This is done using the configuration 
+script <span class="code">configure.py</span>. </p>
+<p>Here&#39;s a summary of how to transfer your wview data to <span class="code">
+weewx</span>.</p>
 <p class="tty">mkdir <em>$WEEWX_ROOT</em>/archive<br />
 cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb<br />
 <em>$WEEWX_ROOT</em>/bin/configure.py --create-stats <em>$WEEWX_ROOT</em>/weewx.conf<br />
@@ -453,9 +461,10 @@ with 512 MB of memory it took a little over 4 minutes for a year and a half (25
 MB) of data (while wview was running in the background).</p>
 <h2>6.2 Configuring your weather station</h2>
 <p>The only two variables <span class="code">weewx</span> tries to manage on the 
-VantagePro is the time and the archive interval. </p>
+VantagePro are the time and the archive interval. </p>
 <h3>Time</h3>
-<p>The time on the VP is automatically synchronized with the server every four hours. 
+<p>The time on the VP is automatically synchronized with the <span class="code">
+weewx</span> server every four hours. 
 However, you should run a NTP daemon on your server to insure that it is synchronized 
 with the correct time. Doing so will greatly reduce errors, especially if you send 
 data to services such as the Weather Underground.</p>
@@ -473,8 +482,9 @@ script to set it on the VantagePro. If it differs from the old archive interval,
 the main memory log of the VantagePro will be cleared. </p>
 <p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --configure-VantagePro $WEEWX_ROOT/weewx.conf</p>
 <h2>6.3 Editing the configuration file <span class="code">weewx.conf</span></h2>
-<p>There are many, many options that can be set in the configuration file,
-<span class="code">weewx.conf</span>. They are all documented in this section, although 
+<p>Virtually every conceivable configuration option is in the configuration file
+<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. Most of the important 
+ones are up near the top of the file. They are all documented in this section, although 
 you can safely ignore most of them. The truly important ones, the ones you are likely 
 to have to customize for your station, are shown in <span class="bold_n_blue">
 <strong>bold face and in blue</strong></span>. </p>
