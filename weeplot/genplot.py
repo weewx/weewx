@@ -34,8 +34,8 @@ class GeneralPlot(object):
         self.xscale = None
         self.yscale = None
         
-        self.lmargin = 30
-        self.rmargin = 30
+        self.lmargin = 35
+        self.rmargin = 20
         self.bmargin = 30
         self.tmargin = 20
         self.tbandht = 12
