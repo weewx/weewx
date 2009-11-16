@@ -13,18 +13,17 @@
 import datetime
 import time
 import math
+
 import weeplot
     
-def scale(fmn, fmx, prescale = None):
+def scale(fmn, fmx, nsteps = 10, prescale = None):
     """Calculates an appropriate min, max, and step size for scaling axes on a plot.
-    
-    Reference: 2003 Pharmasug 2003 by Don Li "Tired of Defining Axis Scale for
-    SAAS Graphs? A Solution with Automatic Optimizing Approach."
-    http://www.lexjansen.com/pharmasug/2003/coderscorner/cc024.pdf
     
     fmn: The minimum data value
     
     fmx: The maximum data value. Must be greater than or equal to fmn.
+
+    nsteps: The nominal number of desired steps. Default = 10
     
     prescale: One or more of the results may be preset. [optional]
     
@@ -32,47 +31,43 @@ def scale(fmn, fmx, prescale = None):
     The third value is the step (increment) between them.
     """
     minscale = maxscale = interval = None
+
     if prescale is not None :
-        minscale = prescale[0]
-        maxscale = prescale[1]
-        interval= prescale[2]
+        (minscale, maxscale, interval) = prescale
         
     if fmx < fmn :
         raise weeplot.ViolatedPrecondition, "scale() called with max value less than min value"
 
-    if minscale is not None :
-        fmn = minscale
-    if maxscale is not None :
-        fmx = maxscale
-        
     if fmx == fmn :
         if fmn == 0.0 :
             fmx = 1.0
         else :
             fmx = fmn + .01*abs(fmn)
-    amin = math.floor(fmn)
-    amax = math.ceil(fmx)
-    range = amax-amin
-    
-    unit = range/10.0
-    
-    grade = math.floor(math.log10(unit))
-    sunit = unit / math.pow(10.0, grade)
 
-    if interval is None :
+    if interval is None:
+        range = float(fmx) - float(fmn)
+        steps = range / nsteps
+        
+        mag = math.floor(math.log10(steps))
+        magPow = math.pow(10.0, mag)
+        magMsd = math.floor(steps/magPow + 0.5)
+        
+        if magMsd > 5.0:
+            magMsd = 10.0
+        elif magMsd > 2.0:
+            magMsd = 5.0
+        elif magMsd > 1.0:
+            magMsd = 2
+    
+        interval = magMsd * magPow
+    
+    if minscale is None:
+        Nmin = math.floor(fmn / interval)
+        minscale = Nmin * interval
 
-        if sunit < math.sqrt(2.0) :
-            interval = math.pow(10.0, grade)
-        elif sunit < math.sqrt(10.0) :
-            interval = math.pow(10.0, grade) * 2.0
-        elif sunit < math.sqrt(50.0) :
-            interval = math.pow(10.0, grade) * 5.0
-        else :
-            interval = pow(10.0, grade+1)
-    if maxscale is None :
-        maxscale = math.ceil(amax/interval) * interval
-    if minscale is None :
-        minscale = math.floor(amin/interval) * interval
+    if maxscale is None:
+        Nmax = math.ceil(fmx / interval)
+        maxscale = Nmax * interval
     
     return (minscale, maxscale, interval)
 
@@ -276,7 +271,7 @@ if __name__ == '__main__' :
     import time
     # Unit test:
     assert(scale(1.1, 12.3) == (1.0, 13.0, 1.0))
-    assert(scale(-1.1, 12.3) == (-2.0, 14.0, 2.0))
+    assert(scale(-1.1, 12.3) == (-2.0, 13.0, 1.0))
     assert(scale(-12.1, -5.3) == (-13.0, -5.0, 1.0))
     
     t= time.time()
