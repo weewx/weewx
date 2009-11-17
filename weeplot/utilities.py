@@ -16,25 +16,31 @@ import math
 
 import weeplot
     
-def scale(fmn, fmx, nsteps = 10, prescale = None):
+def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     """Calculates an appropriate min, max, and step size for scaling axes on a plot.
+    
+    The origin (zero) is guaranteed to be on an interval boundary.
     
     fmn: The minimum data value
     
     fmx: The maximum data value. Must be greater than or equal to fmn.
 
-    nsteps: The nominal number of desired steps. Default = 10
+    prescale: A 3-way tuple. A non-None min or max value (positions 0 and 1, 
+    respectively) will be fixed to that value. A non-None interval (position 2)
+    be at least as big as that value. Default = (None, None, None) 
     
-    prescale: One or more of the results may be preset. [optional]
+    nsteps: The nominal number of desired steps. Default = 10
     
     Returns: a three-way tuple. First value is the lowest scale value, second the highest.
     The third value is the step (increment) between them.
     """
-    minscale = maxscale = interval = None
+    
+    (minscale, maxscale, min_interval) = prescale
+    # Make sure fmn and fmx are float values, in case a user passed
+    # in integers:
+    fmn = float(fmn)
+    fmx = float(fmx)
 
-    if prescale is not None :
-        (minscale, maxscale, interval) = prescale
-        
     if fmx < fmn :
         raise weeplot.ViolatedPrecondition, "scale() called with max value less than min value"
 
@@ -44,31 +50,58 @@ def scale(fmn, fmx, nsteps = 10, prescale = None):
         else :
             fmx = fmn + .01*abs(fmn)
 
-    if interval is None:
-        range = float(fmx) - float(fmn)
-        steps = range / nsteps
-        
-        mag = math.floor(math.log10(steps))
-        magPow = math.pow(10.0, mag)
-        magMsd = math.floor(steps/magPow + 0.5)
-        
-        if magMsd > 5.0:
-            magMsd = 10.0
-        elif magMsd > 2.0:
-            magMsd = 5.0
-        elif magMsd > 1.0:
-            magMsd = 2
+    range = fmx - fmn
+    steps = range / nsteps
     
-        interval = magMsd * magPow
+    mag = math.floor(math.log10(steps))
+    magPow = math.pow(10.0, mag)
+    magMsd = math.floor(steps/magPow + 0.5)
     
-    if minscale is None:
-        Nmin = math.floor(fmn / interval)
-        minscale = Nmin * interval
+    if magMsd > 5.0:
+        magMsd = 10.0
+    elif magMsd > 2.0:
+        magMsd = 5.0
+    elif magMsd > 1.0:
+        magMsd = 2
 
-    if maxscale is None:
-        Nmax = math.ceil(fmx / interval)
-        maxscale = Nmax * interval
+    # This will be the nominal interval size
+    interval = magMsd * magPow
     
+    # Test it against the desired minimum, if any
+    if min_interval is None or interval > min_interval:
+        # Either no min interval was specified, or its safely
+        # less than the chosen interval. 
+        if minscale is None:
+            minscale = interval * math.floor(fmn / interval)
+    
+        if maxscale is None:
+            maxscale = interval * math.ceil(fmx / interval)
+
+    else:
+    
+        # The request for a minimum interval has kicked in.
+        # Sometimes this can make for a plot with just one or
+        # two intervals in it. Adjust the min and max values
+        # to get a nice plot
+        interval = min_interval
+
+        if minscale is None:
+            if maxscale is None:
+                # Both can float. Pick values so the range is near the bottom
+                # of the scale:
+                minscale = interval * math.floor(fmn / interval)
+                maxscale = minscale + interval * nsteps
+            else:
+                # Only minscale can float
+                minscale = maxscale - interval * nsteps
+        else:
+            if maxscale is None:
+                # Only maxscale can float
+                maxscale = minscale + interval * nsteps
+            else:
+                # Both are fixed --- nothing to be done
+                pass
+
     return (minscale, maxscale, interval)
 
 
@@ -273,6 +306,7 @@ if __name__ == '__main__' :
     assert(scale(1.1, 12.3) == (1.0, 13.0, 1.0))
     assert(scale(-1.1, 12.3) == (-2.0, 13.0, 1.0))
     assert(scale(-12.1, -5.3) == (-13.0, -5.0, 1.0))
+    assert(scale(0.0, 0.05, (None, None, .1), 10) == (0.0, 1.0, 0.1))
     
     t= time.time()
     scaletime(t - 24*3600 - 20, t)

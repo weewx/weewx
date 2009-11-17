@@ -81,9 +81,15 @@ def get_font_handle(fontpath, *args):
         
     return font 
 
+def convertToFloat(seq):
+    """Convert a sequence with strings to floats, honoring 'Nones'"""
+    
+    if seq is None: return None
+    res = [None if s in ('None', 'none') else float(s) for s in seq]
+    return res
 
-def accumulatescalars(d):
-    """Merges scalar options above a ConfigObj section with itself, accumulating the results.
+def accumulateLeaves(d):
+    """Merges leaf options above a ConfigObj section with itself, accumulating the results.
     
     This routine is useful for specifying defaults near the root node, 
     then having them overridden in the leaf nodes of a ConfigObj.
@@ -97,7 +103,7 @@ def accumulatescalars(d):
         cum_dict = configobj.ConfigObj()
     else :
         # Otherwise, recursively accumulate scalars above me
-        cum_dict = accumulatescalars(d.parent)
+        cum_dict = accumulateLeaves(d.parent)
         
     # Now merge my scalars into the results:
     merge_dict = {}

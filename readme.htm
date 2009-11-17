@@ -178,15 +178,14 @@ this program. If not, see <http://www.gnu.org/licenses/>
 reasons: it was a wet and miserable winter here in Oregon with not much else to 
 do, so there was no good reason not to, and because I wanted a simple, easy-to-understand 
 server to run my Davis VantagePro2 weather station on a Linux box. I had been using
-<a href="http://www.wviewweather.com/">wview</a>, which is a very
-high-performance, stable, and feature rich system authored by Michael
-Teel with lots of users. Written in C, it&#39;s an amazingly efficient
-system that can run on very underpowered boxes.  In exchange, it&#39;s
-huge (55,000+ lines of code), tightly integrated in with its companion
-library, radlib (another 24,000+ lines), and complex.  But, if
-you&#39;re looking to be in good company and you want to run on
-inexpensive, featherweight machines such as the
-<a href="http://en.wikipedia.org/wiki/NSLU2">Linksys NSLU2</a>, you can&#39;t beat it.</p>
+<a href="http://www.wviewweather.com/">wview</a>, which is a very high-performance, 
+stable, and feature rich system authored by Michael Teel with lots of users. Written 
+in C, it&#39;s an amazingly efficient system that can run on very underpowered boxes. 
+In exchange, it&#39;s huge (55,000+ lines of code), tightly integrated in with its companion 
+library, radlib (another 24,000+ lines), and complex. But, if you&#39;re looking to 
+be in good company and you want to run on inexpensive, featherweight machines such 
+as the <a href="http://en.wikipedia.org/wiki/NSLU2">Linksys NSLU2</a>, you can&#39;t 
+beat it.</p>
 <p>Having made a career in C++ and Java, I was also interested in some more modern 
 languages, so I thought I&#39;d try either Python or Ruby (although, truth be told, 
 the roots of Python are nearly as old as C++!). I picked Python because its libraries 
@@ -425,19 +424,19 @@ the <span class="code">setup.py</span> script does include special provisions fo
 updating your configuration file <span class="code">weewx.conf</span>, which can 
 be handy when upgrading to a later version.</p>
 <h1>6. <a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
-<p>This section covers configuring your archive and statistical database (if 
-necessary; this step is required only if you are moving from
-<a href="http://www.wviewweather.com/">wview</a> to weewx), configuring your 
-weather station, and configuring the configuration file <span class="code">
-weewx.conf</span>.</p>
+<p>This section covers configuring your archive and statistical database (if necessary; 
+this step is required only if you are moving from
+<a href="http://www.wviewweather.com/">wview</a> to weewx), configuring your weather 
+station, and configuring the configuration file <span class="code">weewx.conf</span>.</p>
 <p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to the
-<span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>. </p>
+<span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>.
+</p>
 <h2>6.1 Configuring the databases</h2>
 <p>This section is necessary only if you are moving from
 <a href="http://www.wviewweather.com/">wview</a> to <span class="code">weewx</span> 
 and wish to transfer your old data over. If you are starting afresh, you do not 
-need to follow this section --- the two main databases are created and populated 
-automatically by <span class="code">weewx</span>.</p>
+need to follow this section — the two main databases are created and populated automatically 
+by <span class="code">weewx</span>.</p>
 <p>Two databases are maintained by weewx:</p>
 <ul>
 	<li><span class="code"><em>$WEEWX_ROOT/$archive_file</em></span> (nominally
@@ -445,13 +444,12 @@ automatically by <span class="code">weewx</span>.</p>
 	<li><span class="code"><em>$WEEWX_ROOT/$stats_file</em></span> (nominally
 	<span class="code">/home/weewx/archive/stats.sdb</span>)</li>
 </ul>
-<p>Because wview and weewx use identical schema for the first of these (the 
-archive database), it can be just copied over. However, the second (the 
-statistical databases) are different --- the weewx statistical database must be 
-built manually and backfilled. This is done using the configuration 
-script <span class="code">configure.py</span>. </p>
-<p>Here&#39;s a summary of how to transfer your wview data to <span class="code">
-weewx</span>.</p>
+<p>Because wview and weewx use identical schema for the first of these (the archive 
+database), it can be just copied over. However, the second (the statistical databases) 
+are different — the weewx statistical database must be built manually and backfilled. 
+This is done using the configuration script <span class="code">configure.py</span>.
+</p>
+<p>Here&#39;s a summary of how to transfer your wview data to <span class="code">weewx</span>.</p>
 <p class="tty">mkdir <em>$WEEWX_ROOT</em>/archive<br />
 cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb<br />
 <em>$WEEWX_ROOT</em>/bin/configure.py --create-stats <em>$WEEWX_ROOT</em>/weewx.conf<br />
@@ -465,10 +463,9 @@ MB) of data (while wview was running in the background).</p>
 VantagePro are the time and the archive interval. </p>
 <h3>Time</h3>
 <p>The time on the VP is automatically synchronized with the <span class="code">
-weewx</span> server every four hours. 
-However, you should run a NTP daemon on your server to insure that it is synchronized 
-with the correct time. Doing so will greatly reduce errors, especially if you send 
-data to services such as the Weather Underground.</p>
+weewx</span> server every four hours. However, you should run a NTP daemon on your 
+server to insure that it is synchronized with the correct time. Doing so will greatly 
+reduce errors, especially if you send data to services such as the Weather Underground.</p>
 <h3><a name="Archive_interval">Archive interval</a></h3>
 <p>The archive interval is set in the main configuration file <span class="code">
 <em>$WEEWX_ROOT</em>/weewx.conf. </span>Look for the entry <span class="code">archive_interval</span> 
@@ -683,17 +680,30 @@ this is each of the SQL types to be included in the image. Values specified in t
 level above can be overridden. For example, here&#39;s a typical set of options for 
 sub-sub-section <span class="code">[[[monthrain]]]</span>: </p>
 <p class="tty">[[[monthrain]]]<br />
-&nbsp; [[[[rain]]]]<br />
 &nbsp; plot_type = bar<br />
-&nbsp; aggregate_type = sum<br />
-&nbsp; aggregate_interval = 86400<br />
-&nbsp; label = Rain (daily avg)</p>
+&nbsp; yscale = None, None, 0.02<br />
+&nbsp; [[[[rain]]]]<br />
+&nbsp;&nbsp;&nbsp; aggregate_type = sum<br />
+&nbsp;&nbsp;&nbsp; aggregate_interval = 86400<br />
+&nbsp;&nbsp;&nbsp; label = Rain (daily avg)</p>
 <p>This will generate an image file with name <span class="code">monthrain.png</span>. 
-In it will be a bar plot showing SQL type &#39;rain&#39;. The aggregation type will be summing 
-(overriding the averaging specified in sub-section <span class="code">[[month_images]]</span>, 
+It will be a bar plot. Option <span class="code">yscale</span> controls the y-axis 
+scaling &mdash; if left out, the scale will automatically be chosen. However, in this 
+example we are choosing to exercise some degree of control by specifying values 
+explicitly. It is a 3-way tuple (<span class="code">ylow</span>,
+<span class="code">yhigh</span>, <span class="code">min_interval</span>), where
+<span class="code">ymin</span> and <span class="code">ymax</span> are the minimum 
+and maximum y-axis values, respectively, and <span class="code">min_interval</span> 
+is the minimum tick interval. If set to &#39;<span class="code">None</span>&#39;, the corresponding 
+value will be automatically chosen. So, in this example, we are letting
+<span class="code">weewx</span> pick sensible y minimum and maximum values, but 
+we are requiring that the tick increment (<span class="code">min_interval</span>) 
+be at least 0.02. Continuing on in the example, there will be only one SQL type 
+plotted, <span class="code">rain</span>. The aggregation type will be summing (overriding 
+the averaging specified in sub-section <span class="code">[[month_images]]</span>, 
 so you get the total rain over the aggregate period rather than the average) over 
-an aggregation interval of 86,400 seconds (one day). It will also include the indicated 
-label.</p>
+an aggregation interval of 86,400 seconds (one day). The plot line will be titled 
+with the indicated label (&#39;<span class="code">Rain (daily avg)</span>&#39;)</p>
 <p>More than one SQL type can be included in a plot. For example, here&#39;s how to 
 generate a plot with the week&#39;s outside temperature as well as dewpoint:</p>
 <p class="tty">[[[monthtempdew]]]<br />

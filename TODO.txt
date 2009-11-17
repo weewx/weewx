@@ -1,3 +1,4 @@
 TODO, in decreasing order of importance.
 
-A few "del" here and there might reduce memory requirements.
+Rethink the logic of carrying over values from an old config file to the new,
+when doing an upgrade. Present logic doesn't see commented out sections.

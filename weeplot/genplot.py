@@ -296,28 +296,27 @@ class GeneralPlot(object):
         """Calculates y scaling. Can be used 'as-is' for most purposes.
         
         """
-        if self.yscale is None:
-            # The filter is necessary because unfortunately the value 'None' is not
-            # excluded from min and max (i.e., min(None, x) is not necessarily x). 
-            # Plus, min of an empty list throws a ValueError exception.
-            ymin = ymax = None
-            for line in self.line_list:
-                try :
-                    yline_min = min(filter(lambda v : v is not None, line.y))
-                    ymin = min(yline_min, ymin) if ymin is not None else yline_min
-                except ValueError:
-                    pass
-                try :
-                    yline_max = max(filter(lambda v : v is not None, line.y))
-                    ymax = max(yline_max, ymax) if ymax is not None else yline_max
-                except ValueError:
-                    pass
-            
-            if ymin is None and ymax is None :
-                # No valid data. Pick an arbitrary scaling
-                self.yscale=(0.0, 1.0, 0.2)
-            else:
-                self.yscale = weeplot.utilities.scale(ymin, ymax)
+        # The filter is necessary because unfortunately the value 'None' is not
+        # excluded from min and max (i.e., min(None, x) is not necessarily x). 
+        # Plus, min of an empty list throws a ValueError exception.
+        ymin = ymax = None
+        for line in self.line_list:
+            try :
+                yline_min = min(filter(lambda v : v is not None, line.y))
+                ymin = min(yline_min, ymin) if ymin is not None else yline_min
+            except ValueError:
+                pass
+            try :
+                yline_max = max(filter(lambda v : v is not None, line.y))
+                ymax = max(yline_max, ymax) if ymax is not None else yline_max
+            except ValueError:
+                pass
+        
+        if ymin is None and ymax is None :
+            # No valid data. Pick an arbitrary scaling
+            self.yscale=(0.0, 1.0, 0.2)
+        else:
+            self.yscale = weeplot.utilities.scale(ymin, ymax, self.yscale)
 
     def _calcXLabelFormat(self):
         if self.x_label_format is None:

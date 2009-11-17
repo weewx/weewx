@@ -60,10 +60,13 @@ class GenImages(object):
             for plotname in self.image_dict[timespan].sections :
                 
                 # Accumulate all options from parent nodes:
-                plot_options = weeutil.weeutil.accumulatescalars(self.image_dict[timespan][plotname])
+                plot_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname])
                 
                 # Get the name of the file that the image is going to be saved to:
                 img_file = os.path.join(self.image_root, '%s.png' % plotname)
+                
+                if plotname == 'dayrain':
+                    pass
     
                 # Check whether this plot needs to be done:
                 s = plot_options.get('aggregate_interval')
@@ -81,7 +84,7 @@ class GenImages(object):
                 # Loop over each line type ('outTemp', 'rain', etc.) within the plot.
                 for line_type in line_type_list:
                     # Accumulate options from parent nodes. 
-                    line_options[line_type] = weeutil.weeutil.accumulatescalars(self.image_dict[timespan][plotname][line_type])
+                    line_options[line_type] = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname][line_type])
                     
                     # Look for aggregation type:
                     aggregate_type = line_options[line_type].get('aggregate_type')
@@ -108,6 +111,7 @@ class GenImages(object):
                 
                 # Set the min, max time axis here.
                 plot.setXScaling((minstamp, maxstamp, timeinc))
+                plot.setYScaling(weeutil.weeutil.convertToFloat(plot_options.get('yscale')))
                 
                 # Get a suitable bottom label:
                 bottom_label_format = plot_options.get('bottom_label_format', '%m/%d/%y %H:%M')
