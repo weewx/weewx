@@ -35,7 +35,11 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     The third value is the step (increment) between them.
     """
     
+    if all(x is not None for x in prescale):
+        return prescale
+
     (minscale, maxscale, min_interval) = prescale
+    
     # Make sure fmn and fmx are float values, in case a user passed
     # in integers:
     fmn = float(fmn)
@@ -61,7 +65,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         magMsd = 10.0
     elif magMsd > 2.0:
         magMsd = 5.0
-    elif magMsd > 1.0:
+    else : # magMsd > 1.0
         magMsd = 2
 
     # This will be the nominal interval size
