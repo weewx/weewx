@@ -28,6 +28,7 @@ class Station(object):
         self.altitude = "%d %s" % (self.altitude_f, alt_units)
         self.location        = config_dict['Station']['location']
         self.rain_year_start = int(config_dict['Station'].get('rain_year_start', '1'))
+        self.rain_year_str   = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
         self.radar_url       = config_dict['Station'].get('radar_url','')
         self.uptime = weeutil.weeutil.secs_to_string(time.time() - weewx.launchtime_ts) if weewx.launchtime_ts else ''
         self.version = weewx.__version__

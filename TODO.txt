@@ -3,13 +3,9 @@ TODO, in decreasing order of importance.
 Rethink the logic of carrying over values from an old config file to the new,
 when doing an upgrade. Present logic doesn't see commented out sections.
 
-Rain year start should be parameterized in year.tmpl, rather than hardwired in.
-
 Default to caching LOOP data.
 
 Separate UPGRADE instructions.
 
 Remind users to set HOME in setup.cfg, even when doing an upgrade.
 
-Why are different fonts being used for H1 in my weather station, 
-versus everyone else's?
