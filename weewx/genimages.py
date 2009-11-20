@@ -65,9 +65,6 @@ class GenImages(object):
                 # Get the name of the file that the image is going to be saved to:
                 img_file = os.path.join(self.image_root, '%s.png' % plotname)
                 
-                if plotname == 'dayrain':
-                    pass
-    
                 # Check whether this plot needs to be done:
                 s = plot_options.get('aggregate_interval')
                 ai = int(s) if s is not None else None 
