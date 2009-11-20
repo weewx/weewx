@@ -26,8 +26,8 @@
     In addition to the normal setup script duties, this script does the
     following:
 
- 1. When building a source distribution ('sdist') it filters out username
-    and password information from the configuration file weewx.conf
+ 1. When building a source distribution ('sdist') it checks for
+    password information in the configuration file weewx.conf
 
  2. It merges any existing weewx.conf configuration files into the new, thus
     preserving any user changes.
@@ -43,6 +43,8 @@ from distutils.core import setup, Command
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 from distutils import log
+
+import sys
 import os
 import os.path
 import re
@@ -159,7 +161,7 @@ def backup(filepath):
     return newpath
 
 class My_sdist(sdist):
-    """Specialized version of sdist which does not include password information in distribution
+    """Specialized version of sdist which checks for password information in distribution
 
     See http://epydoc.sourceforge.net/stdlib/distutils.command.sdist.sdist-class.html
     for possible sdist instance methods."""
@@ -173,32 +175,18 @@ class My_sdist(sdist):
         # If this is the configuration file, then massage it to eliminate
         # the password info
         if f == 'weewx.conf':
-            # Should have a more useful logging message than this!
+            # If we're working with the configuration file, make sure it doesn't
+            # have any private data in it.
             config = configobj.ConfigObj(f)
-            config.indent_type = '    '
-            try:
-                config['FTP']['user'] = """replace with your username"""
-                config['FTP']['password'] = """replace with your password"""
-                config['FTP']['server'] = """replace with your server name, eg, www.threefools.org"""
-                config['FTP']['path'] = """replace with the destination root directory on your server"""
-                print config['FTP']['user']
-                print config['FTP']['password']
-                print config['FTP']['server']
-                log.info("%s %s -> %s", 'filtering', f, install_dir)
-            except KeyError:
-                pass
-            try:
-                config['Wunderground']['station'] = " (replace with your Weather Underground station name)"
-                config['Wunderground']['password'] = "(replace with your password)"
-            except KeyError:
-                pass
-            if not self.dry_run:
-                outfile = open(install_dir, 'w')
-                config.write(outfile)
-                outfile.close()
-            return (install_dir, True)
-        else :
-            return sdist.copy_file(self, f, install_dir, **kwargs)
+
+            if config.has_key('FTP') and config['FTP'].has_key('password'):
+                sys.stderr.write("\n*** FTP password found in configuration file. Aborting ***\n\n")
+                exit()
+
+            if config.has_key('Wunderground') and config['Wunderground'].has_key('password'):
+                sys.stderr.write("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
+                exit()
+        return sdist.copy_file(self, f, install_dir, **kwargs)
 
 setup(name='weewx',
       version=VERSION,

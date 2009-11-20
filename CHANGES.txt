@@ -8,6 +8,16 @@ now does a better job for ranges less than 1.0. The user can also
 hardwire in min and max values, as well as specify a minimum increment, through
 parameter 'yscale' in section [Images] in the configuration file.
 
+Rain year is now parameterized in file templates/year.tmpl (instead of 
+being hardwired in).
+
+Now does LOOP caching by default.
+
+When doing backfilling to the stats database, configure now creates the stats
+database if it doesn't already exist.
+
+setup.py now more robust to upgrading the FTP and Wunderground sections
+
 
 1.1.0   11/14/09
 

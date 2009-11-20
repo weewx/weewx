@@ -529,16 +529,6 @@ year starts in October (as mine does). Default is 1.</p>
 <h4 class="config_important">radar_url</h4>
 <p>This variable is available in the HTML templates. Set it to an appropriate URL 
 to display a radar image for your area. No default.</p>
-<h4 class="config_important">cache_loop_data</h4>
-<p>Set to 1 (one) to cache LOOP data, otherwise, set to zero. By default,
-<span class="code">weewx </span>updates the statistical database with every LOOP 
-update. This can be as often as every two seconds. If you are using a solid-state 
-disk as your permanent store, this can result in a lot of wear on the device. By 
-setting <span class="code">cache_loop_data </span>to 1, the LOOP data will be cached, 
-and the stats database will be updated only when new archive data is due. This results 
-in many fewer writes to the database, but possible loss of data should your server 
-go down between archive updates. (The only data actually lost would be any new High/Lows 
-found during the archive period.) The default is 0 (no caching).</p>
 <h4 class="config_option">heating_base<br />
 cooling_base</h4>
 <p>Set to the base temperature for calculating heating and cooling degree-days, 
@@ -546,6 +536,10 @@ respectively. The default is 65.0 for both.</p>
 <h4 class="config_option">hemispheres</h4>
 <p>Set to suitable abbreviations for the four hemispheres. Default is &quot;N&quot;, &quot;S&quot;, 
 &quot;E&quot;, &quot;W&quot;</p>
+<h4 class="config_option">cache_loop_data</h4>
+<p>Set to 1 (one) to cache LOOP data, otherwise, set to zero. Most users will 
+not want to change this unless you have a specialized application. Default is 1 
+(cache LOOP data).</p>
 <h4 class="config_option">station_type</h4>
 <p>Set to the type of hardware you are using. For this version, only &#39;<span class="code">VantagePro</span>&#39; 
 is accepted. Required.</p>
@@ -598,8 +592,7 @@ only Imperial. In any case, Imperial is the only system supported by
 <span class="code">weewx</span> can FTP them for you. It does an incremental update, 
 that is, it only FTPs any files that have changed, saving outgoing bandwidth with 
 your Internet connection.</p>
-<p>If you do not use such a server, comment out the entire section, including the 
-&#39;<span class="code">[FTP]</span>&#39; heading.</p>
+<p>If you do not use such a server, comment out the first four options below.</p>
 <p class="config_important">user</p>
 <p>Set to the username you use for your FTP connection to your web server. Required. 
 No default.</p>
@@ -611,7 +604,8 @@ No default.</p>
 www.threefools.org</a>, in my case). Required. No default</p>
 <p class="config_important">path</p>
 <p>Set to the path where the weather data will be stored on your webserver (e.g., 
-&#39;<span class="code">weather</span>&#39;). Required. No default.</p>
+&#39;<span class="code">/weather</span>&#39;). NB: some FTP servers require a 
+leading slash (&#39;<span class="code">/</span>&#39;), some don&#39;t. Required. No default.</p>
 <h4 class="config_important">passive</h4>
 <p>Set to 1 if you wish to use the more modern, FTP passive mode, 0 if you wish 
 to use active mode. Passive mode generally works better through firewalls, but not 
@@ -623,9 +617,8 @@ mode).</p>
 <p><span class="code">Weewx</span> will try up to this many times to FTP a file 
 up to your server before giving up. Default is 3.</p>
 <h3 class="config_section">[Wunderground]</h3>
-<p><span class="code">Weewx </span>can send your current data to the Weather Underground. 
-If you do not wish to do this, comment out the entire section, including the &#39;<span class="code">[Wunderground]</span>&#39; 
-heading.</p>
+<p><span class="code">Weewx </span>can send your current data to the Weather 
+Underground. If you do not wish to do this, comment out the two options below.</p>
 <h4 class="config_option"><span class="config_important">station</span></h4>
 <p>Set to your Weather Underground station ID (e.g., <span class="code">KORHOODR3</span>). 
 Required.</p>
