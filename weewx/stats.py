@@ -743,14 +743,18 @@ class StatsDb(object):
     # the second member is lastUpdate. If caching is not being used, then
     # self.__dayCache equals None.
     #
-    def __init__(self, statsFilename, heatbase, coolbase, cacheLoopData = False):
+    def __init__(self, statsFilename, heatbase = None, coolbase = None, cacheLoopData = True):
         """Create an instance of StatsDb to manage a database.
         
         statsFilename: Path to the stats database file.
         
         heatbase: The base degrees for calculating heating degree-days
 
-        coolbase: The base degrees for calculating cooling degree-days"""
+        coolbase: The base degrees for calculating cooling degree-days
+        
+        cacheLoopData: True if LOOP data is to be cached and written only when
+        new archive data comes in. Otherwise, it gets written with the arrival
+        of every LOOP packet. [Optional. Default is True]"""
         self.statsFilename = statsFilename
         self.statsTypes    = StatsDb.__getTypes(statsFilename)
         self.heatbase      = heatbase
