@@ -174,8 +174,8 @@ def scaletime(tmin_ts, tmax_ts) :
         # Average month length:
         interval = 365.25/12 * 24 * 3600
     # Convert to epoch time stamps
-    start_ts = time.mktime(start_dt.timetuple())
-    stop_ts  = time.mktime(stop_dt.timetuple())
+    start_ts = int(time.mktime(start_dt.timetuple()))
+    stop_ts  = int(time.mktime(stop_dt.timetuple()))
 
     return (start_ts, stop_ts, interval)
     
@@ -206,10 +206,10 @@ class ScaledDraw(object):
         lls = scaledbox[0]
         urs = scaledbox[1]
         
-        self.xscale = (lri[0] - uli[0]) / (urs[0] - lls[0])
-        self.yscale = -(lri[1] - uli[1]) / (urs[1] - lls[1]) 
-        self.xoffset = lri[0] - urs[0] * self.xscale
-        self.yoffset = uli[1] - urs[1] * self.yscale
+        self.xscale =  float(lri[0] - uli[0]) / float(urs[0] - lls[0])
+        self.yscale = -float(lri[1] - uli[1]) / float(urs[1] - lls[1]) 
+        self.xoffset = int(lri[0] - urs[0] * self.xscale + 0.5)
+        self.yoffset = int(uli[1] - urs[1] * self.yscale + 0.5)
 
         self.draw    = draw
         
@@ -226,7 +226,7 @@ class ScaledDraw(object):
             # Scale it
             xy_seq_scaled = zip([self.xtranslate(x) for x in x_seq], 
                                 [self.ytranslate(y) for y in y_seq])
-             # Draw it:
+            # Draw it:
             if len(xy_seq_scaled) == 1 :
                 self.draw.point(xy_seq_scaled, fill = options['fill'])
             else :
