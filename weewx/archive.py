@@ -218,12 +218,12 @@ class Archive(object):
             _connection.close()
 
     def getSqlVectors(self, sql_type, startstamp, stopstamp, aggregate_interval = None, aggregate_type = None):
-        """Get a time vector bounded by startstamp, stopstamp, with a given time interval
+        """Get time and data vectors bounded by startstamp, stopstamp, with a given time interval
         
         The return value is a 2-way tuple. The first member is a vector of time
-        values, the second member a vector of values for sql type sql_type. 
+        values, the second member a vector of data values for sql type sql_type. 
         
-        An example of a returned value is: ( time_vec, outTempVec). 
+        An example of a returned value is: (time_vec, outTempVec). 
         
         If aggregation is desired (archive_interval is not None), then each element represents
         a time interval exclusive on the left, inclusive on the right. The time
@@ -245,21 +245,22 @@ class Archive(object):
         
         sql_type: The sql type to be retrieved (e.g., 'outTemp'). 
         
-        startstamp: Records with time stamp greater than this will be retrieved.
-        If archive_interval is not None, then the first interval will be from this value,
-        exclusive. 
+        startstamp: If aggregation_interval is None, then data with timestamps greater
+        than or equal to this value will be returned. If aggregation_interval is not
+        None, then the start of the first interval will be greater than (exclusive of) this
+        value. 
         
         stopstamp: Records with time stamp less than or equal to this will be retrieved.
         If interval is not None, then the last interval will include this value.
         
         aggregate_interval: If aggregation is desired, this is the time interval over which a
-        result will be aggregated. Default: None
+        result will be aggregated. Default: None (no aggregation)
         
         aggregate_type: If aggregation is desired, this is the type of aggregation (e.g.,
-        'sum', or 'max'). Default: None
+        'sum', or 'max'). Default: None (no aggregation)
 
         returns: A 2-way tuple. First element is the time vector, second element the
-        y vector.        
+        data vector.        
         """
 
         _connection = sqlite3.connect(self.archiveFile)
@@ -280,7 +281,7 @@ class Archive(object):
                             time_vec.append(_rec[0])
                             y_vec.append(_rec[1])
             else:
-                sql_str = 'SELECT dateTime, %s FROM archive WHERE dateTime > ? AND dateTime <= ?' % sql_type
+                sql_str = 'SELECT dateTime, %s FROM archive WHERE dateTime >= ? AND dateTime <= ?' % sql_type
                 _cursor.execute(sql_str, (startstamp, stopstamp))
                 for _rec in _cursor:
                     time_vec.append(_rec[0])
