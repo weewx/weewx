@@ -56,6 +56,7 @@ class GeneralPlot(object):
         self.top_label_font_path    = config_dict.get('top_label_font_path')
         self.top_label_font_size    = int(config_dict.get('top_label_font_size', 10))
 
+        self.unit_label = None
         self.unit_label_font_path   = config_dict.get('unit_label_font_path')
         self.unit_label_font_color  = int(config_dict.get('unit_label_font_color', 0x000000), 0)
         self.unit_label_font_size   = int(config_dict.get('unit_label_font_size', 10))
@@ -258,7 +259,8 @@ class GeneralPlot(object):
 
         # Put the units in the upper left corner
         unit_label_font = weeutil.weeutil.get_font_handle(self.unit_label_font_path, self.unit_label_font_size)
-        draw.text((0,0), self.unit_label, fill=self.unit_label_font_color, font=unit_label_font)
+        if self.unit_label:
+            draw.text((0,0), self.unit_label, fill=self.unit_label_font_color, font=unit_label_font)
 
         top_label_font = weeutil.weeutil.get_font_handle(self.top_label_font_path, self.top_label_font_size)
         
