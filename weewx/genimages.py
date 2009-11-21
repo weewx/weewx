@@ -66,48 +66,21 @@ class GenImages(object):
                 img_file = os.path.join(self.image_root, '%s.png' % plotname)
                 
                 # Check whether this plot needs to be done:
-                s = plot_options.get('aggregate_interval')
-                ai = int(s) if s is not None else None 
+                ai = plot_options.get('aggregate_interval')
+                if ai is not None:
+                    ai = int(ai)
                 if skipThisPlot(time_ts, ai, img_file) :
                     continue
                 
                 # Calculate a suitable min, max time for the requested time span
                 (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(time_ts - plot_options.as_int('time_length'), time_ts)
-    
-                sql_list = []
-                line_options = {}
-                line_type_list = self.image_dict[timespan][plotname].sections
-                # Gather the data necessary for this plot.
-                # Loop over each line type ('outTemp', 'rain', etc.) within the plot.
-                for line_type in line_type_list:
-                    # Accumulate options from parent nodes. 
-                    line_options[line_type] = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname][line_type])
-                    
-                    # Look for aggregation type:
-                    aggregate_type = line_options[line_type].get('aggregate_type')
-                    if aggregate_type is None or aggregate_type=='' or aggregate_type == 'none':
-                        # No aggregation specified.
-                        aggregate_type = None
-                        aggregate_interval = None
-                        sql_list.append(line_type)
-                    else :
-                        # Aggregation specified. Get the interval.
-                        # TODO: Assumes that all lines use the same aggregation interval.
-                        aggregate_interval = line_options[line_type].as_int('aggregate_interval')
-                        # Form the SQL aggregation of this variable. 
-                        # Results will look like 'max(windGust)', etc.
-                        # Then append it to the list of desired variables.
-                        sql_list.append("%s(%s)" % (aggregate_type, line_type))
-                    
-                # We've accumulated all the variable types necessary for this plot.
-                # Go get them.
-                (timevec, yvals) = archive.getSqlVectorsTS(sql_list, minstamp, maxstamp, aggregate_interval)
                 
                 # Create a new instance of a time plot and start adding to it
                 plot = weeplot.genplot.TimePlot(plot_options)
                 
-                # Set the min, max time axis here.
+                # Set the min, max time axis
                 plot.setXScaling((minstamp, maxstamp, timeinc))
+                # Set the y-scaling, using any user-supplied hints: 
                 plot.setYScaling(weeutil.weeutil.convertToFloat(plot_options.get('yscale')))
                 
                 # Get a suitable bottom label:
@@ -115,11 +88,41 @@ class GenImages(object):
                 bottom_label = time.strftime(bottom_label_format, time.localtime(time_ts))
                 plot.setBottomLabel(bottom_label)
         
-                # Go through each line, adding it to the plot with suitable label, color, and width
-                for i, line_type in enumerate(line_type_list):
+                # Loop over each line type ('outTemp', 'rain', etc.) to be added to the plot.
+                for line_type in self.image_dict[timespan][plotname].sections:
+
+                    # Accumulate options from parent nodes. 
+                    line_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname][line_type])
+                    
+                    # Add a unit label. NB: all will get overwritten except the last.
+                    # TODO: Allow multiple unit labels, one for each plot line?
+                    # Get the label from the configuration dictionary. 
+                    unit_label = self.label_dict['ImperialUnits'].get(line_type, '')
+                    # Because it is likely to use escaped characters, decode it.
+                    unit_label = unit_label.decode('string_escape')
+                    plot.setUnitLabel(unit_label)
+                    
+                    # Look for aggregation type:
+                    aggregate_type = line_options.get('aggregate_type')
+                    if aggregate_type in (None, '', 'None', 'none'):
+                        # No aggregation specified.
+                        aggregate_type     = None
+                        aggregate_interval = None
+                    else :
+                        try:
+                            # Aggregation specified. Get the interval.
+                            aggregate_interval = line_options.as_int('aggregate_interval')
+                        except KeyError:
+                            syslog.syslog(syslog.LOG_ERR, "genimages: aggregate interval required for aggregate type %s" % aggregate_type)
+                            syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % line_type)
+                            continue
+
+                    # Get the data vectors from the database:
+                    (timevec, yvec) = archive.getSqlVectors(line_type, minstamp, maxstamp, 
+                                                            aggregate_interval, aggregate_type)
                     
                     # See if a line label has been explicitly requested:
-                    label = self.image_dict[timespan][plotname][line_type].get('label')
+                    label = line_options.get('label')
                     if not label:
                         # No explicit label. Is there a generic one in the config dict?
                         label = self.label_dict['Generic'].get(line_type)
@@ -132,29 +135,21 @@ class GenImages(object):
                     color = int(color_str,0) if color_str is not None else None
                     
                     # Get the line width, if explicitly requested.
-                    width_str = line_options[line_type].get('width')
+                    width_str = line_options.get('width')
                     width = int(width_str) if width_str is not None else None
                     
                     # Get the type of line ("bar', or 'line')
-                    type = line_options[line_type].get('plot_type', 'line')
+                    type = line_options.get('plot_type', 'line')
                     
-                    aggregate_interval = line_options[line_type].as_int('aggregate_interval') if type != 'line' else None
+                    #aggregate_interval = line_options[line_type].as_int('aggregate_interval') if type != 'line' else None
                     
                     # Add the data to the emerging plot:
-                    plot.addLine(weeplot.genplot.PlotLine(timevec, yvals[i], 
+                    plot.addLine(weeplot.genplot.PlotLine(timevec, yvec, 
                                                           label    = label, 
                                                           color    = color,
                                                           width    = width,
                                                           type     = type, 
                                                           interval = aggregate_interval))
-                    
-                    # Add a unit label. NB: all will get overwritten except the last.
-                    # TODO: Allow multiple unit labels, one for each plot line?
-                    # Get the label from the configuration dictionary. 
-                    unit_label = self.label_dict['ImperialUnits'].get(line_type, '')
-                    # Because it is likely to use escaped characters, decode it.
-                    unit_label = unit_label.decode('string_escape')
-                    plot.setUnitLabel(unit_label)
                     
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()

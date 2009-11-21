@@ -217,20 +217,19 @@ class Archive(object):
             _cursor.close()
             _connection.close()
 
-    def getSqlVectorsTS(self, sql_list, startstamp, stopstamp, interval=None):
+    def getSqlVectors(self, sql_type, startstamp, stopstamp, aggregate_interval = None, aggregate_type = None):
         """Get a time vector bounded by startstamp, stopstamp, with a given time interval
         
         The return value is a 2-way tuple. The first member is a vector of time
-        values. The second member is an N-way tuple, where N is the length of sql_list,
-        containing vectors of the desired variables. 
+        values, the second member a vector of values for sql type sql_type. 
         
-        An example of a returned value is: ( time_vec, (outTempVec, inTempVec)). 
+        An example of a returned value is: ( time_vec, outTempVec). 
         
-        If aggregation is desired (interval is not None), then each element represents
+        If aggregation is desired (archive_interval is not None), then each element represents
         a time interval exclusive on the left, inclusive on the right. The time
         elements will all fall on the same local time boundary as startstamp. 
         For example, if startstamp is 8-Mar-2009 18:00
-        and interval is 10800 (3 hours), then the returned time vector will be
+        and archive_interval is 10800 (3 hours), then the returned time vector will be
         (shown in local times):
         
         8-Mar-2009 21:00
@@ -244,59 +243,54 @@ class Archive(object):
         NB: there is an algorithmic assumption here that all archived
         time intervals are the same length. That is, the archive interval cannot change.
         
-        sql_list: A list of sql types to be retrieved. If interval is not None, then
-        these should be aggregate types (i.e., max(outTemp), etc.)
+        sql_type: The sql type to be retrieved (e.g., 'outTemp'). 
         
         startstamp: Records with time stamp greater than this will be retrieved.
-        If interval is not None, then the first interval will be from this value,
+        If archive_interval is not None, then the first interval will be from this value,
         exclusive. 
         
         stopstamp: Records with time stamp less than or equal to this will be retrieved.
         If interval is not None, then the last interval will include this value.
         
-        interval: If aggregation is desired, this is the time interval over which a
+        aggregate_interval: If aggregation is desired, this is the time interval over which a
         result will be aggregated. Default: None
         
-        returns: A 2-way tuple. First element is the time vector, second element an
-        N-way tuple containing the N SQL variable vectors.
-        
+        aggregate_type: If aggregation is desired, this is the type of aggregation (e.g.,
+        'sum', or 'max'). Default: None
+
+        returns: A 2-way tuple. First element is the time vector, second element the
+        y vector.        
         """
-        from array import array
-        import weeutil.weeutil
-        
-        time_vec = array('i')
-        # An N-way tuple to contain the N SQL variables.
-        result_vecs = tuple([[] for i in xrange(len(sql_list))])       
-        sql_str = 'select dateTime, %s from archive where dateTime>? and dateTime <= ?' % ','.join(sql_list)
+
         _connection = sqlite3.connect(self.archiveFile)
         _cursor=_connection.cursor()
+        time_vec = []
+        y_vec    = []
 
         try:
-            if interval :
-                for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, interval):
+            if aggregate_interval :
+                sql_str = 'SELECT dateTime, %s(%s) FROM archive WHERE dateTime > ? AND dateTime <= ?' % (aggregate_type, sql_type)
+                for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                     _cursor.execute(sql_str, stamp)
-                    for _rec in _cursor:
-                        # Don't accumulate any results where there wasn't a record
-                        # (signified by sqlite3 by a null key)
-                        if _rec[0] is not None:
-                            time_vec.append(_rec[0])
-                            for v, list in zip(_rec[1:], result_vecs) :
-                                list.append(v)
-            else:
-                _cursor.execute(sql_str, (startstamp, stopstamp))
-                for _rec in _cursor:
+                    _rec = _cursor.fetchone()
                     # Don't accumulate any results where there wasn't a record
                     # (signified by sqlite3 by a null key)
-                    if _rec[0] is not None:
-                        time_vec.append(_rec[0])
-                        for v, list in zip(_rec[1:], result_vecs):
-                            list.append(v)
+                    if _rec:
+                        if _rec[0] is not None:
+                            time_vec.append(_rec[0])
+                            y_vec.append(_rec[1])
+            else:
+                sql_str = 'SELECT dateTime, %s FROM archive WHERE dateTime > ? AND dateTime <= ?' % sql_type
+                _cursor.execute(sql_str, (startstamp, stopstamp))
+                for _rec in _cursor:
+                    time_vec.append(_rec[0])
+                    y_vec.append(_rec[1])
         finally:
             _cursor.close()
             _connection.close()
 
-        return (time_vec, result_vecs)
-    
+        return (time_vec, y_vec)
+
     def config(self):
         """Configure a database for use with weewx. This will create the initial schema
         if necessary.
