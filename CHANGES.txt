@@ -5,8 +5,12 @@ CHANGE HISTORY
 
 Improved axis scaling. The automatic axis scaling routine
 now does a better job for ranges less than 1.0. The user can also
-hardwire in min and max values, as well as specify a minimum increment, through
-parameter 'yscale' in section [Images] in the configuration file.
+hardwire in min and max values, as well as specify a minimum increment,
+through parameter 'yscale' in section [Images] in the configuration file.
+
+Now allows the same SQL type to be used more than once in a plot. This
+allows, say, instantaneous and average wind speed to be shown in
+the same plot. 
 
 Rain year is now parameterized in file templates/year.tmpl (instead of 
 being hardwired in).

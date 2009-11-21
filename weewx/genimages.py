@@ -92,15 +92,19 @@ class GenImages(object):
                 plot.setBottomLabel(bottom_label)
         
                 # Loop over each line type ('outTemp', 'rain', etc.) to be added to the plot.
-                for line_type in self.image_dict[timespan][plotname].sections:
+                for line_name in self.image_dict[timespan][plotname].sections:
 
                     # Accumulate options from parent nodes. 
-                    line_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname][line_type])
+                    line_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname][line_name])
                     
+                    # See what variable type to use for this line. By default,
+                    # use the section name.
+                    var_type = line_options.get('magnitude', line_name)
+
                     # Add a unit label. NB: all will get overwritten except the last.
                     # TODO: Allow multiple unit labels, one for each plot line?
                     # Get the label from the configuration dictionary. 
-                    unit_label = self.label_dict['ImperialUnits'].get(line_type, '')
+                    unit_label = self.label_dict['ImperialUnits'].get(var_type, '')
                     # Because it is likely to use escaped characters, decode it.
                     unit_label = unit_label.decode('string_escape')
                     plot.setUnitLabel(unit_label)
@@ -117,24 +121,24 @@ class GenImages(object):
                             aggregate_interval = line_options.as_int('aggregate_interval')
                         except KeyError:
                             syslog.syslog(syslog.LOG_ERR, "genimages: aggregate interval required for aggregate type %s" % aggregate_type)
-                            syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % line_type)
+                            syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % var_type)
                             continue
 
                     # Get the data vectors from the database:
-                    (timevec, yvec) = archive.getSqlVectors(line_type, minstamp, maxstamp, 
+                    (timevec, yvec) = archive.getSqlVectors(var_type, minstamp, maxstamp, 
                                                             aggregate_interval, aggregate_type)
 
                     # See if a line label has been explicitly requested:
                     label = line_options.get('label')
                     if not label:
                         # No explicit label. Is there a generic one in the config dict?
-                        label = self.label_dict['Generic'].get(line_type)
+                        label = self.label_dict['Generic'].get(var_type)
                         if not label:
                             # Nope. Just use the SQL type
-                            label=line_type
+                            label = var_type
     
                     # See if a color has been explicitly requested.
-                    color_str = self.image_dict[timespan][plotname][line_type].get('color')
+                    color_str = line_options.get('color')
                     color = int(color_str,0) if color_str is not None else None
                     
                     # Get the line width, if explicitly requested.
@@ -143,8 +147,6 @@ class GenImages(object):
                     
                     # Get the type of line ("bar', or 'line')
                     type = line_options.get('plot_type', 'line')
-                    
-                    #aggregate_interval = line_options[line_type].as_int('aggregate_interval') if type != 'line' else None
                     
                     # Add the data to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(timevec, yvec, 
