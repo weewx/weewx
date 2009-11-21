@@ -53,6 +53,9 @@ class GenImages(object):
         t1 = time.time()
         ngen = 0
 
+        if not time_ts:
+            time_ts = archive.lastGoodStamp()
+
         # Loop over each time span class (day, week, month, etc.):
         for timespan in self.image_dict.sections :
             
@@ -120,7 +123,7 @@ class GenImages(object):
                     # Get the data vectors from the database:
                     (timevec, yvec) = archive.getSqlVectors(line_type, minstamp, maxstamp, 
                                                             aggregate_interval, aggregate_type)
-                    
+
                     # See if a line label has been explicitly requested:
                     label = line_options.get('label')
                     if not label:
