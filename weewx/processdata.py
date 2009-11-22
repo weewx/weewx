@@ -61,9 +61,13 @@ def processData(config_dict, stop_ts = None):
         genImages.genImages(archive, stop_ts)
         
         # Check to see if there is an 'FTP' section in the configuration
-        # dictionary. If so, FTP the data up to a server.
+        # dictionary and that all necessary options are present. 
+        # If so, FTP the data up to a server.
         ftp_dict = config_dict.get('FTP')
-        if ftp_dict:
+        if ftp_dict and (ftp_dict.has_key('server')   and 
+                         ftp_dict.has_key('password') and 
+                         ftp_dict.has_key('user')     and
+                         ftp_dict.has_key('path')):
             html_dir = os.path.join(config_dict['Station']['WEEWX_ROOT'],
                                     config_dict['HTML']['html_root'])
             ftpData = weewx.ftpdata.FtpData(source_dir = html_dir, **ftp_dict)

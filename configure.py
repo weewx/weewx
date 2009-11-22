@@ -89,10 +89,6 @@ def createStatsDatabase(config_dict):
 
 def backfillStatsDatabase(config_dict):
     """Use the main archive database to backfill the stats database."""
-    # Open up the main database archive
-    archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                   config_dict['Archive']['archive_file'])
-    archive = weewx.archive.Archive(archiveFilename)
 
     # Open up the Stats database
     statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
@@ -101,6 +97,16 @@ def backfillStatsDatabase(config_dict):
                                   int(config_dict['Station'].get('heating_base', 65)),
                                   int(config_dict['Station'].get('cooling_base', 65)))
     
+    # Configure it if necessary (this will do nothing if the database has
+    # already been configured):
+    statsDb.config(config_dict['Stats'].get('stats_types'))
+
+    # Open up the main database archive
+    archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
+                                   config_dict['Archive']['archive_file'])
+    archive = weewx.archive.Archive(archiveFilename)
+
+    # Now backfill
     weewx.stats.backfill(archive, statsDb)
     print "backfilled statistical database %s with archive data from %s" % (statsFilename, archiveFilename)
     

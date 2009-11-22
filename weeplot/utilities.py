@@ -13,67 +13,99 @@
 import datetime
 import time
 import math
+
 import weeplot
     
-def scale(fmn, fmx, prescale = None):
+def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     """Calculates an appropriate min, max, and step size for scaling axes on a plot.
     
-    Reference: 2003 Pharmasug 2003 by Don Li "Tired of Defining Axis Scale for
-    SAAS Graphs? A Solution with Automatic Optimizing Approach."
-    http://www.lexjansen.com/pharmasug/2003/coderscorner/cc024.pdf
+    The origin (zero) is guaranteed to be on an interval boundary.
     
     fmn: The minimum data value
     
     fmx: The maximum data value. Must be greater than or equal to fmn.
+
+    prescale: A 3-way tuple. A non-None min or max value (positions 0 and 1, 
+    respectively) will be fixed to that value. A non-None interval (position 2)
+    be at least as big as that value. Default = (None, None, None) 
     
-    prescale: One or more of the results may be preset. [optional]
+    nsteps: The nominal number of desired steps. Default = 10
     
     Returns: a three-way tuple. First value is the lowest scale value, second the highest.
     The third value is the step (increment) between them.
     """
-    minscale = maxscale = interval = None
-    if prescale is not None :
-        minscale = prescale[0]
-        maxscale = prescale[1]
-        interval= prescale[2]
-        
+    
+    if all(x is not None for x in prescale):
+        return prescale
+
+    (minscale, maxscale, min_interval) = prescale
+    
+    # Make sure fmn and fmx are float values, in case a user passed
+    # in integers:
+    fmn = float(fmn)
+    fmx = float(fmx)
+
     if fmx < fmn :
         raise weeplot.ViolatedPrecondition, "scale() called with max value less than min value"
 
-    if minscale is not None :
-        fmn = minscale
-    if maxscale is not None :
-        fmx = maxscale
-        
     if fmx == fmn :
         if fmn == 0.0 :
             fmx = 1.0
         else :
             fmx = fmn + .01*abs(fmn)
-    amin = math.floor(fmn)
-    amax = math.ceil(fmx)
-    range = amax-amin
-    
-    unit = range/10.0
-    
-    grade = math.floor(math.log10(unit))
-    sunit = unit / math.pow(10.0, grade)
 
-    if interval is None :
-
-        if sunit < math.sqrt(2.0) :
-            interval = math.pow(10.0, grade)
-        elif sunit < math.sqrt(10.0) :
-            interval = math.pow(10.0, grade) * 2.0
-        elif sunit < math.sqrt(50.0) :
-            interval = math.pow(10.0, grade) * 5.0
-        else :
-            interval = pow(10.0, grade+1)
-    if maxscale is None :
-        maxscale = math.ceil(amax/interval) * interval
-    if minscale is None :
-        minscale = math.floor(amin/interval) * interval
+    range = fmx - fmn
+    steps = range / nsteps
     
+    mag = math.floor(math.log10(steps))
+    magPow = math.pow(10.0, mag)
+    magMsd = math.floor(steps/magPow + 0.5)
+    
+    if magMsd > 5.0:
+        magMsd = 10.0
+    elif magMsd > 2.0:
+        magMsd = 5.0
+    else : # magMsd > 1.0
+        magMsd = 2
+
+    # This will be the nominal interval size
+    interval = magMsd * magPow
+    
+    # Test it against the desired minimum, if any
+    if min_interval is None or interval > min_interval:
+        # Either no min interval was specified, or its safely
+        # less than the chosen interval. 
+        if minscale is None:
+            minscale = interval * math.floor(fmn / interval)
+    
+        if maxscale is None:
+            maxscale = interval * math.ceil(fmx / interval)
+
+    else:
+    
+        # The request for a minimum interval has kicked in.
+        # Sometimes this can make for a plot with just one or
+        # two intervals in it. Adjust the min and max values
+        # to get a nice plot
+        interval = min_interval
+
+        if minscale is None:
+            if maxscale is None:
+                # Both can float. Pick values so the range is near the bottom
+                # of the scale:
+                minscale = interval * math.floor(fmn / interval)
+                maxscale = minscale + interval * nsteps
+            else:
+                # Only minscale can float
+                minscale = maxscale - interval * nsteps
+        else:
+            if maxscale is None:
+                # Only maxscale can float
+                maxscale = minscale + interval * nsteps
+            else:
+                # Both are fixed --- nothing to be done
+                pass
+
     return (minscale, maxscale, interval)
 
 
@@ -142,8 +174,8 @@ def scaletime(tmin_ts, tmax_ts) :
         # Average month length:
         interval = 365.25/12 * 24 * 3600
     # Convert to epoch time stamps
-    start_ts = time.mktime(start_dt.timetuple())
-    stop_ts  = time.mktime(stop_dt.timetuple())
+    start_ts = int(time.mktime(start_dt.timetuple()))
+    stop_ts  = int(time.mktime(stop_dt.timetuple()))
 
     return (start_ts, stop_ts, interval)
     
@@ -174,10 +206,10 @@ class ScaledDraw(object):
         lls = scaledbox[0]
         urs = scaledbox[1]
         
-        self.xscale = (lri[0] - uli[0]) / (urs[0] - lls[0])
-        self.yscale = -(lri[1] - uli[1]) / (urs[1] - lls[1]) 
-        self.xoffset = lri[0] - urs[0] * self.xscale
-        self.yoffset = uli[1] - urs[1] * self.yscale
+        self.xscale =  float(lri[0] - uli[0]) / float(urs[0] - lls[0])
+        self.yscale = -float(lri[1] - uli[1]) / float(urs[1] - lls[1]) 
+        self.xoffset = int(lri[0] - urs[0] * self.xscale + 0.5)
+        self.yoffset = int(uli[1] - urs[1] * self.yscale + 0.5)
 
         self.draw    = draw
         
@@ -194,7 +226,7 @@ class ScaledDraw(object):
             # Scale it
             xy_seq_scaled = zip([self.xtranslate(x) for x in x_seq], 
                                 [self.ytranslate(y) for y in y_seq])
-             # Draw it:
+            # Draw it:
             if len(xy_seq_scaled) == 1 :
                 self.draw.point(xy_seq_scaled, fill = options['fill'])
             else :
@@ -210,6 +242,27 @@ class ScaledDraw(object):
         """
         box_scaled = [(coord[0]*self.xscale + self.xoffset + 0.5, coord[1]*self.yscale + self.yoffset + 0.5) for coord in box]
         self.draw.rectangle(box_scaled, **options)
+        
+    def vector(self, x, vec, vector_rotate, **options):
+        
+        if vec is None: 
+            return
+        xstart_scaled = self.xtranslate(x)
+        ystart_scaled = self.ytranslate(0)
+        
+        vecinc_scaled = vec * self.yscale
+        
+        if vector_rotate:
+            vecinc_scaled *= complex(math.cos(math.radians(vector_rotate)),
+                                     math.sin(math.radians(vector_rotate)))
+        
+        # Subtract off the x increment because the x-axis
+        # *increases* to the right, unlike y, which increases
+        # downwards
+        xend_scaled = xstart_scaled - vecinc_scaled.real
+        yend_scaled = ystart_scaled + vecinc_scaled.imag
+        
+        self.draw.line(((xstart_scaled, ystart_scaled), (xend_scaled, yend_scaled)), **options)
         
     def xtranslate(self, x):
         return int(x * self.xscale + self.xoffset + 0.5)
@@ -276,8 +329,9 @@ if __name__ == '__main__' :
     import time
     # Unit test:
     assert(scale(1.1, 12.3) == (1.0, 13.0, 1.0))
-    assert(scale(-1.1, 12.3) == (-2.0, 14.0, 2.0))
+    assert(scale(-1.1, 12.3) == (-2.0, 13.0, 1.0))
     assert(scale(-12.1, -5.3) == (-13.0, -5.0, 1.0))
+    assert(scale(0.0, 0.05, (None, None, .1), 10) == (0.0, 1.0, 0.1))
     
     t= time.time()
     scaletime(t - 24*3600 - 20, t)

@@ -192,10 +192,13 @@ class MainLoop(object):
     def setupWeatherUnderground(self, config_dict):
         """Set up the WU thread."""
         wunder_dict = config_dict.get('Wunderground')
-        if wunder_dict :
+        
+        # Make sure we have a section [Wunderground] and that the station name
+        # and password exist before committing:
+        if wunder_dict and (wunder_dict.has_key('station') and 
+                            wunder_dict.has_key('password')):
             weewx.wunderground.wunderQueue = Queue.Queue()
-            t = weewx.wunderground.WunderThread(wunder_dict['station'], 
-                                                wunder_dict['password'])
+            t = weewx.wunderground.WunderThread(**wunder_dict)
 
     
     def processLoopPacket(self, physicalPacket):

@@ -1,3 +1,2 @@
 TODO, in decreasing order of importance.
 
-A few "del" here and there might reduce memory requirements.
