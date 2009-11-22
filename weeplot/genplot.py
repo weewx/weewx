@@ -87,23 +87,15 @@ class GeneralPlot(object):
         """Set the X scaling.
         
         xscale: A 3-way tuple (xmin, xmax, xinc)
-        
-        returns: The old scaling
         """
-        old = self.xscale
         self.xscale = xscale
-        return old
         
     def setYScaling(self, yscale):
         """Set the Y scaling.
         
         yscale: A 3-way tuple (ymin, ymax, yinc)
-        
-        returns: The old scaling
         """
-        old = self.yscale
         self.yscale = yscale
-        return old
         
     def addLine(self, line):
         """Add a line to be plotted.
@@ -217,22 +209,28 @@ class GeneralPlot(object):
             if width is None :
                 width = self.chart_line_widths[iline%nlines]
 
-            if self.line_list[iline].type == 'line' :
+            if self.line_list[iline].line_type == 'line' :
                 sdraw.line(self.line_list[iline].x, 
                            self.line_list[iline].y, 
                            fill  = color,
                            width = width)
-            elif self.line_list[iline].type == 'bar' :
+            elif self.line_list[iline].line_type == 'bar' :
                 interval = self.line_list[iline].interval
                 for ibox in xrange(len(self.line_list[iline].x)):
                     x = self.line_list[iline].x[ibox]
                     y = self.line_list[iline].y[ibox]
                     if y is None :
                         continue
-                    xleft = x - interval
                     if ibox > 0:
-                        xleft = max(xleft, self.line_list[iline].x[ibox-1])
+                        xleft = self.line_list[iline].x[ibox-1]
+                    else:
+                        xleft = x - interval
                     sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=color, outline=color)
+            elif self.line_list[iline].line_type == 'vector' :
+                sdraw.vector(self.line_list[iline].x,
+                             self.line_list[iline].y,
+                             fill  = color,
+                             width = width)
         
     def _renderBottom(self, draw):
         """Draw anything at the bottom (just some text right now).
@@ -300,25 +298,34 @@ class GeneralPlot(object):
         """
         # The filter is necessary because unfortunately the value 'None' is not
         # excluded from min and max (i.e., min(None, x) is not necessarily x). 
-        # Plus, min of an empty list throws a ValueError exception.
+        # The try block is necessary because min of an empty list throws a
+        # ValueError exception.
         ymin = ymax = None
         for line in self.line_list:
-            try :
-                yline_min = min(filter(lambda v : v is not None, line.y))
-                ymin = min(yline_min, ymin) if ymin is not None else yline_min
-            except ValueError:
-                pass
-            try :
-                yline_max = max(filter(lambda v : v is not None, line.y))
-                ymax = max(yline_max, ymax) if ymax is not None else yline_max
-            except ValueError:
-                pass
-        
+            if line.line_type == 'vector':
+                try:
+                    yline_max = max(abs(c) for c in filter(lambda v : v is not None, line.y))
+                except ValueError:
+                    pass
+                yline_min = - yline_max if yline_max is not None else None
+            else:
+                try :
+                    yline_min = min(filter(lambda v : v is not None, line.y))
+                except ValueError:
+                    pass
+                try :
+                    yline_max = max(filter(lambda v : v is not None, line.y))
+                except ValueError:
+                    pass
+            ymin = min(yline_min, ymin) if ymin is not None else yline_min
+            ymax = max(yline_max, ymax) if ymax is not None else yline_max
+
         if ymin is None and ymax is None :
             # No valid data. Pick an arbitrary scaling
             self.yscale=(0.0, 1.0, 0.2)
         else:
             self.yscale = weeplot.utilities.scale(ymin, ymax, self.yscale)
+        print "chosen y scaling = ", self.yscale
 
     def _calcXLabelFormat(self):
         if self.x_label_format is None:
@@ -375,11 +382,11 @@ class PlotLine(object):
     """Represents a single line (or bar) in a plot.
     
     """
-    def __init__(self, x, y, label='', color=None, width=None, type='line', interval=None):
-        self.x        = x
-        self.y        = y
-        self.label    = label
-        self.type     = type
-        self.color    = color
-        self.width    = width
-        self.interval = interval
+    def __init__(self, x, y, label='', color=None, width=None, line_type='line', interval=None):
+        self.x         = x
+        self.y         = y
+        self.label     = label
+        self.line_type = line_type
+        self.color     = color
+        self.width     = width
+        self.interval  = interval

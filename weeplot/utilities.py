@@ -243,6 +243,22 @@ class ScaledDraw(object):
         box_scaled = [(coord[0]*self.xscale + self.xoffset + 0.5, coord[1]*self.yscale + self.yoffset + 0.5) for coord in box]
         self.draw.rectangle(box_scaled, **options)
         
+    def vector(self, xvec, yvec, **options):
+        
+        for x, vec in zip(xvec, yvec):
+            if vec is None: 
+                continue
+            xstart_scaled = self.xtranslate(x)
+            ystart_scaled = self.ytranslate(0)
+            
+            xinc_scaled = vec.real * self.yscale
+            yinc_scaled = vec.imag * self.yscale
+            
+            xend_scaled = xstart_scaled + xinc_scaled
+            yend_scaled = ystart_scaled + yinc_scaled
+            
+            self.draw.line(((xstart_scaled, ystart_scaled), (xend_scaled, yend_scaled)), **options)
+        
     def xtranslate(self, x):
         return int(x * self.xscale + self.xoffset + 0.5)
                    

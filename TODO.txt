@@ -1,10 +1,5 @@
 TODO, in decreasing order of importance.
 
-Rethink the logic of carrying over values from an old config file to the new,
-when doing an upgrade. Present logic doesn't see commented out sections.
-
-Default to caching LOOP data.
-
 Separate UPGRADE instructions.
 
 Remind users to set HOME in setup.cfg, even when doing an upgrade.

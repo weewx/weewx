@@ -49,12 +49,12 @@ def processData(config_dict, stop_ts = None):
     
         currentRec = archive.getRecord(stop_ts)
         
-        genFiles = weewx.genfiles.GenFiles(config_dict)
+        #genFiles = weewx.genfiles.GenFiles(config_dict)
             
         # Generate the NOAA summaries:
-        genFiles.generateNoaa(start_ts, stop_ts)
+        #genFiles.generateNoaa(start_ts, stop_ts)
         # Generate the HTML pages
-        genFiles.generateHtml(currentRec, stop_ts)
+        #genFiles.generateHtml(currentRec, stop_ts)
     
         # Generate any images
         genImages = weewx.genimages.GenImages(config_dict)
