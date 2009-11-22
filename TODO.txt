@@ -1,6 +1,2 @@
 TODO, in decreasing order of importance.
 
-Separate UPGRADE instructions.
-
-Remind users to set HOME in setup.cfg, even when doing an upgrade.
-

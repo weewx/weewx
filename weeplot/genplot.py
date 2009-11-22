@@ -12,7 +12,6 @@
 import time
 import Image
 import ImageDraw
-import ImageFont
 import weeplot
 import weeplot.utilities
 import weeutil.weeutil
@@ -43,10 +42,10 @@ class GeneralPlot(object):
 
         self.image_width            = int(config_dict.get('image_width',  300))
         self.image_height           = int(config_dict.get('image_height', 180))
-        self.image_background_color = int(config_dict.get('image_background_color', 0xf5f5f5), 0)
+        self.image_background_color = int(config_dict.get('image_background_color', '0xf5f5f5'), 0)
 
-        self.chart_background_color = int(config_dict.get('chart_background_color', 0xd8d8d8), 0)
-        self.chart_gridline_color   = int(config_dict.get('chart_gridline_color',   0xa0a0a0), 0)
+        self.chart_background_color = int(config_dict.get('chart_background_color', '0xd8d8d8'), 0)
+        self.chart_gridline_color   = int(config_dict.get('chart_gridline_color',   '0xa0a0a0'), 0)
         color_list                  = config_dict.get('chart_line_colors', [0xff0000, 0x00ff00, 0x0000ff])
         width_list                  = config_dict.get('chart_line_width',  [1, 1, 1])
         self.chart_line_colors      = [int(v,0) for v in color_list]
@@ -58,19 +57,32 @@ class GeneralPlot(object):
 
         self.unit_label = None
         self.unit_label_font_path   = config_dict.get('unit_label_font_path')
-        self.unit_label_font_color  = int(config_dict.get('unit_label_font_color', 0x000000), 0)
+        self.unit_label_font_color  = int(config_dict.get('unit_label_font_color', '0x000000'), 0)
         self.unit_label_font_size   = int(config_dict.get('unit_label_font_size', 10))
+        self.unit_label_position    = (10, 0)
         
         self.bottom_label_font_path = config_dict.get('bottom_label_font_path')
-        self.bottom_label_font_color= int(config_dict.get('bottom_label_font_color', 0x000000), 0)
+        self.bottom_label_font_color= int(config_dict.get('bottom_label_font_color', '0x000000'), 0)
         self.bottom_label_font_size = int(config_dict.get('bottom_label_font_size', 10))
 
         self.axis_label_font_path   = config_dict.get('axis_label_font_path')
-        self.axis_label_font_color  = int(config_dict.get('axis_label_font_color', 0x000000), 0)
+        self.axis_label_font_color  = int(config_dict.get('axis_label_font_color', '0x000000'), 0)
         self.axis_label_font_size   = int(config_dict.get('axis_label_font_size', 10))
 
         self.x_label_format         = config_dict.get('x_label_format', None)
         self.y_label_format         = config_dict.get('y_label_format', None)
+        
+        self.render_rose            = False
+        self.rose_position          = (5, self.image_height-25)
+        self.rose_rotation          = None
+        self.rose_label             = config_dict.get('rose_label', 'N')
+        self.rose_label_font_path   = config_dict.get('rose_label_font_path', self.bottom_label_font_path)
+        self.rose_label_font_size   = int(config_dict.get('rose_label_font_size', 10))  
+        self.rose_label_font_color  = int(config_dict.get('rose_label_font_color', '0x000000'), 0)
+        self.rose_color             = config_dict.get('rose_color')
+        if self.rose_color is not None:
+            self.rose_color = int(self.rose_color, 0)
+
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot.
         
@@ -135,6 +147,8 @@ class GeneralPlot(object):
         self._renderXAxes(sdraw)
         self._renderYAxes(sdraw)
         self._renderPlotLines(sdraw)
+        if self.render_rose:
+            self._renderRose(image, draw)
 
         return image
     
@@ -227,11 +241,16 @@ class GeneralPlot(object):
                         xleft = x - interval
                     sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=color, outline=color)
             elif self.line_list[iline].line_type == 'vector' :
-                sdraw.vector(self.line_list[iline].x,
-                             self.line_list[iline].y,
-                             fill  = color,
-                             width = width)
-        
+                for (x, vec) in zip(self.line_list[iline].x, self.line_list[iline].y):
+                    sdraw.vector(x, vec,
+                                 vector_rotate = self.line_list[iline].vector_rotate,
+                                 fill  = color,
+                                 width = width)
+                self.render_rose = True
+                self.rose_rotation = self.line_list[iline].vector_rotate
+                if self.rose_color is None:
+                    self.rose_color = color
+
     def _renderBottom(self, draw):
         """Draw anything at the bottom (just some text right now).
         
@@ -243,8 +262,6 @@ class GeneralPlot(object):
                   self.bottom_label, 
                   fill=self.bottom_label_font_color,
                   font=bottom_label_font)
-        
-        
         
     def _renderTopBand(self, draw):
         """Draw the top band and any text in it.
@@ -258,7 +275,9 @@ class GeneralPlot(object):
         # Put the units in the upper left corner
         unit_label_font = weeutil.weeutil.get_font_handle(self.unit_label_font_path, self.unit_label_font_size)
         if self.unit_label:
-            draw.text((0,0), self.unit_label, fill=self.unit_label_font_color, font=unit_label_font)
+            draw.text(self.unit_label_position,
+                      self.unit_label,
+                      fill=self.unit_label_font_color, font=unit_label_font)
 
         top_label_font = weeutil.weeutil.get_font_handle(self.top_label_font_path, self.top_label_font_size)
         
@@ -281,6 +300,44 @@ class GeneralPlot(object):
             # Now advance the width of the label we just drew, plus a space:
             label_size = draw.textsize(self.line_list[i].label + ' ', font= top_label_font)
             x += label_size[0]
+
+    def _renderRose(self, image, draw):
+        """Draw a compass rose."""
+        
+        # Width and height are hardwired to 21x21:
+        rose_width = rose_height = 21
+        rose_center_x = rose_width/2  + 1
+        rose_center_y = rose_height/2 + 1
+        barb_width  = 3
+        barb_height = 4
+        rose_image = Image.new("RGB", (rose_width, rose_height), self.image_background_color)
+        rose_draw = ImageDraw.Draw(rose_image)
+        # Draw the arrow straight up (North). First the shaft:
+        rose_draw.line( ((rose_center_x, 0), (rose_center_x, rose_height)), width = 1, fill = self.rose_color)
+        # Now the left barb:
+        rose_draw.line( ((rose_center_x - barb_width, barb_height), (rose_center_x, 0)), width = 1, fill = self.rose_color)
+        # And the right barb:
+        rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)), width = 1, fill = self.rose_color)
+
+        # Rotate if necessary:
+        if self.rose_rotation:
+            rose_image = rose_image.rotate(self.rose_rotation)
+            rose_draw = ImageDraw.Draw(rose_image)
+        
+        # Calculate the position of the "N" label:
+        rose_label_font = weeutil.weeutil.get_font_handle(self.rose_label_font_path, self.rose_label_font_size)
+        rose_label_size = draw.textsize(self.rose_label, font=rose_label_font)
+        
+        # Draw the label in the middle of the (possibly) rotated arrow
+        rose_draw.text((rose_center_x - rose_label_size[0]/2, 
+                        rose_center_y - rose_label_size[1]/2),
+                        self.rose_label,
+                        fill = self.rose_label_font_color,
+                        font = rose_label_font)
+
+        # Paste the image of the arrow on to the main plot:
+        image.paste(rose_image, self.rose_position)
+        
 
     def _calcXScaling(self):
         """Calculates the x scaling. It will probably be specialized by
@@ -325,7 +382,6 @@ class GeneralPlot(object):
             self.yscale=(0.0, 1.0, 0.2)
         else:
             self.yscale = weeplot.utilities.scale(ymin, ymax, self.yscale)
-        print "chosen y scaling = ", self.yscale
 
     def _calcXLabelFormat(self):
         if self.x_label_format is None:
@@ -382,7 +438,7 @@ class PlotLine(object):
     """Represents a single line (or bar) in a plot.
     
     """
-    def __init__(self, x, y, label='', color=None, width=None, line_type='line', interval=None):
+    def __init__(self, x, y, label='', color=None, width=None, line_type='line', interval=None, vector_rotate = None):
         self.x         = x
         self.y         = y
         self.label     = label
@@ -390,3 +446,5 @@ class PlotLine(object):
         self.color     = color
         self.width     = width
         self.interval  = interval
+        self.vector_rotate = vector_rotate
+

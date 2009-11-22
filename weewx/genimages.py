@@ -130,6 +130,12 @@ class GenImages(object):
                     # Get the type of line ("bar', 'line', or 'vector')
                     line_type = line_options.get('plot_type', 'line')
                     
+                    if line_type == 'vector':
+                        vector_rotate_str = line_options.get('vector_rotate')
+                        vector_rotate = -float(vector_rotate_str) if vector_rotate_str is not None else None
+                    else:
+                        vector_rotate = None
+                    
                     # Look for aggregation type:
                     aggregate_type = line_options.get('aggregate_type')
                     if aggregate_type in (None, '', 'None', 'none'):
@@ -145,17 +151,17 @@ class GenImages(object):
                             syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % var_type)
                             continue
 
-                    print "Time interval: ", weeutil.weeutil.timestamp_to_string(minstamp), weeutil.weeutil.timestamp_to_string(maxstamp)
                     # Get the data vectors from the database:
                     (time_vec, data_vec) = archive.getSqlVectorsExtended(var_type, minstamp, maxstamp, 
                                                                          aggregate_interval, aggregate_type)
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(time_vec, data_vec,
-                                                          label     = label, 
-                                                          color     = color,
-                                                          width     = width,
-                                                          line_type = line_type, 
-                                                          interval  = aggregate_interval))
+                                                          label         = label, 
+                                                          color         = color,
+                                                          width         = width,
+                                                          line_type     = line_type, 
+                                                          interval      = aggregate_interval,
+                                                          vector_rotate = vector_rotate))
                     
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()

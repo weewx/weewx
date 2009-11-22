@@ -302,7 +302,7 @@ class Archive(object):
         """Get time and (possibly aggregated) data vectors within a time interval.
         
         This function is very similar to getSqlVectors, except that for special types
-        'windvec' and 'windgustvec' it returns wind data broken down into 
+        'windvec' and 'windgustvec', it returns wind data broken down into 
         its x- and y-components.
         
         sql_type: The SQL type to be retrieved (e.g., 'outTemp', or 'windvec'). 
@@ -339,8 +339,6 @@ class Archive(object):
             # It is. Prepare the lists that will hold the final results.
             time_vec = list()
             data_vec = list()
-            # This SQL select string will select the proper wind types
-            sql_str = 'SELECT dateTime, %s FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
             _connection = sqlite3.connect(self.archiveFile)
             _cursor=_connection.cursor()
     
@@ -351,30 +349,64 @@ class Archive(object):
                 # not appear in the database (only the magnitude and direction do) we cannot
                 # do the aggregation in the SQL statement. We'll have to do it in Python.
                 # Do we know how to do it?
-                if aggregate_type not in ('sum', 'count', 'avg'):
+                if aggregate_type not in ('sum', 'count', 'avg', 'max', 'min'):
                     raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
                 
+                # This SQL select string will select the proper wind types
+                sql_str = 'SELECT dateTime, %s FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
+
+                    mag_extreme = dir_at_extreme = None
                     xsum = ysum = 0.0
                     count = 0
                     last_time = None
+                    
                     _cursor.execute(sql_str, stamp)
+
                     for _rec in _cursor:
                         (mag, dir) = _rec[1:3]
-                        # We need both magnitude and direction to break it down into
-                        # x and y components
-                        if mag is not None and dir is not None:
-                            xsum += mag * math.cos(math.radians(90.0 - dir))
-                            ysum += mag * math.sin(math.radians(90.0 - dir))
+
+                        if mag is None:
+                            continue
+ 
+                        # A good direction is necessary unless the mag is zero:
+                        if mag == 0.0  or dir is not None:
                             count += 1
                             last_time = _rec[0]
+                            
+                            # Pick the kind of aggregation:
+                            if aggregate_type == 'min':
+                                if mag_extreme is None or mag < mag_extreme:
+                                    mag_extreme = mag
+                                    dir_at_extreme = dir
+                            elif aggregate_type == 'max':
+                                if mag_extreme is None or mag > mag_extreme:
+                                    mag_extreme = mag
+                                    dir_at_extreme = dir
+                            else:
+                                # No need to do the arithmetic if mag is zero.
+                                # We also need a good direction
+                                if mag > 0.0 and dir is not None:
+                                    xsum += mag * math.cos(math.radians(90.0 - dir))
+                                    ysum += mag * math.sin(math.radians(90.0 - dir))
                     # We've gone through the whole interval. Was their any good data?
                     if count:
                         # Record the time of the last good data point:
                         time_vec.append(last_time)
                         # Form the requested aggregation:
-                        if aggregate_type == 'sum':
+                        if aggregate_type in ('min', 'max'):
+                            if dir_at_extreme is None:
+                                # The only way direction can be zero with a non-zero count
+                                # is if all wind velocities were zero
+                                if weewx.debug:
+                                    assert(mag_extreme <= 1.0e-6)
+                                x_extreme = y_extreme = 0.0
+                            else:
+                                x_extreme = mag_extreme * math.cos(math.radians(90.0 - dir_at_extreme))
+                                y_extreme = mag_extreme * math.sin(math.radians(90.0 - dir_at_extreme))
+                            data_vec.append(complex(x_extreme, y_extreme))
+                        elif aggregate_type == 'sum':
                             data_vec.append(complex(xsum, ysum))
                         elif aggregate_type == 'count':
                             data_vec.append(count)
@@ -384,6 +416,8 @@ class Archive(object):
             else:
                 # No aggregation desired. It's a lot simpler. Go get the
                 # data in the requested time period
+                # This SQL select string will select the proper wind types
+                sql_str = 'SELECT dateTime, %s FROM archive WHERE dateTime >= ? AND dateTime <= ?' % windvec_types[ext_type]
                 _cursor.execute(sql_str, (startstamp, stopstamp))
                 for _rec in _cursor:
                     # Record the time:
