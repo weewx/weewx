@@ -7,7 +7,7 @@
 <title>Porting to the SheevaPlug</title>
 <style type="text/css">
 body {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 12pt/0 Verdana, arial, sans-serif;
 	color: black;
 }
 p {
@@ -89,6 +89,8 @@ td {
 .tty {
 	font-family: "Courier New", Courier, monospace;
 	margin-left: 40px;
+	margin-bottom: 0px;
+	margin-top: 0px;
 }
 .title {
 	text-align: center;
@@ -118,13 +120,16 @@ to the SheevaPlug</h1>
 <p>The SheevaPlug is a very small, very low-powered general purpose computer. 
 Equipped with a single USB port and a single Ethernet port and a modest amount 
 of memory (512 MB) and storage (512 MB), in many ways it is an ideal server for 
-a weather station.</p>
+a weather station. The website <a href="http://www.openplug.org">openplug.org</a> 
+has a good &quot;<a href="http://www.openplug.org/plugwiki/index.php/QuickStart">Quick 
+Start</a>&quot; guide on how to get up and running on the Plug.</p>
 <p>Porting weewx to it is very straightforward. For the most part, follow the 
 directions
 <a href="http://www.openplug.org/plugwiki/index.php/New_Plugger_How_To">New 
-Plugger How To</a> in the OpenPlug wiki. </p>
+Plugger How To</a> in the OpenPlug wiki on how to set up the Plug.</p>
 <p>When you get to the &quot;Pause for a second&quot; section, you have a choice. You can 
-either continue using the kernel and version of Ubuntu that comes with the Plug, 
+either continue using the kernel and version of Ubuntu that comes with the Plug 
+&quot;as is&quot;, 
 or you can install a newer version. </p>
 <p>My SheevaPlug came with kernel 2.6.22.18, which does not support the CP2101 
 USB serial device used by the VantagePro, necessitating a kernel upgrade. 
@@ -153,21 +158,21 @@ come off of a USB stick. </p>
 <p>As per the instructions, download the tarball and extract. </p>
 <p>Move the following files from subdirectory sheevaplug-installer-<span class="code">v1.0/installer</span> 
 to to the root directory of a FAT 32 USB stick:</p>
-<p class="tty">initrd<br />
-modules.tar.gz<br />
-README.txt<br />
-rootfs.tar.gz<br />
-ubuntu-sheevaplug.sh<br />
-uImage</p>
+<p class="tty">initrd</p>
+<p class="tty">modules.tar.gz</p>
+<p class="tty">README.txt</p>
+<p class="tty">rootfs.tar.gz</p>
+<p class="tty">ubuntu-sheevaplug.sh</p>
+<p class="tty">uImage</p>
 <p>Plug the stick into the USB port of the SheevaPlug.</p>
 <p>I then tried installing the&nbsp; new kernel using a Windows host but had 
 absolutely no luck. After running &quot;<span class="code">runme.exe nand</span>&quot; I 
 would keep gettting the error:</p>
-<p class="tty">Error: unable to open ftdi device: device not found<br />
-Runtime error, file &quot;command.c&quot;, line 469:<br />
-&nbsp;&nbsp;&nbsp;&nbsp; ****&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; openocd FAILED<br />
-&nbsp;****&nbsp;&nbsp; Is the mini USB cable connected?<br />
-&nbsp;****&nbsp;&nbsp; Try powering down, then replugging the Sheevaplug</p>
+<p class="tty">Error: unable to open ftdi device: device not found</p>
+<p class="tty">Runtime error, file &quot;command.c&quot;, line 469:</p>
+<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp; ****&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; openocd FAILED</p>
+<p class="tty">&nbsp;****&nbsp;&nbsp; Is the mini USB cable connected?</p>
+<p class="tty">&nbsp;****&nbsp;&nbsp; Try powering down, then replugging the Sheevaplug</p>
 <p>I tried several different ways, including rebooting with out running putty on the 
 serial port. I also tried, as per
 <a href="http://www.openplug.org/plugwiki/index.php/SheevaPlug_Installer#Important_Note_for_Newer_Plugs_.287.2F30.2F09ish.29">
@@ -227,8 +232,6 @@ console took about 10 minutes. After that,file generation went quite fast.
 Generating 30 images takes about 6.7 seconds, compared to 10.2 seconds on my 
 fit-PC. Generating 4 HTML files takes 1.8 seconds on the Plug vs. 1.9 seconds on 
 the fit-PC.</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
 
 </body>
 

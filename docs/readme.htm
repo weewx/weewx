@@ -89,6 +89,8 @@ td {
 .tty {
 	font-family: "Courier New", Courier, monospace;
 	margin-left: 40px;
+	margin-top: 0px;
+	margin-bottom: 0px;
 }
 .title {
 	text-align: center;
@@ -116,8 +118,8 @@ td {
 
 <body>
 
-<h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.1</h1>
+<h1 class="title" style="margin-top: 0px">The <span class="code">weewx</span> weather system<br />
+Version 1.2</h1>
 <h1>Table of Contents</h1>
 <ol>
 	<li>
@@ -269,8 +271,8 @@ compiler:</p>
 <span class="code">/usr/local/lib/python2.6/site-packages</span>, which didn&#39;t exist. 
 If this is the case, you may have to create these directories before running
 <span class="code">easy_install</span>:</p>
-<p class="tty">sudo mkdir /usr/local/lib/python2.6<br />
-sudo mkdir /usr/local/lib/python2.6/site-packages</p>
+<p class="tty">sudo mkdir /usr/local/lib/python2.6</p>
+<p class="tty">sudo mkdir /usr/local/lib/python2.6/site-packages</p>
 <h4>sqlite3</h4>
 <p>My SuSE 11.1 system came with V3.6.4, which works just fine. However, if you 
 need to install:</p>
@@ -280,8 +282,8 @@ need to install:</p>
 <a href="#pysqlite_using_easy_install">comments below</a> about installing pysqlite 
 using <span class="code">easy_install</span>. On my SuSE 11.1 system, I had to install 
 the gcc compiler and the sqlite3 development environment first:</p>
-<p class="tty">sudo yast -i gcc<br />
-sudo yast -i sqlite-devel</p>
+<p class="tty">sudo yast -i gcc</p>
+<p class="tty">sudo yast -i sqlite-devel</p>
 <p>Then I was able to install pysqlite using <span class="code">easy_install</span>. 
 However, because the hosting site for pysqlite had changed recently, I had to give 
 the URL explicitly:</p>
@@ -452,10 +454,10 @@ are different — the weewx statistical database must be built manually and back
 This is done using the configuration script <span class="code">configure.py</span>.
 </p>
 <p>Here&#39;s a summary of how to transfer your wview data to <span class="code">weewx</span>.</p>
-<p class="tty">mkdir <em>$WEEWX_ROOT</em>/archive<br />
-cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb<br />
-<em>$WEEWX_ROOT</em>/bin/configure.py --create-stats <em>$WEEWX_ROOT</em>/weewx.conf<br />
-<em>$WEEWX_ROOT</em>/bin/configure.py --backfill-stats <em>$WEEWX_ROOT</em>/weewx.conf</p>
+<p class="tty">mkdir <em>$WEEWX_ROOT</em>/archive</p>
+<p class="tty">cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb</p>
+<p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --create-stats <em>$WEEWX_ROOT</em>/weewx.conf</p>
+<p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --backfill-stats <em>$WEEWX_ROOT</em>/weewx.conf</p>
 <p>If your existing database is large, backfilling could take some time. On my modest 
 500 MHz <a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC</a> 
 with 512 MB of memory it took a little over 4 minutes for a year and a half (25 
@@ -656,12 +658,12 @@ month, and year). These sub-sections define the nature of aggregation and plot t
 for the time period. For example, here&#39;s a typical set of options for sub-section
 <span class="code">[[month_images]]</span>, controlling how images that cover a 
 month period are generated:</p>
-<p class="tty">[[month_images]]<br />
-&nbsp; x_label_format = %d<br />
-&nbsp; bottom_label_format = %m/%d/%y %H:%M<br />
-&nbsp; time_length = 2592000 # == 30 days<br />
-&nbsp; aggregate_type = avg<br />
-&nbsp; aggregate_interval = 10800 # == 3 hours</p>
+<p class="tty">[[month_images]]</p>
+<p class="tty">&nbsp; x_label_format = %d</p>
+<p class="tty">&nbsp; bottom_label_format = %m/%d/%y %H:%M</p>
+<p class="tty">&nbsp; time_length = 2592000 # == 30 days</p>
+<p class="tty">&nbsp; aggregate_type = avg</p>
+<p class="tty">&nbsp; aggregate_interval = 10800 # == 3 hours</p>
 <p>The option <span class="code">x_label_format</span> gives a
 <a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
 type format for the x-axis. In this example, it will only show days (format option 
@@ -677,13 +679,13 @@ Finally, at one additional nesting level (!) are the logical names of all the
 line types to be drawn in the image.&nbsp; Values specified in the 
 level above can be overridden. For example, here&#39;s a typical set of options for 
 sub-sub-section <span class="code">[[[monthrain]]]</span>: </p>
-<p class="tty">[[[monthrain]]]<br />
-&nbsp; plot_type = bar<br />
-&nbsp; yscale = None, None, 0.02<br />
-&nbsp; [[[[rain]]]]<br />
-&nbsp;&nbsp;&nbsp; aggregate_type = sum<br />
-&nbsp;&nbsp;&nbsp; aggregate_interval = 86400<br />
-&nbsp;&nbsp;&nbsp; label = Rain (daily avg)</p>
+<p class="tty">[[[monthrain]]]</p>
+<p class="tty">&nbsp; plot_type = bar</p>
+<p class="tty">&nbsp; yscale = None, None, 0.02</p>
+<p class="tty">&nbsp; [[[[rain]]]]</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = sum</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_interval = 86400</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; label = Rain (daily avg)</p>
 <p>This will generate an image file with name <span class="code">monthrain.png</span>. 
 It will be a bar plot. Option <span class="code">yscale</span> controls the y-axis 
 scaling &mdash; if left out, the scale will automatically be chosen. However, in this 
@@ -709,9 +711,9 @@ with the indicated label (&#39;<span class="code">Rain (daily avg)</span>&#39;)<
 <h4>Including more than one SQL type in a plot</h4>
 <p>More than one SQL type can be included in a plot. For example, here&#39;s how to 
 generate a plot with the week&#39;s outside temperature as well as dewpoint:</p>
-<p class="tty">[[[monthtempdew]]]<br />
-&nbsp; [[[[outTemp]]]]<br />
-&nbsp; [[[[dewpoint]]]]</p>
+<p class="tty">[[[monthtempdew]]]</p>
+<p class="tty">&nbsp; [[[[outTemp]]]]</p>
+<p class="tty">&nbsp; [[[[dewpoint]]]]</p>
 <p>This would create an image in file <span class="code">monthtempdew.png</span> 
 that includes a line plot of both outside temperature and dewpoint.</p>
 <h4>Including the same SQL type more than once in a plot</h4>
@@ -719,12 +721,12 @@ that includes a line plot of both outside temperature and dewpoint.</p>
 hourly averages. Here, you are using the same data type (&#39;<span class="code">outTemp</span>&#39;) 
 for both plot lines, the first with averages, the second without. If you do the 
 obvious it won&#39;t work:</p>
-<p class="tty">## WRONG ##<br />
-[[[daytemp_with_avg]]]<br />
-&nbsp; [[[[outTemp]]]]<br />
-&nbsp;&nbsp;&nbsp; aggregate_type = avg<br />
-&nbsp;&nbsp;&nbsp; aggregate_interval = 3600<br />
-&nbsp; [[[[outTemp]]]]&nbsp; # OOPS! The same section name appears more than 
+<p class="tty">## WRONG ##</p>
+<p class="tty">[[[daytemp_with_avg]]]</p>
+<p class="tty">&nbsp; [[[[outTemp]]]]</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = avg</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_interval = 3600</p>
+<p class="tty">&nbsp; [[[[outTemp]]]]&nbsp; # OOPS! The same section name appears more than 
 once!</p>
 <p>The option parser does not allow the same section name (&#39;<span class="code">outTemp</span>&#39; 
 in this case) to appear more than once at a given level in the configuration 
@@ -734,12 +736,12 @@ once in a plot then there is a trick you must know: use option
 <span class="code">data_type</span>. This will override the default action that 
 the logical line name is used for the SQL type. So, our example would look like 
 this:</p>
-<p class="tty">[[[daytemp_with_avg]]]<br />
-&nbsp;&nbsp;&nbsp; [[[[a_logical_name]]]]<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; data_type = outTemp<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_type = avg<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_interval = 3600<br />
-&nbsp;&nbsp;&nbsp; [[[[outTemp]]]]</p>
+<p class="tty">[[[daytemp_with_avg]]]</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; [[[[a_logical_name]]]]</p>
+<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; data_type = outTemp</p>
+<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_type = avg</p>
+<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_interval = 3600</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; [[[[outTemp]]]]</p>
 <p>Here, the first logical line has been given the name &quot;<span class="code">a_logical_name</span>&quot; 
 to distinguish it from the second line &quot;<span class="code">outTemp</span>&quot;. We 
 have specified that the first line will use data type <span class="code">outTemp</span> 
@@ -755,14 +757,14 @@ The first, &#39;<span class="code">windvec</span>&#39;, represents the average w
 an archive period, the second, &#39;<span class="code">windgustvec</span>&#39; the max 
 wind in an archive period. Here&#39;s how to produce a progressive vector plot of 
 the year&#39;s biggest daily wind gusts, along with daily averages:</p>
-<p class="tty">[[[yeargustoverlay]]]<br />
-&nbsp; aggregate_interval = 86400<br />
-&nbsp; [[[[windvec]]]]<br />
-&nbsp;&nbsp;&nbsp; plot_type = vector<br />
-&nbsp;&nbsp;&nbsp; aggregate_type = avg<br />
-&nbsp; [[[[windgustvec]]]]<br />
-&nbsp;&nbsp;&nbsp; plot_type = vector<br />
-&nbsp;&nbsp;&nbsp; aggregate_type = max</p>
+<p class="tty">[[[yeargustoverlay]]]</p>
+<p class="tty">&nbsp; aggregate_interval = 86400</p>
+<p class="tty">&nbsp; [[[[windvec]]]]</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; plot_type = vector</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = avg</p>
+<p class="tty">&nbsp; [[[[windgustvec]]]]</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; plot_type = vector</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = max</p>
 <p>This will produce an image file with name <span class="code">
 yeargustoverlay.png</span>. It will consist of two progressive vector plots, 
 both using daily aggregation (86,400 seconds). For the first set of vectors, the daily 
@@ -787,16 +789,16 @@ possible without hacking the code. </p>
 <h4 class="config_option">[[Generic]]</h4>
 <p>This sub-sections specifies default labels to be used for each SQL type. For 
 example, options</p>
-<p class="tty">inTemp = Inside Temperature<br />
-outTemp = Outside Temperature</p>
+<p class="tty">inTemp = Inside Temperature</p>
+<p class="tty">outTemp = Outside Temperature</p>
 <p>would cause the given labels to be used for plots involving SQL types
 <span class="code">inTemp </span>and <span class="code">outTemp</span>..</p>
 <h4 class="config_option"><a name="Labels_ImperialFormats">[[ImperialFormats]]</a></h4>
 <p>This sub-section is used to specify what format to be used for y-axis labels 
 in image plots that use Imperial (U.S.) units. It is also used for unit labels in 
 HTML file generation. For example, the options</p>
-<p class="tty">outTemp = %.1f<br />
-rain =&nbsp;&nbsp;&nbsp; %.2f</p>
+<p class="tty">outTemp = %.1f</p>
+<p class="tty">rain =&nbsp;&nbsp;&nbsp; %.2f</p>
 <p>would cause the given formats to be used when formatting outside temperature 
 and rain axes, respectively. The
 <a href="http://docs.python.org/library/string.html#format-specification-mini-language">
@@ -805,8 +807,8 @@ codes.</p>
 <h4 class="config_option"><a name="Labels_ImperialUnits">[[ImperialUnits]]</a></h4>
 <p>This sub-section specifies what unit labels to be used for the y-axis in image 
 plots that use Imperial (U.S.) units. For example, the options</p>
-<p class="tty">outTemp = \xb0F<br />
-rain = &#39; in&#39;</p>
+<p class="tty">outTemp = \xb0F</p>
+<p class="tty">rain = &#39; in&#39;</p>
 <p>would cause outside temperature to have unit labels &#39;<span class="code">°F</span>&#39; 
 and rain to have labels &#39;<span class="code"> in</span>&#39;. (NB: the code
 <span class="code">\xb0</span> is the hexadecimal value <span class="code">b0</span>, 
@@ -825,16 +827,16 @@ where the generated HTML files should be put. Required. No default.</p>
 <span class="code">[Labels]</span> above, except it is used for HTML generation. 
 It is useful to have a separate section because HTML uses special &#39;entity&#39; codes 
 to code special characters, such as the degree sign. For example, the options</p>
-<p class="tty">outTemp = &amp;deg;F<br />
-rain =&nbsp;&nbsp;&nbsp; &#39; in&#39;</p>
+<p class="tty">outTemp = &amp;deg;F</p>
+<p class="tty">rain =&nbsp;&nbsp;&nbsp; &#39; in&#39;</p>
 <p>would cause outside temperature and rain to have unit labels&nbsp; &#39;<span class="code">°F</span>&#39; 
 and &#39;<span class="code"> in</span>&#39;, respectively.</p>
 <h4 class="config_option"><a name="HTML_Time">[[Time]]</a></h4>
 <p>This subsection is used for time labels in HTML generation. It uses
 <a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
 formats. For example</p>
-<p class="tty">week&nbsp; = %H:%M on %A<br />
-month = %d-%b-%Y %H:%M</p>
+<p class="tty">week&nbsp; = %H:%M on %A</p>
+<p class="tty">month = %d-%b-%Y %H:%M</p>
 <p>would specify that week data should use a format such as &quot;<span class="code">15:20 
 on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
 15:20</span>&quot;</p>
@@ -912,9 +914,9 @@ install process, but it&#39;s worth checking). </p>
 <p><span class="code">Weewx</span> will now start automatically whenever your system 
 is booted. You can also manually start, stop, and restart the <span class="code">
 weewx</span> daemon:</p>
-<p class="tty">/etc/init.d/weewx start<br />
-/etc/init.d/weewx stop<br />
-/etc/init.d/weewx restart</p>
+<p class="tty">/etc/init.d/weewx start</p>
+<p class="tty">/etc/init.d/weewx stop</p>
+<p class="tty">/etc/init.d/weewx restart</p>
 <p>By default, the scripts are designed to have <span class="code">weewx</span> 
 run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels 
 with Debian (Ubuntu) systems is <a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. 
@@ -937,20 +939,21 @@ the full semantics of Python available in your templates. As this would make the
 templates incomprehensible to anyone but a Python programmer, <span class="code">
 weewx</span> adopts a very small subset of its power. </p>
 <p>Generally, any value is specified by using a &#39;dot&#39; code. For example:</p>
-<p class="tty">$month.outTemp.max<br />
-$month.outTemp.maxtime<br />
-$current.outTemp</p>
+<p class="tty">$month.outTemp.max</p>
+<p class="tty">$month.outTemp.maxtime</p>
+<p class="tty">$current.outTemp</p>
 <p>would code the max outside temperature for the month, the time it occurred, and 
 the current outside temperature, respectively. So, an HTML file that looks like</p>
-<p class="tty">&lt;html&gt;<br />
-&nbsp; &lt;head&gt;<br />
-&nbsp;&nbsp;&nbsp; &lt;title&gt;Current conditions&lt;/title&gt;<br />
-&nbsp; &lt;/head&gt;<br />
-&nbsp; &lt;body&gt;<br />
-&nbsp; &lt;p&gt;Current temperature = $current.outTemp&lt;/p&gt;<br />
-&nbsp; &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at $month.outTemp.maxtime&lt;/p&gt;<br />
-&nbsp; &lt;/body&gt;<br />
-&lt;/html&gt;</p>
+<p class="tty">&lt;html&gt;</p>
+<p class="tty">&nbsp; &lt;head&gt;</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; &lt;title&gt;Current conditions&lt;/title&gt;</p>
+<p class="tty">&nbsp; &lt;/head&gt;</p>
+<p class="tty">&nbsp; &lt;body&gt;</p>
+<p class="tty">&nbsp; &lt;p&gt;Current temperature = $current.outTemp&lt;/p&gt;</p>
+<p class="tty">&nbsp; &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at</p>
+<p class="tty">$month.outTemp.maxtime&lt;/p&gt;</p>
+<p class="tty">&nbsp; &lt;/body&gt;</p>
+<p class="tty">&lt;/html&gt;</p>
 <p>would be all you need for a very simple HTML page that would display the text:
 </p>
 <p class="indent">Current temperature = 51.0°F<br />
@@ -1496,10 +1499,10 @@ the necessary adjustments. This is generally what <span class="code">wview</span
 does. <span class="code">Weewx </span>takes a different approach and converts from 
 UTC to local, does the arithmetic, then converts back. This is inefficient, but 
 bulletproof against changes in DST algorithms, etc:</p>
-<p class="tty">time_dt = datetime.datetime.fromtimestamp(last_ts)<br />
-delta = datetime.timedelta(seconds=10800)<br />
-next_dt = time_dt + delta<br />
-next_ts = int(time.mktime(next_dt.timetuple()))</p>
+<p class="tty">time_dt = datetime.datetime.fromtimestamp(last_ts)</p>
+<p class="tty">delta = datetime.timedelta(seconds=10800)</p>
+<p class="tty">next_dt = time_dt + delta</p>
+<p class="tty">next_ts = int(time.mktime(next_dt.timetuple()))</p>
 <p>Other time conversion problems are handled in a similar manner.</p>
 <h1>12. <a name="Table_of_Tested_Versions">Table of Tested Versions</a></h1>
 <p>Three different configurations were used to test weewx V1.1.X. Here are the package 
