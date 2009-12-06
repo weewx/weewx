@@ -73,7 +73,10 @@ class GeneralPlot(object):
         self.y_label_format         = config_dict.get('y_label_format', None)
         
         self.render_rose            = False
-        self.rose_position          = (5, self.image_height-25)
+        # Rose width and height are hardwired to 21x21:
+        self.rose_width             = 21
+        self.rose_height            = 21
+        self.rose_position          = (self.lmargin + self.padding + 5, self.image_height - self.bmargin - self.padding - self.rose_height)
         self.rose_rotation          = None
         self.rose_label             = config_dict.get('rose_label', 'N')
         self.rose_label_font_path   = config_dict.get('rose_label_font_path', self.bottom_label_font_path)
@@ -304,20 +307,31 @@ class GeneralPlot(object):
     def _renderRose(self, image, draw):
         """Draw a compass rose."""
         
-        # Width and height are hardwired to 21x21:
-        rose_width = rose_height = 21
-        rose_center_x = rose_width/2  + 1
-        rose_center_y = rose_height/2 + 1
+        # Internal function used to add an opaque alpha channel to an integer RGB value
+        def add_alpha(i):
+            r = i & 0xff
+            g = (i >> 8)  & 0xff
+            b = (i >> 16) & 0xff
+            a = 0xff    # Opaque alpha
+            return (r,g,b,a)
+
+        rose_center_x = self.rose_width/2  + 1
+        rose_center_y = self.rose_height/2 + 1
         barb_width  = 3
-        barb_height = 4
-        rose_image = Image.new("RGB", (rose_width, rose_height), self.image_background_color)
+        barb_height = 3
+        # The background is all white with a zero alpha (totally transparent)
+        rose_image = Image.new("RGBA", (self.rose_width, self.rose_height), (0x00, 0x00, 0x00, 0x00))
         rose_draw = ImageDraw.Draw(rose_image)
+ 
+        fill_color = add_alpha(self.rose_color)
         # Draw the arrow straight up (North). First the shaft:
-        rose_draw.line( ((rose_center_x, 0), (rose_center_x, rose_height)), width = 1, fill = self.rose_color)
+        rose_draw.line( ((rose_center_x, 0), (rose_center_x, self.rose_height)), width = 1, fill = fill_color)
         # Now the left barb:
-        rose_draw.line( ((rose_center_x - barb_width, barb_height), (rose_center_x, 0)), width = 1, fill = self.rose_color)
+        rose_draw.line( ((rose_center_x - barb_width, barb_height), (rose_center_x, 0)), width = 1, fill = fill_color)
         # And the right barb:
-        rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)), width = 1, fill = self.rose_color)
+        rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)), width = 1, fill = fill_color)
+        
+        rose_draw.ellipse(((rose_center_x - 4, rose_center_y - 4), (rose_center_x + 4, rose_center_y + 4)), outline = fill_color)
 
         # Rotate if necessary:
         if self.rose_rotation:
@@ -332,11 +346,13 @@ class GeneralPlot(object):
         rose_draw.text((rose_center_x - rose_label_size[0]/2, 
                         rose_center_y - rose_label_size[1]/2),
                         self.rose_label,
-                        fill = self.rose_label_font_color,
+                        fill = add_alpha(self.rose_label_font_color),
                         font = rose_label_font)
 
-        # Paste the image of the arrow on to the main plot:
-        image.paste(rose_image, self.rose_position)
+        # Paste the image of the arrow on to the main plot. The alpha
+        # channel of the image will be used as the mask.
+        # This will cause the arrow to overlay the background plot
+        image.paste(rose_image, self.rose_position, rose_image)
         
 
     def _calcXScaling(self):
