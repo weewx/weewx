@@ -3,9 +3,9 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    Revision: $Rev$
-#    Author:   $Author$
-#    Date:     $Date$
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """Defines the default station data, available for processing data."""
 import time

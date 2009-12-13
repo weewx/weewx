@@ -3,9 +3,9 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    Revision: $Rev$
-#    Author:   $Author$
-#    Date:     $Date$
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """Determine the phase of the moon phase given a date.
     CF: http://en.wikipedia.org/wiki/Lunar_phase
