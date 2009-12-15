@@ -178,9 +178,9 @@ class MainLoop(object):
                                      self.config_dict['Stats']['stats_file'])
         # statsDb is an instance of weewx.stats.StatsDb, which wraps the stats sqlite file
         self.statsDb = weewx.stats.StatsDb(statsFilename,
-                                      int(self.config_dict['Station'].get('heating_base',   65)),
-                                      int(self.config_dict['Station'].get('cooling_base',   65)),
-                                      int(self.config_dict['Station'].get('cache_loop_data', 0)))
+                                      int(self.config_dict['Station'].get('heating_base',   '65')),
+                                      int(self.config_dict['Station'].get('cooling_base',   '65')),
+                                      int(self.config_dict['Station'].get('cache_loop_data', '1')))
 
         # Configure it if necessary (this will do nothing if the database has
         # already been configured):
