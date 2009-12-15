@@ -60,11 +60,23 @@ class WxStation (object) :
         
         syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up serial port '%s' baudrate=%d" % (self.port, self.baudrate))
 
+    def genLoopPacketsUntil(self, stopTime_ts):
+        """Generator function that returns loop packets until a specified time."""
+        while True:
+            # Get LOOP packets in big batches, then cancel as necessary when the expiration
+            # time is up. This is necessary because there is an undocumented limit to how
+            # many LOOP records you can for on the VP (somewhere around 220).
+            for physicalPacket in self.genLoopPackets(200):
+    
+                yield physicalPacket
+                
+                # Check to see if it's time to get new archive data. If so, cancel the loop
+                # and return
+                if time.time() >= stopTime_ts:
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: new archive record due. Canceling loop")
+                    self.cancelLoop()
+                    return
 
-    def preloop(self, archive, statsDb):
-        """Perform any pre-loop calculations required by the weather station."""
-        pass
-        
     def genLoopPackets(self, N = 1):
         """Generator function to return N loop packets in physical units.
         
@@ -107,8 +119,7 @@ class WxStation (object) :
             else:
                 syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting LOOP packets")
                 raise weewx.RetriesExceeded, "While getting LOOP packets"
-            
-                
+
     def cancelLoop(self):
         """Cancel an active LOOP request."""
         self._wakeup_console()
