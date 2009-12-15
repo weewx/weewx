@@ -22,7 +22,7 @@ import configobj
 
 import daemon
 
-import weewx.mainloop
+import weewx.wxengine
 
 usagestr = """
   %prog config_path [--daemon]
@@ -62,4 +62,4 @@ except IOError:
 syslog.syslog(syslog.LOG_INFO, "main: Using configuration file %s." % os.path.abspath(args[0]))
 
 # Prepare and enter the main loop:
-weewx.mainloop.main(config_dict)
+weewx.wxengine.main(config_dict)
