@@ -38,10 +38,29 @@ One way to do this would be as follows:
   # of the default:
   
   weewx.wxengine.main(EngineClass=MyEngine)
+  
+An alternative approach is to define a new service. For an example
+of a new service, see the alarm example in the example subdirectory.
+In this case, the new service needs to be included in the service_list.
+
+For an example, to include the example alarm service, the call into the
+main function would look like:
+
+  weewx.wxengine.main(service_list = ['weewx.wxengine.StdWunderground',
+                                      'weewx.wxengine.StdCatchUp',
+                                      'weewx.wxengine.StdTimeSynch',
+                                      'weewx.wxengine.StdPrint',
+                                      'examples.alarm.MyAlarm',
+                                      'weewx.wxengine.StdProcess'])
 """
 
 import weewx.wxengine
 
 # Enter the main loop. 
 
-weewx.wxengine.main()
+weewx.wxengine.main(service_list = ['weewx.wxengine.StdWunderground',
+                                    'weewx.wxengine.StdCatchUp',
+                                    'weewx.wxengine.StdTimeSynch',
+                                    'weewx.wxengine.StdPrint',
+                                    'examples.alarm.MyAlarm',
+                                    'weewx.wxengine.StdProcess'])

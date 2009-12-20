@@ -1,7 +1,19 @@
 CHANGE HISTORY
 --------------------------------
 
-1.3.0   12/4/09
+1.3.0   12/20/09
+
+Moved to a very different architecture to drive weewx. Consists of an engine,
+that manages a list of 'services.' At key events, each service is given
+a chance to participate. Services are easy to add, to allow easy
+customization. An example is offered of an 'alarm' service.
+
+Checking the clock of the weather station for drift is now a service, so
+the option clock_check was moved from the station specific [VantagePro]
+section to the more general [Station] section.
+
+Added an example service 'MyAlarm', which sends out an email should the
+outside temperature drop below 40 degrees.
 
 Moved the compass rose used in progressive vector plots into the interior
 of the plot.

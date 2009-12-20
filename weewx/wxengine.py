@@ -42,6 +42,11 @@ Arguments:
 #===============================================================================
 
 class StdEngine(object):
+    """Engine that drives weewx.
+    
+    This engine manages a list of 'services.' At key events, each service
+    is given a chance to participate.
+    """
     
     def __init__(self, service_list):
         """Initialize an instance of StdEngine.
@@ -52,7 +57,7 @@ class StdEngine(object):
         self.service_obj = [_get_object(svc, self) for svc in service_list]
         
     def setup(self):
-        """Run before anything else."""
+        """Gets run before anything else."""
         
         self.parseArgs()
 
@@ -234,6 +239,7 @@ class StdEngine(object):
 #===============================================================================
 
 class StdService(object):
+    """Abstract base class for all services."""
     
     def __init__(self, engine):
         self.engine = engine
@@ -258,7 +264,9 @@ class StdService(object):
 #===============================================================================
 
 class StdCatchUp(StdService):        
-
+    """Looks for data that is on the weather station but not in the database.
+    
+    If any data is found, it arranges to have it put in the database."""
     def __init__(self, engine):
         StdService.__init__(self, engine)
     
@@ -270,19 +278,28 @@ class StdCatchUp(StdService):
 #===============================================================================
 
 class StdTimeSynch(StdService):
-    
+    """Regularly asks the station to synch up its clock."""
     def __init__(self, engine):
         StdService.__init__(self, engine)
+
+    def setup(self):
+        """Zero out the time of last synch, and get the time between synchs."""
         self.last_synch_ts = 0
+        self.clock_check = int(self.engine.config_dict['Station'].get('clock_check','14400'))
         
     def preloop(self):
+        """Ask the station to synch up if enough time has passed."""
         # Synch up the station's clock if it's been more than 
         # clock_check seconds since the last check:
         now_ts = time.time()
-        if now_ts - self.last_synch_ts >= self.engine.station.clock_check:
+        if now_ts - self.last_synch_ts >= self.clock_check:
             self.engine.station.setTime()
             self.last_synch_ts = now_ts
             
+#===============================================================================
+#                    Class StdPrint
+#===============================================================================
+
 class StdPrint(StdService):
     """Service that prints diagnostic information when a LOOP
     or archive packet is received."""
@@ -358,11 +375,10 @@ def main(EngineClass = StdEngine,
                          'weewx.wxengine.StdCatchUp',
                          'weewx.wxengine.StdTimeSynch',
                          'weewx.wxengine.StdPrint',
-                         'example.alarm.MyAlarm',
                          'weewx.wxengine.StdProcess']) :
     """Prepare the main loop and run it. 
 
-    Mostly consists of a bunch of high-level prepatory calls, protected
+    Mostly consists of a bunch of high-level preparatory calls, protected
     by try blocks in the case of an exception."""
 
     try:

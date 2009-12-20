@@ -50,8 +50,6 @@ class WxStation (object) :
         self.archive_delay    = int(config_dict.get('archive_delay', '15'))
         self.unit_system      = int(config_dict.get('unit_system'  , '1'))
         self.max_drift        = int(config_dict.get('max_drift'    , '5'))
-        self.clock_check      = int(config_dict.get('clock_check'  , '14400'))
-        
 
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
         
@@ -366,7 +364,12 @@ class WxStation (object) :
     def config(self, config_dict):
         
         _archive_interval = int(config_dict.get('archive_interval', '300'))
-        self.setArchiveInterval(_archive_interval)
+        _old_interval = self.getArchiveInterval()
+        if _old_interval != _archive_interval:
+            self.setArchiveInterval(_archive_interval)
+            self.clearLog()
+
+        # TODO: This would be the place to set latitude, longitude, and altitude
         
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
@@ -575,10 +578,6 @@ class WxStation (object) :
         # (e.g., temperatures in hundreds) and replace them with None.
         
         return record
-        
-        # TODO: If the new archive interval is different from the old, then the archive memory should be cleared
-        
-        # TODO: This would be the place to set latitude, longitude, and altitude
         
     def _wakeup_console(self):
         """ Wake up a Davis VantagePro console.

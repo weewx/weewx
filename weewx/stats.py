@@ -997,7 +997,6 @@ class StatsDb(object):
 
         yearSpan: An instance of weeutil.timespan.Timespan with the
         time span for the desired year."""
-        #TODO: __dayCache current year data because it gets used twice in processdata.py
 
         # Strategy is to fill in the whole year data structure with default values,
         # then plug in the real values from the SQL search.
