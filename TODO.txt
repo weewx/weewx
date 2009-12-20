@@ -5,3 +5,10 @@ Edit templates so they are less KORHOODR3 specific.
 Test setup.py to make sure it deletes #upstream.last
 
 Add year-to-date rain feature.
+
+Check example in weewxd.py of how to override the default engine
+
+Move option clock_check to section Station. Move attribute to class StdTimeSynch.
+Change docs to reflect.
+
+Put diagnostic print statements in a separate "print services" service.

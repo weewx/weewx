@@ -23,13 +23,14 @@ import daemon
 import weewx
 import weewx.archive
 import weewx.stats
+import weewx.processdata
 import weeutil.weeutil
 
 usagestr = """
   %prog config_path [--daemon]
 
   Entry point to the weewx weather program. Can be run from the command
-  line, or with the '--daemon' option, as a daemon.
+  line or, by specifying the '--daemon' option, as a daemon.
 
 Arguments:
     config_path: Path to the configuration file to be used.
@@ -67,7 +68,6 @@ class StdEngine(object):
         # Set a default socket time out, in case FTP or HTTP hang:
         timeout = int(self.config_dict.get('socket_timeout', '20'))
         socket.setdefaulttimeout(timeout)
-
         
         # Allow each service to run its setup:
         for obj in self.service_obj:
@@ -109,7 +109,6 @@ class StdEngine(object):
         archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
                                        self.config_dict['Archive']['archive_file'])
         self.archive = weewx.archive.Archive(archiveFilename)
-    
 
         # Configure it if necessary (this will do nothing if the database has
         # already been configured):
@@ -151,15 +150,14 @@ class StdEngine(object):
     
         except Exception, ex:
             # Caught unrecoverable error. Log it, exit
-            syslog.syslog(syslog.LOG_CRIT, "main: Unable to open WX station hardware: %s" % ex)
-            syslog.syslog(syslog.LOG_CRIT, "main: Exiting.")
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Exiting.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise
             
         
     def preloop(self):
         """Run every time before asking for LOOP packets"""
-        print "In preloop()"
 
         for obj in self.service_obj:
             obj.preloop()
@@ -167,27 +165,18 @@ class StdEngine(object):
             
     def processLoopPacket(self, physicalPacket):
         """Run whenever a LOOP packet needs to be processed."""
-        print "In processLoopPacket()"
         
         for obj in self.service_obj:
             obj.processLoopPacket(physicalPacket)
             
     def getArchiveData(self):
         """This function gets or calculates new archive data"""
-        print "In getArchiveData()"
         
         lastgood_ts = self.archive.lastGoodStamp()
         
         nrec = 0
         # Add all missed archive records since the last good record in the database
         for rec in self.station.genArchivePackets(lastgood_ts) :
-            print"REC:-> ", weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec['barometer'],\
-                                                                rec['outTemp'],   rec['windSpeed'],\
-                                                                rec['windDir'], " <-"
-            # Add the new record to the archive database and stats database:
-            self.archive.addRecord(rec)
-            self.statsDb.addArchiveRecord(rec)
-            # Give each service a chance to take a look at it:
             self.postArchiveData(rec)
             nrec += 1
     
@@ -196,22 +185,28 @@ class StdEngine(object):
     
     def postArchiveData(self, rec):
         """Run whenever any new archive data appears."""
+
+        # Add the new record to the archive database and stats database:
+        self.archive.addRecord(rec)
+        self.statsDb.addArchiveRecord(rec)
+
+        # Give each service a chance to take a look at it:
         for obj in self.service_obj:
             obj.postArchiveData(rec)
         
     def processArchiveData(self):
         """Run after any archive data has been retrieved and put in the database."""
-        print "In processArchiveData()"
         
         for obj in self.service_obj:
             obj.processArchiveData()
             
     def start(self):
+        """Start up the engine. Runs member function run()"""
         
         self.run()
         
     def run(self):
-        
+        """This is where the work gets done."""
         self.setup()
         
         syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
@@ -243,7 +238,7 @@ class StdService(object):
     def __init__(self, engine):
         self.engine = engine
     
-    def setup(self, engine):
+    def setup(self):
         pass
     
     def preloop(self):
@@ -278,16 +273,35 @@ class StdTimeSynch(StdService):
     
     def __init__(self, engine):
         StdService.__init__(self, engine)
-        self.engine.last_synch_ts = 0
+        self.last_synch_ts = 0
         
     def preloop(self):
         # Synch up the station's clock if it's been more than 
         # clock_check seconds since the last check:
         now_ts = time.time()
-        if now_ts - self.engine.last_synch_ts >= self.engine.station.clock_check:
+        if now_ts - self.last_synch_ts >= self.engine.station.clock_check:
             self.engine.station.setTime()
-            self.engine.last_synch_ts = now_ts
+            self.last_synch_ts = now_ts
+            
+class StdPrint(StdService):
+    """Service that prints diagnostic information when a LOOP
+    or archive packet is received."""
+    
+    def __init__(self, engine):
+        StdService.__init__(self, engine)
         
+    def processLoopPacket(self, physicalPacket):
+        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(physicalPacket['dateTime']),\
+            physicalPacket['barometer'],\
+            physicalPacket['outTemp'],\
+            physicalPacket['windSpeed'],\
+            physicalPacket['windDir']
+
+    def postArchiveData(self, rec):
+        print"REC:-> ", weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec['barometer'],\
+                                                            rec['outTemp'],   rec['windSpeed'],\
+                                                            rec['windDir'], " <-"
+
 #===============================================================================
 #                    Class StdWunderground
 #===============================================================================
@@ -331,7 +345,7 @@ class StdProcess(StdService):
         """This function processes any new archive data"""
         # Now process the data, using a separate thread
         processThread = threading.Thread(target = weewx.processdata.processData,
-                                         args   =(self.config_dict, ))
+                                         args   =(self.engine.config_dict, ))
         processThread.start()
 
 
@@ -343,6 +357,8 @@ def main(EngineClass = StdEngine,
          service_list = ['weewx.wxengine.StdWunderground',
                          'weewx.wxengine.StdCatchUp',
                          'weewx.wxengine.StdTimeSynch',
+                         'weewx.wxengine.StdPrint',
+                         'example.alarm.MyAlarm',
                          'weewx.wxengine.StdProcess']) :
     """Prepare the main loop and run it. 
 
