@@ -44,9 +44,6 @@ class StdReportEngine(threading.Thread):
                                                                            ['weewx.reportengine.FileGen', 
                                                                             'weewx.reportengine.ImageGen',
                                                                             'weewx.reportengine.Ftp'])
-        syslog.syslog(syslog.LOG_DEBUG, "reportengine: List of reports to be run:")
-        for report in self.report_list:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: ** %s" % report)
             
     def run(self):
         """This is where the actual work gets done.
@@ -59,6 +56,7 @@ class StdReportEngine(threading.Thread):
         try:
         
             for report in self.report_list:
+                syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
                 # Instantiate an instance of the class
                 obj = weeutil.weeutil._get_object(report, self)
                 # Call its start() method
