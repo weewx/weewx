@@ -48,19 +48,29 @@ class StdEngine(object):
     is given a chance to participate.
     """
     
-    def __init__(self, service_list):
-        """Initialize an instance of StdEngine.
+    def __init__(self):
+        """Initialize an instance of StdEngine."""
         
-        For each listed service in service_list, instantiates an instance of the class,
-        passing self as the only argument."""
 
-        self.service_obj = [_get_object(svc, self) for svc in service_list]
-        
     def setup(self):
         """Gets run before anything else."""
         
         self.parseArgs()
 
+        service_list = self.config_dict.get('service_list', ['weewx.wxengine.StdWunderground',
+                                                             'weewx.wxengine.StdCatchUp',
+                                                             'weewx.wxengine.StdTimeSynch',
+                                                             'weewx.wxengine.StdPrint',
+                                                             'weewx.wxengine.StdProcess'])
+        
+        syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
+        for svc in service_list:
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: ** %s" % svc)
+        
+        #For each listed service in service_list, instantiates an instance of the class,
+        # passing self as the only argument."""
+        self.service_obj = [_get_object(svc, self) for svc in service_list]
+        
         # Set up the main archive database:
         self.setupArchiveDatabase()
 
@@ -98,16 +108,15 @@ class StdEngine(object):
             self.config_dict = configobj.ConfigObj(args[0], file_error=True)
         except IOError:
             sys.stderr.write("Unable to open configuration file %s" % args[0])
-            syslog.syslog(syslog.LOG_CRIT, "main: Unable to open configuration file %s" % args[0])
-            exit()
-        
-        syslog.syslog(syslog.LOG_INFO, "main: Using configuration file %s." % os.path.abspath(args[0]))
-    
-        if int(self.config_dict.get('debug', '0')):
-            # Get extra debug info. Set the logging mask for full debug info
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-            # Set the global debug flag:
-            weewx.debug = True
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open configuration file %s" % args[0])
+            # Reraise the exception (this will eventually cause the program to exit)
+            raise
+
+        # Look for the debug flag. If set, ask for extra logging
+        weewx.debug = int(self.config_dict.get('debug', '0'))
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG if weewx.debug else syslog.LOG_INFO))
+
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % os.path.abspath(args[0]))
 
     def setupArchiveDatabase(self):
         """Setup the main database archive"""
@@ -370,12 +379,7 @@ class StdProcess(StdService):
 #                    Function main
 #===============================================================================
 
-def main(EngineClass = StdEngine,
-         service_list = ['weewx.wxengine.StdWunderground',
-                         'weewx.wxengine.StdCatchUp',
-                         'weewx.wxengine.StdTimeSynch',
-                         'weewx.wxengine.StdPrint',
-                         'weewx.wxengine.StdProcess']) :
+def main(EngineClass = StdEngine) :
     """Prepare the main loop and run it. 
 
     Mostly consists of a bunch of high-level preparatory calls, protected
@@ -383,14 +387,14 @@ def main(EngineClass = StdEngine,
 
     try:
 
-        # Create and initialize the MainLoop object
-        engine = EngineClass(service_list)
+        # Create and initialize the engine
+        engine = EngineClass()
 
     except Exception, ex:
         # Caught unrecoverable error. Log it, exit
-        syslog.syslog(syslog.LOG_CRIT, "main: Unable to initialize main loop:")
-        syslog.syslog(syslog.LOG_CRIT, "main: %s" % ex)
-        syslog.syslog(syslog.LOG_CRIT, "main: Exiting.")
+        syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to initialize main loop:")
+        syslog.syslog(syslog.LOG_CRIT, "wxengine: %s" % ex)
+        syslog.syslog(syslog.LOG_CRIT, "wxengine: Exiting.")
         # Reraise the exception (this will eventually cause the program to exit)
         raise
 
@@ -404,22 +408,22 @@ def main(EngineClass = StdEngine,
         # Catch any recoverable weewx I/O errors:
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
-            syslog.syslog(syslog.LOG_CRIT, "main: Caught WeeWxIOError: %s" % e)
-            syslog.syslog(syslog.LOG_CRIT, "main: Waiting 60 seconds then retrying...")
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught WeeWxIOError: %s" % e)
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Waiting 60 seconds then retrying...")
             time.sleep(60)
-            syslog.syslog(syslog.LOG_NOTICE, "main: retrying...")
+            syslog.syslog(syslog.LOG_NOTICE, "wxengine: retrying...")
 
         # If run from the command line, catch any keyboard interrupts and log them:
         except KeyboardInterrupt:
-            syslog.syslog(syslog.LOG_CRIT,"main: Keyboard interrupt.")
+            syslog.syslog(syslog.LOG_CRIT,"wxengine: Keyboard interrupt.")
             raise SystemExit, "keyboard interrupt"
 
         # Catch any non-recoverable errors. Log them, exit
         except Exception, ex:
             # Caught unrecoverable error. Log it, exit
-            syslog.syslog(syslog.LOG_CRIT, "main: Caught unrecoverable exception in main loop:")
-            syslog.syslog(syslog.LOG_CRIT, "main: %s" % ex)
-            syslog.syslog(syslog.LOG_CRIT, "main: Exiting.")
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught unrecoverable exception in wxengine:")
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: %s" % ex)
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Exiting.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise
 
