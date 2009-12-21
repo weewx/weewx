@@ -1,7 +1,5 @@
 TODO before the next release:
 
-Test setup.py to make sure it deletes #upstream.last
-
 Add year-to-date rain feature.
 
 Check example in weewxd.py of how to override the default engine

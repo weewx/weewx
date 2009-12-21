@@ -81,12 +81,29 @@ class My_install_data(install_data):
         return rv
     
     def run(self):
+        # Back up the old template directory if it exists
         template_dir = os.path.join(self.install_dir, 'templates')
         if os.path.exists(template_dir):
             backupdir = backup(template_dir)
             print "Backed up template subdirectory to %s" % backupdir
+            
+        # Run the superclass's run():
         install_data.run(self)
         
+        # If the file #upstream.last exists, delete it, thus forcing
+        # all files to be FTP'd to the server at the next opportunity.
+        try:
+            os.remove(os.path.join(self.install_dir, 'public_html/#upstream.last'))
+        except:
+            pass
+            
+        # If the file $WEEWX_ROOT/readme.htm exists, delete it. It's
+        # the old readme (since replaced with docs/readme.htm)
+        try:
+            os.remove('readme.htm')
+        except:
+            pass
+
     def massageConfigFile(self, f, install_dir, **kwargs):
         """Merges any old config file into the new one, and sets WEEWX_ROOT
         

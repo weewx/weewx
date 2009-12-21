@@ -17,6 +17,9 @@ outside temperature drop below 40 degrees.
 
 Moved the compass rose used in progressive vector plots into the interior
 of the plot.
+
+Install now deletes public_html/#upstream.last, thus forcing all files to
+be uploaded to the web server at the next opportunity.
  
 1.2.0   11/22/09
 
