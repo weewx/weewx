@@ -50,12 +50,11 @@ _table=(
 table = array.array('H',_table)
 
 def crc16(string, crc=0):
-     """ Calculate CRC16 sum
+    """ Calculate CRC16 sum"""
 
-     """
-     for ch in string:
-         crc = (table[((crc>>8)^ord(ch)) & 0xff] ^ (crc<<8)) & 0xffff
-     return crc
+    for ch in string:
+        crc = (table[((crc>>8)^ord(ch)) & 0xff] ^ (crc<<8)) & 0xffff
+    return crc
 
 
 if __name__ == '__main__' :

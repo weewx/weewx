@@ -24,6 +24,7 @@ import weewx.stats
 import weewx.station
 import weewx.formatter
 import weeutil.weeutil
+import weeutil.Almanac
 
 class GenFiles(object):
     """Manages the generation of NOAA and HTML files

@@ -23,7 +23,6 @@ import daemon
 import weewx
 import weewx.archive
 import weewx.stats
-import weewx.processdata
 import weeutil.weeutil
 
 usagestr = """
@@ -57,11 +56,12 @@ class StdEngine(object):
         
         self.parseArgs()
 
-        service_list = self.config_dict.get('service_list', ['weewx.wxengine.StdWunderground',
-                                                             'weewx.wxengine.StdCatchUp',
-                                                             'weewx.wxengine.StdTimeSynch',
-                                                             'weewx.wxengine.StdPrint',
-                                                             'weewx.wxengine.StdProcess'])
+        service_list = self.config_dict['Engines']['WxEngine'].get('service_list', 
+                                                                   ['weewx.wxengine.StdWunderground',
+                                                                    'weewx.wxengine.StdCatchUp',
+                                                                    'weewx.wxengine.StdTimeSynch',
+                                                                    'weewx.wxengine.StdPrint',
+                                                                    'weewx.wxengine.StdProcess'])
         
         syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
         for svc in service_list:
@@ -69,7 +69,7 @@ class StdEngine(object):
         
         #For each listed service in service_list, instantiates an instance of the class,
         # passing self as the only argument."""
-        self.service_obj = [_get_object(svc, self) for svc in service_list]
+        self.service_obj = [weeutil.weeutil._get_object(svc, self) for svc in service_list]
         
         # Set up the main archive database:
         self.setupArchiveDatabase()
@@ -366,6 +366,7 @@ class StdWunderground(StdService):
 #===============================================================================
 
 class StdProcess(StdService):
+    import weewx.reportengine
     
     def __init__(self, engine):
         StdService.__init__(self, engine)
@@ -373,9 +374,8 @@ class StdProcess(StdService):
     def processArchiveData(self):
         """This function processes any new archive data"""
         # Now process the data, using a separate thread
-        processThread = threading.Thread(target = weewx.processdata.processData,
-                                         args   =(self.engine.config_dict, ))
-        processThread.start()
+        t = weewx.reportengine.StdReportEngine(self.engine.config_dict) 
+        t.start()
 
 
 #===============================================================================
@@ -430,19 +430,3 @@ def main(EngineClass = StdEngine) :
             # Reraise the exception (this will eventually cause the program to exit)
             raise
 
-def _get_object(module_class, *args, **kwargs):
-    """Given a path to a class, instantiates an instance of the class with the given args and returns it."""
-    
-    # Split the path into its parts
-    parts = module_class.split('.')
-    # Strip off the classname:
-    module = '.'.join(parts[:-1])
-    # Import the top level module
-    mod =  __import__(module)
-    # Then recursively work down from the top level module to the class name:
-    for part in parts[1:]:
-        mod = getattr(mod, part)
-    # Instance 'mod' will now be a class. Instantiate an instance and return it:
-    obj = mod(*args, **kwargs)
-    return obj
-        

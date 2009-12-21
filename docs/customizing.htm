@@ -6,7 +6,7 @@
 <head>
 <meta http-equiv="Content-Language" content="en-us" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Upgrading weewx</title>
+<title>Customizing weewx</title>
 <style type="text/css">
 body {
 	font: 12pt Verdana, arial, sans-serif;
@@ -93,6 +93,7 @@ td {
 	margin-left: 40px;
 	margin-bottom: 0px;
 	margin-top: 0px;
+	background-color: #FFFFCC;
 }
 .title {
 	text-align: center;
@@ -113,15 +114,12 @@ td {
 .bold_n_blue {
 	color: #0000FF;
 }
-.style1 {
-	background-color: #E8E8E8;
-}
 </style>
 </head>
 
 <body>
 
-<h1 class="title"><span class="style1">Customizing </span>weewx v1.3</h1>
+<h1 class="title">Customizing weewx v1.3</h1>
 <h1>Overview</h1>
 <p>At a high level, weewx consists of an <em>engine</em> that is responsible for 
 managing a set of <em>services</em>. A service consists of a Python class with a 
@@ -170,7 +168,44 @@ all services is called.</p>
 <h1>Customizing a Service</h1>
 <p>The service weewx.wxengine.StdPrint prints out new LOOP and archive packets 
 to the console when they arrive. By default, it prints out time, barometer, 
-outside temperature, wind speed, and wind direction.</p>
+outside temperature, wind speed, and wind direction. Suppose you want to add </p>
+
+<h1>Customizing the Engine</h1>
+<p>In this section, we look at how to install a custom Engine. In general, this 
+is the least desirable way to proceed, but in some cases it may be the only way 
+to get what you want.</p>
+<p>The standard engine is a class called <span class="code">StdEngine</span>. To customize, you must 
+inherit from this class. Here&#39;s an example, which prints out the full LOOP 
+packet.</p>
+<p>Create a file with your engine in it. Call it file <span class="code">
+myengine.py</span>. Here&#39;s the contents:</p>
+<p class="tty">from weewx.wxengine import StdEngine<br />
+<br />
+# Create a specialized, custom engine:<br />
+class MyEngine(StdEngine):<br />
+&nbsp;<br />
+&nbsp;&nbsp;&nbsp; # Pass on the init parameters to my superclass<br />
+&nbsp;&nbsp;&nbsp; def __init__(self, *args, **vargs):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; super(MyEngine, self).__init__(*args, 
+**vargs)<br />
+&nbsp;<br />
+&nbsp;&nbsp;&nbsp; # Override the member function that processes loop packets:<br />
+&nbsp;&nbsp;&nbsp; def processLoopPacket(self, physicalPacket):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # First let the superclass process 
+it:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; super(MyEngine, self).processLoopPacket(physicalPacket)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Then add my specialized processing:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print &quot;Hi! I&#39;m a specialized loop 
+packet processor&quot;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print physicalPacket</p>
+<p>Then go into file <span class="code">weewxd.py</span> and change the line</p>
+<p class="tty">weewx.wxengine.main()</p>
+<p>so that it uses your new engine:</p>
+<p class="tty">from myengine import MyEngine<br />
+&nbsp;<br />
+# Specify that my specialized engine should be used instead<br />
+# of the default:<br />
+weewx.wxengine.main(EngineClass = MyEngine)</p>
 
 </body>
 

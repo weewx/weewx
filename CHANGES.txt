@@ -1,7 +1,7 @@
 CHANGE HISTORY
 --------------------------------
 
-1.3.0   12/20/09
+1.3.0   12/21/09
 
 Moved to a very different architecture to drive weewx. Consists of an engine,
 that manages a list of 'services.' At key events, each service is given
@@ -14,6 +14,10 @@ section to the more general [Station] section.
 
 Added an example service 'MyAlarm', which sends out an email should the
 outside temperature drop below 40 degrees.
+
+In a similar manner, all generated files, images, and reports are the
+product of a report engine, which can run any number of reports. New reports
+are easily added.
 
 Moved the compass rose used in progressive vector plots into the interior
 of the plot.

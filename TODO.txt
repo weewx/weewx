@@ -1,7 +1,5 @@
 TODO before the next release:
 
-Add year-to-date rain feature.
-
 Check example in weewxd.py of how to override the default engine
 
 Write customization.htm --- how to customize.
