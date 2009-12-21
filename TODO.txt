@@ -1,15 +1,10 @@
 TODO before the next release:
 
-Modify WunderThread to reflect the new service architecture.
-
 Test setup.py to make sure it deletes #upstream.last
 
 Add year-to-date rain feature.
 
 Check example in weewxd.py of how to override the default engine
-
-Move option clock_check to section Station. Move attribute to class StdTimeSynch.
-Change docs to reflect.
 
 Write customization.htm --- how to customize.
  

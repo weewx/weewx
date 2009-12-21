@@ -4,12 +4,17 @@ NEW_FEATURES.txt
 README
 configure.py
 daemon.py
-readme.htm
 setup.cfg
 setup.py
 upload.py
 weewx.conf
 weewxd.py
+docs/customizing.htm
+docs/readme.htm
+docs/sheeva.htm
+docs/upgrading.htm
+examples/__init__.py
+examples/alarm.py
 public_html/weewx.css
 public_html/backgrounds/band.gif
 public_html/backgrounds/butterfly.jpg
@@ -47,4 +52,5 @@ weewx/processdata.py
 weewx/station.py
 weewx/stats.py
 weewx/wunderground.py
+weewx/wxengine.py
 weewx/wxformulas.py

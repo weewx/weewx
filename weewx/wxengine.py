@@ -345,12 +345,15 @@ class StdWunderground(StdService):
         # and password exist before committing:
         if wunder_dict and (wunder_dict.has_key('station') and 
                             wunder_dict.has_key('password')):
+            # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
+            # Create an instance of weewx.archive.Archive
             archiveFilename = os.path.join(self.engine.config_dict['Station']['WEEWX_ROOT'], 
                                            self.engine.config_dict['Archive']['archive_file'])
-            t = weewx.wunderground.WunderThread(archiveFilename = archiveFilename,
-                                                queue = self.queue, 
-                                                **wunder_dict)
+            archive = weewx.archive.Archive(archiveFilename)
+            t = weewx.wunderground.WunderThread(archive = archive, queue = self.queue, **wunder_dict)
+            t.start()
+            
         else:
             self.queue = None
         
