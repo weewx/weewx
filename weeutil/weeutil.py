@@ -3,9 +3,9 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    Revision: $Rev$
-#    Author:   $Author$
-#    Date:     $Date$
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """Various handy utilities that don't belong anywhere else."""
 
@@ -410,6 +410,22 @@ def latlon_string(ll, hemi):
     min = frac * 60.0
     return ("%d" % (deg,), "%0.2f" % (min,), hemi[0] if ll >= 0 else hemi[1])
 
+def _get_object(module_class, *args, **kwargs):
+    """Given a path to a class, instantiates an instance of the class with the given args and returns it."""
+    
+    # Split the path into its parts
+    parts = module_class.split('.')
+    # Strip off the classname:
+    module = '.'.join(parts[:-1])
+    # Import the top level module
+    mod =  __import__(module)
+    # Then recursively work down from the top level module to the class name:
+    for part in parts[1:]:
+        mod = getattr(mod, part)
+    # Instance 'mod' will now be a class. Instantiate an instance and return it:
+    obj = mod(*args, **kwargs)
+    return obj
+        
 if __name__ == '__main__':
     print "********* genYearSpans ***********"
     print "Should print years 2007 through 2008:"

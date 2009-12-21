@@ -3,9 +3,9 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    Revision: $Rev$
-#    Author:   $Author$
-#    Date:     $Date$
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """classes and functions for interfacing with a Davis VantagePro or VantagePro2"""
 import syslog
@@ -50,8 +50,6 @@ class WxStation (object) :
         self.archive_delay    = int(config_dict.get('archive_delay', '15'))
         self.unit_system      = int(config_dict.get('unit_system'  , '1'))
         self.max_drift        = int(config_dict.get('max_drift'    , '5'))
-        self.clock_check      = int(config_dict.get('clock_check'  , '14400'))
-        
 
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
         
@@ -60,11 +58,23 @@ class WxStation (object) :
         
         syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up serial port '%s' baudrate=%d" % (self.port, self.baudrate))
 
+    def genLoopPacketsUntil(self, stopTime_ts):
+        """Generator function that returns loop packets until a specified time."""
+        while True:
+            # Get LOOP packets in big batches, then cancel as necessary when the expiration
+            # time is up. This is necessary because there is an undocumented limit to how
+            # many LOOP records you can for on the VP (somewhere around 220).
+            for physicalPacket in self.genLoopPackets(200):
+    
+                yield physicalPacket
+                
+                # Check to see if it's time to get new archive data. If so, cancel the loop
+                # and return
+                if time.time() >= stopTime_ts:
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: new archive record due. Canceling loop")
+                    self.cancelLoop()
+                    return
 
-    def preloop(self, archive, statsDb):
-        """Perform any pre-loop calculations required by the weather station."""
-        pass
-        
     def genLoopPackets(self, N = 1):
         """Generator function to return N loop packets in physical units.
         
@@ -107,8 +117,7 @@ class WxStation (object) :
             else:
                 syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting LOOP packets")
                 raise weewx.RetriesExceeded, "While getting LOOP packets"
-            
-                
+
     def cancelLoop(self):
         """Cancel an active LOOP request."""
         self._wakeup_console()
@@ -355,7 +364,12 @@ class WxStation (object) :
     def config(self, config_dict):
         
         _archive_interval = int(config_dict.get('archive_interval', '300'))
-        self.setArchiveInterval(_archive_interval)
+        _old_interval = self.getArchiveInterval()
+        if _old_interval != _archive_interval:
+            self.setArchiveInterval(_archive_interval)
+            self.clearLog()
+
+        # TODO: This would be the place to set latitude, longitude, and altitude
         
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
@@ -564,10 +578,6 @@ class WxStation (object) :
         # (e.g., temperatures in hundreds) and replace them with None.
         
         return record
-        
-        # TODO: If the new archive interval is different from the old, then the archive memory should be cleared
-        
-        # TODO: This would be the place to set latitude, longitude, and altitude
         
     def _wakeup_console(self):
         """ Wake up a Davis VantagePro console.

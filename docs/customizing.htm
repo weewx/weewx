@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<!-- $Revision$ -->
+<!-- $Author$ -->
+<!-- $Date$ -->
+<head>
+<meta http-equiv="Content-Language" content="en-us" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Customizing weewx</title>
+<style type="text/css">
+body {
+	font: 12pt Verdana, arial, sans-serif;
+	color: black;
+}
+p {
+	font: 12pt Verdana,arial,sans-serif;
+	color: black;
+}
+ol {
+	font: 12pt Verdana,arial,sans-serif;
+	color: black;
+}
+ul {
+	font: 12pt Verdana,arial,sans-serif;
+	color: black;
+}
+li {
+	font: 12pt Verdana,arial,sans-serif;
+	color: black;
+}
+dl {
+	font: 12pt Verdana,arial,sans-serif;
+	color: black;
+}
+dt {
+	font: 12pt Verdana,arial,sans-serif;
+	color: black;
+}
+dd {
+	font: 12pt Verdana,arial,sans-serif;
+	color: black;
+}
+h1 {
+	font: 18pt Verdana,arial,sans-serif;
+	color: teal;
+	border: 1px solid black;
+	border-bottom: 2px solid black;
+	border-right: 2px solid black;
+	background-color: #e8e8e8;
+	padding-left: .5em;
+	padding-right: .5em;
+	margin-top: 60pt;
+}
+h2 {
+	font: 16pt Verdana,arial,sans-serif;
+	color: teal;
+	border: 1px solid black;
+	background-color: #e8e8e8;
+	padding-left: .5em;
+	padding-right: .5em;
+	margin-top: 30pt;
+}
+h3 {
+	font: 15pt Verdana,arial,sans-serif;
+	color: teal;
+	border: 1px solid black;
+	background-color: #e8e8e8;
+	padding-left: .5em;
+	padding-right: .5em;
+}
+h4 {
+	font: 12pt Verdana,arial,sans-serif;
+	color: black;
+	font-weight: bold;
+}
+.code {
+	font-family: "Courier New", Courier, monospace;
+}
+table {
+	border-style: solid;
+	border-width: 1px;
+	border-collapse: collapse;
+}
+td {
+	border-style: solid;
+	border-width: 1px;
+}
+.indent {
+	margin-left: 40px;
+}
+.tty {
+	font-family: "Courier New", Courier, monospace;
+	margin-left: 40px;
+	margin-bottom: 0px;
+	margin-top: 0px;
+	background-color: #FFFFCC;
+}
+.title {
+	text-align: center;
+	margin-top: 0px;
+}
+.config_option {
+	font-family: "Courier New", Courier, monospace;
+	font-weight: normal;
+}
+.config_section {
+	font-family: "Courier New", Courier, monospace;
+}
+.config_important {
+	font-family: "Courier New", Courier, monospace;
+	font-weight: bold;
+	color: #0000FF;
+}
+.bold_n_blue {
+	color: #0000FF;
+}
+</style>
+</head>
+
+<body>
+
+<h1 class="title">Customizing weewx v1.3</h1>
+<h1>Overview</h1>
+<p>At a high level, weewx consists of an <em>engine</em> that is responsible for 
+managing a set of <em>services</em>. A service consists of a Python class with a 
+set of member functions. The engine arranges to have appropriate member 
+functions called when specific events happen. For example, when a new LOOP 
+packet arrives, member function <span class="code">processLoopPacket()</span> of 
+all services is called.</p>
+<p>To customize, you can</p>
+<ul>
+	<li>Customize a service</li>
+	<li>Add a service</li>
+	<li>Customize the engine</li>
+</ul>
+<p>This document describes how to do all three.</p>
+<p>The default install of <span class="code">weewx</span> includes the following services:</p>
+<table style="width: 100%">
+	<tr>
+		<td>Service</td>
+		<td>Function</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdWunderground</span></td>
+		<td>Starts thread to manage WU connection; adds new data to a Queue to 
+		be posted to the WU by the thread.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdCatchUp</span></td>
+		<td>Any data found on the weather station memory but not yet in the 
+		archive, is retrieved and put in the archive.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdTimeSynch</span></td>
+		<td>Arranges to have the clock on the station synchronized at regular 
+		intervals.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdPrint</span></td>
+		<td>Prints out new LOOP and archive packets on the console.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdProcess</span></td>
+		<td>Launches a new thread to create reports, HTML, and images.</td>
+	</tr>
+</table>
+
+<h1>Customizing a Service</h1>
+<p>The service weewx.wxengine.StdPrint prints out new LOOP and archive packets 
+to the console when they arrive. By default, it prints out time, barometer, 
+outside temperature, wind speed, and wind direction. Suppose you want to add </p>
+
+<h1>Customizing the Engine</h1>
+<p>In this section, we look at how to install a custom Engine. In general, this 
+is the least desirable way to proceed, but in some cases it may be the only way 
+to get what you want.</p>
+<p>The standard engine is a class called <span class="code">StdEngine</span>. To customize, you must 
+inherit from this class. Here&#39;s an example, which prints out the full LOOP 
+packet.</p>
+<p>Create a file with your engine in it. Call it file <span class="code">
+myengine.py</span>. Here&#39;s the contents:</p>
+<p class="tty">from weewx.wxengine import StdEngine<br />
+<br />
+# Create a specialized, custom engine:<br />
+class MyEngine(StdEngine):<br />
+&nbsp;<br />
+&nbsp;&nbsp;&nbsp; # Pass on the init parameters to my superclass<br />
+&nbsp;&nbsp;&nbsp; def __init__(self, *args, **vargs):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; super(MyEngine, self).__init__(*args, 
+**vargs)<br />
+&nbsp;<br />
+&nbsp;&nbsp;&nbsp; # Override the member function that processes loop packets:<br />
+&nbsp;&nbsp;&nbsp; def processLoopPacket(self, physicalPacket):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # First let the superclass process 
+it:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; super(MyEngine, self).processLoopPacket(physicalPacket)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Then add my specialized processing:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print &quot;Hi! I&#39;m a specialized loop 
+packet processor&quot;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print physicalPacket</p>
+<p>Then go into file <span class="code">weewxd.py</span> and change the line</p>
+<p class="tty">weewx.wxengine.main()</p>
+<p>so that it uses your new engine:</p>
+<p class="tty">from myengine import MyEngine<br />
+&nbsp;<br />
+# Specify that my specialized engine should be used instead<br />
+# of the default:<br />
+weewx.wxengine.main(EngineClass = MyEngine)</p>
+
+</body>
+
+</html>

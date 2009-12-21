@@ -3,13 +3,12 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    Revision: $Rev$
-#    Author:   $Author$
-#    Date:     $Date$
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """Publish weather data to the Weather Underground."""
 import syslog
-import time
 import datetime
 import threading
 import urllib
@@ -17,10 +16,6 @@ import urllib2
 
 import weewx
 import weeutil.weeutil
-
-# If publishing to the Weather Underground is requested, data to be
-# published will be put in this queue:
-wunderQueue = None
 
 class WunderStation(object):
     """Manages interactions with the Weather Underground"""
@@ -136,25 +131,35 @@ class WunderThread(threading.Thread):
     Inherits from threading.Thread.
 
     Basically, it watches a queue, and if anything appears in it, it publishes it.
-    The queue should be populated with a 2-way tuple, where the first member is
-    an instance of weewx.archive.Archive, and the second is a timestamp with the
-    time of the data record to be published.
+    The queue should be populated with the timestamps of the data records to be published.
     """
-    def __init__(self, station, password):
+    def __init__(self, archive, queue, station, password):
+        """Initialize an instance of WunderThread.
+        
+        archive: The archive database. Usually an instance of weewx.archive.Archive 
+        
+        queue: An instance of Queue.Queue where the timestamps will appear
+        
+        station: The Weather Underground station to which data is to be published
+        (e.g., 'KORHOODR3')
+        
+        password: The password for the station.
+        """
         threading.Thread.__init__(self, name="WunderThread")
         # In the strange vocabulary of Python, declaring yourself a "daemon thread"
         # allows the program to exit even if this thread is running:
         self.setDaemon(True)
         self.WUstation = WunderStation(station, password)
-        self.start()
+        self.archive   = archive
+        self.queue     = queue # Fifo queue where new records will appear
 
     def run(self):
-        while 1 :
+        while True :
             # This will block until something appears in the queue:
-            (archive, time_ts) = wunderQueue.get()
+            time_ts = self.queue.get()
             
-            # Gp get the data from the archive for the requested time:
-            record = self.WUstation.extractRecordFrom(archive, time_ts)
+            # Go get the data from the archive for the requested time:
+            record = self.WUstation.extractRecordFrom(self.archive, time_ts)
             
             # This string is just used for logging:
             time_str = weeutil.weeutil.timestamp_to_string(record['dateTime'])

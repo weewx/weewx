@@ -3,9 +3,9 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    Revision: $Rev$
-#    Author:   $Author$
-#    Date:     $Date$
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """Generate files from templates.
 
@@ -24,6 +24,7 @@ import weewx.stats
 import weewx.station
 import weewx.formatter
 import weeutil.weeutil
+import weeutil.Almanac
 
 class GenFiles(object):
     """Manages the generation of NOAA and HTML files

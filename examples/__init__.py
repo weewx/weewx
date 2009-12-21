@@ -7,3 +7,6 @@
 #    $Author$
 #    $Date$
 #
+"""
+Examples for customizing weewx
+"""

@@ -3,16 +3,16 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    Revision: $Rev$
-#    Author:   $Author$
-#    Date:     $Date$
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """Package weewx. A set of modules for supporting a weather station on a sqlite database.
 
 """
 import time
 
-__version__="1.2.0"
+__version__="1.3.0"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'

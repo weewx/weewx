@@ -17,9 +17,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-#    Revision: $Rev$
-#    Author:   $Author$
-#    Date:     $Date$
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """ Customized weewx setup script.
 
@@ -92,9 +92,17 @@ class My_install_data(install_data):
         
         # If the file #upstream.last exists, delete it, thus forcing
         # all files to be FTP'd to the server at the next opportunity.
-        upstream_file = os.path.join(self.install_dir, 'public_html/#upstream.last')
-        if os.path.exists(upstream_file):
-            os.remove(upstream_file)
+        try:
+            os.remove(os.path.join(self.install_dir, 'public_html/#upstream.last'))
+        except:
+            pass
+            
+        # If the file $WEEWX_ROOT/readme.htm exists, delete it. It's
+        # the old readme (since replaced with docs/readme.htm)
+        try:
+            os.remove('readme.htm')
+        except:
+            pass
 
     def massageConfigFile(self, f, install_dir, **kwargs):
         """Merges any old config file into the new one, and sets WEEWX_ROOT
@@ -206,10 +214,12 @@ setup(name='weewx',
       author='Tom Keffer',
       author_email='tkeffer@gmail.com',
       url='http://www.threefools.org/weewx',
-      packages    = ['weewx', 'weeplot', 'weeutil'],
+      packages    = ['weewx', 'weeplot', 'weeutil', 'examples'],
       py_modules  = ['upload', 'daemon'],
       scripts     = ['configure.py', 'weewxd.py'],
-      data_files  = [('',                        ['CHANGES.txt', 'LICENSE.txt', 'README', 'readme.htm', 'weewx.conf']), 
+      data_files  = [('',                        ['CHANGES.txt', 'LICENSE.txt', 'README', 'weewx.conf']),
+                     ('docs',                    ['docs/customizing.htm', 'docs/readme.htm',
+                                                  'docs/sheeva.htm', 'docs/upgrading.htm']),
                      ('templates',               ['templates/index.tmpl', 'templates/week.tmpl',
                                                   'templates/month.tmpl', 'templates/year.tmpl',
                                                   'templates/NOAA_month.tmpl', 'templates/NOAA_year.tmpl']), 
