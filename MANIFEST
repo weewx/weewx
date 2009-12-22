@@ -47,8 +47,7 @@ weewx/formatter.py
 weewx/ftpdata.py
 weewx/genfiles.py
 weewx/genimages.py
-weewx/mainloop.py
-weewx/processdata.py
+weewx/reportengine.py
 weewx/station.py
 weewx/stats.py
 weewx/wunderground.py

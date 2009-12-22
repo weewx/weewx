@@ -9,39 +9,39 @@
 <title>Upgrading weewx</title>
 <style type="text/css">
 body {
-	font: 12pt Verdana, arial, sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 p {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 ol {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 ul {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 li {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 dl {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 dt {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 dd {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 h1 {
-	font: 18pt Verdana,arial,sans-serif;
+	font: normal normal bold 18pt Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	border-bottom: 2px solid black;
@@ -52,7 +52,7 @@ h1 {
 	margin-top: 60pt;
 }
 h2 {
-	font: 16pt Verdana,arial,sans-serif;
+	font: 15pt Verdana,arial,sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -61,7 +61,7 @@ h2 {
 	margin-top: 30pt;
 }
 h3 {
-	font: 15pt Verdana,arial,sans-serif;
+	font: 12pt Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -91,8 +91,8 @@ td {
 .tty {
 	font-family: "Courier New", Courier, monospace;
 	margin-left: 40px;
-	margin-bottom: 0px;
 	margin-top: 0px;
+	margin-bottom: 0px;
 	background-color: #FFFFCC;
 }
 .title {
@@ -132,6 +132,15 @@ over. If you have changed this value or if you can&#39;t stand the thought of
 should delete the old one found under <span class="code">[VantagePro]</span> and 
 make sure the new value, found under <span class="code">[Station]</span> is 
 correct.</p>
+<p>Two Python files are no longer used, so they may be deleted from your 
+installation if you wish:</p>
+<p class="tty"><em>rm $WEEWX_ROOT</em>/bin/weewx/processdata.py<br />
+<em>rm $WEEWX_ROOT</em>/bin/weewx/mainloop.py</p>
+<p>In addition, file <span class="code">readme.htm</span> has been moved to 
+subdirectory <span class="code"><em>$WEEWX_ROOT</em>/docs</span>, so the old one 
+can be deleted:</p>
+<p class="tty">rm <em>$WEEWX_ROOT</em>/readme.htm</p>
+<p>&nbsp;</p>
 
 </body>
 

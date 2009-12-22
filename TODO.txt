@@ -1,8 +1,2 @@
 TODO before the next release:
 
-Check example in weewxd.py of how to override the default engine
-
-Write customization.htm --- how to customize.
- 
-Edit templates so they are less KORHOODR3 specific.
-

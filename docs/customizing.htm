@@ -9,39 +9,39 @@
 <title>Customizing weewx</title>
 <style type="text/css">
 body {
-	font: 12pt Verdana, arial, sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 p {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 ol {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 ul {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 li {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 dl {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 dt {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 dd {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 h1 {
-	font: 18pt Verdana,arial,sans-serif;
+	font: normal normal bold 18pt Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	border-bottom: 2px solid black;
@@ -52,7 +52,7 @@ h1 {
 	margin-top: 60pt;
 }
 h2 {
-	font: 16pt Verdana,arial,sans-serif;
+	font: 15pt Verdana,arial,sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -61,7 +61,7 @@ h2 {
 	margin-top: 30pt;
 }
 h3 {
-	font: 15pt Verdana,arial,sans-serif;
+	font: 12pt Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -91,8 +91,8 @@ td {
 .tty {
 	font-family: "Courier New", Courier, monospace;
 	margin-left: 40px;
-	margin-bottom: 0px;
 	margin-top: 0px;
+	margin-bottom: 0px;
 	background-color: #FFFFCC;
 }
 .title {
@@ -113,6 +113,9 @@ td {
 }
 .bold_n_blue {
 	color: #0000FF;
+}
+.style1 {
+	background-color: #FFFFCC;
 }
 </style>
 </head>
@@ -161,51 +164,346 @@ all services is called.</p>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdProcess</span></td>
-		<td>Launches a new thread to create reports, HTML, and images.</td>
+		<td>Launches a new thread to do processing after a new archive record 
+		arrives. The thread loads zero or more reports and processes them in 
+		order. Reports do things such as generate HTML files, generate images, 
+		or FTP files to a web server. New reports can be added easily by the 
+		user.</td>
 	</tr>
 </table>
 
 <h1>Customizing a Service</h1>
-<p>The service weewx.wxengine.StdPrint prints out new LOOP and archive packets 
+<p>The service <span class="code">weewx.wxengine.StdPrint</span> prints out new LOOP and archive packets 
 to the console when they arrive. By default, it prints out time, barometer, 
-outside temperature, wind speed, and wind direction. Suppose you want to add </p>
-
+outside temperature, wind speed, and wind direction. Suppose you don&#39;t like 
+this, and want to add humidity. This could be done by subclassing the default 
+print service <span class="code">StdPrint</span> and overriding member function <span class="code">
+processLoopPacket()</span>. </p>
+<p>In file <span class="code">myprint.py</span>:</p>
+<p class="tty">from weewx.wxengine import StdPrint<br />
+from weeutil.weeutil import timestamp_to_string<br />
+<br />
+class MyPrint(StdPrint):<br />
+<br />
+&nbsp;&nbsp;&nbsp; # Override the default processLoopPacket:<br />
+&nbsp;&nbsp;&nbsp; def processLoopPacket(self, physicalPacket):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print &quot;LOOP: &quot;, timestamp_to_string(physicalPacket[&#39;dateTime&#39;]),\<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+physicalPacket[&#39;barometer&#39;],\<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+physicalPacket[&#39;outTemp&#39;],\<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+physicalPacket[&#39;outHumidity&#39;],\<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+physicalPacket[&#39;windSpeed&#39;],\<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+physicalPacket[&#39;windDir&#39;]</p>
+<p>You then need to specify that your print service class should be loaded 
+instead of the default <span class="code">StdPrint</span> service. This is done 
+by substituting your service name for the standard print service name in the 
+option <span class="code">service_list</span>, located in <span class="code">
+[Engines][[WxEngine]]</span>:</p>
+<p class="tty">[Engines]<br />
+&nbsp;&nbsp;&nbsp; [[WxEngine]]<br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp,<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; weewx.wxengine.StdTimeSynch, myprint.MyPrint,<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; weewx.wxengine.StdProcess</p>
+<p>(Note that this list is shown on several lines for clarity, but in actuality 
+it must be all on one line. The parser <span class="code">ConfigObj</span> does 
+not allow options to be continued on to following lines.)</p>
+<h1>Adding a Service</h1>
+<p>Suppose there is no service that can easily be customized for your needs. In 
+this case, a 
+new one can easily be created by subclassing off the abstract base class
+<span class="code">StdService</span>, and then adding the functionality you 
+need. Here&#39;s an example that implements an alarm. It is included in the standard 
+distribution in subdirectory &#39;<span class="code">examples</span>.&#39;</p>
+<p>File <span class="code">examples/alarm.py</span>:</p>
+<p class="tty">import time<br />
+import smtplib<br />
+from email.mime.text import MIMEText<br />
+import threading<br />
+import syslog<br />
+<br />
+from weewx.wxengine import StdService<br />
+from weeutil.weeutil import timestamp_to_string<br />
+<br />
+# Inherit from the base class StdService:<br />
+class MyAlarm(StdService):<br />
+&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;Custom service that sounds an alarm if an expression 
+evaluates true&quot;&quot;&quot;<br />
+<br />
+&nbsp;&nbsp;&nbsp; def __init__(self, engine):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Pass the initialization information 
+on to my superclass:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdService.__init__(self, engine)<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # This will hold the time when the 
+last alarm message went out:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.last_msg = None<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.expression = None<br />
+<br />
+&nbsp;&nbsp;&nbsp; def setup(self):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; try:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Dig the 
+needed options out of the configuration dictionary.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # If a 
+critical option is missing, an exception will be thrown and<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # the alarm 
+will not be set.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+self.expression = self.engine.config_dict[&#39;Alarm&#39;][&#39;expression&#39;]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+self.time_wait = int(self.engine.config_dict[&#39;Alarm&#39;].get(&#39;time_wait&#39;, &#39;3600&#39;))<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+self.smtp_host = self.engine.config_dict[&#39;Alarm&#39;][&#39;smtp_host&#39;]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+self.smtp_user = self.engine.config_dict[&#39;Alarm&#39;].get(&#39;smtp_user&#39;)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+self.smtp_password = self.engine.config_dict[&#39;Alarm&#39;].get(&#39;smtp_password&#39;)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.TO = 
+self.engine.config_dict[&#39;Alarm&#39;][&#39;mailto&#39;]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; syslog.syslog(syslog.LOG_INFO, 
+&quot;alarm: Alarm set for expression %s&quot; % self.expression)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; except:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+self.expression = None<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+self.time_wait = None<br />
+<br />
+&nbsp;&nbsp;&nbsp; def postArchiveData(self, rec):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Let the super class see the record 
+first:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdService.postArchiveData(self, rec)<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # See if the alarm has been set:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if self.expression:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # To avoid a 
+flood of nearly identical emails, this will do<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # the check 
+only if we have never sent an email, or if we haven&#39;t<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # sent one in 
+the last self.time_wait seconds:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if not 
+self.last_msg or abs(time.time() - self.last_msg) &gt;= self.time_wait :<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+# Evaluate the expression in the context of &#39;rec&#39;.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+# Sound the alarm if it evaluates true:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+if eval(self.expression, None, rec):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+# Sound the alarm!<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+# Launch in a separate thread so it doesn&#39;t block the main LOOP thread:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+t = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, rec))<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+t.start()<br />
+<br />
+&nbsp;&nbsp;&nbsp; def soundTheAlarm(self, rec):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;This function is called when the 
+given expression evaluates True.&quot;&quot;&quot;<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Get the time and convert to a 
+string:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t_str = timestamp_to_string(rec[&#39;dateTime&#39;])<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Form the message text:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg_text = &quot;Alarm expression %s 
+evaluated True at %s\nRecord:\n%s&quot; % (self.expression, t_str, str(rec))<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Convert to MIME:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg = MIMEText(msg_text)<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Fill in MIME headers:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg[&#39;Subject&#39;] = &quot;Alarm message from 
+weewx&quot;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg[&#39;From&#39;] = &quot;weewx&quot;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg[&#39;To&#39;] = self.TO<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Create an instance of class SMTP 
+for the given SMTP host:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s = smtplib.SMTP(self.smtp_host)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # If a username has been given, 
+assume that login is required for this host:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if self.smtp_user:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s.login(self.smtp_user, 
+self.smtp_password)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Send the email:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s.sendmail(msg[&#39;From&#39;], [self.TO], 
+msg.as_string())<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Log out of the server:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s.quit()<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Record when the message went out:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.last_msg = time.time()<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Log it in the system log:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; syslog.syslog(syslog.LOG_INFO, 
+&quot;alarm: Alarm sounded for expression %s&quot; % self.expression)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; syslog.syslog(syslog.LOG_INFO, &quot; *** 
+email sent to: %s&quot; % self.TO)</p>
+<p>This service expects all the information it needs to be in the configuration 
+file <span class="code">weewx.conf</span> in a new section called
+<span class="code">[Alarm]</span>. So, add the following lines to your 
+configuration file:</p>
+<p class="tty">[Alarm]<br />
+&nbsp;&nbsp;&nbsp; expression = &quot;outTemp &lt; 40.0&quot;<br />
+&nbsp;&nbsp;&nbsp; time_wait = 1800<br />
+&nbsp;&nbsp;&nbsp; smtp_host = smtp.mymailserver.com<br />
+&nbsp;&nbsp;&nbsp; smtp_user = myusername<br />
+&nbsp;&nbsp;&nbsp; smtp_password = mypassword<br />
+&nbsp;&nbsp;&nbsp; mailto = auser@adomain.com</p>
+<p>These options specify that the alarm is to be sounded when &quot;<span class="code">outTemp 
+&lt; 40.0</span>&quot; evaluates True, that is when the outside temperature is below 
+40.0 degrees. Any valid Python expression can be used, although the only 
+variables available are those in the current archive record.</p>
+<p>Another example expression could be:</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 
+10.0&quot;</p>
+<p>In this case, the alarm is sounded if the outside temperature drops below 
+freezing and the wind speed is greater than 10.0.</p>
+<p>Option <span class="code">time_wait</span> is used to avoid a flood of nearly 
+identical emails. The new service will wait this long before sending another 
+email out.</p>
+<p>Email will be sent through the SMTP host specified by option
+<span class="code">smtp_host</span>. The recipient is specified in option
+<span class="code">mailto</span>.</p>
+<p>Many SMTP hosts require user login. If this is the case, the user and 
+password are specified with options <span class="code">smtp_user</span> and
+<span class="code">smtp_password</span>, respectively.</p>
+<p>To make this all work, you must tell the engine to load this new service. 
+This is done by adding your service name to the list <span class="code">
+service_list</span>, located in <span class="code">[Engines][[WxEngine]]</span>:</p>
+<p class="tty">[Engines]<br />
+&nbsp;&nbsp;&nbsp; [[WxEngine]]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp,<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint,<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; weewx.wxengine.StdProcess, examples.alarm.MyAlarm</p>
+<p>(Again, note that this list is shown on several lines for clarity, but in 
+actuality it must be all on one line.)</p>
 <h1>Customizing the Engine</h1>
 <p>In this section, we look at how to install a custom Engine. In general, this 
 is the least desirable way to proceed, but in some cases it may be the only way 
 to get what you want.</p>
-<p>The standard engine is a class called <span class="code">StdEngine</span>. To customize, you must 
-inherit from this class. Here&#39;s an example, which prints out the full LOOP 
-packet.</p>
-<p>Create a file with your engine in it. Call it file <span class="code">
-myengine.py</span>. Here&#39;s the contents:</p>
-<p class="tty">from weewx.wxengine import StdEngine<br />
+<p>For example, suppose you want to define a new event for when the first 
+archive of a day arrives. This can be done by extending the the standard engine. </p>
+<p>This example is in file <span class="code">example/daily.py</span>:</p>
+<p class="tty">from weewx.wxengine import StdEngine, StdService<br />
+from weeutil.weeutil import startOfArchiveDay<br />
 <br />
-# Create a specialized, custom engine:<br />
 class MyEngine(StdEngine):<br />
-&nbsp;<br />
-&nbsp;&nbsp;&nbsp; # Pass on the init parameters to my superclass<br />
+&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;A customized weewx engine.&quot;&quot;&quot;<br />
+<br />
 &nbsp;&nbsp;&nbsp; def __init__(self, *args, **vargs):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; super(MyEngine, self).__init__(*args, 
-**vargs)<br />
-&nbsp;<br />
-&nbsp;&nbsp;&nbsp; # Override the member function that processes loop packets:<br />
-&nbsp;&nbsp;&nbsp; def processLoopPacket(self, physicalPacket):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # First let the superclass process 
-it:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; super(MyEngine, self).processLoopPacket(physicalPacket)<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Then add my specialized processing:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print &quot;Hi! I&#39;m a specialized loop 
-packet processor&quot;<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print physicalPacket</p>
-<p>Then go into file <span class="code">weewxd.py</span> and change the line</p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Pass on the initialization data to 
+my superclass:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdEngine.__init__(self, *args, **vargs)<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # This will record the timestamp of 
+the old day<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.old_day = None<br />
+<br />
+&nbsp;&nbsp;&nbsp; def postArchiveData(self, rec):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # First let my superclass process it:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdEngine.postArchiveData(self, rec)<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Get the timestamp of the start of 
+the day using<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # the utility function 
+startOfArchiveDay <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dayStart_ts = startOfArchiveDay(rec[&#39;dateTime&#39;])<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Call the function firstArchiveOfDay 
+if either this is<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # the first archive since startup, or 
+if a new day has started<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if not self.old_day or self.old_day 
+!= dayStart_ts:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.old_day 
+= dayStart_ts<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+self.newDay(rec)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+# Note 1<br />
+<br />
+&nbsp;&nbsp;&nbsp; def newDay(self, rec):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;Called when the first archive 
+record of a day arrives.&quot;&quot;&quot;<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Go through the list of service 
+objects. This<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # list is actually in my superclass 
+StdEngine.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for svc_obj in self.service_obj:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Because 
+this is a new event, not all services will<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # be prepared 
+to accept it. Check first to see if the<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # service has 
+a member function &quot;firstArchiveOfDay&quot;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # before 
+calling it:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if hasattr(svc_obj, 
+&quot;firstArchiveOfDay&quot;):&nbsp; # Note 2<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+# The object does have the member function. Call it:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+svc_obj.firstArchiveOfDay(rec)</p>
+<p>This customized engine works by monitoring the arrival of archive records, 
+and checking their time stamp (<span class="code">rec[&#39;dateTime&#39;]</span>. It 
+calculates the time stamp for the start of the day, and if it changes, calls 
+member function <span class="code">newDay()</span> (Note 1). </p>
+<p>The member function <span class="code">newDay()</span> then goes through the 
+list of services (attribute <span class="code">self.service_obj</span>). Because 
+this engine is defining a new event (first archive of the day), the existing 
+services may not be prepared to accept it. So, the engine checks each one to 
+make sure it has a function <span class="code">firstArchiveOfDay</span> before 
+calling it (Note 2)</p>
+<p>To use this engine, go into file <span class="code">weewxd.py</span> and change the line</p>
 <p class="tty">weewx.wxengine.main()</p>
 <p>so that it uses your new engine:</p>
-<p class="tty">from myengine import MyEngine<br />
+<p class="tty">from examples.daily i<span class="style1">mport MyEngine</span><br />
 &nbsp;<br />
 # Specify that my specialized engine should be used instead<br />
 # of the default:<br />
 weewx.wxengine.main(EngineClass = MyEngine)</p>
+<p>We now have a new engine that defines a new event (&quot;<span class="code">firstArchiveOfDay</span>&quot;), 
+but there is no service to take advantage of it. We define a new service:</p>
+<p class="tty"># Define a new service to take advantage of the new event<br />
+class DailyService(StdService):<br />
+&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;This service can do something when the first archive 
+record of<br />
+&nbsp;&nbsp;&nbsp; a day arrives.&quot;&quot;&quot;<br />
+<br />
+&nbsp;&nbsp;&nbsp; def firstArchiveOfDay(self, rec):<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;Called when the first archive 
+record of a day arrives.&quot;&quot;&quot;<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print &quot;The first archive of the day 
+has arrived!&quot;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print rec<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # You might want to do something here 
+like run a cron job</p>
+<p>This service will simply print out a notice and then print out the new 
+record. However, if there is some daily processing you want to do, perhaps a 
+backup, or running utility <a href="http://www.weewx.com/wunderfixer">
+wunderfixer</a>, this would be the place to do it.</p>
+<p>The final step is to go into your configuration file and specify that this 
+new service be loaded, by adding its class name to option <span class="code">
+service_list</span>:</p>
+<p class="tty">[Engines]<br />
+<br />
+&nbsp; [[WxEngine]]<br />
+&nbsp;&nbsp;&nbsp; # The list of services the main weewx engine should run:<br />
+&nbsp;&nbsp;&nbsp; service_list = weewx.wxengine.StdWunderground, 
+weewx.wxengine.StdCatchUp,<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint,<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+weewx.wxengine.StdProcess, examples.daily.DailyService</p>
+<p>(Again, note that this list is shown on several lines for clarity, but in 
+actuality it must be all on one line.)</p>
 
 </body>
 

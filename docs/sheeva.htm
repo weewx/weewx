@@ -9,39 +9,39 @@
 <title>Porting to the SheevaPlug</title>
 <style type="text/css">
 body {
-	font: 12pt Verdana, arial, sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 p {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 ol {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 ul {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 li {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 dl {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 dt {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 dd {
-	font: 12pt Verdana,arial,sans-serif;
+	font: 11pt Verdana,arial,sans-serif;
 	color: black;
 }
 h1 {
-	font: 18pt Verdana,arial,sans-serif;
+	font: normal normal bold 18pt Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	border-bottom: 2px solid black;
@@ -52,7 +52,7 @@ h1 {
 	margin-top: 60pt;
 }
 h2 {
-	font: 16pt Verdana,arial,sans-serif;
+	font: 15pt Verdana,arial,sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -61,7 +61,7 @@ h2 {
 	margin-top: 30pt;
 }
 h3 {
-	font: 15pt Verdana,arial,sans-serif;
+	font: 12pt Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -91,8 +91,8 @@ td {
 .tty {
 	font-family: "Courier New", Courier, monospace;
 	margin-left: 40px;
-	margin-bottom: 0px;
 	margin-top: 0px;
+	margin-bottom: 0px;
 	background-color: #FFFFCC;
 }
 .title {
@@ -142,7 +142,7 @@ well be in luck if your converter uses something that is recognized by the
 2.6.22.18 kernel. I think it&#39;s worth trying the out-of-the-box SheevaPlug before messing around with upgrading the kernel&nbsp; --- you might 
 get lucky. I wasn&#39;t. If it doesn&#39;t work out, you&#39;ll only lose about 30 
 minutes of work.</p>
-<h2>1. Installing V1.0 Installer</h2>
+<h1>1. Installing V1.0 Installer</h1>
 <p>This section assumes that you will need to upgrade your kernel. If you don&#39;t, 
 or if you want to give the existing kernel a try, skip it and go on to the next 
 section, <a href="#Installing_weewx">Installing weewx</a>. If things don&#39;t work 
@@ -193,7 +193,7 @@ the original settings that did the trick).</p>
 <p>Still no luck. Then I unplugged then plugged in USB cable. Tried again. 
 Worked!</p>
 <p>This put me at kernel 2.6.30.2.</p>
-<h2><a name="Installing_weewx">2. Installing weewx</a></h2>
+<h1><a name="Installing_weewx">2. Installing weewx</a></h1>
 <p>&nbsp;</p>
 <p>Now it&#39;s just a simple matter of installing weewx, albeit with a few more 
 missing pieces. I did the following installs/configurations to the operating 
