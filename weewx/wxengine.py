@@ -54,6 +54,9 @@ class StdEngine(object):
     def setup(self):
         """Gets run before anything else."""
         
+        syslog.openlog('weewx', syslog.LOG_PID|syslog.LOG_CONS)
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        
         self.parseArgs()
 
         service_list = self.config_dict['Engines']['WxEngine'].get('service_list', 
@@ -114,7 +117,8 @@ class StdEngine(object):
 
         # Look for the debug flag. If set, ask for extra logging
         weewx.debug = int(self.config_dict.get('debug', '0'))
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG if weewx.debug else syslog.LOG_INFO))
+        if weewx.debug:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % os.path.abspath(args[0]))
 
