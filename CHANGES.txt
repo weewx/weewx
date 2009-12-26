@@ -1,6 +1,10 @@
 CHANGE HISTORY
 --------------------------------
 
+1.3.2   12/26/09
+
+LOOP data added to stats database.
+
 1.3.1   12/22/09
 
 Added a call to syslog.openlog() that inadvertently got left out when 
