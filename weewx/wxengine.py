@@ -184,6 +184,9 @@ class StdEngine(object):
     def processLoopPacket(self, physicalPacket):
         """Run whenever a LOOP packet needs to be processed."""
         
+        #Add the LOOP record to the stats database:
+        self.statsDb.addLoopRecord(physicalPacket)
+
         for obj in self.service_obj:
             obj.processLoopPacket(physicalPacket)
             
