@@ -185,8 +185,8 @@ server to run my Davis VantagePro2 weather station on a Linux box. I had been us
 <a href="http://www.wviewweather.com/">wview</a>, which is a very high-performance, 
 stable, and feature rich system authored by Mark Teel with lots of users. Written 
 in C, it&#39;s an amazingly efficient system that can run on very underpowered boxes. 
-In exchange, it&#39;s huge (55,000+ lines of code), tightly integrated in with its companion 
-library, radlib (another 24,000+ lines), and complex. But, if you&#39;re looking to 
+In exchange, it&#39;s huge (45,000+ lines of code), tightly integrated in with its companion 
+library, radlib (another 14,000+ lines), and complex. But, if you&#39;re looking to 
 be in good company and you want to run on inexpensive, featherweight machines such 
 as the <a href="http://en.wikipedia.org/wiki/NSLU2">Linksys NSLU2</a>, you can&#39;t 
 beat it.</p>
@@ -194,13 +194,11 @@ beat it.</p>
 languages, so I thought I&#39;d try either Python or Ruby (although, truth be told, 
 the roots of Python are nearly as old as C++!). I picked Python because its libraries 
 are more mature and there are many more choices for third party libraries.</p>
-<p><span class="code">Weewx</span> weighs in at just under 8,000 lines of code, 
-including its many comment lines although, to be fair, it is missing many 
-features such as support for other weather stations, support for metric units, 
-support for alarms, etc. On the other hand, it offers very powerful 
-configuration, templating, and customization options, 
-making it very easy to customize or to add these things. It is also architecturally very simple and easy to 
-understand.</p>
+<p><span class="code">Weewx</span> weighs in at under 7,000 lines of code, of which 2,500 are
+comments. However, to be fair, it is missing many features such as support for other weather
+stations, support for metric units, support for alarms, etc. On the other hand, it offers very
+powerful configuration, templating, and customization options, making it very easy to customize or
+to add these things. It is also architecturally very simple and easy to understand.</p>
 <h1>3. <a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
 <p><span class="code">weewx</span> can be downloaded from its
 <a href="https://sourceforge.net">SourceForge</a> page:
