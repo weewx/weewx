@@ -184,7 +184,7 @@ do, so there was no good reason not to, and because I wanted a simple, easy-to-u
 server to run my Davis VantagePro2 weather station on a Linux box. I had been using
 <a href="http://www.wviewweather.com/">wview</a>, which is a very high-performance, 
 stable, and feature rich system authored by Mark Teel with lots of users. Written 
-in C, it&#39;s an amazingly efficient system that can run on very underpowered boxes. 
+in C, it&#39;s an efficient system that can run on underpowered boxes. 
 In exchange, it&#39;s huge (45,000+ lines of code), tightly integrated in with its companion 
 library, radlib (another 14,000+ lines), and complex. But, if you&#39;re looking to 
 be in good company and you want to run on inexpensive, featherweight machines such 
@@ -195,8 +195,8 @@ languages, so I thought I&#39;d try either Python or Ruby (although, truth be to
 the roots of Python are nearly as old as C++!). I picked Python because its libraries 
 are more mature and there are many more choices for third party libraries.</p>
 <p><span class="code">Weewx</span> weighs in at under 7,000 lines of code, of which 2,500 are
-comments. However, to be fair, it is missing many features such as support for other weather
-stations, support for metric units, support for alarms, etc. On the other hand, it offers very
+comments. However, to be fair, it is missing features such as support for other weather
+stations and for metric units. On the other hand, it offers very
 powerful configuration, templating, and customization options, making it very easy to customize or
 to add these things. It is also architecturally very simple and easy to understand.</p>
 <h1>3. <a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
@@ -399,7 +399,7 @@ then type</p>
 <p class="tty">sudo ./setup.py install</p>
 <h3>Upgrading</h3>
 <p>Before upgrading from a previous version of <span class="code">weewx</span>, 
-check the upgrade notes, found in file upgrading.htm, to see if there any 
+check the upgrade notes, found in file <a href="upgrading.htm">upgrading.htm</a>, to see if there any 
 specific actions you need to do. </p>
 <p>You then generally follow the procedure above. </p>
 <p><strong>In particular, before starting, be sure to set </strong>
@@ -441,12 +441,12 @@ station, and configuring the configuration file <span class="code">weewx.conf</s
 <span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>.
 </p>
 <h2>6.1 Configuring the databases</h2>
-<p>This section is necessary only if you are moving from
+<p>NOTE: This section is necessary only if you are moving from
 <a href="http://www.wviewweather.com/">wview</a> to <span class="code">weewx</span> 
 and wish to transfer your old data over. If you are starting afresh, you do not 
 need to follow this section — the two main databases are created and populated automatically 
 by <span class="code">weewx</span>.</p>
-<p>Two databases are maintained by weewx:</p>
+<p>If you wish to transfer your wview data, note that two databases are maintained by weewx:</p>
 <ul>
 	<li><span class="code"><em>$WEEWX_ROOT/$archive_file</em></span> (nominally
 	<span class="code">/home/weewx/archive/weewx.sdb</span>)</li>
@@ -455,7 +455,7 @@ by <span class="code">weewx</span>.</p>
 </ul>
 <p>Because wview and weewx use identical schema for the first of these (the archive 
 database), it can be just copied over. However, the second (the statistical databases) 
-are different — the weewx statistical database must be built manually and backfilled. 
+is different — the weewx statistical database must be built manually and backfilled. 
 This is done using the configuration script <span class="code">configure.py</span>.
 </p>
 <p>Here&#39;s a summary of how to transfer your wview data to <span class="code">weewx</span>.</p>
@@ -472,7 +472,8 @@ MB) of data (while wview was running in the background).</p>
 VantagePro are the time and the archive interval. </p>
 <h3>Time</h3>
 <p>The time on the VP is automatically synchronized with the <span class="code">
-weewx</span> server every four hours. However, you should run a NTP daemon on your 
+weewx</span> server nominally every four hours (changeable by the user). You should run a 
+<a href="http://www.ntp.org/">NTP</a> daemon on your 
 server to insure that it is synchronized with the correct time. Doing so will greatly 
 reduce errors, especially if you send data to services such as the Weather Underground.</p>
 <h3><a name="Archive_interval">Archive interval</a></h3>
@@ -551,7 +552,7 @@ is 14400 (every 4 hours)</p>
 <h4 class="config_option">cache_loop_data</h4>
 <p>Set to 1 (one) to cache LOOP data, otherwise, set to zero. Most users will 
 not want to change this unless you have a specialized application. Default is 1 
-(cache LOOP data).</p>
+(<em>i.e.</em>, cache LOOP data).</p>
 <h4 class="config_option">station_type</h4>
 <p>Set to the type of hardware you are using. For this version, only &#39;<span class="code">VantagePro</span>&#39; 
 is accepted. Required.</p>
@@ -583,7 +584,7 @@ minute. Default is 15 seconds.</p>
 up. Default is 5 seconds.</p>
 <h4 class="config_option">wait_before_retry</h4>
 <p>How many seconds to wait before retrying again. Unless you have a good reason 
-to, this value should not be changed from the default, as it is long enough for 
+to change it, this value should be left at the default, as it is long enough for 
 the station to offer new data, but not so long as to go into a new loop packet (which 
 arrive every 2 seconds). Default is 1.2 seconds.</p>
 <h4 class="config_option">max_retries</h4>
@@ -599,8 +600,8 @@ only Imperial. In any case, Imperial is the only system supported by
 <h3 class="config_section">[FTP]</h3>
 <p>If you FTP your images and HTML files to an external web server,
 <span class="code">weewx</span> can FTP them for you. It does an incremental update, 
-that is, it only FTPs any files that have changed, saving outgoing bandwidth with 
-your Internet connection.</p>
+that is, it only FTPs any files that have changed, saving the outgoing bandwidth 
+of your Internet connection.</p>
 <p>If you do not use such a server, comment out the first four options below.</p>
 <p class="config_important">user</p>
 <p>Set to the username you use for your FTP connection to your web server. Required. 
@@ -658,7 +659,7 @@ will work for most stations and probably will not have to be modified.</p>
 <p>This section, which controls which images (plots) get generated and with which 
 options, is by far the most complicated. However, it is extremely flexible and powerful.</p>
 <h4>Time periods</h4>
-<p>It consists of one or more sub-sections, one for each time period (day, week, 
+<p>The section consists of one or more sub-sections, one for each time period (day, week, 
 month, and year). These sub-sections define the nature of aggregation and plot types 
 for the time period. For example, here&#39;s a typical set of options for sub-section
 <span class="code">[[month_images]]</span>, controlling how images that cover a 
@@ -704,12 +705,13 @@ value will be automatically chosen. So, in this example, we are letting
 <span class="code">weewx</span> pick sensible y minimum and maximum values, but 
 we are requiring that the tick increment (<span class="code">min_interval</span>) 
 be at least 0.02. </p>
-<p>Continuing on with the example above, there will be only one line and it will 
+<p>Continuing on with the example above, there will be only one plot &quot;line&quot; (it 
+will actually be a series of bars) and it will 
 have logical name &#39;<span class="code">rain</span>&#39;. Because we haven&#39;t said 
 otherwise, the SQL data type to be used for this line will be the same as its 
 logical name, that is, <span class="code">rain</span>, but this can be 
 overridden (see below). The aggregation type will be summing (overriding 
-the averaging specified in sub-section <span class="code">[[month_images]]</span>, 
+the averaging specified in sub-section <span class="code">[[month_images]]</span>), 
 so you get the total rain over the aggregate period (rather than the average) over 
 an aggregation interval of 86,400 seconds (one day). The plot line will be titled 
 with the indicated label (&#39;<span class="code">Rain (daily avg)</span>&#39;)</p>
@@ -869,7 +871,8 @@ some reason.</p>
 <p><span class="code">Weewx</span> will then start monitoring LOOP data, printing 
 a short version of the received data on standard output, about once every two seconds.</p>
 <h2>7.2 <a name="Running_as_a_daemon">Running as a daemon</a></h2>
-<p>First, select the appropriate run script. They can be found under
+<p>For unattended operations it is best to have <span class="code">weewx</span> 
+run as a daemon, started automatically when the server is rebooted. Start by selecting the appropriate run script. They can be found under
 <span class="code"><em>$WEEWX_ROOT</em>/start_script</span>. </p>
 <table style="width: 100%" class="indent">
 	<tr>
@@ -878,7 +881,7 @@ a short version of the received data on standard output, about once every two se
 	</tr>
 	<tr>
 		<td>Debian/Ubuntu:</td>
-		<td class="code">&nbsp;<em>$WEEWX_ROOT</em>/start_script/Debian/weewx</td>
+		<td class="code"><em>$WEEWX_ROOT</em>/start_script/Debian/weewx</td>
 	</tr>
 </table>
 <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 

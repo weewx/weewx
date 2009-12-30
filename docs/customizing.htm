@@ -140,8 +140,8 @@ all services is called.</p>
 <p>The default install of <span class="code">weewx</span> includes the following services:</p>
 <table style="width: 100%">
 	<tr>
-		<td>Service</td>
-		<td>Function</td>
+		<td><strong>Service</strong></td>
+		<td><strong>Function</strong></td>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdWunderground</span></td>
@@ -176,7 +176,8 @@ all services is called.</p>
 <p>The service <span class="code">weewx.wxengine.StdPrint</span> prints out new LOOP and archive packets 
 to the console when they arrive. By default, it prints out time, barometer, 
 outside temperature, wind speed, and wind direction. Suppose you don&#39;t like 
-this, and want to add humidity. This could be done by subclassing the default 
+this, and want to print out humidity as well when a new LOOP packet arrives, but 
+leave the printing of archive packets alone. This could be done by subclassing the default 
 print service <span class="code">StdPrint</span> and overriding member function <span class="code">
 processLoopPacket()</span>. </p>
 <p>In file <span class="code">myprint.py</span>:</p>
@@ -217,7 +218,8 @@ not allow options to be continued on to following lines.)</p>
 this case, a 
 new one can easily be created by subclassing off the abstract base class
 <span class="code">StdService</span>, and then adding the functionality you 
-need. Here&#39;s an example that implements an alarm. It is included in the standard 
+need. Here&#39;s an example that implements an alarm that sends off an email 
+when an arbitrary expression evaluates True. This example is included in the standard 
 distribution in subdirectory &#39;<span class="code">examples</span>.&#39;</p>
 <p>File <span class="code">examples/alarm.py</span>:</p>
 <p class="tty">import time<br />
@@ -293,7 +295,8 @@ self.last_msg or abs(time.time() - self.last_msg) &gt;= self.time_wait :<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 # Sound the alarm if it evaluates true:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-if eval(self.expression, None, rec):<br />
+if eval(self.expression, None, rec):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # 
+NOTE 1<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 # Sound the alarm!<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
@@ -356,12 +359,13 @@ configuration file:</p>
 <p>These options specify that the alarm is to be sounded when &quot;<span class="code">outTemp 
 &lt; 40.0</span>&quot; evaluates True, that is when the outside temperature is below 
 40.0 degrees. Any valid Python expression can be used, although the only 
-variables available are those in the current archive record.</p>
+variables available are those in the current archive record. (The place in the 
+code where the expression is evaluated is marked with &quot;<span class="code">Note 1</span>&quot;.)</p>
 <p>Another example expression could be:</p>
 <p class="tty">&nbsp;&nbsp;&nbsp; expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 
 10.0&quot;</p>
 <p>In this case, the alarm is sounded if the outside temperature drops below 
-freezing and the wind speed is greater than 10.0.</p>
+freezing and the wind speed is greater than 10.0. </p>
 <p>Option <span class="code">time_wait</span> is used to avoid a flood of nearly 
 identical emails. The new service will wait this long before sending another 
 email out.</p>
