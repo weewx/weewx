@@ -1006,7 +1006,7 @@ class StatsDb(object):
 
 
         _yr = time.localtime(yearSpan.start)[0]
-        _start_ordinal = datetime.date(_yr, 1, 1).toordinal()
+        _start_ordinal = datetime.date.fromtimestamp(_day_list[0].dateTime).toordinal()
         _connection = sqlite3.connect(self.statsFilename)
         _cursor = _connection.cursor()
         
