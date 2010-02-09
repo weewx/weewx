@@ -1,5 +1,7 @@
 NEW FEATURES to be added in decreasing order of importance.
 
+udev support to compensate for flaky 2101 drivers.
+
 Add support for CWOP.
 
 Allow rain-to-date to be added to a partial rainyear. (Unfortunately,

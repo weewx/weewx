@@ -1,6 +1,10 @@
 CHANGE HISTORY
 --------------------------------
 
+1.3.4   02/08/10
+
+Fixed problem when plotting data where all data points are bad (None).
+
 1.3.3   01/10/10
 
 Fixed reporting bug that shows itself if rain year does not start in January.

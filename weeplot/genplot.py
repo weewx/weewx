@@ -379,17 +379,17 @@ class GeneralPlot(object):
                 try:
                     yline_max = max(abs(c) for c in filter(lambda v : v is not None, line.y))
                 except ValueError:
-                    pass
+                    yline_max = None
                 yline_min = - yline_max if yline_max is not None else None
             else:
                 try :
                     yline_min = min(filter(lambda v : v is not None, line.y))
                 except ValueError:
-                    pass
+                    yline_min = None
                 try :
                     yline_max = max(filter(lambda v : v is not None, line.y))
                 except ValueError:
-                    pass
+                    yline_max = None
             ymin = min(yline_min, ymin) if ymin is not None else yline_min
             ymax = max(yline_max, ymax) if ymax is not None else yline_max
 
