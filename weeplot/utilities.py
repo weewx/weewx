@@ -72,7 +72,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     interval = magMsd * magPow
     
     # Test it against the desired minimum, if any
-    if min_interval is None or interval > min_interval:
+    if min_interval is None or interval >= min_interval:
         # Either no min interval was specified, or its safely
         # less than the chosen interval. 
         if minscale is None:
@@ -328,10 +328,11 @@ def pickLabelFormat(increment):
 if __name__ == '__main__' :
     import time
     # Unit test:
-    assert(scale(1.1, 12.3) == (1.0, 13.0, 1.0))
-    assert(scale(-1.1, 12.3) == (-2.0, 13.0, 1.0))
+    assert(scale(1.1, 12.3) == (0.0, 14.0, 2.0))
+    assert(scale(-1.1, 12.3) == (-2.0, 14.0, 2.0))
     assert(scale(-12.1, -5.3) == (-13.0, -5.0, 1.0))
     assert(scale(0.0, 0.05, (None, None, .1), 10) == (0.0, 1.0, 0.1))
+    assert(scale(0.0, 0.21, (None, None, .02)) == (0.0, 0.22, 0.02))
     
     t= time.time()
     scaletime(t - 24*3600 - 20, t)
