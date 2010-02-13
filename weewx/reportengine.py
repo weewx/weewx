@@ -33,12 +33,13 @@ class StdReportEngine(threading.Thread):
     See below for examples of reports.
     """
     
-    def __init__(self, config_dict):
+    def __init__(self, config_dict, gen_ts = None):
         """Initializer for the report engine. 
         
         The only argument is the configuration dictionary."""
         threading.Thread.__init__(self, name="ReportThread")
         self.config_dict = config_dict
+        self.gen_ts = gen_ts
         
         self.report_list = self.config_dict['Engines']['ReportEngine'].get('report_list', 
                                                                            ['weewx.reportengine.FileGen', 
@@ -50,6 +51,9 @@ class StdReportEngine(threading.Thread):
         
         Runs through the list of report classes, instantiating each one,
         then calling its "start()" method."""
+        
+        syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for time %s" % 
+                      weeutil.weeutil.timestamp_to_string(self.gen_ts))
         
         # Put the whole thing in a try block so we can log any exceptions that
         # might bubble up
@@ -89,7 +93,7 @@ class FileGen(Report):
                                        self.engine.config_dict['Archive']['archive_file'])
         archive = weewx.archive.Archive(archiveFilename)
     
-        stop_ts    = archive.lastGoodStamp()
+        stop_ts    = archive.lastGoodStamp() if self.engine.gen_ts is None else self.engine.gen_ts
         start_ts   = archive.firstGoodStamp()
         currentRec = archive.getRecord(stop_ts)
         
@@ -112,7 +116,7 @@ class ImageGen(Report):
                                        self.engine.config_dict['Archive']['archive_file'])
         archive = weewx.archive.Archive(archiveFilename)
     
-        stop_ts = archive.lastGoodStamp()
+        stop_ts = archive.lastGoodStamp() if self.engine.gen_ts is None else self.engine.gen_ts
 
         # Generate any images
         genImages = weewx.genimages.GenImages(self.engine.config_dict)
@@ -147,7 +151,7 @@ if __name__ == '__main__':
     import configobj
     import socket
 
-    def gen_all(config_path):
+    def gen_all(config_path, gen_ts = None):
         
         weewx.debug = 1
         try :
@@ -158,13 +162,14 @@ if __name__ == '__main__':
             
         socket.setdefaulttimeout(10)
         
-        t = StdReportEngine(config_dict)
+        t = StdReportEngine(config_dict, gen_ts)
         t.start()
         t.join()
 
         
     if len(sys.argv) < 2 :
-        print "Usage: processdata.py path-to-configuration-file"
+        print "Usage: reportengine.py path-to-configuration-file [timestamp-to-be-generated]"
         exit()
+    gen_ts = int(sys.argv[2]) if len(sys.argv)>=3 else None
         
-    gen_all(sys.argv[1])
+    gen_all(sys.argv[1], gen_ts)
