@@ -112,17 +112,6 @@ def accumulateLeaves(d):
     cum_dict.merge(merge_dict)
     return cum_dict
 
-def startOfNextInterval(time_ts, interval):
-    """
-    Calculate the unix epoch time for the start of the next interval
-    in local time. This rather complicated algorithm is necessary
-    because of the possibility DST might change in the middle.
-    """
-    time_dt = datetime.datetime.fromtimestamp(time_ts)
-    delta  = datetime.timedelta(seconds=interval)
-    next_dt = time_dt + delta
-    return int(time.mktime(next_dt.timetuple()))
-    
 def stampgen(startstamp, stopstamp, interval):
     """Generator function yielding a sequence of timestamps, spaced interval apart.
     
@@ -482,15 +471,11 @@ if __name__ == '__main__':
     # Test start-of-day routines around a DST boundary:
     start_ts = time.mktime((2007, 03, 11, 01, 0, 0, 0, 0, -1))
     start_of_day = startOfDay(start_ts)
-    nextDay = startOfNextInterval(start_of_day, 24*3600)
     start2 = startOfArchiveDay(start_of_day)
     print timestamp_to_string(start_ts)
     print timestamp_to_string(start_of_day)
-    print timestamp_to_string(nextDay)
     print timestamp_to_string(start2)
     # Check that this is, in fact, a DST boundary:
-    assert((nextDay - start_of_day) == 23*3600)
     assert(start_of_day == int(time.mktime((2007, 03, 11, 0, 0, 0, 0, 0, -1))))
-    assert(nextDay      == int(time.mktime((2007, 03, 12, 0, 0, 0, 0, 0, -1))))
     assert(start2       == int(time.mktime((2007, 03, 10, 0, 0, 0, 0, 0, -1))))
     
