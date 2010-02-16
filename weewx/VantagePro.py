@@ -14,7 +14,6 @@ import struct
 import serial
 import weewx
 import weewx.wxformulas
-import weewx.wunderground
 import weeutil.weeutil
 from weewx.crc16 import crc16
     
