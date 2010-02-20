@@ -97,6 +97,12 @@ class GenFiles(object):
         self.template_list = ('index', 'week', 'month', 'year')
 
     def initAlmanac(self, celestial_ts):
+        """ Initialize an instance of weeutil.Almanac.Almanac for the station's
+        lat and lon, and for a specific time.
+        
+        celestial_ts: The timestamp of the time for which the Almanac is to
+        be initialized.
+        """
         # almanac holds celestial information (sunrise, phase of moon). Its celestial
         # data slowly changes.
         self.almanac = weeutil.Almanac.Almanac(celestial_ts, 
@@ -107,9 +113,9 @@ class GenFiles(object):
     def generateNoaa(self, start_ts, stop_ts):
         """ Generate NOAA yearly and monthly reports.
 
-        start_ts: A timestamp within the year of the first report to be generated.
+        start_ts: The timestamp of the earliest data to be included.
 
-        stop_ts: A timestamp within the year of the last report to be generated."""
+        stop_ts: The report will be current as of this timestamp."""
         
         self.generateNoaaYears(start_ts, stop_ts)
         self.generateNoaaMonths(start_ts, stop_ts)

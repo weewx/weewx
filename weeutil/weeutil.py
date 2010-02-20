@@ -15,7 +15,6 @@ import math
 import ImageFont
 import configobj
 
-import timespan
 
 def min_no_None(seq):
     """Searches sequence of tuples, returning tuple where the first member was a minimum.
@@ -29,7 +28,7 @@ def min_no_None(seq):
     for v_tuple in seq:
         if v_tuple is None or v_tuple[0] is None: continue
         if v_min is None or v_tuple[0] < v_min[0]:
-            v_min  = v_tuple
+            v_min = v_tuple
     return v_min
 
 def max_no_None(seq):
@@ -44,7 +43,7 @@ def max_no_None(seq):
     for v_tuple in seq:
         if v_tuple is None or v_tuple[0] is None: continue
         if v_max is None or v_tuple[0] > v_max[0]:
-            v_max  = v_tuple
+            v_max = v_tuple
     return v_max
 
 def mean_no_None(seq):
@@ -55,7 +54,7 @@ def mean_no_None(seq):
         if v is not None:
             v_sum += v
             count += 1
-    return v_sum/count if count else None
+    return v_sum / count if count else None
 
 def sum_no_None(seq):
     v_sum = 0.0
@@ -137,26 +136,26 @@ def stampgen(startstamp, stopstamp, interval):
     
     yields a sequence of timestamps between startstamp and endstamp, inclusive.
     """
-    dt      = datetime.datetime.fromtimestamp(startstamp)
+    dt = datetime.datetime.fromtimestamp(startstamp)
     stop_dt = datetime.datetime.fromtimestamp(stopstamp)
-    if interval == 365.25/12 * 24 * 3600 :
+    if interval == 365.25 / 12 * 24 * 3600 :
         # Interval is a nominal month. This algorithm is 
         # necessary because not all months have the same length.
         while dt <= stop_dt :
             t_tuple = dt.timetuple()
             yield time.mktime(t_tuple)
-            year  = t_tuple[0]
+            year = t_tuple[0]
             month = t_tuple[1]
             month += 1
             if month > 12 :
                 month -= 12
-                year  += 1
+                year += 1
             dt = dt.replace(year=year, month=month)
     else :
         # This rather complicated algorithm is necessary (rather than just
         # doing some time stamp arithmetic) because of the possibility that DST
         # changes in the middle of an interval
-        delta  = datetime.timedelta(seconds=interval)
+        delta = datetime.timedelta(seconds=interval)
         while dt <= stop_dt :
             yield int(time.mktime(dt.timetuple()))
             dt += delta
@@ -182,20 +181,20 @@ def intervalgen(start_ts, stop_ts, interval):
     start_ts
     
     """  
-    dt1     = datetime.datetime.fromtimestamp(start_ts)
+    dt1 = datetime.datetime.fromtimestamp(start_ts)
     stop_dt = datetime.datetime.fromtimestamp(stop_ts)
     
-    if interval == 365.25/12 * 24 * 3600 :
+    if interval == 365.25 / 12 * 24 * 3600 :
         # Interval is a nominal month. This algorithm is 
         # necessary because not all months have the same length.
         while dt1 < stop_dt :
             t_tuple = dt1.timetuple()
-            year  = t_tuple[0]
+            year = t_tuple[0]
             month = t_tuple[1]
             month += 1
             if month > 12 :
                 month -= 12
-                year  += 1
+                year += 1
             dt2 = min(dt1.replace(year=year, month=month), stop_dt)
             stamp1 = time.mktime(t_tuple)
             stamp2 = time.mktime(dt2.timetuple())
@@ -205,7 +204,7 @@ def intervalgen(start_ts, stop_ts, interval):
         # This rather complicated algorithm is necessary (rather than just
         # doing some time stamp arithmetic) because of the possibility that DST
         # changes in the middle of an interval
-        delta  = datetime.timedelta(seconds=interval)
+        delta = datetime.timedelta(seconds=interval)
         while dt1 < stop_dt :
             dt2 = min(dt1 + delta, stop_dt)
             stamp1 = time.mktime(dt1.timetuple())
@@ -225,21 +224,120 @@ def _ord_to_ts(ord):
 # "weekSpans", etc. They are generally not used between two random times. 
 #===============================================================================
 
-def daySpan(time_ts):
-    _day_date = datetime.date.fromtimestamp(time_ts)
-    _day_ord  = _day_date.toordinal()
-    return timespan.TimeSpan(_ord_to_ts(_day_ord), _ord_to_ts(_day_ord+1))
+class TimeSpan(object):
+    '''
+    Represents a time span, exclusive on the left, inclusive on the right.
+    '''
 
-def weekSpan(time_ts):
+    def __init__(self, start_ts, stop_ts):
+        '''
+        Initialize a new instance of TimeSpan to the interval start_ts, stop_ts.
+        
+        start_ts: The starting time stamp of the interval.
+        
+        stop_ts: The stopping time stamp of the interval
+        '''
+        
+        if start_ts >= stop_ts :
+            raise ValueError, "start time must be less than stop time"
+        self.start = int(start_ts)
+        self.stop = int(stop_ts)
+        
+    def includesArchiveTime(self, timestamp):
+        """
+        Returns True if the span includes the time timestamp, otherwise False.
+        
+        timestamp: The timestamp to be tested.
+        """
+        return self.start < timestamp <= self.stop
+    
+    def includes(self, span):
+        
+        return self.start <= span.start <= self.stop and self.start <= span.stop <= self.stop
+    
+    def __eq__(self, other):
+        return self.start == other.start and self.stop == other.stop
+    
+    def __str__(self):
+        return "[%s -> %s]" % (timestamp_to_string(self.start),
+                               timestamp_to_string(self.stop))
+        
+    def __hash__(self):
+        return hash(self.start) ^ hash(self.stop)
+    
+    def __cmp__(self, other):
+        if self.start < other.start :
+            return - 1
+        return 0 if self.start == other.start else 1
+
+def archiveDaySpan(time_ts, grace = 30):
+    """Returns a TimeSpan representing a day that includes a given time.
+    
+    Midnight is considered to actually belong in the previous day.
+    
+    Examples: (Assume grace is 30; printed times are given below, but
+    the variables are actually in unix epoch timestamps)
+        2007-12-3 18:12:05 returns (2007-12-3 00:00:00 to 2007-12-4 00:00:00)
+        2007-12-3 00:00:00 returns (2007-12-2 00:00:00 to 2007-12-3 00:00:00)
+        2007-12-3 00:00:25 returns (2007-12-2 00:00:00 to 2007-12-3 00:00:00)
+        2007-12-3 00:00:35 returns (2007-12-3 00:00:00 to 2007-12-4 00:00:00)
+    
+    time_ts: The day will include this timestamp. 
+    
+    grace: This many seconds past midnight are still included in the previous day.
+    [Optional. Default is 30 seconds.]
+    
+    returns: A TimeSpan object one day long that contains time_ts. It
+    will begin and end at midnight.
+    """
+    time_ts -= grace
+    _day_date = datetime.date.fromtimestamp(time_ts)
+    _day_ord = _day_date.toordinal()
+    return TimeSpan(_ord_to_ts(_day_ord), _ord_to_ts(_day_ord + 1))
+
+def archiveWeekSpan(time_ts, startOfWeek = 6, grace = 30):
+    """Returns a TimeSpan representing a week that includes a given time.
+    
+    The time at midnight at the end of the week is considered to
+    actually belong in the previous week.
+    
+    time_ts: The week will include this timestamp. 
+    
+    startOfWeek: The start of the week (0=Monday, 1=Tues, ..., 6 = Sun).
+
+    grace: This many seconds past midnight are still included in the last week.
+    [Optional. Default is 30 seconds.]
+
+    returns: A TimeSpan object one week long that contains time_ts. It will
+    start at midnight of the day considered the start of the week, and be
+    one week long.
+    """
+    time_ts -= grace
     _day_date = datetime.date.fromtimestamp(time_ts)
     _day_of_week = _day_date.weekday()
-    _delta = _day_of_week + 1 if _day_of_week is not 6 else 0
-    _sunday_date      = _day_date    - datetime.timedelta(days = _delta)
-    _next_sunday_date = _sunday_date + datetime.timedelta(days = 7)
-    return timespan.TimeSpan(int(time.mktime(_sunday_date.timetuple())),
+    _delta = _day_of_week - startOfWeek
+    if _delta < 0: _delta += 7
+    _sunday_date = _day_date - datetime.timedelta(days=_delta)
+    _next_sunday_date = _sunday_date + datetime.timedelta(days=7)
+    return TimeSpan(int(time.mktime(_sunday_date.timetuple())),
                              int(time.mktime(_next_sunday_date.timetuple())))
 
-def monthSpan(time_ts):
+def archiveMonthSpan(time_ts, grace = 30):
+    """Returns a TimeSpan representing a month that includes a given time.
+    
+    Midnight of the 1st of the month is considered to actually belong
+    in the previous month.
+    
+    time_ts: The month will include this timestamp. 
+    
+    grace: This many seconds past midnight of the 1st are still included
+    in the previous month. [Optional. Default is 30 seconds.]
+
+    returns: A TimeSpan object one month long that contains time_ts.
+    It will start at midnight of the start of the month, and end at midnight
+    of the start of the next month.
+    """
+    time_ts -= grace
     _day_date = datetime.date.fromtimestamp(time_ts)
     _month_date = _day_date.replace(day=1)
     _yr = _month_date.year
@@ -249,31 +347,62 @@ def monthSpan(time_ts):
         _yr += 1
     _next_month_date = datetime.date(_yr, _mo, 1)
     
-    return timespan.TimeSpan(int(time.mktime(_month_date.timetuple())),
+    return TimeSpan(int(time.mktime(_month_date.timetuple())),
                              int(time.mktime(_next_month_date.timetuple())))
 
-def yearSpan(time_ts):
-    _day_date = datetime.date.fromtimestamp(time_ts)
-    return timespan.TimeSpan(int(time.mktime((_day_date.year,   1, 1, 0, 0, 0, 0, 0, -1))),
-                             int(time.mktime((_day_date.year+1, 1, 1, 0, 0, 0, 0, 0, -1))))
+def archiveYearSpan(time_ts, grace = 30):
+    """Returns a TimeSpan representing a year that includes a given time.
+    
+    Midnight of the 1st of the January is considered to actually belong
+    in the previous year.
+    
+    time_ts: The year will include this timestamp. 
+    
+    grace: This many seconds past midnight of 1-Jan are still included
+    in the previous year. [Optional. Default is 30 seconds.]
 
-def rainYearSpan(time_ts, sory_mon = 1):
+    returns: A TimeSpan object one year long that contains time_ts. It will
+    begin and end at midnight 1-Jan.
+    """
+    time_ts -= grace
+    _day_date = datetime.date.fromtimestamp(time_ts)
+    return TimeSpan(int(time.mktime((_day_date.year, 1, 1, 0, 0, 0, 0, 0, -1))),
+                             int(time.mktime((_day_date.year + 1, 1, 1, 0, 0, 0, 0, 0, -1))))
+
+def archiveRainYearSpan(time_ts, sory_mon = 1, grace = 30):
+    """Returns a TimeSpan representing a rain year that includes a given time.
+    
+    Midnight of the 1st of the month starting the rain year is considered to
+    actually belong in the previous rain year.
+    
+    time_ts: The rain year will include this timestamp. 
+    
+    sory_mon: The month the rain year starts. [Optional. Default is 1 (Jan)]
+    
+    grace: This many seconds past midnight of the 1st of the month starting
+    the rain year are still included in the previous rain year.
+    [Optional. Default is 30 seconds.]
+
+    returns: A TimeSpan object one year long that contains time_ts. It will
+    begin on the 1st of the month that starts the rain year.
+    """
+    time_ts -= grace
     _day_date = datetime.date.fromtimestamp(time_ts)
     _year = _day_date.year if _day_date.month >= sory_mon else _day_date.year - 1
-    return timespan.TimeSpan(int(time.mktime((_year,   sory_mon, 1, 0, 0, 0, 0, 0, -1))),
-                             int(time.mktime((_year+1, sory_mon, 1, 0, 0, 0, 0, 0, -1))))
+    return TimeSpan(int(time.mktime((_year, sory_mon, 1, 0, 0, 0, 0, 0, -1))),
+                             int(time.mktime((_year + 1, sory_mon, 1, 0, 0, 0, 0, 0, -1))))
 
 def genDaySpans(start_ts, stop_ts):
     _start_dt = datetime.datetime.fromtimestamp(start_ts)
-    _stop_dt  = datetime.datetime.fromtimestamp(stop_ts)
+    _stop_dt = datetime.datetime.fromtimestamp(stop_ts)
     
     _start_ord = _start_dt.toordinal()
-    _stop_ord  = _stop_dt.toordinal()
+    _stop_ord = _stop_dt.toordinal()
     if (_stop_dt.hour, _stop_dt.minute, _stop_dt.second) == (0, 0, 0):
         _stop_ord -= 1
 
-    for ord in range(_start_ord, _stop_ord+1):
-        yield timespan.TimeSpan( _ord_to_ts(ord), _ord_to_ts(ord+1))
+    for ord in range(_start_ord, _stop_ord + 1):
+        yield TimeSpan(_ord_to_ts(ord), _ord_to_ts(ord + 1))
  
    
 def genMonthSpans(start_ts, stop_ts):
@@ -301,34 +430,34 @@ def genMonthSpans(start_ts, stop_ts):
     
     """
     _start_dt = datetime.date.fromtimestamp(start_ts)
-    _stop_date  = datetime.datetime.fromtimestamp(stop_ts)
+    _stop_date = datetime.datetime.fromtimestamp(stop_ts)
 
-    _start_month = 12 * _start_dt.year   + _start_dt.month
-    _stop_month  = 12 * _stop_date.year  + _stop_date.month
+    _start_month = 12 * _start_dt.year + _start_dt.month
+    _stop_month = 12 * _stop_date.year + _stop_date.month
 
-    if (_stop_date.day, _stop_date.hour, _stop_date.minute, _stop_date.second) == (1,0,0,0):
+    if (_stop_date.day, _stop_date.hour, _stop_date.minute, _stop_date.second) == (1, 0, 0, 0):
         _stop_month -= 1
 
-    for month in range(_start_month, _stop_month+1):
-        _this_yr, _this_mo = divmod(month,   12)
-        _next_yr, _next_mo = divmod(month+1, 12)
-        yield timespan.TimeSpan(time.mktime((_this_yr, _this_mo, 1, 0, 0, 0, 0, 0, -1)),
-                                time.mktime((_next_yr, _next_mo, 1, 0, 0, 0, 0, 0, -1)))
+    for month in range(_start_month, _stop_month + 1):
+        _this_yr, _this_mo = divmod(month, 12)
+        _next_yr, _next_mo = divmod(month + 1, 12)
+        yield TimeSpan(time.mktime((_this_yr, _this_mo, 1, 0, 0, 0, 0, 0, -1)),
+                       time.mktime((_next_yr, _next_mo, 1, 0, 0, 0, 0, 0, -1)))
 
 def genYearSpans(start_ts, stop_ts):
     _start_date = datetime.date.fromtimestamp(start_ts)
     _stop_dt = datetime.datetime.fromtimestamp(stop_ts)
     
     _start_year = _start_date.year
-    _stop_year  = _stop_dt.year
+    _stop_year = _stop_dt.year
     
     if(_stop_dt.month, _stop_dt.day, _stop_dt.hour,
-       _stop_dt.minute, _stop_dt.second) == (1,1,0,0,0):
+       _stop_dt.minute, _stop_dt.second) == (1, 1, 0, 0, 0):
         _stop_year -= 1
         
     for year in range(_start_year, _stop_year + 1):
-        yield timespan.TimeSpan(time.mktime((year,   1, 1, 0, 0, 0, 0, 0, -1)),
-                                time.mktime((year+1, 1, 1, 0, 0, 0, 0, 0, -1)))
+        yield TimeSpan(time.mktime((year, 1, 1, 0, 0, 0, 0, 0, -1)),
+                       time.mktime((year + 1, 1, 1, 0, 0, 0, 0, 0, -1)))
         
 def startOfDay(time_ts):
     """Calculate the unix epoch time for the start of a (local time) day.
@@ -340,14 +469,14 @@ def startOfDay(time_ts):
     
     """
     _time_tt = time.localtime(time_ts)
-    _bod_ts  = time.mktime((_time_tt.tm_year, 
+    _bod_ts = time.mktime((_time_tt.tm_year,
                             _time_tt.tm_mon,
                             _time_tt.tm_mday,
                             0, 0, 0, 0, 0, -1))
     return int(_bod_ts)
 
 
-def startOfArchiveDay(time_ts):
+def startOfArchiveDay(time_ts, grace = 30):
     """Given an archive time stamp, calculate its start of day.
     
     similar to startOfDay(), except that an archive stamped at midnight
@@ -356,18 +485,22 @@ def startOfArchiveDay(time_ts):
     time_ts: A timestamp somewhere in the day for which the start-of-day
     is desired.
     
+    grace: The number of seconds past midnight which is still considered
+    to be in the previous day [Optional. Default is 30 seconds]
+    
     returns: The timestamp for the start-of-day (00:00) in unix epoch time.
     
     """
-    _time_dt = datetime.datetime.fromtimestamp(time_ts)
-    if (_time_dt.hour, _time_dt.minute, _time_dt.second) == (0, 0, 0):
-        _time_dt -= datetime.timedelta(days=1)
-    _time_tt = _time_dt.timetuple()
-    _bod_ts  = time.mktime((_time_tt.tm_year, 
-                            _time_tt.tm_mon,
-                            _time_tt.tm_mday,
-                            0, 0, 0, 0, 0, -1))
-    return int(_bod_ts)
+    return startOfDay(time_ts - grace)
+#    _time_dt = datetime.datetime.fromtimestamp(time_ts)
+#    if (_time_dt.hour, _time_dt.minute, _time_dt.second) == (0, 0, 0):
+#        _time_dt -= datetime.timedelta(days=1)
+#    _time_tt = _time_dt.timetuple()
+#    _bod_ts = time.mktime((_time_tt.tm_year,
+#                            _time_tt.tm_mon,
+#                            _time_tt.tm_mday,
+#                            0, 0, 0, 0, 0, -1))
+#    return int(_bod_ts)
 
     
 def secs_to_string(secs):
@@ -407,7 +540,7 @@ def _get_object(module_class, *args, **kwargs):
     # Strip off the classname:
     module = '.'.join(parts[:-1])
     # Import the top level module
-    mod =  __import__(module)
+    mod = __import__(module)
     # Then recursively work down from the top level module to the class name:
     for part in parts[1:]:
         mod = getattr(mod, part)
@@ -416,58 +549,124 @@ def _get_object(module_class, *args, **kwargs):
     return obj
         
 if __name__ == '__main__':
+    print "********* TimeSpans ***********"
+
+    t = TimeSpan(1230000000, 1231000000)
+    print t
+    assert(t==t)
+    tsub = TimeSpan(1230500000, 1230600000)
+    assert(t.includes(tsub))
+    assert(not tsub.includes(t))
+    tleft = TimeSpan(1229000000, 1229100000)
+    assert(not t.includes(tleft))
+    tright = TimeSpan(1232000000, 1233000000)
+    assert(not t.includes(tright))
+    
+    dic={}
+    dic[t] = 't'
+    dic[tsub] = 'tsub'
+    dic[tleft] = 'tleft'
+    dic[tright] = 'tright'
+    
+    assert(dic[t] == 't')
+    print "PASSES"
+
     print "********* genYearSpans ***********"
     print "Should print years 2007 through 2008:"
-    start_ts = time.mktime((2007, 12,  3, 10, 15, 0, 0, 0, -1))
-    stop_ts  = time.mktime((2008, 03,  1, 0, 0, 0, 0, 0, -1))
+    start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
+    stop_ts = time.mktime((2008, 03, 1, 0, 0, 0, 0, 0, -1))
 
     for span in genYearSpans(start_ts, stop_ts):
         print span
         
     print "********* genMonthSpans ***********"
     print "Should print months 2007-12 through 2008-02:"
-    start_ts = time.mktime((2007, 12,  3, 10, 15, 0, 0, 0, -1))
-    stop_ts  = time.mktime((2008, 03,  1, 0, 0, 0, 0, 0, -1))
+    start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
+    stop_ts = time.mktime((2008, 03, 1, 0, 0, 0, 0, 0, -1))
 
     for span in genMonthSpans(start_ts, stop_ts):
         print span
 
     print "\nShould print months 2007-12 through 2008-03:"
-    start_ts = time.mktime((2007, 12,  3, 10, 15, 0, 0, 0, -1))
-    stop_ts  = time.mktime((2008, 03,  1, 0, 0, 1, 0, 0, -1))
+    start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
+    stop_ts = time.mktime((2008, 03, 1, 0, 0, 1, 0, 0, -1))
 
     for span in genMonthSpans(start_ts, stop_ts):
         print span
     print "********** genDaySpans ************"
     
-    print "Should print 2007-12-23 to 2008-1-6:"
+    print "Should print 2007-12-23 through 2008-1-5:"
     start_ts = time.mktime((2007, 12, 23, 10, 15, 0, 0, 0, -1))
-    stop_ts  = time.mktime((2008,  1,  5,  9, 22, 0, 0, 0, -1))
+    stop_ts = time.mktime((2008, 1, 5, 9, 22, 0, 0, 0, -1))
     for span in genDaySpans(start_ts, stop_ts):
         print span
     print "\nShould print the single date 2007-12-1:"
-    for span in genDaySpans( time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
+    for span in genDaySpans(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
                              time.mktime((2007, 12, 2, 0, 0, 0, 0, 0, -1))):
         print span
 
     print "******** daySpan ***************"
-    print daySpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)))
+    assert(archiveDaySpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
+    assert(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 12, 12, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))))
+    assert(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 31, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
+    print "PASSES"
 
     print "******** weekSpan ***************"
-    print weekSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)))
+    assert(archiveWeekSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
+    assert(archiveWeekSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 12, 2, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1))))
+    assert(archiveWeekSpan(time.mktime((2007, 12, 9, 0, 0, 31, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
+    print "PASSES"
 
     print "******** monthSpan ***************"
-    print monthSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)))
-
+    assert(archiveMonthSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+    assert(archiveMonthSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 11, 1, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))))
+    assert(archiveMonthSpan(time.mktime((2007, 12, 1, 0, 0, 31, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+    assert(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+    print "PASSES"
+    
     print "******** yearSpan ***************"
-    print yearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)))
+    assert(archiveYearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 1, 1, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+    assert(archiveYearSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2007, 1, 1, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+    assert(archiveYearSpan(time.mktime((2008, 1, 1, 0, 0, 31, 0, 0, -1))) == 
+           TimeSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2009, 1, 1, 0, 0, 0, 0, 0, -1))))
+    print "PASSES"
 
     print "******** rainYearSpan ***************"
-    print rainYearSpan(time.mktime((2007,  2, 13, 10, 15, 0, 0, 0, -1)), 10)
-    print rainYearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)), 10)
+    assert(archiveRainYearSpan(time.mktime((2007, 2, 13, 10, 15, 0, 0, 0, -1)), 10) == 
+           TimeSpan(time.mktime((2006, 10, 1, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1))))
+    assert(archiveRainYearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)), 10) == 
+           TimeSpan(time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2008, 10, 1, 0, 0, 0, 0, 0, -1))))
+    print "PASSES"
 
     print "******** Start-of-days **********"
-    
+
     # Test start-of-day routines around a DST boundary:
     start_ts = time.mktime((2007, 03, 11, 01, 0, 0, 0, 0, -1))
     start_of_day = startOfDay(start_ts)
@@ -477,5 +676,6 @@ if __name__ == '__main__':
     print timestamp_to_string(start2)
     # Check that this is, in fact, a DST boundary:
     assert(start_of_day == int(time.mktime((2007, 03, 11, 0, 0, 0, 0, 0, -1))))
-    assert(start2       == int(time.mktime((2007, 03, 10, 0, 0, 0, 0, 0, -1))))
+    assert(start2 == int(time.mktime((2007, 03, 10, 0, 0, 0, 0, 0, -1))))
+    print "PASSES"
     

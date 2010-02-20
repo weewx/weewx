@@ -39,18 +39,16 @@
 """
 
 from __future__ import with_statement
+from pysqlite2 import dbapi2 as sqlite3
 import math
-import time
-import datetime
-import calendar
 import os
 import os.path
 import syslog
-from pysqlite2 import dbapi2 as sqlite3
+import time
 
+import weeutil.weeutil
 import weewx
 import weewx.wxformulas
-import weeutil.weeutil
 
 #===============================================================================
 # The default types for which statistical data should be kept in the
@@ -93,9 +91,7 @@ default_stats_types = ('barometer',
                        'leafWet1',
                        'leafWet2',
                        'rxCheckPercent',
-                       'wind',
-                       'heatdeg',
-                       'cooldeg')
+                       'wind')
 
 std_create_str  = """CREATE TABLE %s   ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
                   """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);"""
@@ -151,9 +147,7 @@ class StdDayStats(object):
         'dateTime'. It may or may not have my type in it. If it does,
         the value for my type is extracted and used to update my
         high/lows.  If it does not, nothing is done."""
-        # Heating and cooling degree-days don't accumulate within a day:
-        if self.type in ('heatdeg', 'cooldeg'):
-            return
+
         val = rec.get(self.type)
         # NB: val could be None because either there is no data for
         # this type, or this type doesn't exist at all in the record.
@@ -175,9 +169,7 @@ class StdDayStats(object):
         type in it. If it does, the value for my type is extracted and
         used to update my sum and count. If it does not, nothing is
         done."""
-        # Heating and cooling degree-days don't accumulate within a day:
-        if self.type in ('heatdeg', 'cooldeg'):
-            return
+
         val = rec.get(self.type)
         # NB: val could be None because either there is no data for
         # this type, or this type doesn't exist at all in the record.
@@ -245,7 +237,6 @@ class StdDayStats(object):
         sum_str = "%f" % self.sum if self.sum is not None else "N/A"
         return "time = %s; type = %s; min = %s (%s); max = %s (%s); avg = %s; sum = %s; " % \
             (time_str, self.type, min_str, mintime_str, max_str, maxtime_str, avg_str, sum_str) 
-
 
 #===============================================================================
 #                    Class WindDayStats
@@ -389,311 +380,86 @@ class WindDayStats(StdDayStats):
 
 class DayStatsDict(dict):
     """Statistics for a day, keyed by type.
+    
+    This is like any other dictionary except that it has an attribute startOfDay_ts,
+    with the timestamp of the start of the day the dictionary represents.
 
     The key of the dictionary is a type ('outTemp', 'barometer',
     etc.), the value an instance of WindDayStats for type 'wind',
     otherwise an instance of StdDayStats
 
     ATTRIBUTES: 
-    self.timespan: The time period this instance covers.
-
-    self.dateTime: The start of the time period this instance covers.
-    (by definition, equal to self.timespan.start)"""
+    self.startOfDay_ts: The start of the day this instance covers."""
     
-    def __init__(self, type_seq, day_span):
+    def __init__(self, type_seq, startOfDay_ts):
         """Create from a sequence of types, and from a time span.
 
         type_seq: An iterable sequence of types ('outTemp',
         'barometer', etc.). These will be the keys of the dictionary
 
-        day_span: An instance of weeutil.timespan.Timespan with the
-        time period this instance will cover.
+        startOfDay_ts: The timestamp of the beginning of the day.
 
         returns: An instance of DayStatsDict where the value for each
         type has been initialized to 'default' values."""
 
-        if weewx.debug:
-            # Make sure the span that has been handed to us is, in fact, a
-            # day span:
-            assert(day_span.start == weeutil.weeutil.startOfDay(day_span.start))
-            assert(day_span == weeutil.weeutil.daySpan(day_span.start))
-        self.timespan = day_span
-        self.dateTime = day_span.start
+        self.startOfDay_ts = startOfDay_ts
         
         for type in type_seq:
             if type == 'wind':
-                self[type] = WindDayStats(type, day_span.start)
+                self[type] = WindDayStats(type, startOfDay_ts)
             else:
-                self[type] = StdDayStats(type, day_span.start)
+                self[type] = StdDayStats(type, startOfDay_ts)
 
     def __str__(self):
+        """Print self out in a useful way for diagnostics."""
         outTempStats = self['outTemp']
         outTempMin_str = str(outTempStats.min) if outTempStats.min is not None else "N/A"
         outTempMax_str = str(outTempStats.max) if outTempStats.max is not None else "N/A"
         return "time span: %s; temperature (min,max) = (%s, %s)" % (str(self.timespan), outTempMin_str, outTempMax_str)
 
 #===============================================================================
-#                    Class AggregateStatsDict
+#                    Class TimespanStats
 #===============================================================================
 
-class AggregateStatsDict(object):
-    """Statistics for an aggregate period, such as a week, month, year, keyed by type.
+class TimespanStats(object):
+    """Nearly stateless class that holds a variable to a stats database and a timespan."""
 
-    This class has a very similar interface to DayStatsDict, except it
-    represents statistics for an aggregate period, rather than just a
-    single day.
-
-    ATTRIBUTES:
-    self.statsTypes: A list of types that can be used as a key.
-
-    self.days: A list of DayStatsDicts, one for each day in the aggregate period.
-    
-    self.timespan: The time period this instance covers.
-
-    self.dateTime: The start time this instance covers (by definition,
-    equal to self.timespan.start
-    """
-    
-    def __init__(self, statsTypes, day_list, timespan):
-        """Initialize from a list of stats
+    def __init__(self, statsDb, timespan):
         
-        statsTypes: A list of types to be used as keys (eg, 'outTemp',
-        'barometer', 'heatdeg', etc.)
-
-        day_list: A list of DayStatsDicts sufficient to cover the timespan.
-
-        timespan: A weeutil.timespan.TimeSpan object for the length of
-        time this instance covers."""
-
-        if weewx.debug:
-            _istart = datetime.date.fromtimestamp(timespan.start).toordinal()
-            _iend   = datetime.date.fromtimestamp(timespan.stop).toordinal()
-            _Ndays  = _iend - _istart
-            if len(day_list) != _Ndays:
-                raise weewx.ViolatedPrecondition, "Timespan (%d days) does not match length of day list (%d) " (_Ndays, len(day_list))
-        self.statsTypes = statsTypes
-        self.days       = day_list
-        self.timespan   = timespan
-        self.dateTime   = timespan.start
-
-    def __getitem__(self, type):
-        """Returns the helper class SummaryStats, initialized with the list 
-        of children and the type."""
-
-        # The following check is to get around a quirk in Cheetah, where it goes
-        # looking for attribute 'days' in _getitem__ instead of
-        # trying attributes first. We throw an exception if the
-        # proferred type is not in the list of acceptable types.
-        if type not in self.statsTypes:
-            raise KeyError, type
-        
-        return SummaryStats(self.days, self.timespan, type)
-    
-
-#===============================================================================
-#                    Class MonthStatsDict
-#===============================================================================
-
-class MonthStatsDict(AggregateStatsDict):
-    
-    def __init__(self, statsTypes, day_list, monthSpan):
-        AggregateStatsDict.__init__(self, statsTypes, day_list, monthSpan)
-        
-#===============================================================================
-#                    Class YearStatsDict
-#===============================================================================
-
-class YearStatsDict(AggregateStatsDict):
-    """Statistics for a year
-    
-    To the methods and attributes offered by the base class AggregateStatsDict,
-    this class adds an attribute self.months.
-
-    ATTRIBUTES:
-    self.statsTypes: A list of types that can be used as a key.
-
-    self.days: A list of DayStatsDicts, one for each day in the year.
-    
-    self.months: A list of MonthStatsDicts, one for each month in the year.
-    
-    self.timespan: The time period this instance covers.
-
-    self.dateTime: The start time this instance covers (by definition,
-    equal to self.timespan.start
-    """
-    
-    def __init__(self, statsTypes, day_list, yearSpan):
-        """Initialize an instance using a list of days
-
-        Note that the year need not be a calendar year (e.g., it could
-        be a rain year). The only requirement is that the list of days
-        be long enough to cover the timespan.
-    
-        statsTypes: A list of types to be used as keys (eg, 'outTemp',
-        'barometer', 'heatdeg', etc.)
-
-        day_list: A list of DayStatsDicts sufficient to cover the year.
-
-        timespan: A weeutil.timespan.TimeSpan object for the year"""
-        
-        AggregateStatsDict.__init__(self, statsTypes, day_list, yearSpan)
-
-        # The logic in what follows is arranged so that the year can represent
-        # a rain year, as well as a calendar year. That is, the first month
-        # need not be January. The only requirement is that day_list be long
-        # enough to cover the time period.
-        self.months = []
-        _start_date = datetime.date.fromtimestamp(yearSpan.start)
-        _start_ordinal = _start_date.toordinal()
-        for _monthSpan in weeutil.weeutil.genMonthSpans(yearSpan.start, yearSpan.stop):
-            _month_start = datetime.date.fromtimestamp(_monthSpan.start)
-            _index = _month_start.toordinal() - _start_ordinal
-            if weewx.debug:
-                if _monthSpan.start != self.days[_index].dateTime:
-                    raise weewx.LogicError, "Month start %s does not match day start %s" % (weeutil.weeutil.timestamp_to_string(_monthSpan.start),
-                                                                                            weeutil.weeutil.timestamp_to_string(self.days[_index].dateTime))
-
-            _days_in_month = calendar.monthrange(_month_start.year, _month_start.month)[1]
-            self.months.append(MonthStatsDict(statsTypes, self.days[_index:_index+_days_in_month], _monthSpan))
-
-#===============================================================================
-#                    Class SummaryStats
-#===============================================================================
-
-class SummaryStats(object):
-    """Helper object to return summary stats from lists of statistics.
-    
-    It is nearly stateless, and intended to be used as a helper class.
-    That is, it is typically returned from a method or as an
-    attribute, helping link the calling class with the attribute.
-    
-    It offers a variety of aggregate statistics, calculated dynamically."""
-
-    def __init__(self, day_list, timespan, type):
-        self.days     = day_list
+        self.statsDb  = statsDb
         self.timespan = timespan
-        self.type     = type
-        self.dateTime = timespan.start
         
-    #===============================================================================
-    # What follows is a long list of aggregate statistics that this
-    # class can offer. They are all calculated dynamically, using generator 
-    # expressions
-    # ===============================================================================
-
-    def get_min(self):
-        vmin_tuple = weeutil.weeutil.min_no_None( (dayStats[self.type].min,) for dayStats in self.days )
-        return vmin_tuple[0] if vmin_tuple is not None else None
-
-    def get_mintime(self):
-        vmin_tuple = weeutil.weeutil.min_no_None( (dayStats[self.type].min, dayStats[self.type].mintime) for dayStats in self.days )
-        return vmin_tuple[1] if vmin_tuple is not None else None
-
-    def get_max(self):
-        vmax_tuple = weeutil.weeutil.max_no_None( (dayStats[self.type].max, ) for dayStats in self.days )
-        return vmax_tuple[0] if vmax_tuple is not None else None
-
-    def get_maxtime(self):
-        vmax_tuple = weeutil.weeutil.max_no_None( (dayStats[self.type].max, dayStats[self.type].maxtime) for dayStats in self.days )
-        return vmax_tuple[1] if vmax_tuple is not None else None
-
-    def get_sum(self):
-        return weeutil.weeutil.sum_no_None( dayStats[self.type].sum for dayStats in self.days )
-    
-    def get_count(self):
-        return weeutil.weeutil.sum_no_None( dayStats[self.type].count for dayStats in self.days )
-    
-    def get_avg(self):
-        vcount = self.count
-        return self.sum / vcount if vcount else None
-    
-    def get_gustdir(self):
-        vmax_tuple = weeutil.weeutil.max_no_None( (dayStats[self.type].max, dayStats[self.type].gustdir) for dayStats in self.days )
-        return vmax_tuple[1] if vmax_tuple is not None else None
-
-    def get_xsum(self):
-        return weeutil.weeutil.sum_no_None( dayStats[self.type].xsum for dayStats in self.days )
-    
-    def get_ysum(self):
-        return weeutil.weeutil.sum_no_None( dayStats[self.type].ysum for dayStats in self.days )
-    
-    def get_squaresum(self):
-        return weeutil.weeutil.sum_no_None( dayStats[self.type].squaresum for dayStats in self.days )
-    
-    def get_squarecount(self):
-        return weeutil.weeutil.sum_no_None( dayStats[self.type].squarecount for dayStats in self.days )
-
-    def get_rms(self):
-        return math.sqrt(self.squaresum / self.squarecount) if self.squarecount else None
-    
-    def get_vecavg(self):
-        return math.sqrt((self.xsum**2 + self.ysum**2) / self.count**2) if self.count else None
-    
-    def get_vecdir(self):
-        deg = 90.0 - math.degrees(math.atan2(self.ysum, self.xsum))
-        return deg if deg > 0 else deg + 360.0
-    
-    def get_meanmax(self):
-        return weeutil.weeutil.mean_no_None( dayStats[self.type].max for dayStats in self.days )
-
-    def get_meanmin(self):
-        return weeutil.weeutil.mean_no_None( dayStats[self.type].min for dayStats in self.days )
-    
-    def get_maxsum(self):
-        vmax_tuple = weeutil.weeutil.max_no_None( (dayStats[self.type].sum, ) for dayStats in self.days )
-        return vmax_tuple[0] if vmax_tuple is not None else None
-    
-    def get_maxsumtime(self):
-        vmax_tuple = weeutil.weeutil.max_no_None( (dayStats[self.type].sum, dayStats.dateTime) for dayStats in self.days )
-        return vmax_tuple[1] if vmax_tuple is not None else None
-    
-    # These property statements will make all these functions available as attributes:
-    min          = property(get_min)
-    max          = property(get_max)
-    mintime      = property(get_mintime)
-    maxtime      = property(get_maxtime)
-    sum          = property(get_sum)
-    count        = property(get_count)
-    avg          = property(get_avg)
-    gustdir      = property(get_gustdir)
-    xsum         = property(get_xsum)
-    ysum         = property(get_ysum)
-    squaresum    = property(get_squaresum)
-    squarecount  = property(get_squarecount)
-    rms          = property(get_rms)
-    vecavg       = property(get_vecavg)
-    vecdir       = property(get_vecdir)
-    meanmax      = property(get_meanmax)
-    meanmin      = property(get_meanmin)
-    maxsum       = property(get_maxsum)
-    maxsumtime   = property(get_maxsumtime)
-    
-    def max_ge(self, val):
-        return len(filter(lambda x : x is not None and x>=val, [dayStats[self.type].max for dayStats in self.days]))
-    
-    def max_le(self, val):
-        return len(filter(lambda x : x is not None and x<=val, [dayStats[self.type].max for dayStats in self.days]))
-    
-    def min_ge(self, val):
-        return len(filter(lambda x : x is not None and x>=val, [dayStats[self.type].min for dayStats in self.days]))
-    
-    def min_le(self, val):
-        return len(filter(lambda x : x is not None and x<=val, [dayStats[self.type].min for dayStats in self.days]))
-    
-    def sum_ge(self, val):
-        return len(filter(lambda x : x>=val, [dayStats[self.type].sum for dayStats in self.days]))
+    def __getattr__(self, statsType):
+        return StatsTypeHelper(self, statsType)
+        
 
 #===============================================================================
-#                    Class StatsDb
+#                    Class StatsAggregate
 #===============================================================================
 
-class StatsDb(object):
-    """Manage the sqlite3 statistical database. 
+class StatsTypeHelper(object):
+    """Nearly stateless helper class that holds the type over which aggregation is to be done."""
+    
+    def __init__(self, statsHelper, statsType):
+        
+        self.statsHelper = statsHelper
+        self.statsType   = statsType
+        
+    def __getattr__(self, aggregateType):
+        res = self.statsHelper.statsDb.getAggregate(self.statsHelper.timespan, self.statsType, aggregateType)
+        return res
+    
+    
+#===============================================================================
+#                    Class StatsReadonlyDb
+#===============================================================================
+
+class StatsReadonlyDb(object):
+    """Manage reading from the sqlite3 statistical database. 
     
     This class acts as a wrapper around the stats database, with a set
-    of methods for adding and retrieving records to and from the
-    statistical compilation. It also offers methods to retrieve data
-    by day, week, month year, etc.
+    of methods for retrieving records from the
+    statistical compilation. 
 
     After initialization, the attribute self.statsTypes will contain a list
     of the types for which statistics are being gathered, or None if
@@ -734,16 +500,16 @@ class StatsDb(object):
     
     heatbase:The base temperature for calculating heating degree-days.
 
-    coolbase: The base temperature for calculating cooling degree-days.
-    """
-    
+    coolbase: The base temperature for calculating cooling degree-days."""
+
     # In addition to the attributes listed above, if caching is used,
-    # each instance has a private attribute self.__dayCache. This is a two-way 
+    # each instance has a private attribute self._dayCache. This is a two-way 
     # tuple where the first member is an instance of DayStatsDict, and
     # the second member is lastUpdate. If caching is not being used, then
-    # self.__dayCache equals None.
+    # self._dayCache equals None.
     #
-    def __init__(self, statsFilename, heatbase = None, coolbase = None, cacheLoopData = True):
+        
+    def __init__(self, statsFilename, heatbase = None, coolbase = None, cacheDayData = True):
         """Create an instance of StatsDb to manage a database.
         
         statsFilename: Path to the stats database file.
@@ -751,52 +517,20 @@ class StatsDb(object):
         heatbase: The base degrees for calculating heating degree-days
 
         coolbase: The base degrees for calculating cooling degree-days
+
+        cacheDayData: True if a days stats are to be cached after reading. 
+        Otherwise, it gets read with every query.
+        [Optional. Default is True]"""
         
-        cacheLoopData: True if LOOP data is to be cached and written only when
-        new archive data comes in. Otherwise, it gets written with the arrival
-        of every LOOP packet. [Optional. Default is True]"""
         self.statsFilename = statsFilename
         self.statsTypes    = StatsDb.__getTypes(statsFilename)
         self.heatbase      = heatbase
         self.coolbase      = coolbase
-        if cacheLoopData:
-            self.__dayCache  = (None, None)
+
+        if cacheDayData:
+            self._dayCache  = (None, None)
         else:
-            self.__dayCache  = None
-        
-    def addArchiveRecord(self, rec):
-        """Add an archive record to the statistical database."""
-
-        # Get the start-of-day for this archive record.
-        _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
-
-        _daySpan = weeutil.weeutil.daySpan(_sod_ts)
-        _allStatsDict = self.day(_daySpan)
-
-        for type in self.statsTypes:
-            # ... and add this archive record to the running tally:
-            _allStatsDict[type].addArchiveRecord(rec)
-
-        # Now write the results for all types back to the database
-        # in a single transaction:
-        self._setDay(_allStatsDict, rec['dateTime'], writeThrough = True)
-            
-    def addLoopRecord(self, rec):
-        """Add a LOOP record to the statistical database."""
-
-        # Get the start-of-day for this loop record.
-        _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
-
-        _daySpan = weeutil.weeutil.daySpan(_sod_ts)
-        _allStatsDict = self.day(_daySpan)
-
-        for type in self.statsTypes:
-            # ... and add this loop record to the running tally:
-            _allStatsDict[type].addLoopRecord(rec)
-
-        # Now write the results for all types back to the database
-        # in a single transaction:
-        self._setDay(_allStatsDict, rec['dateTime'], writeThrough = False)
+            self._dayCache  = None
 
     def getTypeStats(self, type, sod_ts, cursor = None):
         """Get the statistics for a specific type for a specific day.
@@ -851,80 +585,16 @@ class StatsDb(object):
         
         return _dayStats
 
-        
-    def genTypeStats(self, type, span, cursor = None):
-        """Generator function that returns day statistics for a specified type between two timestamps.
-        
-        This function can be much faster than calling getTypeStats()
-        repeatedly.  It creates a connection just once, and shares it
-        between all calls to the stats database. However, the
-        semantics differs slightly from calling getTypeStats()
-        repeatedly in that it only returns instances that exist in the
-        database.
-        
-        type: The type of data to retrieve ('outTemp', 'barometer',
-        'heatdeg', etc.)
-
-        span: An instance of weeutil.timespan.Timespan with the time
-        span over which the instances will be returned. It is
-        inclusive on the left, exclusive on the right.
-
-        cursor: A database cursor to be used for the
-        retrieval. [Optional. If not given, one will be created and
-        destroyed for this query.]
-
-        yields: Instances of WindDayStats for type 'wind', otherwise
-        instances of StdDayStats, initialized with the data from the
-        database. Only records that exist in the database will be
-        returned!"""
-
-        if type in ('heatdeg', 'cooldeg'):
-            for outTempStats in self.genTypeStats('outTemp', span, cursor):
-                yield self.__toHeatCool(type, outTempStats)
-            return
-
-        if cursor:
-            _cursor = cursor
-        else:
-            _connection = sqlite3.connect(self.statsFilename)
-            _cursor = _connection.cursor()
-
-        try:
-            # Form a SQL select statement for the appropriate type
-            _sql_str = "SELECT * FROM %s WHERE dateTime >= ? and dateTime < ?" % type
-            # Peform the select, against the desired range of timestamp
-            _cursor.execute(_sql_str, (span.start, span.stop))
-            
-            for _row in _cursor:
-    
-                if weewx.debug:
-                    # In this case, the cursor row must exist (or we would not have continued in the loop)
-                    assert(_row)
-                    if type =='wind': assert(len(_row) == 12)
-                    else: assert(len(_row) == 7)
-    
-                _dayStats = StdDayStats(type, _row[0], _row) if type != 'wind' else WindDayStats(type, _row[0], _row)
-    
-                yield _dayStats
-
-        finally:
-
-            if not cursor:
-                _cursor.close()
-                _connection.close()
-
-    def day(self, daySpan, cursor = None):
+    def day(self, startOfDay_ts, cursor = None):
         """Return an instance of DayStatsDict initialized to a given day's statistics.
 
-        daySpan: An instance of weeutil.timespan.Timespan with the
-        time span for the desired day.
+        startOfDay_ts: The timestamp of the start-of-day of the desired day.
 
-        cursor: A database cursor to be used for the
-        retrieval. [Optional. If not given, one will be created and
-        destroyed for this query.]"""
+        cursor: A database cursor to be used for the retrieval. [Optional. If not given,
+        one will be created and destroyed for this query.]"""
         
-        if self.__dayCache and self.__dayCache[0] and self.__dayCache[0].timespan == daySpan:
-            return self.__dayCache[0]
+        if self._dayCache and self._dayCache[0] and self._dayCache[0].startOfDay_ts == startOfDay_ts:
+            return self._dayCache[0]
 
         if cursor:
             _cursor = cursor
@@ -934,143 +604,57 @@ class StatsDb(object):
         
         try:
 
-            _allStats = DayStatsDict(self.statsTypes, daySpan)
+            _allStats = DayStatsDict(self.statsTypes, startOfDay_ts)
             
             for type in self.statsTypes:
-                _allStats[type] = self.getTypeStats(type, daySpan.start, _cursor)
+                _allStats[type] = self.getTypeStats(type, startOfDay_ts, _cursor)
         finally:
             if not cursor:
                 _cursor.close()
                 _connection.close()
         
-        if self.__dayCache:
-            self.__dayCache = (_allStats, None)
+        if self._dayCache:
+            self._dayCache = (_allStats, None)
 
         return _allStats
-    
-    def week(self, weekSpan):
-        """Return a weeks worth of statistics as a AggregateStatsDict.
 
-        weekSpan: An instance of weeutil.timespan.Timespan with the
-        time span for the desired week."""
-        stats_list = []
-        # For each day, create a StatsDict and append it to the day list
-        for daySpan in weeutil.weeutil.genDaySpans(weekSpan.start, weekSpan.stop):
-            stats_list.append(DayStatsDict(self.statsTypes, daySpan)) 
-        # For each type, read in the data for the whole week. Doing it in this order
-        # allows us to use the function genTypeStats on a type, which is much
-        # faster than getting each individual day, and then each individual type.
-        for type in self.statsTypes:
-            for dayStats in self.genTypeStats(type, weekSpan):
-                for _dayOfWeek in range(len(stats_list)):
-                    if dayStats.dateTime == stats_list[_dayOfWeek].timespan.start :
-                        # Put it in the right day slot and the right type:
-                        stats_list[_dayOfWeek][type] = dayStats
-                        break
-                
-        return AggregateStatsDict(self.statsTypes, stats_list, weekSpan)
-    
-    def month(self, monthSpan):
-        """Return a month's worth of statistics as a MonthStatsDict
-
-        monthSpan: An instance of weeutil.timespan.Timespan with the
-        time span for the desired month."""
-        _day_list = []
-        # For each day, create a StatsDict and append it to the day list
-        for _daySpan in weeutil.weeutil.genDaySpans(monthSpan.start, monthSpan.stop):
-            _day_list.append(DayStatsDict(self.statsTypes,_daySpan)) 
-        # For each _type, read in the data for the whole month. Doing it in this order
-        # allows us to use the function genTypeStats on a _type, which is much
-        # faster than getting each individual day, and then each individual _type.
-        for _type in self.statsTypes:
-            for _dayStats in self.genTypeStats(_type,  monthSpan):
-                # Figure out which day was just handed to us:
-                _day = time.localtime(_dayStats.dateTime).tm_mday
-                # Put it in the right day slot and the right _type:
-                _day_list[_day-1][_type] =_dayStats
-                
-        return MonthStatsDict(self.statsTypes, _day_list, monthSpan)
-    
-
-    def year(self, yearSpan):
-        """Returns a year's worth of statistics as a YearStatsDict.
-
-        yearSpan: An instance of weeutil.timespan.Timespan with the
-        time span for the desired year."""
-
-        # Strategy is to fill in the whole year data structure with default values,
-        # then plug in the real values from the SQL search.
+    def getAggregate(self, timespan, statsType, aggregateType):
         
-        # Create a list of default day statistics, one year long:
-        _day_list = [DayStatsDict(self.statsTypes, daySpan) for daySpan in weeutil.weeutil.genDaySpans(yearSpan.start, yearSpan.stop)]
+        if aggregateType in ('min', 'max'):
+            sqlStmt = "SELECT %s(%s) FROM %s WHERE dateTime >= ? AND dateTime < ?" % (aggregateType, aggregateType, statsType)
 
-
-        _yr = time.localtime(yearSpan.start)[0]
-        _start_ordinal = datetime.date.fromtimestamp(_day_list[0].dateTime).toordinal()
-        _connection = sqlite3.connect(self.statsFilename)
-        _cursor = _connection.cursor()
-        
-        try:
-            # For each type...
-            for _type in self.statsTypes:
-                # And for each day in the database, retrieve a StdDayStats (or WindDayStats):
-                for _typeDayStats in self.genTypeStats(_type, yearSpan, _cursor):
-                    # Figure out what  day was just handed to us:
-                    _date_ordinal = datetime.date.fromtimestamp(_typeDayStats.dateTime).toordinal()
-                    _index = _date_ordinal-_start_ordinal
-                    # Put it in the right slot:
-                    _day_list[_index][_type] = _typeDayStats
-        finally:
-
-            _cursor.close()
-            _connection.close()
-
-        return YearStatsDict(self.statsTypes, _day_list, yearSpan)
-        
-    def config(self, stats_types = None):
-        """Initialize the StatsDb database
-        
-        Does nothing if the database has already been initialized.
-
-        stats_types: an iterable collection with the names of the types for
-        which statistics will be gathered [optional. Default is to use all
-        possible types]"""
-        # Check whether the database exists:
-        if os.path.exists(self.statsFilename):
-            syslog.syslog(syslog.LOG_INFO, "stats: statistical database %s already exists." % self.statsFilename)
-        else:
-            # If it doesn't exist, create the parent directories
-            archiveDirectory = os.path.dirname(self.statsFilename)
-            if not os.path.exists(archiveDirectory):
-                syslog.syslog(syslog.LOG_NOTICE, "stats: making archive directory %s." % archiveDirectory)
-                os.makedirs(archiveDirectory)
-            
-        # If it has no schema, initialize it:
-        if not self.statsTypes:
-            # No schema. Need to initialize the stats database.
-            
-            # If nothing has been specified, use the default stats types:
-            if not stats_types:
-                stats_types = default_stats_types
-            
-            # Now create all the necessary tables as one transaction:
             with sqlite3.connect(self.statsFilename) as _connection:
-            
-                for _stats_type in stats_types:
-                    if _stats_type in ('heatdeg', 'cooldeg'):
-                        # Heating and cooling degree days are not actually stored in the database,
-                        # but instead are calculated from the daily average temperature
-                        continue
-                    elif _stats_type == 'wind':
-                        _connection.execute(wind_create_str)
-                    else:
-                        _connection.execute(std_create_str % (_stats_type,))
-                _connection.execute(meta_create_str)
-            
-            self.statsTypes = stats_types
-            syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % self.statsFilename)
+                _cursor = _connection.execute(sqlStmt, (timespan.start, timespan.stop))
+                _row = _cursor.fetchone()
+            return _row[0] if _row else None
+        
+        elif aggregateType in ('mintime', 'maxtime'):
+            aggregate = aggregateType[0:3]
+            sqlStmt = "SELECT %s FROM %s WHERE dateTime >= ? AND dateTime < ? AND " \
+                        "%s = (SELECT %s(%s) FROM %s WHERE dateTime >= ? AND dateTime < ?)" % (aggregateType, statsType, aggregate, aggregate, aggregate, statsType)
+            with sqlite3.connect(self.statsFilename) as _connection:
+                _cursor = _connection.execute(sqlStmt, (timespan.start, timespan.stop, timespan.start, timespan.stop))
+                _row = _cursor.fetchone()
+            return int(_row[0]) if _row else None
 
+        elif aggregateType in ('sum', 'count'):
+            sqlStmt = "SELECT sum(%s) FROM %s WHERE dateTime >= ? and dateTime < ?" % (aggregateType, statsType)
+            
+            with sqlite3.connect(self.statsFilename) as _connection:
+                _cursor = _connection.execute(sqlStmt, (timespan.start, timespan.stop))
+                _row = _cursor.fetchone()
+            return _row[0] if _row else None
 
+        elif aggregateType in ('avg'):
+            sqlStmt = "SELECT sum(sum),sum(count) FROM %s WHERE dateTime >= ? and dateTime < ?" % statsType
+            
+            with sqlite3.connect(self.statsFilename) as _connection:
+                _cursor = _connection.execute(sqlStmt, (timespan.start, timespan.stop))
+                _row = _cursor.fetchone()
+            if _row:
+                return _row[0]/_row[1] if _row[1] else None
+            return None
+        
     def _getFirstUpdate(self):
         """Returns the time of the first entry in the statistical database."""
         #=======================================================================
@@ -1091,62 +675,6 @@ class StatsDb(object):
             _row = _cursor.fetchone()
         return int(_row[0]) if _row else None
 
-
-    def _setDay(self, dayStatsDict, lastUpdate, writeThrough = True):
-        """Write all statistics for a day to the database in a single transaction.
-        
-        dayStatsDict: A dictionary. Key is the type to be written, value is a
-        StdDayStats or WindDayStats, as appropriate.  Class DayStatsDict
-        satisfies this.
-        
-        lastUpdate: the time of the last update will be set to this. Normally, this
-        is the timestamp of the last archive record added to the instance
-        dayStatsDict."""
-
-        assert(dayStatsDict)
-
-        if self.__dayCache:
-            if self.__dayCache[0] and self.__dayCache[0].timespan != dayStatsDict.timespan:
-                # Write the old data
-                self.__writeData(self.__dayCache[0], self.__dayCache[1])
-        
-            self.__dayCache = (dayStatsDict, lastUpdate)
-            if writeThrough:
-                self.__writeData(dayStatsDict, lastUpdate)
-        
-        else:
-            self.__writeData(dayStatsDict, lastUpdate)
-        
-        
-    def __writeData(self, dayStatsDict, lastUpdate):
-        
-        assert(dayStatsDict)
-        assert(lastUpdate)
-        
-        _sod = dayStatsDict.timespan.start
-
-        # Using the connection as a context manager means that
-        # in case of an error, all tables will get rolled back.
-        with sqlite3.connect(self.statsFilename) as _connection:
-            for _stats_type in self.statsTypes:
-                
-                # Heating and cooling degree days are calculated on demand, not
-                # stored in the database:
-                if _stats_type in ('heatdeg', 'cooldeg'):
-                    continue
-                # Slightly different SQL statement for wind
-                elif _stats_type == 'wind':
-                    _replace_str = wind_replace_str
-                else:
-                    _replace_str = std_replace_str % _stats_type
-                
-                # Get the stats-tuple, then write the results
-                _write_tuple = dayStatsDict[_stats_type].getStatsTuple()
-                assert(_write_tuple[0] == _sod)
-                _connection.execute(_replace_str,_write_tuple)
-            # Update the time of the last stats update:
-            _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
-            
     def __toHeatCool(self, type, outTempStats):
         """Calculates heating or cooling degree-day statistics from temperature
         
@@ -1181,6 +709,9 @@ class StatsDb(object):
         
         returns: A list of types or None if the database has not been initialized."""
         
+        if not os.path.exists(statsFilename):
+            return None
+        
         _connection = sqlite3.connect(statsFilename)
         _cursor = _connection.cursor()
         try:
@@ -1189,8 +720,6 @@ class StatsDb(object):
             stats_types = [str(_row[0]) for _row in _cursor if _row[0] != u'metadata']
             if len(stats_types) == 0 :
                 stats_types = None
-            else:
-                stats_types += ('heatdeg', 'cooldeg')
 
         finally:
             _cursor.close()
@@ -1198,6 +727,141 @@ class StatsDb(object):
 
         return stats_types
 
+#===============================================================================
+#                    Class StatsDb
+#===============================================================================
+
+class StatsDb(StatsReadonlyDb):
+    """Inherits from class StatsReadonlyDb, adding methods for writing to 
+    the statistical database.
+    """
+    
+    def addArchiveRecord(self, rec):
+        """Add an archive record to the statistical database."""
+
+        # Get the start-of-day for this archive record.
+        _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
+
+        _allStatsDict = self.day(_sod_ts)
+
+        for type in self.statsTypes:
+            # ... and add this archive record to the running tally:
+            _allStatsDict[type].addArchiveRecord(rec)
+
+        # Now write the results for all types back to the database
+        # in a single transaction:
+        self._setDay(_allStatsDict, rec['dateTime'], writeThrough = True)
+            
+    def addLoopRecord(self, rec):
+        """Add a LOOP record to the statistical database."""
+
+        # Get the start-of-day for this loop record.
+        _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
+
+        _allStatsDict = self.day(_sod_ts)
+
+        for type in self.statsTypes:
+            # ... and add this loop record to the running tally:
+            _allStatsDict[type].addLoopRecord(rec)
+
+        # Now write the results for all types back to the database
+        # in a single transaction:
+        self._setDay(_allStatsDict, rec['dateTime'], writeThrough = False)
+
+        
+    def config(self, stats_types = None):
+        """Initialize the StatsDb database
+        
+        Does nothing if the database has already been initialized.
+
+        stats_types: an iterable collection with the names of the types for
+        which statistics will be gathered [optional. Default is to use all
+        possible types]"""
+        # Check whether the database exists:
+        if os.path.exists(self.statsFilename):
+            syslog.syslog(syslog.LOG_INFO, "stats: statistical database %s already exists." % self.statsFilename)
+        else:
+            # If it doesn't exist, create the parent directories
+            archiveDirectory = os.path.dirname(self.statsFilename)
+            if not os.path.exists(archiveDirectory):
+                syslog.syslog(syslog.LOG_NOTICE, "stats: making archive directory %s." % archiveDirectory)
+                os.makedirs(archiveDirectory)
+            
+        # If it has no schema, initialize it:
+        if not self.statsTypes:
+            # No schema. Need to initialize the stats database.
+            
+            # If nothing has been specified, use the default stats types:
+            if not stats_types:
+                stats_types = default_stats_types
+            
+            # Now create all the necessary tables as one transaction:
+            with sqlite3.connect(self.statsFilename) as _connection:
+            
+                for _stats_type in stats_types:
+                    # Slightly different SQL statement for wind
+                    if _stats_type == 'wind':
+                        _connection.execute(wind_create_str)
+                    else:
+                        _connection.execute(std_create_str % (_stats_type,))
+                _connection.execute(meta_create_str)
+            
+            self.statsTypes = stats_types
+            syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % self.statsFilename)
+
+
+
+    def _setDay(self, dayStatsDict, lastUpdate, writeThrough = True):
+        """Write all statistics for a day to the database in a single transaction.
+        
+        dayStatsDict: A dictionary. Key is the type to be written, value is a
+        StdDayStats or WindDayStats, as appropriate.  Class DayStatsDict
+        satisfies this.
+        
+        lastUpdate: the time of the last update will be set to this. Normally, this
+        is the timestamp of the last archive record added to the instance
+        dayStatsDict."""
+
+        assert(dayStatsDict)
+
+        if self._dayCache:
+            if self._dayCache[0] and self._dayCache[0].startOfDay_ts != dayStatsDict.startOfDay_ts:
+                # Write the old data
+                self.__writeData(self._dayCache[0], self._dayCache[1])
+        
+            self._dayCache = (dayStatsDict, lastUpdate)
+            if writeThrough:
+                self.__writeData(dayStatsDict, lastUpdate)
+        
+        else:
+            self.__writeData(dayStatsDict, lastUpdate)
+        
+        
+    def __writeData(self, dayStatsDict, lastUpdate):
+        
+        assert(dayStatsDict)
+        assert(lastUpdate)
+        
+        _sod = dayStatsDict.startOfDay_ts
+
+        # Using the connection as a context manager means that
+        # in case of an error, all tables will get rolled back.
+        with sqlite3.connect(self.statsFilename) as _connection:
+            for _stats_type in self.statsTypes:
+                
+                # Slightly different SQL statement for wind
+                if _stats_type == 'wind':
+                    _replace_str = wind_replace_str
+                else:
+                    _replace_str = std_replace_str % _stats_type
+                
+                # Get the stats-tuple, then write the results
+                _write_tuple = dayStatsDict[_stats_type].getStatsTuple()
+                assert(_write_tuple[0] == _sod)
+                _connection.execute(_replace_str,_write_tuple)
+            # Update the time of the last stats update:
+            _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
+            
 
 #===============================================================================
 #                          USEFUL FUNCTIONS
@@ -1240,13 +904,13 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
         _rec_time_ts = _rec['dateTime']
         _rec_sod_ts = weeutil.weeutil.startOfArchiveDay(_rec_time_ts)
         # Check whether this is the first day, or we have entered a new day:
-        if _allStats is None or _allStats.dateTime != _rec_sod_ts:
+        if _allStats is None or _allStats.startOfDay_ts != _rec_sod_ts:
                 # If this is not the first day, then write it out:
                 if _allStats:
                     statsDb._setDay(_allStats, _lastTime)
                     ndays += 1
                 # Get the stats for the new day:
-                _allStats = statsDb.day(weeutil.weeutil.daySpan(_rec_sod_ts))
+                _allStats = statsDb.day(_rec_sod_ts)
         
         # Add the stats for this record to the running total for this day:
         for _type in _allStats:
@@ -1280,6 +944,29 @@ if __name__ == '__main__':
     import sys
     import configobj
     import weewx.archive
+    
+    def test2(config_path):
+        weewx.debug = 1
+        try :
+            config_dict = configobj.ConfigObj(config_path, file_error=True)
+        except IOError:
+            print "Unable to open configuration file ", config_path
+            exit()
+            
+        statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
+                                     config_dict['Stats']['stats_file'])
+
+        statsDb = StatsReadonlyDb(statsFilename, 65.0, 65.0)
+
+        timespan = weeutil.weeutil.TimeSpan(1262332800, 1265011200)
+        mt = statsDb.getAggregate(timespan, 'outTemp', 'mintime')
+        print weeutil.weeutil.timestamp_to_string(mt)
+        avg = statsDb.getAggregate(timespan, 'outTemp', 'avg')
+        print avg
+
+        ts = TimespanStats(statsDb, timespan)
+        print ts.outTemp.min, ts.outTemp.mintime
+        
     
     def test(config_path):
         
@@ -1326,11 +1013,10 @@ if __name__ == '__main__':
         # Make sure it's a start of day:
         assert(start_ts == weeutil.weeutil.startOfDay(start_ts))
 
-        # OK, now open up the typeStats database using the class StatsDb:
-        statsDb = StatsDb(statsFilename, 65.0, 65.0)
+        # OK, now open up the typeStats database using the class StatsReadonlyDb:
+        statsDb = StatsReadonlyDb(statsFilename, 65.0, 65.0)
         
-        daySpan = weeutil.weeutil.daySpan(start_ts)
-        allStats = statsDb.day(daySpan)
+        allStats = statsDb.day(start_ts)
 
         # Test it against some types
         # Should really do a test for 'wind' as well.
@@ -1370,4 +1056,5 @@ if __name__ == '__main__':
         print "Usage: stats.py path-to-configuration-file"
         exit()
         
+    test2(sys.argv[1])
     test(sys.argv[1])
