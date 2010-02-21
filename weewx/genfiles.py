@@ -11,20 +11,19 @@
 
 This basically includes NOAA summary reports, and HTML files."""
 
-import time
-import re
 import os.path
-import datetime
+import re
 import syslog
+import time
 
 import Cheetah.Template
 
 import weewx
-import weewx.stats
-import weewx.station
 import weewx.formatter
-import weeutil.weeutil
+import weewx.station
+import weewx.stats
 import weeutil.Almanac
+import weeutil.weeutil
 
 class GenFiles(object):
     """Manages the generation of NOAA and HTML files
@@ -49,9 +48,9 @@ class GenFiles(object):
         # Open up the stats database:
         statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                      config_dict['Stats']['stats_file'])
-        self.statsdb = weewx.stats.StatsDb(statsFilename,
-                                           int(config_dict['Station'].get('heating_base', 65)),
-                                           int(config_dict['Station'].get('cooling_base', 65)))
+        self.statsdb = weewx.stats.StatsReadonlyDb(statsFilename,
+                                                  float(config_dict['Station'].get('heating_base', '65')),
+                                                  float(config_dict['Station'].get('cooling_base', '65')))
     
         
     def initNoaa(self, config_dict):
@@ -272,8 +271,7 @@ class GenFiles(object):
 
         _yr = time.localtime(yearSpan.start)[0]
                 
-        # Get the stats for this year:
-        yearStats = self._get_year(yearSpan, stop_ts)
+        yearStats = weewx.stats.TimespanStats(self.statsdb, yearSpan)
 
         searchList = [{'station'   : self.station,
                        'year_name' : _yr,
@@ -292,7 +290,7 @@ class GenFiles(object):
         monthName = time.strftime("%b", month_start_tt)
 
         # Get the stats for this month from the database:
-        monthStats = self._get_month(monthSpan)
+        monthStats = weewx.stats.TimespanStats(self.statsdb, monthSpan)
         
         searchList = [{'station'      : self.station,
                        'year_name'    : _yr,
@@ -306,22 +304,21 @@ class GenFiles(object):
         Can easily be overridden to add things to the search list.
         """
 
-        t1 = time.time()
+        # Calculate the time ranges for all the desired time spans.
+        daySpan      = weeutil.weeutil.archiveDaySpan(stop_ts)
+        weekSpan     = weeutil.weeutil.archiveWeekSpan(stop_ts, startOfWeek = self.station.week_start)
+        monthSpan    = weeutil.weeutil.archiveMonthSpan(stop_ts)
+        yearSpan     = weeutil.weeutil.archiveYearSpan(stop_ts)
+        rainYearSpan = weeutil.weeutil.archiveRainYearSpan(stop_ts, self.station.rain_year_start)
 
-        _date = datetime.date.fromtimestamp(stop_ts)
-        # Form the dictionary that will hold the statistical summaries:
+        # Assemble the dictionary that will be given to the template engine:
         stats = {}
-        # Go get this year's data, then break it up into month and day
-        weekSpan     = weeutil.weeutil.weekSpan(stop_ts)
-        yearSpan     = weeutil.weeutil.yearSpan(stop_ts)
-        rainYearSpan = weeutil.weeutil.rainYearSpan(stop_ts, self.station.rain_year_start)
-
-        stats['year']     = self._get_year(yearSpan, stop_ts)
-        stats['month']    = stats['year'].months[_date.month-1]
-        stats['day']      = stats['month'].days[_date.day-1]
-        stats['week']     = self.statsdb.week(weekSpan)
-        stats['rainyear'] = self.statsdb.year(rainYearSpan)
         stats['current']  = currentRec
+        stats['day']      = weewx.stats.TimespanStats(self.statsdb, daySpan)
+        stats['week']     = weewx.stats.TimespanStats(self.statsdb, weekSpan)
+        stats['month']    = weewx.stats.TimespanStats(self.statsdb, monthSpan)
+        stats['year']     = weewx.stats.TimespanStats(self.statsdb, yearSpan)
+        stats['rainyear'] = weewx.stats.TimespanStats(self.statsdb, rainYearSpan)
 
         # Get a view into the statistical information.
         statsView = weewx.formatter.ModelView(stats, self.formatter)
@@ -334,42 +331,6 @@ class GenFiles(object):
                        'NOAA_month_list' : NOAA_month_list,
                        'NOAA_year_list'  : NOAA_year_list},
                        statsView]
-        elapsed_time = time.time() - t1
-        syslog.syslog(syslog.LOG_DEBUG, "genhtml: assembled searchList for HTML generation in %.2f seconds" % (elapsed_time,))
 
         return searchList
     
-    def _get_year(self, yearSpan, stop_ts):
-        """Returns statistical data for a year, possibly from a cache.
-        
-        Returns from the cache if available, otherwise from the 
-        stats database.
-        
-        It only puts the 'stop' year in the database, so as to avoid
-        memory bloat (it's the one that gets used over and over).
-        """
-        yearStats = self.cache.get(yearSpan)
-        if not yearStats:
-            yearStats = self.statsdb.year(yearSpan)
-            if yearSpan.includesArchiveTime(stop_ts):
-                self.cache[yearSpan] = yearStats
-        return yearStats
-
-    def _get_month(self, monthSpan):
-        """Returns statistical data for a month, possibly from a cache.
-        
-        Returns from the cache if available, otherwise from the 
-        stats database."""
-        
-        # Search for the containing year:
-        yearSpan = weeutil.weeutil.yearSpan(monthSpan.start)
-        yearStats = self.cache.get(yearSpan)
-        if yearStats:
-            # The containing year was found. Extract the month.
-            _date = datetime.date.fromtimestamp(monthSpan.start)
-            return yearStats.months[_date.month-1]
-
-        # Cache miss. Get the data from the stats database. Don't store
-        # it, because it's unlikely that the month will be requested
-        # again w/o the year also being requested.
-        return self.statsdb.month(monthSpan)

@@ -196,13 +196,6 @@ class StdDayStats(object):
         # A LOOP record is used only for Hi/Low data for standard stats.
         self.addToHiLow(rec)
 
-    def get_avg(self):
-        """Calculate average"""
-        return self.sum / self.count if self.count else None
-    
-    # This will make avg available as an attribute:
-    avg = property(get_avg)
-
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the
         gathered statistics.  The results are in the same order as the
@@ -303,6 +296,10 @@ class WindDayStats(StdDayStats):
         if speed is not None:
             self.sum   += speed
             self.count += 1
+            # Note that there is no separate 'count' for theta. We use the
+            # 'count' for sum. This means if there are
+            # a significant number of bad theta's (equal to None), then vecavg
+            # could be off slightly.  
             if theta is not None :
                 self.xsum      += speed * math.cos(math.radians(90.0 - theta))
                 self.ysum      += speed * math.sin(math.radians(90.0 - theta))
@@ -322,21 +319,6 @@ class WindDayStats(StdDayStats):
         Same as the version for StdDayStats, except it also updates the RMS data"""
         self.addToHiLow(rec)
         self.addToRms(rec)
-
-    def get_rms(self):
-        return math.sqrt(self.squaresum / self.squarecount) if self.squarecount else None
-    def get_vecavg(self):
-        return math.sqrt((self.xsum**2 + self.ysum**2) / self.count**2) if self.count else None
-    def get_vecdir(self):
-        if self.xsum == 0.0 and self.ysum == 0.0:
-            return None
-        deg = 90.0 - math.degrees(math.atan2(self.ysum, self.xsum))
-        return deg if deg > 0 else deg + 360.0
-    
-    # This will make rms, vecavg, and vecdir available as attributes:
-    rms    = property(get_rms)
-    vecavg = property(get_vecavg)
-    vecdir = property(get_vecdir)
 
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics.
@@ -422,31 +404,95 @@ class DayStatsDict(dict):
 #===============================================================================
 
 class TimespanStats(object):
-    """Nearly stateless class that holds a variable to a stats database and a timespan."""
+    """Nearly stateless class that holds a binding to a stats database and a timespan.
+
+         This class allows syntax such as the following:
+         
+            statsdb = StatsDb('somestatsfile.sdb')
+            # This timespan runs from 2007-01-01 to 2008-01-01 (one year):
+            yearSpan = weeutil.Timespan(1167638400, 1199174400)
+            yearStats = TimespanStats(statsdb, yearSpan)
+            
+            # Print max temperature for the year:
+            print yearStats.outTemp.max
+            
+            # You can also iterate by day, month, or year:
+            for monthStats in yearStats.months:
+                # Print maximum temperature for each month in the year:
+                print monthStats.outTemp.max
+                
+            for dayStats in yearStats.days:
+                # Print max temperature for each day of the year:
+                print dayStats.outTemp.max
+    """
 
     def __init__(self, statsDb, timespan):
         
         self.statsDb  = statsDb
         self.timespan = timespan
         
-    def __getattr__(self, statsType):
-        return StatsTypeHelper(self, statsType)
+    def __getattr__(self, attrib):
+        """Return a helper object for the given type.
         
-
+        If the attribute is 'days', 'months', or 'years', 
+        returns an appropriate iterator function.
+        
+        If it is 'dateTime', return the start of the timespan.
+        
+        Otherwise, assume it is a type, such as 'barometer', or 'outTemp' and
+        return the helper class StatsTypeHelper to bind to the type
+        """
+        # Sometimes you have to shake your head at how elegant Python can be!
+        if attrib == 'days' :
+            return _seqGenerator(self.statsDb, self.timespan, weeutil.weeutil.genDaySpans)
+        elif attrib == 'months' :
+            return _seqGenerator(self.statsDb, self.timespan, weeutil.weeutil.genMonthSpans)
+        elif attrib == 'years' :
+            return _seqGenerator(self.statsDb, self.timespan, weeutil.weeutil.genYearSpans)
+        # This one is here for historical reasons:
+        elif attrib == 'dateTime' :
+            return self.timespan.start
+        else:
+            # The attribute is probably a type such as 'barometer', or 'heatdeg'
+            # Return the helper class, bound to the type:
+            return StatsTypeHelper(self, attrib)
+        
+def _seqGenerator(statsDb, timespan, genSpanFunc):
+    """Generator function that returns TimespanStats for the appropriate timespans"""
+    for span in genSpanFunc(timespan.start, timespan.stop):
+        yield TimespanStats(statsDb, span)
+        
 #===============================================================================
-#                    Class StatsAggregate
+#                    Class StatsTypeHelper
 #===============================================================================
 
 class StatsTypeHelper(object):
     """Nearly stateless helper class that holds the type over which aggregation is to be done."""
     
-    def __init__(self, statsHelper, statsType):
+    def __init__(self, timespanStats, statsType):
         
-        self.statsHelper = statsHelper
-        self.statsType   = statsType
-        
+        self.timespanStats = timespanStats
+        self.statsType     = statsType
+    
+    def max_ge(self, val):
+        res = self.timespanStats.statsDb.getAggregate(self.timespanStats.timespan, self.statsType, 'max_ge', val)
+        return res
+    
+    def max_le(self, val):
+        res = self.timespanStats.statsDb.getAggregate(self.timespanStats.timespan, self.statsType, 'max_le', val)
+        return res
+    
+    def min_le(self, val):
+        res = self.timespanStats.statsDb.getAggregate(self.timespanStats.timespan, self.statsType, 'min_le', val)
+        return res
+    
+    def sum_ge(self, val):
+        res = self.timespanStats.statsDb.getAggregate(self.timespanStats.timespan, self.statsType, 'sum_ge', val)
+        return res
+    
     def __getattr__(self, aggregateType):
-        res = self.statsHelper.statsDb.getAggregate(self.statsHelper.timespan, self.statsType, aggregateType)
+        """Attribute is an aggregation type, such as 'sum', 'max', etc."""
+        res = self.timespanStats.statsDb.getAggregate(self.timespanStats.timespan, self.statsType, aggregateType)
         return res
     
     
@@ -458,8 +504,7 @@ class StatsReadonlyDb(object):
     """Manage reading from the sqlite3 statistical database. 
     
     This class acts as a wrapper around the stats database, with a set
-    of methods for retrieving records from the
-    statistical compilation. 
+    of methods for retrieving records from the statistical compilation. 
 
     After initialization, the attribute self.statsTypes will contain a list
     of the types for which statistics are being gathered, or None if
@@ -496,7 +541,7 @@ class StatsReadonlyDb(object):
     statsFilename: The path to the stats database
     
     statsTypes: The types of the statistics supported by this instance of
-    StatsDb. None if the database has not been initialized.
+    StatsReadonlyDb. None if the database has not been initialized.
     
     heatbase:The base temperature for calculating heating degree-days.
 
@@ -507,10 +552,9 @@ class StatsReadonlyDb(object):
     # tuple where the first member is an instance of DayStatsDict, and
     # the second member is lastUpdate. If caching is not being used, then
     # self._dayCache equals None.
-    #
         
     def __init__(self, statsFilename, heatbase = None, coolbase = None, cacheDayData = True):
-        """Create an instance of StatsDb to manage a database.
+        """Create an instance of StatsReadonlyDb to manage a database.
         
         statsFilename: Path to the stats database file.
         
@@ -526,13 +570,14 @@ class StatsReadonlyDb(object):
         self.statsTypes    = StatsDb.__getTypes(statsFilename)
         self.heatbase      = heatbase
         self.coolbase      = coolbase
+        self._connection   = None
 
         if cacheDayData:
             self._dayCache  = (None, None)
         else:
             self._dayCache  = None
 
-    def getTypeStats(self, type, sod_ts, cursor = None):
+    def getTypeStats(self, type, sod_ts):
         """Get the statistics for a specific type for a specific day.
 
         type: The type of data to retrieve ('outTemp', 'barometer', 'wind',
@@ -540,52 +585,35 @@ class StatsReadonlyDb(object):
 
         sod_ts: The timestamp of the start-of-day for the desired day.
 
-        cursor: A database cursor to be used for the
-        retrieval. [Optional. If not given, one will be created and
-        destroyed for this query.]
-
         returns: an instance of WindDayStats for type 'wind',
         otherwise an instance of StdDayStats, initialized with the
         data from the database. If the record doesn't exist in the
         database, the returned instance will be set to 'default'
         values (generally, min==None, count=0, etc.)"""
         
-        if type in ('heatdeg', 'cooldeg'):
-            return self.__toHeatCool(type, self.getTypeStats('outTemp', sod_ts, cursor))
+        _connection = self._getConnection()
+        _cursor = _connection.cursor()
 
-        if cursor:
-            _cursor = cursor
-        else:
-            _connection = sqlite3.connect(self.statsFilename)
-            _cursor = _connection.cursor()
+        # Form a SQL select statement for the appropriate type
+        _sql_str = "SELECT * FROM %s WHERE dateTime = ?" % type
+        # Peform the select, against the desired timestamp
+        _cursor.execute(_sql_str, (sod_ts,))
+        # Get the result
+        _row = _cursor.fetchone()
 
-        try:
-            # Form a SQL select statement for the appropriate type
-            _sql_str = "SELECT * FROM %s WHERE dateTime = ?" % type
-            # Peform the select, against the desired timestamp
-            _cursor.execute(_sql_str, (sod_ts,))
-            # Get the result
-            _row = _cursor.fetchone()
-    
-            if weewx.debug:
-                if _row:
-                    if type =='wind': assert(len(_row) == 12)
-                    else: assert(len(_row) == 7)
-    
-            # The date may not exist in the database, in which case _row will
-            # be 'None', causing either StdDayStats or WindDayStats
-            # to initialize to default values.
-            _dayStats = StdDayStats(type, sod_ts, _row) if type != 'wind' else WindDayStats(type, sod_ts, _row)
+        if weewx.debug:
+            if _row:
+                if type =='wind': assert(len(_row) == 12)
+                else: assert(len(_row) == 7)
 
-        finally:
+        # The date may not exist in the database, in which case _row will
+        # be 'None', causing either StdDayStats or WindDayStats
+        # to initialize to default values.
+        _dayStats = StdDayStats(type, sod_ts, _row) if type != 'wind' else WindDayStats(type, sod_ts, _row)
 
-            if not cursor:
-                _cursor.close()
-                _connection.close()
-        
         return _dayStats
 
-    def day(self, startOfDay_ts, cursor = None):
+    def day(self, startOfDay_ts):
         """Return an instance of DayStatsDict initialized to a given day's statistics.
 
         startOfDay_ts: The timestamp of the start-of-day of the desired day.
@@ -596,65 +624,131 @@ class StatsReadonlyDb(object):
         if self._dayCache and self._dayCache[0] and self._dayCache[0].startOfDay_ts == startOfDay_ts:
             return self._dayCache[0]
 
-        if cursor:
-            _cursor = cursor
-        else:
-            _connection = sqlite3.connect(self.statsFilename)
-            _cursor = _connection.cursor()
+        _allStats = DayStatsDict(self.statsTypes, startOfDay_ts)
         
-        try:
-
-            _allStats = DayStatsDict(self.statsTypes, startOfDay_ts)
-            
-            for type in self.statsTypes:
-                _allStats[type] = self.getTypeStats(type, startOfDay_ts, _cursor)
-        finally:
-            if not cursor:
-                _cursor.close()
-                _connection.close()
+        for type in self.statsTypes:
+            _allStats[type] = self.getTypeStats(type, startOfDay_ts)
         
         if self._dayCache:
             self._dayCache = (_allStats, None)
 
         return _allStats
 
-    def getAggregate(self, timespan, statsType, aggregateType):
+    # Set of SQL statements to be used for calculating aggregate statistics. Key is the aggregation type,
+    # value is the SQL statement to be used.
+    sqlDict = {'min'        : "SELECT MIN(min) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'max'        : "SELECT MAX(max) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'meanmin'    : "SELECT AVG(min) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'meanmax'    : "SELECT AVG(max) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'maxsum'     : "SELECT MAX(sum) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'mintime'    : "SELECT mintime FROM %(statsType)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "min = (SELECT MIN(min) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+               'maxtime'    : "SELECT maxtime FROM %(statsType)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "max = (SELECT MAX(max) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+               'maxsumtime' : "SELECT maxtime FROM %(statsType)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "sum = (SELECT MAX(sum) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+               'gustdir'    : "SELECT gustdir FROM %(statsType)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "max = (SELECT MAX(max) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
+               'sum'        : "SELECT SUM(sum) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'count'      : "SELECT SUM(count) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'avg'        : "SELECT SUM(sum),SUM(count) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'rms'        : "SELECT SUM(squaresum),SUM(squarecount) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(count)  FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'max_ge'     : "SELECT SUM(max >= %(val)s) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'max_le'     : "SELECT SUM(max <= %(val)s) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'min_le'     : "SELECT SUM(min <= %(val)s) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
+
+    def getAggregate(self, timespan, statsType, aggregateType, val = None):
+        """Returns an aggregation over a type for a given time period.
         
-        if aggregateType in ('min', 'max'):
-            sqlStmt = "SELECT %s(%s) FROM %s WHERE dateTime >= ? AND dateTime < ?" % (aggregateType, aggregateType, statsType)
-
-            with sqlite3.connect(self.statsFilename) as _connection:
-                _cursor = _connection.execute(sqlStmt, (timespan.start, timespan.stop))
-                _row = _cursor.fetchone()
-            return _row[0] if _row else None
+        timespan: An instance of weeutil.Timespan with the time period over which
+        aggregation is to be done.
         
-        elif aggregateType in ('mintime', 'maxtime'):
-            aggregate = aggregateType[0:3]
-            sqlStmt = "SELECT %s FROM %s WHERE dateTime >= ? AND dateTime < ? AND " \
-                        "%s = (SELECT %s(%s) FROM %s WHERE dateTime >= ? AND dateTime < ?)" % (aggregateType, statsType, aggregate, aggregate, aggregate, statsType)
-            with sqlite3.connect(self.statsFilename) as _connection:
-                _cursor = _connection.execute(sqlStmt, (timespan.start, timespan.stop, timespan.start, timespan.stop))
-                _row = _cursor.fetchone()
-            return int(_row[0]) if _row else None
+        statsType: The type over which aggregation is to be done (e.g., 'barometer',
+        'outTemp', or 'heatdeg')
+        
+        aggregateType: The type of aggregation to be done. The keys in the dictionary
+        sqlDict above are the possible aggregation types. 
+        
+        val: Some aggregations require a value. Specify it here.
+        
+        returns: The aggregation value, or None if not enough data was available to calculate
+        it, or if the aggregation type is unknown.
+        """
+        # Special function for heating and cooling degrees:
+        if statsType in ('heatdeg', 'cooldeg'):
+            return self.getHeatCool(timespan, statsType, aggregateType)
+        
+        # This dictionary is used for interpolating the SQL statement.
+        interDict = {'start'         : timespan.start,
+                     'stop'          : timespan.stop,
+                     'statsType'     : statsType,
+                     'aggregateType' : aggregateType,
+                     'val'           : val}
+        
+        # Run the query against the database:
+        _row = self._xeqSql(StatsReadonlyDb.sqlDict[aggregateType], interDict)
 
-        elif aggregateType in ('sum', 'count'):
-            sqlStmt = "SELECT sum(%s) FROM %s WHERE dateTime >= ? and dateTime < ?" % (aggregateType, statsType)
-            
-            with sqlite3.connect(self.statsFilename) as _connection:
-                _cursor = _connection.execute(sqlStmt, (timespan.start, timespan.stop))
-                _row = _cursor.fetchone()
-            return _row[0] if _row else None
+        # Return None if no row was returned, or if it contains any nulls
+        if not _row or None in _row: return None
+        
+        #=======================================================================
+        # Each aggregation type requires a slightly different calculation.
+        #=======================================================================
+        
+        if aggregateType in ('min', 'max', 'meanmin', 'meanmax', 'maxsum','sum'):
+            return _row[0]
+        
+        elif aggregateType in ('mintime', 'maxtime', 'maxsumtime', 'gustdir',
+                               'count', 'max_ge', 'max_le', 'min_le', 'sum_ge'):
+            return int(_row[0])
 
-        elif aggregateType in ('avg'):
-            sqlStmt = "SELECT sum(sum),sum(count) FROM %s WHERE dateTime >= ? and dateTime < ?" % statsType
-            
-            with sqlite3.connect(self.statsFilename) as _connection:
-                _cursor = _connection.execute(sqlStmt, (timespan.start, timespan.stop))
-                _row = _cursor.fetchone()
-            if _row:
-                return _row[0]/_row[1] if _row[1] else None
+        elif aggregateType in ('avg',):
+            return _row[0]/_row[1] if _row[1] else None
+
+        elif aggregateType in ('rms', ):
+            return math.sqrt(_row[0]/_row[1]) if _row[1] else None
+        
+        elif aggregateType in ('vecavg', ):
+            return math.sqrt((_row[0]**2 + _row[1]**2) / _row[2]**2) if _row[2] else None
+        
+        elif aggregateType in ('vecdir',):
+            if _row[0:2] == (0.0, 0.0):
+                return None
+            deg = 90.0 - math.degrees(math.atan2(_row[1], _row[0]))
+            return deg if deg > 0 else deg + 360.0
+        else:
+            # Unknown aggregation. Return None
             return None
         
+    def getHeatCool(self, timespan, statsType, aggregateType):
+        """Calculate heating or cooling degree days for a given timespan."""
+        
+        # The requested type must be heatdeg or cooldeg
+        if weewx.debug:
+            assert(statsType in ('heatdeg', 'cooldeg'))
+
+        # Only summation (total) or average heating or cooling degree days is supported:
+        if aggregateType not in ('sum', 'avg'):
+            return None
+        
+        sum = 0.0
+        count = 0
+        for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
+            Tavg = self.getAggregate(daySpan, 'outTemp', 'avg')
+            if Tavg is not None:
+                if statsType == 'heatdeg':
+                    sum += weewx.wxformulas.heating_degrees(Tavg, self.heatbase)
+                else:
+                    sum += weewx.wxformulas.cooling_degrees(Tavg, self.coolbase)
+                count += 1
+
+        if aggregateType == 'sum': return sum
+        
+        return sum / count if count else None 
+
     def _getFirstUpdate(self):
         """Returns the time of the first entry in the statistical database."""
         #=======================================================================
@@ -662,45 +756,44 @@ class StatsReadonlyDb(object):
         # for the barometer, which may or may not be the earliest entry in
         # the stats database.
         #=======================================================================
-        with sqlite3.connect(self.statsFilename) as _connection:
-            _cursor = _connection.execute("""SELECT min(dateTime) FROM barometer;""")
-            _row = _cursor.fetchone()
+        _row = self._xeqSql("SELECT min(dateTime) FROM barometer", {})
         return int(_row[0]) if _row else None
 
     def _getLastUpdate(self):
         """Returns the time of the last update to the statistical database."""
 
-        with sqlite3.connect(self.statsFilename) as _connection:
-            _cursor = _connection.execute("""SELECT value FROM metadata WHERE name = 'lastUpdate';""")
-            _row = _cursor.fetchone()
+        _row = self._xeqSql("""SELECT value FROM metadata WHERE name = 'lastUpdate';""", {})
         return int(_row[0]) if _row else None
 
-    def __toHeatCool(self, type, outTempStats):
-        """Calculates heating or cooling degree-day statistics from temperature
+    def _xeqSql(self, rawsqlStmt, interDict):
+        """Execute an arbitrary SQL statement, using an interpolation dictionary.
         
-        type: Either 'heatdeg' or 'cooldeg'
+        Returns only the first row of a result set.
         
-        outTempStats: An instance of StdDayStats for type 'outTemp'
+        rawsqlStmt: A SQL statement with (possible) mapping keys.
         
-        returns: If attribute outTempStats.avg is not None, returns an instance of
-        StdDayStats where min, max, and sum are set to the heating or cooling
-        degree-day value. Otherwise, returns a default instance.
+        interDict: The interpolation dictionary to be used on the mapping keys.
+        
+        returns: The first row from the result set.
         """
-        assert(type in ('heatdeg', 'cooldeg'))
-        assert(outTempStats.type == 'outTemp')
-        _avgtemp = outTempStats.avg
-        _sod_ts  = outTempStats.dateTime
-        if _avgtemp is not None:
-            if type == 'heatdeg':
-                _degs = weewx.wxformulas.heating_degrees(_avgtemp, self.heatbase)
-            else:
-                _degs = weewx.wxformulas.cooling_degrees(_avgtemp, self.coolbase)
-            _dayStat = StdDayStats(type, _sod_ts, (_sod_ts, _degs, _sod_ts, _degs, _sod_ts,
-                                                   _degs, 1))
-        else:
-            _dayStat = StdDayStats(type, _sod_ts)
-        return _dayStat
         
+        # Do the string interpolation:
+        sqlStmt = rawsqlStmt % interDict
+        # Get a _connection
+        _connection = self._getConnection()
+        # Execute the statement:
+        _cursor = _connection.execute(sqlStmt)
+        # Fetch the first row and return it.
+        _row = _cursor.fetchone()
+        return _row 
+        
+    def _getConnection(self):
+        """Return a sqlite _connection"""
+        if not self._connection:
+            self._connection = sqlite3.connect(self.statsFilename)
+            
+        return self._connection
+    
     @staticmethod
     def __getTypes(statsFilename):
         """Static method which returns the types appearing in a stats database.
@@ -712,20 +805,18 @@ class StatsReadonlyDb(object):
         if not os.path.exists(statsFilename):
             return None
         
-        _connection = sqlite3.connect(statsFilename)
-        _cursor = _connection.cursor()
-        try:
-            _cursor.execute('''SELECT name FROM sqlite_master WHERE type = 'table';''')
+        with sqlite3.connect(statsFilename) as _connection:
+            _cursor = _connection.execute('''SELECT name FROM sqlite_master WHERE type = 'table';''')
             
-            stats_types = [str(_row[0]) for _row in _cursor if _row[0] != u'metadata']
-            if len(stats_types) == 0 :
-                stats_types = None
+        stats_types = [str(_row[0]) for _row in _cursor if _row[0] != u'metadata']
+        if len(stats_types) == 0 :
+            return None
 
-        finally:
-            _cursor.close()
-            _connection.close()
+        # Some stats database have schemas for heatdeg and cooldeg (even though they are not
+        # used) due to an earlier bug. Filter them out.
+        results = filter(lambda x : x not in ('heatdeg', 'cooldeg'), stats_types)
 
-        return stats_types
+        return results
 
 #===============================================================================
 #                    Class StatsDb
@@ -795,6 +886,9 @@ class StatsDb(StatsReadonlyDb):
             if not stats_types:
                 stats_types = default_stats_types
             
+            # Heating and cooling degrees are not actually stored in the database:
+            stats_types = filter(lambda x : x not in ('heatdeg', 'cooldeg'), stats_types)
+
             # Now create all the necessary tables as one transaction:
             with sqlite3.connect(self.statsFilename) as _connection:
             
@@ -844,7 +938,7 @@ class StatsDb(StatsReadonlyDb):
         
         _sod = dayStatsDict.startOfDay_ts
 
-        # Using the connection as a context manager means that
+        # Using the _connection as a context manager means that
         # in case of an error, all tables will get rolled back.
         with sqlite3.connect(self.statsFilename) as _connection:
             for _stats_type in self.statsTypes:
@@ -958,15 +1052,17 @@ if __name__ == '__main__':
 
         statsDb = StatsReadonlyDb(statsFilename, 65.0, 65.0)
 
-        timespan = weeutil.weeutil.TimeSpan(1262332800, 1265011200)
+        timespan = weeutil.weeutil.TimeSpan(time.mktime((2009, 12, 1, 0, 0, 0, 0, 0, -1)),
+                                            time.mktime((2010,  1, 1, 0, 0, 0, 0, 0, -1)))
         mt = statsDb.getAggregate(timespan, 'outTemp', 'mintime')
         print weeutil.weeutil.timestamp_to_string(mt)
         avg = statsDb.getAggregate(timespan, 'outTemp', 'avg')
         print avg
 
         ts = TimespanStats(statsDb, timespan)
-        print ts.outTemp.min, ts.outTemp.mintime
-        
+        print ts.outTemp.min, weeutil.weeutil.timestamp_to_string(ts.outTemp.mintime)
+        for day in ts.days:
+            print weeutil.weeutil.timestamp_to_string(day.timespan.start), day.outTemp.min, day.outTemp.max
     
     def test(config_path):
         

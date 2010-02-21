@@ -1,6 +1,17 @@
 CHANGE HISTORY
 --------------------------------
 
+1.4.0   02/21/10
+
+Changed the architecture of stats.py to one that uses very late binding. The
+SQL statements are not run until template evaluation. This greatly reduces
+the amount of memory required, as well as greatly simplifying the code.
+
+Added option week_start. Default is 6 (Sunday).
+
+Fixed reporting bug when the reporting time falls on a calendar month or
+year boundary.
+
 1.3.4   02/08/10
 
 Fixed problem when plotting data where all data points are bad (None).
