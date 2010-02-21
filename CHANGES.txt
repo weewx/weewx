@@ -4,8 +4,10 @@ CHANGE HISTORY
 1.4.0   02/21/10
 
 Changed the architecture of stats.py to one that uses very late binding. The
-SQL statements are not run until template evaluation. This greatly reduces
-the amount of memory required, as well as greatly simplifying the code.
+SQL statements are not run until template evaluation. This reduces
+the amount of memory required (by about 10MB), reduces memory fragmentation, 
+as well as greatly simplifying the code (file stats.py shed 100 lines of code).
+Execution time is approximately the same.
 
 Added option week_start. Default is 6 (Sunday).
 

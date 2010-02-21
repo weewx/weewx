@@ -114,6 +114,9 @@ td {
 .bold_n_blue {
 	color: #0000FF;
 }
+.style1 {
+	background-color: #FFFFCC;
+}
 </style>
 </head>
 
@@ -998,6 +1001,25 @@ format is from <span class="code"><a href="#HTML_Time">[HTML][[Time]]</a></span>
 	except for &#39;<span class="code">current</span>&#39;. The table below shows what aggregation 
 	types are available for which types. </li>
 </ol>
+<p>In addition, if the first part of the dot code represents a time period 
+longer than a day (e.g., a week, month, year, or rainyear), then it can be 
+iterated over. This example uses a Cheetah &#39;for&#39; loop to iterate over all months 
+in a year, printing out each month&#39;s min and max temperature.</p>
+<p class="tty">&lt;html&gt;</p>
+<p class="tty">&nbsp; &lt;head&gt;</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; &lt;title&gt;Year stats by month&lt;/title&gt;</p>
+<p class="tty">&nbsp; &lt;/head&gt;</p>
+<p class="tty">&nbsp; &lt;body&gt;</p>
+<p class="tty">&nbsp; &lt;p&gt;Min, m<span class="style1">ax t</span>emperatures 
+by month:&lt;/p&gt;</p>
+<p class="tty">&nbsp; # for $month in $year.months</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; $month.outTemp.min $month.outTemp.max</p>
+<p class="tty">&nbsp; # end for&nbsp;</p>
+<p class="tty">&nbsp; &lt;/body&gt;</p>
+<p class="tty">&lt;/html&gt;</p>
+<p>See the NOAA template files <span class="code">NOAA_month.tmpl</span> and
+<span class="code">NOAA_year.tmpl</span> for examples using iteration, as well 
+as explicit formatting.</p>
 <h2>9.1 Types</h2>
 <p>The following types are available to be used in your template (assuming your 
 station supports them and you have specified that it be stored in your stats database. 
@@ -1142,7 +1164,7 @@ configuration file).</p>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
-		<td>&nbsp;</td>
+		<td>X</td>
 		<td>X</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
@@ -1154,7 +1176,7 @@ configuration file).</p>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
-		<td>&nbsp;</td>
+		<td>X</td>
 		<td>X</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>

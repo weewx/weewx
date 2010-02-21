@@ -312,7 +312,6 @@ def archiveWeekSpan(time_ts, startOfWeek = 6, grace = 30):
     start at midnight of the day considered the start of the week, and be
     one week long.
     """
-    print "start of week = ", startOfWeek
     time_ts -= grace
     _day_date = datetime.date.fromtimestamp(time_ts)
     _day_of_week = _day_date.weekday()
@@ -493,16 +492,6 @@ def startOfArchiveDay(time_ts, grace = 30):
     
     """
     return startOfDay(time_ts - grace)
-#    _time_dt = datetime.datetime.fromtimestamp(time_ts)
-#    if (_time_dt.hour, _time_dt.minute, _time_dt.second) == (0, 0, 0):
-#        _time_dt -= datetime.timedelta(days=1)
-#    _time_tt = _time_dt.timetuple()
-#    _bod_ts = time.mktime((_time_tt.tm_year,
-#                            _time_tt.tm_mon,
-#                            _time_tt.tm_mday,
-#                            0, 0, 0, 0, 0, -1))
-#    return int(_bod_ts)
-
     
 def secs_to_string(secs):
     """
