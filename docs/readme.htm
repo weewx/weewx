@@ -114,13 +114,16 @@ td {
 .bold_n_blue {
 	color: #0000FF;
 }
+.style1 {
+	background-color: #FFFFCC;
+}
 </style>
 </head>
 
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.3</h1>
+Version 1.4</h1>
 <h1>Table of Contents</h1>
 <ol>
 	<li>
@@ -539,6 +542,9 @@ year starts in October (as mine does). Default is 1.</p>
 <h4 class="config_important">radar_url</h4>
 <p>This variable is available in the HTML templates. Set it to an appropriate URL 
 to display a radar image for your area. No default.</p>
+<h4 class="config_option">week_start</h4>
+<p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 
+(Sunday)</p>
 <h4 class="config_option">heating_base<br />
 cooling_base</h4>
 <p>Set to the base temperature for calculating heating and cooling degree-days, 
@@ -870,6 +876,13 @@ could take a minute or two. I&#39;ve found this process particularly slow on SuS
 some reason.</p>
 <p><span class="code">Weewx</span> will then start monitoring LOOP data, printing 
 a short version of the received data on standard output, about once every two seconds.</p>
+<p>You can tell a running instance of <span class="code">weewx</span> to reread 
+its configuration file by sending it the <span class="code">HUP</span> signal. 
+First run <span class="code">ps</span> to find out the Process ID (PID) number 
+of the instance, then send it the <span class="code">HUP</span> signal:</p>
+<p class="tty">ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note the 
+PID of the weewxd.py process</p>
+<p class="tty">kill -HUP <em>pid</em> # Send it a HUP signal</p>
 <h2>7.2 <a name="Running_as_a_daemon">Running as a daemon</a></h2>
 <p>For unattended operations it is best to have <span class="code">weewx</span> 
 run as a daemon, started automatically when the server is rebooted. Start by selecting the appropriate run script. They can be found under
@@ -932,8 +945,11 @@ run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run level
 with Debian (Ubuntu) systems is <a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. 
 It uses a curses interface to allow you to change easily which run level any of 
 your daemons runs at. There is a similar tool on SuSE. From the start menu run the 
-YAST Control Center, then look for Systesm Services (Runlevel). Pick &quot;Expert&quot; mode 
+YAST Control Center, then look for Systems Services (Runlevel). Pick &quot;Expert&quot; mode 
 to see the run levels.</p>
+<p>You can also tell <span class="code">weewx</span> to reread its configuration 
+file without stopping by using the &#39;reload&#39; option:</p>
+<p class="tty">/etc/init.d/weewx reload</p>
 <h1>8. <a name="Compatibility_with_wview">Compatibility with <span class="code">
 wview</span></a></h1>
 <p>The sqlite3 archive database used by <span class="code">weewx</span> (nominally,
@@ -995,6 +1011,25 @@ format is from <span class="code"><a href="#HTML_Time">[HTML][[Time]]</a></span>
 	except for &#39;<span class="code">current</span>&#39;. The table below shows what aggregation 
 	types are available for which types. </li>
 </ol>
+<p>In addition, if the first part of the dot code represents a time period 
+longer than a day (e.g., a week, month, year, or rainyear), then it can be 
+iterated over. This example uses a Cheetah &#39;for&#39; loop to iterate over all months 
+in a year, printing out each month&#39;s min and max temperature.</p>
+<p class="tty">&lt;html&gt;</p>
+<p class="tty">&nbsp; &lt;head&gt;</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; &lt;title&gt;Year stats by month&lt;/title&gt;</p>
+<p class="tty">&nbsp; &lt;/head&gt;</p>
+<p class="tty">&nbsp; &lt;body&gt;</p>
+<p class="tty">&nbsp; &lt;p&gt;Min, m<span class="style1">ax t</span>emperatures 
+by month:&lt;/p&gt;</p>
+<p class="tty">&nbsp; # for $month in $year.months</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; $month.outTemp.min $month.outTemp.max</p>
+<p class="tty">&nbsp; # end for&nbsp;</p>
+<p class="tty">&nbsp; &lt;/body&gt;</p>
+<p class="tty">&lt;/html&gt;</p>
+<p>See the NOAA template files <span class="code">NOAA_month.tmpl</span> and
+<span class="code">NOAA_year.tmpl</span> for examples using iteration, as well 
+as explicit formatting.</p>
 <h2>9.1 Types</h2>
 <p>The following types are available to be used in your template (assuming your 
 station supports them and you have specified that it be stored in your stats database. 
@@ -1139,7 +1174,7 @@ configuration file).</p>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
-		<td>&nbsp;</td>
+		<td>X</td>
 		<td>X</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
@@ -1151,7 +1186,7 @@ configuration file).</p>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
-		<td>&nbsp;</td>
+		<td>X</td>
 		<td>X</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>

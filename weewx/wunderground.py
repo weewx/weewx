@@ -30,7 +30,8 @@ class WunderStation(object):
         self.station  = station
         self.password = password
 
-    def extractRecordFrom(self, archive, time_ts):
+    @staticmethod
+    def extractRecordFrom(archive, time_ts):
         """Get a record from the archive database.
         
         archive: An instance of weewx.archive.Archive
@@ -158,8 +159,12 @@ class WunderThread(threading.Thread):
             # This will block until something appears in the queue:
             time_ts = self.queue.get()
             
+            # A 'None' value appearing in the queue is our signal to exit
+            if time_ts is None:
+                return
+            
             # Go get the data from the archive for the requested time:
-            record = self.WUstation.extractRecordFrom(self.archive, time_ts)
+            record = WunderStation.extractRecordFrom(self.archive, time_ts)
             
             # This string is just used for logging:
             time_str = weeutil.weeutil.timestamp_to_string(record['dateTime'])

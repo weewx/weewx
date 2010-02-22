@@ -52,8 +52,11 @@ class StdReportEngine(threading.Thread):
         Runs through the list of report classes, instantiating each one,
         then calling its "start()" method."""
         
-        syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for time %s" % 
-                      weeutil.weeutil.timestamp_to_string(self.gen_ts))
+        if self.gen_ts:
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for time %s" % 
+                          weeutil.weeutil.timestamp_to_string(self.gen_ts))
+        else:
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for latest time in the database.")
         
         # Put the whole thing in a try block so we can log any exceptions that
         # might bubble up

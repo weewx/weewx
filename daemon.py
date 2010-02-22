@@ -28,6 +28,8 @@
 import sys, os, time
 from signal import SIGTERM
 
+done = False
+
 def daemonize(stdout='/dev/null', stderr=None, stdin='/dev/null',
               pidfile=None, startmsg = 'started with pid %s' ):
     '''
@@ -40,6 +42,10 @@ def daemonize(stdout='/dev/null', stderr=None, stdin='/dev/null',
         if it shares a file with stdout then interleaved output
         may not appear in the order that you expect.
     '''
+    global done
+    # Don't proceed if we have already daemonized.
+    if done:
+        return
     # Do first fork.
     try:
         pid = os.fork()
@@ -74,4 +80,4 @@ def daemonize(stdout='/dev/null', stderr=None, stdin='/dev/null',
     os.dup2(si.fileno(), sys.stdin.fileno())
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(se.fileno(), sys.stderr.fileno())
-
+    done = True
