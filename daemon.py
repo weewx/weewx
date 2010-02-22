@@ -42,6 +42,7 @@ def daemonize(stdout='/dev/null', stderr=None, stdin='/dev/null',
         if it shares a file with stdout then interleaved output
         may not appear in the order that you expect.
     '''
+    global done
     # Don't proceed if we have already daemonized.
     if done:
         return
