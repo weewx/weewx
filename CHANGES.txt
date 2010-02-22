@@ -1,21 +1,25 @@
 CHANGE HISTORY
 --------------------------------
 
-1.4.0   02/21/10
+1.4.0   02/22/10
 
-Changed the architecture of stats.py to one that uses very late binding. The
-SQL statements are not run until template evaluation. This reduces
-the amount of memory required (by about 10MB), reduces memory fragmentation, 
-as well as greatly simplifying the code (file stats.py shed 100 lines of code).
-Execution time is approximately the same.
+Changed the architecture of stats.py to one that uses very late
+binding. The SQL statements are not run until template
+evaluation. This reduces the amount of memory required (by about 1/2),
+reduces memory fragmentation, as well as greatly simplifying the code
+(file stats.py shed over 150 lines of non-test code).  Execution time
+is slightly slower for NOAA file generation, slightly faster for HTML
+file generation, the same for image generation, although your actual
+results will depend on your disk speed.
 
-Now possible to tell weewx to reread the configuration file without stopping
-it. Send signal HUP to the process.
+Now possible to tell weewx to reread the configuration file without
+stopping it. Send signal HUP to the process.
 
-Added option week_start. Default is 6 (Sunday).
+Added option week_start, for specifying which day a calendar week starts
+on. Default is 6 (Sunday).
 
-Fixed reporting bug when the reporting time falls on a calendar month or
-year boundary.
+Fixed reporting bug when the reporting time falls on a calendar month
+or year boundary.
 
 1.3.4   02/08/10
 

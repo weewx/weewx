@@ -249,14 +249,14 @@ case "$1" in
 	## signaling, do nothing (!)
 
 	# If it supports signaling:
-	#echo -n "Reload service weewx "
-	#killproc -HUP $WEEWX_BIN
-	#touch /var/run/WEEWX.pid
-	#rc_status -v
+	echo -n "Reload service weewx "
+	killproc -HUP $WEEWX_BIN
+	touch /var/run/WEEWX.pid
+	rc_status -v
 	
 	## Otherwise if it does not support reload:
-	rc_failed 3
-	rc_status -v
+	#rc_failed 3
+	#rc_status -v
 	;;
     status)
 	echo -n "Checking for service weewx "

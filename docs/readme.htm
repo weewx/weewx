@@ -876,6 +876,13 @@ could take a minute or two. I&#39;ve found this process particularly slow on SuS
 some reason.</p>
 <p><span class="code">Weewx</span> will then start monitoring LOOP data, printing 
 a short version of the received data on standard output, about once every two seconds.</p>
+<p>You can tell a running instance of <span class="code">weewx</span> to reread 
+its configuration file by sending it the <span class="code">HUP</span> signal. 
+First run <span class="code">ps</span> to find out the Process ID (PID) number 
+of the instance, then send it the <span class="code">HUP</span> signal:</p>
+<p class="tty">ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note the 
+PID of the weewxd.py process</p>
+<p class="tty">kill -HUP <em>pid</em> # Send it a HUP signal</p>
 <h2>7.2 <a name="Running_as_a_daemon">Running as a daemon</a></h2>
 <p>For unattended operations it is best to have <span class="code">weewx</span> 
 run as a daemon, started automatically when the server is rebooted. Start by selecting the appropriate run script. They can be found under
@@ -938,8 +945,11 @@ run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run level
 with Debian (Ubuntu) systems is <a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. 
 It uses a curses interface to allow you to change easily which run level any of 
 your daemons runs at. There is a similar tool on SuSE. From the start menu run the 
-YAST Control Center, then look for Systesm Services (Runlevel). Pick &quot;Expert&quot; mode 
+YAST Control Center, then look for Systems Services (Runlevel). Pick &quot;Expert&quot; mode 
 to see the run levels.</p>
+<p>You can also tell <span class="code">weewx</span> to reread its configuration 
+file without stopping by using the &#39;reload&#39; option:</p>
+<p class="tty">/etc/init.d/weewx reload</p>
 <h1>8. <a name="Compatibility_with_wview">Compatibility with <span class="code">
 wview</span></a></h1>
 <p>The sqlite3 archive database used by <span class="code">weewx</span> (nominally,
