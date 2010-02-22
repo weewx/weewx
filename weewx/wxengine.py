@@ -11,6 +11,7 @@
 import sys
 import syslog
 import time
+import signal
 import socket
 import os.path
 import Queue
@@ -104,7 +105,7 @@ class StdEngine(object):
         
         if options.daemon:
             daemon.daemonize(pidfile='/var/run/weewx.pid')
-        
+            
         # Try to open up the given configuration file. Declare an error if unable to.
         try :
             self.config_dict = configobj.ConfigObj(args[0], file_error=True)
@@ -249,6 +250,11 @@ class StdEngine(object):
             # Now process it. Typically, this means generating reports, etc.
             self.processArchiveData()
 
+    def shutDown(self):
+        """Run when an engine shutdown is requested."""
+        for obj in self.service_obj:
+            obj.shutDown()
+            
 #===============================================================================
 #                    Class StdService
 #===============================================================================
@@ -273,7 +279,10 @@ class StdService(object):
     
     def processArchiveData(self):
         pass
-     
+
+    def shutDown(self):
+        pass
+    
 #===============================================================================
 #                    Class StdCatchUp
 #===============================================================================
@@ -343,6 +352,8 @@ class StdWunderground(StdService):
 
     def __init__(self, engine):
         StdService.__init__(self, engine)
+        self.queue  = None
+        self.thread = None
         
     def setup(self):
         wunder_dict = self.engine.config_dict.get('Wunderground')
@@ -351,21 +362,34 @@ class StdWunderground(StdService):
         # and password exist before committing:
         if wunder_dict and (wunder_dict.has_key('station') and 
                             wunder_dict.has_key('password')):
-            # Create the queue into which we'll put the timestamps of new data
-            self.queue = Queue.Queue()
             # Create an instance of weewx.archive.Archive
             archiveFilename = os.path.join(self.engine.config_dict['Station']['WEEWX_ROOT'], 
                                            self.engine.config_dict['Archive']['archive_file'])
             archive = weewx.archive.Archive(archiveFilename)
-            t = weewx.wunderground.WunderThread(archive = archive, queue = self.queue, **wunder_dict)
-            t.start()
+            # Create the queue into which we'll put the timestamps of new data
+            self.queue = Queue.Queue()
+            self.thread = weewx.wunderground.WunderThread(archive = archive, queue = self.queue, **wunder_dict)
+            self.thread.start()
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started Weather Underground thread.")
             
         else:
-            self.queue = None
+            self.queue  = None
+            self.thread = None
         
     def postArchiveData(self, rec):
+        """Post the new archive data to the WU queue"""
         if self.queue:
             self.queue.put(rec['dateTime'])
+
+    def shutDown(self):
+        """Shut down the WU thread"""
+        # Make sure we have initialized:
+        if self.queue:
+            # Put a None in the queue. This will signal to the thread to shutdown
+            self.queue.put(None)
+            # Wait for the thread to exit:
+            self.thread.join(20.0)
+            syslog.syslog(syslog.LOG_DEBUG, "Shut down Weather Underground thread.")
 
 #===============================================================================
 #                    Class StdProcess
@@ -376,13 +400,25 @@ class StdProcess(StdService):
     
     def __init__(self, engine):
         StdService.__init__(self, engine)
+        self.thread = None
         
     def processArchiveData(self):
         """This function processes any new archive data"""
         # Now process the data, using a separate thread
-        t = weewx.reportengine.StdReportEngine(self.engine.config_dict) 
-        t.start()
+        self.thread = weewx.reportengine.StdReportEngine(self.engine.config_dict) 
+        self.thread.start()
 
+    def shutDown(self):
+        if self.thread:
+            self.thread.join(20.0)
+            syslog.syslog(syslog.LOG_DEBUG, "Shut down StdProcess thread.")
+
+class Restart(Exception):
+    """Exception thrown when restarting the engine is desired."""
+    
+def sigHUPhandler(signum, frame):
+    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Received signal HUP. Throwing Restart exception.")
+    raise Restart
 
 #===============================================================================
 #                    Function main
@@ -398,7 +434,8 @@ def main(EngineClass = StdEngine) :
 
         # Create and initialize the engine
         engine = EngineClass()
-
+        signal.signal(signal.SIGHUP, sigHUPhandler)
+        
     except Exception, ex:
         # Caught unrecoverable error. Log it, exit
         syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to initialize main loop:")
@@ -422,6 +459,10 @@ def main(EngineClass = StdEngine) :
             time.sleep(60)
             syslog.syslog(syslog.LOG_NOTICE, "wxengine: retrying...")
 
+        except Restart:
+            syslog.syslog(syslog.LOG_NOTICE, "wxengine: Received signal HUP. Restarting.")
+            engine.shutDown()
+            
         # If run from the command line, catch any keyboard interrupts and log them:
         except KeyboardInterrupt:
             syslog.syslog(syslog.LOG_CRIT,"wxengine: Keyboard interrupt.")

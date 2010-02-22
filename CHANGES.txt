@@ -9,6 +9,9 @@ the amount of memory required (by about 10MB), reduces memory fragmentation,
 as well as greatly simplifying the code (file stats.py shed 100 lines of code).
 Execution time is approximately the same.
 
+Now possible to tell weewx to reread the configuration file without stopping
+it. Send signal HUP to the process.
+
 Added option week_start. Default is 6 (Sunday).
 
 Fixed reporting bug when the reporting time falls on a calendar month or
