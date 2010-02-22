@@ -14,7 +14,6 @@ import time
 import socket
 import os.path
 import Queue
-import threading
 from optparse import OptionParser
 import configobj
 
