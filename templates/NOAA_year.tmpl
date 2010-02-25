@@ -34,7 +34,7 @@ NAME: $station.location
 ELEV: $station.altitude    LAT: $station.latitude[0]-$station.latitude[1] $station.latitude[2]    LONG: $station.longitude[0]-$station.longitude[1] $station.longitude[2]
 
 
-                                       TEMPERATURE (F)
+                                       TEMPERATURE ($station.temperature_unit_label)
 
                               HEAT    COOL
           MEAN   MEAN         DEG     DEG                               MAX    MAX    MIN    MIN
@@ -51,7 +51,7 @@ $showYM($month.dateTime)
         $showTemp($year.outTemp.meanmax) $showTemp($year.outTemp.meanmin) $showTemp($year.outTemp.avg) $showTemp($year.heatdeg.sum) $showTemp($year.cooldeg.sum)  $showTemp($year.outTemp.max) $showDay($year.outTemp.maxtime)  $showTemp($year.outTemp.min) $showDay($year.outTemp.mintime) $showCount($year.outTemp.max_ge(90.0)) $showCount($year.outTemp.max_le(32.0)) $showCount($year.outTemp.min_le(32.0)) $showCount($year.outTemp.min_le(0.0))
 
 
-                  PRECIPITATION (in)
+                  PRECIPITATION ($station.rain_unit_label)
 
                   MAX         ---DAYS OF RAIN---
                   OBS.               OVER
@@ -68,7 +68,7 @@ $showYM($month.dateTime)
         $showRain($year.rain.sum) $showRain($year.rain.maxsum)  $showMonth($year.rain.maxsumtime) $showCount($year.rain.sum_ge(0.01)) $showCount($year.rain.sum_ge(0.10)) $showCount($year.rain.sum_ge(1.00))
 
 
-           WIND SPEED (mph)
+           WIND SPEED ($station.wind_unit_label)
 
                                 DOM
  YR  MO    AVG     HI   DATE    DIR

@@ -123,7 +123,7 @@ td {
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.4</h1>
+Version 1.5</h1>
 <h1>Table of Contents</h1>
 <ol>
 	<li>
@@ -198,8 +198,8 @@ languages, so I thought I&#39;d try either Python or Ruby (although, truth be to
 the roots of Python are nearly as old as C++!). I picked Python because its libraries 
 are more mature and there are many more choices for third party libraries.</p>
 <p><span class="code">Weewx</span> weighs in at under 7,000 lines of code, of which 2,500 are
-comments. However, to be fair, it is missing features such as support for other weather
-stations and for metric units. On the other hand, it offers very
+comments. However, to be fair, it is missing some features such as support for other weather
+stations. On the other hand, it offers very
 powerful configuration, templating, and customization options, making it very easy to customize or
 to add these things. It is also architecturally very simple and easy to understand.</p>
 <h1>3. <a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
@@ -533,8 +533,8 @@ longitude</h4>
 <p>The lat/lon should be set in decimal degrees, negative for southern and eastern 
 hemispheres, respectively. Required. No default.</p>
 <h4 class="config_important">altitude</h4>
-<p>Should be set to the altitude of the station. In this version, the only unit 
-accepted is feet. Required. No default.</p>
+<p>Should be set to the altitude of the station in the same units specified in
+<span class="code"><a href="#class_altitude">class_altitude</a></span>. Required. No default.</p>
 <h4 class="config_important">rain_year_start</h4>
 <p>If your area uses a rain year that starts on something other than the first of 
 January, you may want to set this variable. For example, set to 10 if your rain 
@@ -600,8 +600,8 @@ arrive every 2 seconds). Default is 1.2 seconds.</p>
 clock, before resetting the clock. Default is 5.</p>
 <h4 class="config_option">unit_system</h4>
 <p>What unit system is in use on your weather station hardware. Possible values 
-are &#39;1&#39; (Imperial) or &#39;2&#39; (Metric). As far as I know, all Davis instruments support 
-only Imperial. In any case, Imperial is the only system supported by
+are &#39;1&#39; (U.S. Customary) or &#39;2&#39; (Metric). As far as I know, all Davis instruments support 
+only U.S.. In any case, U.S. is the only system supported by
 <span class="code">weewx</span>. Default is 1.</p>
 <h3 class="config_section">[FTP]</h3>
 <p>If you FTP your images and HTML files to an external web server,
@@ -648,7 +648,7 @@ data is stored.</p>
 the database. Required</p>
 <h4 class="config_option">unit_system</h4>
 <p>What unit system to use inside the database. Required. The only one supported 
-right now is &#39;1&#39;, the Imperial (U.S.) system</p>
+right now is &#39;1&#39;, the U.S. Customary system</p>
 <h3 class="config_section">[Stats]</h3>
 <p>This section is for configuring the sqlite3 database on which the station statistics 
 are stored.</p>
@@ -661,6 +661,75 @@ be available for generating HTML pages. Optional. The default is all types, resu
 in a possibly much bigger than necessary stats database (do you really have four 
 different soil moisture sensors?) The list that ships with the configuration file 
 will work for most stations and probably will not have to be modified.</p>
+<h3 class="config_section">[Units]</h3>
+<p>This section deals with Units and their formatting. </p>
+<h4><a name="Unit_Classes">Unit Classes</a></h4>
+<p>As there are many different measurement types (such as &#39;<span class="code">outTemp</span>&#39;, 
+&#39;<span class="code">barometer</span>&#39;, etc.) used in <span class="code">weewx</span> 
+(more than 50 at last count), it would be tedious, not to say possibly 
+inconsistent, to specify a different measurement system for each one of them. At 
+the other extreme, requiring them all to be &quot;U.S. Customary&quot; or &quot;Metric&quot; seems 
+overly restrictive. <span class="code">Weewx</span> has taken a middle route and 
+divided all the different measurement types into 12 different &quot;unit classes.&quot; A 
+unit class is something like &quot;<span class="code">class_temperature</span>.&quot; It 
+represents the measurement system to be used by all measurement types that are 
+measured in temperature, such as inside temperature (type &#39;<span class="code">inTemp</span>&#39;), 
+outside temperature (&#39;<span class="code">outTemp</span>&#39;), dewpoint (&#39;<span class="code">dewpoint</span>&#39;), 
+wind chill (&#39;<span class="code">windchill</span>&#39;), <em>etc</em>. If you say 
+that you want unit class <span class="code">class_temperature</span> to be 
+measured in &quot;<span class="code">degrees_C</span>&quot; then you are saying <em>all</em> 
+members of its class will be reported in degrees Celsius.</p>
+<h4 class="config_option">[[UnitClasses]]</h4>
+<p>This section lists all the Unit Classes and specifies which unit system is to 
+be used for each one of them. Note that the unit system is always specified in 
+the singular. That is, specify &quot;<span class="code">foot</span>&quot; or &quot;<span class="code">inch_per_hour</span>&quot;, 
+not &quot;<span class="code">feet</span>&quot; or &quot;<span class="code">inches_per_hour</span>.&quot;</p>
+<h4 class="config_important"><a name="class_altitude">class_altitude</a></h4>
+<p>Which measurement unit to be used for altitude. Either &#39;<span class="code">foot</span>&#39; 
+or &#39;<span class="code">meter</span>&#39;.</p>
+<h4 class="config_option">class_direction</h4>
+<p>Which measurement unit to be used for direction. The only option is &quot;<span class="code">degree_compass</span>&quot;.</p>
+<h4 class="config_option">class_moisture</h4>
+<p>The measurement unit to be used for soil moisture. The only option is &quot;<span class="code">centibar</span>.&quot;</p>
+<h4 class="config_option">class_percent</h4>
+<p>The measurement unit to be used for percentages. The only option is &quot;<span class="code">percent</span>&quot;.</p>
+<h4 class="config_important">class_pressure</h4>
+<p>The measurement unit to be used for pressure. Either &quot;<span class="code">inHg</span>&quot; 
+(inches of mercury), &quot;<span class="code">mbar</span>&quot;, or &quot;<span class="code">hPa</span>.&quot;</p>
+<h4 class="config_option">class_radiation</h4>
+<p>The measurement unit to be used for radiation. The only option is &quot;<span class="code">watt_per_meter_squared</span>.&quot;</p>
+<h4 class="config_important">class_rain</h4>
+<p>The measurement unit to be used for precipitation. Options are &quot;<span class="code">inch</span>&quot;, 
+&quot;<span class="code">cm</span>,&quot; or &quot;<span class="code">mm</span>.&quot;</p>
+<h4 class="config_important">class_rainrate</h4>
+<p>The measurement unit to be used for rate of precipitation. Options are &quot;<span class="code">inch_per_hour</span>&quot;, 
+&quot;<span class="code">cm_per_hour</span>&quot;, or &quot;mm_per<span class="code"> </span>
+hour.&quot;</p>
+<h4 class="config_important">class_speed</h4>
+<p>The measurement unit to be used for wind speeds. Options are &quot;<span class="code">mile_per_hour</span>&quot;, 
+&quot;<span class="code">km_per_hour</span>&quot;, &quot;<span class="code">knot</span>&quot;, or &quot;<span class="code">meter_per_second</span>.&quot;</p>
+<h4 class="config_important">class_speed2</h4>
+<p>This class is similar to class_speed, but is used for calculated wind speeds 
+which typically have a slightly higher resolution. Options are &quot;<span class="code">mile_per_hour2</span>&quot;, 
+&quot;<span class="code">km_per_hour2</span>&quot;, &quot;<span class="code">knot2</span>&quot;, or 
+&quot;<span class="code">meter_per_second2</span>.&quot;</p>
+<h4 class="config_important">class_temperature</h4>
+<p>The measurement unit to be used for temperatures. Options are &quot;<span class="code">degree_F</span>&quot; 
+or &quot;<span class="code">degree_C</span>.&quot;</p>
+<h4 class="config_option">class_volt</h4>
+<p>The measurement unit to be used for voltages. The only option is &quot;<span class="code">volt</span>.&quot;</p>
+<h4 class="config_option"><a name="Units_StringFormats">[[StringFormats]]</a></h4>
+<p>This sub-section is used to specify what string format is to be used for each 
+unit when a quantity needs to be converted to a string. Typically, this happens 
+with y-axis labeling on plots and for statistics in 
+HTML file generation. For example, the options</p>
+<p class="tty">degree_C = %.1f</p>
+<p class="tty">inch&nbsp;&nbsp;&nbsp;&nbsp; =&nbsp;%.2f</p>
+<p>would cause the given string formats to be used when formatting any temperature 
+measured in degrees Celsius or any precipitation amount measured in inches, respectively. The
+<a href="http://docs.python.org/library/string.html#format-specification-mini-language">
+formatting codes are those used by Python</a>, and are very similar to C&#39;s sprintf() 
+codes.</p>
 <h3 class="config_section">[Images]</h3>
 <p>This section, which controls which images (plots) get generated and with which 
 options, is by far the most complicated. However, it is extremely flexible and powerful.</p>
@@ -800,7 +869,9 @@ corner of the image to show the orientation of North.</p>
 will give you ideas about the many different image plot configurations that are 
 possible without hacking the code. </p>
 <h3 class="config_section">[Labels]</h3>
-<p>This section controls how images are labeled. It consists of three sub-sections:</p>
+<p>This section controls how measurement values are labeled. It is generally 
+used in plot generation, although there are a few other areas where it is used. It consists of 
+two sub-sections:</p>
 <h4 class="config_option">[[Generic]]</h4>
 <p>This sub-sections specifies default labels to be used for each SQL type. For 
 example, options</p>
@@ -808,24 +879,13 @@ example, options</p>
 <p class="tty">outTemp = Outside Temperature</p>
 <p>would cause the given labels to be used for plots involving SQL types
 <span class="code">inTemp </span>and <span class="code">outTemp</span>..</p>
-<h4 class="config_option"><a name="Labels_ImperialFormats">[[ImperialFormats]]</a></h4>
-<p>This sub-section is used to specify what format to be used for y-axis labels 
-in image plots that use Imperial (U.S.) units. It is also used for unit labels in 
-HTML file generation. For example, the options</p>
-<p class="tty">outTemp = %.1f</p>
-<p class="tty">rain =&nbsp;&nbsp;&nbsp; %.2f</p>
-<p>would cause the given formats to be used when formatting outside temperature 
-and rain axes, respectively. The
-<a href="http://docs.python.org/library/string.html#format-specification-mini-language">
-formatting codes are those used by Python</a>, and are very similar to C&#39;s sprintf() 
-codes.</p>
-<h4 class="config_option"><a name="Labels_ImperialUnits">[[ImperialUnits]]</a></h4>
-<p>This sub-section specifies what unit labels to be used for the y-axis in image 
-plots that use Imperial (U.S.) units. For example, the options</p>
-<p class="tty">outTemp = \xb0F</p>
-<p class="tty">rain = &#39; in&#39;</p>
-<p>would cause outside temperature to have unit labels &#39;<span class="code">°F</span>&#39; 
-and rain to have labels &#39;<span class="code"> in</span>&#39;. (NB: the code
+<h4 class="config_option">[[<a name="Units_StringFormats">UnitLabels]]</a></h4>
+<p>This sub-section specifies what label to be used for each measurement unit 
+type. For example, the options</p>
+<p class="tty">degree_F = \xb0F</p>
+<p class="tty">inch&nbsp;&nbsp;&nbsp;&nbsp; = &#39; in&#39;</p>
+<p>would cause all temperatures to have unit labels &#39;<span class="code">°F</span>&#39; 
+and all precipitation to have labels &#39;<span class="code"> in</span>&#39;. (NB: the code
 <span class="code">\xb0</span> is the hexadecimal value <span class="code">b0</span>, 
 which in many encodings encodes the degree sign.)</p>
 <h3 class="config_section">[HTML]</h3>
@@ -837,13 +897,13 @@ where the HTML templates can be found. Required. No default.</p>
 <h4 class="config_option">html_root</h4>
 <p>This option specifies the directory, relative to <span class="code"><em>WEEWX_ROOT</em></span>, 
 where the generated HTML files should be put. Required. No default.</p>
-<h4 class="config_option"><a name="HTML_ImperialUnits">[[ImperialUnits]]</a></h4>
+<h4 class="config_option"><a name="HTML_UnitLabels">[[UnitLabels]]</a></h4>
 <p>This subsection is similar to its eponymous counterpart in section
 <span class="code">[Labels]</span> above, except it is used for HTML generation. 
 It is useful to have a separate section because HTML uses special &#39;entity&#39; codes 
 to code special characters, such as the degree sign. For example, the options</p>
-<p class="tty">outTemp = &amp;deg;F</p>
-<p class="tty">rain =&nbsp;&nbsp;&nbsp; &#39; in&#39;</p>
+<p class="tty">degree_F = &amp;deg;F</p>
+<p class="tty">inch&nbsp;&nbsp;&nbsp;&nbsp; = &#39; in&#39;</p>
 <p>would cause outside temperature and rain to have unit labels&nbsp; &#39;<span class="code">°F</span>&#39; 
 and &#39;<span class="code"> in</span>&#39;, respectively.</p>
 <h4 class="config_option"><a name="HTML_Time">[[Time]]</a></h4>
@@ -980,14 +1040,16 @@ the current outside temperature, respectively. So, an HTML file that looks like<
 <p class="tty">$month.outTemp.maxtime&lt;/p&gt;</p>
 <p class="tty">&nbsp; &lt;/body&gt;</p>
 <p class="tty">&lt;/html&gt;</p>
-<p>would be all you need for a very simple HTML page that would display the text:
+<p>would be all you need for a very simple HTML page that would display the text 
+(assuming that the <a href="#Unit_Classes">unit class</a> for temperature is
+<span class="code">degree_F</span>):
 </p>
 <p class="indent">Current temperature = 51.0°F<br />
 Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15</p>
 <p>The format that was used to format the temperature (<span class="code">51.0</span>) 
-is specified in section <span class="code"><a href="#Labels_ImperialFormats">[Labels][[ImperialFormats]]</a></span>. 
+is specified in section <span class="code"><a href="#Units_StringFormats">[Units][[StringFormat]]</a></span>. 
 The unit label <span class="code">°F</span> is from section <span class="code">
-<a href="#HTML_ImperialUnits">[HTML][[ImperialUnits]]</a></span>, while the time 
+<a href="#HTML_UnitLabels">[HTML][[UnitLabels]]</a></span>, while the time 
 format is from <span class="code"><a href="#HTML_Time">[HTML][[Time]]</a></span>.</p>
 <p>The &quot;dot&quot; code has up to three parts. </p>
 <ol>
@@ -1472,24 +1534,27 @@ happened to me yet), then this causes program termination.</p>
 	</tr>
 </table>
 <h2>11.5 Units</h2>
-<p>This package is imperial (U.S.) units only. However, it has been set up to make 
+<p>While weewx can generate plot images and reports in all common measurement 
+units, the internal database uses U.S. Customary units only as this is (as far 
+as I know) the only unit type supported by the Davis VantagePro. </p>
+<p>However, it has been set up to make 
 it easy to extend to metric. </p>
 <p>In general, there are three different areas where the unit system makes a difference.:
 </p>
 <ol>
 	<li>On the weather station. As far as I know, the Davis VantagePro series supports 
-	only imperial units internally. So, any translation to metric must be done in 
+	only U.S. Customary units internally. So, any translation to metric must be done in 
 	one of the other two areas: </li>
 	<li>In the database. The unit system of any individual record is indicated by 
-	the &quot;usUnits&quot; field. The numerical value 1 indicates imperial. Other numbers 
-	haven&#39;t been assigned (yet). Right now, only imperial units is supported.
+	the &quot;usUnits&quot; field. The numerical value 1 indicates U.S. 
+	Customary. Other numbers haven&#39;t been assigned (yet).
 	</li>
-	<li>In the presentation (i.e., html and image files). Right now, whatever unit 
-	system is in use in the database is carried through. </li>
+	<li>In the presentation (i.e., html and image files). This is where
+	<span class="code">weewx</span> can generate multiple unit types.</li>
 </ol>
 <p>The transition from 1 to 2, i.e., from data in the VantagePro to the database, 
 is handled by a translation function. Right now, only one is supplied,
-<span class="code">weewx.VantagePro.translateArchiveToImperial</span>. Others could 
+<span class="code">weewx.VantagePro.translateArchiveToUS</span>. Others could 
 easily be introduced. </p>
 <h2>11.6 Value &quot;<span class="code">None</span>&quot;</h2>
 <p>The Python special value &#39;<span class="code">None</span>&#39; is used throughout 

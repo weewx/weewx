@@ -179,7 +179,7 @@ class Archive(object):
             _cursor.close()
             _connection.close()
 
-    def getRecord(self, timestamp):
+    def getRecord(self, timestamp, unitTypeDict = None):
         """Get a single instance of ArchiveRecord with a given epoch time stamp.
         
         timestamp: The epoch time of the desired record.
@@ -189,8 +189,19 @@ class Archive(object):
             _connection.row_factory = sqlite3.Row
             _cursor = _connection.execute("SELECT * FROM archive WHERE dateTime=?;", (timestamp,))
             _row = _cursor.fetchone()
+            if not _row: return None
+            
+        if not unitTypeDict:
             return ArchiveRecord(_row)
-    
+        
+        _unitSystem = _row['usUnits']
+        _converted = ArchiveRecord()
+        for _type in _row.keys():
+            if _type == 'usUnits':
+                continue
+            _converted[_type] = weewx.units.convertStd(_unitSystem, _type, unitTypeDict.get(_type), _row[_type])
+        return _converted
+
     def getSql(self, sql, *sqlargs):
         """Executes an arbitrary SQL statement on the database.
         
@@ -219,7 +230,10 @@ class Archive(object):
             _cursor.close()
             _connection.close()
 
-    def getSqlVectors(self, sql_type, startstamp, stopstamp, aggregate_interval = None, aggregate_type = None):
+    def getSqlVectors(self, sql_type, startstamp, stopstamp,
+                      aggregate_interval = None, 
+                      aggregate_type = None,
+                      toUnits = None):
         """Get time and (possibly aggregated) data vectors within a time interval. 
         
         The return value is a 2-way tuple. The first member is a vector of time
@@ -263,19 +277,23 @@ class Archive(object):
         aggregation (e.g., 'sum', 'avg', etc.)  Required if aggregate_interval
         is non-None. Default: None (no aggregation)
 
+        toUnits: Return the results in these units (e.g., "inHg", or "mbar"). 
+        If None, do no conversion.
+
         returns: a 2-way tuple. First element is the time vector, second element
-        is the data vector
+        the data vector.
         """
 
         _connection = sqlite3.connect(self.archiveFile)
         _cursor=_connection.cursor()
         time_vec = list()
         data_vec = list()
+        unitSystem = None
 
         if aggregate_interval :
             if not aggregate_type:
                 raise weewx.ViolatedPrecondition, "Aggregation type missing"
-            sql_str = 'SELECT dateTime, %s(%s) FROM archive WHERE dateTime > ? AND dateTime <= ?' % (aggregate_type, sql_type)
+            sql_str = 'SELECT dateTime, %s(%s), usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % (aggregate_type, sql_type)
             for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                 _cursor.execute(sql_str, stamp)
                 _rec = _cursor.fetchone()
@@ -285,20 +303,26 @@ class Archive(object):
                     if _rec[0] is not None:
                         time_vec.append(_rec[0])
                         data_vec.append(_rec[1])
+                        unitSystem = _rec[2]
         else:
-            sql_str = 'SELECT dateTime, %s FROM archive WHERE dateTime >= ? AND dateTime <= ?' % sql_type
+            sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime >= ? AND dateTime <= ?' % sql_type
             _cursor.execute(sql_str, (startstamp, stopstamp))
             for _rec in _cursor:
                 assert(_rec[0])
                 time_vec.append(_rec[0])
                 data_vec.append(_rec[1])
+                unitSystem = _rec[2]
 
         _cursor.close()
         _connection.close()
 
-        return (time_vec, data_vec)
+        data_vec_converted = weewx.units.convertStd(unitSystem, sql_type, toUnits, data_vec) 
+        return (time_vec, data_vec_converted)
 
-    def getSqlVectorsExtended(self, ext_type, startstamp, stopstamp, aggregate_interval = None, aggregate_type = None):
+    def getSqlVectorsExtended(self, ext_type, startstamp, stopstamp, 
+                              aggregate_interval = None, 
+                              aggregate_type = None,
+                              toUnits = None):
         """Get time and (possibly aggregated) data vectors within a time interval.
         
         This function is very similar to getSqlVectors, except that for special types
@@ -324,11 +348,14 @@ class Archive(object):
         aggregate_type: None if no aggregation is desired, otherwise the type of
         aggregation (e.g., 'sum', 'avg', etc.)  Required if aggregate_interval
         is non-None. Default: None (no aggregation)
+        
+        toUnits: Return the results in these units (e.g., "inHg", or "mbar"). 
+        If None, do no conversion.
 
         returns: a 2-way tuple. First element is the time vector, second element
         is the data vector. If sql_type is 'windvec' or 'windgustvec', the data
         vector will be a vector of types complex. The real part is the x-component
-        of the wind, the imaginary part the y-component.
+        of the wind, the imaginary part the y-component. 
         """
 
         windvec_types = {'windvec'     : ('windSpeed, windDir'),
@@ -339,6 +366,7 @@ class Archive(object):
             # It is. Prepare the lists that will hold the final results.
             time_vec = list()
             data_vec = list()
+            unitSystem = None
             _connection = sqlite3.connect(self.archiveFile)
             _cursor=_connection.cursor()
     
@@ -353,7 +381,7 @@ class Archive(object):
                     raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
                 
                 # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
+                sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
 
@@ -373,7 +401,8 @@ class Archive(object):
                         # A good direction is necessary unless the mag is zero:
                         if mag == 0.0  or dir is not None:
                             count += 1
-                            last_time = _rec[0]
+                            last_time  = _rec[0]
+                            unitSystem = _rec[3]
                             
                             # Pick the kind of aggregation:
                             if aggregate_type == 'min':
@@ -417,11 +446,12 @@ class Archive(object):
                 # No aggregation desired. It's a lot simpler. Go get the
                 # data in the requested time period
                 # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s FROM archive WHERE dateTime >= ? AND dateTime <= ?' % windvec_types[ext_type]
+                sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime >= ? AND dateTime <= ?' % windvec_types[ext_type]
                 _cursor.execute(sql_str, (startstamp, stopstamp))
                 for _rec in _cursor:
                     # Record the time:
                     time_vec.append(_rec[0])
+                    unitSystem = _rec[3]
                     # Break the mag and dir down into x- and y-components.
                     (mag, dir) = _rec[1:3]
                     if mag is None or dir is None:
@@ -437,11 +467,11 @@ class Archive(object):
                         data_vec.append(complex(x,y))
             _cursor.close()
             _connection.close()
-            return (time_vec, data_vec)
+            return (time_vec, weewx.units.convertStd(unitSystem, ext_type, toUnits, data_vec))
 
         else:
             # The type is other than the extended wind types. Use the regular version:
-            return self.getSqlVectors(ext_type, startstamp, stopstamp, aggregate_interval, aggregate_type)
+            return self.getSqlVectors(ext_type, startstamp, stopstamp, aggregate_interval, aggregate_type, toUnits)
 
 
     def config(self):
@@ -513,13 +543,6 @@ class ArchiveRecord(dict) :
                     'windGust'     : ('%4.0f mph gust;', ' N/A mph gust;'),
                     'rain'         : ('%5.2f" rain;',    '  N/A  rain;'),
                     'dewpoint'     : ('%4.0fF dewpt;',   ' N/A  dewpt;')}
-    
-
-    def __init__(self, start_dict=None) :
-        """Initialize an instance of ArchiveRecord. It must at the least contain a valid
-        key for 'dateTime' """
-        if start_dict is not None :
-            super(ArchiveRecord, self).__init__(start_dict)
     
     def __str__(self):
         _strlist = []

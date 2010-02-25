@@ -98,7 +98,7 @@ class FileGen(Report):
     
         stop_ts    = archive.lastGoodStamp() if self.engine.gen_ts is None else self.engine.gen_ts
         start_ts   = archive.firstGoodStamp()
-        currentRec = archive.getRecord(stop_ts)
+        currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.engine.config_dict))
         
         genFiles = weewx.genfiles.GenFiles(self.engine.config_dict)
             

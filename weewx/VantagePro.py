@@ -377,24 +377,24 @@ class WxStation (object) :
         
         returns: A dictionary with the values in physical units.
         """
-        # Right now, only Imperial units are supported
-        if self.unit_system == weewx.IMPERIAL :
-            _record = self.translateLoopToImperial(loopPacket)
+        # Right now, only US customary units are supported
+        if self.unit_system == weewx.US :
+            _record = self.translateLoopToUS(loopPacket)
         else :
-            raise weewx.UnsupportedFeature, "Only Imperial Units are supported on the Davis VP2."
+            raise weewx.UnsupportedFeature, "Only US Customary Units are supported on the Davis VP2."
         
         return _record
     
 
-    def translateLoopToImperial(self, packet):
-        """Translates a loop packet from the internal units used by Davis, into Imperial units.
+    def translateLoopToUS(self, packet):
+        """Translates a loop packet from the internal units used by Davis, into US Customary Units.
         
         packet: An instance of DavisLoopPacket.
         
-        returns: A dictionary with the values in Imperial units.
+        returns: A dictionary with the values in US Customary Units.
         """
         # This dictionary maps a type key to a function. The function should be able to
-        # decode a sensor value held in the loop packet in the internal, Davis form into imperial
+        # decode a sensor value held in the loop packet in the internal, Davis form into US
         # units and return it. From the Davis documentation, it's not clear what the
         # 'dash' value is for some of these, so I'm assuming it's the same as for an archive
         # packet.
@@ -453,8 +453,8 @@ class WxStation (object) :
                      'consoleBattery'  : lambda v : float((v * 300) >> 9) / 100.0
                      }        
     
-        if packet['imperial_units'] != weewx.IMPERIAL :
-            raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be imperial (U.S.) units only"
+        if packet['usUnits'] != weewx.US :
+            raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be US Customary Units only"
     
         record = {}
         
@@ -494,24 +494,24 @@ class WxStation (object) :
         returns: A dictionary with the values in physical units.
         """
         
-        # Right now, only Imperial units are supported
-        if self.unit_system == weewx.IMPERIAL :
-            _record = self.translateArchiveToImperial(packet)
+        # Right now, only US units are supported
+        if self.unit_system == weewx.US :
+            _record = self.translateArchiveToUS(packet)
         else :
-            raise weewx.UnsupportedFeature, "Only Imperial Units are supported on the Davis VP2."
+            raise weewx.UnsupportedFeature, "Only US Units are supported on the Davis VP2."
         
         return _record
     
-    def translateArchiveToImperial(self, packet):
-        """Translates an archive packet from the internal units used by Davis, into Imperial units.
+    def translateArchiveToUS(self, packet):
+        """Translates an archive packet from the internal units used by Davis, into US units.
         
         packet: An instance of DavisArchivePacket.
         
-        returns: A dictionary with the values in Imperial units.
+        returns: A dictionary with the values in US units.
         
         """
         # This dictionary maps a type key to a function. The function should be able to
-        # decode a sensor value held in the archive packet in the internal, Davis form into imperial
+        # decode a sensor value held in the archive packet in the internal, Davis form into US
         # units and return it. Some of these functions use a short hand 'lambda' form because 
         # they are trivial and because I think lambda functions are cool.
         _archive_map={'interval'       : lambda v : int(v),
@@ -548,8 +548,8 @@ class WxStation (object) :
                       'leafWet2'       : _little_val,
                       'rxCheckPercent' : _null}
     
-        if packet['imperial_units'] != weewx.IMPERIAL :
-            raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be imperial (U.S.) units only"
+        if packet['usUnits'] != weewx.US :
+            raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be U.S. units only"
     
         record = {}
         
@@ -571,7 +571,7 @@ class WxStation (object) :
         record['windchill']   = weewx.wxformulas.windchillF(T, W)
         record['dateTime']    = _archive_datetime(packet)
         record['dateTimeStr'] = time.ctime(record['dateTime'])
-        record['usUnits']     = weewx.IMPERIAL
+        record['usUnits']     = weewx.US
         
         # This would be the place to do any processing for crazy numbers
         # (e.g., temperatures in hundreds) and replace them with None.
@@ -726,8 +726,8 @@ class DavisLoopPacket(dict) :
         # Add a timestamp:
         self['dateTime'] = int(time.time() + 0.5)
 
-        # As far as I know, the Davis supports only Imperial units:
-        self['imperial_units'] = weewx.IMPERIAL
+        # As far as I know, the Davis supports only US units:
+        self['usUnits'] = weewx.US
 
 
 
@@ -772,8 +772,8 @@ class DavisArchivePacket(dict):
         
         # Divide archive interval by 60 to keep consistent with wview
         self['interval']       = station.archive_interval / 60 
-        # As far as I know, the Davis supports only Imperial units:
-        self['imperial_units'] = weewx.IMPERIAL
+        # As far as I know, the Davis supports only US units:
+        self['usUnits']        = weewx.US
         self['model_type']     = station.model_type
         self['iss_id']         = station.iss_id
         self['rxCheckPercent'] = self._rxcheck()

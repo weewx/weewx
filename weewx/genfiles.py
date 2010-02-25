@@ -22,6 +22,7 @@ import weewx
 import weewx.formatter
 import weewx.station
 import weewx.stats
+import weewx.units
 import weeutil.Almanac
 import weeutil.weeutil
 
@@ -52,6 +53,7 @@ class GenFiles(object):
                                                   float(config_dict['Station'].get('heating_base', '65')),
                                                   float(config_dict['Station'].get('cooling_base', '65')))
     
+        self.unitTypeDict = weewx.units.getUnitTypeDict(config_dict)
         
     def initNoaa(self, config_dict):
         # Get the directory holding the NOAA templates
@@ -81,8 +83,8 @@ class GenFiles(object):
                                      config_dict['HTML'].get('html_root', 'public_html'))
 
         # Get an appropriate formatter:
-        self.formatter =  weewx.formatter.Formatter(config_dict['Labels']['ImperialFormats'],
-                                                    config_dict['HTML']['ImperialUnits'],
+        self.formatter =  weewx.formatter.Formatter(weewx.units.getStringFormatDict(config_dict),
+                                                    weewx.units.getHTMLLabelDict(config_dict),
                                                     config_dict['HTML']['Time'])
 
         try:
@@ -271,7 +273,7 @@ class GenFiles(object):
 
         _yr = time.localtime(yearSpan.start)[0]
                 
-        yearStats = weewx.stats.TimespanStats(self.statsdb, yearSpan)
+        yearStats = weewx.stats.TimespanStats(self.statsdb, yearSpan, self.unitTypeDict)
 
         searchList = [{'station'   : self.station,
                        'year_name' : _yr,
@@ -290,7 +292,7 @@ class GenFiles(object):
         monthName = time.strftime("%b", month_start_tt)
 
         # Get the stats for this month from the database:
-        monthStats = weewx.stats.TimespanStats(self.statsdb, monthSpan)
+        monthStats = weewx.stats.TimespanStats(self.statsdb, monthSpan, self.unitTypeDict)
         
         searchList = [{'station'      : self.station,
                        'year_name'    : _yr,
@@ -314,11 +316,11 @@ class GenFiles(object):
         # Assemble the dictionary that will be given to the template engine:
         stats = {}
         stats['current']  = currentRec
-        stats['day']      = weewx.stats.TimespanStats(self.statsdb, daySpan)
-        stats['week']     = weewx.stats.TimespanStats(self.statsdb, weekSpan)
-        stats['month']    = weewx.stats.TimespanStats(self.statsdb, monthSpan)
-        stats['year']     = weewx.stats.TimespanStats(self.statsdb, yearSpan)
-        stats['rainyear'] = weewx.stats.TimespanStats(self.statsdb, rainYearSpan)
+        stats['day']      = weewx.stats.TimespanStats(self.statsdb, daySpan,      self.unitTypeDict)
+        stats['week']     = weewx.stats.TimespanStats(self.statsdb, weekSpan,     self.unitTypeDict)
+        stats['month']    = weewx.stats.TimespanStats(self.statsdb, monthSpan,    self.unitTypeDict)
+        stats['year']     = weewx.stats.TimespanStats(self.statsdb, yearSpan,     self.unitTypeDict)
+        stats['rainyear'] = weewx.stats.TimespanStats(self.statsdb, rainYearSpan, self.unitTypeDict)
 
         # Get a view into the statistical information.
         statsView = weewx.formatter.ModelView(stats, self.formatter)
