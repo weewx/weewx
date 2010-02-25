@@ -514,13 +514,6 @@ class ArchiveRecord(dict) :
                     'rain'         : ('%5.2f" rain;',    '  N/A  rain;'),
                     'dewpoint'     : ('%4.0fF dewpt;',   ' N/A  dewpt;')}
     
-
-    def __init__(self, start_dict=None) :
-        """Initialize an instance of ArchiveRecord. It must at the least contain a valid
-        key for 'dateTime' """
-        if start_dict is not None :
-            super(ArchiveRecord, self).__init__(start_dict)
-    
     def __str__(self):
         _strlist = []
         for _data_type in ArchiveRecord._format_dict.keys():
