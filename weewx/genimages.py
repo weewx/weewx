@@ -19,6 +19,7 @@ import os.path
 import weeutil.weeutil
 import weeplot.genplot
 import weeplot.utilities
+import weewx.units
 
 class GenImages(object):
     """Generate plots of the weather data.
@@ -37,7 +38,8 @@ class GenImages(object):
         """    
     
         self.image_dict  = config_dict['Images']
-        self.label_dict  = config_dict['Labels']
+        self.label_dict  = weewx.units.getLabelDict(config_dict)
+        self.title_dict  = config_dict['Labels']['Generic']
         self.image_root  = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                         config_dict['Images']['image_root'])
     def genImages(self, archive, time_ts):
@@ -105,7 +107,7 @@ class GenImages(object):
                     # Add a unit label. NB: all will get overwritten except the last.
                     # Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
-                    unit_label = self.label_dict['ImperialUnits'].get(var_type, '')
+                    unit_label = self.label_dict.get(var_type, '')
                     # Because it is likely to use escaped characters, decode it.
                     unit_label = unit_label.decode('string_escape')
                     plot.setUnitLabel(unit_label)
@@ -113,11 +115,9 @@ class GenImages(object):
                     # See if a line label has been explicitly requested:
                     label = line_options.get('label')
                     if not label:
-                        # No explicit label. Is there a generic one in the config dict?
-                        label = self.label_dict['Generic'].get(var_type)
-                        if not label:
-                            # Nope. Just use the SQL type
-                            label = var_type
+                        # No explicit label. Is there a generic one? 
+                        # If not, then the SQL type will be used instead
+                        label = self.title_dict.get(var_type, var_type)
     
                     # See if a color has been explicitly requested.
                     color_str = line_options.get('color')

@@ -88,7 +88,7 @@ class ModelView(object):
         
         # This will raise an AttributeError exception if the model
         # does not support the attribute 'attr':
-        v = self.model.__getattr__(attr)
+        v = getattr(self.model, attr)
 
         # If we made it this far, the model does have attribute 'attr'.
         # Is it a scalar?
@@ -102,11 +102,11 @@ class ModelView(object):
     
 class Formatter(object):
     """Formatter to be used to convert a value to a string, given a context."""
-    def __init__(self, value_format_dict, unit_label_dict, time_format_dict):
+    def __init__(self, string_format_dict, unit_label_dict, time_format_dict):
         """Initialize an instance of Formatter.
         
-        value_label_dict: A dictionary with key of a type, value of a format to be
-        used to format that type. Example: {'outTemp' : '%0.1f', 'barometer' : '%0.3f'}
+        string_format_dict: A dictionary where key is a type, and the value is a string
+        format to be used to for that type. Example: {'outTemp' : '%0.1f', 'barometer' : '%0.3f'}
         
         unit_label_dict: A dictionary with the unit label to be used for a type.
         Example: {'outTemp' : '&deg;F', 'barometer': 'inHg'}
@@ -119,7 +119,7 @@ class Formatter(object):
         reference such as $week.outTemp.min will use the format keyed by 'week'.
         
         """
-        self.value_format_dict = value_format_dict
+        self.string_format_dict = string_format_dict
         self.unit_label_dict   = unit_label_dict
         self.time_format_dict  = time_format_dict
         
@@ -151,12 +151,12 @@ class Formatter(object):
                 return time.strftime(self.time_format_dict[_format_key], time.localtime(v))
             else:
                 # Not a date. Is it in one of the other dictionaries?
-                if self.value_format_dict.has_key(_key) or self.unit_label_dict.has_key(_key):
+                if self.string_format_dict.has_key(_key) or self.unit_label_dict.has_key(_key):
                     # It is. Format as a number
                     if v is None :
                         return "N/A"
                     try:
-                        val_str   = self.value_format_dict.get(_key, '%f') % v
+                        val_str   = self.string_format_dict.get(_key, '%f') % v
                     except TypeError:
                         val_str = str(v)
                     label_str = self.unit_label_dict.get(_key, '')

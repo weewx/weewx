@@ -543,6 +543,9 @@ class StatsReadonlyDb(object):
     statsTypes: The types of the statistics supported by this instance of
     StatsReadonlyDb. None if the database has not been initialized.
     
+    units: The unit system in use (weewx.US or weewx.METRIC). None if the
+    database has not been initialized.
+    
     heatbase:The base temperature for calculating heating degree-days.
 
     coolbase: The base temperature for calculating cooling degree-days."""
@@ -566,11 +569,12 @@ class StatsReadonlyDb(object):
         Otherwise, it gets read with every query.
         [Optional. Default is True]"""
         
+        self._connection   = None
         self.statsFilename = statsFilename
-        self.statsTypes    = StatsDb.__getTypes(statsFilename)
+        self.statsTypes    = self._getTypes()
+        self.units         = self._getUnits()
         self.heatbase      = heatbase
         self.coolbase      = coolbase
-        self._connection   = None
 
         if cacheDayData:
             self._dayCache  = (None, None)
@@ -794,18 +798,17 @@ class StatsReadonlyDb(object):
             
         return self._connection
     
-    @staticmethod
-    def __getTypes(statsFilename):
-        """Static method which returns the types appearing in a stats database.
+    def _getTypes(self):
+        """Returns the types appearing in a stats database.
         
         statsFilename: Path to the stats database.
         
         returns: A list of types or None if the database has not been initialized."""
         
-        if not os.path.exists(statsFilename):
+        if not os.path.exists(self.statsFilename):
             return None
         
-        with sqlite3.connect(statsFilename) as _connection:
+        with sqlite3.connect(self.statsFilename) as _connection:
             _cursor = _connection.execute('''SELECT name FROM sqlite_master WHERE type = 'table';''')
             
         stats_types = [str(_row[0]) for _row in _cursor if _row[0] != u'metadata']
@@ -818,6 +821,25 @@ class StatsReadonlyDb(object):
 
         return results
 
+    def _getUnits(self):
+        """Returns the unit system in use in the stats database."""
+        
+        if not os.path.exists(self.statsFilename):
+            return None
+        
+        _row = self._xeqSql("""SELECT value FROM metadata WHERE name = 'unit_system';""", {})
+        # If the unit system is missing, then it is an older style stats database,
+        # which are always in US units:
+        if not _row:
+            return weewx.US
+        
+        # Otherwise, extract it from the row and, if debugging, test for validity
+        unit_system = int(_row[0])
+        if weewx.debug:
+            assert(unit_system in (weewx.US, weewx.METRIC))
+        return unit_system
+
+        
 #===============================================================================
 #                    Class StatsDb
 #===============================================================================
@@ -860,7 +882,7 @@ class StatsDb(StatsReadonlyDb):
         self._setDay(_allStatsDict, rec['dateTime'], writeThrough = False)
 
         
-    def config(self, stats_types = None):
+    def config(self, stats_types = None, unit_system = weewx.US):
         """Initialize the StatsDb database
         
         Does nothing if the database has already been initialized.
@@ -899,6 +921,7 @@ class StatsDb(StatsReadonlyDb):
                     else:
                         _connection.execute(std_create_str % (_stats_type,))
                 _connection.execute(meta_create_str)
+                _connection.execute(meta_replace_str, ('unit_system', str(unit_system)))
             
             self.statsTypes = stats_types
             syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % self.statsFilename)

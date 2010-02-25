@@ -1,2 +1,6 @@
 TODO before the next release:
 
+Update readme.htm to reflect addition of metric units.
+
+Update readme.htm to reflect name change from "Imperial" to "US" units.
+

@@ -22,6 +22,7 @@ import weewx
 import weewx.formatter
 import weewx.station
 import weewx.stats
+import weewx.units
 import weeutil.Almanac
 import weeutil.weeutil
 
@@ -81,8 +82,8 @@ class GenFiles(object):
                                      config_dict['HTML'].get('html_root', 'public_html'))
 
         # Get an appropriate formatter:
-        self.formatter =  weewx.formatter.Formatter(config_dict['Labels']['ImperialFormats'],
-                                                    config_dict['HTML']['ImperialUnits'],
+        self.formatter =  weewx.formatter.Formatter(weewx.units.getStringFormatDict(config_dict),
+                                                    weewx.units.getHTMLLabelDict(config_dict),
                                                     config_dict['HTML']['Time'])
 
         try:

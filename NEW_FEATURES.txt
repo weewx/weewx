@@ -9,12 +9,7 @@ there is no elegant way of doing this with the present architecture!)
 
 Fix scaling for aggregate interval of a week, so it starts on a Sunday.
 
-Optional start-of-week besides Sunday.
-
 Ability to set parameters such as lat, lon, altitude on the VP2
-
-Investigate reducing memory requirements by computing statistical quantities
-on the fly, instead of storing them in memory.
 
 Dynamic web updates, using AJAX.
 

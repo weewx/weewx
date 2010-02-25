@@ -23,9 +23,8 @@ class Station(object):
         self.longitude_f = config_dict['Station'].as_float('longitude')
         self.longitude   = weeutil.weeutil.latlon_string(self.longitude_f, self.hemispheres[2:4])
         self.altitude_f  = config_dict['Station'].as_float('altitude')
-        # TODO: Shouldn't hard wire in the reference to 'ImperialUnits':
-        alt_units = config_dict['Labels']['ImperialUnits']['altitude']
-        self.altitude = "%d %s" % (self.altitude_f, alt_units)
+        alt_units        = config_dict['Units']['UnitClasses']['class_altitude']
+        self.altitude    = "%d %s" % (self.altitude_f, config_dict['Labels']['UnitLabels'][alt_units])
         self.location        = config_dict['Station']['location']
         self.rain_year_start = int(config_dict['Station'].get('rain_year_start', '1'))
         self.rain_year_str   = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
