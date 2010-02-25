@@ -119,9 +119,15 @@ td {
 
 <body>
 
-<h1 class="title">Upgrading to weewx v1.3</h1>
+<h1 class="title">Upgrading to weewx v1.5</h1>
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
+<h2>V1.4.0 or earlier</h2>
+<p>Because the configuration file <span class="code">weewx.conf</span> changed 
+significantly going from V1.4 to V1.5, the installation script
+<span class="code">setup.py</span> will NOT merge your cold configuration file 
+into the new one. You will have to re-edit <span class="code">weewx.conf</span> 
+to put in your customizations.</p>
 <h2>V1.2.0 or earlier</h2>
 <h3>Optional</h3>
 <p>Option <span class="code">clock_check</span>, previously found in the <span class="code">[VantagePro]</span> section, is now found in the

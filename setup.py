@@ -122,9 +122,12 @@ class My_install_data(install_data):
         # If so, merge its contents with the new one
         if os.path.exists(outname):
             oldconfig = configobj.ConfigObj(outname)
-            # Any user changes in oldconfig will overwrite values in newconfig
-            # with this merge
-            newconfig.merge(oldconfig)
+            # Check to see if this is an old style weewx.conf. If so,
+            # don't merge it.
+            if not oldconfig['Labels'].has_key('ImperialFormats'):
+                # Any user changes in oldconfig will overwrite values in newconfig
+                # with this merge
+                newconfig.merge(oldconfig)
 
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
         newconfig['Station']['WEEWX_ROOT'] = self.install_dir

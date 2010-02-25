@@ -15,6 +15,7 @@ docs/sheeva.htm
 docs/upgrading.htm
 examples/__init__.py
 examples/alarm.py
+examples/daily.py
 public_html/weewx.css
 public_html/backgrounds/band.gif
 public_html/backgrounds/butterfly.jpg
@@ -37,7 +38,6 @@ weeutil/Almanac.py
 weeutil/Moon.py
 weeutil/Sun.py
 weeutil/__init__.py
-weeutil/timespan.py
 weeutil/weeutil.py
 weewx/VantagePro.py
 weewx/__init__.py
@@ -50,6 +50,7 @@ weewx/genimages.py
 weewx/reportengine.py
 weewx/station.py
 weewx/stats.py
+weewx/units.py
 weewx/wunderground.py
 weewx/wxengine.py
 weewx/wxformulas.py

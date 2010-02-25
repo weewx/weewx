@@ -7,6 +7,11 @@ Added support for other units besides the U.S. Customary. Plots and HTML
 reports can be prepared using any arbitrary combination of units. For example,
 pressure can be in millibars, while everything else is in U.S. Customary.
 
+Because the configuration file weewx.conf changed significantly, the installation
+script setup.py will NOT merge your old configuration file into the new one. You
+will have to reedit weewx.conf to put in your customizations.
+
+
 1.4.0   02/22/10
 
 Changed the architecture of stats.py to one that uses very late
