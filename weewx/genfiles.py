@@ -322,8 +322,8 @@ class GenFiles(object):
         stats['year']     = weewx.stats.TimespanStats(self.statsdb, yearSpan,     self.unitTypeDict)
         stats['rainyear'] = weewx.stats.TimespanStats(self.statsdb, rainYearSpan, self.unitTypeDict)
 
-        # Get a view into the statistical information.
-        statsView = weewx.formatter.ModelView(stats, self.formatter)
+        # Get a formatted view into the statistical information.
+        statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
         
         # Get the list of dates for which NOAA monthly and yearly reports are available:
         NOAA_month_list, NOAA_year_list = self.get_existing_NOAA_reports()
@@ -332,7 +332,7 @@ class GenFiles(object):
                        'almanac'         : self.almanac,
                        'NOAA_month_list' : NOAA_month_list,
                        'NOAA_year_list'  : NOAA_year_list},
-                       statsView]
+                       statsFormatter]
 
         return searchList
     

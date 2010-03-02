@@ -11,7 +11,7 @@
 
 import time
 
-class ModelView(object):
+class ModelFormatter(object):
     """A view into an hierarchical data model.
     
     Much of the HTML rendering logic depends on this class. Given a
@@ -30,26 +30,26 @@ class ModelView(object):
         data['year']['outTemp']['min'] = 45.88
         data['year']['outTemp']['max'] = 55.298
     
-    Then a ModelView can be constructed into it, using a formatter:
+    Then a ModelFormatter can be constructed into it, using a formatter:
     
         formatter = weewx.html.Formatter({'outTemp' : '%.1f'}, 
                                          {'outTemp' : " Fahrenheit"}, None)
-        dataView = ModelView(data, formatter)
+        dataView = ModelFormatter(data, formatter)
     
         print data['year']['outTemp']['min']     # Prints 45.88
         print dataView['year']['outTemp']['min'] # Prints "45.9 Fahrenheit"
 
     Note that data['year']['outTemp']['min'] returns a *float* of value 45.88,
-    (which print then converts into a string), while the view offers a formatted view, 
-    returning a *string*."""
+    (which print then converts into a string), while the ModelFormatter
+    offers a formatted view, returning a *string*."""
     def __init__(self, model, formatter, context = ()):
-        """Initialize an instance of ModelView.
+        """Initialize an instance of ModelFormatter.
         
         model: The hierarchical model to be viewed.
         
         formatter: An instance of weewx.html.Formatter, or something that looks like it.
         
-        context: Contains the accumulating context as ModelView creates 
+        context: Contains the accumulating context as ModelFormatter creates 
         itself recursively. 
         """
         self.model     = model
@@ -72,7 +72,7 @@ class ModelView(object):
             str = self.formatter.format(v, self.context + (key,))
             return str
         # It's not a scalar. Create a new instance recursively:
-        return ModelView(v, self.formatter, self.context + (key,))
+        return ModelFormatter(v, self.formatter, self.context + (key,))
     
     def __getattr__(self, attr):
         """Query the underlying model if it has the attribute 'attr'.
@@ -97,7 +97,7 @@ class ModelView(object):
             str = self.formatter.format(v, self.context + (attr,))
             return str
         # It's not a scalar. Create a new instance recursively:
-        return ModelView(v, self.formatter, self.context + (attr,))
+        return ModelFormatter(v, self.formatter, self.context + (attr,))
     
     
 class Formatter(object):
