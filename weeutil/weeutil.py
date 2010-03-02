@@ -290,6 +290,8 @@ def archiveDaySpan(time_ts, grace = 30):
     returns: A TimeSpan object one day long that contains time_ts. It
     will begin and end at midnight.
     """
+    if time_ts is None:
+        return None
     time_ts -= grace
     _day_date = datetime.date.fromtimestamp(time_ts)
     _day_ord = _day_date.toordinal()
@@ -312,6 +314,8 @@ def archiveWeekSpan(time_ts, startOfWeek = 6, grace = 30):
     start at midnight of the day considered the start of the week, and be
     one week long.
     """
+    if time_ts is None:
+        return None
     time_ts -= grace
     _day_date = datetime.date.fromtimestamp(time_ts)
     _day_of_week = _day_date.weekday()
@@ -337,6 +341,8 @@ def archiveMonthSpan(time_ts, grace = 30):
     It will start at midnight of the start of the month, and end at midnight
     of the start of the next month.
     """
+    if time_ts is None:
+        return None
     time_ts -= grace
     _day_date = datetime.date.fromtimestamp(time_ts)
     _month_date = _day_date.replace(day=1)
@@ -364,6 +370,8 @@ def archiveYearSpan(time_ts, grace = 30):
     returns: A TimeSpan object one year long that contains time_ts. It will
     begin and end at midnight 1-Jan.
     """
+    if time_ts is None:
+        return None
     time_ts -= grace
     _day_date = datetime.date.fromtimestamp(time_ts)
     return TimeSpan(int(time.mktime((_day_date.year, 1, 1, 0, 0, 0, 0, 0, -1))),
@@ -386,6 +394,8 @@ def archiveRainYearSpan(time_ts, sory_mon = 1, grace = 30):
     returns: A TimeSpan object one year long that contains time_ts. It will
     begin on the 1st of the month that starts the rain year.
     """
+    if time_ts is None:
+        return None
     time_ts -= grace
     _day_date = datetime.date.fromtimestamp(time_ts)
     _year = _day_date.year if _day_date.month >= sory_mon else _day_date.year - 1
@@ -429,6 +439,8 @@ def genMonthSpans(start_ts, stop_ts):
     of the next month.
     
     """
+    if None in (start_ts, stop_ts):
+        return
     _start_dt = datetime.date.fromtimestamp(start_ts)
     _stop_date = datetime.datetime.fromtimestamp(stop_ts)
 
@@ -445,6 +457,8 @@ def genMonthSpans(start_ts, stop_ts):
                        time.mktime((_next_yr, _next_mo, 1, 0, 0, 0, 0, 0, -1)))
 
 def genYearSpans(start_ts, stop_ts):
+    if None in (start_ts, stop_ts):
+        return
     _start_date = datetime.date.fromtimestamp(start_ts)
     _stop_dt = datetime.datetime.fromtimestamp(stop_ts)
     

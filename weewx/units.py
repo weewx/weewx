@@ -149,7 +149,8 @@ def convertStd(fromUnitSystem, fromType, toUnit, obj):
     on obj converted into the desired units.
     """
     fromClass = unitGroups.get(fromType)
-    if not fromClass: return obj
+    if None in (fromUnitSystem, fromClass): 
+        return obj
     fromUnit = StdUnitSystem[fromUnitSystem][fromClass]
     return convert(fromUnit, toUnit, obj)
     

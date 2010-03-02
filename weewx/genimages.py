@@ -58,6 +58,8 @@ class GenImages(object):
 
         if not time_ts:
             time_ts = archive.lastGoodStamp()
+            if not time_ts:
+                time_ts = time.time()
 
         # Loop over each time span class (day, week, month, etc.):
         for timespan in self.image_dict.sections :

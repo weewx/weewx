@@ -699,6 +699,8 @@ class StatsReadonlyDb(object):
         returns: The aggregation value, or None if not enough data was available to calculate
         it, or if the aggregation type is unknown.
         """
+        if timespan is None:
+            return None
         # Special function for heating and cooling degrees:
         if statsType in ('heatdeg', 'cooldeg'):
             return self.getHeatCool(timespan, statsType, aggregateType)
