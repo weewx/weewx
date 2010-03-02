@@ -88,7 +88,7 @@ class ModelFormatter(object):
         
         # This will raise an AttributeError exception if the model
         # does not support the attribute 'attr':
-        v = self.model.__getattr__(attr)
+        v = getattr(self.model, attr)
 
         # If we made it this far, the model does have attribute 'attr'.
         # Is it a scalar?
