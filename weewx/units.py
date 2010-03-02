@@ -14,84 +14,84 @@
 import weewx
 
 # This data structure maps types to a "unit class"
-unitClasses = {  "barometer"          : "class_pressure",
-                 "pressure"           : "class_pressure",
-                 "altimeter"          : "class_pressure",
-                 "inTemp"             : "class_temperature",
-                 "outTemp"            : "class_temperature",
-                 "inHumidity"         : "class_percent",
-                 "outHumidity"        : "class_percent",
-                 "windSpeed"          : "class_speed",
-                 "windDir"            : "class_direction",
-                 "windGust"           : "class_speed",
-                 "windGustDir"        : "class_direction",
-                 "windvec"            : "class_speed",
-                 "windgustvec"        : "class_speed",
-                 "wind"               : "class_speed",
-                 "vecdir"             : "class_direction",
-                 "vecavg"             : "class_speed2",
-                 "rms"                : "class_speed2",
-                 "gustdir"            : "class_direction",
-                 "rainRate"           : "class_rainrate",
-                 "rain"               : "class_rain",
-                 "dewpoint"           : "class_temperature",
-                 "windchill"          : "class_temperature",
-                 "heatindex"          : "class_temperature",
-                 "ET"                 : "class_rain",
-                 "radiation"          : "class_radiation",
-                 "UV"                 : "class_radiation",
-                 "extraTemp1"         : "class_temperature",
-                 "extraTemp2"         : "class_temperature",
-                 "extraTemp3"         : "class_temperature",
-                 "soilTemp1"          : "class_temperature",
-                 "soilTemp2"          : "class_temperature",
-                 "soilTemp3"          : "class_temperature",
-                 "soilTemp4"          : "class_temperature",
-                 "leafTemp1"          : "class_temperature",
-                 "leafTemp2"          : "class_temperature",
-                 "extraHumid1"        : "class_percent",
-                 "extraHumid2"        : "class_percent",
-                 "soilMoist1"         : "class_moisture",
-                 "soilMoist2"         : "class_moisture",
-                 "soilMoist3"         : "class_moisture",
-                 "soilMoist4"         : "class_moisture",
-                 "rxCheckPercent"     : "class_percent",
-                 "consBatteryVoltage" : "class_volt",
-                 "hail"               : "class_rain",
-                 "hailRate"           : "class_rainrate",
-                 "heatingTemp"        : "class_temperature",
-                 "heatingVoltage"     : "class_volt",
-                 "supplyVoltage"      : "class_volt",
-                 "referenceVoltage"   : "class_volt",
-                 "altitude"           : "class_altitude" }
+unitGroups = {  "barometer"          : "group_pressure",
+                 "pressure"           : "group_pressure",
+                 "altimeter"          : "group_pressure",
+                 "inTemp"             : "group_temperature",
+                 "outTemp"            : "group_temperature",
+                 "inHumidity"         : "group_percent",
+                 "outHumidity"        : "group_percent",
+                 "windSpeed"          : "group_speed",
+                 "windDir"            : "group_direction",
+                 "windGust"           : "group_speed",
+                 "windGustDir"        : "group_direction",
+                 "windvec"            : "group_speed",
+                 "windgustvec"        : "group_speed",
+                 "wind"               : "group_speed",
+                 "vecdir"             : "group_direction",
+                 "vecavg"             : "group_speed2",
+                 "rms"                : "group_speed2",
+                 "gustdir"            : "group_direction",
+                 "rainRate"           : "group_rainrate",
+                 "rain"               : "group_rain",
+                 "dewpoint"           : "group_temperature",
+                 "windchill"          : "group_temperature",
+                 "heatindex"          : "group_temperature",
+                 "ET"                 : "group_rain",
+                 "radiation"          : "group_radiation",
+                 "UV"                 : "group_radiation",
+                 "extraTemp1"         : "group_temperature",
+                 "extraTemp2"         : "group_temperature",
+                 "extraTemp3"         : "group_temperature",
+                 "soilTemp1"          : "group_temperature",
+                 "soilTemp2"          : "group_temperature",
+                 "soilTemp3"          : "group_temperature",
+                 "soilTemp4"          : "group_temperature",
+                 "leafTemp1"          : "group_temperature",
+                 "leafTemp2"          : "group_temperature",
+                 "extraHumid1"        : "group_percent",
+                 "extraHumid2"        : "group_percent",
+                 "soilMoist1"         : "group_moisture",
+                 "soilMoist2"         : "group_moisture",
+                 "soilMoist3"         : "group_moisture",
+                 "soilMoist4"         : "group_moisture",
+                 "rxCheckPercent"     : "group_percent",
+                 "consBatteryVoltage" : "group_volt",
+                 "hail"               : "group_rain",
+                 "hailRate"           : "group_rainrate",
+                 "heatingTemp"        : "group_temperature",
+                 "heatingVoltage"     : "group_volt",
+                 "supplyVoltage"      : "group_volt",
+                 "referenceVoltage"   : "group_volt",
+                 "altitude"           : "group_altitude" }
 
 # This structure maps unit classes to actual units using the
 # US customary unit system.
-USUnits       = {"class_pressure"     : "inHg",
-                 "class_temperature"  : "degree_F",
-                 "class_percent"      : "percent",
-                 "class_speed"        : "mile_per_hour",
-                 "class_direction"    : "degree_compass",
-                 "class_speed2"       : "mile_per_hour2",
-                 "class_rainrate"     : "inch_per_hour",
-                 "class_rain"         : "inch",
-                 "class_radiation"    : "watt_per_meter_squared",
-                 "class_moisture"     : "centibar",
-                 "class_volt"         : "volt",
-                 "class_altitude"     : "meter"}
+USUnits       = {"group_pressure"     : "inHg",
+                 "group_temperature"  : "degree_F",
+                 "group_percent"      : "percent",
+                 "group_speed"        : "mile_per_hour",
+                 "group_direction"    : "degree_compass",
+                 "group_speed2"       : "mile_per_hour2",
+                 "group_rainrate"     : "inch_per_hour",
+                 "group_rain"         : "inch",
+                 "group_radiation"    : "watt_per_meter_squared",
+                 "group_moisture"     : "centibar",
+                 "group_volt"         : "volt",
+                 "group_altitude"     : "meter"}
 
-MetricUnits   = {"class_pressure"     : "mbar",
-                 "class_temperature"  : "degree_C",
-                 "class_percent"      : "percent",
-                 "class_speed"        : "km_per_hour",
-                 "class_direction"    : "degree_compass",
-                 "class_speed2"       : "km_per_hour2",
-                 "class_rainrate"     : "cm_per_hour",
-                 "class_rain"         : "cm",
-                 "class_radiation"    : "watt_per_meter_squared",
-                 "class_moisture"     : "centibar",
-                 "class_volt"        : "volt",
-                 "class_altitude"     : "meter"}
+MetricUnits   = {"group_pressure"     : "mbar",
+                 "group_temperature"  : "degree_C",
+                 "group_percent"      : "percent",
+                 "group_speed"        : "km_per_hour",
+                 "group_direction"    : "degree_compass",
+                 "group_speed2"       : "km_per_hour2",
+                 "group_rainrate"     : "cm_per_hour",
+                 "group_rain"         : "cm",
+                 "group_radiation"    : "watt_per_meter_squared",
+                 "group_moisture"     : "centibar",
+                 "group_volt"        : "volt",
+                 "group_altitude"     : "meter"}
 
 StdUnitSystem     = {weewx.US     : USUnits,
                      weewx.METRIC : MetricUnits}
@@ -148,7 +148,7 @@ def convertStd(fromUnitSystem, fromType, toUnit, obj):
     returns: Either a scalar value or an iterable sequence of values (depending
     on obj converted into the desired units.
     """
-    fromClass = unitClasses.get(fromType)
+    fromClass = unitGroups.get(fromType)
     if not fromClass: return obj
     fromUnit = StdUnitSystem[fromUnitSystem][fromClass]
     return convert(fromUnit, toUnit, obj)
@@ -156,13 +156,13 @@ def convertStd(fromUnitSystem, fromType, toUnit, obj):
 def getUnitType(config_dict, type):
     """Extract the type of unit (e.g., 'feet', 'miles_per_hour', etc.) as
     a string for the given type."""
-    classType = unitClasses[type]
-    unitType = config_dict['Units']['UnitClasses'][classType]
+    classType = unitGroups[type]
+    unitType = config_dict['Units']['UnitGroups'][classType]
     return unitType
 
 def getUnitTypeDict(config_dict):
     unitTypeDict = {}
-    for type in unitClasses:
+    for type in unitGroups:
         unitTypeDict[type] = getUnitType(config_dict, type)
     return unitTypeDict
 
@@ -181,21 +181,21 @@ def getHTMLLabel(config_dict, type):
 def getStringFormatDict(config_dict):
     """Return a dictionary of suitable string formats for all types."""
     stringFormatDict = {}
-    for type in unitClasses:
+    for type in unitGroups:
         stringFormatDict[type] = getStringFormat(config_dict, type)
     return stringFormatDict
 
 def getLabelDict(config_dict):
     """Return a dictionary of suitable generic unit labels for all types."""
     labelDict = {}
-    for type in unitClasses:
+    for type in unitGroups:
         labelDict[type] = getLabel(config_dict, type)
     return labelDict
 
 def getHTMLLabelDict(config_dict):
     """Return a dictionary of suitable HTML unit labels for all types."""
     htmlLabelDict = {}
-    for type in unitClasses:
+    for type in unitGroups:
         htmlLabelDict[type] = getHTMLLabel(config_dict, type)
     return htmlLabelDict
             

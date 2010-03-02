@@ -1,6 +1,11 @@
 TODO before the next release:
 
 Standardize the use of "SQL type". I.e., use "measurement type" or "observation type"
-or something, but be consistent.
+or something, but be consistent. I like obs_type. This is a superset of sql_type.
 
+Check that heating and cooling degree days work in metric.
 
+Check unit labels in NOAA year TXT files.
+
+See if the install can be a bit more friendly by merging the unchanged sections 
+of weewx.conf.

@@ -534,7 +534,7 @@ longitude</h4>
 hemispheres, respectively. Required. No default.</p>
 <h4 class="config_important">altitude</h4>
 <p>Should be set to the altitude of the station in the same units specified in
-<span class="code"><a href="#class_altitude">class_altitude</a></span>. Required. No default.</p>
+<span class="code"><a href="#group_altitude">group_altitude</a></span>. Required. No default.</p>
 <h4 class="config_important">rain_year_start</h4>
 <p>If your area uses a rain year that starts on something other than the first of 
 January, you may want to set this variable. For example, set to 10 if your rain 
@@ -663,60 +663,72 @@ different soil moisture sensors?) The list that ships with the configuration fil
 will work for most stations and probably will not have to be modified.</p>
 <h3 class="config_section">[Units]</h3>
 <p>This section deals with Units and their formatting. </p>
-<h4><a name="Unit_Classes">Unit Classes</a></h4>
-<p>As there are many different measurement types (such as &#39;<span class="code">outTemp</span>&#39;, 
+<h4><a name="Unit_Classes">Unit Groups</a></h4>
+<p>As there are many different observational measurement types (such as &#39;<span class="code">outTemp</span>&#39;, 
 &#39;<span class="code">barometer</span>&#39;, etc.) used in <span class="code">weewx</span> 
 (more than 50 at last count), it would be tedious, not to say possibly 
 inconsistent, to specify a different measurement system for each one of them. At 
 the other extreme, requiring them all to be &quot;U.S. Customary&quot; or &quot;Metric&quot; seems 
 overly restrictive. <span class="code">Weewx</span> has taken a middle route and 
-divided all the different measurement types into 12 different &quot;unit classes.&quot; A 
-unit class is something like &quot;<span class="code">class_temperature</span>.&quot; It 
+divided all the different measurement types into 12 different &quot;unit groups.&quot; A 
+unit group is something like &quot;<span class="code">group_temperature</span>.&quot; It 
 represents the measurement system to be used by all measurement types that are 
 measured in temperature, such as inside temperature (type &#39;<span class="code">inTemp</span>&#39;), 
 outside temperature (&#39;<span class="code">outTemp</span>&#39;), dewpoint (&#39;<span class="code">dewpoint</span>&#39;), 
 wind chill (&#39;<span class="code">windchill</span>&#39;), <em>etc</em>. If you say 
-that you want unit class <span class="code">class_temperature</span> to be 
+that you want unit group <span class="code">group_temperature</span> to be 
 measured in &quot;<span class="code">degrees_C</span>&quot; then you are saying <em>all</em> 
-members of its class will be reported in degrees Celsius.</p>
-<h4 class="config_option">[[UnitClasses]]</h4>
-<p>This section lists all the Unit Classes and specifies which unit system is to 
+members of its group will be reported in degrees Celsius.</p>
+<h4 class="config_option">[[UnitGroups]]</h4>
+<p>This section lists all the Unit Groups and specifies which unit system is to 
 be used for each one of them. Note that the unit system is always specified in 
 the singular. That is, specify &quot;<span class="code">foot</span>&quot; or &quot;<span class="code">inch_per_hour</span>&quot;, 
 not &quot;<span class="code">feet</span>&quot; or &quot;<span class="code">inches_per_hour</span>.&quot;</p>
-<h4 class="config_important"><a name="class_altitude">class_altitude</a></h4>
-<p>Which measurement unit to be used for altitude. Either &#39;<span class="code">foot</span>&#39; 
-or &#39;<span class="code">meter</span>&#39;.</p>
-<h4 class="config_option">class_direction</h4>
-<p>Which measurement unit to be used for direction. The only option is &quot;<span class="code">degree_compass</span>&quot;.</p>
-<h4 class="config_option">class_moisture</h4>
-<p>The measurement unit to be used for soil moisture. The only option is &quot;<span class="code">centibar</span>.&quot;</p>
-<h4 class="config_option">class_percent</h4>
-<p>The measurement unit to be used for percentages. The only option is &quot;<span class="code">percent</span>&quot;.</p>
-<h4 class="config_important">class_pressure</h4>
-<p>The measurement unit to be used for pressure. Either &quot;<span class="code">inHg</span>&quot; 
-(inches of mercury), &quot;<span class="code">mbar</span>&quot;, or &quot;<span class="code">hPa</span>.&quot;</p>
-<h4 class="config_option">class_radiation</h4>
-<p>The measurement unit to be used for radiation. The only option is &quot;<span class="code">watt_per_meter_squared</span>.&quot;</p>
-<h4 class="config_important">class_rain</h4>
-<p>The measurement unit to be used for precipitation. Options are &quot;<span class="code">inch</span>&quot;, 
-&quot;<span class="code">cm</span>,&quot; or &quot;<span class="code">mm</span>.&quot;</p>
-<h4 class="config_important">class_rainrate</h4>
-<p>The measurement unit to be used for rate of precipitation. Options are &quot;<span class="code">inch_per_hour</span>&quot;, 
-&quot;<span class="code">cm_per_hour</span>&quot;, or &quot;mm_per<span class="code"> </span>
-hour.&quot;</p>
-<h4 class="config_important">class_speed</h4>
-<p>The measurement unit to be used for wind speeds. Options are &quot;<span class="code">mile_per_hour</span>&quot;, 
+<h4 class="config_important"><a name="group_altitude">group_altitude</a></h4>
+<p>Which measurement unit to be used for altitude. Possible options
+are &#39;<span class="code">foot</span>&#39; or
+&#39;<span class="code">meter</span>&#39;.</p>
+<h4 class="config_option">group_direction</h4>
+<p>Which measurement unit to be used for direction. The only option is
+&quot;<span class="code">degree_compass</span>&quot;.</p>
+<h4 class="config_option">group_moisture</h4>
+<p>The measurement unit to be used for soil moisture. The only option
+is &quot;<span class="code">centibar</span>.&quot;</p>
+<h4 class="config_option">group_percent</h4>
+<p>The measurement unit to be used for percentages. The only option is
+&quot;<span class="code">percent</span>&quot;.</p>
+<h4 class="config_important">group_pressure</h4>
+<p>The measurement unit to be used for pressure. Possible options are
+one of &quot;<span class="code">inHg</span>&quot; (inches of mercury),
+&quot;<span class="code">mbar</span>&quot;, or
+&quot;<span class="code">hPa</span>.&quot;</p>
+<h4 class="config_option">group_radiation</h4>
+<p>The measurement unit to be used for radiation. The only option is
+&quot;<span class="code">watt_per_meter_squared</span>.&quot;</p>
+<h4 class="config_important">group_rain</h4>
+<p>The measurement unit to be used for precipitation. Options are
+&quot;<span class="code">inch</span>&quot;,
+&quot;<span class="code">cm</span>,&quot; or
+&quot;<span class="code">mm</span>.&quot;</p>
+
+<h4 class="config_important">group_rainrate</h4>
+<p>The measurement unit to be used for rate of precipitation. Options
+are &quot;<span class="code">inch_per_hour</span>&quot;,
+&quot;<span class="code">cm_per_hour</span>&quot;, or
+&quot;<span class="code">mm_per_hour</span>&quot;.</p>
+
+<h4 class="config_important">group_speed</h4>
+<p>The measurement unit to be used for wind speeds. Possible options are one of &quot;<span class="code">mile_per_hour</span>&quot;, 
 &quot;<span class="code">km_per_hour</span>&quot;, &quot;<span class="code">knot</span>&quot;, or &quot;<span class="code">meter_per_second</span>.&quot;</p>
-<h4 class="config_important">class_speed2</h4>
-<p>This class is similar to class_speed, but is used for calculated wind speeds 
-which typically have a slightly higher resolution. Options are &quot;<span class="code">mile_per_hour2</span>&quot;, 
+<h4 class="config_important">group_speed2</h4>
+<p>This group is similar to group_speed, but is used for calculated wind speeds 
+which typically have a slightly higher resolution. Possible options are one of &quot;<span class="code">mile_per_hour2</span>&quot;, 
 &quot;<span class="code">km_per_hour2</span>&quot;, &quot;<span class="code">knot2</span>&quot;, or 
 &quot;<span class="code">meter_per_second2</span>.&quot;</p>
-<h4 class="config_important">class_temperature</h4>
+<h4 class="config_important">group_temperature</h4>
 <p>The measurement unit to be used for temperatures. Options are &quot;<span class="code">degree_F</span>&quot; 
 or &quot;<span class="code">degree_C</span>.&quot;</p>
-<h4 class="config_option">class_volt</h4>
+<h4 class="config_option">group_volt</h4>
 <p>The measurement unit to be used for voltages. The only option is &quot;<span class="code">volt</span>.&quot;</p>
 <h4 class="config_option"><a name="Units_StringFormats">[[StringFormats]]</a></h4>
 <p>This sub-section is used to specify what string format is to be used for each 
