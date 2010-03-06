@@ -455,13 +455,20 @@ def main(EngineClass = StdEngine) :
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught WeeWxIOError: %s" % e)
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Waiting 60 seconds then retrying...")
+            syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
             time.sleep(60)
             syslog.syslog(syslog.LOG_NOTICE, "wxengine: retrying...")
+            
+        except OSError, e:
+            # Caught an OS error. Log it, wait 10 seconds, then try again
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught OSError: %s" % e)
+            syslog.syslog(syslog.LOG_CRIT, "    ****  This is typically caused by another program trying to access the weather station")
+            syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 10 seconds then retrying...")
+            time.sleep(10)
+            syslog.syslog(syslog.LOG_NOTICE,"wxengine: retrying...")
 
         except Restart:
             syslog.syslog(syslog.LOG_NOTICE, "wxengine: Received signal HUP. Restarting.")
-            engine.shutDown()
             
         # If run from the command line, catch any keyboard interrupts and log them:
         except KeyboardInterrupt:
@@ -472,8 +479,10 @@ def main(EngineClass = StdEngine) :
         except Exception, ex:
             # Caught unrecoverable error. Log it, exit
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught unrecoverable exception in wxengine:")
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: %s" % ex)
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Exiting.")
+            syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
+            syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise
 
+        # Shut down the engine first, before retrying.
+        engine.shutDown()

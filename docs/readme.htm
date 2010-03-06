@@ -561,13 +561,14 @@ year starts in October (as mine does). Default is 1.</p>
 <h4 class="config_important">radar_url</h4>
 <p>This variable is available in the HTML templates. Set it to an appropriate URL 
 to display a radar image for your area. No default.</p>
+<h4 class="config_option"><span class="config_important">heating_base<br />
+cooling_base</span></h4>
+<p>Set to the base temperature for calculating heating and cooling degree-days, 
+respectively, in the same units specified in <span class="code">
+<a href="#group_temperature">group_temperature</a></span>. The default is 65.0 for both.</p>
 <h4 class="config_option">week_start</h4>
 <p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 
 (Sunday)</p>
-<h4 class="config_option">heating_base<br />
-cooling_base</h4>
-<p>Set to the base temperature for calculating heating and cooling degree-days, 
-respectively. The default is 65.0 for both.</p>
 <h4 class="config_option">hemispheres</h4>
 <p>Set to suitable abbreviations for the four hemispheres. Default is &quot;N&quot;, &quot;S&quot;, 
 &quot;E&quot;, &quot;W&quot;</p>
@@ -747,7 +748,7 @@ are one of &quot;<span class="code">inch_per_hour</span>&quot;,
 which typically have a slightly higher resolution. Possible options are one of &quot;<span class="code">mile_per_hour2</span>&quot;, 
 &quot;<span class="code">km_per_hour2</span>&quot;, &quot;<span class="code">knot2</span>&quot;, or 
 &quot;<span class="code">meter_per_second2</span>.&quot;</p>
-<h4 class="config_important">group_temperature</h4>
+<h4 class="config_important"><a name="group_temperature">group_temperature</a></h4>
 <p>The measurement unit to be used for temperatures. Options are &quot;<span class="code">degree_F</span>&quot; 
 or &quot;<span class="code">degree_C</span>.&quot;</p>
 <h4 class="config_option">group_volt</h4>
@@ -898,6 +899,28 @@ winds out of the west point straight up. </p>
 <span class="code">weewx</span> includes daily, weekly, monthly, and yearly 
 progressive wind plots), a small compass rose will be put in the lower-left 
 corner of the image to show the orientation of North.</p>
+<h4>Overriding values</h4>
+<p>Remember that values at any level can override values specified at a higher 
+level. For example, say you want to generate the standard plots, but for a few 
+key observation types such as barometer, you want to also generate some 
+oversized plots to give you extra detail, perhaps for an HTML popup. The 
+standard <span class="code">weewx.conf</span> file specifies plot size of 
+300x180 pixels, which will be used for all plots unless overridden:</p>
+<p class="tty">[Images]</p>
+<p class="tty">&nbsp; ...</p>
+<p class="tty">&nbsp; image_width=300</p>
+<p class="tty">&nbsp; image_height = 180</p>
+<p>The standard plot of barometric pressure will appear in <span class="code">
+daybarometer.png</span>:</p>
+<p class="tty">&nbsp;&nbsp;&nbsp; [[[daybarometer]]]</p>
+<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[barometer]]]]&nbsp;</p>
+<p>We now add our special plot of barometric pressure, but specify a larger 
+image size. This image will be put in file <span class="code">
+daybarometer_big.png</span>.</p>
+<p class="tty">&nbsp; &nbsp; [[[daybarometer_big]]]</p>
+<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_width&nbsp; = 600</p>
+<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_height = 360</p>
+<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[barometer]]]]</p>
 <h4>Summary</h4>
 <p>Studying this section in the shipped version of <span class="code">weewx.conf</span> 
 will give you ideas about the many different image plot configurations that are 
