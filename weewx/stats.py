@@ -483,6 +483,12 @@ class StatsTypeHelper(object):
     """Nearly stateless helper class that holds the type over which aggregation is to be done."""
     
     def __init__(self, timespanStats, statsType):
+        """ Initialize an instance of StatsTypeHelper
+        
+        timespanStats: An instance of TimespanStats
+        
+        statsType: A string with the stats type (e.g., 'outTemp') over which aggregation
+        is to be done."""
         
         self.timespanStats = timespanStats
         self.statsType     = statsType
@@ -703,7 +709,7 @@ class StatsReadonlyDb(object):
             return None
         # Special function for heating and cooling degrees:
         if statsType in ('heatdeg', 'cooldeg'):
-            return self.getHeatCool(timespan, statsType, aggregateType)
+            return self.getHeatCool(timespan, statsType, aggregateType, toUnits)
         
         # This dictionary is used for interpolating the SQL statement.
         interDict = {'start'         : timespan.start,
@@ -754,7 +760,7 @@ class StatsReadonlyDb(object):
         else:
             return result
         
-    def getHeatCool(self, timespan, statsType, aggregateType):
+    def getHeatCool(self, timespan, statsType, aggregateType, toUnits):
         """Calculate heating or cooling degree days for a given timespan."""
         
         # The requested type must be heatdeg or cooldeg
@@ -768,7 +774,7 @@ class StatsReadonlyDb(object):
         sum = 0.0
         count = 0
         for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
-            Tavg = self.getAggregate(daySpan, 'outTemp', 'avg')
+            Tavg = self.getAggregate(daySpan, 'outTemp', 'avg', toUnits = toUnits)
             if Tavg is not None:
                 if statsType == 'heatdeg':
                     sum += weewx.wxformulas.heating_degrees(Tavg, self.heatbase)
