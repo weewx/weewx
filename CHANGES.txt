@@ -1,15 +1,19 @@
 CHANGE HISTORY
 --------------------------------
 
-1.5.0   02/25/10
+1.5.0   03/07/10
 
 Added support for other units besides the U.S. Customary. Plots and HTML
 reports can be prepared using any arbitrary combination of units. For example,
-pressure can be in millibars, while everything else is in U.S. Customary.
+pressure could be in millibars, while everything else is in U.S. Customary.
 
 Because the configuration file weewx.conf changed significantly, the installation
 script setup.py will NOT merge your old configuration file into the new one. You
 will have to reedit weewx.conf to put in your customizations.
+
+Added an exception handler for exception OSError, which is typically thrown
+when another piece of software attempts to access the same device port.
+Weewx catches the exception, waits 10 seconds, then starts again from the top.
 
 
 1.4.0   02/22/10
