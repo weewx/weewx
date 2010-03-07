@@ -509,10 +509,10 @@ def startOfArchiveDay(time_ts, grace = 30):
     
 def secs_to_string(secs):
     """
-    Convert seconds to a string with days, hours, minutes and seconds
+    Convert seconds to a string with days, hours, and minutes
     """
     str_list = []
-    for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60), ('second', 1)):
+    for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60)):
         amt = int(secs / interval)
         plural = '' if amt == 1 else 's'
         str_list.append("%d %s%s" % (amt, label, plural))
