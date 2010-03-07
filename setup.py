@@ -131,6 +131,8 @@ class My_install_data(install_data):
 
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
         newconfig['Station']['WEEWX_ROOT'] = self.install_dir
+        # Add the version:
+        newconfig['version'] = VERSION
         
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
