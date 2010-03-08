@@ -76,7 +76,7 @@ class MyAlarm(StdService):
             self.smtp_user     = self.engine.config_dict['Alarm'].get('smtp_user')
             self.smtp_password = self.engine.config_dict['Alarm'].get('smtp_password')
             self.TO            = self.engine.config_dict['Alarm']['mailto']
-            syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression %s" % self.expression)
+            syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
         except:
             self.expression = None
             self.time_wait  = None
@@ -106,7 +106,7 @@ class MyAlarm(StdService):
         # Get the time and convert to a string:
         t_str = timestamp_to_string(rec['dateTime'])
         # Form the message text:
-        msg_text = "Alarm expression %s evaluated True at %s\nRecord:\n%s" % (self.expression, t_str, str(rec))
+        msg_text = "Alarm expression \"%s\" evaluated True at %s\nRecord:\n%s" % (self.expression, t_str, str(rec))
         # Convert to MIME:
         msg = MIMEText(msg_text)
         
@@ -117,6 +117,15 @@ class MyAlarm(StdService):
         
         # Create an instance of class SMTP for the given SMTP host:
         s = smtplib.SMTP(self.smtp_host)
+        s.ehlo()
+        try:
+            # Some servers (eg, gmail) require encrypted transport.
+            # Be prepared to catch an exception if the server
+            # doesn't support it.
+            s.starttls()
+        except smtplib.SMTPException:
+            pass
+        s.ehlo()
         # If a username has been given, assume that login is required for this host:
         if self.smtp_user:
             s.login(self.smtp_user, self.smtp_password)
@@ -127,7 +136,7 @@ class MyAlarm(StdService):
         # Record when the message went out:
         self.last_msg = time.time()
         # Log it in the system log:
-        syslog.syslog(syslog.LOG_INFO, "alarm: Alarm sounded for expression %s" % self.expression)
+        syslog.syslog(syslog.LOG_INFO, "alarm: Alarm sounded for expression: \"%s\"" % self.expression)
         syslog.syslog(syslog.LOG_INFO, "       *** email sent to: %s" % self.TO)
         
         
