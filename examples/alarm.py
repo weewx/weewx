@@ -117,15 +117,15 @@ class MyAlarm(StdService):
         
         # Create an instance of class SMTP for the given SMTP host:
         s = smtplib.SMTP(self.smtp_host)
-        s.ehlo()
         try:
             # Some servers (eg, gmail) require encrypted transport.
             # Be prepared to catch an exception if the server
             # doesn't support it.
+            s.ehlo()
             s.starttls()
+            s.ehlo()
         except smtplib.SMTPException:
             pass
-        s.ehlo()
         # If a username has been given, assume that login is required for this host:
         if self.smtp_user:
             s.login(self.smtp_user, self.smtp_password)

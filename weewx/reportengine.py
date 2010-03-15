@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -41,50 +41,81 @@ class StdReportEngine(threading.Thread):
         self.config_dict = config_dict
         self.gen_ts = gen_ts
         
-        self.report_list = self.config_dict['Engines']['ReportEngine'].get('report_list', 
-                                                                           ['weewx.reportengine.FileGen', 
-                                                                            'weewx.reportengine.ImageGen',
-                                                                            'weewx.reportengine.Ftp'])
-            
-    def run(self):
-        """This is where the actual work gets done.
-        
-        Runs through the list of report classes, instantiating each one,
-        then calling its "start()" method."""
-        
+    def setup(self):
         if self.gen_ts:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for time %s" % 
                           weeutil.weeutil.timestamp_to_string(self.gen_ts))
         else:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for latest time in the database.")
         
-        # Put the whole thing in a try block so we can log any exceptions that
-        # might bubble up
-        try:
+    
+    def run(self):
+        """This is where the actual work gets done.
         
-            for report in self.report_list:
-                syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
-                # Instantiate an instance of the class
-                obj = weeutil.weeutil._get_object(report, self)
-                # Call its start() method
-                obj.start()
-
-        except Exception, ex:
-            # Caught unrecoverable error. Log it, exit
-            syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception while running report %s" % report)
-            syslog.syslog(syslog.LOG_CRIT, "reportengine: ** %s" % ex)
-            syslog.syslog(syslog.LOG_CRIT, "reportengine: ** Thread exiting.")
-            # Reraise the exception (this will eventually cause the thread to terminate)
-            raise
+        Runs through the list of reports."""
+        
+        self.setup()
+        
+        for report in self.config_dict['Reports'].sections:
+            
+            report_config_path = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                              self.config_dict['Reports']['REPORT_ROOT'],
+                                              self.config_dict['Reports'][report].get('skin', 'standard'),
+                                              'skin.conf')
+            print "report_config_path=", report_config_path
+            try :
+                report_dict = configobj.ConfigObj(report_config_path, file_error=True)
+                syslog.syslog(syslog.LOG_DEBUG, "reportengine: Found configuration file %s for report %s" % (report_config_path, report))
+                report_dict.merge(self.config_dict['Reports'][report])
+            except IOError:
+                report_dict = None
+                syslog.syslog(syslog.LOG_DEBUG, "reportengine: No report configuration file for report %s" % report)
+                report_dict = self.config_dict['Reports'][report]
+            print report_dict['Images']['image_width']
+                
+#            try:
+#            
+#                for report in report_list:
+#                    syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % skin)
+#                    # Instantiate an instance of the class
+#                    obj = weeutil.weeutil._get_object(report, self)
+#                    # Call its start() method
+#                    obj.start()
+#    
+#            except Exception, ex:
+#                # Caught unrecoverable error. Log it, exit
+#                syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception while running report %s" % report)
+#                syslog.syslog(syslog.LOG_CRIT, "reportengine: ** %s" % ex)
+#                syslog.syslog(syslog.LOG_CRIT, "reportengine: ** Thread exiting.")
+#                # Reraise the exception (this will eventually cause the thread to terminate)
+#                raise
 
 class Report(object):
     """Base class for all reports."""
     def __init__(self, engine):
         self.engine = engine
+        
+    def setup(self):
+        pass
 
     def start(self):
         self.run()
+        
+class SkinReport(object):
+    pass
 
+class MonthlySummary(Report):
+    """Creates monthly reports, such as NOAA reports"""
+    
+class YearlySummary(Report):
+    """Creates yearly reports, such as NOAA reports."""
+    
+#class ImageGen(Report):
+#    """Creates images (plots) used by reports."""
+    
+class StatsToDateReport(Report):
+    """Creates snapshot statistical reports."""
+    
 class FileGen(Report):
     """ Generates HTML and NOAA files."""
     def __init__(self, engine):
@@ -157,6 +188,9 @@ if __name__ == '__main__':
     def gen_all(config_path, gen_ts = None):
         
         weewx.debug = 1
+        syslog.openlog('reportengine', syslog.LOG_PID|syslog.LOG_CONS)
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+
         try :
             config_dict = configobj.ConfigObj(config_path, file_error=True)
         except IOError:
