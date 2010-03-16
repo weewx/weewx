@@ -59,8 +59,8 @@ class StdReportEngine(threading.Thread):
         for report in self.config_dict['Reports'].sections:
             
             report_config_path = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                              self.config_dict['Reports']['REPORT_ROOT'],
-                                              self.config_dict['Reports'][report].get('skin', 'standard'),
+                                              self.config_dict['Reports']['SKIN_ROOT'],
+                                              self.config_dict['Reports'][report].get('skin', 'Standard'),
                                               'skin.conf')
             print "report_config_path=", report_config_path
             try :
