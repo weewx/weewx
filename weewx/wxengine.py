@@ -23,6 +23,8 @@ import daemon
 import weewx
 import weewx.archive
 import weewx.stats
+import weewx.wunderground
+import weewx.reportengine
 import weeutil.weeutil
 
 usagestr = """
@@ -291,8 +293,6 @@ class StdCatchUp(StdService):
     """Looks for data that is on the weather station but not in the database.
     
     If any data is found, it arranges to have it put in the database."""
-    def __init__(self, engine):
-        StdService.__init__(self, engine)
     
     def setup(self):
         self.engine.getArchiveData()
@@ -303,8 +303,6 @@ class StdCatchUp(StdService):
 
 class StdTimeSynch(StdService):
     """Regularly asks the station to synch up its clock."""
-    def __init__(self, engine):
-        StdService.__init__(self, engine)
 
     def setup(self):
         """Zero out the time of last synch, and get the time between synchs."""
@@ -328,9 +326,6 @@ class StdPrint(StdService):
     """Service that prints diagnostic information when a LOOP
     or archive packet is received."""
     
-    def __init__(self, engine):
-        StdService.__init__(self, engine)
-        
     def processLoopPacket(self, physicalPacket):
         print "LOOP:  ", weeutil.weeutil.timestamp_to_string(physicalPacket['dateTime']),\
             physicalPacket['barometer'],\
@@ -348,7 +343,6 @@ class StdPrint(StdService):
 #===============================================================================
 
 class StdWunderground(StdService):
-    import weewx.wunderground
 
     def __init__(self, engine):
         StdService.__init__(self, engine)
@@ -396,7 +390,6 @@ class StdWunderground(StdService):
 #===============================================================================
 
 class StdProcess(StdService):
-    import weewx.reportengine
     
     def __init__(self, engine):
         StdService.__init__(self, engine)

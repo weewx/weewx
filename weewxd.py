@@ -21,5 +21,10 @@ See the document "customizing.htm" for details.
 
 import weewx.wxengine
 
-# Enter the main loop. 
+# Enter the main loop. This call will use the default
+# engine, StdEngine, but this can be overridden with
+# keyword EngineClass. E.g.,
+#
+# weewx.wxengine.main(EngineClass = MyEngine)
+#
 weewx.wxengine.main()
