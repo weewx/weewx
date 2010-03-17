@@ -58,6 +58,8 @@ class StdReportEngine(threading.Thread):
         
         for report in self.config_dict['Reports'].sections:
             
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
+            
             report_config_path = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
                                               self.config_dict['Reports']['SKIN_ROOT'],
                                               self.config_dict['Reports'][report].get('skin', 'Standard'),
@@ -71,12 +73,9 @@ class StdReportEngine(threading.Thread):
                 report_dict = None
                 syslog.syslog(syslog.LOG_DEBUG, "reportengine: No report configuration file for report %s" % report)
                 report_dict = self.config_dict['Reports'][report]
-            print report_dict['Images']['image_width']
-                
+
 #            try:
 #            
-#                for report in report_list:
-#                    syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % skin)
 #                    # Instantiate an instance of the class
 #                    obj = weeutil.weeutil._get_object(report, self)
 #                    # Call its start() method
