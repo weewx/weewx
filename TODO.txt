@@ -1,2 +1,3 @@
 TODO before the next release:
 
+Add a utility to read a configuration option and always treat it as a list.

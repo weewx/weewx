@@ -73,52 +73,63 @@ class StdReportEngine(threading.Thread):
                 report_dict = None
                 syslog.syslog(syslog.LOG_DEBUG, "reportengine: No report configuration file for report %s" % report)
                 report_dict = self.config_dict['Reports'][report]
+                
+            report_dict.merge(self.config_dict)
+            
+            print "Writing merged configuration file..."
+            outfile = open("merge.conf", "w")
+            report_dict.write(outfile)
+            outfile.close()
+            generator_list = report_dict['generator_list']
+            print "generator list = ", generator_list
 
-#            try:
-#            
-#                    # Instantiate an instance of the class
-#                    obj = weeutil.weeutil._get_object(report, self)
-#                    # Call its start() method
-#                    obj.start()
-#    
-#            except Exception, ex:
-#                # Caught unrecoverable error. Log it, exit
-#                syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception while running report %s" % report)
-#                syslog.syslog(syslog.LOG_CRIT, "reportengine: ** %s" % ex)
-#                syslog.syslog(syslog.LOG_CRIT, "reportengine: ** Thread exiting.")
-#                # Reraise the exception (this will eventually cause the thread to terminate)
-#                raise
-
-class Report(object):
-    """Base class for all reports."""
-    def __init__(self, engine):
-        self.engine = engine
+            for generator in generator_list:
+                try:
+                        # Instantiate an instance of the class
+                        obj = weeutil.weeutil._get_object(generator, report_dict)
+                        # Call its start() method
+                        obj.start()
         
-    def setup(self):
-        pass
+                except Exception, ex:
+                    # Caught unrecoverable error. Log it, exit
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception while running report %s" % report)
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: ** %s" % ex)
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: ** Thread exiting.")
+                    # Reraise the exception (this will eventually cause the thread to terminate)
+                    raise
 
+class ReportGenerator(object):
+    """Base class for all reports."""
+    def __init__(self, report_dict):
+        self.report_dict = report_dict
+        
     def start(self):
         self.run()
-        
-class SkinReport(object):
-    pass
+    
+    def run(self):
+        pass
 
-class MonthlySummary(Report):
+class ByMonth(ReportGenerator):
     """Creates monthly reports, such as NOAA reports"""
     
-class YearlySummary(Report):
+    def run(self):
+        print "Running ByMonth reports..."
+        byMonth = weewx.genfiles.GenByMonth(self.report_dict)
+        byMonth.run()
+    
+class ByYear(ReportGenerator):
     """Creates yearly reports, such as NOAA reports."""
     
-#class ImageGen(Report):
-#    """Creates images (plots) used by reports."""
-    
-class StatsToDateReport(Report):
+class ToDate(ReportGenerator):
     """Creates snapshot statistical reports."""
     
-class FileGen(Report):
+class Images(ReportGenerator):
+    """Creates plots"""
+    
+class FileGen(ReportGenerator):
     """ Generates HTML and NOAA files."""
     def __init__(self, engine):
-        Report.__init__(self, engine)
+        ReportGenerator.__init__(self, engine)
         
     def run(self):
         # Open up the main database archive
@@ -137,11 +148,11 @@ class FileGen(Report):
         # Generate the HTML pages
         genFiles.generateHtml(currentRec, stop_ts)
         
-class ImageGen(Report):
+class ImageGen(ReportGenerator):
     """Generates all images listed in the configuration dictionary."""
     
     def __init__(self, engine):
-        Report.__init__(self, engine)
+        ReportGenerator.__init__(self, engine)
         
     def run(self):
         # Open up the main database archive
@@ -155,22 +166,20 @@ class ImageGen(Report):
         genImages = weewx.genimages.GenImages(self.engine.config_dict)
         genImages.genImages(archive, stop_ts)
         
-class Ftp(Report):
+class Ftp(ReportGenerator):
     """Ftps everything in the public_html subdirectory to a webserver."""
-    def __init__(self, engine):
-        Report.__init__(self, engine)
-        
+
     def run(self):
         # Check to see if there is an 'FTP' section in the configuration
         # dictionary and that all necessary options are present. 
         # If so, FTP the data up to a server.
-        ftp_dict = self.engine.config_dict.get('FTP')
+        ftp_dict = self.report_dict.get('FTP')
         if ftp_dict and (ftp_dict.has_key('server')   and 
                          ftp_dict.has_key('password') and 
                          ftp_dict.has_key('user')     and
                          ftp_dict.has_key('path')):
-            html_dir = os.path.join(self.engine.config_dict['Station']['WEEWX_ROOT'],
-                                    self.engine.config_dict['HTML']['html_root'])
+            html_dir = os.path.join(self.report_dict['Station']['WEEWX_ROOT'],
+                                    self.report_dict['Reports']['HTML_ROOT'])
             ftpData = weewx.ftpdata.FtpData(source_dir = html_dir, **ftp_dict)
             ftpData.ftpData()
                 

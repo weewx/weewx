@@ -27,42 +27,72 @@ import weeutil.Almanac
 import weeutil.weeutil
 
 class GenFiles(object):
-    """Manages the generation of NOAA and HTML files
+    """Base class for generator classes that generate files"""
     
-    This class has been designed so that it's easy to subclass and override majob
-    pieces of functionality."""
-    
-    def __init__(self, config_dict):
+    def __init__(self, report_dict):
 
-        self.initStation(config_dict)
-        self.initStats(config_dict)
-        self.initNoaa(config_dict)
-        self.initHtml(config_dict)
-        self.moonphases = config_dict['Almanac'].get('moon_phases')
-        self.cache = {}
+        self.report_dict = report_dict
+        self.initStation(report_dict)
+        self.initStats(report_dict)
+        self.initUnits(report_dict)
+        self.moonphases = report_dict['Almanac'].get('moon_phases')
+#        self.initNoaa(report_dict)
+#        self.initHtml(report_dict)
 
-    def initStation(self, config_dict):
+    def initStation(self, report_dict):
         # station holds info such as 'altitude', 'latitude', etc. It seldom changes
-        self.station = weewx.station.Station(config_dict)
+        self.station = weewx.station.Station(report_dict)
         
-    def initStats(self, config_dict):
+    def initStats(self, report_dict):
         # Open up the stats database:
-        statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                     config_dict['Stats']['stats_file'])
+        statsFilename = os.path.join(report_dict['Station']['WEEWX_ROOT'], 
+                                     report_dict['Stats']['stats_file'])
         self.statsdb = weewx.stats.StatsReadonlyDb(statsFilename,
-                                                  float(config_dict['Station'].get('heating_base', '65')),
-                                                  float(config_dict['Station'].get('cooling_base', '65')))
+                                                  float(report_dict['Station'].get('heating_base', '65')),
+                                                  float(report_dict['Station'].get('cooling_base', '65')))
     
-        self.unitTypeDict = weewx.units.getUnitTypeDict(config_dict)
+    def initUnits(self, report_dict):
+        self.unitTypeDict = weewx.units.getUnitTypeDict(report_dict)
         
-    def initNoaa(self, config_dict):
+
+class GenByMonth(GenFiles):
+    """Class for generating reports that run 'by month.'"""
+    
+    def run(self):
+        for subreport in self.report_dict['ByMonth'].sections:
+            print "starting GenByMonth subreport ", subreport
+        
+            accum_dict = weeutil.weeutil.accumulateLeaves(self.report_dict['ByMonth'][subreport])
+
+            template = os.path.join(self.report_dict['Station']['WEEWX_ROOT'],
+                                    self.report_dict['Reports']['SKIN_ROOT'],
+                                    accum_dict['skin'],
+                                    accum_dict['template'])
+            destination_dir = os.path.join(self.report_dict['Station']['WEEWX_ROOT'],
+                                               self.report_dict['Reports']['HTML_ROOT'],
+                                               accum_dict['destination_dir'])
+            print "Using template ", template
+            print "Putting results in ", destination_dir
+        
+            
+
+class GenByYear(GenFiles):
+    """Class for generating reports that run 'by year.'"""
+    
+class GenToDate(GenFiles):
+    """Class for generating "to date" reports, such as daily, weekly, monthly,
+    and yearly summaries."""
+    
+    
+    
+    def initNoaa(self, report_dict):
         # Get the directory holding the NOAA templates
-        self.noaa_template_dir = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                              config_dict['NOAA'].get('template_root', 'templates'))
+        self.noaa_template_dir = os.path.join(report_dict['Station']['WEEWX_ROOT'],
+                                              report_dict['NOAA'].get('template_root', 'templates'))
     
         # Get the directory that will hold the generated NOAA reports:
-        self.noaa_dir = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                     config_dict['NOAA'].get('noaa_dir', 'public_html/NOAA'))
+        self.noaa_dir = os.path.join(report_dict['Station']['WEEWX_ROOT'],
+                                     report_dict['NOAA'].get('noaa_dir', 'public_html/NOAA'))
 
         try:
             # Create the directory that is to receive the generated files.  If
@@ -73,19 +103,19 @@ class GenFiles(object):
             pass
 
     
-    def initHtml(self, config_dict):
+    def initHtml(self, report_dict):
 
         # Get the directory holding the templates
-        self.html_template_dir = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                              config_dict['HTML'].get('template_root', 'templates'))
+        self.html_template_dir = os.path.join(report_dict['Station']['WEEWX_ROOT'],
+                                              report_dict['HTML'].get('template_root', 'templates'))
         # Get the directories that will hold the generated HTML files:
-        self.html_dir = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                     config_dict['HTML'].get('html_root', 'public_html'))
+        self.html_dir = os.path.join(report_dict['Station']['WEEWX_ROOT'],
+                                     report_dict['HTML'].get('html_root', 'public_html'))
 
         # Get an appropriate formatter:
-        self.formatter =  weewx.formatter.Formatter(weewx.units.getStringFormatDict(config_dict),
-                                                    weewx.units.getHTMLLabelDict(config_dict),
-                                                    config_dict['HTML']['Time'])
+        self.formatter =  weewx.formatter.Formatter(weewx.units.getStringFormatDict(report_dict),
+                                                    weewx.units.getHTMLLabelDict(report_dict),
+                                                    report_dict['HTML']['Time'])
 
         try:
             # Create the directory that is to receive the generated files.  If

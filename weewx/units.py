@@ -161,7 +161,7 @@ def getUnitType(config_dict, type):
     """Extract the type of unit (e.g., 'feet', 'miles_per_hour', etc.) as
     a string for the given type."""
     classType = unitGroups[type]
-    unitType = config_dict['Units']['UnitGroups'][classType]
+    unitType = config_dict['Units']['Groups'][classType]
     return unitType
 
 def getUnitTypeDict(config_dict):
@@ -176,7 +176,7 @@ def getStringFormat(config_dict, type):
 
 def getLabel(config_dict, type):
     """Extract a generic unit label (e.g., "\xb0F", or "mph") for a specific type"""
-    return config_dict['Labels']['UnitLabels'][getUnitType(config_dict, type)]
+    return config_dict['Units']['Labels'][getUnitType(config_dict, type)]
     
 def getHTMLLabel(config_dict, type):
     """Extract an HTML unit label (e.g., "&deg;F") for a specific type"""
