@@ -14,7 +14,7 @@ import time
 import math
 import ImageFont
 import configobj
-
+from htmlentitydefs import codepoint2name
 
 def min_no_None(seq):
     """Searches sequence of tuples, returning tuple where the first member was a minimum.
@@ -536,6 +536,21 @@ def latlon_string(ll, hemi):
     min = frac * 60.0
     return ("%d" % (deg,), "%0.2f" % (min,), hemi[0] if ll >= 0 else hemi[1])
 
+def htmlescape(instring):
+    """Escape all entities and non-7bit characters."""
+    
+    outlist = []
+    for c in instring:
+        n = ord(c)
+        if n < 128:
+            outlist.append(c)
+        else:
+            if n in codepoint2name:
+                outlist.append("&%s;" % codepoint2name[n])
+            else:
+                outlist.append("&#%d;" % n)
+    return ''.join(outlist)
+    
 def _get_object(module_class, *args, **kwargs):
     """Given a path to a class, instantiates an instance of the class with the given args and returns it."""
     

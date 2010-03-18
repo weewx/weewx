@@ -12,6 +12,7 @@
 """
 
 import weewx
+import weeutil.weeutil
 
 # This data structure maps types to a "unit class"
 unitGroups = {"barometer"          : "group_pressure",
@@ -180,7 +181,7 @@ def getLabel(config_dict, type):
     
 def getHTMLLabel(config_dict, type):
     """Extract an HTML unit label (e.g., "&deg;F") for a specific type"""
-    return config_dict['HTML']['UnitLabels'][getUnitType(config_dict, type)]
+    return weeutil.weeutil.htmlescape(getLabel(config_dict, type))
     
 def getStringFormatDict(config_dict):
     """Return a dictionary of suitable string formats for all types."""

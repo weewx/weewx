@@ -86,7 +86,7 @@ class StdReportEngine(threading.Thread):
             for generator in generator_list:
                 try:
                         # Instantiate an instance of the class
-                        obj = weeutil.weeutil._get_object(generator, report_dict)
+                        obj = weeutil.weeutil._get_object(generator, report_dict, self.gen_ts)
                         # Call its start() method
                         obj.start()
         
@@ -100,8 +100,9 @@ class StdReportEngine(threading.Thread):
 
 class ReportGenerator(object):
     """Base class for all reports."""
-    def __init__(self, report_dict):
+    def __init__(self, report_dict, gen_ts):
         self.report_dict = report_dict
+        self.gen_ts = gen_ts
         
     def start(self):
         self.run()
@@ -114,15 +115,46 @@ class ByMonth(ReportGenerator):
     
     def run(self):
         print "Running ByMonth reports..."
+        # Open up the main database archive
+        archiveFilename = os.path.join(self.report_dict['Station']['WEEWX_ROOT'], 
+                                       self.report_dict['Archive']['archive_file'])
+        archive = weewx.archive.Archive(archiveFilename)
+    
+        stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
+        start_ts   = archive.firstGoodStamp()
         byMonth = weewx.genfiles.GenByMonth(self.report_dict)
-        byMonth.run()
+        byMonth.generate(start_ts, stop_ts)
     
 class ByYear(ReportGenerator):
     """Creates yearly reports, such as NOAA reports."""
     
+    def run(self):
+        print "Running ByYear reports..."
+        # Open up the main database archive
+        archiveFilename = os.path.join(self.report_dict['Station']['WEEWX_ROOT'], 
+                                       self.report_dict['Archive']['archive_file'])
+        archive = weewx.archive.Archive(archiveFilename)
+    
+        stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
+        start_ts   = archive.firstGoodStamp()
+        byYear = weewx.genfiles.GenByYear(self.report_dict)
+        byYear.generate(start_ts, stop_ts)
+    
 class ToDate(ReportGenerator):
     """Creates snapshot statistical reports."""
     
+    def run(self):
+        print "Running ToDate reports..."
+        # Open up the main database archive
+        archiveFilename = os.path.join(self.report_dict['Station']['WEEWX_ROOT'], 
+                                       self.report_dict['Archive']['archive_file'])
+        archive = weewx.archive.Archive(archiveFilename)
+    
+        stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
+        currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.report_dict))
+        toDate = weewx.genfiles.GenToDate(self.report_dict)
+        toDate.generate(currentRec, stop_ts)
+
 class Images(ReportGenerator):
     """Creates plots"""
     
