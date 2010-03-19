@@ -432,8 +432,8 @@ def main(EngineClass = StdEngine) :
     except Exception, ex:
         # Caught unrecoverable error. Log it, exit
         syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to initialize main loop:")
-        syslog.syslog(syslog.LOG_CRIT, "wxengine: %s" % ex)
-        syslog.syslog(syslog.LOG_CRIT, "wxengine: Exiting.")
+        syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
+        syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
         # Reraise the exception (this will eventually cause the program to exit)
         raise
 

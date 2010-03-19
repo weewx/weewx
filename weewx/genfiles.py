@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -26,8 +26,12 @@ import weewx.units
 import weeutil.Almanac
 import weeutil.weeutil
 
+#===============================================================================
+#                    Class GenFiles
+#===============================================================================
+
 class GenFiles(object):
-    """Base class for generator classes that generate files"""
+    """Class for running files through templates"""
     
     def __init__(self, report_dict):
         self.report_dict = report_dict
@@ -71,10 +75,7 @@ class GenFiles(object):
 
         return (template, destination_dir)
     
-class GenByMonth(GenFiles):
-    """Class for generating reports that run 'by month.'"""
-
-    def generate(self, start_ts, stop_ts):
+    def generateByMonth(self, start_ts, stop_ts):
         
         for subreport in self.report_dict['ByMonth'].sections:
             print "starting GenByMonth subreport ", subreport
@@ -89,6 +90,8 @@ class GenByMonth(GenFiles):
             for monthSpan in weeutil.weeutil.genMonthSpans(start_ts, stop_ts):
                 # Calculate the file name for this month
                 _month_start_tt = time.localtime(monthSpan.start)
+                # Form the destination filename from the template name, replacing 'YYYY' with
+                # the year, 'MM' with the month, and stripping off the trailing '.tmpl':
                 _filename = os.path.basename(template).replace('YYYY', "%4d" % _month_start_tt[0]).replace('MM', "%02d" % _month_start_tt[1]).replace('.tmpl','')
                 _fullpath = os.path.join(destination_dir, _filename)
                 print "ByMonth output will go to path ", _fullpath
@@ -97,7 +100,7 @@ class GenByMonth(GenFiles):
                 # we must generate it
                 if not os.path.exists(_fullpath) or monthSpan.includesArchiveTime(stop_ts):
     
-                    searchList = self.getSearchList(monthSpan)
+                    searchList = self.getByMonthSearchList(monthSpan)
                     # Run everything through the template engine
                     text = Cheetah.Template.Template(file = template, searchList = searchList)
                     # Open up the file that is to be created:
@@ -112,7 +115,7 @@ class GenByMonth(GenFiles):
             elapsed_time = t2 - t1
             syslog.syslog(syslog.LOG_INFO, """genfiles: generated %d "ByMonth" files in %.2f seconds""" % (ngen, elapsed_time))
 
-    def getSearchList(self, monthSpan):
+    def getByMonthSearchList(self, monthSpan):
         """Return the searchList for the Cheetah Template engine for month NOAA reports.
         
         Can easily be overridden to add things to the search list.
@@ -131,10 +134,8 @@ class GenByMonth(GenFiles):
                        'month'        : monthStats}]
         return searchList
 
-class GenByYear(GenFiles):
-    """Class for generating reports that run 'by year.'"""
     
-    def generate(self, start_ts, stop_ts):
+    def generateByYear(self, start_ts, stop_ts):
         for subreport in self.report_dict['ByYear'].sections:
             print "starting GenByYear subreport ", subreport
     
@@ -156,7 +157,7 @@ class GenByYear(GenFiles):
                 # we must generate it
                 if not os.path.exists(_fullpath) or yearSpan.includesArchiveTime(stop_ts):
     
-                    searchList = self.getSearchList(yearSpan)
+                    searchList = self.getByYearSearchList(yearSpan)
                     # Run everything through the template engine
                     text = Cheetah.Template.Template(file = template, searchList = searchList)
                     # Open up the file that is to be created:
@@ -171,7 +172,7 @@ class GenByYear(GenFiles):
             elapsed_time = t2 - t1
             syslog.syslog(syslog.LOG_INFO, """genfiles: generated %d "ByYear" files in %.2f seconds""" % (ngen, elapsed_time))
 
-    def getSearchList(self, yearSpan):
+    def getByYearSearchList(self, yearSpan):
         """Return the searchList for the Cheetah Template engine for By Year reports.
         
         Can easily be overridden to add things to the search list.
@@ -187,11 +188,7 @@ class GenByYear(GenFiles):
         
         return searchList
 
-class GenToDate(GenFiles):
-    """Class for generating "to date" reports, such as daily, weekly, monthly,
-    and yearly summaries."""
-    
-    def generate(self, currentRec, stop_ts):
+    def generateByDate(self, currentRec, stop_ts):
         """
         currentRec: A dictionary containing current observation. Key is a type
         ('outTemp', 'barometer', etc.), value the value of the
@@ -274,7 +271,7 @@ class GenToDate(GenFiles):
         return (month_list, year_list)
     
     
-    def getSearchList(self, currentRec, stop_ts):
+    def getByDateSearchList(self, currentRec, stop_ts):
         """Return the searchList for the Cheetah Template engine for HTML generation.
         
         Can easily be overridden to add things to the search list.

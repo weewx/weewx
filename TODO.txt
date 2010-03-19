@@ -1,3 +1,6 @@
 TODO before the next release:
 
 Add a utility to read a configuration option and always treat it as a list.
+
+Still need to straighten out HTLM_ROOT v. destination_dir, especially when
+it comes to FTP.

@@ -22,21 +22,25 @@ import weeutil.weeutil
 class StdReportEngine(threading.Thread):
     """Reporting engine for weewx.
     
-    This engine runs zero or more reports. Each report is a class, which
-    should inherit from class StdReport. The initializer for the class
-    will be handed a variable bound to this engine.
-    The work for the report should be done in member function run().
+    This engine runs zero or more reports. Each report uses a skin. A skin
+    has its own configuration file specifying things such as which 'generators'
+    should be run and where the results should go. A 'generator' is a class,
+    which should inherit from class ReportGenerator, which produces the parts
+    of the report, such as image plots, our HTML files. 
     
-    It inherits from threading.Thread, so it will be run in a separate
+    StdReportEngine inherits from threading.Thread, so it will be run in a separate
     thread.
     
-    See below for examples of reports.
+    See below for examples of generators.
     """
     
     def __init__(self, config_dict, gen_ts = None):
         """Initializer for the report engine. 
         
-        The only argument is the configuration dictionary."""
+        config_dict: the configuration dictionary.
+        
+        gen_ts: The timestamp for which the output is to be current [Optional; default
+        is the last time in the database]"""
         threading.Thread.__init__(self, name="ReportThread")
         self.config_dict = config_dict
         self.gen_ts = gen_ts
@@ -52,7 +56,7 @@ class StdReportEngine(threading.Thread):
     def run(self):
         """This is where the actual work gets done.
         
-        Runs through the list of reports."""
+        Runs through the list of reports. """
         
         self.setup()
         
@@ -60,49 +64,57 @@ class StdReportEngine(threading.Thread):
             
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
             
-            report_config_path = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                              self.config_dict['Reports']['SKIN_ROOT'],
-                                              self.config_dict['Reports'][report].get('skin', 'Standard'),
-                                              'skin.conf')
-            print "report_config_path=", report_config_path
+            skin_config_path = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                            self.config_dict['Reports']['SKIN_ROOT'],
+                                            self.config_dict['Reports'][report].get('skin', 'Standard'),
+                                            'skin.conf')
+            print "skin_config_path=", skin_config_path
             try :
-                report_dict = configobj.ConfigObj(report_config_path, file_error=True)
-                syslog.syslog(syslog.LOG_DEBUG, "reportengine: Found configuration file %s for report %s" % (report_config_path, report))
-                report_dict.merge(self.config_dict['Reports'][report])
+                skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
+                syslog.syslog(syslog.LOG_DEBUG, "reportengine: Found configuration file %s for report %s" % (skin_config_path, report))
             except IOError:
-                report_dict = None
-                syslog.syslog(syslog.LOG_DEBUG, "reportengine: No report configuration file for report %s" % report)
-                report_dict = self.config_dict['Reports'][report]
+                syslog.syslog(syslog.LOG_INFO, "reportengine: No skin configuration file for report %s" % report)
+                syslog.syslog(syslog.LOG_INFO, "        ****  Report ignored...")
+                continue
                 
-            report_dict.merge(self.config_dict)
+            # Insert where the generated output should go:
+            skin_dict['HTML_ROOT'] = self.config_dict.get('HTML_ROOT', 'public_html')
+            # Inject any overrides the user might have specified for this report into
+            # this skin's configuration dictionary:
+            skin_dict.merge(self.config_dict['Reports'][report])
             
-            print "Writing merged configuration file..."
-            outfile = open("merge.conf", "w")
-            report_dict.write(outfile)
-            outfile.close()
-            generator_list = report_dict['generator_list']
-            print "generator list = ", generator_list
+            f = open("/home/weewx/merge.dict","w")
+            skin_dict.write(f)
+            f.close()
+            generator_list = skin_dict['generator_list']
 
             for generator in generator_list:
                 try:
-                        # Instantiate an instance of the class
-                        obj = weeutil.weeutil._get_object(generator, report_dict, self.gen_ts)
-                        # Call its start() method
-                        obj.start()
-        
-                except Exception, ex:
+                    # Instantiate an instance of the class
+                    obj = weeutil.weeutil._get_object(generator, self.config_dict, skin_dict, self.gen_ts)
+                except ValueError, e:
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
+                    continue
+
+                try:
+                    # Call its start() method
+                    obj.start()
+                except Exception, e:
                     # Caught unrecoverable error. Log it, exit
-                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception while running report %s" % report)
-                    syslog.syslog(syslog.LOG_CRIT, "reportengine: ** %s" % ex)
-                    syslog.syslog(syslog.LOG_CRIT, "reportengine: ** Thread exiting.")
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % generator)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    syslog.syslog(syslog.LOG_CRIT, "        **** Thread exiting.")
                     # Reraise the exception (this will eventually cause the thread to terminate)
                     raise
 
 class ReportGenerator(object):
     """Base class for all reports."""
-    def __init__(self, report_dict, gen_ts):
-        self.report_dict = report_dict
-        self.gen_ts = gen_ts
+    def __init__(self, config_dict, skin_dict, gen_ts):
+        self.config_dict = config_dict
+        self.skin_dict   = skin_dict
+        self.gen_ts      = gen_ts
         
     def start(self):
         self.run()
@@ -110,77 +122,25 @@ class ReportGenerator(object):
     def run(self):
         pass
 
-class ByMonth(ReportGenerator):
-    """Creates monthly reports, such as NOAA reports"""
+class FileGenerator(ReportGenerator):
+    """Class for managing the template based generators"""
     
     def run(self):
-        print "Running ByMonth reports..."
         # Open up the main database archive
-        archiveFilename = os.path.join(self.report_dict['Station']['WEEWX_ROOT'], 
-                                       self.report_dict['Archive']['archive_file'])
+        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
+                                       self.config_dict['Archive']['archive_file'])
         archive = weewx.archive.Archive(archiveFilename)
     
         stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
         start_ts   = archive.firstGoodStamp()
-        byMonth = weewx.genfiles.GenByMonth(self.report_dict)
-        byMonth.generate(start_ts, stop_ts)
+        currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
+        genFiles = weewx.genfiles.GenFiles(self.config_dict, self.skin_dict)
+        genFiles.generateByMonth(start_ts, stop_ts)
+        genFiles.generateByYear(start_ts, stop_ts)
+        genFiles.generateToDate(currentRec, stop_ts)
     
-class ByYear(ReportGenerator):
-    """Creates yearly reports, such as NOAA reports."""
-    
-    def run(self):
-        print "Running ByYear reports..."
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.report_dict['Station']['WEEWX_ROOT'], 
-                                       self.report_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-        start_ts   = archive.firstGoodStamp()
-        byYear = weewx.genfiles.GenByYear(self.report_dict)
-        byYear.generate(start_ts, stop_ts)
-    
-class ToDate(ReportGenerator):
-    """Creates snapshot statistical reports."""
-    
-    def run(self):
-        print "Running ToDate reports..."
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.report_dict['Station']['WEEWX_ROOT'], 
-                                       self.report_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-        currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.report_dict))
-        toDate = weewx.genfiles.GenToDate(self.report_dict)
-        toDate.generate(currentRec, stop_ts)
 
-class Images(ReportGenerator):
-    """Creates plots"""
-    
-class FileGen(ReportGenerator):
-    """ Generates HTML and NOAA files."""
-    def __init__(self, engine):
-        ReportGenerator.__init__(self, engine)
-        
-    def run(self):
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.engine.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.engine.config_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        stop_ts    = archive.lastGoodStamp() if self.engine.gen_ts is None else self.engine.gen_ts
-        start_ts   = archive.firstGoodStamp()
-        currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.engine.config_dict))
-        
-        genFiles = weewx.genfiles.GenFiles(self.engine.config_dict)
-            
-        # Generate the NOAA summaries:
-        genFiles.generateNoaa(start_ts, stop_ts)
-        # Generate the HTML pages
-        genFiles.generateHtml(currentRec, stop_ts)
-        
-class ImageGen(ReportGenerator):
+class ImageGenerator(ReportGenerator):
     """Generates all images listed in the configuration dictionary."""
     
     def __init__(self, engine):
@@ -192,10 +152,10 @@ class ImageGen(ReportGenerator):
                                        self.engine.config_dict['Archive']['archive_file'])
         archive = weewx.archive.Archive(archiveFilename)
     
-        stop_ts = archive.lastGoodStamp() if self.engine.gen_ts is None else self.engine.gen_ts
+        stop_ts = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
 
         # Generate any images
-        genImages = weewx.genimages.GenImages(self.engine.config_dict)
+        genImages = weewx.genimages.GenImages(self.config_dict, self.skin_dict)
         genImages.genImages(archive, stop_ts)
         
 class Ftp(ReportGenerator):
@@ -205,13 +165,13 @@ class Ftp(ReportGenerator):
         # Check to see if there is an 'FTP' section in the configuration
         # dictionary and that all necessary options are present. 
         # If so, FTP the data up to a server.
-        ftp_dict = self.report_dict.get('FTP')
+        ftp_dict = self.config_dict.get('FTP')
         if ftp_dict and (ftp_dict.has_key('server')   and 
                          ftp_dict.has_key('password') and 
                          ftp_dict.has_key('user')     and
                          ftp_dict.has_key('path')):
-            html_dir = os.path.join(self.report_dict['Station']['WEEWX_ROOT'],
-                                    self.report_dict['Reports']['HTML_ROOT'])
+            html_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                    self.config_dict['Reports']['HTML_ROOT'])
             ftpData = weewx.ftpdata.FtpData(source_dir = html_dir, **ftp_dict)
             ftpData.ftpData()
                 
