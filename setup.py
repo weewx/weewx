@@ -42,7 +42,6 @@
 from distutils.core import setup, Command
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
-from distutils import log
 
 import sys
 import os
