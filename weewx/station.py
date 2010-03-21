@@ -15,7 +15,7 @@ import weeutil.weeutil
 
 class Station(object):
     """Static data about the station. Rarely changes."""
-    def __init__(self, config_dict):
+    def __init__(self, config_dict, unit_labels_dict, unit_groups_dict):
         """Extracts info from the config_dict and stores it in self."""
         self.hemispheres = config_dict['Station'].get('hemispheres', ('N','S','E','W'))
         self.latitude_f  = config_dict['Station'].as_float('latitude')
@@ -23,10 +23,10 @@ class Station(object):
         self.longitude_f = config_dict['Station'].as_float('longitude')
         self.longitude   = weeutil.weeutil.latlon_string(self.longitude_f, self.hemispheres[2:4])
 
-        self.altitude_unit_label    = config_dict['Units']['Labels'][config_dict['Units']['Groups']['group_altitude']]
-        self.temperature_unit_label = config_dict['Units']['Labels'][config_dict['Units']['Groups']['group_temperature']].replace(r'\xb0','')
-        self.wind_unit_label        = config_dict['Units']['Labels'][config_dict['Units']['Groups']['group_speed']]
-        self.rain_unit_label        = config_dict['Units']['Labels'][config_dict['Units']['Groups']['group_rain']]
+        self.altitude_unit_label    = unit_labels_dict[unit_groups_dict['group_altitude']]
+        self.temperature_unit_label = unit_labels_dict[unit_groups_dict['group_temperature']].replace(r'\xb0','')
+        self.wind_unit_label        = unit_labels_dict[unit_groups_dict['group_speed']]
+        self.rain_unit_label        = unit_labels_dict[unit_groups_dict['group_rain']]
 
         self.altitude_f             = config_dict['Station'].as_float('altitude')
         self.altitude               = "%d %s" % (self.altitude_f, self.altitude_unit_label)

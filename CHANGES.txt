@@ -1,6 +1,15 @@
 CHANGE HISTORY
 --------------------------------
 
+1.6.0 
+
+Now supports skins.
+
+Now requires configobj v4.6 (instead of V4.5). As this version was released
+nearly a year ago, this should not be a problem for most users. If it is
+  easy_install --upgrade configobj
+will take care of it.
+
 1.5.0   03/07/10
 
 Added support for other units besides the U.S. Customary. Plots and HTML

@@ -14,7 +14,6 @@ Note that this archive uses a schema that is compatible with a wview V5.X.X
 
 """
 from __future__ import with_statement
-import time
 import datetime
 import syslog
 import os

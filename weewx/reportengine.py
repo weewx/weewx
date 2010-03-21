@@ -77,16 +77,19 @@ class StdReportEngine(threading.Thread):
                 syslog.syslog(syslog.LOG_INFO, "        ****  Report ignored...")
                 continue
                 
-            # Insert where the generated output should go:
-            skin_dict['HTML_ROOT'] = self.config_dict.get('HTML_ROOT', 'public_html')
-            # Inject any overrides the user might have specified for this report into
+            # Inject any overrides the user may have specified for all reports into
             # this skin's configuration dictionary:
+            for scalar in self.config_dict['Reports'].scalars:
+                skin_dict[scalar] = self.config_dict['Reports'][scalar]
+            
+            # Now inject any overrides for this specific report:
             skin_dict.merge(self.config_dict['Reports'][report])
             
             f = open("/home/weewx/merge.dict","w")
             skin_dict.write(f)
             f.close()
-            generator_list = skin_dict['generator_list']
+
+            generator_list = skin_dict.as_list('generator_list')
 
             for generator in generator_list:
                 try:
@@ -105,7 +108,7 @@ class StdReportEngine(threading.Thread):
                     # Caught unrecoverable error. Log it, exit
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                    syslog.syslog(syslog.LOG_CRIT, "        **** Thread exiting.")
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
                     # Reraise the exception (this will eventually cause the thread to terminate)
                     raise
 
@@ -134,9 +137,10 @@ class FileGenerator(ReportGenerator):
         stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
         start_ts   = archive.firstGoodStamp()
         currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
+
         genFiles = weewx.genfiles.GenFiles(self.config_dict, self.skin_dict)
-        genFiles.generateByMonth(start_ts, stop_ts)
-        genFiles.generateByYear(start_ts, stop_ts)
+        genFiles.generateBy('ByMonth', start_ts, stop_ts)
+        genFiles.generateBy('ByYear',  start_ts, stop_ts)
         genFiles.generateToDate(currentRec, stop_ts)
     
 

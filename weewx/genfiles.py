@@ -33,38 +33,41 @@ import weeutil.weeutil
 class GenFiles(object):
     """Class for running files through templates"""
     
-    def __init__(self, report_dict):
-        self.report_dict = report_dict
-        self.initStation(report_dict)
-        self.initStats(report_dict)
-        self.initUnits(report_dict)
+    def __init__(self, config_dict, skin_dict):
+        self.config_dict = config_dict
+        self.skin_dict = skin_dict
+        self.initStation()
+        self.initStats()
+        self.initUnits()
 
-    def initStation(self, report_dict):
+    def initStation(self):
         # station holds info such as 'altitude', 'latitude', etc. It seldom changes
-        self.station = weewx.station.Station(report_dict)
+        self.station = weewx.station.Station(self.config_dict, 
+                                             self.skin_dict['Units']['Labels'],
+                                             self.skin_dict['Units']['Groups'])
         
-    def initStats(self, report_dict):
+    def initStats(self):
         # Open up the stats database:
-        statsFilename = os.path.join(report_dict['Station']['WEEWX_ROOT'], 
-                                     report_dict['Stats']['stats_file'])
+        statsFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
+                                     self.config_dict['Stats']['stats_file'])
         self.statsdb = weewx.stats.StatsReadonlyDb(statsFilename,
-                                                  float(report_dict['Station'].get('heating_base', '65')),
-                                                  float(report_dict['Station'].get('cooling_base', '65')))
+                                                  float(self.config_dict['Station'].get('heating_base', '65')),
+                                                  float(self.config_dict['Station'].get('cooling_base', '65')))
     
-    def initUnits(self, report_dict):
-        self.unitTypeDict = weewx.units.getUnitTypeDict(report_dict)
+    def initUnits(self):
+        self.unitTypeDict = weewx.units.getUnitTypeDict(self.skin_dict)
         
-    def _prepGen(self, subreport_dict):
+    def _prepGen(self, subskin_dict):
         
-        accum_dict = weeutil.weeutil.accumulateLeaves(subreport_dict)
-
-        template = os.path.join(self.report_dict['Station']['WEEWX_ROOT'],
-                                self.report_dict['Reports']['SKIN_ROOT'],
+        accum_dict = weeutil.weeutil.accumulateLeaves(subskin_dict)
+        template = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                self.config_dict['Reports']['SKIN_ROOT'],
                                 accum_dict['skin'],
                                 accum_dict['template'])
-        destination_dir = os.path.join(self.report_dict['Station']['WEEWX_ROOT'],
-                                       self.report_dict['Reports']['HTML_ROOT'],
-                                       accum_dict['destination_dir'])
+        destination_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                       accum_dict['HTML_ROOT'],
+                                       os.path.dirname(accum_dict['template']))
+
         try:
             # Create the directory that is to receive the generated files.  If
             # it already exists an exception will be thrown, so be prepared to
@@ -75,32 +78,41 @@ class GenFiles(object):
 
         return (template, destination_dir)
     
-    def generateByMonth(self, start_ts, stop_ts):
+    def generateBy(self, by_time, start_ts, stop_ts):
         
-        for subreport in self.report_dict['ByMonth'].sections:
-            print "starting GenByMonth subreport ", subreport
+        if by_time == 'ByMonth':
+            _genfunc = weeutil.weeutil.genMonthSpans
+        elif by_time == 'ByYear':
+            _genfunc = weeutil.weeutil.genYearSpans
+        else:
+            syslog.syslog(syslog.LOG_NOTICE, "genfiles: Unrecognized by time: %s. Skipped." % by_time)
+            return
+
+        for subreport in self.skin_dict['Files'][by_time].sections:
+            print "starting subreport ", subreport
     
-            (template, destination_dir) = self._prepGen(self.report_dict['ByMonth'][subreport])
+            (template, destination_dir) = self._prepGen(self.skin_dict['Files'][by_time][subreport])
 
             ngen = 0
             t1 = time.time()
             
+            
             # Loop through all months, looking for reports that need to be
             # generated.
-            for monthSpan in weeutil.weeutil.genMonthSpans(start_ts, stop_ts):
+            for timespan in _genfunc(start_ts, stop_ts):
                 # Calculate the file name for this month
-                _month_start_tt = time.localtime(monthSpan.start)
+                timespan_start_tt = time.localtime(timespan.start)
                 # Form the destination filename from the template name, replacing 'YYYY' with
                 # the year, 'MM' with the month, and stripping off the trailing '.tmpl':
-                _filename = os.path.basename(template).replace('YYYY', "%4d" % _month_start_tt[0]).replace('MM', "%02d" % _month_start_tt[1]).replace('.tmpl','')
+                _filename = os.path.basename(template).replace('YYYY', "%4d" % timespan_start_tt[0]).replace('MM', "%02d" % timespan_start_tt[1]).replace('.tmpl','')
                 _fullpath = os.path.join(destination_dir, _filename)
                 print "ByMonth output will go to path ", _fullpath
     
                 # If the file doesn't exist, or it is the last month, then
                 # we must generate it
-                if not os.path.exists(_fullpath) or monthSpan.includesArchiveTime(stop_ts):
+                if not os.path.exists(_fullpath) or timespan.includesArchiveTime(stop_ts):
     
-                    searchList = self.getByMonthSearchList(monthSpan)
+                    searchList = self.getByTimeSearchList(by_time, timespan)
                     # Run everything through the template engine
                     text = Cheetah.Template.Template(file = template, searchList = searchList)
                     # Open up the file that is to be created:
@@ -113,80 +125,30 @@ class GenFiles(object):
             
             t2 = time.time()
             elapsed_time = t2 - t1
-            syslog.syslog(syslog.LOG_INFO, """genfiles: generated %d "ByMonth" files in %.2f seconds""" % (ngen, elapsed_time))
+            syslog.syslog(syslog.LOG_INFO, """genfiles: generated %d %s files in %.2f seconds""" % (ngen, by_time, elapsed_time))
 
-    def getByMonthSearchList(self, monthSpan):
+    def getByTimeSearchList(self, by_time, timespan):
         """Return the searchList for the Cheetah Template engine for month NOAA reports.
         
         Can easily be overridden to add things to the search list.
         """
-        month_start_tt = time.localtime(monthSpan.start)
-        # Form a suitable name for the month:
-        (_yr, _mo) = month_start_tt[0:2]
-        monthName = time.strftime("%b", month_start_tt)
+        timespan_start_tt = time.localtime(timespan.start)
+        (_yr, _mo) = timespan_start_tt[0:2]
 
-        # Get the stats for this month from the database:
-        monthStats = weewx.stats.TimespanStats(self.statsdb, monthSpan, self.unitTypeDict)
+        # Get the stats for this timespan from the database:
+        stats = weewx.stats.TimespanStats(self.statsdb, timespan, self.unitTypeDict)
         
-        searchList = [{'station'      : self.station,
-                       'year_name'    : _yr,
-                       'month_name'   : monthName,
-                       'month'        : monthStats}]
-        return searchList
-
-    
-    def generateByYear(self, start_ts, stop_ts):
-        for subreport in self.report_dict['ByYear'].sections:
-            print "starting GenByYear subreport ", subreport
-    
-            (template, destination_dir) = self._prepGen(self.report_dict['ByYear'][subreport])
-
-            ngen = 0
-            t1 = time.time()
-            
-            # Loop through all months, looking for reports that need to be
-            # generated.
-            for yearSpan in weeutil.weeutil.genYearSpans(start_ts, stop_ts):
-                # Calculate the file name for this month
-                _month_start_tt = time.localtime(yearSpan.start)
-                _filename = os.path.basename(template).replace('YYYY', "%4d" % _month_start_tt[0]).replace('.tmpl','')
-                _fullpath = os.path.join(destination_dir, _filename)
-                print "ByYear output will go to path ", _fullpath
-    
-                # If the file doesn't exist, or it is the last month, then
-                # we must generate it
-                if not os.path.exists(_fullpath) or yearSpan.includesArchiveTime(stop_ts):
-    
-                    searchList = self.getByYearSearchList(yearSpan)
-                    # Run everything through the template engine
-                    text = Cheetah.Template.Template(file = template, searchList = searchList)
-                    # Open up the file that is to be created:
-                    file = open(_fullpath, mode='w')
-                    # Write it out
-                    print >> file, text
-                    # Close it
-                    file.close()
-                    ngen += 1
-            
-            t2 = time.time()
-            elapsed_time = t2 - t1
-            syslog.syslog(syslog.LOG_INFO, """genfiles: generated %d "ByYear" files in %.2f seconds""" % (ngen, elapsed_time))
-
-    def getByYearSearchList(self, yearSpan):
-        """Return the searchList for the Cheetah Template engine for By Year reports.
+        search_dict = {'station'   : self.station,
+                       'year_name' : _yr}
         
-        Can easily be overridden to add things to the search list.
-        """
-
-        _yr = time.localtime(yearSpan.start)[0]
-                
-        yearStats = weewx.stats.TimespanStats(self.statsdb, yearSpan, self.unitTypeDict)
-
-        searchList = [{'station'   : self.station,
-                       'year_name' : _yr,
-                       'year'      : yearStats}]
+        if by_time == 'ByMonth':
+            search_dict['month'] = stats
+            # Form a suitable name for the month:
+            search_dict['month_name'] = time.strftime("%b", timespan_start_tt)
+        elif by_time == 'ByYear':
+            search_dict['year'] = stats 
         
-        return searchList
+        return [search_dict]    
 
     def generateByDate(self, currentRec, stop_ts):
         """
@@ -202,18 +164,18 @@ class GenFiles(object):
         t1 = time.time()
 
         # Get an appropriate formatter:
-        self.formatter =  weewx.formatter.Formatter(weewx.units.getStringFormatDict(self.report_dict),
-                                                    weewx.units.getHTMLLabelDict(self.report_dict),
-                                                    self.report_dict['Labels']['Time'])
+        self.formatter =  weewx.formatter.Formatter(weewx.units.getStringFormatDict(self.skin_dict),
+                                                    weewx.units.getHTMLLabelDict(self.skin_dict),
+                                                    self.skin_dict['Labels']['Time'])
 
         self.initAlmanac(stop_ts)
     
         searchList = self.getSearchList(currentRec, stop_ts)
             
-        for subreport in self.report_dict['ToDate'].sections:
+        for subreport in self.skin_dict['ToDate'].sections:
             print "starting GenToDate subreport ", subreport
     
-            (template, destination_dir) = self._prepGen(self.report_dict['ToDate'][subreport])
+            (template, destination_dir) = self._prepGen(self.skin_dict['ToDate'][subreport])
 
             print "GenToDate template is ", template, "; destination dir is ", destination_dir
     
@@ -238,7 +200,7 @@ class GenFiles(object):
         celestial_ts: The timestamp of the time for which the Almanac is to
         be initialized.
         """
-        self.moonphases = self.report_dict['Almanac'].get('moon_phases')
+        self.moonphases = self.skin_dict['Almanac'].get('moon_phases')
 
         # almanac holds celestial information (sunrise, phase of moon). Its celestial
         # data slowly changes.
