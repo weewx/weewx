@@ -160,6 +160,6 @@ class Formatter(object):
                     except TypeError:
                         val_str = str(v)
                     label_str = self.unit_label_dict.get(_key, '')
-                    return (val_str + label_str).decode('string_escape').decode('latin1')
+                    return (val_str + label_str).decode('string_escape')
         # Don't know how to format it. Just return it as is
         return v

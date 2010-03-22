@@ -224,7 +224,8 @@
         <p>&nbsp;</p>
 
         <div id="radar_img">
-          <a href="$station.radar_url"><img src="$station.radar_url" alt="Radar" /></a>
+          <a href="http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif">
+          <img src="http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif" alt="Radar" /></a>
         </div>
 
       </div> <!--End class "stats_group" -->
@@ -290,7 +291,7 @@
         <input type="button" value="    Year     " onclick="openURL('year.html')" />
         <p>Monthly summary:&nbsp;
         <select NAME=noaaselect onchange="openNoaaFile(value)">
-        #for $monthYear in $NOAA_month_list
+        #for $monthYear in $SummaryByMonth
             <option value="$monthYear">$monthYear</option>
         #end for
 	    <option selected>-Select month-</option>
@@ -298,7 +299,7 @@
         <br/>
         Yearly summary:&nbsp;
         <select NAME=noaaselect onchange="openNoaaFile(value)">
-        #for $year in $NOAA_year_list
+        #for $year in $SummaryByYear
             <option value="$year">$year</option>
         #end for
 	    <option selected>-Select year-</option>

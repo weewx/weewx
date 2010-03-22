@@ -23,10 +23,10 @@ class Station(object):
         self.longitude_f = config_dict['Station'].as_float('longitude')
         self.longitude   = weeutil.weeutil.latlon_string(self.longitude_f, self.hemispheres[2:4])
 
-        self.altitude_unit_label    = unit_labels_dict[unit_groups_dict['group_altitude']]
-        self.temperature_unit_label = unit_labels_dict[unit_groups_dict['group_temperature']].replace(r'\xb0','')
-        self.wind_unit_label        = unit_labels_dict[unit_groups_dict['group_speed']]
-        self.rain_unit_label        = unit_labels_dict[unit_groups_dict['group_rain']]
+        self.altitude_unit_label    = unit_labels_dict[unit_groups_dict['group_altitude']].strip()
+        self.temperature_unit_label = unit_labels_dict[unit_groups_dict['group_temperature']].replace(r'\xb0','').strip()
+        self.wind_unit_label        = unit_labels_dict[unit_groups_dict['group_speed']].strip()
+        self.rain_unit_label        = unit_labels_dict[unit_groups_dict['group_rain']].strip()
 
         self.altitude_f             = config_dict['Station'].as_float('altitude')
         self.altitude               = "%d %s" % (self.altitude_f, self.altitude_unit_label)

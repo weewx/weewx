@@ -2,5 +2,7 @@ TODO before the next release:
 
 Add details about skins to the CHANGES.txt file.
 
-Still need to straighten out HTLM_ROOT v. destination_dir, especially when
-it comes to FTP.
+HTML_ROOT should be overridable with images for individual reports,
+just like with generated files.
+
+Check FTP and HTML_ROOT 

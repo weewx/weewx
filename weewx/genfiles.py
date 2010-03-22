@@ -12,13 +12,11 @@
 This basically includes NOAA summary reports, and HTML files."""
 
 import os.path
-import re
 import syslog
 import time
 
 import Cheetah.Template
 
-import weewx
 import weewx.formatter
 import weewx.station
 import weewx.stats
@@ -35,7 +33,8 @@ class GenFiles(object):
     
     def __init__(self, config_dict, skin_dict):
         self.config_dict = config_dict
-        self.skin_dict = skin_dict
+        self.skin_dict   = skin_dict
+        self.outputted_dict = {}
         self.initStation()
         self.initStats()
         self.initUnits()
@@ -80,16 +79,16 @@ class GenFiles(object):
     
     def generateBy(self, by_time, start_ts, stop_ts):
         
-        if by_time == 'ByMonth':
+        if by_time == 'SummaryByMonth':
             _genfunc = weeutil.weeutil.genMonthSpans
-        elif by_time == 'ByYear':
+        elif by_time == 'SummaryByYear':
             _genfunc = weeutil.weeutil.genYearSpans
         else:
             syslog.syslog(syslog.LOG_NOTICE, "genfiles: Unrecognized by time: %s. Skipped." % by_time)
             return
 
+        self.outputted_dict[by_time] = []
         for subreport in self.skin_dict['Files'][by_time].sections:
-            print "starting subreport ", subreport
     
             (template, destination_dir) = self._prepGen(self.skin_dict['Files'][by_time][subreport])
 
@@ -97,22 +96,31 @@ class GenFiles(object):
             t1 = time.time()
             
             
-            # Loop through all months, looking for reports that need to be
-            # generated.
+            # Loop through all the "By Timespan" reports
             for timespan in _genfunc(start_ts, stop_ts):
-                # Calculate the file name for this month
+
                 timespan_start_tt = time.localtime(timespan.start)
+                #===============================================================
+                # Calculate the output filename
+                #===============================================================
                 # Form the destination filename from the template name, replacing 'YYYY' with
                 # the year, 'MM' with the month, and stripping off the trailing '.tmpl':
-                _filename = os.path.basename(template).replace('YYYY', "%4d" % timespan_start_tt[0]).replace('MM', "%02d" % timespan_start_tt[1]).replace('.tmpl','')
+                _yr_str = "%4d"  % timespan_start_tt[0]
+                _filename = os.path.basename(template).replace('.tmpl','').replace('YYYY', _yr_str) 
+                if by_time == 'SummaryByMonth' :
+                    _mo_str = "%02d" % timespan_start_tt[1]
+                    _filename = _filename.replace('MM', _mo_str)
+                    self.outputted_dict['SummaryByMonth'].append("%s-%s" %(_yr_str, _mo_str))
+                elif by_time == 'SummaryByYear' :
+                    self.outputted_dict['SummaryByYear'].append(_yr_str)
+
                 _fullpath = os.path.join(destination_dir, _filename)
-                print "ByMonth output will go to path ", _fullpath
     
                 # If the file doesn't exist, or it is the last month, then
                 # we must generate it
                 if not os.path.exists(_fullpath) or timespan.includesArchiveTime(stop_ts):
     
-                    searchList = self.getByTimeSearchList(by_time, timespan)
+                    searchList = self.getSummarySearchList(by_time, timespan)
                     # Run everything through the template engine
                     text = Cheetah.Template.Template(file = template, searchList = searchList)
                     # Open up the file that is to be created:
@@ -125,9 +133,9 @@ class GenFiles(object):
             
             t2 = time.time()
             elapsed_time = t2 - t1
-            syslog.syslog(syslog.LOG_INFO, """genfiles: generated %d %s files in %.2f seconds""" % (ngen, by_time, elapsed_time))
+            syslog.syslog(syslog.LOG_INFO, """genfiles: generated %d '%s' files in %.2f seconds""" % (ngen, by_time, elapsed_time))
 
-    def getByTimeSearchList(self, by_time, timespan):
+    def getSummarySearchList(self, by_time, timespan):
         """Return the searchList for the Cheetah Template engine for month NOAA reports.
         
         Can easily be overridden to add things to the search list.
@@ -141,16 +149,16 @@ class GenFiles(object):
         search_dict = {'station'   : self.station,
                        'year_name' : _yr}
         
-        if by_time == 'ByMonth':
+        if by_time == 'SummaryByMonth':
             search_dict['month'] = stats
             # Form a suitable name for the month:
             search_dict['month_name'] = time.strftime("%b", timespan_start_tt)
-        elif by_time == 'ByYear':
+        elif by_time == 'SummaryByYear':
             search_dict['year'] = stats 
         
         return [search_dict]    
 
-    def generateByDate(self, currentRec, stop_ts):
+    def generateToDate(self, currentRec, stop_ts):
         """
         currentRec: A dictionary containing current observation. Key is a type
         ('outTemp', 'barometer', etc.), value the value of the
@@ -170,14 +178,14 @@ class GenFiles(object):
 
         self.initAlmanac(stop_ts)
     
-        searchList = self.getSearchList(currentRec, stop_ts)
+        searchList = self.getToDateSearchList(currentRec, stop_ts)
             
-        for subreport in self.skin_dict['ToDate'].sections:
-            print "starting GenToDate subreport ", subreport
+        for subreport in self.skin_dict['Files']['ToDate'].sections:
     
-            (template, destination_dir) = self._prepGen(self.skin_dict['ToDate'][subreport])
-
-            print "GenToDate template is ", template, "; destination dir is ", destination_dir
+            (template, destination_dir) = self._prepGen(self.skin_dict['Files']['ToDate'][subreport])
+            
+            # Form the destination filename:
+            _filename = os.path.basename(template).replace('.tmpl','')
     
             #===================================================================
             # Here's where the heavy lifting occurs. Use Cheetah to actually
@@ -186,12 +194,12 @@ class GenFiles(object):
             # ===================================================================
             html = Cheetah.Template.Template(file = template, searchList = searchList)
 
-            file = open(os.path.join(self.html_dir, template + ".html"), mode='w')
+            file = open(os.path.join(destination_dir, _filename), mode='w')
             print >> file, html
             ngen += 1
         
         elapsed_time = time.time() - t1
-        syslog.syslog(syslog.LOG_INFO, "genhtml: generated %d 'toDate' pages in %.2f seconds" % (ngen, elapsed_time))
+        syslog.syslog(syslog.LOG_INFO, "genhtml: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
     
     def initAlmanac(self, celestial_ts):
         """ Initialize an instance of weeutil.Almanac.Almanac for the station's
@@ -208,32 +216,8 @@ class GenFiles(object):
                                                self.station.latitude_f, 
                                                self.station.longitude_f, 
                                                self.moonphases)
-    
 
-
-
-    def get_existing_NOAA_reports(self):
-        """Returns strings with the dates for which NOAA reports exists.
-        
-        returns: a tuple. First value is the list of monthly reports,
-        the second a list of yearly reports.
-        """
-        
-        re_month = re.compile(r"NOAA-\d{4}-\d{2}\.txt")
-        re_year  = re.compile(r"NOAA-\d{4}\.txt") 
-        fileList = os.listdir(self.noaa_dir)
-        fileList.sort()
-        month_list = []
-        year_list  = []
-        for _file in fileList:
-            if re_month.match(_file):
-                month_list.append(_file[5:12])
-            elif re_year.match(_file):
-                year_list.append(_file[5:9])
-        return (month_list, year_list)
-    
-    
-    def getByDateSearchList(self, currentRec, stop_ts):
+    def getToDateSearchList(self, currentRec, stop_ts):
         """Return the searchList for the Cheetah Template engine for HTML generation.
         
         Can easily be overridden to add things to the search list.
@@ -258,14 +242,8 @@ class GenFiles(object):
         # Get a formatted view into the statistical information.
         statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
         
-        # Get the list of dates for which NOAA monthly and yearly reports are available:
-        NOAA_month_list, NOAA_year_list = self.get_existing_NOAA_reports()
-
         searchList = [{'station'         : self.station,
-                       'almanac'         : self.almanac,
-                       'NOAA_month_list' : NOAA_month_list,
-                       'NOAA_year_list'  : NOAA_year_list},
+                       'almanac'         : self.almanac},
+                       self.outputted_dict,
                        statsFormatter]
-
         return searchList
-    

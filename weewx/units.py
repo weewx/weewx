@@ -158,50 +158,53 @@ def convertStd(fromUnitSystem, fromType, toUnit, obj):
     fromUnit = StdUnitSystem[fromUnitSystem][fromClass]
     return convert(fromUnit, toUnit, obj)
     
-def getUnitType(config_dict, type):
+def getUnitType(config_dict, obs_type):
     """Extract the type of unit (e.g., 'feet', 'miles_per_hour', etc.) as
-    a string for the given type."""
-    classType = unitGroups[type]
+    a string for the given observation type."""
+    classType = unitGroups[obs_type]
     unitType = config_dict['Units']['Groups'][classType]
     return unitType
 
 def getUnitTypeDict(config_dict):
+    """Returns a dictionary where the key is an observation type (eg, 'outTemp'),
+    and the value is the type of unit for that type (eg, 'degree_F')"""
     unitTypeDict = {}
-    for type in unitGroups:
-        unitTypeDict[type] = getUnitType(config_dict, type)
+    for obs_type in unitGroups:
+        unitTypeDict[obs_type] = getUnitType(config_dict, obs_type)
     return unitTypeDict
 
-def getStringFormat(config_dict, type):
-    """Extract a suitable string format (e.g., "%.0f") for a specific type"""
-    return config_dict['Units']['StringFormats'][getUnitType(config_dict, type)]
+def getStringFormat(config_dict, obs_type):
+    """Extract a suitable string format (e.g., "%.0f") for a specific observation type"""
+    return config_dict['Units']['StringFormats'][getUnitType(config_dict, obs_type)]
 
-def getLabel(config_dict, type):
-    """Extract a generic unit label (e.g., "\xb0F", or "mph") for a specific type"""
-    return config_dict['Units']['Labels'][getUnitType(config_dict, type)]
+def getLabel(config_dict, obs_type):
+    """Extract a generic unit label (e.g., "\xb0F", or "mph") for a specific observation type"""
+    label = config_dict['Units']['Labels'][getUnitType(config_dict, obs_type)]
+    return label.decode('string_escape')
     
-def getHTMLLabel(config_dict, type):
-    """Extract an HTML unit label (e.g., "&deg;F") for a specific type"""
-    return weeutil.weeutil.htmlescape(getLabel(config_dict, type))
+def getHTMLLabel(config_dict, obs_type):
+    """Extract an HTML unit label (e.g., "&deg;F") for a specific observation type"""
+    return weeutil.weeutil.htmlescape(getLabel(config_dict, obs_type))
     
 def getStringFormatDict(config_dict):
-    """Return a dictionary of suitable string formats for all types."""
+    """Return a dictionary of suitable string formats for all observation types."""
     stringFormatDict = {}
-    for type in unitGroups:
-        stringFormatDict[type] = getStringFormat(config_dict, type)
+    for obs_type in unitGroups:
+        stringFormatDict[obs_type] = getStringFormat(config_dict, obs_type)
     return stringFormatDict
 
 def getLabelDict(config_dict):
-    """Return a dictionary of suitable generic unit labels for all types."""
+    """Return a dictionary of suitable generic unit labels for all observation types."""
     labelDict = {}
-    for type in unitGroups:
-        labelDict[type] = getLabel(config_dict, type)
+    for obs_type in unitGroups:
+        labelDict[obs_type] = getLabel(config_dict, obs_type)
     return labelDict
 
 def getHTMLLabelDict(config_dict):
-    """Return a dictionary of suitable HTML unit labels for all types."""
+    """Return a dictionary of suitable HTML unit labels for all observation types."""
     htmlLabelDict = {}
-    for type in unitGroups:
-        htmlLabelDict[type] = getHTMLLabel(config_dict, type)
+    for obs_type in unitGroups:
+        htmlLabelDict[obs_type] = getHTMLLabel(config_dict, obs_type)
     return htmlLabelDict
             
 if __name__ == '__main__':

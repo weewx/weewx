@@ -16,6 +16,7 @@ import time
 import datetime
 import syslog
 import os.path
+
 import weeutil.weeutil
 import weeplot.genplot
 import weeplot.utilities
@@ -30,19 +31,20 @@ class GenImages(object):
     
     """
     
-    def __init__(self, config_dict):
+    def __init__(self, config_dict, skin_dict):
         """    config_dict: An instance of ConfigObj. It must have sections ['Station'] (for key
         'WEEWX_ROOT'), ['Archive'] (for key 'archive_file'), and a section ['Images'] (containing
         the images to be generated.)
-        The generated images will be put in the directory specified by ['Images']['image_root']
+        The generated images will be put in the directory specified by HTML_ROOT
         """    
     
-        self.image_dict   = config_dict['Images']
-        self.label_dict   = weewx.units.getLabelDict(config_dict)
-        self.title_dict   = config_dict['Labels']['Generic']
-        self.unitTypeDict = weewx.units.getUnitTypeDict(config_dict)
-        self.image_root   = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                        config_dict['Images']['image_root'])
+        self.image_dict   = skin_dict['Images']
+        self.label_dict   = weewx.units.getLabelDict(skin_dict)
+        self.title_dict   = skin_dict['Labels']['Generic']
+        self.unitTypeDict = weewx.units.getUnitTypeDict(skin_dict)
+        self.image_root   = os.path.join(config_dict['Station']['WEEWX_ROOT'],
+                                         config_dict['Reports']['HTML_ROOT'])
+
     def genImages(self, archive, time_ts):
         """Generate the images.
         
@@ -111,8 +113,9 @@ class GenImages(object):
                     # Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
                     unit_label = self.label_dict.get(var_type, '')
-                    # Because it is likely to use escaped characters, decode it.
-                    unit_label = unit_label.decode('string_escape')
+                    # Because it is likely to use escaped characters, decode it. Also,
+                    # strip off any leading and trailing whitespace so it's easy to center
+                    unit_label = unit_label.decode('string_escape').strip()
                     plot.setUnitLabel(unit_label)
                     
                     # See if a line label has been explicitly requested:

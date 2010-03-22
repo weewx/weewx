@@ -24,9 +24,9 @@ class StdReportEngine(threading.Thread):
     
     This engine runs zero or more reports. Each report uses a skin. A skin
     has its own configuration file specifying things such as which 'generators'
-    should be run and where the results should go. A 'generator' is a class,
-    which should inherit from class ReportGenerator, which produces the parts
-    of the report, such as image plots, our HTML files. 
+    should be run, which templates are to be used, what units are to be used, etc.. 
+    A 'generator' is a class inheriting from class ReportGenerator, that produces the parts
+    of the report, such as image plots, HTML files. 
     
     StdReportEngine inherits from threading.Thread, so it will be run in a separate
     thread.
@@ -60,15 +60,18 @@ class StdReportEngine(threading.Thread):
         
         self.setup()
         
+        # Iterate over each requested report
         for report in self.config_dict['Reports'].sections:
             
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
             
+            # Figure out where the configuration file is for the skin used for this report:
             skin_config_path = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
                                             self.config_dict['Reports']['SKIN_ROOT'],
                                             self.config_dict['Reports'][report].get('skin', 'Standard'),
                                             'skin.conf')
-            print "skin_config_path=", skin_config_path
+            # Retrieve the configuration dictionary for the skin. Wrap it in a try
+            # block in case we fail
             try :
                 skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
                 syslog.syslog(syslog.LOG_DEBUG, "reportengine: Found configuration file %s for report %s" % (skin_config_path, report))
@@ -77,18 +80,14 @@ class StdReportEngine(threading.Thread):
                 syslog.syslog(syslog.LOG_INFO, "        ****  Report ignored...")
                 continue
                 
-            # Inject any overrides the user may have specified for all reports into
-            # this skin's configuration dictionary:
+            # Inject any overrides the user may have specified in the weewx.conf
+            # configuration file for all reports:
             for scalar in self.config_dict['Reports'].scalars:
                 skin_dict[scalar] = self.config_dict['Reports'][scalar]
             
             # Now inject any overrides for this specific report:
             skin_dict.merge(self.config_dict['Reports'][report])
             
-            f = open("/home/weewx/merge.dict","w")
-            skin_dict.write(f)
-            f.close()
-
             generator_list = skin_dict.as_list('generator_list')
 
             for generator in generator_list:
@@ -139,21 +138,18 @@ class FileGenerator(ReportGenerator):
         currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
 
         genFiles = weewx.genfiles.GenFiles(self.config_dict, self.skin_dict)
-        genFiles.generateBy('ByMonth', start_ts, stop_ts)
-        genFiles.generateBy('ByYear',  start_ts, stop_ts)
+        genFiles.generateBy('SummaryByMonth', start_ts, stop_ts)
+        genFiles.generateBy('SummaryByYear',  start_ts, stop_ts)
         genFiles.generateToDate(currentRec, stop_ts)
     
 
 class ImageGenerator(ReportGenerator):
-    """Generates all images listed in the configuration dictionary."""
-    
-    def __init__(self, engine):
-        ReportGenerator.__init__(self, engine)
-        
+    """Generates all images listed in the [Image] section of the skin dictionary."""
+
     def run(self):
         # Open up the main database archive
-        archiveFilename = os.path.join(self.engine.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.engine.config_dict['Archive']['archive_file'])
+        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
+                                       self.config_dict['Archive']['archive_file'])
         archive = weewx.archive.Archive(archiveFilename)
     
         stop_ts = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
