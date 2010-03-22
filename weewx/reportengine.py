@@ -10,6 +10,8 @@
 """Engine for generating reports"""
 
 import os.path
+import glob
+import shutil
 import syslog
 import threading
 
@@ -36,16 +38,21 @@ class StdReportEngine(threading.Thread):
     See below for examples of generators.
     """
     
-    def __init__(self, config_dict, gen_ts = None):
+    def __init__(self, config_dict, gen_ts = None, first_run = True):
         """Initializer for the report engine. 
         
         config_dict: the configuration dictionary.
         
         gen_ts: The timestamp for which the output is to be current [Optional; default
-        is the last time in the database]"""
+        is the last time in the database]
+        
+        first_run: True if this is the first time the report engine has been run.
+        If this is the case, then any 'one time' events should be done.
+        """
         threading.Thread.__init__(self, name="ReportThread")
         self.config_dict = config_dict
-        self.gen_ts = gen_ts
+        self.gen_ts      = gen_ts
+        self.first_run   = first_run
         
     def setup(self):
         if self.gen_ts:
@@ -61,7 +68,7 @@ class StdReportEngine(threading.Thread):
         Runs through the list of reports. """
         
         self.setup()
-        
+
         # Iterate over each requested report
         for report in self.config_dict['Reports'].sections:
             
@@ -90,8 +97,14 @@ class StdReportEngine(threading.Thread):
             # Now inject any overrides for this specific report:
             skin_dict.merge(self.config_dict['Reports'][report])
             
-            generator_list = skin_dict.as_list('generator_list')
+            if self.first_run and skin_dict.has_key('singleton_list'):
+                    singleton_list = skin_dict.as_list('singleton_list')
+                    self.runGenerators(skin_dict, singleton_list)
 
+            self.runGenerators(skin_dict, skin_dict.as_list('generator_list'))
+            
+    def runGenerators(self, skin_dict, generator_list):
+        
             for generator in generator_list:
                 try:
                     # Instantiate an instance of the class
@@ -112,6 +125,7 @@ class StdReportEngine(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
                     # Reraise the exception (this will eventually cause the thread to terminate)
                     raise
+
 
 class ReportGenerator(object):
     """Base class for all reports."""
@@ -177,6 +191,33 @@ class Ftp(ReportGenerator):
             ftpData = weewx.ftpdata.FtpData(source_dir = html_dir, **ftp_dict)
             ftpData.ftpData()
                 
+class Copy(ReportGenerator):
+    
+    def run(self):
+        try:
+            copy_once_list = self.skin_dict['Files']['Copy']['copy_once']
+        except KeyError:
+            return
+
+        os.chdir(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                              self.skin_dict['SKIN_ROOT'],
+                              self.skin_dict['skin']))
+        html_dest_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                     self.skin_dict['HTML_ROOT'])
+        
+        ncopy = 0
+        for pattern in copy_once_list:
+            for file in glob.glob(pattern):
+                dest_dir = os.path.join(html_dest_dir, os.path.dirname(file))
+                try:
+                    os.makedirs(dest_dir)
+                except OSError:
+                    pass
+                shutil.copy(file, dest_dir)
+                ncopy += 1
+        
+        syslog.syslog(syslog.LOG_DEBUG, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))
+        
 if __name__ == '__main__':
     
     # ===============================================================================

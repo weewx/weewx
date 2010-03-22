@@ -36,7 +36,7 @@
     the actual installation directory (as set in setup.cfg or specified
     in the command line to setup.py install)
 
- 4. It backups up any pre-existing template subdirectory
+ 4. It backups up any pre-existing skin subdirectory
 """
 
 from distutils.core import setup, Command
@@ -80,11 +80,11 @@ class My_install_data(install_data):
         return rv
     
     def run(self):
-        # Back up the old template directory if it exists
-        template_dir = os.path.join(self.install_dir, 'templates')
-        if os.path.exists(template_dir):
-            backupdir = backup(template_dir)
-            print "Backed up template subdirectory to %s" % backupdir
+        # Back up the old skin directory if it exists
+        skin_dir = os.path.join(self.install_dir, 'skins')
+        if os.path.exists(skin_dir):
+            backupdir = backup(skin_dir)
+            print "Backed up skins subdirectory to %s" % backupdir
             
         # Run the superclass's run():
         install_data.run(self)
@@ -116,14 +116,19 @@ class My_install_data(install_data):
         # Create a ConfigObj using the new contents:
         newconfig = configobj.ConfigObj(f)
         newconfig.indent_type = '    '
+        new_version_number = VERSION.split('.')
         
         # Check to see if there is an existing config file.
         # If so, merge its contents with the new one
         if os.path.exists(outname):
             oldconfig = configobj.ConfigObj(outname)
-            # Check to see if this is an old style weewx.conf. If so,
-            # don't merge it.
-            if not oldconfig['Labels'].has_key('ImperialFormats'):
+            old_version = oldconfig.get('version')
+            # If the version number does not appear at all, then
+            # assume a very old version:
+            if not old_version: old_version = '1.0.0'
+            old_version_number = old_version.split('.')
+            # Do the merge only for versions >= 1.6
+            if old_version_number[0:2] >= ['1','6']:
                 # Any user changes in oldconfig will overwrite values in newconfig
                 # with this merge
                 newconfig.merge(oldconfig)
@@ -217,25 +222,16 @@ setup(name='weewx',
       "current and historical weather",
       author='Tom Keffer',
       author_email='tkeffer@gmail.com',
-      url='http://www.threefools.org/weewx',
+      url='http://www.weewx.com',
       packages    = ['weewx', 'weeplot', 'weeutil', 'examples'],
       py_modules  = ['upload', 'daemon'],
       scripts     = ['configure.py', 'weewxd.py'],
       data_files  = [('',                        ['CHANGES.txt', 'LICENSE.txt', 'README', 'weewx.conf']),
-                     ('docs',                    ['docs/customizing.htm', 'docs/readme.htm',
-                                                  'docs/sheeva.htm', 'docs/upgrading.htm']),
-                     ('templates',               ['templates/index.tmpl', 'templates/week.tmpl',
-                                                  'templates/month.tmpl', 'templates/year.tmpl',
-                                                  'templates/NOAA_month.tmpl', 'templates/NOAA_year.tmpl']), 
-                     ('public_html',             ['public_html/weewx.css']),
-                     ('public_html/backgrounds', ['public_html/backgrounds/band.gif',
-                                                  'public_html/backgrounds/butterfly.jpg',
-                                                  'public_html/backgrounds/drops.gif',
-                                                  'public_html/backgrounds/flower.jpg',
-                                                  'public_html/backgrounds/leaf.jpg',
-                                                  'public_html/backgrounds/night.gif']),
-                     ('start_scripts/Debian',    ['start_scripts/Debian/weewx'])],
-      requires    = ['configobj', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
+                     ('docs',                    ['docs/*']),
+                     ('skins',                   ['skins/*']), 
+                     ('public_html',             ['public_html/*']),
+                     ('start_scripts',           ['start_scripts/*'])],
+      requires    = ['configobj(>=4.6)', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "sdist" :        My_sdist}
       )

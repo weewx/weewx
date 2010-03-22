@@ -389,17 +389,25 @@ class StdProcess(StdService):
     def __init__(self, engine):
         StdService.__init__(self, engine)
         self.thread = None
+        self.first_run = True
         
     def processArchiveData(self):
         """This function processes any new archive data"""
         # Now process the data, using a separate thread
-        self.thread = weewx.reportengine.StdReportEngine(self.engine.config_dict) 
+        self.thread = weewx.reportengine.StdReportEngine(self.engine.config_dict,
+                                                         first_run = self.first_run) 
         self.thread.start()
+        self.first_run = False
 
     def shutDown(self):
         if self.thread:
             self.thread.join(20.0)
             syslog.syslog(syslog.LOG_DEBUG, "Shut down StdProcess thread.")
+        self.first_run = True
+
+#===============================================================================
+#                       Signal handler
+#===============================================================================
 
 class Restart(Exception):
     """Exception thrown when restarting the engine is desired."""

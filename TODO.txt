@@ -6,3 +6,7 @@ HTML_ROOT should be overridable with images for individual reports,
 just like with generated files.
 
 Check FTP
+
+Copy weewx.css to public_html
+
+Background .jpg files should be copied over as well.
