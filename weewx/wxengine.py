@@ -34,7 +34,7 @@ usagestr = """
   line or, by specifying the '--daemon' option, as a daemon.
 
 Arguments:
-    config_path: Path to the configuration file to be used.
+    config_path: Path to the weewx configuration file to be used.
 """
 
 
@@ -65,7 +65,7 @@ class StdEngine(object):
         
         syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
         for svc in service_list:
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: ** %s" % svc)
+            syslog.syslog(syslog.LOG_DEBUG, "    ****: %s" % svc)
         
         #For each listed service in service_list, instantiates an instance of the class,
         # passing self as the only argument."""

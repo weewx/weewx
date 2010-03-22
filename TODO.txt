@@ -5,4 +5,4 @@ Add details about skins to the CHANGES.txt file.
 HTML_ROOT should be overridable with images for individual reports,
 just like with generated files.
 
-Check FTP and HTML_ROOT 
+Check FTP

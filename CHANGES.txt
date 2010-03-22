@@ -1,31 +1,42 @@
 CHANGE HISTORY
 --------------------------------
 
-1.6.0 
+1.6.0   03/22/10
 
-Now supports skins.
+Now supports skins. A skin is a collection of templates, under the
+control of a 'skin configuration file.' Presentation layer specific
+options have been moved out of the weewx configuration file
+'weewx.conf' to the skin configuration files 'skin.conf'. The standard
+distribution comes with one skin, but new ones can be easily added by
+the user community.
 
-Moved the URL for the radar image from the configuration file to the 
+FTP is treated as just another report, albeit with an unusual report
+generator.
+
+Moved the URL for the radar image from the configuration file to the
 template index.html.tmpl.
 
-Now requires configobj v4.6 (instead of V4.5). As this version was released
-nearly a year ago, this should not be a problem for most users. If it is
+Now requires configobj v4.6 (instead of V4.5). As this version was
+released nearly a year ago, this should not be a problem for most
+users. If it is the following command will take care of it:
   easy_install --upgrade configobj
-will take care of it.
 
 1.5.0   03/07/10
 
-Added support for other units besides the U.S. Customary. Plots and HTML
-reports can be prepared using any arbitrary combination of units. For example,
-pressure could be in millibars, while everything else is in U.S. Customary.
+Added support for other units besides the U.S. Customary. Plots and
+HTML reports can be prepared using any arbitrary combination of
+units. For example, pressure could be in millibars, while everything
+else is in U.S. Customary.
 
-Because the configuration file weewx.conf changed significantly, the installation
-script setup.py will NOT merge your old configuration file into the new one. You
-will have to reedit weewx.conf to put in your customizations.
+Because the configuration file weewx.conf changed significantly, the
+installation script setup.py will NOT merge your old configuration
+file into the new one. You will have to reedit weewx.conf to put in
+your customizations.
 
-Added an exception handler for exception OSError, which is typically thrown
-when another piece of software attempts to access the same device port.
-Weewx catches the exception, waits 10 seconds, then starts again from the top.
+Added an exception handler for exception OSError, which is typically
+thrown when another piece of software attempts to access the same
+device port.  Weewx catches the exception, waits 10 seconds, then
+starts again from the top.
 
 
 1.4.0   02/22/10

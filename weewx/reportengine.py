@@ -13,6 +13,8 @@ import os.path
 import syslog
 import threading
 
+import configobj
+
 import weewx.archive
 import weewx.genfiles
 import weewx.genimages
