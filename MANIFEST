@@ -16,12 +16,6 @@ docs/upgrading.htm
 examples/__init__.py
 examples/alarm.py
 examples/daily.py
-public_html/backgrounds/band.gif
-public_html/backgrounds/butterfly.jpg
-public_html/backgrounds/drops.gif
-public_html/backgrounds/flower.jpg
-public_html/backgrounds/leaf.jpg
-public_html/backgrounds/night.gif
 skins/Ftp/skin.conf
 skins/Standard/index.html.tmpl
 skins/Standard/month.html.tmpl
@@ -31,6 +25,12 @@ skins/Standard/weewx.css
 skins/Standard/year.html.tmpl
 skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl
 skins/Standard/NOAA/NOAA-YYYY.txt.tmpl
+skins/Standard/backgrounds/band.gif
+skins/Standard/backgrounds/butterfly.jpg
+skins/Standard/backgrounds/drops.gif
+skins/Standard/backgrounds/flower.jpg
+skins/Standard/backgrounds/leaf.jpg
+skins/Standard/backgrounds/night.gif
 start_scripts/Debian/weewx
 start_scripts/SuSE/weewx
 weeplot/__init__.py

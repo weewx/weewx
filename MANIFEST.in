@@ -1,5 +1,4 @@
 recursive-include docs *
-recursive-include public_html *.gif *.jpg *.css
 recursive-include start_scripts *
 recursive-include skins *
 include CHANGES.txt

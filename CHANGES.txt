@@ -7,11 +7,18 @@ Now supports skins. A skin is a collection of templates, under the
 control of a 'skin configuration file.' Presentation layer specific
 options have been moved out of the weewx configuration file
 'weewx.conf' to the skin configuration files 'skin.conf'. The standard
-distribution comes with one skin, but new ones can be easily added by
-the user community.
+distribution comes with one skin, but new ones can be added easily.
 
 FTP is treated as just another report, albeit with an unusual report
 generator.
+
+Data files used in reports (such as weewx.css) are copied over to the
+HTML directory on program startup. So, setup.py no longer deletes
+public_html/#upstream.last.
+
+HTML labels are now derived from regular labels by substituting
+HTML entities for non-7bit characters. For example, "\0xb0F" becomes
+"&deg;F".
 
 Moved the URL for the radar image from the configuration file to the
 template index.html.tmpl.
