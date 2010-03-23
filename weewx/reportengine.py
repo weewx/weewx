@@ -97,38 +97,48 @@ class StdReportEngine(threading.Thread):
             # Now inject any overrides for this specific report:
             skin_dict.merge(self.config_dict['Reports'][report])
             
+            # If this is the first time the report engine has been run, then
+            # run the 'singleton list' of generators.
             if self.first_run and skin_dict.has_key('singleton_list'):
                     singleton_list = skin_dict.as_list('singleton_list')
                     self.runGenerators(skin_dict, singleton_list)
 
+            # Now run all the regular generators:
             self.runGenerators(skin_dict, skin_dict.as_list('generator_list'))
             
     def runGenerators(self, skin_dict, generator_list):
+        """Runs a list of generators.
+        skin_dict: The skin dictionary the list is to be run against.
         
-            for generator in generator_list:
-                try:
-                    # Instantiate an instance of the class
-                    obj = weeutil.weeutil._get_object(generator, self.config_dict, skin_dict, self.gen_ts)
-                except ValueError, e:
-                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
-                    continue
+        generator_list: A list of generators to be run. Each generator should
+        be a class with a method "start()". The initializer of the class should
+        take arguments (config_dict, skin_dict, gen_ts).
+        """
+        
+        for generator in generator_list:
+            try:
+                # Instantiate an instance of the class.
+                obj = weeutil.weeutil._get_object(generator, self.config_dict, skin_dict, self.gen_ts)
+            except ValueError, e:
+                syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
+                syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
+                continue
 
-                try:
-                    # Call its start() method
-                    obj.start()
-                except Exception, e:
-                    # Caught unrecoverable error. Log it, exit
-                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % generator)
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
-                    # Reraise the exception (this will eventually cause the thread to terminate)
-                    raise
+            try:
+                # Call its start() method
+                obj.start()
+            except Exception, e:
+                # Caught unrecoverable error. Log it, exit
+                syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % generator)
+                syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
+                # Reraise the exception (this will eventually cause the thread to terminate)
+                raise
 
 
 class ReportGenerator(object):
-    """Base class for all reports."""
+    """Base class for all report generators."""
     def __init__(self, config_dict, skin_dict, gen_ts):
         self.config_dict = config_dict
         self.skin_dict   = skin_dict
@@ -160,7 +170,7 @@ class FileGenerator(ReportGenerator):
     
 
 class ImageGenerator(ReportGenerator):
-    """Generates all images listed in the [Image] section of the skin dictionary."""
+    """Class for managing the image generator."""
 
     def run(self):
         # Open up the main database archive
@@ -175,7 +185,9 @@ class ImageGenerator(ReportGenerator):
         genImages.genImages(archive, stop_ts)
         
 class Ftp(ReportGenerator):
-    """Ftps everything in the public_html subdirectory to a webserver."""
+    """Class for managing the "FTP generator".
+    
+    This will ftp everything in the public_html subdirectory to a webserver."""
 
     def run(self):
         # Check to see if there is an 'FTP' section in the configuration
@@ -192,27 +204,46 @@ class Ftp(ReportGenerator):
             ftpData.ftpData()
                 
 class Copy(ReportGenerator):
+    """Class for managing the 'copy generator.'
+    
+    This will copy files from the skin subdirectory to the public_html
+    subdirectory."""
     
     def run(self):
+        
+        # Get the list of files to be copied. Wrap in a try block in case
+        # the list does not exist.
         try:
             copy_once_list = self.skin_dict['Files']['Copy']['copy_once']
         except KeyError:
             return
 
+        # Change directory to the skin subdirectory:
         os.chdir(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
                               self.skin_dict['SKIN_ROOT'],
                               self.skin_dict['skin']))
+        # Figure out the destination of the files
         html_dest_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
                                      self.skin_dict['HTML_ROOT'])
         
+        # The copy list can contain wildcard characters. Go through the
+        # list globbing any character expansions
         ncopy = 0
         for pattern in copy_once_list:
+            # Glob this pattern; then go through each resultant filename:
             for file in glob.glob(pattern):
+                # Final destination is the join of the html destination directory
+                # and any relative subdirectory on the filename:
                 dest_dir = os.path.join(html_dest_dir, os.path.dirname(file))
+                # Make the destination directory, wrapping it in a try block in
+                # case it already exists:
                 try:
                     os.makedirs(dest_dir)
                 except OSError:
                     pass
+                # This version of copy does not copy over modification time,
+                # so it will look like a new file, causing it to be (for example)
+                # ftp'd to the server:
                 shutil.copy(file, dest_dir)
                 ncopy += 1
         
@@ -225,7 +256,6 @@ if __name__ == '__main__':
     # that are current as of the last archive record in the archive database.
     # ===============================================================================
     import sys
-    import configobj
     import socket
 
     def gen_all(config_path, gen_ts = None):
@@ -238,7 +268,7 @@ if __name__ == '__main__':
             config_dict = configobj.ConfigObj(config_path, file_error=True)
         except IOError:
             print "Unable to open configuration file ", config_path
-            exit()
+            raise
             
         socket.setdefaulttimeout(10)
         

@@ -89,13 +89,6 @@ class My_install_data(install_data):
         # Run the superclass's run():
         install_data.run(self)
         
-#        # If the file #upstream.last exists, delete it, thus forcing
-#        # all files to be FTP'd to the server at the next opportunity.
-#        try:
-#            os.remove(os.path.join(self.install_dir, 'public_html/#upstream.last'))
-#        except:
-#            pass
-
         # If the file $WEEWX_ROOT/readme.htm exists, delete it. It's
         # the old readme (since replaced with docs/readme.htm)
         try:

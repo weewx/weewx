@@ -32,18 +32,20 @@ class GenImages(object):
     """
     
     def __init__(self, config_dict, skin_dict):
-        """    config_dict: An instance of ConfigObj. It must have sections ['Station'] (for key
-        'WEEWX_ROOT'), ['Archive'] (for key 'archive_file'), and a section ['Images'] (containing
-        the images to be generated.)
-        The generated images will be put in the directory specified by HTML_ROOT
+        """Initialize an instance of GenImages.
+        
+        config_dict: weewx configuration dictionary with general station
+        information.
+        
+        skin_dict: Skin configuration dictionary with selections specific
+        to the presentation layer.
         """    
     
+        self.weewx_root   = config_dict['Station']['WEEWX_ROOT']
         self.image_dict   = skin_dict['Images']
-        self.label_dict   = weewx.units.getLabelDict(skin_dict)
         self.title_dict   = skin_dict['Labels']['Generic']
+        self.label_dict   = weewx.units.getLabelDict(skin_dict)
         self.unitTypeDict = weewx.units.getUnitTypeDict(skin_dict)
-        self.image_root   = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                         config_dict['Reports']['HTML_ROOT'])
 
     def genImages(self, archive, time_ts):
         """Generate the images.
@@ -71,16 +73,22 @@ class GenImages(object):
                 
                 # Accumulate all options from parent nodes:
                 plot_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname])
-                
-                # Get the name of the file that the image is going to be saved to:
-                img_file = os.path.join(self.image_root, '%s.png' % plotname)
+
+                image_root = os.path.join(self.weewx_root, plot_options['HTML_ROOT'])
+                # Get the path of the file that the image is going to be saved to:
+                img_file = os.path.join(image_root, '%s.png' % plotname)
                 
                 # Check whether this plot needs to be done at all:
-                ai = plot_options.get('aggregate_interval')
-                if ai is not None:
-                    ai = int(ai)
+                ai = plot_options.as_int('aggregate_interval') if plot_options.has_key('aggregate_interval') else None
                 if skipThisPlot(time_ts, ai, img_file) :
                     continue
+                
+                # Create the subdirectory that the image is to be put in.
+                # Wrap in a try block in case it already does.
+                try:
+                    os.makedirs(os.path.dirname(img_file))
+                except:
+                    pass
                 
                 # Calculate a suitable min, max time for the requested time span
                 (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(time_ts - plot_options.as_int('time_length'), time_ts)
