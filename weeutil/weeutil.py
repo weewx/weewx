@@ -536,10 +536,6 @@ def latlon_string(ll, hemi):
     min = frac * 60.0
     return ("%d" % (deg,), "%0.2f" % (min,), hemi[0] if ll >= 0 else hemi[1])
 
-def utf8_to_html(instring):
-    """Convert from UTF-8 to HTML entities."""
-    return instring.decode('utf-8').encode('ascii', 'xmlcharrefreplace')
-
 def utf8_to_latin1(instring):
     """Convert from UTF-8 to Latin-1 encoding."""
     return unicode(instring, "utf8").encode("latin1")

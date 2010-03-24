@@ -164,8 +164,8 @@ class FileGenerator(ReportGenerator):
         currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
 
         genFiles = weewx.genfiles.GenFiles(self.config_dict, self.skin_dict)
-        genFiles.generateBy('SummaryByMonth', start_ts, stop_ts)
-        genFiles.generateBy('SummaryByYear',  start_ts, stop_ts)
+        genFiles.generateSummaryBy('SummaryByMonth', start_ts, stop_ts)
+        genFiles.generateSummaryBy('SummaryByYear',  start_ts, stop_ts)
         genFiles.generateToDate(currentRec, stop_ts)
     
 

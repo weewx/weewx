@@ -16,6 +16,7 @@ import syslog
 import time
 
 import Cheetah.Template
+from Cheetah.Filters import Filter
 
 import weewx.formatter
 import weewx.station
@@ -65,8 +66,8 @@ class GenFiles(object):
     def initUnits(self):
         self.unitTypeDict = weewx.units.getUnitTypeDict(self.skin_dict)
         
-    def generateBy(self, by_time, start_ts, stop_ts):
-        """This entry point is used for "SummarizeBy" reports, such as NOAA monthly
+    def generateSummaryBy(self, by_time, start_ts, stop_ts):
+        """This entry point is used for "SummaryBy" reports, such as NOAA monthly
         or yearly reports.
         
         by_time: Set to "SummaryByMonth" to run the template for each month between
@@ -88,7 +89,7 @@ class GenFiles(object):
         self.outputted_dict[by_time] = []
         for subreport in self.skin_dict['Files'][by_time].sections:
     
-            (template, destination_dir) = self._prepGen(self.skin_dict['Files'][by_time][subreport])
+            (template, destination_dir, encoding) = self._prepGen(self.skin_dict['Files'][by_time][subreport])
 
             ngen = 0
             t1 = time.time()
@@ -122,7 +123,10 @@ class GenFiles(object):
     
                     searchList = self.getSummarySearchList(by_time, timespan)
                     # Run everything through the template engine
-                    text = Cheetah.Template.Template(file = template, searchList = searchList)
+                    text = Cheetah.Template.Template(file       = template,
+                                                     searchList = searchList + [{'encoding' : encoding}],
+                                                     filter     = encoding,
+                                                     filtersLib = weewx.genfiles)
                     # Open up the file that is to be created:
                     file = open(_fullpath, mode='w')
                     # Write it out
@@ -161,7 +165,7 @@ class GenFiles(object):
             
         for subreport in self.skin_dict['Files']['ToDate'].sections:
     
-            (template, destination_dir) = self._prepGen(self.skin_dict['Files']['ToDate'][subreport])
+            (template, destination_dir, encoding) = self._prepGen(self.skin_dict['Files']['ToDate'][subreport])
             
             # Form the destination filename:
             _filename = os.path.basename(template).replace('.tmpl','')
@@ -171,7 +175,10 @@ class GenFiles(object):
             # generate the files. It will use introspection on the searchList to
             # populate the parameters in the template file.
             # ===================================================================
-            html = Cheetah.Template.Template(file = template, searchList = searchList)
+            html = Cheetah.Template.Template(file       = template,
+                                             searchList = searchList + [{'encoding' : encoding}],
+                                             filter     = encoding,
+                                             filtersLib = weewx.genfiles)
 
             file = open(os.path.join(destination_dir, _filename), mode='w')
             print >> file, html
@@ -260,6 +267,7 @@ class GenFiles(object):
         destination_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
                                        accum_dict['HTML_ROOT'],
                                        os.path.dirname(accum_dict['template']))
+        encoding = accum_dict['encoding']
 
         try:
             # Create the directory that is to receive the generated files.  If
@@ -269,5 +277,47 @@ class GenFiles(object):
         except OSError:
             pass
 
-        return (template, destination_dir)
+        return (template, destination_dir, encoding)
     
+
+class html_entities(Filter):
+
+    def filter(self, val, **kw):
+        """Filter incoming strings so they use HTML entity characters"""
+        if isinstance(val, unicode):
+            filtered = val.encode('ascii', 'xmlcharrefreplace')
+        elif val is None:
+            filtered = ''
+        elif isinstance(val, str):
+            filtered = val.decode('utf-8').encode('ascii', 'xmlcharrefreplace')
+        else:
+            filtered = str(val)
+        return filtered
+
+class strict_ascii(Filter):
+
+    def filter(self, val, **kw):
+        """Filter incoming strings to strip out any non-ascii characters"""
+        if isinstance(val, unicode):
+            filtered = val.encode('ascii', 'ignore')
+        elif val is None:
+            filtered = ''
+        elif isinstance(val, str):
+            filtered = val.decode('utf-8').encode('ascii', 'ignore')
+        else:
+            filtered = str(val)
+        return filtered
+
+    
+class utf8(Filter):
+
+    def filter(self, val, **kw):
+        """Filter incoming strings, converting to UTF-8"""
+        if isinstance(val, unicode):
+            filtered = val.encode('utf8')
+        elif val is None:
+            filtered = ''
+        else:
+            filtered = str(val)
+        return filtered
+

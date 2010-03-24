@@ -184,7 +184,8 @@ def getLabel(config_dict, obs_type):
     
 def getHTMLLabel(config_dict, obs_type):
     """Extract an HTML unit label (e.g., "&deg;F") for a specific observation type"""
-    return weeutil.weeutil.utf8_to_html(getLabel(config_dict, obs_type))
+#    return weeutil.weeutil.utf8_to_html(getLabel(config_dict, obs_type))
+    return getLabel(config_dict, obs_type)
     
 def getStringFormatDict(config_dict):
     """Return a dictionary of suitable string formats for all observation types."""

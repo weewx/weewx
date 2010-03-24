@@ -1,3 +1,4 @@
 TODO before the next release:
 
-Move FTP parameters out of weewx.conf to skin.conf
+Documentation:
+ o Characters used in the image plots must be Latin-1 characters.
