@@ -100,11 +100,11 @@ class StdReportEngine(threading.Thread):
             # If this is the first time the report engine has been run, then
             # run the 'singleton list' of generators.
             if self.first_run and skin_dict.has_key('singleton_list'):
-                    singleton_list = skin_dict.as_list('singleton_list')
+                    singleton_list = weeutil.weeutil.option_as_list(skin_dict.get('singleton_list'))
                     self.runGenerators(skin_dict, singleton_list)
 
             # Now run all the regular generators:
-            self.runGenerators(skin_dict, skin_dict.as_list('generator_list'))
+            self.runGenerators(skin_dict, weeutil.weeutil.option_as_list(skin_dict.get('generator_list')))
             
     def runGenerators(self, skin_dict, generator_list):
         """Runs a list of generators.

@@ -61,7 +61,7 @@ class StdEngine(object):
         
         self.parseArgs()
 
-        service_list = self.config_dict['Engines']['WxEngine'].as_list('service_list')
+        service_list = weeutil.weeutil.option_as_list(self.config_dict['Engines']['WxEngine'].get('service_list'))
         
         syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
         for svc in service_list:

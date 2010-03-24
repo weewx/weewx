@@ -111,6 +111,12 @@ def accumulateLeaves(d):
     cum_dict.merge(merge_dict)
     return cum_dict
 
+def option_as_list(option):
+    if option is None: return None
+    if hasattr(option, '__iter__'):
+        return option
+    return [option]
+
 def stampgen(startstamp, stopstamp, interval):
     """Generator function yielding a sequence of timestamps, spaced interval apart.
     
@@ -557,6 +563,15 @@ def _get_object(module_class, *args, **kwargs):
     return obj
         
 if __name__ == '__main__':
+
+    print "****** option_as_list *********"
+    assert( option_as_list("abc") == ['abc'])
+    assert( option_as_list(['a', 'b']) == ['a', 'b'])
+    assert( option_as_list(None) == None)
+    assert( option_as_list('') == [''])
+    print "PASSES"
+
+    
     print "********* TimeSpans ***********"
 
     t = TimeSpan(1230000000, 1231000000)
