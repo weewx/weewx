@@ -121,9 +121,9 @@ class GenImages(object):
                     # Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
                     unit_label = self.label_dict.get(var_type, '')
-                    # Because it is likely to use escaped characters, decode it. Also,
-                    # strip off any leading and trailing whitespace so it's easy to center
-                    unit_label = unit_label.decode('string_escape').strip()
+                    # PIL cannot handle UTF-8. So, convert to Latin1. Also, strip off
+                    # any leading and trailing whitespace so it's easy to center
+                    unit_label = weeutil.weeutil.utf8_to_latin1(unit_label).strip()
                     plot.setUnitLabel(unit_label)
                     
                     # See if a line label has been explicitly requested:
@@ -132,6 +132,8 @@ class GenImages(object):
                         # No explicit label. Is there a generic one? 
                         # If not, then the SQL type will be used instead
                         label = self.title_dict.get(var_type, var_type)
+                    # Convert to Latin-1
+                    label = weeutil.weeutil.utf8_to_latin1(label)
     
                     # See if a color has been explicitly requested.
                     color_str = line_options.get('color')

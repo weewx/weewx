@@ -180,11 +180,11 @@ def getStringFormat(config_dict, obs_type):
 def getLabel(config_dict, obs_type):
     """Extract a generic unit label (e.g., "\xb0F", or "mph") for a specific observation type"""
     label = config_dict['Units']['Labels'][getUnitType(config_dict, obs_type)]
-    return label.decode('string_escape')
+    return label
     
 def getHTMLLabel(config_dict, obs_type):
     """Extract an HTML unit label (e.g., "&deg;F") for a specific observation type"""
-    return weeutil.weeutil.htmlescape(getLabel(config_dict, obs_type))
+    return weeutil.weeutil.utf8_to_html(getLabel(config_dict, obs_type))
     
 def getStringFormatDict(config_dict):
     """Return a dictionary of suitable string formats for all observation types."""

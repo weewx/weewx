@@ -1,7 +1,7 @@
 CHANGE HISTORY
 --------------------------------
 
-1.6.0   03/22/10
+1.6.0   03/24/10
 
 Now supports skins. A skin is a collection of templates, under the
 control of a 'skin configuration file.' Presentation layer specific
@@ -10,18 +10,22 @@ options have been moved out of the weewx configuration file
 distribution comes with one skin, but new ones can be added easily.
 
 FTP is treated as just another report, albeit with an unusual report
-generator.
+generator. You can have multiple FTP sessions, each to a different
+server, or uploading to or from a different area.
 
 Data files used in reports (such as weewx.css) are copied over to the
-HTML directory on program startup. So, setup.py no longer deletes
-public_html/#upstream.last.
+HTML directory on program startup. 
 
-HTML labels are now derived from regular labels by substituting
-HTML entities for non-7bit characters. For example, "\0xb0F" becomes
-"&deg;F".
+The configuration files weewx.conf and skin.conf now expect UTF-8
+characters throughout. If the text is used in an HTML report, it is
+automatically converted to HTML entities (e.g., '&#176;'). If it is
+used in an image plot, it is converted to ISO Latin-1.
 
 Moved the URL for the radar image from the configuration file to the
 template index.html.tmpl.
+
+setup.py no longer deletes public_html/#upstream.last as part of the
+install process.
 
 Now requires configobj v4.6 (instead of V4.5). As this version was
 released nearly a year ago, this should not be a problem for most

@@ -6,6 +6,8 @@ Support for UTF-8 characters.
 
 Add support for user-supplied skins.
 
+More robust FTP driver
+
 Add support for CWOP.
 
 Allow rain-to-date to be added to a partial rainyear.

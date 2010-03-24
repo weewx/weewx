@@ -190,17 +190,22 @@ class Ftp(ReportGenerator):
     This will ftp everything in the public_html subdirectory to a webserver."""
 
     def run(self):
-        # Check to see if there is an 'FTP' section in the configuration
-        # dictionary and that all necessary options are present. 
+        f = open("/home/weewx/ftp.dict", "w")
+        self.skin_dict.write(f)
+        f.close()
+
+        # Check to see that all necessary options are present. 
         # If so, FTP the data up to a server.
-        ftp_dict = self.config_dict.get('FTP')
-        if ftp_dict and (ftp_dict.has_key('server')   and 
-                         ftp_dict.has_key('password') and 
-                         ftp_dict.has_key('user')     and
-                         ftp_dict.has_key('path')):
-            html_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                    self.config_dict['Reports']['HTML_ROOT'])
-            ftpData = weewx.ftpdata.FtpData(source_dir = html_dir, **ftp_dict)
+        if (self.skin_dict.has_key('server')   and 
+            self.skin_dict.has_key('password') and 
+            self.skin_dict.has_key('user')     and
+            self.skin_dict.has_key('path')):
+            ftpData = weewx.ftpdata.FtpData(source_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                                                      self.config_dict['Reports']['HTML_ROOT']), 
+                                            server     = self.skin_dict['server'],
+                                            user       = self.skin_dict['user'],
+                                            password   = self.skin_dict['password'],
+                                            path       = self.skin_dict['path'])
             ftpData.ftpData()
                 
 class Copy(ReportGenerator):

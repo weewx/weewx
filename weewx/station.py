@@ -15,9 +15,9 @@ import weeutil.weeutil
 
 class Station(object):
     """Static data about the station. Rarely changes."""
-    def __init__(self, config_dict, unit_labels_dict, unit_groups_dict):
+    def __init__(self, config_dict, unit_labels_dict, unit_groups_dict, hemispheres = ('N','S','E','W')):
         """Extracts info from the config_dict and stores it in self."""
-        self.hemispheres = config_dict['Station'].get('hemispheres', ('N','S','E','W'))
+        self.hemispheres = hemispheres
         self.latitude_f  = config_dict['Station'].as_float('latitude')
         self.latitude    = weeutil.weeutil.latlon_string(self.latitude_f, self.hemispheres[0:2])
         self.longitude_f = config_dict['Station'].as_float('longitude')
@@ -30,7 +30,7 @@ class Station(object):
 
         self.altitude_f             = config_dict['Station'].as_float('altitude')
         self.altitude               = "%d %s" % (self.altitude_f, self.altitude_unit_label)
-        self.location        = config_dict['Station']['location']
+        self.location        = weeutil.weeutil.utf8_to_html(config_dict['Station']['location'])
         self.rain_year_start = int(config_dict['Station'].get('rain_year_start', '1'))
         self.rain_year_str   = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
         self.week_start      = int(config_dict['Station'].get('week_start', '6'))
