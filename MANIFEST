@@ -6,7 +6,6 @@ configure.py
 daemon.py
 setup.cfg
 setup.py
-upload.py
 weewx.conf
 weewxd.py
 docs/customizing.htm
@@ -40,13 +39,13 @@ weeutil/Almanac.py
 weeutil/Moon.py
 weeutil/Sun.py
 weeutil/__init__.py
+weeutil/ftpupload.py
 weeutil/weeutil.py
 weewx/VantagePro.py
 weewx/__init__.py
 weewx/archive.py
 weewx/crc16.py
 weewx/formatter.py
-weewx/ftpdata.py
 weewx/genfiles.py
 weewx/genimages.py
 weewx/reportengine.py

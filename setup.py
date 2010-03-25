@@ -89,6 +89,12 @@ class My_install_data(install_data):
         # Run the superclass's run():
         install_data.run(self)
         
+        # If the file #upstream.last exists, delete it, as it is no longer used.
+        try:
+            os.remove(os.path.join(self.install_dir, 'public_html/#upstream.last'))
+        except:
+            pass
+            
         # If the file $WEEWX_ROOT/readme.htm exists, delete it. It's
         # the old readme (since replaced with docs/readme.htm)
         try:
@@ -217,7 +223,7 @@ setup(name='weewx',
       author_email='tkeffer@gmail.com',
       url='http://www.weewx.com',
       packages    = ['weewx', 'weeplot', 'weeutil', 'examples'],
-      py_modules  = ['upload', 'daemon'],
+      py_modules  = ['daemon'],
       scripts     = ['configure.py', 'weewxd.py'],
       data_files  = [('',                           ['CHANGES.txt', 'LICENSE.txt', 'README', 'weewx.conf']),
                      ('docs',                       ['docs/customizing.htm', 'docs/readme.htm', 
@@ -229,7 +235,7 @@ setup(name='weewx',
                                                      'skins/Standard/skin.conf', 'skins/Standard/week.html.tmpl',
                                                      'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 
                      ('start_scripts',              ['start_scripts/Debian/weewx', 'start_scripts/SuSE/weewx'])],
-      requires    = ['configobj(>=4.6)', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
+      requires    = ['configobj(>=4.5)', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "sdist" :        My_sdist}
       )

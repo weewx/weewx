@@ -14,13 +14,14 @@ import glob
 import shutil
 import syslog
 import threading
+import time
 
 import configobj
 
 import weewx.archive
 import weewx.genfiles
 import weewx.genimages
-import weewx.ftpdata
+import weeutil.ftpupload
 import weeutil.weeutil
 
 class StdReportEngine(threading.Thread):
@@ -96,6 +97,9 @@ class StdReportEngine(threading.Thread):
             
             # Now inject any overrides for this specific report:
             skin_dict.merge(self.config_dict['Reports'][report])
+            
+            # Finally, add the report name:
+            skin_dict['REPORT_NAME'] = report
             
             # If this is the first time the report engine has been run, then
             # run the 'singleton list' of generators.
@@ -190,9 +194,6 @@ class Ftp(ReportGenerator):
     This will ftp everything in the public_html subdirectory to a webserver."""
 
     def run(self):
-        f = open("/home/weewx/ftp.dict", "w")
-        self.skin_dict.write(f)
-        f.close()
 
         # Check to see that all necessary options are present. 
         # If so, FTP the data up to a server.
@@ -200,13 +201,21 @@ class Ftp(ReportGenerator):
             self.skin_dict.has_key('password') and 
             self.skin_dict.has_key('user')     and
             self.skin_dict.has_key('path')):
-            ftpData = weewx.ftpdata.FtpData(source_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                                                      self.config_dict['Reports']['HTML_ROOT']), 
-                                            server     = self.skin_dict['server'],
-                                            user       = self.skin_dict['user'],
-                                            password   = self.skin_dict['password'],
-                                            path       = self.skin_dict['path'])
-            ftpData.ftpData()
+            
+            t1 = time.time()
+            ftpData = weeutil.ftpupload.FtpUpload(server      = self.skin_dict['server'],
+                                                  user        = self.skin_dict['user'],
+                                                  password    = self.skin_dict['password'],
+                                                  local_root  = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                                                             self.config_dict['Reports']['HTML_ROOT']),
+                                                  remote_root = self.skin_dict['path'],
+                                                  name        = self.skin_dict['REPORT_NAME'],
+                                                  passive     = bool(self.skin_dict.get('passive', True)),
+                                                  max_tries   = int(self.skin_dict.get('max_tries', 3)))
+            N = ftpData.run()
+            t2= time.time()
+            syslog.syslog(syslog.LOG_INFO, "reportengine: uploaded %d files in %0.1f seconds" % (N, (t2-t1)))
+            
                 
 class Copy(ReportGenerator):
     """Class for managing the 'copy generator.'
