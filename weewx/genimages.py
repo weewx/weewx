@@ -25,7 +25,7 @@ import weewx.units
 class GenImages(object):
     """Generate plots of the weather data.
     
-    This class generates all the images specified in the ['Images'] section
+    This class generates all the images specified in the ['ImageGenerator'] section
     of the given configuration dictionary. Typically, this is daily, weekly,
     monthly, and yearly time plots.
     
@@ -42,7 +42,7 @@ class GenImages(object):
         """    
     
         self.weewx_root   = config_dict['Station']['WEEWX_ROOT']
-        self.image_dict   = skin_dict['Images']
+        self.image_dict   = skin_dict['ImageGenerator']
         self.title_dict   = skin_dict['Labels']['Generic']
         self.label_dict   = weewx.units.getLabelDict(skin_dict)
         self.unitTypeDict = weewx.units.getUnitTypeDict(skin_dict)

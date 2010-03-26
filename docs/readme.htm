@@ -41,18 +41,20 @@ dd {
 	color: black;
 }
 h1 {
-	font: normal normal bold 18pt Verdana, arial, sans-serif;
-	color: teal;
+	font: normal normal bold xx-large Verdana, arial, sans-serif;
+	color: #FFFFFF;
 	border: 1px solid black;
 	border-bottom: 2px solid black;
 	border-right: 2px solid black;
-	background-color: #e8e8e8;
+	background-color: #008080;
 	padding-left: .5em;
 	padding-right: .5em;
 	margin-top: 60pt;
+	border-right-width: medium;
+	border-bottom-width: medium;
 }
 h2 {
-	font: 15pt Verdana,arial,sans-serif;
+	font: x-large Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -61,7 +63,7 @@ h2 {
 	margin-top: 30pt;
 }
 h3 {
-	font: 12pt Verdana, arial, sans-serif;
+	font: medium Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -69,7 +71,7 @@ h3 {
 	padding-right: .5em;
 }
 h4 {
-	font: 12pt Verdana,arial,sans-serif;
+	font: medium Verdana, arial, sans-serif;
 	color: black;
 	font-weight: bold;
 }
@@ -114,13 +116,7 @@ td {
 .bold_n_blue {
 	color: #0000FF;
 }
-.style1 {
-	background-color: #FFFFCC;
-}
-.style2 {
-	border-style: solid;
-}
-.style3 {
+.xxsmall {
 	font-size: xx-small;
 }
 </style>
@@ -129,7 +125,7 @@ td {
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.5</h1>
+Version 1.6</h1>
 <h1>Table of Contents</h1>
 <ol>
 	<li>
@@ -195,7 +191,7 @@ this program. If not, see <http://www.gnu.org/licenses/>
 		<p><span class="code">weewx</span> is a piece of software, written in
 		<a href="http://www.python.org">Python</a>, that interacts with your 
 		weather station to produce plots, reports, and HTML pages. It can 
-		optionally publish to the <a href="http://www.wunderground.com">
+		optionally upload the reports to a remote Web server as well as publish to the <a href="http://www.wunderground.com">
 		WeatherUnderground</a>. It uses modern software concepts, making it 
 		simple, robust, and easy to extend. For an example station see
 		<a href="http://www.threefools.org/weewx">Hood River West</a>.</p>
@@ -209,13 +205,17 @@ with lots of users. Written in C, it&#39;s an efficient system that can run on v
 (45,000+ lines of code), tightly integrated in with its companion library, radlib (another 
 14,000+ lines), and very complex, making it difficult to understand and reliably 
 customize. I wanted something more modern and much simpler.</p>
-&nbsp;<p>Having made a career in C++ and Java, I was also interested in some more 
+<p>Having made a career in C++ and Java, I was also interested in some more 
 modern languages, so I thought I&#39;d try either Python or Ruby (although, truth be 
 told, the roots of Python are nearly as old as C++!). I ended up picking Python because 
 its libraries are more mature and there are many mores choices for third party 
 libraries.</p>
 <p><span class="code">Weewx</span> weighs in at under 4,000 lines of code, plus 
-another 2,500 comment lines. Because it is pure Python, it requires no makefiles, no builds, no special installs. However, to be fair, it is missing features such as support for other weather stations. On the other hand, it offers very powerful configuration 
+another 2,500 comment lines. Because it is pure Python, it requires no makefiles, 
+no builds, no special installs. However, to be fair, at this point it supports 
+only the&nbsp;
+<a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis VantagePro2</a> 
+weather station. On the other hand, it offers very powerful configuration 
 and templating options, as well as an internally extensible engine, making it easy to customize. 
 Its internal modular design and use of modern exception handling make it very 
 robust and difficult to crash. It is also architecturally 
@@ -238,7 +238,7 @@ very simple and easy to understand.</p>
 	<li><a href="http://pypi.python.org/pypi/pysqlite/">pysqlite</a> (Version 2.5 
 	or greater) The Python interface to sqlite3.</li>
 	<li><a href="http://pypi.python.org/pypi/configobj/">configobj</a> (Version 
-	4.6 or greater) Manages the configuration file <span class="code">weewx.conf</span>.</li>
+	4.5 or greater) Manages the configuration file <span class="code">weewx.conf</span>.</li>
 	<li><a href="http://pypi.python.org/pypi/pyserial/2.4">pyserial</a> (Version 
 	1.35 or greater) Manages the serial connection to the weather station.</li>
 	<li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or greater) 
@@ -263,7 +263,7 @@ both approaches are given below.</p>
 apt_get</span>, but the same package names would be used should you chose to use 
 a graphical interface such as the Synaptic Package Manager.</p>
 <h4>sqlite3</h4>
-<p>My Ubuntu 8.10 system came with V3.5.9, which works just fine. However, if you 
+<p>My Ubuntu 8.10 system came with V3.5.9 of sqlite, which works just fine. However, if you 
 need to install:</p>
 <p class="tty">sudo apt-get install sqlite3</p>
 <h4>pysqlite</h4>
@@ -458,7 +458,8 @@ be handy when upgrading to a later version.</p>
 <p>This section covers configuring your archive and statistical database (if necessary; 
 this step is required only if you are moving from
 <a href="http://www.wviewweather.com/">wview</a> to <span class="code">weewx</span>), configuring your weather 
-station, and configuring the configuration file <span class="code">weewx.conf</span>.</p>
+station, and configuring the configuration files <span class="code">weewx.conf</span> 
+and <span class="code">skin.conf</span>.</p>
 <p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to the
 <span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>.
 </p>
@@ -512,9 +513,12 @@ script to set it on the VantagePro. If it differs from the old archive interval,
 the main memory log of the VantagePro will be cleared. </p>
 <p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --configure-VantagePro $WEEWX_ROOT/weewx.conf</p>
 <h2>6.3 Editing the configuration file <span class="code">weewx.conf</span></h2>
-<p>Virtually every conceivable configuration option is in the configuration file
-<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. Most of the important 
-ones are up near the top of the file. They are all documented in this section, although 
+<p>Station specific information is set in the configuration file
+<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. There is another 
+configuration file <span class="code">skin.conf</span> for presentation-specific 
+options, which is described below. </p>
+<p>Most of the important 
+options are up near the top of the file. They are all documented in this section, although 
 you can safely ignore most of them. The truly important ones, the ones you are likely 
 to have to customize for your station, are shown in <span class="bold_n_blue">
 <strong>bold face and in blue</strong></span>. </p>
@@ -545,7 +549,7 @@ will be set automatically by the setup script <span class="code">setup.py</span>
 to reflect the choice you made in the configuration file <span class="code">setup.cfg</span>. 
 Required. No default.</p>
 <h4 class="config_important">location</h4>
-<p>The station location should be a string that describes the geography of where 
+<p>The station location should be a UTF-8 string that describes the geography of where 
 you weather station is located, such as &#39;Hood River, Oregon&#39;. Required. No default.</p>
 <h4 class="config_important">latitude<br />
 longitude</h4>
@@ -558,9 +562,6 @@ hemispheres, respectively. Required. No default.</p>
 <p>If your area uses a rain year that starts on something other than the first of 
 January, you may want to set this variable. For example, set to 10 if your rain 
 year starts in October (as mine does). Default is 1.</p>
-<h4 class="config_important">radar_url</h4>
-<p>This variable is available in the HTML templates. Set it to an appropriate URL 
-to display a radar image for your area. No default.</p>
 <h4 class="config_option"><span class="config_important">heating_base<br />
 cooling_base</span></h4>
 <p>Set to the base temperature for calculating heating and cooling degree-days, 
@@ -681,297 +682,6 @@ be available for generating HTML pages. Optional. The default is all types, resu
 in a possibly much bigger than necessary stats database (do you really have four 
 different soil moisture sensors?) The list that ships with the configuration file 
 will work for most stations and probably will not have to be modified.</p>
-<h3 class="config_section">[Units]</h3>
-<p>This section deals with Units and their formatting. </p>
-<h4><a name="Unit_Classes">Unit Groups</a></h4>
-<p>As there are many different observational measurement types (such as &#39;<span class="code">outTemp</span>&#39;, 
-&#39;<span class="code">barometer</span>&#39;, etc.) used in <span class="code">weewx</span> 
-(more than 50 at last count), it would be tedious, not to say possibly 
-inconsistent, to specify a different measurement system for each one of them. At 
-the other extreme, requiring them all to be &quot;U.S. Customary&quot; or &quot;Metric&quot; seems 
-overly restrictive. <span class="code">Weewx</span> has taken a middle route and 
-divided all the different measurement types into 12 different &quot;unit groups.&quot; A 
-unit group is something like &quot;<span class="code">group_temperature</span>.&quot; It 
-represents the measurement system to be used by all observation types that are 
-measured in temperature, such as inside temperature (type &#39;<span class="code">inTemp</span>&#39;), 
-outside temperature (&#39;<span class="code">outTemp</span>&#39;), dewpoint (&#39;<span class="code">dewpoint</span>&#39;), 
-wind chill (&#39;<span class="code">windchill</span>&#39;), and so on. If you 
-decide that you want unit group <span class="code">group_temperature</span> to be 
-measured in &quot;<span class="code">degrees_C</span>&quot; then you are saying <em>all</em> 
-members of its group will be reported in degrees Celsius.</p>
-<h4 class="config_option">[[UnitGroups]]</h4>
-<p>This section lists all the Unit Groups and specifies which unit system is to 
-be used for each one of them. Note that the unit system is always specified in 
-the singular. That is, specify &quot;<span class="code">foot</span>&quot; or &quot;<span class="code">inch_per_hour</span>&quot;, 
-not &quot;<span class="code">feet</span>&quot; or &quot;<span class="code">inches_per_hour</span>.&quot;</p>
-<p>See section <a href="#Units">Units</a> for more information, including a concise 
-summary of the groups, their members, and which options can be used for each 
-group.</p>
-<h4 class="config_important"><a name="group_altitude">group_altitude</a></h4>
-<p>Which measurement unit to be used for altitude. Possible options
-are &#39;<span class="code">foot</span>&#39; or
-&#39;<span class="code">meter</span>&#39;.</p>
-<h4 class="config_option">group_direction</h4>
-<p>Which measurement unit to be used for direction. The only option is
-&quot;<span class="code">degree_compass</span>&quot;.</p>
-<h4 class="config_option">group_moisture</h4>
-<p>The measurement unit to be used for soil moisture. The only option
-is &quot;<span class="code">centibar</span>.&quot;</p>
-<h4 class="config_option">group_percent</h4>
-<p>The measurement unit to be used for percentages. The only option is
-&quot;<span class="code">percent</span>&quot;.</p>
-<h4 class="config_important">group_pressure</h4>
-<p>The measurement unit to be used for pressure. Possible options are
-one of &quot;<span class="code">inHg</span>&quot; (inches of mercury),
-&quot;<span class="code">mbar</span>&quot;, or
-&quot;<span class="code">hPa</span>.&quot;</p>
-<h4 class="config_option">group_radiation</h4>
-<p>The measurement unit to be used for radiation. The only option is
-&quot;<span class="code">watt_per_meter_squared</span>.&quot;</p>
-<h4 class="config_important">group_rain</h4>
-<p>The measurement unit to be used for precipitation. Options are
-&quot;<span class="code">inch</span>&quot;,
-&quot;<span class="code">cm</span>,&quot; or
-&quot;<span class="code">mm</span>.&quot;</p>
-
-<h4 class="config_important">group_rainrate</h4>
-<p>The measurement unit to be used for rate of precipitation. Possible options
-are one of &quot;<span class="code">inch_per_hour</span>&quot;,
-&quot;<span class="code">cm_per_hour</span>&quot;, or
-&quot;<span class="code">mm_per_hour</span>&quot;.</p>
-
-<h4 class="config_important">group_speed</h4>
-<p>The measurement unit to be used for wind speeds. Possible options are one of &quot;<span class="code">mile_per_hour</span>&quot;, 
-&quot;<span class="code">km_per_hour</span>&quot;, &quot;<span class="code">knot</span>&quot;, or &quot;<span class="code">meter_per_second</span>.&quot;</p>
-<h4 class="config_important">group_speed2</h4>
-<p>This group is similar to <span class="code">group_speed</span>, but is used for calculated wind speeds 
-which typically have a slightly higher resolution. Possible options are one of &quot;<span class="code">mile_per_hour2</span>&quot;, 
-&quot;<span class="code">km_per_hour2</span>&quot;, &quot;<span class="code">knot2</span>&quot;, or 
-&quot;<span class="code">meter_per_second2</span>.&quot;</p>
-<h4 class="config_important"><a name="group_temperature">group_temperature</a></h4>
-<p>The measurement unit to be used for temperatures. Options are &quot;<span class="code">degree_F</span>&quot; 
-or &quot;<span class="code">degree_C</span>.&quot;</p>
-<h4 class="config_option">group_volt</h4>
-<p>The measurement unit to be used for voltages. The only option is &quot;<span class="code">volt</span>.&quot;</p>
-<h4 class="config_option"><a name="Units_StringFormats">[[StringFormats]]</a></h4>
-<p>This sub-section is used to specify what string format is to be used for each 
-unit when a quantity needs to be converted to a string. Typically, this happens 
-with y-axis labeling on plots and for statistics in 
-HTML file generation. For example, the options</p>
-<p class="tty">degree_C = %.1f</p>
-<p class="tty">inch&nbsp;&nbsp;&nbsp;&nbsp; =&nbsp;%.2f</p>
-<p>would specify that the given string formats are to be used when formatting any temperature 
-measured in degrees Celsius or any precipitation amount measured in inches, respectively. The
-<a href="http://docs.python.org/library/string.html#format-specification-mini-language">
-formatting codes are those used by Python</a>, and are very similar to C&#39;s sprintf() 
-codes.</p>
-<h3 class="config_section">[Images]</h3>
-<p>This section, which controls which images (plots) get generated and with which 
-options, is by far the most complicated. However, it is extremely flexible and powerful.</p>
-<h4>Time periods</h4>
-<p>The section consists of one or more sub-sections, one for each time period (day, week, 
-month, and year). These sub-sections define the nature of aggregation and plot types 
-for the time period. For example, here&#39;s a typical set of options for sub-section
-<span class="code">[[month_images]]</span>, controlling how images that cover a 
-month period are generated:</p>
-<p class="tty">[[month_images]]</p>
-<p class="tty">&nbsp; x_label_format = %d</p>
-<p class="tty">&nbsp; bottom_label_format = %m/%d/%y %H:%M</p>
-<p class="tty">&nbsp; time_length = 2592000 # == 30 days</p>
-<p class="tty">&nbsp; aggregate_type = avg</p>
-<p class="tty">&nbsp; aggregate_interval = 10800 # == 3 hours</p>
-<p>The option <span class="code">x_label_format</span> gives a
-<a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
-type format for the x-axis. In this example, it will only show days (format option 
-&quot;<span class="code">%d</span>&quot;). The <span class="code">bottom_label_format</span> 
-is the format used to time stamp the image at the bottom. In this example, it will 
-show the time as <span class="code">10/25/09 15:35</span>. A plot will cover a nominal 
-30 days, and all items included in it will use an aggregate type of averaging over 
-3 hours. </p>
-<h4>Image files</h4>
-<p>Within each sub-section is another nesting, one for each image to be generated. 
-The title of each sub-sub-section is the filename to be used for the image. 
-Finally, at one additional nesting level (!) are the logical names of all the 
-line types to be drawn in the image.&nbsp; Values specified in the 
-level above can be overridden. For example, here&#39;s a typical set of options for 
-sub-sub-section <span class="code">[[[monthrain]]]</span>: </p>
-<p class="tty">[[[monthrain]]]</p>
-<p class="tty">&nbsp; plot_type = bar</p>
-<p class="tty">&nbsp; yscale = None, None, 0.02</p>
-<p class="tty">&nbsp; [[[[rain]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = sum</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_interval = 86400</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; label = Rain (daily avg)</p>
-<p>This will generate an image file with name <span class="code">monthrain.png</span>. 
-It will be a bar plot. Option <span class="code">yscale</span> controls the y-axis 
-scaling &mdash; if left out, the scale will automatically be chosen. However, in this 
-example we are choosing to exercise some degree of control by specifying values 
-explicitly. It is a 3-way tuple (<span class="code">ylow</span>,
-<span class="code">yhigh</span>, <span class="code">min_interval</span>), where
-<span class="code">ymin</span> and <span class="code">ymax</span> are the minimum 
-and maximum y-axis values, respectively, and <span class="code">min_interval</span> 
-is the minimum tick interval. If set to &#39;<span class="code">None</span>&#39;, the corresponding 
-value will be automatically chosen. So, in this example, we are letting
-<span class="code">weewx</span> pick sensible y minimum and maximum values, but 
-we are requiring that the tick increment (<span class="code">min_interval</span>) 
-be at least 0.02. </p>
-<p>Continuing on with the example above, there will be only one plot &quot;line&quot; (it 
-will actually be a series of bars) and it will 
-have logical name &#39;<span class="code">rain</span>&#39;. Because we haven&#39;t said 
-otherwise, the SQL data type to be used for this line will be the same as its 
-logical name, that is, <span class="code">rain</span>, but this can be 
-overridden (see below). The aggregation type will be summing (overriding 
-the averaging specified in sub-section <span class="code">[[month_images]]</span>), 
-so you get the total rain over the aggregate period (rather than the average) over 
-an aggregation interval of 86,400 seconds (one day). The plot line will be titled 
-with the indicated label (&#39;<span class="code">Rain (daily avg)</span>&#39;)</p>
-<h4>Including more than one SQL type in a plot</h4>
-<p>More than one SQL type can be included in a plot. For example, here&#39;s how to 
-generate a plot with the week&#39;s outside temperature as well as dewpoint:</p>
-<p class="tty">[[[monthtempdew]]]</p>
-<p class="tty">&nbsp; [[[[outTemp]]]]</p>
-<p class="tty">&nbsp; [[[[dewpoint]]]]</p>
-<p>This would create an image in file <span class="code">monthtempdew.png</span> 
-that includes a line plot of both outside temperature and dewpoint.</p>
-<h4>Including the same SQL type more than once in a plot</h4>
-<p>Another example. Say you want a plot of the day&#39;s temperature, overlaid with 
-hourly averages. Here, you are using the same data type (&#39;<span class="code">outTemp</span>&#39;) 
-for both plot lines, the first with averages, the second without. If you do the 
-obvious it won&#39;t work:</p>
-<p class="tty">## WRONG ##</p>
-<p class="tty">[[[daytemp_with_avg]]]</p>
-<p class="tty">&nbsp; [[[[outTemp]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = avg</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_interval = 3600</p>
-<p class="tty">&nbsp; [[[[outTemp]]]]&nbsp; # OOPS! The same section name appears more than 
-once!</p>
-<p>The option parser does not allow the same section name (&#39;<span class="code">outTemp</span>&#39; 
-in this case) to appear more than once at a given level in the configuration 
-file, so an error will be declared (technical reason: formally, the sections are 
-an unordered dictionary). If you wish for the same SQL type to appear more than 
-once in a plot then there is a trick you must know: use option
-<span class="code">data_type</span>. This will override the default action that 
-the logical line name is used for the SQL type. So, our example would look like 
-this:</p>
-<p class="tty">[[[daytemp_with_avg]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; [[[[a_logical_name]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; data_type = outTemp</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_type = avg</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_interval = 3600</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; [[[[outTemp]]]]</p>
-<p>Here, the first logical line has been given the name &quot;<span class="code">a_logical_name</span>&quot; 
-to distinguish it from the second line &quot;<span class="code">outTemp</span>&quot;. We 
-have specified that the first line will use data type <span class="code">outTemp</span> 
-and that it will use averaging over a one hour period. The second also uses
-<span class="code">outTemp</span>, but will not use averaging.</p>
-<p>The result is a nice plot of the day&#39;s temperature, overlaid with a 3-hour 
-smoothed average.</p>
-<h4>Progressive vector plots</h4>
-<p><span class="code">Weewx</span> can produce progressive vector plots as well as the more conventional 
-x-y plots. To produce these, use plot type &#39;<span class="code">vector</span>&#39;. 
-You need a vector type to produce this kind of plot. There are two: &#39;<span class="code">windvec</span>&#39;, 
-and &#39;<span class="code">windgustvec</span>&#39;. While they don&#39;t actually appear in 
-the SQL database, <span class="code">weewx</span> understands that they represent special vector-types. 
-The first, &#39;<span class="code">windvec</span>&#39;, represents the average wind in 
-an archive period, the second, &#39;<span class="code">windgustvec</span>&#39; the max 
-wind in an archive period. Here&#39;s how to produce a progressive vector plot of 
-the year&#39;s biggest daily wind gusts, along with daily averages:</p>
-<p class="tty">[[[yeargustoverlay]]]</p>
-<p class="tty">&nbsp; aggregate_interval = 86400</p>
-<p class="tty">&nbsp; [[[[windvec]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; plot_type = vector</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = avg</p>
-<p class="tty">&nbsp; [[[[windgustvec]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; plot_type = vector</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = max</p>
-<p>This will produce an image file with name <span class="code">
-yeargustoverlay.png</span>. It will consist of two progressive vector plots, 
-both using daily aggregation (86,400 seconds). For the first set of vectors, the daily 
-average will be used. In the second, the max of the gusts will be used.</p>
-<p>By default, the sticks in the progressive wind plots point towards the wind 
-source. That is, the stick for a wind from the west will point left. If you have 
-a chronic wind direction (as I do), you may want to rotate the default direction 
-so that all the vectors don&#39;t line up over the x-axis, overlaying each other. Do 
-this by using option <span class="code">vector_rotate</span>. For example, with 
-my chronic westerlies, I set <span class="code">vector_rotate</span> to 90.0, so 
-winds out of the west point straight up. </p>
-<p>If you use this kind of plot (the out-of-the-box version of
-<span class="code">weewx</span> includes daily, weekly, monthly, and yearly 
-progressive wind plots), a small compass rose will be put in the lower-left 
-corner of the image to show the orientation of North.</p>
-<h4>Overriding values</h4>
-<p>Remember that values at any level can override values specified at a higher 
-level. For example, say you want to generate the standard plots, but for a few 
-key observation types such as barometer, you want to also generate some 
-oversized plots to give you extra detail, perhaps for an HTML popup. The 
-standard <span class="code">weewx.conf</span> file specifies plot size of 
-300x180 pixels, which will be used for all plots unless overridden:</p>
-<p class="tty">[Images]</p>
-<p class="tty">&nbsp; ...</p>
-<p class="tty">&nbsp; image_width=300</p>
-<p class="tty">&nbsp; image_height = 180</p>
-<p>The standard plot of barometric pressure will appear in <span class="code">
-daybarometer.png</span>:</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; [[[daybarometer]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[barometer]]]]&nbsp;</p>
-<p>We now add our special plot of barometric pressure, but specify a larger 
-image size. This image will be put in file <span class="code">
-daybarometer_big.png</span>.</p>
-<p class="tty">&nbsp; &nbsp; [[[daybarometer_big]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_width&nbsp; = 600</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_height = 360</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[barometer]]]]</p>
-<h4>Summary</h4>
-<p>Studying this section in the shipped version of <span class="code">weewx.conf</span> 
-will give you ideas about the many different image plot configurations that are 
-possible without hacking the code. </p>
-<h3 class="config_section">[Labels]</h3>
-<p>This section controls how measurement values are labeled. It is generally 
-used in plot generation, although there are a few other areas where it is used. It consists of 
-two sub-sections:</p>
-<h4 class="config_option">[[Generic]]</h4>
-<p>This sub-sections specifies default labels to be used for each SQL type. For 
-example, options</p>
-<p class="tty">inTemp = Inside Temperature</p>
-<p class="tty">outTemp = Outside Temperature</p>
-<p>would cause the given labels to be used for plots involving SQL types
-<span class="code">inTemp </span>and <span class="code">outTemp</span>..</p>
-<h4 class="config_option">[[<a name="Units_StringFormats">UnitLabels]]</a></h4>
-<p>This sub-section specifies what label to be used for each measurement unit 
-type. For example, the options</p>
-<p class="tty">degree_F = \xb0F</p>
-<p class="tty">inch&nbsp;&nbsp;&nbsp;&nbsp; = &#39; in&#39;</p>
-<p>would cause all temperatures to have unit labels &#39;<span class="code">°F</span>&#39; 
-and all precipitation to have labels &#39;<span class="code"> in</span>&#39;. (NB: the code
-<span class="code">\xb0</span> is the hexadecimal value <span class="code">b0</span>, 
-which in many encodings encodes the degree sign.)</p>
-<h3 class="config_section">[HTML]</h3>
-<p>Section [HTML] has two options and two sub-sections. For additional information 
-on HTML generation <a href="#HTML_Generation">see the section below</a>.</p>
-<h4 class="config_option">template_root</h4>
-<p>This option specifies the directory, relative to <span class="code"><em>WEEWX_ROOT</em></span>, 
-where the HTML templates can be found. Required. No default.</p>
-<h4 class="config_option">html_root</h4>
-<p>This option specifies the directory, relative to <span class="code"><em>WEEWX_ROOT</em></span>, 
-where the generated HTML files should be put. Required. No default.</p>
-<h4 class="config_option"><a name="HTML_UnitLabels">[[UnitLabels]]</a></h4>
-<p>This subsection is similar to its eponymous counterpart in section
-<span class="code">[Labels]</span> above, except it is used for HTML generation. 
-It is useful to have a separate section because HTML uses special &#39;entity&#39; codes 
-to code special characters, such as the degree sign. For example, the options</p>
-<p class="tty">degree_F = &amp;deg;F</p>
-<p class="tty">inch&nbsp;&nbsp;&nbsp;&nbsp; = &#39; in&#39;</p>
-<p>would cause outside temperature and rain to have unit labels&nbsp; &#39;<span class="code">°F</span>&#39; 
-and &#39;<span class="code"> in</span>&#39;, respectively.</p>
-<h4 class="config_option"><a name="HTML_Time">[[Time]]</a></h4>
-<p>This subsection is used for time labels in HTML generation. It uses
-<a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
-formats. For example</p>
-<p class="tty">week&nbsp; = %H:%M on %A</p>
-<p class="tty">month = %d-%b-%Y %H:%M</p>
-<p>would specify that week data should use a format such as &quot;<span class="code">15:20 
-on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
-15:20</span>&quot;</p>
 <h1>7. <a name="Running_weewx">Running <span class="code">weewx</span></a></h1>
 <p><span class="code">Weewx</span> can be run either from the command line (useful 
 for diagnostic purposes because it will print out a summary of every LOOP data), 
@@ -1097,15 +807,15 @@ fall into. Note that just because a type appears in the table does not
 necessarily mean that it is available for <em>your</em> station setup. That 
 would depend on whether your instrument supports the type, and whether or not 
 you configured <span class="code">weewx</span> to use that type.</p>
-<table style="width: 80%" align="center" class="style2">
+<table style="width: 80%" align="center" >
 	<tr >
 		<td><strong>Name</strong></td>
 		<td style="width: 200px"><strong>SQL Type</strong><br />
-			<span class="style3">(appears in archive database)</span></td>
+			<span class="xxsmall">(appears in archive database)</span></td>
 		<td style="width: 200px"><strong>Observation Type</strong><br />
-			<span class="style3">(can be used in plots)</span></td>
+			<span class="xxsmall">(can be used in plots)</span></td>
 		<td style="width: 200px"><strong>Stats Type</strong><br />
-			<span class="style3">(can be used in statistical aggregations)</span></td>
+			<span class="xxsmall">(can be used in statistical aggregations)</span></td>
 	</tr>
 	<tr >
 		<td class="code">altimeter</td>
@@ -1430,7 +1140,7 @@ you configured <span class="code">weewx</span> to use that type.</p>
 <h2>10.1 <a name="Units">Units</a></h2>
 <p>The table below lists all the unit groups, their members, and which units are 
 options for the group.</p>
-<table style="width: 60%" class="style2" align="center">
+<table style="width: 60%" align="center">
 	<tr>
 		<td><strong>Group</strong></td>
 		<td><strong>Members</strong></td>
@@ -1614,7 +1324,7 @@ in a year, printing out each month&#39;s min and max temperature.</p>
 <p class="tty">&nbsp;&nbsp;&nbsp; &lt;title&gt;Year stats by month&lt;/title&gt;</p>
 <p class="tty">&nbsp; &lt;/head&gt;</p>
 <p class="tty">&nbsp; &lt;body&gt;</p>
-<p class="tty">&nbsp; &lt;p&gt;Min, m<span class="style1">ax t</span>emperatures 
+<p class="tty">&nbsp; &lt;p&gt;Min, max temperatures 
 by month:&lt;/p&gt;</p>
 <p class="tty">&nbsp; # for $month in $year.months</p>
 <p class="tty">&nbsp;&nbsp;&nbsp; $month.outTemp.min $month.outTemp.max</p>
@@ -1987,48 +1697,6 @@ with V2.X, that a separate code base will most likely be needed. My intention is
 to stick with the V2.5 and V2.6 versions until V3.X is so widespread it cannot be 
 ignored, then make a permanent switch. I doubt this will affect the average
 <span class="code">weewx</span> user. </p>
-<h2>12.3 Run time internals</h2>
-<p>At a high-level, <span class="code">weewx</span> consists of an engine class called 
-<span class="code">StdEngine</span>. It is 
-responsible for loading any &quot;services&quot; that are to be run and arranging for them 
-to be called when key events occur, such as the arrival of LOOP data. The default install of <span class="code">weewx</span> includes the following services:</p>
-<table style="width: 60%" align="center" class="style2">
-	<tr>
-		<td><strong>Service</strong></td>
-		<td><strong>Function</strong></td>
-	</tr>
-	<tr>
-		<td><span class="code">weewx.wxengine.StdWunderground</span></td>
-		<td>Starts thread to manage WU connection; adds new data to a Queue to 
-		be posted to the WU by the thread.</td>
-	</tr>
-	<tr>
-		<td><span class="code">weewx.wxengine.StdCatchUp</span></td>
-		<td>Any data found on the weather station memory but not yet in the 
-		archive, is retrieved and put in the archive.</td>
-	</tr>
-	<tr>
-		<td><span class="code">weewx.wxengine.StdTimeSynch</span></td>
-		<td>Arranges to have the clock on the station synchronized at regular 
-		intervals.</td>
-	</tr>
-	<tr>
-		<td><span class="code">weewx.wxengine.StdPrint</span></td>
-		<td>Prints out new LOOP and archive packets on the console.</td>
-	</tr>
-	<tr>
-		<td><span class="code">weewx.wxengine.StdProcess</span></td>
-		<td>Launches a new thread to do processing after a new archive record 
-		arrives. The thread loads zero or more reports and processes them in 
-		order. Reports do things such as generate HTML files, generate images, 
-		or FTP files to a web server. New reports can be added easily by the 
-		user.</td>
-	</tr>
-</table>
-
-<p>It is easy to add new services. The source distribution includes an example 
-new service called &quot;<span class="code">MyAlarm</span>,&quot; which sends an email 
-when an arbitrary expression evaluates <span class="code">True</span>.</p>
 <p>All writes to the databases are protected by transactions. You can kill the program 
 at any time (either Control-C if run from the command line or &quot;<span class="code">/etc/init.d/weewx 
 stop</span>&quot; if a daemon) without fear of corrupting the databases.</p>
@@ -2043,7 +1711,7 @@ cause thread termination. If this happens in the main thread (not likely and has
 happened to me yet), then this causes program termination. Otherwise, the 
 program will keep chugging along, storing data, allowing you to fix the problem 
 at your leisure, without losing any data.</p>
-<h2>12.4 Terminology</h2>
+<h2>12.3 Terminology</h2>
 <p>This is a glossary of terminology used throughout the code.</p>
 <table style="width: 100%">
 	<tr>
@@ -2112,7 +1780,7 @@ at your leisure, without losing any data.</p>
 		or <span class="code">vecavg</span>).</td>
 	</tr>
 </table>
-<h2>12.5 Units</h2>
+<h2>12.4 Units</h2>
 <p>In general, there are three different areas where the unit system makes a 
 difference.:
 </p>
@@ -2131,12 +1799,12 @@ measurement system of the weather instrument. That is, the units used in #1 and
 and #3, allowing any unit system to be used in the presentation layer.</p>
 <p>It would be easy enough to support an instrument that uses metric units 
 internally, although this has not been done yet. </p>
-<h2>12.6 Value &quot;<span class="code">None</span>&quot;</h2>
+<h2>12.5 Value &quot;<span class="code">None</span>&quot;</h2>
 <p>The Python special value &#39;<span class="code">None</span>&#39; is used throughout 
 to signal a missing data point. All functions expect it.</p>
 <p>However, the time value must never be &#39;<span class="code">None</span>&#39;. This 
 is because it is used as the primary key in the SQL database. </p>
-<h2>12.7 Time</h2>
+<h2>12.6 Time</h2>
 <p><span class="code">Weewx </span>stores all data in UTC (roughly, &quot;Greenwich&quot; 
 or &quot;Zulu&quot;) time. However, usually one is interested in weather events in local time 
 and want image and HTML generation to reflect that. Furthermore, most weather stations 

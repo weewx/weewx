@@ -17,7 +17,7 @@ import time
 import syslog
 
 class FtpUpload:
-    """Uploads a directory and all its descendents to a remote server.
+    """Uploads a directory and all its descendants to a remote server.
     
     Keeps track of when a file was last uploaded, so it is uploaded only
     if its modification time is newer."""
@@ -25,8 +25,8 @@ class FtpUpload:
     def __init__(self, server, 
                  user, password, 
                  local_root, remote_root, 
-                 name = "FTP", 
-                 passive = True, 
+                 name      = "FTP", 
+                 passive   = True, 
                  max_tries = 3):
         """Initialize an instance of FtpUpload.
         
@@ -186,7 +186,6 @@ class FtpUpload:
 if __name__ == '__main__':
     
     import weewx
-    import syslog
     import socket
     import configobj
     
@@ -227,3 +226,4 @@ if __name__ == '__main__':
                            config_dict['Reports']['FTP'].as_bool('passive'),
                            config_dict['Reports']['FTP'].as_int('max_tries'))
     ftp_upload.run()
+    

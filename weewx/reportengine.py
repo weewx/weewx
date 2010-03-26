@@ -188,7 +188,7 @@ class ImageGenerator(ReportGenerator):
         genImages = weewx.genimages.GenImages(self.config_dict, self.skin_dict)
         genImages.genImages(archive, stop_ts)
         
-class Ftp(ReportGenerator):
+class FtpGenerator(ReportGenerator):
     """Class for managing the "FTP generator".
     
     This will ftp everything in the public_html subdirectory to a webserver."""
@@ -214,10 +214,10 @@ class Ftp(ReportGenerator):
                                                   max_tries   = int(self.skin_dict.get('max_tries', 3)))
             N = ftpData.run()
             t2= time.time()
-            syslog.syslog(syslog.LOG_INFO, "reportengine: uploaded %d files in %0.1f seconds" % (N, (t2-t1)))
+            syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
             
                 
-class Copy(ReportGenerator):
+class CopyGenerator(ReportGenerator):
     """Class for managing the 'copy generator.'
     
     This will copy files from the skin subdirectory to the public_html
@@ -228,7 +228,7 @@ class Copy(ReportGenerator):
         # Get the list of files to be copied. Wrap in a try block in case
         # the list does not exist.
         try:
-            copy_once_list = self.skin_dict['Files']['Copy']['copy_once']
+            copy_once_list = self.skin_dict['CopyGenerator']['copy_once']
         except KeyError:
             return
 

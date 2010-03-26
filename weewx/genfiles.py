@@ -87,9 +87,9 @@ class GenFiles(object):
             return
 
         self.outputted_dict[by_time] = []
-        for subreport in self.skin_dict['Files'][by_time].sections:
+        for subreport in self.skin_dict['FileGenerator'][by_time].sections:
     
-            (template, destination_dir, encoding) = self._prepGen(self.skin_dict['Files'][by_time][subreport])
+            (template, destination_dir, encoding) = self._prepGen(self.skin_dict['FileGenerator'][by_time][subreport])
 
             ngen = 0
             t1 = time.time()
@@ -163,9 +163,9 @@ class GenFiles(object):
     
         searchList = self.getToDateSearchList(currentRec, stop_ts)
             
-        for subreport in self.skin_dict['Files']['ToDate'].sections:
+        for subreport in self.skin_dict['FileGenerator']['ToDate'].sections:
     
-            (template, destination_dir, encoding) = self._prepGen(self.skin_dict['Files']['ToDate'][subreport])
+            (template, destination_dir, encoding) = self._prepGen(self.skin_dict['FileGenerator']['ToDate'][subreport])
             
             # Form the destination filename:
             _filename = os.path.basename(template).replace('.tmpl','')
