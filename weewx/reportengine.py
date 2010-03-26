@@ -101,52 +101,40 @@ class StdReportEngine(threading.Thread):
             # Finally, add the report name:
             skin_dict['REPORT_NAME'] = report
             
-            # If this is the first time the report engine has been run, then
-            # run the 'singleton list' of generators.
-            if self.first_run and skin_dict.has_key('singleton_list'):
-                    singleton_list = weeutil.weeutil.option_as_list(skin_dict.get('singleton_list'))
-                    self.runGenerators(skin_dict, singleton_list)
-
-            # Now run all the regular generators:
-            self.runGenerators(skin_dict, weeutil.weeutil.option_as_list(skin_dict.get('generator_list')))
-            
-    def runGenerators(self, skin_dict, generator_list):
-        """Runs a list of generators.
-        skin_dict: The skin dictionary the list is to be run against.
-        
-        generator_list: A list of generators to be run. Each generator should
-        be a class with a method "start()". The initializer of the class should
-        take arguments (config_dict, skin_dict, gen_ts).
-        """
-        
-        for generator in generator_list:
-            try:
-                # Instantiate an instance of the class.
-                obj = weeutil.weeutil._get_object(generator, self.config_dict, skin_dict, self.gen_ts)
-            except ValueError, e:
-                syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
-                syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
-                continue
-
-            try:
-                # Call its start() method
-                obj.start()
-            except Exception, e:
-                # Caught unrecoverable error. Log it, exit
-                syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % generator)
-                syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
-                # Reraise the exception (this will eventually cause the thread to terminate)
-                raise
+            for generator in weeutil.weeutil.option_as_list(skin_dict.get('generator_list')):
+                try:
+                    # Instantiate an instance of the class.
+                    obj = weeutil.weeutil._get_object(generator, 
+                                                      self.config_dict, 
+                                                      skin_dict, 
+                                                      self.gen_ts, 
+                                                      self.first_run)
+                except ValueError, e:
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
+                    continue
+    
+                try:
+                    # Call its start() method
+                    obj.start()
+                    
+                except Exception, e:
+                    # Caught unrecoverable error. Log it, exit
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % generator)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
+                    # Reraise the exception (this will eventually cause the thread to terminate)
+                    raise
 
 
 class ReportGenerator(object):
     """Base class for all report generators."""
-    def __init__(self, config_dict, skin_dict, gen_ts):
+    def __init__(self, config_dict, skin_dict, gen_ts, first_run):
         self.config_dict = config_dict
         self.skin_dict   = skin_dict
         self.gen_ts      = gen_ts
+        self.first_run   = first_run
         
     def start(self):
         self.run()
@@ -225,12 +213,21 @@ class CopyGenerator(ReportGenerator):
     
     def run(self):
         
-        # Get the list of files to be copied. Wrap in a try block in case
-        # the list does not exist.
+        copy_list = []
+
+        if self.first_run:
+            # Get the list of files to be copied only once, at the first invocation of
+            # the generator. Wrap in a try block in case the list does not exist.
+            try:
+                copy_list += weeutil.weeutil.option_as_list(self.skin_dict['CopyGenerator']['copy_once'])
+            except KeyError:
+                pass
+
+        # Get the list of files to be copied everytime. Again, wrap in a try block.
         try:
-            copy_once_list = self.skin_dict['CopyGenerator']['copy_once']
+            copy_list += weeutil.weeutil.option_as_list(self.skin_dict['CopyGenerator']['copy_always'])
         except KeyError:
-            return
+            pass
 
         # Change directory to the skin subdirectory:
         os.chdir(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
@@ -243,7 +240,7 @@ class CopyGenerator(ReportGenerator):
         # The copy list can contain wildcard characters. Go through the
         # list globbing any character expansions
         ncopy = 0
-        for pattern in copy_once_list:
+        for pattern in copy_list:
             # Glob this pattern; then go through each resultant filename:
             for file in glob.glob(pattern):
                 # Final destination is the join of the html destination directory

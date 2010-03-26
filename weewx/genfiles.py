@@ -185,7 +185,7 @@ class GenFiles(object):
             ngen += 1
         
         elapsed_time = time.time() - t1
-        syslog.syslog(syslog.LOG_INFO, "genhtml: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
+        syslog.syslog(syslog.LOG_INFO, "genfiles: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
     
     def getSummarySearchList(self, by_time, timespan):
         """Return the searchList for the Cheetah Template engine for "summarize by" reports.
