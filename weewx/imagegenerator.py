@@ -17,36 +17,42 @@ import datetime
 import syslog
 import os.path
 
-import weeutil.weeutil
 import weeplot.genplot
 import weeplot.utilities
+import weeutil.weeutil
+import weewx.archive
+import weewx.reportengine
 import weewx.units
 
-class GenImages(object):
-    """Generate plots of the weather data.
-    
-    This class generates all the images specified in the ['ImageGenerator'] section
-    of the given configuration dictionary. Typically, this is daily, weekly,
-    monthly, and yearly time plots.
-    
-    """
-    
-    def __init__(self, config_dict, skin_dict):
-        """Initialize an instance of GenImages.
-        
-        config_dict: weewx configuration dictionary with general station
-        information.
-        
-        skin_dict: Skin configuration dictionary with selections specific
-        to the presentation layer.
-        """    
-    
-        self.weewx_root   = config_dict['Station']['WEEWX_ROOT']
-        self.image_dict   = skin_dict['ImageGenerator']
-        self.title_dict   = skin_dict['Labels']['Generic']
-        self.label_dict   = weewx.units.getLabelDict(skin_dict)
-        self.unitTypeDict = weewx.units.getUnitTypeDict(skin_dict)
+#===============================================================================
+#                    Class ImageGenerator
+#===============================================================================
 
+class ImageGenerator(weewx.reportengine.ReportGenerator):
+    """Class for managing the image generator."""
+
+    def run(self):
+        
+        self.setup()
+        
+        # Open up the main database archive
+        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
+                                       self.config_dict['Archive']['archive_file'])
+        archive = weewx.archive.Archive(archiveFilename)
+    
+        stop_ts = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
+
+        # Generate any images
+        self.genImages(archive, stop_ts)
+        
+    def setup(self):
+        
+        self.weewx_root   = self.config_dict['Station']['WEEWX_ROOT']
+        self.image_dict   = self.skin_dict['ImageGenerator']
+        self.title_dict   = self.skin_dict['Labels']['Generic']
+        self.label_dict   = weewx.units.getLabelDict(self.skin_dict)
+        self.unitTypeDict = weewx.units.getUnitTypeDict(self.skin_dict)
+        
     def genImages(self, archive, time_ts):
         """Generate the images.
         

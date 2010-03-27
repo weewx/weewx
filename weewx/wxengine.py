@@ -381,10 +381,10 @@ class StdWunderground(StdService):
             syslog.syslog(syslog.LOG_DEBUG, "Shut down Weather Underground thread.")
 
 #===============================================================================
-#                    Class StdProcess
+#                    Class StdReportService
 #===============================================================================
 
-class StdProcess(StdService):
+class StdReportService(StdService):
     
     def __init__(self, engine):
         StdService.__init__(self, engine)
@@ -402,7 +402,7 @@ class StdProcess(StdService):
     def shutDown(self):
         if self.thread:
             self.thread.join(20.0)
-            syslog.syslog(syslog.LOG_DEBUG, "Shut down StdProcess thread.")
+            syslog.syslog(syslog.LOG_DEBUG, "Shut down StdReportService thread.")
         self.first_run = True
 
 #===============================================================================

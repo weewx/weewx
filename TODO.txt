@@ -2,3 +2,6 @@ TODO before the next release:
 
 Documentation:
  o Characters used in the image plots must be Latin-1 characters.
+ o Include some of the examples I've sent to Alf.
+ 
+ 

@@ -18,9 +18,7 @@ import time
 
 import configobj
 
-import weewx.archive
-import weewx.genfiles
-import weewx.genimages
+import weewx
 import weeutil.ftpupload
 import weeutil.weeutil
 
@@ -142,40 +140,6 @@ class ReportGenerator(object):
     def run(self):
         pass
 
-class FileGenerator(ReportGenerator):
-    """Class for managing the template based generators"""
-    
-    def run(self):
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.config_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-        start_ts   = archive.firstGoodStamp()
-        currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
-
-        genFiles = weewx.genfiles.GenFiles(self.config_dict, self.skin_dict)
-        genFiles.generateSummaryBy('SummaryByMonth', start_ts, stop_ts)
-        genFiles.generateSummaryBy('SummaryByYear',  start_ts, stop_ts)
-        genFiles.generateToDate(currentRec, stop_ts)
-    
-
-class ImageGenerator(ReportGenerator):
-    """Class for managing the image generator."""
-
-    def run(self):
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.config_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        stop_ts = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-
-        # Generate any images
-        genImages = weewx.genimages.GenImages(self.config_dict, self.skin_dict)
-        genImages.genImages(archive, stop_ts)
-        
 class FtpGenerator(ReportGenerator):
     """Class for managing the "FTP generator".
     

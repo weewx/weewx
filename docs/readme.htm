@@ -41,7 +41,7 @@ dd {
 	color: black;
 }
 h1 {
-	font: normal normal bold xx-large Verdana, arial, sans-serif;
+	font: bold xx-large Verdana, arial, sans-serif;
 	color: #FFFFFF;
 	border: 1px solid black;
 	border-bottom: 2px solid black;
@@ -54,7 +54,7 @@ h1 {
 	border-bottom-width: medium;
 }
 h2 {
-	font: x-large Verdana, arial, sans-serif;
+	font: bold x-large Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -63,7 +63,7 @@ h2 {
 	margin-top: 30pt;
 }
 h3 {
-	font: medium Verdana, arial, sans-serif;
+	font: bold medium Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -71,9 +71,8 @@ h3 {
 	padding-right: .5em;
 }
 h4 {
-	font: medium Verdana, arial, sans-serif;
+	font: bold medium Verdana, arial, sans-serif;
 	color: black;
-	font-weight: bold;
 }
 .code {
 	font-family: "Courier New", Courier, monospace;
@@ -161,19 +160,8 @@ Version 1.6</h1>
 	weewx</span></a></p>
 	</li>
 	<li>
-	<p class="indent"><a href="#Types">Advanced topics: types</a></p>
-	</li>
-	<li>
-	<p class="indent"><a href="#HTML_Generation">Advanced topics: customizing HTML 
-	generation</a></p>
-	</li>
-	<li>
-	<p class="indent"><a href="#Architectural_notes">Advanced topics: architectural 
+	<p class="indent"><a href="#Architectural_notes">Architectural 
 	notes</a></p>
-	</li>
-	<li>
-	<p class="indent"><a href="#Customizing_weewx">Advanced topics: customizing
-	the internal <span class="code">weewx</span> engines</a></p>
 	</li>
 </ol>
 <h1>1. <a name="Copyright">Copyright</a></h1>
@@ -516,7 +504,7 @@ the main memory log of the VantagePro will be cleared. </p>
 <p>Station specific information is set in the configuration file
 <span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. There is another 
 configuration file <span class="code">skin.conf</span> for presentation-specific 
-options, which is described below. </p>
+options, which is described in a <a href="customizing.htm">separate document</a>. </p>
 <p>Most of the important 
 options are up near the top of the file. They are all documented in this section, although 
 you can safely ignore most of them. The truly important ones, the ones you are likely 
@@ -570,9 +558,6 @@ respectively, in the same units specified in <span class="code">
 <h4 class="config_option">week_start</h4>
 <p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 
 (Sunday)</p>
-<h4 class="config_option">hemispheres</h4>
-<p>Set to suitable abbreviations for the four hemispheres. Default is &quot;N&quot;, &quot;S&quot;, 
-&quot;E&quot;, &quot;W&quot;</p>
 <h4 class="config_option">clock_check</h4>
 <p>How often to check the station&#39;s onboard clock for drift, in seconds. Default 
 is 14400 (every 4 hours)</p>
@@ -624,7 +609,38 @@ clock, before resetting the clock. Default is 5.</p>
 are &#39;1&#39; (U.S. Customary) or &#39;2&#39; (Metric). As far as I know, all Davis instruments support 
 only U.S.. In any case, U.S. is the only system supported by
 <span class="code">weewx</span> at this time. Default is 1.</p>
-<h3 class="config_section">[FTP]</h3>
+<h3 class="config_section">[Wunderground]</h3>
+<p><span class="code">Weewx </span>can send your current data to the Weather 
+Underground. If you do not wish to do this, comment out the two options below.</p>
+<h4 class="config_option"><span class="config_important">station</span></h4>
+<p>Set to your Weather Underground station ID (e.g., <span class="code">KORHOODR3</span>). 
+Required.</p>
+<h4 class="config_important">password</h4>
+<p>Set to your Weather Underground password. Required.</p>
+<h3 class="config_section">[Archive]</h3>
+<p>This section is for configuring the sqlite3 database in which the station archive 
+data is stored.</p>
+<h4 class="config_option">archive_file</h4>
+<p>The path, relative to the <span class="code">WEEWX_ROOT </span>directory, to 
+the database. Required</p>
+<h4 class="config_option">unit_system</h4>
+<p>What unit system to use inside the database. Required. The only one supported 
+right now is &#39;1&#39;, the U.S. Customary system</p>
+<h3 class="config_section"><a name="[Stats]">[Stats]</a></h3>
+<p>This section is for configuring the sqlite3 database in which the station statistics 
+are stored.</p>
+<h4 class="config_option">stats_file</h4>
+<p>The path, relative to the <span class="code">WEEWX_ROOT </span>directory to the 
+statistical database. Required.</p>
+<h4 class="config_option"><a name="stats_types">stats_types</a></h4>
+<p>The list of types for which statistics will be kept. Types not listed will not 
+be available for generating HTML pages. Optional. The default is all types, resulting 
+in a possibly much bigger than necessary stats database (do you really have four 
+different soil moisture sensors?) The list that ships with the configuration file 
+will work for most stations and probably will not have to be modified.</p>
+<h3 class="config_section">[Reports]</h3>
+<p>This section controls which reports are to be generated.</p>
+<h4 class="config_section">[[FTP]]</h4>
 <p>If you FTP your images and HTML files to an external web server,
 <span class="code">weewx</span> can FTP them for you. It does an incremental update, 
 that is, it only FTPs any files that have changed, saving the outgoing bandwidth 
@@ -650,38 +666,9 @@ all FTP servers do a good job of supporting it. See
 <a href="http://slacksite.com/other/ftp.html">Active FTP vs. Passive FTP, a Definitive 
 Explanation</a> for a good explanation of the difference. Default is 1 (passive 
 mode).</p>
-<h4 class="config_option">max_retries</h4>
+<h4 class="config_option">max_tries</h4>
 <p><span class="code">Weewx</span> will try up to this many times to FTP a file 
 up to your server before giving up. Default is 3.</p>
-<h3 class="config_section">[Wunderground]</h3>
-<p><span class="code">Weewx </span>can send your current data to the Weather 
-Underground. If you do not wish to do this, comment out the two options below.</p>
-<h4 class="config_option"><span class="config_important">station</span></h4>
-<p>Set to your Weather Underground station ID (e.g., <span class="code">KORHOODR3</span>). 
-Required.</p>
-<h4 class="config_important">password</h4>
-<p>Set to your Weather Underground password. Required.</p>
-<h3 class="config_section">[Archive]</h3>
-<p>This section is for configuring the sqlite3 database in which the station archive 
-data is stored.</p>
-<h4 class="config_option">archive_file</h4>
-<p>The path, relative to the <span class="code">WEEWX_ROOT </span>directory, to 
-the database. Required</p>
-<h4 class="config_option">unit_system</h4>
-<p>What unit system to use inside the database. Required. The only one supported 
-right now is &#39;1&#39;, the U.S. Customary system</p>
-<h3 class="config_section">[Stats]</h3>
-<p>This section is for configuring the sqlite3 database in which the station statistics 
-are stored.</p>
-<h4 class="config_option">stats_file</h4>
-<p>The path, relative to the <span class="code">WEEWX_ROOT </span>directory to the 
-statistical database. Required.</p>
-<h4 class="config_option"><a name="stats_types">stats_types</a></h4>
-<p>The list of types for which statistics will be kept. Types not listed will not 
-be available for generating HTML pages. Optional. The default is all types, resulting 
-in a possibly much bigger than necessary stats database (do you really have four 
-different soil moisture sensors?) The list that ships with the configuration file 
-will work for most stations and probably will not have to be modified.</p>
 <h1>7. <a name="Running_weewx">Running <span class="code">weewx</span></a></h1>
 <p><span class="code">Weewx</span> can be run either from the command line (useful 
 for diagnostic purposes because it will print out a summary of every LOOP data), 
@@ -793,851 +780,9 @@ When troubleshooting the system, be sure to check it!</p>
 <p>Setting the option <span class="code">debug </span>in <span class="code">weewx.conf</span> 
 to <span class="code">1</span> (one) will generate many more checks and output and 
 can be useful for debugging.</p>
-<h1>10. Advanced topics: t<a name="Types">ypes</a></h1>
+<h1>10. A<a name="Architectural_notes">rchitectural notes</a></h1>
 <p>This section is not needed to get started. </p>
-<p>The weather variables used in <span class="code">weewx</span> generally fall into three different camps. 
-They can be a &quot;SQL type&quot;, meaning they appear in the archive database, an 
-&quot;Observational type&quot;, meaning that they either appear in the archive 
-database or are a derived quantity thereof, 
-or a &quot;Statistical type,&quot; meaning that they appear in the statistical 
-database. Observational types can be used in plots, statistical types can be 
-aggregated and used in daily, weekly, monthly, and yearly summaries. </p>
-<p>The following table shows all the possible types and what categories they 
-fall into. Note that just because a type appears in the table does not 
-necessarily mean that it is available for <em>your</em> station setup. That 
-would depend on whether your instrument supports the type, and whether or not 
-you configured <span class="code">weewx</span> to use that type.</p>
-<table style="width: 80%" align="center" >
-	<tr >
-		<td><strong>Name</strong></td>
-		<td style="width: 200px"><strong>SQL Type</strong><br />
-			<span class="xxsmall">(appears in archive database)</span></td>
-		<td style="width: 200px"><strong>Observation Type</strong><br />
-			<span class="xxsmall">(can be used in plots)</span></td>
-		<td style="width: 200px"><strong>Stats Type</strong><br />
-			<span class="xxsmall">(can be used in statistical aggregations)</span></td>
-	</tr>
-	<tr >
-		<td class="code">altimeter</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">altitude</td>
-		<td></td>
-		<td></td>
-		<td></td>
-	</tr>
-	<tr >
-		<td class="code">barometer</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">consBatteryVoltage</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">dateTime</td>
-		<td>X</td>
-		<td></td>
-		<td></td>
-	</tr>
-	<tr >
-		<td class="code">dewpoint</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">ET</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">extraHumid1</td>
-		<td>X</td>
-		<td>X</td>
-		<td>x</td>
-	</tr>
-	<tr >
-		<td class="code">extraHumid2</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">extraTemp1</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">extraTemp2</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">extraTemp3</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">hail</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">hailRate</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">heatindex</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">heatingTemp</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">heatingVoltage</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">inHumidity</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">inTemp</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">inTempBatteryStatus</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">interval</td>
-		<td>X</td>
-		<td>X</td>
-		<td></td>
-	</tr>
-	<tr >
-		<td class="code">leafTemp2</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">leafWet2</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">outHumidity</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">outTemp</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code" >outTempBatteryStatus</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">pressure</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">radiation</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">rain</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code" >rainBatteryStatus</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">rainRate</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code" >referenceVoltage</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code" >rxCheckPercent</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">soilMoist1</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">soilMoist2</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">soilMoist3</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">soilMoist4</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">soilTemp1</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">soilTemp2</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">soilTemp3</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">soilTemp4</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">supplyVoltage</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">txBatteryStatus</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">usUnits</td>
-		<td>X</td>
-		<td>X</td>
-		<td></td>
-	</tr>
-	<tr >
-		<td class="code">UV</td>
-		<td>X</td>
-		<td>X</td>
-		<td></td>
-	</tr>
-	<tr >
-		<td class="code">wind</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">windvec</td>
-		<td>&nbsp;</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr >
-		<td class="code">windBatteryStatus</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">windDir</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">windGust</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">windGustDir</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">windSpeed</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr >
-		<td class="code">windchill</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-</table>
-<p>&nbsp;</p>
-<h2>10.1 <a name="Units">Units</a></h2>
-<p>The table below lists all the unit groups, their members, and which units are 
-options for the group.</p>
-<table style="width: 60%" align="center">
-	<tr>
-		<td><strong>Group</strong></td>
-		<td><strong>Members</strong></td>
-		<td><strong>Unit options</strong></td>
-	</tr>
-	<tr>
-		<td class="code">group_altitude</td>
-		<td class="code">altitude</td>
-		<td class="code">foot<br />
-		meter</td>
-	</tr>
-	<tr class="code">
-		<td>group_direction</td>
-		<td>gustdir<br />
-		vecdir<br />
-		windDir<br />
-		windGustDir</td>
-		<td>degree_compass</td>
-	</tr>
-	<tr class="code">
-		<td>group_moisture</td>
-		<td>soilMoist1<br />
-		soilMoist2<br />
-		soilMoist3<br />
-		soilMoist4</td>
-		<td>centibar</td>
-	</tr>
-	<tr class="code">
-		<td>group_percent</td>
-		<td>extraHumid1<br />
-		extraHumid2<br />
-		inHumidity<br />
-		outHumidity<br />
-		rxCheckPercent</td>
-		<td>percent</td>
-	</tr>
-	<tr class="code">
-		<td>group_pressure</td>
-		<td>barometer<br />
-		altimeter<br />
-		pressure</td>
-		<td>inHg<br />
-		mbar<br />
-		hPa</td>
-	</tr>
-	<tr class="code">
-		<td>group_radiation</td>
-		<td>UV<br />
-		radiation</td>
-		<td>watt_per_meter_squared</td>
-	</tr>
-	<tr class="code">
-		<td>group_rain</td>
-		<td>rain<br />
-		ET<br />
-		hail</td>
-		<td>in<br />
-		cm<br />
-		mm</td>
-	</tr>
-	<tr class="code">
-		<td>group_rainrate</td>
-		<td>rainRate<br />
-		hailRate</td>
-		<td>in_per_hour<br />
-		cm_per_hour<br />
-		mm_per_hour</td>
-	</tr>
-	<tr class="code">
-		<td>group_speed</td>
-		<td>wind<br />
-		windGust<br />
-		windSpeed<br />
-		windgustvec<br />
-		windvec</td>
-		<td>mile_per_hour<br />
-		km_per_hour<br />
-		knot<br />
-		meter_per_second</td>
-	</tr>
-	<tr class="code">
-		<td>group_speed2</td>
-		<td>rms<br />
-		vecavg</td>
-		<td>mile_per_hour2<br />
-		km_per_hour2<br />
-		knot2<br />
-		meter_per_second2</td>
-	</tr>
-	<tr class="code">
-		<td>group_temperature</td>
-		<td>dewpoint<br />
-		extraTemp1<br />
-		extraTemp2<br />
-		extraTemp3<br />
-		heatindex<br />
-		heatingTemp<br />
-		inTemp<br />
-		leafTemp1<br />
-		leafTemp2<br />
-		outTemp<br />
-		soilTemp1<br />
-		soilTemp2<br />
-		soilTemp3<br />
-		soilTemp4<br />
-		windchill</td>
-		<td>degree_F<br />
-		degree_C</td>
-	</tr>
-	<tr class="code">
-		<td>group_volt</td>
-		<td>consBatteryVoltage<br />
-		heatingVoltage<br />
-		referenceVoltage<br />
-		supplyVoltage</td>
-		<td>volt</td>
-	</tr>
-</table>
-<h1>11. Advanced topics: customizing <a name="HTML_Generation">HTML Generation</a></h1>
-<p>This section is not needed to get started. </p>
-<p>HTML generation is done using the <a href="http://www.cheetahtemplate.org/">Cheetah</a> 
-templating engine. This is a very powerful engine, which essentially lets you have 
-the full semantics of Python available in your templates. As this would make the 
-templates incomprehensible to anyone but a Python programmer, <span class="code">
-weewx</span> adopts a very small subset of its power. </p>
-<p>Generally, any value is specified by using a &#39;dot&#39; code. For example:</p>
-<p class="tty">$month.outTemp.max</p>
-<p class="tty">$month.outTemp.maxtime</p>
-<p class="tty">$current.outTemp</p>
-<p>would code the max outside temperature for the month, the time it occurred, and 
-the current outside temperature, respectively. So, an HTML file that looks like</p>
-<p class="tty">&lt;html&gt;</p>
-<p class="tty">&nbsp; &lt;head&gt;</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; &lt;title&gt;Current conditions&lt;/title&gt;</p>
-<p class="tty">&nbsp; &lt;/head&gt;</p>
-<p class="tty">&nbsp; &lt;body&gt;</p>
-<p class="tty">&nbsp; &lt;p&gt;Current temperature = $current.outTemp&lt;/p&gt;</p>
-<p class="tty">&nbsp; &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at</p>
-<p class="tty">$month.outTemp.maxtime&lt;/p&gt;</p>
-<p class="tty">&nbsp; &lt;/body&gt;</p>
-<p class="tty">&lt;/html&gt;</p>
-<p>would be all you need for a very simple HTML page that would display the text 
-(assuming that the <a href="#Unit_Classes">unit class</a> for temperature is
-<span class="code">degree_F</span>):
-</p>
-<p class="indent">Current temperature = 51.0°F<br />
-Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15</p>
-<p>The format that was used to format the temperature (<span class="code">51.0</span>) 
-is specified in section <span class="code"><a href="#Units_StringFormats">[Units][[StringFormat]]</a></span>. 
-The unit label <span class="code">°F</span> is from section <span class="code">
-<a href="#HTML_UnitLabels">[HTML][[UnitLabels]]</a></span>, while the time 
-format is from <span class="code"><a href="#HTML_Time">[HTML][[Time]]</a></span>.</p>
-<p>The &quot;dot&quot; code has up to three parts. </p>
-<ol>
-	<li>The first part is the time period, and can be one of <span class="code">
-	current</span>, <span class="code">day</span>, <span class="code">week</span>,
-	<span class="code">month</span>, <span class="code">year</span>, or
-	<span class="code">rainyear</span>.</li>
-	<li>The second part is the &quot;statistical type&quot;. This is something like &#39;<span class="code">outTemp</span>&#39;, 
-	&#39;<span class="code">rain</span>&#39;, &#39;<span class="code">wind</span>&#39;, etc. 
-	The statistical types are generally those that appear in the SQL databases with three exceptions. First, type &#39;<span class="code">wind</span>&#39; 
-	is a special hybrid type and does not appear in the SQL database. It brings 
-	together the several different SQL types &#39;<span class="code">windSpeed</span>&#39;, 
-	&#39;<span class="code">windDir</span>&#39;, <span class="code">windGust</span>&#39;, and 
-	&#39;<span class="code">windGustDir</span>&#39; under one roof (all are still available, 
-	should you wish to use them for a specialized application). Exceptions number 
-	two and three are &#39;<span class="code">heatdeg</span>&#39; and &#39;<span class="code">cooldeg</span>&#39;, 
-	heating and cooling degree-days, respectively, which are synthesized from average 
-	outside temperature and do not appear directly in the database.</li>
-	<li>The last position is the aggregation type, available for any time period 
-	except for &#39;<span class="code">current</span>&#39;. The table below in 
-	section <a href="#Statistical_aggregations">Statistical aggregations</a> shows what aggregation 
-	types are available for which types. </li>
-</ol>
-<p>In addition, if the first part of the dot code represents a time period 
-longer than a day (e.g., a week, month, year, or rainyear), then it can be 
-iterated over. This example uses a Cheetah &#39;for&#39; loop to iterate over all months 
-in a year, printing out each month&#39;s min and max temperature.</p>
-<p class="tty">&lt;html&gt;</p>
-<p class="tty">&nbsp; &lt;head&gt;</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; &lt;title&gt;Year stats by month&lt;/title&gt;</p>
-<p class="tty">&nbsp; &lt;/head&gt;</p>
-<p class="tty">&nbsp; &lt;body&gt;</p>
-<p class="tty">&nbsp; &lt;p&gt;Min, max temperatures 
-by month:&lt;/p&gt;</p>
-<p class="tty">&nbsp; # for $month in $year.months</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; $month.outTemp.min $month.outTemp.max</p>
-<p class="tty">&nbsp; # end for&nbsp;</p>
-<p class="tty">&nbsp; &lt;/body&gt;</p>
-<p class="tty">&lt;/html&gt;</p>
-<p>See the NOAA template files <span class="code">NOAA_month.tmpl</span> and
-<span class="code">NOAA_year.tmpl</span> for examples using iteration, as well 
-as explicit formatting.</p>
-<h2>11.1 <a name="Statistical_aggregations">Statistical aggregations</a></h2>
-<p>Most of the HTML templates are devoted to generating <em>statistical 
-aggregates</em>, such as monthly max temperature, or year-to-date rainfall. 
-These are called <em>aggregations</em>, because they are a summary of lots of 
-underlying data. However, only certain aggregates make sense for certain 
-statistical 
-types. For example, heat degree days is defined on a daily basis, so while the 
-day&#39;s average temperature is meaningful, the day&#39;s heating degree days do not.</p>
-<p>The following table defines which aggregates are available to be used in your template 
-for which statistical types (assuming your 
-station supports them and you have specified that it be stored in your stats database. 
-See section <a href="#stats_types">stats_types</a> in the <span class="code">weewx.conf</span> 
-configuration file).</p>
-<table style="width: 100%">
-	<tr>
-		<td><em>Stats Type</em></td>
-		<td class="code">min</td>
-		<td class="code">mintime</td>
-		<td class="code">max</td>
-		<td class="code">maxtime</td>
-		<td class="code">avg</td>
-		<td class="code">sum</td>
-		<td class="code">rms</td>
-		<td class="code">vecavg</td>
-		<td class="code">vecdir</td>
-	</tr>
-	<tr>
-		<td class="code">barometer</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">inTemp</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">outTemp</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">inHumidity</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">outHumidity</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">wind</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-	</tr>
-	<tr>
-		<td class="code">rain</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">dewpoint</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">windchill</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">heatindex</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">heatdeg</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">cooldeg</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">ET</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">radiation</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">UV</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">extraTemp1<br />
-		extraTemp2<br />
-		extraTemp3</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">soilTemp1<br />
-		soilTemp2<br />
-		soilTemp3</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">leafTemp1<br />
-		leafTemp2</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">extraHumid1<br />
-		extraHumid2</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">soilMoist1<br />
-		soilMoist2<br />
-		soilMoist3<br />
-		soilMoist4</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">leafWet1<br />
-		leafWet2</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td class="code">rxCheckPercent</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>X</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-	</tr>
-</table>
-<h1>12. Advanced topics: <a name="Architectural_notes">architectural notes</a></h1>
-<p>This section is not needed to get started. </p>
-<h2>12.1 Goals</h2>
+<h2>10.1 Goals</h2>
 <p>The primary goals of <span class="code">weewx </span>are:</p>
 <ul>
 	<li>Architectural simplicity. No semaphores, no named pipes, no inter-process 
@@ -1658,7 +803,7 @@ configuration file).</p>
 	with two decades of experience in C++. I tried hard to not make the code base 
 	look like it was written by a C++ programmer who stumbled across a Python manual!</li>
 </ul>
-<h2>12.2 Strategies</h2>
+<h2>10.2 Strategies</h2>
 <p>To meet these goals, the following strategies were used:</p>
 <ul>
 	<li>A powerful configuration parser,
@@ -1711,7 +856,7 @@ cause thread termination. If this happens in the main thread (not likely and has
 happened to me yet), then this causes program termination. Otherwise, the 
 program will keep chugging along, storing data, allowing you to fix the problem 
 at your leisure, without losing any data.</p>
-<h2>12.3 Terminology</h2>
+<h2>10.3 Terminology</h2>
 <p>This is a glossary of terminology used throughout the code.</p>
 <table style="width: 100%">
 	<tr>
@@ -1780,7 +925,7 @@ at your leisure, without losing any data.</p>
 		or <span class="code">vecavg</span>).</td>
 	</tr>
 </table>
-<h2>12.4 Units</h2>
+<h2>10.4 Units</h2>
 <p>In general, there are three different areas where the unit system makes a 
 difference.:
 </p>
@@ -1799,12 +944,12 @@ measurement system of the weather instrument. That is, the units used in #1 and
 and #3, allowing any unit system to be used in the presentation layer.</p>
 <p>It would be easy enough to support an instrument that uses metric units 
 internally, although this has not been done yet. </p>
-<h2>12.5 Value &quot;<span class="code">None</span>&quot;</h2>
+<h2>10.5 Value &quot;<span class="code">None</span>&quot;</h2>
 <p>The Python special value &#39;<span class="code">None</span>&#39; is used throughout 
 to signal a missing data point. All functions expect it.</p>
 <p>However, the time value must never be &#39;<span class="code">None</span>&#39;. This 
 is because it is used as the primary key in the SQL database. </p>
-<h2>12.6 Time</h2>
+<h2>10.6 Time</h2>
 <p><span class="code">Weewx </span>stores all data in UTC (roughly, &quot;Greenwich&quot; 
 or &quot;Zulu&quot;) time. However, usually one is interested in weather events in local time 
 and want image and HTML generation to reflect that. Furthermore, most weather stations 
@@ -1830,10 +975,6 @@ bulletproof against changes in DST algorithms, etc:</p>
 <p class="tty">next_dt = time_dt + delta</p>
 <p class="tty">next_ts = int(time.mktime(next_dt.timetuple()))</p>
 <p>Other time conversion problems are handled in a similar manner.</p>
-<h1>13. Advanced topic: <a name="Customizing_weewx">customizing the internal
-<span class="code">weewx</span></a> engines</h1>
-<p>See file <a href="customizing.htm">customizing.htm</a> for details on how to 
-customize <span class="code">weewx</span>.</p>
 
 </body>
 

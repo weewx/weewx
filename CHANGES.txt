@@ -1,7 +1,7 @@
 CHANGE HISTORY
 --------------------------------
 
-1.6.0   03/25/10
+1.6.0   03/27/10
 
 Now supports skins. A skin is a collection of templates, under the
 control of a 'skin configuration file.' Presentation layer specific
@@ -23,13 +23,16 @@ server, or uploading to or from a different area.
 
 Rewrote the FTP upload package so that it allows more than one FTP
 session to be active in the same local directory. This version also does
-fewer hits on the server, so it might be a bit faster.
+fewer hits on the server, so it is significantly faster.
 
 Data files used in reports (such as weewx.css) are copied over to the
 HTML directory on program startup. 
 
 Moved the URL for the radar image from the configuration file to the
 template index.html.tmpl.
+
+Changed the name of the service StdProcess to StdReportService. This
+will affect only users who have written custom reports.
 
 1.5.0   03/07/10
 
@@ -166,7 +169,7 @@ Took the module weewx.factory back out, as it was too complicated and
 hard to understand.
 
 Added support for generating NOAA monthly and yearly
-reports. Completely rewrote the genfiles.py module, to allow easy
+reports. Completely rewrote the filegenerator.py module, to allow easy
 subclassing and specialization.
 
 Completely rewrote the stats.py module. All aggregate quantities

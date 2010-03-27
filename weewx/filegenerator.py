@@ -7,45 +7,51 @@
 #    $Author$
 #    $Date$
 #
-"""Generate files from templates.
-
-This basically includes NOAA summary reports, and HTML files."""
+"""Generate files from templates."""
 
 import os.path
 import syslog
 import time
 
 import Cheetah.Template
-from Cheetah.Filters import Filter
+import Cheetah.Filters
 
+import weeutil.Almanac
+import weeutil.weeutil
+import weewx.archive
 import weewx.formatter
+import weewx.reportengine
 import weewx.station
 import weewx.stats
 import weewx.units
-import weeutil.Almanac
-import weeutil.weeutil
 
 #===============================================================================
-#                    Class GenFiles
+#                    Class FileGenerator
 #===============================================================================
 
-class GenFiles(object):
-    """Class for running files through templates"""
+class FileGenerator(weewx.reportengine.ReportGenerator):
+    """Class for managing the template based generators"""
     
-    def __init__(self, config_dict, skin_dict):
-        """Initialize an instance of GenFiles.
-        
-        config_dict: weewx configuration dictionary with general station
-        information.
-        
-        skin_dict: Skin configuration dictionary with selections specific
-        to the presentation layer."""
-        self.config_dict = config_dict
-        self.skin_dict   = skin_dict
+    def run(self):
+
         self.outputted_dict = {}
+        
         self.initStation()
         self.initStats()
         self.initUnits()
+        # Open up the main database archive
+        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
+                                       self.config_dict['Archive']['archive_file'])
+        archive = weewx.archive.Archive(archiveFilename)
+    
+        stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
+        start_ts   = archive.firstGoodStamp()
+        currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
+
+        self.generateSummaryBy('SummaryByMonth', start_ts, stop_ts)
+        self.generateSummaryBy('SummaryByYear',  start_ts, stop_ts)
+        self.generateToDate(currentRec, stop_ts)
+    
 
     def initStation(self):
 
@@ -64,6 +70,7 @@ class GenFiles(object):
                                                   float(self.config_dict['Station'].get('cooling_base', '65')))
     
     def initUnits(self):
+        
         self.unitTypeDict = weewx.units.getUnitTypeDict(self.skin_dict)
         
     def generateSummaryBy(self, by_time, start_ts, stop_ts):
@@ -83,7 +90,7 @@ class GenFiles(object):
         elif by_time == 'SummaryByYear':
             _genfunc = weeutil.weeutil.genYearSpans
         else:
-            syslog.syslog(syslog.LOG_NOTICE, "genfiles: Unrecognized summary interval: %s. Skipped." % by_time)
+            syslog.syslog(syslog.LOG_NOTICE, "filegenerator: Unrecognized summary interval: %s. Skipped." % by_time)
             return
 
         self.outputted_dict[by_time] = []
@@ -126,7 +133,7 @@ class GenFiles(object):
                     text = Cheetah.Template.Template(file       = template,
                                                      searchList = searchList + [{'encoding' : encoding}],
                                                      filter     = encoding,
-                                                     filtersLib = weewx.genfiles)
+                                                     filtersLib = weewx.filegenerator)
                     # Open up the file that is to be created:
                     file = open(_fullpath, mode='w')
                     # Write it out
@@ -137,7 +144,7 @@ class GenFiles(object):
             
             t2 = time.time()
             elapsed_time = t2 - t1
-            syslog.syslog(syslog.LOG_INFO, """genfiles: generated %d '%s' files in %.2f seconds""" % (ngen, by_time, elapsed_time))
+            syslog.syslog(syslog.LOG_INFO, """filegenerator: generated %d '%s' files in %.2f seconds""" % (ngen, by_time, elapsed_time))
 
     def generateToDate(self, currentRec, stop_ts):
         """This entry point is used for "To Date" reports, such as observations for
@@ -178,14 +185,14 @@ class GenFiles(object):
             html = Cheetah.Template.Template(file       = template,
                                              searchList = searchList + [{'encoding' : encoding}],
                                              filter     = encoding,
-                                             filtersLib = weewx.genfiles)
+                                             filtersLib = weewx.filegenerator)
 
             file = open(os.path.join(destination_dir, _filename), mode='w')
             print >> file, html
             ngen += 1
         
         elapsed_time = time.time() - t1
-        syslog.syslog(syslog.LOG_INFO, "genfiles: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
+        syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
     
     def getSummarySearchList(self, by_time, timespan):
         """Return the searchList for the Cheetah Template engine for "summarize by" reports.
@@ -279,8 +286,11 @@ class GenFiles(object):
 
         return (template, destination_dir, encoding)
     
+#===============================================================================
+#                 Filters used for encoding
+#===============================================================================
 
-class html_entities(Filter):
+class html_entities(Cheetah.Filters.Filter):
 
     def filter(self, val, **kw):
         """Filter incoming strings so they use HTML entity characters"""
@@ -294,7 +304,7 @@ class html_entities(Filter):
             filtered = str(val)
         return filtered
 
-class strict_ascii(Filter):
+class strict_ascii(Cheetah.Filters.Filter):
 
     def filter(self, val, **kw):
         """Filter incoming strings to strip out any non-ascii characters"""
@@ -309,7 +319,7 @@ class strict_ascii(Filter):
         return filtered
 
     
-class utf8(Filter):
+class utf8(Cheetah.Filters.Filter):
 
     def filter(self, val, **kw):
         """Filter incoming strings, converting to UTF-8"""
