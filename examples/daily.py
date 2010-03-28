@@ -39,7 +39,7 @@ class MyEngine(StdEngine):
         # the first archive since startup, or if a new day has started
         if not self.old_day or self.old_day != dayStart_ts:
             self.old_day = dayStart_ts
-            self.newDay(rec)
+            self.newDay(rec)                          # NOTE 1
             
     def newDay(self, rec):
         """Called when the first archive record of a day arrives."""
@@ -51,7 +51,7 @@ class MyEngine(StdEngine):
             # be prepared to accept it. Check first to see if the
             # service has a member function "firstArchiveOfDay"
             # before calling it:
-            if hasattr(svc_obj, "firstArchiveOfDay"):
+            if hasattr(svc_obj, "firstArchiveOfDay"):  # NOTE 2
                 # The object does have the member function. Call it:
                 svc_obj.firstArchiveOfDay(rec)
 

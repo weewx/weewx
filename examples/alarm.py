@@ -54,15 +54,15 @@ from weeutil.weeutil import timestamp_to_string
 
 # Inherit from the base class StdService:
 class MyAlarm(StdService):
-    """Custom service that sounds an alarm if an expression evaluates true"""
+    """Custom service that sounds an alarm if an arbitrary expression evaluates true"""
     
     def __init__(self, engine):
         # Pass the initialization information on to my superclass:
         StdService.__init__(self, engine)
         
         # This will hold the time when the last alarm message went out:
-        self.last_msg = None
-        self.expression = None
+        self.last_msg_ts = None
+        self.expression  = None
         
     def setup(self):
         
@@ -71,7 +71,7 @@ class MyAlarm(StdService):
             # If a critical option is missing, an exception will be thrown and
             # the alarm will not be set.
             self.expression    = self.engine.config_dict['Alarm']['expression']
-            self.time_wait     = int(self.engine.config_dict['Alarm'].get('time_wait', '3600'))
+            self.time_wait     = int(self.engine.config_dict['Alarm'].get('time_wait', 3600))
             self.smtp_host     = self.engine.config_dict['Alarm']['smtp_host']
             self.smtp_user     = self.engine.config_dict['Alarm'].get('smtp_user')
             self.smtp_password = self.engine.config_dict['Alarm'].get('smtp_password')
@@ -90,15 +90,17 @@ class MyAlarm(StdService):
             # To avoid a flood of nearly identical emails, this will do
             # the check only if we have never sent an email, or if we haven't
             # sent one in the last self.time_wait seconds:
-            if not self.last_msg or abs(time.time() - self.last_msg) >= self.time_wait :
+            if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait :
                 
                 # Evaluate the expression in the context of 'rec'.
                 # Sound the alarm if it evaluates true:
-                if eval(self.expression, None, rec):
+                if eval(self.expression, None, rec):            # NOTE 1
                     # Sound the alarm!
                     # Launch in a separate thread so it doesn't block the main LOOP thread:
                     t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, rec))
                     t.start()
+                    # Record when the message went out:
+                    self.last_msg_ts = time.time()
 
     def soundTheAlarm(self, rec):
         """This function is called when the given expression evaluates True."""
@@ -133,8 +135,6 @@ class MyAlarm(StdService):
         s.sendmail(msg['From'], [self.TO],  msg.as_string())
         # Log out of the server:
         s.quit()
-        # Record when the message went out:
-        self.last_msg = time.time()
         # Log it in the system log:
         syslog.syslog(syslog.LOG_INFO, "alarm: Alarm sounded for expression: \"%s\"" % self.expression)
         syslog.syslog(syslog.LOG_INFO, "       *** email sent to: %s" % self.TO)
