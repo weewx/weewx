@@ -87,11 +87,12 @@ table {
 td {
 	border-style: solid;
 	border-width: 1px;
+	padding: 5px;
 }
 .indent {
 	margin-left: 40px;
 }
-.tty {
+.tty, pre {
 	font-family: "Courier New", Courier, monospace;
 	margin-left: 40px;
 	margin-top: 0px;
@@ -120,11 +121,17 @@ td {
 .xxsmall {
 	font-size: xx-small;
 }
-.style1 {
-	background-color: #E8E8E8;
+.highlight {
+	background-color: #FFFF66;
 }
-.style2 {
-	background-color: #008080;
+.center {
+	text-align: center;
+}
+.Example_output {
+	padding: 10px;
+	border: thin #000000 dotted;
+	font-family: "Times New Roman", Times, serif;
+	margin-left: 40px;
 }
 </style>
 </head>
@@ -134,9 +141,18 @@ td {
 <h1 class="title">Customizing weewx v1.6</h1>
 <h1>Table of Contents</h1>
 <ol>
-	<li>Introduction</li>
+	<li><a href="#Introduction">Introduction</a></li>
+	<li><a href="#Opportunities_for_customizing_reports">Opportunities for 
+	customizing reports</a></li>
+	<li><a href="#Reference:_The_Standard_skin_configuration_file">Reference: 
+	The Standard skin configuration file</a></li>
+	<li><a href="#Customizing_the_weewx_service_engine">Customizing the
+	<span class="code">weewx</span> service engine</a></li>
+	<li><a href="#Types">Appendix A: Types</a></li>
+	<li><a href="#Units">Appendix B: Units</a></li>
+	<li><a href="#Statistical_aggregations">Appendix C: Statistical aggregations</a></li>
 </ol>
-<h1>Introduction</h1>
+<h1><a name="Introduction">Introduction</a></h1>
 <p>This document covers the customization of weewx. It assumes that you have read 
 and are reasonably familiar with the Users Guide.</p>
 <p>It starts with an overview of the architecture of weewx. If you are only interested 
@@ -189,7 +205,7 @@ includes an example new service called &quot;<span class="code">MyAlarm</span>,&
 sends an email when an arbitrary expression evaluates <span class="code">True</span>. 
 It is also possible to extend the internal engine. These advanced topics are covered 
 later in section XX.</p>
-<h3>The Reporting service, <span class="code">StdReportService</span></h3>
+<h3><a name="The_standard_reporting_service,_StdReportService">The standard reporting service, <span class="code">StdReportService</span></a></h3>
 <p>For the moment, we focus on the last service, <span class="code">weewx.wxengine.StdReportService</span>, 
 the standard service for creating reports. This will be what most users want to 
 customize even if it means just changing a few options.</p>
@@ -240,15 +256,15 @@ files around or FTP them to remote locations. The default install of
 <span class="code">weewx </span>includes the following generators:</p>
 <table style="width: 60%" align="center">
 	<tr>
-		<td>Generator</td>
+		<td><strong>Generator</strong></td>
 		<td><strong>Function</strong></td>
 	</tr>
 	<tr>
-		<td class="code">weewx.reportengine.FileGenerator</td>
+		<td class="code">weewx.filegenerator.FileGenerator</td>
 		<td>Generates HTML files from templates. </td>
 	</tr>
 	<tr>
-		<td class="code">weewx.reportengine.ImageGenerator</td>
+		<td class="code">weewx.imagegenerator.ImageGenerator</td>
 		<td>Generates image plots</td>
 	</tr>
 	<tr>
@@ -265,122 +281,113 @@ files around or FTP them to remote locations. The default install of
 the presentation layer. Instead, they just move files around. </p>
 <p>Which generators are to be run for a given skin is specified in the skin&#39;s configuration 
 file <span class="code">skin.conf</span>.</p>
-<h1>Opportunities for customizing reports</h1>
+<h1><a name="Opportunities_for_customizing_reports">Opportunities for customizing reports</a></h1>
 <p>This section discusses the two general strategies for customizing reports: by 
 changing options in one or more configuration file, or by changing the template 
 files. The former is generally easier, but occasionally the latter is necessary.</p>
 <h2>By changing options</h2>
 <p>Changing an option means going into either weewx.conf or the skin.conf that 
 comes with the standard distribution and changing a value.</p>
-<h3>B<span class="style1">y changing options in </span>skin.conf</h3>
+<h3>By changing options in <span class="code">skin.conf</span></h3>
 <p>With this approach, the user edits the skin configuration file for the standard 
 skin that comes with weewx, located in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>, 
 using a text editor. For example, suppose you wish to use metric units in the presentation 
 layer. Then, you would edit section <span class="code">[Units][[Groups]]</span> 
 to read:</p>
-<p class="tty">[Units]</p>
-<p class="tty">&nbsp; [[Groups]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_altitude&nbsp;&nbsp;&nbsp; = meter</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_direction&nbsp;&nbsp; = degree_compass</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_moisture&nbsp;&nbsp;&nbsp; = centibar</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_percent&nbsp;&nbsp;&nbsp;&nbsp; = percent</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_pressure&nbsp;&nbsp;&nbsp; = mbar</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_radiation&nbsp;&nbsp; = watt_per_meter_squared</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_rain&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-= mm</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_rainrate&nbsp;&nbsp;&nbsp; = mm_per_hour</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_speed&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-= meter_per_second</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_speed2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = meter_per_second2</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_temperature = degree_C</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; group_volt&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-= volt</p>
-<p>Details of the various unit options are given in section XX below.</p>
+<pre>[Units]</pre>
+<pre>  [[Groups]]</pre>
+<pre>    group_altitude    = meter</pre>
+<pre>    group_direction   = degree_compass</pre>
+<pre>    group_moisture    = centibar</pre>
+<pre>    group_percent     = percent</pre>
+<pre>    group_pressure    = mbar</pre>
+<pre>    group_radiation   = watt_per_meter_squared</pre>
+<pre>    group_rain        = mm</pre>
+<pre>    group_rainrate    = mm_per_hour</pre>
+<pre>    group_speed       = meter_per_second</pre>
+<pre>    group_speed2      = meter_per_second2</pre>
+<pre>    group_temperature = degree_C</pre>
+<pre>    group_volt        = volt</pre>
+<p>Details of the various unit options are given in <em><a href="#Units">
+Appendix B: Units</a></em>.</p>
 <p>Other options are available, such as changing the label for various observation 
 types. Suppose your weather instrument console is actually located in a barn, not 
 indoors, and you want its plot to be labeled &quot;Barn Temperature,&quot; rather than the 
 default &quot;Inside Temperature.&quot; This can be done by changing the &quot;inTemp&quot; option located 
 in section [Labels][[Generic]] from </p>
-<p class="tty">[Units]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; [[Generic]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inTemp&nbsp; = Inside Temperature</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; outTemp = Outside Temperature</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...</p>
+<pre>[Units]</pre>
+<pre>    [[Generic]]</pre>
+<pre>      inTemp  = Inside Temperature</pre>
+<pre>      outTemp = Outside Temperature</pre>
+<pre>      ...</pre>
 <p>so that it reads</p>
-<p class="tty">[Units]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; [[Generic]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inTemp&nbsp; = Barn Temperature</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; outTemp = Outside Temperature</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...</p>
+<pre>[Units]</pre>
+<pre>    [[Generic]]</pre>
+<pre>      inTemp  = Barn Temperature</pre>
+<pre>      outTemp = Outside Temperature</pre>
+<pre>      ...</pre>
 <h3>By overriding options</h3>
 <p>This approach is very similar, except that instead of changing the skin configuration, 
-you override its options by editing the main configuration file, weewx.conf. The 
+you override its options by editing the main configuration file, 
+<span class="code">weewx.conf</span>. The 
 advantage of this approach is that you can use the same skin to produce several 
 different output, each with separate options. </p>
 <p>Revisiting our example, suppose you want two reports, one in US Customary, the 
-other in Metric. The former will go in the directory public_html, the latter in 
-a subdirectory, public_html/metric. If you just simply modify skin.conf, you can 
+other in Metric. The former will go in the directory <span class="code">public_html</span>, the latter in 
+a subdirectory, <span class="code">public_html/metric</span>. If you just simply modify
+<span class="code">skin.conf</span>, you can 
 get one, but not both at the same time. Alternatively, you could create a whole 
 new skin by copying all the files to a new skin subdirectory then editing the new 
-skin.conf. The trouble with this approach is that you would then have <em>two</em> 
+<span class="code">skin.conf</span>. The trouble with this approach is that you would then have <em>two</em> 
 skins you would have to maintain. If you change something, you have to remember 
 to change it in both places.</p>
 <p>But, there&#39;s a better approach: reuse the same skin, but overriding some options. 
 Here&#39;s what your <span class="code">[Report]</span> section in
 <span class="code">weewx.conf</span> would look like:</p>
-<p class="tty">[Reports]</p>
-<p class="tty">#<br />
-# This section specifies what reports, using which skins, are to be generated.<br />
-#</p>
-<p class="tty">&nbsp;</p>
-<p class="tty"># Where the skins reside, relative to WEEWX_ROOT:<br />
-SKIN_ROOT = skins<br />
-</p>
-<p class="tty"># Where the generated reports should go, relative to WEEWX_ROOT:<br />
-HTML_ROOT = public_html </p>
-<p class="tty">&nbsp;</p>
-<p class="tty">&nbsp; # This report will use US Customary Units<br />
-&nbsp; [[USReport]]<br />
-&nbsp;&nbsp;&nbsp; # It&#39;s based on the Standard skin<br />
-&nbsp;&nbsp;&nbsp; skin = Standard</p>
-<p class="tty">&nbsp;</p>
-<p class="tty">&nbsp; # This report will use metric units: </p>
-<p class="tty">&nbsp; [[MetricReport]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; # It&#39;s also based on the Standard skin:</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; skin = Standard </p>
-<p class="tty">&nbsp;&nbsp;&nbsp; # However, override where the results will go 
-and put them in a subdirectory:</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; HTML_ROOT = public_html/metric</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; </p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # And override options that were not 
-in metric units</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[Units]]]<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[Groups]]]]<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; group_altitude&nbsp;&nbsp;&nbsp; 
-= meter</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; group_pressure&nbsp;&nbsp;&nbsp; 
-= mbar</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; group_rain&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-= mm</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; group_rainrate&nbsp;&nbsp;&nbsp; 
-= mm_per_hour</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; group_speed&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-= meter_per_second</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; group_speed2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-= meter_per_second2</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; group_temperature 
-= degree_C</p>
-<p class="tty">&nbsp;</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; [[FTP]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ...</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ... (as before) </p>
+<pre>[Reports]</pre>
+<pre>#
+# This section specifies what reports, using which skins, are to be generated.
+#</pre>
+<pre>&nbsp;</pre>
+<pre># Where the skins reside, relative to WEEWX_ROOT:
+SKIN_ROOT = skins
+</pre>
+<pre># Where the generated reports should go, relative to WEEWX_ROOT:
+HTML_ROOT = public_html </pre>
+<pre>&nbsp;</pre>
+<pre>  # This report will use US Customary Units
+  [[USReport]]
+    # It&#39;s based on the Standard skin
+    skin = Standard</pre>
+<pre>&nbsp;</pre>
+<pre>  # This report will use metric units: </pre>
+<pre>  [[MetricReport]]</pre>
+<pre>    # It&#39;s also based on the Standard skin:</pre>
+<pre>    skin = Standard </pre>
+<pre>    # However, override where the results will go and put them in a subdirectory:</pre>
+<pre>    HTML_ROOT = public_html/metric</pre>
+<pre>    </pre>
+<pre>      # And override the options that were not in metric units</pre>
+<pre>      [[[Units]]]
+        [[[[Groups]]]]
+          group_altitude    = meter</pre>
+<pre>          group_pressure    = mbar</pre>
+<pre>          group_rain        = mm</pre>
+<pre>          group_rainrate    = mm_per_hour</pre>
+<pre>          group_speed       = meter_per_second</pre>
+<pre>          group_speed2      = meter_per_second2</pre>
+<pre>          group_temperature = degree_C</pre>
+<pre>&nbsp;</pre>
+<pre>    [[FTP]]</pre>
+<pre>      ...</pre>
+<pre>      ... (as before) </pre>
 <p>We have done two things different from the stock reports. First (1), we&#39;ve renamed 
 the first report from <span class="code">StandardReport </span>to
 <span class="code">USReport </span>for clarity; and (2) we&#39;ve introduced a new report
 <span class="code">MetricReport</span>, just like the first, except it puts its 
 results in a different spot and uses different units. Both use the same skin, the
 <span class="code">Standard </span>skin.</p>
-<h2>By customizing <a name="HTML_Generation">templates</a></h2>
+<h2>By <a name="Customizing_templates">customizing templates</a></h2>
 <p>If you cannot achieve the results you need by changing a configuration 
 option, you may have to modify the templates that come with <span class="code">
 weewx</span>, or write your own. </p>
@@ -390,31 +397,31 @@ the full semantics of Python available in your templates. As this would make the
 templates incomprehensible to anyone but a Python programmer, <span class="code">
 weewx</span> adopts a very small subset of its power. </p>
 <p>Generally, any value substituted by the engine is specified by using a &#39;dot&#39; code. For example:</p>
-<p class="tty">$month.outTemp.max</p>
-<p class="tty">$month.outTemp.maxtime</p>
-<p class="tty">$current.outTemp</p>
+<pre>$month.outTemp.max</pre>
+<pre>$month.outTemp.maxtime</pre>
+<pre>$current.outTemp</pre>
 <p>would code the max outside temperature for the month, the time it occurred, and 
 the current outside temperature, respectively. So, an HTML file that looks like</p>
-<p class="tty">&lt;html&gt;</p>
-<p class="tty">&nbsp; &lt;head&gt;</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; &lt;title&gt;Current conditions&lt;/title&gt;</p>
-<p class="tty">&nbsp; &lt;/head&gt;</p>
-<p class="tty">&nbsp; &lt;body&gt;</p>
-<p class="tty">&nbsp; &lt;p&gt;Current temperature = $current.outTemp&lt;/p&gt;</p>
-<p class="tty">&nbsp; &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at $month.outTemp.maxtime&lt;/p&gt;</p>
-<p class="tty">&nbsp; &lt;/body&gt;</p>
-<p class="tty">&lt;/html&gt;</p>
+<pre>&lt;html&gt;</pre>
+<pre>  &lt;head&gt;</pre>
+<pre>    &lt;title&gt;Current conditions&lt;/title&gt;</pre>
+<pre>  &lt;/head&gt;</pre>
+<pre>  &lt;body&gt;</pre>
+<pre>  &lt;p&gt;Current temperature = $current.outTemp&lt;/p&gt;</pre>
+<pre>  &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at $month.outTemp.maxtime&lt;/p&gt;</pre>
+<pre>  &lt;/body&gt;</pre>
+<pre>&lt;/html&gt;</pre>
 <p>would be all you need for a very simple HTML page that would display the text 
-(assuming that the <a href="#Unit_Classes">unit class</a> for temperature is
+(assuming that the unit group for temperature is
 <span class="code">degree_F</span>):
 </p>
-<p class="indent">Current temperature = 51.0°F<br />
+<p class="Example_output">Current temperature = 51.0°F<br />
 Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15</p>
 <p>The format that was used to format the temperature (<span class="code">51.0</span>) 
 is specified in section <span class="code"><a href="#Units_StringFormats">[Units][[StringFormat]]</a></span>. 
 The unit label <span class="code">°F</span> is from section <span class="code">
-<a href="#HTML_UnitLabels">[Units][[Labels]]</a></span>, while the time 
-format is from <span class="code"><a href="#HTML_Time">[Labels][[Time]]</a></span>.</p>
+<a href="#[[Labels]]">[Units][[Labels]]</a></span>, while the time 
+format is from <span class="code"><a href="#Labels_Time">[Labels][[Time]]</a></span>.</p>
 <p>The &quot;dot&quot; code has up to three parts. </p>
 <ol>
 	<li>The first part is the time period, and can be one of <span class="code">
@@ -431,32 +438,132 @@ format is from <span class="code"><a href="#HTML_Time">[Labels][[Time]]</a></spa
 	should you wish to use them for a specialized application). Exceptions number 
 	two and three are &#39;<span class="code">heatdeg</span>&#39; and &#39;<span class="code">cooldeg</span>&#39;, 
 	heating and cooling degree-days, respectively, which are synthesized from average 
-	outside temperature and do not appear directly in the database.</li>
+	outside temperature and do not appear directly in the database. See <em>
+	<a href="#Types">Appendix A: Types</a></em> for a table of statistical 
+	types.</li>
 	<li>The last position is the aggregation type, available for any time period 
-	except for &#39;<span class="code">current</span>&#39;. The table below in the 
-	appendix <a href="#Statistical_aggregations">Statistical aggregations</a> shows what aggregation 
+	except for &#39;<span class="code">current</span>&#39;. The table 
+	<a href="#Statistical_aggregations">Appendix C: Statistical aggregations</a> shows what aggregation 
 	types are available for which types. </li>
 </ol>
 <p>In addition, if the first part of the dot code represents a time period 
 longer than a day (e.g., a week, month, year, or rainyear), then it can be 
 iterated over. This example uses a Cheetah &#39;for&#39; loop to iterate over all months 
 in a year, printing out each month&#39;s min and max temperature.</p>
-<p class="tty">&lt;html&gt;</p>
-<p class="tty">&nbsp; &lt;head&gt;</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; &lt;title&gt;Year stats by month&lt;/title&gt;</p>
-<p class="tty">&nbsp; &lt;/head&gt;</p>
-<p class="tty">&nbsp; &lt;body&gt;</p>
-<p class="tty">&nbsp; &lt;p&gt;Min, max temperatures 
-by month:&lt;/p&gt;</p>
-<p class="tty">&nbsp; # for $month in $year.months</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; $month.outTemp.min $month.outTemp.max</p>
-<p class="tty">&nbsp; # end for&nbsp;</p>
-<p class="tty">&nbsp; &lt;/body&gt;</p>
-<p class="tty">&lt;/html&gt;</p>
+<pre>&lt;html&gt;</pre>
+<pre>  &lt;head&gt;</pre>
+<pre>    &lt;title&gt;Year stats by month&lt;/title&gt;</pre>
+<pre>  &lt;/head&gt;</pre>
+<pre>  &lt;body&gt;</pre>
+<pre>  &lt;p&gt;Min, max temperatures by month:&lt;/p&gt;</pre>
+<pre>  # for $month in $year.months</pre>
+<pre>    $month.outTemp.min $month.outTemp.max</pre>
+<pre>  # end for&nbsp;</pre>
+<pre>  &lt;/body&gt;</pre>
+<pre>&lt;/html&gt;</pre>
 <p>See the NOAA template files <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span> and
 <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> for examples using iteration, as well 
 as explicit formatting.</p>
-<h1>The Standard skin configuration file</h1>
+<h2>By writing a custom generator</h2>
+<p>To do more sophisticated customization it may be necessary to extend an 
+existing generator, or write your own. </p>
+<h4>Extending an existing generator</h4>
+<p>In the section on <em><a href="#Customizing_templates">Customizing templates</a></em>, we have seen how you can 
+change a template and make use of the various tags available such as
+<span class="code">$day.outTemp.max</span> for the maximum outside temperature 
+for the day. But, what if you 
+want to introduce some new data for which no tag is available? For example, 
+suppose you want to use Google analytics, and you want to make reference to the 
+Google Tracker ID? You could modify a template and hardware it in, but then 
+you&#39;d have to do that for every template. What you&#39;d really like to do is be 
+able to obtain it through a tag:</p>
+<pre class="tty">... (Google Analytics boilerplate)
+&lt;script type=&quot;text/javascript&quot;&gt;
+try {
+  var pageTracker = _gat._getTracker(<span class="highlight">$googleID</span>);
+  pageTracker._trackPageview();
+} catch(err) {}
+&lt;/script&gt;</pre>
+<pre class="tty">... (More Google Analytics boilerplate)</pre>
+
+<p>Here, the Google ID has been parameterized as a tag, <span class="code">$googleID</span>. 
+But, where does this value come from? How do I make it available inside my 
+templates?</p>
+<p>The answer is to extend the default file generator<span class="code"> 
+weewx.filegenerator.FileGenerator</span> by subclassing, then override the 
+function that returns the <em>search list</em>. The search list is a list of 
+dictionaries that the template engine searches through, trying all keys in each 
+dictionary, looking for a match for your tag. For example, for the &quot;ToDate&quot; 
+generator, you would override function <span class="code">getToDateSearchList()</span>, 
+and adding to the list of dictionaries a small dictionary with your tag as the 
+key. Here&#39;s an 
+example: </p>
+<p>File <span class="code">mygenerator.py</span>:</p>
+<pre>from weewx.filegenerator import FileGenerator
+
+class MyFileGenerator(FileGenerator):
+    
+    def getToDateSearchList(self, currentRec, stop_ts):
+
+        # Call the superclass&#39;s version:
+        search_list = FileGenerator.getToDateSearchList(currentRec, stop_ts)
+    
+        <span class="highlight">search_list += [ {&#39;googleID&#39; : &#39;UA-19281126-1&#39;} ]</span>
+        
+        return search_list</pre>
+<p>Here, we first get the search list from the superclass, <span class="code">FileGenerator</span>, and 
+then (shown highlighted) add to it our simple dictionary with a single entry: a 
+key of &quot;<span class="code">googleID</span>&quot; and value of &quot;<span class="code">UA-19281126-1</span>&quot;. </p>
+<p>Of course, this approach is not entirely satisfactory because you&#39;ve 
+hardwired in the Google ID tag in your Python code. It would be much more 
+desirable to get it from the configuration file. One way to do this is to add a 
+section to the weewx configuration file with all your special options, including 
+the Google tag:</p>
+<p>File <span class="code">weewx.conf</span>:</p>
+<pre>...</pre>
+<pre>[MyOptions]</pre>
+<pre>&nbsp; googleID = UA-19281126-1</pre>
+<pre>&nbsp; myName = Mary</pre>
+<pre>&nbsp; [[Video]]</pre>
+<pre>&nbsp;   video_capture = http://www.acme.com/videoimage.jpg</pre>
+<pre>...</pre>
+<p>The code for <span class="code">mygenerator.py</span> gets modified slightly 
+to inject the whole configuration section into the search list (shown 
+highlighted below):</p>
+<pre>from weewx.filegenerator import FileGenerator
+
+class MyFileGenerator(FileGenerator):
+    
+    def getToDateSearchList(self, currentRec, stop_ts):
+
+        # Call the superclass&#39;s version:
+        search_list = FileGenerator.getToDateSearchList(currentRec, stop_ts)
+    
+        search_list += [ self.config_dict[&#39;MyOptions&#39;] ]
+        
+        return search_list</pre>
+<p>With this approach, you can now use all sorts of custom tags (highlighted) in 
+your HTML templates:</p>
+<pre>...</pre>
+<pre>&lt;img src=&quot;<span class="highlight">$Video.video_capture</span>&quot; alt=&quot;Image of the house&quot; /&gt;</pre>
+<pre>&nbsp;</pre>
+<pre>&lt;p&gt;The operator&#39;s name is <span class="highlight">$myName</span>.&lt;/p&gt;</pre>
+<pre>&nbsp;</pre>
+<pre>... (Google Analytics boilerplate)
+&lt;script type=&quot;text/javascript&quot;&gt;
+try {
+  var pageTracker = _gat._getTracker(<span class="highlight">$googleID</span>);
+  pageTracker._trackPageview();
+} catch(err) {}
+&lt;/script&gt;</pre>
+<pre>... (More Google Analytics boilerplate)</pre>
+
+<pre class="tty">&nbsp;</pre>
+<p>One additonal step is required: to tell the report service to run your 
+generator instead of the default generator. Modify option <span class="code">generator_list</span> in the skin configuration file 
+<span class="code">skin.conf</span> to read:</p>
+<pre>generator_list = mygenerator.MyFileGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator</pre>
+<h1><a name="Reference:_The_Standard_skin_configuration_file">Reference: The Standard skin configuration file</a></h1>
 <p>This section is a reference to the options appearing in the Standard skin configuration 
 file, found in <span class="code"> <em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>.</p>
 <p>It is worth noting that, like the main configuration file <span class="code">
@@ -532,23 +639,25 @@ or &quot;<span class="code">degree_C</span>.&quot;</p>
 unit when a quantity needs to be converted to a string. Typically, this happens 
 with y-axis labeling on plots and for statistics in HTML file generation. For example, 
 the options</p>
-<p class="tty">degree_C = %.1f</p>
-<p class="tty">inch&nbsp;&nbsp;&nbsp;&nbsp; = %.2f</p>
+<pre>degree_C = %.1f</pre>
+<pre>inch     = %.2f</pre>
 <p>would specify that the given string formats are to be used when formatting any 
 temperature measured in degrees Celsius or any precipitation amount measured in 
 inches, respectively. The
 <a href="http://docs.python.org/library/string.html#format-specification-mini-language">
 formatting codes are those used by Python</a>, a, and are very similar to C&#39;s
 <span class="code">sprintf()</span> codes.</p>
-<h3 class="config_section">[[Labels]]</h3>
-<p>ThiThis subsection specifies what label is to be used for each measurement unit 
+<h3 class="config_section"><a name="[[Labels]]">[[Labels]]</a></h3>
+<p>This subsection specifies what label is to be used for each measurement unit 
 type. For example, the options</p>
-<p class="tty">degree_F = °F</p>
-<p class="tty">inch&nbsp;&nbsp;&nbsp;&nbsp; = &#39; in&#39;</p>
+<pre>degree_F = °F</pre>
+<pre>inch     = &#39; in&#39;</pre>
 <p>would cause all temperatures to have unit labels &#39;<span class="code">°F</span>&#39; 
 and all precipitation to have labels&nbsp; &#39; in&#39;. If any special symbols are to 
-be used (such as the degree sign above) they should be encoded in UTF-8. (This is 
-generally what most text editors use if you cut-and-paste from a character map.)</p>
+be used (such as the degree sign above) they should be encoded in UTF-8. This is 
+generally what most text editors use if you cut-and-paste from a character map. 
+Labels used in plot images will be converted to Latin-1 first (this is all the 
+Python Imaging Library can handle).</p>
 <h2 class="config_section">[Labels]</h2>
 <p>This section sets the various labels to use.</p>
 <p class="config_option">hemispheres </p>
@@ -557,16 +666,16 @@ default is &quot;<span class="code">N, S, E, W</span>&quot;.</p>
 <h3 class="config_section">[[Generic]]</h3>
 <p>This sub-sections specifies default labels to be used for each SQL type. For 
 example, options</p>
-<p class="tty">inTemp = Temperature inside the house</p>
-<p class="tty">outTemp = Outside Temperature</p>
+<pre>inTemp = Temperature inside the house</pre>
+<pre>outTemp = Outside Temperature</pre>
 <p>would cause the given labels to be used for plots involving SQL types
 <span class="code">inTemp </span>and <span class="code">outTemp</span>.</p>
-<h3 class="config_section"><a name="HTML_Time">[[Time]]</a></h3>
+<h3 class="config_section"><a name="Labels_Time">[[Time]]</a></h3>
 <p>This sub-section is used for time labels. It uses
 <a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
 formats. For example</p>
-<p class="tty">week&nbsp; = %H:%M on %A</p>
-<p class="tty">month = %d-%b-%Y %H:%M</p>
+<pre>week  = %H:%M on %A</pre>
+<pre>month = %d-%b-%Y %H:%M</pre>
 <p>would specify that week data should use a format such as &quot;<span class="code">15:20 
 on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
 15:20</span>&quot;</p>
@@ -665,12 +774,12 @@ week, month, and year). These sub-sections define the nature of aggregation and
 plot types for the time period. For example, here&#39;s a typical set of options for 
 sub-section <span class="code">[[month_images]]</span>, controlling how images that 
 cover a month period are generated:</p>
-<p class="tty">[[month_images]]</p>
-<p class="tty">&nbsp; x_label_format = %d</p>
-<p class="tty">&nbsp; bottom_label_format = %m/%d/%y %H:%M</p>
-<p class="tty">&nbsp; time_length = 2592000 # == 30 days</p>
-<p class="tty">&nbsp; aggregate_type = avg</p>
-<p class="tty">&nbsp; aggregate_interval = 10800 # == 3 hours</p>
+<pre>[[month_images]]</pre>
+<pre>  x_label_format = %d</pre>
+<pre>  bottom_label_format = %m/%d/%y %H:%M</pre>
+<pre>  time_length = 2592000 # == 30 days</pre>
+<pre>  aggregate_type = avg</pre>
+<pre>  aggregate_interval = 10800 # == 3 hours</pre>
 <p>The option <span class="code">x_label_format</span> gives a
 <a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
 type format for the x-axis. In this example, it will only show days (format option 
@@ -686,12 +795,12 @@ at one additional nesting level (!) are the logical names of all the line types
 to be drawn in the image.&nbsp; Values specified in the level above can be overridden. 
 For example, here&#39;s a typical set of options for sub-sub-section
 <span class="code">[[[[[[[monthrain]]]</span>: /p&gt; class=&quot;tty&quot;&gt;[[[[[[monthrain]]]</p>
-<p class="tty">&nbsp; plot_type = bar</p>
-<p class="tty">&nbsp; yscale = None, None, 0.02</p>
-<p class="tty">&nbsp; [[[[rain]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = sum</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_interval = 86400</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; label = Rain (daily avg)</p>
+<pre>  plot_type = bar</pre>
+<pre>  yscale = None, None, 0.02</pre>
+<pre>  [[[[rain]]]]</pre>
+<pre>    aggregate_type = sum</pre>
+<pre>    aggregate_interval = 86400</pre>
+<pre>    label = Rain (daily avg)</pre>
 <p>This will generate an image file with name <span class="code">monthrain.png</span>. 
 It will be a bar plot. Option <span class="code">yscale</span> controls the y-axis 
 scaling — if left out, the scale will automatically be chosen. However, in this 
@@ -727,13 +836,12 @@ that includes a line plot of both outside temperature and dewpoint.</p>
 hourly averages. Here, you are using the same data type (&#39;<span class="code">outTemp</span>&#39;) 
 for both plot lines, the first with averages, the second without. If you do the 
 obvious it won&#39;t work:</p>
-<p class="tty">## WRONG ##</p>
-<p class="tty">[[[[[[daytemp_with_avg]]]</p>
-<p class="tty">&nbsp; [[[[outTemp]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = avg</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_interval = 3600</p>
-<p class="tty">&nbsp; [[[[outTemp]]]]&nbsp; # OOPS! The same section name appears 
-more than once!</p>
+<pre>## WRONG ##</pre>
+<pre>[[[[[[daytemp_with_avg]]]</pre>
+<pre>  [[[[outTemp]]]]</pre>
+<pre>    aggregate_type = avg</pre>
+<pre>    aggregate_interval = 3600</pre>
+<pre>  [[[[outTemp]]]]  # OOPS! The same section name appears more than once!</pre>
 <p>The option parser does not allow the same section name (&#39;<span class="code">outTemp</span>&#39; 
 in this case) to appear more than once at a given level in the configuration file, 
 so an error will be declared (technical reason: formally, the sections are an unordered 
@@ -741,19 +849,22 @@ dictionary). If you wish for the same SQL type to appear more than once in a plo
 then there is a trick you must know: use option <span class="code">data_type</span>. 
 This will override the default action that the logical line name is used for the 
 SQL type. So, our example would look like this:</p>
-<p class="tty">[[[daytemp_with_avg]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; [[[[a_logical_name]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; data_type = outTemp</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_type = avg</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_interval = 3600</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; [[[[outTemp]]]]</p>
+<pre>[[[daytemp_with_avg]]]</pre>
+<pre>    [[[[a_logical_name]]]]</pre>
+<pre>      data_type = outTemp</pre>
+<pre>      aggregate_type = avg</pre>
+<pre>      aggregate_interval = 3600</pre>
+<pre>&nbsp;     label = Avg. Temp.&nbsp;</pre>
+<pre>    [[[[outTemp]]]]</pre>
 <p>Here, the first logical line has been given the name &quot;<span class="code">a_logical_name</span>&quot; 
 to distinguish it from the second line &quot;<span class="code">outTemp</span>&quot;. We have 
 specified that the first line will use data type <span class="code">outTemp</span> 
 and that it will use averaging over a one hour period. The second also uses
 <span class="code">outTemp</span>, but will not use averaging.</p>
-<p>The result is a nice plot of the day&#39;s temperature, overlaid with a 3-hour smoothed 
-average.</p>
+<p>The result is a nice plot of the day&#39;s temperature, overlaid with a 3-hour 
+smoothed average:</p>
+<p class="center">
+<img alt="Daytime temperature with running average" src="daytemp_with_avg.png" width="300" height="180" /></p>
 <h3>Progressive vector plots</h3>
 <p><span class="code">Weewx</span> can produce progressive vector plots as well 
 as the more conventional x-y plots. To produce these, use plot type &#39;<span class="code">vector</span>&#39;. 
@@ -762,26 +873,31 @@ and &#39;<span class="code">windgustvec</span>&#39;. While they don&#39;t actual
 the SQL database, <span class="code">weewx</span> understands that they represent 
 special vector-types. The first, &#39;<span class="code">windvec</span>&#39;, represents 
 the average wind in an archive period, the second, &#39;<span class="code">windgustvec</span>&#39; 
-the max wind in an archive period. Here&#39;s how to produce a progressive vector plot 
-of the year&#39;s biggest daily wind gusts, along with daily averages:</p>
-<p class="tty">[[[yeargustoverlay]]]</p>
-<p class="tty">&nbsp; aggregate_interval = 86400</p>
-<p class="tty">&nbsp; [[[[windvec]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; plot_type = vector</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = avg</p>
-<p class="tty">&nbsp; [[[[windgustvec]]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; plot_type = vector</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; aggregate_type = max</p>
-<p>This will produce an image file with name <span class="code">yeargustoverlay.png</span>. 
-It will consist of two progressive vector plots, both using daily aggregation (86,400 
-seconds). For the first set of vectors, the daily average will be used. In the second, 
-the max of the gusts will be used.</p>
-<p>By By default, the sticks in the progressive wind plots point towards the wind 
+the max wind in an archive period. Here&#39;s how to produce a progressive vector 
+for one week that shows the hourly biggest wind gusts, along with hourly averages:</p>
+<pre>[[[weekgustoverlay]]]</pre>
+<pre>   aggregate_interval = 3600</pre>
+<pre>   [[[[windvec]]]]</pre>
+<pre>     label = Hourly Wind&nbsp;</pre>
+<pre>     plot_type = vector</pre>
+<pre>     aggregate_type = avg</pre>
+<pre>   [[[[windgustvec]]]]</pre>
+<pre>&nbsp;   label = Gust Wind&nbsp;</pre>
+<pre>     plot_type = vector</pre>
+<pre>     aggregate_type = max</pre>
+<p>This will produce an image file with name <span class="code">weekgustoverlay.png</span>. 
+It will consist of two progressive vector plots, both using hourly aggregation 
+(3,600 seconds). For the first set of vectors, the hourly average will be used. 
+In the second, the max of the gusts will be used:</p>
+<p class="center">
+<img alt="hourly average wind vector overlaid with gust vectors" src="weekgustoverlay.png" width="300" height="180" /></p>
+<p>By default, the sticks in the progressive wind plots point towards the wind 
 source. That is, the stick for a wind from the west will point left. If you have 
 a chronic wind direction (as I do), you may want to rotate the default direction 
 so that all the vectors don&#39;t line up over the x-axis, overlaying each other. Do 
 this by using option <span class="code">vector_rotate</span>. For example, with 
-my chronic westerlies, I set <span class="code">vector_rotate</span> to 90.0, so 
+my chronic westerlies, I set <span class="code">vector_rotate</span> to 90.0 for 
+the plot above, so 
 winds out of the west point straight up. </p>
 <p>If you use this kind of plot (the out-of-the-box version of
 <span class="code">weewx</span> includes daily, weekly, monthly, and yearly progressive 
@@ -794,10 +910,10 @@ observation types such as barometer, you want to also generate some oversized pl
 to give you extra detail, perhaps for an HTML popup. The standard
 <span class="code">weewx.conf</span> file specifies plot size of 300x180 pixels, 
 which will be used for all plots unless overridden:</p>
-<p class="tty">[Images]</p>
-<p class="tty">&nbsp; ...</p>
-<p class="tty">&nbsp; image_width=300</p>
-<p class="tty">&nbsp; image_height = 180</p>
+<pre>[Images]</pre>
+<pre>  ...</pre>
+<pre>  image_width=300</pre>
+<pre>  image_height = 180</pre>
 <p>The standard plot of barometric pressure will appear in <span class="code">daybarometer.png</span>:</p>
 <p class="tty">&nbsp;&nbsp;&nbsp; [[[daybarometer]]]</p>
 <p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[barometer]]]] </p>
@@ -807,7 +923,8 @@ size. This image will be put in file an class=&quot;code&quot; daybarometer_big.
 <p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_width&nbsp; = 600</p>
 <p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_height = 360</p>
 <p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[barometer]]]]</p>
-<h1>Customizing the weewx service engine</h1>
+<h1><a name="Customizing_the_weewx_service_engine">Customizing the 
+<span class="code">weewx</span> service engine</a></h1>
 <p>This is an advance topic intended for those who wish to try their hand at 
 extending the internal engine in weewx.</p>
 <p>At a high level, weewx consists of an <em>engine</em> that is responsible for 
@@ -865,33 +982,27 @@ arrives, but leave the printing of archive packets alone. This could be done by
 subclassing the default print service <span class="code">StdPrint</span> and overriding 
 member function <span class="code">processLoopPacket()</span>. </p>
 <p>In file <span class="code">myprint.py</span>:</p>
-<p class="tty">from weewx.wxengine import StdPrint<br />
-from weeutil.weeutil import timestamp_to_string<br />
-<br />
-class MyPrint(StdPrint):<br />
-<br />
-&nbsp;&nbsp;&nbsp; # Override the default processLoopPacket:<br />
-&nbsp;&nbsp;&nbsp; def processLoopPacket(self, physicalPacket):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print &quot;LOOP: &quot;, timestamp_to_string(physicalPacket[&#39;dateTime&#39;]),\<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; physicalPacket[&#39;barometer&#39;],\<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; physicalPacket[&#39;outTemp&#39;],\<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; physicalPacket[&#39;outHumidity&#39;],\<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; physicalPacket[&#39;windSpeed&#39;],\<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; physicalPacket[&#39;windDir&#39;]</p>
+<pre>from weewx.wxengine import StdPrint
+from weeutil.weeutil import timestamp_to_string
+
+class MyPrint(StdPrint):
+
+    # Override the default processLoopPacket:
+    def processLoopPacket(self, physicalPacket):
+        print &quot;LOOP: &quot;, timestamp_to_string(physicalPacket[&#39;dateTime&#39;]),\
+            physicalPacket[&#39;barometer&#39;],\
+            physicalPacket[&#39;outTemp&#39;],\
+            physicalPacket[&#39;outHumidity&#39;],\
+            physicalPacket[&#39;windSpeed&#39;],\
+            physicalPacket[&#39;windDir&#39;]</pre>
 <p>You then need to specify that your print service class should be loaded instead 
 of the default <span class="code">StdPrint</span> service. This is done by substituting 
 your service name for the standard print service name in the option
 <span class="code">service_list</span>, located in <span class="code">[Engines][[WxEngine]]</span>:</p>
-<p class="tty">[Engines]<br />
-&nbsp;&nbsp;&nbsp; [[WxEngine]]<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; service_list = weewx.wxengine.StdWunderground, 
-weewx.wxengine.StdCatchUp,<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-weewx.wxengine.StdTimeSynch, myprint.MyPrint,<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-weewx.wxengine.StdReportService</p>
-<p>(Note that this list is shown on several lines for clarity, but in actuality 
-it must be all on one line. The parser <span class="code">ConfigObj</span> does 
+<pre>[Engines]
+    [[WxEngine]]
+        service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, myprint.MyPrint, weewx.wxengine.StdReportService</pre>
+<p>(Note that this list must be all on one line. The parser <span class="code">ConfigObj</span> does 
 not allow options to be continued on to following lines.)</p>
 <h2>Adding a Service</h2>
 <p>Suppose there is no service that can be easily customized for your needs. 
@@ -901,137 +1012,102 @@ you need. Here&#39;s an example that implements an alarm that sends off an email
 when an arbitrary expression evaluates True. This example is included in the 
 standard distribution in subdirectory &quot;<span class="code">examples</span>&quot;.</p>
 <p>File <span class="code">examples/alarm.py</span>:</p>
-<p class="tty">import time<br />
-import smtplib<br />
-from email.mime.text import MIMEText<br />
-import threading<br />
-import syslog<br />
-<br />
-from weewx.wxengine import StdService<br />
-from weeutil.weeutil import timestamp_to_string<br />
-<br />
-# Inherit from the base class StdService:<br />
-class MyAlarm(StdService):<br />
-&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;Custom service that sounds an alarm if an expression evaluates 
-true&quot;&quot;&quot;<br />
-<br />
-&nbsp;&nbsp;&nbsp; def __init__(self, engine):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Pass the initialization information 
-on to my superclass:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdService.__init__(self, engine)<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # This will hold the time when the last 
-alarm message went out:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.last_msg = None<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.expression = None<br />
-<br />
-&nbsp;&nbsp;&nbsp; def setup(self):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; try:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Dig the needed 
-options out of the configuration dictionary.<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # If a critical 
-option is missing, an exception will be thrown and<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # the alarm will 
-not be set.<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.expression 
-= self.engine.config_dict[&#39;Alarm&#39;][&#39;expression&#39;]<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.time_wait 
-= int(self.engine.config_dict[&#39;Alarm&#39;].get(&#39;time_wait&#39;, &#39;3600&#39;))<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.smtp_host 
-= self.engine.config_dict[&#39;Alarm&#39;][&#39;smtp_host&#39;]<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.smtp_user 
-= self.engine.config_dict[&#39;Alarm&#39;].get(&#39;smtp_user&#39;)<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.smtp_password 
-= self.engine.config_dict[&#39;Alarm&#39;].get(&#39;smtp_password&#39;)<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.TO = self.engine.config_dict[&#39;Alarm&#39;][&#39;mailto&#39;]<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; syslog.syslog(syslog.LOG_INFO, 
-&quot;alarm: Alarm set for expression %s&quot; % self.expression)<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; except:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.expression 
-= None<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.time_wait 
-= None<br />
-<br />
-&nbsp;&nbsp;&nbsp; def postArchiveData(self, rec):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Let the super class see the record 
-first:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdService.postArchiveData(self, rec)<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # See if the alarm has been set:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if self.expression:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # To avoid a 
-flood of nearly identical emails, this will do<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # the check only 
-if we have never sent an email, or if we haven&#39;t<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # sent one in 
-the last self.time_wait seconds:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if not self.last_msg 
-or abs(time.time() - self.last_msg) &gt;= self.time_wait :<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-# Evaluate the expression in the context of &#39;rec&#39;.<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-# Sound the alarm if it evaluates true:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-if eval(self.expression, None, rec):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # 
-NOTE 1<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-# Sound the alarm!<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-# Launch in a separate thread so it doesn&#39;t block the main LOOP thread:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-t = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, rec))<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-t.start()<br />
-<br />
-&nbsp;&nbsp;&nbsp; def soundTheAlarm(self, rec):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;This function is called when the given 
-expression evaluates True.&quot;&quot;&quot;<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Get the time and convert to a string:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; t_str = timestamp_to_string(rec[&#39;dateTime&#39;])<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Form the message text:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg_text = &quot;Alarm expression %s evaluated 
-True at %s\nRecord:\n%s&quot; % (self.expression, t_str, str(rec))<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Convert to MIME:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg = MIMEText(msg_text)<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Fill in MIME headers:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg[&#39;Subject&#39;] = &quot;Alarm message from 
-weewx&quot;<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg[&#39;From&#39;] = &quot;weewx&quot;<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msg[&#39;To&#39;] = self.TO<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Create an instance of class SMTP for 
-the given SMTP host:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s = smtplib.SMTP(self.smtp_host)<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # If a username has been given, assume 
-that login is required for this host:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if self.smtp_user:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s.login(self.smtp_user, 
-self.smtp_password)<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Send the email:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s.sendmail(msg[&#39;From&#39;], [self.TO], msg.as_string())<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Log out of the server:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s.quit()<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Record when the message went out:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.last_msg = time.time()<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Log it in the system log:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; syslog.syslog(syslog.LOG_INFO, &quot;alarm: 
-Alarm sounded for expression %s&quot; % self.expression)<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; syslog.syslog(syslog.LOG_INFO, &quot; *** 
-email sent to: %s&quot; % self.TO)</p>
+<pre>import time
+import smtplib
+from email.mime.text import MIMEText
+import threading
+import syslog
+
+from weewx.wxengine import StdService
+from weeutil.weeutil import timestamp_to_string
+
+# Inherit from the base class StdService:
+class MyAlarm(StdService):
+    &quot;&quot;&quot;Custom service that sounds an alarm if an expression evaluates true&quot;&quot;&quot;
+
+    def __init__(self, engine):
+        # Pass the initialization information on to my superclass:
+        StdService.__init__(self, engine)
+
+        # This will hold the time when the last alarm message went out:
+        self.last_msg = None
+        self.expression = None
+
+    def setup(self):
+        try:
+            # Dig the needed options out of the configuration dictionary.
+            # If a critical option is missing, an exception will be thrown and
+            # the alarm will not be set.
+            self.expression = self.engine.config_dict[&#39;Alarm&#39;][&#39;expression&#39;]
+            self.time_wait = int(self.engine.config_dict[&#39;Alarm&#39;].get(&#39;time_wait&#39;, &#39;3600&#39;))
+            self.smtp_host = self.engine.config_dict[&#39;Alarm&#39;][&#39;smtp_host&#39;]
+            self.smtp_user = self.engine.config_dict[&#39;Alarm&#39;].get(&#39;smtp_user&#39;)
+            self.smtp_password = self.engine.config_dict[&#39;Alarm&#39;].get(&#39;smtp_password&#39;)
+            self.TO = self.engine.config_dict[&#39;Alarm&#39;][&#39;mailto&#39;]
+            syslog.syslog(syslog.LOG_INFO, &quot;alarm: Alarm set for expression %s&quot; % self.expression)
+        except:
+            self.expression = None
+            self.time_wait = None
+
+    def postArchiveData(self, rec):
+        # Let the super class see the record first:
+        StdService.postArchiveData(self, rec)
+
+        # See if the alarm has been set:
+        if self.expression:
+            # To avoid a flood of nearly identical emails, this will do
+            # the check only if we have never sent an email, or if we haven&#39;t
+            # sent one in the last self.time_wait seconds:
+            if not self.last_msg or abs(time.time() - self.last_msg) &gt;= self.time_wait :
+
+                # Evaluate the expression in the context of &#39;rec&#39;.
+                # Sound the alarm if it evaluates true:
+                if eval(self.expression, None, rec):        # NOTE 1
+                    # Sound the alarm!
+                    # Launch in a separate thread so it doesn&#39;t block the main LOOP thread:
+                    t = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, rec))
+                    t.start()
+
+    def soundTheAlarm(self, rec):
+        &quot;&quot;&quot;This function is called when the given expression evaluates True.&quot;&quot;&quot;
+
+        # Get the time and convert to a string:
+        t_str = timestamp_to_string(rec[&#39;dateTime&#39;])
+        # Form the message text:
+        msg_text = &quot;Alarm expression %s evaluated True at %s\nRecord:\n%s&quot; % (self.expression, t_str, str(rec))
+        # Convert to MIME:
+        msg = MIMEText(msg_text)
+
+        # Fill in MIME headers:
+        msg[&#39;Subject&#39;] = &quot;Alarm message from weewx&quot;
+        msg[&#39;From&#39;] = &quot;weewx&quot;
+        msg[&#39;To&#39;] = self.TO
+
+        # Create an instance of class SMTP for the given SMTP host:
+        s = smtplib.SMTP(self.smtp_host)
+        # If a username has been given, assume that login is required for this host:
+        if self.smtp_user:
+            s.login(self.smtp_user, self.smtp_password)
+        # Send the email:
+        s.sendmail(msg[&#39;From&#39;], [self.TO], msg.as_string())
+        # Log out of the server:
+        s.quit()
+        # Record when the message went out:
+        self.last_msg = time.time()
+        # Log it in the system log:
+        syslog.syslog(syslog.LOG_INFO, &quot;alarm: Alarm sounded for expression %s&quot; % self.expression)
+        syslog.syslog(syslog.LOG_INFO, &quot; *** email sent to: %s&quot; % self.TO)</pre>
 <p>This service expects all the information it needs to be in the configuration 
 file <span class="code">weewx.conf</span> in a new section called
 <span class="code">[Alarm]</span>. So, add the following lines to your configuration 
 file:</p>
-<p class="tty">[Alarm]<br />
-&nbsp;&nbsp;&nbsp; expression = &quot;outTemp &lt; 40.0&quot;<br />
-&nbsp;&nbsp;&nbsp; time_wait = 1800<br />
-&nbsp;&nbsp;&nbsp; smtp_host = smtp.mymailserver.com<br />
-&nbsp;&nbsp;&nbsp; smtp_user = myusername<br />
-&nbsp;&nbsp;&nbsp; smtp_password = mypassword<br />
-&nbsp;&nbsp;&nbsp; mailto = auser@adomain.com</p>
+<pre>[Alarm]
+    expression = &quot;outTemp &lt; 40.0&quot;
+    time_wait = 1800
+    smtp_host = smtp.mymailserver.com
+    smtp_user = myusername
+    smtp_password = mypassword
+    mailto = auser@adomain.com</pre>
 <p>These options specify that the alarm is to be sounded when &quot;<span class="code">outTemp 
 &lt; 40.0</span>&quot; evaluates True, that is when the outside temperature is below 40.0 
 degrees. Any valid Python expression can be used, although the only variables available 
@@ -1053,16 +1129,10 @@ are specified with options <span class="code">smtp_user</span> and
 <p>To make this all work, you must tell the engine to load this new service. This 
 is done by adding your service name to the list <span class="code">service_list</span>, 
 located in <span class="code">[Engines][[WxEngine]]</span>:</p>
-<p class="tty">[Engines]<br />
-&nbsp;&nbsp;&nbsp; [[WxEngine]]<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; service_list = weewx.wxengine.StdWunderground, 
-weewx.wxengine.StdCatchUp,<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint,<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-weewx.wxengine.StdReportService, examples.alarm.MyAlarm</p>
-<p>(Again, note that this list is shown on several lines for clarity, but in actuality 
-it must be all on one line.)</p>
+<pre>[Engines]
+    [[WxEngine]]
+        service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.alarm.MyAlarm</pre>
+<p>(Again, the list must be all on one line.)</p>
 <h2>Customizing the Engine</h2>
 <p>In this section, we look at how to install a custom Engine. In general, this 
 is the least desirable way to proceed, but in some cases it may be the only way 
@@ -1070,64 +1140,46 @@ to get what you want.</p>
 <p>For example, suppose you want to define a new event for when the first archive 
 of a day arrives. This can be done by extending the the standard engine. </p>
 <p>This example is in file <span class="code">example/daily.py</span>:&lt;/:</p>
-<p class="tty">from weewx.wxengine import StdEngine, StdService<br />
-from weeutil.weeutil import startOfArchiveDay<br />
-<br />
-class MyEngine(StdEngine):<br />
-&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;A customized weewx engine.&quot;&quot;&quot;<br />
-<br />
-&nbsp;&nbsp;&nbsp; def __init__(self, *args, **vargs):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Pass on the initialization data to 
-my superclass:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdEngine.__init__(self, *args, **vargs)<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # This will record the timestamp of the 
-old day<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.old_day = None<br />
-<br />
-&nbsp;&nbsp;&nbsp; def postArchiveData(self, rec):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # First let my superclass process it:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StdEngine.postArchiveData(self, rec)<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Get the timestamp of the start of the 
-day using<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # the utility function startOfArchiveDay
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dayStart_ts = startOfArchiveDay(rec[&#39;dateTime&#39;])<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Call the function firstArchiveOfDay 
-if either this is<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # the first archive since startup, or 
-if a new day has started<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if not self.old_day or self.old_day != 
-dayStart_ts:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.old_day 
-= dayStart_ts<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.newDay(rec)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-# Note 1<br />
-<br />
-&nbsp;&nbsp;&nbsp; def newDay(self, rec):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;Called when the first archive record 
-of a day arrives.&quot;&quot;&quot;<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Go through the list of service objects. 
-This<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # list is actually in my superclass StdEngine.<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for svc_obj in self.service_obj:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Because this 
-is a new event, not all services will<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # be prepared 
-to accept it. Check first to see if the<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # service has 
-a member function &quot;firstArchiveOfDay&quot;<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # before calling 
-it:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if hasattr(svc_obj, 
-&quot;firstArchiveOfDay&quot;):&nbsp; # Note 2<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-# The object does have the member function. Call it:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-svc_obj.firstArchiveOfDay(rec)</p>
+<pre>from weewx.wxengine import StdEngine, StdService
+from weeutil.weeutil import startOfArchiveDay
+
+class MyEngine(StdEngine):
+    &quot;&quot;&quot;A customized weewx engine.&quot;&quot;&quot;
+
+    def __init__(self, *args, **vargs):
+        # Pass on the initialization data to my superclass:
+        StdEngine.__init__(self, *args, **vargs)
+
+        # This will record the timestamp of the old day
+        self.old_day = None
+
+    def postArchiveData(self, rec):
+        # First let my superclass process it:
+        StdEngine.postArchiveData(self, rec)
+
+        # Get the timestamp of the start of the day using
+        # the utility function startOfArchiveDay 
+        dayStart_ts = startOfArchiveDay(rec[&#39;dateTime&#39;])
+
+        # Call the function firstArchiveOfDay if either this is
+        # the first archive since startup, or if a new day has started
+        if not self.old_day or self.old_day != dayStart_ts:
+            self.old_day = dayStart_ts
+            self.newDay(rec)                          # Note 1
+
+    def newDay(self, rec):
+        &quot;&quot;&quot;Called when the first archive record of a day arrives.&quot;&quot;&quot;
+
+        # Go through the list of service objects. This
+        # list is actually in my superclass StdEngine.
+        for svc_obj in self.service_obj:
+            # Because this is a new event, not all services will
+            # be prepared to accept it. Check first to see if the
+            # service has a member function &quot;firstArchiveOfDay&quot;
+            # before calling it:
+            if hasattr(svc_obj, &quot;firstArchiveOfDay&quot;):  # Note 2
+                # The object does have the member function. Call it:
+                svc_obj.firstArchiveOfDay(rec)</pre>
 <p>This customized engine works by monitoring the arrival of archive records, and 
 checking their time stamp (<span class="code">rec[&#39;dateTime&#39;]</span>. It calculates 
 the time stamp for the start of the day, and if it changes, calls member function
@@ -1142,46 +1194,37 @@ has a function <span class="code">firstArchiveOfDay</span> before calling it (No
 the line</p>
 <p class="tty">weewx.wxengine.main()</p>
 <p>so that it uses your new engine:</p>
-<p class="tty">from examples.daily import MyEngine<br />
-&nbsp;<br />
-# Specify that my specialized engine should be used instead<br />
-# of the default:<br />
-weewx.wxengine.main(EngineClass = MyEngine)</p>
+<pre>from examples.daily import MyEngine
+&nbsp;
+# Specify that my specialized engine should be used instead
+# of the default:
+weewx.wxengine.main(EngineClass = MyEngine)</pre>
 <p>We now have a new engine that defines a new event (&quot;<span class="code">firstArchiveOfDay</span>&quot;), 
 but there is no service to take advantage of it. We define a new service:</p>
-<p class="tty"># Define a new service to take advantage of the new event<br />
-class DailyService(StdService):<br />
-&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;This service can do something when the first archive record 
-of<br />
-&nbsp;&nbsp;&nbsp; a day arrives.&quot;&quot;&quot;<br />
-<br />
-&nbsp;&nbsp;&nbsp; def firstArchiveOfDay(self, rec):<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;&quot;&quot;Called when the first archive record 
-of a day arrives.&quot;&quot;&quot;<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print &quot;The first archive of the day has 
-arrived!&quot;<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print rec<br />
-<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # You might want to do something here 
-like run a cron job</p>
+<pre># Define a new service to take advantage of the new event
+class DailyService(StdService):
+    &quot;&quot;&quot;This service can do something when the first archive record of
+    a day arrives.&quot;&quot;&quot;
+
+    def firstArchiveOfDay(self, rec):
+        &quot;&quot;&quot;Called when the first archive record of a day arrives.&quot;&quot;&quot;
+
+        print &quot;The first archive of the day has arrived!&quot;
+        print rec
+
+        # You might want to do something here like run a cron job</pre>
 <p>This service will simply print out a notice and then print out the new record. 
 However, if there is some daily processing you want to do, perhaps a backup, or 
 running utility <a href="http://www.weewx.com/wunderfixer">wunderfixer</a>, this 
 would be the place to do it.</p>
 <p>The final step is to go into your configuration file and specify that this new 
 service be loaded, by adding its class name to option <span class="code">service_list</span>:</p>
-<p class="tty">[Engines]<br />
-<br />
-&nbsp; [[WxEngine]]<br />
-&nbsp;&nbsp;&nbsp; # The list of services the main weewx engine should run:<br />
-&nbsp;&nbsp;&nbsp; service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp,<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint,<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-weewx.wxengine.StdReportService, examples.daily.DailyService</p>
-<p>(Again, note that this list is shown on several lines for clarity, but in actuality 
-it must be all on one line.)</p>
+<pre>[Engines]
+
+  [[WxEngine]]
+    # The list of services the main weewx engine should run:
+    service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.daily.DailyService</pre>
+<p>(Again, the list must be all on one line.)</p>
 
 <h1>Appendix A: T<a name="Types">ypes</a></h1>
 <p>The weather variables used in <span class="code">weewx</span> generally fall into three different camps. 
@@ -1525,7 +1568,7 @@ you configured <span class="code">weewx</span> to use that type.</p>
 		<td>X</td>
 	</tr>
 </table>
-<h1>Appendix B: Units</h1>
+<h1>Appendix B: <a name="Units">Units</a></h1>
 <p>The table below lists all the unit groups, their members, and which units are 
 options for the group.</p>
 <table style="width: 60%" align="center">
@@ -1648,7 +1691,7 @@ options for the group.</p>
 	</tr>
 </table>
 
-<h1>Appendix C<span class="style2">: </span><a name="Statistical_aggregations">Statistical aggregations</a></h1>
+<h1>Appendix C: <a name="Statistical_aggregations">Statistical aggregations</a></h1>
 <p>Most of the templates are devoted to reporting <em>statistical 
 aggregates</em>, such as monthly max temperature, or year-to-date rainfall. 
 These are called <em>aggregations</em>, because they are a summary of lots of 

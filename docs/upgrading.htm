@@ -119,7 +119,7 @@ td {
 
 <body>
 
-<h1 class="title">Upgrading to weewx v1.5</h1>
+<h1 class="title">Upgrading to weewx v1.6</h1>
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
 <h2>V.1.5.0 or earlier</h2>
@@ -135,12 +135,10 @@ comes with the distribution).</p>
 Pacific Northwest, you will probably want to change it! You can find it in
 <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/index.html.tmpl</span> 
 and searching for &quot;radar.&quot;</p>
-<p>The directory &#39;<span class="code">templates</span>&#39; is no longer used, so you 
+<p>The directory &#39;<span class="code">templates</span>&#39; is no longer used; 
+it has been replaced with directory &#39;<span class="code">skins</span>&#39;. You 
 may delete it if you wish:</p>
 <p class="tty">rm -r <em>$WEEWX_ROOT</em>/templates</p>
-<p>Two Python files are no longer used and may be deleted if you wish:</p>
-<p class="tty">rm <em>$WEEWX_ROOT</em>/bin/upload.*</p>
-<p class="tty">rm <em>$WEEWX_ROOT</em>/bin/weewx/ftpdata.*</p>
 <h2>V1.4.0 or earlier</h2>
 <p>Because the configuration file <span class="code">weewx.conf</span> changed 
 significantly going from V1.4 to V1.5, the installation script

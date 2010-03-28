@@ -83,8 +83,13 @@ class My_install_data(install_data):
         # Back up the old skin directory if it exists
         skin_dir = os.path.join(self.install_dir, 'skins')
         if os.path.exists(skin_dir):
-            backupdir = backup(skin_dir)
-            print "Backed up skins subdirectory to %s" % backupdir
+            skin_backupdir = backup(skin_dir)
+            print "Backed up skins subdirectory to %s" % skin_backupdir
+            
+        bin_dir = os.path.join(self.install_dir, 'bin')
+        if os.path.exists(bin_dir):
+            bin_backupdir = backup(bin_dir)
+            print "Backed up bin subdirectory to %s" % bin_backupdir
             
         # Run the superclass's run():
         install_data.run(self)
@@ -227,7 +232,8 @@ setup(name='weewx',
       scripts     = ['configure.py', 'weewxd.py'],
       data_files  = [('',                           ['CHANGES.txt', 'LICENSE.txt', 'README', 'weewx.conf']),
                      ('docs',                       ['docs/customizing.htm', 'docs/readme.htm', 
-                                                     'docs/sheeva.htm', 'docs/upgrading.htm']),
+                                                     'docs/sheeva.htm', 'docs/upgrading.htm',
+                                                     'docs/daytemp_with_avg.png', 'docs/weekgustoverlay.png']),
                      ('skins/Ftp',                  ['skins/Ftp/skin.conf']),
                      ('skins/Standard/backgrounds', ['skins/Standard/backgrounds/band.gif']),
                      ('skins/Standard/NOAA',        ['skins/Standard/NOAA/NOAA-YYYY.txt.tmpl', 'skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl']),
