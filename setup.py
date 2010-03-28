@@ -41,6 +41,7 @@
 
 from distutils.core import setup, Command
 from distutils.command.install_data import install_data
+from distutils.command.install_lib  import install_lib
 from distutils.command.sdist import sdist
 
 import sys
@@ -54,6 +55,22 @@ import configobj
 
 from weewx import __version__ as VERSION
 
+class My_install_lib(install_lib):
+    """Specialized version of install_lib
+    
+    This version:
+    
+    - Backs up the old ./bin subdirectory before installing.
+    """ 
+
+    def run(self):
+        if os.path.exists(self.install_dir):
+            bin_backupdir = backup(self.install_dir)
+            print "Backed up bin subdirectory to %s" % bin_backupdir
+
+        # Run the superclass's run:
+        install_lib.run(self)
+        
 class My_install_data(install_data):
     """Specialized version of install_data 
     
@@ -63,6 +80,7 @@ class My_install_data(install_data):
         actual installation root directory;
       - Merges an old configuration file into a new,
         thus preserving any changes made by the user;
+      - Backs up the old skin directory;
       - Massages the daemon start up script to reflect the choice
         of WEEWX_ROOT        
     """
@@ -80,16 +98,12 @@ class My_install_data(install_data):
         return rv
     
     def run(self):
+            
         # Back up the old skin directory if it exists
         skin_dir = os.path.join(self.install_dir, 'skins')
         if os.path.exists(skin_dir):
             skin_backupdir = backup(skin_dir)
             print "Backed up skins subdirectory to %s" % skin_backupdir
-            
-        bin_dir = os.path.join(self.install_dir, 'bin')
-        if os.path.exists(bin_dir):
-            bin_backupdir = backup(bin_dir)
-            print "Backed up bin subdirectory to %s" % bin_backupdir
             
         # Run the superclass's run():
         install_data.run(self)
@@ -186,6 +200,8 @@ class My_install_data(install_data):
         return rv
 
 def backup(filepath):
+    # Sometimes the target has a trailing '/'. This will take care of it:
+    filepath = os.path.normpath(filepath)
     newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
     os.rename(filepath, newpath)
     return newpath
@@ -243,5 +259,6 @@ setup(name='weewx',
                      ('start_scripts',              ['start_scripts/Debian/weewx', 'start_scripts/SuSE/weewx'])],
       requires    = ['configobj(>=4.5)', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
+                     "install_lib"  : My_install_lib,
                      "sdist" :        My_sdist}
       )
