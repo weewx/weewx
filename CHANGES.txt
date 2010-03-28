@@ -26,7 +26,9 @@ session to be active in the same local directory. This version also does
 fewer hits on the server, so it is significantly faster.
 
 Data files used in reports (such as weewx.css) are copied over to the
-HTML directory on program startup. 
+HTML directory on program startup.
+
+Included an example of a low-battery alarm.
 
 Moved the URL for the radar image from the configuration file to the
 template index.html.tmpl.

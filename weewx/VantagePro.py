@@ -449,7 +449,7 @@ class WxStation (object) :
                      'leafWet2'        : _little_val, 
                      'leafWet3'        : _little_val, 
                      'leafWet4'        : _little_val,
-                     'transmitBattery' : _null, 
+                     'transmitBattery' : _null_int, 
                      'consoleBattery'  : lambda v : float((v * 300) >> 9) / 100.0
                      }        
     
@@ -862,6 +862,9 @@ def _little_temp(v) :
 
 def _null(v) :
     return float(v)
+
+def _null_int(v):
+    return int(v)
 
 def _windDir(v):
     return float(v) * 22.5 if v!= 0x00ff else None

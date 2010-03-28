@@ -65,7 +65,7 @@ class StdEngine(object):
         
         syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
         for svc in service_list:
-            syslog.syslog(syslog.LOG_DEBUG, "    ****: %s" % svc)
+            syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % svc)
         
         #For each listed service in service_list, instantiates an instance of the class,
         # passing self as the only argument."""

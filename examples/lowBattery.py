@@ -84,16 +84,22 @@ class BatteryAlarm(StdService):
             self.time_wait  = None
 
     def processLoopPacket(self, loopPacket):
+        """This function is called with the arrival of every LOOP packet."""
         
+        # Let the superclass have a peek first:
+        StdService.processLoopPacket(self, loopPacket)
+                
         # If the Transmit Battery Status byte is non-zero, an alarm is on
         if self.time_wait is not None and loopPacket['transmitBattery']:
+
             self.alarm_count += 1
+
             # Don't panic on the first occurrence. We must see the alarm at
             # least count_threshold times before sounding the alarm.
             if self.alarm_count >= self.count_threshold:
                 # We've hit the threshold. However, to avoid a flood of nearly
-                # identical emails, send a new one only if we have never sent
-                # an email, or if we haven't sent one in the last self.time_wait seconds:
+                # identical emails, send a new one only if it's been a long time
+                # since we sent the last one:
                 if abs(time.time() - self.last_msg_ts) >= self.time_wait :
                     # Sound the alarm!
                     # Launch in a separate thread so it doesn't block the main LOOP thread:
@@ -103,7 +109,9 @@ class BatteryAlarm(StdService):
                     self.last_msg_ts = time.time()
         
     def postArchiveData(self, rec):
-        # Let the super class see the record first:
+        """This function is called when it's time to post some archive data."""
+        
+        # Let the superclass do its thing first:
         StdService.postArchiveData(self, rec)
 
         # Reset the alarm counter
