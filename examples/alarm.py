@@ -9,29 +9,29 @@
 #
 """Example of how to implement an alarm in weewx. 
 
-*****************************************************************************
+********************************************************************************
 
-To use this alarm, add the following somewhere in your
-configuration file weewx.conf:
+To use this alarm, add the following somewhere in your configuration file
+weewx.conf:
 
 [Alarm]
   expression = "outTemp < 40.0"
-  time_wait = 1800
+  time_wait = 3600
   smtp_host = smtp.mymailserver.com
   smtp_user = myusername
   smtp_password = mypassword
   mailto = auser@adomain.com
   
-In this example, if the outside temperature falls below 40, it
-will send an email to the recipient auser@adomain.com.
+In this example, if the outside temperature falls below 40, it will send an
+email to the recipient auser@adomain.com.
 
 The example assumes that your SMTP email server is at smtp.mymailserver.com and
-that it uses secure logins. If it does not use secure logins, leave out the lines
-for smtp_user and smtp_password and no login will be attempted.
+that it uses secure logins. If it does not use secure logins, leave out the
+lines for smtp_user and smtp_password and no login will be attempted.
 
-To avoid a flood of emails, one will only be sent every 1800 seconds (half hour).
+To avoid a flood of emails, one will only be sent every 3600 seconds (one hour).
 
-*****************************************************************************
+********************************************************************************
 
 To specify that this new service be loaded and run, it must be added to the
 configuration option service_list, located in sub-section [Engines][[WxEngine]]:
@@ -40,7 +40,13 @@ configuration option service_list, located in sub-section [Engines][[WxEngine]]:
   [[WxEngine]]
     service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.alarm.MyAlarm
 
-*****************************************************************************
+********************************************************************************
+
+If you wish to use both this example and the lowBattery.py example, simply merge
+the two configuration options together under [Alarm] and add both services to
+the service_list.
+
+********************************************************************************
 """
 
 import time

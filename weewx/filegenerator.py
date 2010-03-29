@@ -215,7 +215,14 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         elif by_time == 'SummaryByYear':
             search_dict['year'] = stats 
         
-        return [search_dict]    
+        searchList = [search_dict]
+
+        # IF the user has supplied an '[Extra]' section in the skin dictionary, include
+        # it in the search list. Otherwise, just include an empty dictionary.
+        extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
+        searchList += [{'Extras' : extra_dict}]
+
+        return searchList
 
     def getToDateSearchList(self, currentRec, stop_ts):
         """Return the searchList for the Cheetah Template engine for "to date" generation.
@@ -246,6 +253,12 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                        'almanac'         : self.almanac},
                        self.outputted_dict,
                        statsFormatter]
+        
+        # IF the user has supplied an '[Extra]' section in the skin dictionary, include
+        # it in the search list. Otherwise, just include an empty dictionary.
+        extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
+        searchList += [{'Extras' : extra_dict}]
+
         return searchList
 
     def initAlmanac(self, celestial_ts):

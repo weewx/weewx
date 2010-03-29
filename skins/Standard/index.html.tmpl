@@ -226,10 +226,12 @@
 
         <p>&nbsp;</p>
 
+        #if $Extras.has_key('radar_url')
         <div id="radar_img">
-          <a href="http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif">
-          <img src="http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif" alt="Radar" /></a>
+          <a  href="$Extras.radar_url">
+          <img src="$Extras.radar_url" alt="Radar" /></a>
         </div>
+        #end if
 
       </div> <!--End class "stats_group" -->
 

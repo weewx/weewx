@@ -152,13 +152,15 @@ td {
 	<li><a href="#Units">Appendix B: Units</a></li>
 	<li><a href="#Statistical_aggregations">Appendix C: Statistical aggregations</a></li>
 </ol>
-<h1><a name="Introduction">Introduction</a></h1>
+<h1>1. <a name="Introduction">Introduction</a></h1>
 <p>This document covers the customization of weewx. It assumes that you have read 
 and are reasonably familiar with the Users Guide.</p>
 <p>It starts with an overview of the architecture of weewx. If you are only interested 
 in customizing the generated skin reports you can probably skip that section and 
 just have a look at the options available for the Standard skin configuration file, 
-described in section XX. With this approach you can easily add new plot images, 
+described in the section <em>
+<a href="#Reference:_The_Standard_skin_configuration_file">The Standard skin 
+configuration file</a></em>. With this approach you can easily add new plot images, 
 change the titles of images, change the units used in the reports, and so on.</p>
 <p>However, if your goal is a specialized application such as adding alarms, RSS 
 feeds, etc., then it would be worth your while to read about the internal architecture 
@@ -203,8 +205,10 @@ includes the following services:</p>
 <p>It is easy to extend old services or to add new ones. The source distribution 
 includes an example new service called &quot;<span class="code">MyAlarm</span>,&quot; which 
 sends an email when an arbitrary expression evaluates <span class="code">True</span>. 
-It is also possible to extend the internal engine. These advanced topics are covered 
-later in section XX.</p>
+It is also possible to extend the internal engine. These advanced topics are 
+covered later in the section <em>
+<a href="#Customizing_the_weewx_service_engine">Customizing the weewx service 
+engine</a></em>.</p>
 <h3><a name="The_standard_reporting_service,_StdReportService">The standard reporting 
 service, <span class="code">StdReportService</span></a></h3>
 <p>For the moment, we focus on the last service, <span class="code">weewx.wxengine.StdReportService</span>, 
@@ -282,7 +286,7 @@ files around or FTP them to remote locations. The default install of
 the presentation layer. Instead, they just move files around. </p>
 <p>Which generators are to be run for a given skin is specified in the skin&#39;s configuration 
 file <span class="code">skin.conf</span>.</p>
-<h1><a name="Opportunities_for_customizing_reports">Opportunities for customizing 
+<h1>2. <a name="Opportunities_for_customizing_reports">Opportunities for customizing 
 reports</a></h1>
 <p>This section discusses the two general strategies for customizing reports: by 
 changing options in one or more configuration file, or by changing the template 
@@ -560,7 +564,7 @@ try {
 instead of the default generator. Modify option <span class="code">generator_list</span> 
 in the skin configuration file <span class="code">skin.conf</span> to read:</p>
 <pre>generator_list = mygenerator.MyFileGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator</pre>
-<h1><a name="Reference:_The_Standard_skin_configuration_file">Reference: The Standard 
+<h1>3. <a name="Reference:_The_Standard_skin_configuration_file">Reference: The Standard 
 skin configuration file</a></h1>
 <p>This section is a reference to the options appearing in the Standard skin configuration 
 file, found in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>.</p>
@@ -573,6 +577,17 @@ the ones you are likely to have to customize for your station, are shown in
 <p class="config_option">generator_list</p>
 <p>This option controls which generators get run for this skin. It is a comma separated 
 list. The generators will be run in this order.</p>
+<h2 class="config_section">[[Extras]]</h2>
+<p>This section is available to you to add any tags that you might want to be available 
+in the templates. As an example, the stock <span class="code">skin.conf</span> file 
+includes option <span class="code">radar_url</span>, which is available as tag
+<span class="code">$Extras.radar_url</span>. If you take a look at the template
+<span class="code">index.html.tmpl</span> you will see an example of testing for 
+this tag (search the file for the string &#39;<span class="code">radar</span>&#39; to find 
+it).</p>
+<p class="config_option">radar_url</p>
+<p>If set, the NOAA radar image will be displayed. If commented out, no image will 
+be displayed.</p>
 <h2 class="config_section">[Units]</h2>
 <p>This section deals with Units and their formatting. </p>
 <h3 class="config_section">[[Groups]]</h3>
@@ -595,7 +610,7 @@ all</em> members of its group will be reported in degrees Celsius.</p>
 <p>Note that the unit system is always specified in the singular. That is, specify 
 &quot;<span class="code">foot</span>&quot; or &quot;<span class="code">inch_per_hour</span>&quot;, not 
 &quot;<span class="code">feet</span>&quot; or &quot;<span class="code">inches_per_hour</span>.&quot; 
-See section XX for more information, including a concise summary of the groups, 
+See the Appendix <em><a href="#Units">Units</a></em> for more information, including a concise summary of the groups, 
 their members, and which options can be used for each group.</p>
 <h4 class="config_important"><a name="group_altitude">group_altitude</a></h4>
 <p>Which measurement unit to be used for altitude. Possible options are &#39;<span class="code">foot</span>&#39; 
@@ -901,12 +916,12 @@ out of the west point straight up. </p>
 wind plots), a small compass rose will be put in the lower-left corner of the image 
 to show the orientation of North.</p>
 <h3>Overriding values</h3>
-<p>RemRemember that values at any level can override values specified at a higher 
-level. For example, say you want to generate the standard plots, but for a few key 
-observation types such as barometer, you want to also generate some oversized plots 
-to give you extra detail, perhaps for an HTML popup. The standard
-<span class="code">weewx.conf</span> file specifies plot size of 300x180 pixels, 
-which will be used for all plots unless overridden:</p>
+<p>Remember that values at any level can override values specified at a higher level. 
+For example, say you want to generate the standard plots, but for a few key observation 
+types such as barometer, you want to also generate some oversized plots to give 
+you extra detail, perhaps for an HTML popup. The standard <span class="code">weewx.conf</span> 
+file specifies plot size of 300x180 pixels, which will be used for all plots unless 
+overridden:</p>
 <pre>[Images]</pre>
 <pre>  ...</pre>
 <pre>  image_width=300</pre>
@@ -920,7 +935,7 @@ size. This image will be put in file an class=&quot;code&quot; daybarometer_big.
 <p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_width&nbsp; = 600</p>
 <p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_height = 360</p>
 <p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[barometer]]]]</p>
-<h1><a name="Customizing_the_weewx_service_engine">Customizing the
+<h1>4. <a name="Customizing_the_weewx_service_engine">Customizing the
 <span class="code">weewx</span> service engine</a></h1>
 <p>This is an advance topic intended for those who wish to try their hand at extending 
 the internal engine in weewx. You should have a passing familiarity with Python 
@@ -1141,9 +1156,9 @@ located in <span class="code">[Engines][[WxEngine]]</span>:</p>
     [[WxEngine]]
         service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.alarm.MyAlarm</pre>
 <p>(Again, the list must be all on one line.)</p>
-<p>The example subdirectory in the distribution includes a similar example, a 
-low-battery alarm (<span class="code">lowBattery.py</span>), that I actually use 
-in my production setup.</p>
+<p>In addition to the example above, the distribution also includes a low-battery 
+alarm (<span class="code">lowBattery.py</span>), which is very similar, except that 
+it intercepts LOOP events (instead of archiving events).</p>
 <h2>Customizing the Engine</h2>
 <p>In this section, we look at how to install a custom Engine. In general, this 
 is the least desirable way to proceed, but in some cases it may be the only way 

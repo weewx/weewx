@@ -9,10 +9,10 @@
 #
 """Example of how to implement a low battery alarm in weewx. 
 
-*****************************************************************************
+********************************************************************************
 
-To use this alarm, add the following somewhere in your
-configuration file weewx.conf:
+To use this alarm, add the following somewhere in your configuration file
+weewx.conf:
 
 [Alarm]
   time_wait = 3600
@@ -23,16 +23,16 @@ configuration file weewx.conf:
   mailto = auser@adomain.com
   
 The example assumes that your SMTP email server is at smtp.mymailserver.com and
-that it uses secure logins. If it does not use secure logins, leave out the lines
-for smtp_user and smtp_password and no login will be attempted.
+that it uses secure logins. If it does not use secure logins, leave out the
+lines for smtp_user and smtp_password and no login will be attempted.
 
-To avoid a flood of emails, one will only be sent every time_wait seconds (one hour).
+To avoid a flood of emails, one will only be sent every 3600 seconds (one hour).
 
-It will also not send an email unless the low battery indicator has been on greater
-than or equal to count_threshold times in an archive period. This avoids sending out
-an alarm if the battery is only occasionally being signaled as bad. 
+It will also not send an email unless the low battery indicator has been on
+greater than or equal to count_threshold times in an archive period. This avoids
+sending out an alarm if the battery is only occasionally being signaled as bad.
 
-*****************************************************************************
+********************************************************************************
 
 To specify that this new service be loaded and run, it must be added to the
 configuration option service_list, located in sub-section [Engines][[WxEngine]]:
@@ -40,6 +40,12 @@ configuration option service_list, located in sub-section [Engines][[WxEngine]]:
 [Engines]
   [[WxEngine]]
     service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.lowBattery.BatteryAlarm
+
+********************************************************************************
+
+If you wish to use both this example and the alarm.py example, simply merge the
+two configuration options together under [Alarm] and add both services to the
+service_list.
 
 *****************************************************************************
 """

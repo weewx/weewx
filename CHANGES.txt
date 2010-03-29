@@ -17,6 +17,10 @@ default, the day, week, month, and year HTML files are encoded using
 HTML entities; the NOAA reports encoded using 'strict ascii.' Optionally,
 reports can be encoded using UTF-8.
 
+Now offer a section 'Extras' in the skin configuration file for
+including user added tags. As an example, the tag radar_url has been
+moved into here.
+ 
 FTP is treated as just another report, albeit with an unusual report
 generator. You can have multiple FTP sessions, each to a different
 server, or uploading to or from a different area.
@@ -29,9 +33,6 @@ Data files used in reports (such as weewx.css) are copied over to the
 HTML directory on program startup.
 
 Included an example of a low-battery alarm.
-
-Moved the URL for the radar image from the configuration file to the
-template index.html.tmpl.
 
 Changed the name of the service StdProcess to StdReportService. This
 will affect only users who have written custom reports.
