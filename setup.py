@@ -124,7 +124,7 @@ class My_install_data(install_data):
         
         # Clean up after a bad install from earlier versions of setup.py:
         try:
-            os.remove(os.path.join(self.install_dir, 'start_script/weewx'))
+            os.remove(os.path.join(self.install_dir, 'start_scripts/weewx'))
         except:
             pass
 
@@ -268,8 +268,8 @@ setup(name='weewx',
                      ('skins/Standard',             ['skins/Standard/index.html.tmpl', 'skins/Standard/month.html.tmpl',
                                                      'skins/Standard/skin.conf', 'skins/Standard/week.html.tmpl',
                                                      'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 
-                     ('start_scripts/Debian',       ['start_scripts/Debian/weewx'])
-                     ('start_script/SuSE',          ['start_scripts/SuSE/weewx'])],
+                     ('start_scripts/Debian',       ['start_scripts/Debian/weewx']),
+                     ('start_scripts/SuSE',          ['start_scripts/SuSE/weewx'])],
       requires    = ['configobj(>=4.5)', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "install_lib"  : My_install_lib,

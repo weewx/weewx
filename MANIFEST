@@ -18,6 +18,7 @@ examples/__init__.py
 examples/alarm.py
 examples/daily.py
 examples/lowBattery.py
+examples/mygenerator.py
 skins/Ftp/skin.conf
 skins/Standard/index.html.tmpl
 skins/Standard/month.html.tmpl
