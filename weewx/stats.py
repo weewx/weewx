@@ -401,10 +401,10 @@ class DayStatsDict(dict):
         return "time span: %s; temperature (min,max) = (%s, %s)" % (str(self.timespan), outTempMin_str, outTempMax_str)
 
 #===============================================================================
-#                    Class TimespanStats
+#                    Class TimeSpanStats
 #===============================================================================
 
-class TimespanStats(object):
+class TimeSpanStats(object):
     """Nearly stateless class that holds a binding to a stats database and a timespan.
 
          This class allows syntax such as the following:
@@ -412,7 +412,7 @@ class TimespanStats(object):
             statsdb = StatsDb('somestatsfile.sdb')
             # This timespan runs from 2007-01-01 to 2008-01-01 (one year):
             yearSpan = weeutil.Timespan(1167638400, 1199174400)
-            yearStats = TimespanStats(statsdb, yearSpan)
+            yearStats = TimeSpanStats(statsdb, yearSpan)
             
             # Print max temperature for the year:
             print yearStats.outTemp.max
@@ -428,7 +428,7 @@ class TimespanStats(object):
     """
 
     def __init__(self, statsDb, timespan, unitTypeDict = None):
-        """Initialize an instance of TimespanStats.
+        """Initialize an instance of TimeSpanStats.
         
         statsDb: An instance of StatsReadonlyDb or a subclass.
         
@@ -471,9 +471,9 @@ class TimespanStats(object):
             return StatsTypeHelper(self, attrib)
         
 def _seqGenerator(statsDb, timespan, unitTypeDict, genSpanFunc):
-    """Generator function that returns TimespanStats for the appropriate timespans"""
+    """Generator function that returns TimeSpanStats for the appropriate timespans"""
     for span in genSpanFunc(timespan.start, timespan.stop):
-        yield TimespanStats(statsDb, span, unitTypeDict)
+        yield TimeSpanStats(statsDb, span, unitTypeDict)
         
 #===============================================================================
 #                    Class StatsTypeHelper
@@ -485,7 +485,7 @@ class StatsTypeHelper(object):
     def __init__(self, timespanStats, statsType):
         """ Initialize an instance of StatsTypeHelper
         
-        timespanStats: An instance of TimespanStats
+        timespanStats: An instance of TimeSpanStats
         
         statsType: A string with the stats type (e.g., 'outTemp') over which aggregation
         is to be done."""
@@ -1115,7 +1115,7 @@ if __name__ == '__main__':
         avg = statsDb.getAggregate(timespan, 'outTemp', 'avg')
         print avg
 
-        ts = TimespanStats(statsDb, timespan)
+        ts = TimeSpanStats(statsDb, timespan)
         print ts.outTemp.min, weeutil.weeutil.timestamp_to_string(ts.outTemp.mintime)
         for day in ts.days:
             print weeutil.weeutil.timestamp_to_string(day.timespan.start), day.outTemp.min, day.outTemp.max

@@ -155,6 +155,11 @@ Version 1.6</h1>
 </ol>
 <p>For information on customizing <span class="code">weewx</span>, see the separate 
 document <a href="customizing.htm"><em>Customizing </em><em><span class="code">weewx</span></em></a>.</p>
+<p>For instructions on upgrading from various versions, see the separate 
+document <em><a href="upgrading.htm">Upgrading <span class="code">weewx</span></a></em>.</p>
+<p>For instructions on porting to the SheevaPlug, see the separate document <em>
+<a href="sheeva.htm">Notes on porting <span class="code">weewx</span> to the 
+SheevaPlug</a></em>.</p>
 <h1>1. <a name="Copyright">Copyright</a></h1>
 <p>(c) 2009, 2010 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;</p>
 <p>This program is free software: you can redistribute it and/or modify it under 
@@ -597,7 +602,7 @@ up. Default is 5 seconds.</p>
 to change it, this value should be left at the default, as it is long enough for 
 the station to offer new data, but not so long as to go into a new loop packet (which 
 arrive every 2 seconds). Default is 1.2 seconds.</p>
-<h4 class="config_option">max_retries</h4>
+<h4 class="config_option">max_tries</h4>
 <p>How many times to try again before giving up. Default is 4.</p>
 <h4 class="config_option">max_drift</h4>
 <p>The maximum amount of drift to tolerate, in seconds, in the VantagePro&#39;s onboard 

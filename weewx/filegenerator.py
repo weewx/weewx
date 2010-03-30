@@ -44,13 +44,15 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                                        self.config_dict['Archive']['archive_file'])
         archive = weewx.archive.Archive(archiveFilename)
     
-        stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-        start_ts   = archive.firstGoodStamp()
-        currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
+        self.stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
+        self.start_ts   = archive.firstGoodStamp()
+        currentRec = archive.getRecord(self.stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
 
-        self.generateSummaryBy('SummaryByMonth', start_ts, stop_ts)
-        self.generateSummaryBy('SummaryByYear',  start_ts, stop_ts)
-        self.generateToDate(currentRec, stop_ts)
+        del archive
+
+        self.generateSummaryBy('SummaryByMonth', self.start_ts, self.stop_ts)
+        self.generateSummaryBy('SummaryByYear',  self.start_ts, self.stop_ts)
+        self.generateToDate(currentRec, self.stop_ts)
     
 
     def initStation(self):
@@ -203,7 +205,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         (_yr, _mo) = timespan_start_tt[0:2]
 
         # Get the stats for this timespan from the database:
-        stats = weewx.stats.TimespanStats(self.statsdb, timespan, self.unitTypeDict)
+        stats = weewx.stats.TimeSpanStats(self.statsdb, timespan, self.unitTypeDict)
         
         search_dict = {'station'   : self.station,
                        'year_name' : _yr}
@@ -240,11 +242,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Assemble the dictionary that will be given to the template engine:
         stats = {}
         stats['current']  = currentRec
-        stats['day']      = weewx.stats.TimespanStats(self.statsdb, daySpan,      self.unitTypeDict)
-        stats['week']     = weewx.stats.TimespanStats(self.statsdb, weekSpan,     self.unitTypeDict)
-        stats['month']    = weewx.stats.TimespanStats(self.statsdb, monthSpan,    self.unitTypeDict)
-        stats['year']     = weewx.stats.TimespanStats(self.statsdb, yearSpan,     self.unitTypeDict)
-        stats['rainyear'] = weewx.stats.TimespanStats(self.statsdb, rainYearSpan, self.unitTypeDict)
+        stats['day']      = weewx.stats.TimeSpanStats(self.statsdb, daySpan,      self.unitTypeDict)
+        stats['week']     = weewx.stats.TimeSpanStats(self.statsdb, weekSpan,     self.unitTypeDict)
+        stats['month']    = weewx.stats.TimeSpanStats(self.statsdb, monthSpan,    self.unitTypeDict)
+        stats['year']     = weewx.stats.TimeSpanStats(self.statsdb, yearSpan,     self.unitTypeDict)
+        stats['rainyear'] = weewx.stats.TimeSpanStats(self.statsdb, rainYearSpan, self.unitTypeDict)
 
         # Get a formatted view into the statistical information.
         statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)

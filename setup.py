@@ -35,11 +35,15 @@
  3. It sets the option ['Station']['WEEWX_ROOT'] in weewx.conf to reflect
     the actual installation directory (as set in setup.cfg or specified
     in the command line to setup.py install)
+    
+ 4. In a similar manner, it sets WEEWX_ROOT in the daemon startup script.
 
- 4. It backups up any pre-existing skin subdirectory
+ 5. It backs up any pre-existing skin subdirectory
+ 
+ 6. It backs up any pre-existing bin subdirectory.
 """
 
-from distutils.core import setup, Command
+from distutils.core import setup
 from distutils.command.install_data import install_data
 from distutils.command.install_lib  import install_lib
 from distutils.command.sdist import sdist
@@ -105,9 +109,6 @@ class My_install_data(install_data):
             skin_backupdir = backup(skin_dir)
             print "Backed up skins subdirectory to %s" % skin_backupdir
             
-        # Run the superclass's run():
-        install_data.run(self)
-        
         # If the file #upstream.last exists, delete it, as it is no longer used.
         try:
             os.remove(os.path.join(self.install_dir, 'public_html/#upstream.last'))
@@ -117,10 +118,19 @@ class My_install_data(install_data):
         # If the file $WEEWX_ROOT/readme.htm exists, delete it. It's
         # the old readme (since replaced with docs/readme.htm)
         try:
-            os.remove('readme.htm')
+            os.remove(os.path.join(self.install_dir, 'readme.htm'))
+        except:
+            pass
+        
+        # Clean up after a bad install from earlier versions of setup.py:
+        try:
+            os.remove(os.path.join(self.install_dir, 'start_script/weewx'))
         except:
             pass
 
+        # Run the superclass's run():
+        install_data.run(self)
+        
     def massageConfigFile(self, f, install_dir, **kwargs):
         """Merges any old config file into the new one, and sets WEEWX_ROOT
         
@@ -225,13 +235,15 @@ class My_sdist(sdist):
             # have any private data in it.
             config = configobj.ConfigObj(f)
 
-            if config.has_key('FTP') and config['FTP'].has_key('password'):
+            if config.has_key('Reports') and config['Reports'].has_key('FTP') and config['Reports']['FTP'].has_key('password'):
                 sys.stderr.write("\n*** FTP password found in configuration file. Aborting ***\n\n")
                 exit()
 
             if config.has_key('Wunderground') and config['Wunderground'].has_key('password'):
                 sys.stderr.write("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
                 exit()
+
+        # Pass on to my superclass:
         return sdist.copy_file(self, f, install_dir, **kwargs)
 
 setup(name='weewx',
@@ -256,7 +268,8 @@ setup(name='weewx',
                      ('skins/Standard',             ['skins/Standard/index.html.tmpl', 'skins/Standard/month.html.tmpl',
                                                      'skins/Standard/skin.conf', 'skins/Standard/week.html.tmpl',
                                                      'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 
-                     ('start_scripts',              ['start_scripts/Debian/weewx', 'start_scripts/SuSE/weewx'])],
+                     ('start_scripts/Debian',       ['start_scripts/Debian/weewx'])
+                     ('start_script/SuSE',          ['start_scripts/SuSE/weewx'])],
       requires    = ['configobj(>=4.5)', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "install_lib"  : My_install_lib,

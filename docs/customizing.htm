@@ -479,91 +479,101 @@ generator, or write your own. </p>
 we have seen how you can change a template and make use of the various tags available 
 such as <span class="code">$day.outTemp.max</span> for the maximum outside temperature 
 for the day. But, what if you want to introduce some new data for which no tag is 
-available? For example, suppose you want to use Google analytics, and you want to 
-make reference to the Google Tracker ID? You could modify a template and hardware 
-it in, but then you&#39;d have to do that for every template. What you&#39;d really like 
-to do is be able to obtain it through a tag:</p>
-<pre class="tty">... (Google Analytics boilerplate)
-&lt;script type=&quot;text/javascript&quot;&gt;
-try {
-  var pageTracker = _gat._getTracker(<span class="highlight">$googleID</span>);
-  pageTracker._trackPageview();
-} catch(err) {}
-&lt;/script&gt;</pre>
-<pre class="tty">... (More Google Analytics boilerplate)</pre>
-<p>Here, the Google ID has been parameterized as a tag, <span class="code">$googleID</span>. 
-But, where does this value come from? How do I make it available inside my templates?</p>
+available? </p>
+<p>If you wish to introduce a static tag, that is, one that will not change with 
+time (such as a Google analytics Tracker ID or your name), then this is very 
+easy: simply put it in section <span class="code"><a href="#[Extras]">[Extras]</a></span> 
+in the skin configuration file. More information on how to do this can be found 
+there.</p>
+<p>But, what if you wish to introduce a more dynamic tag, one that requires some 
+calculation? Simply putting it in the <span class="code">[Extras]</span> section 
+won&#39;t do, because then it cannot change. </p>
 <p>The answer is to extend the default file generator<span class="code"> weewx.filegenerator.FileGenerator</span> 
 by subclassing, then override the function that returns the <em>search list</em>. 
 The search list is a list of dictionaries that the template engine searches through, 
 trying all keys in each dictionary, looking for a match for your tag. For example, 
 for the &quot;ToDate&quot; generator, you would override function <span class="code">getToDateSearchList()</span>, 
-and adding to the list of dictionaries a small dictionary with your tag as the key. 
-Here&#39;s an example: </p>
-<p>File <span class="code">mygenerator.py</span>:</p>
+and add a small dictionary with your tag as the key to the list returned by the 
+superclass.</p>
+<p>Let&#39;s look at an example. The stock <span class="code">weewx</span> reports 
+offers statistical summaries by day, week, month, and year. Suppose we would like to add 
+one more: all-time statistics. This would allow us to display statistics such as 
+the all-time high or low temperature seen at your station. </p>
+<p>This example is included in the distribution as <span class="code">examples/mygenerator.py</span>:</p>
 <pre>from weewx.filegenerator import FileGenerator
+from weewx.stats import TimeSpanStats
+from weeutil.weeutil import TimeSpan
 
-class MyFileGenerator(FileGenerator):
-    
-    def getToDateSearchList(self, currentRec, stop_ts):
+class MyFileGenerator(FileGenerator):                    # 1
 
-        # Call the superclass&#39;s version:
-        search_list = FileGenerator.getToDateSearchList(currentRec, stop_ts)
-    
-        <span class="highlight">search_list += [ {&#39;googleID&#39; : &#39;UA-19281126-1&#39;} ]</span>
-        
-        return search_list</pre>
-<p>Here, we first get the search list from the superclass, <span class="code">FileGenerator</span>, 
-and then (shown highlighted) add to it our simple dictionary with a single entry: 
-a key of &quot;<span class="code">googleID</span>&quot; and value of &quot;<span class="code">UA-19281126-1</span>&quot;.
-</p>
-<p>Of course, this approach is not entirely satisfactory because you&#39;ve hardwired 
-in the Google ID tag in your Python code. It would be much more desirable to get 
-it from the configuration file. One way to do this is to add a section to the weewx 
-configuration file with all your special options, including the Google tag:</p>
-<p>File <span class="code">weewx.conf</span>:</p>
-<pre>...</pre>
-<pre>[MyOptions]</pre>
-<pre>  googleID = UA-19281126-1</pre>
-<pre>  myName = Mary</pre>
-<pre>  [[Video]]</pre>
-<pre>    video_capture = http://www.acme.com/videoimage.jpg</pre>
-<pre>...</pre>
-<p>The code for <span class="code">mygenerator.py</span> gets modified slightly 
-to inject the whole configuration section into the search list (shown highlighted 
-below):</p>
-<pre>from weewx.filegenerator import FileGenerator
+    def getToDateSearchList(self, currentRec, stop_ts):  # 2
 
-class MyFileGenerator(FileGenerator):
-    
-    def getToDateSearchList(self, currentRec, stop_ts):
+        # Get a TimeSpan object that represents all time up to the stop time:
+        all_time = TimeSpan(self.start_ts, stop_ts)      # 3
 
-        # Call the superclass&#39;s version:
-        search_list = FileGenerator.getToDateSearchList(currentRec, stop_ts)
-    
-        search_list += [ self.config_dict[&#39;MyOptions&#39;] ]
-        
-        return search_list</pre>
-<p>With this approach, you can now use all sorts of custom tags (highlighted) in 
+        # Get a TimeSpanStats object :
+        all_stats = TimeSpanStats(self.statsdb,
+                                  all_time,
+                                  self.unitTypeDict)     # 4
+
+        # Get the superclass&#39;s search list: 
+        search_list = FileGenerator.getToDateSearchList(self, currentRec, stop_ts) #5
+
+        # Now tack on my addition as a small dictionary with key &#39;alltime&#39;:
+        search_list += [ {&#39;alltime&#39; : all_stats} ]       # 6
+
+        return search_list
+
+</pre>
+<p>Going through the example, line by line:</p>
+<ol>
+	<li>Subclass from class <span class="code">FileGenerator</span>. The new 
+	class will be caled <span class="code">MyFileGenerator</span></li>
+	<li>Override member function <span class="code">getToDateSearchList()</span>. 
+	The parameters are <span class="code">self</span> (Python&#39;s way of 
+	indicating the instance we are working with), <span class="code">currentRec</span> 
+	(a dictionary with the current conditions), and <span class="code">stop_ts</span> 
+	(the ending time for the &quot;to date&quot; summary, in Unix epoch time).</li>
+	<li>Attribute <span class="code">self.start_ts</span> is available as the 
+	earliest time seen in the main archive database. The class <span class="code">TimeSpan</span> 
+	is a utility class that represents an interval of time. Here, we are 
+	creating an instance of <span class="code">TimeSpan</span> that represents 
+	all time preceeding <span class="code">stop_ts</span>.</li>
+	<li>Class <span class="code">TimeSpanStats</span> represents a statistical calculation that can be 
+	done against a database. It takes 3 parameters. The first, 
+	<span class="code">self.statsdb</span> is 
+	the statistical database the calculation is to be run against; the second is 
+	the timespan over which the calculation is to be done; and the third is the 
+	units the results are to be returned in. </li>
+	<li>Get the search list from the superclass.</li>
+	<li>Tack on our addition and return the results. The search list will now 
+	consist of a list of dictionaries, including a small one we added on the end 
+	that has a single key, &#39;<span class="code">alltime</span>&#39;, with value an instance of 
+	<span class="code">TimeSpanStats</span>.</li>
+</ol>
+<p>With this approach, you can now include &quot;all time&quot; statistics in 
 your HTML templates:</p>
 <pre>...</pre>
-<pre>&lt;img src=&quot;<span class="highlight">$Video.video_capture</span>&quot; alt=&quot;Image of the house&quot; /&gt;</pre>
-<pre> </pre>
-<pre>&lt;p&gt;The operator&#39;s name is <span class="highlight">$myName</span>.&lt;/p&gt;</pre>
-<pre> </pre>
-<pre>... (Google Analytics boilerplate)
-&lt;script type=&quot;text/javascript&quot;&gt;
-try {
-  var pageTracker = _gat._getTracker(<span class="highlight">$googleID</span>);
-  pageTracker._trackPageview();
-} catch(err) {}
-&lt;/script&gt;</pre>
-<pre>... (More Google Analytics boilerplate)</pre>
+<pre>...
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td&gt;Maximum temperature to date: &lt;/td&gt;
+    &lt;td&gt;$alltime.outTemp.max&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;Minimum temperature to date: &lt;/td&gt;
+    &lt;td&gt;$alltime.outTemp.min
+  &lt;/tr&gt;
+  ... (more table entries)</pre>
 <pre class="tty"> </pre>
 <p>One additonal step is required: to tell the report service to run your generator 
 instead of the default generator. Modify option <span class="code">generator_list</span> 
 in the skin configuration file <span class="code">skin.conf</span> to read:</p>
-<pre>generator_list = mygenerator.MyFileGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator</pre>
+<pre>generator_list = examples.mygenerator.MyFileGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator</pre>
+<p>NB: If you create a custom generator some place other than where
+<span class="code">weewxd.py</span> resides, you may have to specify its 
+location in the environment variable <span class="code">PYTHON_PATH</span>:</p>
+<pre>export PYTHON_PATH=/home/me/secret_location</pre>
 <h1>3. <a name="Reference:_The_Standard_skin_configuration_file">Reference: The Standard 
 skin configuration file</a></h1>
 <p>This section is a reference to the options appearing in the Standard skin configuration 
@@ -577,40 +587,52 @@ the ones you are likely to have to customize for your station, are shown in
 <p class="config_option">generator_list</p>
 <p>This option controls which generators get run for this skin. It is a comma separated 
 list. The generators will be run in this order.</p>
-<h2 class="config_section">[[Extras]]</h2>
-<p>This section is available to you to add any tags that you might want to be available 
+<h2 class="config_section"><a name="[Extras]">[Extras]</a></h2>
+<p>This section is available to you to add any static tags that you might want to be available 
 in the templates. As an example, the stock <span class="code">skin.conf</span> file 
 includes option <span class="code">radar_url</span>, which is available as tag
 <span class="code">$Extras.radar_url</span>. If you take a look at the template
 <span class="code">index.html.tmpl</span> you will see an example of testing for 
-this tag (search the file for the string &#39;<span class="code">radar</span>&#39; to find 
+this tag (search the file for the string &#39;<span class="code">radar_url</span>&#39; to find 
 it).</p>
 <p class="config_option">radar_url</p>
 <p>If set, the NOAA radar image will be displayed. If commented out, no image will 
 be displayed.</p>
+<h4>Extending <span class="code">[Extras]</span></h4>
+<p>Other tags can be added in a similar manner, including subsections. For 
+example, say you have added a video camera and you would like to add a still 
+image with a hyperlink to a page with the video. You want all of these options 
+to be neatly contained in a subsection. </p>
+<pre>[Extras]</pre>
+<pre>&nbsp; [[video]]</pre>
+<pre>&nbsp;   still = video_capture.jpg</pre>
+<pre>&nbsp;   hyperlink = <a href="http://www.eatatjoes.com/video.html">http://www.eatatjoes.com/video.html</a></pre>
+<p>Then in your template you could refer to these as:</p>
+<pre>&lt;a href=&quot;$Extras.video.hyperlink&quot;&gt;
+  &lt;img src=&quot;$Extras.video.still&quot; alt=&quot;Video capture&quot;/&gt;
+&lt;/a&gt;</pre>
 <h2 class="config_section">[Units]</h2>
 <p>This section deals with Units and their formatting. </p>
 <h3 class="config_section">[[Groups]]</h3>
 <p>This subsection lists all the <em>Unit Groups</em> and specifies which unit system 
 is to be used for each one of them. </p>
-<p>As As there are many different observational measurement types (such as &#39;<span class="code">outTemp</span>&#39;, 
+<p>As there are many different observational measurement types (such as &#39;<span class="code">outTemp</span>&#39;, 
 &#39;<span class="code">barometer</span>&#39;, etc.) used in <span class="code">weewx</span> 
 (more than 50 at last count), it would be tedious, not to say possibly inconsistent, 
 to specify a different measurement system for each one of them. At the other extreme, 
 requiring all of them to be &quot;U.S. Customary&quot; or &quot;Metric&quot; seems overly restrictive.
 <span class="code">Weewx</span> has taken a middle route and divided all the different 
-observation types into 12 different &quot;unit groups.&quot; A unit group is something like 
+observation types into 12 different &quot;<em>unit groups</em>.&quot; A unit group is something like 
 &quot;<span class="code">group_temperature</span>.&quot; It represents the measurement system 
 to be used by all observation types that are measured in temperature, such as inside 
 temperature (type &#39;<span class="code">inTemp</span>&#39;), outside temperature (&#39;<span class="code">outTemp</span>&#39;), 
 dewpoint (&#39;<span class="code">dewpoint</span>&#39;), wind chill (&#39;<span class="code">windchill</span>&#39;), 
 and so on. If you decide that you want unit group <span class="code">group_temperature</span> 
-to be measured in &quot;<span class="code">degrees_C</span>&quot; then you are saying <em>
+to be measured in &quot;<span class="code">degree_C</span>&quot; then you are saying <em>
 all</em> members of its group will be reported in degrees Celsius.</p>
 <p>Note that the unit system is always specified in the singular. That is, specify 
-&quot;<span class="code">foot</span>&quot; or &quot;<span class="code">inch_per_hour</span>&quot;, not 
-&quot;<span class="code">feet</span>&quot; or &quot;<span class="code">inches_per_hour</span>.&quot; 
-See the Appendix <em><a href="#Units">Units</a></em> for more information, including a concise summary of the groups, 
+&quot;<span class="code">degree_C</span>&quot; or &quot;<span class="code">foot</span>&quot;, not 
+&quot;<span class="code">degrees_C</span>&quot; or &quot;<span class="code">feet</span>&quot;. See the Appendix <em><a href="#Units">Units</a></em> for more information, including a concise summary of the groups, 
 their members, and which options can be used for each group.</p>
 <h4 class="config_important"><a name="group_altitude">group_altitude</a></h4>
 <p>Which measurement unit to be used for altitude. Possible options are &#39;<span class="code">foot</span>&#39; 
@@ -666,7 +688,7 @@ type. For example, the options</p>
 <pre>degree_F = °F</pre>
 <pre>inch     = &#39; in&#39;</pre>
 <p>would cause all temperatures to have unit labels &#39;<span class="code">°F</span>&#39; 
-and all precipitation to have labels&nbsp; &#39; in&#39;. If any special symbols are to 
+and all precipitation to have labels&nbsp; &#39;<span class="code"> in</span>&#39;. If any special symbols are to 
 be used (such as the degree sign above) they should be encoded in UTF-8. This is 
 generally what most text editors use if you cut-and-paste from a character map. 
 Labels used in plot images will be converted to Latin-1 first (this is all the Python 
@@ -707,8 +729,8 @@ produced from which template.</p>
 <p>Customization of file generation consists of playing with the various options 
 offered below and, failing that, modifying the template files that come with the 
 distribution.</p>
-<p>EacEach template file is named something like <span class="code"><em>D/F.E.tmpl</em></span>, 
-where <span class="code">D</span> is the subdirectory the template sits in&nbsp; 
+<p>Each template file is named something like <span class="code"><em>D/F.E.tmpl</em></span>, 
+where <span class="code">D</span> is the subdirectory the template sits in 
 and will also be the subdirectory the results will be put in, and
 <span class="code">F.E</span> is the generated file name. So, given a template file 
 with name <span class="code">Acme/index.html.tmpl</span>, the results will be put 
@@ -719,7 +741,9 @@ contains three different kinds of generated output:</p>
 	<li>Summary by month. In addition to the naming rules above, if the template 
 	file has the letters <span class="code">YYYY</span> and <span class="code">MM</span> 
 	in its name, these will be substituted for the year and month, respectively. 
-	The default distribution has been set up to produce NOAA monthly summaries, 
+	So, a template with the name <span class="code">summary-YYYY-MM.html.tmpl</span> 
+	would have name <span class="code">summary-2010-03.html</span> for the month 
+	of March, 2010. The default distribution has been set up to produce NOAA monthly summaries, 
 	one for each month, as a simple text file (no HTML). </li>
 	<li>Summary by year.&nbsp; In addition to the naming rules above, if the template 
 	file has the letters <span class="code">YYYY</span> in its name, the year will 
@@ -727,7 +751,7 @@ contains three different kinds of generated output:</p>
 	summaries, one for each year, as a simple text file (no HTML). </li>
 	<li>Summary &quot;To Date&quot;. The default distribution has been set up to produce reports 
 	for the day, week, month, and year-to-date observations. These four files are 
-	all HTML files. The first, the daily summary (output file index.html), includes 
+	all HTML files. The first, the daily summary (output file i<span class="code">ndex.html</span>), includes 
 	a drop-down list that allows the NOAA month and yearly summaries to be displayed.</li>
 </ol>
 <h3>General</h3>
@@ -753,18 +777,60 @@ are 3 possible choices:</p>
 		<td>Non 7-bit characters will be ignoredd&gt; </td>
 	</tr>
 </table>
-<p>By By default, the encoding <span class="code">html_entities</span> is used for 
+<p>By default, the encoding <span class="code">html_entities</span> is used for 
 HTML files, <span class="code">strict_ascii</span> for the NOAA template files.
 </p>
 <h3 class="config_section">[[SummaryByMonth]]</h3>
-<p>This section controls how summaries-by-month are generated. The default configuration 
-generates NOAA-by-month summaries. </p>
+<p>This section controls which summaries-by-month are generated. For each such 
+summary, it should have its own sub-subsection, with option <span class="code">
+template</span> listing the template to be used. The default configuration 
+generates NOAA-by-month summaries and is summarized below as an example. 
+Additional &quot;by month&quot; summaries can be added easily by following the 
+same pattern.</p>
+<h4 class="config_section">[[[NOAA_month]]]</h4>
+<p class="config_option">encoding</p>
+<p>Set to <span class="code">strict_ascii</span> for the NOAA monthly summary.</p>
+<p class="config_option">template</p>
+<p>This option is set to the source template for the NOAA monthly summary,
+<span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span>.</p>
 <h3 class="config_section">[[SummaryByYear]]</h3>
-<p>This section controls how summaries-by-year are generated. The default configuration 
-generates NOAA-by-year summaries. </p>
+<p>This section controls which summaries-by-year are generated. For each such 
+summary, it should have its own sub-subsection, with option <span class="code">
+template</span> listing the template to be used. The default configuration 
+generates NOAA-by-year summaries and is summarized below as an example. 
+Additional &quot;by year&quot; summaries can be added easily by following the pattern.</p>
+<h4 class="config_section">[[[NOAA_year]]]</h4>
+<p class="config_option">encoding</p>
+<p>Set to <span class="code">strict_ascii</span> for the NOAA year summary.</p>
+<p class="config_option">template</p>
+<p>This option is set to the source template for the NOAA yearl summary,
+<span class="code">NOAA/NOAA-YYYY.txt.tmpl</span>.</p>
 <h3 class="config_section">[[ToDate]]</h3>
-<p>This section controls how observations-to-date are generated. The default configuration 
-generates four files, one for day, week, month, and year-to-date.</p>
+<p>This section controls which observations-to-date are generated. The default configuration 
+generates four files: one for day, week, month, and year. Although the 
+sub-subsections below have names such as &#39;week&#39; or &#39;month&#39;, this is not used in 
+their generation.&nbsp; Output is set by the template <em>content</em>, not the 
+name of the sub-subsection &mdash; the names below could as easily have been&#39;Fred&#39;, 
+&#39;Mary&#39;, &#39;Peter&#39;, and &#39;George&#39; and had the same output.</p>
+<p>Additional observations-to-date pages can be created easily by adding a new 
+sub-subsection and giving it a unique name (&quot;Jill&quot;?), then giving the path to 
+its template as option <span class="code">template</span>. </p>
+<h4 class="config_section">[[[day]]]</h4>
+<p class="config_option">template</p>
+<p>Set to <span class="code">index.html.tmpl</span>, which contains the template 
+for the day summary.</p>
+<h4 class="config_section">[[[week]]]</h4>
+<p class="config_option">template</p>
+<p>Set to <span class="code">week.html.tmpl</span>, which contains the template 
+for the week summary.</p>
+<h4 class="config_section">[[[month]]]</h4>
+<p class="config_option">template</p>
+<p>Set to <span class="code">month.html.tmpl</span>, which contains the template 
+for the month summary.</p>
+<h4 class="config_section">[[[year]]]</h4>
+<p class="config_option">template</p>
+<p>Set to <span class="code">year.html.tmpl</span>, which contains the template 
+for the year summary.</p>
 <h2 class="config_section">[CopyGenerator]</h2>
 <p>This section is used by generator <span class="code">weewx.reportengine.CopyGenerator</span> 
 and controls which files are to be copied over from the skin subdirectory to the 
