@@ -182,35 +182,22 @@ def getLabel(config_dict, obs_type):
     label = config_dict['Units']['Labels'][getUnitType(config_dict, obs_type)]
     return label
     
-def getHTMLLabel(config_dict, obs_type):
-    """Extract an HTML unit label (e.g., "&deg;F") for a specific observation type"""
-#    return weeutil.weeutil.utf8_to_html(getLabel(config_dict, obs_type))
-    return getLabel(config_dict, obs_type)
-    
-def getStringFormatDict(config_dict):
+def getUnitStringFormatDict(config_dict):
     """Return a dictionary of suitable string formats for all observation types."""
     stringFormatDict = {}
     for obs_type in unitGroups:
         stringFormatDict[obs_type] = getStringFormat(config_dict, obs_type)
     return stringFormatDict
 
-def getLabelDict(config_dict):
+def getUnitLabelDict(config_dict):
     """Return a dictionary of suitable generic unit labels for all observation types."""
     labelDict = {}
     for obs_type in unitGroups:
         labelDict[obs_type] = getLabel(config_dict, obs_type)
     return labelDict
 
-def getHTMLLabelDict(config_dict):
-    """Return a dictionary of suitable HTML unit labels for all observation types."""
-    htmlLabelDict = {}
-    for obs_type in unitGroups:
-        htmlLabelDict[obs_type] = getHTMLLabel(config_dict, obs_type)
-    return htmlLabelDict
-            
 if __name__ == '__main__':
     
     assert(convert('degrees_F', 'degrees_C', 32.0) == 0.0)
     assert(convert('degrees_F', 'degrees_C', [32.0, 212.0, -40.0]) == [0.0, 100.0, -40.0])
-    assert()
     

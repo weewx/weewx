@@ -73,7 +73,9 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
     def initUnits(self):
         
-        self.unitTypeDict = weewx.units.getUnitTypeDict(self.skin_dict)
+        self.unitTypeDict         = weewx.units.getUnitTypeDict(self.skin_dict)
+        self.unitStringFormatDict = weewx.units.getUnitStringFormatDict(self.skin_dict)
+        self.unitLabelDict        = weewx.units.getUnitLabelDict(self.skin_dict)
         
     def generateSummaryBy(self, by_time, start_ts, stop_ts):
         """This entry point is used for "SummaryBy" reports, such as NOAA monthly
@@ -164,8 +166,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         t1 = time.time()
 
         # Get an appropriate formatter:
-        self.formatter =  weewx.formatter.Formatter(weewx.units.getStringFormatDict(self.skin_dict),
-                                                    weewx.units.getHTMLLabelDict(self.skin_dict),
+        self.formatter =  weewx.formatter.Formatter(self.unitStringFormatDict,
+                                                    self.unitLabelDict,
                                                     self.skin_dict['Labels']['Time'])
 
         self.initAlmanac(stop_ts)
@@ -207,8 +209,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Get the stats for this timespan from the database:
         stats = weewx.stats.TimeSpanStats(self.statsdb, timespan, self.unitTypeDict)
         
-        search_dict = {'station'   : self.station,
-                       'year_name' : _yr}
+        search_dict = {'station'     : self.station,
+                       'unit_type'   : self.unitTypeDict,
+                       'unit_label'  : self.unitLabelDict,
+                       'unit_format' : self.unitStringFormatDict,
+                       'year_name'   : _yr}
         
         if by_time == 'SummaryByMonth':
             search_dict['month'] = stats
@@ -251,8 +256,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Get a formatted view into the statistical information.
         statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
         
-        searchList = [{'station'         : self.station,
-                       'almanac'         : self.almanac},
+        searchList = [{'station'     : self.station,
+                       'almanac'     : self.almanac,
+                       'unit_type'   : self.unitTypeDict,
+                       'unit_label'  : self.unitLabelDict,
+                       'unit_format' : self.unitStringFormatDict},
                        self.outputted_dict,
                        statsFormatter]
         

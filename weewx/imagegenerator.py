@@ -50,7 +50,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         self.weewx_root   = self.config_dict['Station']['WEEWX_ROOT']
         self.image_dict   = self.skin_dict['ImageGenerator']
         self.title_dict   = self.skin_dict['Labels']['Generic']
-        self.label_dict   = weewx.units.getLabelDict(self.skin_dict)
+        self.label_dict   = weewx.units.getUnitLabelDict(self.skin_dict)
         self.unitTypeDict = weewx.units.getUnitTypeDict(self.skin_dict)
         
     def genImages(self, archive, time_ts):
