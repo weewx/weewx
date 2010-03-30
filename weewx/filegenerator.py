@@ -324,7 +324,7 @@ class html_entities(Cheetah.Filters.Filter):
         elif isinstance(val, str):
             filtered = val.decode('utf-8').encode('ascii', 'xmlcharrefreplace')
         else:
-            filtered = str(val)
+            filtered = self.filter(str(val))
         return filtered
 
 class strict_ascii(Cheetah.Filters.Filter):
@@ -338,7 +338,7 @@ class strict_ascii(Cheetah.Filters.Filter):
         elif isinstance(val, str):
             filtered = val.decode('utf-8').encode('ascii', 'ignore')
         else:
-            filtered = str(val)
+            filtered = self.filter(str(val))
         return filtered
 
     

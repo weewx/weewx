@@ -28,6 +28,10 @@ day, week, month, and year HTML files are encoded using HTML entities; the NOAA
 reports encoded using 'strict ascii.' Optionally, reports can be encoded using
 UTF-8.
 
+All tags in the templates can now have an optional ending 'raw' to return the
+raw underlying data (no string formatting or label applied), or 'formatted'
+to return a version with string formatting applied (but no label).
+
 Now offer a section 'Extras' in the skin configuration file for including tags
 added by the user. As an example, the tag radar_url has been moved into here.
  

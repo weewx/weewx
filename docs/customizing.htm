@@ -291,10 +291,10 @@ reports</a></h1>
 <p>This section discusses the two general strategies for customizing reports: by 
 changing options in one or more configuration file, or by changing the template 
 files. The former is generally easier, but occasionally the latter is necessary.</p>
-<h2>By changing options</h2>
+<h2>Changing options</h2>
 <p>Changing an option means going into either weewx.conf or the skin.conf that comes 
 with the standard distribution and changing a value.</p>
-<h3>By changing options in <span class="code">skin.conf</span></h3>
+<h3>Changing options in <span class="code">skin.conf</span></h3>
 <p>With this approach, the user edits the skin configuration file for the standard 
 skin that comes with weewx, located in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>, 
 using a text editor. For example, suppose you wish to use metric units in the presentation 
@@ -332,7 +332,8 @@ in section [Labels][[Generic]] from </p>
 <pre>      inTemp  = Barn Temperature</pre>
 <pre>      outTemp = Outside Temperature</pre>
 <pre>      ...</pre>
-<h3>By overriding options</h3>
+<h3>Overriding options in <span class="code">skin.conf</span> from
+<span class="code">weewx.conf</span></h3>
 <p>This approach is very similar, except that instead of changing the skin configuration, 
 you override its options by editing the main configuration file,
 <span class="code">weewx.conf</span>. The advantage of this approach is that you 
@@ -393,7 +394,7 @@ the first report from <span class="code">StandardReport </span>to
 <span class="code">MetricReport</span>, just like the first, except it puts its 
 results in a different spot and uses different units. Both use the same skin, the
 <span class="code">Standard </span>skin.</p>
-<h2>By <a name="Customizing_templates">customizing templates</a></h2>
+<h2><a name="Customizing_templates">Customizing templates</a></h2>
 <p>If you cannot achieve the results you need by changing a configuration option, 
 you may have to modify the templates that come with <span class="code">weewx</span>, 
 or write your own. </p>
@@ -429,13 +430,15 @@ is specified in section <span class="code"><a href="#Units_StringFormats">[Units
 The unit label <span class="code">°F</span> is from section <span class="code">
 <a href="#[[Labels]]">[Units][[Labels]]</a></span>, while the time format is from
 <span class="code"><a href="#Labels_Time">[Labels][[Time]]</a></span>.</p>
-<p>The &quot;dot&quot; code has up to three parts. </p>
+<h3>The dot code</h3>
+<p>The &quot;dot&quot; code has up to four parts:</p>
+<pre>$<em>period</em>.<em>stattype</em>.<em>aggregation</em>.[<em>optional_formatting</em>]</pre>
 <ol>
-	<li>The first part is the time period, and can be one of <span class="code">
+	<li>The first part is the <em>period</em>, and can be one of <span class="code">
 	current</span>, <span class="code">day</span>, <span class="code">week</span>,
 	<span class="code">month</span>, <span class="code">year</span>, or
 	<span class="code">rainyear</span>.</li>
-	<li>The second part is the &quot;statistical type&quot;. This is something like &#39;<span class="code">outTemp</span>&#39;, 
+	<li>The second part is the <em>stattype</em>. This is something like &#39;<span class="code">outTemp</span>&#39;, 
 	&#39;<span class="code">rain</span>&#39;, &#39;<span class="code">wind</span>&#39;, etc. The 
 	statistical types are generally those that appear in the SQL databases with 
 	three exceptions. First, type &#39;<span class="code">wind</span>&#39; is a special 
@@ -448,13 +451,114 @@ The unit label <span class="code">°F</span> is from section <span class="code">
 	which are synthesized from average outside temperature and do not appear directly 
 	in the database. See <em><a href="#Types">Appendix A: Types</a></em> for a table 
 	of statistical types.</li>
-	<li>The last position is the aggregation type, available for any time period 
-	except for &#39;<span class="code">current</span>&#39;. The table
+	<li>For types other than &#39;<span class="code">current</span>&#39; the 
+	third position is the <em>aggregation type</em>. Examples are &quot;<span class="code">min</span>&quot;, 
+	&quot;<span class="code">mintime</span>&quot;, or &quot;<span class="code">sum</span>&quot;. The table
 	<a href="#Statistical_aggregations">Appendix C: Statistical aggregations</a> 
-	shows what aggregation types are available for which types. </li>
+	shows what aggregation types are available for which types. This position is 
+	not valid for period &#39;<span class="code">current</span>&#39;.</li>
+	<li>The last position (position &quot;3&quot; for period &quot;<span class="code">current</span>&quot;, 
+	position &quot;4&quot; for everything else) controls the <em>optional_formatting</em> of the results. If 
+	left out, the results will be formatted as in the example above, that is 
+	with an appropriate string format (such as &quot;<span class="code">%.1f</span>&quot;) 
+	and with an appropriate unit label (<span class="code">°F</span>) tacked on 
+	the end. Other options are &quot;<span class="code">raw</span>&quot; (value will be 
+	returned as is, with no string format applied; this could possibly lead to results such as <span class="code">
+	12.49999999</span> due to rounding errors); or &quot;<span class="code">formatted</span>&quot; 
+	(value will have a string format applied, but no unit label will be added.</li>
 </ol>
-<p>In addition, if the first part of the dot code represents a time period longer 
-than a day (e.g., a week, month, year, or rainyear), then it can be iterated over. 
+<p>Here are some examples with the expected results:</p>
+<table align="center" style="width: 40%">
+	<tr>
+		<td><strong>Tag</strong></td>
+		<td><strong>Result</strong></td>
+	</tr>
+	<tr>
+		<td>
+		<pre>$current.outTemp</pre>
+		</td>
+		<td>
+		<p>18.5°C</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		<pre>$current.outTemp.formatted</pre>
+		</td>
+		<td>
+		<p>18.5</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		<pre>$current.outTemp.raw</pre>
+		</td>
+		<td>
+		<p>18.499999999</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		<pre>$day.outTemp.max</pre>
+		</td>
+		<td>
+		<p>21.2°C</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		<pre>$day.outTemp.max.formatted</pre>
+		</td>
+		<td>
+		<p>21.2</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		<pre>$day.outTemp.max.raw</pre>
+		</td>
+		<td>
+		<p>21.199999999</p>
+		</td>
+	</tr>
+</table>
+<h3>Unit tags</h3>
+<p>In addition, the unit type, label, and string formats are also available, 
+allowing you to do highly customized labels:</p>
+<table style="width: 40%" align="center">
+	<tr>
+		<td><strong>Tag</strong></td>
+		<td><strong>Results</strong></td>
+	</tr>
+	<tr>
+		<td>
+		<pre>$unit_type.outTemp</pre>
+		</td>
+		<td>degree_C</td>
+	</tr>
+	<tr>
+		<td>
+		<pre>$unit_label.outTemp</pre>
+		</td>
+		<td>°C</td>
+	</tr>
+	<tr>
+		<td>
+		<pre>$unit_format.outTemp</pre>
+		</td>
+		<td>%.1f</td>
+	</tr>
+</table>
+<p>As a summary, the tag</p>
+<pre>$day.outTemp.max.formatted$unit_label.outTemp</pre>
+<p>would result in</p>
+<pre>21.2°C</pre>
+<p>essentially reproducing the results of the simpler tag <span class="code">
+$day.outTemp.max</span>.</p>
+<h3>Iteration</h3>
+<p>If the first part of the dot code represents a time period longer 
+than a day (e.g., a week, month, year, or rainyear), then it can be iterated over 
+by day or month. 
 This example uses a Cheetah &#39;for&#39; loop to iterate over all months in a year, printing 
 out each month&#39;s min and max temperature.</p>
 <pre>&lt;html&gt;</pre>
@@ -471,7 +575,7 @@ out each month&#39;s min and max temperature.</p>
 <p>See the NOAA template files <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span> 
 and <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> for examples using iteration, 
 as well as explicit formatting.</p>
-<h2>By writing a custom generator</h2>
+<h2>Writing a custom generator</h2>
 <p>To do more sophisticated customization it may be necessary to extend an existing 
 generator, or write your own. </p>
 <h4>Extending an existing generator</h4>

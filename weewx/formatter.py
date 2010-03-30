@@ -66,8 +66,8 @@ class ModelFormatter(object):
         # does not support the key 'key':
         v = self.model.__getitem__(key)
         # If we made it this far, the model does have key 'key'.
-        # Is it a scalar?
-        if v is None or type(v) in (float, int):
+        # Is it None?
+        if v is None:
             # Yes, it is. Format it and return the string.
             str = self.formatter.format(v, self.context + (key,))
             return str
@@ -91,21 +91,40 @@ class ModelFormatter(object):
         v = getattr(self.model, attr)
 
         # If we made it this far, the model does have attribute 'attr'.
-        # Is it a scalar?
-        if v is None or type(v) in (float, int) :
-            # Yes, it is. Format it and return the string.
+        if v is None:
+            # v is None. Format it and return the string.
             str = self.formatter.format(v, self.context + (attr,))
             return str
-        # It's not a scalar. Create a new instance recursively:
+        # Create a new instance recursively:
         return ModelFormatter(v, self.formatter, self.context + (attr,))
     
+    def __str__(self):
+        """Return a formatted version of self.
+        
+        Ultimately the recursion change is broken when a string version of
+        my underlying model is requested. This is time time to add the formatting
+        and return it."""
+        res = self.formatter.format(self.model, self.context)
+        return res
+    
+    @property
+    def raw(self):
+        """Return a raw version of the underlying model.
+        
+        The raw version does not apply any formatting."""
+        return self.model
+    
+    @property
+    def formatted(self):
+        res = self.formatter.format(self.model, self.context, False)
+        return res
     
 class Formatter(object):
     """Formatter to be used to convert a value to a string, given a context."""
-    def __init__(self, value_format_dict, unit_label_dict, time_format_dict):
+    def __init__(self, unit_format_dict, unit_label_dict, time_format_dict):
         """Initialize an instance of Formatter.
         
-        value_label_dict: A dictionary with key of a type, value of a format to be
+        unit_format_dict: A dictionary with key of a type, value a string format to be
         used to format that type. Example: {'outTemp' : '%0.1f', 'barometer' : '%0.3f'}
         
         unit_label_dict: A dictionary with the unit label to be used for a type.
@@ -119,11 +138,11 @@ class Formatter(object):
         reference such as $week.outTemp.min will use the format keyed by 'week'.
         
         """
-        self.value_format_dict = value_format_dict
+        self.unit_format_dict  = unit_format_dict
         self.unit_label_dict   = unit_label_dict
         self.time_format_dict  = time_format_dict
         
-    def format(self, v, context):
+    def format(self, v, context, addLabel = True):
         """Format the value v in the context context.
         
         v: The value to be formatted. If no suitable format can be found, 
@@ -134,8 +153,15 @@ class Formatter(object):
         searches backwards down the context ('max', 'barometer',
         'year' in this case), looking for something it can format.
         
+        addLabel: True to add a label (such as 'feet') to the returned value.
+                  False otherwise.
+        
         returns formatted version of v
         """
+
+        if v is None :
+            return "N/A"
+
         # Walk backwards through the context tuple, looking
         # for something we recognize and can format:
         for _key in context[::-1]:
@@ -151,15 +177,13 @@ class Formatter(object):
                 return time.strftime(self.time_format_dict[_format_key], time.localtime(v))
             else:
                 # Not a date. Is it in one of the other dictionaries?
-                if self.value_format_dict.has_key(_key) or self.unit_label_dict.has_key(_key):
+                if self.unit_format_dict.has_key(_key) or self.unit_label_dict.has_key(_key):
                     # It is. Format as a number
-                    if v is None :
-                        return "N/A"
                     try:
-                        val_str   = self.value_format_dict.get(_key, '%f') % v
+                        val_str   = self.unit_format_dict.get(_key, '%f') % v
                     except TypeError:
                         val_str = str(v)
-                    label_str = self.unit_label_dict.get(_key, '')
-                    return (val_str + label_str)
+                    res = val_str + self.unit_label_dict.get(_key, '') if addLabel else val_str 
+                    return res
         # Don't know how to format it. Just return it as is
         return v
