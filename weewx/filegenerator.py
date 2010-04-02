@@ -39,6 +39,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.initStation()
         self.initStats()
         self.initUnits()
+        self.initFormatter()
+
         # Open up the main database archive
         archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
                                        self.config_dict['Archive']['archive_file'])
@@ -76,7 +78,13 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.unitTypeDict         = weewx.units.getUnitTypeDict(self.skin_dict)
         self.unitStringFormatDict = weewx.units.getUnitStringFormatDict(self.skin_dict)
         self.unitLabelDict        = weewx.units.getUnitLabelDict(self.skin_dict)
-        
+
+    def initFormatter(self):
+        # Get an appropriate formatter:
+        self.formatter =  weewx.formatter.Formatter(self.unitStringFormatDict,
+                                                    self.unitLabelDict,
+                                                    self.skin_dict['Labels']['Time'])
+
     def generateSummaryBy(self, by_time, start_ts, stop_ts):
         """This entry point is used for "SummaryBy" reports, such as NOAA monthly
         or yearly reports.
@@ -132,7 +140,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                 # we must generate it
                 if not os.path.exists(_fullpath) or timespan.includesArchiveTime(stop_ts):
     
-                    searchList = self.getSummarySearchList(by_time, timespan)
+                    searchList = self.getSummaryBySearchList(timespan)
                     # Run everything through the template engine
                     text = Cheetah.Template.Template(file       = template,
                                                      searchList = searchList + [{'encoding' : encoding}],
@@ -165,11 +173,6 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         ngen = 0
         t1 = time.time()
 
-        # Get an appropriate formatter:
-        self.formatter =  weewx.formatter.Formatter(self.unitStringFormatDict,
-                                                    self.unitLabelDict,
-                                                    self.skin_dict['Labels']['Time'])
-
         self.initAlmanac(stop_ts)
     
         searchList = self.getToDateSearchList(currentRec, stop_ts)
@@ -198,7 +201,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         elapsed_time = time.time() - t1
         syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
     
-    def getSummarySearchList(self, by_time, timespan):
+    def getSummaryBySearchList(self, timespan):
         """Return the searchList for the Cheetah Template engine for "summarize by" reports.
         
         Can easily be overridden to add things to the search list.
@@ -206,23 +209,20 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         timespan_start_tt = time.localtime(timespan.start)
         (_yr, _mo) = timespan_start_tt[0:2]
 
-        # Get the stats for this timespan from the database:
-        stats = weewx.stats.TimeSpanStats(self.statsdb, timespan, self.unitTypeDict)
-        
-        search_dict = {'station'     : self.station,
+        # Get a TaggedStats structure. This allows constructs such as
+        # stats.month.outTemp.max
+        stats = weewx.stats.TaggedStats(self.statsdb, timespan.stop, self.unitTypeDict)
+        # Get a formatted view into it:
+        statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
+
+        # Put together the search list:
+        searchList = [{'station'     : self.station,
                        'unit_type'   : self.unitTypeDict,
                        'unit_label'  : self.unitLabelDict,
                        'unit_format' : self.unitStringFormatDict,
-                       'year_name'   : _yr}
-        
-        if by_time == 'SummaryByMonth':
-            search_dict['month'] = stats
-            # Form a suitable name for the month:
-            search_dict['month_name'] = time.strftime("%b", timespan_start_tt)
-        elif by_time == 'SummaryByYear':
-            search_dict['year'] = stats 
-        
-        searchList = [search_dict]
+                       'month_name'  : time.strftime("%b", timespan_start_tt),
+                       'year_name'   : _yr},
+                       statsFormatter]
 
         # IF the user has supplied an '[Extra]' section in the skin dictionary, include
         # it in the search list. Otherwise, just include an empty dictionary.
@@ -237,32 +237,26 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         Can easily be overridden to add things to the search list.
         """
 
-        # Calculate the time ranges for all the desired time spans.
-        daySpan      = weeutil.weeutil.archiveDaySpan(stop_ts)
-        weekSpan     = weeutil.weeutil.archiveWeekSpan(stop_ts, startOfWeek = self.station.week_start)
-        monthSpan    = weeutil.weeutil.archiveMonthSpan(stop_ts)
-        yearSpan     = weeutil.weeutil.archiveYearSpan(stop_ts)
-        rainYearSpan = weeutil.weeutil.archiveRainYearSpan(stop_ts, self.station.rain_year_start)
-
-        # Assemble the dictionary that will be given to the template engine:
-        stats = {}
-        stats['current']  = currentRec
-        stats['day']      = weewx.stats.TimeSpanStats(self.statsdb, daySpan,      self.unitTypeDict)
-        stats['week']     = weewx.stats.TimeSpanStats(self.statsdb, weekSpan,     self.unitTypeDict)
-        stats['month']    = weewx.stats.TimeSpanStats(self.statsdb, monthSpan,    self.unitTypeDict)
-        stats['year']     = weewx.stats.TimeSpanStats(self.statsdb, yearSpan,     self.unitTypeDict)
-        stats['rainyear'] = weewx.stats.TimeSpanStats(self.statsdb, rainYearSpan, self.unitTypeDict)
-
-        # Get a formatted view into the statistical information.
+        # Get a TaggedStats structure. This allows constructs such as
+        # stats.month.outTemp.max
+        stats = weewx.stats.TaggedStats(self.statsdb, stop_ts, self.unitTypeDict)
+        # Get a formatted view into the TaggedStats structure:
         statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
-        
+
+        # Get the current conditions:
+        current = {'current' : currentRec}
+        # Get a formatted view into it:
+        currentFormatter = weewx.formatter.ModelFormatter(current, self.formatter)
+
+        # Put together the search list:
         searchList = [{'station'     : self.station,
                        'almanac'     : self.almanac,
                        'unit_type'   : self.unitTypeDict,
                        'unit_label'  : self.unitLabelDict,
                        'unit_format' : self.unitStringFormatDict},
                        self.outputted_dict,
-                       statsFormatter]
+                       statsFormatter,
+                       currentFormatter]
         
         # IF the user has supplied an '[Extra]' section in the skin dictionary, include
         # it in the search list. Otherwise, just include an empty dictionary.

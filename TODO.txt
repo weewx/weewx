@@ -2,8 +2,3 @@ TODO before the next release:
 
 Add the skin subdirectory to PYTHONPATH automatically, 
 to allow custom skins to find their generators.
-
-Document these additions to the searchLists:
-  unit_label
-  unit_format
-  unit_type
