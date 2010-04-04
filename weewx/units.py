@@ -66,7 +66,8 @@ unitGroups = {"barometer"          : "group_pressure",
               "referenceVoltage"   : "group_volt",
               "altitude"           : "group_altitude",
               "heatdeg"            : "group_temperature",
-              "cooldeg"            : "group_temperature" }
+              "cooldeg"            : "group_temperature",
+              "NONE"               : "group_NONE"}
 
 # This structure maps unit classes to actual units using the
 # US customary unit system.
@@ -81,7 +82,8 @@ USUnits       = {"group_pressure"     : "inHg",
                  "group_radiation"    : "watt_per_meter_squared",
                  "group_moisture"     : "centibar",
                  "group_volt"         : "volt",
-                 "group_altitude"     : "meter"}
+                 "group_altitude"     : "meter",
+                 "group_NONE"         : "NONE"}
 
 MetricUnits   = {"group_pressure"     : "mbar",
                  "group_temperature"  : "degree_C",
@@ -93,8 +95,9 @@ MetricUnits   = {"group_pressure"     : "mbar",
                  "group_rain"         : "cm",
                  "group_radiation"    : "watt_per_meter_squared",
                  "group_moisture"     : "centibar",
-                 "group_volt"        : "volt",
-                 "group_altitude"     : "meter"}
+                 "group_volt"         : "volt",
+                 "group_altitude"     : "meter",
+                 "group_NONE"         : "NONE"}
 
 StdUnitSystem     = {weewx.US     : USUnits,
                      weewx.METRIC : MetricUnits}
@@ -161,8 +164,8 @@ def convertStd(fromUnitSystem, fromType, toUnit, obj):
 def getUnitType(config_dict, obs_type):
     """Extract the type of unit (e.g., 'feet', 'miles_per_hour', etc.) as
     a string for the given observation type."""
-    classType = unitGroups[obs_type]
-    unitType = config_dict['Units']['Groups'][classType]
+    unit_group = unitGroups[obs_type]
+    unitType = config_dict['Units']['Groups'][unit_group]
     return unitType
 
 def getUnitTypeDict(config_dict):

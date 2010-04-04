@@ -221,10 +221,16 @@ class ModelObjectFormatter(object):
         res = self.formatter.format(self.model, self.context, False)
         return res
     
-    def format(self, format_string):
+    def format(self, format_string, NONE_string = None):
         """Return a formatted version of the model, using a user-supplied format."""
-        res = self.formatter.format(self.model, self.context, False, format_string)
+        res = self.formatter.format(self.model, self.context, False, format_string, NONE_string)
         return res
+    
+    def string(self, NONE_string = None):
+        if self.model is None:
+            return self.formatter.format(self.model, self.context, None_string = NONE_string)
+        else:
+            return str(self.model)
         
 #===============================================================================
 #                             class Formatter
@@ -253,7 +259,7 @@ class Formatter(object):
         self.unit_label_dict   = unit_label_dict
         self.time_format_dict  = time_format_dict
         
-    def format(self, v, context, addLabel = True, useThisFormat = None):
+    def format(self, v, context, addLabel = True, useThisFormat = None, None_string = None):
         """Format the value v in the context context.
         
         v: The value to be formatted. If no suitable format can be found, 
@@ -270,11 +276,14 @@ class Formatter(object):
         useThisFormat: If not None, use this format to do the formatting. The
         dictionaries supplied in the initializer are ignored.
         
+        None_string: Use this string if the value is None. If set to None,
+        retrieve the value from the unit label dictionary.
+        
         returns formatted version of v
         """
 
         if v is None :
-            return "N/A"
+            return None_string if None_string else self.unit_format_dict.get('NONE', 'N/A')
 
         # Is it a date?
         if context[-1] in ('mintime', 'maxtime', 'time', 'dateTime'):

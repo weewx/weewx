@@ -133,6 +133,12 @@ td {
 	font-family: "Times New Roman", Times, serif;
 	margin-left: 40px;
 }
+.style1 {
+	border-style: solid;
+}
+.style2 {
+	list-style-type: lower-roman;
+}
 </style>
 </head>
 
@@ -154,7 +160,7 @@ td {
 </ol>
 <h1>1. <a name="Introduction">Introduction</a></h1>
 <p>This document covers the customization of weewx. It assumes that you have read 
-and are reasonably familiar with the Users Guide.</p>
+and are reasonably familiar with the <a href="readme.htm">Users Guide</a>.</p>
 <p>It starts with an overview of the architecture of weewx. If you are only interested 
 in customizing the generated skin reports you can probably skip that section and 
 just have a look at the options available for the Standard skin configuration file, 
@@ -196,8 +202,8 @@ includes the following services:</p>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdReportService</span></td>
-		<td>Launches a new thread to do processing after a new archive record arrives. 
-		The thread loads zero or more reports and processes them in order. Reports 
+		<td>Launches a new thread to do report processing after a new archive record arrives. 
+		Reports 
 		do things such as generate HTML files, generate images, or FTP files to 
 		a web server. New reports can be added easily by the user.</td>
 	</tr>
@@ -241,11 +247,11 @@ generate anything. Instead, it uses the reporting service engine to arrange for
 things to be FTP&#39;d to a remote server.</p>
 <h4>Skins<br />
 </h4>
-<p>Each Report has a <em>Skin</em> associated with it. For most Reports, the relationship 
+<p>Each report has a <em>Skin</em> associated with it. For most reports, the relationship 
 with the skin is an obvious one: it contains the templates, any auxiliary files 
 such as background GIFs or CSS style sheets, and a <em>skin configuration file</em>,
 <span class="code">skin.conf</span>. If you will, the skin controls the <em>look 
-and feel </em>of the Report. Note that more than one Report can use the same skin. 
+and feel </em>of the report. Note that more than one report can use the same skin. 
 For example, you might want to run a report that uses US Customary units, then run 
 another report against the same skin, but using metric units and put the results 
 in a different place. All this is possible by either overriding configuration options 
@@ -266,15 +272,16 @@ files around or FTP them to remote locations. The default install of
 	</tr>
 	<tr>
 		<td class="code">weewx.filegenerator.FileGenerator</td>
-		<td>Generates HTML files from templates. </td>
+		<td>Generates files from templates. Used to generate HTML and text 
+		files.</td>
 	</tr>
 	<tr>
 		<td class="code">weewx.imagegenerator.ImageGenerator</td>
-		<td>Generates image plots</td>
+		<td>Generates graph plots.</td>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.reportengine.FtpGenerator</span></td>
-		<td>FTP uploads data</td>
+		<td>Uploads data to a remote server using FTP.</td>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.reportengine.CopyGenerator</span></td>
@@ -292,33 +299,34 @@ reports</a></h1>
 changing options in one or more configuration file, or by changing the template 
 files. The former is generally easier, but occasionally the latter is necessary.</p>
 <h2>Changing options</h2>
-<p>Changing an option means going into either weewx.conf or the skin.conf that comes 
+<p>Changing an option means going into either <span class="code">weewx.conf</span> or the 
+<span class="code">skin.conf</span> that comes 
 with the standard distribution and changing a value.</p>
 <h3>Changing options in <span class="code">skin.conf</span></h3>
 <p>With this approach, the user edits the skin configuration file for the standard 
-skin that comes with weewx, located in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>, 
+skin that comes with <span class="code">weewx</span>, located in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>, 
 using a text editor. For example, suppose you wish to use metric units in the presentation 
 layer. Then, you would edit section <span class="code">[Units][[Groups]]</span> 
 to read:</p>
 <pre>[Units]</pre>
 <pre>  [[Groups]]</pre>
-<pre>    group_altitude    = meter</pre>
+<pre class="highlight">    group_altitude    = meter</pre>
 <pre>    group_direction   = degree_compass</pre>
 <pre>    group_moisture    = centibar</pre>
 <pre>    group_percent     = percent</pre>
-<pre>    group_pressure    = mbar</pre>
+<pre class="highlight">    group_pressure    = mbar</pre>
 <pre>    group_radiation   = watt_per_meter_squared</pre>
-<pre>    group_rain        = mm</pre>
-<pre>    group_rainrate    = mm_per_hour</pre>
-<pre>    group_speed       = meter_per_second</pre>
-<pre>    group_speed2      = meter_per_second2</pre>
-<pre>    group_temperature = degree_C</pre>
+<pre class="highlight">    group_rain        = mm</pre>
+<pre class="highlight">    group_rainrate    = mm_per_hour</pre>
+<pre class="highlight">    group_speed       = meter_per_second</pre>
+<pre class="highlight">    group_speed2      = meter_per_second2</pre>
+<pre class="highlight">    group_temperature = degree_C</pre>
 <pre>    group_volt        = volt</pre>
-<p>Details of the various unit options are given in <em><a href="#Units">Appendix 
+<p>The options that were changed have been <span class="highlight">highlighted</span>. Details of the various unit options are given in <em><a href="#Units">Appendix 
 B: Units</a></em>.</p>
-<p>Other options are available, such as changing the label for various observation 
+<p>Other options are available, such as changing the text label for various observation 
 types. Suppose your weather instrument console is actually located in a barn, not 
-indoors, and you want its plot to be labeled &quot;Barn Temperature,&quot; rather than the 
+indoors, and you want the plot for the temperature at the console to be labeled &quot;Barn Temperature,&quot; rather than the 
 default &quot;Inside Temperature.&quot; This can be done by changing the &quot;inTemp&quot; option located 
 in section [Labels][[Generic]] from </p>
 <pre>[Units]</pre>
@@ -329,12 +337,13 @@ in section [Labels][[Generic]] from </p>
 <p>so that it reads</p>
 <pre>[Units]</pre>
 <pre>    [[Generic]]</pre>
-<pre>      inTemp  = Barn Temperature</pre>
+<pre class="highlight">      inTemp  = Barn Temperature</pre>
 <pre>      outTemp = Outside Temperature</pre>
 <pre>      ...</pre>
 <h3>Overriding options in <span class="code">skin.conf</span> from
 <span class="code">weewx.conf</span></h3>
-<p>This approach is very similar, except that instead of changing the skin configuration, 
+<p>This approach is very similar, except that instead of changing the skin configuration 
+file directly, 
 you override its options by editing the main configuration file,
 <span class="code">weewx.conf</span>. The advantage of this approach is that you 
 can use the same skin to produce several different output, each with separate options.
@@ -362,28 +371,28 @@ SKIN_ROOT = skins
 <pre># Where the generated reports should go, relative to WEEWX_ROOT:
 HTML_ROOT = public_html </pre>
 <pre> </pre>
-<pre>  # This report will use US Customary Units
-  [[USReport]]
-    # It&#39;s based on the Standard skin
+<pre>  # This report will use US Customary Units</pre>
+<pre class="highlight">  [[USReport]]</pre>
+<pre>    # It&#39;s based on the Standard skin
     skin = Standard</pre>
 <pre> </pre>
-<pre>  # This report will use metric units: </pre>
-<pre>  [[MetricReport]]</pre>
-<pre>    # It&#39;s also based on the Standard skin:</pre>
-<pre>    skin = Standard </pre>
-<pre>    # However, override where the results will go and put them in a subdirectory:</pre>
-<pre>    HTML_ROOT = public_html/metric</pre>
-<pre>    </pre>
-<pre>      # And override the options that were not in metric units</pre>
-<pre>      [[[Units]]]
+<pre class="highlight">  # This report will use metric units:
+  [[MetricReport]]
+    # It&#39;s also based on the Standard skin:
+    skin = Standard 
+    # However, override where the results will go and put them in a subdirectory:
+    HTML_ROOT = public_html/metric
+    
+      # And override the options that were not in metric units
+      [[[Units]]]
         [[[[Groups]]]]
-          group_altitude    = meter</pre>
-<pre>          group_pressure    = mbar</pre>
-<pre>          group_rain        = mm</pre>
-<pre>          group_rainrate    = mm_per_hour</pre>
-<pre>          group_speed       = meter_per_second</pre>
-<pre>          group_speed2      = meter_per_second2</pre>
-<pre>          group_temperature = degree_C</pre>
+          group_altitude    = meter
+          group_pressure    = mbar
+          group_rain        = mm
+          group_rainrate    = mm_per_hour
+          group_speed       = meter_per_second
+          group_speed2      = meter_per_second2
+          group_temperature = degree_C</pre>
 <pre> </pre>
 <pre>    [[FTP]]</pre>
 <pre>      ...</pre>
@@ -404,8 +413,8 @@ a very powerful engine, which essentially lets you have the full semantics of Py
 available in your templates. As this would make the templates incomprehensible to 
 anyone but a Python programmer, <span class="code">weewx</span> adopts a very small 
 subset of its power. </p>
-<p>Generally, any value substituted by the engine is specified by using a &#39;dot&#39; 
-code. For example:</p>
+<p>The key construct is a &#39;dot&#39; 
+code, specifying what value you want. For example:</p>
 <pre>$month.outTemp.max</pre>
 <pre>$month.outTemp.maxtime</pre>
 <pre>$current.outTemp</pre>
@@ -431,29 +440,46 @@ The unit label <span class="code">°F</span> is from section <span class="code">
 <a href="#[[Labels]]">[Units][[Labels]]</a></span>, while the time format is from
 <span class="code"><a href="#Labels_Time">[Labels][[Time]]</a></span>.</p>
 <h3>The dot code</h3>
-<p>The &quot;dot&quot; code has up to four parts:</p>
+<p>As we saw above, the dot codes can be very simple:</p>
+<pre>## Output max outside temperature using an appropriate format and label:
+$month.outTemp.max</pre>
+<p>Most of the time, this is all you will be using. However, <span class="code">
+weewx</span> offers extensive customization of the generate output for specialized applications such as XML RSS 
+feeds, or ridgidly formatted reports (such as the NOAA reports). This section 
+specifies the various options available.</p>
+<p>In general, the dot code has up to four parts:</p>
 <pre>$<em>period</em>.<em>stattype</em>.<em>aggregation</em>.[<em>optional_formatting</em>]</pre>
 <ol>
 	<li>The first part is the <em>period</em>, and can be one of <span class="code">
 	current</span>, <span class="code">day</span>, <span class="code">week</span>,
 	<span class="code">month</span>, <span class="code">year</span>, or
 	<span class="code">rainyear</span>.</li>
-	<li>The second part is the <em>stattype</em>. This is something like &#39;<span class="code">outTemp</span>&#39;, 
-	&#39;<span class="code">rain</span>&#39;, &#39;<span class="code">wind</span>&#39;, etc. The 
-	statistical types are generally those that appear in the SQL databases with 
-	three exceptions. First, type &#39;<span class="code">wind</span>&#39; is a special 
-	hybrid type and does not appear in the SQL database. It brings together the 
+	<li>The second part is the <em>stattype</em> or <em>statistical type</em>. This is the type of 
+	observation, something like &#39;<span class="code">outTemp</span>&#39;, 
+	&#39;<span class="code">rain</span>&#39;, &#39;<span class="code">wind</span>&#39;, etc. See <em><a href="#Types">Appendix A: Types</a></em> for a table 
+	of statistical types. Generally, they are the types that appear in the 
+	statistical SQL database, but there are three exceptions. 
+	<ol class="style2">
+	<li>Type &#39;<span class="code">wind</span>&#39; is a special 
+	hybrid type and does not appear in the database. It brings together the 
 	several different SQL types &#39;<span class="code">windSpeed</span>&#39;, &#39;<span class="code">windDir</span>&#39;,
 	<span class="code">windGust</span>&#39;, and &#39;<span class="code">windGustDir</span>&#39; 
-	under one roof (all are still available, should you wish to use them for a specialized 
-	application). Exceptions number two and three are &#39;<span class="code">heatdeg</span>&#39; 
-	and &#39;<span class="code">cooldeg</span>&#39;, heating and cooling degree-days, respectively, 
-	which are synthesized from average outside temperature and do not appear directly 
-	in the database. See <em><a href="#Types">Appendix A: Types</a></em> for a table 
-	of statistical types.</li>
+	under one roof (all are still available, should you wish to use them for a 
+	specialized application). </li>
+	<li>Types &#39;<span class="code">heatdeg</span>&#39; 
+	and &#39;<span class="code">cooldeg</span>&#39;, heating and cooling 
+	degree-days, respectively, are synthesized from average outside temperature 
+	and do not appear directly in the database.</li>
+		<li>Tag &#39;<span class="code">dateTime</span>&#39; is the index key used in 
+		all the databases, but it can be used when the starting time of the 
+		period is wanted. </li></ol>
+	</li>
 	<li>For types other than &#39;<span class="code">current</span>&#39; the 
-	third position is the <em>aggregation type</em>. Examples are &quot;<span class="code">min</span>&quot;, 
-	&quot;<span class="code">mintime</span>&quot;, or &quot;<span class="code">sum</span>&quot;. The table
+	third position is the <em>aggregation type </em>and specifies the type of 
+	aggregation that is to be done over the period specified in position 1. Examples are &quot;<span class="code">min</span>&quot;, 
+	&quot;<span class="code">mintime</span>&quot;, or &quot;<span class="code">sum</span>&quot;. 
+	If you ask for <span class="code">$month.outTemp.avg</span> you are asking 
+	for the <em>average</em> outside temperature for the month. The table
 	<a href="#Statistical_aggregations">Appendix C: Statistical aggregations</a> 
 	shows what aggregation types are available for which types. This position is 
 	not valid for period &#39;<span class="code">current</span>&#39;.</li>
@@ -461,69 +487,269 @@ The unit label <span class="code">°F</span> is from section <span class="code">
 	position &quot;4&quot; for everything else) controls the <em>optional_formatting</em> of the results. If 
 	left out, the results will be formatted as in the example above, that is 
 	with an appropriate string format (such as &quot;<span class="code">%.1f</span>&quot;) 
-	and with an appropriate unit label (<span class="code">°F</span>) tacked on 
-	the end. Other options are &quot;<span class="code">raw</span>&quot; (value will be 
-	returned as is, with no string format applied; this could possibly lead to results such as <span class="code">
-	12.49999999</span> due to rounding errors); or &quot;<span class="code">formatted</span>&quot; 
-	(value will have a string format applied, but no unit label will be added.</li>
+	and an appropriate unit label (<span class="code">°F</span>), both 
+	retrieved from <span class="code">skin.conf</span>. See the table below for a summary of options. </li>
 </ol>
+<table align="center" style="width: 80%" class="style1">
+	<tr>
+		<td>
+		<p><strong>Optional formatting tag</strong></p>
+		</td>
+		<td>
+		<p><strong>Comment</strong></p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		<p><em>(no tag)</em></p>
+		</td>
+		<td>
+		<p>Value is returned as a string, formatted using an appropriate string format 
+		from <span class="code">skin.conf</span>. A unit label from
+		<span class="code">skin.conf </span>is also attached at the end.</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		<span class="code">.formatted</span></td>
+		<td>
+		Value is returned as a string, formatted using an appropriate string 
+		format from <span class="code">skin.conf</span>. No label.</td>
+	</tr>
+	<tr>
+		<td>
+		<span class="code">.format(<em>string_format</em>, <em>NONE_string</em>)</span></td>
+		<td>
+		Value is returned as a string, using the string format specified with
+		<em>string_format</em>. If the value is <span class="code">None</span>, 
+		the string <span class="code">NONE_string</span> will be substituted if 
+		given, otherwise the value for <span class="code">NONE</span> in
+		<span class="code"><a href="#Units_StringFormats">[Units][[Formats]]</a></span> will be 
+		used.</td>
+	</tr>
+	<tr>
+		<td>
+		<span class="code">.string(<em>NONE_string</em></span>)</td>
+		<td>
+		Value is returned as a string, with Python picking a format. If the 
+		value is <span class="code">None</span>, 
+		the string <span class="code">NONE_string</span> will be substituted if 
+		given, otherwise the value for <span class="code">NONE</span> in
+		<span class="code"><a href="#Units_StringFormats">[Units][[Formats]]</a></span> 
+		will be used.</td>
+	</tr>
+	<tr>
+		<td>
+		<p><span class="code">.raw</span></p>
+		</td>
+		<td>
+		Value is returned &quot;as is&quot; without being converted to a string and 
+		without any formatting applied. You must be prepared to deal with a
+		<span class="code">None</span> value unless the value is converted 
+		directly to a string. In this case, it will be converted to the empty 
+		string (<span class="code">&#39;&#39;</span>)</td>
+	</tr>
+	</table>
 <p>Here are some examples with the expected results:</p>
-<table align="center" style="width: 40%">
+<table align="center">
 	<tr>
 		<td><strong>Tag</strong></td>
 		<td><strong>Result</strong></td>
+		<td><strong>Comment</strong></td>
 	</tr>
 	<tr>
-		<td>
-		<pre>$current.outTemp</pre>
+		<td class="code">
+		$current.outTemp
+		</td>
+		<td class="code">
+		45.2°F
 		</td>
 		<td>
-		<p>18.5°C</p>
-		</td>
+		String formatting and label from <span class="code">skin.conf</span></td>
 	</tr>
 	<tr>
-		<td>
-		<pre>$current.outTemp.formatted</pre>
+		<td class="code">
+		$current.outTemp.formatted
 		</td>
+		<td class="code">
+		45.2</td>
 		<td>
-		<p>18.5</p>
-		</td>
+		String formatting from <span class="code">skin.conf</span>; no label</td>
 	</tr>
 	<tr>
-		<td>
-		<pre>$current.outTemp.raw</pre>
+		<td class="code">
+		$current.outTemp.format(&quot;%.3f&quot;)
+		</td>
+		<td class="code">
+		45.200
 		</td>
 		<td>
-		<p>18.499999999</p>
-		</td>
+		Specified string format used; no label</td>
 	</tr>
 	<tr>
+		<td class="code">
+		$current.dateTime</td>
+		<td class="code">
+		02-Apr-2010 16:25</td>
 		<td>
-		<pre>$day.outTemp.max</pre>
-		</td>
-		<td>
-		<p>21.2°C</p>
-		</td>
+		Time formatting and label from <span class="code">skin.conf</span></td>
 	</tr>
 	<tr>
+		<td class="code">
+		$current.dateTime.format(&quot;%H:%M&quot;)</td>
+		<td class="code">
+		16:25</td>
 		<td>
-		<pre>$day.outTemp.max.formatted</pre>
-		</td>
-		<td>
-		<p>21.2</p>
-		</td>
+		Specified time format used; no label</td>
 	</tr>
 	<tr>
+		<td class="code">
+		$current.dateTime.raw</td>
+		<td class="code">
+		1270250700</td>
 		<td>
-		<pre>$day.outTemp.max.raw</pre>
-		</td>
+		Unix epoch time, converted to string by template engine.</td>
+	</tr>
+	<tr>
+		<td class="code">
+		$current.outTemp.string</td>
+		<td class="code">
+		45.2</td>
 		<td>
-		<p>21.199999999</p>
+		Python picks string formatting. No label.</td>
+	</tr>
+	<tr>
+		<td class="code">
+		$current.outTemp.raw</td>
+		<td class="code">
+		45.2</td>
+		<td>
+		Float returned, converted to string by template engine.</td>
+	</tr>
+	<tr>
+		<td class="code">
+		$current.UV.string</td>
+		<td class="code">
+		N/A</td>
+		<td>
+		<span class="code">None</span> value converted to value given by
+		<span class="code">NONE</span> in <span class="code">
+		<a href="#Units_StringFormats">[Units][[Formats]]</a></span> </td>
+	</tr>
+	<tr>
+		<td class="code">
+		$current.UV.string(&quot;No UV&quot;)</td>
+		<td class="code">
+		No UV</td>
+		<td>
+		<span class="code">None</span> value converted to specified string</td>
+	</tr>
+	<tr>
+		<td class="code">
+		$month.dateTime</td>
+		<td class="code">
+		01-Apr-2010 00:00</td>
+		<td>
+		Time formatting and label from <span class="code">skin.conf</span></td>
+	</tr>
+	<tr>
+		<td class="code">
+		$month.outTemp.avg
 		</td>
+		<td class="code">
+		40.8°F</td>
+		<td>
+		String formatting and label from <span class="code">skin.conf</span></td>
+	</tr>
+	<tr>
+		<td class="code">
+		$month.outTemp.avg.formatted
+		</td>
+		<td class="code">
+		40.8</td>
+		<td>
+		String formatting from <span class="code">skin.conf</span>; no label</td>
+	</tr>
+	<tr>
+		<td class="code">
+		$month.outTemp.avg.format(&quot;%.3f&quot;)</td>
+		<td class="code">
+		40.759</td>
+		<td>
+		Specified string format used; no label</td>
+	</tr>
+	<tr>
+		<td class="code">
+		$month.outTemp.avg.string</td>
+		<td class="code">
+		40.7589690722</td>
+		<td>
+		Python picks string formatting</td>
+	</tr>
+	<tr>
+		<td class="code">
+		$month.outTemp.avg.raw
+		</td>
+		<td class="code">
+		40.7589690722</td>
+		<td>
+		Float returned, converted to string by template engine</td>
+	</tr>
+	<tr>
+		<td class="code">
+		$month.UV.avg.string</td>
+		<td class="code">
+		N/A</td>
+		<td>
+		<span class="code">None</span> value converted to value given by
+		<span class="code">NONE</span> in <span class="code"><a href="#Units_StringFormats">
+		[Units][[Formats]]</a></span></td>
+	</tr>
+	<tr>
+		<td class="code">
+		$month.UV.avg.string(&quot;No UV&quot;)</td>
+		<td class="code">
+		No UV</td>
+		<td>
+		<span class="code">None</span> value converted to specified string</td>
+	</tr>
+	<tr>
+		<td class="code">
+		$month.UV.avg.raw</td>
+		<td class="code">
+		(empty)</td>
+		<td>
+		<span class="code">None</span> value converted to empty string by template engine.</td>
 	</tr>
 </table>
+<p>Note:</p>
+<ul>
+	<li>Tags that take an argument (such as <span class="code">.string(NONE_string)</span>) do not require parenthesis if 
+	the argument is omitted.Thus, you can specify either <span class="code">
+	$month.outTemp.string()</span> or <span class="code">$month.outTemp.string</span>, 
+	if you want the default value of <span class="code">NONE_string</span>. They produce the same results.</li>
+</ul>
+<h3>Type <span class="code">dateTime</span></h3>
+<p>While not an observation type, in many ways the time of an observation,
+<span class="code">dateTime</span>, can be treated as one. A tag such as
+<span class="code">$month.dateTime</span> represents the start time of the 
+month. Like true observation types, explicit formats can be specified, except 
+that they require a
+<a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime() 
+<em>time format</em></a>, rather than a <em>string format:</em></p>
+<pre>$month.dateTime.format(&quot;%B %Y)</pre>
+<p>produces</p>
+<pre>January 2010</pre>
+<p>The returned string value will always be in <em>local time</em>. </p>
+<p>The raw value of <span class="code">dateTime</span> is Unix 
+	Epoch Time (number of seconds since 00:00:00 UTC 1 Jan 1970, <em>i.e.</em>, 
+	a large number), which you must convert yourself to local time. It is 
+guaranteed to never be <span class="code">None</span>, so you don&#39;t 
+	worry have to worry about handling a <span class="code">None</span> value. 
+</p>
+<p>&nbsp;</p>
 <h3>Unit tags</h3>
-<p>In addition, the unit type, label, and string formats are also available, 
+<p>The unit type, label, and string formats are also available, 
 allowing you to do highly customized labels:</p>
 <table style="width: 40%" align="center">
 	<tr>
@@ -534,26 +760,27 @@ allowing you to do highly customized labels:</p>
 		<td>
 		<pre>$unit_type.outTemp</pre>
 		</td>
-		<td>degree_C</td>
+		<td class="code">degree_C</td>
 	</tr>
 	<tr>
 		<td>
 		<pre>$unit_label.outTemp</pre>
 		</td>
-		<td>°C</td>
+		<td class="code">°C</td>
 	</tr>
 	<tr>
 		<td>
 		<pre>$unit_format.outTemp</pre>
 		</td>
-		<td>%.1f</td>
+		<td class="code">%.1f</td>
 	</tr>
 </table>
 <p>As a summary, the tag</p>
 <pre>$day.outTemp.max.formatted$unit_label.outTemp</pre>
 <p>would result in</p>
 <pre>21.2°C</pre>
-<p>essentially reproducing the results of the simpler tag <span class="code">
+<p>(assuming metric values have been specified for <span class="code">
+group_temperature</span>), essentially reproducing the results of the simpler tag <span class="code">
 $day.outTemp.max</span>.</p>
 <h3>Iteration</h3>
 <p>If the first part of the dot code represents a time period longer 
@@ -567,11 +794,26 @@ out each month&#39;s min and max temperature.</p>
 <pre>  &lt;/head&gt;</pre>
 <pre>  &lt;body&gt;</pre>
 <pre>  &lt;p&gt;Min, max temperatures by month:&lt;/p&gt;</pre>
-<pre>  # for $month in $year.months</pre>
-<pre>    $month.outTemp.min $month.outTemp.max</pre>
-<pre>  # end for </pre>
+<pre>  #for $month in $year.months</pre>
+<pre>    &lt;p&gt;$month.dateTime.format(&quot;%B&quot;): Min, max temperatures: $month.outTemp.min $month.outTemp.max&lt;/p&gt;</pre>
+<pre>  #end for </pre>
 <pre>  &lt;/body&gt;</pre>
 <pre>&lt;/html&gt;</pre>
+<p>Produces results:</p>
+<pre>Min, max temperatures by month:
+January: Min, max temperatures: 30.1°F 51.5°F
+February: Min, max temperatures: 24.4°F 58.6°F
+March: Min, max temperatures: 27.3°F 64.1°F
+April: Min, max temperatures: 33.2°F 52.5°F
+May: Min, max temperatures: N/A N/A
+June: Min, max temperatures: N/A N/A
+July: Min, max temperatures: N/A N/A
+August: Min, max temperatures: N/A N/A
+September: Min, max temperatures: N/A N/A
+October: Min, max temperatures: N/A N/A
+November: Min, max temperatures: N/A N/A
+December: Min, max temperatures: N/A N/A
+</pre>
 <p>See the NOAA template files <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span> 
 and <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> for examples using iteration, 
 as well as explicit formatting.</p>
@@ -786,6 +1028,9 @@ inches, respectively. The
 <a href="http://docs.python.org/library/string.html#format-specification-mini-language">
 formatting codes are those used by Python</a>, a, and are very similar to C&#39;s
 <span class="code">sprintf()</span> codes.</p>
+<p>You can also specify what string to use for an invalid or unavailable 
+measurement (value &#39;<span class="code">None</span>&#39;). For example,</p>
+<pre>NONE = &quot; N/A &quot;</pre>
 <h3 class="config_section"><a name="[[Labels]]">[[Labels]]</a></h3>
 <p>This subsection specifies what label is to be used for each measurement unit 
 type. For example, the options</p>
@@ -1883,6 +2128,11 @@ options for the group.</p>
 		referenceVoltage<br />
 		supplyVoltage</td>
 		<td>volt</td>
+	</tr>
+	<tr class="code">
+		<td>group_NONE</td>
+		<td>NONE</td>
+		<td>NONE</td>
 	</tr>
 </table>
 <h1>Appendix C: <a name="Statistical_aggregations">Statistical aggregations</a></h1>
