@@ -9,27 +9,24 @@
 #
 """Defines the default station data, available for processing data."""
 import time
+import urlparse
 
 import weewx
 import weeutil.weeutil
+import weewx.units
 
 class Station(object):
     """Static data about the station. Rarely changes."""
-    def __init__(self, config_dict, unit_labels_dict, unit_groups_dict, hemispheres = ('N','S','E','W')):
+    def __init__(self, config_dict, skin_dict):
         """Extracts info from the config_dict and stores it in self."""
-        self.hemispheres = hemispheres
+        self.hemispheres = skin_dict['Labels'].get('hemispheres', ('N','S','E','W'))
         self.latitude_f  = config_dict['Station'].as_float('latitude')
         self.latitude    = weeutil.weeutil.latlon_string(self.latitude_f, self.hemispheres[0:2])
         self.longitude_f = config_dict['Station'].as_float('longitude')
         self.longitude   = weeutil.weeutil.latlon_string(self.longitude_f, self.hemispheres[2:4])
 
-        self.altitude_unit_label    = unit_labels_dict[unit_groups_dict['group_altitude']].strip()
-        self.temperature_unit_label = unit_labels_dict[unit_groups_dict['group_temperature']].strip()
-        self.wind_unit_label        = unit_labels_dict[unit_groups_dict['group_speed']].strip()
-        self.rain_unit_label        = unit_labels_dict[unit_groups_dict['group_rain']].strip()
-
-        self.altitude_f             = config_dict['Station'].as_float('altitude')
-        self.altitude               = "%d %s" % (self.altitude_f, self.altitude_unit_label)
+        self.altitude_f  = config_dict['Station'].as_float('altitude')
+        self.altitude    = "%d %s" % (self.altitude_f, weewx.units.getUnitLabel(skin_dict,'altitude'))
 
         self.location        = config_dict['Station']['location']
         self.rain_year_start = int(config_dict['Station'].get('rain_year_start', '1'))
@@ -45,3 +42,9 @@ class Station(object):
         except:
             self.os_uptime = ''
     
+        try:
+            website = "http://" + config_dict['Reports']['FTP']['server']
+            self.webpath = urlparse.urljoin(website, config_dict['Reports']['FTP']['path'])
+        except KeyError:
+            self.webpath = "http://www.weewx.com"
+             

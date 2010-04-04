@@ -161,42 +161,42 @@ def convertStd(fromUnitSystem, fromType, toUnit, obj):
     fromUnit = StdUnitSystem[fromUnitSystem][fromClass]
     return convert(fromUnit, toUnit, obj)
     
-def getUnitType(config_dict, obs_type):
+def getUnitType(skin_dict, obs_type):
     """Extract the type of unit (e.g., 'feet', 'miles_per_hour', etc.) as
     a string for the given observation type."""
     unit_group = unitGroups[obs_type]
-    unitType = config_dict['Units']['Groups'][unit_group]
+    unitType = skin_dict['Units']['Groups'][unit_group]
     return unitType
 
-def getUnitTypeDict(config_dict):
+def getUnitTypeDict(skin_dict):
     """Returns a dictionary where the key is an observation type (eg, 'outTemp'),
     and the value is the type of unit for that type (eg, 'degree_F')"""
     unitTypeDict = {}
     for obs_type in unitGroups:
-        unitTypeDict[obs_type] = getUnitType(config_dict, obs_type)
+        unitTypeDict[obs_type] = getUnitType(skin_dict, obs_type)
     return unitTypeDict
 
-def getStringFormat(config_dict, obs_type):
+def getStringFormat(skin_dict, obs_type):
     """Extract a suitable string format (e.g., "%.0f") for a specific observation type"""
-    return config_dict['Units']['StringFormats'][getUnitType(config_dict, obs_type)]
+    return skin_dict['Units']['StringFormats'][getUnitType(skin_dict, obs_type)]
 
-def getLabel(config_dict, obs_type):
+def getUnitLabel(skin_dict, obs_type):
     """Extract a generic unit label (e.g., "\xb0F", or "mph") for a specific observation type"""
-    label = config_dict['Units']['Labels'][getUnitType(config_dict, obs_type)]
+    label = skin_dict['Units']['Labels'][getUnitType(skin_dict, obs_type)]
     return label
     
-def getUnitStringFormatDict(config_dict):
+def getUnitStringFormatDict(skin_dict):
     """Return a dictionary of suitable string formats for all observation types."""
     stringFormatDict = {}
     for obs_type in unitGroups:
-        stringFormatDict[obs_type] = getStringFormat(config_dict, obs_type)
+        stringFormatDict[obs_type] = getStringFormat(skin_dict, obs_type)
     return stringFormatDict
 
-def getUnitLabelDict(config_dict):
+def getUnitLabelDict(skin_dict):
     """Return a dictionary of suitable generic unit labels for all observation types."""
     labelDict = {}
     for obs_type in unitGroups:
-        labelDict[obs_type] = getLabel(config_dict, obs_type)
+        labelDict[obs_type] = getUnitLabel(skin_dict, obs_type)
     return labelDict
 
 if __name__ == '__main__':

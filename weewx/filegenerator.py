@@ -60,10 +60,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     def initStation(self):
 
         # station holds info such as 'altitude', 'latitude', etc. It seldom changes
-        self.station = weewx.station.Station(self.config_dict, 
-                                             self.skin_dict['Units']['Labels'],
-                                             self.skin_dict['Units']['Groups'],
-                                             self.skin_dict['Labels'].get('hemispheres', ('N','S','E','W')))
+        self.station = weewx.station.Station(self.config_dict, self.skin_dict)
         
     def initStats(self):
         # Open up the stats database:
