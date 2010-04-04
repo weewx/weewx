@@ -28,6 +28,7 @@ skins/Standard/weewx.css
 skins/Standard/year.html.tmpl
 skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl
 skins/Standard/NOAA/NOAA-YYYY.txt.tmpl
+skins/Standard/RSS/weewx_rss.xml.tmpl
 skins/Standard/backgrounds/band.gif
 skins/Standard/backgrounds/butterfly.jpg
 skins/Standard/backgrounds/drops.gif

@@ -94,7 +94,9 @@ class My_install_data(install_data):
         # If this is the configuration file, then merge it instead
         # of copying it
         if f == 'weewx.conf':
-            rv = self.massageConfigFile(f, install_dir, **kwargs)
+            rv = self.massageWeewxConfigFile(f, install_dir, **kwargs)
+        elif f == 'skins/Standard/skin.conf':
+            rv = self.massageSkinConfigFile(f, install_dir, **kwargs)
         elif f in ('start_scripts/Debian/weewx', 'start_scripts/SuSE/weewx'):
             rv = self.massageStartFile(f, install_dir, **kwargs)
         else:
@@ -106,8 +108,8 @@ class My_install_data(install_data):
         # Back up the old skin directory if it exists
         skin_dir = os.path.join(self.install_dir, 'skins')
         if os.path.exists(skin_dir):
-            skin_backupdir = backup(skin_dir)
-            print "Backed up skins subdirectory to %s" % skin_backupdir
+            self.skin_backupdir = backup(skin_dir)
+            print "Backed up skins subdirectory to %s" % self.skin_backupdir
             
         # If the file #upstream.last exists, delete it, as it is no longer used.
         try:
@@ -131,59 +133,102 @@ class My_install_data(install_data):
         # Run the superclass's run():
         install_data.run(self)
         
-    def massageConfigFile(self, f, install_dir, **kwargs):
+    def massageWeewxConfigFile(self, f, install_dir, **kwargs):
         """Merges any old config file into the new one, and sets WEEWX_ROOT
         
         If an old configuration file exists, it will merge the contents
         into the new file. It also sets variable ['Station']['WEEWX_ROOT']
         to reflect the installation directory"""
         
-        # The path name of the final output file:
-        outname = os.path.join(install_dir, os.path.basename(f))
+        # The path name of the weewx.conf configuration file:
+        config_path = os.path.join(install_dir, os.path.basename(f))
         
         # Create a ConfigObj using the new contents:
-        newconfig = configobj.ConfigObj(f)
-        newconfig.indent_type = '    '
+        new_config = configobj.ConfigObj(f)
+        new_config.indent_type = '    '
         new_version_number = VERSION.split('.')
         
         # Check to see if there is an existing config file.
         # If so, merge its contents with the new one
-        if os.path.exists(outname):
-            oldconfig = configobj.ConfigObj(outname)
-            old_version = oldconfig.get('version')
+        if os.path.exists(config_path):
+            old_config = configobj.ConfigObj(config_path)
+            old_version = old_config.get('version')
             # If the version number does not appear at all, then
             # assume a very old version:
             if not old_version: old_version = '1.0.0'
             old_version_number = old_version.split('.')
             # Do the merge only for versions >= 1.6
             if old_version_number[0:2] >= ['1','6']:
-                # Any user changes in oldconfig will overwrite values in newconfig
+                # Any user changes in old_config will overwrite values in new_config
                 # with this merge
-                newconfig.merge(oldconfig)
+                new_config.merge(old_config)
 
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
-        newconfig['Station']['WEEWX_ROOT'] = self.install_dir
+        new_config['Station']['WEEWX_ROOT'] = self.install_dir
         # Add the version:
-        newconfig['version'] = VERSION
+        new_config['version'] = VERSION
         
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         
         # Write the new configuration file to it:
-        newconfig.write(tmpfile)
+        new_config.write(tmpfile)
         
         # Back up the old config file if it exists:
-        if os.path.exists(outname):
-            backup_path = backup(outname)
+        if os.path.exists(config_path):
+            backup_path = backup(config_path)
             print "Backed up old configuration file as %s" % backup_path
             
         # Now install the temporary file (holding the merged config data)
         # into the proper place:
-        rv = install_data.copy_file(self, tmpfile.name, outname, **kwargs)
+        rv = install_data.copy_file(self, tmpfile.name, config_path, **kwargs)
         
         # Set the permission bits unless this is a dry run:
         if not self.dry_run:
-            shutil.copymode(f, outname)
+            shutil.copymode(f, config_path)
+
+        return rv
+        
+    def massageSkinConfigFile(self, f, install_dir, **kwargs):
+        """Merges an old skin.conf file into the new one"""
+        
+        # The path name of the final output file:
+        new_skin_config_path = os.path.join(install_dir, os.path.basename(f))
+        
+        # Create a ConfigObj using the new contents:
+        new_skin_config = configobj.ConfigObj(f)
+        new_skin_config.indent_type = '    '
+        
+        # If the backed up skin directory doesn't exist, we'll get
+        # an attribute error. Skip the merge in this case.
+        try:
+            old_skin_config_path = os.path.join(self.skin_backupdir, 'Standard/skin.conf')
+            # Check to see if there is an existing skin.conf file.
+            # If so, merge its contents with the new one
+            if os.path.exists(old_skin_config_path):
+                old_skin_config = configobj.ConfigObj(old_skin_config_path)
+                # Any user changes in the old skin.conf will overwrite
+                # values in the new skin.conf file with this merge
+                new_skin_config.merge(old_skin_config)
+        except AttributeError:
+            pass
+        
+        # Add the version:
+        new_skin_config['version'] = VERSION
+
+        # Get a temporary file:
+        tmpfile = tempfile.NamedTemporaryFile("w", 1)
+        
+        # Write the new configuration file to it:
+        new_skin_config.write(tmpfile)
+        
+        # Now install the temporary file (holding the merged config data)
+        # into the proper place:
+        rv = install_data.copy_file(self, tmpfile.name, new_skin_config_path, **kwargs)
+        
+        # Set the permission bits unless this is a dry run:
+        if not self.dry_run:
+            shutil.copymode(f, new_skin_config_path)
 
         return rv
         
@@ -265,6 +310,7 @@ setup(name='weewx',
                      ('skins/Ftp',                  ['skins/Ftp/skin.conf']),
                      ('skins/Standard/backgrounds', ['skins/Standard/backgrounds/band.gif']),
                      ('skins/Standard/NOAA',        ['skins/Standard/NOAA/NOAA-YYYY.txt.tmpl', 'skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl']),
+                     ('skins/Standard/RSS',         ['skins/Standard/RSS/weewx_rss.xml.tmpl']),
                      ('skins/Standard',             ['skins/Standard/index.html.tmpl', 'skins/Standard/month.html.tmpl',
                                                      'skins/Standard/skin.conf', 'skins/Standard/week.html.tmpl',
                                                      'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 

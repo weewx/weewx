@@ -133,12 +133,6 @@ td {
 	font-family: "Times New Roman", Times, serif;
 	margin-left: 40px;
 }
-.style1 {
-	border-style: solid;
-}
-.style2 {
-	list-style-type: lower-roman;
-}
 </style>
 </head>
 
@@ -156,7 +150,7 @@ td {
 	<span class="code">weewx</span> service engine</a></li>
 	<li><a href="#Types">Appendix A: Types</a></li>
 	<li><a href="#Units">Appendix B: Units</a></li>
-	<li><a href="#Statistical_aggregations">Appendix C: Statistical aggregations</a></li>
+	<li><a href="#Statistical_types">Appendix C: Statistical aggregations</a></li>
 </ol>
 <h1>1. <a name="Introduction">Introduction</a></h1>
 <p>This document covers the customization of weewx. It assumes that you have read 
@@ -293,6 +287,32 @@ files around or FTP them to remote locations. The default install of
 the presentation layer. Instead, they just move files around. </p>
 <p>Which generators are to be run for a given skin is specified in the skin&#39;s configuration 
 file <span class="code">skin.conf</span>.</p>
+<h2><a name="Databases">Databases</a></h2>
+<p>There are two databases used in weewx, both <a href="http://www.sqlite.org/">SQLITE3</a> 
+databases:</p>
+<ul>
+	<li>The <em>archive database</em>, nominally located at <span class="code">
+	<em>$WEEWX_ROOT</em>/archive/weewx.sdb</span>. It is a big flat table, one 
+	record for each archive interval, keyed by <span class="code">dateTime</span>, 
+	the time at the end of the archive interval.</li>
+	<li>The <em>statistical database</em>, nominally located at
+	<span class="code"><em>$WEEWX_ROOT</em>/archive/stats.sdb</span>. It 
+	consists of a separate table for each type, one record per day, keyed by the 
+	start time of the day. </li>
+</ul>
+<p>The important thing to remember is that the archive database contains a 
+record for every archive interval and, as such, represents the c<em>urrent 
+conditions</em> at the time of the observation. The statistical database 
+represents the <em>aggregation of conditions over a day</em>. That is, it 
+contains the daily minimum, maximum, and the time of the minimum and maximum, 
+for each observation type. As you can imagine, the statistical database is much 
+smaller because it represents only a summary of the data.</p>
+<p>The archive database is used for both generating plot data and in template 
+generation (where it appears as tag <span class="code">$current</span>). The 
+statistical database is used only in template generation (where it appears as 
+tags <span class="code">$day</span>, <span class="code">$week</span>,
+<span class="code">$month</span>, <span class="code">$year</span>, and
+<span class="code">$rainyear</span>, depending on the aggregation time period). </p>
 <h1>2. <a name="Opportunities_for_customizing_reports">Opportunities for customizing 
 reports</a></h1>
 <p>This section discusses the two general strategies for customizing reports: by 
@@ -448,49 +468,44 @@ weewx</span> offers extensive customization of the generate output for specializ
 feeds, or ridgidly formatted reports (such as the NOAA reports). This section 
 specifies the various options available.</p>
 <p>In general, the dot code has up to four parts:</p>
-<pre>$<em>period</em>.<em>stattype</em>.<em>aggregation</em>.[<em>optional_formatting</em>]</pre>
+<pre>$<em>period</em>.<em>obstype</em>.<em>aggregation</em>.[<em>optional_formatting</em>]</pre>
 <ol>
-	<li>The first part is the <em>period</em>, and can be one of <span class="code">
+	<li>The first part is the <em>time period</em>, and can be one of <span class="code">
 	current</span>, <span class="code">day</span>, <span class="code">week</span>,
 	<span class="code">month</span>, <span class="code">year</span>, or
-	<span class="code">rainyear</span>.</li>
-	<li>The second part is the <em>stattype</em> or <em>statistical type</em>. This is the type of 
-	observation, something like &#39;<span class="code">outTemp</span>&#39;, 
-	&#39;<span class="code">rain</span>&#39;, &#39;<span class="code">wind</span>&#39;, etc. See <em><a href="#Types">Appendix A: Types</a></em> for a table 
-	of statistical types. Generally, they are the types that appear in the 
-	statistical SQL database, but there are three exceptions. 
-	<ol class="style2">
-	<li>Type &#39;<span class="code">wind</span>&#39; is a special 
-	hybrid type and does not appear in the database. It brings together the 
-	several different SQL types &#39;<span class="code">windSpeed</span>&#39;, &#39;<span class="code">windDir</span>&#39;,
-	<span class="code">windGust</span>&#39;, and &#39;<span class="code">windGustDir</span>&#39; 
-	under one roof (all are still available, should you wish to use them for a 
-	specialized application). </li>
-	<li>Types &#39;<span class="code">heatdeg</span>&#39; 
-	and &#39;<span class="code">cooldeg</span>&#39;, heating and cooling 
-	degree-days, respectively, are synthesized from average outside temperature 
-	and do not appear directly in the database.</li>
-		<li>Tag &#39;<span class="code">dateTime</span>&#39; is the index key used in 
-		all the databases, but it can be used when the starting time of the 
-		period is wanted. </li></ol>
-	</li>
+	<span class="code">rainyear</span>. For period <span class="code">current</span>, 
+	the data comes from the archive database; for all others, the data comes 
+	from the statistical database. See section <a href="#Databases">Databases</a> above 
+	for more information about the differences between these two databases.</li>
+	<li>The second part is the <em>observation type</em>, something like  
+	&#39;<span class="code">outTemp</span>&#39;, 
+	&#39;<span class="code">rain</span>&#39;, &#39;<span class="code">wind</span>&#39;, 
+	<em>etc</em>. While most observation types can be used for any of the time periods, 
+	there are a few differences. See <em><a href="#Archive_types">Appendix A, 
+	Archive Types</a></em> for a table of 
+	types in the archive database and that can appear in time period
+	<span class="code">current</span>, and <em><a href="#Statistical_types">
+	Appendix C, Statistical Types</a></em>, for a 
+	table of types in the statistical database and that can appear in all other 
+	periods.</li>
 	<li>For types other than &#39;<span class="code">current</span>&#39; the 
 	third position is the <em>aggregation type </em>and specifies the type of 
 	aggregation that is to be done over the period specified in position 1. Examples are &quot;<span class="code">min</span>&quot;, 
 	&quot;<span class="code">mintime</span>&quot;, or &quot;<span class="code">sum</span>&quot;. 
 	If you ask for <span class="code">$month.outTemp.avg</span> you are asking 
 	for the <em>average</em> outside temperature for the month. The table
-	<a href="#Statistical_aggregations">Appendix C: Statistical aggregations</a> 
+	<em><a href="#Statistical_types">Appendix C: Statistical types</a></em>
 	shows what aggregation types are available for which types. This position is 
 	not valid for period &#39;<span class="code">current</span>&#39;.</li>
 	<li>The last position (position &quot;3&quot; for period &quot;<span class="code">current</span>&quot;, 
-	position &quot;4&quot; for everything else) controls the <em>optional_formatting</em> of the results. If 
+	position &quot;4&quot; for everything else) controls the <em>optional formatting</em> of the results. If 
 	left out, the results will be formatted as in the example above, that is 
 	with an appropriate string format (such as &quot;<span class="code">%.1f</span>&quot;) 
 	and an appropriate unit label (<span class="code">°F</span>), both 
-	retrieved from <span class="code">skin.conf</span>. See the table below for a summary of options. </li>
+	retrieved from <span class="code">skin.conf</span>. Most of the time, this 
+	is what you want. See the table below for a summary of formatting options. </li>
 </ol>
-<table align="center" style="width: 80%" class="style1">
+<table align="center" style="width: 80%">
 	<tr>
 		<td>
 		<p><strong>Optional formatting tag</strong></p>
@@ -729,9 +744,11 @@ specifies the various options available.</p>
 	$month.outTemp.string()</span> or <span class="code">$month.outTemp.string</span>, 
 	if you want the default value of <span class="code">NONE_string</span>. They produce the same results.</li>
 </ul>
-<h3>Type <span class="code">dateTime</span></h3>
+<h3><a name="Type_dateTime">Type <span class="code">dateTime</span></a></h3>
 <p>While not an observation type, in many ways the time of an observation,
 <span class="code">dateTime</span>, can be treated as one. A tag such as
+<span class="code">$current.dateTime</span> represents the end time of an 
+archive interval, a tag such as
 <span class="code">$month.dateTime</span> represents the start time of the 
 month. Like true observation types, explicit formats can be specified, except 
 that they require a
@@ -757,21 +774,15 @@ allowing you to do highly customized labels:</p>
 		<td><strong>Results</strong></td>
 	</tr>
 	<tr>
-		<td>
-		<pre>$unit_type.outTemp</pre>
-		</td>
+		<td class="code">$unit_type.outTemp</td>
 		<td class="code">degree_C</td>
 	</tr>
 	<tr>
-		<td>
-		<pre>$unit_label.outTemp</pre>
-		</td>
+		<td class="code">$unit_label.outTemp</td>
 		<td class="code">°C</td>
 	</tr>
 	<tr>
-		<td>
-		<pre>$unit_format.outTemp</pre>
-		</td>
+		<td class="code">$unit_format.outTemp</td>
 		<td class="code">%.1f</td>
 	</tr>
 </table>
@@ -1152,7 +1163,7 @@ Additional &quot;by year&quot; summaries can be added easily by following the pa
 <p class="config_option">encoding</p>
 <p>Set to <span class="code">strict_ascii</span> for the NOAA year summary.</p>
 <p class="config_option">template</p>
-<p>This option is set to the source template for the NOAA yearl summary,
+<p>This option is set to the source template for the NOAA yearly summary,
 <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span>.</p>
 <h3 class="config_section">[[ToDate]]</h3>
 <p>This section controls which observations-to-date are generated. The default configuration 
@@ -1180,6 +1191,9 @@ for the month summary.</p>
 <p class="config_option">template</p>
 <p>Set to <span class="code">year.html.tmpl</span>, which contains the template 
 for the year summary.</p>
+<h4 class="config_section">[[[RSS]]]</h4>
+<p>Set to <span class="code">RSS/weewx_rss.xml.tmpl</span>, which contains a 
+template for an RSS feed.</p>
 <h2 class="config_section">[CopyGenerator]</h2>
 <p>This section is used by generator <span class="code">weewx.reportengine.CopyGenerator</span> 
 and controls which files are to be copied over from the skin subdirectory to the 
@@ -1615,21 +1629,21 @@ class MyEngine(StdEngine):
         # list is actually in my superclass StdEngine.
         for svc_obj in self.service_obj:
             # Because this is a new event, not all services will
-            # be prepared to accept it. Check first to see if the
-            # service has a member function &quot;firstArchiveOfDay&quot;
-            # before calling it:
-            if hasattr(svc_obj, &quot;firstArchiveOfDay&quot;):  # NOTE 2
-                # The object does have the member function. Call it:
-                svc_obj.firstArchiveOfDay(rec)</pre>
+            # be prepared to accept it. Be prepared for an AttributeError
+            # exception:
+            try:                                     # NOTE 2
+                svc_obj.firstArchiveOfDay(rec)
+            except AttributeError:
+                pass</pre>
 <p>This customized engine works by monitoring the arrival of archive records, and 
 checking their time stamp (<span class="code">rec[&#39;dateTime&#39;]</span>. It calculates 
 the time stamp for the start of the day, and if it changes, calls member function
 <span class="code">newDay()</span> (NOTE 1). </p>
 <p>The member function <span class="code">newDay()</span> then goes through the 
 list of services (attribute <span class="code">self.service_obj</span>). Because 
-this engine is defining a new event (first archive of the day), the existing services 
-may not be prepared to accept it. So, the engine checks each one to make sure it 
-has a function <span class="code">firstArchiveOfDay</span> before calling it (NOTE 
+this engine is defining a new event (first archive of the day), the existing 
+services may not be prepared to accept it. So, be prepared to catch an exception
+<span class="code">AttributeError</span> if the service does not define it (NOTE 
 2).</p>
 <p>To use this engine, go into file <span class="code">weewxd.py</span> and change 
 the line</p>
@@ -1666,40 +1680,41 @@ service be loaded, by adding its class name to option <span class="code">service
     # The list of services the main weewx engine should run:
     service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.daily.DailyService</pre>
 <p>(Again, the list must be all on one line.)</p>
-<h1>Appendix A: T<a name="Types">ypes</a></h1>
-<p>The weather variables used in <span class="code">weewx</span> generally fall 
-into three different camps. They can be a &quot;SQL type&quot;, meaning they appear in the 
-archive database, an &quot;Observational type&quot;, meaning that they either appear in the 
-archive database or are a derived quantity thereof, or a &quot;Statistical type,&quot; meaning 
-that they appear in the statistical database. Observational types can be used in 
-plots, statistical types can be aggregated and used in daily, weekly, monthly, and 
-yearly summaries. </p>
-<p>The following table shows all the possible types and what categories they fall 
-into. Note that just because a type appears in the table does not necessarily mean 
-that it is available for <em>your</em> station setup. That would depend on whether 
-your instrument supports the type, and whether or not you configured
-<span class="code">weewx</span> to use that type.</p>
+<h1>Appendix A: <a name="Archive_types">Archive types</a></h1>
+<p><em>Archive types</em> are weather observations that have come from your 
+instrument and been stored in the <em>archive database, </em>&nbsp;a SQL 
+database. They represent the <em>current conditions</em> as of some time. They 
+are available to be used in two places:</p>
+<ul>
+	<li>In your template files as a tag with period <span class="code">$current</span>. 
+	Hence, the tag <span class="code">$current.outTemp</span> represents the 
+	latest current outside temperature. There is no aggregation involved (see
+	<a href="#Statistical_types">statistical types</a> for aggregation).</li>
+	<li>In your plot graphs. Here, a line in the graph represents the set of 
+	current observations over a time period. While each plot point in a graph 
+	may represent an aggregation, do not confuse this aggregation with the 
+	statistical aggregation. The former is done with the archive database, the 
+	latter with the statistical database.</li>
+</ul>
+<p>The following table shows all the possible archive types and whether they can 
+be used in tag <span class="code">$current</span> or in a plot. Note that just because a type appears in the table does not necessarily mean 
+that it is available for <em>your</em> station setup. That would depend on 
+whether your instrument supports the type.</p>
 <table align="center" style="width: 80%">
 	<tr>
 		<td><strong>Name</strong></td>
 		<td style="width: 200px"><strong>SQL Type</strong><br />
 		<span class="xxsmall">(appears in archive database)</span></td>
-		<td style="width: 200px"><strong>Observation Type</strong><br />
-		<span class="xxsmall">(can be used in plots)</span></td>
-		<td style="width: 200px"><strong>Stats Type</strong><br />
-		<span class="xxsmall">(can be used in statistical aggregations)</span></td>
+		<td><strong>Can be used<br />
+		in plots</strong></td>
+		<td><strong>Can be used<br />
+		in tag <span class="code">$current</span></strong></td>
 	</tr>
 	<tr>
 		<td class="code">altimeter</td>
 		<td>X</td>
 		<td>X</td>
 		<td>X</td>
-	</tr>
-	<tr>
-		<td class="code">altitude</td>
-		<td></td>
-		<td></td>
-		<td></td>
 	</tr>
 	<tr>
 		<td class="code">barometer</td>
@@ -1717,7 +1732,7 @@ your instrument supports the type, and whether or not you configured
 		<td class="code">dateTime</td>
 		<td>X</td>
 		<td></td>
-		<td></td>
+		<td>X (represents current time)</td>
 	</tr>
 	<tr>
 		<td class="code">dewpoint</td>
@@ -1735,7 +1750,7 @@ your instrument supports the type, and whether or not you configured
 		<td class="code">extraHumid1</td>
 		<td>X</td>
 		<td>X</td>
-		<td>x</td>
+		<td>X</td>
 	</tr>
 	<tr>
 		<td class="code">extraHumid2</td>
@@ -1813,7 +1828,7 @@ your instrument supports the type, and whether or not you configured
 		<td class="code">interval</td>
 		<td>X</td>
 		<td>X</td>
-		<td></td>
+		<td>X</td>
 	</tr>
 	<tr>
 		<td class="code">leafTemp2</td>
@@ -1951,16 +1966,10 @@ your instrument supports the type, and whether or not you configured
 		<td class="code">usUnits</td>
 		<td>X</td>
 		<td>X</td>
-		<td></td>
+		<td>X</td>
 	</tr>
 	<tr>
 		<td class="code">UV</td>
-		<td>X</td>
-		<td>X</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td class="code">wind</td>
 		<td>X</td>
 		<td>X</td>
 		<td>X</td>
@@ -1968,7 +1977,7 @@ your instrument supports the type, and whether or not you configured
 	<tr>
 		<td class="code">windvec</td>
 		<td>&nbsp;</td>
-		<td>X</td>
+		<td>X (special vector type)</td>
 		<td>&nbsp;</td>
 	</tr>
 	<tr>
@@ -2135,9 +2144,10 @@ options for the group.</p>
 		<td>NONE</td>
 	</tr>
 </table>
-<h1>Appendix C: <a name="Statistical_aggregations">Statistical aggregations</a></h1>
-<p>Most of the templates are devoted to reporting <em>statistical aggregates</em>, 
-such as monthly max temperature, or year-to-date rainfall. These are called <em>
+<h1>Appendix C: <a name="Statistical_types">Statistical types</a></h1>
+<p>Most of the templates are devoted to reporting <em>statistical types</em>, 
+such as temperature, wind, or rainfall, using various <em>aggregates</em>, 
+such as min, max, or sum. These are called <em>
 aggregations</em>, because they are a summary of lots of underlying data. However, 
 only certain aggregates make sense for certain statistical types. For example, heat 
 degree days is defined on a daily basis, so while the day&#39;s average temperature 

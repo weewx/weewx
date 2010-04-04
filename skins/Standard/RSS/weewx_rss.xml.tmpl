@@ -13,7 +13,7 @@
       <lastBuildDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</lastBuildDate>
       <docs>http://blogs.law.harvard.edu/tech/rss</docs>
       <generator>weewx $station.version</generator>
-      <ttl>5</ttl>
+      <ttl>$current.interval.string('')</ttl>
       <item>
          <title>Current Weather Conditions</title>
          <link>$station.webpath/index.html</link>
