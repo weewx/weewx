@@ -7,7 +7,11 @@
 #    $Author$
 #    $Date$
 #
-"""Views into a tree like model, and a formatter to format them."""
+"""Views into a tree like model, and a formatter to format them.
+
+This module probably contains the most hard core Python code in the
+whole system.
+"""
 
 import time
 import types
@@ -26,8 +30,9 @@ class ModelFormatter(object):
     are through a formatter object. The views are created on the fly,
     on demand. Thus the model can change without changing any state in
     the view. It does this by creating itself recursively, as it goes
-    down the model, root to leaf node. When the caller finally requests
-    a strong, it stops and invokes the formatter.
+    down the model, root to leaf node. When a primitive such as an int,
+    float, or string is encountered, it is assumed that we are at the
+    leaf note, and the ModelFormatter stops and invokes the formatter.
     
     For example, given a model such as:
         data = {}
@@ -37,9 +42,10 @@ class ModelFormatter(object):
         data['year']['outTemp']['max'] = 55.298
     
     Then a ModelFormatter can be constructed into it, using a formatter:
-    
-        formatter = weewx.html.Formatter({'outTemp' : '%.1f'}, 
-                                         {'outTemp' : " Fahrenheit"}, None)
+
+        formatter = Formatter({'outTemp' : '%.1f'}, 
+                              {'outTemp' : " Fahrenheit"},
+                              None)
         dataView = ModelFormatter(data, formatter)
     
         print data['year']['outTemp']['min']     # Prints 45.88
@@ -53,7 +59,7 @@ class ModelFormatter(object):
         
         model: The hierarchical model to be viewed.
         
-        formatter: An instance of weewx.html.Formatter, or something that looks like it.
+        formatter: An instance of weewx.formatter.Formatter.
         
         context: Contains the accumulating context as ModelFormatter creates 
         itself recursively. 
@@ -70,7 +76,7 @@ class ModelFormatter(object):
         """
         # This will raise a KeyError exception if the model
         # does not support the key 'key':
-        v = self.model.__getitem__(key)
+        v = self.model[key]
 
         # If we made it this far, the model does have key 'key'.
         # Is it a primitive?
@@ -160,14 +166,22 @@ class ModelGeneratorFormatter(object):
         self.context         = context
         
     def __iter__(self):
+        # This is a common idiom with Python: Iterators return themselves when
+        # asked for an iterator:
         return ModelGeneratorFormatter(self.model_generator, self.formatter, self.context)
         
     def next(self):
+        """Return the next item"""
         try:
+            # Ask my model for the next item:
             x = self.model_generator.next()
-            if type(x) in (int, float, basestring):
+            
+            # Is the results a primitive?
+            if type(x) in (int, float, str, types.NoneType):
+                # Yes. Wrap it in a ModelObjectFormatter:
                 return ModelObjectFormatter(x, self.formatter, self.context)
             else:
+                # No. Wrap it in a ModelFormatter so the recursion can continue
                 return ModelFormatter(x, self.formatter, self.context)
         except StopIteration:
             raise
@@ -177,17 +191,24 @@ class ModelGeneratorFormatter(object):
 #===============================================================================
 
 class ModelCallFormatter(object):
-    """Wraps an instance call in a formatter."""
+    """Wraps an instance method in a formatter."""
     def __init__(self, model_call, formatter, context):
         self.model_call = model_call
         self.formatter  = formatter
         self.context    = context
         
     def __call__(self, *args):
+        """The client is invoking the instance method"""
+
+        # Invoke the call on the model, with the given arguments:
         x = self.model_call(*args)
-        if type(x) in (int, float, basestring):
+
+        # Is the results a primitive?
+        if type(x) in (int, float, str, types.NoneType):
+            # Yes. Wrap it in a ModelObjectFormatter:
             return ModelObjectFormatter(x, self.formatter, self.context)
         else:
+            # No. Wrap it in a ModelFormatter so the recursion can continue
             return ModelFormatter(x, self.formatter, self.context)
           
 #===============================================================================
@@ -250,11 +271,7 @@ class Formatter(object):
         time_format_dict: A dictionary with strftime type formats, to be used to format
         any times encountered. The key is a time period ('day', 'week', 'current', etc.)
         and the value is a strftime format that should be used to format that time. 
-        Example: {'day' : '%H:%M', 'current' : '%d-%b-%Y %H:%M', 'week' : '%H:%M on %A'}
-        The key is usually extracted from the node closest to the root. Hence, a template
-        reference such as $week.outTemp.min will use the format keyed by 'week'.
-        
-        """
+        Example: {'day' : '%H:%M', 'current' : '%d-%b-%Y %H:%M', 'week' : '%H:%M on %A'}"""
         self.unit_format_dict  = unit_format_dict
         self.unit_label_dict   = unit_label_dict
         self.time_format_dict  = time_format_dict
@@ -262,8 +279,7 @@ class Formatter(object):
     def format(self, v, context, addLabel = True, useThisFormat = None, None_string = None):
         """Format the value v in the context context.
         
-        v: The value to be formatted. If no suitable format can be found, 
-        the value itself will be returned.
+        v: The value to be formatted.
         
         context: A tuple with the context of the value.  An example
         context would be ('year', 'barometer', 'max'). The first
@@ -274,14 +290,17 @@ class Formatter(object):
                   False otherwise.
                   
         useThisFormat: If not None, use this format to do the formatting. The
-        dictionaries supplied in the initializer are ignored.
+        dictionary unit_format_dict supplied in the initializer is ignored.
         
-        None_string: Use this string if the value is None. If set to None,
-        retrieve the value from the unit label dictionary.
+        None_string: Use this string if the value is None. An example would
+        be "N/A". If set to None, retrieve the string from the unit label dictionary.
         
         returns formatted version of v
         """
 
+        # Figure out what the value is.
+        
+        # Is it a None value?
         if v is None :
             return None_string if None_string else self.unit_format_dict.get('NONE', 'N/A')
 
@@ -293,9 +312,11 @@ class Formatter(object):
             _format = self.time_format_dict[context[0]] if not useThisFormat else useThisFormat
             return time.strftime(_format, time.localtime(v))
 
-        # Is it a count of some kind?
+        # Is it a count of some kind? 
         elif context[-1] in ('count', 'max_ge', 'max_le', 'min_le', 'sum_ge'):
-            # It is. Return converted as a string:
+            # It is. In this case, the observation type in context[1]
+            # is not a reliable indicator of the returned value, which should always be
+            # an integer. Return converted as a string:
             return str(v)
             
         else:
@@ -307,11 +328,13 @@ class Formatter(object):
                 val_str   = _format % v
             except (TypeError, KeyError):
                 # Don't know how to format it. Explicitly convert to a string:
-                return str(v)
+                val_str = str(v)
             
             # Add the (optional) label and return
-            res = val_str + self.unit_label_dict.get(context[1], '') if addLabel else val_str 
-            return res
+            if addLabel:
+                val_str += self.unit_label_dict.get(context[1], '') 
+
+            return val_str
 
 #===============================================================================
 #                            Testing routines

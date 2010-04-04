@@ -22,8 +22,8 @@
  		 <content:encoded><![CDATA[
            <p>
              Time:                $current.dateTime<br/>
-	         Outside Temperature: $current.outTemp<br/>
-	         Inside Temperature:  $current.inTemp<br/>
+             Outside Temperature: $current.outTemp<br/>
+             Inside Temperature:  $current.inTemp<br/>
              Wind Chill:          $current.windchill<br/>
              Heat Index:          $current.heatindex<br/>
              Dewpoint:            $current.dewpoint<br/>
@@ -42,6 +42,7 @@
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
  		 <content:encoded><![CDATA[
            <p>
+             Day:                     $day.dateTime.format("%d %b %Y")<br/>
 	         Max Outside Temperature: $day.outTemp.max at $day.outTemp.maxtime<br/>
 	         Min Outside Temperature: $day.outTemp.min at $day.outTemp.mintime<br/>
 	         Max Inside Temperature:  $day.inTemp.max at $day.inTemp.maxtime<br/>
@@ -61,6 +62,7 @@
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
  		 <content:encoded><![CDATA[
            <p>
+             Month:                   $month.dateTime.format("%B %Y")<br/>
 	         Max Outside Temperature: $month.outTemp.max at $month.outTemp.maxtime<br/>
 	         Min Outside Temperature: $month.outTemp.min at $month.outTemp.mintime<br/>
 	         Max Inside Temperature:  $month.inTemp.max at $month.inTemp.maxtime<br/>
@@ -80,6 +82,7 @@
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
  		 <content:encoded><![CDATA[
            <p>
+             Year:                    $year.dateTime.format("%Y")<br/>
 	         Max Outside Temperature: $year.outTemp.max at $year.outTemp.maxtime<br/>
 	         Min Outside Temperature: $year.outTemp.min at $year.outTemp.mintime<br/>
 	         Max Inside Temperature:  $year.inTemp.max at $year.inTemp.maxtime<br/>

@@ -32,15 +32,18 @@
  2. It merges any existing weewx.conf configuration files into the new, thus
     preserving any user changes.
     
- 3. It sets the option ['Station']['WEEWX_ROOT'] in weewx.conf to reflect
+ 3. It merges any existing Standard/skin.conf configuration file into the new, thus
+    preserving any user changes.
+    
+ 4. It sets the option ['Station']['WEEWX_ROOT'] in weewx.conf to reflect
     the actual installation directory (as set in setup.cfg or specified
     in the command line to setup.py install)
     
- 4. In a similar manner, it sets WEEWX_ROOT in the daemon startup script.
+ 5. In a similar manner, it sets WEEWX_ROOT in the daemon startup script.
 
- 5. It backs up any pre-existing skin subdirectory
+ 6. It backs up any pre-existing skin subdirectory
  
- 6. It backs up any pre-existing bin subdirectory.
+ 7. It backs up any pre-existing bin subdirectory.
 """
 
 from distutils.core import setup
@@ -82,8 +85,10 @@ class My_install_data(install_data):
     
       - Sets WEEWX_ROOT in the configuration file to reflect the
         actual installation root directory;
-      - Merges an old configuration file into a new,
+      - Merges an old week.conf configuration file into a new,
         thus preserving any changes made by the user;
+      - Merges an old skin.conf file into a new, thus preserving
+        any changes;
       - Backs up the old skin directory;
       - Massages the daemon start up script to reflect the choice
         of WEEWX_ROOT        
