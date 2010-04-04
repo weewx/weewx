@@ -9,9 +9,10 @@
 #
 """Engine for generating reports"""
 
-import os.path
 import glob
+import os.path
 import shutil
+import sys
 import syslog
 import threading
 import time
@@ -118,8 +119,9 @@ class StdReportEngine(threading.Thread):
                     obj.start()
                     
                 except Exception, e:
+                    (cl, ob, tr) = sys.exc_info()
                     # Caught unrecoverable error. Log it, exit
-                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % generator)
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception %s in generator %s" % (cl, generator))
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
                     # Reraise the exception (this will eventually cause the thread to terminate)

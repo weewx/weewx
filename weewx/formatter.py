@@ -305,7 +305,7 @@ class Formatter(object):
             return None_string if None_string else self.unit_format_dict.get('NONE', 'N/A')
 
         # Is it a date?
-        if context[-1] in ('mintime', 'maxtime', 'time', 'dateTime'):
+        elif context[-1] in ('mintime', 'maxtime', 'time', 'dateTime'):
             # The last tag is 'time' related. Format as a date/time.
             # The first context element will be the time period, something like
             # 'current' or 'month'. This will be the key into the time format dictionary. 
@@ -314,26 +314,27 @@ class Formatter(object):
 
         # Is it a count of some kind? 
         elif context[-1] in ('count', 'max_ge', 'max_le', 'min_le', 'sum_ge'):
-            # It is. In this case, the observation type in context[1]
-            # is not a reliable indicator of the returned value, which should always be
-            # an integer. Return converted as a string:
+            # It is. Format as an int by simply converting to a string:
             return str(v)
-            
+        
         else:
+            _type = context[-1] if context[-1] in ('vecdir', 'gustdir') else context[1]
             # Try formatting it. If we get a TypeError the format is for the wrong type 
             # (eg, an integer format being used to format a float). If we get a KeyError, there is
             # no format in the format dictionary for the type.
             try:
-                _format = self.unit_format_dict[context[1]] if not useThisFormat else useThisFormat
-                val_str   = _format % v
+                if useThisFormat:
+                    val_str = useThisFormat % v
+                else:
+                    val_str   = self.unit_format_dict[_type] % v
             except (TypeError, KeyError):
                 # Don't know how to format it. Explicitly convert to a string:
                 val_str = str(v)
             
             # Add the (optional) label and return
             if addLabel:
-                val_str += self.unit_label_dict.get(context[1], '') 
-
+                val_str += self.unit_label_dict.get(_type, '') 
+    
             return val_str
 
 #===============================================================================

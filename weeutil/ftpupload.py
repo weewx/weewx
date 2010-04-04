@@ -15,6 +15,7 @@ import ftplib
 import cPickle
 import time
 import syslog
+import socket
 
 class FtpUpload:
     """Uploads a directory and all its descendants to a remote server.
@@ -65,54 +66,57 @@ class FtpUpload:
         (timestamp, fileset) = self.getLastUpload()
 
         n_uploaded = 0
-        ftp_server = ftplib.FTP(self.server)
-        #ftp_server.set_debuglevel(1)
-        ftp_server.login(self.user, self.password)
-        ftp_server.set_pasv(self.passive)
-        
-        # Walk the local directory structure
-        for (dirpath, dirnames, filenames) in os.walk(self.local_root):
-
-            # Strip out the common local root directory. What is left
-            # will be the relative directory both locally and remotely.
-            local_rel_dir_path = dirpath.replace(self.local_root, '.')
-            if self._skipThisDir(local_rel_dir_path):
-                continue
-            # This is the absolute path to the remote directory:
-            remote_dir_path = os.path.normpath(os.path.join(self.remote_root, local_rel_dir_path))
-
-            # Make the remote directory if necessary:
-            self._make_remote_dir(ftp_server, remote_dir_path)
-                
-            # Now iterate over all members of the local directory:
-            for filename in filenames:
-
-                full_local_path = os.path.join(dirpath, filename)
-                # See if this file can be skipped:
-                if self._skipThisFile(timestamp, fileset, full_local_path):
-                    continue
-
-                full_remote_path = os.path.join(remote_dir_path, filename)
-                STOR_cmd = "STOR %s" % full_remote_path
-                fd = open(full_local_path, "r")
-                for count in range(self.max_tries):
-                    try:
-                        ftp_server.storbinary(STOR_cmd, fd)
-                    except ftplib.all_errors, e:
-                        syslog.syslog(syslog.LOG_ERR, "ftpupload: attempt #%d. Failed uploading %s. Reason: %s" % (count+1, full_remote_path, e))
-                        if count >= self.max_tries -1 :
-                            syslog.syslog(syslog.LOG_ERR, "ftpupload: Failed to upload file %s" % full_remote_path)
-                            raise
-                    else:
-                        fd.close()
-                        n_uploaded += 1
-                        syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Uploaded file %s" % full_remote_path)
-                        break
-                fileset.add(full_local_path)
         try:
-            ftp_server.quit()
-        except socket.error:
-            pass
+            ftp_server = ftplib.FTP(self.server)
+            #ftp_server.set_debuglevel(1)
+            ftp_server.login(self.user, self.password)
+            ftp_server.set_pasv(self.passive)
+            
+            # Walk the local directory structure
+            for (dirpath, dirnames, filenames) in os.walk(self.local_root):
+    
+                # Strip out the common local root directory. What is left
+                # will be the relative directory both locally and remotely.
+                local_rel_dir_path = dirpath.replace(self.local_root, '.')
+                if self._skipThisDir(local_rel_dir_path):
+                    continue
+                # This is the absolute path to the remote directory:
+                remote_dir_path = os.path.normpath(os.path.join(self.remote_root, local_rel_dir_path))
+    
+                # Make the remote directory if necessary:
+                self._make_remote_dir(ftp_server, remote_dir_path)
+                    
+                # Now iterate over all members of the local directory:
+                for filename in filenames:
+    
+                    full_local_path = os.path.join(dirpath, filename)
+                    # See if this file can be skipped:
+                    if self._skipThisFile(timestamp, fileset, full_local_path):
+                        continue
+    
+                    full_remote_path = os.path.join(remote_dir_path, filename)
+                    STOR_cmd = "STOR %s" % full_remote_path
+                    fd = open(full_local_path, "r")
+                    for count in range(self.max_tries):
+                        try:
+                            ftp_server.storbinary(STOR_cmd, fd)
+                        except ftplib.all_errors, e:
+                            syslog.syslog(syslog.LOG_ERR, "ftpupload: attempt #%d. Failed uploading %s. Reason: %s" % (count+1, full_remote_path, e))
+                            if count >= self.max_tries -1 :
+                                syslog.syslog(syslog.LOG_ERR, "ftpupload: Failed to upload file %s" % full_remote_path)
+                                raise
+                            ftp_server.set_pasv(self.passive)
+                        else:
+                            fd.close()
+                            n_uploaded += 1
+                            syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Uploaded file %s" % full_remote_path)
+                            break
+                    fileset.add(full_local_path)
+        finally:
+            try:
+                ftp_server.quit()
+            except socket.error:
+                pass
         
         timestamp = time.time()
         self.saveLastUpload(timestamp, fileset)
