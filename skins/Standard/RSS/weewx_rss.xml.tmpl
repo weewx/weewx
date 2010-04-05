@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+##    $Revision$
+##    $Author$
+##    $Date$
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+   <channel>
+      <title>$station.location, Weather Conditions</title>
+      <link>$station.webpath</link>
+      <description>Current conditions, and daily, monthly, and yearly summaries</description>
+      <language>en-us</language>
+      <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+
+      <lastBuildDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</lastBuildDate>
+      <docs>http://blogs.law.harvard.edu/tech/rss</docs>
+      <generator>weewx $station.version</generator>
+      <ttl>$current.interval.string('')</ttl>
+      <item>
+         <title>Current Weather Conditions</title>
+         <link>$station.webpath/index.html</link>
+         <description>Current weather conditions at $station.location</description>
+         <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+ 		 <content:encoded><![CDATA[
+           <p>
+             Time:                $current.dateTime<br/>
+             Outside Temperature: $current.outTemp<br/>
+             Inside Temperature:  $current.inTemp<br/>
+             Wind Chill:          $current.windchill<br/>
+             Heat Index:          $current.heatindex<br/>
+             Dewpoint:            $current.dewpoint<br/>
+             Humidity:            $current.outHumidity<br/>
+             Barometer:           $current.barometer<br/>
+             Wind:                $current.windSpeed from $current.windDir<br/>
+             Rain Rate:           $current.rainRate<br/>
+        </p>
+      ]]></content:encoded>
+      </item>
+
+      <item>
+         <title>Daily Weather Summary</title>
+         <link>$station.webpath/index.html</link>
+         <description>Daily summary of weather conditions at $station.location</description>
+         <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+ 		 <content:encoded><![CDATA[
+           <p>
+             Day:                     $day.dateTime.format("%d %b %Y")<br/>
+	         Max Outside Temperature: $day.outTemp.max at $day.outTemp.maxtime<br/>
+	         Min Outside Temperature: $day.outTemp.min at $day.outTemp.mintime<br/>
+	         Max Inside Temperature:  $day.inTemp.max at $day.inTemp.maxtime<br/>
+	         Min Inside Temperature:  $day.inTemp.min at $day.inTemp.mintime<br/>
+	         Max Barometer:           $day.barometer.max at $day.barometer.maxtime<br/>
+	         Min Barometer:           $day.barometer.min at $day.barometer.mintime<br/>
+             Max Wind :               $day.wind.max from $day.wind.gustdir at $day.wind.maxtime<br/>
+             Rain today:              $day.rain.sum<br/>
+        </p>
+      ]]></content:encoded>
+      </item>
+
+      <item>
+         <title>Monthly Weather Summary</title>
+         <link>$station.webpath/month.html</link>
+         <description>Monthly summary of weather conditions at $station.location</description>
+         <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+ 		 <content:encoded><![CDATA[
+           <p>
+             Month:                   $month.dateTime.format("%B %Y")<br/>
+	         Max Outside Temperature: $month.outTemp.max at $month.outTemp.maxtime<br/>
+	         Min Outside Temperature: $month.outTemp.min at $month.outTemp.mintime<br/>
+	         Max Inside Temperature:  $month.inTemp.max at $month.inTemp.maxtime<br/>
+	         Min Inside Temperature:  $month.inTemp.min at $month.inTemp.mintime<br/>
+	         Max Barometer:           $month.barometer.max at $month.barometer.maxtime<br/>
+	         Min Barometer:           $month.barometer.min at $month.barometer.mintime<br/>
+             Max Wind :               $month.wind.max from $month.wind.gustdir at $month.wind.maxtime<br/>
+             Rain total for month:    $month.rain.sum<br/>
+        </p>
+      ]]></content:encoded>
+      </item>
+
+      <item>
+         <title>Yearly Weather Summary</title>
+         <link>$station.webpath/year.html</link>
+         <description>Yearly summary of weather conditions at $station.location</description>
+         <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+ 		 <content:encoded><![CDATA[
+           <p>
+             Year:                    $year.dateTime.format("%Y")<br/>
+	         Max Outside Temperature: $year.outTemp.max at $year.outTemp.maxtime<br/>
+	         Min Outside Temperature: $year.outTemp.min at $year.outTemp.mintime<br/>
+	         Max Inside Temperature:  $year.inTemp.max at $year.inTemp.maxtime<br/>
+	         Min Inside Temperature:  $year.inTemp.min at $year.inTemp.mintime<br/>
+	         Max Barometer:           $year.barometer.max at $year.barometer.maxtime<br/>
+	         Min Barometer:           $year.barometer.min at $year.barometer.mintime<br/>
+             Max Wind :               $year.wind.max from $year.wind.gustdir at $year.wind.maxtime<br/>
+             Rain total for year:     $year.rain.sum<br/>
+        </p>
+      ]]></content:encoded>
+      </item>
+
+   </channel>
+</rss>

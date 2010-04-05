@@ -44,7 +44,7 @@ class WxStation (object) :
         self.port             = config_dict['port']
         self.timeout          = float(config_dict.get('timeout', '5.0'))
         self.wait_before_retry= float(config_dict.get('wait_before_retry', '1.2'))
-        self.max_retries      = int(config_dict.get('max_retries'  , '4'))
+        self.max_tries        = int(config_dict.get('max_tries'  , '4'))
         self.baudrate         = int(config_dict.get('baudrate'     , '19200'))
         self.archive_delay    = int(config_dict.get('archive_delay', '15'))
         self.unit_system      = int(config_dict.get('unit_system'  , '1'))
@@ -101,7 +101,7 @@ class WxStation (object) :
         
         for loop in xrange(N) :
             
-            for count in xrange(self.max_retries):
+            for count in xrange(self.max_tries):
                 # Fetch a packet
                 #print "LOOP #%d; Try #%d" % (loop, count)
                 buffer = self.serial_port.read(99)
@@ -147,8 +147,8 @@ class WxStation (object) :
         # Save the last good time:
         _last_good_ts = since_ts if since_ts else 0
 
-        # Retry the dump up to max_retries times
-        for _count in xrange(self.max_retries) :
+        # Retry the dump up to max_tries times
+        for _count in xrange(self.max_tries) :
             try :
                 # Wake up the console...
                 self._wakeup_console()
@@ -200,7 +200,7 @@ class WxStation (object) :
         """
         
         # Try up to 3 times:
-        for _count in xrange(self.max_retries) :
+        for _count in xrange(self.max_tries) :
             try :
                 # Wake up the console...
                 self._wakeup_console()
@@ -241,7 +241,7 @@ class WxStation (object) :
         _buffer = struct.pack("<bbbbbb", newtime_tt[5], newtime_tt[4], newtime_tt[3], newtime_tt[2],
                                          newtime_tt[1], newtime_tt[0] - 1900)
         
-        for _count in xrange(self.max_retries) :
+        for _count in xrange(self.max_tries) :
             try :
                 self._wakeup_console()
                 self._send_data('SETTIME\n')
@@ -269,7 +269,7 @@ class WxStation (object) :
         if archive_interval_minutes not in (1, 5, 10, 15, 30, 60, 120):
             raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % archive_interval
 
-        for _count in xrange(self.max_retries):
+        for _count in xrange(self.max_tries):
             try :
                 self._wakeup_console()
             
@@ -299,7 +299,7 @@ class WxStation (object) :
     
     def clearLog(self):
         """Clear the internal archive memory in the VantagePro."""
-        for _count in xrange(self.max_retries):
+        for _count in xrange(self.max_tries):
             try:
                 self._wakeup_console()
                 self._send_data("CLRLOG\n")
@@ -314,7 +314,7 @@ class WxStation (object) :
     def getArchiveInterval(self):
         """Return the present archive interval in seconds."""
         
-        for _count in xrange(self.max_retries):
+        for _count in xrange(self.max_tries):
             try :
                 self._wakeup_console()
                 self._send_data("EEBRD 2D 01\n")
@@ -337,7 +337,7 @@ class WxStation (object) :
         # of resynchronizations, the max # of packets received w/o an error,
         the # of CRC errors detected.)"""
         
-        for _count in xrange(self.max_retries) :
+        for _count in xrange(self.max_tries) :
             try :
                 self._wakeup_console()
                 # Can't use function _send_data because the VP doesn't respond with an 
@@ -449,7 +449,7 @@ class WxStation (object) :
                      'leafWet2'        : _little_val, 
                      'leafWet3'        : _little_val, 
                      'leafWet4'        : _little_val,
-                     'transmitBattery' : _null, 
+                     'transmitBattery' : _null_int, 
                      'consoleBattery'  : lambda v : float((v * 300) >> 9) / 100.0
                      }        
     
@@ -583,8 +583,8 @@ class WxStation (object) :
         
         """
         
-        # Wake up the console. Try up to max_retries times
-        for _count in xrange(self.max_retries) :
+        # Wake up the console. Try up to max_tries times
+        for _count in xrange(self.max_tries) :
             # Clear out any pending input or output characters:
             self.serial_port.flushOutput()
             self.serial_port.flushInput()
@@ -635,8 +635,8 @@ class WxStation (object) :
         # ...and pack that on to the end of the data in big-endian order:
         _data_with_crc = data + struct.pack(">H", _crc)
         
-        # Retry up to max_retries times:
-        for _count in xrange(self.max_retries) :
+        # Retry up to max_tries times:
+        for _count in xrange(self.max_tries) :
             self.serial_port.write(_data_with_crc)
             # Look for the acknowledgment.
             _resp = self.serial_port.read()
@@ -862,6 +862,9 @@ def _little_temp(v) :
 
 def _null(v) :
     return float(v)
+
+def _null_int(v):
+    return int(v)
 
 def _windDir(v):
     return float(v) * 22.5 if v!= 0x00ff else None

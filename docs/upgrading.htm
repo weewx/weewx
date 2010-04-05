@@ -119,23 +119,25 @@ td {
 
 <body>
 
-<h1 class="title">Upgrading to weewx v1.5</h1>
+<h1 class="title">Upgrading to weewx v1.6</h1>
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
 <h2>V.1.5.0 or earlier</h2>
 <p>The part of the configuration file dealing with the presentation layer has 
 been split off into a separate file <span class="code">skin.conf</span>. Hence, 
 once again, the installation script
-<span class="code">setup.py</span> will NOT merge your old configuration file 
+<span class="code">setup.py</span> will NOT merge your old <span class="code">
+weewx.conf</span> configuration file 
 into the new one. You will have to re-edit <span class="code">weewx.conf</span> 
 to put in your customizations. You may also have to edit <span class="code">
-skin.conf</span> for whatever skin you choose (right now, only skin, Standard 
+skin.conf</span> for whatever skin you choose (right now, only one skin, <em>Standard</em>, 
 comes with the distribution).</p>
-<p>The URL for the radar image is now in the template. If you don&#39;t live in the 
-Pacific Northwest, you will probably want to change it! You can find it in
-<span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/index.html.tmpl</span> 
-and searching for &quot;radar.&quot;</p>
-<p>The directory &#39;<span class="code">templates</span>&#39; is no longer used, so you 
+<p>However, a reinstall of V1.6 <em>will</em> merge your changes for
+<span class="code">weewx.conf</span>.</p>
+<p>It will also merge any changes you have made to <span class="code">skin.conf</span> 
+as well.</p>
+<p>The directory &#39;<span class="code">templates</span>&#39; is no longer used; 
+it has been replaced with directory &#39;<span class="code">skins</span>&#39;. You 
 may delete it if you wish:</p>
 <p class="tty">rm -r <em>$WEEWX_ROOT</em>/templates</p>
 <h2>V1.4.0 or earlier</h2>

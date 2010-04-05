@@ -1,4 +1,10 @@
 #! /bin/sh
+#
+# Author: Tom Keffer <keffer@gmail.com>
+#
+# Startup script for Debian derivatives
+#
+#
 ### BEGIN INIT INFO
 # Provides:          weewx
 # Required-Start:    $local_fs $remote_fs $syslog $time
@@ -9,10 +15,6 @@
 # Description:       Manages the weewx weather system
 #
 ### END INIT INFO
-
-#
-# Author: TomKeffer <keffer@gmail.com>
-#
 
 # Do NOT "set -e"
 

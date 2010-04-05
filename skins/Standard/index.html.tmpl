@@ -5,6 +5,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    #if $encoding == 'utf8'
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    #end if    
     <title>$station.location Current Weather Conditions</title>
     <link rel="stylesheet" type="text/css" href="weewx.css"/>
     <script type="text/javascript">
@@ -223,10 +226,12 @@
 
         <p>&nbsp;</p>
 
+        #if $Extras.has_key('radar_url')
         <div id="radar_img">
-          <a href="http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif">
-          <img src="http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif" alt="Radar" /></a>
+          <a  href="$Extras.radar_url">
+          <img src="$Extras.radar_url" alt="Radar" /></a>
         </div>
+        #end if
 
       </div> <!--End class "stats_group" -->
 
@@ -266,21 +271,22 @@
             fast, and easy to understand by leveraging modern software concepts.
           </p>
           ##<p><a href="../weather">More information about this weather station.</a></p>
+          <p><a href="RSS/weewx_rss.xml">RSS feed</a></p>
           <p>Weewx uptime:  $station.uptime<br/>
              Server uptime: $station.os_uptime<br/>
              weewx v$station.version</p>
         </div>
         <div id="plots">
-          <img src="daytempdew.png" alt="temperatures" />
+          <img src="daytempdew.png"   alt="temperatures" />
           <img src="daytempchill.png" alt="heatchill" />
-          <img src="dayrain.png" alt="rain" />
-          <img src="daywind.png" alt="wind" />
+          <img src="dayrain.png"      alt="rain" />
+          <img src="daywind.png"      alt="wind" />
           <img src="daybarometer.png" alt="barometer"/>
-          <img src="daywinddir.png" alt="Hi Wind" />
-          <img src="dayinside.png" alt="Inside" />
-          <img src="daywindvec.png" alt="Wind Vector" />
-          <img src="dayrx.png" alt="day rx percent"/>
-          <img src="daypond.png" alt="Pond Temperatures" />
+          <img src="daywinddir.png"   alt="Hi Wind" />
+          <img src="dayinside.png"    alt="Inside" />
+          <img src="daywindvec.png"   alt="Wind Vector" />
+          <img src="dayrx.png"        alt="day rx percent"/>
+          <img src="daypond.png"      alt="Pond Temperatures" />
         </div> <!-- End id "plots" -->
       </div> <!-- End id "content" -->
 

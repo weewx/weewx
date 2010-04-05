@@ -7,21 +7,32 @@
 #    $Author$
 #    $Date$
 #
-"""Views into scalar data, and a formatter to format them."""
+"""Views into a tree like model, and a formatter to format them.
+
+This module probably contains the most hard core Python code in the
+whole system.
+"""
 
 import time
+import types
+import weewx
+
+#===============================================================================
+#                             class ModelFormatter
+#===============================================================================
 
 class ModelFormatter(object):
     """A view into an hierarchical data model.
     
-    Much of the HTML rendering logic depends on this class. Given a
+    Much of the template rendering logic depends on this class. Given a
     hierarchical data model consisting of dictionaries and attributes,
     this class offers views into it, using introspection. The views
     are through a formatter object. The views are created on the fly,
     on demand. Thus the model can change without changing any state in
     the view. It does this by creating itself recursively, as it goes
-    down the model, root to leaf node. When it finally hits an integer
-    or float, it stops and invokes the formatter.
+    down the model, root to leaf node. When a primitive such as an int,
+    float, or string is encountered, it is assumed that we are at the
+    leaf note, and the ModelFormatter stops and invokes the formatter.
     
     For example, given a model such as:
         data = {}
@@ -31,9 +42,10 @@ class ModelFormatter(object):
         data['year']['outTemp']['max'] = 55.298
     
     Then a ModelFormatter can be constructed into it, using a formatter:
-    
-        formatter = weewx.html.Formatter({'outTemp' : '%.1f'}, 
-                                         {'outTemp' : " Fahrenheit"}, None)
+
+        formatter = Formatter({'outTemp' : '%.1f'}, 
+                              {'outTemp' : " Fahrenheit"},
+                              None)
         dataView = ModelFormatter(data, formatter)
     
         print data['year']['outTemp']['min']     # Prints 45.88
@@ -47,7 +59,7 @@ class ModelFormatter(object):
         
         model: The hierarchical model to be viewed.
         
-        formatter: An instance of weewx.html.Formatter, or something that looks like it.
+        formatter: An instance of weewx.formatter.Formatter.
         
         context: Contains the accumulating context as ModelFormatter creates 
         itself recursively. 
@@ -64,14 +76,35 @@ class ModelFormatter(object):
         """
         # This will raise a KeyError exception if the model
         # does not support the key 'key':
-        v = self.model.__getitem__(key)
+        v = self.model[key]
+
         # If we made it this far, the model does have key 'key'.
-        # Is it a scalar?
-        if v is None or type(v) in (float, int):
-            # Yes, it is. Format it and return the string.
-            str = self.formatter.format(v, self.context + (key,))
-            return str
-        # It's not a scalar. Create a new instance recursively:
+        # Is it a primitive?
+        if type(v) in (int, float, str, types.NoneType):
+            # It is. We're done. Return a wrapper that will format it as requested:
+            return ModelObjectFormatter(v, self.formatter, self.context +(key,))
+        
+        # Not a primitive. Did the model return a generator type? 
+        elif isinstance(v, types.GeneratorType):
+            # It did. Wrap it in a ModelGeneratorFormatter. 
+            # Unfortunately, we do not have access to
+            # whatever variable the results of the generator expression is being
+            # bound to, so we kludge up a context. If the key that triggered the
+            # the return of the generator ends in s, then the context is that
+            # key up to the 's'. This turns 'days' to 'day', 'months' to 'month',
+            # etc. It's not general, but it will work within the context of weewx.
+            if weewx.debug:
+                assert(key[-1] == 's')
+            return ModelGeneratorFormatter(v, self.formatter, (key[:-1],))
+
+        # Not a generator type. Did the model return an instance method? 
+        elif isinstance(v, types.MethodType):
+            # It is an instance method. Wrap it in a call formatter before returning it:
+            return ModelCallFormatter(v, self.formatter, self.context + (key,))
+
+        # Don't know what it is. Hopefully, we're at an internal node of the tree,
+        # and subsequent calls will work us down to a leaf. 
+        # Create a new instance recursively, adding the key to the context:
         return ModelFormatter(v, self.formatter, self.context + (key,))
     
     def __getattr__(self, attr):
@@ -91,75 +124,292 @@ class ModelFormatter(object):
         v = getattr(self.model, attr)
 
         # If we made it this far, the model does have attribute 'attr'.
-        # Is it a scalar?
-        if v is None or type(v) in (float, int) :
-            # Yes, it is. Format it and return the string.
-            str = self.formatter.format(v, self.context + (attr,))
-            return str
-        # It's not a scalar. Create a new instance recursively:
+        # Is it a primitive?
+        if type(v) in (int, float, str, types.NoneType):
+            # It is. We're done. Return a wrapper that will format it as requested:
+            return ModelObjectFormatter(v, self.formatter, self.context +(attr,))
+        
+        # Not a primitive. Did the model return a generator type? 
+        elif isinstance(v, types.GeneratorType):
+            # It did. Wrap it in a ModelGeneratorFormatter. 
+            # Unfortunately, we do not have access to
+            # whatever variable the results of the generator expression is being
+            # bound to, so we kludge up a context. If the key that triggered the
+            # the return of the generator ends in s, then the context is that
+            # key up to the 's'. This turns 'days' to 'day', 'months' to 'month',
+            # etc. It's not general, but it will work within the context of weewx.
+            if weewx.debug:
+                assert(attr[-1] == 's')
+            return ModelGeneratorFormatter(v, self.formatter, (attr[:-1],))
+        
+        # Not a generator type. Did the model return an instance method? 
+        elif isinstance(v, types.MethodType):
+            # It is an instance method. Wrap it in a call formatter before returning it:
+            return ModelCallFormatter(v, self.formatter, self.context + (attr,))
+
+        # Don't know what it is. Hopefully, we're at an internal node of the tree,
+        # and subsequent calls will work us down to a leaf. 
+        # Create a new instance recursively, adding the key to the context:
         return ModelFormatter(v, self.formatter, self.context + (attr,))
     
+#===============================================================================
+#                             class ModelGeneratorFormatter
+#===============================================================================
+
+class ModelGeneratorFormatter(object):
+    """Wraps a generator object in a formatter.
     
+    The presence of an __iter__ method is what makes this object iterable."""
+    def __init__(self, model_generator, formatter, context):
+        self.model_generator = model_generator
+        self.formatter       = formatter
+        self.context         = context
+        
+    def __iter__(self):
+        # This is a common idiom with Python: Iterators return themselves when
+        # asked for an iterator:
+        return ModelGeneratorFormatter(self.model_generator, self.formatter, self.context)
+        
+    def next(self):
+        """Return the next item"""
+        try:
+            # Ask my model for the next item:
+            x = self.model_generator.next()
+            
+            # Is the results a primitive?
+            if type(x) in (int, float, str, types.NoneType):
+                # Yes. Wrap it in a ModelObjectFormatter:
+                return ModelObjectFormatter(x, self.formatter, self.context)
+            else:
+                # No. Wrap it in a ModelFormatter so the recursion can continue
+                return ModelFormatter(x, self.formatter, self.context)
+        except StopIteration:
+            raise
+      
+#===============================================================================
+#                             class ModelCallFormatter
+#===============================================================================
+
+class ModelCallFormatter(object):
+    """Wraps an instance method in a formatter."""
+    def __init__(self, model_call, formatter, context):
+        self.model_call = model_call
+        self.formatter  = formatter
+        self.context    = context
+        
+    def __call__(self, *args):
+        """The client is invoking the instance method"""
+
+        # Invoke the call on the model, with the given arguments:
+        x = self.model_call(*args)
+
+        # Is the results a primitive?
+        if type(x) in (int, float, str, types.NoneType):
+            # Yes. Wrap it in a ModelObjectFormatter:
+            return ModelObjectFormatter(x, self.formatter, self.context)
+        else:
+            # No. Wrap it in a ModelFormatter so the recursion can continue
+            return ModelFormatter(x, self.formatter, self.context)
+          
+#===============================================================================
+#                             class ModelObjectFormatter
+#===============================================================================
+
+class ModelObjectFormatter(object):
+    """Wraps a primitive type (int, float, string) in a formatter."""
+    
+    def __init__(self, model, formatter, context):
+#        print "making ModelObjectFormatter ", model, context
+        self.model     = model
+        self.formatter = formatter
+        self.context   = context
+        
+    def __str__(self):
+        """Return a formatted version of the model value with a label. """
+        res = self.formatter.format(self.model, self.context)
+        return res
+    
+    @property
+    def raw(self):
+        """Return a raw version of the underlying model.
+        
+        The raw version does not apply any formatting."""
+        return self.model
+    
+    @property
+    def formatted(self):
+        """Return a formatted version of the model, but with no label."""
+        res = self.formatter.format(self.model, self.context, False)
+        return res
+    
+    def format(self, format_string, NONE_string = None):
+        """Return a formatted version of the model, using a user-supplied format."""
+        res = self.formatter.format(self.model, self.context, False, format_string, NONE_string)
+        return res
+    
+    def string(self, NONE_string = None):
+        if self.model is None:
+            return self.formatter.format(self.model, self.context, None_string = NONE_string)
+        else:
+            return str(self.model)
+        
+#===============================================================================
+#                             class Formatter
+#===============================================================================
+
 class Formatter(object):
     """Formatter to be used to convert a value to a string, given a context."""
-    def __init__(self, value_format_dict, unit_label_dict, time_format_dict):
+    def __init__(self, type_format_dict, type_label_dict, time_format_dict):
         """Initialize an instance of Formatter.
         
-        value_label_dict: A dictionary with key of a type, value of a format to be
-        used to format that type. Example: {'outTemp' : '%0.1f', 'barometer' : '%0.3f'}
+        type_format_dict: A dictionary with key of a type, value a string format to be
+        used to format that type. 
         
-        unit_label_dict: A dictionary with the unit label to be used for a type.
-        Example: {'outTemp' : '&deg;F', 'barometer': 'inHg'}
+          Example: {'outTemp' : '%0.1f', 'barometer' : '%0.3f'}
         
-        time_format_dict: A dictionary with strftime type formats, to be used to format
-        any times encountered. The key is a time period ('day', 'week', 'current', etc.)
-        and the value is a strftime format that should be used to format that time. 
-        Example: {'day' : '%H:%M', 'current' : '%d-%b-%Y %H:%M', 'week' : '%H:%M on %A'}
-        The key is usually extracted from the node closest to the root. Hence, a template
-        reference such as $week.outTemp.min will use the format keyed by 'week'.
+        type_label_dict: A dictionary with key of a type, value a unit label to be
+        used for a type.
         
-        """
-        self.value_format_dict = value_format_dict
-        self.unit_label_dict   = unit_label_dict
+          Example: {'outTemp' : '&deg;F', 'barometer': 'inHg'}
+        
+        time_format_dict: A dictionary with key a time period ('day', 'week', 
+        'current', etc.), value a strftime format that should be used to format 
+        that period. 
+        
+          Example: {'day' : '%H:%M', 'current' : '%d-%b-%Y %H:%M', 'week' : '%H:%M on %A'}"""
+          
+        self.type_format_dict  = type_format_dict
+        self.type_label_dict   = type_label_dict
         self.time_format_dict  = time_format_dict
         
-    def format(self, v, context):
+    def format(self, v, context, addLabel = True, useThisFormat = None, None_string = None):
         """Format the value v in the context context.
         
-        v: The value to be formatted. If no suitable format can be found, 
-        the value itself will be returned.
+        v: The value to be formatted.
         
         context: A tuple with the context of the value.  An example
-        context would be ('year', 'barometer', 'max'). The algorithm
-        searches backwards down the context ('max', 'barometer',
-        'year' in this case), looking for something it can format.
+        context would be ('year', 'barometer', 'max'). The first
+        position is always the time period, the second always the type.
+        The optional third position is something like 'max' or 'maxtime.'
+        
+        addLabel: True to add a label (such as 'feet') to the returned value.
+                  False otherwise.
+                  
+        useThisFormat: If not None, use this format to do the formatting. The
+        dictionary type_format_dict supplied in the initializer is ignored.
+        
+        None_string: Use this string if the value is None. An example would
+        be "N/A". If set to None, retrieve the string from the unit label dictionary.
         
         returns formatted version of v
         """
-        # Walk backwards through the context tuple, looking
-        # for something we recognize and can format:
-        for _key in context[::-1]:
-            # Is it a date?
-            if _key in ('mintime', 'maxtime', 'time', 'dateTime'):
-                # Format as a date/time.  If the context is 3 elements
-                # long, it's probably something like
-                # month.outTemp.min. If it's 2 elements long, it's
-                # probably something like current.outTemp.  Based on
-                # its length, pick the right time format ('month', or
-                # 'current', respectively, in this example).
-                _format_key = context[-3] if len(context)>=3 else context[-2]
-                return time.strftime(self.time_format_dict[_format_key], time.localtime(v))
-            else:
-                # Not a date. Is it in one of the other dictionaries?
-                if self.value_format_dict.has_key(_key) or self.unit_label_dict.has_key(_key):
-                    # It is. Format as a number
-                    if v is None :
-                        return "N/A"
-                    try:
-                        val_str   = self.value_format_dict.get(_key, '%f') % v
-                    except TypeError:
-                        val_str = str(v)
-                    label_str = self.unit_label_dict.get(_key, '')
-                    return (val_str + label_str).decode('string_escape')
-        # Don't know how to format it. Just return it as is
-        return v
+
+        # Figure out what the value is.
+        
+        # Is it a None value?
+        if v is None :
+            return None_string if None_string else self.type_format_dict.get('NONE', 'N/A')
+
+        # Is it a date?
+        elif context[-1] in ('mintime', 'maxtime', 'time', 'dateTime'):
+            # The last tag is 'time' related. Format as a date/time.
+            # The first context element will be the time period, something like
+            # 'current' or 'month'. This will be the key into the time format dictionary. 
+            _format = self.time_format_dict[context[0]] if not useThisFormat else useThisFormat
+            return time.strftime(_format, time.localtime(v))
+
+        # Is it a count of some kind? 
+        elif context[-1] in ('count', 'max_ge', 'max_le', 'min_le', 'sum_ge'):
+            # It is. Format as an int by simply converting to a string:
+            return str(v)
+        
+        else:
+            _type = context[-1] if context[-1] in ('vecdir', 'gustdir') else context[1]
+            # Try formatting it. If we get a TypeError the format is for the wrong type 
+            # (eg, an integer format being used to format a float). If we get a KeyError, there is
+            # no format in the format dictionary for the type.
+            try:
+                if useThisFormat:
+                    val_str = useThisFormat % v
+                else:
+                    val_str   = self.type_format_dict[_type] % v
+            except (TypeError, KeyError):
+                # Don't know how to format it. Explicitly convert to a string:
+                val_str = str(v)
+            
+            # Add the (optional) label and return
+            if addLabel:
+                val_str += self.type_label_dict.get(_type, '') 
+    
+            return val_str
+
+#===============================================================================
+#                            Testing routines
+#===============================================================================
+
+
+if __name__ == '__main__':
+
+    import configobj
+    import os.path
+    import sys
+    
+    import weewx.stats
+
+    def testFormatting(config_path):
+        weewx.debug = 1
+        try :
+            config_dict = configobj.ConfigObj(config_path, file_error=True)
+        except IOError:
+            print "Unable to open configuration file ", config_path
+            exit()
+            
+        unitTypeDict         = {'outTemp' : 'degree_F'}
+        unitStringFormatDict = {'outTemp' : "%.2f"}
+        unitLabelDict        = {'outTemp' : ' degrees F'}    # No degree sign in order to avoid introducing UTF-8
+        timeLabelDict        = {'day'     : "%H:%M",
+                                'week'    : "%H:%M on %A",
+                                'month'   : "%d-%b-%Y %H:%M",
+                                'year'    : "%d-%b-%Y %H:%M",
+                                'current' : "%d-%b-%Y %H:%M"} 
+
+        statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
+                                     config_dict['Stats']['stats_file'])
+
+        statsDb = weewx.stats.StatsReadonlyDb(statsFilename, 65.0, 65.0)
+
+        end_tt =   (2010,  1, 1, 0, 0, 0, 0, 0, -1)
+
+        tagStats = weewx.stats.TaggedStats(statsDb, time.mktime(end_tt), unitTypeDict)
+        print "Temperature minimum; unformatted output: ", tagStats.month.outTemp.min
+        print "Temperature mintime; unformatted output: ", tagStats.month.outTemp.mintime
+        print "Days w/max temp over 90.0:               ", tagStats.month.outTemp.max_ge(90.0)
+        formatter =  Formatter(unitStringFormatDict,
+                               unitLabelDict,
+                               timeLabelDict)
+
+        # Get a formatted view into the statistical information.
+        tagStatsFormatted = ModelFormatter(tagStats, formatter)
+        print tagStatsFormatted.month.outTemp.min
+        print tagStatsFormatted.month.outTemp.mintime
+        print tagStatsFormatted.month.outTemp.max_ge(90.0)
+        print tagStatsFormatted.month.outTemp.count
+        print tagStatsFormatted.month.outTemp.count.raw
+
+        for day in tagStatsFormatted.month.days:
+            print "            ********"
+            print "Date:                               ", day.dateTime.format("%d-%m-%y")
+            print "Start of day:                       ", day.dateTime
+            print "Start of day   raw:                 ", day.dateTime.raw
+            print "Day's mintime, formatted & labeled: ", day.outTemp.mintime
+            print "Day's min,     formatted & labeled: ", day.outTemp.min
+            print "Day's mintime, raw                : ", day.outTemp.mintime.raw
+            print "Day's min,     raw                : ", day.outTemp.min.raw
+            print "Day's mintime, formatted          : ", day.outTemp.mintime.formatted
+            print "Day's min,     formatted          : ", day.outTemp.min.formatted
+            
+    if len(sys.argv) < 2 :
+        print "Usage: stats.py path-to-configuration-file"
+        exit()
+        
+    testFormatting(sys.argv[1])

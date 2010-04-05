@@ -28,18 +28,19 @@ NAME: $station.location
 ELEV: $station.altitude    LAT: $station.latitude[0]-$station.latitude[1] $station.latitude[2]    LONG: $station.longitude[0]-$station.longitude[1] $station.longitude[2]
 
 
-                   TEMPERATURE ($station.temperature_unit_label), RAIN ($station.rain_unit_label), WIND SPEED ($station.wind_unit_label)
+                   TEMPERATURE ($unit_label.outTemp.strip()), RAIN ($unit_label.rain.strip()), WIND SPEED ($unit_label.windSpeed.strip())
 
                                          HEAT   COOL         AVG
       MEAN                               DEG    DEG          WIND                   DOM
 DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME    DIR
 ---------------------------------------------------------------------------------------
 #for $day in $month.days
-#if $day.barometer.count
-$showDay($day.dateTime) $showTemp($day.outTemp.avg) $showTemp($day.outTemp.max) $showTime($day.outTemp.maxtime) $showTemp($day.outTemp.min) $showTime($day.outTemp.mintime) $showTemp($day.heatdeg.sum) $showTemp($day.cooldeg.sum) $showRain($day.rain.sum) $showWind($day.wind.avg) $showWind($day.wind.max) $showTime($day.wind.maxtime) $showDir($day.wind.vecdir)
+#if $day.barometer.count.raw
+$showDay($day.dateTime.raw) $showTemp($day.outTemp.avg.raw) $showTemp($day.outTemp.max.raw) $showTime($day.outTemp.maxtime.raw) $showTemp($day.outTemp.min.raw) $showTime($day.outTemp.mintime.raw) $showTemp($day.heatdeg.sum.raw) $showTemp($day.cooldeg.sum.raw) $showRain($day.rain.sum.raw) $showWind($day.wind.avg.raw) $showWind($day.wind.max.raw) $showTime($day.wind.maxtime.raw) $showDir($day.wind.vecdir.raw)
 #else
-$showDay($day.dateTime)
+$showDay($day.dateTime.raw)
 #end if
 #end for
 ---------------------------------------------------------------------------------------
-    $showTemp($month.outTemp.avg) $showTemp($month.outTemp.max)    $showDay($month.outTemp.maxtime) $showTemp($month.outTemp.min)    $showDay($month.outTemp.mintime) $showTemp($month.heatdeg.sum) $showTemp($month.cooldeg.sum) $showRain($month.rain.sum) $showWind($month.wind.avg) $showWind($month.wind.max)    $showDay($month.wind.maxtime) $showDir($month.wind.vecdir)
+    $showTemp($month.outTemp.avg.raw) $showTemp($month.outTemp.max.raw)    $showDay($month.outTemp.maxtime.raw) $showTemp($month.outTemp.min.raw)    $showDay($month.outTemp.mintime.raw) $showTemp($month.heatdeg.sum.raw) $showTemp($month.cooldeg.sum.raw) $showRain($month.rain.sum.raw) $showWind($month.wind.avg.raw) $showWind($month.wind.max.raw)    $showDay($month.wind.maxtime.raw) $showDir($month.wind.vecdir.raw)
+    

@@ -61,11 +61,11 @@ class StdEngine(object):
         
         self.parseArgs()
 
-        service_list = self.config_dict['Engines']['WxEngine'].as_list('service_list')
+        service_list = weeutil.weeutil.option_as_list(self.config_dict['Engines']['WxEngine'].get('service_list'))
         
         syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
         for svc in service_list:
-            syslog.syslog(syslog.LOG_DEBUG, "    ****: %s" % svc)
+            syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % svc)
         
         #For each listed service in service_list, instantiates an instance of the class,
         # passing self as the only argument."""
@@ -381,10 +381,10 @@ class StdWunderground(StdService):
             syslog.syslog(syslog.LOG_DEBUG, "Shut down Weather Underground thread.")
 
 #===============================================================================
-#                    Class StdProcess
+#                    Class StdReportService
 #===============================================================================
 
-class StdProcess(StdService):
+class StdReportService(StdService):
     
     def __init__(self, engine):
         StdService.__init__(self, engine)
@@ -402,7 +402,7 @@ class StdProcess(StdService):
     def shutDown(self):
         if self.thread:
             self.thread.join(20.0)
-            syslog.syslog(syslog.LOG_DEBUG, "Shut down StdProcess thread.")
+            syslog.syslog(syslog.LOG_DEBUG, "Shut down StdReportService thread.")
         self.first_run = True
 
 #===============================================================================

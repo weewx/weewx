@@ -39,7 +39,7 @@ class MyEngine(StdEngine):
         # the first archive since startup, or if a new day has started
         if not self.old_day or self.old_day != dayStart_ts:
             self.old_day = dayStart_ts
-            self.newDay(rec)
+            self.newDay(rec)                          # NOTE 1
             
     def newDay(self, rec):
         """Called when the first archive record of a day arrives."""
@@ -48,12 +48,12 @@ class MyEngine(StdEngine):
         # list is actually in my superclass StdEngine.
         for svc_obj in self.service_obj:
             # Because this is a new event, not all services will
-            # be prepared to accept it. Check first to see if the
-            # service has a member function "firstArchiveOfDay"
-            # before calling it:
-            if hasattr(svc_obj, "firstArchiveOfDay"):
-                # The object does have the member function. Call it:
+            # be prepared to accept it. Be prepared for an AttributeError
+            # exception:
+            try:                                     # NOTE 2
                 svc_obj.firstArchiveOfDay(rec)
+            except AttributeError:
+                pass
 
 # Define a new service to take advantage of the new event
 class DailyService(StdService):

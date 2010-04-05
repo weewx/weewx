@@ -178,7 +178,7 @@ class Archive(object):
             _cursor.close()
             _connection.close()
 
-    def getRecord(self, timestamp, unitTypeDict = None):
+    def getRecord(self, timestamp, units = None):
         """Get a single instance of ArchiveRecord with a given epoch time stamp.
         
         timestamp: The epoch time of the desired record.
@@ -190,15 +190,16 @@ class Archive(object):
             _row = _cursor.fetchone()
             if not _row: return None
             
-        if not unitTypeDict:
+        if not units:
             return ArchiveRecord(_row)
         
         _unitSystem = _row['usUnits']
+        
         _converted = ArchiveRecord()
         for _type in _row.keys():
             if _type == 'usUnits':
                 continue
-            _converted[_type] = weewx.units.convertStd(_unitSystem, _type, unitTypeDict.get(_type), _row[_type])
+            _converted[_type] = units.convertFromStd(_unitSystem, _row[type], _type)
         return _converted
 
     def getSql(self, sql, *sqlargs):

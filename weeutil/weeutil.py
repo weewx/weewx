@@ -111,6 +111,12 @@ def accumulateLeaves(d):
     cum_dict.merge(merge_dict)
     return cum_dict
 
+def option_as_list(option):
+    if option is None: return None
+    if hasattr(option, '__iter__'):
+        return option
+    return [option]
+
 def stampgen(startstamp, stopstamp, interval):
     """Generator function yielding a sequence of timestamps, spaced interval apart.
     
@@ -536,20 +542,9 @@ def latlon_string(ll, hemi):
     min = frac * 60.0
     return ("%d" % (deg,), "%0.2f" % (min,), hemi[0] if ll >= 0 else hemi[1])
 
-def htmlescape(instring):
-    """Escape all entities and non-7bit characters."""
-    
-    outlist = []
-    for c in instring:
-        n = ord(c)
-        if n < 128:
-            outlist.append(c)
-        else:
-            if n in codepoint2name:
-                outlist.append("&%s;" % codepoint2name[n])
-            else:
-                outlist.append("&#%d;" % n)
-    return ''.join(outlist)
+def utf8_to_latin1(instring):
+    """Convert from UTF-8 to Latin-1 encoding."""
+    return unicode(instring, "utf8").encode("latin1")
     
 def _get_object(module_class, *args, **kwargs):
     """Given a path to a class, instantiates an instance of the class with the given args and returns it."""
@@ -568,6 +563,15 @@ def _get_object(module_class, *args, **kwargs):
     return obj
         
 if __name__ == '__main__':
+
+    print "****** option_as_list *********"
+    assert( option_as_list("abc") == ['abc'])
+    assert( option_as_list(['a', 'b']) == ['a', 'b'])
+    assert( option_as_list(None) == None)
+    assert( option_as_list('') == [''])
+    print "PASSES"
+
+    
     print "********* TimeSpans ***********"
 
     t = TimeSpan(1230000000, 1231000000)

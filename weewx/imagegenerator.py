@@ -17,36 +17,42 @@ import datetime
 import syslog
 import os.path
 
-import weeutil.weeutil
 import weeplot.genplot
 import weeplot.utilities
+import weeutil.weeutil
+import weewx.archive
+import weewx.reportengine
 import weewx.units
 
-class GenImages(object):
-    """Generate plots of the weather data.
-    
-    This class generates all the images specified in the ['Images'] section
-    of the given configuration dictionary. Typically, this is daily, weekly,
-    monthly, and yearly time plots.
-    
-    """
-    
-    def __init__(self, config_dict, skin_dict):
-        """Initialize an instance of GenImages.
-        
-        config_dict: weewx configuration dictionary with general station
-        information.
-        
-        skin_dict: Skin configuration dictionary with selections specific
-        to the presentation layer.
-        """    
-    
-        self.weewx_root   = config_dict['Station']['WEEWX_ROOT']
-        self.image_dict   = skin_dict['Images']
-        self.title_dict   = skin_dict['Labels']['Generic']
-        self.label_dict   = weewx.units.getLabelDict(skin_dict)
-        self.unitTypeDict = weewx.units.getUnitTypeDict(skin_dict)
+#===============================================================================
+#                    Class ImageGenerator
+#===============================================================================
 
+class ImageGenerator(weewx.reportengine.ReportGenerator):
+    """Class for managing the image generator."""
+
+    def run(self):
+        
+        self.setup()
+        
+        # Open up the main database archive
+        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
+                                       self.config_dict['Archive']['archive_file'])
+        archive = weewx.archive.Archive(archiveFilename)
+    
+        stop_ts = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
+
+        # Generate any images
+        self.genImages(archive, stop_ts)
+        
+    def setup(self):
+        
+        self.weewx_root   = self.config_dict['Station']['WEEWX_ROOT']
+        self.image_dict   = self.skin_dict['ImageGenerator']
+        self.title_dict   = self.skin_dict['Labels']['Generic']
+        self.label_dict   = weewx.units.getUnitLabelDict(self.skin_dict)
+        self.unitTypeDict = weewx.units.getUnitTypeDict(self.skin_dict)
+        
     def genImages(self, archive, time_ts):
         """Generate the images.
         
@@ -121,9 +127,9 @@ class GenImages(object):
                     # Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
                     unit_label = self.label_dict.get(var_type, '')
-                    # Because it is likely to use escaped characters, decode it. Also,
-                    # strip off any leading and trailing whitespace so it's easy to center
-                    unit_label = unit_label.decode('string_escape').strip()
+                    # PIL cannot handle UTF-8. So, convert to Latin1. Also, strip off
+                    # any leading and trailing whitespace so it's easy to center
+                    unit_label = weeutil.weeutil.utf8_to_latin1(unit_label).strip()
                     plot.setUnitLabel(unit_label)
                     
                     # See if a line label has been explicitly requested:
@@ -132,6 +138,8 @@ class GenImages(object):
                         # No explicit label. Is there a generic one? 
                         # If not, then the SQL type will be used instead
                         label = self.title_dict.get(var_type, var_type)
+                    # Convert to Latin-1
+                    label = weeutil.weeutil.utf8_to_latin1(label)
     
                     # See if a color has been explicitly requested.
                     color_str = line_options.get('color')

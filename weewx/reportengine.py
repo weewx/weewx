@@ -9,18 +9,18 @@
 #
 """Engine for generating reports"""
 
-import os.path
 import glob
+import os.path
 import shutil
+import sys
 import syslog
 import threading
+import time
 
 import configobj
 
-import weewx.archive
-import weewx.genfiles
-import weewx.genimages
-import weewx.ftpdata
+import weewx
+import weeutil.ftpupload
 import weeutil.weeutil
 
 class StdReportEngine(threading.Thread):
@@ -97,52 +97,44 @@ class StdReportEngine(threading.Thread):
             # Now inject any overrides for this specific report:
             skin_dict.merge(self.config_dict['Reports'][report])
             
-            # If this is the first time the report engine has been run, then
-            # run the 'singleton list' of generators.
-            if self.first_run and skin_dict.has_key('singleton_list'):
-                    singleton_list = skin_dict.as_list('singleton_list')
-                    self.runGenerators(skin_dict, singleton_list)
-
-            # Now run all the regular generators:
-            self.runGenerators(skin_dict, skin_dict.as_list('generator_list'))
+            # Finally, add the report name:
+            skin_dict['REPORT_NAME'] = report
             
-    def runGenerators(self, skin_dict, generator_list):
-        """Runs a list of generators.
-        skin_dict: The skin dictionary the list is to be run against.
-        
-        generator_list: A list of generators to be run. Each generator should
-        be a class with a method "start()". The initializer of the class should
-        take arguments (config_dict, skin_dict, gen_ts).
-        """
-        
-        for generator in generator_list:
-            try:
-                # Instantiate an instance of the class.
-                obj = weeutil.weeutil._get_object(generator, self.config_dict, skin_dict, self.gen_ts)
-            except ValueError, e:
-                syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
-                syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
-                continue
-
-            try:
-                # Call its start() method
-                obj.start()
-            except Exception, e:
-                # Caught unrecoverable error. Log it, exit
-                syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % generator)
-                syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
-                # Reraise the exception (this will eventually cause the thread to terminate)
-                raise
+            for generator in weeutil.weeutil.option_as_list(skin_dict.get('generator_list')):
+                try:
+                    # Instantiate an instance of the class.
+                    obj = weeutil.weeutil._get_object(generator, 
+                                                      self.config_dict, 
+                                                      skin_dict, 
+                                                      self.gen_ts, 
+                                                      self.first_run)
+                except ValueError, e:
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
+                    continue
+    
+                try:
+                    # Call its start() method
+                    obj.start()
+                    
+                except Exception, e:
+                    (cl, ob, tr) = sys.exc_info()
+                    # Caught unrecoverable error. Log it, exit
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception %s in generator %s" % (cl, generator))
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
+                    # Reraise the exception (this will eventually cause the thread to terminate)
+                    raise
 
 
 class ReportGenerator(object):
     """Base class for all report generators."""
-    def __init__(self, config_dict, skin_dict, gen_ts):
+    def __init__(self, config_dict, skin_dict, gen_ts, first_run):
         self.config_dict = config_dict
         self.skin_dict   = skin_dict
         self.gen_ts      = gen_ts
+        self.first_run   = first_run
         
     def start(self):
         self.run()
@@ -150,60 +142,36 @@ class ReportGenerator(object):
     def run(self):
         pass
 
-class FileGenerator(ReportGenerator):
-    """Class for managing the template based generators"""
-    
-    def run(self):
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.config_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-        start_ts   = archive.firstGoodStamp()
-        currentRec = archive.getRecord(stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
-
-        genFiles = weewx.genfiles.GenFiles(self.config_dict, self.skin_dict)
-        genFiles.generateBy('SummaryByMonth', start_ts, stop_ts)
-        genFiles.generateBy('SummaryByYear',  start_ts, stop_ts)
-        genFiles.generateToDate(currentRec, stop_ts)
-    
-
-class ImageGenerator(ReportGenerator):
-    """Class for managing the image generator."""
-
-    def run(self):
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.config_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        stop_ts = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-
-        # Generate any images
-        genImages = weewx.genimages.GenImages(self.config_dict, self.skin_dict)
-        genImages.genImages(archive, stop_ts)
-        
-class Ftp(ReportGenerator):
+class FtpGenerator(ReportGenerator):
     """Class for managing the "FTP generator".
     
     This will ftp everything in the public_html subdirectory to a webserver."""
 
     def run(self):
-        # Check to see if there is an 'FTP' section in the configuration
-        # dictionary and that all necessary options are present. 
+
+        # Check to see that all necessary options are present. 
         # If so, FTP the data up to a server.
-        ftp_dict = self.config_dict.get('FTP')
-        if ftp_dict and (ftp_dict.has_key('server')   and 
-                         ftp_dict.has_key('password') and 
-                         ftp_dict.has_key('user')     and
-                         ftp_dict.has_key('path')):
-            html_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                    self.config_dict['Reports']['HTML_ROOT'])
-            ftpData = weewx.ftpdata.FtpData(source_dir = html_dir, **ftp_dict)
-            ftpData.ftpData()
+        if (self.skin_dict.has_key('server')   and 
+            self.skin_dict.has_key('password') and 
+            self.skin_dict.has_key('user')     and
+            self.skin_dict.has_key('path')):
+            
+            t1 = time.time()
+            ftpData = weeutil.ftpupload.FtpUpload(server      = self.skin_dict['server'],
+                                                  user        = self.skin_dict['user'],
+                                                  password    = self.skin_dict['password'],
+                                                  local_root  = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                                                             self.config_dict['Reports']['HTML_ROOT']),
+                                                  remote_root = self.skin_dict['path'],
+                                                  name        = self.skin_dict['REPORT_NAME'],
+                                                  passive     = bool(self.skin_dict.get('passive', True)),
+                                                  max_tries   = int(self.skin_dict.get('max_tries', 3)))
+            N = ftpData.run()
+            t2= time.time()
+            syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
+            
                 
-class Copy(ReportGenerator):
+class CopyGenerator(ReportGenerator):
     """Class for managing the 'copy generator.'
     
     This will copy files from the skin subdirectory to the public_html
@@ -211,12 +179,21 @@ class Copy(ReportGenerator):
     
     def run(self):
         
-        # Get the list of files to be copied. Wrap in a try block in case
-        # the list does not exist.
+        copy_list = []
+
+        if self.first_run:
+            # Get the list of files to be copied only once, at the first invocation of
+            # the generator. Wrap in a try block in case the list does not exist.
+            try:
+                copy_list += weeutil.weeutil.option_as_list(self.skin_dict['CopyGenerator']['copy_once'])
+            except KeyError:
+                pass
+
+        # Get the list of files to be copied everytime. Again, wrap in a try block.
         try:
-            copy_once_list = self.skin_dict['Files']['Copy']['copy_once']
+            copy_list += weeutil.weeutil.option_as_list(self.skin_dict['CopyGenerator']['copy_always'])
         except KeyError:
-            return
+            pass
 
         # Change directory to the skin subdirectory:
         os.chdir(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
@@ -229,7 +206,7 @@ class Copy(ReportGenerator):
         # The copy list can contain wildcard characters. Go through the
         # list globbing any character expansions
         ncopy = 0
-        for pattern in copy_once_list:
+        for pattern in copy_list:
             # Glob this pattern; then go through each resultant filename:
             for file in glob.glob(pattern):
                 # Final destination is the join of the html destination directory
