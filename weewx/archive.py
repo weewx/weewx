@@ -14,7 +14,6 @@ Note that this archive uses a schema that is compatible with a wview V5.X.X
 
 """
 from __future__ import with_statement
-import datetime
 import syslog
 import os
 import os.path
@@ -22,6 +21,7 @@ import math
 from pysqlite2 import dbapi2 as sqlite3
     
 import weewx
+import weewx.units
 import weeutil.weeutil
 
 # This is a tuple containing the schema of the archive database. 
@@ -86,15 +86,15 @@ sqlkeys = [_tuple[0] for _tuple in sqltypes]
 # number of placeholder question marks, separated by commas:
 sql_insert_stmt = "INSERT INTO archive VALUES ( %s );" % ','.join('?'*len(sqlkeys))
 
-
-
         
+#===============================================================================
+#                         class Archive
+#===============================================================================
+
 class Archive(object):
     """Manages a sqlite archive file. Offers a number of convenient member functions
     for managing the archive file. These functions encapsulate whatever sql statements
-    are needed.
-    
-    """
+    are needed."""
     
     def __init__(self, archiveFile):
         """Initialize an object of type weewx.Archive. 
@@ -148,7 +148,7 @@ class Archive(object):
 
 
     def genBatchRecords(self, startstamp, stopstamp):
-        """Generator function that yields ArchiveRecords within a time interval.
+        """Generator function that yields ValueRecords within a time interval.
         
         startstamp: Exclusive start of the interval in epoch time. If 'None', then
         start at earliest archive record.
@@ -156,7 +156,8 @@ class Archive(object):
         stopstamp: Inclusive end of the interval in epoch time. If 'None', then
         end at last archive record.
         
-        yields: instances of ArchiveRecord between the two times. """
+        yields: A dictionary for each time or None if there is no 
+        record at that time. """
         _connection = sqlite3.connect(self.archiveFile)
         _connection.row_factory = sqlite3.Row
         _cursor=_connection.cursor()
@@ -173,34 +174,31 @@ class Archive(object):
                     _cursor.execute("SELECT * FROM archive WHERE dateTime > ? AND dateTime <= ?", (startstamp, stopstamp))
             
             for _row in _cursor :
-                yield ArchiveRecord(_row)
+                yield dict(zip(_row.keys(), _row)) if _row else None
         finally:
             _cursor.close()
             _connection.close()
 
-    def getRecord(self, timestamp, units = None):
-        """Get a single instance of ArchiveRecord with a given epoch time stamp.
+    def getValueDict(self, timestamp):
+        """Get a single instance of ValueRecord with a given epoch time stamp.
         
         timestamp: The epoch time of the desired record.
         
-        returns: an instance of weewx.archive.ArchiveRecord"""
+        returns: an instance of weewx.archive.ValueRecord or None if there is
+        no such record"""
+        # Helper class for cleaning up what's returned by a cursor and making
+        # it ready for the fromSeq factory function:
+        def _val_factory(cursor, row):
+            obs_seq = [cursor.description[i][0] for i in range(len(cursor.description))]
+            vd = weewx.units.ValueDict.fromSeq(obs_seq, row)
+            return vd
+
         with sqlite3.connect(self.archiveFile) as _connection:
-            _connection.row_factory = sqlite3.Row
+            _connection.row_factory = _val_factory
             _cursor = _connection.execute("SELECT * FROM archive WHERE dateTime=?;", (timestamp,))
-            _row = _cursor.fetchone()
-            if not _row: return None
-            
-        if not units:
-            return ArchiveRecord(_row)
-        
-        _unitSystem = _row['usUnits']
-        
-        _converted = ArchiveRecord()
-        for _type in _row.keys():
-            if _type == 'usUnits':
-                continue
-            _converted[_type] = units.convertFromStd(_unitSystem, _row[type], _type)
-        return _converted
+            _value_dict = _cursor.fetchone()
+
+        return _value_dict
 
     def getSql(self, sql, *sqlargs):
         """Executes an arbitrary SQL statement on the database.
@@ -231,15 +229,15 @@ class Archive(object):
             _connection.close()
 
     def getSqlVectors(self, sql_type, startstamp, stopstamp,
-                      aggregate_interval = None, 
-                      aggregate_type = None,
-                      toUnits = None):
+                      aggregate_interval=None, 
+                      aggregate_type=None):
         """Get time and (possibly aggregated) data vectors within a time interval. 
         
         The return value is a 2-way tuple. The first member is a vector of time
-        values, the second member a vector of data values for sql type sql_type. 
+        values, the second member an instance of weewx.std_unit_system.Value with a
+        value of a vector of data values, and a unit_type given by sql_type. 
         
-        An example of a returned value is: (time_vec, outTempVec). 
+        An example of a returned value is: (time_vec, Value(outTempVec, 'outTemp')). 
         
         If aggregation is desired (archive_interval is not None), then each element represents
         a time interval exclusive on the left, inclusive on the right. The time
@@ -277,18 +275,15 @@ class Archive(object):
         aggregation (e.g., 'sum', 'avg', etc.)  Required if aggregate_interval
         is non-None. Default: None (no aggregation)
 
-        toUnits: Return the results in these units (e.g., "inHg", or "mbar"). 
-        If None, do no conversion.
-
-        returns: a 2-way tuple. First element is the time vector, second element
-        the data vector.
+        returns: a 2-way tuple of weewx.std_unit_system.ValueLists. 
+        First element is the time vector, second element the data vector.
         """
 
+        time_vec = weewx.units.ValueList((), None)
+        data_vec = weewx.units.ValueList((), None)
+        std_unit_system = None
         _connection = sqlite3.connect(self.archiveFile)
         _cursor=_connection.cursor()
-        time_vec = list()
-        data_vec = list()
-        unitSystem = None
 
         if aggregate_interval :
             if not aggregate_type:
@@ -303,7 +298,7 @@ class Archive(object):
                     if _rec[0] is not None:
                         time_vec.append(_rec[0])
                         data_vec.append(_rec[1])
-                        unitSystem = _rec[2]
+                        std_unit_system = _rec[2]
         else:
             sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime >= ? AND dateTime <= ?' % sql_type
             _cursor.execute(sql_str, (startstamp, stopstamp))
@@ -311,18 +306,18 @@ class Archive(object):
                 assert(_rec[0])
                 time_vec.append(_rec[0])
                 data_vec.append(_rec[1])
-                unitSystem = _rec[2]
+                std_unit_system = _rec[2]
 
         _cursor.close()
         _connection.close()
 
-        data_vec_converted = weewx.units.convertStd(unitSystem, sql_type, toUnits, data_vec) 
-        return (time_vec, data_vec_converted)
+        time_vec.unit_type = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
+        data_vec.unit_type = weewx.units.getStandardUnitType(std_unit_system, sql_type, aggregate_type)
+        return (time_vec, data_vec)
 
     def getSqlVectorsExtended(self, ext_type, startstamp, stopstamp, 
                               aggregate_interval = None, 
-                              aggregate_type = None,
-                              toUnits = None):
+                              aggregate_type = None):
         """Get time and (possibly aggregated) data vectors within a time interval.
         
         This function is very similar to getSqlVectors, except that for special types
@@ -349,11 +344,9 @@ class Archive(object):
         aggregation (e.g., 'sum', 'avg', etc.)  Required if aggregate_interval
         is non-None. Default: None (no aggregation)
         
-        toUnits: Return the results in these units (e.g., "inHg", or "mbar"). 
-        If None, do no conversion.
-
-        returns: a 2-way tuple. First element is the time vector, second element
-        is the data vector. If sql_type is 'windvec' or 'windgustvec', the data
+        returns: a 2-way tuple of weewx.std_unit_system.ValueLists. 
+        First element is the time vector, second element the data vector.
+        If sql_type is 'windvec' or 'windgustvec', the data
         vector will be a vector of types complex. The real part is the x-component
         of the wind, the imaginary part the y-component. 
         """
@@ -361,118 +354,119 @@ class Archive(object):
         windvec_types = {'windvec'     : ('windSpeed, windDir'),
                          'windgustvec' : ('windGust,  windGustDir')}
         
-        # Check to see if the requested type is 'windvec' or 'windgustvec'
-        if ext_type in windvec_types:
-            # It is. Prepare the lists that will hold the final results.
-            time_vec = list()
-            data_vec = list()
-            unitSystem = None
-            _connection = sqlite3.connect(self.archiveFile)
-            _cursor=_connection.cursor()
-    
-            # Is aggregation requested?
-            if aggregate_interval :
-                # Aggregation is requested.
-                # The aggregation should happen over the x- and y-components. Because they do
-                # not appear in the database (only the magnitude and direction do) we cannot
-                # do the aggregation in the SQL statement. We'll have to do it in Python.
-                # Do we know how to do it?
-                if aggregate_type not in ('sum', 'count', 'avg', 'max', 'min'):
-                    raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
+        # Check to see if the requested type is not 'windvec' or 'windgustvec'
+        if ext_type not in windvec_types:
+            # The type is not one of the extended wind types. Use the regular version:
+            return self.getSqlVectors(ext_type, startstamp, stopstamp, aggregate_interval, aggregate_type)
+
+        # It is an extended wind type. Prepare the lists that will hold the final results.
+        time_vec = weewx.units.ValueList((), None)
+        data_vec = weewx.units.ValueList((), None)
+        std_unit_system = None
+        _connection = sqlite3.connect(self.archiveFile)
+        _cursor=_connection.cursor()
+
+        # Is aggregation requested?
+        if aggregate_interval :
+            # Aggregation is requested.
+            # The aggregation should happen over the x- and y-components. Because they do
+            # not appear in the database (only the magnitude and direction do) we cannot
+            # do the aggregation in the SQL statement. We'll have to do it in Python.
+            # Do we know how to do it?
+            if aggregate_type not in ('sum', 'count', 'avg', 'max', 'min'):
+                raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
+            
+            # This SQL select string will select the proper wind types
+            sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
+            # Go through each aggregation interval, calculating the aggregation.
+            for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
+
+                mag_extreme = dir_at_extreme = None
+                xsum = ysum = 0.0
+                count = 0
+                last_time = None
                 
-                # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
-                # Go through each aggregation interval, calculating the aggregation.
-                for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
+                _cursor.execute(sql_str, stamp)
 
-                    mag_extreme = dir_at_extreme = None
-                    xsum = ysum = 0.0
-                    count = 0
-                    last_time = None
-                    
-                    _cursor.execute(sql_str, stamp)
-
-                    for _rec in _cursor:
-                        (mag, dir) = _rec[1:3]
-
-                        if mag is None:
-                            continue
- 
-                        # A good direction is necessary unless the mag is zero:
-                        if mag == 0.0  or dir is not None:
-                            count += 1
-                            last_time  = _rec[0]
-                            unitSystem = _rec[3]
-                            
-                            # Pick the kind of aggregation:
-                            if aggregate_type == 'min':
-                                if mag_extreme is None or mag < mag_extreme:
-                                    mag_extreme = mag
-                                    dir_at_extreme = dir
-                            elif aggregate_type == 'max':
-                                if mag_extreme is None or mag > mag_extreme:
-                                    mag_extreme = mag
-                                    dir_at_extreme = dir
-                            else:
-                                # No need to do the arithmetic if mag is zero.
-                                # We also need a good direction
-                                if mag > 0.0 and dir is not None:
-                                    xsum += mag * math.cos(math.radians(90.0 - dir))
-                                    ysum += mag * math.sin(math.radians(90.0 - dir))
-                    # We've gone through the whole interval. Was their any good data?
-                    if count:
-                        # Record the time of the last good data point:
-                        time_vec.append(last_time)
-                        # Form the requested aggregation:
-                        if aggregate_type in ('min', 'max'):
-                            if dir_at_extreme is None:
-                                # The only way direction can be zero with a non-zero count
-                                # is if all wind velocities were zero
-                                if weewx.debug:
-                                    assert(mag_extreme <= 1.0e-6)
-                                x_extreme = y_extreme = 0.0
-                            else:
-                                x_extreme = mag_extreme * math.cos(math.radians(90.0 - dir_at_extreme))
-                                y_extreme = mag_extreme * math.sin(math.radians(90.0 - dir_at_extreme))
-                            data_vec.append(complex(x_extreme, y_extreme))
-                        elif aggregate_type == 'sum':
-                            data_vec.append(complex(xsum, ysum))
-                        elif aggregate_type == 'count':
-                            data_vec.append(count)
-                        else:
-                            # Must be 'avg'
-                            data_vec.append(complex(xsum/count, ysum/count))
-            else:
-                # No aggregation desired. It's a lot simpler. Go get the
-                # data in the requested time period
-                # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime >= ? AND dateTime <= ?' % windvec_types[ext_type]
-                _cursor.execute(sql_str, (startstamp, stopstamp))
                 for _rec in _cursor:
-                    # Record the time:
-                    time_vec.append(_rec[0])
-                    unitSystem = _rec[3]
-                    # Break the mag and dir down into x- and y-components.
                     (mag, dir) = _rec[1:3]
-                    if mag is None or dir is None:
-                        data_vec.append(None)
+
+                    if mag is None:
+                        continue
+
+                    # A good direction is necessary unless the mag is zero:
+                    if mag == 0.0  or dir is not None:
+                        count += 1
+                        last_time  = _rec[0]
+                        unit_system = _rec[3]
+                        
+                        # Pick the kind of aggregation:
+                        if aggregate_type == 'min':
+                            if mag_extreme is None or mag < mag_extreme:
+                                mag_extreme = mag
+                                dir_at_extreme = dir
+                        elif aggregate_type == 'max':
+                            if mag_extreme is None or mag > mag_extreme:
+                                mag_extreme = mag
+                                dir_at_extreme = dir
+                        else:
+                            # No need to do the arithmetic if mag is zero.
+                            # We also need a good direction
+                            if mag > 0.0 and dir is not None:
+                                xsum += mag * math.cos(math.radians(90.0 - dir))
+                                ysum += mag * math.sin(math.radians(90.0 - dir))
+                # We've gone through the whole interval. Was their any good data?
+                if count:
+                    # Record the time of the last good data point:
+                    time_vec.append(last_time)
+                    # Form the requested aggregation:
+                    if aggregate_type in ('min', 'max'):
+                        if dir_at_extreme is None:
+                            # The only way direction can be zero with a non-zero count
+                            # is if all wind velocities were zero
+                            if weewx.debug:
+                                assert(mag_extreme <= 1.0e-6)
+                            x_extreme = y_extreme = 0.0
+                        else:
+                            x_extreme = mag_extreme * math.cos(math.radians(90.0 - dir_at_extreme))
+                            y_extreme = mag_extreme * math.sin(math.radians(90.0 - dir_at_extreme))
+                        data_vec.append(complex(x_extreme, y_extreme))
+                    elif aggregate_type == 'sum':
+                        data_vec.append(complex(xsum, ysum))
+                    elif aggregate_type == 'count':
+                        data_vec.append(count)
                     else:
-                        x = mag * math.cos(math.radians(90.0 - dir))
-                        y = mag * math.sin(math.radians(90.0 - dir))
-                        if weewx.debug:
-                            # There seem to be some little rounding errors that are driving
-                            # my debugging crazy. Zero them out
-                            if abs(x) < 1.0e-6 : x = 0.0
-                            if abs(y) < 1.0e-6 : y = 0.0
-                        data_vec.append(complex(x,y))
-            _cursor.close()
-            _connection.close()
-            return (time_vec, weewx.units.convertStd(unitSystem, ext_type, toUnits, data_vec))
-
+                        # Must be 'avg'
+                        data_vec.append(complex(xsum/count, ysum/count))
         else:
-            # The type is other than the extended wind types. Use the regular version:
-            return self.getSqlVectors(ext_type, startstamp, stopstamp, aggregate_interval, aggregate_type, toUnits)
+            # No aggregation desired. It's a lot simpler. Go get the
+            # data in the requested time period
+            # This SQL select string will select the proper wind types
+            sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime >= ? AND dateTime <= ?' % windvec_types[ext_type]
+            _cursor.execute(sql_str, (startstamp, stopstamp))
+            for _rec in _cursor:
+                # Record the time:
+                time_vec.append(_rec[0])
+                unit_system = _rec[3]
+                # Break the mag and dir down into x- and y-components.
+                (mag, dir) = _rec[1:3]
+                if mag is None or dir is None:
+                    data_vec.append(None)
+                else:
+                    x = mag * math.cos(math.radians(90.0 - dir))
+                    y = mag * math.sin(math.radians(90.0 - dir))
+                    if weewx.debug:
+                        # There seem to be some little rounding errors that are driving
+                        # my debugging crazy. Zero them out
+                        if abs(x) < 1.0e-6 : x = 0.0
+                        if abs(y) < 1.0e-6 : y = 0.0
+                    data_vec.append(complex(x,y))
+        _cursor.close()
+        _connection.close()
 
+        time_vec.unit_type = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
+        data_vec.unit_type = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
+        return (time_vec, data_vec)
 
     def config(self):
         """Configure a database for use with weewx. This will create the initial schema
@@ -523,43 +517,41 @@ class Archive(object):
         
         return res
 
-class ArchiveRecord(dict) :
-    """A dictionary which represents a single archive record in the sqlite3 archive file
+if __name__ == '__main__':
     
-    It is no different from any other dictionary, except it has a special method of __str__ to
-    print out the most important contents nicely.
-    """
+    import sys
+    import configobj
     
-    # A dictionary. The key is the type, the value is a tuple containing the two formats
-    # to be used to print something out. The first format is for normal printing, the
-    # second if a 'None' value is encountered.
-    _format_dict = {'str_dateTime' : ('%s',              'YYYY-MM-DD HH:MM:SS'),
-                    'dateTime'     : ('(%10u);',         '(   N/A    );'),
-                    'barometer'    : ('%7.3f";',         '    N/A ;'),
-                    'outTemp'      : ('%6.1fF;',         '   N/A ;'),
-                    'outHumidity'  : ('%4.0f%%;',        ' N/A ;'),
-                    'windSpeed'    : ('%4.0f mph;',      ' N/A mph;'),
-                    'windDir'      : ('%4.0f deg;',      ' N/A deg;'),
-                    'windGust'     : ('%4.0f mph gust;', ' N/A mph gust;'),
-                    'rain'         : ('%5.2f" rain;',    '  N/A  rain;'),
-                    'dewpoint'     : ('%4.0fF dewpt;',   ' N/A  dewpt;')}
+    if len(sys.argv) < 2 :
+        print "Usage: archive.py path-to-configuration-file"
+        exit()
+        
+    config_path = sys.argv[1]
     
-    def __str__(self):
-        _strlist = []
-        for _data_type in ArchiveRecord._format_dict.keys():
-            _val = self.get(_data_type)
-            if _val is None:
-                _strlist.append(ArchiveRecord._format_dict[_data_type][1])
-            else:
-                _strlist.append(ArchiveRecord._format_dict[_data_type][0] % _val)
-        # _strlist is a list of strings. Convert it into one long string:
-        _string_result = ''.join(_strlist)
-        return _string_result
+    weewx.debug = 1
+    syslog.openlog('archive', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+
+    try :
+        config_dict = configobj.ConfigObj(config_path, file_error=True)
+    except IOError:
+        print "Unable to open configuration file ", config_path
+        raise
+
+    archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
+                                   config_dict['Archive']['archive_file'])
+    archive = Archive(archiveFilename)
+
+    start_ts   = archive.firstGoodStamp()
+    stop_ts    = archive.lastGoodStamp()
+
+    print "First stamp in database: ", weeutil.weeutil.timestamp_to_string(start_ts)
+    print "Last stamp in database:  ", weeutil.weeutil.timestamp_to_string(stop_ts)
     
-    def __getitem__(self, key):
-        # Add formatted strings for local and UTC time:
-        if key == 'str_dateTime' :
-            return datetime.datetime.fromtimestamp(self['dateTime']).isoformat(' ')
-        elif key == 'str_dateTimeUTC' :
-            return datetime.datetime.utcfromtimestamp(self['dateTime']).isoformat('+')
-        return super(ArchiveRecord, self).__getitem__(key)
+    for ts in (stop_ts, stop_ts + 300):
+        val = archive.getValueDict(ts)
+
+        if val:
+            print val.summary()
+        else:
+            print "No record for timestamp ", ts

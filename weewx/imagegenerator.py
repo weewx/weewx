@@ -50,8 +50,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         self.weewx_root   = self.config_dict['Station']['WEEWX_ROOT']
         self.image_dict   = self.skin_dict['ImageGenerator']
         self.title_dict   = self.skin_dict['Labels']['Generic']
-        self.label_dict   = weewx.units.getUnitLabelDict(self.skin_dict)
-        self.unitTypeDict = weewx.units.getUnitTypeDict(self.skin_dict)
+        self.label_dict   = weewx.std_unit_system.getUnitLabelDict(self.skin_dict)
+        self.target_units = weewx.std_unit_system.getUnitTypeDict(self.skin_dict)
         
     def genImages(self, archive, time_ts):
         """Generate the images.
@@ -176,7 +176,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the data vectors from the database:
                     (time_vec, data_vec) = archive.getSqlVectorsExtended(var_type, minstamp, maxstamp, 
                                                                          aggregate_interval, aggregate_type,
-                                                                         self.unitTypeDict[var_type])
+                                                                         self.target_units[var_type])
 
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(time_vec, data_vec,

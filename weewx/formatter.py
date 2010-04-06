@@ -16,6 +16,7 @@ whole system.
 import time
 import types
 import weewx
+import weewx.units
 
 #===============================================================================
 #                             class ModelFormatter
@@ -259,18 +260,16 @@ class ModelObjectFormatter(object):
 
 class Formatter(object):
     """Formatter to be used to convert a value to a string, given a context."""
-    def __init__(self, type_format_dict, type_label_dict, time_format_dict):
+    def __init__(self, unit_format_dict, unit_label_dict, time_format_dict):
         """Initialize an instance of Formatter.
         
-        type_format_dict: A dictionary with key of a type, value a string format to be
-        used to format that type. 
+        unit_format_dict: A dictionary with key of a unit type, value a string format
         
-          Example: {'outTemp' : '%0.1f', 'barometer' : '%0.3f'}
+          Example: {'mbar' : '%0.1f', 'inHg' : '%0.3f'}
         
-        type_label_dict: A dictionary with key of a type, value a unit label to be
-        used for a type.
+        unit_label_dict: A dictionary with key of a unit type, value a unit label
         
-          Example: {'outTemp' : '&deg;F', 'barometer': 'inHg'}
+          Example: {'degree_F' : '&deg;F', 'inHg': 'inHg'}
         
         time_format_dict: A dictionary with key a time period ('day', 'week', 
         'current', etc.), value a strftime format that should be used to format 
@@ -278,8 +277,8 @@ class Formatter(object):
         
           Example: {'day' : '%H:%M', 'current' : '%d-%b-%Y %H:%M', 'week' : '%H:%M on %A'}"""
           
-        self.type_format_dict  = type_format_dict
-        self.type_label_dict   = type_label_dict
+        self.unit_format_dict  = unit_format_dict
+        self.unit_label_dict   = unit_label_dict
         self.time_format_dict  = time_format_dict
         
     def format(self, v, context, addLabel = True, useThisFormat = None, None_string = None):
@@ -296,7 +295,7 @@ class Formatter(object):
                   False otherwise.
                   
         useThisFormat: If not None, use this format to do the formatting. The
-        dictionary type_format_dict supplied in the initializer is ignored.
+        dictionary unit_format_dict supplied in the initializer is ignored.
         
         None_string: Use this string if the value is None. An example would
         be "N/A". If set to None, retrieve the string from the unit label dictionary.
@@ -308,7 +307,7 @@ class Formatter(object):
         
         # Is it a None value?
         if v is None :
-            return None_string if None_string else self.type_format_dict.get('NONE', 'N/A')
+            return None_string if None_string else self.unit_format_dict.get('NONE', 'N/A')
 
         # Is it a date?
         elif context[-1] in ('mintime', 'maxtime', 'time', 'dateTime'):
@@ -332,16 +331,17 @@ class Formatter(object):
                 if useThisFormat:
                     val_str = useThisFormat % v
                 else:
-                    val_str   = self.type_format_dict[_type] % v
+                    val_str   = self.unit_format_dict[_type] % v
             except (TypeError, KeyError):
                 # Don't know how to format it. Explicitly convert to a string:
                 val_str = str(v)
             
             # Add the (optional) label and return
             if addLabel:
-                val_str += self.type_label_dict.get(_type, '') 
+                val_str += self.unit_label_dict.get(_type, '') 
     
             return val_str
+
 
 #===============================================================================
 #                            Testing routines
@@ -350,19 +350,21 @@ class Formatter(object):
 
 if __name__ == '__main__':
 
-    import configobj
-    import os.path
-    import sys
-    
-    import weewx.stats
+    def testValueFormatting(skin_dict):
+        val = weewx.std_unit_system.Value(22.0, 'degree_C')
 
-    def testFormatting(config_path):
-        weewx.debug = 1
-        try :
-            config_dict = configobj.ConfigObj(config_path, file_error=True)
-        except IOError:
-            print "Unable to open configuration file ", config_path
-            exit()
+        value_formatter = ValueFormatter(skin_dict['Units']['Groups'])
+        print value_formatter.toString(val)
+
+        value_formatter = ValueFormatter.fromSkinDict(skin_dict)
+        print value_formatter.toString(val)
+        
+        print value_formatter.toString(weewx.std_unit_system.Value(None, 'degree_C'))
+        
+
+
+    
+    def testFormatting(config_dict):
             
         unitTypeDict         = {'outTemp' : 'degree_F'}
         unitStringFormatDict = {'outTemp' : "%.2f"}
@@ -408,8 +410,32 @@ if __name__ == '__main__':
             print "Day's mintime, formatted          : ", day.outTemp.mintime.formatted
             print "Day's min,     formatted          : ", day.outTemp.min.formatted
             
+
+    import configobj
+    import os.path
+    import sys
+    
+    import weewx.stats
+
     if len(sys.argv) < 2 :
         print "Usage: stats.py path-to-configuration-file"
         exit()
         
-    testFormatting(sys.argv[1])
+    weewx.debug = 1
+    config_path = sys.argv[1]
+    try :
+        config_dict = configobj.ConfigObj(config_path, file_error=True)
+    except IOError:
+        print "Unable to open configuration file ", config_path
+        raise
+#    testFormatting(config_dict)
+
+    skin_path = os.path.join(config_dict['Reports']['SKIN_ROOT'],
+                             'Standard/skin.conf')
+    try :
+        skin_dict = configobj.ConfigObj(skin_path, file_error=True)
+    except IOError:
+        print "Unable to open skin configuration file ", skin_path
+        raise
+
+    testValueFormatting(skin_dict)

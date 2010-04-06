@@ -48,7 +48,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
         self.stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
         self.start_ts   = archive.firstGoodStamp()
-        currentRec = archive.getRecord(self.stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
+        currentRec = archive.getValueDict(self.stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
 
         del archive
 
@@ -72,11 +72,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
     def initUnits(self):
         
-        self.units = weewx.units.Units(self.skin_dict)
+        self.std_unit_system = weewx.units.Units(self.skin_dict)
 
     def initFormatter(self):
         # Get an appropriate formatter:
-        self.formatter =  weewx.formatter.Formatter(self.units)
+        self.formatter =  weewx.formatter.Formatter(self.std_unit_system)
 
     def generateSummaryBy(self, by_time, start_ts, stop_ts):
         """This entry point is used for "SummaryBy" reports, such as NOAA monthly
@@ -204,13 +204,13 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
         # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(self.statsdb, timespan.stop, self.unitTypeDict)
+        stats = weewx.stats.TaggedStats(self.statsdb, timespan.stop, self.target_units)
         # Get a formatted view into it:
         statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
 
         # Put together the search list:
         searchList = [{'station'     : self.station,
-                       'unit_type'   : self.unitTypeDict,
+                       'unit_type'   : self.target_units,
                        'unit_label'  : self.unitLabelDict,
                        'unit_format' : self.unitStringFormatDict,
                        'month_name'  : time.strftime("%b", timespan_start_tt),
@@ -232,7 +232,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
         # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(self.statsdb, stop_ts, self.unitTypeDict)
+        stats = weewx.stats.TaggedStats(self.statsdb, stop_ts, self.target_units)
         # Get a formatted view into the TaggedStats structure:
         statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
 
@@ -244,7 +244,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Put together the search list:
         searchList = [{'station'     : self.station,
                        'almanac'     : self.almanac,
-                       'unit_type'   : self.unitTypeDict,
+                       'unit_type'   : self.target_units,
                        'unit_label'  : self.unitLabelDict,
                        'unit_format' : self.unitStringFormatDict},
                        self.outputted_dict,

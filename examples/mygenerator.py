@@ -33,7 +33,7 @@ class MyFileGenerator(FileGenerator):                    # 1
         # Get a TimeSpanStats object :
         all_stats = TimeSpanStats(self.statsdb,
                                 all_time,
-                                self.unitTypeDict)       # 4
+                                self.target_units)       # 4
 
         # Get the superclass's search list:       
         search_list = FileGenerator.getToDateSearchList(self, currentRec, stop_ts) #5

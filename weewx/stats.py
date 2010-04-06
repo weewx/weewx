@@ -150,9 +150,9 @@ class StdDayStats(object):
         high/lows.  If it does not, nothing is done."""
 
         val = rec.get(self.type)
-        # NB: val could be None because either there is no data for
-        # this type, or this type doesn't exist at all in the record.
         if val is None :
+            # Either the type doesn't exist in this record, or it's bad.
+            # Ignore.
             return
         if self.min is None or val < self.min:
             self.min = val
@@ -172,9 +172,9 @@ class StdDayStats(object):
         done."""
 
         val = rec.get(self.type)
-        # NB: val could be None because either there is no data for
-        # this type, or this type doesn't exist at all in the record.
-        if val is None:
+        if val is None :
+            # Either the type doesn't exist in this record, or it's bad.
+            # Ignore.
             return
         self.sum += val
         self.count += 1
@@ -408,26 +408,26 @@ class TaggedStats(object):
     """Allows stats references like obj.month.outTemp.max.
     """
     
-    def __init__(self, statsDb, endtime_ts, unitTypeDict = None):
+    def __init__(self, statsDb, endtime_ts, target_units = None):
         self.statsDb = statsDb
-        self.endtime_ts  = endtime_ts
-        self.unitTypeDict = unitTypeDict
+        self.endtime_ts = endtime_ts
+        self.target_units = target_units
 
     @property
     def day(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveDaySpan(self.endtime_ts), self.unitTypeDict)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveDaySpan(self.endtime_ts), self.target_units)
     @property
     def week(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveWeekSpan(self.endtime_ts), self.unitTypeDict)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveWeekSpan(self.endtime_ts), self.target_units)
     @property
     def month(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveMonthSpan(self.endtime_ts), self.unitTypeDict)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveMonthSpan(self.endtime_ts), self.target_units)
     @property
     def year(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveYearSpan(self.endtime_ts), self.unitTypeDict)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveYearSpan(self.endtime_ts), self.target_units)
     @property
     def rainyear(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveRainYearSpan(self.endtime_ts), self.unitTypeDict)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveRainYearSpan(self.endtime_ts), self.target_units)
         
    
 #===============================================================================
@@ -457,7 +457,7 @@ class TimeSpanStats(object):
                 print dayStats.outTemp.max
     """
 
-    def __init__(self, statsDb, timespan, unitTypeDict = None):
+    def __init__(self, statsDb, timespan, target_units = None):
         """Initialize an instance of TimeSpanStats.
         
         statsDb: An instance of StatsReadonlyDb or a subclass.
@@ -465,7 +465,7 @@ class TimeSpanStats(object):
         timespan: An instance of weeutil.Timespan with the time span
         over which the statistics are to be calculated.
         
-        unitTypeDict: A dictionary keyed by type (e.g., "barometer") with values
+        target_units: A dictionary keyed by type (e.g., "barometer") with values
         being the type of unit (e.g., "inHg", or "mbar") for which
         the results are to be returned. [Optional. If not specified, the
         results will be returned in the native unit on the stats database.]
@@ -473,17 +473,17 @@ class TimeSpanStats(object):
         
         self.statsDb      = statsDb
         self.timespan     = timespan
-        self.unitTypeDict = unitTypeDict
+        self.target_units = target_units
         
     @property
     def days(self):
-        return _seqGenerator(self.statsDb, self.timespan, self.unitTypeDict, weeutil.weeutil.genDaySpans)
+        return _seqGenerator(self.statsDb, self.timespan, self.target_units, weeutil.weeutil.genDaySpans)
     @property
     def months(self):
-        return _seqGenerator(self.statsDb, self.timespan, self.unitTypeDict, weeutil.weeutil.genMonthSpans)
+        return _seqGenerator(self.statsDb, self.timespan, self.target_units, weeutil.weeutil.genMonthSpans)
     @property
     def years(self):
-        return _seqGenerator(self.statsDb, self.timespan, self.unitTypeDict, weeutil.weeutil.genYearSpans)
+        return _seqGenerator(self.statsDb, self.timespan, self.target_units, weeutil.weeutil.genYearSpans)
     @property
     def dateTime(self):
         # This one is here for historical reasons:
@@ -499,11 +499,8 @@ class TimeSpanStats(object):
         """
         # The attribute is probably a type such as 'barometer', or 'heatdeg'
         # Return the helper class, bound to the type:
-        return StatsTypeHelper(self.statsDb, self.timespan, statsType, self._getUnitType(statsType))
+        return StatsTypeHelper(self.statsDb, self.timespan, statsType, self.target_units)
         
-    def _getUnitType(self, statsType):
-        return self.unitTypeDict.get(statsType) if self.unitTypeDict else None
-
     def __str__(self):
         """Return string version of self.
         
@@ -522,7 +519,7 @@ def _seqGenerator(statsDb, timespan, unitTypeDict, genSpanFunc):
 class StatsTypeHelper(object):
     """Nearly stateless helper class that holds the type over which aggregation is to be done."""
     
-    def __init__(self, statsDb, timespan, statsType, toUnits = None):
+    def __init__(self, statsDb, timespan, statsType, target_units = None):
         """ Initialize an instance of StatsTypeHelper
         
         statsDb: The database against which the query is to be run.
@@ -533,38 +530,42 @@ class StatsTypeHelper(object):
         statsType: A string with the stats type (e.g., 'outTemp') for which the query is
         to be done.
         
-        toUnits: The units in which the results should be returned in [Optional. If not
-        specified, the units will not be converted.]
+        target_units: An instance of weewx.units.Units holding the target units. 
+        [Optional. If not specified, the units will not be converted.]
         """
         
-        self.statsDb   = statsDb
-        self.timespan  = timespan
-        self.statsType = statsType
-        self.toUnits   = toUnits
+        self.statsDb      = statsDb
+        self.timespan     = timespan
+        self.statsType    = statsType
+        self.target_units = target_units
     
     def max_ge(self, val):
-        res = self.statsDb.getAggregate(self.timespan, self.statsType, 'max_ge', val, self.toUnits)
-        return res
-    
+        res = self.statsDb.getAggregate(self.timespan, self.statsType, 'max_ge', val)
+        return self._convert(res)
+
     def max_le(self, val):
-        res = self.statsDb.getAggregate(self.timespan, self.statsType, 'max_le', val, self.toUnits)
-        return res
+        res = self.statsDb.getAggregate(self.timespan, self.statsType, 'max_le', val)
+        return self._convert(res)
     
     def min_le(self, val):
-        res = self.statsDb.getAggregate(self.timespan, self.statsType, 'min_le', val, self.toUnits)
-        return res
+        res = self.statsDb.getAggregate(self.timespan, self.statsType, 'min_le', val)
+        return self._convert(res)
     
     def sum_ge(self, val):
-        res = self.statsDb.getAggregate(self.timespan, self.statsType, 'sum_ge', val, self.toUnits)
-        return res
+        res = self.statsDb.getAggregate(self.timespan, self.statsType, 'sum_ge', val)
+        return self._convert(res)
     
     def __getattr__(self, aggregateType):
         """Attribute is an aggregation type, such as 'sum', 'max', etc."""
-        res = self.statsDb.getAggregate(self.timespan, self.statsType, aggregateType, 
-                                        toUnits = self.toUnits)
-        return res
+        res = self.statsDb.getAggregate(self.timespan, self.statsType, aggregateType)
+        return self._convert(res)
     
-    
+    def _convert(self, res):
+        if not self.target_units:
+            return res
+        converted_res = weewx.units.Value.convertUsing(res, self.target_units)
+        return converted_res
+        
 #===============================================================================
 #                    Class StatsReadonlyDb
 #===============================================================================
@@ -612,7 +613,7 @@ class StatsReadonlyDb(object):
     statsTypes: The types of the statistics supported by this instance of
     StatsReadonlyDb. None if the database has not been initialized.
     
-    units: The unit system in use (weewx.US or weewx.METRIC). None if the
+    std_unit_system: The unit system in use (weewx.US or weewx.METRIC). None if the
     database has not been initialized.
     
     heatbase:The base temperature for calculating heating degree-days.
@@ -638,12 +639,12 @@ class StatsReadonlyDb(object):
         Otherwise, it gets read with every query.
         [Optional. Default is True]"""
         
-        self._connection   = None
-        self.statsFilename = statsFilename
-        self.statsTypes    = self._getTypes()
-        self.units         = self._getUnits()
-        self.heatbase      = heatbase
-        self.coolbase      = coolbase
+        self._connection     = None
+        self.statsFilename   = statsFilename
+        self.statsTypes      = self._getTypes()
+        self.std_unit_system = self._getStdUnitSystem()
+        self.heatbase        = heatbase
+        self.coolbase        = coolbase
 
         if cacheDayData:
             self._dayCache  = (None, None)
@@ -733,7 +734,7 @@ class StatsReadonlyDb(object):
                'min_le'     : "SELECT SUM(min <= %(val)s) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
                'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM %(statsType)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
 
-    def getAggregate(self, timespan, statsType, aggregateType, val = None, toUnits = None):
+    def getAggregate(self, timespan, statsType, aggregateType, val = None):
         """Returns an aggregation over a type for a given time period.
         
         timespan: An instance of weeutil.Timespan with the time period over which
@@ -747,17 +748,16 @@ class StatsReadonlyDb(object):
         
         val: Some aggregations require a value. Specify it here.
         
-        toUnits: Return the value in this unit (e.g., "inHg", or "mbar"). 
-        If None, do no conversion.
-        
-        returns: The aggregation value, or None if not enough data was available to calculate
-        it, or if the aggregation type is unknown.
+        returns: An instance of weewx.units.Value. Its value is the aggregation value,
+        or None if not enough data was available to calculate it, or if the aggregation
+        type is unknown. Its unit type is determined from the statsType and the type
+        of aggregation.
         """
         if timespan is None:
             return None
         # Special function for heating and cooling degrees:
         if statsType in ('heatdeg', 'cooldeg'):
-            return self.getHeatCool(timespan, statsType, aggregateType, toUnits)
+            return self.getHeatCool(timespan, statsType, aggregateType)
         
         # This dictionary is used for interpolating the SQL statement.
         interDict = {'start'         : timespan.start,
@@ -769,47 +769,46 @@ class StatsReadonlyDb(object):
         # Run the query against the database:
         _row = self._xeqSql(StatsReadonlyDb.sqlDict[aggregateType], interDict)
 
-        # If no row was returned, or if it contains any nulls,
-        # treat specially:
-        if not _row or None in _row: return None
-        
         #=======================================================================
         # Each aggregation type requires a slightly different calculation.
         #=======================================================================
         
-        if aggregateType in ('min', 'max', 'meanmin', 'meanmax', 'maxsum','sum', 'gustdir'):
-            result = _row[0]
+        if not _row or None in _row: 
+            # If no row was returned, or if it contains any nulls,
+            # treat specially:
+            _result = None
+        
+        elif aggregateType in ('min', 'max', 'meanmin', 'meanmax', 'maxsum','sum', 'gustdir'):
+            _result = _row[0]
         
         elif aggregateType in ('mintime', 'maxtime', 'maxsumtime',
                                'count', 'max_ge', 'max_le', 'min_le', 'sum_ge'):
             # These aggregates do not undergo a type conversion and are always integers:
-            return int(_row[0])
+            _result = int(_row[0])
 
         elif aggregateType in ('avg',):
-            result = _row[0]/_row[1] if _row[1] else None
+            _result = _row[0]/_row[1]
 
         elif aggregateType in ('rms', ):
-            result = math.sqrt(_row[0]/_row[1]) if _row[1] else None
+            _result = math.sqrt(_row[0]/_row[1])
         
         elif aggregateType in ('vecavg', ):
-            result = math.sqrt((_row[0]**2 + _row[1]**2) / _row[2]**2) if _row[2] else None
+            _result = math.sqrt((_row[0]**2 + _row[1]**2) / _row[2]**2)
         
         elif aggregateType in ('vecdir',):
             if _row[0:2] == (0.0, 0.0):
-                return None
+                _result = None
             deg = 90.0 - math.degrees(math.atan2(_row[1], _row[0]))
-            result = deg if deg > 0 else deg + 360.0
+            _result = deg if deg > 0 else deg + 360.0
         else:
             # Unknown aggregation. Return None
-            return None
+            _result = None
+
+        _result_unit_type = weewx.units.getStandardUnitType(self.std_unit_system, statsType, aggregateType)
+        _result_value = weewx.units.Value(_result, _result_unit_type)
+        return _result_value
         
-        # If unit conversion was requested, perform it, otherwise just return the results
-        if toUnits :
-            return weewx.units.convertStd(self.units, statsType, toUnits, result)
-        else:
-            return result
-        
-    def getHeatCool(self, timespan, statsType, aggregateType, toUnits):
+    def getHeatCool(self, timespan, statsType, aggregateType):
         """Calculate heating or cooling degree days for a given timespan."""
         
         # The requested type must be heatdeg or cooldeg
@@ -818,12 +817,12 @@ class StatsReadonlyDb(object):
 
         # Only summation (total) or average heating or cooling degree days is supported:
         if aggregateType not in ('sum', 'avg'):
-            return None
-        
+            raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, statsType)
+
         sum = 0.0
         count = 0
         for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
-            Tavg = self.getAggregate(daySpan, 'outTemp', 'avg', toUnits = toUnits)
+            Tavg = self.getAggregate(daySpan, 'outTemp', 'avg')
             if Tavg is not None:
                 if statsType == 'heatdeg':
                     sum += weewx.wxformulas.heating_degrees(Tavg, self.heatbase)
@@ -831,9 +830,14 @@ class StatsReadonlyDb(object):
                     sum += weewx.wxformulas.cooling_degrees(Tavg, self.coolbase)
                 count += 1
 
-        if aggregateType == 'sum': return sum
-        
-        return sum / count if count else None 
+        if aggregateType == 'sum':
+            _result = sum
+        else:
+            _result = sum / count if count else None 
+
+        _result_unit_type = weewx.units.getStandardUnitType(self.std_unit_system, statsType, aggregateType)
+        _result_value = weewx.units.Value(_result, _result_unit_type)
+        return _result_value
 
     def _getFirstUpdate(self):
         """Returns the time of the first entry in the statistical database."""
@@ -903,7 +907,7 @@ class StatsReadonlyDb(object):
 
         return results
 
-    def _getUnits(self):
+    def _getStdUnitSystem(self):
         """Returns the unit system in use in the stats database."""
         
         if not os.path.exists(self.statsFilename):
@@ -911,7 +915,7 @@ class StatsReadonlyDb(object):
         
         _row = self._xeqSql("""SELECT value FROM metadata WHERE name = 'unit_system';""", {})
         # If the unit system is missing, then it is an older style stats database,
-        # which are always in US units:
+        # which are always in US std_unit_system:
         if not _row:
             return weewx.US
         
@@ -1238,8 +1242,8 @@ if __name__ == '__main__':
 
         statsDb = StatsReadonlyDb(statsFilename, 65.0, 65.0)
 
-        start_tt = (2011, 12, 1, 0, 0, 0, 0, 0, -1)
-        end_tt =   (2012,  1, 1, 0, 0, 0, 0, 0, -1)
+        start_tt = (2009, 12, 1, 0, 0, 0, 0, 0, -1)
+        end_tt =   (2010,  1, 1, 0, 0, 0, 0, 0, -1)
         timespan = weeutil.weeutil.TimeSpan(time.mktime(start_tt),
                                             time.mktime(end_tt))
 
@@ -1247,13 +1251,12 @@ if __name__ == '__main__':
 
         print tagStats.month.barometer.avg
         print tagStats.month.barometer.count
-        exit()
 
         time_from_statsDb = statsDb.getAggregate(timespan, 'outTemp', 'mintime')
         time_from_tag = tagStats.month.outTemp.mintime
         assert(time_from_statsDb == time_from_tag)
-        print "assertion ", weeutil.weeutil.timestamp_to_string(time_from_statsDb), " == ",\
-                            weeutil.weeutil.timestamp_to_string(time_from_tag), " PASSES."
+        print "assertion ", weeutil.weeutil.timestamp_to_string(time_from_statsDb.val), " == ",\
+                            weeutil.weeutil.timestamp_to_string(time_from_tag.val), " PASSES."
         
         avg_from_statsDb = statsDb.getAggregate(timespan, 'outTemp', 'avg')
         avg_from_tag = tagStats.month.outTemp.avg
