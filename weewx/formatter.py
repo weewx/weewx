@@ -351,7 +351,7 @@ class Formatter(object):
 if __name__ == '__main__':
 
     def testValueFormatting(skin_dict):
-        val = weewx.std_unit_system.Value(22.0, 'degree_C')
+        val = weewx.units.Value(22.0, 'degree_C')
 
         value_formatter = ValueFormatter(skin_dict['Units']['Groups'])
         print value_formatter.toString(val)
@@ -359,7 +359,7 @@ if __name__ == '__main__':
         value_formatter = ValueFormatter.fromSkinDict(skin_dict)
         print value_formatter.toString(val)
         
-        print value_formatter.toString(weewx.std_unit_system.Value(None, 'degree_C'))
+        print value_formatter.toString(weewx.units.Value(None, 'degree_C'))
         
 
 
@@ -382,7 +382,7 @@ if __name__ == '__main__':
 
         end_tt =   (2010,  1, 1, 0, 0, 0, 0, 0, -1)
 
-        tagStats = weewx.stats.TaggedStats(statsDb, time.mktime(end_tt), unitTypeDict)
+        tagStats = weewx.stats.AggregateStats(statsDb, time.mktime(end_tt), unitTypeDict)
         print "Temperature minimum; unformatted output: ", tagStats.month.outTemp.min
         print "Temperature mintime; unformatted output: ", tagStats.month.outTemp.mintime
         print "Days w/max temp over 90.0:               ", tagStats.month.outTemp.max_ge(90.0)

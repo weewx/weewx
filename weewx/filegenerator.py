@@ -19,7 +19,6 @@ import Cheetah.Filters
 import weeutil.Almanac
 import weeutil.weeutil
 import weewx.archive
-import weewx.formatter
 import weewx.reportengine
 import weewx.station
 import weewx.stats
@@ -34,29 +33,18 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
     def run(self):
 
-        self.outputted_dict = {}
+        self.outputted_dict = {'SummaryByMonth' : [],
+                               'SummaryByYear'  : []}
         
         self.initStation()
         self.initStats()
         self.initUnits()
-        self.initFormatter()
-
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.config_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        self.stop_ts    = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-        self.start_ts   = archive.firstGoodStamp()
-        currentRec = archive.getValueDict(self.stop_ts, weewx.units.getUnitTypeDict(self.skin_dict))
-
-        del archive
-
+        currentRec = self.getCurrentRec()
+        
         self.generateSummaryBy('SummaryByMonth', self.start_ts, self.stop_ts)
         self.generateSummaryBy('SummaryByYear',  self.start_ts, self.stop_ts)
         self.generateToDate(currentRec, self.stop_ts)
     
-
     def initStation(self):
 
         # station holds info such as 'altitude', 'latitude', etc. It seldom changes
@@ -72,11 +60,24 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
     def initUnits(self):
         
-        self.std_unit_system = weewx.units.Units(self.skin_dict)
+        self.unit_info = weewx.units.UnitInfo.fromSkinDict(self.skin_dict)
 
-    def initFormatter(self):
-        # Get an appropriate formatter:
-        self.formatter =  weewx.formatter.Formatter(self.std_unit_system)
+    def getCurrentRec(self):
+        # Open up the main database archive
+        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
+                                       self.config_dict['Archive']['archive_file'])
+        archive = weewx.archive.Archive(archiveFilename)
+    
+        self.stop_ts  = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
+        self.start_ts = archive.firstGoodStamp()
+        
+        # Get a dictionary with the current record:
+        current_dict = archive.getRecord(self.stop_ts)
+        
+        # Wrap it in a ValueDict
+        currentRec = weewx.units.ValueDict(current_dict, self.unit_info)
+        
+        return currentRec
 
     def generateSummaryBy(self, by_time, start_ts, stop_ts):
         """This entry point is used for "SummaryBy" reports, such as NOAA monthly
@@ -98,7 +99,6 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
             syslog.syslog(syslog.LOG_NOTICE, "filegenerator: Unrecognized summary interval: %s. Skipped." % by_time)
             return
 
-        self.outputted_dict[by_time] = []
         for subreport in self.skin_dict['FileGenerator'][by_time].sections:
     
             (template, destination_dir, encoding) = self._prepGen(self.skin_dict['FileGenerator'][by_time][subreport])
@@ -162,7 +162,6 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         stop_ts: A timestamp. The HTML files generated will be current as of
         this time."""
         
-        
         ngen = 0
         t1 = time.time()
 
@@ -202,20 +201,19 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         timespan_start_tt = time.localtime(timespan.start)
         (_yr, _mo) = timespan_start_tt[0:2]
 
-        # Get a TaggedStats structure. This allows constructs such as
+        # Get a AggregateStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(self.statsdb, timespan.stop, self.target_units)
-        # Get a formatted view into it:
-        statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
+        stats = weewx.stats.AggregateStats(self.statsdb, timespan.stop, self.unit_info)
+#        # Get a formatted view into it:
+#        statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
 
         # Put together the search list:
         searchList = [{'station'     : self.station,
-                       'unit_type'   : self.target_units,
-                       'unit_label'  : self.unitLabelDict,
-                       'unit_format' : self.unitStringFormatDict,
+                       'unit_format' : self.unit_info.getObsFormatDict(),
+                       'unit_label'  : self.unit_info.getObsLabelDict(),
                        'month_name'  : time.strftime("%b", timespan_start_tt),
                        'year_name'   : _yr},
-                       statsFormatter]
+                       stats]
 
         # IF the user has supplied an '[Extra]' section in the skin dictionary, include
         # it in the search list. Otherwise, just include an empty dictionary.
@@ -230,26 +228,21 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         Can easily be overridden to add things to the search list.
         """
 
-        # Get a TaggedStats structure. This allows constructs such as
+        # Get a AggregateStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(self.statsdb, stop_ts, self.target_units)
-        # Get a formatted view into the TaggedStats structure:
-        statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
+        stats = weewx.stats.AggregateStats(self.statsdb, stop_ts, self.unit_info)
 
         # Get the current conditions:
         current = {'current' : currentRec}
-        # Get a formatted view into it:
-        currentFormatter = weewx.formatter.ModelFormatter(current, self.formatter)
 
         # Put together the search list:
         searchList = [{'station'     : self.station,
                        'almanac'     : self.almanac,
-                       'unit_type'   : self.target_units,
-                       'unit_label'  : self.unitLabelDict,
-                       'unit_format' : self.unitStringFormatDict},
+                       'unit_format' : self.unit_info.getObsFormatDict(),
+                       'unit_label'  : self.unit_info.getObsLabelDict()},
                        self.outputted_dict,
-                       statsFormatter,
-                       currentFormatter]
+                       current,
+                       stats]
         
         # IF the user has supplied an '[Extra]' section in the skin dictionary, include
         # it in the search list. Otherwise, just include an empty dictionary.

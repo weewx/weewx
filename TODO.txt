@@ -4,3 +4,7 @@ Add the skin subdirectory to PYTHONPATH automatically,
 to allow custom skins to find their generators.
 
 Clarify table of what can be used where. Such as windvec.
+
+$unit_type no longer offered in templates
+
+time strftime formats moved to under Units in skin.conf

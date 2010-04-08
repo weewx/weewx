@@ -25,8 +25,10 @@ class Station(object):
         self.longitude_f = config_dict['Station'].as_float('longitude')
         self.longitude   = weeutil.weeutil.latlon_string(self.longitude_f, self.hemispheres[2:4])
 
-        self.altitude_f  = config_dict['Station'].as_float('altitude')
-        self.altitude    = "%d %s" % (self.altitude_f, weewx.std_unit_system.Units(skin_dict).getUnitLabel('altitude'))
+        unit_info = weewx.units.UnitInfo.fromSkinDict(skin_dict)
+        altitude           = config_dict['Station'].as_float('altitude')
+        altitude_unit_type = config_dict['Station'].get('altitude_unit')
+        self.altitude      = weewx.units.ValueHelper(altitude, altitude_unit_type, unit_info=unit_info)
 
         self.location        = config_dict['Station']['location']
         self.rain_year_start = int(config_dict['Station'].get('rain_year_start', '1'))

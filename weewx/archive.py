@@ -179,26 +179,19 @@ class Archive(object):
             _cursor.close()
             _connection.close()
 
-    def getValueDict(self, timestamp):
-        """Get a single instance of ValueRecord with a given epoch time stamp.
+    def getRecord(self, timestamp):
+        """Get a single archive record with a given epoch time stamp.
         
         timestamp: The epoch time of the desired record.
         
-        returns: an instance of weewx.archive.ValueRecord or None if there is
-        no such record"""
-        # Helper class for cleaning up what's returned by a cursor and making
-        # it ready for the fromSeq factory function:
-        def _val_factory(cursor, row):
-            obs_seq = [cursor.description[i][0] for i in range(len(cursor.description))]
-            vd = weewx.units.ValueDict.fromSeq(obs_seq, row)
-            return vd
+        returns: a dictionary. Key is a sql type, value its value"""
 
         with sqlite3.connect(self.archiveFile) as _connection:
-            _connection.row_factory = _val_factory
+            _connection.row_factory = sqlite3.Row
             _cursor = _connection.execute("SELECT * FROM archive WHERE dateTime=?;", (timestamp,))
-            _value_dict = _cursor.fetchone()
+            _row = _cursor.fetchone()
 
-        return _value_dict
+        return dict(zip(_row.keys(), _row)) if _row else None
 
     def getSql(self, sql, *sqlargs):
         """Executes an arbitrary SQL statement on the database.
@@ -275,12 +268,16 @@ class Archive(object):
         aggregation (e.g., 'sum', 'avg', etc.)  Required if aggregate_interval
         is non-None. Default: None (no aggregation)
 
-        returns: a 2-way tuple of weewx.std_unit_system.ValueLists. 
-        First element is the time vector, second element the data vector.
+        returns: a 2-way tuple of 2-way tuples: 
+          ((time_vec, time_unit_type), (data_vec, data_unit_type))
+        The first tuple hold the time information: the first element 
+        is the time vector, the second the unit type of the time vector. 
+        The second tuple holds the data information. The first element is
+        the data vector, the second the unit type of the data vector.
         """
 
-        time_vec = weewx.units.ValueList((), None)
-        data_vec = weewx.units.ValueList((), None)
+        time_vec = list()
+        data_vec = list()
         std_unit_system = None
         _connection = sqlite3.connect(self.archiveFile)
         _cursor=_connection.cursor()
@@ -311,9 +308,9 @@ class Archive(object):
         _cursor.close()
         _connection.close()
 
-        time_vec.unit_type = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
-        data_vec.unit_type = weewx.units.getStandardUnitType(std_unit_system, sql_type, aggregate_type)
-        return (time_vec, data_vec)
+        time_unit_type = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
+        data_unit_type = weewx.units.getStandardUnitType(std_unit_system, sql_type, aggregate_type)
+        return ((time_vec, time_unit_type), (data_vec, data_unit_type))
 
     def getSqlVectorsExtended(self, ext_type, startstamp, stopstamp, 
                               aggregate_interval = None, 
@@ -344,8 +341,12 @@ class Archive(object):
         aggregation (e.g., 'sum', 'avg', etc.)  Required if aggregate_interval
         is non-None. Default: None (no aggregation)
         
-        returns: a 2-way tuple of weewx.std_unit_system.ValueLists. 
-        First element is the time vector, second element the data vector.
+        returns: a 2-way tuple of 2-way tuples: 
+          ((time_vec, time_unit_type), (data_vec, data_unit_type))
+        The first tuple hold the time information: the first element 
+        is the time vector, the second the unit type of the time vector. 
+        The second tuple holds the data information. The first element is
+        the data vector, the second the unit type of the data vector.
         If sql_type is 'windvec' or 'windgustvec', the data
         vector will be a vector of types complex. The real part is the x-component
         of the wind, the imaginary part the y-component. 
@@ -360,8 +361,8 @@ class Archive(object):
             return self.getSqlVectors(ext_type, startstamp, stopstamp, aggregate_interval, aggregate_type)
 
         # It is an extended wind type. Prepare the lists that will hold the final results.
-        time_vec = weewx.units.ValueList((), None)
-        data_vec = weewx.units.ValueList((), None)
+        time_vec = list()
+        data_vec = list()
         std_unit_system = None
         _connection = sqlite3.connect(self.archiveFile)
         _cursor=_connection.cursor()
@@ -398,7 +399,7 @@ class Archive(object):
                     if mag == 0.0  or dir is not None:
                         count += 1
                         last_time  = _rec[0]
-                        unit_system = _rec[3]
+                        std_unit_system = _rec[3]
                         
                         # Pick the kind of aggregation:
                         if aggregate_type == 'min':
@@ -447,7 +448,7 @@ class Archive(object):
             for _rec in _cursor:
                 # Record the time:
                 time_vec.append(_rec[0])
-                unit_system = _rec[3]
+                std_unit_system = _rec[3]
                 # Break the mag and dir down into x- and y-components.
                 (mag, dir) = _rec[1:3]
                 if mag is None or dir is None:
@@ -464,9 +465,9 @@ class Archive(object):
         _cursor.close()
         _connection.close()
 
-        time_vec.unit_type = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
-        data_vec.unit_type = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
-        return (time_vec, data_vec)
+        time_unit_type = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
+        data_unit_type = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
+        return ((time_vec, time_unit_type), (data_vec, data_unit_type))
 
     def config(self):
         """Configure a database for use with weewx. This will create the initial schema
