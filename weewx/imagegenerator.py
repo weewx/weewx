@@ -47,11 +47,11 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         
     def setup(self):
         
-        self.weewx_root   = self.config_dict['Station']['WEEWX_ROOT']
-        self.image_dict   = self.skin_dict['ImageGenerator']
-        self.title_dict   = self.skin_dict['Labels']['Generic']
-        self.label_dict   = weewx.std_unit_system.getUnitLabelDict(self.skin_dict)
-        self.target_units = weewx.std_unit_system.getUnitTypeDict(self.skin_dict)
+        self.weewx_root = self.config_dict['Station']['WEEWX_ROOT']
+        self.image_dict = self.skin_dict['ImageGenerator']
+        self.title_dict = self.skin_dict['Labels']['Generic']
+        self.unit_info  = weewx.units.UnitInfo.fromSkinDict(self.skin_dict)
+        self.unit_label_dict  = self.unit_info.getObsLabelDict()
         
     def genImages(self, archive, time_ts):
         """Generate the images.
@@ -126,7 +126,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Add a unit label. NB: all will get overwritten except the last.
                     # Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
-                    unit_label = self.label_dict.get(var_type, '')
+                    unit_label = self.unit_label_dict.get(var_type, '')
                     # PIL cannot handle UTF-8. So, convert to Latin1. Also, strip off
                     # any leading and trailing whitespace so it's easy to center
                     unit_label = weeutil.weeutil.utf8_to_latin1(unit_label).strip()
@@ -173,13 +173,14 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % var_type)
                             continue
 
-                    # Get the data vectors from the database:
-                    (time_vec, data_vec) = archive.getSqlVectorsExtended(var_type, minstamp, maxstamp, 
-                                                                         aggregate_interval, aggregate_type,
-                                                                         self.target_units[var_type])
+                    # Get the time and data vectors from the database:
+                    (time_vec_t, data_vec_t) = archive.getSqlVectorsExtended(var_type, minstamp, maxstamp, 
+                                                                         aggregate_interval, aggregate_type)
 
+                    new_time_vec_t = self.unit_info.convert(time_vec_t)
+                    new_data_vec_t = self.unit_info.convert(data_vec_t)
                     # Add the line to the emerging plot:
-                    plot.addLine(weeplot.genplot.PlotLine(time_vec, data_vec,
+                    plot.addLine(weeplot.genplot.PlotLine(new_time_vec_t[0], new_data_vec_t[0],
                                                           label         = label, 
                                                           color         = color,
                                                           width         = width,

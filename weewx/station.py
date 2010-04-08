@@ -25,15 +25,14 @@ class Station(object):
         self.longitude_f = config_dict['Station'].as_float('longitude')
         self.longitude   = weeutil.weeutil.latlon_string(self.longitude_f, self.hemispheres[2:4])
 
-        unit_info = weewx.units.UnitInfo.fromSkinDict(skin_dict)
-        altitude           = config_dict['Station'].as_float('altitude')
-        altitude_unit_type = config_dict['Station'].get('altitude_unit')
-        self.altitude      = weewx.units.ValueHelper(altitude, altitude_unit_type, unit_info=unit_info)
+        altitude_t           = config_dict['Station'].get('altitude', (None, None))
+        self.altitude        = weewx.units.ValueHelper((float(altitude_t[0]), altitude_t[1]), 
+                                                       unit_info=weewx.units.UnitInfo.fromSkinDict(skin_dict))
 
         self.location        = config_dict['Station']['location']
-        self.rain_year_start = int(config_dict['Station'].get('rain_year_start', '1'))
+        self.rain_year_start = int(config_dict['Station'].get('rain_year_start', 1))
         self.rain_year_str   = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
-        self.week_start      = int(config_dict['Station'].get('week_start', '6'))
+        self.week_start      = int(config_dict['Station'].get('week_start', 6))
 
         self.uptime = weeutil.weeutil.secs_to_string(time.time() - weewx.launchtime_ts) if weewx.launchtime_ts else ''
         self.version = weewx.__version__
@@ -41,7 +40,7 @@ class Station(object):
         try:
             os_uptime_secs =  float(open("/proc/uptime").read().split()[0])
             self.os_uptime = weeutil.weeutil.secs_to_string(int(os_uptime_secs + 0.5))
-        except:
+        except (IOError, KeyError):
             self.os_uptime = ''
     
         try:

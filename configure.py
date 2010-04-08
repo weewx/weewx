@@ -93,9 +93,7 @@ def backfillStatsDatabase(config_dict):
     # Open up the Stats database
     statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                  config_dict['Stats']['stats_file'])
-    statsDb = weewx.stats.StatsDb(statsFilename,
-                                  int(config_dict['Station'].get('heating_base', 65)),
-                                  int(config_dict['Station'].get('cooling_base', 65)))
+    statsDb = weewx.stats.StatsDb(statsFilename)
     
     # Configure it if necessary (this will do nothing if the database has
     # already been configured):

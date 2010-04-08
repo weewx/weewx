@@ -54,9 +54,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Open up the stats database:
         statsFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
                                      self.config_dict['Stats']['stats_file'])
-        self.statsdb = weewx.stats.StatsReadonlyDb(statsFilename,
-                                                  float(self.config_dict['Station'].get('heating_base', '65')),
-                                                  float(self.config_dict['Station'].get('cooling_base', '65')))
+        self.statsdb = weewx.stats.StatsReadonlyDb(statsFilename)
     
     def initUnits(self):
         

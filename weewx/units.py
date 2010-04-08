@@ -7,9 +7,7 @@
 #    $Author$
 #    $Date$
 #
-"""Data structures and functions for dealing with units
-
-"""
+"""Data structures and functions for dealing with units"""
 import time
 
 import weewx
@@ -118,8 +116,8 @@ agg_group = {'mintime' : "group_time",
              'vecdir'  : "group_direction",
              'gustdir' : "group_direction"}
 
-# This structure maps unit classes to actual units using the US customary unit
-# system.
+# This structure maps unit groups to the unit type in the 
+# US customary unit system:
 USUnits       = {"group_altitude"     : "foot",
                  "group_count"        : "count",
                  "group_direction"    : "degree_compass",
@@ -136,6 +134,8 @@ USUnits       = {"group_altitude"     : "foot",
                  "group_time"         : "unix_epoch",
                  "group_volt"         : "volt"}
 
+# This structure maps unit groups to the unit type in the 
+# metric unit system:
 MetricUnits   = {"group_altitude"     : "meter",
                  "group_count"        : "count",
                  "group_direction"    : "degree_compass",
@@ -202,7 +202,7 @@ default_unit_format_dict = {"centibar"           : "%.0f",
                             "watt_per_meter_squared" : "%.0f",
                             "NONE"              : "   N/A"}
 
-# Default unit formatting to be used in the absence of a skin configuration file
+# Default unit labels to be used in the absence of a skin configuration file
 default_unit_label_dict = { "centibar"          : " cb",
                             "cm"                : " cm",
                             "cm_per_hour"       : " cm/hr",
@@ -231,12 +231,19 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "watt_per_meter_squared" : " W/m\xc2\xb2",
                             "NONE"              : "" }
 
+# Default strftime formatting to be used in the absence of a skin
+# configuration file:
 default_time_format_dict = {"day"      : "%H:%M",
                             "week"     : "%H:%M on %A",
                             "month"    : "%d-%b-%Y %H:%M",
                             "year"     : "%d-%b-%Y %H:%M",
                             "rainyear" : "%d-%b-%Y %H:%M",
                             "current"  : "%d-%b-%Y %H:%M"}
+
+# Default base temperature and unit type for heating and cooling degree days
+# as a value tuple
+default_heatbase = (65.0, "degree_F")
+default_coolbase = (65.0, "degree_F")
 
 #===============================================================================
 #                        class ValueHelper
@@ -246,51 +253,77 @@ class ValueHelper(object):
     """A helper class that binds together everything needed to do a
     context sensitive formatting"""
     
-    def __init__(self, val, unit_type=None, context='current', unit_info=None):
-        self.val = val
-        self.unit_type = unit_type
-        self.context = context
-        self.unit_info = unit_info
+    def __init__(self, value_t, context='current', unit_info=None):
+        """Initialize a ValueHelper.
+        
+        value_t: The value tuple with the data. First element is the value,
+        second element the unit type (or None if not known).
+        
+        context: The time context. Something like 'current', 'day', 'week', etc.
+        [Optional. If not given, context 'current' will be used.]
+        
+        unit_info: An instance of UnitInfo. This will be used to determine what
+        unit the value is to be displayed in, as well as any formatting and labeling
+        information. [Optional. If not given, the default UnitInfo will be used]
+        """
+        self.value_t   = value_t
+        self.context   = context
+        self.unit_info = unit_info if unit_info else UnitInfo()
         
     def __str__(self):
-        return self.unit_info.toString(self.val, self.unit_type, self.context)
+        """Return as string"""
+        return self.unit_info.toString(self.value_t, self.context)
     
     def string(self, NONE_string=None):
-        return self.unit_info.toString(self.val, self.unit_type, self.context, NONE_string=NONE_string)
+        """Return as string with an optional user specified string to be used if None"""
+        return self.unit_info.toString(self.value_t, self.context, NONE_string=NONE_string)
     
     def format(self, format_string, NONE_string=None):
-        """Return a formatted version of the model, using a user-supplied format."""
-        print "format: ", self.val, self.unit_type, self.context
-        return self.unit_info.toString(self.val, self.unit_type, self.context, useThisFormat=format_string, NONE_string=NONE_string)
+        """Return a formatted version of the data, using a user-supplied format."""
+        return self.unit_info.toString(self.value_t, self.context, useThisFormat=format_string, NONE_string=NONE_string)
     
     @property
     def formatted(self):
-        """Return a formatted version of the model, but with no label."""
-        return self.unit_info.toString(self.val, self.unit_type, self.context, addLabel=False)
+        """Return a formatted version of the data, but with no label."""
+        return self.unit_info.toString(self.value_t, self.context, addLabel=False)
         
     @property
     def raw(self):
-        """Return a raw version of the underlying model.
+        """Return the value in the target unit type.
         
-        The raw version does unit conversion, but does not apply any formatting."""
-        (target_val, target_unit_type) = self.unit_info.convert(self.val, self.unit_type)
-        return target_val
+        The raw version does unit conversion, but does not apply any formatting.
+        
+        Returns: The value in the target unit type"""
+        return self.value_tuple[0]
     
-
+    @property
+    def value_tuple(self):
+        """Returns a value tuple with the value in the targeted unit type.
+        
+        Returns: A value tuple. First element is the value, second element the unit type"""
+        
+        return self.unit_info.convert(self.value_t)
+        
 #===============================================================================
 #                            class ValueDict
 #===============================================================================
 
 class ValueDict(dict):
+    """A dictionary that returns contents as a ValueHelper.
+    
+    This dictionary, when keyed returns a ValueHelper object, which can then
+    be used for context sensitive formatting.
+    """
     
     def __init__(self, d, unit_info=None):
         dict.__init__(self, d)
-        self.unit_info = unit_info
+        self.unit_info = unit_info if unit_info else UnitInfo()
         
     def __getitem__(self, obs_type):
         std_unit_system = dict.__getitem__(self, 'usUnits')
         unit_type = getStandardUnitType(std_unit_system, obs_type)
-        vh = ValueHelper(dict.__getitem__(self, obs_type), unit_type, unit_info=self.unit_info)
+        val_t = (dict.__getitem__(self, obs_type), unit_type)
+        vh = ValueHelper(val_t, unit_info=self.unit_info)
         return vh
         
 #===============================================================================
@@ -303,7 +336,8 @@ class UnitInfo(object):
                  unit_group_dict  = USUnits, 
                  unit_format_dict = default_unit_format_dict,  
                  unit_label_dict  = default_unit_label_dict,
-                 time_format_dict = default_time_format_dict):
+                 time_format_dict = default_time_format_dict,
+                 heatbase=None, coolbase=None):
         """
         unit_group_dict: Key is a unit_group (eg, 'pressure'), 
         value is the desired unit type ('mbar')
@@ -316,43 +350,81 @@ class UnitInfo(object):
         
         time_format_dict: Key is a context (eg, 'week'),
         value is a strftime format ("%d-%b-%Y %H:%M").
+        
+        heatbase: A value tuple. First element is the base temperature
+        for heating degree days, second element the unit it is in.
+        [Optional. If not given, (65.0, 'default_F') will be used.]
+        
+        coolbase: A value tuple. First element is the base temperature
+        for cooling degree days, second element the unit it is in.
+        [Optional. If not given, (65.0, 'default_F') will be used.]
         """
         self.unit_group_dict  = unit_group_dict
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
         self.time_format_dict = time_format_dict
+        self.heatbase = heatbase if heatbase is not None else default_heatbase
+        self.coolbase = coolbase if coolbase is not None else default_coolbase
 
     @staticmethod
     def fromSkinDict(skin_dict):
+        heatbase = skin_dict['Units']['DegreeDays'].get('heating_base')
+        coolbase = skin_dict['Units']['DegreeDays'].get('heating_base')
+        heatbase_t = (float(heatbase[0]), heatbase[1]) if heatbase else None
+        coolbase_t = (float(coolbase[0]), coolbase[1]) if coolbase else None
+
         return UnitInfo(skin_dict['Units']['Groups'],
                         skin_dict['Units']['StringFormats'],
                         skin_dict['Units']['Labels'],
-                        skin_dict['Units']['TimeFormats'])
+                        skin_dict['Units']['TimeFormats'],
+                        heatbase_t,
+                        coolbase_t)
     
-    
-    def toString(self, val, unit_type, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
-        """need to do unit type conversion!"""
-        if val is None:
+    def toString(self, val_t, context='current', addLabel=True, 
+                 useThisFormat=None, NONE_string=None):
+        """Format the value as a string.
+        
+        val_t: The value to be formatted as a value tuple. First element
+        is the value, the second element the unit type (eg, 'degree_F') it is in.
+        
+        context: A time context (eg, 'day'). 
+        [Optional. If not given, context 'current' will be used.]
+        
+        addLabel: True to add a unit label (eg, 'mbar'), False to not.
+        [Optional. If not given, a label will be added.]
+        
+        useThisFormat: An optional string or strftime format to be used. 
+        [Optional. If not given, the format given in the initializer will be used.]
+        
+        NONE_string: A string to be used if the value val is None.
+        [Optional. If not given, the string given unit_format_dict['NONE'] will be used.]
+        """
+        if val_t is None or val_t[0] is None:
             if NONE_string: 
                 return NONE_string
             else:
                 return self.unit_format_dict.get('NONE', 'N/A')
             
-        # It's not a None value. Perform the type conversion:
-        (target_val, target_unit_type) = self.convert(val, unit_type)
+        # It's not a None value. Perform the type conversion to the internally
+        # held target type:
+        (target_val, target_unit_type) = self.convert(val_t)
 
         if target_unit_type == "unix_epoch":
+            # Different formatting routines are used if the value is a time.
             if useThisFormat:
                 return time.strftime(useThisFormat, time.localtime(target_val))
             else:
                 try:
                     val_str = time.strftime(self.time_format_dict[context], time.localtime(target_val))
                 except (KeyError, TypeError):
+                    # If all else fails, use this weeutil utility:
                     val_str = weeutil.weeutil.timestamp_to_string(target_val)
         else:
+            # It's not a time. It's a regular value.
             try:
                 val_str = self.unit_format_dict[target_unit_type] % target_val
             except (KeyError, TypeError):
+                # If all else fails, ask Python to convert to a string:
                 val_str = str(target_val)
 
         if addLabel:
@@ -368,22 +440,28 @@ class UnitInfo(object):
         return unit_type
         
     def getTargetType(self, old_unit_type):
+        """Given an old unit type, return the target unit type"""
         unit_group= unit_type_dict[old_unit_type]
         unit_type = self.unit_group_dict[unit_group]
         return unit_type
     
-    def convert(self, val, unit_type):
-        new_unit_type = self.getTargetType(unit_type)
-        new_val = convert(unit_type, new_unit_type, val)
-        return (new_val, new_unit_type)
+    def convert(self, val_t):
+        """Convert a value from a given unit type to the target type.
+        
+        returns: A value tuple in the new unit type"""
+        new_unit_type = self.getTargetType(val_t[1])
+        new_val_t = convert(val_t, new_unit_type)
+        return new_val_t
         
     def getObsFormatDict(self):
+        """Returns a dictionary with key an observation type, value a string or time format."""
         obs_format_dict = {}
         for obs_type in obs_group_dict:
             obs_format_dict[obs_type] = self.unit_format_dict.get(self.getUnitType(obs_type),'')
         return obs_format_dict
     
     def getObsLabelDict(self):
+        """Returns a dictionary with key an observation type, value a label."""
         obs_label_dict = {}
         for obs_type in obs_group_dict:
             obs_label_dict[obs_type] = self.unit_label_dict.get(self.getUnitType(obs_type),'')
@@ -420,163 +498,22 @@ def getStandardUnitType(std_unit_system, obs_type, agg_type=None):
         unit_type = None
     return unit_type
     
-def convert(from_unit_type, to_unit_type, obj):
+def convert(val_t, target_unit_type):
     """ Convert a value or a sequence of values between unit systems
 
-    from_unit_type: A string with the unit type (e.g., "foot", or "inHg") from
-    which the object is to be converted.
+    val_t: A value-tuple with the value to be converted. The first
+    element is the value (either a scalar or iterable), the second element 
+    the unit type (e.g., "foot", or "inHg") it is in.
     
-    to_unit_type: A string with the unit type (e.g., "meter", or "mbar") to
-    which the object is to be converted.
+    target_unit_type: The unit type (e.g., "meter", or "mbar") to
+    which the value is to be converted.
     
-    obj: Either a scalar value or an iterable sequence of values.
-    
-    returns: Either a scalar value or an iterable sequence of values (depending
-    on obj), converted into the desired units.
+    returns: A value tuple converted into the desired units.
     """
-    if to_unit_type is None or from_unit_type == to_unit_type or obj is None:
-        return obj
+    if target_unit_type is None or val_t[1] == target_unit_type or val_t[0] is None:
+        return val_t
 
     try:
-        return map(conversionDict[from_unit_type][to_unit_type], obj)
+        return (map(conversionDict[val_t[1]][target_unit_type], val_t[0]), target_unit_type)
     except TypeError:
-        return conversionDict[from_unit_type][to_unit_type](obj)
-
-##===============================================================================
-##                                class Value
-##===============================================================================
-#
-#class Value(object):
-#    """Represents an arbitrary value and a unit type (eg, 'mbar')"""
-#    
-#    def __init__(self, val, unit_type):
-#        """Initialize with a value and a unit type.
-#        
-#        val: A scalar .
-#        
-#        unit_type: The units val is in ('mbar', 'foot', 'degree_F'), etc.
-#        Set to None if unknown
-#        """
-#        self.val = val
-#        self.unit_type = unit_type
-#        
-#    @staticmethod
-#    def convertFrom(old_value, to_unit_type):
-#        """Convert an instance of Value to a new unit type.
-#        
-#        old_value: an instance of weewx.units.Value
-#        
-#        to_unit_type: The type of desired unit ('mbar', 'cm', etc.).
-#        
-#        Returns: A Value with attribute val equal to the converted values, 
-#        attribute unit_type equal to the new unit_type."""
-#        
-#        if old_value.unit_type is None or to_unit_type is None:
-#            return Value(old_value.val, None)
-#        if  old_value.unit_type == to_unit_type:
-#            return Value(old_value.val, old_value.unit_type)
-#    
-#        return Value(conversionDict[old_value.unit_type][to_unit_type](old_value.val), to_unit_type)
-#    
-#    @staticmethod
-#    def convertUsing(old_value, units):
-#        """Convert an instance of Value to a new unit given by an instance of weewx.units.Units.
-#        
-#        old_value: an instance of weewx.units.Value
-#        
-#        units: an instance of weewx.units.Units.
-#        
-#        Returns: A Value with attribute val equal to the converted values, 
-#        attribute unit_type equal to the new unit_type."""
-#        to_unit_type = units.getTargetType(old_value.unit_type)
-#        return Value.convertFrom(old_value, to_unit_type)
-#
-#    def __str__(self):
-#        return ValueFormatter().toString(self)
-#    
-#    def __cmp__(self, other):
-#        return cmp(self.val, other.val) and cmp(self.unit_type, other.unit_type)
-#    
-#    def toString(self, valueFormatter = None):
-#        if not valueFormatter: 
-#            valueFormatter = ValueFormatter()
-#        return valueFormatter.toString(self)
-    
-#===============================================================================
-#                        ValueList
-#===============================================================================
-#
-#class ValueList(list):
-#    """Represents a list with a unit type."""
-#
-#    def __init__(self, seq, unit_type):
-#        """Initialize with a seq and a unit type.
-#        
-#        seq: A sequence.
-#        
-#        unit_type: The units val is in ('mbar', 'foot', 'degree_F'), etc.  Set
-#        to None if unknown
-#        """
-#        super(ValueList, self).__init__(self, seq)
-#        self.unit_type = unit_type
-#        
-#    def toUnit(self, to_unit_type):
-#        if self.unit_type is None or to_unit_type is None:
-#            return ValueList(self, None)
-#        if  self.unit_type == to_unit_type:
-#            return ValueList(self, self.unit_type)
-#    
-#        return ValueList(map(conversionDict[self.unit_type][to_unit_type], self), to_unit_type)
-#
-#        
-##===============================================================================
-##                            class ValueDict
-##===============================================================================
-#
-#class ValueDict(dict) :
-#    """A dictionary like object which retains unit type information."""
-#    
-#    def __init__(self, d):
-#        unit_system = d['usUnits']
-#        
-#        for obs_type in d.keys():
-#            if obs_type == 'usUnits': continue
-#            self[obs_type] = Value(d[obs_type], getStandardUnitType(unit_system, obs_type))
-#    
-#    @staticmethod
-#    def fromSeq(type_seq, row_seq):
-#
-#        d = dict(zip(type_seq, row_seq))
-#        return ValueDict(d)
-#        
-#    def __str__(self):
-#        return '{' + ', '.join(str(self[obs_type]) for obs_type in self.keys()) + '}'
-#    
-#    def summary(self):
-#        str_list = []
-#        for obs_type in ('dateTime', 'outTemp', 'barometer', 'windSpeed', 'windDir'):
-#            try:
-#                str_list.append(str(self[obs_type]))
-#            except KeyError:
-#                pass
-#        return ', '.join(str_list)    
-#===============================================================================
-#                                      Test
-#===============================================================================
-
-if __name__ == '__main__':
-    
-    assert(convert('degree_F', 'degree_C', 32.0) == 0.0)
-    assert(convert('degree_F', 'degree_C', [32.0, 212.0, -40.0]) == [0.0, 100.0, -40.0])
-    
-    d = {'usUnits' : 1,
-         'dateTime' : 1234567890,
-         'barometer': 30.02,
-         'outTemp'  : 45.2}
-    
-    vd = ValueDict(d)
-    print vd['barometer']
-    
-    print vd
-    print vd.summary()
-    
+        return (conversionDict[val_t[1]][target_unit_type](val_t[0]), target_unit_type)
