@@ -982,9 +982,9 @@ class MyFileGenerator(FileGenerator):                    # 1
 	<span class="code">self.statsdb</span> is the statistical database the 
 	calculation is to be run against; the second is the timespan over which the 
 	calculation is to be done; and the third, <span class="code">self.unit_info</span>, 
-	is an instance of weewx.units.UnitInfo, which contains information about the 
-	target units the results are to be returned in as well as formatting and 
-	labeling information. </li>
+	is an instance of class <span class="code">weewx.units.UnitInfo</span>, 
+	which contains information about the target units the results are to be 
+	returned in as well as formatting and labeling information. </li>
 	<li>Get the search list from the superclass.</li>
 	<li>Tack on our addition and return the results. The search list will now 
 	consist of a list of dictionaries, including a small one we added on the end 
