@@ -79,7 +79,7 @@ class BatteryAlarm(StdService):
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be thrown and
             # the alarm will not be set.
-            self.time_wait       = int(self.engine.config_dict['Alarm'].get('time_wait', '3600'))
+            self.time_wait       = int(self.engine.config_dict['Alarm'].get('time_wait', 3600))
             self.count_threshold = int(self.engine.config_dict['Alarm'].get('count_threshold', 50))
             self.smtp_host       = self.engine.config_dict['Alarm']['smtp_host']
             self.smtp_user       = self.engine.config_dict['Alarm'].get('smtp_user')

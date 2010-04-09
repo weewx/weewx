@@ -38,7 +38,7 @@ class StdReportEngine(threading.Thread):
     See below for examples of generators.
     """
     
-    def __init__(self, config_dict, gen_ts = None, first_run = True):
+    def __init__(self, config_path, gen_ts = None, first_run = True):
         """Initializer for the report engine. 
         
         config_dict: the configuration dictionary.
@@ -50,7 +50,12 @@ class StdReportEngine(threading.Thread):
         If this is the case, then any 'one time' events should be done.
         """
         threading.Thread.__init__(self, name="ReportThread")
-        self.config_dict = config_dict
+        try :
+            self.config_dict = configobj.ConfigObj(config_path, file_error=True)
+        except IOError:
+            print "Unable to open configuration file ", config_path
+            raise
+            
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         
@@ -100,7 +105,7 @@ class StdReportEngine(threading.Thread):
             # Finally, add the report name:
             skin_dict['REPORT_NAME'] = report
             
-            for generator in weeutil.weeutil.option_as_list(skin_dict.get('generator_list')):
+            for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
                 try:
                     # Instantiate an instance of the class.
                     obj = weeutil.weeutil._get_object(generator, 
@@ -241,15 +246,9 @@ if __name__ == '__main__':
         syslog.openlog('reportengine', syslog.LOG_PID|syslog.LOG_CONS)
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
-        try :
-            config_dict = configobj.ConfigObj(config_path, file_error=True)
-        except IOError:
-            print "Unable to open configuration file ", config_path
-            raise
-            
         socket.setdefaulttimeout(10)
         
-        t = StdReportEngine(config_dict, gen_ts)
+        t = StdReportEngine(config_path, gen_ts)
         t.start()
         t.join()
 

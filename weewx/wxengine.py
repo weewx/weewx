@@ -103,9 +103,11 @@ class StdEngine(object):
         if options.daemon:
             daemon.daemonize(pidfile='/var/run/weewx.pid')
             
+        self.config_path = os.path.abspath(args[0])
+            
         # Try to open up the given configuration file. Declare an error if unable to.
         try :
-            self.config_dict = configobj.ConfigObj(args[0], file_error=True)
+            self.config_dict = configobj.ConfigObj(self.config_path, file_error=True)
         except IOError:
             sys.stderr.write("Unable to open configuration file %s" % args[0])
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open configuration file %s" % args[0])
@@ -392,7 +394,7 @@ class StdReportService(StdService):
     def processArchiveData(self):
         """This function processes any new archive data"""
         # Now process the data, using a separate thread
-        self.thread = weewx.reportengine.StdReportEngine(self.engine.config_dict,
+        self.thread = weewx.reportengine.StdReportEngine(self.engine.config_path,
                                                          first_run = self.first_run) 
         self.thread.start()
         self.first_run = False

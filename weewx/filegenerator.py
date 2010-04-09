@@ -44,7 +44,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.generateSummaryBy('SummaryByMonth', self.start_ts, self.stop_ts)
         self.generateSummaryBy('SummaryByYear',  self.start_ts, self.stop_ts)
         self.generateToDate(currentRec, self.stop_ts)
-    
+
     def initStation(self):
 
         # station holds info such as 'altitude', 'latitude', etc. It seldom changes
@@ -206,11 +206,10 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 #        statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
 
         # Put together the search list:
-        searchList = [{'station'     : self.station,
-                       'unit_format' : self.unit_info.getObsFormatDict(),
-                       'unit_label'  : self.unit_info.getObsLabelDict(),
-                       'month_name'  : time.strftime("%b", timespan_start_tt),
-                       'year_name'   : _yr},
+        searchList = [{'station'    : self.station,
+                       'unit'       : self.unit_info,
+                       'month_name' : time.strftime("%b", timespan_start_tt),
+                       'year_name'  : _yr},
                        stats]
 
         # IF the user has supplied an '[Extra]' section in the skin dictionary, include
@@ -234,10 +233,9 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         current = {'current' : currentRec}
 
         # Put together the search list:
-        searchList = [{'station'     : self.station,
-                       'almanac'     : self.almanac,
-                       'unit_format' : self.unit_info.getObsFormatDict(),
-                       'unit_label'  : self.unit_info.getObsLabelDict()},
+        searchList = [{'station' : self.station,
+                       'almanac' : self.almanac,
+                       'unit'    : self.unit_info},
                        self.outputted_dict,
                        current,
                        stats]
@@ -318,7 +316,6 @@ class strict_ascii(Cheetah.Filters.Filter):
         else:
             filtered = self.filter(str(val))
         return filtered
-
     
 class utf8(Cheetah.Filters.Filter):
 

@@ -247,8 +247,10 @@ class Archive(object):
         Note that DST happens at 02:00 on 9-Mar, so the actual time deltas between the
         elements is 3 hours between times #1 and #2, but only 2 hours between #2 and #3.
         
-        NB: there is an algorithmic assumption here that all archived
-        time intervals are the same length. That is, the archive interval cannot change.
+        NB: there is an algorithmic assumption here that the archive time interval
+        is a constant.
+        
+        There is another assumption that the unit type does not change within a time interval.
         
         sql_type: The SQL type to be retrieved (e.g., 'outTemp') 
         
@@ -268,13 +270,16 @@ class Archive(object):
         aggregation (e.g., 'sum', 'avg', etc.)  Required if aggregate_interval
         is non-None. Default: None (no aggregation)
 
-        returns: a 2-way tuple of 2-way tuples: 
+        returns: a 2-way tuple of value tuples: 
           ((time_vec, time_unit_type), (data_vec, data_unit_type))
-        The first tuple hold the time information: the first element 
-        is the time vector, the second the unit type of the time vector. 
-        The second tuple holds the data information. The first element is
-        the data vector, the second the unit type of the data vector.
+        The first element holds the time value tuple, the second the data value tuple.
+        The first element of the time value tuple is a time vector (as a list), the
+        second element the unit it is in ('unix_epoch'). The first element
+        of the data value tuple is the data vector (as a list), the second
+        element the unit type it is in. 
         """
+        # There is an assumption here that the unit type does not change in the
+        # middle of the time interval.
 
         time_vec = list()
         data_vec = list()
@@ -295,7 +300,11 @@ class Archive(object):
                     if _rec[0] is not None:
                         time_vec.append(_rec[0])
                         data_vec.append(_rec[1])
-                        std_unit_system = _rec[2]
+                        if std_unit_system:
+                            if std_unit_system != _rec[2]:
+                                raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                        else:
+                            std_unit_system = _rec[2]
         else:
             sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime >= ? AND dateTime <= ?' % sql_type
             _cursor.execute(sql_str, (startstamp, stopstamp))
@@ -303,7 +312,11 @@ class Archive(object):
                 assert(_rec[0])
                 time_vec.append(_rec[0])
                 data_vec.append(_rec[1])
-                std_unit_system = _rec[2]
+                if std_unit_system:
+                    if std_unit_system != _rec[2]:
+                        raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                else:
+                    std_unit_system = _rec[2]
 
         _cursor.close()
         _connection.close()
@@ -399,7 +412,11 @@ class Archive(object):
                     if mag == 0.0  or dir is not None:
                         count += 1
                         last_time  = _rec[0]
-                        std_unit_system = _rec[3]
+                        if std_unit_system:
+                            if std_unit_system != _rec[3]:
+                                raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                        else:
+                            std_unit_system = _rec[3]
                         
                         # Pick the kind of aggregation:
                         if aggregate_type == 'min':
@@ -448,7 +465,11 @@ class Archive(object):
             for _rec in _cursor:
                 # Record the time:
                 time_vec.append(_rec[0])
-                std_unit_system = _rec[3]
+                if std_unit_system:
+                    if std_unit_system != _rec[3]:
+                        raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                else:
+                    std_unit_system = _rec[3]
                 # Break the mag and dir down into x- and y-components.
                 (mag, dir) = _rec[1:3]
                 if mag is None or dir is None:
@@ -518,41 +539,3 @@ class Archive(object):
         
         return res
 
-if __name__ == '__main__':
-    
-    import sys
-    import configobj
-    
-    if len(sys.argv) < 2 :
-        print "Usage: archive.py path-to-configuration-file"
-        exit()
-        
-    config_path = sys.argv[1]
-    
-    weewx.debug = 1
-    syslog.openlog('archive', syslog.LOG_PID|syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-
-    try :
-        config_dict = configobj.ConfigObj(config_path, file_error=True)
-    except IOError:
-        print "Unable to open configuration file ", config_path
-        raise
-
-    archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                   config_dict['Archive']['archive_file'])
-    archive = Archive(archiveFilename)
-
-    start_ts   = archive.firstGoodStamp()
-    stop_ts    = archive.lastGoodStamp()
-
-    print "First stamp in database: ", weeutil.weeutil.timestamp_to_string(start_ts)
-    print "Last stamp in database:  ", weeutil.weeutil.timestamp_to_string(stop_ts)
-    
-    for ts in (stop_ts, stop_ts + 300):
-        val = archive.getValueDict(ts)
-
-        if val:
-            print val.summary()
-        else:
-            print "No record for timestamp ", ts

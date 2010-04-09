@@ -139,7 +139,7 @@ td {
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.6</h1>
+Version 1.7</h1>
 <h1>Table of Contents</h1>
 <ol>
 	<li><a href="#Copyright">Copyright</a></li>
@@ -546,19 +546,13 @@ longitude</h4>
 <p>The lat/lon should be set in decimal degrees, negative for southern and eastern 
 hemispheres, respectively. Required. No default.</p>
 <h4 class="config_important">altitude</h4>
-<p>Should be set to the altitude of the station in the same units specified in
-<span class="code"><a href="customizing.htm#group_altitude">group_altitude</a></span>. 
-Required. No default.</p>
+<p>Set to the altitude of the station and the unit used for the altitude. 
+Required. No default. Example:</p>
+<pre>altitude = 700, foot</pre>
 <h4 class="config_important">rain_year_start</h4>
 <p>If your area uses a rain year that starts on something other than the first of 
 January, you may want to set this variable. For example, set to 10 if your rain 
 year starts in October (as mine does). Default is 1.</p>
-<h4 class="config_option"><span class="config_important">heating_base<br />
-cooling_base</span></h4>
-<p>Set to the base temperature for calculating heating and cooling degree-days, 
-respectively, in the same units specified in <span class="code">
-<a href="customizing.htm#group_temperature">group_temperature</a></span>. The default 
-is 65.0 for both.</p>
 <h4 class="config_option">week_start</h4>
 <p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 (Sunday)</p>
 <h4 class="config_option">clock_check</h4>

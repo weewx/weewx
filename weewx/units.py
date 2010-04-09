@@ -64,8 +64,8 @@ obs_group_dict = {"barometer"          : "group_pressure",
                   "supplyVoltage"      : "group_volt",
                   "referenceVoltage"   : "group_volt",
                   "altitude"           : "group_altitude",
-                  "heatdeg"            : "group_temperature",
-                  "cooldeg"            : "group_temperature",
+                  "heatdeg"            : "group_degree_day",
+                  "cooldeg"            : "group_degree_day",
                   "dateTime"           : "group_time",
                   "interval"           : "group_interval"}
 
@@ -79,8 +79,10 @@ unit_type_dict = {"centibar"           : "group_moisture",
                   "cm_per_hour"        : "group_rainrate",
                   "count"              : "group_count",
                   "degree_C"           : "group_temperature",
+                  "degree_C_day"       : "group_degree_day",
                   "degree_compass"     : "group_direction",
                   "degree_F"           : "group_temperature",
+                  "degree_F_day"       : "group_degree_day",
                   "foot"               : "group_altitude",
                   "hPa"                : "group_pressure",
                   "inHg"               : "group_pressure",
@@ -106,20 +108,22 @@ unit_type_dict = {"centibar"           : "group_moisture",
 
 # Some aggregations when applied to a type result in a different unit
 # group. This data structure maps aggregation type to the group:
-agg_group = {'mintime' : "group_time",
-             'maxtime' : "group_time",
-             'count'   : "group_count",
-             'max_ge'  : "group_count",
-             'max_le'  : "group_count",
-             'min_le'  : "group_count",
-             'sum_ge'  : "group_count",
-             'vecdir'  : "group_direction",
-             'gustdir' : "group_direction"}
+agg_group = {'mintime'    : "group_time",
+             'maxtime'    : "group_time",
+             "maxsumtime" : "group_time",
+             'count'      : "group_count",
+             'max_ge'     : "group_count",
+             'max_le'     : "group_count",
+             'min_le'     : "group_count",
+             'sum_ge'     : "group_count",
+             'vecdir'     : "group_direction",
+             'gustdir'    : "group_direction"}
 
 # This structure maps unit groups to the unit type in the 
 # US customary unit system:
 USUnits       = {"group_altitude"     : "foot",
                  "group_count"        : "count",
+                 "group_degree_day"   : "degree_F_day",
                  "group_direction"    : "degree_compass",
                  "group_interval"     : "minute",
                  "group_moisture"     : "centibar",
@@ -138,6 +142,7 @@ USUnits       = {"group_altitude"     : "foot",
 # metric unit system:
 MetricUnits   = {"group_altitude"     : "meter",
                  "group_count"        : "count",
+                 "group_degree_day"   : "degree_C_day",
                  "group_direction"    : "degree_compass",
                  "group_interval"     : "minute",
                  "group_moisture"     : "centibar",
@@ -155,22 +160,48 @@ MetricUnits   = {"group_altitude"     : "meter",
 StdUnitSystem     = {weewx.US     : USUnits,
                      weewx.METRIC : MetricUnits}
 
-# Conversion functions to go from one unit type to another.  Right now, it only
-# maps US Customary to Metric. It should be extended to go the other way.
-conversionDict = {'inHg'           : {'mbar' : lambda x : 33.86 * x if x is not None else None, 
-                                      'hPa'  : lambda x : 33.86 * x if x is not None else None},
-                  'degree_F'       : {'degree_C' : lambda x : (5.0/9.0) * (x - 32.0) if x is not None else None},
-                  'mile_per_hour'  : {'km_per_hour'       : lambda x : 1.609344    * x if x is not None else None,
-                                      'knot'              : lambda x : 0.868976242 * x if x is not None else None,
-                                      'meter_per_second'  : lambda x : 0.44704     * x if x is not None else None},
-                  'mile_per_hour2' : {'km_per_hour2'      : lambda x : 1.609344    * x if x is not None else None,
-                                      'knot2'             : lambda x : 0.868976242 * x if x is not None else None,
-                                      'meter_per_second2' : lambda x : 0.44704     * x if x is not None else None},
-                  'inch_per_hour'  : {'cm_per_hour' : lambda x : 2.54   * x if x is not None else None,
-                                      'mm_per_hour' : lambda x : 25.4   * x if x is not None else None},
-                  'inch'           : {'cm'          : lambda x : 2.54   * x if x is not None else None,
-                                      'mm'          : lambda x : 25.4   * x if x is not None else None},
-                  'foot'           : {'meter'       : lambda x : 0.3048 * x if x is not None else None} }
+# Conversion functions to go from one unit type to another.
+conversionDict = {
+      'inHg'             : {'mbar' : lambda x : 33.86 * x if x is not None else None, 
+                            'hPa'  : lambda x : 33.86 * x if x is not None else None},
+      'degree_F'         : {'degree_C'   : lambda x : (5.0/9.0) * (x - 32.0) if x is not None else None},
+      'degree_F_day'     : {'degree_C_day'      : lambda x : (5.0/9.0)   * x if x is not None else None},
+      'mile_per_hour'    : {'km_per_hour'       : lambda x : 1.609344    * x if x is not None else None,
+                            'knot'              : lambda x : 0.868976242 * x if x is not None else None,
+                            'meter_per_second'  : lambda x : 0.44704     * x if x is not None else None},
+      'mile_per_hour2'   : {'km_per_hour2'      : lambda x : 1.609344    * x if x is not None else None,
+                            'knot2'             : lambda x : 0.868976242 * x if x is not None else None,
+                            'meter_per_second2' : lambda x : 0.44704     * x if x is not None else None},
+      'inch_per_hour'    : {'cm_per_hour' : lambda x : 2.54   * x if x is not None else None,
+                            'mm_per_hour' : lambda x : 25.4   * x if x is not None else None},
+      'inch'             : {'cm'          : lambda x : 2.54   * x if x is not None else None,
+                            'mm'          : lambda x : 25.4   * x if x is not None else None},
+      'foot'             : {'meter'       : lambda x : 0.3048 * x if x is not None else None},
+      
+      'mbar'             : {'inHg'            : lambda x : 0.0295333727 * x if x is not None else None,
+                            'hPa'             : lambda x : 1.0 * x          if x is not None else None},
+      'hPa'              : {'inHg'            : lambda x : 0.0295333727 * x if x is not None else None,
+                            'mbar'            : lambda x : 1.0 * x          if x is not None else None},
+      'degree_C'         : {'degree_F'        : lambda x : (9.0/5.0 * x + 32.0) if x is not None else None},
+      'degree_C_day'     : {'degree_F_day'    : lambda x : (9.0/5.0 * x)   if x is not None else None},
+      'km_per_hour'      : {'mile_per_hour'   : lambda x : 0.621371192* x if x is not None else None,
+                            'knot'            : lambda x : 0.539956803* x if x is not None else None,
+                            'meter_per_second': lambda x : 0.277777778* x if x is not None else None},
+      'meter_per_second' : {'mile_per_hour'   : lambda x : 2.23693629 * x if x is not None else None,
+                            'knot'            : lambda x : 1.94384449 * x if x is not None else None,
+                            'km_per_hour'     : lambda x : 3.6        * x if x is not None else None},
+      'meter_per_second2': {'mile_per_hour2'  : lambda x : 2.23693629 * x if x is not None else None,
+                            'knot2'           : lambda x : 1.94384449 * x if x is not None else None,
+                            'km_per_hour2'    : lambda x : 3.6        * x if x is not None else None},
+      'cm_per_hour'      : {'inch_per_hour'   : lambda x : 0.393700787* x if x is not None else None,
+                            'mm_per_hour'     : lambda x : 10.0       * x if x is not None else None},
+      'mm_per_hour'      : {'inch_per_hour'   : lambda x : .0393700787* x if x is not None else None,
+                            'cm_per_hour'     : lambda x : 0.10       * x if x is not None else None},
+      'cm'               : {'inch'            : lambda x : 0.393700787* x if x is not None else None,
+                            'mm'              : lambda x : 10.0       * x if x is not None else None},
+      'mm'               : {'inch'            : lambda x : .0393700787* x if x is not None else None,
+                            'cm'              : lambda x : 0.10       * x if x is not None else None},
+      'meter'            : {'foot'            : lambda x : 3.2808399  * x if x is not None else None} }
 
 
 # Default unit formatting to be used in the absence of a skin configuration file
@@ -178,8 +209,10 @@ default_unit_format_dict = {"centibar"           : "%.0f",
                             "cm"                 : "%.2f",
                             "cm_per_hour"        : "%.2f",
                             "degree_C"           : "%.1f",
+                            "degree_C_day"       : "%.1f",
                             "degree_compass"     : "%.0f",
                             "degree_F"           : "%.1f",
+                            "degree_F_day"       : "%.1f",
                             "foot"               : "%.0f",
                             "hPa"                : "%.1f",
                             "inHg"               : "%.3f",
@@ -207,8 +240,10 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "cm"                : " cm",
                             "cm_per_hour"       : " cm/hr",
                             "degree_C"          : "\xc2\xb0C",
+                            "degree_C_day"      : "\xc2\xb0C-day",
                             "degree_compass"    : "\xc2\xb0",
                             "degree_F"          : "\xc2\xb0F",
+                            "degree_F_day"      : "\xc2\xb0F-day",
                             "foot"              : " feet",
                             "hPa"               : " hPa",
                             "inHg"              : " inHg",
@@ -282,16 +317,20 @@ class ValueHelper(object):
         """Return a formatted version of the data, using a user-supplied format."""
         return self.unit_info.toString(self.value_t, self.context, useThisFormat=format_string, NONE_string=NONE_string)
     
+    def nolabel(self, format_string, NONE_string=None):
+        """Return a formatted version of the data, using a user-supplied format. No label."""
+        return self.unit_info.toString(self.value_t, self.context, addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
+
     @property
     def formatted(self):
-        """Return a formatted version of the data, but with no label."""
+        """Return a formatted version of the data. No label."""
         return self.unit_info.toString(self.value_t, self.context, addLabel=False)
         
     @property
     def raw(self):
         """Return the value in the target unit type.
         
-        The raw version does unit conversion, but does not apply any formatting.
+        'Raw' does unit conversion, but does not apply any formatting.
         
         Returns: The value in the target unit type"""
         return self.value_tuple[0]
@@ -311,7 +350,7 @@ class ValueHelper(object):
 class ValueDict(dict):
     """A dictionary that returns contents as a ValueHelper.
     
-    This dictionary, when keyed returns a ValueHelper object, which can then
+    This dictionary, when keyed, returns a ValueHelper object, which can then
     be used for context sensitive formatting.
     """
     
@@ -331,16 +370,17 @@ class ValueDict(dict):
 #===============================================================================
 
 class UnitInfo(object):
+    """Holds formatting, labels, and target types for units."""
 
     def __init__(self, 
-                 unit_group_dict  = USUnits, 
+                 unit_type_dict   = USUnits, 
                  unit_format_dict = default_unit_format_dict,  
                  unit_label_dict  = default_unit_label_dict,
                  time_format_dict = default_time_format_dict,
                  heatbase=None, coolbase=None):
         """
-        unit_group_dict: Key is a unit_group (eg, 'pressure'), 
-        value is the desired unit type ('mbar')
+        unit_type_dict: Key is a unit_group (eg, 'group_pressure'), 
+        value is the target unit type ('mbar')
         
         unit_format_dict: Key is unit type (eg, 'inHg'), 
         value is a string format ("%.1f")
@@ -359,15 +399,21 @@ class UnitInfo(object):
         for cooling degree days, second element the unit it is in.
         [Optional. If not given, (65.0, 'default_F') will be used.]
         """
-        self.unit_group_dict  = unit_group_dict
+        self.unit_type_dict  = unit_type_dict
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
         self.time_format_dict = time_format_dict
         self.heatbase = heatbase if heatbase is not None else default_heatbase
         self.coolbase = coolbase if coolbase is not None else default_coolbase
+        
+        # These are mostly used as template tags:
+        self.format    = self.getObsFormatDict()
+        self.label     = self.getObsLabelDict()
+        self.unit_type = self.getObsUnitDict()
 
     @staticmethod
     def fromSkinDict(skin_dict):
+        """Factory static method to initialize from a skin dictionary."""
         heatbase = skin_dict['Units']['DegreeDays'].get('heating_base')
         coolbase = skin_dict['Units']['DegreeDays'].get('heating_base')
         heatbase_t = (float(heatbase[0]), heatbase[1]) if heatbase else None
@@ -411,18 +457,21 @@ class UnitInfo(object):
 
         if target_unit_type == "unix_epoch":
             # Different formatting routines are used if the value is a time.
-            if useThisFormat:
-                return time.strftime(useThisFormat, time.localtime(target_val))
-            else:
-                try:
+            try:
+                if useThisFormat:
+                    val_str = time.strftime(useThisFormat, time.localtime(target_val))
+                else:
                     val_str = time.strftime(self.time_format_dict[context], time.localtime(target_val))
-                except (KeyError, TypeError):
-                    # If all else fails, use this weeutil utility:
-                    val_str = weeutil.weeutil.timestamp_to_string(target_val)
+            except (KeyError, TypeError):
+                # If all else fails, use this weeutil utility:
+                val_str = weeutil.weeutil.timestamp_to_string(target_val)
         else:
             # It's not a time. It's a regular value.
             try:
-                val_str = self.unit_format_dict[target_unit_type] % target_val
+                if useThisFormat:
+                    val_str = useThisFormat % target_val
+                else:
+                    val_str = self.unit_format_dict[target_unit_type] % target_val
             except (KeyError, TypeError):
                 # If all else fails, ask Python to convert to a string:
                 val_str = str(target_val)
@@ -434,21 +483,45 @@ class UnitInfo(object):
 
     def getUnitType(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type,
-        return the target unit type."""
+        return the target unit type.
+        
+        Examples:
+             obs_type  agg_type              Returns
+             ________  ________              _______
+            'outTemp',  None     returns --> 'degree_C'
+            'outTemp', 'mintime' returns --> 'unix_epoch'
+            'wind',    'avg'     returns --> 'meter_per_second'
+            'wind',    'vecdir'  returns --> 'degree_compass'
+        
+        obs_type: An observation type. E.g., 'barometer'.
+        
+        agg_type: An aggregation type E.g., 'mintime', or 'avg'.
+        
+        Returns: the target unit type
+        """
         unit_group = getUnitGroup(obs_type, agg_type)
-        unit_type  = self.unit_group_dict[unit_group]
+        unit_type = self._getUnitTypeFromGroup(unit_group)
         return unit_type
         
     def getTargetType(self, old_unit_type):
-        """Given an old unit type, return the target unit type"""
+        """Given an old unit type, return the target unit type.
+        
+        old_unit_type: A unit type such as 'inHg'.
+        
+        Returns: the target unit type, such as 'mbar'.
+        """
         unit_group= unit_type_dict[old_unit_type]
-        unit_type = self.unit_group_dict[unit_group]
+        unit_type = self._getUnitTypeFromGroup(unit_group)
         return unit_type
     
     def convert(self, val_t):
         """Convert a value from a given unit type to the target type.
         
-        returns: A value tuple in the new unit type"""
+        val_t: A value tuple with the data and a unit type. 
+        Example: (30.02, 'inHg')
+        
+        returns: A value tuple in the new, target unit type 
+        Example: (1016.5, 'mbar')"""
         new_unit_type = self.getTargetType(val_t[1])
         new_val_t = convert(val_t, new_unit_type)
         return new_val_t
@@ -466,6 +539,18 @@ class UnitInfo(object):
         for obs_type in obs_group_dict:
             obs_label_dict[obs_type] = self.unit_label_dict.get(self.getUnitType(obs_type),'')
         return obs_label_dict
+    
+    def getObsUnitDict(self):
+        """Returns a dictionary with key an observation type, value the target unit type."""
+        obs_unit_dict = {}
+        for obs_type in obs_group_dict:
+            obs_unit_dict[obs_type] = self.getUnitType(obs_type)
+        return obs_unit_dict
+    
+    def _getUnitTypeFromGroup(self, unit_group):
+        unit_type = self.unit_type_dict.get(unit_group, USUnits[unit_group])
+        return unit_type
+        
     
 def getUnitGroup(obs_type, agg_type=None):
     """Given an observation type and an aggregation type, what unit group does it belong to?
@@ -517,3 +602,21 @@ def convert(val_t, target_unit_type):
         return (map(conversionDict[val_t[1]][target_unit_type], val_t[0]), target_unit_type)
     except TypeError:
         return (conversionDict[val_t[1]][target_unit_type](val_t[0]), target_unit_type)
+
+def convertStd(val_t, target_std_unit_system):
+    """Convert a value tuple to an appropriate unit in a target standardized
+    unit system
+    
+        Example: convertStd((30.02, 'inHg'), weewx.METRIC)
+        returns: (1016.5 'mbar')
+    
+    val_t: A value tuple. Example: (30.02, 'inHg')
+    
+    target_std_unit_system: A standardized unit system. 
+    Example: weewx.US or weewx.METRIC.
+    
+    Returns: A value tuple in the given standardized unit system.
+    """
+    unit_group = unit_type_dict[val_t[1]]
+    target_unit_type = StdUnitSystem[target_std_unit_system][unit_group]
+    return convert(val_t, target_unit_type)
