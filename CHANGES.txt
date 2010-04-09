@@ -1,7 +1,9 @@
 CHANGE HISTORY
 --------------------------------
 
-1.6.0   04/5/10
+1.7.0   04/9/10
+
+Big update.
 
 Reports now use skins for their "look or feel."  Options specific to the
 presentation layer have been moved out of the weewx configuration file
@@ -28,12 +30,19 @@ day, week, month, and year HTML files are encoded using HTML entities; the NOAA
 reports encoded using 'strict ascii.' Optionally, reports can be encoded using
 UTF-8.
 
+Revamped the template formatting. No longer use class ModelView. Went to a
+simpler system built around classes ValueHelper and UnitInfo.
+
 Optional formatting was added to all tags in the templates. There are now
 optional endings:
+  'string': Use specified string for None value.
+  'formatted': No label.
+  'format': Format using specified string format.
+  'nolabel': Format using specified string format; no label.
   'raw': return the underlying data with no string formatting or label.
-  'formatted': return a version with string formatting, but no label.
-  'format': Use the specified string format. No label.
-  'string': Let Python convert to a string. 
+
+For the index, week, month, and year template files, added conditional to not
+include ISS extended types (UV, radiation, ET) unless they exist.
 
 Added an RSS feed.
 
@@ -44,6 +53,10 @@ Data files used in reports (such as weewx.css) are copied over to the HTML
 directory on program startup.
 
 Included an example of a low-battery alarm.
+
+Moved base temperature for heating and cooling degree days into skin.conf.
+
+Require unit be specified for 'altitude'.
 
 Changed the name of the service StdProcess to StdReportService. This will affect
 only users who have written custom reports.

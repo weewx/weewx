@@ -32,11 +32,11 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
 ---------------------------------------------------------------------------------------
 #for $day in $month.days
 #if $day.barometer.count.raw
-$day.dateTime.format($D) $day.outTemp.avg.nolabel($Temp,$NONE) $day.outTemp.max.nolabel($Temp,$NONE) $day.outTemp.maxtime.format($Time) ##$day.outTemp.min.nolabel($Temp,$NONE) $day.outTemp.mintime.format($Time) $day.heatdeg.sum.nolabel($Temp,$NONE) $day.cooldeg.sum.nolabel($Temp,$NONE) $day.rain.sum.nolabel($Rain,$NONE) $day.wind.avg.nolabel($Wind,$NONE) $day.wind.max.nolabel($Wind,$NONE) $day.wind.maxtime.format($Time) $day.wind.vecdir.nolabel($Dir,$NONE)
+$day.dateTime.format($D) $day.outTemp.avg.nolabel($Temp,$NONE) $day.outTemp.max.nolabel($Temp,$NONE) $day.outTemp.maxtime.format($Time) $day.outTemp.min.nolabel($Temp,$NONE) $day.outTemp.mintime.format($Time) $day.heatdeg.sum.nolabel($Temp,$NONE) $day.cooldeg.sum.nolabel($Temp,$NONE) $day.rain.sum.nolabel($Rain,$NONE) $day.wind.avg.nolabel($Wind,$NONE) $day.wind.max.nolabel($Wind,$NONE) $day.wind.maxtime.format($Time) $day.wind.vecdir.nolabel($Dir,$NONE)
 #else
 $day.dateTime.format($D)
 #end if
 #end for
 ---------------------------------------------------------------------------------------
-##    $month.outTemp.avg.nolabel($Temp,$NONE) $month.outTemp.max.nolabel($Temp,$NONE)    $month.outTemp.maxtime.format($D) $month.outTemp.min.nolabel($Temp,$NONE)    $month.outTemp.mintime.format($D) $month.heatdeg.sum.nolabel($Temp,$NONE) $month.cooldeg.sum.nolabel($Temp,$NONE) $month.rain.sum.nolabel($Rain,$NONE) $month.wind.avg.nolabel($Wind,$NONE) $month.wind.max.nolabel($Wind,$NONE)    $month.wind.maxtime.format($D) $month.wind.vecdir.nolabel($Dir)
+    $month.outTemp.avg.nolabel($Temp,$NONE) $month.outTemp.max.nolabel($Temp,$NONE)    $month.outTemp.maxtime.format($D) $month.outTemp.min.nolabel($Temp,$NONE)    $month.outTemp.mintime.format($D) $month.heatdeg.sum.nolabel($Temp,$NONE) $month.cooldeg.sum.nolabel($Temp,$NONE) $month.rain.sum.nolabel($Rain,$NONE) $month.wind.avg.nolabel($Wind,$NONE) $month.wind.max.nolabel($Wind,$NONE)    $month.wind.maxtime.format($D) $month.wind.vecdir.nolabel($Dir)
     
