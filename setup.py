@@ -163,7 +163,7 @@ class My_install_data(install_data):
             if not old_version: old_version = '1.0.0'
             old_version_number = old_version.split('.')
             # Do the merge only for versions >= 1.6
-            if old_version_number[0:2] >= ['1','6']:
+            if old_version_number[0:2] >= ['1','7']:
                 # Any user changes in old_config will overwrite values in new_config
                 # with this merge
                 new_config.merge(old_config)
@@ -172,6 +172,10 @@ class My_install_data(install_data):
         new_config['Station']['WEEWX_ROOT'] = self.install_dir
         # Add the version:
         new_config['version'] = VERSION
+        
+        # Options heating_base and cooling_base have moved.
+        new_config['Station'].pop('heating_base', None)
+        new_config['Station'].pop('cooling_base', None)
         
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)

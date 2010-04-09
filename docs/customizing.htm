@@ -952,7 +952,7 @@ class MyFileGenerator(FileGenerator):                    # 1
         # Get a TimeSpanStats object :
         all_stats = TimeSpanStats(self.statsdb,
                                   all_time,
-                                  self.unitTypeDict)     # 4
+                                  unit_info=self.unit_info) # 4
 
         # Get the superclass&#39;s search list: 
         search_list = FileGenerator.getToDateSearchList(self, currentRec, stop_ts) #5
@@ -977,12 +977,14 @@ class MyFileGenerator(FileGenerator):                    # 1
 	is a utility class that represents an interval of time. Here, we are 
 	creating an instance of <span class="code">TimeSpan</span> that represents 
 	all time preceeding <span class="code">stop_ts</span>.</li>
-	<li>Class <span class="code">TimeSpanStats</span> represents a statistical calculation that can be 
-	done against a database. It takes 3 parameters. The first, 
-	<span class="code">self.statsdb</span> is 
-	the statistical database the calculation is to be run against; the second is 
-	the timespan over which the calculation is to be done; and the third is the 
-	units the results are to be returned in. </li>
+	<li>Class <span class="code">TimeSpanStats</span> represents a statistical calculation 
+	over a time period. It takes 3 parameters. The first, 
+	<span class="code">self.statsdb</span> is the statistical database the 
+	calculation is to be run against; the second is the timespan over which the 
+	calculation is to be done; and the third, <span class="code">self.unit_info</span>, 
+	is an instance of weewx.units.UnitInfo, which contains information about the 
+	target units the results are to be returned in as well as formatting and 
+	labeling information. </li>
 	<li>Get the search list from the superclass.</li>
 	<li>Tack on our addition and return the results. The search list will now 
 	consist of a list of dictionaries, including a small one we added on the end 

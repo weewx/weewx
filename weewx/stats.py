@@ -401,10 +401,10 @@ class DayStatsDict(dict):
         return "time span: %s; temperature (min,max) = (%s, %s)" % (str(self.timespan), outTempMin_str, outTempMax_str)
 
 #===============================================================================
-#                    Class AggregateStats
+#                    Class TaggedStats
 #===============================================================================
 
-class AggregateStats(object):
+class TaggedStats(object):
     """Allows stats references like obj.month.outTemp.max.
     
     This class sits on the top of chain of helper classes that enable
@@ -412,12 +412,12 @@ class AggregateStats(object):
     
     When a time period is given as an attribute to it, such as obj.month,
     the next item in the chain is returned, in this case an instance of
-    AggregateTimeSpanStats, which binds the stats database with the
+    TimeSpanStats, which binds the stats database with the
     time period. 
     """
     
     def __init__(self, statsDb, endtime_ts, unit_info=None):
-        """Initialize an instance of AggregateStats.
+        """Initialize an instance of TaggedStats.
         statsDb: An instance of weewx.stats.StatsReadonly
         
         endtime_ts: The time the stats are to be current to.
@@ -433,26 +433,26 @@ class AggregateStats(object):
 
     @property
     def day(self):
-        return AggregateTimeSpanStats(self.statsDb, weeutil.weeutil.archiveDaySpan(self.endtime_ts), 'day', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveDaySpan(self.endtime_ts), 'day', self.unit_info)
     @property
     def week(self):
-        return AggregateTimeSpanStats(self.statsDb, weeutil.weeutil.archiveWeekSpan(self.endtime_ts), 'week', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveWeekSpan(self.endtime_ts), 'week', self.unit_info)
     @property
     def month(self):
-        return AggregateTimeSpanStats(self.statsDb, weeutil.weeutil.archiveMonthSpan(self.endtime_ts), 'month', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveMonthSpan(self.endtime_ts), 'month', self.unit_info)
     @property
     def year(self):
-        return AggregateTimeSpanStats(self.statsDb, weeutil.weeutil.archiveYearSpan(self.endtime_ts), 'year', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveYearSpan(self.endtime_ts), 'year', self.unit_info)
     @property
     def rainyear(self):
-        return AggregateTimeSpanStats(self.statsDb, weeutil.weeutil.archiveRainYearSpan(self.endtime_ts), 'rainyear', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveRainYearSpan(self.endtime_ts), 'rainyear', self.unit_info)
         
    
 #===============================================================================
-#                    Class AggregateTimeSpanStats
+#                    Class TimeSpanStats
 #===============================================================================
 
-class AggregateTimeSpanStats(object):
+class TimeSpanStats(object):
     """Nearly stateless class that holds a binding to a stats database and a timespan.
     
     This class is the next class in the chain of helper classes.
@@ -462,7 +462,7 @@ class AggregateTimeSpanStats(object):
        statsdb = StatsDb('somestatsfile.sdb')
        # This timespan runs from 2007-01-01 to 2008-01-01 (one year):
        yearSpan = weeutil.Timespan(1167638400, 1199174400)
-       yearStats = AggregateTimeSpanStats(statsdb, yearSpan)
+       yearStats = TimeSpanStats(statsdb, yearSpan)
        
        # Print max temperature for the year:
        print yearStats.outTemp.max
@@ -478,7 +478,7 @@ class AggregateTimeSpanStats(object):
     """
 
     def __init__(self, statsDb, timespan, context='current', unit_info=None):
-        """Initialize an instance of AggregateTimeSpanStats.
+        """Initialize an instance of TimeSpanStats.
         
         statsDb: An instance of StatsReadonlyDb or a subclass.
         
@@ -523,9 +523,9 @@ class AggregateTimeSpanStats(object):
         return StatsTypeHelper(self.statsDb, self.timespan, stats_type, self.context, self.unit_info)
         
 def _seqGenerator(statsDb, timespan, context, unit_info, genSpanFunc):
-    """Generator function that returns AggregateTimeSpanStats for the appropriate timespans"""
+    """Generator function that returns TimeSpanStats for the appropriate timespans"""
     for span in genSpanFunc(timespan.start, timespan.stop):
-        yield AggregateTimeSpanStats(statsDb, span, context, unit_info)
+        yield TimeSpanStats(statsDb, span, context, unit_info)
         
 #===============================================================================
 #                    Class StatsTypeHelper
@@ -1289,7 +1289,7 @@ if __name__ == '__main__':
         timespan = weeutil.weeutil.TimeSpan(time.mktime(start_tt),
                                             time.mktime(end_tt))
 
-        tagStats = AggregateStats(statsDb, time.mktime(end_tt))
+        tagStats = TaggedStats(statsDb, time.mktime(end_tt))
 
         print tagStats.month.barometer.avg
         print tagStats.month.barometer.count

@@ -412,14 +412,17 @@ to see if there any specific actions you need to do. </p>
 <span class="code"><strong>setup.cfg</strong></span><strong>. </strong></p>
 <p>The build and install process will do the following for you.</p>
 <ul>
-	<li>Save your old &#39;skin&#39; subdirectory as <span class="code"><em>$WEEWX_ROOT</em>/skins.YYYYMMDDHHMMSS</span> 
+	<li>Save your old &#39;<span class="code">skin</span>&#39; subdirectory as <span class="code"><em>$WEEWX_ROOT</em>/skins.YYYYMMDDHHMMSS</span> 
 	where YYYYMMDDHHMMSS is a timestamp;</li>
-	<li>Save your old &#39;bin&#39; subdirectory as <span class="code"><em>$WEEWX_ROOT</em>/bin.YYYYMMDDHHMMSS</span> 
+	<li>Save your old &#39;<span class="code">bin</span>&#39; subdirectory as <span class="code"><em>$WEEWX_ROOT</em>/bin.YYYYMMDDHHMMSS</span> 
 	where YYYYMMDDHHMMSS is a timestamp;</li>
 	<li>Merge any changes you&#39;ve made to your old configuration file
 	<span class="code">weewx.conf</span> into the new configuration file, then install 
 	the merged copy (this effectively causes changes you&#39;ve made to override the 
 	values in the shipped version of <span class="code">weewx.conf</span>);</li>
+	<li>In a similar manner, merge any changes you&#39;ve made to the
+	<span class="code">skin.conf</span> configuration file into the new
+	<span class="code">skin.conf</span>;</li>
 	<li>Save a copy of your old <span class="code">weewx.conf</span> as
 	<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf.YYYYMMDDHHMMSS</span>.</li>
 </ul>
@@ -503,10 +506,10 @@ the main memory log of the VantagePro will be cleared. </p>
 <p>Station specific information is set in the configuration file
 <span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. There is another configuration 
 file <span class="code">skin.conf</span> for presentation-specific options, which 
-is described under section <em>
+is described in a separate document <em>
+<a href="customizing.htm">Customizing <span class="code">weewx</span></a> </em>under section <em>
 <a href="customizing.htm#Reference:_The_Standard_skin_configuration_file">Reference: 
-The standard skin configuration file</a></em> in the document <em>
-<a href="customizing.htm">Customizing <span class="code">weewx</span></a> </em>.</p>
+The standard skin configuration file</a></em>.</p>
 <p>Most of the important options are up near the top of the file. They are all documented 
 in this section, although you can safely ignore most of them. The truly important 
 ones, the ones you are likely to have to customize for your station, are shown in
@@ -539,7 +542,7 @@ to reflect the choice you made in the configuration file <span class="code">setu
 Required. No default.</p>
 <h4 class="config_important">location</h4>
 <p>The station location should be a UTF-8 string that describes the geography of 
-where you weather station is located, such as &#39;Hood River, Oregon&#39;. Required. No 
+where you weather station is located, such as &#39;<span class="code">Hood River, Oregon</span>&#39;. Required. No 
 default.</p>
 <h4 class="config_important">latitude<br />
 longitude</h4>
@@ -701,7 +704,7 @@ weewx service engine</a> </em>in the document <a href="customizing.htm"><em>Cust
 </em><span class="code"><em>weewx</em></span></a>.</p>
 <h4 class="config_section">[[WxEngine]]</h4>
 <p>This section is for options used by the service engine.</p>
-<pre>service_list</pre>
+<h4 class="config_option">service_list</h4>
 <p>This option is the list of <em>services</em> that are to be run by the service 
 engine. After each event (such as the arrival of LOOP data, etc.), they will be 
 run in the given order. </p>
@@ -825,7 +828,7 @@ can be useful for debugging.</p>
 	<li>Architectural simplicity. No semaphores, no named pipes, no inter-process 
 	communications, no complex multi-threading to manage. </li>
 	<li>One code base. The same code base should be used for all platforms, all 
-	weather stations, all platforms, and any combination of features. Ample configuration 
+	weather stations, all reports, and any combination of features. Ample configuration 
 	and customization options should be provided so the user doesn&#39;t feel tempted 
 	to start hacking code. At worse, the user may have to subclass, which is much 
 	easier to port to newer versions of the code base, than customizing the base 
@@ -859,8 +862,8 @@ can be useful for debugging.</p>
 	the database, where transactions are easily controlled. This greatly reduces 
 	the chances of corrupting the data, making it much easier to understand and 
 	modify the code base.</li>
-	<li>An engine-driven design. Key services are actually classes that can be loaded 
-	at runtime, making it easy for users to add or subtract features.</li>
+	<li>A &quot;micro-kernel&quot; design. The actual internal engine does very little. 
+	It&#39;s main job is to load and run <em>services</em> at runtime, making it easy for users to add or subtract features.</li>
 	<li>No static variables (except read only variables) to make it easy to simultaneously 
 	support multiple weather stations and to allow some level of multithreading.</li>
 	<li>Pure Python. The code base is 100% Python — no underlying C libraries need 
@@ -890,10 +893,12 @@ console error (such as the console not responding at all), the program waits 60
 seconds then restarts the program from the top.</p>
 <p>Any &quot;hard&quot; exceptions, that is those that do not involve network and console 
 timeouts and are most likely due to a logic error, are logged, reraised, and ultimately 
-cause thread termination. If this happens in the main thread (not likely and hasn&#39;t 
-happened to me yet), then this causes program termination. Otherwise, the program 
-will keep chugging along, storing data, allowing you to fix the problem at your 
-leisure, without losing any data.</p>
+cause thread termination. If this happens in the main thread (not likely due to 
+its simplicity), then this causes program termination. If it happens in the 
+report processing thread (much more likely), then only the generation of reports 
+will be affected &mdash; the main thread will continue downloading data off the 
+instrument and putting it in the database. You can fix the problem at your 
+leisure, without worrying about losing any data.</p>
 <h2>10.3 Terminology</h2>
 <p>This is a glossary of terminology used throughout the code.</p>
 <table style="width: 100%">

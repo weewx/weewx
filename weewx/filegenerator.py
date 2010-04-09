@@ -199,9 +199,9 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         timespan_start_tt = time.localtime(timespan.start)
         (_yr, _mo) = timespan_start_tt[0:2]
 
-        # Get a AggregateStats structure. This allows constructs such as
+        # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.AggregateStats(self.statsdb, timespan.stop, self.unit_info)
+        stats = weewx.stats.TaggedStats(self.statsdb, timespan.stop, self.unit_info)
 #        # Get a formatted view into it:
 #        statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
 
@@ -225,9 +225,9 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         Can easily be overridden to add things to the search list.
         """
 
-        # Get a AggregateStats structure. This allows constructs such as
+        # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.AggregateStats(self.statsdb, stop_ts, self.unit_info)
+        stats = weewx.stats.TaggedStats(self.statsdb, stop_ts, self.unit_info)
 
         # Get the current conditions:
         current = {'current' : currentRec}

@@ -20,7 +20,7 @@ You can then use tags such as $alltime.outTemp.max for the all-time max temperat
 """
 
 from weewx.filegenerator import FileGenerator
-from weewx.stats import AggregateTimeSpanStats
+from weewx.stats import TimeSpanStats
 from weeutil.weeutil import TimeSpan
 
 class MyFileGenerator(FileGenerator):                    # 1
@@ -30,10 +30,10 @@ class MyFileGenerator(FileGenerator):                    # 1
         # Get a TimeSpan object that represents all time up to the stop time:
         all_time = TimeSpan(self.start_ts, stop_ts)      # 3
 
-        # Get a AggregateTimeSpanStats object :
-        all_stats = AggregateTimeSpanStats(self.statsdb,
-                                all_time,
-                                unit_info=self.unit_info) # 4
+        # Get a TimeSpanStats object :
+        all_stats = TimeSpanStats(self.statsdb,
+                                  all_time,
+                                  unit_info=self.unit_info) # 4
 
         # Get the superclass's search list:       
         search_list = FileGenerator.getToDateSearchList(self, currentRec, stop_ts) #5

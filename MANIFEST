@@ -51,7 +51,6 @@ weewx/__init__.py
 weewx/archive.py
 weewx/crc16.py
 weewx/filegenerator.py
-weewx/formatter.py
 weewx/imagegenerator.py
 weewx/reportengine.py
 weewx/station.py
