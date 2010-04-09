@@ -78,22 +78,30 @@
                 <td class="stats_label">Inside Temperature</td>
                 <td class="stats_data">$current.inTemp</td>
               </tr>
+              #if $day.extraTemp1.count.raw
               <tr>
                 <td class="stats_label">Pond Temperature</td>
                 <td class="stats_data">$current.extraTemp1</td>
               </tr>
+              #end if
+              #if $day.UV.count.raw
               <tr>
                 <td class="stats_label">UV</td>
                 <td class="stats_data">$current.UV</td>
               </tr>
+              #end if
+              #if $day.ET.sum.raw > 0.0
               <tr>
                 <td class="stats_label">ET</td>
                 <td class="stats_data">$current.ET</td>
               </tr>
+              #end if
+              #if $day.radiation.count.raw
               <tr>
                 <td class="stats_label">Solar Radiation</td>
                 <td class="stats_data">$current.radiation</td>
               </tr>
+              #end if
             </tbody>
           </table>
         </div>
@@ -202,16 +210,6 @@
 
               <tr>
                 <td class="stats_label">
-                  High Pond Temperature<br/>
-                  Low Pond Temperature
-                </td>
-                <td class="stats_data">
-                  $day.extraTemp1.max at $day.extraTemp1.maxtime<br/>
-                  $day.extraTemp1.min at $day.extraTemp1.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
                   High Inside Temperature<br/>
                   Low Inside Temperature
                 </td>
@@ -220,6 +218,54 @@
                   $day.inTemp.min at $day.inTemp.mintime
                 </td>
               </tr>
+			  #if $day.extraTemp1.count.raw
+              <tr>
+                <td class="stats_label">
+                  High Pond Temperature<br/>
+                  Low Pond Temperature
+                </td>
+                <td class="stats_data">
+                  $day.extraTemp1.max at $day.extraTemp1.maxtime<br/>
+                  $day.extraTemp1.min at $day.extraTemp1.mintime
+                </td>
+              </tr>
+              #end if
+              #if $day.UV.count.raw
+              <tr>
+                <td class="stats_label">
+                  High UV<br/>
+                  Low UV
+                </td>
+                <td class="stats_data">
+                  $day.UV.max at $day.UV.maxtime<br/>
+                  $day.UV.min at $day.UV.mintime
+                </td>
+              </tr>
+              #end if
+              #if $day.ET.sum.raw >0.0
+              <tr>
+                <td class="stats_label">
+                  High ET<br/>
+                  Low ET
+                </td>
+                <td class="stats_data">
+                  $day.ET.max at $day.ET.maxtime<br/>
+                  $day.ET.min at $day.ET.mintime
+                </td>
+              </tr>
+              #end if
+              #if $day.radiation.count.raw
+              <tr>
+                <td class="stats_label">
+                  High Radiation<br/>
+                  Low Radiation
+                </td>
+                <td class="stats_data">
+                  $day.radiation.max at $day.radiation.maxtime<br/>
+                  $day.radiation.min at $day.radiation.mintime
+                </td>
+              </tr>
+              #end if
             </tbody>
           </table>
         </div> <!--End class "stats" -->

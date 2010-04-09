@@ -2,6 +2,3 @@ TODO before the next release:
 
 Add the skin subdirectory to PYTHONPATH automatically, 
 to allow custom skins to find their generators.
-
-Clarify table of what can be used where. Such as windvec.
-

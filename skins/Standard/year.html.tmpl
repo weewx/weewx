@@ -146,16 +146,6 @@
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Pond Temperature<br/>
-                  Low Pond Temperature
-                </td>
-                <td class="stats_data">
-                  $year.extraTemp1.max at $year.extraTemp1.maxtime<br/>
-                  $year.extraTemp1.min at $year.extraTemp1.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
                   High Inside Temperature<br/>
                   Low Inside Temperature
                 </td>
@@ -164,6 +154,54 @@
                   $year.inTemp.min at $year.inTemp.mintime
                 </td>
               </tr>
+			  #if $year.extraTemp1.count.raw
+              <tr>
+                <td class="stats_label">
+                  High Pond Temperature<br/>
+                  Low Pond Temperature
+                </td>
+                <td class="stats_data">
+                  $year.extraTemp1.max at $year.extraTemp1.maxtime<br/>
+                  $year.extraTemp1.min at $year.extraTemp1.mintime
+                </td>
+              </tr>
+              #end if
+              #if $year.UV.count.raw
+              <tr>
+                <td class="stats_label">
+                  High UV<br/>
+                  Low UV
+                </td>
+                <td class="stats_data">
+                  $year.UV.max at $year.UV.maxtime<br/>
+                  $year.UV.min at $year.UV.mintime
+                </td>
+              </tr>
+              #end if
+              #if $year.ET.sum.raw >0.0
+              <tr>
+                <td class="stats_label">
+                  High ET<br/>
+                  Low ET
+                </td>
+                <td class="stats_data">
+                  $year.ET.max at $year.ET.maxtime<br/>
+                  $year.ET.min at $year.ET.mintime
+                </td>
+              </tr>
+              #end if
+              #if $year.radiation.count.raw
+              <tr>
+                <td class="stats_label">
+                  High Radiation<br/>
+                  Low Radiation
+                </td>
+                <td class="stats_data">
+                  $year.radiation.max at $year.radiation.maxtime<br/>
+                  $year.radiation.min at $year.radiation.mintime
+                </td>
+              </tr>
+              #end if
             </tbody>
           </table>
         </div> <!-- End class "stats" -->
