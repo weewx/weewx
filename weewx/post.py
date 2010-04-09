@@ -7,7 +7,7 @@
 #    $Author$
 #    $Date$
 #
-"""Publish weather data to the Weather Underground."""
+"""Publish weather data to RESTful sites such as the Weather Underground or PWSWeather."""
 import syslog
 import datetime
 import threading
@@ -17,7 +17,7 @@ import urllib2
 import weewx
 import weeutil.weeutil
 
-class WunderStation(object):
+class PostStation(object):
     """Manages interactions with the Weather Underground"""
 
     def __init__(self, station, password):
@@ -72,7 +72,7 @@ class WunderStation(object):
 
 
     def postData(self, record) :
-        """Posts a data record on the Weather Underground, using their upload protocol.
+        """Posts a data record on the station, using their upload protocol.
         
         record: A dictionary holding the data values.
         
@@ -150,7 +150,7 @@ class WunderThread(threading.Thread):
         # In the strange vocabulary of Python, declaring yourself a "daemon thread"
         # allows the program to exit even if this thread is running:
         self.setDaemon(True)
-        self.WUstation = WunderStation(station, password)
+        self.WUstation = PostStation(station, password)
         self.archive   = archive
         self.queue     = queue # Fifo queue where new records will appear
 
@@ -164,7 +164,65 @@ class WunderThread(threading.Thread):
                 return
             
             # Go get the data from the archive for the requested time:
-            record = WunderStation.extractRecordFrom(self.archive, time_ts)
+            record = PostStation.extractRecordFrom(self.archive, time_ts)
+            
+            # This string is just used for logging:
+            time_str = weeutil.weeutil.timestamp_to_string(record['dateTime'])
+    
+            # Post the data to the WU. Be prepared to catch any exceptions:
+            try :
+                self.WUstation.postData(record)
+                syslog.syslog(syslog.LOG_INFO, "wunderground: Published record %s to station %s" % (time_str, self.WUstation.station))
+    
+            # The urllib2 library throws exceptions of type urllib2.URLError, a subclass
+            # of IOError. Hence all relevant exceptions are caught by catching IOError:
+            except IOError, e :
+                syslog.syslog(syslog.LOG_ERR, "wunderground: Unable to publish record %s to station %s" % (time_str, self.WUstation.station))
+                if hasattr(e, 'reason'):
+                    syslog.syslog(syslog.LOG_ERR, "wunderground: Failed to reach server. Reason: %s" % e.reason)
+                if hasattr(e, 'code'):
+                    syslog.syslog(syslog.LOG_ERR, "wunderground: Failed to reach server. Error code: %s" % e.code)
+
+
+class PWSWeather(threading.Thread):
+    """Dedicated thread for publishing weather data to PWSWeather.
+    
+    Inherits from threading.Thread.
+
+    Basically, it watches a queue, and if anything appears in it, it publishes it.
+    The queue should be populated with the timestamps of the data records to be published.
+    """
+    def __init__(self, archive, queue, station, password):
+        """Initialize an instance of PWSWeather.
+        
+        archive: The archive database. Usually an instance of weewx.archive.Archive 
+        
+        queue: An instance of Queue.Queue where the timestamps will appear
+        
+        station: The PWS Weather station to which data is to be published
+        (e.g., 'KORHOODR3')
+        
+        password: The password for the station.
+        """
+        threading.Thread.__init__(self, name="PWSThread")
+        # In the strange vocabulary of Python, declaring yourself a "daemon thread"
+        # allows the program to exit even if this thread is running:
+        self.setDaemon(True)
+        self.WUstation = PostStation(station, password)
+        self.archive   = archive
+        self.queue     = queue # Fifo queue where new records will appear
+
+    def run(self):
+        while True :
+            # This will block until something appears in the queue:
+            time_ts = self.queue.get()
+            
+            # A 'None' value appearing in the queue is our signal to exit
+            if time_ts is None:
+                return
+            
+            # Go get the data from the archive for the requested time:
+            record = PostStation.extractRecordFrom(self.archive, time_ts)
             
             # This string is just used for logging:
             time_str = weeutil.weeutil.timestamp_to_string(record['dateTime'])
@@ -207,7 +265,7 @@ if __name__ == '__main__':
         stationName = config_dict['Wunderground']['station']
         password    = config_dict['Wunderground']['password']
         
-        wustation = WunderStation(stationName, password)
+        wustation = PostStation(stationName, password)
 
         # Open up the main database archive
         archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 

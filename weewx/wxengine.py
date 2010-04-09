@@ -23,7 +23,7 @@ import daemon
 import weewx
 import weewx.archive
 import weewx.stats
-import weewx.wunderground
+import weewx.post
 import weewx.reportengine
 import weeutil.weeutil
 
@@ -357,7 +357,7 @@ class StdWunderground(StdService):
             archive = weewx.archive.Archive(archiveFilename)
             # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
-            self.thread = weewx.wunderground.WunderThread(archive = archive, queue = self.queue, **wunder_dict)
+            self.thread = weewx.post.WunderThread(archive = archive, queue = self.queue, **wunder_dict)
             self.thread.start()
             syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started Weather Underground thread.")
             
