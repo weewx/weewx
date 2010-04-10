@@ -293,8 +293,16 @@ class My_sdist(sdist):
                 sys.stderr.write("\n*** FTP password found in configuration file. Aborting ***\n\n")
                 exit()
 
-            if config.has_key('Wunderground') and config['Wunderground'].has_key('password'):
+            rest_dict = config['RESTful']
+            if rest_dict.has_key('Wunderground') and rest_dict['Wunderground'].has_key('password'):
                 sys.stderr.write("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
+                exit()
+            if rest_dict.has_key('PWSweather') and rest_dict['PWSweather'].has_key('password'):
+                sys.stderr.write("\n*** PWSweather password found in configuration file. Aborting ***\n\n")
+                exit()
+                
+            if config.get('debug'):
+                sys.stderr.write("\n*** Debug flat on in configuration file. Aborting ***\n\n")
                 exit()
 
         # Pass on to my superclass:

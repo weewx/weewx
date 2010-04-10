@@ -23,7 +23,7 @@ import daemon
 import weewx
 import weewx.archive
 import weewx.stats
-import weewx.post
+import weewx.restful
 import weewx.reportengine
 import weeutil.weeutil
 
@@ -334,10 +334,10 @@ class StdPrint(StdService):
                                                             rec['windDir'], " <-"
 
 #===============================================================================
-#                    Class StdWunderground
+#                    Class StdRESTful
 #===============================================================================
 
-class StdWunderground(StdService):
+class StdRESTful(StdService):
 
     def __init__(self, engine):
         StdService.__init__(self, engine)
@@ -345,22 +345,35 @@ class StdWunderground(StdService):
         self.thread = None
         
     def setup(self):
-        wunder_dict = self.engine.config_dict.get('Wunderground')
         
-        # Make sure we have a section [Wunderground] and that the station name
-        # and password exist before committing:
-        if wunder_dict and (wunder_dict.has_key('station') and 
-                            wunder_dict.has_key('password')):
+        station_list = []
+        # This hardwires in the two RESTful sites we support. It should really
+        # be generalized.
+        for site in ('Wunderground', 'PWSweather'):
+            
+            site_dict = self.engine.config_dict['RESTful'].get(site)
+            # Make sure that the upload site has a  station name
+            # and password before committing:
+            if site_dict and (site_dict.has_key('station') and site_dict.has_key('password')):
+                
+                new_station = weewx.restful.Ambient(site_dict['station'], 
+                                                    site_dict['password'],
+                                                    weewx.restful.site_url[site],
+                                                    site)                
+                station_list.append(new_station)
+                
+        if len(station_list) > 0 :
             # Create an instance of weewx.archive.Archive
             archiveFilename = os.path.join(self.engine.config_dict['Station']['WEEWX_ROOT'], 
                                            self.engine.config_dict['Archive']['archive_file'])
             archive = weewx.archive.Archive(archiveFilename)
             # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
-            self.thread = weewx.post.WunderThread(archive = archive, queue = self.queue, **wunder_dict)
+    
+            self.thread = weewx.restful.RESTThread(archive, self.queue, station_list)
             self.thread.start()
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started Weather Underground thread.")
-            
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started RESTful thread.")
+        
         else:
             self.queue  = None
             self.thread = None
@@ -371,14 +384,14 @@ class StdWunderground(StdService):
             self.queue.put(rec['dateTime'])
 
     def shutDown(self):
-        """Shut down the WU thread"""
+        """Shut down the RESTful thread"""
         # Make sure we have initialized:
         if self.queue:
             # Put a None in the queue. This will signal to the thread to shutdown
             self.queue.put(None)
             # Wait for the thread to exit:
             self.thread.join(20.0)
-            syslog.syslog(syslog.LOG_DEBUG, "Shut down Weather Underground thread.")
+            syslog.syslog(syslog.LOG_DEBUG, "Shut down RESTful thread.")
 
 #===============================================================================
 #                    Class StdReportService
