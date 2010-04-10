@@ -1,7 +1,7 @@
 CHANGE HISTORY
 --------------------------------
 
-1.7.0   04/9/10
+1.7.0   04/10/10
 
 Big update.
 
@@ -45,6 +45,8 @@ For the index, week, month, and year template files, added conditional to not
 include ISS extended types (UV, radiation, ET) unless they exist.
 
 Added an RSS feed.
+
+Added support for PWSweather.com
 
 Now offer a section 'Extras' in the skin configuration file for including tags
 added by the user. As an example, the tag radar_url has been moved into here.

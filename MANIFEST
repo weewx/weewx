@@ -53,9 +53,9 @@ weewx/crc16.py
 weewx/filegenerator.py
 weewx/imagegenerator.py
 weewx/reportengine.py
+weewx/restful.py
 weewx/station.py
 weewx/stats.py
 weewx/units.py
-weewx/wunderground.py
 weewx/wxengine.py
 weewx/wxformulas.py

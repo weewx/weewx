@@ -153,6 +153,9 @@ class My_install_data(install_data):
         new_config.indent_type = '    '
         new_version_number = VERSION.split('.')
         
+        # Shut off the debug flag:
+        new_config['debug'] = 0
+
         # Check to see if there is an existing config file.
         # If so, merge its contents with the new one
         if os.path.exists(config_path):
@@ -172,11 +175,14 @@ class My_install_data(install_data):
         new_config['Station']['WEEWX_ROOT'] = self.install_dir
         # Add the version:
         new_config['version'] = VERSION
-        
+
         # Options heating_base and cooling_base have moved.
         new_config['Station'].pop('heating_base', None)
         new_config['Station'].pop('cooling_base', None)
-        
+        # Wunderground has been put under section ['RESTful']:
+        new_config.pop('Wunderground', None)
+        # Name change:
+        new_config['Engines']['WXEngine']['service_list'] = new_config['Engines']['WXEngine']['service_list'].replace('StdWunderground', 'StdRESTful') 
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         
@@ -301,10 +307,6 @@ class My_sdist(sdist):
                 sys.stderr.write("\n*** PWSweather password found in configuration file. Aborting ***\n\n")
                 exit()
                 
-            if config.get('debug'):
-                sys.stderr.write("\n*** Debug flat on in configuration file. Aborting ***\n\n")
-                exit()
-
         # Pass on to my superclass:
         return sdist.copy_file(self, f, install_dir, **kwargs)
 

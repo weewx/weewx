@@ -347,29 +347,33 @@ class StdRESTful(StdService):
     def setup(self):
         
         station_list = []
-        # This hardwires in the two RESTful sites we support. It should really
-        # be generalized.
-        for site in ('Wunderground', 'PWSweather'):
+
+        # Each subsection in section [RESTful] represents a different upload site:
+        for site in self.engine.config_dict['RESTful'].sections:
             
-            site_dict = self.engine.config_dict['RESTful'].get(site)
+            # Get the dictionary for this site:
+            site_dict = self.engine.config_dict['RESTful'][site]
             # Make sure that the upload site has a  station name
             # and password before committing:
-            if site_dict and (site_dict.has_key('station') and site_dict.has_key('password')):
+            if site_dict.has_key('station') and site_dict.has_key('password'):
                 
-                new_station = weewx.restful.Ambient(site_dict['station'], 
-                                                    site_dict['password'],
-                                                    weewx.restful.site_url[site],
-                                                    site)                
+                # Instantiate an instance of the class that implements the
+                # protocol used by this site:
+                obj_class = 'weewx.restful.' + site_dict['protocol']
+                new_station = weeutil.weeutil._get_object(obj_class, site, site_dict) 
                 station_list.append(new_station)
-                
+        
+        # Were there any valid upload sites?
         if len(station_list) > 0 :
+            # Yes. Proceed by setting up the queue and thread.
+            
             # Create an instance of weewx.archive.Archive
             archiveFilename = os.path.join(self.engine.config_dict['Station']['WEEWX_ROOT'], 
                                            self.engine.config_dict['Archive']['archive_file'])
             archive = weewx.archive.Archive(archiveFilename)
             # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
-    
+            # Start up the thread:
             self.thread = weewx.restful.RESTThread(archive, self.queue, station_list)
             self.thread.start()
             syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started RESTful thread.")
@@ -377,6 +381,7 @@ class StdRESTful(StdService):
         else:
             self.queue  = None
             self.thread = None
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: No RESTful upload sites.")
         
     def postArchiveData(self, rec):
         """Post the new archive data to the WU queue"""

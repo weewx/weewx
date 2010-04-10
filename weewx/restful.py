@@ -27,39 +27,42 @@ class RESTful(object):
     Specializing classes should override member function getURL()
     """
 
-    def __init__(self, station, password, http_prefix, site="N/A", max_tries=3):
-        """Initialize with a given station.
+    def __init__(self, site, site_dict):
+        """Initialize for a given upload site.
         
-        station: The name of the station (e.g., "KORHOODR3") as a string
-
-        password: Password for the station
+        site: The upload site ('Wunderground' or 'PWSweather')
         
-        http_prefix: The URL of the upload point
-        Example: "http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?"
-        
-        site: A name for the upload site (eg, "Weather Underground")
+        site_dict: A dictionary holding any information needed for the upload
+        site. Generally, this includes:       
+            {'station'   : "The name of the station (e.g., "KORHOODR3") as a string",
+             'password'  : "Password for the station",
+             'http_prefix: "The URL of the upload point"
+             'max_tries' : "Max # of tries before giving up"}
+             
+        There are defaults for http_prefix and max_tries. Generally, station
+        and password are required.
         """
         
-        self.station  = station
-        self.password = password
-        self.http_prefix = http_prefix
-        self.site      = site
-        self.max_tries = max_tries
-        
+        self.site        = site
+        self.station     = site_dict['station']
+        self.password    = site_dict['password']
+        self.http_prefix = site_dict.get('http_prefix', site_url[site])
+        self.max_tries   = int(site_dict.get('max_tries', 3))
+
     def postData(self, record):
         """Post using a RESTful protocol"""
 
         _url = self.getURL(record)
         print _url
 
-        for count in range(self.max_tries):
+        for _count in range(self.max_tries):
             # Now use an HTTP GET to post the data on the Weather Underground
             try:
                 _response = urllib2.urlopen(_url)
             except (urllib2.URLError, socket.error), e:
-                syslog.syslog(syslog.LOG_ERR, "restful: Failed attempt #%d to upload to %s" % (count+1, self.site))
+                syslog.syslog(syslog.LOG_ERR, "restful: Failed attempt #%d to upload to %s" % (_count+1, self.site))
                 syslog.syslog(syslog.LOG_ERR, "   ****  Reason: s" % (e,))
-                if count >= self.max_tries -1 :
+                if _count >= self.max_tries -1 :
                     syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
                     raise
             else:
@@ -79,7 +82,7 @@ class RESTful(object):
         
         time_ts: The record desired as a unix epoch time.
         
-        returns: A dictionary containing the values needed to post to the Weather Underground"""
+        returns: A dictionary containing the values needed for the Ambient protocol"""
         
         sod_ts = weeutil.weeutil.startOfDay(time_ts)
         
@@ -244,10 +247,7 @@ if __name__ == '__main__':
         stationName = config_dict['RESTful'][site]['station']
         password    = config_dict['RESTful'][site]['password']
         
-        station = Ambient(stationName,
-                          password, 
-                          site_url[site],
-                          site)
+        station = Ambient(site, config_dict['RESTful'][site])
 
         # Open up the main database archive
         archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
@@ -264,8 +264,9 @@ if __name__ == '__main__':
             station.postData(record)
 
         
-    if len(sys.argv) < 2 :
-        print "Usage: restful.py path-to-configuration-file"
+    if len(sys.argv) < 3 :
+        print """Usage: restful.py path-to-configuration-file upload-site\n"""\
+              """Where:   upload-site is "Wunderground" or "PWSweather" """
         exit()
         
-    backfill_today(sys.argv[1], 'PWSweather')
+    backfill_today(sys.argv[1], sys.argv[2])
