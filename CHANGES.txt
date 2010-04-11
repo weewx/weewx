@@ -48,6 +48,9 @@ Added an RSS feed.
 
 Added support for PWSweather.com
 
+Both WeatherUnderground and PWSweather posts are now retried up to 3 times
+before giving up.
+
 Now offer a section 'Extras' in the skin configuration file for including tags
 added by the user. As an example, the tag radar_url has been moved into here.
  
@@ -57,11 +60,9 @@ directory on program startup.
 Included an example of a low-battery alarm.
 
 Moved base temperature for heating and cooling degree days into skin.conf.
+They now also require a unit.
 
-Require unit be specified for 'altitude'.
-
-Changed the name of the service StdProcess to StdReportService. This will affect
-only users who have written custom reports.
+Now require unit to be specified for 'altitude'.
 
 1.5.0   03/07/10
 

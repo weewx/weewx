@@ -65,7 +65,7 @@ class RESTful(object):
                 _response = urllib2.urlopen(_url)
             except (urllib2.URLError, socket.error), e:
                 syslog.syslog(syslog.LOG_ERR, "restful: Failed attempt #%d to upload to %s" % (_count+1, self.site))
-                syslog.syslog(syslog.LOG_ERR, "   ****  Reason: s" % (e,))
+                syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
                 if _count >= self.max_tries -1 :
                     syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
                     raise
@@ -224,10 +224,11 @@ class RESTThread(threading.Thread):
                 # Post the data to the upload site. Be prepared to catch any exceptions:
                 try :
                     station.postData(record)
-        
                 # The urllib2 library throws exceptions of type urllib2.URLError, a subclass
-                # of IOError. Hence all relevant exceptions are caught by catching IOError:
-                except IOError, e :
+                # of IOError. Hence all relevant exceptions are caught by catching IOError.
+                # Starting with Python v2.6, socket.error is a subclass of IOError as well,
+                # but we keep them separate to support V2.5:
+                except (IOError, socket.error), e:
                     syslog.syslog(syslog.LOG_ERR, "restful: Unable to publish record %s to %s station %s" % (time_str, station.site, station.station))
                     if hasattr(e, 'reason'):
                         syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Reason: %s" % e.reason)

@@ -1,10 +1,14 @@
 NEW FEATURES to be added in decreasing order of importance.
 
+Check to see if the stats.sdb database is really necessary.
+
 udev support to compensate for flaky 2101 drivers.
 
 Add support for CWOP.
 
 Allow rain-to-date to be added to a partial rainyear.
+
+Add support for MySQL.
 
 Support for APT package.
 
