@@ -176,7 +176,8 @@ this program. If not, see <http://www.gnu.org/licenses/>
 <a href="http://www.python.org">Python</a>, that interacts with your weather station 
 to produce plots, reports, and HTML pages. It can optionally upload the reports 
 to a remote Web server as well as publish to the
-<a href="http://www.wunderground.com">WeatherUnderground</a>. It uses modern software 
+<a href="http://www.wunderground.com">WeatherUnderground</a> or
+<a href="http://www.pwsweather.com/">PWSweather.com</a>. It uses modern software 
 concepts, making it simple, robust, and easy to extend. For an example station see
 <a href="http://www.threefools.org/weewx">Hood River West</a>.</p>
 <p>I wrote <span class="code">weewx</span> over the winter of 2008-2009 for two 
@@ -609,14 +610,28 @@ clock, before resetting the clock. Default is 5.</p>
 are &#39;1&#39; (U.S. Customary) or &#39;2&#39; (Metric). As far as I know, all Davis instruments 
 support only U.S.. In any case, U.S. is the only system supported by
 <span class="code">weewx</span> at this time. Default is 1.</p>
-<h3 class="config_section">[Wunderground]</h3>
+<h3 class="config_section">[RESTful]</h3>
+<p>This section is for configuring uploads to simple
+<a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
+servers such as the <a href="http://www.wunderground.com/">Weather Underground</a> 
+or <a href="http://www.pwsweather.com/">PWSweather.com</a>.</p>
+<h4 class="config_section">[Wunderground]</h4>
 <p><span class="code">Weewx </span>can send your current data to the Weather Underground. 
 If you do not wish to do this, comment out the two options below.</p>
-<h4 class="config_option"><span class="config_important">station</span></h4>
+<h5 class="config_important">station</h5>
 <p>Set to your Weather Underground station ID (e.g., <span class="code">KORHOODR3</span>). 
 Required.</p>
-<h4 class="config_important">password</h4>
+<h5 class="config_important">password</h5>
 <p>Set to your Weather Underground password. Required.</p>
+<h4 class="config_section">[PWSweather]</h4>
+<p><span class="code">Weewx </span>can send your current data to the 
+PWSweather.com service. 
+If you do not wish to do this, comment out the two options below.</p>
+<h5 class="config_important">station</h5>
+<p>Set to your PWSweather station ID. 
+Required.</p>
+<h5 class="config_important">password</h5>
+<p>Set to your PWSweather password. Required.</p>
 <h3 class="config_section">[Archive]</h3>
 <p>This section is for configuring the sqlite3 database in which the station archive 
 data is stored.</p>
