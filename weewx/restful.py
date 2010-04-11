@@ -21,6 +21,9 @@ import weeutil.weeutil
 site_url = {'Wunderground' : "http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?",
             'PWSweather'   : "http://www.pwsweather.com/pwsupdate/pwsupdate.php?"} 
 
+class FailedPost(IOError):
+    pass
+
 class RESTful(object):
     """Abstract base class for interacting with a RESTful site.
     
@@ -53,10 +56,11 @@ class RESTful(object):
         """Post using a RESTful protocol"""
 
         _url = self.getURL(record)
-        print _url
 
+        # Retry up to max_tries times:
         for _count in range(self.max_tries):
-            # Now use an HTTP GET to post the data on the Weather Underground
+            # Now use an HTTP GET to post the data. Wrap in a try block
+            # in case there's a network problem.
             try:
                 _response = urllib2.urlopen(_url)
             except (urllib2.URLError, socket.error), e:
@@ -66,9 +70,16 @@ class RESTful(object):
                     syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
                     raise
             else:
-                if weewx.debug:
-                    syslog.syslog(syslog.LOG_DEBUG, "restful: Uploaded to %s" % (self.site,))
-                break
+                # A bad station ID or password will not throw an exception, but
+                # it will have the error encoded in the return message:
+                for line in _response:
+                    # PWSweather signals with 'ERROR', WU with 'INVALID':
+                    if line.startswith('ERROR') or line.startswith('INVALID'):
+                        # Bad login. No reason to retry. Log it and raise an exception.
+                        syslog.syslog(syslog.LOG_ERR, "restful: %s returns %s. Aborting." % (self.site, line))
+                        raise FailedPost, line
+                # If we get here, we have been successful.  Just return.
+                return
     
     @staticmethod
     def extractRecordFrom(archive, time_ts):
@@ -207,12 +218,12 @@ class RESTThread(threading.Thread):
             # This string is just used for logging:
             time_str = weeutil.weeutil.timestamp_to_string(record['dateTime'])
             
+            # Cycle through all the RESTful stations in the list:
             for station in self.station_list:
     
                 # Post the data to the upload site. Be prepared to catch any exceptions:
                 try :
                     station.postData(record)
-                    syslog.syslog(syslog.LOG_INFO, "restful: Published record %s to %s station %s" % (time_str, station.site, station.station))
         
                 # The urllib2 library throws exceptions of type urllib2.URLError, a subclass
                 # of IOError. Hence all relevant exceptions are caught by catching IOError:
@@ -222,51 +233,98 @@ class RESTThread(threading.Thread):
                         syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Reason: %s" % e.reason)
                     if hasattr(e, 'code'):
                         syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Error code: %s" % e.code)
-
+                else:
+                    syslog.syslog(syslog.LOG_INFO, "restful: Published record %s to %s station %s" % (time_str, station.site, station.station))
 
 if __name__ == '__main__':
            
     import sys
     import configobj
     import os.path
+    from optparse import OptionParser
+    import Queue
     
-    import weewx
     import weewx.archive
-    import weeutil.weeutil
     
-    def backfill_today(config_path, site):
-        """Publishes all of today's records to the WU. Makes a useful test."""
+    def main():
+        usage_string ="""Usage: 
+        
+        restful.py config_path upload-site [--today] [--last]
+        
+        Arguments:
+        
+          config_path: Path to weewx.conf
+          
+          upload-site: Either "Wunderground" or "PWSweather" 
+          
+        Options:
+        
+            --today: Publish all of today's day
+            
+            --last: Just do the last archive record. [default]
+          """
+        parser = OptionParser(usage=usage_string)
+        parser.add_option("-t", "--today", action="store_true", dest="do_today", help="Publish today\'s records")
+        parser.add_option("-l", "--last", action="store_true", dest="do_last", help="Publish the last archive record only")
+        (options, args) = parser.parse_args()
+        
+        if len(args) < 2:
+            sys.stderr.write("Missing argument(s).\n")
+            sys.stderr.write(parser.parse_args(["--help"]))
+            exit()
+            
+        if options.do_today and options.do_last:
+            sys.stderr.write("Choose --today or --last, not both\n")
+            sys.stderr.write(parser.parse_args(["--help"]))
+            exit()
+    
+        if not options.do_today and not options.do_last:
+            options.do_last = True
+            
+        config_path = args[0]
+        site        = args[1]
         
         weewx.debug = 1
+        
         try :
             config_dict = configobj.ConfigObj(config_path, file_error=True)
         except IOError:
             print "Unable to open configuration file ", config_path
             exit()
             
-        stationName = config_dict['RESTful'][site]['station']
-        password    = config_dict['RESTful'][site]['password']
-        
-        station = Ambient(site, config_dict['RESTful'][site])
-
         # Open up the main database archive
         archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                        config_dict['Archive']['archive_file'])
         archive = weewx.archive.Archive(archiveFilename)
         
-        time_ts = archive.lastGoodStamp()
-        sod = weeutil.weeutil.startOfDay(time_ts)
+        stop_ts  = archive.lastGoodStamp()
+        start_ts = weeutil.weeutil.startOfDay(stop_ts) if options.do_today else stop_ts
         
-        for row in archive.genSql("SELECT dateTime FROM archive WHERE dateTime >=? and dateTime <= ?", sod, time_ts):
+        publish(config_dict, site, archive, start_ts, stop_ts )
+
+    def publish(config_dict, site, archive, start_ts, stop_ts):
+        """Publishes records to site 'site' from start_ts to stop_ts. 
+        Makes a useful test."""
+        
+        stationName = config_dict['RESTful'][site]['station']
+        
+        station = Ambient(site, config_dict['RESTful'][site])
+
+        # Create the queue into which we'll put the timestamps of new data
+        queue = Queue.Queue()
+        # Start up the thread:
+        thread = RESTThread(archive, queue, [station])
+        thread.start()
+
+        for row in archive.genSql("SELECT dateTime FROM archive WHERE dateTime >=? and dateTime <= ?", start_ts, stop_ts):
             ts = row['dateTime']
             print "Posting station %s for time %s" % (stationName, weeutil.weeutil.timestamp_to_string(ts))
-            record = RESTful.extractRecordFrom(archive, ts)
-            station.postData(record)
-
-        
-    if len(sys.argv) < 3 :
-        print """Usage: restful.py path-to-configuration-file upload-site\n"""\
-              """Where:   upload-site is "Wunderground" or "PWSweather" """
-        exit()
-        
-    backfill_today(sys.argv[1], sys.argv[2])
+            queue.put(ts)
+            
+        # Value 'None' signals to the thread to exit:
+        queue.put(None)
+        # Wait for exit:
+        thread.join()
+    
+    main()
+    
