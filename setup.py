@@ -46,11 +46,6 @@
  7. It backs up any pre-existing bin subdirectory.
 """
 
-from distutils.core import setup
-from distutils.command.install_data import install_data
-from distutils.command.install_lib  import install_lib
-from distutils.command.sdist import sdist
-
 import sys
 import os
 import os.path
@@ -60,6 +55,15 @@ import tempfile
 import shutil
 import configobj
 
+from distutils.core import setup
+from distutils.command.install_data import install_data
+from distutils.command.install_lib  import install_lib
+from distutils.command.sdist import sdist
+
+bin_dir = os.path.join(os.getcwd(), 'bin')
+print bin_dir
+sys.path.insert(0, bin_dir)
+print sys.path  
 from weewx import __version__ as VERSION
 
 class My_install_lib(install_lib):
@@ -181,8 +185,10 @@ class My_install_data(install_data):
         new_config['Station'].pop('cooling_base', None)
         # Wunderground has been put under section ['RESTful']:
         new_config.pop('Wunderground', None)
-        # Name change:
-        new_config['Engines']['WXEngine']['service_list'] = new_config['Engines']['WXEngine']['service_list'].replace('StdWunderground', 'StdRESTful') 
+        # Name change from StdWunderground to StdRESTful:
+        new_config['Engines']['WxEngine']['service_list'] =\
+            [svc.replace('StdWunderground', 'StdRESTful') for svc in\
+             new_config['Engines']['WxEngine']['service_list']]
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         
@@ -319,9 +325,10 @@ setup(name='weewx',
       author='Tom Keffer',
       author_email='tkeffer@gmail.com',
       url='http://www.weewx.com',
+      package_dir = {'' : 'bin'},
       packages    = ['weewx', 'weeplot', 'weeutil', 'examples'],
       py_modules  = ['daemon'],
-      scripts     = ['configure.py', 'weewxd.py'],
+      scripts     = ['bin/configure.py', 'bin/weewxd.py'],
       data_files  = [('',                           ['CHANGES.txt', 'LICENSE.txt', 'README', 'weewx.conf']),
                      ('docs',                       ['docs/customizing.htm', 'docs/readme.htm', 
                                                      'docs/sheeva.htm', 'docs/upgrading.htm',

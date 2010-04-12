@@ -59,6 +59,9 @@ directory on program startup.
 
 Included an example of a low-battery alarm.
 
+Rearranged distribution directory structure so that it matches the install
+directory structure.
+
 Moved base temperature for heating and cooling degree days into skin.conf.
 They now also require a unit.
 
