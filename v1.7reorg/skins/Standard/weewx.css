@@ -1,0 +1,165 @@
+/*
+ * $Revision$
+ * $Author$
+ * $Date$
+ */
+  
+/* Global */
+
+body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 10pt;
+    background-color: #f2f2f7;
+    background-image: url('backgrounds/band.gif');
+    background-repeat: repeat;
+    background-attachment: scroll;
+}	
+
+#container {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+#masthead {
+    margin: 1% 1% 0 1%;
+    padding: 5px;
+    text-align: center;
+    border-top: 1px solid #dcdcdc;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #808080;
+    border-left: 1px solid #a9a9a9;
+    background-color: #fafaff;
+}
+
+#stats_group {
+    width: 30%;
+    min-height: 500px;
+    margin: 1%;
+    padding: 5px;
+    float: left;
+    border-top: 1px solid #dcdcdc;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #808080;
+    border-left: 1px solid #a9a9a9;
+    background-color: #fafaff;
+}
+
+#content {
+    width: 62%;
+    min-height: 500px;
+    margin: 1%;
+    padding: 5px;
+    float: right;
+    border-top: 1px solid #dcdcdc;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #808080;
+    border-left: 1px solid #a9a9a9;
+    background-color: #fafaff;
+}
+
+.header {
+    text-align: center;
+}
+
+.header table {
+    text-align: center;
+    width: 100%;
+}
+
+.header td {
+    width: 50%;
+    padding: 0;
+    margin: 0;
+}
+
+#navbar {
+    margin: 0 1% 1% 1%;
+    padding: 5px;
+    text-align: center;
+    clear: both;
+    border-top: 1px solid #dcdcdc;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #808080;
+    border-left: 1px solid #a9a9a9;
+    background-color: #fafaff;
+}
+
+
+/* Masthead styles */
+#masthead h1 {
+    color: #3d6c87;
+}
+#masthead h3 {
+    color: #5f8ea9;
+}
+
+/* stats_group styles */
+
+.stats table {
+    border: thin solid #000000;
+    width: 100%;
+}
+.stats td {
+    border: thin solid #000000;
+    padding: 2px;
+}
+
+.stats_header  {
+    background-color: #000000;
+    color: #a8b8c8;
+    font-size: 14pt;
+    font-weight: bolder;
+}
+
+.stats_label {
+    color: green;
+}
+
+.stats_data {
+    color: red;
+}
+
+/* content styles */
+#content h1 {
+    color: #3d6c87;
+    clear: left;
+}
+
+#plots {
+    width: 90%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+    
+#plots img {
+    margin: 3px;
+    border: thin solid black;
+    padding: 3px;
+}
+
+#radar_img {
+    width: 90%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#radar_img img {
+    width: 90%;
+    padding: 3px;
+    margin: 3px;
+}
+
+/*************** Global Styles ***************/
+
+
+
+h2, h3, h4, h5, h6 {
+    color: #3d6c87;
+}
+

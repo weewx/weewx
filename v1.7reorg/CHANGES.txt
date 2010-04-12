@@ -1,0 +1,276 @@
+CHANGE HISTORY
+--------------------------------
+
+1.7.0   04/10/10
+
+Big update.
+
+Reports now use skins for their "look or feel."  Options specific to the
+presentation layer have been moved out of the weewx configuration file
+'weewx.conf' to a skin configuration file, 'skin.conf'. Other options have
+remained behind.
+
+Because the configuration file weewx.conf was split, the installation script
+setup.py will NOT merge your old configuration file into the new one. You will
+have to reedit weewx.conf to put in your customizations.
+
+FTP is treated as just another report, albeit with an unusual generator. You can
+have multiple FTP sessions, each to a different server, or uploading to or from
+a different area.
+
+Rewrote the FTP upload package so that it allows more than one FTP session to be
+active in the same local directory. This version also does fewer hits on the
+server, so it is significantly faster.
+
+The configuration files weewx.conf and skin.conf now expect UTF-8 characters
+throughout.
+
+The encoding for reports generated from templates can be chosen. By default, the
+day, week, month, and year HTML files are encoded using HTML entities; the NOAA
+reports encoded using 'strict ascii.' Optionally, reports can be encoded using
+UTF-8.
+
+Revamped the template formatting. No longer use class ModelView. Went to a
+simpler system built around classes ValueHelper and UnitInfo.
+
+Optional formatting was added to all tags in the templates. There are now
+optional endings:
+  'string': Use specified string for None value.
+  'formatted': No label.
+  'format': Format using specified string format.
+  'nolabel': Format using specified string format; no label.
+  'raw': return the underlying data with no string formatting or label.
+
+For the index, week, month, and year template files, added conditional to not
+include ISS extended types (UV, radiation, ET) unless they exist.
+
+Added an RSS feed.
+
+Added support for PWSweather.com
+
+Both WeatherUnderground and PWSweather posts are now retried up to 3 times
+before giving up.
+
+Now offer a section 'Extras' in the skin configuration file for including tags
+added by the user. As an example, the tag radar_url has been moved into here.
+ 
+Data files used in reports (such as weewx.css) are copied over to the HTML
+directory on program startup.
+
+Included an example of a low-battery alarm.
+
+Rearranged distribution directory structure so that it matches the install
+directory structure.
+
+Moved base temperature for heating and cooling degree days into skin.conf.
+They now also require a unit.
+
+Now require unit to be specified for 'altitude'.
+
+1.5.0   03/07/10
+
+Added support for other units besides the U.S. Customary. Plots and HTML reports
+can be prepared using any arbitrary combination of units. For example, pressure
+could be in millibars, while everything else is in U.S. Customary.
+
+Because the configuration file weewx.conf changed significantly, the
+installation script setup.py will NOT merge your old configuration file into the
+new one. You will have to reedit weewx.conf to put in your customizations.
+
+Added an exception handler for exception OSError, which is typically thrown when
+another piece of software attempts to access the same device port.  Weewx
+catches the exception, waits 10 seconds, then starts again from the top.
+
+1.4.0   02/22/10
+
+Changed the architecture of stats.py to one that uses very late binding. The SQL
+statements are not run until template evaluation. This reduces the amount of
+memory required (by about 1/2), reduces memory fragmentation, as well as greatly
+simplifying the code (file stats.py shed over 150 lines of non-test code).
+Execution time is slightly slower for NOAA file generation, slightly faster for
+HTML file generation, the same for image generation, although your actual
+results will depend on your disk speed.
+
+Now possible to tell weewx to reread the configuration file without
+stopping it. Send signal HUP to the process.
+
+Added option week_start, for specifying which day a calendar week starts
+on. Default is 6 (Sunday).
+
+Fixed reporting bug when the reporting time falls on a calendar month
+or year boundary.
+
+1.3.4   02/08/10
+
+Fixed problem when plotting data where all data points are bad (None).
+
+1.3.3   01/10/10
+
+Fixed reporting bug that shows itself if rain year does not start in January.
+
+1.3.2   12/26/09
+
+LOOP data added to stats database.
+
+1.3.1   12/22/09
+
+Added a call to syslog.openlog() that inadvertently got left out when 
+switching to the engine driven architecture.
+
+1.3.0   12/21/09
+
+Moved to a very different architecture to drive weewx. Consists of an engine,
+that manages a list of 'services.' At key events, each service is given
+a chance to participate. Services are easy to add, to allow easy
+customization. An example is offered of an 'alarm' service.
+
+Checking the clock of the weather station for drift is now a service, so the
+option clock_check was moved from the station specific [VantagePro] section to
+the more general [Station] section.
+
+Added an example service 'MyAlarm', which sends out an email should the outside
+temperature drop below 40 degrees.
+
+In a similar manner, all generated files, images, and reports are the product of
+a report engine, which can run any number of reports. New reports are easily
+added.
+
+Moved the compass rose used in progressive vector plots into the interior of the
+plot.
+
+Install now deletes public_html/#upstream.last, thus forcing all files to be
+uploaded to the web server at the next opportunity.
+ 
+1.2.0   11/22/09
+
+Added progressive vector plots for wind data.
+
+Improved axis scaling. The automatic axis scaling routine now does a better job
+for ranges less than 1.0. The user can also hardwire in min and max values, as
+well as specify a minimum increment, through parameter 'yscale' in section
+[Images] in the configuration file.
+
+Now allows the same SQL type to be used more than once in a plot. This
+allows, say, instantaneous and average wind speed to be shown in
+the same plot. 
+
+Rain year is now parameterized in file templates/year.tmpl (instead of 
+being hardwired in).
+
+Now does LOOP caching by default.
+
+When doing backfilling to the stats database, configure now creates the stats
+database if it doesn't already exist.
+
+setup.py now more robust to upgrading the FTP and Wunderground sections
+
+
+1.1.0   11/14/09
+
+Added the ability to cache LOOP data. This can dramatically reduce the
+number of writes to the stats database, reducing wear on solid-state
+disk stores.
+
+Introduced module weewx.mainloop. Introduced class weewx.mainloop.MainLoop This
+class offers many opportunities to customize weewx through subclassing, then
+overriding an appropriate member function.
+
+Refactored module weewx.wunderground so it more closely resembles the (better)
+logic in wunderfixer.
+
+setup.py no longer installs a daemon startup script to /etc/init.d. It must now
+be done by hand.
+
+setup.py now uses the 'home' value in setup.cfg to set WEEWX_ROOT in weewx.conf
+and in the daemon start up scripts
+
+Now uses FTP passive mode by default.
+
+1.0.1   11/09/09
+
+Fixed bug that prevented backfilling the stats database after modifying the main
+archive.
+
+1.0.0   10/26/09
+
+Took the module weewx.factory back out, as it was too complicated and hard to
+understand.
+
+Added support for generating NOAA monthly and yearly reports. Completely rewrote
+the filegenerator.py module, to allow easy subclassing and specialization.
+
+Completely rewrote the stats.py module. All aggregate quantities are now
+calculated dynamically.
+
+Labels for HTML generation are now held separately from labels used for image
+generation. This allows entities such as '&deg;' to be used for the former.
+
+LOOP mode now requests only 200 LOOP records (instead of the old 2000). It then
+renews the request should it run out. This was to get around an (undocumented)
+limitation in the VP2 that limits the number of LOOP records that can be
+requested to something like 220. This was a problem when supporting VP2s that
+use long archive intervals.
+
+Cut down the amount of computing that went on before the processing thread was
+spawned, thus allowing the main thread to get back into LOOP mode more quickly.
+
+Added type 'rainRate' to the types decoded from a Davis archive record. For some
+reason it was left out.
+
+Added retries when doing FTP uploads. It will now attempt the upload several
+times before giving up.
+
+Much more extensive DEBUG analysis.
+
+Nipped and tucked here and there, trying to simplify.
+
+
+0.6.5  10/11/09
+
+Ported to Cheetah V2.2.X. Mostly, this is making sure that all strings that
+cannot be converted with the 'ascii' codec are converted to Unicode first before
+feeding to Cheetah.
+
+0.6.4   9/22/09
+
+Fixed an error in the calculation of heat index.
+
+0.6.3   8/25/09
+
+FTP transfers now default to ACTIVE mode, but a configuration file option allows
+PASSIVE mode. This was necessary to support Microsoft FTP servers.
+
+0.6.2   8/1/09
+
+Exception handling in weewx/ftpdata.py used socket.error but failed to declare
+it. Added 'import socket' to fix.
+
+Added more complete check for unused pages in weewx/VantagePro.py. Now the
+entire record must be filled with 0xff, not just the time field. This fixes a
+bug where certain time stamps could look like unused records.
+
+0.6.1   6/22/09
+
+Fixed minor ftp bug.
+
+0.6.0   5/20/09
+
+Changed the file, imaging, ftping functions into objects, so they can be more
+easily specialized by the user.
+
+Introduced a StationData object.
+
+Introduced module weewx.factory that produces these things, so the user has a
+place to inject his/her new types.
+
+0.5.1	5/13/09
+
+1. Weather Underground thread now run as daemon thread, allowing the program to
+exit even if it is running.
+
+2. WU queue now hold an instance of archive and the time to be published, rather
+than a record. This allows dailyrain to be published as well.
+
+3. WU date is now given in the format "2009-05-13+12%3A35%3A00" rather than
+"2009-05-13 12:35:00". Seems to be more reliable. But, maybe I'm imagining
+things...

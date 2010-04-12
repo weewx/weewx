@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<!-- $Revision$ -->
+<!-- $Author$ -->
+<!-- $Date$ -->
+<head>
+<meta http-equiv="Content-Language" content="en-us" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Porting to the SheevaPlug</title>
+<style type="text/css">
+body {
+	font: 11pt Verdana,arial,sans-serif;
+	color: black;
+}
+p {
+	font: 11pt Verdana,arial,sans-serif;
+	color: black;
+}
+ol {
+	font: 11pt Verdana,arial,sans-serif;
+	color: black;
+}
+ul {
+	font: 11pt Verdana,arial,sans-serif;
+	color: black;
+}
+li {
+	font: 11pt Verdana,arial,sans-serif;
+	color: black;
+}
+dl {
+	font: 11pt Verdana,arial,sans-serif;
+	color: black;
+}
+dt {
+	font: 11pt Verdana,arial,sans-serif;
+	color: black;
+}
+dd {
+	font: 11pt Verdana,arial,sans-serif;
+	color: black;
+}
+h1 {
+	font: normal normal bold 18pt Verdana, arial, sans-serif;
+	color: teal;
+	border: 1px solid black;
+	border-bottom: 2px solid black;
+	border-right: 2px solid black;
+	background-color: #e8e8e8;
+	padding-left: .5em;
+	padding-right: .5em;
+	margin-top: 60pt;
+}
+h2 {
+	font: 15pt Verdana,arial,sans-serif;
+	color: teal;
+	border: 1px solid black;
+	background-color: #e8e8e8;
+	padding-left: .5em;
+	padding-right: .5em;
+	margin-top: 30pt;
+}
+h3 {
+	font: 12pt Verdana, arial, sans-serif;
+	color: teal;
+	border: 1px solid black;
+	background-color: #e8e8e8;
+	padding-left: .5em;
+	padding-right: .5em;
+}
+h4 {
+	font: 12pt Verdana,arial,sans-serif;
+	color: black;
+	font-weight: bold;
+}
+.code {
+	font-family: "Courier New", Courier, monospace;
+}
+table {
+	border-style: solid;
+	border-width: 1px;
+	border-collapse: collapse;
+}
+td {
+	border-style: solid;
+	border-width: 1px;
+}
+.indent {
+	margin-left: 40px;
+}
+.tty {
+	font-family: "Courier New", Courier, monospace;
+	margin-left: 40px;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	background-color: #FFFFCC;
+}
+.title {
+	text-align: center;
+	margin-top: 0px;
+}
+.config_option {
+	font-family: "Courier New", Courier, monospace;
+	font-weight: normal;
+}
+.config_section {
+	font-family: "Courier New", Courier, monospace;
+}
+.config_important {
+	font-family: "Courier New", Courier, monospace;
+	font-weight: bold;
+	color: #0000FF;
+}
+.bold_n_blue {
+	color: #0000FF;
+}
+</style>
+</head>
+
+<body>
+
+<h1 class="title">Notes on porting <span class="code">weewx</span> <br />
+to the SheevaPlug</h1>
+<p>The SheevaPlug is a very small, very low-powered general purpose computer. 
+Equipped with a single USB port and a single Ethernet port and a modest amount 
+of memory (512 MB) and storage (512 MB), in many ways it is an ideal server for 
+a weather station. The website <a href="http://www.openplug.org">openplug.org</a> 
+has a good &quot;<a href="http://www.openplug.org/plugwiki/index.php/QuickStart">Quick 
+Start</a>&quot; guide on how to get up and running on the Plug.</p>
+<p>Porting weewx to it is very straightforward. For the most part, follow the 
+directions
+<a href="http://www.openplug.org/plugwiki/index.php/New_Plugger_How_To">New 
+Plugger How To</a> in the OpenPlug wiki on how to set up the Plug.</p>
+<p>When you get to the &quot;Pause for a second&quot; section, you have a choice. You can 
+either continue using the kernel and version of Ubuntu that comes with the Plug 
+&quot;as is&quot;, 
+or you can install a newer version. </p>
+<p>My SheevaPlug came with kernel 2.6.22.18, which does not support the CP2101 
+USB serial device used by the VantagePro, necessitating a kernel upgrade. 
+However, if you have a serial interface to your VantagePro and you are planning on using a USB-to-serial converter, you might 
+well be in luck if your converter uses something that is recognized by the 
+2.6.22.18 kernel. I think it&#39;s worth trying the out-of-the-box SheevaPlug before messing around with upgrading the kernel&nbsp; --- you might 
+get lucky. I wasn&#39;t. If it doesn&#39;t work out, you&#39;ll only lose about 30 
+minutes of work.</p>
+<h1>1. Installing V1.0 Installer</h1>
+<p>This section assumes that you will need to upgrade your kernel. If you don&#39;t, 
+or if you want to give the existing kernel a try, skip it and go on to the next 
+section, <a href="#Installing_weewx">Installing weewx</a>. If things don&#39;t work 
+out, you can always come back here.</p>
+<p>If you need to upgrade your kernel, the easiest way to do so is to use the 
+new V1.0 Installer. <a href="http://www.openplug.org/plugwiki/index.php/SheevaPlug_Installer">
+Instructions can be found here.</a> The readme file that comes with the 
+installer is very confusing. These instructions are much better.</p>
+<p>One of the first things you will need to do is establish connectivity to the SheevaPlug by using its serial port (instead of via SSH through its Ethernet 
+port). Here are directions for both
+<a href="http://www.openplug.org/plugwiki/index.php/Setting_up_Serial_Console_Under_Linux">
+Linux</a> or
+<a href="http://www.openplug.org/plugwiki/index.php/How-to_setup_PuTTY_for_the_SheevaPlug_on_Windows">
+Windows</a>. I was able to get both to work. As I understand it, the install 
+process is managed and controlled through this port, although the actual files 
+come off of a USB stick. </p>
+<p>As per the instructions, download the tarball and extract. </p>
+<p>Move the following files from subdirectory sheevaplug-installer-<span class="code">v1.0/installer</span> 
+to to the root directory of a FAT 32 USB stick:</p>
+<p class="tty">initrd</p>
+<p class="tty">modules.tar.gz</p>
+<p class="tty">README.txt</p>
+<p class="tty">rootfs.tar.gz</p>
+<p class="tty">ubuntu-sheevaplug.sh</p>
+<p class="tty">uImage</p>
+<p>Plug the stick into the USB port of the SheevaPlug.</p>
+<p>I then tried installing the&nbsp; new kernel using a Windows host but had 
+absolutely no luck. After running &quot;<span class="code">runme.exe nand</span>&quot; I 
+would keep gettting the error:</p>
+<p class="tty">Error: unable to open ftdi device: device not found</p>
+<p class="tty">Runtime error, file &quot;command.c&quot;, line 469:</p>
+<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp; ****&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; openocd FAILED</p>
+<p class="tty">&nbsp;****&nbsp;&nbsp; Is the mini USB cable connected?</p>
+<p class="tty">&nbsp;****&nbsp;&nbsp; Try powering down, then replugging the Sheevaplug</p>
+<p>I tried several different ways, including rebooting with out running putty on the 
+serial port. I also tried, as per
+<a href="http://www.openplug.org/plugwiki/index.php/SheevaPlug_Installer#Important_Note_for_Newer_Plugs_.287.2F30.2F09ish.29">
+these directions</a>, editing the file <span class="code">
+sheevaplug-installer-v1.0/uboot/openocd/config/interfaces/sheevaplug.cfg</span>. 
+No luck (in fact, when I finally got things working using a Linux host, it was 
+the original settings that did the trick).</p>
+<p>Here&#39;s how to install from a Linux host. From a Ubuntu 9.10 host I installed php:</p>
+<p class="tty">apt-get install php5-cli</p>
+<p>Then ran the Linux script</p>
+<p class="tty">php runme.php nand</p>
+<p>Got an error: libftdi.so.1 no such file. I installed it:</p>
+<p class="tty">apt-get install libftdi1</p>
+<p>Still no luck. Then I unplugged then plugged in USB cable. Tried again. 
+Worked!</p>
+<p>This put me at kernel 2.6.30.2.</p>
+<h1><a name="Installing_weewx">2. Installing weewx</a></h1>
+<p>&nbsp;</p>
+<p>Now it&#39;s just a simple matter of installing weewx, albeit with a few more 
+missing pieces. I did the following installs/configurations to the operating 
+system. You may want to do more, or leave some out. When I was done I had about 
+256 MB of disk space left on the internal flash drive (out of the original 512 
+MB).</p>
+<p class="tty">apt-get update<br />
+apt-get dist-upgrade (big one)<br />
+apt-get autoremove<br />
+apt-get install wget<br />
+apt-get install sysv-rc-conf<br />
+apt-get install nfs-common<br />
+apt-get install ntp<br />
+dpkg-reconfigure tzdata</p>
+<p>I chose to have the directory <span class="code">/home/weewx</span> on a 
+separate SD flash card, formatted with a Linux ext2 file system, which I then 
+plugged into the slot the SheevaPlug offers.</p>
+<p>To have it mounted automatically on reboot, add the following line to /etc/fstab:</p>
+<p class="tty">/dev/mmcblk0p1 /home/weewx ext2 defaults 0 1</p>
+<p>I then went about adding the weewx prerequisites in the normal way (see the 
+weewx
+<a href="file:///C:/Documents%20and%20Settings/Thomas%20Keffer/My%20Documents/My%20Web%20Sites/weewx/docs/readme.htm">readme</a> file):</p>
+<p style="margin-left: .375in; margin-right: 0in; margin-top: 0in; margin-bottom: 0in;" class="tty">
+apt-get install sqlite3</p>
+<p style="margin-left: .375in; margin-right: 0in; margin-top: 0in; margin-bottom: 0in;" class="tty">
+apt-get install python-pysqlite2</p>
+<p style="margin-left: .375in; margin-right: 0in; margin-top: 0in; margin-bottom: 0in;" class="tty">
+apt-get install python-configobj&nbsp; # this installs python-support as well</p>
+<p style="margin-left: .375in; margin-right: 0in; margin-top: 0in; margin-bottom: 0in;" class="tty">
+apt-get install python-serial</p>
+<p style="margin-left: .375in; margin-right: 0in; margin-top: 0in; margin-bottom: 0in;" class="tty">
+apt-get install python-cheetah</p>
+<p style="margin-left: .375in; margin-right: 0in; margin-top: 0in; margin-bottom: 0in;" class="tty">
+apt-get install python-imaging&nbsp;&nbsp;&nbsp; # for PIL; it&#39;s not included on 
+the SheevaPlug</p>
+<p>Weewx then fired up right away. </p>
+<p>The SheevaPlug is no speed demon, but it&#39;s easily fast enough for the job at 
+hand. Downloading the initial two weeks of data from the memory of my VantagePro 
+console took about 10 minutes. After that,file generation went quite fast. 
+Generating 30 images takes about 6.7 seconds, compared to 10.2 seconds on my 
+fit-PC. Generating 4 HTML files takes 1.8 seconds on the Plug vs. 1.9 seconds on 
+the fit-PC.</p>
+
+</body>
+
+</html>

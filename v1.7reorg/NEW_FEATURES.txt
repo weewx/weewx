@@ -1,0 +1,21 @@
+NEW FEATURES to be added in decreasing order of importance.
+
+Make the directory structure for the distribution more compatible with the installed version.
+
+udev support to compensate for flaky 2101 drivers.
+
+Add support for CWOP.
+
+Allow rain-to-date to be added to a partial rainyear.
+
+Add support for MySQL.
+
+Support for APT package.
+
+Fix scaling for aggregate interval of a week, so it starts on a Sunday.
+
+Ability to set parameters such as lat, lon, altitude on the VP2
+
+Dynamic web updates, using AJAX.
+
+Port to Windows.
