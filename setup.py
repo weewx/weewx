@@ -61,7 +61,8 @@ from distutils.command.install_lib  import install_lib
 from distutils.command.sdist import sdist
 
 # Make sure we can find the bin subdirectory:
-bin_dir = os.path.join(os.getcwd(), 'bin')
+this_file = os.path.join(os.getcwd(), __file__)
+bin_dir = os.path.abspath(os.path.join(os.path.dirname(this_file), 'bin'))
 sys.path.insert(0, bin_dir)
 
 from weewx import __version__ as VERSION
