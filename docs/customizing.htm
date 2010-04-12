@@ -1026,14 +1026,21 @@ the ones you are likely to have to customize for your station, are shown in
 <h2 class="config_section"><a name="[Extras]">[Extras]</a></h2>
 <p>This section is available to you to add any static tags that you might want to be available 
 in the templates. As an example, the stock <span class="code">skin.conf</span> file 
-includes option <span class="code">radar_url</span>, which is available as tag
-<span class="code">$Extras.radar_url</span>. If you take a look at the template
-<span class="code">index.html.tmpl</span> you will see an example of testing for 
-this tag (search the file for the string &#39;<span class="code">radar_url</span>&#39; to find 
-it).</p>
-<p class="config_option">radar_url</p>
+includes two options: <span class="code">radar_url</span>, which is available as tag
+<span class="code">$Extras.radar_url</span>, and <span class="code">
+googleAnalyticsId</span>, available as tag <span class="code">
+$Extras.googleAnalyticsId</span>. If you take a look at the template
+<span class="code">index.html.tmpl</span> you will see examples of testing for 
+these tags (search the file for the string &#39;<span class="code">radar_url</span>&#39; 
+or <span class="code">googleAnalyticsId</span> to find 
+them).</p>
+<h4 class="config_option">radar_url</h4>
 <p>If set, the NOAA radar image will be displayed. If commented out, no image will 
 be displayed.</p>
+<h4 class="config_option">googleAnalyticsId</h4>
+<p>If you have a Google Analytics ID, you can set it here. The Google Javascript 
+code will then be included, enabling analytics of your website usage. If 
+commented out, the code will not be included.</p>
 <h4>Extending <span class="code">[Extras]</span></h4>
 <p>Other tags can be added in a similar manner, including subsections. For 
 example, say you have added a video camera and you would like to add a still 
