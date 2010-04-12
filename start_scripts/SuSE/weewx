@@ -19,6 +19,13 @@
 #     USA.
 #
 # /etc/init.d/weewx
+#
+#
+# Author: Tom Keffer <keffer@gmail.com>
+#
+# Startup script for SuSE derivatives
+#
+
 # LSB compatible service control script; see http://www.linuxbase.org/spec/
 # Please send feedback to http://www.suse.de/feedback/
 # 
@@ -32,6 +39,7 @@
 # chkconfig: 345 99 00
 # description: weewx weather daemon
 # 
+
 ### BEGIN INIT INFO
 # Provides:          weewx
 # Required-Start:    $local_fs $syslog $time

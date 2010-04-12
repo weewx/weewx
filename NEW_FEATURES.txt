@@ -1,13 +1,14 @@
 NEW FEATURES to be added in decreasing order of importance.
 
-udev support to compensate for flaky 2101 drivers.
+Make the directory structure for the distribution more compatible with the installed version.
 
-Support for UTF-8 characters.
+udev support to compensate for flaky 2101 drivers.
 
 Add support for CWOP.
 
-Allow rain-to-date to be added to a partial rainyear. (Unfortunately,
-there is no elegant way of doing this with the present architecture!)
+Allow rain-to-date to be added to a partial rainyear.
+
+Add support for MySQL.
 
 Support for APT package.
 

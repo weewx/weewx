@@ -1,7 +1,6 @@
 recursive-include docs *
-recursive-include public_html *.gif *.jpg *.css
 recursive-include start_scripts *
-recursive-include templates *.tmpl
+recursive-include skins *
 include CHANGES.txt
 include LICENSE.txt
 include NEW_FEATURES.txt

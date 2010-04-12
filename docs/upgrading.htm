@@ -41,18 +41,20 @@ dd {
 	color: black;
 }
 h1 {
-	font: normal normal bold 18pt Verdana, arial, sans-serif;
-	color: teal;
+	font: bold xx-large Verdana, arial, sans-serif;
+	color: #FFFFFF;
 	border: 1px solid black;
 	border-bottom: 2px solid black;
 	border-right: 2px solid black;
-	background-color: #e8e8e8;
+	background-color: #008080;
 	padding-left: .5em;
 	padding-right: .5em;
 	margin-top: 60pt;
+	border-right-width: medium;
+	border-bottom-width: medium;
 }
 h2 {
-	font: 15pt Verdana,arial,sans-serif;
+	font: bold x-large Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -61,7 +63,7 @@ h2 {
 	margin-top: 30pt;
 }
 h3 {
-	font: 12pt Verdana, arial, sans-serif;
+	font: bold medium Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -69,9 +71,8 @@ h3 {
 	padding-right: .5em;
 }
 h4 {
-	font: 12pt Verdana,arial,sans-serif;
+	font: bold medium Verdana, arial, sans-serif;
 	color: black;
-	font-weight: bold;
 }
 .code {
 	font-family: "Courier New", Courier, monospace;
@@ -84,11 +85,12 @@ table {
 td {
 	border-style: solid;
 	border-width: 1px;
+	padding: 5px;
 }
 .indent {
 	margin-left: 40px;
 }
-.tty {
+.tty, pre {
 	font-family: "Courier New", Courier, monospace;
 	margin-left: 40px;
 	margin-top: 0px;
@@ -114,18 +116,67 @@ td {
 .bold_n_blue {
 	color: #0000FF;
 }
+.xxsmall {
+	font-size: xx-small;
+}
+.highlight {
+	background-color: #FFFF66;
+}
+.center {
+	text-align: center;
+}
+.Example_output {
+	padding: 10px;
+	border: thin #000000 dotted;
+	font-family: "Times New Roman", Times, serif;
+	margin-left: 40px;
+}
 </style>
 </head>
 
 <body>
 
-<h1 class="title">Upgrading to weewx v1.5</h1>
+<h1 class="title">Upgrading to <span class="code">weewx</span> v1.7</h1>
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
+<h2>V.1.5.0 or earlier</h2>
+<p>V1.7 introduces <em>skins</em>. The skins live in subdirectory
+<span class="code">skins</span>. They are <em>not</em> compatible with the old
+<span class="code">template</span> subdirectory --- you can&#39;t simply rename
+<span class="code">templates</span> to <span class="code">skins</span>. </p>
+<p>The part of the configuration file dealing with the presentation layer has 
+been split off into a separate file <span class="code">skin.conf</span>. Hence, 
+once again, the installation script
+<span class="code">setup.py</span> will NOT merge your old <span class="code">
+weewx.conf</span> configuration file 
+into the new one. You will have to re-edit <span class="code">weewx.conf</span> 
+to put in your customizations. You may also have to edit <span class="code">
+skin.conf</span> for whatever skin you choose (right now, only one skin, <em>Standard</em>, 
+comes with the distribution).</p>
+<p>However, a reinstall of V1.7 <em>will</em> merge your changes for
+<span class="code">weewx.conf</span>. It will also merge any changes you have made to <span class="code">skin.conf</span> 
+as well.</p>
+<p>Please check the following:</p>
+<ul>
+	<li>Option &quot;<span class="code">altitude</span>&quot; in section
+	<span class="code">[Station]</span> now takes a unit. Hence, it should look 
+	something like:	<pre> altitude = 120, meter</pre>
+	</li>
+	<li>In a similar manner, options <span class="code">heating_base</span> and
+	<span class="code">cooling_base</span> in <span class="code">skin.conf</span> 
+	also take units:
+		<pre>heating_base = 65, degree_F
+cooling_base = 65, degree_F</pre>
+	</li>
+</ul>
+<p>The directory &#39;<span class="code">templates</span>&#39; is no longer used; 
+it has been replaced with directory &#39;<span class="code">skins</span>&#39;. You 
+may delete it if you wish:</p>
+<p class="tty">rm -r <em>$WEEWX_ROOT</em>/templates</p>
 <h2>V1.4.0 or earlier</h2>
 <p>Because the configuration file <span class="code">weewx.conf</span> changed 
 significantly going from V1.4 to V1.5, the installation script
-<span class="code">setup.py</span> will NOT merge your cold configuration file 
+<span class="code">setup.py</span> will NOT merge your old configuration file 
 into the new one. You will have to re-edit <span class="code">weewx.conf</span> 
 to put in your customizations.</p>
 <h2>V1.2.0 or earlier</h2>

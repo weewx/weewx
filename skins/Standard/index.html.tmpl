@@ -5,6 +5,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    #if $encoding == 'utf8'
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    #end if    
     <title>$station.location Current Weather Conditions</title>
     <link rel="stylesheet" type="text/css" href="weewx.css"/>
     <script type="text/javascript">
@@ -75,22 +78,30 @@
                 <td class="stats_label">Inside Temperature</td>
                 <td class="stats_data">$current.inTemp</td>
               </tr>
+              #if $day.extraTemp1.count.raw
               <tr>
                 <td class="stats_label">Pond Temperature</td>
                 <td class="stats_data">$current.extraTemp1</td>
               </tr>
+              #end if
+              #if $day.UV.count.raw
               <tr>
                 <td class="stats_label">UV</td>
                 <td class="stats_data">$current.UV</td>
               </tr>
+              #end if
+              #if $day.ET.sum.raw > 0.0
               <tr>
                 <td class="stats_label">ET</td>
                 <td class="stats_data">$current.ET</td>
               </tr>
+              #end if
+              #if $day.radiation.count.raw
               <tr>
                 <td class="stats_label">Solar Radiation</td>
                 <td class="stats_data">$current.radiation</td>
               </tr>
+              #end if
             </tbody>
           </table>
         </div>
@@ -199,16 +210,6 @@
 
               <tr>
                 <td class="stats_label">
-                  High Pond Temperature<br/>
-                  Low Pond Temperature
-                </td>
-                <td class="stats_data">
-                  $day.extraTemp1.max at $day.extraTemp1.maxtime<br/>
-                  $day.extraTemp1.min at $day.extraTemp1.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
                   High Inside Temperature<br/>
                   Low Inside Temperature
                 </td>
@@ -217,15 +218,66 @@
                   $day.inTemp.min at $day.inTemp.mintime
                 </td>
               </tr>
+			  #if $day.extraTemp1.count.raw
+              <tr>
+                <td class="stats_label">
+                  High Pond Temperature<br/>
+                  Low Pond Temperature
+                </td>
+                <td class="stats_data">
+                  $day.extraTemp1.max at $day.extraTemp1.maxtime<br/>
+                  $day.extraTemp1.min at $day.extraTemp1.mintime
+                </td>
+              </tr>
+              #end if
+              #if $day.UV.count.raw
+              <tr>
+                <td class="stats_label">
+                  High UV<br/>
+                  Low UV
+                </td>
+                <td class="stats_data">
+                  $day.UV.max at $day.UV.maxtime<br/>
+                  $day.UV.min at $day.UV.mintime
+                </td>
+              </tr>
+              #end if
+              #if $day.ET.sum.raw >0.0
+              <tr>
+                <td class="stats_label">
+                  High ET<br/>
+                  Low ET
+                </td>
+                <td class="stats_data">
+                  $day.ET.max at $day.ET.maxtime<br/>
+                  $day.ET.min at $day.ET.mintime
+                </td>
+              </tr>
+              #end if
+              #if $day.radiation.count.raw
+              <tr>
+                <td class="stats_label">
+                  High Radiation<br/>
+                  Low Radiation
+                </td>
+                <td class="stats_data">
+                  $day.radiation.max at $day.radiation.maxtime<br/>
+                  $day.radiation.min at $day.radiation.mintime
+                </td>
+              </tr>
+              #end if
             </tbody>
           </table>
         </div> <!--End class "stats" -->
 
         <p>&nbsp;</p>
 
+        #if $Extras.has_key('radar_url')
         <div id="radar_img">
-          <a href="$station.radar_url"><img src="$station.radar_url" alt="Radar" /></a>
+          <a  href="$Extras.radar_url">
+          <img src="$Extras.radar_url" alt="Radar" /></a>
         </div>
+        #end if
 
       </div> <!--End class "stats_group" -->
 
@@ -265,21 +317,22 @@
             fast, and easy to understand by leveraging modern software concepts.
           </p>
           ##<p><a href="../weather">More information about this weather station.</a></p>
+          <p><a href="RSS/weewx_rss.xml">RSS feed</a></p>
           <p>Weewx uptime:  $station.uptime<br/>
              Server uptime: $station.os_uptime<br/>
              weewx v$station.version</p>
         </div>
         <div id="plots">
-          <img src="daytempdew.png" alt="temperatures" />
+          <img src="daytempdew.png"   alt="temperatures" />
           <img src="daytempchill.png" alt="heatchill" />
-          <img src="dayrain.png" alt="rain" />
-          <img src="daywind.png" alt="wind" />
+          <img src="dayrain.png"      alt="rain" />
+          <img src="daywind.png"      alt="wind" />
           <img src="daybarometer.png" alt="barometer"/>
-          <img src="daywinddir.png" alt="Hi Wind" />
-          <img src="dayinside.png" alt="Inside" />
-          <img src="daywindvec.png" alt="Wind Vector" />
-          <img src="dayrx.png" alt="day rx percent"/>
-          <img src="daypond.png" alt="Pond Temperatures" />
+          <img src="daywinddir.png"   alt="Hi Wind" />
+          <img src="dayinside.png"    alt="Inside" />
+          <img src="daywindvec.png"   alt="Wind Vector" />
+          <img src="dayrx.png"        alt="day rx percent"/>
+          <img src="daypond.png"      alt="Pond Temperatures" />
         </div> <!-- End id "plots" -->
       </div> <!-- End id "content" -->
 
@@ -290,7 +343,7 @@
         <input type="button" value="    Year     " onclick="openURL('year.html')" />
         <p>Monthly summary:&nbsp;
         <select NAME=noaaselect onchange="openNoaaFile(value)">
-        #for $monthYear in $NOAA_month_list
+        #for $monthYear in $SummaryByMonth
             <option value="$monthYear">$monthYear</option>
         #end for
 	    <option selected>-Select month-</option>
@@ -298,7 +351,7 @@
         <br/>
         Yearly summary:&nbsp;
         <select NAME=noaaselect onchange="openNoaaFile(value)">
-        #for $year in $NOAA_year_list
+        #for $year in $SummaryByYear
             <option value="$year">$year</option>
         #end for
 	    <option selected>-Select year-</option>
@@ -306,6 +359,20 @@
         </p>
       </div>
     </div>
+
+    ## Include the Google Analytics code if the user has supplied an ID:
+    #if $Extras.has_key('googleAnalyticsId')
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try{
+            var pageTracker = _gat._getTracker("$Extras.googleAnalyticsId");
+            pageTracker._trackPageview();
+        } catch(err) {}
+    </script>
+    #end if
 
 </body>
 

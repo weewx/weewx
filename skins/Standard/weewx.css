@@ -105,6 +105,7 @@ body {
 }
 .stats td {
     border: thin solid #000000;
+    padding: 2px;
 }
 
 .stats_header  {
