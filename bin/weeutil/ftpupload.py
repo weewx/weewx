@@ -15,7 +15,6 @@ import ftplib
 import cPickle
 import time
 import syslog
-import socket
 
 class FtpUpload:
     """Uploads a directory and all its descendants to a remote server.
@@ -96,26 +95,37 @@ class FtpUpload:
     
                     full_remote_path = os.path.join(remote_dir_path, filename)
                     STOR_cmd = "STOR %s" % full_remote_path
-                    fd = open(full_local_path, "r")
+                    # Retry up to max_tries times:
                     for count in range(self.max_tries):
                         try:
+                            # If we have to retry, we should probably reopen the file as well.
+                            # Hence, the open is in the inner loop:
+                            fd = open(full_local_path, "r")
                             ftp_server.storbinary(STOR_cmd, fd)
-                        except ftplib.all_errors, e:
+                        except (ftplib.all_errors, IOError), e:
+                            # Unsuccessful. Log it and go around again.
                             syslog.syslog(syslog.LOG_ERR, "ftpupload: attempt #%d. Failed uploading %s. Reason: %s" % (count+1, full_remote_path, e))
-                            if count >= self.max_tries -1 :
-                                syslog.syslog(syslog.LOG_ERR, "ftpupload: Failed to upload file %s" % full_remote_path)
-                                raise
                             ftp_server.set_pasv(self.passive)
                         else:
-                            fd.close()
+                            # Success. Log it, break out of the loop
                             n_uploaded += 1
+                            fileset.add(full_local_path)
                             syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Uploaded file %s" % full_remote_path)
                             break
-                    fileset.add(full_local_path)
+                        finally:
+                            # This is always executed on every loop. Close the file.
+                            try:
+                                fd.close()
+                            except:
+                                pass
+                    else:
+                        # This is executed only if the loop terminates naturally (without a break statement),
+                        # meaning the upload failed max_tries times. Log it, move on to the next file.
+                        syslog.syslog(syslog.LOG_ERR, "ftpupload: Failed to upload file %s" % full_remote_path)
         finally:
             try:
                 ftp_server.quit()
-            except socket.error:
+            except:
                 pass
         
         timestamp = time.time()
@@ -194,7 +204,7 @@ if __name__ == '__main__':
     import configobj
     
     weewx.debug = 1
-    syslog.openlog('reportengine', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('ftpupload', syslog.LOG_PID|syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     if len(sys.argv) < 2 :

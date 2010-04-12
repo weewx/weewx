@@ -64,23 +64,27 @@ class RESTful(object):
             try:
                 _response = urllib2.urlopen(_url)
             except (urllib2.URLError, socket.error), e:
+                # Unsuccessful. Log it and go around again for another try
                 syslog.syslog(syslog.LOG_ERR, "restful: Failed attempt #%d to upload to %s" % (_count+1, self.site))
                 syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
-                if _count >= self.max_tries -1 :
-                    syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
-                    raise
             else:
-                # A bad station ID or password will not throw an exception, but
-                # it will have the error encoded in the return message:
+                # No exception thrown, but we're still not done.
+                # We have to also check for a bad station ID or password.
+                # It will have the error encoded in the return message:
                 for line in _response:
                     # PWSweather signals with 'ERROR', WU with 'INVALID':
                     if line.startswith('ERROR') or line.startswith('INVALID'):
                         # Bad login. No reason to retry. Log it and raise an exception.
                         syslog.syslog(syslog.LOG_ERR, "restful: %s returns %s. Aborting." % (self.site, line))
                         raise FailedPost, line
-                # If we get here, we have been successful.  Just return.
+                # Does not seem to be an error. We're done.
                 return
-    
+        else:
+            # This is executed only if the loop terminates normally, meaning
+            # the upload failed max_tries times. Log it.
+            syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
+            raise IOError, "Failed ftp upload to site %s after %d tries" % (self.site, self.max_tries)
+
     @staticmethod
     def extractRecordFrom(archive, time_ts):
         """Get a record from the archive database. 
@@ -230,6 +234,7 @@ class RESTThread(threading.Thread):
                 # but we keep them separate to support V2.5:
                 except (IOError, socket.error), e:
                     syslog.syslog(syslog.LOG_ERR, "restful: Unable to publish record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
                     if hasattr(e, 'reason'):
                         syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Reason: %s" % e.reason)
                     if hasattr(e, 'code'):

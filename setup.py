@@ -60,10 +60,10 @@ from distutils.command.install_data import install_data
 from distutils.command.install_lib  import install_lib
 from distutils.command.sdist import sdist
 
+# Make sure we can find the bin subdirectory:
 bin_dir = os.path.join(os.getcwd(), 'bin')
-print bin_dir
 sys.path.insert(0, bin_dir)
-print sys.path  
+
 from weewx import __version__ as VERSION
 
 class My_install_lib(install_lib):

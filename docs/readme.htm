@@ -566,7 +566,10 @@ FTP&#39;ing data to a web server or sending data to the Weather Underground. Twe
 <p>This section covers options relating to the entire weather station setup. </p>
 <h4 class="config_option">WEEWX_ROOT</h4>
 <p>Set to the root directory of the <span class="code">weewx</span> data file hierarchy 
-for this station, nominally &#39;<span class="code">/home/weewx</span>&#39;. This value 
+for this station, nominally &#39;<span class="code">/home/weewx</span>&#39;. The 
+weewx data subdirectories <span class="code">skins</span>, <span class="code">
+archive</span>, and <span class="code">public_html</span> are expected to be 
+found here. This value 
 will be set automatically by the setup script <span class="code">setup.py</span> 
 to reflect the choice you made in the configuration file <span class="code">setup.cfg</span>. 
 Required. No default.</p>
