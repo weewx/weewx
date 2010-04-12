@@ -10,6 +10,7 @@
 """Generate files from templates."""
 
 import os.path
+import sys
 import syslog
 import time
 
@@ -139,11 +140,19 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                                                      filtersLib = weewx.filegenerator)
                     # Open up the file that is to be created:
                     file = open(_fullpath, mode='w')
-                    # Write it out
-                    print >> file, text
-                    # Close it
-                    file.close()
-                    ngen += 1
+                    try:
+                        # Write it out
+                        print >> file, text
+                    except Cheetah.NameMapper.NotFound, e:
+                        (cl, ob, tr) = sys.exc_info()
+                        syslog.syslog(syslog.LOG_ERR, """filegenerator: Caught exception "%s" """ % cl) 
+                        syslog.syslog(syslog.LOG_ERR, """         ****  Message: "%s in template %s" """ % (e, template))
+                        syslog.syslog(syslog.LOG_ERR, """         ****  Ignoring template and continuing.""")
+                    else:
+                        ngen += 1
+                    finally:
+                        # Close it
+                        file.close()
             
             t2 = time.time()
             elapsed_time = t2 - t1
@@ -172,21 +181,32 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
             (template, destination_dir, encoding) = self._prepGen(self.skin_dict['FileGenerator']['ToDate'][subreport])
             
             # Form the destination filename:
-            _filename = os.path.basename(template).replace('.tmpl','')
+            _fullpath = os.path.basename(template).replace('.tmpl','')
     
             #===================================================================
             # Here's where the heavy lifting occurs. Use Cheetah to actually
             # generate the files. It will use introspection on the searchList to
             # populate the parameters in the template file.
             # ===================================================================
-            html = Cheetah.Template.Template(file       = template,
+            text = Cheetah.Template.Template(file       = template,
                                              searchList = searchList + [{'encoding' : encoding}],
                                              filter     = encoding,
                                              filtersLib = weewx.filegenerator)
 
-            file = open(os.path.join(destination_dir, _filename), mode='w')
-            print >> file, html
-            ngen += 1
+            file = open(os.path.join(destination_dir, _fullpath), mode='w')
+            try:
+                # Write it out
+                print >> file, text
+            except Cheetah.NameMapper.NotFound, e:
+                (cl, ob, tr) = sys.exc_info()
+                syslog.syslog(syslog.LOG_ERR, """filegenerator: Caught exception "%s" """ % cl) 
+                syslog.syslog(syslog.LOG_ERR, """         ****  Message: "%s in template %s" """ % (e, template))
+                syslog.syslog(syslog.LOG_ERR, """         ****  Ignoring template and continuing.""")
+            else:
+                ngen += 1
+            finally:
+                # Close it
+                file.close()
         
         elapsed_time = time.time() - t1
         syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))

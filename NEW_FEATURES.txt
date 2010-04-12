@@ -1,6 +1,6 @@
 NEW FEATURES to be added in decreasing order of importance.
 
-Check to see if the stats.sdb database is really necessary.
+Make the directory structure for the distribution more compatible with the installed version.
 
 udev support to compensate for flaky 2101 drivers.
 

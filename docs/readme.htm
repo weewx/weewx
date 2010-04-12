@@ -133,6 +133,10 @@ td {
 	font-family: "Times New Roman", Times, serif;
 	margin-left: 40px;
 }
+.style1 {
+	font-family: "Times New Roman", serif;
+	font-size: 12pt;
+}
 </style>
 </head>
 
@@ -151,6 +155,7 @@ Version 1.7</h1>
 	<li><a href="#Running_weewx">Running weewx</a></li>
 	<li><a href="#Compatibility_with_wview">Compatibility with wview</a></li>
 	<li><a href="#Monitoring_weewx">Monitoring weewx</a></li>
+	<li><a href="#Troubleshooting">Troubleshooting</a></li>
 	<li><a href="#Architectural_notes">Architectural notes</a></li>
 </ol>
 <p>For information on customizing <span class="code">weewx</span>, see the separate 
@@ -835,9 +840,48 @@ When troubleshooting the system, be sure to check it!</p>
 <p>Setting the option <span class="code">debug </span>in <span class="code">weewx.conf</span> 
 to <span class="code">1</span> (one) will generate many more checks and output and 
 can be useful for debugging.</p>
-<h1>10. A<a name="Architectural_notes">rchitectural notes</a></h1>
+<h1>10. <a name="Troubleshooting">Troubleshooting</a></h1>
+<h2>10.1 Execution</h2>
+<h2>10.2 Hardware</h2>
+<h3>cp2101 converter problems</h3>
+<p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
+problems. The symptom is that the Linux kernel will disconnect from your old USB 
+port claiming &quot;EMI noise&quot;, and reconnect to a new and different one, where
+<span class="code">weewx</span> can&#39;t find it. Here&#39;s 
+a typical log output:</p>
+<pre>Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?), re-enabling... 
+Nov 29 10:40:21 hummingbird kernel: [6661624.786871] usb 2-3: USB disconnect, address 2 
+Nov 29 10:40:21 hummingbird kernel: [6661624.795778] cp2101 2-3:1.0: device disconnected 
+Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while getting LOOP packets</pre>
+<pre>&nbsp;</pre>
+<pre>... (messages elided)</pre>
+<pre>&nbsp;</pre>
+<pre>Nov 29 10:40:22 hummingbird kernel: [6661625.352340] cp2101 2-3:1.0: cp2101 converter detected 
+Nov 29 10:40:22 hummingbird kernel: [6661625.528107] usb 2-3: reset full speed USB device using ohci_hcd and address 3 
+Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</pre>
+<p>In this example, the VantagePro was connected to <span class="code">
+/dev/ttyUSB0</span>, but then reconnected to <span class="code">/dev/ttyUSB1</span>. 
+Usually physically disconnecting the USB then plugging it back in clears the 
+problem. Most likely you will also have to restart <span class="code">weewx</span>, 
+but sometimes it can recover on its own.</p>
+<p>After this happened to me twice, I added a ferrite coil to the connection 
+between my VP2 Envoy and my server and it hasn&#39;t happened again. Mind you, 
+that&#39;s twice in three years, so it is not a very common occurrence.</p>
+<p>Finally, if you have a choice and if your server has the port, a VP2 with an 
+old-fashioned serial cable turns out to be more reliable than one with a USB 
+connection. My console has the former and has never once given me any trouble.</p>
+<h2>10.3 Templates</h2>
+<h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
+<p>If you get errors of the sort:</p>
+<pre>Apr 12 05:12:32 raven reportengine[3074]: filegenerator: Caught exception &quot;&lt;class &#39;NameMapper.NotFound&#39;&gt;&quot; 
+Apr 12 05:12:32 raven reportengine[3074]:          ****  Message: &quot;cannot find &#39;fubar&#39; in template /home/weewx/skins/Standard/index.html.tmpl&quot;
+Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and continuing.</pre>
+<p class="style1">you have a tag in your template that <span class="code">weewx</span> 
+does not recognize (in this example, it&#39;s the tag <span class="code">$fubar</span> 
+in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.</p>
+<h1>11. A<a name="Architectural_notes">rchitectural notes</a></h1>
 <p>This section is not needed to get started. </p>
-<h2>10.1 Goals</h2>
+<h2>11.1 Goals</h2>
 <p>The primary goals of <span class="code">weewx </span>are:</p>
 <ul>
 	<li>Architectural simplicity. No semaphores, no named pipes, no inter-process 
@@ -858,7 +902,7 @@ can be useful for debugging.</p>
 	with two decades of experience in C++. I tried hard to not make the code base 
 	look like it was written by a C++ programmer who stumbled across a Python manual!</li>
 </ul>
-<h2>10.2 Strategies</h2>
+<h2>11.2 Strategies</h2>
 <p>To meet these goals, the following strategies were used:</p>
 <ul>
 	<li>A powerful configuration parser,
@@ -914,7 +958,7 @@ report processing thread (much more likely), then only the generation of reports
 will be affected &mdash; the main thread will continue downloading data off the 
 instrument and putting it in the database. You can fix the problem at your 
 leisure, without worrying about losing any data.</p>
-<h2>10.3 Terminology</h2>
+<h2>11.3 Terminology</h2>
 <p>This is a glossary of terminology used throughout the code.</p>
 <table style="width: 100%">
 	<tr>
@@ -989,7 +1033,7 @@ leisure, without worrying about losing any data.</p>
 		&#39;degree_C&#39;)</span>.</td>
 	</tr>
 </table>
-<h2>10.4 Units</h2>
+<h2>11.4 Units</h2>
 <p>In general, there are three different areas where the unit system makes a difference.:
 </p>
 <ol>
@@ -1006,12 +1050,12 @@ measurement system of the weather instrument. That is, the units used in #1 and
 and #3, allowing any unit system to be used in the presentation layer.</p>
 <p>It would be easy enough to support an instrument that uses metric units internally, 
 although this has not been done yet. </p>
-<h2>10.5 Value &quot;<span class="code">None</span>&quot;</h2>
+<h2>11.5 Value &quot;<span class="code">None</span>&quot;</h2>
 <p>The Python special value &#39;<span class="code">None</span>&#39; is used throughout 
 to signal a missing data point. All functions expect it.</p>
 <p>However, the time value must never be &#39;<span class="code">None</span>&#39;. This 
 is because it is used as the primary key in the SQL database. </p>
-<h2>10.6 Time</h2>
+<h2>11.6 Time</h2>
 <p><span class="code">Weewx </span>stores all data in UTC (roughly, &quot;Greenwich&quot; 
 or &quot;Zulu&quot;) time. However, usually one is interested in weather events in local time 
 and want image and HTML generation to reflect that. Furthermore, most weather stations 
@@ -1037,6 +1081,7 @@ bulletproof against changes in DST algorithms, etc:</p>
 <p class="tty">next_dt = time_dt + delta</p>
 <p class="tty">next_ts = int(time.mktime(next_dt.timetuple()))</p>
 <p>Other time conversion problems are handled in a similar manner.</p>
+<p>&nbsp;</p>
 
 </body>
 

@@ -140,6 +140,10 @@ td {
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
 <h2>V.1.5.0 or earlier</h2>
+<p>V1.7 introduces <em>skins</em>. The skins live in subdirectory
+<span class="code">skins</span>. They are <em>not</em> compatible with the old
+<span class="code">template</span> subdirectory --- you can&#39;t simply rename
+<span class="code">templates</span> to <span class="code">skins</span>. </p>
 <p>The part of the configuration file dealing with the presentation layer has 
 been split off into a separate file <span class="code">skin.conf</span>. Hence, 
 once again, the installation script
@@ -149,9 +153,8 @@ into the new one. You will have to re-edit <span class="code">weewx.conf</span>
 to put in your customizations. You may also have to edit <span class="code">
 skin.conf</span> for whatever skin you choose (right now, only one skin, <em>Standard</em>, 
 comes with the distribution).</p>
-<p>However, a reinstall of V1.6 <em>will</em> merge your changes for
-<span class="code">weewx.conf</span>.</p>
-<p>It will also merge any changes you have made to <span class="code">skin.conf</span> 
+<p>However, a reinstall of V1.7 <em>will</em> merge your changes for
+<span class="code">weewx.conf</span>. It will also merge any changes you have made to <span class="code">skin.conf</span> 
 as well.</p>
 <p>Please check the following:</p>
 <ul>

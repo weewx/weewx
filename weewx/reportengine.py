@@ -90,8 +90,9 @@ class StdReportEngine(threading.Thread):
                 skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
                 syslog.syslog(syslog.LOG_DEBUG, "reportengine: Found configuration file %s for report %s" % (skin_config_path, report))
             except IOError:
-                syslog.syslog(syslog.LOG_INFO, "reportengine: No skin configuration file for report %s" % report)
-                syslog.syslog(syslog.LOG_INFO, "        ****  Report ignored...")
+                syslog.syslog(syslog.LOG_ERR, "reportengine: No skin configuration file for report %s" % report)
+                syslog.syslog(syslog.LOG_ERR, "        ****  Tried path %s" % skin_config_path)
+                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
                 continue
                 
             # Inject any overrides the user may have specified in the weewx.conf
