@@ -375,23 +375,38 @@ directory where you have write permission</p>
 <p class="tty">tar xvf weewx-X.Y.Z</p>
 <p>Then change directory into it:</p>
 <p class="tty">cd weewx-X.Y.Z</p>
-<h2>5.1 Choosing the <span class="code">WEEWX_ROOT</span> directory</h2>
+<h2>5.1 Choosing where to install <span class="code">weewx</span></h2>
 <p>Next step is figuring out where you want to install <span class="code">weewx</span>. 
-If <span class="code"><em>WEEWX_ROOT</em></span> symbolizes the root location of 
-the <span class="code">weewx</span> directory hierarchy, then</p>
-<ul>
-	<li><span class="code"><em>$WEEWX_ROOT</em>/bin</span> is where the Python packages 
-	and scripts are installed;</li>
-	<li><span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span> is the configuration 
-	file;</li>
-	<li><span class="code"><em>$WEEWX_ROOT</em>/skins</span> is where the skins 
-	live;</li>
-	<li><span class="code"><em>$WEEWX_ROOT</em>/archive</span> is the directory 
-	where the sqlite3 databases live;</li>
-	<li><em>$</em><span class="code"><em>WEEWX_ROOT</em>/public_html</span> is where 
-	generated html and .png images are put.</li>
-</ul>
-<p>By default, the location for <span class="code"><em>WEEWX_ROOT</em></span> is
+If <span class="code"><em>$WEEWX_INSTALL</em></span> symbolizes the root 
+location of where the <span class="code">weewx</span> directory will be 
+installed, then the nominal directory layout is:</p>
+<table align="center" style="width: 60%">
+	<tr>
+		<td><strong>Subdirectory</strong></td>
+		<td><strong>Contents</strong></td>
+	</tr>
+	<tr>
+		<td><span class="code"><em>$WEEWX_INSTALL</em>/bin</span></td>
+		<td>Python packages and scripts</td>
+	</tr>
+	<tr>
+		<td><span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf</span></td>
+		<td>Configuration file</td>
+	</tr>
+	<tr>
+		<td><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
+		<td>Template skins and their configuration files</td>
+	</tr>
+	<tr>
+		<td><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
+		<td>sqlite3 archive and statistical databases</td>
+	</tr>
+	<tr>
+		<td><span class="code"><em>$WEEWX_INSTALL</em>/public_html</span></td>
+		<td>Generated HTML and .PNG images</td>
+	</tr>
+</table>
+<p>By default, the location for <span class="code"><em>WEEWX_INSTALL</em></span> is
 <span class="code">/home/weewx</span>. However, it can be changed by editing the 
 file <span class="code">setup.cfg</span>. If you wish to install someplace else, 
 open up <span class="code">setup.cfg</span> and change the line</p>
@@ -403,7 +418,8 @@ open up <span class="code">setup.cfg</span> and change the line</p>
 <p>(Because <span class="code">weewx</span> is pure Python this doesn&#39;t actually 
 build anything, but it does arrange files for the final installation)</p>
 <p>Then install it. If you have write permission in the directory where
-<span class="code">weewx</span> will go (<em>i.e.</em>, <span class="code"><em>$WEEWX_ROOT</em></span>), 
+<span class="code">weewx</span> will go (<em>i.e.</em>, <span class="code"><em>
+$WEEWX_INSTALL</em></span>), 
 then type</p>
 <p class="tty">./setup.py install</p>
 <p>Otherwise, if you do not have write permission, you will have to use sudo:</p>
@@ -418,9 +434,11 @@ to see if there any specific actions you need to do. </p>
 <span class="code"><strong>setup.cfg</strong></span><strong>. </strong></p>
 <p>The build and install process will do the following for you.</p>
 <ul>
-	<li>Save your old &#39;<span class="code">skin</span>&#39; subdirectory as <span class="code"><em>$WEEWX_ROOT</em>/skins.YYYYMMDDHHMMSS</span> 
+	<li>Save your old &#39;<span class="code">skin</span>&#39; subdirectory as <span class="code"><em>
+	$WEEWX_INSTALL</em>/skins.YYYYMMDDHHMMSS</span> 
 	where YYYYMMDDHHMMSS is a timestamp;</li>
-	<li>Save your old &#39;<span class="code">bin</span>&#39; subdirectory as <span class="code"><em>$WEEWX_ROOT</em>/bin.YYYYMMDDHHMMSS</span> 
+	<li>Save your old &#39;<span class="code">bin</span>&#39; subdirectory as <span class="code"><em>
+	$WEEWX_INSTALL</em>/bin.YYYYMMDDHHMMSS</span> 
 	where YYYYMMDDHHMMSS is a timestamp;</li>
 	<li>Merge any changes you&#39;ve made to your old configuration file
 	<span class="code">weewx.conf</span> into the new configuration file, then install 
@@ -430,7 +448,7 @@ to see if there any specific actions you need to do. </p>
 	<span class="code">skin.conf</span> configuration file into the new
 	<span class="code">skin.conf</span>;</li>
 	<li>Save a copy of your old <span class="code">weewx.conf</span> as
-	<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf.YYYYMMDDHHMMSS</span>.</li>
+	<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS</span>.</li>
 </ul>
 <h2>5.3 Permissions</h2>
 <p>Strictly speaking it is not necessary to install or run <span class="code">weewx</span> 
@@ -441,13 +459,17 @@ hardware. For example, if your hardware has a USB interface, on Ubuntu and SuSE:
 directory where you have write permissions, you can install and run
 <span class="code">weewx</span> without any root privileges at all. </p>
 <h2>5.4 Final note on installation</h2>
-<p>Because <span class="code">weewx</span> is pure Python, it actually does not 
-have to be &quot;built&quot; and &quot;installed&quot; at all! You can just simply run it out of whatever 
-directory you unpack it into (after, of course, editing <span class="code">weewx.conf</span> 
-to reflect your local environment). I do this all the time when testing. However, 
-the <span class="code">setup.py</span> script does include special provisions for 
-updating your configuration file <span class="code">weewx.conf</span>, which can 
-be handy when upgrading to a later version.</p>
+<p>Because <span class="code">weewx</span> is pure Python, it does not 
+actually have to be &quot;built&quot; and &quot;installed&quot; at all! You can just simply run it out of whatever 
+directory you unpack it into. However, it must still be told where to find the 
+skin templates and databases, as well as where to put the generated HTML files 
+and plot images. This is done by setting <span class="code">WEEWX_ROOT</span> in <span class="code">weewx.conf</span> 
+to reflect where your data files can be found (normally, the install process 
+does this for you):</p>
+<pre>&gt; # Edit WEEWX_ROOT to reflect the location of your data hierarchy:</pre>
+<pre>&gt; vi ./weewx-X.Y.Z/weewx.conf
+&gt; # Now run weewxd.py out of the directory you unpacked weewx into:
+&gt; ./weewx-X.Y.Z/bin/weewxd.py ./weewx-X.Y.Z/weewx.conf</pre>
 <h1>6. <a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
 <p>This section covers configuring your archive and statistical database (if necessary; 
 this step is required only if you are moving from
@@ -455,7 +477,9 @@ this step is required only if you are moving from
 configuring your weather station, and configuring the configuration files
 <span class="code">weewx.conf</span> and <span class="code">skin.conf</span>.</p>
 <p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to the
-<span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>.
+<span class="code">weewx</span> data root directory, generally <span class="code">/home/weewx</span>.
+The subdirectories <span class="code">archive</span>, <span class="code">skins</span>, 
+and <span class="code">public_html</span> are expected to be found here.
 </p>
 <h2>6.1 Configuring the databases</h2>
 <p>NOTE: This section is necessary only if you are moving from
@@ -541,7 +565,7 @@ FTP&#39;ing data to a web server or sending data to the Weather Underground. Twe
 <h3 class="config_section">[Station]</h3>
 <p>This section covers options relating to the entire weather station setup. </p>
 <h4 class="config_option">WEEWX_ROOT</h4>
-<p>Set to the root directory of the <span class="code">weewx</span> file hierarchy 
+<p>Set to the root directory of the <span class="code">weewx</span> data file hierarchy 
 for this station, nominally &#39;<span class="code">/home/weewx</span>&#39;. This value 
 will be set automatically by the setup script <span class="code">setup.py</span> 
 to reflect the choice you made in the configuration file <span class="code">setup.cfg</span>. 

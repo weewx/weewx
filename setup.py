@@ -88,7 +88,7 @@ class My_install_data(install_data):
     This version: 
     
       - Sets WEEWX_ROOT in the configuration file to reflect the
-        actual installation root directory;
+        the location of the install directory;
       - Merges an old week.conf configuration file into a new,
         thus preserving any changes made by the user;
       - Merges an old skin.conf file into a new, thus preserving
@@ -126,7 +126,7 @@ class My_install_data(install_data):
         except:
             pass
             
-        # If the file $WEEWX_ROOT/readme.htm exists, delete it. It's
+        # If the file $WEEWX_INSTALL/readme.htm exists, delete it. It's
         # the old readme (since replaced with docs/readme.htm)
         try:
             os.remove(os.path.join(self.install_dir, 'readme.htm'))
