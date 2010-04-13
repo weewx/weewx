@@ -1,6 +1,10 @@
 NEW FEATURES to be added in decreasing order of importance.
 
-Make the directory structure for the distribution more compatible with the installed version.
+Noticed during one test that VantagePro.py downloaded a record with 
+timestamp 18:02. I deleted the record in archive.sdb and tried again.
+Did it again. Obviously, the assumption that all archive intervals are
+the same is not correct. I think this happened during a lengthy download
+from the VP2 into a virgin database, which spanned the 18:00 boundary.
 
 udev support to compensate for flaky 2101 drivers.
 

@@ -133,10 +133,6 @@ td {
 	font-family: "Times New Roman", Times, serif;
 	margin-left: 40px;
 }
-.style1 {
-	font-family: "Times New Roman", serif;
-	font-size: 12pt;
-}
 </style>
 </head>
 
@@ -788,13 +784,13 @@ PID of the weewxd.py process</p>
 run as a daemon, started automatically when the server is rebooted. Start by selecting 
 the appropriate run script. They can be found under <span class="code"><em>$WEEWX_ROOT</em>/start_script</span>.
 </p>
-<table class="indent" style="width: 100%">
+<table style="width: 70%" align="center">
 	<tr>
-		<td>SuSE:</td>
+		<td style="width: 25%">SuSE:</td>
 		<td class="code"><em>$WEEWX_ROOT</em>/start_script/SuSE/weewx</td>
 	</tr>
 	<tr>
-		<td>Debian/Ubuntu:</td>
+		<td style="width: 25%">Debian/Ubuntu:</td>
 		<td class="code"><em>$WEEWX_ROOT</em>/start_script/Debian/weewx</td>
 	</tr>
 </table>
@@ -803,9 +799,9 @@ inside has been set to the proper root directory for your <span class="code">wee
 installation (it should have been set to the correct value automatically by the 
 install process, but it&#39;s worth checking). </p>
 <p>Copy it to the proper location for your system:</p>
-<table class="indent" style="width: 100%">
+<table style="width: 70%" align="center">
 	<tr>
-		<td>SuSE:</td>
+		<td style="width: 25%">SuSE:</td>
 		<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/SuSE/weewx /etc/init.d</td>
 	</tr>
 	<tr>
@@ -813,25 +809,24 @@ install process, but it&#39;s worth checking). </p>
 		<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/Debian/weewx /etc/init.d</td>
 	</tr>
 </table>
-<p>Make sure the script is executable </p>
-<table class="indent" style="width: 100%">
-	<tr>
-		<td>SuSE:</td>
+<p>Make sure the script is executable:</p>
+<table style="width: 70%" align="center">	<tr>
+		<td style="width: 25%">SuSE:</td>
 		<td class="code">chmod +x /etc/init.d/weewx</td>
 	</tr>
 	<tr>
-		<td>Debian/Ubuntu:</td>
+		<td style="width: 25%">Debian/Ubuntu:</td>
 		<td class="code">chmod +x /etc/init.d/weewx</td>
 	</tr>
 </table>
 <p>Create symbolic links in the run level directories:</p>
-<table class="indent" style="width: 100%">
+<table style="width: 70%" align="center">
 	<tr>
-		<td>SuSE:</td>
+		<td style="width: 25%">SuSE:</td>
 		<td class="code">/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
 	</tr>
 	<tr>
-		<td>Debian/Ubuntu:</td>
+		<td style="width: 25%">Debian/Ubuntu:</td>
 		<td class="code">update-rc.d weewx defaults 98</td>
 	</tr>
 </table>
@@ -903,7 +898,7 @@ connection. My console has the former and has never once given me any trouble.</
 <pre>Apr 12 05:12:32 raven reportengine[3074]: filegenerator: Caught exception &quot;&lt;class &#39;NameMapper.NotFound&#39;&gt;&quot; 
 Apr 12 05:12:32 raven reportengine[3074]:          ****  Message: &quot;cannot find &#39;fubar&#39; in template /home/weewx/skins/Standard/index.html.tmpl&quot;
 Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and continuing.</pre>
-<p class="style1">you have a tag in your template that <span class="code">weewx</span> 
+<p>you have a tag in your template that <span class="code">weewx</span> 
 does not recognize (in this example, it&#39;s the tag <span class="code">$fubar</span> 
 in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.</p>
 <h1>11. A<a name="Architectural_notes">rchitectural notes</a></h1>

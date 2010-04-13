@@ -9,9 +9,11 @@
 #
 """Engine for generating reports"""
 
+import ftplib
 import glob
 import os.path
 import shutil
+import socket
 import sys
 import syslog
 import threading
@@ -172,9 +174,14 @@ class FtpGenerator(ReportGenerator):
                                                   name        = self.skin_dict['REPORT_NAME'],
                                                   passive     = bool(self.skin_dict.get('passive', True)),
                                                   max_tries   = int(self.skin_dict.get('max_tries', 3)))
-            N = ftpData.run()
-            t2= time.time()
-            syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
+            try:
+                N = ftpData.run()
+            except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
+                (cl, ob, tr) = sys.exc_info()
+                syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in FtpGenerator; %s." % (cl, e))
+            else:
+                t2= time.time()
+                syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
             
                 
 class CopyGenerator(ReportGenerator):

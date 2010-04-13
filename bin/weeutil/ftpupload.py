@@ -170,12 +170,12 @@ class FtpUpload:
                     return
                 syslog.syslog(syslog.LOG_ERR, "ftpupload: Got error while attempting to make remote directory %s" % remote_dir_path)
                 syslog.syslog(syslog.LOG_ERR, "     ****  Error:" % e)
-                if count >= self.max_tries - 1:
-                    syslog.syslog(syslog.LOG_ERR, "ftpupload: Unable to create remote directory %s" % remote_dir_path)
-                    raise
             else:
                 syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Made directory %s" % remote_dir_path)
                 return
+        else:
+            syslog.syslog(syslog.LOG_ERR, "ftpupload: Unable to create remote directory %s" % remote_dir_path)
+            raise IOError, "Unable to create remote directory %s" % remote_dir_path
             
     def _skipThisDir(self, local_dir):
         
