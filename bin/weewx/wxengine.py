@@ -355,12 +355,9 @@ class StdRESTful(StdService):
         # Each subsection in section [RESTful] represents a different upload site:
         for site in self.engine.config_dict['RESTful'].sections:
 
-            # Get the dictionary for this site:
-            site_dict = self.engine.config_dict['RESTful'][site]
-            # Some protocols require extra entries:
-            site_dict['latitude']  = self.engine.config_dict['Station']['latitude']
-            site_dict['longitude'] = self.engine.config_dict['Station']['longitude']
-            site_dict['hardware']  = self.engine.config_dict['Station']['station_type']
+            # Get the site dictionary:
+            site_dict = self.getSiteDict(site)
+
             try:
                 # Instantiate an instance of the class that implements the
                 # protocol used by this site. It will throw an exception if
@@ -407,7 +404,22 @@ class StdRESTful(StdService):
             # Wait for the thread to exit:
             self.thread.join(20.0)
             syslog.syslog(syslog.LOG_DEBUG, "Shut down RESTful thread.")
-
+            
+    def getSiteDict(self, site):
+        """Return the site dictionary for the given site.
+        
+        This function can be overridden by subclassing if you need something
+        extra in the site dictionary.
+        """
+        # Get the dictionary for this site out of the config dictionary:
+        site_dict = self.engine.config_dict['RESTful'][site]
+        # Some protocols require extra entries:
+        site_dict['latitude']  = self.engine.config_dict['Station']['latitude']
+        site_dict['longitude'] = self.engine.config_dict['Station']['longitude']
+        site_dict['hardware']  = self.engine.config_dict['Station']['station_type']
+        return site_dict
+    
+    
 #===============================================================================
 #                    Class StdReportService
 #===============================================================================

@@ -209,13 +209,16 @@ class CWOP(object):
         
         site_dict: A dictionary holding any information needed for the CWOP
         protocol. Generally, this includes:       
-            {'station'   : "The name of the station (e.g., "CW1234") as a string [Required]",
-             'server     : "List of APRS server and port in the form cwop.aprs.net:14580 [Required]", 
+            {'station'   : "The name of the station (e.g., "CW1234") as 
+                            a string [Required]",
+             'server     : "List of APRS server and port in the form 
+                            cwop.aprs.net:14580 [Required]", 
              'latitude'  : "station latitude [Required]",
              'longitude' : "station longitude [Required]",
              'hardware'  : "station hardware (eg, VantagePro) [Required]
              'passcode'  : "Passcode for your station [Optional. APRS only]",
-             'interval'  : "The interval in seconds between posts [Optional. Default is 0]",
+             'interval'  : "The interval in seconds between posts [Optional. 
+                            Default is 0 (send every post)]",
              'stale'     : "How old a record can be before it will not be 
                             used for a catchup [Optional. Default is 1800]",
              'max_tries' : "Max # of tries before giving up [Optional. Default is 3]",
@@ -264,22 +267,29 @@ class CWOP(object):
         if self._lastpost and time_ts - self._lastpost < self.interval:
             raise SkippedPost, "CWOP: Wait interval (%d) has not passed." %\
                     (self.interval, )
-                
+        
+        # Get the data record for this time:
         _record = self.extractRecordFrom(archive, time_ts)
         
+        # Get the login and packet strings:
         _login = self.getLoginString()
         _tnc_packet = self.getTNCPacket(_record)
         
+        # Get a socket connection:
         _sock = self._get_connect()
-#        _resp = _sock.recv(1024)
-#        print "Connect responds with ", _resp
 
+        # Send the login:
         _resp = self._send(_sock, _login)
         print "Login response:",_resp
 
+        # And now the packet
         _resp = self._send(_sock, _tnc_packet)
         print "Packet response:",_resp
-        _sock.close()
+        
+        try:
+            _sock.close()
+        except:
+            pass
 
         self._lastpost = time_ts
         
@@ -334,7 +344,8 @@ class CWOP(object):
         # Station hardware:
         hardware_str = ".DsVP" if self.hardware=="VantagePro" else ".Unkn"
         
-        tnc_packet = prefix + time_str + latlon_str + wt_str + rain_str + baro_str + humid_str + hardware_str + "\r\n"
+        tnc_packet = prefix + time_str + latlon_str + wt_str +\
+                     rain_str + baro_str + humid_str + hardware_str + "\r\n"
 
         return tnc_packet
     
@@ -347,7 +358,7 @@ class CWOP(object):
         
         time_ts: The record desired as a unix epoch time.
         
-        returns: A dictionary containing the values needed for the Ambient protocol"""
+        returns: A dictionary containing the values needed for the CWOP protocol"""
         
         sod_ts = weeutil.weeutil.startOfDay(time_ts)
         
@@ -436,7 +447,7 @@ class CWOP(object):
 #===============================================================================
 
 class RESTThread(threading.Thread):
-    """Dedicated thread for publishing weather data using the Ambient RESTful protocol.
+    """Dedicated thread for publishing weather data using RESTful protocol.
     
     Inherits from threading.Thread.
 
