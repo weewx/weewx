@@ -535,12 +535,12 @@ def timestamp_to_string(ts):
     else:
         return "****** N/A ******** (    N/A   )"
 
-def latlon_string(ll, hemi):
+def latlon_string(ll, hemi, which):
     """Decimal degrees into a string for degrees, and one for minutes."""
     labs = abs(ll)
     (frac, deg) = math.modf(labs)
     min = frac * 60.0
-    return ("%d" % (deg,), "%0.2f" % (min,), hemi[0] if ll >= 0 else hemi[1])
+    return (("%02d" if which == 'lat' else "%03d") % (deg,), "%05.2f" % (min,), hemi[0] if ll >= 0 else hemi[1])
 
 def utf8_to_latin1(instring):
     """Convert from UTF-8 to Latin-1 encoding."""

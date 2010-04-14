@@ -354,18 +354,24 @@ class StdRESTful(StdService):
 
         # Each subsection in section [RESTful] represents a different upload site:
         for site in self.engine.config_dict['RESTful'].sections:
-            
+
             # Get the dictionary for this site:
             site_dict = self.engine.config_dict['RESTful'][site]
-            # Make sure that the upload site has a  station name
-            # and password before committing:
-            if site_dict.has_key('station') and site_dict.has_key('password'):
-                
+            # Some protocols require extra entries:
+            site_dict['latitude']  = self.engine.config_dict['Station']['latitude']
+            site_dict['longitude'] = self.engine.config_dict['Station']['longitude']
+            site_dict['hardware']  = self.engine.config_dict['Station']['station_type']
+            try:
                 # Instantiate an instance of the class that implements the
-                # protocol used by this site:
+                # protocol used by this site. It will throw an exception if
+                # not enough information is available to instantiate.
                 obj_class = 'weewx.restful.' + site_dict['protocol']
-                new_station = weeutil.weeutil._get_object(obj_class, site, site_dict) 
+                new_station = weeutil.weeutil._get_object(obj_class, site, site_dict)
+            except KeyError:
+                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
+            else:
                 station_list.append(new_station)
+                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will be posted to %s" % (site,))
         
         # Were there any valid upload sites?
         if len(station_list) > 0 :
@@ -380,12 +386,12 @@ class StdRESTful(StdService):
             # Start up the thread:
             self.thread = weewx.restful.RESTThread(archive, self.queue, station_list)
             self.thread.start()
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started RESTful thread.")
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started thread for RESTful upload sites.")
         
         else:
             self.queue  = None
             self.thread = None
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: No RESTful upload sites.")
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: No RESTful upload sites. Thread not started.")
         
     def postArchiveData(self, rec):
         """Post the new archive data to the WU queue"""

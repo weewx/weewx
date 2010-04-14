@@ -3,4 +3,4 @@ TODO before the next release:
 Add the skin subdirectory to PYTHONPATH automatically, 
 to allow custom skins to find their generators.
 
-Check install w/existing skins subdirectory.
+Check CWOP with a bad IP address.

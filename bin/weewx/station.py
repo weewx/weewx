@@ -22,9 +22,9 @@ class Station(object):
         """Extracts info from the config_dict and stores it in self."""
         self.hemispheres = skin_dict['Labels'].get('hemispheres', ('N','S','E','W'))
         self.latitude_f  = config_dict['Station'].as_float('latitude')
-        self.latitude    = weeutil.weeutil.latlon_string(self.latitude_f, self.hemispheres[0:2])
+        self.latitude    = weeutil.weeutil.latlon_string(self.latitude_f, self.hemispheres[0:2], 'lat')
         self.longitude_f = config_dict['Station'].as_float('longitude')
-        self.longitude   = weeutil.weeutil.latlon_string(self.longitude_f, self.hemispheres[2:4])
+        self.longitude   = weeutil.weeutil.latlon_string(self.longitude_f, self.hemispheres[2:4], 'lon')
 
         altitude_t           = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
         # This test is in here to catch any old-style altitudes:
