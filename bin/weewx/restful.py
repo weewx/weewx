@@ -23,21 +23,74 @@ import weeutil.weeutil
 site_url = {'Wunderground' : "http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?",
             'PWSweather'   : "http://www.pwsweather.com/pwsupdate/pwsupdate.php?"} 
 
-rain_query = "SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?"
-    
-# Raised when a post fails, usually because of a login problem
 class FailedPost(IOError):
-    pass
+    """Raised when a post fails, usually because of a login problem"""
 
-# Raised when a post is skipped.
 class SkippedPost(Exception):
-    pass
+    """Raised when a post is skipped."""
 
+#===============================================================================
+#                          Abstract base class REST
+#===============================================================================
+
+class REST(object):
+    """Abstract base class for RESTful protocols."""
+    
+    rain_query = "SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?"
+    
+    def extractRecordFrom(self, archive, time_ts):
+        """Get a record from the archive database. 
+        
+        This is a general version that works for:
+          - WeatherUnderground
+          - PWSweather
+          - CWOP
+        It can be overridden and specialized for additional protocols.
+        
+        archive: An instance of weewx.archive.Archive
+        
+        time_ts: The record desired as a unix epoch time.
+        
+        returns: A dictionary of weather values"""
+        
+        sod_ts = weeutil.weeutil.startOfDay(time_ts)
+        
+        sqlrec = archive.getSql("""SELECT dateTime, usUnits, barometer, outTemp, outHumidity, 
+                                windSpeed, windDir, windGust, dewpoint FROM archive WHERE dateTime=?""", time_ts)
+    
+        datadict = {}
+        for (i, _key) in enumerate(('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
+                                    'windSpeed', 'windDir', 'windGust', 'dewpoint')):
+            datadict[_key] = sqlrec[i]
+    
+        if datadict['usUnits'] != 1:
+            raise NotImplementedError, "Only U.S. Units are supported for the Ambient protocol."
+        
+        # CWOP says rain should be "rain that fell in the past hour". 
+        # Presumably, this is exclusive of the archive
+        # record 60 minutes before, so the SQL statement is exclusive
+        # on the left, inclusive on the right. Strictly speaking, this
+        # may or may not be what they mean over a DST boundary.
+        datadict['rain'] = archive.getSql(REST.rain_query,
+                                         time_ts - 3600.0, time_ts)[0]
+        
+        # NB: The WU considers the archive with time stamp 00:00
+        # (midnight) as (wrongly) belonging to the current day
+        # (instead of the previous day). But, it's their site, so
+        # we'll do it their way.  That means the SELECT statement is
+        # inclusive on both time ends:
+        datadict['dailyrain'] = archive.getSql(REST.rain_query, 
+                                              sod_ts, time_ts)[0]
+                                              
+        datadict['rain24'] = archive.getSql(REST.rain_query,
+                                            time_ts - 24*3600.0, time_ts)[0]
+        return datadict
+    
 #===============================================================================
 #                             class Ambient
 #===============================================================================
 
-class Ambient(object):
+class Ambient(REST):
     """Upload using the Ambient protocol. 
     
     For details of the Ambient upload protocol,
@@ -154,52 +207,11 @@ class Ambient(object):
         return _url
 
 
-    def extractRecordFrom(self, archive, time_ts):
-        """Get a record from the archive database. 
-        
-        This version is for the Ambient protocol.
-        
-        archive: An instance of weewx.archive.Archive
-        
-        time_ts: The record desired as a unix epoch time.
-        
-        returns: A dictionary containing the values needed for the Ambient protocol"""
-        
-        sod_ts = weeutil.weeutil.startOfDay(time_ts)
-        
-        sqlrec = archive.getSql("""SELECT dateTime, usUnits, barometer, outTemp, outHumidity, 
-                                windSpeed, windDir, windGust, dewpoint FROM archive WHERE dateTime=?""", time_ts)
-    
-        datadict = {}
-        for (i, _key) in enumerate(('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                                    'windSpeed', 'windDir', 'windGust', 'dewpoint')):
-            datadict[_key] = sqlrec[i]
-    
-        if datadict['usUnits'] != 1:
-            raise NotImplementedError, "Only U.S. Units are supported for the Ambient protocol."
-        
-        # WU says rain should be "accumulated rainfall over the last
-        # 60 minutes". Presumably, this is exclusive of the archive
-        # record 60 minutes before, so the SQL statement is exclusive
-        # on the left, inclusive on the right. Strictly speaking, this
-        # may or may not be what they mean over a DST boundary.
-        datadict['rain'] = archive.getSql(rain_query,
-                                          time_ts - 3600.0, time_ts)[0]
-        
-        # NB: The WU considers the archive with time stamp 00:00
-        # (midnight) as (wrongly) belonging to the current day
-        # (instead of the previous day). But, it's their site, so
-        # we'll do it their way.  That means the SELECT statement is
-        # inclusive on both time ends:
-        datadict['dailyrain'] = archive.getSql(rain_query, 
-                                               sod_ts, time_ts)[0]
-        return datadict
-    
 #===============================================================================
 #                             class CWOP
 #===============================================================================
 
-class CWOP(object):
+class CWOP(REST):
     """Upload using the CWOP protocol. """
 
     def __init__(self, site, site_dict):
@@ -246,6 +258,7 @@ class CWOP(object):
         self._lastpost = None
         
     def postData(self, archive, time_ts):
+        """Post data to CWOP, using the CWOP protocol."""
         
         _last_ts = archive.lastGoodStamp()
 
@@ -299,6 +312,7 @@ class CWOP(object):
         return login
     
     def getTNCPacket(self, record):
+        """Form the TNC2 packet used by CWOP."""
         
         # Preamble to the TNC packet:
         prefix = "%s>APRS,TCPIP*:" % (self.station, )
@@ -349,49 +363,6 @@ class CWOP(object):
 
         return tnc_packet
     
-    def extractRecordFrom(self, archive, time_ts):
-        """Get a record from the archive database. 
-        
-        This version is for the TNC2 protocol. 
-        
-        archive: An instance of weewx.archive.Archive
-        
-        time_ts: The record desired as a unix epoch time.
-        
-        returns: A dictionary containing the values needed for the CWOP protocol"""
-        
-        sod_ts = weeutil.weeutil.startOfDay(time_ts)
-        
-        sqlrec = archive.getSql("""SELECT dateTime, usUnits, barometer, outTemp, outHumidity, 
-                                windSpeed, windDir, windGust, dewpoint FROM archive WHERE dateTime=?""", time_ts)
-    
-        datadict = {}
-        for (i, _key) in enumerate(('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                                    'windSpeed', 'windDir', 'windGust', 'dewpoint')):
-            datadict[_key] = sqlrec[i]
-    
-        if datadict['usUnits'] != 1:
-            raise NotImplementedError, "Only U.S. Units are supported for the Ambient protocol."
-        
-        # CWOP says rain should be "rain that fell in the past hour". 
-        # Presumably, this is exclusive of the archive
-        # record 60 minutes before, so the SQL statement is exclusive
-        # on the left, inclusive on the right. Strictly speaking, this
-        # may or may not be what they mean over a DST boundary.
-        datadict['rain'] = archive.getSql(rain_query,
-                                         time_ts - 3600.0, time_ts)[0]
-        
-        # NB: The WU considers the archive with time stamp 00:00
-        # (midnight) as (wrongly) belonging to the current day
-        # (instead of the previous day). But, it's their site, so
-        # we'll do it their way.  That means the SELECT statement is
-        # inclusive on both time ends:
-        datadict['dailyrain'] = archive.getSql(rain_query, 
-                                              sod_ts, time_ts)[0]
-                                              
-        datadict['rain24'] = archive.getSql(rain_query,
-                                            time_ts - 24*3600.0, time_ts)[0]
-        return datadict
 
     def _get_connect(self):
         
@@ -503,6 +474,11 @@ class RESTThread(threading.Thread):
                 except SkippedPost, e:
                     syslog.syslog(syslog.LOG_DEBUG, "restful: Skipped record %s to %s station %s" % (time_str, station.site, station.station))
                     syslog.syslog(syslog.LOG_DEBUG, "   ****  %s" % (e,))
+                except Exception, e:
+                    syslog.syslog(syslog.LOG_CRIT, "restful: Unrecoverable error when posting record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_CRIT, "   ****  %s" % (e,))
+                    syslog.syslog(syslog.LOG_CRIT, "   ****  Thread terminating.")
+                    raise
                 else:
                     syslog.syslog(syslog.LOG_INFO, "restful: Published record %s to %s station %s" % (time_str, station.site, station.station))
 
