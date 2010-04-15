@@ -36,8 +36,6 @@ class SkippedPost(Exception):
 class REST(object):
     """Abstract base class for RESTful protocols."""
     
-    rain_query = "SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?"
-    
     def extractRecordFrom(self, archive, time_ts):
         """Get a record from the archive database. 
         
@@ -66,24 +64,24 @@ class REST(object):
         if datadict['usUnits'] != 1:
             raise NotImplementedError, "Only U.S. Units are supported for the Ambient protocol."
         
-        # CWOP says rain should be "rain that fell in the past hour". 
-        # Presumably, this is exclusive of the archive
-        # record 60 minutes before, so the SQL statement is exclusive
-        # on the left, inclusive on the right. Strictly speaking, this
-        # may or may not be what they mean over a DST boundary.
-        datadict['rain'] = archive.getSql(REST.rain_query,
+        # CWOP says rain should be "rain that fell in the past hour".  WU says
+        # it should be "the accumulated rainfall in the past 60 min".
+        # Presumably, this is exclusive of the archive record 60 minutes before,
+        # so the SQL statement is exclusive on the left, inclusive on the right.
+        datadict['rain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
                                          time_ts - 3600.0, time_ts)[0]
-        
-        # NB: The WU considers the archive with time stamp 00:00
-        # (midnight) as (wrongly) belonging to the current day
-        # (instead of the previous day). But, it's their site, so
-        # we'll do it their way.  That means the SELECT statement is
-        # inclusive on both time ends:
-        datadict['dailyrain'] = archive.getSql(REST.rain_query, 
+
+        # Similar issue, except for last 24 hours:
+        datadict['rain24'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
+                                            time_ts - 24*3600.0, time_ts)[0]
+
+        # NB: The WU considers the archive with time stamp 00:00 (midnight) as
+        # (wrongly) belonging to the current day (instead of the previous
+        # day). But, it's their site, so we'll do it their way.  That means the
+        # SELECT statement is inclusive on both time ends:
+        datadict['dailyrain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>=? AND dateTime<=?", 
                                               sod_ts, time_ts)[0]
                                               
-        datadict['rain24'] = archive.getSql(REST.rain_query,
-                                            time_ts - 24*3600.0, time_ts)[0]
         return datadict
     
 #===============================================================================
