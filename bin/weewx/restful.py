@@ -14,21 +14,104 @@ import threading
 import urllib
 import urllib2
 import socket
+import time
 
 import weewx
+import weewx.units
 import weeutil.weeutil
 
 site_url = {'Wunderground' : "http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?",
             'PWSweather'   : "http://www.pwsweather.com/pwsupdate/pwsupdate.php?"} 
 
 class FailedPost(IOError):
-    pass
+    """Raised when a post fails, usually because of a login problem"""
 
-class RESTful(object):
-    """Abstract base class for interacting with a RESTful site.
+class SkippedPost(Exception):
+    """Raised when a post is skipped."""
+
+#===============================================================================
+#                          Abstract base class REST
+#===============================================================================
+
+class REST(object):
+    """Abstract base class for RESTful protocols."""
     
-    Specializing classes should override member function getURL()
+    rain_query = "SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?"
+    
+    def extractRecordFrom(self, archive, time_ts):
+        """Get a record from the archive database. 
+        
+        This is a general version that works for:
+          - WeatherUnderground
+          - PWSweather
+          - CWOP
+        It can be overridden and specialized for additional protocols.
+        
+        archive: An instance of weewx.archive.Archive
+        
+        time_ts: The record desired as a unix epoch time.
+        
+        returns: A dictionary of weather values"""
+        
+        sod_ts = weeutil.weeutil.startOfDay(time_ts)
+        
+        sqlrec = archive.getSql("""SELECT dateTime, usUnits, barometer, outTemp, outHumidity, 
+                                windSpeed, windDir, windGust, dewpoint FROM archive WHERE dateTime=?""", time_ts)
+    
+        datadict = {}
+        for (i, _key) in enumerate(('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
+                                    'windSpeed', 'windDir', 'windGust', 'dewpoint')):
+            datadict[_key] = sqlrec[i]
+    
+        if datadict['usUnits'] != 1:
+            raise NotImplementedError, "Only U.S. Units are supported for the Ambient protocol."
+        
+        # CWOP says rain should be "rain that fell in the past hour". 
+        # Presumably, this is exclusive of the archive
+        # record 60 minutes before, so the SQL statement is exclusive
+        # on the left, inclusive on the right. Strictly speaking, this
+        # may or may not be what they mean over a DST boundary.
+        datadict['rain'] = archive.getSql(REST.rain_query,
+                                         time_ts - 3600.0, time_ts)[0]
+        
+        # NB: The WU considers the archive with time stamp 00:00
+        # (midnight) as (wrongly) belonging to the current day
+        # (instead of the previous day). But, it's their site, so
+        # we'll do it their way.  That means the SELECT statement is
+        # inclusive on both time ends:
+        datadict['dailyrain'] = archive.getSql(REST.rain_query, 
+                                              sod_ts, time_ts)[0]
+                                              
+        datadict['rain24'] = archive.getSql(REST.rain_query,
+                                            time_ts - 24*3600.0, time_ts)[0]
+        return datadict
+    
+#===============================================================================
+#                             class Ambient
+#===============================================================================
+
+class Ambient(REST):
+    """Upload using the Ambient protocol. 
+    
+    For details of the Ambient upload protocol,
+    see http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
+    
+    For details on how urllib2 works, see "urllib2 - The Missing Manual"
+    at http://www.voidspace.org.uk/python/articles/urllib2.shtml
     """
+
+    # Types and formats of the data to be published:
+    _formats = {'dateTime'    : 'dateutc=%s',
+                'barometer'   : 'baromin=%06.3f',
+                'outTemp'     : 'tempf=%05.1f',
+                'outHumidity' : 'humidity=%03.0f',
+                'windSpeed'   : 'windspeedmph=%03.0f',
+                'windDir'     : 'winddir=%03.0f',
+                'windGust'    : 'windgustmph=%03.0f',
+                'dewpoint'    : 'dewptf=%03.0f',
+                'rain'        : 'rainin=%04.2f',
+                'dailyrain'   : 'dailyrainin=%05.2f'}
+
 
     def __init__(self, site, site_dict):
         """Initialize for a given upload site.
@@ -52,10 +135,14 @@ class RESTful(object):
         self.http_prefix = site_dict.get('http_prefix', site_url[site])
         self.max_tries   = int(site_dict.get('max_tries', 3))
 
-    def postData(self, record):
-        """Post using a RESTful protocol"""
+    def postData(self, archive, time_ts):
+        """Post using the Ambient HTTP protocol
 
-        _url = self.getURL(record)
+        archive: An instance of weewx.archive.Archive
+        
+        time_ts: The record desired as a unix epoch time."""
+        
+        _url = self.getURL(archive, time_ts)
 
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
@@ -85,79 +172,17 @@ class RESTful(object):
             syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
             raise IOError, "Failed ftp upload to site %s after %d tries" % (self.site, self.max_tries)
 
-    @staticmethod
-    def extractRecordFrom(archive, time_ts):
-        """Get a record from the archive database. 
-        
-        This version is really designed for the Ambient protocol. If new
-        protocols get added, it should probably be at least generalized,
-        if not overridden by specializing classes.
+    def getURL(self, archive, time_ts):
+
+        """Return an URL for posting using the Ambient protocol.
         
         archive: An instance of weewx.archive.Archive
         
         time_ts: The record desired as a unix epoch time.
-        
-        returns: A dictionary containing the values needed for the Ambient protocol"""
-        
-        sod_ts = weeutil.weeutil.startOfDay(time_ts)
-        
-        sqlrec = archive.getSql("""SELECT dateTime, usUnits, barometer, outTemp, outHumidity, 
-                                windSpeed, windDir, windGust, dewpoint FROM archive WHERE dateTime=?""", time_ts)
-    
-        datadict = {}
-        for (i, _key) in enumerate(('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                                    'windSpeed', 'windDir', 'windGust', 'dewpoint')):
-            datadict[_key] = sqlrec[i]
-    
-        if datadict['usUnits'] != 1:
-            raise NotImplementedError, "Only U.S. Units are supported for the Ambient protocol."
-        
-        # WU says rain should be "accumulated rainfall over the last
-        # 60 minutes". Presumably, this is exclusive of the archive
-        # record 60 minutes before, so the SQL statement is exclusive
-        # on the left, inclusive on the right. Strictly speaking, this
-        # may or may not be what they mean over a DST boundary.
-        datadict['rain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
-                                         time_ts - 3600.0, time_ts)[0]
-        
-        # NB: The WU considers the archive with time stamp 00:00
-        # (midnight) as (wrongly) belonging to the current day
-        # (instead of the previous day). But, it's their site, so
-        # we'll do it their way.  That means the SELECT statement is
-        # inclusive on both time ends:
-        datadict['dailyrain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>=? AND dateTime<=?", 
-                                              sod_ts, time_ts)[0]
-        return datadict
-
-class Ambient(RESTful):
-    """Upload using the Ambient protocol. 
-    
-    For details of the Ambient upload protocol,
-    see http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
-    
-    For details on how urllib2 works, see "urllib2 - The Missing Manual"
-    at http://www.voidspace.org.uk/python/articles/urllib2.shtml
-    """
-
-    # Types and formats of the data to be published:
-    _formats = {'dateTime'    : 'dateutc=%s',
-                'barometer'   : 'baromin=%06.3f',
-                'outTemp'     : 'tempf=%05.1f',
-                'outHumidity' : 'humidity=%03.0f',
-                'windSpeed'   : 'windspeedmph=%03.0f',
-                'windDir'     : 'winddir=%03.0f',
-                'windGust'    : 'windgustmph=%03.0f',
-                'dewpoint'    : 'dewptf=%03.0f',
-                'rain'        : 'rainin=%04.2f',
-                'dailyrain'   : 'dailyrainin=%05.2f'}
-
-    def getURL(self, record):
-
-        """Return an URL for posting using the Ambient protocol.
-        
-        record: A dictionary holding the data values.
         """
     
+        record = self.extractRecordFrom(archive, time_ts)
+        
         _liststr = ["action=updateraw", "ID=%s" % self.station, "PASSWORD=%s" % self.password ]
         
         # Go through each of the supported types, formatting it, then adding to _liststr:
@@ -182,8 +207,12 @@ class Ambient(RESTful):
         return _url
 
 
+#===============================================================================
+#                             class RESTThread
+#===============================================================================
+
 class RESTThread(threading.Thread):
-    """Dedicated thread for publishing weather data using the Ambient RESTful protocol.
+    """Dedicated thread for publishing weather data using RESTful protocol.
     
     Inherits from threading.Thread.
 
@@ -216,18 +245,15 @@ class RESTThread(threading.Thread):
             if time_ts is None:
                 return
             
-            # Go get the data from the archive for the requested time:
-            record = RESTful.extractRecordFrom(self.archive, time_ts)
-            
             # This string is just used for logging:
-            time_str = weeutil.weeutil.timestamp_to_string(record['dateTime'])
+            time_str = weeutil.weeutil.timestamp_to_string(time_ts)
             
             # Cycle through all the RESTful stations in the list:
             for station in self.station_list:
     
                 # Post the data to the upload site. Be prepared to catch any exceptions:
                 try :
-                    station.postData(record)
+                    station.postData(self.archive, time_ts)
                 # The urllib2 library throws exceptions of type urllib2.URLError, a subclass
                 # of IOError. Hence all relevant exceptions are caught by catching IOError.
                 # Starting with Python v2.6, socket.error is a subclass of IOError as well,
@@ -239,8 +265,21 @@ class RESTThread(threading.Thread):
                         syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Reason: %s" % e.reason)
                     if hasattr(e, 'code'):
                         syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Error code: %s" % e.code)
+                except SkippedPost, e:
+                    syslog.syslog(syslog.LOG_DEBUG, "restful: Skipped record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_DEBUG, "   ****  %s" % (e,))
+                except Exception, e:
+                    syslog.syslog(syslog.LOG_CRIT, "restful: Unrecoverable error when posting record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_CRIT, "   ****  %s" % (e,))
+                    syslog.syslog(syslog.LOG_CRIT, "   ****  Thread terminating.")
+                    raise
                 else:
                     syslog.syslog(syslog.LOG_INFO, "restful: Published record %s to %s station %s" % (time_str, station.site, station.station))
+
+
+#===============================================================================
+#                                 Testing
+#===============================================================================
 
 if __name__ == '__main__':
            
@@ -261,7 +300,7 @@ if __name__ == '__main__':
         
           config_path: Path to weewx.conf
           
-          upload-site: Either "Wunderground" or "PWSweather" 
+          upload-site: Either "Wunderground", "PWSweather", or "CWOP" 
           
         Options:
         
@@ -312,9 +351,17 @@ if __name__ == '__main__':
         """Publishes records to site 'site' from start_ts to stop_ts. 
         Makes a useful test."""
         
-        stationName = config_dict['RESTful'][site]['station']
+        site_dict = config_dict['RESTful'][site]
+        site_dict['latitude']  = config_dict['Station']['latitude']
+        site_dict['longitude'] = config_dict['Station']['longitude']
+        site_dict['hardware']  = config_dict['Station']['station_type']
+
+        stationName = site_dict['station']
         
-        station = Ambient(site, config_dict['RESTful'][site])
+        # Instantiate an instance of the class that implements the
+        # protocol used by this site:
+        obj_class = 'weewx.restful.' + site_dict['protocol']
+        station = weeutil.weeutil._get_object(obj_class, site, site_dict) 
 
         # Create the queue into which we'll put the timestamps of new data
         queue = Queue.Queue()
