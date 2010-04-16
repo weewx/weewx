@@ -870,7 +870,6 @@ def _windDir(v):
     return float(v) * 22.5 if v!= 0x00ff else None
 
 if __name__ == '__main__':
-    import os.path
     import configobj
     from optparse import OptionParser
     

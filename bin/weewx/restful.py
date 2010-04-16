@@ -168,7 +168,7 @@ class Ambient(REST):
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Log it.
             syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
-            raise IOError, "Failed ftp upload to site %s after %d tries" % (self.site, self.max_tries)
+            raise IOError, "Failed upload to site %s after %d tries" % (self.site, self.max_tries)
 
     def getURL(self, archive, time_ts):
 

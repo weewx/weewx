@@ -245,7 +245,6 @@ if __name__ == '__main__':
     # This module can be called as a main program to generate reports, etc.,
     # that are current as of the last archive record in the archive database.
     # ===============================================================================
-    import socket
 
     def gen_all(config_path, gen_ts = None):
         

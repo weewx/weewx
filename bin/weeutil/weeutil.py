@@ -14,7 +14,6 @@ import time
 import math
 import ImageFont
 import configobj
-from htmlentitydefs import codepoint2name
 
 def min_no_None(seq):
     """Searches sequence of tuples, returning tuple where the first member was a minimum.
