@@ -475,7 +475,10 @@ specifies the various options available.</p>
 &quot;current&quot;, or an aggregation over time. However, both versions are 
 very similar</p>
 <h4>Time period <span class="code">$current</span></h4>
-<p>Time period <span class="code">$current</span> represents a <em>current observation</em>. Its dot code looks like:</p>
+<p>Time period <span class="code">$current</span> represents a <em>current observation</em>. 
+An example would be the current barometric pressure:</p>
+<pre>$current.barometer</pre>
+<p>The dot code for a current observation looks like:</p>
 <pre><em>$current.obstype[.optional_formatting]</em></pre>
 <p>Where:</p>
 <p class="indent"><span class="code"><em>obstype</em></span> is an observation 
@@ -489,8 +492,11 @@ optional formatting tag that controls how the value will appear. See the section
 <span class="code">$rainyear</span></h4>
 <p>The other time periods represent an <em>aggregation over time</em>. In 
 addition to the time period over which the aggregation will occur, they also require an <em>aggregation type</em>. 
-The dot code 
-looks like:</p>
+An example would be the week&#39;s total precipitation (where the aggregation type 
+is <span class="code"><em>sum</em></span>):</p>
+<pre>$week.rain.sum</pre>
+<p>The dot code 
+for an aggregation over time looks like:</p>
 <pre><em>$period.statstype.aggregation.[optional_formatting</em>]</pre>
 <p>Where:</p>
 <p class="indent"><span class="code"><em>period</em></span> is the time period 
@@ -512,7 +518,7 @@ optional formatting tag that controls how the value will appear. See the section
 <em><a href="#Formatting_options">Formatting Options</a></em> below.</p>
 <h4><a name="Formatting_options">Formatting options</a></h4>
 <p>The tag <span class="code"><em>optional_formatting</em></span> can be used 
-with either current observations, or aggregations. It can be one of:</p>
+with either current observations or aggregations. It can be one of:</p>
 <table align="center" style="width: 80%">
 	<tr>
 		<td>
@@ -880,17 +886,19 @@ $day.outTemp.max</span>.</p>
 <span class="code">$month</span>, <span class="code">$year</span>,
 <span class="code">$rainyear</span>, then the aggregation period can be iterated over 
 by day or month. 
-This example uses a Cheetah &#39;<span class="code">for</span>&#39; loop to iterate 
-over all months in a year, printing out each month&#39;s min and max temperature:</p>
+These are the only two iteration periods available in Version 1.7. </p>
+<p>This example uses a Cheetah &#39;<span class="code">for</span>&#39; loop to iterate 
+over all months in a year, printing out each month&#39;s min and max temperature 
+(the iteration loop is highlighted):</p>
 <pre>&lt;html&gt;</pre>
 <pre>  &lt;head&gt;</pre>
 <pre>    &lt;title&gt;Year stats by month&lt;/title&gt;</pre>
 <pre>  &lt;/head&gt;</pre>
 <pre>  &lt;body&gt;</pre>
 <pre>  &lt;p&gt;Min, max temperatures by month:&lt;/p&gt;</pre>
-<pre>  #for $month in $year.months</pre>
+<pre class="highlight">  #for $month in $year.months</pre>
 <pre>    &lt;p&gt;$month.dateTime.format(&quot;%B&quot;): Min, max temperatures: $month.outTemp.min $month.outTemp.max&lt;/p&gt;</pre>
-<pre>  #end for </pre>
+<pre class="highlight">  #end for </pre>
 <pre>  &lt;/body&gt;</pre>
 <pre>&lt;/html&gt;</pre>
 <p>Produces results:</p>
@@ -1021,7 +1029,7 @@ skin configuration file</a></h1>
 <p>This section is a reference to the options appearing in the Standard skin configuration 
 file, found in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>.</p>
 <p>It is worth noting that, like the main configuration file <span class="code">
-weewx.conf</span>, U, UTF-8 is used throughout. Also, like the weewx.conf, the most 
+weewx.conf</span>, UTF-8 is used throughout. The most 
 important options are up near the top of the file.&nbsp; The truly important ones, 
 the ones you are likely to have to customize for your station, are shown in
 <span class="bold_n_blue"><strong>bold face and in blue</strong></span>. </p>

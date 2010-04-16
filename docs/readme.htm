@@ -643,7 +643,7 @@ support only U.S.. In any case, U.S. is the only system supported by
 <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
 servers such as the <a href="http://www.wunderground.com/">Weather Underground</a> 
 or <a href="http://www.pwsweather.com/">PWSweather.com</a>.</p>
-<h4 class="config_section">[Wunderground]</h4>
+<h4 class="config_section">[[Wunderground]]</h4>
 <p><span class="code">Weewx </span>can send your current data to the Weather Underground. 
 If you do not wish to do this, comment out the two options below.</p>
 <h5 class="config_important">station</h5>
@@ -651,7 +651,7 @@ If you do not wish to do this, comment out the two options below.</p>
 Required.</p>
 <h5 class="config_important">password</h5>
 <p>Set to your Weather Underground password. Required.</p>
-<h4 class="config_section">[PWSweather]</h4>
+<h4 class="config_section">[[PWSweather]]</h4>
 <p><span class="code">Weewx </span>can send your current data to the 
 PWSweather.com service. 
 If you do not wish to do this, comment out the two options below.</p>
@@ -908,6 +908,9 @@ in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</s
 <ul>
 	<li>Architectural simplicity. No semaphores, no named pipes, no inter-process 
 	communications, no complex multi-threading to manage. </li>
+	<li>&quot;Fast enough.&quot; In any design decision, architectural simplicity 
+	and elegance trumps speed.
+	</li>
 	<li>One code base. The same code base should be used for all platforms, all 
 	weather stations, all reports, and any combination of features. Ample configuration 
 	and customization options should be provided so the user doesn&#39;t feel tempted 
@@ -916,8 +919,6 @@ in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</s
 	code.</li>
 	<li>Minimal reliance on external packages, so the user doesn&#39;t have to go chase 
 	them down all over the Web before getting started.</li>
-	<li>&quot;Fast enough.&quot; In any design decision, architectural simplicity trumps speed.
-	</li>
 	<li>Support only the Davis VantagePro2 initially (that&#39;s what I have), but make 
 	no architectural decisions that lock out other stations.</li>
 	<li>As &quot;pythonic&quot; as I know how to make it. I&#39;m a beginner Python programmer 
@@ -927,6 +928,19 @@ in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</s
 <h2>11.2 Strategies</h2>
 <p>To meet these goals, the following strategies were used:</p>
 <ul>
+	<li>A &quot;micro-kernel&quot; design. The actual internal engine does very little. 
+	It&#39;s main job is to load and run <em>services</em> at runtime, making it easy for users to add or subtract features.</li>
+	<li>A largely stateless design style. For example, many of the processing routines 
+	read their own data from the database, rather than caching it and sharing with 
+	other processing routines. While this means the same data may be read multiple 
+	times, it also means the only point of possible cache incoherence is through 
+	the database, where transactions are easily controlled. This greatly reduces 
+	the chances of corrupting the data, making it much easier to understand and 
+	modify the code base.</li>
+	<li>Isolate the data collection and archiving code in a single thread that 
+	is simple enough that it is unlikely to crash. The user controlled report 
+	processing is where most mistakes are likely to happen, so isolate that in a 
+	separate thread. If it crashes, it will not affect the main data thread.</li>
 	<li>A powerful configuration parser,
 	<a href="http://www.voidspace.org.uk/python/configobj.html">ConfigObj</a>, by 
 	Michael Foord and Nicola Larosa, was chosen to read the configuration file. 
@@ -936,17 +950,6 @@ in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</s
 	Cheetah</a>, was used. This allows many variables that I may not have thought 
 	of to be accessed from within the HTML templates, without starting to modify 
 	the code.</li>
-	<li>A largely stateless design style. For example, many of the processing routines 
-	read their own data from the database, rather than caching it and sharing with 
-	other processing routines. While this means the same data may be read multiple 
-	times, it also means the only point of possible cache incoherence is through 
-	the database, where transactions are easily controlled. This greatly reduces 
-	the chances of corrupting the data, making it much easier to understand and 
-	modify the code base.</li>
-	<li>A &quot;micro-kernel&quot; design. The actual internal engine does very little. 
-	It&#39;s main job is to load and run <em>services</em> at runtime, making it easy for users to add or subtract features.</li>
-	<li>No static variables (except read only variables) to make it easy to simultaneously 
-	support multiple weather stations and to allow some level of multithreading.</li>
 	<li>Pure Python. The code base is 100% Python — no underlying C libraries need 
 	be built to install <span class="code">weewx</span>. This also means no Makefiles 
 	are needed.</li>
