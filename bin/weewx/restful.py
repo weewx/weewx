@@ -206,6 +206,212 @@ class Ambient(REST):
 
 
 #===============================================================================
+#                             class CWOP
+#===============================================================================
+
+class CWOP(REST):
+    """Upload using the CWOP protocol. """
+
+    def __init__(self, site, site_dict):
+        """Initialize for a post to CWOP.
+        
+        site: The upload site ("CWOP")
+        
+        site_dict: A dictionary holding any information needed for the CWOP
+        protocol. Generally, this includes:       
+            {'station'   : "The name of the station (e.g., "CW1234") as 
+                            a string [Required]",
+             'server     : "List of APRS server and port in the form 
+                            cwop.aprs.net:14580 [Required]", 
+             'latitude'  : "station latitude [Required]",
+             'longitude' : "station longitude [Required]",
+             'hardware'  : "station hardware (eg, VantagePro) [Required]
+             'passcode'  : "Passcode for your station [Optional. APRS only]",
+             'interval'  : "The interval in seconds between posts [Optional. 
+                            Default is 0 (send every post)]",
+             'stale'     : "How old a record can be before it will not be 
+                            used for a catchup [Optional. Default is 1800]",
+             'max_tries' : "Max # of tries before giving up [Optional. Default is 3]",
+             }
+             
+        CWOP does not like heavy traffic on their servers, so they encourage
+        posts roughly every 15 minutes and at most every 5 minutes. So,
+        key 'interval' should be set to no less than 300, but preferably 900.
+        Setting it to zero will cause every archive record to be posted.
+        """
+        self.site      = site
+        self.station   = site_dict['station'].upper()
+        if self.station[0:2] in ('CW', 'DW'):
+            self.passcode = "-1"
+        else:
+            self.passcode = site_dict['passcode']
+        self.server    = weeutil.weeutil.option_as_list(site_dict['server'])
+        self.latitude  = site_dict.as_float('latitude')
+        self.longitude = site_dict.as_float('longitude')
+        self.hardware  = site_dict['hardware']
+        self.interval  = int(site_dict.get('interval', 0))
+        self.stale     = int(site_dict.get('stale', 1800))
+        self.max_tries = int(site_dict.get('max_tries', 3))
+        
+        self._lastpost = None
+        
+    def postData(self, archive, time_ts):
+        """Post data to CWOP, using the CWOP protocol."""
+        
+        _last_ts = archive.lastGoodStamp()
+
+        # There are a variety of reasons to skip a post to CWOP.
+
+        # 1. They do not allow backfilling, so there is no reason
+        # to post anything other than the latest record:
+        if time_ts != _last_ts:
+            raise SkippedPost, "CWOP: Record %s is not last record" %\
+                    (weeutil.weeutil.timestamp_to_string(time_ts), )
+
+        # 2. No reason to post an old out-of-date record.
+        _how_old = time.time() - time_ts
+        if _how_old > self.stale:
+            raise SkippedPost, "CWOP: Record %s is stale (%d > %d)." %\
+                    (weeutil.weeutil.timestamp_to_string(time_ts), _how_old, self.stale)
+        
+        # 3. Finally, we don't want to post more often than the interval
+        if self._lastpost and time_ts - self._lastpost < self.interval:
+            raise SkippedPost, "CWOP: Wait interval (%d) has not passed." %\
+                    (self.interval, )
+        
+        # Get the data record for this time:
+        _record = self.extractRecordFrom(archive, time_ts)
+        
+        # Get the login and packet strings:
+        _login = self.getLoginString()
+        _tnc_packet = self.getTNCPacket(_record)
+        
+        # Get a socket connection:
+        _sock = self._get_connect()
+
+        # Send the login:
+        _resp = self._send(_sock, _login)
+        print "Login response:",_resp
+
+        # And now the packet
+        _resp = self._send(_sock, _tnc_packet)
+        print "Packet response:",_resp
+        
+        try:
+            _sock.close()
+        except:
+            pass
+
+        self._lastpost = time_ts
+        
+
+    def getLoginString(self):
+        login = "user %s pass %s vers weewx %s\r\n" % (self.station, self.passcode, weewx.__version__ )
+        return login
+    
+    def getTNCPacket(self, record):
+        """Form the TNC2 packet used by CWOP."""
+        
+        # Preamble to the TNC packet:
+        prefix = "%s>APRS,TCPIP*:" % (self.station, )
+
+        # Time:
+        time_tt = time.gmtime(record['dateTime'])
+        time_str = time.strftime("@%d%H%Mz", time_tt)
+
+        # Position:
+        lat_str = weeutil.weeutil.latlon_string(self.latitude, ('N', 'S'), 'lat')
+        lon_str = weeutil.weeutil.latlon_string(self.longitude, ('E', 'W'), 'lon')
+        latlon_str = '%s%s%s/%s%s%s' % (lat_str + lon_str)
+
+        # Wind and temperature
+        wt_list = []
+        for obs_type in ('windDir', 'windSpeed', 'windGust', 'outTemp'):
+            wt_list.append("%03d" % record[obs_type] if record[obs_type] is not None else '...')
+        wt_str = "_%s/%sg%st%s" % tuple(wt_list)
+
+        # Rain
+        rain_list = []
+        for obs_type in ('rain', 'rain24', 'dailyrain'):
+            rain_list.append("%03d" % (record[obs_type]*100.0) if record[obs_type] is not None else '...')
+        rain_str = "r%sp%sP%s" % tuple(rain_list)
+        
+        # Barometer:
+        if record['barometer'] is None:
+            baro_str = "b....."
+        else:
+            # Figure out what unit type barometric pressure is in for this record:
+            baro_unit = weewx.units.getStandardUnitType(record['usUnits'], 'barometer')
+            # Convert to millibars:
+            baro = weewx.units.convert((record['barometer'], baro_unit), 'mbar')
+            baro_str = "b%5d" % (baro[0]*10.0)
+
+        # Humidity:
+        humidity = record['outHumidity']
+        if humidity is None:
+            humid_str = "h.."
+        else:
+            humid_str = ("h%2d" % humidity) if humidity != 100.0 else "h00"
+
+        # Station hardware:
+        hardware_str = ".DsVP" if self.hardware=="VantagePro" else ".Unkn"
+        
+        tnc_packet = prefix + time_str + latlon_str + wt_str +\
+                     rain_str + baro_str + humid_str + hardware_str + "\r\n"
+
+        return tnc_packet
+    
+
+    def _get_connect(self):
+        
+        # Go through the list of known server:ports, looking for
+        # a connection that works:
+        for serv_addr_str in self.server:
+            server, port = serv_addr_str.split(":")
+            port = int(port)
+            for _count in range(self.max_tries):
+                try:
+                    sock = socket.socket()
+                    sock.connect((server, port))
+                except socket.error, e:
+                    # Unsuccessful. Log it and try again
+                    syslog.syslog(syslog.LOG_ERR, "restful: Connection attempt #%d failed to %s server %s:%d" % (_count+1, self.site, server, port))
+                    syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
+                else:
+                    syslog.syslog(syslog.LOG_DEBUG, "restful: Connected to %s server %s:%d" % (self.site, server, port))
+                    return sock
+                # Couldn't connect on this attempt. Close it, try again.
+                try:
+                    sock.close()
+                except:
+                    pass
+            # If we got here, that server didn't work. Log it and go on to the next one.
+            syslog.syslog(syslog.LOG_ERR, "restful: Unable to connect to %s server %s:%d" % (self.site, server, port))
+
+        # If we got here. None of the servers worked. Raise an exception
+        raise IOError, "Unable to obtain a socket connection to %s" % (self.site,)
+     
+    def _send(self, sock, msg):
+        
+        for _count in range(self.max_tries):
+
+            try:
+                sock.send(msg)
+            except (IOError, socket.error), e:
+                # Unsuccessful. Log it and go around again for another try
+                syslog.syslog(syslog.LOG_ERR, "restful: Attempt #%d failed to send to %s" % (_count+1, self.site))
+                syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
+            else:
+                _resp = sock.recv(1024)
+                return _resp
+        else:
+            # This is executed only if the loop terminates normally, meaning
+            # the send failed max_tries times. Log it.
+            syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
+            raise IOError, "Failed CWOP upload to site %s after %d tries" % (self.site, self.max_tries)
+    
+
+#===============================================================================
 #                             class RESTThread
 #===============================================================================
 
