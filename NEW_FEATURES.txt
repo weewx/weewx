@@ -10,6 +10,10 @@ udev support to compensate for flaky 2101 drivers.
 
 Add support for CWOP.
 
+Save LOOP battery data in the archive file.
+
+Calibration capability.
+
 Allow rain-to-date to be added to a partial rainyear.
 
 Add support for MySQL.

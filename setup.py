@@ -343,7 +343,7 @@ setup(name='weewx',
                                                      'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 
                      ('start_scripts/Debian',       ['start_scripts/Debian/weewx']),
                      ('start_scripts/SuSE',          ['start_scripts/SuSE/weewx'])],
-      requires    = ['configobj(>=4.5)', 'pyserial(>=1.35)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
+      requires    = ['configobj(>=4.5)', 'pyserial(>=2.3)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "install_lib"  : My_install_lib,
                      "sdist" :        My_sdist}

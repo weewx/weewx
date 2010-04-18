@@ -57,6 +57,14 @@ class WxStation (object) :
         
         syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up serial port '%s' baudrate=%d" % (self.port, self.baudrate))
 
+    def close(self):
+        """Shut down the station hardware."""
+        try:
+            self.serial_port.close()
+        except:
+            pass
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Closed serial port '%s'" % (self.port,))
+        
     def genLoopPacketsUntil(self, stopTime_ts):
         """Generator function that returns loop packets until a specified time."""
         while True:

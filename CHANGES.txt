@@ -1,6 +1,11 @@
 CHANGE HISTORY
 --------------------------------
 
+1.7.1   04/17/10
+
+Added a shutdown for the VP2 serial port. This will release the port on error,
+allowing a clean restart.
+
 1.7.0   04/15/10
 
 Big update.

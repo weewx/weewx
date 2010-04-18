@@ -61,6 +61,10 @@ class StdEngine(object):
         
         self.parseArgs()
 
+        # Set a default socket time out, in case FTP or HTTP hang:
+        timeout = int(self.config_dict.get('socket_timeout', '20'))
+        socket.setdefaulttimeout(timeout)
+        
         service_list = weeutil.weeutil.option_as_list(self.config_dict['Engines']['WxEngine'].get('service_list'))
         
         syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
@@ -80,10 +84,6 @@ class StdEngine(object):
         # Set up the weather station hardware:
         self.setupStation()
 
-        # Set a default socket time out, in case FTP or HTTP hang:
-        timeout = int(self.config_dict.get('socket_timeout', '20'))
-        socket.setdefaulttimeout(timeout)
-        
         # Allow each service to run its setup:
         for obj in self.service_obj:
             obj.setup()
@@ -107,8 +107,10 @@ class StdEngine(object):
         
         if options.daemon:
             daemon.daemonize(pidfile='/var/run/weewx.pid')
-            
-        self.config_path = os.path.abspath(args[0])
+
+        # Get and set the absolute path of the configuration file in case of a restart.
+        # A service might to a chdir(), and then we'd be unable to find it again.
+        self.config_path = args[0] = os.path.abspath(args[0])
             
         # Try to open up the given configuration file. Declare an error if unable to.
         try :
@@ -167,11 +169,12 @@ class StdEngine(object):
             # Now open up the weather station:
             self.station = hardware_module.WxStation(self.config_dict[stationType])
     
+        # To support older versions of PySerial, we have to catch Exception
+        # (and not IOError).
         except Exception, ex:
             # Caught unrecoverable error. Log it, exit
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Exiting.")
-            # Reraise the exception (this will eventually cause the program to exit)
+            # Reraise the exception:
             raise
             
         
@@ -222,40 +225,61 @@ class StdEngine(object):
         for obj in self.service_obj:
             obj.processArchiveData()
             
-    def start(self):
-        """Start up the engine. Runs member function run()"""
-        
-        self.run()
-        
     def run(self):
         """This is where the work gets done."""
-        self.setup()
         
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
-
-        while True:
-    
-            self.preloop()
-
-            # Next time to ask for archive records:
-            nextArchive_ts = (int(time.time() / self.station.archive_interval) + 1) * self.station.archive_interval + self.station.archive_delay
-    
-            for physicalPacket in self.station.genLoopPacketsUntil(nextArchive_ts):
-                
-                # Process the physical LOOP packet:
-                self.processLoopPacket(physicalPacket)
-                
-            # Calculate/get new archive data:
-            self.getArchiveData()
+        try:
+            self.setup()
             
-            # Now process it. Typically, this means generating reports, etc.
-            self.processArchiveData()
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
+    
+            while True:
+        
+                self.preloop()
+    
+                # Next time to ask for archive records:
+                nextArchive_ts = (int(time.time() / self.station.archive_interval) + 1) * self.station.archive_interval + self.station.archive_delay
+        
+                for physicalPacket in self.station.genLoopPacketsUntil(nextArchive_ts):
+                    
+                    # Process the physical LOOP packet:
+                    self.processLoopPacket(physicalPacket)
+                    
+                # Calculate/get new archive data:
+                self.getArchiveData()
+                
+                # Now process it. Typically, this means generating reports, etc.
+                self.processArchiveData()
+
+        finally:
+            # If an exception occurred, shut myself down in an orderly way
+            self.shutDown()
+
 
     def shutDown(self):
         """Run when an engine shutdown is requested."""
-        for obj in self.service_obj:
-            obj.shutDown()
-            
+
+        # Try closing the weather station. Wrap in a try block
+        # in case it was never opened.
+        try:
+            self.station.close()
+        except:
+            pass
+
+        # Shut down all the services. Wrap in a try block in case
+        # they were never started, and self.service_obj does not
+        # exist.
+        try:
+            # Shutdown all the services:
+            for obj in self.service_obj:
+                # Wrap each individual service shutdown, in case
+                # of a problem.
+                try:
+                    obj.shutDown()
+                except:
+                    pass
+        except:
+            pass
 #===============================================================================
 #                    Class StdService
 #===============================================================================
@@ -485,7 +509,7 @@ def main(EngineClass = StdEngine) :
         # Start the main loop, wrapping it in an exception block.
         try:
 
-            engine.start()
+            engine.run()
 
         # Catch any recoverable weewx I/O errors:
         except weewx.WeeWxIOError, e:
@@ -498,7 +522,7 @@ def main(EngineClass = StdEngine) :
         except OSError, e:
             # Caught an OS error. Log it, wait 10 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught OSError: %s" % e)
-            syslog.syslog(syslog.LOG_CRIT, "    ****  This is typically caused by another program trying to access the weather station")
+            syslog.syslog(syslog.LOG_CRIT, "    ****  (Another program trying to access the weather station could cause this.)")
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 10 seconds then retrying...")
             time.sleep(10)
             syslog.syslog(syslog.LOG_NOTICE,"wxengine: retrying...")
@@ -509,7 +533,8 @@ def main(EngineClass = StdEngine) :
         # If run from the command line, catch any keyboard interrupts and log them:
         except KeyboardInterrupt:
             syslog.syslog(syslog.LOG_CRIT,"wxengine: Keyboard interrupt.")
-            raise SystemExit, "keyboard interrupt"
+            # Reraise the exception (this will eventually cause the program to exit)
+            raise
 
         # Catch any non-recoverable errors. Log them, exit
         except Exception, ex:
@@ -520,5 +545,3 @@ def main(EngineClass = StdEngine) :
             # Reraise the exception (this will eventually cause the program to exit)
             raise
 
-        # Shut down the engine first, before retrying.
-        engine.shutDown()
