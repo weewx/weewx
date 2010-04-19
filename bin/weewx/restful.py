@@ -53,12 +53,13 @@ class REST(object):
         
         sod_ts = weeutil.weeutil.startOfDay(time_ts)
         
-        sqlrec = archive.getSql("""SELECT dateTime, usUnits, barometer, outTemp, outHumidity, 
-                                windSpeed, windDir, windGust, dewpoint FROM archive WHERE dateTime=?""", time_ts)
+        sqlrec = archive.getSql("""SELECT dateTime, usUnits, barometer, outTemp,
+                                outHumidity, windSpeed, windDir, windGust, 
+                                dewpoint, radiation FROM archive WHERE dateTime=?""", time_ts)
     
         datadict = {}
         for (i, _key) in enumerate(('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                                    'windSpeed', 'windDir', 'windGust', 'dewpoint')):
+                                    'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation')):
             datadict[_key] = sqlrec[i]
     
         if datadict['usUnits'] != 1:
@@ -111,27 +112,27 @@ class Ambient(REST):
                 'dailyrain'   : 'dailyrainin=%05.2f'}
 
 
-    def __init__(self, site, site_dict):
+    def __init__(self, site, **kwargs):
         """Initialize for a given upload site.
         
         site: The upload site ('Wunderground' or 'PWSweather')
         
-        site_dict: A dictionary holding any information needed for the upload
-        site. Generally, this includes:       
-            {'station'   : "The name of the station (e.g., "KORHOODR3") as a string",
-             'password'  : "Password for the station",
-             'http_prefix: "The URL of the upload point"
-             'max_tries' : "Max # of tries before giving up"}
-             
-        There are defaults for http_prefix and max_tries. Generally, station
-        and password are required.
-        """
+        station: The name of the station (e.g., "KORHOODR3") 
+        as a string [Required]
+        
+        password: Password for the station [Required]
+        
+        http_prefix: The URL of the upload point [Optional. If not
+        given a prefix will be chosen on the basis of the upload site.
+        
+        max_tries: Max # of tries before giving up [Optional. Default
+        is 3]"""
         
         self.site        = site
-        self.station     = site_dict['station']
-        self.password    = site_dict['password']
-        self.http_prefix = site_dict.get('http_prefix', site_url[site])
-        self.max_tries   = int(site_dict.get('max_tries', 3))
+        self.station     = kwargs['station']
+        self.password    = kwargs['password']
+        self.http_prefix = kwargs.get('http_prefix', site_url[site])
+        self.max_tries   = int(kwargs.get('max_tries', 3))
 
     def postData(self, archive, time_ts):
         """Post using the Ambient HTTP protocol
@@ -212,46 +213,50 @@ class Ambient(REST):
 class CWOP(REST):
     """Upload using the CWOP protocol. """
 
-    def __init__(self, site, site_dict):
+    def __init__(self, site, **kwargs):
         """Initialize for a post to CWOP.
         
         site: The upload site ("CWOP")
         
-        site_dict: A dictionary holding any information needed for the CWOP
-        protocol. Generally, this includes:       
-            {'station'   : "The name of the station (e.g., "CW1234") as 
-                            a string [Required]",
-             'server     : "List of APRS server and port in the form 
-                            cwop.aprs.net:14580 [Required]", 
-             'latitude'  : "station latitude [Required]",
-             'longitude' : "station longitude [Required]",
-             'hardware'  : "station hardware (eg, VantagePro) [Required]
-             'passcode'  : "Passcode for your station [Optional. APRS only]",
-             'interval'  : "The interval in seconds between posts [Optional. 
-                            Default is 0 (send every post)]",
-             'stale'     : "How old a record can be before it will not be 
-                            used for a catchup [Optional. Default is 1800]",
-             'max_tries' : "Max # of tries before giving up [Optional. Default is 3]",
-             }
-             
+        station: The name of the station (e.g., "CW1234") as a string [Required]
+        
+        server: List of APRS servers and ports in the 
+        form cwop.aprs.net:14580 [Required]
+         
+        latitude: Station latitude [Required]
+        
+        longitude: Station longitude [Required]
+
+        hardware: Station hardware (eg, "VantagePro") [Required]
+        
+        passcode: Passcode for your station [Optional. APRS only]
+        
+        interval: The interval in seconds between posts [Optional. 
+        Default is 0 (send every post)]
+        
+        stale: How old a record can be before it will not be 
+        used for a catchup [Optional. Default is 1800]
+        
+        max_tries: Max # of tries before giving up [Optional. Default is 3]
+
         CWOP does not like heavy traffic on their servers, so they encourage
         posts roughly every 15 minutes and at most every 5 minutes. So,
         key 'interval' should be set to no less than 300, but preferably 900.
         Setting it to zero will cause every archive record to be posted.
         """
         self.site      = site
-        self.station   = site_dict['station'].upper()
+        self.station   = kwargs['station'].upper()
         if self.station[0:2] in ('CW', 'DW'):
             self.passcode = "-1"
         else:
-            self.passcode = site_dict['passcode']
-        self.server    = weeutil.weeutil.option_as_list(site_dict['server'])
-        self.latitude  = site_dict.as_float('latitude')
-        self.longitude = site_dict.as_float('longitude')
-        self.hardware  = site_dict['hardware']
-        self.interval  = int(site_dict.get('interval', 0))
-        self.stale     = int(site_dict.get('stale', 1800))
-        self.max_tries = int(site_dict.get('max_tries', 3))
+            self.passcode = kwargs['passcode']
+        self.server    = weeutil.weeutil.option_as_list(kwargs['server'])
+        self.latitude  = float(kwargs['latitude'])
+        self.longitude = float(kwargs['longitude'])
+        self.hardware  = kwargs['hardware']
+        self.interval  = int(kwargs.get('interval', 0))
+        self.stale     = int(kwargs.get('stale', 1800))
+        self.max_tries = int(kwargs.get('max_tries', 3))
         
         self._lastpost = None
         
@@ -285,7 +290,7 @@ class CWOP(REST):
         # Get the login and packet strings:
         _login = self.getLoginString()
         _tnc_packet = self.getTNCPacket(_record)
-        
+
         # Get a socket connection:
         _sock = self._get_connect()
 
@@ -351,13 +356,24 @@ class CWOP(REST):
         if humidity is None:
             humid_str = "h.."
         else:
-            humid_str = ("h%2d" % humidity) if humidity != 100.0 else "h00"
+            humid_str = ("h%2d" % humidity) if humidity < 100.0 else "h00"
+            
+        # Radiation:
+        radiation = record['radiation']
+        if radiation is None:
+            radiation_str = ""
+        elif radiation < 1000.0:
+            radiation_str = "l%03d" % radiation
+        elif radiation < 2000.0:
+            radiation_str = "L%03d" % (radiation - 1000)
+        else:
+            radiation_str = ""
 
         # Station hardware:
         hardware_str = ".DsVP" if self.hardware=="VantagePro" else ".Unkn"
         
-        tnc_packet = prefix + time_str + latlon_str + wt_str +\
-                     rain_str + baro_str + humid_str + hardware_str + "\r\n"
+        tnc_packet = prefix + time_str + latlon_str + wt_str + rain_str +\
+                     baro_str + humid_str + radiation_str + hardware_str + "\r\n"
 
         return tnc_packet
     
@@ -565,7 +581,7 @@ if __name__ == '__main__':
         # Instantiate an instance of the class that implements the
         # protocol used by this site:
         obj_class = 'weewx.restful.' + site_dict['protocol']
-        station = weeutil.weeutil._get_object(obj_class, site, site_dict) 
+        station = weeutil.weeutil._get_object(obj_class, site, **site_dict) 
 
         # Create the queue into which we'll put the timestamps of new data
         queue = Queue.Queue()
