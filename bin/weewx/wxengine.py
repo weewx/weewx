@@ -8,15 +8,15 @@
 #    $Date$
 #
 
+from optparse import OptionParser
+import Queue
+import configobj
+import os.path
+import signal
+import socket
 import sys
 import syslog
 import time
-import signal
-import socket
-import os.path
-import Queue
-from optparse import OptionParser
-import configobj
 
 import daemon
 
@@ -51,6 +51,7 @@ class StdEngine(object):
     
     def __init__(self):
         """Initialize an instance of StdEngine."""
+        self.service_obj = []
         
 
     def setup(self):
@@ -169,10 +170,8 @@ class StdEngine(object):
             # Now open up the weather station:
             self.station = hardware_module.WxStation(self.config_dict[stationType])
     
-        # To support older versions of PySerial, we have to catch Exception
-        # (and not IOError).
         except Exception, ex:
-            # Caught unrecoverable error. Log it, exit
+            # Caught unrecoverable error. Log it:
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
             # Reraise the exception:
             raise
@@ -238,7 +237,8 @@ class StdEngine(object):
                 self.preloop()
     
                 # Next time to ask for archive records:
-                nextArchive_ts = (int(time.time() / self.station.archive_interval) + 1) * self.station.archive_interval + self.station.archive_delay
+                nextArchive_ts = (int(time.time() / self.station.archive_interval) + 1) *\
+                                    self.station.archive_interval + self.station.archive_delay
         
                 for physicalPacket in self.station.genLoopPacketsUntil(nextArchive_ts):
                     
@@ -259,27 +259,15 @@ class StdEngine(object):
     def shutDown(self):
         """Run when an engine shutdown is requested."""
 
-        # Try closing the weather station. Wrap in a try block
-        # in case it was never opened.
-        try:
-            self.station.close()
-        except:
-            pass
+        # Shutdown all the services:
+        for obj in self.service_obj:
+            # Wrap each individual service shutdown, in case
+            # of a problem.
+            try:
+                obj.shutDown()
+            except:
+                pass
 
-        # Shut down all the services. Wrap in a try block in case
-        # they were never started, and self.service_obj does not
-        # exist.
-        try:
-            # Shutdown all the services:
-            for obj in self.service_obj:
-                # Wrap each individual service shutdown, in case
-                # of a problem.
-                try:
-                    obj.shutDown()
-                except:
-                    pass
-        except:
-            pass
 #===============================================================================
 #                    Class StdService
 #===============================================================================
@@ -387,7 +375,7 @@ class StdRESTful(StdService):
                 # protocol used by this site. It will throw an exception if
                 # not enough information is available to instantiate.
                 obj_class = 'weewx.restful.' + site_dict['protocol']
-                new_station = weeutil.weeutil._get_object(obj_class, site, site_dict)
+                new_station = weeutil.weeutil._get_object(obj_class, site, **site_dict)
             except KeyError:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
             else:
