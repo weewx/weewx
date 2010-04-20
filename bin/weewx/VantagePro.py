@@ -300,13 +300,13 @@ class WxStation (object) :
                 
                     # The Davis documentation is wrong about the SETPER command.
                     # It actually returns an 'OK', not an <ACK>
-                    self.serial_port.write('SETPER %d\n' % archive_interval_minutes)
+                    serial_port.write('SETPER %d\n' % archive_interval_minutes)
                     # Takes a bit for the VP to react and fill up the buffer. Sleep for a sec
                     time.sleep(1)
                     # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
                     # So, instead find how many bytes are waiting and fetch them all
-                    nc=self.serial_port.inWaiting()
-                    _buffer = self.serial_port.read(nc)
+                    nc = serial_port.inWaiting()
+                    _buffer = serial_port.read(nc)
                     # Split the buffer on white space
                     rx_list = _buffer.split()
                     # The first member should be the 'OK' in the VP response
@@ -370,14 +370,14 @@ class WxStation (object) :
                     _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
                     # Can't use function _send_data because the VP doesn't respond with an 
                     # ACK for this command, it responds with 'OK'. Go figure.
-                    self.serial_port.write('RXCHECK\n')
+                    serial_port.write('RXCHECK\n')
                     # Takes a bit for the VP to react and fill up the buffer. Sleep for 
                     # half a sec
                     time.sleep(0.5)
                     # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
                     # So, instead find how many bytes are waiting and fetch them all
-                    nc=self.serial_port.inWaiting()
-                    _buffer = self.serial_port.read(nc)
+                    nc=serial_port.inWaiting()
+                    _buffer = serial_port.read(nc)
                     # Split the buffer on white space
                     rx_list = _buffer.split()
                     # The first member should be the 'OK' in the VP response
@@ -390,7 +390,7 @@ class WxStation (object) :
 
     def config(self, config_dict):
         
-        _archive_interval = int(config_dict.get('archive_interval', '300'))
+        _archive_interval = int(config_dict.get('archive_interval', 300))
         _old_interval = self.getArchiveInterval()
         if _old_interval != _archive_interval:
             self.setArchiveInterval(_archive_interval)

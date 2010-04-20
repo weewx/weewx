@@ -3,8 +3,9 @@ CHANGE HISTORY
 
 1.7.1   04/17/10
 
-Added a shutdown for the VP2 serial port. This will release the port on error,
-allowing a clean restart.
+Added a wrapper to the serial port in the VantagePro code. When used in
+a Python "with" statement, it automatically releases the serial port
+if an exception happens, allowing a more orderly shutdown.
 
 1.7.0   04/15/10
 
