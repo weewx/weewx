@@ -865,6 +865,26 @@ can be useful for debugging.</p>
 <h1>10. <a name="Troubleshooting">Troubleshooting</a></h1>
 <h2>10.1 Execution</h2>
 <h2>10.2 Hardware</h2>
+<h3>Tips on a reliable system</h3>
+<p>If you are having problems keeping your weather station up for long periods 
+of time, here are some tips, in decreasing order of importance:</p>
+<ul>
+	<li>Run on dedicated hardware. If you are using the server for other tasks, 
+	particularly as your desktop machine, you will have reliability problems. If 
+	you are using it as a print or network server, you will probably be OK.</li>
+	<li>Run headless. Modern graphical systems are extremely complex. As new 
+	features are added, test suites don&#39;t always catch up. Your system will be 
+	much more reliable if you run it without a windowing system (X Windows, in 
+	the case of Linux).</li>
+	<li>Use an Uninterruptible Power Supply (UPS). The vast majority of power 
+	glitches are very short lived &mdash; just a second or two &mdash; so you do not 
+	need a big one. The 425 VA unit I use to protect my fit-PC cost me 
+	$55 at Best Buy.</li>
+	<li>Use a VantagePro console with a serial connection, not a USB connection. See the 
+	next section for details.</li>
+	<li>If you do use a USB connection, put a ferrite coil on each end of the 
+	connection.</li>
+</ul>
 <h3>cp2101 converter problems</h3>
 <p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
 problems. The symptom is that the Linux kernel will disconnect from your old USB 
@@ -882,16 +902,45 @@ Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while
 Nov 29 10:40:22 hummingbird kernel: [6661625.528107] usb 2-3: reset full speed USB device using ohci_hcd and address 3 
 Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</pre>
 <p>In this example, the VantagePro was connected to <span class="code">
-/dev/ttyUSB0</span>, but then reconnected to <span class="code">/dev/ttyUSB1</span>. 
-Usually physically disconnecting the USB then plugging it back in clears the 
-problem. Most likely you will also have to restart <span class="code">weewx</span>, 
-but sometimes it can recover on its own.</p>
-<p>After this happened to me twice, I added a ferrite coil to the connection 
-between my VP2 Envoy and my server and it hasn&#39;t happened again. Mind you, 
-that&#39;s twice in three years, so it is not a very common occurrence.</p>
-<p>Finally, if you have a choice and if your server has the port, a VP2 with an 
-old-fashioned serial cable turns out to be more reliable than one with a USB 
-connection. My console has the former and has never once given me any trouble.</p>
+/dev/ttyUSB0</span>, but then reconnected to <span class="code">/dev/ttyUSB1</span>. </p>
+<p>If you put ferrite coils on the USB connection, you will eliminate 90% of 
+this problem. I did this about 6 months ago, and have not had a problem since. </p>
+<p>However, there is one final step you can take that will reallly harden up 
+your system: install a <span class="code">udev</span> script that will create 
+a symbolic link to the VantagePro USB port, whatever it might be. With this 
+approach, if the port jumps from <span class="code">ttyUSB0</span> to 
+<span class="code">ttyUSB1</span>, the symbolic link will move 
+as well. You just specify port <span class="code">/dev/vpro</span> and be done with it. Here&#39;s how:</p>
+<h4>Installing a udev script</h4>
+<p>I have installed a file <span class="code">/etc/udev/rules.d/66-vpro.rules</span> 
+on my fit-PC that looks like this:</p>
+<pre># Automount the VantagePro2 to port /dev/vpro.</pre>
+<pre># Install in /dev/udev/rules.d/66-vpro.rules</pre>
+<pre>#</pre>
+<pre>ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
+<p>What this rule says is that when the USB port is plugged in (action
+<span class="code">ADD</span>), and it has an attribute with name
+<span class="code">interface</span> that is equal to &quot;<span class="code">CP2102 
+USB to UART Bridge Controller</span>&quot;, add a symbolic link for its physical port 
+to <span class="code">/dev/vpro</span>. </p>
+<p>Your controller may have a different identifier!! I can recommend this 
+article, &quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing 
+udev rules</em></a><span class="style1">,</span>&quot; for how to find and write an 
+appropriate <span class="code">udev</span> rule for your controller. In 
+particular, run the command</p>
+<pre># udevinfo -a -p $(udevinfo -q path -n /dev/ttyUSB0)</pre>
+<p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute your 
+real USB port) the VP2 is attached to. It will print out various identifiers 
+that can be useful in identifying your VP2 to <span class="code">udev</span>.</p>
+<p>Once you&#39;ve installed your <span class="code">udev</span> rule, you can then 
+set <span class="code">port=/dev/vpro</span> in <span class="code">weewx.conf</span>, 
+confident that it will always point to your VantagePro2, no matter which USB 
+port it is actually attached to!</p>
+<p>I have tested this system many times. You can yank the USB port out of the 
+machine and then plug it back in while also pulling out the network connection 
+in the middle of an FTP upload: weewx will recover.</p>
+<p>Or, at least, it should!</p>
+<p>&nbsp;</p>
 <h2>10.3 Templates</h2>
 <h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
 <p>If you get errors of the sort:</p>

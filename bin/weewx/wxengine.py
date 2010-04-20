@@ -236,16 +236,14 @@ class StdEngine(object):
         
                 self.preloop()
     
-                # Next time to ask for archive records:
-                nextArchive_ts = (int(time.time() / self.station.archive_interval) + 1) *\
-                                    self.station.archive_interval + self.station.archive_delay
-        
-                for physicalPacket in self.station.genLoopPacketsUntil(nextArchive_ts):
+                # Generate LOOP packets until the next archive record is due.
+                for physicalPacket in self.station.genLoopPackets():
                     
                     # Process the physical LOOP packet:
                     self.processLoopPacket(physicalPacket)
                     
-                # Calculate/get new archive data:
+                # We've popped out of the loop. The next archiver record must be
+                # due. Go get it:
                 self.getArchiveData()
                 
                 # Now process it. Typically, this means generating reports, etc.

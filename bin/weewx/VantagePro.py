@@ -77,33 +77,27 @@ class WxStation (object) :
         # Get the archive interval dynamically:
         self.archive_interval = self.getArchiveInterval()
         
-    def genLoopPacketsUntil(self, stopTime_ts):
-        """Generator function that returns loop packets until a specified time."""
+    def genLoopPackets(self):
+        """Generator function that returns loop packets until the next archive record is due."""
+
+        # Next time to ask for archive records:
+        nextArchive_ts = (int(time.time() / self.archive_interval) + 1) *\
+                            self.archive_interval + self.archive_delay
+        
         while True:
             # Get LOOP packets in big batches, then cancel as necessary when the expiration
             # time is up. This is necessary because there is an undocumented limit to how
             # many LOOP records you can for on the VP (somewhere around 220).
-            for physicalPacket in self.genLoopPackets(200):
-    
-                yield physicalPacket
+            for _loopPacket in self.genDavisLoopPackets(200):
+                # Translate the LOOP packet to one with physical units:
+                _physicalPacket = self.translateLoopPacket(_loopPacket)
+                yield _physicalPacket
                 
                 # Check to see if it's time to get new archive data. If so, cancel the loop
                 # and return
-                if time.time() >= stopTime_ts:
+                if time.time() >= nextArchive_ts:
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: new archive record due. Canceling loop")
                     return
-
-    def genLoopPackets(self, N = 1):
-        """Generator function to return N loop packets in physical units.
-        
-        N: The number of packets to generate [default is 1]
-        
-        yields: up to N dictionary objects containing the LOOP data
-        """
-        for _loopPacket in self.genDavisLoopPackets(N):
-            # Translate the LOOP packet to one with physical units:
-            _physicalPacket = self.translateLoopPacket(_loopPacket)
-            yield _physicalPacket
 
     def genDavisLoopPackets(self, N = 1):
         """Generator function to return N LoopPacket objects from a VantagePro console
