@@ -286,6 +286,11 @@ class CWOP(REST):
         
         # Get the data record for this time:
         _record = self.extractRecordFrom(archive, time_ts)
+
+        # 4. Units must be US Customary. We could add code to convert, but for
+        # now this will do:
+        if _record['usUnits'] != weewx.US:
+            raise SkippedPost, "CWOP: Units must be US Customary."
         
         # Get the login and packet strings:
         _login = self.getLoginString()
@@ -316,6 +321,8 @@ class CWOP(REST):
     
     def getTNCPacket(self, record):
         """Form the TNC2 packet used by CWOP."""
+        
+        # TODO: Allow native metric units. Convert as necessary for CWOP.
         
         # Preamble to the TNC packet:
         prefix = "%s>APRS,TCPIP*:" % (self.station, )
