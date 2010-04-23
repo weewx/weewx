@@ -510,6 +510,9 @@ class UnitInfo(object):
         
         Returns: the target unit type, such as 'mbar'.
         """
+        # If there is no unit attached, then the target can only be None:
+        if not old_unit_type:
+            return None
         unit_group= unit_type_dict[old_unit_type]
         unit_type = self._getUnitTypeFromGroup(unit_group)
         return unit_type
@@ -591,7 +594,7 @@ def convert(val_t, target_unit_type):
     the unit type (e.g., "foot", or "inHg") it is in.
     
     target_unit_type: The unit type (e.g., "meter", or "mbar") to
-    which the value is to be converted.
+    which the value is to be converted. If None, it will not be converted.
     
     returns: A value tuple converted into the desired units.
     """
