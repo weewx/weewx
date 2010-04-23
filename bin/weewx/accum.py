@@ -88,6 +88,10 @@ class StdAccum(object):
         self.sum += val
         self.count += 1
 
+    @property
+    def avg(self):
+        return self.sum/self.count if self.count else None
+    
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the
         gathered statistics."""

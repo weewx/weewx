@@ -1,16 +1,10 @@
 NEW FEATURES to be added in decreasing order of importance.
 
-Save LOOP battery data in the archive file.
+Move archiving and stats into a separate service.
 
-Calibration capability.
+Calibration capability. Should be a separate service.
 
 Allow rain-to-date to be added to a partial rainyear.
-
-Noticed during one test that VantagePro.py downloaded a record with 
-timestamp 18:02. I deleted the record in archive.sdb and tried again.
-Did it again. Obviously, the assumption that all archive intervals are
-the same is not correct. I think this happened during a lengthy download
-from the VP2 into a virgin database, which spanned the 18:00 boundary.
 
 Add support for MySQL.
 

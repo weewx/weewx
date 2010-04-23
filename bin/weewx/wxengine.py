@@ -163,12 +163,13 @@ class StdEngine(object):
         # Look for and load the module that handles this hardware type:
         _moduleName = "weewx." + stationType
         __import__(_moduleName)
-        hardware_module = sys.modules[_moduleName]
     
         try:
     
             # Now open up the weather station:
-            self.station = hardware_module.WxStation(self.config_dict[stationType])
+            self.station = weeutil.weeutil._get_object(_moduleName + '.' + stationType, 
+                                                       **self.config_dict[stationType])
+
     
         except Exception, ex:
             # Caught unrecoverable error. Log it:

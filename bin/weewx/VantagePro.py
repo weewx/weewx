@@ -17,6 +17,7 @@ import time
 from weewx.crc16 import crc16
 import weeutil.weeutil
 import weewx
+import weewx.accum
 import weewx.wxformulas
     
 # A few handy constants:
@@ -46,33 +47,51 @@ class SerialWrapper(object):
         except:
             pass
 
-class WxStation (object) :
-    """Class that represents a connection to a VantagePro console.
-    
-    After initialization, the serial port (e.g., '/dev/ttyUSB0') specified in the 
-    configuration dictionary will have been opened.
-    
-    """
-    def __init__(self, config_dict) :
+class VantagePro (object) :
+    """Class that represents a connection to a VantagePro console."""
+    def __init__(self, **vp_dict) :
         """Initialize an object of type VantagePro. 
         
-        config_dict: The 'VantagePro' section of a configuration dictionary. 
-        The port (e.g., '/dev/ttyUSB0'), baudrate, and other parameters are
-        extracted from this dictionary.
+        PARAMETERS:
+        
+        port: The serial port of the VP. [Required]
+        
+        baudrate: Baudrate of the port. [Optional. Default 19200]
+        
+        timeout: How long to wait before giving up on a response from the
+        serial port. [Optional. Default is 5]
+        
+        wait_before_retry: How long to wait before retrying. [Optional.
+        Default is 1.2 seconds]
+
+        max_tries: How many times to try again before giving up. [Optional.
+        Default is 4]
+        
+        archive_delay: How long to wait after an archive record is due
+        before retrieving it. [Optional. Default is 15 seconds]
+        
+        max_drift: Maximum drift allowed on the on board VP clock before
+        it will be corrected. [Optional. Default is 5 seconds]
+
+        iss_id: The station number of the ISS [Optional. Default is 1]
+        
+        unit_system: What unit system to use on the VP. [Optional.
+        Default is 1 (US Customary), and the only system supported
+        in this version.]
         """
         # TODO: These values should really be retrieved dynamically from the VP:
-        self.iss_id           = int(config_dict.get('iss_id', '1'))
+        self.iss_id           = int(vp_dict.get('iss_id', 1))
         self.model_type       = 2 # = 1 for original VantagePro, = 2 for VP2
 
         # These come from the configuration dictionary:
-        self.port             = config_dict['port']
-        self.timeout          = float(config_dict.get('timeout', 5.0))
-        self.wait_before_retry= float(config_dict.get('wait_before_retry', 1.2))
-        self.max_tries        = int(config_dict.get('max_tries'    , 4))
-        self.baudrate         = int(config_dict.get('baudrate'     , 19200))
-        self.archive_delay    = int(config_dict.get('archive_delay', 15))
-        self.unit_system      = int(config_dict.get('unit_system'  , 1))
-        self.max_drift        = int(config_dict.get('max_drift'    , 5))
+        self.port             = vp_dict['port']
+        self.baudrate         = int(vp_dict.get('baudrate'     , 19200))
+        self.timeout          = float(vp_dict.get('timeout', 5.0))
+        self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
+        self.max_tries        = int(vp_dict.get('max_tries'    , 4))
+        self.archive_delay    = int(vp_dict.get('archive_delay', 15))
+        self.max_drift        = int(vp_dict.get('max_drift'    , 5))
+        self.unit_system      = int(vp_dict.get('unit_system'  , 1))
 
         # Get the archive interval dynamically:
         self.archive_interval = self.getArchiveInterval()
@@ -91,6 +110,7 @@ class WxStation (object) :
             for _loopPacket in self.genDavisLoopPackets(200):
                 # Translate the LOOP packet to one with physical units:
                 _physicalPacket = self.translateLoopPacket(_loopPacket)
+                self.accumulateLoop(_physicalPacket)
                 yield _physicalPacket
                 
                 # Check to see if it's time to get new archive data. If so, cancel the loop
@@ -124,7 +144,8 @@ class WxStation (object) :
                     # Fetch a packet
                     buffer = serial_port.read(99)
                     if len(buffer) != 99 :
-                        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: LOOP #%d; buffer not full (%d)... retrying" % (loop,len(buffer)))
+                        syslog.syslog(syslog.LOG_DEBUG, 
+                                      "VantagePro: LOOP #%d; buffer not full (%d)... retrying" % (loop,len(buffer)))
                         continue
                     # ... decode it
                     pkt_dict = DavisLoopPacket(buffer[:89])
@@ -132,7 +153,8 @@ class WxStation (object) :
                     yield pkt_dict
                     break
                 else:
-                    syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting LOOP packets")
+                    syslog.syslog(syslog.LOG_ERR, 
+                                  "VantagePro: Max retries exceeded while getting LOOP packets")
                     raise weewx.RetriesExceeded, "While getting LOOP packets"
 
     def genArchivePackets(self, since_ts):
@@ -198,6 +220,8 @@ class WxStation (object) :
                             if _record['dateTime'] <= _last_good_ts :
                                 # The time stamp is declining. We're done.
                                 return
+                            # Add any LOOP data we've been accumulating:
+                            self.addAccumulators(_record)
                             # Set the last time to the current time, and yield the packet
                             _last_good_ts = _record['dateTime']
                             yield _record
@@ -208,7 +232,57 @@ class WxStation (object) :
                     continue
             syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive packets")
             raise weewx.RetriesExceeded, "Max retries exceeded while getting archive packets"
-                
+
+    # List of VP2 types for which archive records will be explicitly calculated.
+    special = ['consBatteryVoltage']
+
+    def accumulateLoop(self, physicalLOOPPacket):
+        """Process LOOP data, calculating averages within an archive period."""
+        try:
+            # Gather the LOOP data for each special type. An exception
+            # will be thrown if either the accumulators have not been initialized 
+            # yet, or if the timestamp of the packet is outside the timespan held
+            # by the accumulator.
+            for obs_type in self.special:
+                self.current_accumulators[obs_type].addToSum(physicalLOOPPacket)
+            # For battery status, OR every status field together:
+            self.txBatteryStatus |= physicalLOOPPacket['txBatteryStatus']
+        except (AttributeError, weewx.accum.OutOfSpan):
+            # Initialize the accumulators:
+            self.clearAccumulators(physicalLOOPPacket['dateTime'])
+            # Try again, calling myself recursively:
+            self.accumulateLoop(physicalLOOPPacket)
+            
+    def clearAccumulators(self, time_ts):
+        """Initialize or clear the accumulators"""
+        try:
+            # Shuffle accumulators. An exception will be thrown
+            # if they have never been initialized.
+            self.last_accumulators=self.current_accumulators
+        except:
+            pass
+        # Calculate the interval timespan that contains time_ts
+        start_of_interval = weeutil.weeutil.startOfInterval(time_ts, self.archive_interval)
+        timespan = weeutil.weeutil.TimeSpan(start_of_interval, start_of_interval+self.archive_interval)
+        # Initialize current_accumulators with instances of StdAccum
+        self.current_accumulators = {}
+        for obs_type in VantagePro.special:
+            self.current_accumulators[obs_type] = weewx.accum.StdAccum(obs_type, timespan)
+        self.txBatteryStatus = 0  
+
+    def addAccumulators(self, record):
+        """Add the results of the accumulators to the current archive record."""
+        try:
+            # For each special type, add its average to the archive record. An exception
+            # will be thrown if there is no accumulator (first time through).
+            for obs_type in VantagePro.special:
+                # Make sure the times match:
+                if self.last_accumulators[obs_type].timespan.stop == record['dateTime']:
+                    record[obs_type] = self.last_accumulators[obs_type].avg
+            record['txBatteryStatus'] = float(self.txBatteryStatus)
+        except AttributeError:
+            pass
+        
     def getTime(self) :
         """Get the current time from the console and decode it, returning it as a time-tuple
         
@@ -240,9 +314,7 @@ class WxStation (object) :
         newtime_tt: A time tuple with the time to which the
         clock should be set. If 'None', then the host's time will 
         be used. In this case, if the clock has drifted less than
-        maxdiff seconds, nothing is done.
-        
-        """
+        maxdiff seconds, nothing is done. """
         # Unfortunately, this algorithm takes a little while to execute, so the clock
         # usually ends up a few hundred milliseconds slow
         if newtime_tt is None:
@@ -471,8 +543,8 @@ class WxStation (object) :
                      'leafWet2'        : _little_val, 
                      'leafWet3'        : _little_val, 
                      'leafWet4'        : _little_val,
-                     'transmitBattery' : _null_int, 
-                     'consoleBattery'  : lambda v : float((v * 300) >> 9) / 100.0
+                     'txBatteryStatus' : _null_int, 
+                     'consBatteryVoltage'  : lambda v : float((v * 300) >> 9) / 100.0
                      }        
     
         if packet['usUnits'] != weewx.US :
@@ -722,7 +794,7 @@ class DavisLoopPacket(dict) :
                'dayRain',         'monthRain',     'yearRain',    'dayET',       'monthET',    'yearET',
                'soilMoist1',      'soilMoist2',    'soilMoist3',  'soilMoist4',
                'leafWet1',        'leafWet2',      'leafWet3',    'leafWet4',
-               'transmitBattery', 'consoleBattery')
+               'txBatteryStatus', 'consBatteryVoltage')
 
     loop_format = struct.Struct("<3sbBHHHBHBBH7B4B4BB7BHBHHHHHHHHH4B4B16xBH")
     
@@ -938,7 +1010,7 @@ if __name__ == '__main__':
     ans = raw_input("about to configure VantagePro. OK (y/n)? ")
     if ans == 'y' :
         # Open up the weather station:
-        station = WxStation(config_dict['VantagePro'])
+        station = VantagePro(config_dict['VantagePro'])
         station.config(config_dict)
         print "Done."
     else :
