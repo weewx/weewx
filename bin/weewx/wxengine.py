@@ -259,6 +259,45 @@ class StdService(object):
         pass
     
 #===============================================================================
+#                    Class StdCalibrate
+#===============================================================================
+
+class StdCalibrate(StdService):
+    """Adjust data using calibration expressions.
+    
+    This service must be run before StdArchive, so the correction
+    is applied before the data is archived."""
+    
+    def __init__(self, engine, config_dict):
+        super(StdCalibrate, self).__init__(engine, config_dict)
+        
+        self.corrections = {}
+        # Get the list of calibration corrections to apply. If a section
+        # is missing, a KeyError exception will get thrown:
+        try:
+            correction_dict = config_dict['Calibrate']['Corrections']
+        except KeyError:
+            return
+        
+        # For each correction, compile it, then save in a dictionary of
+        # corrections to be applied:
+        for obs_type in correction_dict.scalars:
+            self.corrections[obs_type] = compile(correction_dict[obs_type], 
+                                                 'StdCalibrate', 'eval')
+        
+    def newLoopPacket(self, loopPacket):
+        """Apply a calibration correction to a LOOP packet"""
+        for obs_type in self.corrections:
+            if loopPacket[obs_type] is not None:
+                loopPacket[obs_type] = eval(self.corrections[obs_type], None, loopPacket)
+
+    def newArchivePacket(self, archivePacket):
+        """Apply a calibration correction to an archive packet"""
+        for obs_type in self.corrections:
+            if archivePacket[obs_type] is not None:
+                archivePacket[obs_type] = eval(self.corrections[obs_type], None, archivePacket)
+
+#===============================================================================
 #                    Class StdArchive
 #===============================================================================
 

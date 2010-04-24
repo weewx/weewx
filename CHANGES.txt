@@ -8,6 +8,9 @@ Added CWOP support.
 Storage of LOOP and archive data into the SQL databases is now just another
 service, StdArchive.
 
+Added a calibration service, StdCalibrate, that can correct LOOP and archive
+data.
+
 Average console battery voltage is now calculated from LOOP data, and saved to
 the archive as 'consBatteryVoltage'.
 

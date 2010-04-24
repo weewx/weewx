@@ -1,7 +1,5 @@
 NEW FEATURES to be added in decreasing order of importance.
 
-Calibration capability. Should be a separate service.
-
 Allow rain-to-date to be added to a partial rainyear.
 
 Add support for MySQL.
