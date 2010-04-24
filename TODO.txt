@@ -3,6 +3,3 @@ TODO before the next release:
 Add the skin subdirectory to PYTHONPATH automatically, 
 to allow custom skins to find their generators.
 
-Document new archive service.
-
-Remove example of adding a new event to the engine (too advanced!)

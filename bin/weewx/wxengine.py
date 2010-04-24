@@ -112,6 +112,9 @@ class StdEngine(object):
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open configuration file %s" % args[0])
             # Reraise the exception (this will eventually cause the program to exit)
             raise
+        except configobj.ConfigObjError:
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Error while parsing configuration file %s" % args[0])
+            raise
 
         # Look for the debug flag. If set, ask for extra logging
         weewx.debug = int(config_dict.get('debug', 0))

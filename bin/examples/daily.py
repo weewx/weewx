@@ -27,15 +27,15 @@ class MyEngine(StdEngine):
         # This will record the timestamp of the old day
         self.old_day = None
         
-    def postArchiveData(self, rec):
+    def newArchivePacket(self, rec):
         # First let my superclass process it:
-        StdEngine.postArchiveData(self, rec)
+        StdEngine.newArchivePacket(self, rec)
         
         # Get the timestamp of the start of the day using
         # the utility function startOfArchiveDay 
         dayStart_ts = startOfArchiveDay(rec['dateTime'])
 
-        # Call the function firstArchiveOfDay if either this is
+        # Call the function newDay() if either this is
         # the first archive since startup, or if a new day has started
         if not self.old_day or self.old_day != dayStart_ts:
             self.old_day = dayStart_ts

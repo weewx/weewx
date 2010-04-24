@@ -23,6 +23,9 @@ Added a wrapper to the serial port in the VantagePro code. When used in a Python
 "with" statement, it automatically releases the serial port if an exception
 happens, allowing a more orderly shutdown.
 
+Offered some hints in the documentation on how to automount your VP2 when using
+a USB connection.
+
 Corrected error in units. getTargetType() that showed itself with when the
 console memory was freshly cleared, then tried to graph something immediately.
 

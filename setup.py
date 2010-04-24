@@ -170,12 +170,20 @@ class My_install_data(install_data):
             # assume a very old version:
             if not old_version: old_version = '1.0.0'
             old_version_number = old_version.split('.')
-            # Do the merge only for versions >= 1.6
+            # Do the merge only for versions >= 1.7
             if old_version_number[0:2] >= ['1','7']:
+                new_svc_list = new_config['Engines']['WxEngine']['service_list']
+                old_svc_list = old_config['Engines']['WxEngine']['service_list']
+                for svc in old_svc_list:
+                    if svc not in new_svc_list and svc not in ['weewx.wxengine.StdCatchUp', 
+                                                               'weewx.wxengine.StdWunderground']:
+                        new_svc_list.append(svc)
                 # Any user changes in old_config will overwrite values in new_config
                 # with this merge
                 new_config.merge(old_config)
-
+                # Now correct the new service list:
+                new_config['Engines']['WxEngine']['service_list'] = new_svc_list
+                        
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
         new_config['Station']['WEEWX_ROOT'] = self.install_dir
         # Add the version:

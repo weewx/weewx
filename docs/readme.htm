@@ -139,7 +139,7 @@ td {
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.7</h1>
+Version 1.8</h1>
 <h1>Table of Contents</h1>
 <ol>
 	<li><a href="#Copyright">Copyright</a></li>
@@ -187,7 +187,7 @@ do, so there was no good reason not to, and because I wanted a simple, easy-to-u
 server to run my Davis VantagePro2 weather station on a Linux box. I had been using
 <a href="http://www.wviewweather.com/">wview</a>, which is a high-performance and 
 feature rich system authored by Mark Teel with lots of users. Written in C, it&#39;s 
-an efficient system that can run on very underpowered boxes. In exchange, it&#39;s huge 
+an efficient system that can run on underpowered boxes. In exchange, it&#39;s huge 
 (45,000+ lines of code), tightly integrated in with its companion library, radlib 
 (another 14,000+ lines), and very complex, making it difficult to understand and 
 reliably customize. I wanted something more modern and much simpler.</p>
@@ -195,8 +195,8 @@ reliably customize. I wanted something more modern and much simpler.</p>
 languages, so I thought I&#39;d try either Python or Ruby (although, truth be told, 
 the roots of Python are nearly as old as C++!). I ended up picking Python because 
 its libraries are more mature and there are many mores choices for third party libraries.</p>
-<p><span class="code">Weewx</span> weighs in at under 4,000 lines of code, plus 
-another 2,500 comment lines. Because it is pure Python, it requires no makefiles, 
+<p><span class="code">Weewx</span> weighs in at well under 5,000 lines of code, plus 
+another 2,900 comment lines. Because it is pure Python, it requires no makefiles, 
 no builds, no special installs. However, to be fair, at this point it supports only 
 the&nbsp; <a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis 
 VantagePro2</a> weather station. On the other hand, it offers very powerful configuration 
@@ -641,8 +641,9 @@ support only U.S.. In any case, U.S. is the only system supported by
 <h3 class="config_section">[RESTful]</h3>
 <p>This section is for configuring uploads to simple
 <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
-servers such as the <a href="http://www.wunderground.com/">Weather Underground</a> 
-or <a href="http://www.pwsweather.com/">PWSweather.com</a>.</p>
+servers such as the <a href="http://www.wunderground.com/">Weather Underground</a>,
+<a href="http://www.pwsweather.com/">PWSweather.com</a>, or
+<a href="http://www.wxqa.com/">CWOP</a>.</p>
 <h4 class="config_section">[[Wunderground]]</h4>
 <p><span class="code">Weewx </span>can send your current data to the Weather Underground. 
 If you do not wish to do this, comment out the two options below.</p>
@@ -660,6 +661,31 @@ If you do not wish to do this, comment out the two options below.</p>
 Required.</p>
 <h5 class="config_important">password</h5>
 <p>Set to your PWSweather password. Required.</p>
+<h4 class="config_section">[[CWOP]]</h4>
+<p><span class="code">Weewx</span> can send your data to the Citizen Weather 
+Observer Program. If you do not wish to do this, comment out option &quot;<span class="code">station</span>&quot; 
+below.</p>
+<h5 class="config_important">station</h5>
+<p>Set to your CWOP station ID (e.g., <span class="code">CW1234</span>). 
+Required.</p>
+<h5 class="config_important">passcode</h5>
+<p>This is used for APRS (amateur radio) stations only. Set to the passcode 
+given to you by the CWOP operators. Otherwise, leave this option commented out 
+[Required for APRS stations; ignored for others]</p>
+<h5 class="config_option">server</h5>
+<p>A comma separated list of servers:ports to try. Unless you have a good reason 
+to change this, use the servers listed. [Required.]</p>
+<h5 class="config_option">interval</h5>
+<p>The interval in seconds between posts. Because CWOP is heavily used, the 
+operators discourage very frequent posts. Every 5 minutes (300 seconds) is fine, 
+but they prefer every 10 minutes (600 s) or even longer. Setting this value to 
+zero will cause every archive record to be posted. [Optional. Default is zero.]</p>
+<h5 class="config_option">stale</h5>
+<p>How old a record can be before it will not be used for a catch up. CWOP does 
+not use the timestamp on a posted record. Instead, they use the wall clock time 
+that it came in. This means that if your station is off the air for a long 
+period of time, then weewx attempts a catch up, old data could be interpreted as 
+the current conditions. [Optional. Default is 1800 seconds.]</p>
 <h3 class="config_section">[Archive]</h3>
 <p>This section is for configuring the sqlite3 database in which the station archive 
 data is stored.</p>
@@ -739,10 +765,34 @@ mode).</p>
 <h4 class="config_option">max_tries</h4>
 <p><span class="code">Weewx</span> will try up to this many times to FTP a file 
 up to your server before giving up. Default is 3.</p>
+<h3 class="config_section">[Calibrate]</h3>
+<p>One of the services that <span class="code">weewx</span> can run is a <em>calibration service</em>. 
+This is an opportunity to correct for any calibration errors in your 
+instruments. It is very general and flexible.</p>
+<h4 class="config_section">[[Corrections]]</h4>
+<p>In this section you list all <em>correction expressions</em>. For example, 
+say that you know your outside thermometer reads high by 0.2&deg;F. You could 
+add the expression:</p>
+<pre>outTemp = outTemp - 0.2</pre>
+<p>Perhaps you need a linear correction around a reference temperature of 68&deg;F:</p>
+<pre>outTemp = outTemp + (outTemp-68) * 0.02</pre>
+<p>It is even possible to do corrections involving more than one variable. 
+Suppose you have a temperature sensitive barometer:</p>
+<pre>barometer = barometer + (outTemp-32) * 0.0091</pre>
+<p>All correction expressions are run in the order given.</p>
+<p>The units should be <em>in the native units of the instrument</em>, US 
+Customary in the case of the VantagePro.</p>
+<p>Both LOOP data and archive data will be corrected. It is important that the 
+calibration service, <span class="code">StdCalibrate</span>, be run <em>before</em> 
+the archiving service <span class="code">StdArchive</span>, so that it is the 
+corrected data that is stored.</p>
+<p>If all you require is a simple correction offset, this can also be done in 
+the Davis VantagePro hardware. See your manual for instructions.</p>
 <h3 class="config_section">[Engines]</h3>
 <p>This section is used to configure the internal service engine in weewx. It is 
 for advanced customization. Details on how to do this is found in the section
-<em><a href="customizing.htm#Customizing_the_weewx_service_engine">Customizing the 
+<em>
+<a href="file://RAVEN/tkeffer/workspace/weewx/docs/customizing.htm#Customizing_the_weewx_service_engine">Customizing the 
 weewx service engine</a> </em>in the document <a href="customizing.htm"><em>Customizing
 </em><span class="code"><em>weewx</em></span></a>.</p>
 <h4 class="config_section">[[WxEngine]]</h4>
@@ -863,7 +913,49 @@ When troubleshooting the system, be sure to check it!</p>
 to <span class="code">1</span> (one) will generate many more checks and output and 
 can be useful for debugging.</p>
 <h1>10. <a name="Troubleshooting">Troubleshooting</a></h1>
+<p>If you get stuck, be sure to </p>
+<ul>
+	<li>Set option <span class="code">debug </span>in <span class="code">weewx.conf</span> 
+to <span class="code">1</span> (one)! It will put lots more information in the 
+	log file, which can be very useful for troubleshooting and debugging!</li>
+	<li><a href="#Monitoring_weewx">Look at the log file</a>. I am always happy 
+	to take questions, but the first thing I will ask you is: &quot;Did you look at 
+	the log file?&quot;</li>
+	<li>Run from the command line. Generally, weewx will catch and log any 
+	unrecoverable exceptions. But if you are getting strange results, it is 
+	worth running from the command line and looking for any clues.</li>
+</ul>
 <h2>10.1 Execution</h2>
+<h3><span class="code">configobj</span> errors</h3>
+<p>These are errors in the configuration file. Two are very common. 
+Incidentally, these errors are far easier to diagnose when <span class="code">
+weewx</span> is run from the command line.</p>
+<h4><span class="code">configobj.DuplicateError</span> exception</h4>
+<p>This error is caused by using an identifier more than once in the 
+configuration file. For example, you may have inadvertently listed your FTP 
+server twice:</p>
+<pre>[Reports]
+	[[FTP]]
+		... (details elided)
+		user = fred
+		server = ftp.myhost.com
+		password = mypassword
+		server = ftp.myhost.com  # OOPS! Listed it twice!
+		path = /weather
+		... </pre>
+<p>Generally, if you encounter this error, the log file will give you the line 
+number it happened in:</p>
+<pre>Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
+Apr 24 12:09:15 raven weewx[11480]: wxengine: Unable to initialize main loop:
+Apr 24 12:09:15 raven weewx[11480]:     ****  Duplicate keyword name at line 254.
+Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting.&nbsp;</pre>
+<h4><span class="code">configobj.NestingError</span> exception</h4>
+<p>This is a very similar error, and is caused by a misformed section nesting. 
+For example:</p>
+<pre>[Reports]
+	[[FTP]]]
+		... (details elided)</pre>
+<p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.</p>
 <h2>10.2 Hardware</h2>
 <h3>Tips on a reliable system</h3>
 <p>If you are having problems keeping your weather station up for long periods 
