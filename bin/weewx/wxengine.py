@@ -11,12 +11,14 @@
 # Python imports
 from optparse import OptionParser
 import Queue
+import StringIO
 import os.path
 import signal
 import socket
 import sys
 import syslog
 import time
+import traceback
 
 # 3rd party imports:
 import configobj
@@ -541,6 +543,12 @@ def main(EngineClass = StdEngine) :
             # Caught unrecoverable error. Log it, exit
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught unrecoverable exception in wxengine:")
             syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
+            sfd = StringIO.StringIO()
+            traceback.print_exc(file=sfd)
+            sfd.seek(0)
+            for line in sfd:
+                syslog.syslog(syslog.LOG_INFO, "    ****  %s" % (line,))
+            del sfd
             syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise

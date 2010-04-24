@@ -8,6 +8,8 @@
 #    $Date$
 #
 """Publish weather data to RESTful sites such as the Weather Underground or PWSWeather."""
+import StringIO
+import traceback
 import syslog
 import datetime
 import threading
@@ -498,6 +500,12 @@ class RESTThread(threading.Thread):
                 except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "restful: Unrecoverable error when posting record %s to %s station %s" % (time_str, station.site, station.station))
                     syslog.syslog(syslog.LOG_CRIT, "   ****  %s" % (e,))
+                    sfd = StringIO.StringIO()
+                    traceback.print_exc(file=sfd)
+                    sfd.seek(0)
+                    for line in sfd:
+                        syslog.syslog(syslog.LOG_INFO, "   ****  %s" % (line,))
+                    del sfd
                     syslog.syslog(syslog.LOG_CRIT, "   ****  Thread terminating.")
                     raise
                 else:

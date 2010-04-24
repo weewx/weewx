@@ -5,24 +5,23 @@ CHANGE HISTORY
 
 Added CWOP support.
 
-Storage of LOOP and archive data into the SQL databases is now
-just another service, StdArchive.
+Storage of LOOP and archive data into the SQL databases is now just another
+service, StdArchive.
 
-Average console battery voltage is now calculated from
-LOOP data, and saves to the archive as 'consBatteryVoltage'.
+Average console battery voltage is now calculated from LOOP data, and saved to
+the archive as 'consBatteryVoltage'.
 
-Transmitter battery status is now saved from LOOP data. Because
-this is actually a bitfield, all LOOP data in an archive period
-is ORd together, and that is what is saved.For historical reasons, 
-it is saved as a float.
+Transmitter battery status is now ORd together from LOOP data, and saved to the
+archive as 'txBatteryStatus'.
 
-Added a wrapper to the serial port in the VantagePro code. When used in
-a Python "with" statement, it automatically releases the serial port
-if an exception happens, allowing a more orderly shutdown.
+Added stack tracebacks for unrecoverable exceptions.
 
-Corrected error in units. getTargetType() that showed itself with
-when the console memory was freshly cleared, then tried to graph
-something immediately.
+Added a wrapper to the serial port in the VantagePro code. When used in a Python
+"with" statement, it automatically releases the serial port if an exception
+happens, allowing a more orderly shutdown.
+
+Corrected error in units. getTargetType() that showed itself with when the
+console memory was freshly cleared, then tried to graph something immediately.
 
 
 1.7.0   04/15/10
