@@ -62,15 +62,12 @@ from weeutil.weeutil import timestamp_to_string
 class MyAlarm(StdService):
     """Custom service that sounds an alarm if an arbitrary expression evaluates true"""
     
-    def __init__(self, engine):
+    def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
-        StdService.__init__(self, engine)
+        super(MyAlarm, self).__init__(engine, config_dict)
         
         # This will hold the time when the last alarm message went out:
         self.last_msg_ts = None
-        self.expression  = None
-        
-    def setup(self, config_dict):
         
         try:
             # Dig the needed options out of the configuration dictionary.

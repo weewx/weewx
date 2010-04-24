@@ -55,11 +55,7 @@ class StdEngine(object):
     def __init__(self):
         """Initialize an instance of StdEngine."""
         self.service_obj = []
-        
 
-    def setup(self):
-        """Gets run before anything else."""
-        
         syslog.openlog('weewx', syslog.LOG_PID|syslog.LOG_CONS)
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
         
@@ -77,14 +73,10 @@ class StdEngine(object):
         
         #For each listed service in service_list, instantiates an instance of the class,
         # passing self as the only argument."""
-        self.service_obj = [weeutil.weeutil._get_object(svc, self) for svc in service_list]
+        self.service_obj = [weeutil.weeutil._get_object(svc, self, config_dict) for svc in service_list]
         
         # Set up the weather station hardware:
         self.setupStation(config_dict)
-
-        # Allow each service to run its setup:
-        for obj in self.service_obj:
-            obj.setup(config_dict)
 
     def parseArgs(self):
         """Parse any command line options."""
@@ -176,6 +168,13 @@ class StdEngine(object):
             self.shutDown()
 
 
+    def setup(self):
+        """Gets run before anything else."""
+        
+        # Allow each service to run its setup:
+        for obj in self.service_obj:
+            obj.setup()
+
     def preloop(self):
         """Run every time before asking for LOOP packets"""
 
@@ -236,10 +235,10 @@ class StdEngine(object):
 class StdService(object):
     """Abstract base class for all services."""
     
-    def __init__(self, engine):
+    def __init__(self, engine, *args, **kwargs):
         self.engine = engine
     
-    def setup(self, config_dict):
+    def setup(self):
         pass
     
     def preloop(self):
@@ -264,9 +263,13 @@ class StdService(object):
 class StdArchive(StdService):
     """Archives data in the SQL database."""
     
-    def setup(self, config_dict):
+    def __init__(self, engine, config_dict):
+        super(StdArchive, self).__init__(engine, config_dict)
+        
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
+    
+    def setup(self):
         
         # This will do a catch up on any data still on the
         # station, but not yet put in the database:
@@ -325,9 +328,11 @@ class StdArchive(StdService):
 
 class StdTimeSynch(StdService):
     """Regularly asks the station to synch up its clock."""
-
-    def setup(self, config_dict):
-        """Zero out the time of last synch, and get the time between synchs."""
+    
+    def __init__(self, engine, config_dict):
+        super(StdTimeSynch, self).__init__(engine, config_dict)
+        
+        # Zero out the time of last synch, and get the time between synchs.
         self.last_synch_ts = 0
         self.clock_check = int(config_dict['Station'].get('clock_check','14400'))
         
@@ -366,13 +371,9 @@ class StdPrint(StdService):
 
 class StdRESTful(StdService):
 
-    def __init__(self, engine):
-        StdService.__init__(self, engine)
-        self.queue  = None
-        self.thread = None
-        
-    def setup(self, config_dict):
-        
+    def __init__(self, engine, config_dict):
+        super(StdRESTful, self).__init__(engine, config_dict)
+
         station_list = []
 
         # Each subsection in section [RESTful] represents a different upload site:
@@ -449,8 +450,8 @@ class StdRESTful(StdService):
 
 class StdReportService(StdService):
     
-    def __init__(self, engine):
-        StdService.__init__(self, engine)
+    def __init__(self, engine, config_dict):
+        super(StdReportService, self).__init__(engine, config_dict)
         self.thread = None
         self.first_run = True
         

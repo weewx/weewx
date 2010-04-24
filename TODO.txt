@@ -7,4 +7,6 @@ Redo and check examples in light of the new archive service.
 
 Document new archive service.
 
-Remove references to StdCatchup
+Add stack tracebacks
+
+Remove example of adding a new event to the engine (too advanced!)

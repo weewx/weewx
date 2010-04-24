@@ -63,17 +63,15 @@ from weeutil.weeutil import timestamp_to_string
 class BatteryAlarm(StdService):
     """Custom service that sounds an alarm if one of the batteries is low"""
     
-    def __init__(self, engine):
+    def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
-        StdService.__init__(self, engine)
+        super(BatteryAlarm, self).__init__(engine, config_dict)
         
         # This will hold the time when the last alarm message went out:
         self.last_msg_ts = 0
         # This will hold the count of the number of times the VP2 has signaled
         # a low battery alarm this archive period
         self.alarm_count = 0
-        
-    def setup(self, config_dict):
         
         try:
             # Dig the needed options out of the configuration dictionary.
