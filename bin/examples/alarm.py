@@ -70,26 +70,26 @@ class MyAlarm(StdService):
         self.last_msg_ts = None
         self.expression  = None
         
-    def setup(self):
+    def setup(self, config_dict):
         
         try:
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be thrown and
             # the alarm will not be set.
-            self.expression    = self.engine.config_dict['Alarm']['expression']
-            self.time_wait     = int(self.engine.config_dict['Alarm'].get('time_wait', 3600))
-            self.smtp_host     = self.engine.config_dict['Alarm']['smtp_host']
-            self.smtp_user     = self.engine.config_dict['Alarm'].get('smtp_user')
-            self.smtp_password = self.engine.config_dict['Alarm'].get('smtp_password')
-            self.TO            = self.engine.config_dict['Alarm']['mailto']
+            self.expression    = config_dict['Alarm']['expression']
+            self.time_wait     = int(config_dict['Alarm'].get('time_wait', 3600))
+            self.smtp_host     = config_dict['Alarm']['smtp_host']
+            self.smtp_user     = config_dict['Alarm'].get('smtp_user')
+            self.smtp_password = config_dict['Alarm'].get('smtp_password')
+            self.TO            = config_dict['Alarm']['mailto']
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
         except:
             self.expression = None
             self.time_wait  = None
 
-    def postArchiveData(self, rec):
+    def newArchivePacket(self, rec):
         # Let the super class see the record first:
-        StdService.postArchiveData(self, rec)
+        StdService.newArchivePacket(self, rec)
 
         # See if the alarm has been set:
         if self.expression:

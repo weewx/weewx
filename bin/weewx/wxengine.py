@@ -8,9 +8,9 @@
 #    $Date$
 #
 
+# Python imports
 from optparse import OptionParser
 import Queue
-import configobj
 import os.path
 import signal
 import socket
@@ -18,8 +18,11 @@ import sys
 import syslog
 import time
 
+# 3rd party imports:
+import configobj
 import daemon
 
+# weewx imports:
 import weewx
 import weewx.archive
 import weewx.stats
@@ -60,13 +63,13 @@ class StdEngine(object):
         syslog.openlog('weewx', syslog.LOG_PID|syslog.LOG_CONS)
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
         
-        self.parseArgs()
+        config_dict = self.parseArgs()
 
         # Set a default socket time out, in case FTP or HTTP hang:
-        timeout = int(self.config_dict.get('socket_timeout', '20'))
+        timeout = int(config_dict.get('socket_timeout', '20'))
         socket.setdefaulttimeout(timeout)
         
-        service_list = weeutil.weeutil.option_as_list(self.config_dict['Engines']['WxEngine'].get('service_list'))
+        service_list = weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get('service_list'))
         
         syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
         for svc in service_list:
@@ -76,18 +79,12 @@ class StdEngine(object):
         # passing self as the only argument."""
         self.service_obj = [weeutil.weeutil._get_object(svc, self) for svc in service_list]
         
-        # Set up the main archive database:
-        self.setupArchiveDatabase()
-
-        # Set up the statistical database:
-        self.setupStatsDatabase()
-
         # Set up the weather station hardware:
-        self.setupStation()
+        self.setupStation(config_dict)
 
         # Allow each service to run its setup:
         for obj in self.service_obj:
-            obj.setup()
+            obj.setup(config_dict)
 
     def parseArgs(self):
         """Parse any command line options."""
@@ -115,7 +112,7 @@ class StdEngine(object):
             
         # Try to open up the given configuration file. Declare an error if unable to.
         try :
-            self.config_dict = configobj.ConfigObj(self.config_path, file_error=True)
+            config_dict = configobj.ConfigObj(self.config_path, file_error=True)
         except IOError:
             sys.stderr.write("Unable to open configuration file %s" % args[0])
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open configuration file %s" % args[0])
@@ -123,42 +120,19 @@ class StdEngine(object):
             raise
 
         # Look for the debug flag. If set, ask for extra logging
-        weewx.debug = int(self.config_dict.get('debug', 0))
+        weewx.debug = int(config_dict.get('debug', 0))
         if weewx.debug:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % self.config_path)
-
-    def setupArchiveDatabase(self):
-        """Setup the main database archive"""
-        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.config_dict['Archive']['archive_file'])
-        self.archive = weewx.archive.Archive(archiveFilename)
-
-        # Configure it if necessary (this will do nothing if the database has
-        # already been configured):
-        self.archive.config()
-
-    def setupStatsDatabase(self):
-        """Prepare the stats database"""
-        statsFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                     self.config_dict['Stats']['stats_file'])
-        # statsDb is an instance of weewx.stats.StatsDb, which wraps the stats sqlite file
-        self.statsDb = weewx.stats.StatsDb(statsFilename,
-                                           int(self.config_dict['Station'].get('cache_loop_data', '1')))
-        # Configure it if necessary (this will do nothing if the database has
-        # already been configured):
-        self.statsDb.config(self.config_dict['Stats'].get('stats_types'))
-
-        # Backfill it with data from the archive. This will do nothing if 
-        # the stats database is already up-to-date.
-        weewx.stats.backfill(self.archive, self.statsDb)
         
-    def setupStation(self):
+        return config_dict
+
+    def setupStation(self, config_dict):
         """Set up the weather station hardware."""
         # Get the hardware type from the configuration dictionary.
         # This will be a string such as "VantagePro"
-        stationType = self.config_dict['Station']['station_type']
+        stationType = config_dict['Station']['station_type']
     
         # Look for and load the module that handles this hardware type:
         _moduleName = "weewx." + stationType
@@ -168,63 +142,14 @@ class StdEngine(object):
     
             # Now open up the weather station:
             self.station = weeutil.weeutil._get_object(_moduleName + '.' + stationType, 
-                                                       **self.config_dict[stationType])
-
+                                                       **config_dict[stationType])
     
         except Exception, ex:
             # Caught unrecoverable error. Log it:
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
             # Reraise the exception:
             raise
-            
         
-    def preloop(self):
-        """Run every time before asking for LOOP packets"""
-
-        for obj in self.service_obj:
-            obj.preloop()
-
-            
-    def processLoopPacket(self, physicalPacket):
-        """Run whenever a LOOP packet needs to be processed."""
-        
-        #Add the LOOP record to the stats database:
-        self.statsDb.addLoopRecord(physicalPacket)
-
-        for obj in self.service_obj:
-            obj.processLoopPacket(physicalPacket)
-            
-    def getArchiveData(self):
-        """This function gets or calculates new archive data"""
-        
-        lastgood_ts = self.archive.lastGoodStamp()
-        
-        nrec = 0
-        # Add all missed archive records since the last good record in the database
-        for rec in self.station.genArchivePackets(lastgood_ts) :
-            self.postArchiveData(rec)
-            nrec += 1
-    
-        if nrec != 0:
-            syslog.syslog(syslog.LOG_INFO, "wxengine: %d new archive packets added to database" % nrec)
-    
-    def postArchiveData(self, rec):
-        """Run whenever any new archive data appears."""
-
-        # Add the new record to the archive database and stats database:
-        self.archive.addRecord(rec)
-        self.statsDb.addArchiveRecord(rec)
-
-        # Give each service a chance to take a look at it:
-        for obj in self.service_obj:
-            obj.postArchiveData(rec)
-        
-    def processArchiveData(self):
-        """Run after any archive data has been retrieved and put in the database."""
-        
-        for obj in self.service_obj:
-            obj.processArchiveData()
-            
     def run(self):
         """This is where the work gets done."""
         
@@ -240,20 +165,37 @@ class StdEngine(object):
                 # Generate LOOP packets until the next archive record is due.
                 for physicalPacket in self.station.genLoopPackets():
                     
-                    # Process the physical LOOP packet:
-                    self.processLoopPacket(physicalPacket)
-                    
-                # We've popped out of the loop. The next archiver record must be
-                # due. Go get it:
-                self.getArchiveData()
+                    # Process the new LOOP packet:
+                    self.newLoopPacket(physicalPacket)
                 
-                # Now process it. Typically, this means generating reports, etc.
+                # Get and process any new archive data. 
                 self.processArchiveData()
 
         finally:
             # If an exception occurred, shut myself down in an orderly way
             self.shutDown()
 
+
+    def preloop(self):
+        """Run every time before asking for LOOP packets"""
+
+        for obj in self.service_obj:
+            obj.preloop()
+
+            
+    def newLoopPacket(self, loopPacket):
+        """Run whenever a new LOOP packet becomes available."""
+        
+        for obj in self.service_obj:
+            obj.newLoopPacket(loopPacket)
+            
+    def processArchiveData(self):
+        """Run after the main loop.
+        
+        Listeners should get and process any new archive data."""
+        
+        for obj in self.service_obj:
+            obj.processArchiveData()
 
     def shutDown(self):
         """Run when an engine shutdown is requested."""
@@ -267,6 +209,26 @@ class StdEngine(object):
             except:
                 pass
 
+    def getArchivePacketsSince(self, lastgood_ts):
+        """Retrieve new archive packets from the station since a specified time.
+        
+        Unlike the other events, this one must actually be triggered by one of the services."""
+        
+        nrec = 0
+        # Add all missed archive records since the last good record in the database
+        for archivePacket in self.station.genArchivePackets(lastgood_ts) :
+            self.newArchivePacket(archivePacket)
+            nrec += 1
+    
+        if nrec != 0:
+            syslog.syslog(syslog.LOG_INFO, "wxengine: %d new archive packets added to database" % nrec)
+    
+    def newArchivePacket(self, archivePacket):
+        """Run whenever a new archive packet becomes available."""
+        
+        for obj in self.service_obj:
+            obj.newArchivePacket(archivePacket)
+            
 #===============================================================================
 #                    Class StdService
 #===============================================================================
@@ -277,16 +239,16 @@ class StdService(object):
     def __init__(self, engine):
         self.engine = engine
     
-    def setup(self):
+    def setup(self, config_dict):
         pass
     
     def preloop(self):
         pass
     
-    def processLoopPacket(self, physicalPacket):
+    def newLoopPacket(self, loopPacket):
         pass
     
-    def postArchiveData(self, rec):
+    def newArchivePacket(self, archivePacket):
         pass
     
     def processArchiveData(self):
@@ -296,17 +258,67 @@ class StdService(object):
         pass
     
 #===============================================================================
-#                    Class StdCatchUp
+#                    Class StdArchive
 #===============================================================================
 
-class StdCatchUp(StdService):        
-    """Looks for data that is on the weather station but not in the database.
+class StdArchive(StdService):
+    """Archives data in the SQL database."""
     
-    If any data is found, it arranges to have it put in the database."""
-    
-    def setup(self):
-        self.engine.getArchiveData()
+    def setup(self, config_dict):
+        self.setupArchiveDatabase(config_dict)
+        self.setupStatsDatabase(config_dict)
+        
+        # This will do a catch up on any data still on the
+        # station, but not yet put in the database:
+        self.processArchiveData()
+        
+    def newLoopPacket(self, physicalPacket):
+        """Add LOOP packet data to the statistical hi/lows."""
+        
+        # Add the LOOP record to the stats database:
+        self.statsDb.addLoopRecord(physicalPacket)
+            
+    def newArchivePacket(self, archivePacket):
+        """Add a new archive record to the SQL archive and stats databases."""
 
+        # Add the new record to the archive database and stats database:
+        self.archive.addRecord(archivePacket)
+        self.statsDb.addArchiveRecord(archivePacket)
+        
+    def processArchiveData(self):
+        """Retrieves that last timestamp in the database, then posts that time to the engine"""
+        
+        # Get the last timestamp in the archive:
+        lastgood_ts = self.archive.lastGoodStamp()
+        
+        # Tell the engine to get all packets off the station since that time:
+        self.engine.getArchivePacketsSince(lastgood_ts)
+        
+    def setupArchiveDatabase(self, config_dict):
+        """Setup the main database archive"""
+        archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
+                                       config_dict['Archive']['archive_file'])
+        self.archive = weewx.archive.Archive(archiveFilename)
+
+        # Configure it if necessary (this will do nothing if the database has
+        # already been configured):
+        self.archive.config()
+
+    def setupStatsDatabase(self, config_dict):
+        """Prepare the stats database"""
+        statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
+                                     config_dict['Stats']['stats_file'])
+        # statsDb is an instance of weewx.stats.StatsDb, which wraps the stats sqlite file
+        self.statsDb = weewx.stats.StatsDb(statsFilename,
+                                           int(config_dict['Station'].get('cache_loop_data', '1')))
+        # Configure it if necessary (this will do nothing if the database has
+        # already been configured):
+        self.statsDb.config(config_dict['Stats'].get('stats_types'))
+
+        # Backfill it with data from the archive. This will do nothing if 
+        # the stats database is already up-to-date.
+        weewx.stats.backfill(self.archive, self.statsDb)
+        
 #===============================================================================
 #                    Class StdTimeSynch
 #===============================================================================
@@ -314,10 +326,10 @@ class StdCatchUp(StdService):
 class StdTimeSynch(StdService):
     """Regularly asks the station to synch up its clock."""
 
-    def setup(self):
+    def setup(self, config_dict):
         """Zero out the time of last synch, and get the time between synchs."""
         self.last_synch_ts = 0
-        self.clock_check = int(self.engine.config_dict['Station'].get('clock_check','14400'))
+        self.clock_check = int(config_dict['Station'].get('clock_check','14400'))
         
     def preloop(self):
         """Ask the station to synch up if enough time has passed."""
@@ -336,17 +348,17 @@ class StdPrint(StdService):
     """Service that prints diagnostic information when a LOOP
     or archive packet is received."""
     
-    def processLoopPacket(self, physicalPacket):
-        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(physicalPacket['dateTime']),\
-            physicalPacket['barometer'],\
-            physicalPacket['outTemp'],\
-            physicalPacket['windSpeed'],\
-            physicalPacket['windDir']
+    def newLoopPacket(self, loopPacket):
+        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(loopPacket['dateTime']),\
+                loopPacket['barometer'],\
+                loopPacket['outTemp'],\
+                loopPacket['windSpeed'],\
+                loopPacket['windDir']
 
-    def postArchiveData(self, rec):
-        print"REC:-> ", weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec['barometer'],\
-                                                            rec['outTemp'],   rec['windSpeed'],\
-                                                            rec['windDir'], " <-"
+    def newArchivePacket(self, archivePacket):
+        print"REC:-> ", weeutil.weeutil.timestamp_to_string(archivePacket['dateTime']), archivePacket['barometer'],\
+                archivePacket['outTemp'],   archivePacket['windSpeed'],\
+                archivePacket['windDir'], " <-"
 
 #===============================================================================
 #                    Class StdRESTful
@@ -359,15 +371,15 @@ class StdRESTful(StdService):
         self.queue  = None
         self.thread = None
         
-    def setup(self):
+    def setup(self, config_dict):
         
         station_list = []
 
         # Each subsection in section [RESTful] represents a different upload site:
-        for site in self.engine.config_dict['RESTful'].sections:
+        for site in config_dict['RESTful'].sections:
 
             # Get the site dictionary:
-            site_dict = self.getSiteDict(site)
+            site_dict = self.getSiteDict(config_dict, site)
 
             try:
                 # Instantiate an instance of the class that implements the
@@ -386,8 +398,8 @@ class StdRESTful(StdService):
             # Yes. Proceed by setting up the queue and thread.
             
             # Create an instance of weewx.archive.Archive
-            archiveFilename = os.path.join(self.engine.config_dict['Station']['WEEWX_ROOT'], 
-                                           self.engine.config_dict['Archive']['archive_file'])
+            archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
+                                           config_dict['Archive']['archive_file'])
             archive = weewx.archive.Archive(archiveFilename)
             # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
@@ -401,10 +413,10 @@ class StdRESTful(StdService):
             self.thread = None
             syslog.syslog(syslog.LOG_DEBUG, "wxengine: No RESTful upload sites. Thread not started.")
         
-    def postArchiveData(self, rec):
+    def newArchivePacket(self, archivePacket):
         """Post the new archive data to the WU queue"""
         if self.queue:
-            self.queue.put(rec['dateTime'])
+            self.queue.put(archivePacket['dateTime'])
 
     def shutDown(self):
         """Shut down the RESTful thread"""
@@ -416,18 +428,18 @@ class StdRESTful(StdService):
             self.thread.join(20.0)
             syslog.syslog(syslog.LOG_DEBUG, "Shut down RESTful thread.")
             
-    def getSiteDict(self, site):
+    def getSiteDict(self, config_dict, site):
         """Return the site dictionary for the given site.
         
         This function can be overridden by subclassing if you need something
         extra in the site dictionary.
         """
         # Get the dictionary for this site out of the config dictionary:
-        site_dict = self.engine.config_dict['RESTful'][site]
+        site_dict = config_dict['RESTful'][site]
         # Some protocols require extra entries:
-        site_dict['latitude']  = self.engine.config_dict['Station']['latitude']
-        site_dict['longitude'] = self.engine.config_dict['Station']['longitude']
-        site_dict['hardware']  = self.engine.config_dict['Station']['station_type']
+        site_dict['latitude']  = config_dict['Station']['latitude']
+        site_dict['longitude'] = config_dict['Station']['longitude']
+        site_dict['hardware']  = config_dict['Station']['station_type']
         return site_dict
     
     

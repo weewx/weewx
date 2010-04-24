@@ -43,7 +43,7 @@ class StdReportEngine(threading.Thread):
     def __init__(self, config_path, gen_ts = None, first_run = True):
         """Initializer for the report engine. 
         
-        config_dict: the configuration dictionary.
+        config_path: File path to the configuration dictionary.
         
         gen_ts: The timestamp for which the output is to be current [Optional; default
         is the last time in the database]

@@ -73,30 +73,30 @@ class BatteryAlarm(StdService):
         # a low battery alarm this archive period
         self.alarm_count = 0
         
-    def setup(self):
+    def setup(self, config_dict):
         
         try:
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be thrown and
             # the alarm will not be set.
-            self.time_wait       = int(self.engine.config_dict['Alarm'].get('time_wait', 3600))
-            self.count_threshold = int(self.engine.config_dict['Alarm'].get('count_threshold', 50))
-            self.smtp_host       = self.engine.config_dict['Alarm']['smtp_host']
-            self.smtp_user       = self.engine.config_dict['Alarm'].get('smtp_user')
-            self.smtp_password   = self.engine.config_dict['Alarm'].get('smtp_password')
-            self.TO              = self.engine.config_dict['Alarm']['mailto']
+            self.time_wait       = int(config_dict['Alarm'].get('time_wait', 3600))
+            self.count_threshold = int(config_dict['Alarm'].get('count_threshold', 50))
+            self.smtp_host       = config_dict['Alarm']['smtp_host']
+            self.smtp_user       = config_dict['Alarm'].get('smtp_user')
+            self.smtp_password   = config_dict['Alarm'].get('smtp_password')
+            self.TO              = config_dict['Alarm']['mailto']
             syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm turned on. Count threshold is %d" % self.count_threshold)
         except:
             self.time_wait  = None
 
-    def processLoopPacket(self, loopPacket):
-        """This function is called with the arrival of every LOOP packet."""
+    def newLoopPacket(self, loopPacket):
+        """This function is called with the arrival of every new LOOP packet."""
         
         # Let the superclass have a peek first:
-        StdService.processLoopPacket(self, loopPacket)
+        StdService.newLoopPacket(self, loopPacket)
                 
         # If the Transmit Battery Status byte is non-zero, an alarm is on
-        if self.time_wait is not None and loopPacket['transmitBattery']:
+        if self.time_wait is not None and loopPacket['txBatteryStatus']:
 
             self.alarm_count += 1
 
@@ -109,16 +109,17 @@ class BatteryAlarm(StdService):
                 if abs(time.time() - self.last_msg_ts) >= self.time_wait :
                     # Sound the alarm!
                     # Launch in a separate thread so it doesn't block the main LOOP thread:
-                    t  = threading.Thread(target = BatteryAlarm.soundTheAlarm, args=(self, loopPacket, self.alarm_count))
+                    t  = threading.Thread(target = BatteryAlarm.soundTheAlarm,
+                                          args=(self, loopPacket, self.alarm_count))
                     t.start()
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
         
-    def postArchiveData(self, rec):
-        """This function is called when it's time to post some archive data."""
+    def newArchivePacket(self, rec):
+        """This function is called with the arrival of every new archive packet."""
         
         # Let the superclass do its thing first:
-        StdService.postArchiveData(self, rec)
+        StdService.newArchivePacket(self, rec)
 
         # Reset the alarm counter
         self.alarm_count = 0
@@ -131,7 +132,7 @@ class BatteryAlarm(StdService):
         # Form the message text:
         msg_text = """The low battery alarm (0x%04x) has been seen %d times since the last archive period.\n\n"""\
                    """Alarm sounded at %s\n\n"""\
-                   """LOOP record:\n%s""" % (rec['transmitBattery'], alarm_count, t_str, str(rec))
+                   """LOOP record:\n%s""" % (rec['txBatteryStatus'], alarm_count, t_str, str(rec))
         # Convert to MIME:
         msg = MIMEText(msg_text)
         
@@ -159,6 +160,6 @@ class BatteryAlarm(StdService):
         # Log out of the server:
         s.quit()
         # Log it in the system log:
-        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery alarm (0x%04x) sounded." % rec['transmitBattery'])
+        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery alarm (0x%04x) sounded." % rec['txBatteryStatus'])
         syslog.syslog(syslog.LOG_INFO, "       ***  email sent to: %s" % self.TO)
         

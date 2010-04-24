@@ -49,10 +49,15 @@ class SerialWrapper(object):
 
 class VantagePro (object) :
     """Class that represents a connection to a VantagePro console."""
+
+    # List of types for which archive records will be explicitly calculated
+    # from LOOP data:
+    special = ['consBatteryVoltage']
+
     def __init__(self, **vp_dict) :
         """Initialize an object of type VantagePro. 
         
-        PARAMETERS:
+        NAMED ARGUMENTS:
         
         port: The serial port of the VP. [Required]
         
@@ -221,7 +226,7 @@ class VantagePro (object) :
                                 # The time stamp is declining. We're done.
                                 return
                             # Add any LOOP data we've been accumulating:
-                            self.addAccumulators(_record)
+                            self.archiveAccumulators(_record)
                             # Set the last time to the current time, and yield the packet
                             _last_good_ts = _record['dateTime']
                             yield _record
@@ -232,9 +237,6 @@ class VantagePro (object) :
                     continue
             syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive packets")
             raise weewx.RetriesExceeded, "Max retries exceeded while getting archive packets"
-
-    # List of VP2 types for which archive records will be explicitly calculated.
-    special = ['consBatteryVoltage']
 
     def accumulateLoop(self, physicalLOOPPacket):
         """Process LOOP data, calculating averages within an archive period."""
@@ -270,7 +272,7 @@ class VantagePro (object) :
             self.current_accumulators[obs_type] = weewx.accum.StdAccum(obs_type, timespan)
         self.txBatteryStatus = 0  
 
-    def addAccumulators(self, record):
+    def archiveAccumulators(self, record):
         """Add the results of the accumulators to the current archive record."""
         try:
             # For each special type, add its average to the archive record. An exception
@@ -279,7 +281,8 @@ class VantagePro (object) :
                 # Make sure the times match:
                 if self.last_accumulators[obs_type].timespan.stop == record['dateTime']:
                     record[obs_type] = self.last_accumulators[obs_type].avg
-            record['txBatteryStatus'] = float(self.txBatteryStatus)
+            # Save the battery status:
+            record['txBatteryStatus'] = self.txBatteryStatus
         except AttributeError:
             pass
         
