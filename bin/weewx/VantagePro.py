@@ -26,7 +26,8 @@ _resend = chr(0x21)
 
 # Unfortunately, package serial does not take advantage of the "with" transaction
 # semantics. So, we'll provide it ourself. This will insure that the serial connection
-# to the VP2 gets closed despite any exceptions
+# to the VP2 gets closed despite any exceptions. For a readable description
+# of the 'with' statement, see http://effbot.org/zone/python-with-statement.htm
 class SerialWrapper(object):
     """Wraps a serial connection returned from package serial"""
     
@@ -36,6 +37,7 @@ class SerialWrapper(object):
         self.timeout  = timeout
         
     def __enter__(self):
+        # Open up the port and return it
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
         return self.serial_port
     
@@ -51,7 +53,9 @@ class VantagePro (object) :
     """Class that represents a connection to a VantagePro console."""
 
     # List of types for which archive records will be explicitly calculated
-    # from LOOP data:
+    # from LOOP data. Right now there is only one, but if we ever support weather
+    # stations that do not have onboard storage of archive data (and most don't),
+    # this could be expanded, probably to include virtually every type.
     special = ['consBatteryVoltage']
 
     def __init__(self, **vp_dict) :

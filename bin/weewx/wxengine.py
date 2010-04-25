@@ -11,14 +11,12 @@
 # Python imports
 from optparse import OptionParser
 import Queue
-import StringIO
 import os.path
 import signal
 import socket
 import sys
 import syslog
 import time
-import traceback
 
 # 3rd party imports:
 import configobj
@@ -42,46 +40,50 @@ Arguments:
     config_path: Path to the weewx configuration file to be used.
 """
 
+# Holds the current working directory:
+cwd = None
 
 #===============================================================================
 #                    Class StdEngine
 #===============================================================================
 
 class StdEngine(object):
-    """Engine that drives weewx.
+    """The main engine responsible for the creating and dispatching of events
+    from the weather station.
     
-    This engine manages a list of 'services.' At key events, each service
-    is given a chance to participate.
+    This engine manages a list of 'services.' At key events, each service is
+    given a chance to participate.
     """
     
     def __init__(self):
         """Initialize an instance of StdEngine."""
-        self.service_obj = []
-
+        
         syslog.openlog('weewx', syslog.LOG_PID|syslog.LOG_CONS)
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
         
+        # Parse the arguments and get the configuration dictionary:
         config_dict = self.parseArgs()
 
         # Set a default socket time out, in case FTP or HTTP hang:
         timeout = int(config_dict.get('socket_timeout', '20'))
         socket.setdefaulttimeout(timeout)
-        
-        service_list = weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get('service_list'))
-        
-        syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
-        for svc in service_list:
-            syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % svc)
-        
-        #For each listed service in service_list, instantiates an instance of the class,
-        # passing self as the only argument."""
-        self.service_obj = [weeutil.weeutil._get_object(svc, self, config_dict) for svc in service_list]
+
+        # Set up the services to be run:
+        self.setupServices(config_dict)
         
         # Set up the weather station hardware:
         self.setupStation(config_dict)
 
     def parseArgs(self):
         """Parse any command line options."""
+        global cwd
+        
+        # Save the current working directory. A service might
+        # change it. In case of a restart, we need to change it back.
+        if cwd:
+            os.chdir(cwd)
+        else:
+            cwd = os.getcwd()
 
         parser = OptionParser(usage=usagestr)
         parser.add_option("-d", "--daemon",  action="store_true", dest="daemon",  help="Run as a daemon")
@@ -100,17 +102,19 @@ class StdEngine(object):
         if options.daemon:
             daemon.daemonize(pidfile='/var/run/weewx.pid')
 
-        # Get and set the absolute path of the configuration file in case of a restart.
-        # A service might to a chdir(), and then we'd be unable to find it again.
-        self.config_path = args[0] = os.path.abspath(args[0])
-            
-        # Try to open up the given configuration file. Declare an error if unable to.
+        # Get and set the absolute path of the configuration file.  
+        # A service might to a chdir(), and then another service would be unable to
+        # find it.
+        self.config_path = os.path.abspath(args[0])
+        # Try to open up the given configuration file. Declare an error if
+        # unable to.
         try :
             config_dict = configobj.ConfigObj(self.config_path, file_error=True)
         except IOError:
             sys.stderr.write("Unable to open configuration file %s" % args[0])
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open configuration file %s" % args[0])
-            # Reraise the exception (this will eventually cause the program to exit)
+            # Reraise the exception (this will eventually cause the program to
+            # exit)
             raise
         except configobj.ConfigObjError:
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Error while parsing configuration file %s" % args[0])
@@ -124,6 +128,21 @@ class StdEngine(object):
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % self.config_path)
         
         return config_dict
+    
+    def setupServices(self, config_dict):
+        """Set up the services to be run."""
+        
+        service_list = weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get('service_list'))
+        
+        syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
+        for svc in service_list:
+            syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % svc)
+        
+        # For each listed service in service_list, instantiates an instance of
+        # the class, passing self and the configuration dictionary as the
+        # arguments:
+        self.service_obj = [weeutil.weeutil._get_object(svc, self, config_dict) for svc in service_list]
+        
 
     def setupStation(self, config_dict):
         """Set up the weather station hardware."""
@@ -131,7 +150,7 @@ class StdEngine(object):
         # This will be a string such as "VantagePro"
         stationType = config_dict['Station']['station_type']
     
-        # Look for and load the module that handles this hardware type:
+        # Look for and load the module of that name:
         _moduleName = "weewx." + stationType
         __import__(_moduleName)
     
@@ -150,27 +169,22 @@ class StdEngine(object):
     def run(self):
         """This is where the work gets done."""
         
-        try:
-            self.setup()
-            
-            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
-    
-            while True:
+        self.setup()
         
-                self.preloop()
-    
-                # Generate LOOP packets until the next archive record is due.
-                for physicalPacket in self.station.genLoopPackets():
-                    
-                    # Process the new LOOP packet:
-                    self.newLoopPacket(physicalPacket)
-                
-                # Get and process any new archive data. 
-                self.processArchiveData()
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
 
-        finally:
-            # If an exception occurred, shut myself down in an orderly way
-            self.shutDown()
+        while True:
+    
+            self.preloop()
+
+            # Generate LOOP packets until the next archive record is due.
+            for physicalPacket in self.station.genLoopPackets():
+                
+                # Process the new LOOP packet:
+                self.newLoopPacket(physicalPacket)
+            
+            # Get and process any new archive data. 
+            self.processArchiveData()
 
 
     def setup(self):
@@ -204,14 +218,20 @@ class StdEngine(object):
     def shutDown(self):
         """Run when an engine shutdown is requested."""
 
-        # Shutdown all the services:
-        for obj in self.service_obj:
-            # Wrap each individual service shutdown, in case
-            # of a problem.
-            try:
-                obj.shutDown()
-            except:
-                pass
+        # If we've gotten as far as having a list of service objects,
+        # then shut them all down:
+        if hasattr(self, 'service_obj'):
+            # Shutdown all the services:
+            for obj in self.service_obj:
+                # Wrap each individual service shutdown, in case
+                # of a problem.
+                try:
+                    obj.shutDown()
+                except:
+                    pass
+            # Unbind the list of service objects. This will allow
+            # them to be garbage collected w/o a circular reference:
+            del self.service_obj
 
     def getArchivePacketsSince(self, lastgood_ts):
         """Retrieve new archive packets from the station since a specified time.
@@ -219,7 +239,8 @@ class StdEngine(object):
         Unlike the other events, this one must actually be triggered by one of the services."""
         
         nrec = 0
-        # Add all missed archive records since the last good record in the database
+        # Add all missed archive records since the last good record in the
+        # database
         for archivePacket in self.station.genArchivePackets(lastgood_ts) :
             self.newArchivePacket(archivePacket)
             nrec += 1
@@ -268,8 +289,8 @@ class StdService(object):
 class StdCalibrate(StdService):
     """Adjust data using calibration expressions.
     
-    This service must be run before StdArchive, so the correction
-    is applied before the data is archived."""
+    This service must be run before StdArchive, so the correction is applied
+    before the data is archived."""
     
     def __init__(self, engine, config_dict):
         super(StdCalibrate, self).__init__(engine, config_dict)
@@ -314,7 +335,6 @@ class StdArchive(StdService):
         self.setupStatsDatabase(config_dict)
     
     def setup(self):
-        
         # This will do a catch up on any data still on the
         # station, but not yet put in the database:
         self.processArchiveData()
@@ -355,7 +375,8 @@ class StdArchive(StdService):
         """Prepare the stats database"""
         statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                      config_dict['Stats']['stats_file'])
-        # statsDb is an instance of weewx.stats.StatsDb, which wraps the stats sqlite file
+        # statsDb is an instance of weewx.stats.StatsDb, which wraps the stats
+        # sqlite file
         self.statsDb = weewx.stats.StatsDb(statsFilename,
                                            int(config_dict['Station'].get('cache_loop_data', '1')))
         # Configure it if necessary (this will do nothing if the database has
@@ -414,13 +435,16 @@ class StdPrint(StdService):
 #===============================================================================
 
 class StdRESTful(StdService):
+    """Launches a thread that will monitor a queue of new data, which is to be
+    posted to RESTful websites. Then, put new data in the queue. """
 
     def __init__(self, engine, config_dict):
         super(StdRESTful, self).__init__(engine, config_dict)
 
         station_list = []
 
-        # Each subsection in section [RESTful] represents a different upload site:
+        # Each subsection in section [RESTful] represents a different upload
+        # site:
         for site in config_dict['RESTful'].sections:
 
             # Get the site dictionary:
@@ -428,8 +452,8 @@ class StdRESTful(StdService):
 
             try:
                 # Instantiate an instance of the class that implements the
-                # protocol used by this site. It will throw an exception if
-                # not enough information is available to instantiate.
+                # protocol used by this site. It will throw an exception if not
+                # enough information is available to instantiate.
                 obj_class = 'weewx.restful.' + site_dict['protocol']
                 new_station = weeutil.weeutil._get_object(obj_class, site, **site_dict)
             except KeyError:
@@ -493,6 +517,7 @@ class StdRESTful(StdService):
 #===============================================================================
 
 class StdReportService(StdService):
+    """Launches a separate thread to do reporting."""
     
     def __init__(self, engine, config_dict):
         super(StdReportService, self).__init__(engine, config_dict)
@@ -528,33 +553,23 @@ def sigHUPhandler(signum, frame):
 #                    Function main
 #===============================================================================
 
-def main(EngineClass = StdEngine) :
+def main(EngineClass=StdEngine) :
     """Prepare the main loop and run it. 
 
     Mostly consists of a bunch of high-level preparatory calls, protected
     by try blocks in the case of an exception."""
 
-    try:
-
-        # Create and initialize the engine
-        engine = EngineClass()
-        signal.signal(signal.SIGHUP, sigHUPhandler)
-        
-    except Exception, ex:
-        # Caught unrecoverable error. Log it, exit
-        syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to initialize main loop:")
-        syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
-        syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
-        # Reraise the exception (this will eventually cause the program to exit)
-        raise
-
-
     while True:
-        # Start the main loop, wrapping it in an exception block.
+
         try:
-
+    
+            # Create and initialize the engine
+            engine = EngineClass()
+            # Set up the reload signal handler:
+            signal.signal(signal.SIGHUP, sigHUPhandler)
+            # Run the main event loop:
             engine.run()
-
+    
         # Catch any recoverable weewx I/O errors:
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
@@ -566,11 +581,10 @@ def main(EngineClass = StdEngine) :
         except OSError, e:
             # Caught an OS error. Log it, wait 10 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught OSError: %s" % e)
-            syslog.syslog(syslog.LOG_CRIT, "    ****  (Another program trying to access the weather station could cause this.)")
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 10 seconds then retrying...")
             time.sleep(10)
             syslog.syslog(syslog.LOG_NOTICE,"wxengine: retrying...")
-
+    
         except Restart:
             syslog.syslog(syslog.LOG_NOTICE, "wxengine: Received signal HUP. Restarting.")
             
@@ -579,19 +593,19 @@ def main(EngineClass = StdEngine) :
             syslog.syslog(syslog.LOG_CRIT,"wxengine: Keyboard interrupt.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise
-
+    
         # Catch any non-recoverable errors. Log them, exit
         except Exception, ex:
             # Caught unrecoverable error. Log it, exit
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught unrecoverable exception in wxengine:")
             syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
-            sfd = StringIO.StringIO()
-            traceback.print_exc(file=sfd)
-            sfd.seek(0)
-            for line in sfd:
-                syslog.syslog(syslog.LOG_INFO, "    ****  %s" % (line,))
-            del sfd
+            # Include a stack traceback in the log:
+            weeutil.weeutil.log_traceback("    ****  ")
             syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise
 
+        finally:
+            # Shut down the engine before exiting or restart:
+            engine.shutDown()
+            

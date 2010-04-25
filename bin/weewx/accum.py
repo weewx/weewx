@@ -12,7 +12,7 @@
 import math
 
 class OutOfSpan(ValueError):
-    pass
+    """Raised when a record is outside of a timespan"""
 
 #===============================================================================
 #                    Class StdAccum

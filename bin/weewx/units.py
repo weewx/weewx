@@ -351,17 +351,41 @@ class ValueDict(dict):
     """A dictionary that returns contents as a ValueHelper.
     
     This dictionary, when keyed, returns a ValueHelper object, which can then
-    be used for context sensitive formatting.
+    be used for context sensitive formatting. 
     """
     
     def __init__(self, d, unit_info=None):
-        dict.__init__(self, d)
+        """Initialize the ValueDict from another dictionary.
+        
+        d: A dictionary containing the key-value pairs for observation types
+        and their values. It must include an entry 'usUnits', giving the
+        standard unit system the entries are in. An example would be:
+        
+            {'outTemp'   : 23.9,
+             'barometer' : 1002.3,
+             'usUnits'   : 2}
+
+        In this case, the standard unit system being used is "2", or Metric.
+        
+        unit_info: An instance of UnitInfo. This will be passed on to
+        the returned instance of ValueHelper. [Optional. If not given,
+        the default UnitInfo will be used]
+        """
+        # Initialize my superclass, the dictionary:
+        super(ValueDict, self).__init__(d)
         self.unit_info = unit_info if unit_info else UnitInfo()
         
     def __getitem__(self, obs_type):
+        """Look up an observation type (eg, 'outTemp') and return it as a 
+        value-tuple in the target unit system."""
+        # Find out what standard unit system (US or Metric) I am in:
         std_unit_system = dict.__getitem__(self, 'usUnits')
+        # Given this standard unit system, what is the unit type of this
+        # particular observation type?
         unit_type = getStandardUnitType(std_unit_system, obs_type)
+        # Form the value-tuple. First entry is a value, second the unit type:
         val_t = (dict.__getitem__(self, obs_type), unit_type)
+        # Return the results as a ValueHelper
         vh = ValueHelper(val_t, unit_info=self.unit_info)
         return vh
         
@@ -399,7 +423,7 @@ class UnitInfo(object):
         for cooling degree days, second element the unit it is in.
         [Optional. If not given, (65.0, 'default_F') will be used.]
         """
-        self.unit_type_dict  = unit_type_dict
+        self.unit_type_dict   = unit_type_dict
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
         self.time_format_dict = time_format_dict

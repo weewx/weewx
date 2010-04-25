@@ -451,21 +451,18 @@ class StatsReadonlyDb(object):
 
         return _dayStats
 
-    def day(self, startOfDay_ts):
+    def day(self, sod_ts):
         """Return an instance of DayStatsDict initialized to a given day's statistics.
 
-        startOfDay_ts: The timestamp of the start-of-day of the desired day.
-
-        cursor: A database cursor to be used for the retrieval. [Optional. If not given,
-        one will be created and destroyed for this query.]"""
-        
-        if self._dayCache and self._dayCache[0] and self._dayCache[0].startOfDay_ts == startOfDay_ts:
+        sod_ts: The timestamp of the start-of-day of the desired day."""
+                
+        if self._dayCache and self._dayCache[0] and self._dayCache[0].startOfDay_ts == sod_ts:
             return self._dayCache[0]
 
-        _allStats = DayStatsDict(self.statsTypes, startOfDay_ts)
+        _allStats = DayStatsDict(self.statsTypes, sod_ts)
         
         for stats_type in self.statsTypes:
-            _allStats[stats_type] = self.getStatsForType(stats_type, startOfDay_ts)
+            _allStats[stats_type] = self.getStatsForType(stats_type, sod_ts)
         
         if self._dayCache:
             self._dayCache = (_allStats, None)
@@ -732,6 +729,7 @@ class StatsDb(StatsReadonlyDb):
         # Get the start-of-day for this archive record.
         _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
 
+        # Retrieve a dictionary containing the day's statistics:
         _allStatsDict = self.day(_sod_ts)
 
         for _stats_type in self.statsTypes:

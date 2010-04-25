@@ -9,7 +9,6 @@
 #
 """Engine for generating reports"""
 
-import StringIO
 import ftplib
 import glob
 import os.path
@@ -19,7 +18,6 @@ import sys
 import syslog
 import threading
 import time
-import traceback
 
 import configobj
 
@@ -132,12 +130,7 @@ class StdReportEngine(threading.Thread):
                     # Caught unrecoverable error. Log it, exit
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % (generator,))
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                    sfd = StringIO.StringIO()
-                    traceback.print_exc(file=sfd)
-                    sfd.seek(0)
-                    for line in sfd:
-                        syslog.syslog(syslog.LOG_INFO, "        ****  %s" % (line,))
-                    del sfd
+                    weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
                     # Reraise the exception (this will eventually cause the thread to terminate)
                     raise

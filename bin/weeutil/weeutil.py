@@ -9,10 +9,14 @@
 #
 """Various handy utilities that don't belong anywhere else."""
 
-import datetime
-import time
-import math
 import ImageFont
+import StringIO
+import datetime
+import math
+import syslog
+import time
+import traceback
+
 import configobj
 
 def min_no_None(seq):
@@ -588,6 +592,15 @@ def latlon_string(ll, hemi, which):
 def utf8_to_latin1(instring):
     """Convert from UTF-8 to Latin-1 encoding."""
     return unicode(instring, "utf8").encode("latin1")
+
+def log_traceback(prefix=''):
+    """Log the stack traceback into syslog."""
+    sfd = StringIO.StringIO()
+    traceback.print_exc(file=sfd)
+    sfd.seek(0)
+    for line in sfd:
+        syslog.syslog(syslog.LOG_INFO, prefix + line)
+    del sfd
     
 def _get_object(module_class, *args, **kwargs):
     """Given a path to a class, instantiates an instance of the class with the given args and returns it."""
