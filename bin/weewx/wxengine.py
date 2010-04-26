@@ -66,10 +66,14 @@ class StdEngine(object):
         timeout = int(config_dict.get('socket_timeout', 20))
         socket.setdefaulttimeout(timeout)
 
+        syslog.openlog('weewx', syslog.LOG_PID|syslog.LOG_CONS)
         # Look for the debug flag. If set, ask for extra logging
         weewx.debug = int(config_dict.get('debug', 0))
         if weewx.debug:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+        else:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
 
         # Set up the services to be run:
         self.setupServices(config_dict)
@@ -557,9 +561,6 @@ def main(EngineClass=StdEngine) :
 
     Mostly consists of a bunch of high-level preparatory calls, protected
     by try blocks in the case of an exception."""
-
-    syslog.openlog('weewx', syslog.LOG_PID|syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
