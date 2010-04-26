@@ -36,6 +36,12 @@ class SkippedPost(Exception):
 class REST(object):
     """Abstract base class for RESTful protocols."""
     
+    # The types to be retrieved from the arhive database:
+    archive_types = ('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
+                    'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation')
+    # A SQL statement to do the retrieval:
+    sql_select = "SELECT " + ", ".join(archive_types) + " FROM archive WHERE dateTime=?"  
+    
     def extractRecordFrom(self, archive, time_ts):
         """Get a record from the archive database. 
         
@@ -53,17 +59,13 @@ class REST(object):
         
         sod_ts = weeutil.weeutil.startOfDay(time_ts)
         
-        sqlrec = archive.getSql("""SELECT dateTime, usUnits, barometer, outTemp,
-                                outHumidity, windSpeed, windDir, windGust, 
-                                dewpoint, radiation FROM archive WHERE dateTime=?""", time_ts)
+        # Get the values off the archive database:
+        sqlrec = archive.getSql(REST.sql_select, time_ts)
+        # Make a dictionary out of them:
+        datadict = dict(zip(REST.archive_types, sqlrec))
     
-        datadict = {}
-        for (i, _key) in enumerate(('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                                    'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation')):
-            datadict[_key] = sqlrec[i]
-    
-        if datadict['usUnits'] != 1:
-            raise NotImplementedError, "Only U.S. Units are supported for the Ambient protocol."
+        if datadict['usUnits'] != weewx.US:
+            raise weewx.UnsupportedFeature, "Only U.S. Units are supported for the Ambient protocol."
         
         # CWOP says rain should be "rain that fell in the past hour".  WU says
         # it should be "the accumulated rainfall in the past 60 min".
@@ -142,7 +144,7 @@ class Ambient(REST):
         time_ts: The record desired as a unix epoch time."""
         
         _url = self.getURL(archive, time_ts)
-
+        
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
             # Now use an HTTP GET to post the data. Wrap in a try block
