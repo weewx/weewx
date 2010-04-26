@@ -116,7 +116,7 @@ class StdReportEngine(threading.Thread):
                                                       skin_dict, 
                                                       self.gen_ts, 
                                                       self.first_run)
-                except ValueError, e:
+                except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
@@ -131,9 +131,7 @@ class StdReportEngine(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % (generator,))
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Thread exiting.")
-                    # Reraise the exception (this will eventually cause the thread to terminate)
-                    raise
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generated terminated...")
 
 
 class ReportGenerator(object):
@@ -157,14 +155,9 @@ class FtpGenerator(ReportGenerator):
 
     def run(self):
 
-        # Check to see that all necessary options are present. 
-        # If so, FTP the data up to a server.
-        if (self.skin_dict.has_key('server')   and 
-            self.skin_dict.has_key('password') and 
-            self.skin_dict.has_key('user')     and
-            self.skin_dict.has_key('path')):
-            
-            t1 = time.time()
+        t1 = time.time()
+
+        try:
             ftpData = weeutil.ftpupload.FtpUpload(server      = self.skin_dict['server'],
                                                   user        = self.skin_dict['user'],
                                                   password    = self.skin_dict['password'],
@@ -174,14 +167,19 @@ class FtpGenerator(ReportGenerator):
                                                   name        = self.skin_dict['REPORT_NAME'],
                                                   passive     = bool(self.skin_dict.get('passive', True)),
                                                   max_tries   = int(self.skin_dict.get('max_tries', 3)))
-            try:
-                N = ftpData.run()
-            except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
-                (cl, ob, tr) = sys.exc_info()
-                syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in FtpGenerator; %s." % (cl, e))
-            else:
-                t2= time.time()
-                syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
+        except Exception:
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Unable to instantiate FTP uploader. Skipped.")
+            return
+
+        try:
+            N = ftpData.run()
+        except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
+            (cl, ob, tr) = sys.exc_info()
+            syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in FtpGenerator; %s." % (cl, e))
+            return
+        
+        t2= time.time()
+        syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
             
                 
 class CopyGenerator(ReportGenerator):
