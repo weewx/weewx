@@ -40,9 +40,6 @@ Arguments:
     config_path: Path to the weewx configuration file to be used.
 """
 
-# Holds the current working directory:
-cwd = None
-
 #===============================================================================
 #                    Class StdEngine
 #===============================================================================
@@ -55,18 +52,24 @@ class StdEngine(object):
     given a chance to participate.
     """
     
-    def __init__(self):
-        """Initialize an instance of StdEngine."""
+    def __init__(self, options, args):
+        """Initialize an instance of StdEngine.
         
-        syslog.openlog('weewx', syslog.LOG_PID|syslog.LOG_CONS)
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        options: An object containing values for all options, as returned
+        by optparse
         
-        # Parse the arguments and get the configuration dictionary:
-        config_dict = self.parseArgs()
-
+        args: The command line arguments, as returned by optparse.
+        """
+        config_dict = self.getConfiguration(options, args)
+        
         # Set a default socket time out, in case FTP or HTTP hang:
-        timeout = int(config_dict.get('socket_timeout', '20'))
+        timeout = int(config_dict.get('socket_timeout', 20))
         socket.setdefaulttimeout(timeout)
+
+        # Look for the debug flag. If set, ask for extra logging
+        weewx.debug = int(config_dict.get('debug', 0))
+        if weewx.debug:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
         # Set up the services to be run:
         self.setupServices(config_dict)
@@ -74,33 +77,7 @@ class StdEngine(object):
         # Set up the weather station hardware:
         self.setupStation(config_dict)
 
-    def parseArgs(self):
-        """Parse any command line options."""
-        global cwd
-        
-        # Save the current working directory. A service might
-        # change it. In case of a restart, we need to change it back.
-        if cwd:
-            os.chdir(cwd)
-        else:
-            cwd = os.getcwd()
-
-        parser = OptionParser(usage=usagestr)
-        parser.add_option("-d", "--daemon",  action="store_true", dest="daemon",  help="Run as a daemon")
-        parser.add_option("-v", "--version", action="store_true", dest="version", help="Give version number then exit")
-        (options, args) = parser.parse_args()
-        
-        if options.version:
-            print weewx.__version__
-            exit()
-            
-        if len(args) < 1:
-            sys.stderr.write("Missing argument(s).\n")
-            sys.stderr.write(parser.parse_args(["--help"]))
-            exit()
-        
-        if options.daemon:
-            daemon.daemonize(pidfile='/var/run/weewx.pid')
+    def getConfiguration(self, options, args):
 
         # Get and set the absolute path of the configuration file.  
         # A service might to a chdir(), and then another service would be unable to
@@ -119,11 +96,6 @@ class StdEngine(object):
         except configobj.ConfigObjError:
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Error while parsing configuration file %s" % args[0])
             raise
-
-        # Look for the debug flag. If set, ask for extra logging
-        weewx.debug = int(config_dict.get('debug', 0))
-        if weewx.debug:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % self.config_path)
         
@@ -538,6 +510,33 @@ class StdReportService(StdService):
             syslog.syslog(syslog.LOG_DEBUG, "Shut down StdReportService thread.")
         self.first_run = True
 
+
+#===============================================================================
+#                       function parseArgs()
+#===============================================================================
+
+def parseArgs():
+    """Parse any command line options."""
+
+    parser = OptionParser(usage=usagestr)
+    parser.add_option("-d", "--daemon",  action="store_true", dest="daemon",  help="Run as a daemon")
+    parser.add_option("-v", "--version", action="store_true", dest="version", help="Give version number then exit")
+    (options, args) = parser.parse_args()
+    
+    if options.version:
+        print weewx.__version__
+        exit()
+        
+    if len(args) < 1:
+        sys.stderr.write("Missing argument(s).\n")
+        sys.stderr.write(parser.parse_args(["--help"]))
+        exit()
+    
+    if options.daemon:
+        daemon.daemonize(pidfile='/var/run/weewx.pid')
+
+    return (options, args)
+
 #===============================================================================
 #                       Signal handler
 #===============================================================================
@@ -559,12 +558,23 @@ def main(EngineClass=StdEngine) :
     Mostly consists of a bunch of high-level preparatory calls, protected
     by try blocks in the case of an exception."""
 
+    syslog.openlog('weewx', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
+    # Save the current working directory. A service might
+    # change it. In case of a restart, we need to change it back.
+    cwd = os.getcwd()
+
+    # Get the command line options and arguments:
+    (options, args) = parseArgs()
+    
     while True:
 
         try:
     
+            os.chdir(cwd)
             # Create and initialize the engine
-            engine = EngineClass()
+            engine = EngineClass(options, args)
             # Set up the reload signal handler:
             signal.signal(signal.SIGHUP, sigHUPhandler)
             # Run the main event loop:
@@ -606,6 +616,10 @@ def main(EngineClass=StdEngine) :
             raise
 
         finally:
-            # Shut down the engine before exiting or restart:
-            engine.shutDown()
-            
+            try:
+                # Shut down the engine before exiting or restart. If the
+                # engine has not started yet, we will get an UnboundLocalError
+                # exception.
+                engine.shutDown()
+            except UnboundLocalError:
+                pass
