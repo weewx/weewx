@@ -75,6 +75,7 @@ h3 {
 h4 {
 	font: bold medium Verdana, arial, sans-serif;
 	color: black;
+	text-decoration: underline;
 }
 .code {
 	font-family: "Courier New", Courier, monospace;
@@ -105,10 +106,11 @@ td {
 }
 .config_option {
 	font-family: "Courier New", Courier, monospace;
-	font-weight: normal;
+	font-weight: bold;
 }
 .config_section {
 	font-family: "Courier New", Courier, monospace;
+	font-weight: bold;
 }
 .config_important {
 	font-family: "Courier New", Courier, monospace;
@@ -1047,10 +1049,10 @@ $Extras.googleAnalyticsId</span>. If you take a look at the template
 these tags (search the file for the string &#39;<span class="code">radar_url</span>&#39; 
 or <span class="code">googleAnalyticsId</span> to find 
 them).</p>
-<h4 class="config_option">radar_url</h4>
+<p class="config_option">radar_url</p>
 <p>If set, the NOAA radar image will be displayed. If commented out, no image will 
 be displayed.</p>
-<h4 class="config_option">googleAnalyticsId</h4>
+<p class="config_option">googleAnalyticsId</p>
 <p>If you have a <a href="http://www.google.com/analytics/">Google Analytics ID</a>, you can set it here. The Google 
 Analytics Javascript 
 code will then be included, enabling analytics of your website usage. If 
@@ -1091,40 +1093,40 @@ all</em> members of its group will be reported in degrees Celsius.</p>
 &quot;<span class="code">degree_C</span>&quot; or &quot;<span class="code">foot</span>&quot;, not 
 &quot;<span class="code">degrees_C</span>&quot; or &quot;<span class="code">feet</span>&quot;. See the Appendix <em><a href="#Units">Units</a></em> for more information, including a concise summary of the groups, 
 their members, and which options can be used for each group.</p>
-<h4 class="config_important"><a name="group_altitude">group_altitude</a></h4>
+<p class="config_important"><a name="group_altitude" class="config_option">group_altitude</a></p>
 <p>Which measurement unit to be used for altitude. Possible options are &#39;<span class="code">foot</span>&#39; 
 or &#39;<span class="code">meter</span>&#39;.</p>
-<h4 class="config_option">group_direction</h4>
+<p class="config_option">group_direction</p>
 <p>Which measurement unit to be used for direction. The only option is &quot;<span class="code">degree_compass</span>&quot;.</p>
-<h4 class="config_option">group_moisture</h4>
+<p class="config_option">group_moisture</p>
 <p>The measurement unit to be used for soil moisture. The only option is &quot;<span class="code">centibar</span>.&quot;</p>
-<h4 class="config_option">group_percent</h4>
+<p class="config_option">group_percent</p>
 <p>The measurement unit to be used for percentages. The only option is &quot;<span class="code">percent</span>&quot;.</p>
-<h4 class="config_important">group_pressure</h4>
+<p class="config_important">group_pressure</p>
 <p>The measurement unit to be used for pressure. Possible options are one of &quot;<span class="code">inHg</span>&quot; 
 (inches of mercury), &quot;<span class="code">mbar</span>&quot;, or &quot;<span class="code">hPa</span>.&quot;</p>
-<h4 class="config_option">group_radiation</h4>
+<p class="config_option">group_radiation</p>
 <p>The measurement unit to be used for radiation. The only option is &quot;<span class="code">watt_per_meter_squared</span>.&quot;</p>
-<h4 class="config_important">group_rain</h4>
+<p class="config_important">group_rain</p>
 <p>The measurement unit to be used for precipitation. Options are &quot;<span class="code">inch</span>&quot;, 
 &quot;<span class="code">cm</span>,&quot; or &quot;<span class="code">mm</span>.&quot;</p>
-<h4 class="config_important">group_rainrate</h4>
+<p class="config_important">group_rainrate</p>
 <p>The measurement unit to be used for rate of precipitation. Possible options are 
 one of &quot;<span class="code">inch_per_hour</span>&quot;, &quot;<span class="code">cm_per_hour</span>&quot;, 
 or &quot;<span class="code">mm_per_hour</span>&quot;.</p>
-<h4 class="config_important">group_speed</h4>
+<p class="config_important">group_speed</p>
 <p>The measurement unit to be used for wind speeds. Possible options are one of 
 &quot;<span class="code">mile_per_hour</span>&quot;, &quot;<span class="code">km_per_hour</span>&quot;, 
 &quot;<span class="code">knot</span>&quot;, or &quot;<span class="code">meter_per_second</span>.&quot;</p>
-<h4 class="config_important">group_speed2</h4>
+<p class="config_important">group_speed2</p>
 <p>This group is similar to <span class="code">group_speed</span>, but is used for 
 calculated wind speeds which typically have a slightly higher resolution. Possible 
 options are one &quot;<span class="code">mile_per_hour2</span>&quot;, &quot;<span class="code">km_per_hour2</span>&quot;, 
 &quot;<span class="code">knot2</span>&quot;, or &quot;<span class="code">meter_per_second2</span>&quot;.</p>
-<h4 class="config_important"><a name="group_temperature">group_temperature</a></h4>
+<p><a name="group_temperature" class="config_important">group_temperature</a></p>
 <p>The measurement unit to be used for temperatures. Options are &quot;<span class="code">degree_F</span>&quot; 
 or &quot;<span class="code">degree_C</span>.&quot;</p>
-<h4 class="config_option">group_volt</h4>
+<p class="config_option">group_volt</p>
 <p>The measurement unit to be used for voltages. The only option is &quot;<span class="code">volt</span>.&quot;</p>
 <h3 class="config_section"><a name="Units_StringFormats">[[StringFormats]]</a></h3>
 <p>This sub-section is used to specify what string format is to be used for each 
@@ -1163,8 +1165,8 @@ formats. For example</p>
 on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
 15:20</span>&quot;</p>
 <h3 class="config_section">[[DegreeDays]]&nbsp;</h3>
-<h4 class="config_option"><span class="config_important">heating_base<br />
-cooling_base</span></h4>
+<p class="config_important">heating_base<br />
+cooling_base</p>
 <p>Set to the base temperature for calculating heating and cooling degree-days, 
 along with the unit to be used:</p>
 <pre>heating_base = 65.0, degree_F
@@ -1222,7 +1224,7 @@ contains three different kinds of generated output:</p>
 	a drop-down list that allows the NOAA month and yearly summaries to be displayed.</li>
 </ol>
 <h3>General</h3>
-<h4 class="config_option">encoding</h4>
+<p class="config_option">encoding</p>
 <p>This option controls which encoding is to be used for the generated output. There 
 are 3 possible choices:</p>
 <table align="center" style="width: 60%">

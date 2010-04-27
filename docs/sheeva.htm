@@ -41,18 +41,20 @@ dd {
 	color: black;
 }
 h1 {
-	font: normal normal bold 18pt Verdana, arial, sans-serif;
-	color: teal;
+	font: bold xx-large Verdana, arial, sans-serif;
+	color: #FFFFFF;
 	border: 1px solid black;
 	border-bottom: 2px solid black;
 	border-right: 2px solid black;
-	background-color: #e8e8e8;
+	background-color: #008080;
 	padding-left: .5em;
 	padding-right: .5em;
 	margin-top: 60pt;
+	border-right-width: medium;
+	border-bottom-width: medium;
 }
 h2 {
-	font: 15pt Verdana,arial,sans-serif;
+	font: bold x-large Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -61,7 +63,7 @@ h2 {
 	margin-top: 30pt;
 }
 h3 {
-	font: 12pt Verdana, arial, sans-serif;
+	font: bold medium Verdana, arial, sans-serif;
 	color: teal;
 	border: 1px solid black;
 	background-color: #e8e8e8;
@@ -69,9 +71,9 @@ h3 {
 	padding-right: .5em;
 }
 h4 {
-	font: 12pt Verdana,arial,sans-serif;
+	font: bold medium Verdana, arial, sans-serif;
 	color: black;
-	font-weight: bold;
+	text-decoration: underline;
 }
 .code {
 	font-family: "Courier New", Courier, monospace;
@@ -84,11 +86,12 @@ table {
 td {
 	border-style: solid;
 	border-width: 1px;
+	padding: 5px;
 }
 .indent {
 	margin-left: 40px;
 }
-.tty {
+.tty, pre {
 	font-family: "Courier New", Courier, monospace;
 	margin-left: 40px;
 	margin-top: 0px;
@@ -101,10 +104,11 @@ td {
 }
 .config_option {
 	font-family: "Courier New", Courier, monospace;
-	font-weight: normal;
+	font-weight: bold;
 }
 .config_section {
 	font-family: "Courier New", Courier, monospace;
+	font-weight: bold;
 }
 .config_important {
 	font-family: "Courier New", Courier, monospace;
@@ -113,6 +117,21 @@ td {
 }
 .bold_n_blue {
 	color: #0000FF;
+}
+.xxsmall {
+	font-size: xx-small;
+}
+.highlight {
+	background-color: #FFFF66;
+}
+.center {
+	text-align: center;
+}
+.Example_output {
+	padding: 10px;
+	border: thin #000000 dotted;
+	font-family: "Times New Roman", Times, serif;
+	margin-left: 40px;
 }
 </style>
 </head>
