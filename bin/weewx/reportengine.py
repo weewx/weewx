@@ -131,7 +131,7 @@ class StdReportEngine(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % (generator,))
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generated terminated...")
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
 
 
 class ReportGenerator(object):

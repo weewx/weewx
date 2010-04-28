@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -479,11 +479,10 @@ class VantagePro (object) :
         returns: A dictionary with the values in physical units.
         """
         # Right now, only US customary units are supported
-        if self.unit_system == weewx.US :
-            _record = self.translateLoopToUS(loopPacket)
-        else :
+        if self.unit_system != weewx.US :
             raise weewx.UnsupportedFeature, "Only US Customary Units are supported on the Davis VP2."
-        
+
+        _record = self.translateLoopToUS(loopPacket)
         return _record
     
 
@@ -562,10 +561,8 @@ class VantagePro (object) :
         for _type in _loop_map.keys() :    
             # Get the mapping function needed for this key
             func = _loop_map[_type]
-            # Call it, with the value as an argument
-            fv = func(packet[_type])
-            # Store the results
-            record[_type] = fv
+            # Call it, with the value as an argument, storing the result:
+            record[_type] = func(packet[_type])
     
         # Add a few derived values that are not in the packet itself.
         T = record['outTemp']
@@ -596,11 +593,10 @@ class VantagePro (object) :
         """
         
         # Right now, only US units are supported
-        if self.unit_system == weewx.US :
-            _record = self.translateArchiveToUS(packet)
-        else :
+        if self.unit_system != weewx.US :
             raise weewx.UnsupportedFeature, "Only US Units are supported on the Davis VP2."
-        
+
+        _record = self.translateArchiveToUS(packet)
         return _record
     
     def translateArchiveToUS(self, packet):
@@ -657,10 +653,8 @@ class VantagePro (object) :
         for _type in _archive_map.keys() :    
             # Get the mapping function needed for this key
             func = _archive_map[_type]
-            # Call it, with the value as an argument
-            fv = func(packet[_type])
-            # Store the results
-            record[_type] = fv
+            # Call it, with the value as an argument, storing the results:
+            record[_type] = func(packet[_type])
     
         # Add a few derived values that are not in the packet itself.
         T = record['outTemp']
@@ -671,7 +665,6 @@ class VantagePro (object) :
         record['heatindex']   = weewx.wxformulas.heatindexF(T, R)
         record['windchill']   = weewx.wxformulas.windchillF(T, W)
         record['dateTime']    = _archive_datetime(packet)
-        record['dateTimeStr'] = time.ctime(record['dateTime'])
         record['usUnits']     = weewx.US
         
         # This would be the place to do any processing for crazy numbers
@@ -713,8 +706,8 @@ def _wakeup_console(serial_port, max_tries=3, wait_before_retry=1.2):
 def _send_data(serial_port, data):
     """Send data to the Davis console, waiting for an acknowledging <ack> 
     
-    data: The data to send, as a string
-    """
+    data: The data to send, as a string"""
+
     serial_port.write(data)
     
     # Look for the acknowledging ACK character
@@ -727,9 +720,7 @@ def _send_data_with_crc16(serial_port, data, max_tries=3) :
     """Send data to the Davis console along with a CRC check, waiting for an acknowledging <ack>.
     If none received, resend up to 3 times.
     
-    data: The data to send, as a string
-    
-    """
+    data: The data to send, as a string"""
     
     #Calculate the crc for the data:
     _crc = crc16(data)
@@ -761,9 +752,7 @@ def _get_data_with_crc16(serial_port, nbytes, prompt=None, max_tries=3) :
     
     max_tries: Number of tries before giving up. Default=3
     
-    returns: the packet data as a string
-    
-    """
+    returns: the packet data as a string"""
     if prompt :
         serial_port.write(prompt)
         
@@ -809,9 +798,7 @@ class DavisLoopPacket(dict) :
         """Create a new DavisLoopPacket from a buffer's worth of data from a Davis VantagePro
     
         packet: The loop packet data as a string. This will be unpacked and the results placed
-        in the dictionary inherited by LoopPacket
-    
-        """
+        in the dictionary inherited by LoopPacket"""
         # Unpack the data, using the compiled stuct.Struct string 'loop_format'
         data_tuple = DavisLoopPacket.loop_format.unpack(packet)
         
@@ -836,15 +823,12 @@ class DavisLoopPacket(dict) :
         self['usUnits'] = weewx.US
 
 
-
 #===============================================================================
 #                         class DavisArchivePacket
 #===============================================================================
 
 class DavisArchivePacket(dict):
-    """Decode a Davis archive packet, holding the results as a dictionary. 
-    
-    """
+    """Decode a Davis archive packet, holding the results as a dictionary."""
     
     # A tuple of all the types held in a VantagePro2 Rev B archive record in their native order.
     # TODO: Extend to Rev A type archive records
@@ -894,14 +878,12 @@ class DavisArchivePacket(dict):
     def _rxcheck(self):
         """Gives an estimate of the fraction of packets received.
         
-        Ref: Vantage Serial Protocol doc, V2.1.0, released 25-Jan-05; p42
-        
-        """
+        Ref: Vantage Serial Protocol doc, V2.1.0, released 25-Jan-05; p42"""
         # The formula for the expected # of packets varies with model number.
         if self['model_type'] == 1 :
             _expected_packets = float(self['interval'] * 60) / ( 2.5 + (self['iss_id']-1) / 16.0) -\
                                 float(self['interval'] * 60) / (50.0 + (self['iss_id']-1) * 1.25)
-        if self['model_type'] == 2 :
+        elif self['model_type'] == 2 :
             _expected_packets = 960.0 * self['interval'] / float(41 + self['iss_id'] - 1)
         else :
             return None
@@ -915,9 +897,7 @@ class DavisArchivePacket(dict):
 #===============================================================================
 
 def _archive_datetime(packet) :
-    """Returns the epoch time of the archive packet.
-    
-    """
+    """Returns the epoch time of the archive packet."""
     datestamp = packet['date_stamp']
     timestamp = packet['time_stamp']
     
@@ -1022,6 +1002,3 @@ if __name__ == '__main__':
         print "Done."
     else :
         print "Nothing done."
-
-
-

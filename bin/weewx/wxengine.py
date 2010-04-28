@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -75,12 +75,12 @@ class StdEngine(object):
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
 
-        # Set up the services to be run:
-        self.setupServices(config_dict)
-        
         # Set up the weather station hardware:
         self.setupStation(config_dict)
 
+        # Set up the services to be run:
+        self.setupServices(config_dict)
+        
     def getConfiguration(self, options, args):
 
         # Get and set the absolute path of the configuration file.  
@@ -108,17 +108,28 @@ class StdEngine(object):
     def setupServices(self, config_dict):
         """Set up the services to be run."""
         
-        service_list = weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get('service_list'))
+        # This will hold the list of services to be run:
+        self.service_obj = []
+
+        # Get the names of the services to be run:
+        service_names = weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get('service_list'))
         
         syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
-        for svc in service_list:
-            syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % svc)
         
-        # For each listed service in service_list, instantiates an instance of
-        # the class, passing self and the configuration dictionary as the
-        # arguments:
-        self.service_obj = [weeutil.weeutil._get_object(svc, self, config_dict) for svc in service_list]
-        
+        # Wrap the instantiation of the services in a try block, so if an exception
+        # occurs, any that may have already started can be shut down in an orderly way.
+        try:
+            for svc in service_names:
+                # For each listed service in service_list, instantiates an instance of
+                # the class, passing self and the configuration dictionary as the
+                # arguments:
+                self.service_obj.append(weeutil.weeutil._get_object(svc, self, config_dict))
+                syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % svc)
+        except:
+            # An exception occurred. Shut down any running services, 
+            # then reraise the exception.
+            self.shutDown()
+            raise
 
     def setupStation(self, config_dict):
         """Set up the weather station hardware."""
@@ -145,23 +156,28 @@ class StdEngine(object):
     def run(self):
         """This is where the work gets done."""
         
-        self.setup()
-        
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
-
-        while True:
-    
-            self.preloop()
-
-            # Generate LOOP packets until the next archive record is due.
-            for physicalPacket in self.station.genLoopPackets():
-                
-                # Process the new LOOP packet:
-                self.newLoopPacket(physicalPacket)
+        # Start the main loop. Wrap it in a try block so we can do an orderly
+        # shutdown should an exception occur:
+        try:
+            self.setup()
             
-            # Get and process any new archive data. 
-            self.processArchiveData()
-
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
+    
+            while True:
+        
+                self.preloop()
+    
+                # Generate LOOP packets until the next archive record is due.
+                for physicalPacket in self.station.genLoopPackets():
+                    
+                    # Process the new LOOP packet:
+                    self.newLoopPacket(physicalPacket)
+                
+                # Get and process any new archive data. 
+                self.processArchiveData()
+        finally:
+            # The main loop has exited. Shut the engine down.
+            self.shutDown()
 
     def setup(self):
         """Gets run before anything else."""
@@ -179,7 +195,7 @@ class StdEngine(object):
             
     def newLoopPacket(self, loopPacket):
         """Run whenever a new LOOP packet becomes available."""
-        
+
         for obj in self.service_obj:
             obj.newLoopPacket(loopPacket)
             
@@ -193,7 +209,6 @@ class StdEngine(object):
 
     def shutDown(self):
         """Run when an engine shutdown is requested."""
-
         # If we've gotten as far as having a list of service objects,
         # then shut them all down:
         if hasattr(self, 'service_obj'):
@@ -306,7 +321,7 @@ class StdArchive(StdService):
     
     def __init__(self, engine, config_dict):
         super(StdArchive, self).__init__(engine, config_dict)
-        
+
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
     
@@ -375,7 +390,7 @@ class StdTimeSynch(StdService):
         
         # Zero out the time of last synch, and get the time between synchs.
         self.last_synch_ts = 0
-        self.clock_check = int(config_dict['Station'].get('clock_check','14400'))
+        self.clock_check = int(config_dict['Station'].get('clock_check', 14400))
         
     def preloop(self):
         """Ask the station to synch up if enough time has passed."""
@@ -615,12 +630,3 @@ def main(EngineClass=StdEngine) :
             syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise
-
-        finally:
-            try:
-                # Shut down the engine before exiting or restart. If the
-                # engine has not started yet, we will get an UnboundLocalError
-                # exception.
-                engine.shutDown()
-            except UnboundLocalError:
-                pass
