@@ -75,6 +75,7 @@ h3 {
 h4 {
 	font: bold medium Verdana, arial, sans-serif;
 	color: black;
+	text-decoration: underline;
 }
 .code {
 	font-family: "Courier New", Courier, monospace;
@@ -105,10 +106,11 @@ td {
 }
 .config_option {
 	font-family: "Courier New", Courier, monospace;
-	font-weight: normal;
+	font-weight: bold;
 }
 .config_section {
 	font-family: "Courier New", Courier, monospace;
+	font-weight: bold;
 }
 .config_important {
 	font-family: "Courier New", Courier, monospace;
@@ -139,7 +141,7 @@ td {
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.7</h1>
+Version 1.8</h1>
 <h1>Table of Contents</h1>
 <ol>
 	<li><a href="#Copyright">Copyright</a></li>
@@ -181,13 +183,27 @@ to a remote Web server as well as publish to the
 <a href="http://www.pwsweather.com/">PWSweather.com</a>. It uses modern software 
 concepts, making it simple, robust, and easy to extend. For an example station see
 <a href="http://www.threefools.org/weewx">Hood River West</a>.</p>
+		<p>Key features:</p>
+		<ul>
+			<li>An easy to understand, simple, extensible micro-kernel 
+			architecture<em>;</em></li>
+			<li>Uploads to popular weather sites, such as Weather Underground 
+			and CWOP;</li>
+			<li>Uploads to your website using FTP;</li>
+			<li>Support for multiple <em>skins</em>;</li>
+			<li>Simple, but extensible templating system;</li>
+			<li>Support for multiple unit systems;</li>
+			<li>Calibration corrections;</li>
+			<li>Ability to extend <span class="code">weewx</span> with new 
+			services and reports.</li>
+		</ul>
 <p>I wrote <span class="code">weewx</span> over the winter of 2008-2009 for two 
 reasons: it was a wet and miserable winter here in Oregon with not much else to 
 do, so there was no good reason not to, and because I wanted a simple, easy-to-understand 
 server to run my Davis VantagePro2 weather station on a Linux box. I had been using
 <a href="http://www.wviewweather.com/">wview</a>, which is a high-performance and 
 feature rich system authored by Mark Teel with lots of users. Written in C, it&#39;s 
-an efficient system that can run on very underpowered boxes. In exchange, it&#39;s huge 
+an efficient system that can run on underpowered boxes. In exchange, it&#39;s huge 
 (45,000+ lines of code), tightly integrated in with its companion library, radlib 
 (another 14,000+ lines), and very complex, making it difficult to understand and 
 reliably customize. I wanted something more modern and much simpler.</p>
@@ -195,15 +211,16 @@ reliably customize. I wanted something more modern and much simpler.</p>
 languages, so I thought I&#39;d try either Python or Ruby (although, truth be told, 
 the roots of Python are nearly as old as C++!). I ended up picking Python because 
 its libraries are more mature and there are many mores choices for third party libraries.</p>
-<p><span class="code">Weewx</span> weighs in at under 4,000 lines of code, plus 
-another 2,500 comment lines. Because it is pure Python, it requires no makefiles, 
-no builds, no special installs. However, to be fair, at this point it supports only 
-the&nbsp; <a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis 
-VantagePro2</a> weather station. On the other hand, it offers very powerful configuration 
-and templating options, as well as an internally extensible engine, making it easy 
-to customize. Its internal modular design and use of modern exception handling make 
-it very robust and difficult to crash. It is also architecturally very simple and 
-easy to understand.</p>
+<p><span class="code">Weewx</span> weighs in at well under 5,000 lines of code. It also has another 2,900 
+comment lines. Because it is pure Python, it requires no makefiles, no builds, 
+no special installs. It offers very powerful 
+configuration and templating options, as well as an internally extensible 
+engine, making it easy to customize. Its internal modular design and use of 
+modern exception handling make it very robust and difficult to crash. It is also 
+architecturally very simple and easy to understand. However, to be fair, at this 
+point it supports only the&nbsp;
+<a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis 
+VantagePro2</a> weather station.</p>
 <h1>3. <a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
 <p><span class="code">weewx</span> can be downloaded from its
 <a href="https://sourceforge.net">SourceForge</a> page:
@@ -551,16 +568,16 @@ same as the &quot;default value&quot;.</p>
 <h3>General</h3>
 <p>The options declared at the top are not actually part of any section. There are 
 two:</p>
-<h4 class="config_option">debug</h4>
+<p class="config_option">debug</p>
 <p>Set to 1 to have the program perform extra debug checks, as well as emit extra 
 information on the log file. Otherwise, set to 0. Default is 0 (no debug).</p>
-<h4 class="config_option">socket_timeout</h4>
+<p class="config_option">socket_timeout</p>
 <p>Set to how long to wait before declaring a socket time out. This is used when 
 FTP&#39;ing data to a web server or sending data to the Weather Underground. Twenty 
 (20) seconds is reasonable. Default is 20.</p>
 <h3 class="config_section">[Station]</h3>
 <p>This section covers options relating to the entire weather station setup. </p>
-<h4 class="config_option">WEEWX_ROOT</h4>
+<p class="config_important">WEEWX_ROOT</p>
 <p>Set to the root directory of the <span class="code">weewx</span> data file hierarchy 
 for this station, nominally &#39;<span class="code">/home/weewx</span>&#39;. The 
 weewx data subdirectories <span class="code">skins</span>, <span class="code">
@@ -569,71 +586,71 @@ found here. This value
 will be set automatically by the setup script <span class="code">setup.py</span> 
 to reflect the choice you made in the configuration file <span class="code">setup.cfg</span>. 
 Required. No default.</p>
-<h4 class="config_important">location</h4>
+<p class="config_important">location</p>
 <p>The station location should be a UTF-8 string that describes the geography of 
 where you weather station is located, such as &#39;<span class="code">Hood River, Oregon</span>&#39;. Required. No 
 default.</p>
-<h4 class="config_important">latitude<br />
-longitude</h4>
+<p class="config_important">latitude<br />
+longitude</p>
 <p>The lat/lon should be set in decimal degrees, negative for southern and eastern 
 hemispheres, respectively. Required. No default.</p>
-<h4 class="config_important">altitude</h4>
+<p class="config_important">altitude</p>
 <p>Set to the altitude of the station and the unit used for the altitude. 
 Required. No default. Example:</p>
 <pre>altitude = 700, foot</pre>
-<h4 class="config_important">rain_year_start</h4>
+<p class="config_important">rain_year_start</p>
 <p>If your area uses a rain year that starts on something other than the first of 
 January, you may want to set this variable. For example, set to 10 if your rain 
 year starts in October (as mine does). Default is 1.</p>
-<h4 class="config_option">week_start</h4>
+<p class="config_option">week_start</p>
 <p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 (Sunday)</p>
-<h4 class="config_option">clock_check</h4>
+<p class="config_option">clock_check</p>
 <p>How often to check the station&#39;s onboard clock for drift, in seconds. Default 
 is 14400 (every 4 hours)</p>
-<h4 class="config_option">cache_loop_data</h4>
+<p class="config_option">cache_loop_data</p>
 <p>Set to 1 (one) to cache LOOP data, otherwise, set to zero. Most users will not 
 want to change this unless you have a specialized application. Default is 1 (<em>i.e.</em>, 
 cache LOOP data).</p>
-<h4 class="config_option">station_type</h4>
+<p class="config_option">station_type</p>
 <p>Set to the type of hardware you are using. For this version, only &#39;<span class="code">VantagePro</span>&#39; 
 is accepted. Required.</p>
 <h3 class="config_section">[VantagePro]</h3>
 <p>This section is for options relating to the VantagePro hardware.</p>
-<h4 class="config_important">port</h4>
+<p class="config_important">port</p>
 <p>Set to the port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
 is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
 for serial ports. Required. No default.</p>
-<h4 class="config_option">baudrate</h4>
+<p class="config_option">baudrate</p>
 <p>Set to the baudrate of your station. The default is 19200.</p>
-<h4 class="config_important">archive_interval</h4>
+<p class="config_important">archive_interval</p>
 <p>Set to the desired archive interval of your station, in seconds. This variable 
 is only used when setting up your station. Otherwise, this value is read directly 
 from the station. Required if you <a href="#Archive_interval">configure your station</a>. 
 No default.</p>
-<h4 class="config_option">iss_id</h4>
+<p class="config_option">iss_id</p>
 <p>Set to the ID number of your Integrated Sensor Suite (ISS). This is used in the 
 formula to calculate reception quality for wireless stations. The default is 1.</p>
-<h4 class="config_option">archive_delay</h4>
+<p class="config_option">archive_delay</p>
 <p>How long to wait in seconds after the top of an archiving interval before fetching 
 new data off the station. For example, if your archive interval is 5 minutes and 
 archive_delay is set to 15, then the data will be fetched at 00:00:15, 00:05:15, 
 00:10:15, etc. This delay is to give the station a few seconds to archive the data 
 internally, and in case your server has any other tasks to do at the top of the 
 minute. Default is 15 seconds.</p>
-<h4 class="config_option">timeout</h4>
+<p class="config_option">timeout</p>
 <p>How many seconds&nbsp; to wait for a response from the station before giving 
 up. Default is 5 seconds.</p>
-<h4 class="config_option">wait_before_retry</h4>
+<p class="config_option">wait_before_retry</p>
 <p>How many seconds to wait before retrying again. Unless you have a good reason 
 to change it, this value should be left at the default, as it is long enough for 
 the station to offer new data, but not so long as to go into a new loop packet (which 
 arrive every 2 seconds). Default is 1.2 seconds.</p>
-<h4 class="config_option">max_tries</h4>
+<p class="config_option">max_tries</p>
 <p>How many times to try again before giving up. Default is 4.</p>
-<h4 class="config_option">max_drift</h4>
+<p class="config_option">max_drift</p>
 <p>The maximum amount of drift to tolerate, in seconds, in the VantagePro&#39;s onboard 
 clock, before resetting the clock. Default is 5.</p>
-<h4 class="config_option">unit_system</h4>
+<p class="config_option">unit_system</p>
 <p>What unit system is in use on your weather station hardware. Possible values 
 are &#39;1&#39; (U.S. Customary) or &#39;2&#39; (Metric). As far as I know, all Davis instruments 
 support only U.S.. In any case, U.S. is the only system supported by
@@ -641,41 +658,67 @@ support only U.S.. In any case, U.S. is the only system supported by
 <h3 class="config_section">[RESTful]</h3>
 <p>This section is for configuring uploads to simple
 <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
-servers such as the <a href="http://www.wunderground.com/">Weather Underground</a> 
-or <a href="http://www.pwsweather.com/">PWSweather.com</a>.</p>
+servers such as the <a href="http://www.wunderground.com/">Weather Underground</a>,
+<a href="http://www.pwsweather.com/">PWSweather.com</a>, or
+<a href="http://www.wxqa.com/">CWOP</a>.</p>
 <h4 class="config_section">[[Wunderground]]</h4>
 <p><span class="code">Weewx </span>can send your current data to the Weather Underground. 
 If you do not wish to do this, comment out the two options below.</p>
-<h5 class="config_important">station</h5>
+<p class="config_important">station</p>
 <p>Set to your Weather Underground station ID (e.g., <span class="code">KORHOODR3</span>). 
 Required.</p>
-<h5 class="config_important">password</h5>
+<p class="config_important">password</p>
 <p>Set to your Weather Underground password. Required.</p>
 <h4 class="config_section">[[PWSweather]]</h4>
 <p><span class="code">Weewx </span>can send your current data to the 
 PWSweather.com service. 
 If you do not wish to do this, comment out the two options below.</p>
-<h5 class="config_important">station</h5>
+<p class="config_important">station</p>
 <p>Set to your PWSweather station ID. 
 Required.</p>
-<h5 class="config_important">password</h5>
+<p class="config_important">password</p>
 <p>Set to your PWSweather password. Required.</p>
+<h4 class="config_section">[[CWOP]]</h4>
+<p><span class="code">Weewx</span> can send your data to the Citizen Weather 
+Observer Program. If you do not wish to do this, comment out option &quot;<span class="code">station</span>&quot; 
+below.</p>
+<p class="config_important">station</p>
+<p>Set to your CWOP station ID (e.g., <span class="code">CW1234</span>). 
+Required.</p>
+<p class="config_important">passcode</p>
+<p>This is used for APRS (amateur radio) stations only. Set to the passcode 
+given to you by the CWOP operators. Otherwise, leave this option commented out 
+[Required for APRS stations; ignored for others]</p>
+<p class="config_option">server</p>
+<p>A comma separated list of servers:ports to try. Unless you have a good reason 
+to change this, use the servers listed. [Required.]</p>
+<p class="config_option">interval</p>
+<p>The interval in seconds between posts. Because CWOP is heavily used, the 
+operators discourage very frequent posts. Every 5 minutes (300 seconds) is fine, 
+but they prefer every 10 minutes (600 s) or even longer. Setting this value to 
+zero will cause every archive record to be posted. [Optional. Default is zero.]</p>
+<p class="config_option">stale</p>
+<p>How old a record can be before it will not be used for a catch up. CWOP does 
+not use the timestamp on a posted record. Instead, they use the wall clock time 
+that it came in. This means that if your station is off the air for a long 
+period of time, then weewx attempts a catch up, old data could be interpreted as 
+the current conditions. [Optional. Default is 1800 seconds.]</p>
 <h3 class="config_section">[Archive]</h3>
 <p>This section is for configuring the sqlite3 database in which the station archive 
 data is stored.</p>
-<h4 class="config_option">archive_file</h4>
+<p class="config_option">archive_file</p>
 <p>The path, relative to the <span class="code">WEEWX_ROOT </span>directory, to 
 the database. Required</p>
-<h4 class="config_option">unit_system</h4>
+<p class="config_option">unit_system</p>
 <p>What unit system to use inside the database. Required. The only one supported 
 right now is &#39;1&#39;, the U.S. Customary system</p>
 <h3 class="config_section"><a name="[Stats]">[Stats]</a></h3>
 <p>This section is for configuring the sqlite3 database in which the station statistics 
 are stored.</p>
-<h4 class="config_option">stats_file</h4>
+<p class="config_option">stats_file</p>
 <p>The path, relative to the <span class="code">WEEWX_ROOT </span>directory to the 
 statistical database. Required.</p>
-<h4 class="config_option"><a name="stats_types">stats_types</a></h4>
+<p class="config_option"><a name="stats_types">stats_types</a></p>
 <p>The list of types for which statistics will be kept. Types not listed will not 
 be available for generating HTML pages. Optional. The default is all types, resulting 
 in a possibly much bigger than necessary stats database (do you really have four 
@@ -729,25 +772,49 @@ www.threefools.org</a>, in my case). Required. No default</p>
 <p>Set to the path where the weather data will be stored on your webserver (e.g., 
 &#39;<span class="code">/weather</span>&#39;). NB: some FTP servers require a leading slash 
 (&#39;<span class="code">/</span>&#39;), some don&#39;t. Required. No default.</p>
-<h4 class="config_important">passive</h4>
+<p class="config_important">passive</p>
 <p>Set to 1 if you wish to use the more modern, FTP passive mode, 0 if you wish 
 to use active mode. Passive mode generally works better through firewalls, but not 
 all FTP servers do a good job of supporting it. See
 <a href="http://slacksite.com/other/ftp.html">Active FTP vs. Passive FTP, a Definitive 
 Explanation</a> for a good explanation of the difference. Default is 1 (passive 
 mode).</p>
-<h4 class="config_option">max_tries</h4>
+<p class="config_option">max_tries</p>
 <p><span class="code">Weewx</span> will try up to this many times to FTP a file 
 up to your server before giving up. Default is 3.</p>
+<h3 class="config_section">[Calibrate]</h3>
+<p>One of the services that <span class="code">weewx</span> can run is a <em>calibration service</em>. 
+This is an opportunity to correct for any calibration errors in your 
+instruments. It is very general and flexible.</p>
+<h4 class="config_section">[[Corrections]]</h4>
+<p>In this section you list all <em>correction expressions</em>. For example, 
+say that you know your outside thermometer reads high by 0.2&deg;F. You could 
+add the expression:</p>
+<pre>outTemp = outTemp - 0.2</pre>
+<p>Perhaps you need a linear correction around a reference temperature of 68&deg;F:</p>
+<pre>outTemp = outTemp + (outTemp-68) * 0.02</pre>
+<p>It is even possible to do corrections involving more than one variable. 
+Suppose you have a temperature sensitive barometer:</p>
+<pre>barometer = barometer + (outTemp-32) * 0.0091</pre>
+<p>All correction expressions are run in the order given.</p>
+<p>The units should be <em>in the native units of the instrument</em>, US 
+Customary in the case of the VantagePro.</p>
+<p>Both LOOP data and archive data will be corrected. It is important that the 
+calibration service, <span class="code">StdCalibrate</span>, be run <em>before</em> 
+the archiving service <span class="code">StdArchive</span>, so that it is the 
+corrected data that is stored.</p>
+<p>If all you require is a simple correction offset, this can also be done in 
+the Davis VantagePro hardware. See your manual for instructions.</p>
 <h3 class="config_section">[Engines]</h3>
 <p>This section is used to configure the internal service engine in weewx. It is 
 for advanced customization. Details on how to do this is found in the section
-<em><a href="customizing.htm#Customizing_the_weewx_service_engine">Customizing the 
+<em>
+<a href="file://RAVEN/tkeffer/workspace/weewx/docs/customizing.htm#Customizing_the_weewx_service_engine">Customizing the 
 weewx service engine</a> </em>in the document <a href="customizing.htm"><em>Customizing
 </em><span class="code"><em>weewx</em></span></a>.</p>
 <h4 class="config_section">[[WxEngine]]</h4>
 <p>This section is for options used by the service engine.</p>
-<h4 class="config_option">service_list</h4>
+<p class="config_option">service_list</p>
 <p>This option is the list of <em>services</em> that are to be run by the service 
 engine. After each event (such as the arrival of LOOP data, etc.), they will be 
 run in the given order. </p>
@@ -863,8 +930,70 @@ When troubleshooting the system, be sure to check it!</p>
 to <span class="code">1</span> (one) will generate many more checks and output and 
 can be useful for debugging.</p>
 <h1>10. <a name="Troubleshooting">Troubleshooting</a></h1>
+<p>If you get stuck, be sure to </p>
+<ul>
+	<li>Set option <span class="code">debug </span>in <span class="code">weewx.conf</span> 
+to <span class="code">1</span> (one)! It will put lots more information in the 
+	log file, which can be very useful for troubleshooting and debugging!</li>
+	<li><a href="#Monitoring_weewx">Look at the log file</a>. I am always happy 
+	to take questions, but the first thing I will ask you is: &quot;Did you look at 
+	the log file?&quot;</li>
+	<li>Run from the command line. Generally, weewx will catch and log any 
+	unrecoverable exceptions. But if you are getting strange results, it is 
+	worth running from the command line and looking for any clues.</li>
+</ul>
 <h2>10.1 Execution</h2>
+<h3><span class="code">configobj</span> errors</h3>
+<p>These are errors in the configuration file. Two are very common. 
+Incidentally, these errors are far easier to diagnose when <span class="code">
+weewx</span> is run from the command line.</p>
+<h4><span class="code">configobj.DuplicateError</span> exception</h4>
+<p>This error is caused by using an identifier more than once in the 
+configuration file. For example, you may have inadvertently listed your FTP 
+server twice:</p>
+<pre>[Reports]
+	[[FTP]]
+		... (details elided)
+		user = fred
+		server = ftp.myhost.com
+		password = mypassword
+		server = ftp.myhost.com  # OOPS! Listed it twice!
+		path = /weather
+		... </pre>
+<p>Generally, if you encounter this error, the log file will give you the line 
+number it happened in:</p>
+<pre>Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
+Apr 24 12:09:15 raven weewx[11480]: wxengine: Unable to initialize main loop:
+Apr 24 12:09:15 raven weewx[11480]:     ****  Duplicate keyword name at line 254.
+Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting.&nbsp;</pre>
+<h4><span class="code">configobj.NestingError</span> exception</h4>
+<p>This is a very similar error, and is caused by a misformed section nesting. 
+For example:</p>
+<pre>[Reports]
+	[[FTP]]]
+		... (details elided)</pre>
+<p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.</p>
 <h2>10.2 Hardware</h2>
+<h3>Tips on a reliable system</h3>
+<p>If you are having problems keeping your weather station up for long periods 
+of time, here are some tips, in decreasing order of importance:</p>
+<ul>
+	<li>Run on dedicated hardware. If you are using the server for other tasks, 
+	particularly as your desktop machine, you will have reliability problems. If 
+	you are using it as a print or network server, you will probably be OK.</li>
+	<li>Run headless. Modern graphical systems are extremely complex. As new 
+	features are added, test suites don&#39;t always catch up. Your system will be 
+	much more reliable if you run it without a windowing system (X Windows, in 
+	the case of Linux).</li>
+	<li>Use an Uninterruptible Power Supply (UPS). The vast majority of power 
+	glitches are very short lived &mdash; just a second or two &mdash; so you do not 
+	need a big one. The 425 VA unit I use to protect my fit-PC cost me 
+	$55 at Best Buy.</li>
+	<li>Use a VantagePro console with a serial connection, not a USB connection. See the 
+	next section for details.</li>
+	<li>If you do use a USB connection, put a ferrite coil on each end of the 
+	connection.</li>
+</ul>
 <h3>cp2101 converter problems</h3>
 <p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
 problems. The symptom is that the Linux kernel will disconnect from your old USB 
@@ -882,16 +1011,45 @@ Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while
 Nov 29 10:40:22 hummingbird kernel: [6661625.528107] usb 2-3: reset full speed USB device using ohci_hcd and address 3 
 Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</pre>
 <p>In this example, the VantagePro was connected to <span class="code">
-/dev/ttyUSB0</span>, but then reconnected to <span class="code">/dev/ttyUSB1</span>. 
-Usually physically disconnecting the USB then plugging it back in clears the 
-problem. Most likely you will also have to restart <span class="code">weewx</span>, 
-but sometimes it can recover on its own.</p>
-<p>After this happened to me twice, I added a ferrite coil to the connection 
-between my VP2 Envoy and my server and it hasn&#39;t happened again. Mind you, 
-that&#39;s twice in three years, so it is not a very common occurrence.</p>
-<p>Finally, if you have a choice and if your server has the port, a VP2 with an 
-old-fashioned serial cable turns out to be more reliable than one with a USB 
-connection. My console has the former and has never once given me any trouble.</p>
+/dev/ttyUSB0</span>, but then reconnected to <span class="code">/dev/ttyUSB1</span>. </p>
+<p>If you put ferrite coils on the USB connection, you will eliminate 90% of 
+this problem. I did this about 6 months ago, and have not had a problem since. </p>
+<p>However, there is one final step you can take that will reallly harden up 
+your system: install a <span class="code">udev</span> script that will create 
+a symbolic link to the VantagePro USB port, whatever it might be. With this 
+approach, if the port jumps from <span class="code">ttyUSB0</span> to 
+<span class="code">ttyUSB1</span>, the symbolic link will move 
+as well. You just specify port <span class="code">/dev/vpro</span> and be done with it. Here&#39;s how:</p>
+<h4>Installing a udev script</h4>
+<p>I have installed a file <span class="code">/etc/udev/rules.d/66-vpro.rules</span> 
+on my fit-PC that looks like this:</p>
+<pre># Automount the VantagePro2 to port /dev/vpro.</pre>
+<pre># Install in /dev/udev/rules.d/66-vpro.rules</pre>
+<pre>#</pre>
+<pre>ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
+<p>What this rule says is that when the USB port is plugged in (action
+<span class="code">ADD</span>), and it has an attribute with name
+<span class="code">interface</span> that is equal to &quot;<span class="code">CP2102 
+USB to UART Bridge Controller</span>&quot;, add a symbolic link for its physical port 
+to <span class="code">/dev/vpro</span>. </p>
+<p>Your controller may have a different identifier!! I can recommend this 
+article, &quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing 
+udev rules</em></a><span class="style1">,</span>&quot; for how to find and write an 
+appropriate <span class="code">udev</span> rule for your controller. In 
+particular, run the command</p>
+<pre># udevinfo -a -p $(udevinfo -q path -n /dev/ttyUSB0)</pre>
+<p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute your 
+real USB port) the VP2 is attached to. It will print out various identifiers 
+that can be useful in identifying your VP2 to <span class="code">udev</span>.</p>
+<p>Once you&#39;ve installed your <span class="code">udev</span> rule, you can then 
+set <span class="code">port=/dev/vpro</span> in <span class="code">weewx.conf</span>, 
+confident that it will always point to your VantagePro2, no matter which USB 
+port it is actually attached to!</p>
+<p>I have tested this system many times. You can yank the USB port out of the 
+machine and then plug it back in while also pulling out the network connection 
+in the middle of an FTP upload: weewx will recover.</p>
+<p>Or, at least, it should!</p>
+<p>&nbsp;</p>
 <h2>10.3 Templates</h2>
 <h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
 <p>If you get errors of the sort:</p>

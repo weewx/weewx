@@ -1,10 +1,34 @@
 CHANGE HISTORY
 --------------------------------
 
-1.7.1   04/17/10
+1.8.0   04/28/10
 
-Added a shutdown for the VP2 serial port. This will release the port on error,
-allowing a clean restart.
+Added CWOP support.
+
+Storage of LOOP and archive data into the SQL databases is now just another
+service, StdArchive.
+
+Added a calibration service, StdCalibrate, that can correct LOOP and archive
+data.
+
+Average console battery voltage is now calculated from LOOP data, and saved to
+the archive as 'consBatteryVoltage'.
+
+Transmitter battery status is now ORd together from LOOP data, and saved to the
+archive as 'txBatteryStatus'.
+
+Added stack tracebacks for unrecoverable exceptions.
+
+Added a wrapper to the serial port in the VantagePro code. When used in a Python
+"with" statement, it automatically releases the serial port if an exception
+happens, allowing a more orderly shutdown.
+
+Offered some hints in the documentation on how to automount your VP2 when using
+a USB connection.
+
+Corrected error in units. getTargetType() that showed itself with when the
+console memory was freshly cleared, then tried to graph something immediately.
+
 
 1.7.0   04/15/10
 

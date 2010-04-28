@@ -75,6 +75,7 @@ h3 {
 h4 {
 	font: bold medium Verdana, arial, sans-serif;
 	color: black;
+	text-decoration: underline;
 }
 .code {
 	font-family: "Courier New", Courier, monospace;
@@ -105,10 +106,11 @@ td {
 }
 .config_option {
 	font-family: "Courier New", Courier, monospace;
-	font-weight: normal;
+	font-weight: bold;
 }
 .config_section {
 	font-family: "Courier New", Courier, monospace;
+	font-weight: bold;
 }
 .config_important {
 	font-family: "Courier New", Courier, monospace;
@@ -139,7 +141,7 @@ td {
 <body>
 
 <h1 class="title">Customizing <span class="code">weewx</span><br />
-Version 1.7</h1>
+Version 1.8</h1>
 <h1>Table of contents</h1>
 <ol>
 	<li><a href="#Introduction">Introduction</a></li>
@@ -178,28 +180,31 @@ includes the following services:</p>
 		<td><strong>Function</strong></td>
 	</tr>
 	<tr>
+		<td><span class="code">weewx.wxengine.StdCalibrate</span></td>
+		<td>Adjust new LOOP and archive packets using calibration expressions.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdArchive</span></td>
+		<td>Archive any new data to the SQL databases.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdTimeSynch</span></td>
+		<td>Arrange to have the clock on the station synchronized at regular intervals.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdPrint</span></td>
+		<td>Print out new LOOP and archive packets on the console.</td>
+	</tr>
+	<tr>
 		<td><span class="code">weewx.wxengine.StdRESTful</span></td>
-		<td>Starts a thread to manage
+		<td>Start a thread to manage
 		<a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
 		RESTful</a> (simple stateless client-server protocols) connections; such 
 		as those used by the Weather Underground or PWSweather.</td>
 	</tr>
 	<tr>
-		<td><span class="code">weewx.wxengine.StdCatchUp</span></td>
-		<td>Any data found on the weather station memory but not yet in the archive, 
-		is retrieved and put in the archive.</td>
-	</tr>
-	<tr>
-		<td><span class="code">weewx.wxengine.StdTimeSynch</span></td>
-		<td>Arranges to have the clock on the station synchronized at regular intervals.</td>
-	</tr>
-	<tr>
-		<td><span class="code">weewx.wxengine.StdPrint</span></td>
-		<td>Prints out new LOOP and archive packets on the console.</td>
-	</tr>
-	<tr>
 		<td><span class="code">weewx.wxengine.StdReportService</span></td>
-		<td>Launches a new thread to do report processing after a new archive record arrives. 
+		<td>Launch a new thread to do report processing after a new archive record arrives. 
 		Reports 
 		do things such as generate HTML files, generate images, or FTP files to 
 		a web server. New reports can be added easily by the user.</td>
@@ -208,7 +213,7 @@ includes the following services:</p>
 <p>It is easy to extend old services or to add new ones. The source distribution 
 includes an example new service called &quot;<span class="code">MyAlarm</span>,&quot; which 
 sends an email when an arbitrary expression evaluates <span class="code">True</span>. 
-It is also possible to extend the internal engine. These advanced topics are 
+These advanced topics are 
 covered later in the section <em>
 <a href="#Customizing_the_weewx_service_engine">Customizing the weewx service 
 engine</a></em>.</p>
@@ -1044,10 +1049,10 @@ $Extras.googleAnalyticsId</span>. If you take a look at the template
 these tags (search the file for the string &#39;<span class="code">radar_url</span>&#39; 
 or <span class="code">googleAnalyticsId</span> to find 
 them).</p>
-<h4 class="config_option">radar_url</h4>
+<p class="config_option">radar_url</p>
 <p>If set, the NOAA radar image will be displayed. If commented out, no image will 
 be displayed.</p>
-<h4 class="config_option">googleAnalyticsId</h4>
+<p class="config_option">googleAnalyticsId</p>
 <p>If you have a <a href="http://www.google.com/analytics/">Google Analytics ID</a>, you can set it here. The Google 
 Analytics Javascript 
 code will then be included, enabling analytics of your website usage. If 
@@ -1088,40 +1093,40 @@ all</em> members of its group will be reported in degrees Celsius.</p>
 &quot;<span class="code">degree_C</span>&quot; or &quot;<span class="code">foot</span>&quot;, not 
 &quot;<span class="code">degrees_C</span>&quot; or &quot;<span class="code">feet</span>&quot;. See the Appendix <em><a href="#Units">Units</a></em> for more information, including a concise summary of the groups, 
 their members, and which options can be used for each group.</p>
-<h4 class="config_important"><a name="group_altitude">group_altitude</a></h4>
+<p class="config_important"><a name="group_altitude" class="config_option">group_altitude</a></p>
 <p>Which measurement unit to be used for altitude. Possible options are &#39;<span class="code">foot</span>&#39; 
 or &#39;<span class="code">meter</span>&#39;.</p>
-<h4 class="config_option">group_direction</h4>
+<p class="config_option">group_direction</p>
 <p>Which measurement unit to be used for direction. The only option is &quot;<span class="code">degree_compass</span>&quot;.</p>
-<h4 class="config_option">group_moisture</h4>
+<p class="config_option">group_moisture</p>
 <p>The measurement unit to be used for soil moisture. The only option is &quot;<span class="code">centibar</span>.&quot;</p>
-<h4 class="config_option">group_percent</h4>
+<p class="config_option">group_percent</p>
 <p>The measurement unit to be used for percentages. The only option is &quot;<span class="code">percent</span>&quot;.</p>
-<h4 class="config_important">group_pressure</h4>
+<p class="config_important">group_pressure</p>
 <p>The measurement unit to be used for pressure. Possible options are one of &quot;<span class="code">inHg</span>&quot; 
 (inches of mercury), &quot;<span class="code">mbar</span>&quot;, or &quot;<span class="code">hPa</span>.&quot;</p>
-<h4 class="config_option">group_radiation</h4>
+<p class="config_option">group_radiation</p>
 <p>The measurement unit to be used for radiation. The only option is &quot;<span class="code">watt_per_meter_squared</span>.&quot;</p>
-<h4 class="config_important">group_rain</h4>
+<p class="config_important">group_rain</p>
 <p>The measurement unit to be used for precipitation. Options are &quot;<span class="code">inch</span>&quot;, 
 &quot;<span class="code">cm</span>,&quot; or &quot;<span class="code">mm</span>.&quot;</p>
-<h4 class="config_important">group_rainrate</h4>
+<p class="config_important">group_rainrate</p>
 <p>The measurement unit to be used for rate of precipitation. Possible options are 
 one of &quot;<span class="code">inch_per_hour</span>&quot;, &quot;<span class="code">cm_per_hour</span>&quot;, 
 or &quot;<span class="code">mm_per_hour</span>&quot;.</p>
-<h4 class="config_important">group_speed</h4>
+<p class="config_important">group_speed</p>
 <p>The measurement unit to be used for wind speeds. Possible options are one of 
 &quot;<span class="code">mile_per_hour</span>&quot;, &quot;<span class="code">km_per_hour</span>&quot;, 
 &quot;<span class="code">knot</span>&quot;, or &quot;<span class="code">meter_per_second</span>.&quot;</p>
-<h4 class="config_important">group_speed2</h4>
+<p class="config_important">group_speed2</p>
 <p>This group is similar to <span class="code">group_speed</span>, but is used for 
 calculated wind speeds which typically have a slightly higher resolution. Possible 
 options are one &quot;<span class="code">mile_per_hour2</span>&quot;, &quot;<span class="code">km_per_hour2</span>&quot;, 
 &quot;<span class="code">knot2</span>&quot;, or &quot;<span class="code">meter_per_second2</span>&quot;.</p>
-<h4 class="config_important"><a name="group_temperature">group_temperature</a></h4>
+<p><a name="group_temperature" class="config_important">group_temperature</a></p>
 <p>The measurement unit to be used for temperatures. Options are &quot;<span class="code">degree_F</span>&quot; 
 or &quot;<span class="code">degree_C</span>.&quot;</p>
-<h4 class="config_option">group_volt</h4>
+<p class="config_option">group_volt</p>
 <p>The measurement unit to be used for voltages. The only option is &quot;<span class="code">volt</span>.&quot;</p>
 <h3 class="config_section"><a name="Units_StringFormats">[[StringFormats]]</a></h3>
 <p>This sub-section is used to specify what string format is to be used for each 
@@ -1160,8 +1165,8 @@ formats. For example</p>
 on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
 15:20</span>&quot;</p>
 <h3 class="config_section">[[DegreeDays]]&nbsp;</h3>
-<h4 class="config_option"><span class="config_important">heating_base<br />
-cooling_base</span></h4>
+<p class="config_important">heating_base<br />
+cooling_base</p>
 <p>Set to the base temperature for calculating heating and cooling degree-days, 
 along with the unit to be used:</p>
 <pre>heating_base = 65.0, degree_F
@@ -1219,7 +1224,7 @@ contains three different kinds of generated output:</p>
 	a drop-down list that allows the NOAA month and yearly summaries to be displayed.</li>
 </ol>
 <h3>General</h3>
-<h4 class="config_option">encoding</h4>
+<p class="config_option">encoding</p>
 <p>This option controls which encoding is to be used for the generated output. There 
 are 3 possible choices:</p>
 <table align="center" style="width: 60%">
@@ -1481,8 +1486,9 @@ or, at least, be willing to learn it.</p>
 <p>At a high level, weewx consists of an <em>engine</em> that is responsible for 
 managing a set of <em>services</em>. A service consists of a Python class with a 
 set of member functions. The engine arranges to have appropriate member functions 
-called when specific events happen. For example, when a new LOOP packet arrives, 
-member function <span class="code">processLoopPacket()</span> of all services is 
+called when specific events happen. For example, when a new LOOP packet becomes 
+available, 
+member function <span class="code">newLoopPacket()</span> of all services is 
 called.</p>
 <p>To customize, you can</p>
 <ul>
@@ -1493,37 +1499,38 @@ called.</p>
 <p>This section describes how to do all three.</p>
 <p>The default install of <span class="code">weewx</span> includes the following 
 services:</p>
-<table style="width: 100%">
+<table align="center" style="width: 60%">
 	<tr>
 		<td><strong>Service</strong></td>
 		<td><strong>Function</strong></td>
 	</tr>
 	<tr>
-		<td><span class="code">weewx.wxengine.StdRESTful</span></td>
-		<td>Starts thread to manage 
-		<a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
-		RESTful</a> (simple client-server stateless protocols) connections; adds 
-		new data to a Queue monitored by the thread. The thread then consumes 
-		the new data, sending it to sites such as the Weather Underground or 
-		PWSweather.</td>
+		<td><span class="code">weewx.wxengine.StdCalibrate</span></td>
+		<td>Adjust new LOOP and archive packets using calibration expressions.</td>
 	</tr>
 	<tr>
-		<td><span class="code">weewx.wxengine.StdCatchUp</span></td>
-		<td>Any data found on the weather station memory but not yet in the archive, 
-		is retrieved and put in the archive.</td>
+		<td><span class="code">weewx.wxengine.StdArchive</span></td>
+		<td>Archive any new data to the SQL databases.</td>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdTimeSynch</span></td>
-		<td>Arranges to have the clock on the station synchronized at regular intervals.</td>
+		<td>Arrange to have the clock on the station synchronized at regular intervals.</td>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdPrint</span></td>
-		<td>Prints out new LOOP and archive packets on the console.</td>
+		<td>Print out new LOOP and archive packets on the console.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdRESTful</span></td>
+		<td>Start a thread to manage
+		<a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
+		RESTful</a> (simple stateless client-server protocols) connections; such 
+		as those used by the Weather Underground or PWSweather.</td>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdReportService</span></td>
-		<td>Launches a new thread to do processing after a new archive record arrives. 
-		The thread loads zero or more reports and processes them in order. Reports 
+		<td>Launch a new thread to do report processing after a new archive record arrives. 
+		Reports 
 		do things such as generate HTML files, generate images, or FTP files to 
 		a web server. New reports can be added easily by the user.</td>
 	</tr>
@@ -1533,9 +1540,9 @@ services:</p>
 LOOP and archive packets to the console when they arrive. By default, it prints 
 out time, barometer, outside temperature, wind speed, and wind direction. Suppose 
 you don&#39;t like this, and want to print out humidity as well when a new LOOP packet 
-arrives, but leave the printing of archive packets alone. This could be done by 
+arrives. This could be done by 
 subclassing the default print service <span class="code">StdPrint</span> and overriding 
-member function <span class="code">processLoopPacket()</span>. </p>
+member function <span class="code">newLoopPacket()</span>. </p>
 <p>In file <span class="code">myprint.py</span>:</p>
 <pre>from weewx.wxengine import StdPrint
 from weeutil.weeutil import timestamp_to_string
@@ -1543,21 +1550,21 @@ from weeutil.weeutil import timestamp_to_string
 class MyPrint(StdPrint):
 
     # Override the default processLoopPacket:
-    def processLoopPacket(self, physicalPacket):
-        print &quot;LOOP: &quot;, timestamp_to_string(physicalPacket[&#39;dateTime&#39;]),\
-            physicalPacket[&#39;barometer&#39;],\
-            physicalPacket[&#39;outTemp&#39;],\
-            physicalPacket[&#39;outHumidity&#39;],\
-            physicalPacket[&#39;windSpeed&#39;],\
-            physicalPacket[&#39;windDir&#39;]</pre>
+    def newLoopPacket(self, loop_packet):
+        print &quot;LOOP: &quot;, timestamp_to_string(loop_packet[&#39;dateTime&#39;]),\
+            loop_packet[&#39;barometer&#39;],\
+            loop_packet[&#39;outTemp&#39;],\
+            loop_packet[&#39;outHumidity&#39;],\
+            loop_packet[&#39;windSpeed&#39;],\
+            loop_packet[&#39;windDir&#39;]</pre>
 <p>You then need to specify that your print service class should be loaded instead 
 of the default <span class="code">StdPrint</span> service. This is done by substituting 
 your service name for the standard print service name in the option
 <span class="code">service_list</span>, located in <span class="code">[Engines][[WxEngine]]</span>:</p>
 <pre>[Engines]
     [[WxEngine]]
-        service_list = weewx.wxengine.StdRESTful, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, myprint.MyPrint, weewx.wxengine.StdReportService</pre>
-<p>(Note that this list must be all on one line. The parser <span class="code">ConfigObj</span> 
+        service_list = weewx.wxengine.StdCalibrate, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReportService</pre>
+<p>e that this list must be all on one line. The parser <span class="code">ConfigObj</span> 
 does not allow options to be continued on to following lines.)</p>
 <h2>Adding a Service</h2>
 <p>Suppose there is no service that can be easily customized for your needs. In 
@@ -1580,34 +1587,31 @@ from weeutil.weeutil import timestamp_to_string
 class MyAlarm(StdService):
     &quot;&quot;&quot;Custom service that sounds an alarm if an arbitrary expression evaluates true&quot;&quot;&quot;
     
-    def __init__(self, engine):
+    def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
-        StdService.__init__(self, engine)
+        super(MyAlarm, self).__init__(engine, config_dict)
         
         # This will hold the time when the last alarm message went out:
         self.last_msg_ts = None
-        self.expression  = None
-        
-    def setup(self):
         
         try:
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be thrown and
             # the alarm will not be set.
-            self.expression    = self.engine.config_dict[&#39;Alarm&#39;][&#39;expression&#39;]
-            self.time_wait     = int(self.engine.config_dict[&#39;Alarm&#39;].get(&#39;time_wait&#39;, 3600))
-            self.smtp_host     = self.engine.config_dict[&#39;Alarm&#39;][&#39;smtp_host&#39;]
-            self.smtp_user     = self.engine.config_dict[&#39;Alarm&#39;].get(&#39;smtp_user&#39;)
-            self.smtp_password = self.engine.config_dict[&#39;Alarm&#39;].get(&#39;smtp_password&#39;)
-            self.TO            = self.engine.config_dict[&#39;Alarm&#39;][&#39;mailto&#39;]
+            self.expression    = config_dict[&#39;Alarm&#39;][&#39;expression&#39;]
+            self.time_wait     = int(config_dict[&#39;Alarm&#39;].get(&#39;time_wait&#39;, 3600))
+            self.smtp_host     = config_dict[&#39;Alarm&#39;][&#39;smtp_host&#39;]
+            self.smtp_user     = config_dict[&#39;Alarm&#39;].get(&#39;smtp_user&#39;)
+            self.smtp_password = config_dict[&#39;Alarm&#39;].get(&#39;smtp_password&#39;)
+            self.TO            = config_dict[&#39;Alarm&#39;][&#39;mailto&#39;]
             syslog.syslog(syslog.LOG_INFO, &quot;alarm: Alarm set for expression: \&quot;%s\&quot;&quot; % self.expression)
         except:
             self.expression = None
             self.time_wait  = None
 
-    def postArchiveData(self, rec):
+    def newArchivePacket(self, rec):
         # Let the super class see the record first:
-        StdService.postArchiveData(self, rec)
+        StdService.newArchivePacket(self, rec)
 
         # See if the alarm has been set:
         if self.expression:
@@ -1661,7 +1665,7 @@ class MyAlarm(StdService):
         s.quit()
         # Log it in the system log:
         syslog.syslog(syslog.LOG_INFO, &quot;alarm: Alarm sounded for expression: \&quot;%s\&quot;&quot; % self.expression)
-        syslog.syslog(syslog.LOG_INFO, &quot;       *** email sent to: %s&quot; % self.TO) </pre>
+        syslog.syslog(syslog.LOG_INFO, &quot;       *** email sent to: %s&quot; % self.TO)</pre>
 <p>This service expects all the information it needs to be in the configuration 
 file <span class="code">weewx.conf</span> in a new section called
 <span class="code">[Alarm]</span>. So, add the following lines to your configuration 
@@ -1674,7 +1678,7 @@ file:</p>
     smtp_password = mypassword
     mailto = auser@adomain.com</pre>
 <p>These options specify that the alarm is to be sounded when &quot;<span class="code">outTemp 
-&lt; 40.0</span>&quot; evaluates True, that is when the outside temperature is below 40.0 
+&lt; 40.0</span>&quot; evaluates <span class="code">True</span>, that is when the outside temperature is below 40.0 
 degrees. Any valid Python expression can be used, although the only variables available 
 are those in the current archive record. (The place in the code where the expression 
 is evaluated is marked with &quot;<span class="code">NOTE 1</span>&quot;.)</p>
@@ -1696,12 +1700,13 @@ is done by adding your service name to the list <span class="code">service_list<
 located in <span class="code">[Engines][[WxEngine]]</span>:</p>
 <pre>[Engines]
     [[WxEngine]]
-        service_list = weewx.wxengine.StdRESTful, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.alarm.MyAlarm</pre>
+
+        service_list = weewx.wxengine.StdCalibrate, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReportService, examples.alarm.MyAlarm</pre>
 <p>(Again, the list must be all on one line.)</p>
 <p>In addition to the example above, the distribution also includes a low-battery 
 alarm (<span class="code">lowBattery.py</span>), which is very similar, except that 
 it intercepts LOOP events (instead of archiving events).</p>
-<h2>Customizing the Engine</h2>
+<h2><a name="Customizing_the_Engine">Customizing the Engine</a></h2>
 <p>In this section, we look at how to install a custom Engine. In general, this 
 is the least desirable way to proceed, but in some cases it may be the only way 
 to get what you want.</p>
@@ -1721,15 +1726,15 @@ class MyEngine(StdEngine):
         # This will record the timestamp of the old day
         self.old_day = None
 
-    def postArchiveData(self, rec):
+    def newArchivePacket(self, rec):
         # First let my superclass process it:
-        StdEngine.postArchiveData(self, rec)
+        StdEngine.newArchivePacket(self, rec)
 
         # Get the timestamp of the start of the day using
         # the utility function startOfArchiveDay 
         dayStart_ts = startOfArchiveDay(rec[&#39;dateTime&#39;])
 
-        # Call the function firstArchiveOfDay if either this is
+        # Call the function newDay() if either this is
         # the first archive since startup, or if a new day has started
         if not self.old_day or self.old_day != dayStart_ts:
             self.old_day = dayStart_ts
@@ -1782,7 +1787,7 @@ class DailyService(StdService):
 
         # You might want to do something here like run a cron job</pre>
 <p>This service will simply print out a notice and then print out the new record. 
-However, if there is some daily processing you want to do, perhaps a backup, or 
+However, if there is some daily processing you want to do, such as running a backup, or 
 running utility <a href="http://www.weewx.com/wunderfixer">wunderfixer</a>, this 
 would be the place to do it.</p>
 <p>The final step is to go into your configuration file and specify that this new 
@@ -1791,7 +1796,7 @@ service be loaded, by adding its class name to option <span class="code">service
 
   [[WxEngine]]
     # The list of services the main weewx engine should run:
-    service_list = weewx.wxengine.StdRESTful, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.daily.DailyService</pre>
+    service_list = weewx.wxengine.StdCalibrate, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReportService, examples.daily.DailyService</pre>
 <p>(Again, the list must be all on one line.)</p>
 <h1>Appendix A: <a name="Archive_types">Archive types</a></h1>
 <p><em>Archive types</em> are weather observations that have come from your 

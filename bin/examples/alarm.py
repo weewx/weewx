@@ -62,34 +62,31 @@ from weeutil.weeutil import timestamp_to_string
 class MyAlarm(StdService):
     """Custom service that sounds an alarm if an arbitrary expression evaluates true"""
     
-    def __init__(self, engine):
+    def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
-        StdService.__init__(self, engine)
+        super(MyAlarm, self).__init__(engine, config_dict)
         
         # This will hold the time when the last alarm message went out:
         self.last_msg_ts = None
-        self.expression  = None
-        
-    def setup(self):
         
         try:
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be thrown and
             # the alarm will not be set.
-            self.expression    = self.engine.config_dict['Alarm']['expression']
-            self.time_wait     = int(self.engine.config_dict['Alarm'].get('time_wait', 3600))
-            self.smtp_host     = self.engine.config_dict['Alarm']['smtp_host']
-            self.smtp_user     = self.engine.config_dict['Alarm'].get('smtp_user')
-            self.smtp_password = self.engine.config_dict['Alarm'].get('smtp_password')
-            self.TO            = self.engine.config_dict['Alarm']['mailto']
+            self.expression    = config_dict['Alarm']['expression']
+            self.time_wait     = int(config_dict['Alarm'].get('time_wait', 3600))
+            self.smtp_host     = config_dict['Alarm']['smtp_host']
+            self.smtp_user     = config_dict['Alarm'].get('smtp_user')
+            self.smtp_password = config_dict['Alarm'].get('smtp_password')
+            self.TO            = config_dict['Alarm']['mailto']
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
         except:
             self.expression = None
             self.time_wait  = None
 
-    def postArchiveData(self, rec):
+    def newArchivePacket(self, rec):
         # Let the super class see the record first:
-        StdService.postArchiveData(self, rec)
+        StdService.newArchivePacket(self, rec)
 
         # See if the alarm has been set:
         if self.expression:

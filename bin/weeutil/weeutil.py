@@ -9,10 +9,14 @@
 #
 """Various handy utilities that don't belong anywhere else."""
 
-import datetime
-import time
-import math
 import ImageFont
+import StringIO
+import datetime
+import math
+import syslog
+import time
+import traceback
+
 import configobj
 
 def min_no_None(seq):
@@ -217,6 +221,46 @@ def intervalgen(start_ts, stop_ts, interval):
             yield (stamp1, stamp2)
             dt1 = dt2
 
+def startOfInterval(time_ts, interval):
+    """Find the start time of an interval.
+    
+    This algorithm assumes the day is divided up into
+    intervals of 'interval' length. Given a timestamp, it
+    figures out which interval it lies in, returning the start
+    time.
+    
+    Examples (human readable times shown instead of timestamps):
+    
+      time_ts     interval    returns
+      01:57:35       300      01:55:00
+      01:57:35       600      01:50:00
+      01:57:35       900      01:45:00
+      01:57:35      3600      01:00:00
+      01:57:35      7200      00:00:00
+    
+    time_ts: A timestamp. The start of the interval containing this
+    timestamp will be returned.
+    
+    interval: An interval length in seconds.
+    
+    Returns: A timestamp with the start of the interval."""
+
+    # Convert time into a datetime:
+    time_dt = datetime.datetime.fromtimestamp(time_ts)
+    
+    # Convert interval to minutes:
+    interval_m = interval / 60
+    
+    # This is the number of minutes since midnight:
+    minutes = time_dt.minute + time_dt.hour * 60
+    # This is the number of minutes since the start of the minute:
+    diff_minutes = minutes % interval_m
+    diff_seconds = diff_minutes * 60
+    
+    start_interval_dt = time_dt.replace(second=0, microsecond=0) - datetime.timedelta(seconds=diff_seconds)
+    start_interval_ts = time.mktime(start_interval_dt.timetuple())
+    return start_interval_ts
+    
 def _ord_to_ts(ord):
     d = datetime.date.fromordinal(ord)
     t = int(time.mktime(d.timetuple()))
@@ -275,22 +319,23 @@ class TimeSpan(object):
             return - 1
         return 0 if self.start == other.start else 1
 
-def archiveDaySpan(time_ts, grace = 30):
+def archiveDaySpan(time_ts, grace=1):
     """Returns a TimeSpan representing a day that includes a given time.
     
-    Midnight is considered to actually belong in the previous day.
+    Midnight is considered to actually belong in the previous day if
+    grace is greater than zero.
     
-    Examples: (Assume grace is 30; printed times are given below, but
+    Examples: (Assume grace is 1; printed times are given below, but
     the variables are actually in unix epoch timestamps)
         2007-12-3 18:12:05 returns (2007-12-3 00:00:00 to 2007-12-4 00:00:00)
         2007-12-3 00:00:00 returns (2007-12-2 00:00:00 to 2007-12-3 00:00:00)
-        2007-12-3 00:00:25 returns (2007-12-2 00:00:00 to 2007-12-3 00:00:00)
-        2007-12-3 00:00:35 returns (2007-12-3 00:00:00 to 2007-12-4 00:00:00)
+        2007-12-3 00:00:01 returns (2007-12-3 00:00:00 to 2007-12-4 00:00:00)
     
     time_ts: The day will include this timestamp. 
     
-    grace: This many seconds past midnight are still included in the previous day.
-    [Optional. Default is 30 seconds.]
+    grace: This many seconds past midnight marks the start of the next
+    day. Set to zero to have midnight be included in the
+    following day.  [Optional. Default is 1 second.]
     
     returns: A TimeSpan object one day long that contains time_ts. It
     will begin and end at midnight.
@@ -302,7 +347,7 @@ def archiveDaySpan(time_ts, grace = 30):
     _day_ord = _day_date.toordinal()
     return TimeSpan(_ord_to_ts(_day_ord), _ord_to_ts(_day_ord + 1))
 
-def archiveWeekSpan(time_ts, startOfWeek = 6, grace = 30):
+def archiveWeekSpan(time_ts, startOfWeek=6, grace=1):
     """Returns a TimeSpan representing a week that includes a given time.
     
     The time at midnight at the end of the week is considered to
@@ -312,9 +357,10 @@ def archiveWeekSpan(time_ts, startOfWeek = 6, grace = 30):
     
     startOfWeek: The start of the week (0=Monday, 1=Tues, ..., 6 = Sun).
 
-    grace: This many seconds past midnight are still included in the last week.
-    [Optional. Default is 30 seconds.]
-
+    grace: This many seconds past midnight marks the start of the next
+    week. Set to zero to have midnight be included in the
+    following week.  [Optional. Default is 1 second.]
+    
     returns: A TimeSpan object one week long that contains time_ts. It will
     start at midnight of the day considered the start of the week, and be
     one week long.
@@ -331,7 +377,7 @@ def archiveWeekSpan(time_ts, startOfWeek = 6, grace = 30):
     return TimeSpan(int(time.mktime(_sunday_date.timetuple())),
                              int(time.mktime(_next_sunday_date.timetuple())))
 
-def archiveMonthSpan(time_ts, grace = 30):
+def archiveMonthSpan(time_ts, grace=1):
     """Returns a TimeSpan representing a month that includes a given time.
     
     Midnight of the 1st of the month is considered to actually belong
@@ -339,9 +385,10 @@ def archiveMonthSpan(time_ts, grace = 30):
     
     time_ts: The month will include this timestamp. 
     
-    grace: This many seconds past midnight of the 1st are still included
-    in the previous month. [Optional. Default is 30 seconds.]
-
+    grace: This many seconds past midnight marks the start of the next
+    month. Set to zero to have midnight be included in the
+    following month.  [Optional. Default is 1 second.]
+    
     returns: A TimeSpan object one month long that contains time_ts.
     It will start at midnight of the start of the month, and end at midnight
     of the start of the next month.
@@ -361,7 +408,7 @@ def archiveMonthSpan(time_ts, grace = 30):
     return TimeSpan(int(time.mktime(_month_date.timetuple())),
                              int(time.mktime(_next_month_date.timetuple())))
 
-def archiveYearSpan(time_ts, grace = 30):
+def archiveYearSpan(time_ts, grace=1):
     """Returns a TimeSpan representing a year that includes a given time.
     
     Midnight of the 1st of the January is considered to actually belong
@@ -369,9 +416,10 @@ def archiveYearSpan(time_ts, grace = 30):
     
     time_ts: The year will include this timestamp. 
     
-    grace: This many seconds past midnight of 1-Jan are still included
-    in the previous year. [Optional. Default is 30 seconds.]
-
+    grace: This many seconds past midnight marks the start of the next
+    year. Set to zero to have midnight be included in the
+    following year.  [Optional. Default is 1 second.]
+    
     returns: A TimeSpan object one year long that contains time_ts. It will
     begin and end at midnight 1-Jan.
     """
@@ -382,7 +430,7 @@ def archiveYearSpan(time_ts, grace = 30):
     return TimeSpan(int(time.mktime((_day_date.year, 1, 1, 0, 0, 0, 0, 0, -1))),
                              int(time.mktime((_day_date.year + 1, 1, 1, 0, 0, 0, 0, 0, -1))))
 
-def archiveRainYearSpan(time_ts, sory_mon = 1, grace = 30):
+def archiveRainYearSpan(time_ts, sory_mon=1, grace=1):
     """Returns a TimeSpan representing a rain year that includes a given time.
     
     Midnight of the 1st of the month starting the rain year is considered to
@@ -392,10 +440,10 @@ def archiveRainYearSpan(time_ts, sory_mon = 1, grace = 30):
     
     sory_mon: The month the rain year starts. [Optional. Default is 1 (Jan)]
     
-    grace: This many seconds past midnight of the 1st of the month starting
-    the rain year are still included in the previous rain year.
-    [Optional. Default is 30 seconds.]
-
+    grace: This many seconds past midnight marks the start of the next
+    rain year. Set to zero to have midnight be included in the
+    following rain year.  [Optional. Default is 1 second.]
+    
     returns: A TimeSpan object one year long that contains time_ts. It will
     begin on the 1st of the month that starts the rain year.
     """
@@ -495,7 +543,7 @@ def startOfDay(time_ts):
     return int(_bod_ts)
 
 
-def startOfArchiveDay(time_ts, grace = 30):
+def startOfArchiveDay(time_ts, grace=1):
     """Given an archive time stamp, calculate its start of day.
     
     similar to startOfDay(), except that an archive stamped at midnight
@@ -504,8 +552,8 @@ def startOfArchiveDay(time_ts, grace = 30):
     time_ts: A timestamp somewhere in the day for which the start-of-day
     is desired.
     
-    grace: The number of seconds past midnight which is still considered
-    to be in the previous day [Optional. Default is 30 seconds]
+    grace: The number of seconds past midnight when the following
+    day is considered to start [Optional. Default is 1 second]
     
     returns: The timestamp for the start-of-day (00:00) in unix epoch time.
     
@@ -544,6 +592,15 @@ def latlon_string(ll, hemi, which):
 def utf8_to_latin1(instring):
     """Convert from UTF-8 to Latin-1 encoding."""
     return unicode(instring, "utf8").encode("latin1")
+
+def log_traceback(prefix=''):
+    """Log the stack traceback into syslog."""
+    sfd = StringIO.StringIO()
+    traceback.print_exc(file=sfd)
+    sfd.seek(0)
+    for line in sfd:
+        syslog.syslog(syslog.LOG_INFO, prefix + line)
+    del sfd
     
 def _get_object(module_class, *args, **kwargs):
     """Given a path to a class, instantiates an instance of the class with the given args and returns it."""
@@ -571,6 +628,88 @@ if __name__ == '__main__':
     print "PASSES"
 
     
+    print "********startOfInterval*************"
+    
+    t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
+    t_start = startOfInterval(t, 1 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 57, 00))
+
+    t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
+    t_start = startOfInterval(t, 5 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 55, 00))
+
+    t = time.mktime((2009, 3, 4, 1, 0, 0, 0, 0, 0))
+    t_start = startOfInterval(t, 5 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 0, 0))
+
+    t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
+    t_start = startOfInterval(t, 10 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 50, 00))
+
+    t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
+    t_start = startOfInterval(t, 15 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 45, 00))
+
+    t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
+    t_start = startOfInterval(t, 20 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 40, 00))
+
+    t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
+    t_start = startOfInterval(t, 30 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 30, 00))
+
+    t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
+    t_start = startOfInterval(t, 60 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 00, 00))
+
+    t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
+    t_start = startOfInterval(t, 120 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 00, 00, 00))
+    
+    # Do a test over the spring DST boundary:
+    t = time.mktime((2009, 3, 8, 3, 22, 05, 0, 0, 1))
+    t_start = startOfInterval(t, 120 * 60)
+    # Result should be 3am DST, or 2am ST:
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start) == (2009, 3, 8, 3, 0, 0, 6, 67, 1))
+    
+    # Do a test over the fall DST boundary.
+    # This is 01:22:05 DST, just before the change over:
+    t = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 1))
+    t_start = startOfInterval(t, 120 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start) == (2009, 11, 1, 0, 0, 0, 6, 305, 1))
+
+    # Do it again, except after the change over
+    # This is 01:22:05 ST, just after the change over:
+    t = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 0))
+    t_start = startOfInterval(t, 120 * 60)
+    print timestamp_to_string(t)
+    print timestamp_to_string(t_start)
+    assert(time.localtime(t_start) == (2009, 11, 1, 0, 0, 0, 6, 305, 1))
+
+    print "PASSES"
+    
     print "********* TimeSpans ***********"
 
     t = TimeSpan(1230000000, 1231000000)
@@ -592,11 +731,11 @@ if __name__ == '__main__':
     
     assert(dic[t] == 't')
     print "PASSES"
-
+    
     print "********* genYearSpans ***********"
     print "Should print years 2007 through 2008:"
     start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
-    stop_ts = time.mktime((2008, 03, 1, 0, 0, 0, 0, 0, -1))
+    stop_ts = time.mktime((2008, 3, 1, 0, 0, 0, 0, 0, -1))
 
     for span in genYearSpans(start_ts, stop_ts):
         print span
@@ -604,14 +743,14 @@ if __name__ == '__main__':
     print "********* genMonthSpans ***********"
     print "Should print months 2007-12 through 2008-02:"
     start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
-    stop_ts = time.mktime((2008, 03, 1, 0, 0, 0, 0, 0, -1))
+    stop_ts = time.mktime((2008, 3, 1, 0, 0, 0, 0, 0, -1))
 
     for span in genMonthSpans(start_ts, stop_ts):
         print span
 
     print "\nShould print months 2007-12 through 2008-03:"
     start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
-    stop_ts = time.mktime((2008, 03, 1, 0, 0, 1, 0, 0, -1))
+    stop_ts = time.mktime((2008, 3, 1, 0, 0, 1, 0, 0, -1))
 
     for span in genMonthSpans(start_ts, stop_ts):
         print span
@@ -634,7 +773,11 @@ if __name__ == '__main__':
     assert(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))) == 
            TimeSpan(time.mktime((2007, 12, 12, 0, 0, 0, 0, 0, -1)),
                     time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))))
-    assert(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 31, 0, 0, -1))) == 
+    # Try it again with grace=0
+    assert(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)), grace=0) == 
+           TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
+                    time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
+    assert(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 1, 0, 0, -1))) == 
            TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
                     time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
     print "PASSES"
@@ -646,7 +789,7 @@ if __name__ == '__main__':
     assert(archiveWeekSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1))) == 
            TimeSpan(time.mktime((2007, 12, 2, 0, 0, 0, 0, 0, -1)),
                     time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1))))
-    assert(archiveWeekSpan(time.mktime((2007, 12, 9, 0, 0, 31, 0, 0, -1))) == 
+    assert(archiveWeekSpan(time.mktime((2007, 12, 9, 0, 0, 1, 0, 0, -1))) == 
            TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
                     time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
     print "PASSES"
@@ -658,7 +801,7 @@ if __name__ == '__main__':
     assert(archiveMonthSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))) == 
            TimeSpan(time.mktime((2007, 11, 1, 0, 0, 0, 0, 0, -1)),
                     time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))))
-    assert(archiveMonthSpan(time.mktime((2007, 12, 1, 0, 0, 31, 0, 0, -1))) == 
+    assert(archiveMonthSpan(time.mktime((2007, 12, 1, 0, 0, 1, 0, 0, -1))) == 
            TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
                     time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
     assert(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))) == 
@@ -673,7 +816,7 @@ if __name__ == '__main__':
     assert(archiveYearSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))) == 
            TimeSpan(time.mktime((2007, 1, 1, 0, 0, 0, 0, 0, -1)),
                     time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
-    assert(archiveYearSpan(time.mktime((2008, 1, 1, 0, 0, 31, 0, 0, -1))) == 
+    assert(archiveYearSpan(time.mktime((2008, 1, 1, 0, 0, 1, 0, 0, -1))) == 
            TimeSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1)),
                     time.mktime((2009, 1, 1, 0, 0, 0, 0, 0, -1))))
     print "PASSES"
@@ -690,14 +833,14 @@ if __name__ == '__main__':
     print "******** Start-of-days **********"
 
     # Test start-of-day routines around a DST boundary:
-    start_ts = time.mktime((2007, 03, 11, 01, 0, 0, 0, 0, -1))
+    start_ts = time.mktime((2007, 3, 11, 1, 0, 0, 0, 0, -1))
     start_of_day = startOfDay(start_ts)
     start2 = startOfArchiveDay(start_of_day)
     print timestamp_to_string(start_ts)
     print timestamp_to_string(start_of_day)
     print timestamp_to_string(start2)
     # Check that this is, in fact, a DST boundary:
-    assert(start_of_day == int(time.mktime((2007, 03, 11, 0, 0, 0, 0, 0, -1))))
-    assert(start2 == int(time.mktime((2007, 03, 10, 0, 0, 0, 0, 0, -1))))
+    assert(start_of_day == int(time.mktime((2007, 3, 11, 0, 0, 0, 0, 0, -1))))
+    assert(start2       == int(time.mktime((2007, 3, 10, 0, 0, 0, 0, 0, -1))))
     print "PASSES"
     

@@ -73,6 +73,7 @@ h3 {
 h4 {
 	font: bold medium Verdana, arial, sans-serif;
 	color: black;
+	text-decoration: underline;
 }
 .code {
 	font-family: "Courier New", Courier, monospace;
@@ -103,10 +104,11 @@ td {
 }
 .config_option {
 	font-family: "Courier New", Courier, monospace;
-	font-weight: normal;
+	font-weight: bold;
 }
 .config_section {
 	font-family: "Courier New", Courier, monospace;
+	font-weight: bold;
 }
 .config_important {
 	font-family: "Courier New", Courier, monospace;
@@ -136,9 +138,13 @@ td {
 
 <body>
 
-<h1 class="title">Upgrading to <span class="code">weewx</span> v1.7</h1>
+<h1 class="title">Upgrading to <span class="code">weewx</span> v1.8</h1>
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
+<h2>V1.7.0 or earlier</h2>
+<p>With the introduction of a standard archiving service, <span class="code">
+StdArchive</span>, the names of some events have changed. This will not affect 
+you unless you have written a custom service.</p>
 <h2>V.1.5.0 or earlier</h2>
 <p>V1.7 introduces <em>skins</em>. The skins live in subdirectory
 <span class="code">skins</span>. They are <em>not</em> compatible with the old

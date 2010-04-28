@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -47,6 +47,7 @@ import syslog
 import time
 
 import weewx
+import weewx.accum
 import weewx.units
 import weewx.wxformulas
 import weeutil.weeutil
@@ -109,255 +110,6 @@ meta_replace_str = """REPLACE into metadata VALUES(?, ?)"""
 
 
 #===============================================================================
-#                    Class StdDayStats
-#===============================================================================
-
-class StdDayStats(object):
-    """Holds daily statistics (min, max, avg, etc.) for a type.
-    
-    For a given type ('outTemp', 'wind', etc.), keeps track of the min and max
-    encountered and when. It also keeps a running sum and count, so averages can
-    be calculated.""" 
-    def __init__(self, type, sod_ts, stats_seq = None):
-        """Initialize an instance for type 'type' with default values.
-        
-        type: A string containing the SQL type (e.g., 'outTemp', 'rain', etc.)
-        
-        sod_ts: The start-of-day. Must not be None
-
-        stats_seq: An iterable holding the initialization values in the same order
-        as the stats SQL database:
-            (dateTime, min, mintime, max, maxtime, sum, count)
-        Note that the first value (dateTime) is not used. Instead, the value sod_ts in
-        the parameter list is used. 
-        [Optional. If not given, the instance will be initialized to starting values]"""
-        
-        if weewx.debug:
-            # Make sure we have, in fact, been handed the start-of-day:
-            assert(sod_ts == weeutil.weeutil.startOfDay(sod_ts))
-        self.type = type
-        self.dateTime = sod_ts
-        self.setStats(stats_seq)
-
-    def addToHiLow(self, rec):
-        """Add a new record to the running hi/low tally for my type.
-        
-        rec: A dictionary holding a record. The dictionary keys are
-        measurement types (eg 'outTemp') and the values the
-        corresponding values. The dictionary must have value
-        'dateTime'. It may or may not have my type in it. If it does,
-        the value for my type is extracted and used to update my
-        high/lows.  If it does not, nothing is done."""
-
-        val = rec.get(self.type)
-        if val is None :
-            # Either the type doesn't exist in this record, or it's bad.
-            # Ignore.
-            return
-        if self.min is None or val < self.min:
-            self.min = val
-            self.mintime = rec['dateTime']
-        if self.max is None or val > self.max:
-            self.max = val
-            self.maxtime = rec['dateTime']
-    
-    def addToSum(self, rec):
-        """Add a new record to the running sum and count for my type.
-        
-        rec: A dictionary holding a record. The dictionary keys are
-        measurement types (eg 'outTemp') and the values the
-        corresponding values. The dictionary may or may not have my
-        type in it. If it does, the value for my type is extracted and
-        used to update my sum and count. If it does not, nothing is
-        done."""
-
-        val = rec.get(self.type)
-        if val is None :
-            # Either the type doesn't exist in this record, or it's bad.
-            # Ignore.
-            return
-        self.sum += val
-        self.count += 1
-
-        
-    def addArchiveRecord(self, rec):
-        """Add a new archive record to the hi/lo and summation data.
-        
-        rec: A dictionary holding an archive record. The type will be extracted
-        from it. Must also have type 'dateTime'. """
-        # Archive data is used for the Hi/Low data, as well as averages.
-        self.addToHiLow(rec)
-        self.addToSum(rec)
-        
-    def addLoopRecord(self, rec):
-        """Add a new LOOP record to the hi/lo stats.
-        
-        rec: A dictionary holding an archive record. The type will be extracted
-        from it. Must also have type 'dateTime'."""
-        # A LOOP record is used only for Hi/Low data for standard stats.
-        self.addToHiLow(rec)
-
-    def getStatsTuple(self):
-        """Return a stats-tuple. That is, a tuple containing the
-        gathered statistics.  The results are in the same order as the
-        schema, making it easy to use in an SQL statement"""
-        return (self.dateTime, self.min, self.mintime, self.max, self.maxtime, self.sum, self.count)
-    
-    def setStats(self, stats_seq):
-        """Set self to the values in an iterable.
-        
-        stats_seq: an iterable sequence. The instance will be set to these values.
-        Note that the ordering is the same as the schema, i.e., 
-        (dateTime, min, mintime, max, maxtime, sum, count). The value dateTime is
-        not used."""
-        if not stats_seq:
-            stats_seq = (None, None, None, None, None, 0.0 , 0)
-        (self.min,
-         self.mintime,
-         self.max,
-         self.maxtime,
-         self.sum,
-         self.count) = stats_seq[1:]
-         
-    
-    def __str__(self):
-        """Return self as a string. Useful for diagnostics & debugging."""
-        time_str = weeutil.weeutil.timestamp_to_string(self.dateTime)
-        min_str = "%f" % self.min if self.min is not None else "N/A"
-        max_str = "%f" % self.max if self.max is not None else "N/A"
-        mintime_str = weeutil.weeutil.timestamp_to_string(self.mintime)
-        maxtime_str = weeutil.weeutil.timestamp_to_string(self.maxtime)
-        avg_str = "%f" % self.avg if self.avg is not None else "N/A"
-        sum_str = "%f" % self.sum if self.sum is not None else "N/A"
-        return "time = %s; type = %s; min = %s (%s); max = %s (%s); avg = %s; sum = %s; " % \
-            (time_str, self.type, min_str, mintime_str, max_str, maxtime_str, avg_str, sum_str) 
-
-#===============================================================================
-#                    Class WindDayStats
-#===============================================================================
-
-class WindDayStats(StdDayStats):
-    """Specialized version of StdDayStats to be used for wind data. 
-    
-    It includes some extra statistics such as gust direction, rms speeds, etc."""
-    def __init__(self, type, sod_ts, stats_seq = None):
-        """Initialize an instance for type 'type'.
-        
-        type: A string containing the SQL type (must be 'wind' for this version)
-        
-        sod_ts: The start-of-day. Must not be None
-
-        stats_seq: An iterable holding the initialization values in the same order
-        as the stats SQL database:
-            (dateTime, min, mintime, max, maxtime, sum, count,
-            gustdir, xsum, ysum, squaresum, squarecount)
-        Note that the first value (dateTime) is not used. Instead, the value sod_ts in
-        the parameter list is used."""
-
-        assert(stats_seq is None or len(stats_seq) == 12)
-        super(WindDayStats, self).__init__(type, sod_ts, stats_seq)
-
-    def addToHiLow(self, rec):
-        """Specialized version for wind data. It differs from
-        the standard addToHiLow in that it takes advantage of 
-        wind gust data if it's available. It also keeps track
-        of the *direction* of the high wind, as well as its time 
-        and magnitude."""
-        # Sanity check:
-        assert(self.type == 'wind')
-        # Get the wind speed & direction, breaking them down into vector
-        # components.
-        v      = rec.get('windSpeed')
-        vHi    = rec.get('windGust')
-        vHiDir = rec.get('windGustDir')
-        if vHi is None:
-            # This typically happens because a LOOP packet is being added, which
-            # does not have windGust data.
-            vHi    = v
-            vHiDir = rec.get('windDir')
-
-        if v is not None and (self.min is None or v < self.min):
-            self.min = v
-            self.mintime = rec['dateTime']
-        if vHi is not None and (self.max is None or vHi > self.max):
-            self.max = vHi
-            self.maxtime = rec['dateTime']
-            self.gustdir = vHiDir
-    
-    def addToSum(self, rec):
-        """Specialized version for wind data. It differs from
-        the standard addToSum in that it calculates a vector
-        average as well."""
-        # Sanity check:
-        assert(self.type == 'wind')
-        # Get the wind speed & direction, breaking them down into vector
-        # components.
-        speed = rec.get('windSpeed')
-        theta = rec.get('windDir')
-        if speed is not None:
-            self.sum   += speed
-            self.count += 1
-            # Note that there is no separate 'count' for theta. We use the
-            # 'count' for sum. This means if there are
-            # a significant number of bad theta's (equal to None), then vecavg
-            # could be off slightly.  
-            if theta is not None :
-                self.xsum      += speed * math.cos(math.radians(90.0 - theta))
-                self.ysum      += speed * math.sin(math.radians(90.0 - theta))
-    
-    def addToRms(self, rec):
-        """Add a record to the wind-specific rms stats"""
-        # Sanity check:
-        assert(self.type == 'wind')
-        speed = rec.get('windSpeed')
-        if speed is not None:
-            self.squaresum   += speed**2
-            self.squarecount += 1
-
-    def addLoopRecord(self, rec):
-        """Specialized version for wind data.
-        
-        Same as the version for StdDayStats, except it also updates the RMS data"""
-        self.addToHiLow(rec)
-        self.addToRms(rec)
-
-    def getStatsTuple(self):
-        """Return a stats-tuple. That is, a tuple containing the gathered statistics.
-        The results are in the same order as the schema, making it easy
-        to use in an SQL statement."""
-        return (StdDayStats.getStatsTuple(self) +
-                (self.gustdir, self.xsum, self.ysum, self.squaresum, self.squarecount))
-        
-    def setStats(self, stats_seq):
-        """Set self to the values in an iterable.
-        
-        stats_seq: an iterable sequence. The instance will be set to
-        these values.  Note that the ordering is the same as the
-        schema, i.e., (dateTime, min, mintime, max, maxtime, sum, count,
-        gustdir, xsum, ysum, squaresum, squarecount)"""
-
-        if not stats_seq:
-            stats_seq = (None, None, None, None, None, 0.0 , 0,
-                         None, 0.0, 0.0, 0.0, 0)
-
-        # First set the superclass,
-        StdDayStats.setStats(self, stats_seq[:7])
-        # Then initialize the specialized data:
-        (self.gustdir,
-         self.xsum,
-         self.ysum,
-         self.squaresum,
-         self.squarecount) = stats_seq[7:]
-
-    def __str__(self):
-        """Return self as a string. Useful for diagnostics and debugging."""
-        rms_str = "%f" % self.rms if self.rms is not None else "N/A"
-        vecavg_str = "%f" % self.vecavg if self.vecavg is not None else "N/A"
-        vecdir_str = "%f" % self.vecdir if self.vecdir is not None else "N/A"
-        return StdDayStats.__str__(self) + "; rms = %s; vecavg = %s; vecdir = %s " % (rms_str, vecavg_str, vecdir_str)
-
-
-#===============================================================================
 #                    Class DayStatsDict
 #===============================================================================
 
@@ -368,16 +120,16 @@ class DayStatsDict(dict):
     with the timestamp of the start of the day the dictionary represents.
 
     The key of the dictionary is a type ('outTemp', 'barometer',
-    etc.), the value an instance of WindDayStats for type 'wind',
-    otherwise an instance of StdDayStats
+    etc.), the value an instance of WindAccum for type 'wind',
+    otherwise an instance of StdAccum
 
     ATTRIBUTES: 
     self.startOfDay_ts: The start of the day this instance covers."""
     
-    def __init__(self, type_seq, startOfDay_ts):
+    def __init__(self, stats_type_seq, startOfDay_ts):
         """Create from a sequence of types, and from a time span.
 
-        type_seq: An iterable sequence of types ('outTemp',
+        stats_type_seq: An iterable sequence of types ('outTemp',
         'barometer', etc.). These will be the keys of the dictionary
 
         startOfDay_ts: The timestamp of the beginning of the day.
@@ -387,18 +139,11 @@ class DayStatsDict(dict):
 
         self.startOfDay_ts = startOfDay_ts
         
-        for type in type_seq:
-            if type == 'wind':
-                self[type] = WindDayStats(type, startOfDay_ts)
+        for _stats_type in stats_type_seq:
+            if _stats_type == 'wind':
+                self[_stats_type] = weewx.accum.WindAccum(_stats_type, startOfDay_ts)
             else:
-                self[type] = StdDayStats(type, startOfDay_ts)
-
-    def __str__(self):
-        """Print self out in a useful way for diagnostics."""
-        outTempStats = self['outTemp']
-        outTempMin_str = str(outTempStats.min) if outTempStats.min is not None else "N/A"
-        outTempMax_str = str(outTempStats.max) if outTempStats.max is not None else "N/A"
-        return "time span: %s; temperature (min,max) = (%s, %s)" % (str(self.timespan), outTempMin_str, outTempMax_str)
+                self[_stats_type] = weewx.accum.StdAccum(_stats_type, startOfDay_ts)
 
 #===============================================================================
 #                    Class TaggedStats
@@ -670,8 +415,8 @@ class StatsReadonlyDb(object):
 
         sod_ts: The timestamp of the start-of-day for the desired day.
 
-        returns: an instance of WindDayStats for type 'wind',
-        otherwise an instance of StdDayStats, initialized with the
+        returns: an instance of WindAccum for type 'wind',
+        otherwise an instance of StdAccum, initialized with the
         data from the database. If the record doesn't exist in the
         database, the returned instance will be set to 'default'
         values (generally, min==None, count=0, etc.)"""
@@ -694,29 +439,30 @@ class StatsReadonlyDb(object):
                 if stats_type =='wind': assert(len(_row) == 12)
                 else: assert(len(_row) == 7)
 
+        # Get the TimeSpan for the day starting with sod_ts:
+        timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
+
         # The date may not exist in the database, in which case _row will
-        # be 'None', causing either StdDayStats or WindDayStats
-        # to initialize to default values.
-        _dayStats = StdDayStats(stats_type, sod_ts, _row) if stats_type != 'wind'\
-                                                          else WindDayStats(stats_type, sod_ts, _row)
+        # be 'None'
+        _stats_tuple = _row[1:] if _row else None
+            
+        _dayStats = weewx.accum.StdAccum(stats_type, timespan, _stats_tuple) if stats_type != 'wind'\
+              else weewx.accum.WindAccum(stats_type, timespan, _stats_tuple)
 
         return _dayStats
 
-    def day(self, startOfDay_ts):
+    def day(self, sod_ts):
         """Return an instance of DayStatsDict initialized to a given day's statistics.
 
-        startOfDay_ts: The timestamp of the start-of-day of the desired day.
-
-        cursor: A database cursor to be used for the retrieval. [Optional. If not given,
-        one will be created and destroyed for this query.]"""
-        
-        if self._dayCache and self._dayCache[0] and self._dayCache[0].startOfDay_ts == startOfDay_ts:
+        sod_ts: The timestamp of the start-of-day of the desired day."""
+                
+        if self._dayCache and self._dayCache[0] and self._dayCache[0].startOfDay_ts == sod_ts:
             return self._dayCache[0]
 
-        _allStats = DayStatsDict(self.statsTypes, startOfDay_ts)
+        _allStats = DayStatsDict(self.statsTypes, sod_ts)
         
         for stats_type in self.statsTypes:
-            _allStats[stats_type] = self.getStatsForType(stats_type, startOfDay_ts)
+            _allStats[stats_type] = self.getStatsForType(stats_type, sod_ts)
         
         if self._dayCache:
             self._dayCache = (_allStats, None)
@@ -983,11 +729,15 @@ class StatsDb(StatsReadonlyDb):
         # Get the start-of-day for this archive record.
         _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
 
+        # Retrieve a dictionary containing the day's statistics:
         _allStatsDict = self.day(_sod_ts)
 
-        for type in self.statsTypes:
-            # ... and add this archive record to the running tally:
-            _allStatsDict[type].addArchiveRecord(rec)
+        for _stats_type in self.statsTypes:
+            # ... and add this archive record to the running tally.
+            # Archive records are used in both the high-lows, and
+            # averages:
+            _allStatsDict[_stats_type].addToHiLow(rec)
+            _allStatsDict[_stats_type].addToSum(rec)
 
         # Now write the results for all types back to the database
         # in a single transaction:
@@ -1001,9 +751,14 @@ class StatsDb(StatsReadonlyDb):
 
         _allStatsDict = self.day(_sod_ts)
 
-        for type in self.statsTypes:
-            # ... and add this loop record to the running tally:
-            _allStatsDict[type].addLoopRecord(rec)
+        for _stats_type in self.statsTypes:
+            # ... and add this loop record to the running tally.
+            # Loop records are used in hi-lows only, except wind
+            # data which is also used for RMS speeds
+            _allStatsDict[_stats_type].addToHiLow(rec)
+            if _stats_type == 'wind':
+                _allStatsDict[_stats_type].addToRms(rec)
+                
 
         # Now write the results for all types back to the database
         # in a single transaction:
@@ -1060,7 +815,7 @@ class StatsDb(StatsReadonlyDb):
         """Write all statistics for a day to the database in a single transaction.
         
         dayStatsDict: A dictionary. Key is the type to be written, value is a
-        StdDayStats or WindDayStats, as appropriate.  Class DayStatsDict
+        StdAccum or WindAccum, as appropriate.  Class DayStatsDict
         satisfies this.
         
         lastUpdate: the time of the last update will be set to this. Normally, this
@@ -1101,8 +856,7 @@ class StatsDb(StatsReadonlyDb):
                     _replace_str = std_replace_str % _stats_type
                 
                 # Get the stats-tuple, then write the results
-                _write_tuple = dayStatsDict[_stats_type].getStatsTuple()
-                assert(_write_tuple[0] == _sod)
+                _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
                 _connection.execute(_replace_str,_write_tuple)
             # Update the time of the last stats update:
             _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
@@ -1158,8 +912,10 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
                 _allStats = statsDb.day(_rec_sod_ts)
         
         # Add the stats for this record to the running total for this day:
-        for _type in _allStats:
-            _allStats[_type].addArchiveRecord(_rec)
+        for _stats_type in _allStats:
+            _allStats[_stats_type].addToHiLow(_rec)
+            _allStats[_stats_type].addToSum(_rec)
+            
         nrecs += 1
         # Remember the timestamp for this record.
         _lastTime = _rec_time_ts
@@ -1243,18 +999,18 @@ if __name__ == '__main__':
         # Test it against some types
         # Should really do a test for 'wind' as well.
         # Should also test monthly, yearly summaries
-        for type in ('barometer', 'outTemp', 'inTemp', 'heatindex'):
-            print "\n***************** %s ********************" % type
-            # Get the StatsDict for this day and this type:
-            typeStats = statsDb.getStatsForType(type, start_ts)
+        for stats_type in ('barometer', 'outTemp', 'inTemp', 'heatindex'):
+            print "\n***************** %s ********************" % stats_type
+            # Get the StatsDict for this day and this stats_type:
+            typeStats = statsDb.getStatsForType(stats_type, start_ts)
         
             # Now test all the aggregates:
             for aggregate in ('min', 'max', 'sum', 'count'):
                 # Compare to the main archive:
-                res = archive.getSql("SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, type), start_ts, stop_ts)
+                res = archive.getSql("SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, stats_type), start_ts, stop_ts)
                 # From StatsDb:
                 typeStats_res = typeStats.__getattribute__(aggregate)
-                allStats_res  = allStats[type].__getattribute__(aggregate)
+                allStats_res  = allStats[stats_type].__getattribute__(aggregate)
                 print "%s: results from stats database using getStatsForType(): " % aggregate, typeStats_res
                 print "%s: results from stats database using day():         " % aggregate, allStats_res
                 print "%s: result from running SQL on the main archive:     " % aggregate, res[0]
@@ -1263,7 +1019,7 @@ if __name__ == '__main__':
                 
                 # Check the times of min and max as well:
                 if aggregate in ('min','max'):
-                    res2 = archive.getSql("SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (type,), res[0], start_ts, stop_ts)
+                    res2 = archive.getSql("SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (stats_type,), res[0], start_ts, stop_ts)
                     stats_time =  typeStats.__getattribute__(aggregate+'time')
                     print aggregate+'time: from main archive:   ', weeutil.weeutil.timestamp_to_string(res2[0])
                     print aggregate+'time: from typeStats database: ', weeutil.weeutil.timestamp_to_string(stats_time)

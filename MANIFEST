@@ -24,6 +24,7 @@ bin/weeutil/ftpupload.py
 bin/weeutil/weeutil.py
 bin/weewx/VantagePro.py
 bin/weewx/__init__.py
+bin/weewx/accum.py
 bin/weewx/archive.py
 bin/weewx/crc16.py
 bin/weewx/filegenerator.py
