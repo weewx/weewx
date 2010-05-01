@@ -263,6 +263,9 @@ class TimeSpanStats(object):
         returns: The helper class StatsTypeHelper bound to the type
         and timespan.
         """
+        # check to see if this is a valid stats type:
+        if stats_type not in self.statsDb.getUsableTypes():
+            raise AttributeError
         # The attribute is probably a type such as 'barometer', or 'heatdeg'
         # Return the helper class, bound to the type:
         return StatsTypeHelper(self.statsDb, self.timespan, stats_type, self.context, self.unit_info)
@@ -626,6 +629,10 @@ class StatsReadonlyDb(object):
         _result_unit_type = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
         # Return as a value tuple
         return (_result, _result_unit_type)
+    
+    def getUsableTypes(self):
+        """Return all types for which we can offer statistics."""
+        return self.statsTypes + ['heatdeg', 'cooldeg']
 
     def _getFirstUpdate(self):
         """Returns the time of the first entry in the statistical database."""
