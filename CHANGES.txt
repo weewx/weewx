@@ -1,6 +1,18 @@
 CHANGE HISTORY
 --------------------------------
 
+1.8.2   5/9/10
+
+Added check to skip calibration for a type that doesn't exist in LOOP
+or archive records. This allows windSpeed and windGust to be calibrated
+separately.
+
+
+1.8.1   5/1/10
+
+Ported to Cheetah V2.4.X
+
+
 1.8.0   04/28/10
 
 Added CWOP support.

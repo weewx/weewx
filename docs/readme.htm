@@ -484,42 +484,27 @@ does this for you):</p>
 &gt; # Now run weewxd.py out of the directory you unpacked weewx into:
 &gt; ./weewx-X.Y.Z/bin/weewxd.py ./weewx-X.Y.Z/weewx.conf</pre>
 <h1>6. <a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
-<p>This section covers configuring your archive and statistical database (if necessary; 
-this step is required only if you are moving from
-<a href="http://www.wviewweather.com/">wview</a> to <span class="code">weewx</span>), 
-configuring your weather station, and configuring the configuration files
+<p>This section covers configuring <span class="code">weewx</span>, in 
+particular the configuration files
 <span class="code">weewx.conf</span> and <span class="code">skin.conf</span>.</p>
 <p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to the
 <span class="code">weewx</span> data root directory, generally <span class="code">/home/weewx</span>.
 The subdirectories <span class="code">archive</span>, <span class="code">skins</span>, 
 and <span class="code">public_html</span> are expected to be found here.
 </p>
-<h2>6.1 Configuring the databases</h2>
+<h2>6.1 Moving from wview</h2>
 <p>NOTE: This section is necessary only if you are moving from
 <a href="http://www.wviewweather.com/">wview</a> to <span class="code">weewx</span> 
 and wish to transfer your old data over. If you are starting afresh, you do not 
 need to follow this section — the two main databases are created and populated automatically 
 by <span class="code">weewx</span>.</p>
-<p>If you wish to transfer your wview data, note that two databases are maintained 
-by weewx:</p>
-<ul>
-	<li><span class="code"><em>$WEEWX_ROOT/$archive_file</em></span> (nominally
-	<span class="code">/home/weewx/archive/weewx.sdb</span>)</li>
-	<li><span class="code"><em>$WEEWX_ROOT/$stats_file</em></span> (nominally
-	<span class="code">/home/weewx/archive/stats.sdb</span>)</li>
-</ul>
-<p>Because wview and <span class="code">weewx</span> use identical schema for the 
-first of these (the archive database), it can be just copied over. However, the 
-second (the statistical databases) is different — the <span class="code">weewx</span> 
-statistical database must be built manually and backfilled. This is done using the 
-configuration script <span class="code">configure.py</span>. </p>
-<p>Here&#39;s a summary of how to transfer your wview data to <span class="code">weewx</span>.</p>
+<p>The main archive database can be just copied over because wview and <span class="code">weewx</span> 
+use identical schemas:</p>
 <p class="tty">mkdir <em>$WEEWX_ROOT</em>/archive</p>
 <p class="tty">cp /usr/local/var/wview/archive/wview-archive.sdb
 <span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb</p>
-<p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --create-stats <em>$WEEWX_ROOT</em>/weewx.conf</p>
-<p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --backfill-stats <em>$WEEWX_ROOT</em>/weewx.conf</p>
-<p>If your existing database is large, backfilling could take some time. On my modest 
+<p>The second database, the statistics, will then be automatically created and 
+backfilled on startup of weewx. If your existing database is large, backfilling could take some time. On my modest 
 500 MHz <a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC 
 Slim</a> with 512 MB of memory it took a little over 4 minutes for a year and a 
 half (25 MB) of data (while wview was running in the background).</p>
@@ -920,7 +905,8 @@ wview</span></a></h1>
 used by <a href="http://www.wviewweather.com">wview</a> (usually called
 <span class="code">wview-archive.sdb</span>), at least as of wview Version 5.2.X. 
 The schema and its semantics is identical. However, the statistical file
-<span class="code">stats.sdb</span> is different, and must be rebuilt</p>
+<span class="code">stats.sdb</span> is different, and must be rebuilt. This will 
+be done automatically on startup by <span class="code">weewx</span>.</p>
 <h1>9. <a name="Monitoring_weewx">Monitoring <span class="code">weewx</span></a></h1>
 <p><span class="code">Weewx</span> logs many events to the system log. On Debian 
 systems, this is <span class="code">/var/log/syslog</span>, on SuSE,

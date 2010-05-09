@@ -303,11 +303,9 @@ class CWOP(REST):
 
         # Send the login:
         _resp = self._send(_sock, _login)
-        print "Login response:",_resp
 
         # And now the packet
         _resp = self._send(_sock, _tnc_packet)
-        print "Packet response:",_resp
         
         try:
             _sock.close()

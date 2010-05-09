@@ -303,13 +303,13 @@ class StdCalibrate(StdService):
     def newLoopPacket(self, loopPacket):
         """Apply a calibration correction to a LOOP packet"""
         for obs_type in self.corrections:
-            if loopPacket[obs_type] is not None:
+            if loopPacket.has_key(obs_type) and loopPacket[obs_type] is not None:
                 loopPacket[obs_type] = eval(self.corrections[obs_type], None, loopPacket)
 
     def newArchivePacket(self, archivePacket):
         """Apply a calibration correction to an archive packet"""
         for obs_type in self.corrections:
-            if archivePacket[obs_type] is not None:
+            if archivePacket.has_key(obs_type) and archivePacket[obs_type] is not None:
                 archivePacket[obs_type] = eval(self.corrections[obs_type], None, archivePacket)
 
 #===============================================================================
