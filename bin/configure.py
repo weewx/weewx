@@ -113,7 +113,7 @@ def configureVP(config_dict):
     
     print "Configuring VantagePro..."
     # Open up the weather station:
-    station = weewx.VantagePro.WxStation(config_dict['VantagePro'])
+    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
 
     old_archive_interval = station.archive_interval
     new_archive_interval = config_dict['VantagePro'].as_int('archive_interval')

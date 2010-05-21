@@ -1,6 +1,12 @@
 CHANGE HISTORY
 --------------------------------
 
+1.8.3  5/20/10
+
+Problem with configuring archive interval found and fixed
+by user A. Burriel (thanks, Antonio!)
+
+
 1.8.2   5/9/10
 
 Added check to skip calibration for a type that doesn't exist in LOOP

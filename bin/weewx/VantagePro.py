@@ -997,7 +997,7 @@ if __name__ == '__main__':
     ans = raw_input("about to configure VantagePro. OK (y/n)? ")
     if ans == 'y' :
         # Open up the weather station:
-        station = VantagePro(config_dict['VantagePro'])
+        station = VantagePro(**config_dict['VantagePro'])
         station.config(config_dict)
         print "Done."
     else :
