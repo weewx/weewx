@@ -526,7 +526,13 @@ lots of files to a server, setting it to 60 seconds may not give enough time to
 have them all uploaded before the next archive record is due. If this is the case, 
 you should pick an archive interval of at least 300 seconds, or trim the number 
 of files you are using.</p>
-<p>After setting to the desired interval, run the <span class="code">configure.py</span> 
+<p>I have found that a five minute (300 seconds) archive interval works well for 
+the VantagePro. Because of the large amount of onboard memory it carries, going 
+to a larger interval really does not have any advantages.</p>
+<p><em>Choose your archiving interval carefully! </em>Once chosen, it cannot be 
+changed without messing up your statistics (highs and lows will be OK, but 
+averages and rms wind speed will be wrong).</p>
+<p>After setting the desired interval in the configuration file, run the <span class="code">configure.py</span> 
 script to set it on the VantagePro. If it differs from the old archive interval, 
 the main memory log of the VantagePro will be cleared. </p>
 <p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --configure-VantagePro $WEEWX_ROOT/weewx.conf</p>
