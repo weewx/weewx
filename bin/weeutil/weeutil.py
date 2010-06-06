@@ -221,7 +221,7 @@ def intervalgen(start_ts, stop_ts, interval):
             yield (stamp1, stamp2)
             dt1 = dt2
 
-def startOfInterval(time_ts, interval):
+def startOfInterval(time_ts, interval, grace=1):
     """Find the start time of an interval.
     
     This algorithm assumes the day is divided up into
@@ -237,23 +237,28 @@ def startOfInterval(time_ts, interval):
       01:57:35       900      01:45:00
       01:57:35      3600      01:00:00
       01:57:35      7200      00:00:00
+      01:00:00       300      00:55:00
     
     time_ts: A timestamp. The start of the interval containing this
     timestamp will be returned.
     
     interval: An interval length in seconds.
     
+    grace: A time this many seconds into an interval is still
+    included in the last interval. Set to zero to have an
+    inclusive start of an interval. [Optional. Default is 1 second.]
+    
     Returns: A timestamp with the start of the interval."""
 
     # Convert time into a datetime:
-    time_dt = datetime.datetime.fromtimestamp(time_ts)
+    time_dt = datetime.datetime.fromtimestamp(time_ts - grace)
     
     # Convert interval to minutes:
     interval_m = interval / 60
     
     # This is the number of minutes since midnight:
     minutes = time_dt.minute + time_dt.hour * 60
-    # This is the number of minutes since the start of the minute:
+    # This is the number of minutes since the start of the interval:
     diff_minutes = minutes % interval_m
     diff_seconds = diff_minutes * 60
     
@@ -631,81 +636,87 @@ if __name__ == '__main__':
     print "********startOfInterval*************"
     
     t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_start = startOfInterval(t, 1 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 1 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 57, 00))
 
     t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_start = startOfInterval(t, 5 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 5 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 55, 00))
 
     t = time.mktime((2009, 3, 4, 1, 0, 0, 0, 0, 0))
-    t_start = startOfInterval(t, 5 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
-    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 0, 0))
+    t_length = 1 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 0, 59, 0))
+
+    t = time.mktime((2009, 3, 4, 1, 0, 0, 0, 0, 0))
+    t_length = 5 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
+    assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 0, 55, 0))
 
     t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_start = startOfInterval(t, 10 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 10 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 50, 00))
 
     t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_start = startOfInterval(t, 15 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 15 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 45, 00))
 
     t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_start = startOfInterval(t, 20 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 20 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 40, 00))
 
     t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_start = startOfInterval(t, 30 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 30 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 30, 00))
 
     t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_start = startOfInterval(t, 60 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 60 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 1, 00, 00))
 
     t = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_start = startOfInterval(t, 120 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 120 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start)[0:6] == (2009, 3, 4, 00, 00, 00))
     
     # Do a test over the spring DST boundary:
     t = time.mktime((2009, 3, 8, 3, 22, 05, 0, 0, 1))
-    t_start = startOfInterval(t, 120 * 60)
+    t_length = 120 * 60
+    t_start = startOfInterval(t, t_length)
     # Result should be 3am DST, or 2am ST:
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start) == (2009, 3, 8, 3, 0, 0, 6, 67, 1))
     
     # Do a test over the fall DST boundary.
     # This is 01:22:05 DST, just before the change over:
     t = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 1))
-    t_start = startOfInterval(t, 120 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 120 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start) == (2009, 11, 1, 0, 0, 0, 6, 305, 1))
 
     # Do it again, except after the change over
     # This is 01:22:05 ST, just after the change over:
     t = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 0))
-    t_start = startOfInterval(t, 120 * 60)
-    print timestamp_to_string(t)
-    print timestamp_to_string(t_start)
+    t_length = 120 * 60
+    t_start = startOfInterval(t, t_length)
+    print timestamp_to_string(t), t_length, timestamp_to_string(t_start)
     assert(time.localtime(t_start) == (2009, 11, 1, 0, 0, 0, 6, 305, 1))
 
     print "PASSES"

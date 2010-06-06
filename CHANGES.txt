@@ -1,17 +1,25 @@
 CHANGE HISTORY
 --------------------------------
 
+1.8.4  6/06/10
+
+Fixed problem that shows itself if weewx starts up at precisely the beginning of
+an archive interval. Symptom is max recursion depth exceeded. 
+
+Units for UV in LOOP records corrected. Also, introduced new group for UV,
+group_uv_index. Thanks to user A. Burriel for this fix!
+
+
 1.8.3  5/20/10
 
-Problem with configuring archive interval found and fixed
-by user A. Burriel (thanks, Antonio!)
+Problem with configuring archive interval found and fixed by user A. Burriel
+(thanks, Antonio!)
 
 
 1.8.2   5/9/10
 
-Added check to skip calibration for a type that doesn't exist in LOOP
-or archive records. This allows windSpeed and windGust to be calibrated
-separately.
+Added check to skip calibration for a type that doesn't exist in LOOP or archive
+records. This allows windSpeed and windGust to be calibrated separately.
 
 
 1.8.1   5/1/10

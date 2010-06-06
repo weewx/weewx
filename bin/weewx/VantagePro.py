@@ -531,7 +531,7 @@ class VantagePro (object) :
                      'extraHumid6'     : _little_val, 
                      'extraHumid7'     : _little_val,
                      'rainRate'        : _big_val100, 
-                     'UV'              : _little_val, 
+                     'UV'              : _little_val10, 
                      'radiation'       : _big_val, 
                      'stormRain'       : _val100, 
                      'stormStart'      : _loop_date,
