@@ -25,7 +25,7 @@ def dewpointF(T, R) :
 
     TdC = dewpointC((T - 32.0)*5.0/9.0, R)
 
-    return TdC * 9.0/5.0 + 32.0
+    return TdC * 9.0/5.0 + 32.0 if TdC is not None else None
 
 def dewpointC(T, R):
     """Calculate dew point. From http://en.wikipedia.org/wiki/Dew_point
@@ -40,8 +40,11 @@ def dewpointC(T, R):
     if T is None or R is None :
         return None
     R = R / 100.0
-    _gamma = 17.27 * T / (237.7 + T) + math.log(R)
-    TdC = 237.7 * _gamma / (17.27 - _gamma)
+    try:
+        _gamma = 17.27 * T / (237.7 + T) + math.log(R)
+        TdC = 237.7 * _gamma / (17.27 - _gamma)
+    except ValueError:
+        TdC = None
     return TdC
 
 def windchillF(T, V) :

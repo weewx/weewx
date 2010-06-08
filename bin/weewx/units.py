@@ -39,7 +39,7 @@ obs_group_dict = {"barometer"          : "group_pressure",
                   "heatindex"          : "group_temperature",
                   "ET"                 : "group_rain",
                   "radiation"          : "group_radiation",
-                  "UV"                 : "group_uv_index",
+                  "UV"                 : "group_uv",
                   "extraTemp1"         : "group_temperature",
                   "extraTemp2"         : "group_temperature",
                   "extraTemp3"         : "group_temperature",
@@ -103,7 +103,7 @@ unit_type_dict = {"centibar"           : "group_moisture",
                   "mm_per_hour"        : "group_rainrate",
                   "percent"            : "group_percent",
                   "unix_epoch"         : "group_time",
-                  "uv_index"           : "group_uv_index",
+                  "uv_index"           : "group_uv",
                   "volt"               : "group_volt",
                   "watt_per_meter_squared" : "group_radiation"}
 
@@ -137,7 +137,7 @@ USUnits       = {"group_altitude"     : "foot",
                  "group_speed2"       : "mile_per_hour2",
                  "group_temperature"  : "degree_F",
                  "group_time"         : "unix_epoch",
-                 "group_uv_index"     : "uv_index",
+                 "group_uv"           : "uv_index",
                  "group_volt"         : "volt"}
 
 # This structure maps unit groups to the unit type in the 
@@ -157,7 +157,7 @@ MetricUnits   = {"group_altitude"     : "meter",
                  "group_speed2"       : "km_per_hour2",
                  "group_temperature"  : "degree_C",
                  "group_time"         : "unix_epoch",
-                 "group_uv_index"     : "uv_index",
+                 "group_uv"           : "uv_index",
                  "group_volt"         : "volt"}
 
 StdUnitSystem     = {weewx.US     : USUnits,
