@@ -573,17 +573,8 @@ class VantagePro (object) :
         record['heatindex']   = weewx.wxformulas.heatindexF(T, R)
         record['windchill']   = weewx.wxformulas.windchillF(T, W)
         
-        final_record = self.errorCheck(record)
-        
-        return final_record
-
-    def errorCheck(self, record):
-        """Final (optional) sanity check of any data before being returned."""
-        
-        # This would be the place to do any processing for crazy numbers
-        # (e.g., temperatures in hundreds) and replace them with None.
         return record
-    
+
     def translateArchivePacket(self, packet):
         """Translates an archive packet from the internal units used by Davis, into physical units.
         
