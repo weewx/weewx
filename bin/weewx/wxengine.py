@@ -313,6 +313,42 @@ class StdCalibrate(StdService):
                 archivePacket[obs_type] = eval(self.corrections[obs_type], None, archivePacket)
 
 #===============================================================================
+#                    Class StdQC
+#===============================================================================
+
+class StdQC(StdService):
+    """Performs quality check on incoming data."""
+    
+    def __init__(self, engine, config_dict):
+        super(StdQC, self).__init__(engine, config_dict)
+
+        self.min_max_dict = {}
+        # Nothing to do if the 'QC' section does not exist in the configuration
+        # dictionary.
+        if config_dict.has_key('QC'):
+            min_max_dict = config_dict['QC']['MinMax']
+    
+            for obs_type in min_max_dict.scalars:
+                self.min_max_dict[obs_type] = (float(min_max_dict[obs_type][0]),
+                                               float(min_max_dict[obs_type][1]))
+            
+    def newLoopPacket(self, loopPacket):
+        """Apply quality check to the data in a LOOP packet"""
+        for obs_type in self.min_max_dict:
+            if loopPacket.has_key(obs_type) and loopPacket[obs_type] is not None:
+                if loopPacket[obs_type] < self.min_max_dict[obs_type][0] or\
+                   loopPacket[obs_type] > self.min_max_dict[obs_type][1]:
+                    loopPacket[obs_type] = None
+
+    def newArchivePacket(self, archivePacket):
+        """Apply quality check to the data in a LOOP packet"""
+        for obs_type in self.min_max_dict:
+            if archivePacket.has_key(obs_type) and archivePacket[obs_type] is not None:
+                if archivePacket[obs_type] < self.min_max_dict[obs_type][0] or\
+                   archivePacket[obs_type] > self.min_max_dict[obs_type][1]:
+                    archivePacket[obs_type] = None
+
+#===============================================================================
 #                    Class StdArchive
 #===============================================================================
 
