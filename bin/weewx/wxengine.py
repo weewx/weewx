@@ -427,6 +427,7 @@ class StdTimeSynch(StdService):
         # Zero out the time of last synch, and get the time between synchs.
         self.last_synch_ts = 0
         self.clock_check = int(config_dict['Station'].get('clock_check', 14400))
+        self.max_drift   = int(config_dict['Station'].get('max_drift', 5))
         
     def preloop(self):
         """Ask the station to synch up if enough time has passed."""
@@ -434,7 +435,7 @@ class StdTimeSynch(StdService):
         # clock_check seconds since the last check:
         now_ts = time.time()
         if now_ts - self.last_synch_ts >= self.clock_check:
-            self.engine.station.setTime()
+            self.engine.station.setTime(time.time(), self.max_drift)
             self.last_synch_ts = now_ts
             
 #===============================================================================

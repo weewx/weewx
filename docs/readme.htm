@@ -598,6 +598,9 @@ year starts in October (as mine does). Default is 1.</p>
 <p class="config_option">clock_check</p>
 <p>How often to check the station&#39;s onboard clock for drift, in seconds. Default 
 is 14400 (every 4 hours)</p>
+<p class="config_option">max_drift</p>
+<p>The maximum amount of drift to tolerate, in seconds, in the onboard 
+clock, before resetting the clock. Default is 5.</p>
 <p class="config_option">cache_loop_data</p>
 <p>Set to 1 (one) to cache LOOP data, otherwise, set to zero. Most users will not 
 want to change this unless you have a specialized application. Default is 1 (<em>i.e.</em>, 
@@ -638,9 +641,6 @@ the station to offer new data, but not so long as to go into a new loop packet (
 arrive every 2 seconds). Default is 1.2 seconds.</p>
 <p class="config_option">max_tries</p>
 <p>How many times to try again before giving up. Default is 4.</p>
-<p class="config_option">max_drift</p>
-<p>The maximum amount of drift to tolerate, in seconds, in the VantagePro&#39;s onboard 
-clock, before resetting the clock. Default is 5.</p>
 <p class="config_option">unit_system</p>
 <p>What unit system is in use on your weather station hardware. Possible values 
 are &#39;1&#39; (U.S. Customary) or &#39;2&#39; (Metric). As far as I know, all Davis instruments 

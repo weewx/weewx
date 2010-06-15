@@ -7,6 +7,9 @@ Added a new service, StdQC, that offers a rudimentary data check.
 
 Corrected error in rain year total if rain year does not start in January.
 
+Moved option max_drift (the max amount of clock drift to tolerate) to section
+[Station].
+
 
 1.8.4  6/06/10
 

@@ -79,9 +79,6 @@ class VantagePro (object) :
         archive_delay: How long to wait after an archive record is due
         before retrieving it. [Optional. Default is 15 seconds]
         
-        max_drift: Maximum drift allowed on the on board VP clock before
-        it will be corrected. [Optional. Default is 5 seconds]
-
         iss_id: The station number of the ISS [Optional. Default is 1]
         
         unit_system: What unit system to use on the VP. [Optional.
@@ -99,7 +96,6 @@ class VantagePro (object) :
         self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
         self.archive_delay    = int(vp_dict.get('archive_delay', 15))
-        self.max_drift        = int(vp_dict.get('max_drift'    , 5))
         self.unit_system      = int(vp_dict.get('unit_system'  , 1))
 
         # Get the archive interval dynamically:
@@ -315,23 +311,22 @@ class VantagePro (object) :
             syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting time")
             raise weewx.RetriesExceeded, "While getting console time"
             
-    def setTime(self, newtime_tt = None) :
+    def setTime(self, newtime_ts, max_drift):
         """Set the clock on the Davis VantagePro console
+
+        newtime_ts: The time the internal clock should be set to.
         
-        newtime_tt: A time tuple with the time to which the
-        clock should be set. If 'None', then the host's time will 
-        be used. In this case, if the clock has drifted less than
-        maxdiff seconds, nothing is done. """
+        max_drift: The request to set the time will be ignored
+        if the clock error is less than this value."""
+        
         # Unfortunately, this algorithm takes a little while to execute, so the clock
         # usually ends up a few hundred milliseconds slow
-        if newtime_tt is None:
-            _hosttime_ts = time.time()
-            _diff = time.mktime(self.getTime()) - _hosttime_ts
-            syslog.syslog(syslog.LOG_INFO, 
-                          "VantagePro: Clock error is %.2f seconds (positive is fast)" % _diff)
-            if abs(_diff) < self.max_drift:
-                return
-            newtime_tt = time.localtime(int(_hosttime_ts + 0.5))
+        _diff = time.mktime(self.getTime()) - newtime_ts
+        syslog.syslog(syslog.LOG_INFO, 
+                      "VantagePro: Clock error is %.2f seconds (positive is fast)" % _diff)
+        if abs(_diff) < max_drift:
+            return
+        newtime_tt = time.localtime(int(newtime_ts + 0.5))
             
         # The Davis expects the time in reversed order, and the year is since 1900
         _buffer = struct.pack("<bbbbbb", newtime_tt[5], newtime_tt[4], newtime_tt[3], newtime_tt[2],

@@ -435,7 +435,7 @@ def archiveYearSpan(time_ts, grace=1):
     return TimeSpan(int(time.mktime((_day_date.year, 1, 1, 0, 0, 0, 0, 0, -1))),
                              int(time.mktime((_day_date.year + 1, 1, 1, 0, 0, 0, 0, 0, -1))))
 
-def archiveRainYearSpan(time_ts, sory_mon=1, grace=1):
+def archiveRainYearSpan(time_ts, sory_mon, grace=1):
     """Returns a TimeSpan representing a rain year that includes a given time.
     
     Midnight of the 1st of the month starting the rain year is considered to
@@ -443,7 +443,7 @@ def archiveRainYearSpan(time_ts, sory_mon=1, grace=1):
     
     time_ts: The rain year will include this timestamp. 
     
-    sory_mon: The month the rain year starts. [Optional. Default is 1 (Jan)]
+    sory_mon: The month the rain year starts.
     
     grace: This many seconds past midnight marks the start of the next
     rain year. Set to zero to have midnight be included in the
