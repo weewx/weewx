@@ -221,7 +221,9 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
         # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(self.statsdb, timespan.stop, self.unit_info)
+        stats = weewx.stats.TaggedStats(self.statsdb, timespan.stop, 
+                                        self.station.rain_year_start,
+                                        self.unit_info)
 #        # Get a formatted view into it:
 #        statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
 
@@ -247,7 +249,9 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
         # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(self.statsdb, stop_ts, self.unit_info)
+        stats = weewx.stats.TaggedStats(self.statsdb, stop_ts,
+                                        self.station.rain_year_start,
+                                        self.unit_info)
 
         # Get the current conditions:
         current = {'current' : currentRec}

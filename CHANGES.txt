@@ -1,6 +1,13 @@
 CHANGE HISTORY
 --------------------------------
 
+1.9.0  6/01/10
+
+Added a new service, StdQC, that offers a rudimentary data check.
+
+Corrected error in rain year total if rain year does not start in January.
+
+
 1.8.4  6/06/10
 
 Fixed problem that shows itself if weewx starts up at precisely the beginning of

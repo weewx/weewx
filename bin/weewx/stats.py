@@ -161,36 +161,44 @@ class TaggedStats(object):
     time period. 
     """
     
-    def __init__(self, statsDb, endtime_ts, unit_info=None):
+    def __init__(self, statsDb, endtime_ts, sory_mon=1, unit_info=None):
         """Initialize an instance of TaggedStats.
         statsDb: An instance of weewx.stats.StatsReadonly
         
         endtime_ts: The time the stats are to be current to.
+        
+        sory_mon: The month the rain year starts. [Optional. Default is 1 or January]
         
         unit_info: An instance of weewx.units.Units holding the target units. 
         [Optional. If not specified, default formatting and units will be chosen.]
         """
         self.statsDb    = statsDb
         self.endtime_ts = endtime_ts
+        self.sory_mon   = sory_mon
         self.unit_info  = unit_info
         
     # What follows is the list of time period attributes:
 
     @property
     def day(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveDaySpan(self.endtime_ts), 'day', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveDaySpan(self.endtime_ts),
+                             'day', self.unit_info)
     @property
     def week(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveWeekSpan(self.endtime_ts), 'week', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveWeekSpan(self.endtime_ts),
+                             'week', self.unit_info)
     @property
     def month(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveMonthSpan(self.endtime_ts), 'month', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveMonthSpan(self.endtime_ts),
+                             'month', self.unit_info)
     @property
     def year(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveYearSpan(self.endtime_ts), 'year', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveYearSpan(self.endtime_ts),
+                             'year', self.unit_info)
     @property
     def rainyear(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveRainYearSpan(self.endtime_ts), 'rainyear', self.unit_info)
+        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveRainYearSpan(self.endtime_ts, self.sory_mon), 
+                             'rainyear', self.unit_info)
         
    
 #===============================================================================
