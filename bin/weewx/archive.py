@@ -131,12 +131,14 @@ class Archive(object):
         
         record: A data record. It must look like a dictionary, where the keys
         are the SQL types and the values are the values to be stored in the
-        database. 
-        
-        """
+        database."""
         global sql_insert_stmt
         global sqlkeys
  
+        if record['dateTime'] is None:
+            syslog.syslog(syslog.LOG_ERR, "Archive: archive record with null time encountered. Ignored.")
+            return
+        
         # This will be a list of the values, in the order of the sqlkeys.
         # A value will be replaced with None if it did not exist in the record
         _vallist = [record.get(_key) for _key in sqlkeys]
@@ -145,7 +147,6 @@ class Archive(object):
             _connection.execute(sql_insert_stmt, _vallist)
         
         syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(_vallist[0]))
-
 
     def genBatchRecords(self, startstamp, stopstamp):
         """Generator function that yields ValueRecords within a time interval.

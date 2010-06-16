@@ -10,6 +10,12 @@ Corrected error in rain year total if rain year does not start in January.
 Moved option max_drift (the max amount of clock drift to tolerate) to section
 [Station].
 
+Added check for a bad storm start time.
+
+Added checks for bad dateTime.
+
+Simplified VantagePro module.
+
 
 1.8.4  6/06/10
 

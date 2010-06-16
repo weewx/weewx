@@ -124,7 +124,7 @@ class VantagePro (object) :
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: new archive record due. Canceling loop")
                     return
 
-    def genDavisLoopPackets(self, N = 1):
+    def genDavisLoopPackets(self, N=1):
         """Generator function to return N LoopPacket objects from a VantagePro console
         
         N: The number of packets to generate [default is 1]
@@ -153,7 +153,7 @@ class VantagePro (object) :
                                       "VantagePro: LOOP #%d; buffer not full (%d)... retrying" % (loop,len(buffer)))
                         continue
                     # ... decode it
-                    pkt_dict = DavisLoopPacket(buffer[:89])
+                    pkt_dict = unpackLoopPacket(buffer[:89])
                     # Yield it
                     yield pkt_dict
                     break
@@ -168,7 +168,7 @@ class VantagePro (object) :
         since_ts: A timestamp. All data since (but not including) this time will be returned.
         Pass in None for all data
         
-        yields: a sequence of DavisArchivePackets containing the data
+        yields: a sequence of dictionaries containing the data
         """
         
         if since_ts :
@@ -217,15 +217,22 @@ class VantagePro (object) :
                             if _page[1+52*_index:53+52*_index] == 52*chr(0xff) :
                                 # This record has never been used. We're done.
                                 return
-                            # Create a new instance to hold the data
-                            _packet = DavisArchivePacket(_page[1+52*_index:53+52*_index], self)
+                            # Unpack the raw archive packet:
+                            _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
+                            # Divide archive interval by 60 to keep consistent with wview
+                            _packet['interval']   = self.archive_interval / 60 
+                            _packet['model_type'] = self.model_type
+                            _packet['iss_id']     = self.iss_id
+                            _packet['rxCheckPercent'] = _rxcheck(_packet)
+    
+                            # Convert from the internal, Davis encoding to physical units:
                             _record = self.translateArchivePacket(_packet)
                             # Check to see if the time stamps are declining, which would
                             # signal this is a wrap around record on the last page
-                            if _record['dateTime'] <= _last_good_ts :
+                            if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts :
                                 # The time stamp is declining. We're done.
                                 return
-                            # Add any LOOP data we've been accumulating:
+                            # Augment the record with the data from the accumulators:
                             self.archiveAccumulators(_record)
                             # Set the last time to the current time, and yield the packet
                             _last_good_ts = _record['dateTime']
@@ -469,195 +476,31 @@ class VantagePro (object) :
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
         
-        loopPacket: An instance of DavisLoopPacket
+        loopPacket: A dictionary holding the LOOP data in the internal units used by Davis.
         
-        returns: A dictionary with the values in physical units.
-        """
+        returns: A dictionary with the values in physical units."""
         # Right now, only US customary units are supported
         if self.unit_system != weewx.US :
             raise weewx.UnsupportedFeature, "Only US Customary Units are supported on the Davis VP2."
 
-        _record = self.translateLoopToUS(loopPacket)
-        return _record
+        _packet = translateLoopToUS(loopPacket)
+        return _packet
     
 
-    def translateLoopToUS(self, packet):
-        """Translates a loop packet from the internal units used by Davis, into US Customary Units.
-        
-        packet: An instance of DavisLoopPacket.
-        
-        returns: A dictionary with the values in US Customary Units.
-        """
-        # This dictionary maps a type key to a function. The function should be able to
-        # decode a sensor value held in the loop packet in the internal, Davis form into US
-        # units and return it. From the Davis documentation, it's not clear what the
-        # 'dash' value is for some of these, so I'm assuming it's the same as for an archive
-        # packet.
-    
-        _loop_map = {'dateTime'        : lambda v : v,
-                     'barometer'       : _val1000Zero, 
-                     'inTemp'          : _big_val10, 
-                     'inHumidity'      : _little_val, 
-                     'outTemp'         : _big_val10, 
-                     'windSpeed'       : _little_val, 
-                     'windSpeed10'     : _little_val, 
-                     'windDir'         : _big_val, 
-                     'extraTemp1'      : _little_temp, 
-                     'extraTemp2'      : _little_temp, 
-                     'extraTemp3'      : _little_temp, 
-                     'extraTemp4'      : _little_temp,
-                     'extraTemp5'      : _little_temp, 
-                     'extraTemp6'      : _little_temp, 
-                     'extraTemp7'      : _little_temp, 
-                     'soilTemp1'       : _little_temp, 
-                     'soilTemp2'       : _little_temp, 
-                     'soilTemp3'       : _little_temp, 
-                     'soilTemp4'       : _little_temp,
-                     'leafTemp1'       : _little_temp, 
-                     'leafTemp2'       : _little_temp, 
-                     'leafTemp3'       : _little_temp, 
-                     'leafTemp4'       : _little_temp,
-                     'outHumidity'     : _little_val, 
-                     'extraHumid1'     : _little_val, 
-                     'extraHumid2'     : _little_val, 
-                     'extraHumid3'     : _little_val,
-                     'extraHumid4'     : _little_val, 
-                     'extraHumid5'     : _little_val, 
-                     'extraHumid6'     : _little_val, 
-                     'extraHumid7'     : _little_val,
-                     'rainRate'        : _big_val100, 
-                     'UV'              : _little_val10, 
-                     'radiation'       : _big_val, 
-                     'stormRain'       : _val100, 
-                     'stormStart'      : _loop_date,
-                     'dayRain'         : _val100, 
-                     'monthRain'       : _val100, 
-                     'yearRain'        : _val100, 
-                     'dayET'           : _val100, 
-                     'monthET'         : _val100, 
-                     'yearET'          : _val100,
-                     'soilMoist1'      : _little_val, 
-                     'soilMoist2'      : _little_val, 
-                     'soilMoist3'      : _little_val, 
-                     'soilMoist4'      : _little_val,
-                     'leafWet1'        : _little_val, 
-                     'leafWet2'        : _little_val, 
-                     'leafWet3'        : _little_val, 
-                     'leafWet4'        : _little_val,
-                     'txBatteryStatus' : _null_int, 
-                     'consBatteryVoltage'  : lambda v : float((v * 300) >> 9) / 100.0
-                     }        
-    
-        if packet['usUnits'] != weewx.US :
-            raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be US Customary Units only"
-    
-        record = {}
-        
-        for _type in _loop_map.keys() :    
-            # Get the mapping function needed for this key
-            func = _loop_map[_type]
-            # Call it, with the value as an argument, storing the result:
-            record[_type] = func(packet[_type])
-    
-        # Add a few derived values that are not in the packet itself.
-        T = record['outTemp']
-        R = record['outHumidity']
-        W = record['windSpeed']
-    
-        record['dewpoint']    = weewx.wxformulas.dewpointF(T, R)
-        record['heatindex']   = weewx.wxformulas.heatindexF(T, R)
-        record['windchill']   = weewx.wxformulas.windchillF(T, W)
-        
-        return record
-
-    def translateArchivePacket(self, packet):
+    def translateArchivePacket(self, archivePacket):
         """Translates an archive packet from the internal units used by Davis, into physical units.
         
-        packet: An instance of DavisArchivePacket.
+        archivePacket: A dictionary holding an archive packet in the internal, Davis encoding
         
-        returns: A dictionary with the values in physical units.
-        """
+        returns: A dictionary with the values in physical units."""
         
         # Right now, only US units are supported
         if self.unit_system != weewx.US :
             raise weewx.UnsupportedFeature, "Only US Units are supported on the Davis VP2."
 
-        _record = self.translateArchiveToUS(packet)
-        return _record
+        _packet = translateArchiveToUS(archivePacket)
+        return _packet
     
-    def translateArchiveToUS(self, packet):
-        """Translates an archive packet from the internal units used by Davis, into US units.
-        
-        packet: An instance of DavisArchivePacket.
-        
-        returns: A dictionary with the values in US units.
-        
-        """
-        # This dictionary maps a type key to a function. The function should be able to
-        # decode a sensor value held in the archive packet in the internal, Davis form into US
-        # units and return it. Some of these functions use a short hand 'lambda' form because 
-        # they are trivial and because I think lambda functions are cool.
-        _archive_map={'interval'       : lambda v : int(v),
-                      'barometer'      : _val1000Zero, 
-                      'inTemp'         : _big_val10,
-                      'outTemp'        : _big_val10,
-                      'inHumidity'     : _little_val,
-                      'outHumidity'    : _little_val,
-                      'windSpeed'      : _little_val,
-                      'windDir'        : _windDir,
-                      'windGust'       : _null,
-                      'windGustDir'    : _windDir,
-                      'rain'           : _val100,
-                      'rainRate'       : _val100,
-                      'ET'             : _val1000,
-                      'radiation'      : _big_val,
-                      'UV'             : _little_val10,
-                      'extraTemp1'     : _little_temp,
-                      'extraTemp2'     : _little_temp,
-                      'extraTemp3'     : _little_temp,
-                      'soilTemp1'      : _little_temp,
-                      'soilTemp2'      : _little_temp,
-                      'soilTemp3'      : _little_temp,
-                      'soilTemp4'      : _little_temp,
-                      'leafTemp1'      : _little_temp,
-                      'leafTemp2'      : _little_temp,
-                      'extraHumid1'    : _little_val,
-                      'extraHumid2'    : _little_val,
-                      'soilMoist1'     : _little_val,
-                      'soilMoist2'     : _little_val,
-                      'soilMoist3'     : _little_val,
-                      'soilMoist4'     : _little_val,
-                      'leafWet1'       : _little_val,
-                      'leafWet2'       : _little_val,
-                      'rxCheckPercent' : _null}
-    
-        if packet['usUnits'] != weewx.US :
-            raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be U.S. units only"
-    
-        record = {}
-        
-        for _type in _archive_map.keys() :    
-            # Get the mapping function needed for this key
-            func = _archive_map[_type]
-            # Call it, with the value as an argument, storing the results:
-            record[_type] = func(packet[_type])
-    
-        # Add a few derived values that are not in the packet itself.
-        T = record['outTemp']
-        R = record['outHumidity']
-        W = record['windSpeed']
-    
-        record['dewpoint']    = weewx.wxformulas.dewpointF(T, R)
-        record['heatindex']   = weewx.wxformulas.heatindexF(T, R)
-        record['windchill']   = weewx.wxformulas.windchillF(T, W)
-        record['dateTime']    = _archive_datetime(packet)
-        record['usUnits']     = weewx.US
-        
-        # This would be the place to do any processing for crazy numbers
-        # (e.g., temperatures in hundreds) and replace them with None.
-        
-        return record
-
 #===============================================================================
 #          Primitives for working with the Davis Console
 #===============================================================================
@@ -755,128 +598,176 @@ def _get_data_with_crc16(serial_port, nbytes, prompt=None, max_tries=3) :
 
 
 #===============================================================================
-#                         class DavisLoopPacket
+#                         LOOP packet helper functions
 #===============================================================================
 
-class DavisLoopPacket(dict) :
-    """Holds a loop packet's worth of data as a dictionary.
+# A tuple of all the types held in a VantagePro2 LOOP packet in their native order.
+vp2loop = ('loop',            'loop_type',     'packet_type', 'next_record', 'barometer', 
+           'inTemp',          'inHumidity',    'outTemp', 
+           'windSpeed',       'windSpeed10',   'windDir', 
+           'extraTemp1',      'extraTemp2',    'extraTemp3',  'extraTemp4',
+           'extraTemp5',      'extraTemp6',    'extraTemp7', 
+           'soilTemp1',       'soilTemp2',     'soilTemp3',   'soilTemp4',
+           'leafTemp1',       'leafTemp2',     'leafTemp3',   'leafTemp4',
+           'outHumidity',     'extraHumid1',   'extraHumid2', 'extraHumid3',
+           'extraHumid4',     'extraHumid5',   'extraHumid6', 'extraHumid7',
+           'rainRate',        'UV',            'radiation',   'stormRain',   'stormStart',
+           'dayRain',         'monthRain',     'yearRain',    'dayET',       'monthET',    'yearET',
+           'soilMoist1',      'soilMoist2',    'soilMoist3',  'soilMoist4',
+           'leafWet1',        'leafWet2',      'leafWet3',    'leafWet4',
+           'txBatteryStatus', 'consBatteryVoltage')
+
+loop_format = struct.Struct("<3sbBHHHBHBBH7B4B4BB7BHBHHHHHHHHH4B4B16xBH")
     
-    """
-
-    vp2loop = ('loop',            'loop_type',     'packet_type', 'next_record', 'barometer', 
-               'inTemp',          'inHumidity',    'outTemp', 
-               'windSpeed',       'windSpeed10',   'windDir', 
-               'extraTemp1',      'extraTemp2',    'extraTemp3',  'extraTemp4',
-               'extraTemp5',      'extraTemp6',    'extraTemp7', 
-               'soilTemp1',       'soilTemp2',     'soilTemp3',   'soilTemp4',
-               'leafTemp1',       'leafTemp2',     'leafTemp3',   'leafTemp4',
-               'outHumidity',     'extraHumid1',   'extraHumid2', 'extraHumid3',
-               'extraHumid4',     'extraHumid5',   'extraHumid6', 'extraHumid7',
-               'rainRate',        'UV',            'radiation',   'stormRain',   'stormStart',
-               'dayRain',         'monthRain',     'yearRain',    'dayET',       'monthET',    'yearET',
-               'soilMoist1',      'soilMoist2',    'soilMoist3',  'soilMoist4',
-               'leafWet1',        'leafWet2',      'leafWet3',    'leafWet4',
-               'txBatteryStatus', 'consBatteryVoltage')
-
-    loop_format = struct.Struct("<3sbBHHHBHBBH7B4B4BB7BHBHHHHHHHHH4B4B16xBH")
+def unpackLoopPacket(raw_packet) :
+    """Decode a Davis LOOP packet, returning the results as a dictionary.
     
-    def __init__(self, packet):
-        """Create a new DavisLoopPacket from a buffer's worth of data from a Davis VantagePro
+    raw_packet: The loop packet data buffer, passed in as a string. This will be unpacked and 
+    the results placed a dictionary"""
+
+    # Unpack the data, using the compiled stuct.Struct string 'loop_format'
+    data_tuple = loop_format.unpack(raw_packet)
+
+    packet = dict(zip(vp2loop, data_tuple))
+
+    # Detect the kind of LOOP packet. Type 'A' has the character 'P' in this
+    # position. Type 'B' contains the 3-hour barometer trend in this position.
+    if packet['loop_type'] == ord('P'):
+        packet['trend'] = None
+        packet['loop_type'] = 'A'
+    else :
+        packet['trend'] = packet['loop_type']
+        packet['loop_type'] = 'B'
+
+    # Add a timestamp:
+    packet['dateTime'] = int(time.time() + 0.5)
+
+    # As far as I know, the Davis supports only US units:
+    packet['usUnits'] = weewx.US
     
-        packet: The loop packet data as a string. This will be unpacked and the results placed
-        in the dictionary inherited by LoopPacket"""
-        # Unpack the data, using the compiled stuct.Struct string 'loop_format'
-        data_tuple = DavisLoopPacket.loop_format.unpack(packet)
-        
-        assert(len(data_tuple) == len(DavisLoopPacket.vp2loop))
-        
-        for k,v in zip(DavisLoopPacket.vp2loop, data_tuple) :
-            self[k] = v
+    return packet
 
-        # Detect the kind of LOOP packet. Type 'A' has the character 'P' in this
-        # position. Type 'B' contains the 3-hour barometer trend in this position.
-        if self['loop_type'] == ord('P'):
-            self['trend'] = None
-            self['loop_type'] = 'A'
-        else :
-            self['trend'] = self['loop_type']
-            self['loop_type'] = 'B'
+def translateLoopToUS(packet):
+    """Translates a loop packet from the internal units used by Davis, into US Customary Units.
+    
+    packet: A dictionary holding the LOOP data in the internal units used by Davis.
+    
+    returns: A dictionary with the values in US Customary Units."""
+    # This dictionary maps a type key to a function. The function should be able to
+    # decode a sensor value held in the loop packet in the internal, Davis form into US
+    # units and return it. From the Davis documentation, it's not clear what the
+    # 'dash' value is for some of these, so I'm assuming it's the same as for an archive
+    # packet.
 
-        # Add a timestamp:
-        self['dateTime'] = int(time.time() + 0.5)
+    if packet['usUnits'] != weewx.US :
+        raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be US Customary Units only"
 
-        # As far as I know, the Davis supports only US units:
-        self['usUnits'] = weewx.US
+    record = {}
+    
+    for _type in _loop_map:    
+        # Get the mapping function needed for this key
+        func = _loop_map[_type]
+        # Call it, with the value as an argument, storing the result:
+        record[_type] = func(packet[_type])
+
+    # Add a few derived values that are not in the packet itself.
+    T = record['outTemp']
+    R = record['outHumidity']
+    W = record['windSpeed']
+
+    record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
+    record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
+    record['windchill'] = weewx.wxformulas.windchillF(T, W)
+    
+    return record
 
 
 #===============================================================================
-#                         class DavisArchivePacket
+#                         archive packet helper functions
 #===============================================================================
 
-class DavisArchivePacket(dict):
-    """Decode a Davis archive packet, holding the results as a dictionary."""
-    
-    # A tuple of all the types held in a VantagePro2 Rev B archive record in their native order.
-    # TODO: Extend to Rev A type archive records
-    vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'high_outside_temperature', 'low_outside_temperature',
-               'rain', 'rainRate', 'barometer', 'radiation', 'number_of_wind_samples',
-               'inTemp', 'inHumidity', 'outHumidity', 'windSpeed', 'windGust', 'windGustDir', 'windDir',
-               'UV', 'ET', 'high_solar_radiation', 'high_uv_index', 'forecast_rule',
-               'leafTemp1', 'leafTemp2', 'leafWet1', 'leafWet2',
-               'soilTemp1', 'soilTemp2', 'soilTemp3','soilTemp4', 'download_record_type',
-               'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
-               'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4')
-    
-    loop_format = struct.Struct("<HHHHHHHHHHHBBBBBBBBHBB2B2B4BB2B3B4B")
-    
-    def __init__(self, packet, station):
-        """Create a new DavisArchivePacket from a buffer's worth of data from a Davis VantagePro
-    
-        packet: The loop packet data buffer, passed in as a string. This will be unpacked and 
-        the results placed in the dictionary inherited by DavisArchivePacket"""
-        # TODO: Add Rev A style packets.
-        
-        # Check that this is a Rev B style packet. We don't know how to handle any others
-        record_type = ord(packet[42])
-        if record_type != 0x0000 :
-            raise weewx.UnknownArchiveType, "Unknown archive type = 0x%x" % record_type 
-        
-        data_tuple = DavisArchivePacket.loop_format.unpack(packet)
-        
-        assert(len(data_tuple) == len(DavisArchivePacket.vp2archB))
-        
-        for k,v in zip(DavisArchivePacket.vp2archB, data_tuple) :
-            self[k] = v
-            
-        # Augment the data types with these extras
-        
-        # Divide archive interval by 60 to keep consistent with wview
-        self['interval']       = station.archive_interval / 60 
-        # As far as I know, the Davis supports only US units:
-        self['usUnits']        = weewx.US
-        self['model_type']     = station.model_type
-        self['iss_id']         = station.iss_id
-        self['rxCheckPercent'] = self._rxcheck()
-        
-        # Sanity check that this is in fact a Rev B archive:
-        assert(self['download_record_type'] == 0)
+# A tuple of all the types held in a VantagePro2 Rev B archive packet in their native order.
+# TODO: Extend to Rev A type packet records
+vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'high_outside_temperature', 'low_outside_temperature',
+           'rain', 'rainRate', 'barometer', 'radiation', 'number_of_wind_samples',
+           'inTemp', 'inHumidity', 'outHumidity', 'windSpeed', 'windGust', 'windGustDir', 'windDir',
+           'UV', 'ET', 'high_solar_radiation', 'high_uv_index', 'forecast_rule',
+           'leafTemp1', 'leafTemp2', 'leafWet1', 'leafWet2',
+           'soilTemp1', 'soilTemp2', 'soilTemp3','soilTemp4', 'download_record_type',
+           'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
+           'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4')
 
-    def _rxcheck(self):
-        """Gives an estimate of the fraction of packets received.
+archive_format = struct.Struct("<HHHHHHHHHHHBBBBBBBBHBB2B2B4BB2B3B4B")
+    
+def unpackArchivePacket(raw_packet):
+    """Decode a Davis archive packet, returning the results as a dictionary.
+    
+    raw_packet: The archive packet data buffer, passed in as a string. This will be unpacked and 
+    the results placed a dictionary"""
+    # TODO: Add Rev A style packets.
+    
+    # Check that this is a Rev B style packet. We don't know how to handle any others
+    packet_type = ord(raw_packet[42])
+    if packet_type != 0x0000 :
+        raise weewx.UnknownArchiveType, "Unknown archive type = 0x%x" % packet_type 
+    
+    data_tuple = archive_format.unpack(raw_packet)
+    
+    packet = dict(zip(vp2archB, data_tuple))
         
-        Ref: Vantage Serial Protocol doc, V2.1.0, released 25-Jan-05; p42"""
-        # The formula for the expected # of packets varies with model number.
-        if self['model_type'] == 1 :
-            _expected_packets = float(self['interval'] * 60) / ( 2.5 + (self['iss_id']-1) / 16.0) -\
-                                float(self['interval'] * 60) / (50.0 + (self['iss_id']-1) * 1.25)
-        elif self['model_type'] == 2 :
-            _expected_packets = 960.0 * self['interval'] / float(41 + self['iss_id'] - 1)
-        else :
-            return None
-        _frac = self['number_of_wind_samples'] * 100.0 / _expected_packets
-        if _frac > 100.0 :
-            _frac = 100.0
-        return _frac
+    # As far as I know, the Davis supports only US units:
+    packet['usUnits'] = weewx.US
+    # Sanity check that this is in fact a Rev B archive:
+    assert(packet['download_record_type'] == 0)
+    return packet
+
+def translateArchiveToUS(packet):
+    """Translates an archive packet from the internal units used by Davis, into US units.
+    
+    packet: A dictionary holding an archive packet in the internal, Davis encoding
+    
+    returns: A dictionary with the values in US units."""
+
+    if packet['usUnits'] != weewx.US :
+        raise weewx.ViolatedPrecondition, "Unit system on the VantagePro must be U.S. units only"
+
+    record = {}
+    
+    for _type in _archive_map:
+        # Get the mapping function needed for this key
+        func = _archive_map[_type]
+        # Call it, with the value as an argument, storing the results:
+        record[_type] = func(packet[_type])
+
+    # Add a few derived values that are not in the packet itself.
+    T = record['outTemp']
+    R = record['outHumidity']
+    W = record['windSpeed']
+
+    record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
+    record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
+    record['windchill'] = weewx.wxformulas.windchillF(T, W)
+    record['dateTime']  = _archive_datetime(packet)
+    record['usUnits']   = weewx.US
+    
+    return record
+
+def _rxcheck(packet):
+    """Gives an estimate of the fraction of packets received.
+    
+    Ref: Vantage Serial Protocol doc, V2.1.0, released 25-Jan-05; p42"""
+    # The formula for the expected # of packets varies with model number.
+    if packet['model_type'] == 1 :
+        _expected_packets = float(packet['interval'] * 60) / ( 2.5 + (packet['iss_id']-1) / 16.0) -\
+                            float(packet['interval'] * 60) / (50.0 + (packet['iss_id']-1) * 1.25)
+    elif packet['model_type'] == 2 :
+        _expected_packets = 960.0 * packet['interval'] / float(41 + packet['iss_id'] - 1)
+    else :
+        return None
+    _frac = packet['number_of_wind_samples'] * 100.0 / _expected_packets
+    if _frac > 100.0 :
+        _frac = 100.0
+    return _frac
 
 #===============================================================================
 #                      Decoding routines
@@ -896,7 +787,11 @@ def _archive_datetime(packet) :
                   0,                            # second
                   0, 0, -1)
     # Convert to epoch time:
-    return int(time.mktime(time_tuple))
+    try:
+        ts = int(time.mktime(time_tuple))
+    except (OverflowError, ValueError):
+        ts = None
+    return ts
     
 def _loop_date(v):
     """Returns the epoch time stamp of a time encoded in the LOOP packet, 
@@ -911,7 +806,12 @@ def _loop_date(v):
                   (0x0f80 & v) >>  7,   # day
                   0, 0, 0,              # h, m, s
                   0, 0, -1)
-    return int(time.mktime(time_tuple))
+    # Convert to epoch time:
+    try:
+        ts = int(time.mktime(time_tuple))
+    except (OverflowError, ValueError):
+        ts = None
+    return ts
     
 def _big_val(v) :
     return float(v) if v != 0x7fff else None
@@ -948,6 +848,99 @@ def _null_int(v):
 
 def _windDir(v):
     return float(v) * 22.5 if v!= 0x00ff else None
+
+# This dictionary maps a type key to a function. The function should be able to
+# decode a sensor value held in the LOOP packet in the internal, Davis form into US
+# units and return it.
+_loop_map = {'dateTime'        : lambda v : v,
+             'barometer'       : _val1000Zero, 
+             'inTemp'          : _big_val10, 
+             'inHumidity'      : _little_val, 
+             'outTemp'         : _big_val10, 
+             'windSpeed'       : _little_val, 
+             'windSpeed10'     : _little_val, 
+             'windDir'         : _big_val, 
+             'extraTemp1'      : _little_temp, 
+             'extraTemp2'      : _little_temp, 
+             'extraTemp3'      : _little_temp, 
+             'extraTemp4'      : _little_temp,
+             'extraTemp5'      : _little_temp, 
+             'extraTemp6'      : _little_temp, 
+             'extraTemp7'      : _little_temp, 
+             'soilTemp1'       : _little_temp, 
+             'soilTemp2'       : _little_temp, 
+             'soilTemp3'       : _little_temp, 
+             'soilTemp4'       : _little_temp,
+             'leafTemp1'       : _little_temp, 
+             'leafTemp2'       : _little_temp, 
+             'leafTemp3'       : _little_temp, 
+             'leafTemp4'       : _little_temp,
+             'outHumidity'     : _little_val, 
+             'extraHumid1'     : _little_val, 
+             'extraHumid2'     : _little_val, 
+             'extraHumid3'     : _little_val,
+             'extraHumid4'     : _little_val, 
+             'extraHumid5'     : _little_val, 
+             'extraHumid6'     : _little_val, 
+             'extraHumid7'     : _little_val,
+             'rainRate'        : _big_val100, 
+             'UV'              : _little_val10, 
+             'radiation'       : _big_val, 
+             'stormRain'       : _val100, 
+             'stormStart'      : _loop_date,
+             'dayRain'         : _val100, 
+             'monthRain'       : _val100, 
+             'yearRain'        : _val100, 
+             'dayET'           : _val100, 
+             'monthET'         : _val100, 
+             'yearET'          : _val100,
+             'soilMoist1'      : _little_val, 
+             'soilMoist2'      : _little_val, 
+             'soilMoist3'      : _little_val, 
+             'soilMoist4'      : _little_val,
+             'leafWet1'        : _little_val, 
+             'leafWet2'        : _little_val, 
+             'leafWet3'        : _little_val, 
+             'leafWet4'        : _little_val,
+             'txBatteryStatus' : _null_int, 
+             'consBatteryVoltage'  : lambda v : float((v * 300) >> 9) / 100.0}
+
+# This dictionary maps a type key to a function. The function should be able to
+# decode a sensor value held in the archive packet in the internal, Davis form into US
+# units and return it.
+_archive_map={'interval'       : lambda v : int(v),
+              'barometer'      : _val1000Zero, 
+              'inTemp'         : _big_val10,
+              'outTemp'        : _big_val10,
+              'inHumidity'     : _little_val,
+              'outHumidity'    : _little_val,
+              'windSpeed'      : _little_val,
+              'windDir'        : _windDir,
+              'windGust'       : _null,
+              'windGustDir'    : _windDir,
+              'rain'           : _val100,
+              'rainRate'       : _val100,
+              'ET'             : _val1000,
+              'radiation'      : _big_val,
+              'UV'             : _little_val10,
+              'extraTemp1'     : _little_temp,
+              'extraTemp2'     : _little_temp,
+              'extraTemp3'     : _little_temp,
+              'soilTemp1'      : _little_temp,
+              'soilTemp2'      : _little_temp,
+              'soilTemp3'      : _little_temp,
+              'soilTemp4'      : _little_temp,
+              'leafTemp1'      : _little_temp,
+              'leafTemp2'      : _little_temp,
+              'extraHumid1'    : _little_val,
+              'extraHumid2'    : _little_val,
+              'soilMoist1'     : _little_val,
+              'soilMoist2'     : _little_val,
+              'soilMoist3'     : _little_val,
+              'soilMoist4'     : _little_val,
+              'leafWet1'       : _little_val,
+              'leafWet2'       : _little_val,
+              'rxCheckPercent' : _null}
 
 if __name__ == '__main__':
     import configobj

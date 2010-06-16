@@ -229,15 +229,10 @@ class StdEngine(object):
         
         Unlike the other events, this one must actually be triggered by one of the services."""
         
-        nrec = 0
         # Add all missed archive records since the last good record in the
         # database
         for archivePacket in self.station.genArchivePackets(lastgood_ts) :
             self.newArchivePacket(archivePacket)
-            nrec += 1
-    
-        if nrec != 0:
-            syslog.syslog(syslog.LOG_INFO, "wxengine: %d new archive packets added to database" % nrec)
     
     def newArchivePacket(self, archivePacket):
         """Run whenever a new archive packet becomes available."""

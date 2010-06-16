@@ -741,6 +741,10 @@ class StatsDb(StatsReadonlyDb):
     def addArchiveRecord(self, rec):
         """Add an archive record to the statistical database."""
 
+        if rec['dateTime'] is None:
+            syslog.syslog(syslog.LOG_ERR, "stats: archive record with null time encountered. Ignored.")
+            return
+        
         # Get the start-of-day for this archive record.
         _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
 
