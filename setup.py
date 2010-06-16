@@ -197,6 +197,8 @@ class My_install_data(install_data):
         new_config['Station'].pop('cooling_base', None)
         # Wunderground has been put under section ['RESTful']:
         new_config.pop('Wunderground', None)
+        # Option max_drift has been moved from section VantagePro
+        new_config['VantagePro'].pop('max_drift', None)
         # Name change from StdWunderground to StdRESTful:
         new_config['Engines']['WxEngine']['service_list'] =\
             [svc.replace('StdWunderground', 'StdRESTful') for svc in\
