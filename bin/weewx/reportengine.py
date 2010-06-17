@@ -174,7 +174,7 @@ class FtpGenerator(ReportGenerator):
         try:
             N = ftpData.run()
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
-            (cl, ob, tr) = sys.exc_info()
+            (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in FtpGenerator; %s." % (cl, e))
             return
         

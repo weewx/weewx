@@ -15,12 +15,10 @@ Note that this archive uses a schema that is compatible with a wview V5.X.X
 """
 from __future__ import with_statement
 import syslog
-import os
 import os.path
 import math
 from pysqlite2 import dbapi2 as sqlite3
     
-import weewx
 import weewx.units
 import weeutil.weeutil
 

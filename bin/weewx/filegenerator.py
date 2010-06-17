@@ -144,7 +144,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                         # Write it out
                         print >> file, text
                     except Cheetah.NameMapper.NotFound, e:
-                        (cl, ob, tr) = sys.exc_info()
+                        (cl, unused_ob, unused_tr) = sys.exc_info()
                         syslog.syslog(syslog.LOG_ERR, """filegenerator: Caught exception "%s" """ % cl) 
                         syslog.syslog(syslog.LOG_ERR, """         ****  Message: "%s in template %s" """ % (e, template))
                         syslog.syslog(syslog.LOG_ERR, """         ****  Ignoring template and continuing.""")
@@ -198,7 +198,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                 # Write it out
                 print >> file, text
             except Cheetah.NameMapper.NotFound, e:
-                (cl, ob, tr) = sys.exc_info()
+                (cl, unused_ob, unused_tr) = sys.exc_info()
                 syslog.syslog(syslog.LOG_ERR, """filegenerator: Caught exception "%s" """ % cl) 
                 syslog.syslog(syslog.LOG_ERR, """         ****  Message: "%s in template %s" """ % (e, template))
                 syslog.syslog(syslog.LOG_ERR, """         ****  Ignoring template and continuing.""")
@@ -217,7 +217,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         Can easily be overridden to add things to the search list.
         """
         timespan_start_tt = time.localtime(timespan.start)
-        (_yr, _mo) = timespan_start_tt[0:2]
+        (_yr, unused_mo) = timespan_start_tt[0:2]
 
         # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
@@ -315,7 +315,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
 class html_entities(Cheetah.Filters.Filter):
 
-    def filter(self, val, **kw):
+    def filter(self, val, **dummy_kw):
         """Filter incoming strings so they use HTML entity characters"""
         if isinstance(val, unicode):
             filtered = val.encode('ascii', 'xmlcharrefreplace')
@@ -329,7 +329,7 @@ class html_entities(Cheetah.Filters.Filter):
 
 class strict_ascii(Cheetah.Filters.Filter):
 
-    def filter(self, val, **kw):
+    def filter(self, val, **dummy_kw):
         """Filter incoming strings to strip out any non-ascii characters"""
         if isinstance(val, unicode):
             filtered = val.encode('ascii', 'ignore')
@@ -343,7 +343,7 @@ class strict_ascii(Cheetah.Filters.Filter):
     
 class utf8(Cheetah.Filters.Filter):
 
-    def filter(self, val, **kw):
+    def filter(self, val, **dummy_kw):
         """Filter incoming strings, converting to UTF-8"""
         if isinstance(val, unicode):
             filtered = val.encode('utf8')

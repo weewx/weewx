@@ -326,7 +326,7 @@ def pickLabelFormat(increment):
 
  
 if __name__ == '__main__' :
-    import time
+
     # Unit test:
     assert(scale(1.1, 12.3) == (0.0, 14.0, 2.0))
     assert(scale(-1.1, 12.3) == (-2.0, 14.0, 2.0))

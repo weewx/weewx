@@ -41,12 +41,10 @@
 from __future__ import with_statement
 from pysqlite2 import dbapi2 as sqlite3
 import math
-import os
 import os.path
 import syslog
 import time
 
-import weewx
 import weewx.accum
 import weewx.units
 import weewx.wxformulas

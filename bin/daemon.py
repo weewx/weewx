@@ -25,8 +25,7 @@
 
       http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
 '''
-import sys, os, time
-from signal import SIGTERM
+import sys, os
 
 done = False
 

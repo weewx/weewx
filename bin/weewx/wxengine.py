@@ -23,7 +23,6 @@ import configobj
 import daemon
 
 # weewx imports:
-import weewx
 import weewx.archive
 import weewx.stats
 import weewx.restful
@@ -81,7 +80,7 @@ class StdEngine(object):
         # Set up the services to be run:
         self.setupServices(config_dict)
         
-    def getConfiguration(self, options, args):
+    def getConfiguration(self, dummy_options, args):
 
         # Get and set the absolute path of the configuration file.  
         # A service might to a chdir(), and then another service would be unable to
@@ -247,7 +246,7 @@ class StdEngine(object):
 class StdService(object):
     """Abstract base class for all services."""
     
-    def __init__(self, engine, *args, **kwargs):
+    def __init__(self, engine, *dummy, **dummy_kwargs):
         self.engine = engine
     
     def setup(self):
@@ -595,7 +594,7 @@ def parseArgs():
 class Restart(Exception):
     """Exception thrown when restarting the engine is desired."""
     
-def sigHUPhandler(signum, frame):
+def sigHUPhandler(dummy_signum, dummy_frame):
     syslog.syslog(syslog.LOG_DEBUG, "wxengine: Received signal HUP. Throwing Restart exception.")
     raise Restart
 

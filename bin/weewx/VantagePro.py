@@ -16,7 +16,6 @@ import time
 
 from weewx.crc16 import crc16
 import weeutil.weeutil
-import weewx
 import weewx.accum
 import weewx.wxformulas
     
@@ -41,7 +40,7 @@ class SerialWrapper(object):
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
         return self.serial_port
     
-    def __exit__(self, etyp, einst, etb):
+    def __exit__(self, dummy_etyp, dummy_einst, dummy_etb):
         try:
             # This will cancel any pending loop:
             _wakeup_console(self.serial_port)
@@ -145,7 +144,7 @@ class VantagePro (object) :
             
             for loop in xrange(N) :
                 
-                for count in xrange(self.max_tries):
+                for unused_count in xrange(self.max_tries):
                     # Fetch a packet
                     buffer = serial_port.read(99)
                     if len(buffer) != 99 :
@@ -191,7 +190,7 @@ class VantagePro (object) :
         with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
 
             # Retry the dump up to max_tries times
-            for _count in xrange(self.max_tries) :
+            for unused_count in xrange(self.max_tries) :
                 try :
                     # Wake up the console...
                     _wakeup_console(serial_port, self.max_tries, self.wait_before_retry)
@@ -207,7 +206,7 @@ class VantagePro (object) :
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
                     
                     # Cycle through the pages...
-                    for _ipage in xrange(_npages) :
+                    for unused_ipage in xrange(_npages) :
                         # ... get a page of archive data
                         _page = _get_data_with_crc16(serial_port, 267, prompt=_ack, max_tries=self.max_tries)
                         # Now extract each record from the page
@@ -301,7 +300,7 @@ class VantagePro (object) :
         with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
     
             # Try up to 3 times:
-            for _count in xrange(self.max_tries) :
+            for unused_count in xrange(self.max_tries) :
                 try :
                     # Wake up the console...
                     _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
@@ -309,7 +308,7 @@ class VantagePro (object) :
                     _send_data(serial_port, 'GETTIME\n')
                     # ... get the binary data. No prompt, only one try:
                     _buffer = _get_data_with_crc16(serial_port, 8, max_tries=1)
-                    (sec, min, hr, day, mon, yr, crc) = struct.unpack("<bbbbbbH", _buffer)
+                    (sec, min, hr, day, mon, yr, unused_crc) = struct.unpack("<bbbbbbH", _buffer)
                     time_tt = (yr+1900, mon, day, hr, min, sec, 0, 0, -1)
                     return time_tt
                 except weewx.WeeWxIOError :
@@ -340,7 +339,7 @@ class VantagePro (object) :
                                          newtime_tt[1], newtime_tt[0] - 1900)
             
         with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for _count in xrange(self.max_tries) :
+            for unused_count in xrange(self.max_tries) :
                 try :
                     _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
                     _send_data(serial_port, 'SETTIME\n')
@@ -369,7 +368,7 @@ class VantagePro (object) :
             raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % archive_interval
 
         with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for _count in xrange(self.max_tries):
+            for unused_count in xrange(self.max_tries):
                 try :
                     _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
                 
@@ -400,7 +399,7 @@ class VantagePro (object) :
     def clearLog(self):
         """Clear the internal archive memory in the VantagePro."""
         with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for _count in xrange(self.max_tries):
+            for unused_count in xrange(self.max_tries):
                 try:
                     _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
                     _send_data(serial_port, "CLRLOG\n")
@@ -416,7 +415,7 @@ class VantagePro (object) :
         """Return the present archive interval in seconds."""
         
         with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for _count in xrange(self.max_tries):
+            for unused_count in xrange(self.max_tries):
                 try :
                     _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
                     _send_data(serial_port, "EEBRD 2D 01\n")
@@ -440,7 +439,7 @@ class VantagePro (object) :
         the # of CRC errors detected.)"""
         
         with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for _count in xrange(self.max_tries) :
+            for unused_count in xrange(self.max_tries) :
                 try :
                     _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
                     # Can't use function _send_data because the VP doesn't respond with an 
@@ -509,7 +508,7 @@ def _wakeup_console(serial_port, max_tries=3, wait_before_retry=1.2):
     """ Wake up a Davis VantagePro console."""
     
     # Wake up the console. Try up to max_tries times
-    for _count in xrange(max_tries) :
+    for unused_count in xrange(max_tries) :
         # Clear out any pending input or output characters:
         serial_port.flushOutput()
         serial_port.flushInput()
@@ -558,7 +557,7 @@ def _send_data_with_crc16(serial_port, data, max_tries=3) :
     _data_with_crc = data + struct.pack(">H", _crc)
     
     # Retry up to max_tries times:
-    for _count in xrange(max_tries) :
+    for unused_count in xrange(max_tries) :
         serial_port.write(_data_with_crc)
         # Look for the acknowledgment.
         _resp = serial_port.read()
@@ -585,7 +584,7 @@ def _get_data_with_crc16(serial_port, nbytes, prompt=None, max_tries=3) :
     if prompt :
         serial_port.write(prompt)
         
-    for _count in xrange(max_tries):
+    for unused_count in xrange(max_tries):
         _buffer = serial_port.read(nbytes)
         # If the right amount of data was returned and it passes the CRC check,
         # return it. Otherwise, signal to resend
