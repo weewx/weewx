@@ -23,6 +23,7 @@ import configobj
 import daemon
 
 # weewx imports:
+import weewx
 import weewx.archive
 import weewx.stats
 import weewx.restful
@@ -30,7 +31,7 @@ import weewx.reportengine
 import weeutil.weeutil
 
 usagestr = """
-  %prog config_path [--daemon] [--version]
+  %prog config_path [--help] [--daemon] [--version] [--exit]
 
   Entry point to the weewx weather program. Can be run from the command
   line or, by specifying the '--daemon' option, as a daemon.
@@ -571,16 +572,17 @@ def parseArgs():
     parser = OptionParser(usage=usagestr)
     parser.add_option("-d", "--daemon",  action="store_true", dest="daemon",  help="Run as a daemon")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="Give version number then exit")
+    parser.add_option("-x", "--exit",    action="store_true", dest="exit"   , help="Exit on I/O error (rather than restart)")
     (options, args) = parser.parse_args()
     
     if options.version:
         print weewx.__version__
-        exit()
+        sys.exit()
         
     if len(args) < 1:
         sys.stderr.write("Missing argument(s).\n")
         sys.stderr.write(parser.parse_args(["--help"]))
-        exit()
+        sys.exit(weewx.CMD_ERROR)
     
     if options.daemon:
         daemon.daemonize(pidfile='/var/run/weewx.pid')
@@ -631,6 +633,9 @@ def main(EngineClass=StdEngine) :
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught WeeWxIOError: %s" % e)
+            if options.exit :
+                syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
+                sys.exit(weewx.IO_ERROR)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
             time.sleep(60)
             syslog.syslog(syslog.LOG_NOTICE, "wxengine: retrying...")

@@ -21,6 +21,11 @@ launchtime_ts = time.time()
 # Set to true for extra debug information:
 debug = False
 
+# Exit return codes
+CMD_ERROR    = 2
+CONFIG_ERROR = 3
+IO_ERROR     = 4
+
 # Constants used to indicate a unit system:
 US     = 1
 METRIC = 2
