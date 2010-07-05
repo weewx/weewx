@@ -222,11 +222,9 @@ def __sunriset__(year, month, day, lon, lat, altit, upper_limb):
                (cosd(lat) * cosd(sdec))
     
     if cost >= 1.0:
-        rc = -1 
         t = 0.0           # Sun always below altit
         
     elif cost <= -1.0:
-        rc = +1 
         t = 12.0;         # Sun always above altit
     
     else:
@@ -257,7 +255,7 @@ def __daylen__(year, month, day, lon, lat, altit, upper_limb):
     
     # Compute d of 12h local mean solar time 
     d = daysSince2000Jan0(year,month,day) + 0.5 - (lon/360.0)
-    	 
+
     # Compute obliquity of ecliptic (inclination of Earth's axis) 
     obl_ecl = 23.4393 - 3.563E-7 * d
     
@@ -379,7 +377,7 @@ def GMST0(d):
     # add these numbers, I'll let the C compiler do it for me.  
     # Any decent C compiler will add the constants at compile   
     # time, imposing no runtime or code overhead.               
-    					
+
     sidtim0 = revolution((180.0 + 356.0470 + 282.9404) +
                             (0.9856002585 + 4.70935E-5) * d)
     return sidtim0;
@@ -402,7 +400,6 @@ def solar_altitude(latitude, year, month, day):
     N = daysSince2000Jan0(year, month, day)
     res =  sunRADec(N)
     declination = res[1]
-    sr = res[2]
 
     # Compute the altitude
     altitude = 90.0 - latitude  + declination
@@ -426,7 +423,7 @@ def get_max_solar_flux(latitude, year, month, day):
     Output is in W/M^2.
     """
 
-    (fEot, fR0r, tDeclsc) = equation_of_time(year, month, day, latitude)
+    (unused_fEot, fR0r, tDeclsc) = equation_of_time(year, month, day, latitude)
     fSF = (tDeclsc[0]+tDeclsc[1])*fR0r
 
     # In the case of a negative declinaison, solar flux is null

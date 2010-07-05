@@ -141,7 +141,7 @@ td {
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.8</h1>
+Version 1.9</h1>
 <h1>Table of Contents</h1>
 <ol>
 	<li><a href="#Copyright">Copyright</a></li>
@@ -240,7 +240,7 @@ VantagePro2</a> weather station.</p>
 	or greater) The Python interface to sqlite3.</li>
 	<li><a href="http://pypi.python.org/pypi/configobj/">configobj</a> (Version 
 	4.5 or greater) Manages the configuration file <span class="code">weewx.conf</span>.</li>
-	<li><a href="http://pypi.python.org/pypi/pyserial/2.4">pyserial</a> (Version 
+	<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 
 	2.3 or greater) Manages the serial connection to the weather station.</li>
 	<li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or greater) 
 	The HTML templating engine.</li>
@@ -598,6 +598,9 @@ year starts in October (as mine does). Default is 1.</p>
 <p class="config_option">clock_check</p>
 <p>How often to check the station&#39;s onboard clock for drift, in seconds. Default 
 is 14400 (every 4 hours)</p>
+<p class="config_option">max_drift</p>
+<p>The maximum amount of drift to tolerate, in seconds, in the onboard 
+clock, before resetting the clock. Default is 5.</p>
 <p class="config_option">cache_loop_data</p>
 <p>Set to 1 (one) to cache LOOP data, otherwise, set to zero. Most users will not 
 want to change this unless you have a specialized application. Default is 1 (<em>i.e.</em>, 
@@ -638,9 +641,6 @@ the station to offer new data, but not so long as to go into a new loop packet (
 arrive every 2 seconds). Default is 1.2 seconds.</p>
 <p class="config_option">max_tries</p>
 <p>How many times to try again before giving up. Default is 4.</p>
-<p class="config_option">max_drift</p>
-<p>The maximum amount of drift to tolerate, in seconds, in the VantagePro&#39;s onboard 
-clock, before resetting the clock. Default is 5.</p>
 <p class="config_option">unit_system</p>
 <p>What unit system is in use on your weather station hardware. Possible values 
 are &#39;1&#39; (U.S. Customary) or &#39;2&#39; (Metric). As far as I know, all Davis instruments 
@@ -774,9 +774,13 @@ mode).</p>
 <p><span class="code">Weewx</span> will try up to this many times to FTP a file 
 up to your server before giving up. Default is 3.</p>
 <h3 class="config_section">[Calibrate]</h3>
-<p>One of the services that <span class="code">weewx</span> can run is a <em>calibration service</em>. 
-This is an opportunity to correct for any calibration errors in your 
+<p>One of the services that <span class="code">weewx</span> can run is a <em>calibration service</em> 
+called <span class="code">StdCalibrate</span>. 
+This service offers an opportunity to correct for any calibration errors in your 
 instruments. It is very general and flexible.</p>
+<p>If you do not wish to apply any calibrations, you can leave it out of
+<span class="code"><a href="#service_list">service_list</a></span>, the list of 
+services to be run, and it will not be loaded or run.</p>
 <h4 class="config_section">[[Corrections]]</h4>
 <p>In this section you list all <em>correction expressions</em>. For example, 
 say that you know your outside thermometer reads high by 0.2&deg;F. You could 
@@ -796,6 +800,39 @@ the archiving service <span class="code">StdArchive</span>, so that it is the
 corrected data that is stored.</p>
 <p>If all you require is a simple correction offset, this can also be done in 
 the Davis VantagePro hardware. See your manual for instructions.</p>
+<h3 class="config_section">[QC]</h3>
+<p>Another service that weewx can run is a <em>quality control service</em> 
+called <span class="code">StdQC</span>. This service is very simple and only 
+checks that values are within a minimum and maximum range.</p>
+<p>If you do not wish to use this service, you can leave it out of
+<span class="code"><a href="#service_list">service_list</a></span>, the list of 
+services to be run, and it will not be loaded or run.</p>
+<h4 class="config_section">[[MinMax]]</h4>
+<p>In this section you list the observation types you wish to have checked, 
+along with their minimum and maximum values. The units should be in the native 
+units of the weather station hardware (<em>e.g.</em>, US Customary in the case of the Davis 
+VantagePro2). For example,</p>
+<p class="tty">[[MinMax]]<br />
+&nbsp; outTemp = -40, 120<br />
+&nbsp; barometer = 28, 32.5<br />
+&nbsp; outHumidity = 0, 100</p>
+<p>In this example, if a temperature should fall outside of the inclusive range 
+-40 &deg;F through 120 &deg;F, then it will be set to the null value,
+<span class="code">None</span> and ignored. In a similar manner, the acceptable 
+values for barometric pressure would be 28 through 32.5 inHg, for humidity 0 
+through 100%.</p>
+<p>Both LOOP and archive data will be checked. It is important that the quality 
+control service be run <em>after</em> the calibration service <span class="code">
+StdCalibrate</span> and <em>before</em> the archiving service <span class="code">
+StdArchive</span>, so that it is the calibrated data that is checked and then 
+stored.</p>
+<p>Knowing the details of how your hardware encodes data helps to minimize the 
+number of observations that need to be checked. For example, the VP2 devotes 
+only one unsigned byte to storing wind speed, and even then <span class="code">
+0xff</span> is devoted to a bad value, so the only possible values that could 
+appear are 0 through 126 mph, a reasonable range. So, there is no real point in 
+checking wind speed for these instruments.</p>
+
 <h3 class="config_section">[Engines]</h3>
 <p>This section is used to configure the internal service engine in weewx. It is 
 for advanced customization. Details on how to do this is found in the section
@@ -805,10 +842,15 @@ weewx service engine</a> </em>in the document <a href="customizing.htm"><em>Cust
 </em><span class="code"><em>weewx</em></span></a>.</p>
 <h4 class="config_section">[[WxEngine]]</h4>
 <p>This section is for options used by the service engine.</p>
-<p class="config_option">service_list</p>
+<p class="config_option"><a name="service_list">service_list</a></p>
 <p>This option is the list of <em>services</em> that are to be run by the service 
 engine. After each event (such as the arrival of LOOP data, etc.), they will be 
-run in the given order. </p>
+run in the given order. The standard list of services run by weewx is:</p>
+<p class="tty">service_list = weewx.wxengine.StdCalibrate, weewx.wxengine,StdQC, 
+weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, 
+weewx.wxengine.StdRESTful, weewx.wxengine.StdReportService</p>
+<p>You can leave some of these services out if you do not need them. However, 
+this will only make a slight difference in execution speed.</p>
 <h1>7. <a name="Running_weewx">Running <span class="code">weewx</span></a></h1>
 <p><span class="code">Weewx</span> can be run either from the command line (useful 
 for diagnostic purposes because it will print out a summary of every LOOP data), 

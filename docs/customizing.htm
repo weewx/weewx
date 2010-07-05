@@ -141,7 +141,7 @@ td {
 <body>
 
 <h1 class="title">Customizing <span class="code">weewx</span><br />
-Version 1.8</h1>
+Version 1.9</h1>
 <h1>Table of contents</h1>
 <ol>
 	<li><a href="#Introduction">Introduction</a></li>
@@ -182,6 +182,11 @@ includes the following services:</p>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdCalibrate</span></td>
 		<td>Adjust new LOOP and archive packets using calibration expressions.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdQC</span></td>
+		<td>Check quality of incoming data, making sure values fall within a 
+		specified range.</td>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdArchive</span></td>
@@ -1507,6 +1512,10 @@ services:</p>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdCalibrate</span></td>
 		<td>Adjust new LOOP and archive packets using calibration expressions.</td>
+	</tr>
+	<tr>
+		<td><span class="code">weewx.wxengine.StdQC</span></td>
+		<td>Check that observation values fall within a specified range.</td>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdArchive</span></td>

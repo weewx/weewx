@@ -16,7 +16,6 @@ import urllib2
 import socket
 import time
 
-import weewx
 import weewx.units
 import weeutil.weeutil
 
@@ -302,10 +301,10 @@ class CWOP(REST):
         _sock = self._get_connect()
 
         # Send the login:
-        _resp = self._send(_sock, _login)
+        self._send(_sock, _login)
 
         # And now the packet
-        _resp = self._send(_sock, _tnc_packet)
+        self._send(_sock, _tnc_packet)
         
         try:
             _sock.close()

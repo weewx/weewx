@@ -12,7 +12,6 @@ import time
 import urlparse
 import syslog
 
-import weewx
 import weeutil.weeutil
 import weewx.units
 

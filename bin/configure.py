@@ -10,6 +10,7 @@
 #
 """Configure various resources used by weewx"""
 
+import sys
 import syslog
 import os.path
 from optparse import OptionParser
@@ -37,7 +38,7 @@ def main():
     if len(args) < 1:
         print "Missing argument(s)."
         print parser.parse_args(["--help"])
-        exit()
+        sys.exit(weewx.CMD_ERROR)
     
     config_path = args[0]
     
@@ -50,7 +51,7 @@ def main():
     except IOError:
         print "Unable to open configuration file ", config_path
         syslog.syslog(syslog.LOG_CRIT, "main: Unable to open configuration file %s" % config_path)
-        exit()
+        sys.exit(weewx.CONFIG_ERROR)
         
     if options.create_database:
         createMainDatabase(config_dict)

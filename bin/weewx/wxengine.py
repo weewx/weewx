@@ -8,6 +8,8 @@
 #    $Date$
 #
 
+"""Main engine for the weewx weather system."""
+
 # Python imports
 from optparse import OptionParser
 import Queue
@@ -31,7 +33,7 @@ import weewx.reportengine
 import weeutil.weeutil
 
 usagestr = """
-  %prog config_path [--daemon] [--version]
+  %prog config_path [--help] [--daemon] [--version] [--exit]
 
   Entry point to the weewx weather program. Can be run from the command
   line or, by specifying the '--daemon' option, as a daemon.
@@ -81,7 +83,7 @@ class StdEngine(object):
         # Set up the services to be run:
         self.setupServices(config_dict)
         
-    def getConfiguration(self, options, args):
+    def getConfiguration(self, dummy_options, args):
 
         # Get and set the absolute path of the configuration file.  
         # A service might to a chdir(), and then another service would be unable to
@@ -229,15 +231,10 @@ class StdEngine(object):
         
         Unlike the other events, this one must actually be triggered by one of the services."""
         
-        nrec = 0
         # Add all missed archive records since the last good record in the
         # database
         for archivePacket in self.station.genArchivePackets(lastgood_ts) :
             self.newArchivePacket(archivePacket)
-            nrec += 1
-    
-        if nrec != 0:
-            syslog.syslog(syslog.LOG_INFO, "wxengine: %d new archive packets added to database" % nrec)
     
     def newArchivePacket(self, archivePacket):
         """Run whenever a new archive packet becomes available."""
@@ -252,7 +249,7 @@ class StdEngine(object):
 class StdService(object):
     """Abstract base class for all services."""
     
-    def __init__(self, engine, *args, **kwargs):
+    def __init__(self, engine, *dummy, **dummy_kwargs):
         self.engine = engine
     
     def setup(self):
@@ -311,6 +308,40 @@ class StdCalibrate(StdService):
         for obs_type in self.corrections:
             if archivePacket.has_key(obs_type) and archivePacket[obs_type] is not None:
                 archivePacket[obs_type] = eval(self.corrections[obs_type], None, archivePacket)
+
+#===============================================================================
+#                    Class StdQC
+#===============================================================================
+
+class StdQC(StdService):
+    """Performs quality check on incoming data."""
+    
+    def __init__(self, engine, config_dict):
+        super(StdQC, self).__init__(engine, config_dict)
+
+        self.min_max_dict = {}
+        # Nothing to do if the 'QC' section does not exist in the configuration
+        # dictionary.
+        if config_dict.has_key('QC'):
+            min_max_dict = config_dict['QC']['MinMax']
+    
+            for obs_type in min_max_dict.scalars:
+                self.min_max_dict[obs_type] = (float(min_max_dict[obs_type][0]),
+                                               float(min_max_dict[obs_type][1]))
+            
+    def newLoopPacket(self, loopPacket):
+        """Apply quality check to the data in a LOOP packet"""
+        for obs_type in self.min_max_dict:
+            if loopPacket.has_key(obs_type) and loopPacket[obs_type] is not None:
+                if not self.min_max_dict[obs_type][0] <= loopPacket[obs_type] <= self.min_max_dict[obs_type][1]:
+                    loopPacket[obs_type] = None
+
+    def newArchivePacket(self, archivePacket):
+        """Apply quality check to the data in a LOOP packet"""
+        for obs_type in self.min_max_dict:
+            if archivePacket.has_key(obs_type) and archivePacket[obs_type] is not None:
+                if not self.min_max_dict[obs_type][0] <= archivePacket[obs_type] <= self.min_max_dict[obs_type][1]:
+                    archivePacket[obs_type] = None
 
 #===============================================================================
 #                    Class StdArchive
@@ -391,6 +422,7 @@ class StdTimeSynch(StdService):
         # Zero out the time of last synch, and get the time between synchs.
         self.last_synch_ts = 0
         self.clock_check = int(config_dict['Station'].get('clock_check', 14400))
+        self.max_drift   = int(config_dict['Station'].get('max_drift', 5))
         
     def preloop(self):
         """Ask the station to synch up if enough time has passed."""
@@ -398,7 +430,7 @@ class StdTimeSynch(StdService):
         # clock_check seconds since the last check:
         now_ts = time.time()
         if now_ts - self.last_synch_ts >= self.clock_check:
-            self.engine.station.setTime()
+            self.engine.station.setTime(time.time(), self.max_drift)
             self.last_synch_ts = now_ts
             
 #===============================================================================
@@ -540,16 +572,17 @@ def parseArgs():
     parser = OptionParser(usage=usagestr)
     parser.add_option("-d", "--daemon",  action="store_true", dest="daemon",  help="Run as a daemon")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="Give version number then exit")
+    parser.add_option("-x", "--exit",    action="store_true", dest="exit"   , help="Exit on I/O error (rather than restart)")
     (options, args) = parser.parse_args()
     
     if options.version:
         print weewx.__version__
-        exit()
+        sys.exit()
         
     if len(args) < 1:
         sys.stderr.write("Missing argument(s).\n")
         sys.stderr.write(parser.parse_args(["--help"]))
-        exit()
+        sys.exit(weewx.CMD_ERROR)
     
     if options.daemon:
         daemon.daemonize(pidfile='/var/run/weewx.pid')
@@ -563,7 +596,7 @@ def parseArgs():
 class Restart(Exception):
     """Exception thrown when restarting the engine is desired."""
     
-def sigHUPhandler(signum, frame):
+def sigHUPhandler(dummy_signum, dummy_frame):
     syslog.syslog(syslog.LOG_DEBUG, "wxengine: Received signal HUP. Throwing Restart exception.")
     raise Restart
 
@@ -600,6 +633,9 @@ def main(EngineClass=StdEngine) :
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught WeeWxIOError: %s" % e)
+            if options.exit :
+                syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
+                sys.exit(weewx.IO_ERROR)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
             time.sleep(60)
             syslog.syslog(syslog.LOG_NOTICE, "wxengine: retrying...")

@@ -72,7 +72,7 @@ class FtpUpload:
             ftp_server.set_pasv(self.passive)
             
             # Walk the local directory structure
-            for (dirpath, dirnames, filenames) in os.walk(self.local_root):
+            for (dirpath, unused_dirnames, filenames) in os.walk(self.local_root):
     
                 # Strip out the common local root directory. What is left
                 # will be the relative directory both locally and remotely.
@@ -160,7 +160,7 @@ class FtpUpload:
     def _make_remote_dir(self, ftp_server, remote_dir_path):
         """Make a remote directory if necessary."""
         # Try to make the remote directory up max_tries times, then give up.
-        for count in range(self.max_tries):
+        for unused_count in range(self.max_tries):
             try:
                 ftp_server.mkd(remote_dir_path)
             except ftplib.all_errors, e:

@@ -12,7 +12,7 @@
 import time
 import Image
 import ImageDraw
-import weeplot
+
 import weeplot.utilities
 import weeutil.weeutil
         

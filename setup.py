@@ -158,8 +158,11 @@ class My_install_data(install_data):
         new_config.indent_type = '    '
         new_version_number = VERSION.split('.')
         
-        # Shut off the debug flag:
+        # SMake sure the debug flag is off:
         new_config['debug'] = 0
+        
+        # Make sure the rain year starts in January:
+        new_config['Station']['rain_year_start'] = 1
 
         # Check to see if there is an existing config file.
         # If so, merge its contents with the new one
@@ -194,6 +197,8 @@ class My_install_data(install_data):
         new_config['Station'].pop('cooling_base', None)
         # Wunderground has been put under section ['RESTful']:
         new_config.pop('Wunderground', None)
+        # Option max_drift has been moved from section VantagePro
+        new_config['VantagePro'].pop('max_drift', None)
         # Name change from StdWunderground to StdRESTful:
         new_config['Engines']['WxEngine']['service_list'] =\
             [svc.replace('StdWunderground', 'StdRESTful') for svc in\

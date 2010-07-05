@@ -12,7 +12,7 @@
 """
 import time
 
-__version__="1.8.4"
+__version__="1.9.0"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -20,6 +20,11 @@ launchtime_ts = time.time()
 
 # Set to true for extra debug information:
 debug = False
+
+# Exit return codes
+CMD_ERROR    = 2
+CONFIG_ERROR = 3
+IO_ERROR     = 4
 
 # Constants used to indicate a unit system:
 US     = 1
