@@ -8,6 +8,8 @@
 #    $Date$
 #
 
+"""Main engine for the weewx weather system."""
+
 # Python imports
 from optparse import OptionParser
 import Queue
@@ -331,16 +333,14 @@ class StdQC(StdService):
         """Apply quality check to the data in a LOOP packet"""
         for obs_type in self.min_max_dict:
             if loopPacket.has_key(obs_type) and loopPacket[obs_type] is not None:
-                if loopPacket[obs_type] < self.min_max_dict[obs_type][0] or\
-                   loopPacket[obs_type] > self.min_max_dict[obs_type][1]:
+                if not self.min_max_dict[obs_type][0] <= loopPacket[obs_type] <= self.min_max_dict[obs_type][1]:
                     loopPacket[obs_type] = None
 
     def newArchivePacket(self, archivePacket):
         """Apply quality check to the data in a LOOP packet"""
         for obs_type in self.min_max_dict:
             if archivePacket.has_key(obs_type) and archivePacket[obs_type] is not None:
-                if archivePacket[obs_type] < self.min_max_dict[obs_type][0] or\
-                   archivePacket[obs_type] > self.min_max_dict[obs_type][1]:
+                if not self.min_max_dict[obs_type][0] <= archivePacket[obs_type] <= self.min_max_dict[obs_type][1]:
                     archivePacket[obs_type] = None
 
 #===============================================================================

@@ -1,7 +1,7 @@
 CHANGE HISTORY
 --------------------------------
 
-1.9.0  6/01/10
+1.9.0  7/04/10
 
 Added a new service, StdQC, that offers a rudimentary data check.
 
