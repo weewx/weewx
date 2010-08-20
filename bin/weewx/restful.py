@@ -11,6 +11,7 @@
 import syslog
 import datetime
 import threading
+import httplib
 import urllib
 import urllib2
 import socket
@@ -150,7 +151,7 @@ class Ambient(REST):
             # in case there's a network problem.
             try:
                 _response = urllib2.urlopen(_url)
-            except (urllib2.URLError, socket.error), e:
+            except (urllib2.URLError, socket.error, httplib.BadStatusLine), e:
                 # Unsuccessful. Log it and go around again for another try
                 syslog.syslog(syslog.LOG_ERR, "restful: Failed attempt #%d to upload to %s" % (_count+1, self.site))
                 syslog.syslog(syslog.LOG_ERR, "   ****  Reason: %s" % (e,))
