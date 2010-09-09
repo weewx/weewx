@@ -1,10 +1,13 @@
 CHANGE HISTORY
 --------------------------------
 
-1.9.1  8/19/10
+1.9.1  9/9/10
 
 Now catches exceptions of type httplib.BadStatusLine when doing RESTful
 posts.
+
+Added an extra decimal point of precision to dew point reports to the Weather
+Underground and PWS.
 
 
 1.9.0  7/04/10

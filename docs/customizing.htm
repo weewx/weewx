@@ -158,10 +158,9 @@ Version 1.9</h1>
 <h1>1. <a name="Introduction">Introduction</a></h1>
 <p>This document covers the customization of weewx. It assumes that you have read 
 and are reasonably familiar with the <a href="readme.htm">Users Guide</a>.</p>
-<p>It starts with an overview of the architecture of weewx. If you are only interested 
-in customizing the generated skin reports you can probably skip that section and 
-just have a look at the options available for the Standard skin configuration file, 
-described in the section <em>
+<p>It starts with an overview of the architecture of weewx. If you are only 
+interested in customizing the generated skin reports you can probably skip the 
+overview and proceed directly to the section <em>
 <a href="#Reference:_The_Standard_skin_configuration_file">The Standard skin 
 configuration file</a></em>. With this approach you can easily add new plot images, 
 change the titles of images, change the units used in the reports, and so on.</p>
@@ -344,7 +343,7 @@ to read:</p>
 <pre>[Units]</pre>
 <pre>  [[Groups]]</pre>
 <pre class="highlight">    group_altitude    = meter</pre>
-<pre class="highlight">&nbsp;   group_degree_day  = degree_C_day&nbsp;</pre>
+<pre class="highlight">    group_degree_day  = degree_C_day&nbsp;</pre>
 <pre>    group_direction   = degree_compass</pre>
 <pre>    group_moisture    = centibar</pre>
 <pre>    group_percent     = percent</pre>
@@ -449,20 +448,20 @@ anyone but a Python programmer, <span class="code">weewx</span> adopts a very sm
 subset of its power. </p>
 <p>The key construct is a &#39;dot&#39; 
 code, specifying what value you want. For example:</p>
-<pre>$month.outTemp.max</pre>
-<pre>$month.outTemp.maxtime</pre>
-<pre>$current.outTemp</pre>
+<pre>$month.outTemp.max
+$month.outTemp.maxtime
+$current.outTemp</pre>
 <p>would code the max outside temperature for the month, the time it occurred, and 
 the current outside temperature, respectively. So, an HTML file that looks like</p>
-<pre>&lt;html&gt;</pre>
-<pre>  &lt;head&gt;</pre>
-<pre>    &lt;title&gt;Current conditions&lt;/title&gt;</pre>
-<pre>  &lt;/head&gt;</pre>
-<pre>  &lt;body&gt;</pre>
-<pre>  &lt;p&gt;Current temperature = $current.outTemp&lt;/p&gt;</pre>
-<pre>  &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at $month.outTemp.maxtime&lt;/p&gt;</pre>
-<pre>  &lt;/body&gt;</pre>
-<pre>&lt;/html&gt;</pre>
+<pre>&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Current conditions&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+  &lt;p&gt;Current temperature = $current.outTemp&lt;/p&gt;
+  &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at $month.outTemp.maxtime&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
 <p>would be all you need for a very simple HTML page that would display the text 
 (assuming that the unit group for temperature is <span class="code">degree_F</span>):
 </p>
@@ -1013,8 +1012,8 @@ class MyFileGenerator(FileGenerator):                    # 1
 </ol>
 <p>With this approach, you can now include &quot;all time&quot; statistics in 
 your HTML templates:</p>
-<pre>...</pre>
 <pre>...
+...
 &lt;table&gt;
   &lt;tr&gt;
     &lt;td&gt;Maximum temperature to date: &lt;/td&gt;
@@ -1067,10 +1066,10 @@ commented out, the code will not be included.</p>
 example, say you have added a video camera and you would like to add a still 
 image with a hyperlink to a page with the video. You want all of these options 
 to be neatly contained in a subsection. </p>
-<pre>[Extras]</pre>
-<pre>&nbsp; [[video]]</pre>
-<pre>&nbsp;   still = video_capture.jpg</pre>
-<pre>&nbsp;   hyperlink = <a href="http://www.eatatjoes.com/video.html">http://www.eatatjoes.com/video.html</a></pre>
+<pre>[Extras]
+&nbsp; [[video]]
+&nbsp;   still = video_capture.jpg
+&nbsp;   hyperlink = <a href="http://www.eatatjoes.com/video.html">http://www.eatatjoes.com/video.html</a></pre>
 <p>Then in your template you could refer to these as:</p>
 <pre>&lt;a href=&quot;$Extras.video.hyperlink&quot;&gt;
   &lt;img src=&quot;$Extras.video.still&quot; alt=&quot;Video capture&quot;/&gt;
@@ -1138,8 +1137,8 @@ or &quot;<span class="code">degree_C</span>.&quot;</p>
 unit when a quantity needs to be converted to a string. Typically, this happens 
 with y-axis labeling on plots and for statistics in HTML file generation. For example, 
 the options</p>
-<pre>degree_C = %.1f</pre>
-<pre>inch     = %.2f</pre>
+<pre>degree_C = %.1f
+inch     = %.2f</pre>
 <p>would specify that the given string formats are to be used when formatting any 
 temperature measured in degrees Celsius or any precipitation amount measured in 
 inches, respectively. The
@@ -1152,8 +1151,8 @@ measurement (value &#39;<span class="code">None</span>&#39;). For example,</p>
 <h3 class="config_section"><a name="[[Labels]]">[[Labels]]</a></h3>
 <p>This subsection specifies what label is to be used for each measurement unit 
 type. For example, the options</p>
-<pre>degree_F = °F</pre>
-<pre>inch     = &#39; in&#39;</pre>
+<pre>degree_F = °F
+inch     = &#39; in&#39;</pre>
 <p>would cause all temperatures to have unit labels &#39;<span class="code">°F</span>&#39; 
 and all precipitation to have labels&nbsp; &#39;<span class="code"> in</span>&#39;. If any special symbols are to 
 be used (such as the degree sign above) they should be encoded in UTF-8. This is 
@@ -1164,8 +1163,8 @@ Imaging Library can handle).</p>
 <p>This sub-section is used for time labels. It uses
 <a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
 formats. For example</p>
-<pre>week  = %H:%M on %A</pre>
-<pre>month = %d-%b-%Y %H:%M</pre>
+<pre>week  = %H:%M on %A
+month = %d-%b-%Y %H:%M</pre>
 <p>would specify that week data should use a format such as &quot;<span class="code">15:20 
 on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
 15:20</span>&quot;</p>
@@ -1184,8 +1183,8 @@ default is &quot;<span class="code">N, S, E, W</span>&quot;.</p>
 <h3 class="config_section">[[Generic]]</h3>
 <p>This sub-sections specifies default labels to be used for each SQL type. For 
 example, options</p>
-<pre>inTemp = Temperature inside the house</pre>
-<pre>outTemp = Outside Temperature</pre>
+<pre>inTemp = Temperature inside the house
+outTemp = Outside Temperature</pre>
 <p>would cause the given labels to be used for plots involving SQL types
 <span class="code">inTemp </span>and <span class="code">outTemp</span>.</p>
 <h2 class="config_section">[Almanac]</h2>
@@ -1248,7 +1247,7 @@ are 3 possible choices:</p>
 	</tr>
 	<tr>
 		<td class="code">strict_ascii</td>
-		<td>Non 7-bit characters will be ignoredd&gt; </td>
+		<td>Non 7-bit characters will be ignored.</td>
 	</tr>
 </table>
 <p>By default, the encoding <span class="code">html_entities</span> is used for 
@@ -1330,12 +1329,12 @@ week, month, and year). These sub-sections define the nature of aggregation and
 plot types for the time period. For example, here&#39;s a typical set of options for 
 sub-section <span class="code">[[month_images]]</span>, controlling how images that 
 cover a month period are generated:</p>
-<pre>[[month_images]]</pre>
-<pre>  x_label_format = %d</pre>
-<pre>  bottom_label_format = %m/%d/%y %H:%M</pre>
-<pre>  time_length = 2592000 # == 30 days</pre>
-<pre>  aggregate_type = avg</pre>
-<pre>  aggregate_interval = 10800 # == 3 hours</pre>
+<pre>[[month_images]]
+  x_label_format = %d
+  bottom_label_format = %m/%d/%y %H:%M
+  time_length = 2592000 # == 30 days
+  aggregate_type = avg
+  aggregate_interval = 10800 # == 3 hours</pre>
 <p>The option <span class="code">x_label_format</span> gives a
 <a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
 type format for the x-axis. In this example, it will only show days (format option 
@@ -1350,25 +1349,26 @@ The title of each sub-sub-section is the filename to be used for the image. Fina
 at one additional nesting level (!) are the logical names of all the line types 
 to be drawn in the image.&nbsp; Values specified in the level above can be overridden. 
 For example, here&#39;s a typical set of options for sub-sub-section
-<span class="code">[[[[[[[monthrain]]]</span>: /p&gt; class=&quot;tty&quot;&gt;[[[[[[monthrain]]]</p>
-<pre>  plot_type = bar</pre>
-<pre>  yscale = None, None, 0.02</pre>
-<pre>  [[[[rain]]]]</pre>
-<pre>    aggregate_type = sum</pre>
-<pre>    aggregate_interval = 86400</pre>
-<pre>    label = Rain (daily avg)</pre>
+<span class="code">[[[monthrain]]]</span>:</p>
+<pre>[[[monthrain]]]
+  plot_type = bar
+  yscale = None, None, 0.02
+  [[[[rain]]]]
+    aggregate_type = sum
+    aggregate_interval = 86400
+    label = Rain (daily avg)</pre>
 <p>This will generate an image file with name <span class="code">monthrain.png</span>. 
-It will be a bar plot. Option <span class="code">yscale</span> controls the y-axis 
-scaling — if left out, the scale will automatically be chosen. However, in this 
-example we are choosing to exercise some degree of control by specifying values 
-explicitly. It is a 3-way tuple (<span class="code">ylow</span>,
+It will be a bar plot. Option <span class="code">yscale</span> controls the 
+y-axis scaling — if left out, the scale will automatically be chosen. However, 
+in this example we are choosing to exercise some degree of control by specifying 
+values explicitly. It is a 3-way tuple (<span class="code">ylow</span>,
 <span class="code">yhigh</span>, <span class="code">min_interval</span>), where
-<span class="code">ymin</span> and <span class="code">ymax</span> are the minimum 
-and maximum y-axis values, respectively, and <span class="code">min_interval</span> 
-is the minimum tick interval. If set to &#39;<span class="code">None</span>&#39;, the corresponding 
-value will be automatically chosen. So, in this example, we are letting
-<span class="code">weewx</span> pick sensible y minimum and maximum values, but 
-we are requiring that the tick increment (<span class="code">min_interval</span>) 
+<span class="code">ymin</span> and <span class="code">ymax</span> are the 
+minimum and maximum y-axis values, respectively, and <span class="code">
+min_interval</span> is the minimum tick interval. If set to &#39;<span class="code">None</span>&#39;, 
+the corresponding value will be automatically chosen. So, in this example, we 
+are letting <span class="code">weewx</span> pick sensible y minimum and maximum 
+values, but we are requiring that the tick increment (<span class="code">min_interval</span>) 
 be at least 0.02. </p>
 <p>Continuing on with the example above, there will be only one plot &quot;line&quot; (it 
 will actually be a series of bars) and it will have logical name &quot;<span class="code">rain</span>&quot;. 
@@ -1382,9 +1382,9 @@ with the indicated label (&#39;<span class="code">Rain (daily avg)</span>&#39;)<
 <h3>Including more than one SQL type in a plot</h3>
 <p>More than one SQL type can be included in a plot. For example, here&#39;s how to 
 generate a plot with the week&#39;s outside temperature as well as dewpoint:</p>
-<p class="tty">[[[monthtempdew]]]</p>
-<p class="tty">&nbsp; [[[[outTemp]]]]</p>
-<p class="tty">&nbsp; [[[[dewpoint]]]]</p>
+<pre>[[[monthtempdew]]]
+   [[[[outTemp]]]]
+   [[[[dewpoint]]]]</pre>
 <p>This would create an image in file <span class="code">monthtempdew.png</span> 
 that includes a line plot of both outside temperature and dewpoint.</p>
 <h3>Including the same SQL type more than once in a plot</h3>
@@ -1392,12 +1392,12 @@ that includes a line plot of both outside temperature and dewpoint.</p>
 hourly averages. Here, you are using the same data type (&#39;<span class="code">outTemp</span>&#39;) 
 for both plot lines, the first with averages, the second without. If you do the 
 obvious it won&#39;t work:</p>
-<pre>## WRONG ##</pre>
-<pre>[[[[[[daytemp_with_avg]]]</pre>
-<pre>  [[[[outTemp]]]]</pre>
-<pre>    aggregate_type = avg</pre>
-<pre>    aggregate_interval = 3600</pre>
-<pre>  [[[[outTemp]]]]  # OOPS! The same section name appears more than once!</pre>
+<pre>## WRONG ##
+[[[[[[daytemp_with_avg]]]
+  [[[[outTemp]]]]
+    aggregate_type = avg
+    aggregate_interval = 3600
+  [[[[outTemp]]]]  # OOPS! The same section name appears more than once!</pre>
 <p>The option parser does not allow the same section name (&#39;<span class="code">outTemp</span>&#39; 
 in this case) to appear more than once at a given level in the configuration file, 
 so an error will be declared (technical reason: formally, the sections are an unordered 
@@ -1405,13 +1405,13 @@ dictionary). If you wish for the same SQL type to appear more than once in a plo
 then there is a trick you must know: use option <span class="code">data_type</span>. 
 This will override the default action that the logical line name is used for the 
 SQL type. So, our example would look like this:</p>
-<pre>[[[daytemp_with_avg]]]</pre>
-<pre>    [[[[a_logical_name]]]]</pre>
-<pre>      data_type = outTemp</pre>
-<pre>      aggregate_type = avg</pre>
-<pre>      aggregate_interval = 3600</pre>
-<pre>      label = Avg. Temp. </pre>
-<pre>    [[[[outTemp]]]]</pre>
+<pre>[[[daytemp_with_avg]]]
+    [[[[a_logical_name]]]]
+      data_type = outTemp
+      aggregate_type = avg
+      aggregate_interval = 3600
+      label = Avg. Temp.
+    [[[[outTemp]]]]</pre>
 <p>Here, the first logical line has been given the name &quot;<span class="code">a_logical_name</span>&quot; 
 to distinguish it from the second line &quot;<span class="code">outTemp</span>&quot;. We have 
 specified that the first line will use data type <span class="code">outTemp</span> 
@@ -1431,16 +1431,16 @@ special vector-types. The first, &#39;<span class="code">windvec</span>&#39;, re
 the average wind in an archive period, the second, &#39;<span class="code">windgustvec</span>&#39; 
 the max wind in an archive period. Here&#39;s how to produce a progressive vector for 
 one week that shows the hourly biggest wind gusts, along with hourly averages:</p>
-<pre>[[[weekgustoverlay]]]</pre>
-<pre>   aggregate_interval = 3600</pre>
-<pre>   [[[[windvec]]]]</pre>
-<pre>     label = Hourly Wind </pre>
-<pre>     plot_type = vector</pre>
-<pre>     aggregate_type = avg</pre>
-<pre>   [[[[windgustvec]]]]</pre>
-<pre>    label = Gust Wind </pre>
-<pre>     plot_type = vector</pre>
-<pre>     aggregate_type = max</pre>
+<pre>[[[weekgustoverlay]]]
+   aggregate_interval = 3600
+   [[[[windvec]]]]
+     label = Hourly Wind 
+     plot_type = vector
+     aggregate_type = avg
+   [[[[windgustvec]]]]
+     label = Gust Wind 
+     plot_type = vector
+     aggregate_type = max</pre>
 <p>This will produce an image file with name <span class="code">weekgustoverlay.png</span>. 
 It will consist of two progressive vector plots, both using hourly aggregation (3,600 
 seconds). For the first set of vectors, the hourly average will be used. In the 
@@ -1465,19 +1465,19 @@ types such as barometer, you want to also generate some oversized plots to give
 you extra detail, perhaps for an HTML popup. The standard <span class="code">weewx.conf</span> 
 file specifies plot size of 300x180 pixels, which will be used for all plots unless 
 overridden:</p>
-<pre>[Images]</pre>
-<pre>  ...</pre>
-<pre>  image_width=300</pre>
-<pre>  image_height = 180</pre>
+<pre>[Images]
+  ...
+  image_width=300
+  image_height = 180</pre>
 <p>The standard plot of barometric pressure will appear in <span class="code">daybarometer.png</span>:</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; [[[daybarometer]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[barometer]]]] </p>
+<pre>    [[[daybarometer]]]
+      [[[[barometer]]]] </pre>
 <p>We now add our special plot of barometric pressure, but specify a larger image 
 size. This image will be put in file an class=&quot;code&quot; daybarometer_big.png.</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp; [[[daybarometer_big]]]</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_width&nbsp; = 600</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; image_height = 360</p>
-<p class="tty">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [[[[barometer]]]]</p>
+<pre>     [[[daybarometer_big]]]
+      image_width  = 600
+      image_height = 360
+      [[[[barometer]]]]</pre>
 <h2 class="config_section">[Generators]</h2>
 <p class="config_option">generator_list</p>
 <p>This option controls which generators get run for this skin. It is a comma separated 
@@ -1692,7 +1692,7 @@ degrees. Any valid Python expression can be used, although the only variables av
 are those in the current archive record. (The place in the code where the expression 
 is evaluated is marked with &quot;<span class="code">NOTE 1</span>&quot;.)</p>
 <p>Another example expression could be:</p>
-<p class="tty">&nbsp;&nbsp;&nbsp; expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</p>
+<pre>    expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 <p>In this case, the alarm is sounded if the outside temperature drops below freezing 
 and the wind speed is greater than 10.0. </p>
 <p>Option <span class="code">time_wait</span> is used to avoid a flood of nearly 
@@ -1774,7 +1774,7 @@ services may not be prepared to accept it. So, be prepared to catch an exception
 2).</p>
 <p>To use this engine, go into file <span class="code">weewxd.py</span> and change 
 the line</p>
-<p class="tty">weewx.wxengine.main()</p>
+<pre>weewx.wxengine.main()</pre>
 <p>so that it uses your new engine:</p>
 <pre>from examples.daily import MyEngine
  

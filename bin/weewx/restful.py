@@ -103,15 +103,15 @@ class Ambient(REST):
 
     # Types and formats of the data to be published:
     _formats = {'dateTime'    : 'dateutc=%s',
-                'barometer'   : 'baromin=%06.3f',
-                'outTemp'     : 'tempf=%05.1f',
+                'barometer'   : 'baromin=%.3f',
+                'outTemp'     : 'tempf=%.1f',
                 'outHumidity' : 'humidity=%03.0f',
                 'windSpeed'   : 'windspeedmph=%03.0f',
                 'windDir'     : 'winddir=%03.0f',
                 'windGust'    : 'windgustmph=%03.0f',
-                'dewpoint'    : 'dewptf=%03.0f',
-                'rain'        : 'rainin=%04.2f',
-                'dailyrain'   : 'dailyrainin=%05.2f'}
+                'dewpoint'    : 'dewptf=%.1f',
+                'rain'        : 'rainin=%.2f',
+                'dailyrain'   : 'dailyrainin=%.2f'}
 
 
     def __init__(self, site, **kwargs):

@@ -479,8 +479,8 @@ skin templates and databases, as well as where to put the generated HTML files
 and plot images. This is done by setting <span class="code">WEEWX_ROOT</span> in <span class="code">weewx.conf</span> 
 to reflect where your data files can be found (normally, the install process 
 does this for you):</p>
-<pre>&gt; # Edit WEEWX_ROOT to reflect the location of your data hierarchy:</pre>
-<pre>&gt; vi ./weewx-X.Y.Z/weewx.conf
+<pre>&gt; # Edit WEEWX_ROOT to reflect the location of your data hierarchy:
+&gt; vi ./weewx-X.Y.Z/weewx.conf
 &gt; # Now run weewxd.py out of the directory you unpacked weewx into:
 &gt; ./weewx-X.Y.Z/bin/weewxd.py ./weewx-X.Y.Z/weewx.conf</pre>
 <h1>6. <a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
@@ -500,9 +500,8 @@ need to follow this section — the two main databases are created and populated
 by <span class="code">weewx</span>.</p>
 <p>The main archive database can be just copied over because wview and <span class="code">weewx</span> 
 use identical schemas:</p>
-<p class="tty">mkdir <em>$WEEWX_ROOT</em>/archive</p>
-<p class="tty">cp /usr/local/var/wview/archive/wview-archive.sdb
-<span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb</p>
+<pre>mkdir <em>$WEEWX_ROOT</em>/archive
+cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb</pre>
 <p>The second database, the statistics, will then be automatically created and 
 backfilled on startup of weewx. If your existing database is large, backfilling could take some time. On my modest 
 500 MHz <a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC 
@@ -1031,7 +1030,7 @@ of time, here are some tips, in decreasing order of importance:</p>
 <h3>cp2101 converter problems</h3>
 <p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
 problems. The symptom is that the Linux kernel will disconnect from your old USB 
-port claiming &quot;EMI noise&quot;, and reconnect to a new and different one, where
+port claiming &quot;EMI noise&quot;, and reconnect to a new and different port, where
 <span class="code">weewx</span> can&#39;t find it. Here&#39;s 
 a typical log output:</p>
 <pre>Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?), re-enabling... 
@@ -1062,9 +1061,9 @@ on my fit-PC that looks like this:</p>
 <pre>#</pre>
 <pre>ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
 <p>What this rule says is that when the USB port is plugged in (action
-<span class="code">ADD</span>), and it has an attribute with name
+<span class="code">add</span>), and it has an attribute with name
 <span class="code">interface</span> that is equal to &quot;<span class="code">CP2102 
-USB to UART Bridge Controller</span>&quot;, add a symbolic link for its physical port 
+USB to UART Bridge Controller</span>&quot;, then add a symbolic link for its physical port 
 to <span class="code">/dev/vpro</span>. </p>
 <p>Your controller may have a different identifier!! I can recommend this 
 article, &quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing 
@@ -1130,7 +1129,7 @@ in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</s
 	the chances of corrupting the data, making it much easier to understand and 
 	modify the code base.</li>
 	<li>Isolate the data collection and archiving code in a single thread that 
-	is simple enough that it is unlikely to crash. The user controlled report 
+	is simple enough that it is unlikely to crash. The report 
 	processing is where most mistakes are likely to happen, so isolate that in a 
 	separate thread. If it crashes, it will not affect the main data thread.</li>
 	<li>A powerful configuration parser,
@@ -1173,7 +1172,7 @@ cause thread termination. If this happens in the main thread (not likely due to
 its simplicity), then this causes program termination. If it happens in the 
 report processing thread (much more likely), then only the generation of reports 
 will be affected &mdash; the main thread will continue downloading data off the 
-instrument and putting it in the database. You can fix the problem at your 
+instrument and putting them in the database. You can fix the problem at your 
 leisure, without worrying about losing any data.</p>
 <h2>11.3 Terminology</h2>
 <p>This is a glossary of terminology used throughout the code.</p>
