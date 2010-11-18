@@ -43,7 +43,7 @@ def dewpointC(T, R):
     try:
         _gamma = 17.27 * T / (237.7 + T) + math.log(R)
         TdC = 237.7 * _gamma / (17.27 - _gamma)
-    except ValueError:
+    except (ValueError, OverflowError):
         TdC = None
     return TdC
 
