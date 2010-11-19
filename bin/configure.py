@@ -32,6 +32,7 @@ def main():
     parser.add_option("--create-stats",    action="store_true", dest="create_stats",    help="To create the statistical statistical database stats.sdb")
     parser.add_option("--backfill-stats",  action="store_true", dest="backfill_stats",  help="To backfill the statistical database from the main database")
     parser.add_option("--configure-VantagePro", action="store_true", dest="configure_VP", help="To configure a VantagePro weather station")
+    parser.add_option("--clear-VantagePro",     action="store_true", dest="clear_VP",     help="To clear the memory of the VantagePro weather station")
     
     (options, args) = parser.parse_args()
     
@@ -65,6 +66,8 @@ def main():
     if options.configure_VP:
         configureVP(config_dict)
 
+    if options.clear_VP:
+        clearVP(config_dict)
 
 def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
@@ -135,4 +138,19 @@ def configureVP(config_dict):
             print "Archive records cleared."
         else:
             print "Nothing done."
+            
+def clearVP(config_dict):
+    """Clear the archive memory of a VantagePro"""
+    
+    print "Clearing the archive memory of the VantagePro..."
+    # Open up the weather station:
+    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+    print "Proceeding will erase old archive records."
+    ans = raw_input("Are you sure you wish to proceed? (y/n) ")
+    if ans == 'y':
+        station.clearLog()
+        print "Archive records cleared."
+    else:
+        print "Nothing done."
+
 main()
