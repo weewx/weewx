@@ -59,3 +59,6 @@ class ViolatedPrecondition(StandardError):
     
 class LogicError(StandardError):
     """Exception thrown when there is an internal logic error in the code."""
+    
+class ArchiveError(StandardError):
+    """Exception thrown when there is an archive database error."""

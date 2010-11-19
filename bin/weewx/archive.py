@@ -141,10 +141,14 @@ class Archive(object):
         # A value will be replaced with None if it did not exist in the record
         _vallist = [record.get(_key) for _key in sqlkeys]
 
-        with sqlite3.connect(self.archiveFile) as _connection:
-            _connection.execute(sql_insert_stmt, _vallist)
-        
-        syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(_vallist[0]))
+        try:
+            with sqlite3.connect(self.archiveFile) as _connection:
+                _connection.execute(sql_insert_stmt, _vallist)
+            syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(_vallist[0]))
+        except Exception, e:
+            syslog.syslog(syslog.LOG_NOTICE, "Archive: unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(_vallist[0]))
+            syslog.syslog(syslog.LOG_NOTICE, " ****    Reason: %s" % e)
+            raise weewx.ArchiveError, "Unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(_vallist[0])
 
     def genBatchRecords(self, startstamp, stopstamp):
         """Generator function that yields ValueRecords within a time interval.
