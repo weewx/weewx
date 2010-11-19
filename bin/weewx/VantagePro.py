@@ -96,6 +96,7 @@ class VantagePro (object) :
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
         self.archive_delay    = int(vp_dict.get('archive_delay', 15))
         self.unit_system      = int(vp_dict.get('unit_system'  , 1))
+        self.dst_delta        = 3600
 
         # Get the archive interval dynamically:
         self.archive_interval = self.getArchiveInterval()
@@ -227,8 +228,11 @@ class VantagePro (object) :
                             # Convert from the internal, Davis encoding to physical units:
                             _record = self.translateArchivePacket(_packet)
                             # Check to see if the time stamps are declining, which would
-                            # signal this is a wrap around record on the last page
-                            if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts :
+                            # signal this is a wrap around record on the last page.
+                            # However, the time stamps may be declining just because of the
+                            # "fall back" from DST in the Fall, so allow times stamps to
+                            # decline up to the DST delta.
+                            if _record['dateTime'] is None or _record['dateTime'] + self.dst_delta <= _last_good_ts :
                                 # The time stamp is declining. We're done.
                                 return
                             # Augment the record with the data from the accumulators:
@@ -462,16 +466,6 @@ class VantagePro (object) :
             syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting RX data")
             raise weewx.RetriesExceeded, "While getting RX data"
 
-    def config(self, config_dict):
-        
-        _archive_interval = int(config_dict.get('archive_interval', 300))
-        _old_interval = self.getArchiveInterval()
-        if _old_interval != _archive_interval:
-            self.setArchiveInterval(_archive_interval)
-            self.clearLog()
-
-        # TODO: This would be the place to set latitude, longitude, and altitude
-        
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
         
