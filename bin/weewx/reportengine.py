@@ -168,7 +168,7 @@ class FtpGenerator(ReportGenerator):
                                                   passive     = bool(self.skin_dict.get('passive', True)),
                                                   max_tries   = int(self.skin_dict.get('max_tries', 3)))
         except Exception:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Unable to instantiate FTP uploader. Skipped.")
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: FTP upload not requested. Skipped.")
             return
 
         try:

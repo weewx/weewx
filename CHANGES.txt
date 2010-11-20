@@ -1,6 +1,23 @@
 CHANGE HISTORY
 --------------------------------
 
+1.9.2  11/20/10
+
+Now catches exception of type OverflowError when calculating celsius dewpoint.
+(Despite the documentation indicating otherwise, math.log() can still throw an
+OverflowError)
+
+Fixed bug that causes crash in VantagePro.accumulateLoop() during fall DST
+transition in certain situations.
+
+VP2 does not store records during the one hour fall DST transition.  Improved
+logic in dealing with this.
+
+Changed install so that it backs up the ./bin subdirectory, then overwrites
+the old one. Also, does not install the ./skins subdirectory at all if one
+already exists (thus preserving any user customization).
+
+
 1.9.1  9/9/10
 
 Now catches exceptions of type httplib.BadStatusLine when doing RESTful
