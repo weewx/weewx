@@ -32,8 +32,8 @@
  2. It merges any existing weewx.conf configuration files into the new, thus
     preserving any user changes.
     
- 3. It merges any existing Standard/skin.conf configuration file into the new, thus
-    preserving any user changes.
+ 3. It installs the skins subdirectory only if the user doesn't already 
+    have one.
     
  4. It sets the option ['Station']['WEEWX_ROOT'] in weewx.conf to reflect
     the actual installation directory (as set in setup.cfg or specified
@@ -41,24 +41,23 @@
     
  5. In a similar manner, it sets WEEWX_ROOT in the daemon startup script.
 
- 6. It backs up any pre-existing skin subdirectory
- 
- 7. It backs up any pre-existing bin subdirectory.
+ 6. It backs up any pre-existing bin subdirectory.
 """
 
-import sys
 import os
 import os.path
 import re
-import time
-import tempfile
 import shutil
+import sys
+import tempfile
+import time
 import configobj
 
 from distutils.core import setup
 from distutils.command.install_data import install_data
 from distutils.command.install_lib  import install_lib
 from distutils.command.sdist import sdist
+import distutils.dir_util
 
 # Make sure we can find the bin subdirectory:
 this_file = os.path.join(os.getcwd(), __file__)
@@ -66,6 +65,10 @@ bin_dir = os.path.abspath(os.path.join(os.path.dirname(this_file), 'bin'))
 sys.path.insert(0, bin_dir)
 
 from weewx import __version__ as VERSION
+
+#===============================================================================
+#                              install_lib
+#===============================================================================
 
 class My_install_lib(install_lib):
     """Specialized version of install_lib
@@ -82,7 +85,11 @@ class My_install_lib(install_lib):
 
         # Run the superclass's run:
         install_lib.run(self)
-        
+
+#===============================================================================
+#                         install_data
+#===============================================================================
+
 class My_install_data(install_data):
     """Specialized version of install_data 
     
@@ -92,21 +99,19 @@ class My_install_data(install_data):
         the location of the install directory;
       - Merges an old week.conf configuration file into a new,
         thus preserving any changes made by the user;
-      - Merges an old skin.conf file into a new, thus preserving
-        any changes;
-      - Backs up the old skin directory;
       - Massages the daemon start up script to reflect the choice
-        of WEEWX_ROOT        
+        of WEEWX_ROOT;
+      - Installs the skins subdirectory only if the user doesn't
+        already have one.
     """
     
     def copy_file(self, f, install_dir, **kwargs):
         rv = None
+
         # If this is the configuration file, then merge it instead
         # of copying it
         if f == 'weewx.conf':
             rv = self.massageWeewxConfigFile(f, install_dir, **kwargs)
-        elif f == 'skins/Standard/skin.conf':
-            rv = self.massageSkinConfigFile(f, install_dir, **kwargs)
         elif f in ('start_scripts/Debian/weewx', 'start_scripts/SuSE/weewx'):
             rv = self.massageStartFile(f, install_dir, **kwargs)
         else:
@@ -114,13 +119,11 @@ class My_install_data(install_data):
         return rv
     
     def run(self):
-            
-        # Back up the old skin directory if it exists
-        skin_dir = os.path.join(self.install_dir, 'skins')
-        if os.path.exists(skin_dir):
-            self.skin_backupdir = backup(skin_dir)
-            print "Backed up skins subdirectory to %s" % self.skin_backupdir
-            
+        # If there is an existing skins subdirectory, do not overwrite it.
+        if os.path.exists(os.path.join(self.install_dir, 'skins')):
+            # Do this by filtering it out of the list of subdirectories to be installed:
+            self.data_files = filter(lambda dat : not dat[0].startswith('skins/'), self.data_files)
+
         # If the file #upstream.last exists, delete it, as it is no longer used.
         try:
             os.remove(os.path.join(self.install_dir, 'public_html/#upstream.last'))
@@ -143,6 +146,7 @@ class My_install_data(install_data):
         # Run the superclass's run():
         install_data.run(self)
         
+       
     def massageWeewxConfigFile(self, f, install_dir, **kwargs):
         """Merges any old config file into the new one, and sets WEEWX_ROOT
         
@@ -158,10 +162,11 @@ class My_install_data(install_data):
         new_config.indent_type = '    '
         new_version_number = VERSION.split('.')
         
-        # SMake sure the debug flag is off:
+        # Sometimes I forget to turn the debug flag off:
         new_config['debug'] = 0
         
-        # Make sure the rain year starts in January:
+        # And forget that while mine starts in October, 
+        # most people's rain year starts in January!
         new_config['Station']['rain_year_start'] = 1
 
         # Check to see if there is an existing config file.
@@ -173,19 +178,13 @@ class My_install_data(install_data):
             # assume a very old version:
             if not old_version: old_version = '1.0.0'
             old_version_number = old_version.split('.')
-            # Do the merge only for versions >= 1.7
+
+            # If the user has a version >= 1.7, then merge in the old
+            # config file.
             if old_version_number[0:2] >= ['1','7']:
-                new_svc_list = new_config['Engines']['WxEngine']['service_list']
-                old_svc_list = old_config['Engines']['WxEngine']['service_list']
-                for svc in old_svc_list:
-                    if svc not in new_svc_list and svc not in ['weewx.wxengine.StdCatchUp', 
-                                                               'weewx.wxengine.StdWunderground']:
-                        new_svc_list.append(svc)
                 # Any user changes in old_config will overwrite values in new_config
                 # with this merge
                 new_config.merge(old_config)
-                # Now correct the new service list:
-                new_config['Engines']['WxEngine']['service_list'] = new_svc_list
                         
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
         new_config['Station']['WEEWX_ROOT'] = self.install_dir
@@ -195,14 +194,23 @@ class My_install_data(install_data):
         # Options heating_base and cooling_base have moved.
         new_config['Station'].pop('heating_base', None)
         new_config['Station'].pop('cooling_base', None)
+
         # Wunderground has been put under section ['RESTful']:
         new_config.pop('Wunderground', None)
+
         # Option max_drift has been moved from section VantagePro
         new_config['VantagePro'].pop('max_drift', None)
-        # Name change from StdWunderground to StdRESTful:
+
+        # Service StdCatchUp is no longer used. Filter it from the list:
+        new_config['Engines']['WxEngine']['service_list'] =\
+            filter(lambda svc_name : svc_name != 'weewx.wxengine.StdCatchUp', 
+                new_config['Engines']['WxEngine']['service_list'])
+
+        # Service StdWunderground has changed its name to StdRESTful:
         new_config['Engines']['WxEngine']['service_list'] =\
             [svc.replace('StdWunderground', 'StdRESTful') for svc in\
              new_config['Engines']['WxEngine']['service_list']]
+
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         
@@ -223,50 +231,7 @@ class My_install_data(install_data):
             shutil.copymode(f, config_path)
 
         return rv
-        
-    def massageSkinConfigFile(self, f, install_dir, **kwargs):
-        """Merges an old skin.conf file into the new one"""
-        
-        # The path name of the final output file:
-        new_skin_config_path = os.path.join(install_dir, os.path.basename(f))
-        
-        # Create a ConfigObj using the new contents:
-        new_skin_config = configobj.ConfigObj(f)
-        new_skin_config.indent_type = '    '
-        
-        # If the backed up skin directory doesn't exist, we'll get
-        # an attribute error. Skip the merge in this case.
-        try:
-            old_skin_config_path = os.path.join(self.skin_backupdir, 'Standard/skin.conf')
-            # Check to see if there is an existing skin.conf file.
-            # If so, merge its contents with the new one
-            if os.path.exists(old_skin_config_path):
-                old_skin_config = configobj.ConfigObj(old_skin_config_path)
-                # Any user changes in the old skin.conf will overwrite
-                # values in the new skin.conf file with this merge
-                new_skin_config.merge(old_skin_config)
-        except AttributeError:
-            pass
-        
-        # Add the version:
-        new_skin_config['version'] = VERSION
 
-        # Get a temporary file:
-        tmpfile = tempfile.NamedTemporaryFile("w", 1)
-        
-        # Write the new configuration file to it:
-        new_skin_config.write(tmpfile)
-        
-        # Now install the temporary file (holding the merged config data)
-        # into the proper place:
-        rv = install_data.copy_file(self, tmpfile.name, new_skin_config_path, **kwargs)
-        
-        # Set the permission bits unless this is a dry run:
-        if not self.dry_run:
-            shutil.copymode(f, new_skin_config_path)
-
-        return rv
-        
     def massageStartFile(self, f, install_dir, **kwargs):
 
         outname = os.path.join(install_dir, os.path.basename(f))
@@ -289,12 +254,9 @@ class My_install_data(install_data):
 
         return rv
 
-def backup(filepath):
-    # Sometimes the target has a trailing '/'. This will take care of it:
-    filepath = os.path.normpath(filepath)
-    newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
-    os.rename(filepath, newpath)
-    return newpath
+#===============================================================================
+#                                  sdist
+#===============================================================================
 
 class My_sdist(sdist):
     """Specialized version of sdist which checks for password information in distribution
@@ -329,6 +291,19 @@ class My_sdist(sdist):
                 
         # Pass on to my superclass:
         return sdist.copy_file(self, f, install_dir, **kwargs)
+
+#===============================================================================
+#                         utility functions
+#===============================================================================
+def backup(filepath):
+    # Sometimes the target has a trailing '/'. This will take care of it:
+    filepath = os.path.normpath(filepath)
+    newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
+    if os.path.isdir(filepath):
+        distutils.dir_util.copy_tree(filepath, newpath)
+    else:
+        distutils.file_util.copy_file(filepath, newpath)
+    return newpath
 
 setup(name='weewx',
       version=VERSION,

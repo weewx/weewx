@@ -2,12 +2,14 @@ NEW FEATURES to be added in decreasing order of importance.
 
 Allow rain-to-date to be added to a partial rainyear.
 
+Support for APT package.
+
 ET appears only at the top of the hour in an archive record. So,
 it's effective archive interval is 60 minutes. Does this carry through?
 
-Add support for MySQL.
+Support other weather stations (will probably require a rewrite of wxengine)
 
-Support for APT package.
+Add support for MySQL.
 
 Fix scaling for aggregate interval of a week, so it starts on a Sunday.
 

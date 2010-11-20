@@ -447,21 +447,17 @@ to see if there any specific actions you need to do. </p>
 <span class="code"><strong>setup.cfg</strong></span><strong>. </strong></p>
 <p>The build and install process will do the following for you.</p>
 <ul>
-	<li>Save your old &#39;<span class="code">skin</span>&#39; subdirectory as <span class="code"><em>
-	$WEEWX_INSTALL</em>/skins.YYYYMMDDHHMMSS</span> 
-	where YYYYMMDDHHMMSS is a timestamp;</li>
 	<li>Save your old &#39;<span class="code">bin</span>&#39; subdirectory as <span class="code"><em>
 	$WEEWX_INSTALL</em>/bin.YYYYMMDDHHMMSS</span> 
 	where YYYYMMDDHHMMSS is a timestamp;</li>
+	<li>Save a copy of your old <span class="code">weewx.conf</span> as
+	<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS;</span></li>
 	<li>Merge any changes you&#39;ve made to your old configuration file
 	<span class="code">weewx.conf</span> into the new configuration file, then install 
 	the merged copy (this effectively causes changes you&#39;ve made to override the 
 	values in the shipped version of <span class="code">weewx.conf</span>);</li>
-	<li>In a similar manner, merge any changes you&#39;ve made to the
-	<span class="code">skin.conf</span> configuration file into the new
-	<span class="code">skin.conf</span>;</li>
-	<li>Save a copy of your old <span class="code">weewx.conf</span> as
-	<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS</span>.</li>
+	<li>Install a <span class="code">&#39;skins&#39;</span> subdirectory if one does not 
+	already exist.</li>
 </ul>
 <h2>5.3 Permissions</h2>
 <p>Strictly speaking it is not necessary to install or run <span class="code">weewx</span> 
