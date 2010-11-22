@@ -262,8 +262,15 @@ class VantagePro (object) :
         except (AttributeError, weewx.accum.OutOfSpan):
             # Initialize the accumulators:
             self.clearAccumulators(physicalLOOPPacket['dateTime'])
-            # Try again, calling myself recursively:
-            self.accumulateLoop(physicalLOOPPacket)
+            # Try again:
+            try:
+                for obs_type in self.special:
+                    self.current_accumulators[obs_type].addToSum(physicalLOOPPacket)
+                # For battery status, OR every status field together:
+                self.txBatteryStatus |= physicalLOOPPacket['txBatteryStatus']
+            except weewx.accum.OutOfSpan:
+                # Failed again. There's something wrong. Log it.
+                syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to initialize accumulators.")
             
     def clearAccumulators(self, time_ts):
         """Initialize or clear the accumulators"""

@@ -1,6 +1,13 @@
 CHANGE HISTORY
 --------------------------------
 
+X.X.X
+
+Add a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
+
+Changed VantagePro.accumulateLoop to make it slightly more robust.
+
+
 1.9.2  11/20/10
 
 Now catches exception of type OverflowError when calculating celsius dewpoint.
