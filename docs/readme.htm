@@ -1053,7 +1053,7 @@ as well. You just specify port <span class="code">/dev/vpro</span> and be done w
 <p>I have installed a file <span class="code">/etc/udev/rules.d/66-vpro.rules</span> 
 on my fit-PC that looks like this:</p>
 <pre># Automount the VantagePro2 to port /dev/vpro.</pre>
-<pre># Install in /dev/udev/rules.d/66-vpro.rules</pre>
+<pre># Install in /etc/udev/rules.d/66-vpro.rules</pre>
 <pre>#</pre>
 <pre>ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
 <p>What this rule says is that when the USB port is plugged in (action
@@ -1064,12 +1064,17 @@ to <span class="code">/dev/vpro</span>. </p>
 <p>Your controller may have a different identifier!! I can recommend this 
 article, &quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing 
 udev rules</em></a><span class="style1">,</span>&quot; for how to find and write an 
-appropriate <span class="code">udev</span> rule for your controller. In 
+appropriate <span class="code">udev</span> rule for your controller. (Note, 
+however, that this article uses the old <span class="code">udevinfo</span> 
+command, rather than the newer <span class="code">udevadm</span> command.) In 
 particular, run the command</p>
-<pre># udevinfo -a -p $(udevinfo -q path -n /dev/ttyUSB0)</pre>
+<pre># udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </pre>
 <p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute your 
 real USB port) the VP2 is attached to. It will print out various identifiers 
-that can be useful in identifying your VP2 to <span class="code">udev</span>.</p>
+that can be useful in identifying your VP2 to <span class="code">udev</span>. 
+While the example script above used a rule that matched attribute
+<span class="code">interface</span>, others are possible. For example, you might 
+chose to match the attribute <span class="code">product</span>.</p>
 <p>Once you&#39;ve installed your <span class="code">udev</span> rule, you can then 
 set <span class="code">port=/dev/vpro</span> in <span class="code">weewx.conf</span>, 
 confident that it will always point to your VantagePro2, no matter which USB 
