@@ -12,6 +12,7 @@ from __future__ import with_statement
 import serial
 import struct
 import syslog
+import datetime
 import time
 
 from weewx.crc16 import crc16
@@ -149,11 +150,15 @@ class VantagePro (object) :
                     # Fetch a packet
                     buffer = serial_port.read(99)
                     if len(buffer) != 99 :
-                        syslog.syslog(syslog.LOG_DEBUG, 
+                        syslog.syslog(syslog.LOG_ERR, 
                                       "VantagePro: LOOP #%d; buffer not full (%d)... retrying" % (loop,len(buffer)))
                         continue
+                    if crc16(buffer) :
+                        syslog.syslog(syslog.LOG_ERR,
+                                      "VantagePro: LOOP #%d; CRC error... retrying" % loop)
+                        continue
                     # ... decode it
-                    pkt_dict = unpackLoopPacket(buffer[:89])
+                    pkt_dict = unpackLoopPacket(buffer[:95])
                     # Yield it
                     yield pkt_dict
                     break
@@ -615,10 +620,15 @@ vp2loop = ('loop',            'loop_type',     'packet_type', 'next_record', 'ba
            'dayRain',         'monthRain',     'yearRain',    'dayET',       'monthET',    'yearET',
            'soilMoist1',      'soilMoist2',    'soilMoist3',  'soilMoist4',
            'leafWet1',        'leafWet2',      'leafWet3',    'leafWet4',
-           'txBatteryStatus', 'consBatteryVoltage')
+           'insideAlarm',     'rainAlarm',     'outsideAlarm1', 'outsideAlarm2',
+           'extraAlarm1',     'extraAlarm2',   'extraAlarm3', 'extraAlarm4',
+           'extraAlarm5',     'extraAlarm6',   'extraAlarm7', 'extraAlarm8',
+           'soilLeafAlarm1',  'soilLeafAlarm2', 'soilLeafAlarm3', 'soilLeafAlarm4',
+           'txBatteryStatus', 'consBatteryVoltage', 'forecastIcon', 'forecastRule',
+           'sunrise',         'sunset')
 
-loop_format = struct.Struct("<3sbBHHHBHBBH7B4B4BB7BHBHHHHHHHHH4B4B16xBH")
-    
+loop_format = struct.Struct("<3sbBHHHBHBBH7B4B4BB7BHBHHHHHHHHH4B4B16BBHBBHH")
+
 def unpackLoopPacket(raw_packet) :
     """Decode a Davis LOOP packet, returning the results as a dictionary.
     
@@ -813,6 +823,9 @@ def _loop_date(v):
         ts = None
     return ts
     
+def _stime(v):
+    return datetime.time(v//100, v%100)
+
 def _big_val(v) :
     return float(v) if v != 0x7fff else None
 
@@ -840,7 +853,10 @@ def _little_val10(v) :
 def _little_temp(v) :
     return float(v-90) if v != 0x00ff else None
 
-def _null(v) :
+def _null(v):
+    return v
+
+def _null_float(v) :
     return float(v)
 
 def _null_int(v):
@@ -852,7 +868,7 @@ def _windDir(v):
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the LOOP packet in the internal, Davis form into US
 # units and return it.
-_loop_map = {'dateTime'        : lambda v : v,
+_loop_map = {'dateTime'        : _null,
              'barometer'       : _val1000Zero, 
              'inTemp'          : _big_val10, 
              'inHumidity'      : _little_val, 
@@ -902,8 +918,28 @@ _loop_map = {'dateTime'        : lambda v : v,
              'leafWet2'        : _little_val, 
              'leafWet3'        : _little_val, 
              'leafWet4'        : _little_val,
+             'insideAlarm'     : _null,
+             'rainAlarm'       : _null,
+             'outsideAlarm1'   : _null,
+             'outsideAlarm2'   : _null,
+             'extraAlarm1'     : _null,
+             'extraAlarm2'     : _null,
+             'extraAlarm3'     : _null,
+             'extraAlarm4'     : _null,
+             'extraAlarm5'     : _null,
+             'extraAlarm6'     : _null,
+             'extraAlarm7'     : _null,
+             'extraAlarm8'     : _null,
+             'soilLeafAlarm1'  : _null,
+             'soilLeafAlarm2'  : _null,
+             'soilLeafAlarm3'  : _null,
+             'soilLeafAlarm4'  : _null,
              'txBatteryStatus' : _null_int, 
-             'consBatteryVoltage'  : lambda v : float((v * 300) >> 9) / 100.0}
+             'consBatteryVoltage'  : lambda v : float((v * 300) >> 9) / 100.0,
+             'forecastIcon'    : _null,
+             'forecastRule'    : _null,
+             'sunrise'         : _stime,
+             'sunset'          : _stime}
 
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the archive packet in the internal, Davis form into US
@@ -916,7 +952,7 @@ _archive_map={'interval'       : lambda v : int(v),
               'outHumidity'    : _little_val,
               'windSpeed'      : _little_val,
               'windDir'        : _windDir,
-              'windGust'       : _null,
+              'windGust'       : _null_float,
               'windGustDir'    : _windDir,
               'rain'           : _val100,
               'rainRate'       : _val100,
@@ -940,7 +976,7 @@ _archive_map={'interval'       : lambda v : int(v),
               'soilMoist4'     : _little_val,
               'leafWet1'       : _little_val,
               'leafWet2'       : _little_val,
-              'rxCheckPercent' : _null}
+              'rxCheckPercent' : _null_float}
 
 if __name__ == '__main__':
     import configobj
