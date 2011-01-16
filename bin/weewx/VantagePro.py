@@ -151,7 +151,7 @@ class VantagePro (object) :
                     buffer = serial_port.read(99)
                     if len(buffer) != 99 :
                         syslog.syslog(syslog.LOG_ERR, 
-                                      "VantagePro: LOOP #%d; buffer not full (%d)... retrying" % (loop,len(buffer)))
+                                      "VantagePro: LOOP #%d; buffer not full (%d) after timeout... retrying" % (loop,len(buffer)))
                         continue
                     if crc16(buffer) :
                         syslog.syslog(syslog.LOG_ERR,
@@ -698,10 +698,10 @@ def translateLoopToUS(packet):
 
 # A tuple of all the types held in a VantagePro2 Rev B archive packet in their native order.
 # TODO: Extend to Rev A type packet records
-vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'high_outside_temperature', 'low_outside_temperature',
+vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
            'rain', 'rainRate', 'barometer', 'radiation', 'number_of_wind_samples',
            'inTemp', 'inHumidity', 'outHumidity', 'windSpeed', 'windGust', 'windGustDir', 'windDir',
-           'UV', 'ET', 'high_solar_radiation', 'high_uv_index', 'forecast_rule',
+           'UV', 'ET', 'highRadiation', 'highUV', 'forecastRule',
            'leafTemp1', 'leafTemp2', 'leafWet1', 'leafWet2',
            'soilTemp1', 'soilTemp2', 'soilTemp3','soilTemp4', 'download_record_type',
            'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
@@ -792,7 +792,7 @@ def _archive_datetime(packet) :
     time_tuple = ((0xfe00 & datestamp) >> 9,    # year
                   (0x01e0 & datestamp) >> 5,    # month
                   (0x001f & datestamp),         # day
-                  timestamp / 100,              # hour
+                  timestamp // 100,             # hour
                   timestamp % 100,              # minute
                   0,                            # second
                   0, 0, -1)
@@ -944,10 +944,12 @@ _loop_map = {'dateTime'        : _null,
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the archive packet in the internal, Davis form into US
 # units and return it.
-_archive_map={'interval'       : lambda v : int(v),
+_archive_map={'interval'       : _null_int,
               'barometer'      : _val1000Zero, 
               'inTemp'         : _big_val10,
               'outTemp'        : _big_val10,
+              'highOutTemp'    : lambda v : float(v/10.0) if v != 0xffff else None,
+              'lowOutTemp'     : _big_val10,
               'inHumidity'     : _little_val,
               'outHumidity'    : _little_val,
               'windSpeed'      : _little_val,
@@ -958,7 +960,9 @@ _archive_map={'interval'       : lambda v : int(v),
               'rainRate'       : _val100,
               'ET'             : _val1000,
               'radiation'      : _big_val,
+              'highRadiation'  : lambda v : float(v) if v else None,
               'UV'             : _little_val10,
+              'highUV'         : _little_val10, # TODO: not sure about this one. 
               'extraTemp1'     : _little_temp,
               'extraTemp2'     : _little_temp,
               'extraTemp3'     : _little_temp,
@@ -976,7 +980,8 @@ _archive_map={'interval'       : lambda v : int(v),
               'soilMoist4'     : _little_val,
               'leafWet1'       : _little_val,
               'leafWet2'       : _little_val,
-              'rxCheckPercent' : _null_float}
+              'rxCheckPercent' : _null_float,
+              'forecastRule'   : _null}
 
 if __name__ == '__main__':
     import configobj
