@@ -237,29 +237,3 @@ class CopyGenerator(ReportGenerator):
         
         syslog.syslog(syslog.LOG_DEBUG, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))
         
-if __name__ == '__main__':
-    
-    # ===============================================================================
-    # This module can be called as a main program to generate reports, etc.,
-    # that are current as of the last archive record in the archive database.
-    # ===============================================================================
-
-    def gen_all(config_path, gen_ts = None):
-        
-        weewx.debug = 1
-        syslog.openlog('reportengine', syslog.LOG_PID|syslog.LOG_CONS)
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-
-        socket.setdefaulttimeout(10)
-        
-        t = StdReportEngine(config_path, gen_ts)
-        t.start()
-        t.join()
-
-        
-    if len(sys.argv) < 2 :
-        print "Usage: reportengine.py path-to-configuration-file [timestamp-to-be-generated]"
-        exit()
-    gen_ts = int(sys.argv[2]) if len(sys.argv)>=3 else None
-        
-    gen_all(sys.argv[1], gen_ts)
