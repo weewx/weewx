@@ -627,7 +627,7 @@ vp2loop = ('loop',            'loop_type',     'packet_type', 'next_record', 'ba
            'txBatteryStatus', 'consBatteryVoltage', 'forecastIcon', 'forecastRule',
            'sunrise',         'sunset')
 
-loop_format = struct.Struct("<3sbBHHHBHBBH7B4B4BB7BHBHHHHHHHHH4B4B16BBHBBHH")
+loop_format = struct.Struct("<3sbBHHhBhBBH7B4B4BB7BHBHHHHHHHHH4B4B16BBHBBHH")
 
 def unpackLoopPacket(raw_packet) :
     """Decode a Davis LOOP packet, returning the results as a dictionary.
@@ -707,7 +707,7 @@ vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
            'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
            'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4')
 
-archive_format = struct.Struct("<HHHHHHHHHHHBBBBBBBBHBB2B2B4BB2B3B4B")
+archive_format = struct.Struct("<HHhhhHHHHHhBBBBBBBBHBB2B2B4BB2B3B4B")
     
 def unpackArchivePacket(raw_packet):
     """Decode a Davis archive packet, returning the results as a dictionary.
@@ -727,8 +727,9 @@ def unpackArchivePacket(raw_packet):
         
     # As far as I know, the Davis supports only US units:
     packet['usUnits'] = weewx.US
-    # Sanity check that this is in fact a Rev B archive:
-    assert(packet['download_record_type'] == 0)
+    if weewx.debug:
+        # Sanity check that this is in fact a Rev B archive:
+        assert(packet['download_record_type'] == 0)
     return packet
 
 def translateArchiveToUS(packet):
@@ -948,7 +949,7 @@ _archive_map={'interval'       : _null_int,
               'barometer'      : _val1000Zero, 
               'inTemp'         : _big_val10,
               'outTemp'        : _big_val10,
-              'highOutTemp'    : lambda v : float(v/10.0) if v != 0xffff else None,
+              'highOutTemp'    : lambda v : float(v/10.0) if v != -32768 else None,
               'lowOutTemp'     : _big_val10,
               'inHumidity'     : _little_val,
               'outHumidity'    : _little_val,
