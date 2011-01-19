@@ -126,7 +126,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Add a unit label. NB: all will get overwritten except the last.
                     # Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
-                    unit_label = self.unit_label_dict.get(var_type, '')
+                    unit_label = line_options.get('y_label',
+                                                  self.unit_label_dict.get(var_type, ''))
                     # PIL cannot handle UTF-8. So, convert to Latin1. Also, strip off
                     # any leading and trailing whitespace so it's easy to center
                     unit_label = weeutil.weeutil.utf8_to_latin1(unit_label).strip()
