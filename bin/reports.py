@@ -15,6 +15,7 @@ import socket
 import sys
 import syslog
 
+import user.extensions
 import weewx.reportengine
 
 def gen_all(config_path, gen_ts = None):

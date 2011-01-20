@@ -1,11 +1,41 @@
 CHANGE HISTORY
 --------------------------------
 
-X.X.X
+1.10.0 01/17/11
 
-Add a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
+Added a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
+
+Added a mobile formatted HTML page, courtesy of user Vince Skahan (thanks,
+Vince!!).
+
+Added executable module "reports.py", which will just run report generation.
+
+Y-axis plot labels (such as "°F") can now be overridden in the plot configuration
+section of skin.conf by using option "y_label".
+
+Added package "user", which can contain any user extensions. This package
+will not get overridden in the upgrade process.
 
 Changed VantagePro.accumulateLoop to make it slightly more robust.
+
+Added missing CRC check to LOOP data.
+
+Now unpacks below zero temperatures correctly.
+
+Now makes all of the LOOP and archive data available to services. This includes
+new keys:
+
+  LOOP data: 
+    'extraAlarm1'    'extraAlarm2'    'extraAlarm3'    'extraAlarm4'
+    'extraAlarm5'    'extraAlarm6'    'extraAlarm7'    'extraAlarm8'
+    'forecastIcon'   'forecastRule'
+    'insideAlarm'    'outsideAlarm1'  'outsideAlarm2'  'rainAlarm'
+    'soilLeafAlarm1' 'soilLeafAlarm2' 'soilLeafAlarm3' 'soilLeafAlarm4'
+    'sunrise'        'sunset'
+
+  Archive data:
+    'forecastRule'   'highOutTemp'    'highRadiation'   'highUV'
+    'lowOutTemp'
 
 
 1.9.2  11/20/10

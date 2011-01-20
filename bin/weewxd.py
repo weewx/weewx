@@ -18,7 +18,9 @@ the call to the main entry point as parameter 'EngineClass'.
 
 See the document "customizing.htm" for details.
 """
-
+# First import any user extensions:
+import user.extensions
+# Now the engine
 import weewx.wxengine
 
 # Enter the main loop. This call will use the default
