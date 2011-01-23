@@ -3,6 +3,5 @@ recursive-include start_scripts *
 recursive-include skins *
 include CHANGES.txt
 include LICENSE.txt
-include NEW_FEATURES.txt
 include README
 include weewx.conf

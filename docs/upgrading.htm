@@ -138,9 +138,44 @@ td {
 
 <body>
 
-<h1 class="title">Upgrading to <span class="code">weewx</span> v1.9</h1>
+<h1 class="title">Upgrading to <span class="code">weewx</span> v1.10</h1>
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
+<h2>V1.9 or earlier</h2>
+<p>Version 1.10 introduces some new skin features. In particular, it now 
+includes a template formatted for smartphones and an icon (&quot;<span class="code">favicon.ico</span>&quot;) 
+that displays in your browser toolbar. If you do nothing, your old skins will 
+continue to work, but you will not take advantage of these new features. </p>
+<p>You have two choices:</p>
+<ol>
+	<li>Rename your old skin directory (call it &quot;<span class="code">skin.old</span>&quot;) 
+	then do the install. This will install the new skin distribution. You can 
+	modify it to reflect any changes you have made, referring to <span class="code">
+	skin.old</span> for guidance.</li>
+	<li>Alternatively, change the contents of your existing skin directory to take 
+	advantage of the new features. If you take this approach, you will need to 
+	copy over files <span class="code">favicon.ico, mobile.css</span>, and
+	<span class="code">mobile.html.tmpl</span> from the distribution into your <span class="code">skin/Standard</span> 
+	directory. You will then need to modify your <span class="code">skin.conf</span>.
+	<p>Add a new <span class="code">[[[Mobile]]]</span> section:</p>
+	<p class="tty">[FileGenerator]<br />
+&nbsp; .<br />
+&nbsp; .<br />
+&nbsp; .<br />
+&nbsp; [[ToDate]]<br />
+&nbsp;&nbsp;&nbsp; .<br />
+&nbsp;&nbsp;&nbsp; .<br />
+&nbsp;&nbsp;&nbsp; .<br />
+&nbsp;&nbsp;&nbsp; [[[Mobile]]]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; template = mobile.html.tmpl</p>
+	<p>Then add <span class="code">mobile.css</span> and <span class="code">
+	favicon.ico</span> to the list of files to be copied on report generation:</p>
+	<p class="tty">[CopyGenerator]<br />
+&nbsp; copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico</p>
+</ol>
+<p>Which approach you should take will depend on how extensively you have 
+modified the stock skin distribution. If the modifications are slight, approach 
+#1 will be easier, otherwise use approach #2.</p>
 <h2>V1.7.0 or earlier</h2>
 <p>With the introduction of a standard archiving service, <span class="code">
 StdArchive</span>, the names of some events have changed. This will not affect 

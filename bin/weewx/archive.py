@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,12 +7,7 @@
 #    $Author$
 #    $Date$
 #
-"""Classes and functions for interfacing with a weewx sqlite3 archive.
-
-Note that this archive uses a schema that is compatible with a wview V5.X.X 
-(see http://www.wviewweather.com) sqlite3 database.
-
-"""
+"""Classes and functions for interfacing with a weewx sqlite3 archive."""
 from __future__ import with_statement
 import syslog
 import os.path
@@ -22,69 +17,6 @@ from pysqlite2 import dbapi2 as sqlite3
 import weewx.units
 import weeutil.weeutil
 
-# This is a tuple containing the schema of the archive database. 
-# Although a type may be listed here, it may not necessarily be supported by a weather station
-sqltypes = (('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
-            ('usUnits',              'INTEGER NOT NULL'),
-            ('interval',             'INTEGER NOT NULL'),
-            ('barometer',            'REAL'),
-            ('pressure',             'REAL'),
-            ('altimeter',            'REAL'),
-            ('inTemp',               'REAL'),
-            ('outTemp',              'REAL'),
-            ('inHumidity',           'REAL'),
-            ('outHumidity',          'REAL'),
-            ('windSpeed',            'REAL'),
-            ('windDir',              'REAL'),
-            ('windGust',             'REAL'),
-            ('windGustDir',          'REAL'),
-            ('rainRate',             'REAL'),
-            ('rain',                 'REAL'),
-            ('dewpoint',             'REAL'),
-            ('windchill',            'REAL'),
-            ('heatindex',            'REAL'),
-            ('ET',                   'REAL'),
-            ('radiation',            'REAL'),
-            ('UV',                   'REAL'),
-            ('extraTemp1',           'REAL'),
-            ('extraTemp2',           'REAL'),
-            ('extraTemp3',           'REAL'),
-            ('soilTemp1',            'REAL'),
-            ('soilTemp2',            'REAL'),
-            ('soilTemp3',            'REAL'),
-            ('soilTemp4',            'REAL'),
-            ('leafTemp1',            'REAL'),
-            ('leafTemp2',            'REAL'),
-            ('extraHumid1',          'REAL'),
-            ('extraHumid2',          'REAL'),
-            ('soilMoist1',           'REAL'),
-            ('soilMoist2',           'REAL'),
-            ('soilMoist3',           'REAL'),
-            ('soilMoist4',           'REAL'),
-            ('leafWet1',             'REAL'),
-            ('leafWet2',             'REAL'),
-            ('rxCheckPercent',       'REAL'),
-            ('txBatteryStatus',      'REAL'),
-            ('consBatteryVoltage',   'REAL'),
-            ('hail',                 'REAL'),
-            ('hailRate',             'REAL'),
-            ('heatingTemp',          'REAL'),
-            ('heatingVoltage',       'REAL'),
-            ('supplyVoltage',        'REAL'),
-            ('referenceVoltage',     'REAL'),
-            ('windBatteryStatus',    'REAL'),
-            ('rainBatteryStatus',    'REAL'),
-            ('outTempBatteryStatus', 'REAL'),
-            ('inTempBatteryStatus',  'REAL'))
-
-# This is just a list of the first value in each tuple above (i.e., the SQL keys):
-sqlkeys = [_tuple[0] for _tuple in sqltypes]
-
-# This is a SQL insert statement to be used to add a record. It will have the correct
-# number of placeholder question marks, separated by commas:
-sql_insert_stmt = "INSERT INTO archive VALUES ( %s );" % ','.join('?'*len(sqlkeys))
-
-        
 #===============================================================================
 #                         class Archive
 #===============================================================================
@@ -94,33 +26,34 @@ class Archive(object):
     for managing the archive file. These functions encapsulate whatever sql statements
     are needed."""
     
-    def __init__(self, archiveFile):
+    def __init__(self, archiveFilename):
         """Initialize an object of type weewx.Archive. 
         
-        archiveFile: The path name to the sqlite3 archive file.
+        If the database does not exist or it is uninitialized, an
+        exception will be thrown. 
         
+        archiveFilename: The path to the sqlite3 archive file.
         """
-        self.archiveFile = archiveFile
-
+        self.archiveFilename = archiveFilename
+        self.sqlkeys = self._getTypes()
+#        if not self.sqlkeys:
+#            raise weewx.Uninitialized, "Archive database %s not initialized" % self.archiveFilename
+    
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
         
         returns: Time of the last good archive record as an epoch time, or
         None if there are no records."""
-        with sqlite3.connect(self.archiveFile) as _connection:
-            _row = _connection.execute("SELECT MAX(dateTime) FROM archive").fetchone()
-            _ts = _row[0]
-        return _ts
+        _row = self.getSql("SELECT MAX(dateTime) FROM archive")
+        return _row[0]
     
     def firstGoodStamp(self):
         """Retrieves earliest timestamp in the archive.
         
         returns: Time of the first good archive record as an epoch time, or
         None if there are no records."""
-        with sqlite3.connect(self.archiveFile) as _connection:
-            _row = _connection.execute("SELECT MIN(dateTime) FROM archive").fetchone()
-            _ts = _row[0]
-        return _ts
+        _row = self.getSql("SELECT MIN(dateTime) FROM archive")
+        return _row[0]
 
     def addRecord(self, record):
         """Commit an archive record to the sqlite3 database.
@@ -130,25 +63,35 @@ class Archive(object):
         record: A data record. It must look like a dictionary, where the keys
         are the SQL types and the values are the values to be stored in the
         database."""
-        global sql_insert_stmt
-        global sqlkeys
- 
+
         if record['dateTime'] is None:
             syslog.syslog(syslog.LOG_ERR, "Archive: archive record with null time encountered. Ignored.")
             return
-        
-        # This will be a list of the values, in the order of the sqlkeys.
-        # A value will be replaced with None if it did not exist in the record
-        _vallist = [record.get(_key) for _key in sqlkeys]
 
+        # Only data types that appear in the database schema can be inserted.
+        # To find them, form the intersection between the set of all record
+        # keys and the set of all sql keys
+        record_key_set = set(record.keys())
+        insert_key_set = record_key_set.intersection(self.sqlkeys)
+        # Convert to an ordered list:
+        key_list = list(insert_key_set)
+        # Get the values in the same order:
+        value_list = [record[k] for k in key_list]
+        
+        # This will a string of sql types, separated by commas
+        k_str = ','.join(key_list)
+        # This will be a string with the correct number of placeholder question marks:
+        q_str = ','.join('?' * len(key_list))
+        # Form the SQL insert statement:
+        sql_insert_stmt = "INSERT INTO archive (%s) VALUES (%s)" % (k_str, q_str) 
         try:
-            with sqlite3.connect(self.archiveFile) as _connection:
-                _connection.execute(sql_insert_stmt, _vallist)
-            syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(_vallist[0]))
+            with sqlite3.connect(self.archiveFilename) as _connection:
+                _connection.execute(sql_insert_stmt, value_list)
+            syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
         except Exception, e:
-            syslog.syslog(syslog.LOG_NOTICE, "Archive: unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(_vallist[0]))
-            syslog.syslog(syslog.LOG_NOTICE, " ****    Reason: %s" % e)
-            raise weewx.ArchiveError, "Unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(_vallist[0])
+            syslog.syslog(syslog.LOG_ERR, "Archive: unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
+            syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
+            raise weewx.ArchiveError, "Unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(record['datetime'])
 
     def genBatchRecords(self, startstamp, stopstamp):
         """Generator function that yields ValueRecords within a time interval.
@@ -161,7 +104,7 @@ class Archive(object):
         
         yields: A dictionary for each time or None if there is no 
         record at that time. """
-        _connection = sqlite3.connect(self.archiveFile)
+        _connection = sqlite3.connect(self.archiveFilename)
         _connection.row_factory = sqlite3.Row
         _cursor=_connection.cursor()
         try:
@@ -189,7 +132,7 @@ class Archive(object):
         
         returns: a dictionary. Key is a sql type, value its value"""
 
-        with sqlite3.connect(self.archiveFile) as _connection:
+        with sqlite3.connect(self.archiveFilename) as _connection:
             _connection.row_factory = sqlite3.Row
             _cursor = _connection.execute("SELECT * FROM archive WHERE dateTime=?;", (timestamp,))
             _row = _cursor.fetchone()
@@ -205,7 +148,7 @@ class Archive(object):
         
         returns: an instance of sqlite3.Row
         """
-        with sqlite3.connect(self.archiveFile) as _connection:
+        with sqlite3.connect(self.archiveFilename) as _connection:
             _connection.row_factory = sqlite3.Row
             _cursor = _connection.execute(sql, sqlargs)
             _row = _cursor.fetchone()
@@ -213,7 +156,7 @@ class Archive(object):
 
     def genSql(self, sql, *sqlargs):
         """Generator function that executes an arbitrary SQL statement on the database."""
-        _connection = sqlite3.connect(self.archiveFile)
+        _connection = sqlite3.connect(self.archiveFilename)
         _connection.row_factory = sqlite3.Row
         _cursor=_connection.cursor()
         try:
@@ -287,7 +230,7 @@ class Archive(object):
         time_vec = list()
         data_vec = list()
         std_unit_system = None
-        _connection = sqlite3.connect(self.archiveFile)
+        _connection = sqlite3.connect(self.archiveFilename)
         _cursor=_connection.cursor()
 
         if aggregate_interval :
@@ -380,7 +323,7 @@ class Archive(object):
         time_vec = list()
         data_vec = list()
         std_unit_system = None
-        _connection = sqlite3.connect(self.archiveFile)
+        _connection = sqlite3.connect(self.archiveFilename)
         _cursor=_connection.cursor()
 
         # Is aggregation requested?
@@ -493,52 +436,55 @@ class Archive(object):
         data_unit_type = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
         return ((time_vec, time_unit_type), (data_vec, data_unit_type))
 
-    def config(self):
-        """Configure a database for use with weewx. This will create the initial schema
-        if necessary.
+    def _getTypes(self):
+        """Returns the types appearing in an archive database.
         
-        """
+        returns: A list of types or None if the database has not been initialized."""
+        
+        # Get the schema dictionary:
+        schema_dict = weeutil.dbutil.schema(self.archiveFilename)
+        # Get the columns in the table
+        column_dict = weeutil.dbutil.column_dict(schema_dict)
+        # If there is no 'archive' table, the database has not been initialized
+#        if not 'archive' in column_dict:
+#            return None
+        # Convert from unicode to strings
+        column_names = [str(s) for s in column_dict['archive']]
+        return column_names
+
+def config(archiveFilename, archiveSchema=None):
+    """Configure a database for use with weewx. This will create the initial schema
+    if necessary.
     
-        # Check whether the database exists:
-        if os.path.exists(self.archiveFile):
-            syslog.syslog(syslog.LOG_INFO, "archive: archive database %s already exists." % self.archiveFile)
-        else:
-            # If it doesn't exist, create the parent directories
-            archiveDirectory = os.path.dirname(self.archiveFile)
-            if not os.path.exists(archiveDirectory):
-                syslog.syslog(syslog.LOG_NOTICE, "archive: making archive directory %s." % archiveDirectory)
-                os.makedirs(archiveDirectory)
-            
-        # If it has no schema, initialize it:
-        if not self._getCreate():
-       
-            # List comprehension of the types, joined together with commas:
-            _sqltypestr = ', '.join([' '.join(type) for type in sqltypes])
-            
-            _createstr ="CREATE TABLE archive (%s);" % _sqltypestr
-        
-            with sqlite3.connect(self.archiveFile) as _connection:
-                _connection.execute(_createstr)
-            
-            syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for archive file %s." % self.archiveFile)
+    """
 
-    def _getCreate(self):
-        """Returns the CREATE statement that created the archive.
-        
-        Useful for determining if the archive has been initialized.
-        
-        returns: the string used to CREATE the archive, or None if the archive
-        has not been initialized.
-        """
-        _connection = sqlite3.connect(self.archiveFile)
-        _cursor=_connection.cursor()
-        try:
-            _cursor.execute("""SELECT sql FROM sqlite_master where type='table';""")
-            _row = _cursor.fetchone()
-            res = str(_row[0]) if _row is not None else None
-        finally:
-            _cursor.close()
-            _connection.close() 
-        
-        return res
+    # Check whether the database exists:
+    if not os.path.exists(archiveFilename):
+        # If it doesn't exist, create the parent directories
+        archiveDirectory = os.path.dirname(archiveFilename)
+        if not os.path.exists(archiveDirectory):
+            syslog.syslog(syslog.LOG_NOTICE, "archive: making archive directory %s." % archiveDirectory)
+            os.makedirs(archiveDirectory)
 
+    config_check = weeutil.dbutil.schema(archiveFilename)
+    
+    # Check to see if it has already been configured. If it has, do
+    # nothing. We're done.
+    if config_check:
+        return
+    
+    if not archiveSchema:
+        import user.schemas
+        archiveSchema = user.schemas.defaultArchiveSchema
+        
+    # List comprehension of the types, joined together with commas:
+    _sqltypestr = ', '.join([' '.join(type) for type in archiveSchema])
+    
+    _createstr ="CREATE TABLE archive (%s);" % _sqltypestr
+
+    with sqlite3.connect(archiveFilename) as _connection:
+        _connection.execute(_createstr)
+    
+    syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for archive file %s." % archiveFilename)
+
+    

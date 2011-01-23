@@ -83,7 +83,7 @@ class My_install_lib(install_lib):
             bin_backupdir = backup(self.install_dir)
             print "Backed up bin subdirectory to %s" % bin_backupdir
 
-        # Run the superclass's run:
+        # Run the superclass's version:
         install_lib.run(self)
 
 #===============================================================================
@@ -315,9 +315,9 @@ setup(name='weewx',
       author_email='tkeffer@gmail.com',
       url='http://www.weewx.com',
       package_dir = {'' : 'bin'},
-      packages    = ['weewx', 'weeplot', 'weeutil', 'examples'],
+      packages    = ['weewx', 'weeplot', 'weeutil', 'examples', 'user'],
       py_modules  = ['daemon'],
-      scripts     = ['bin/configure.py', 'bin/weewxd.py'],
+      scripts     = ['bin/configure.py', 'bin/weewxd.py', 'bin/reports.py'],
       data_files  = [('',                           ['CHANGES.txt', 'LICENSE.txt', 'README', 'weewx.conf']),
                      ('docs',                       ['docs/customizing.htm', 'docs/readme.htm', 
                                                      'docs/sheeva.htm', 'docs/upgrading.htm',
@@ -326,7 +326,9 @@ setup(name='weewx',
                      ('skins/Standard/backgrounds', ['skins/Standard/backgrounds/band.gif']),
                      ('skins/Standard/NOAA',        ['skins/Standard/NOAA/NOAA-YYYY.txt.tmpl', 'skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl']),
                      ('skins/Standard/RSS',         ['skins/Standard/RSS/weewx_rss.xml.tmpl']),
-                     ('skins/Standard',             ['skins/Standard/index.html.tmpl', 'skins/Standard/month.html.tmpl',
+                     ('skins/Standard',             ['skins/Standard/favicon.ico',
+                                                     'skins/Standard/mobile.css', 'skins/Standard/mobile.html.tmpl',
+                                                     'skins/Standard/index.html.tmpl', 'skins/Standard/month.html.tmpl',
                                                      'skins/Standard/skin.conf', 'skins/Standard/week.html.tmpl',
                                                      'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 
                      ('start_scripts/Debian',       ['start_scripts/Debian/weewx']),

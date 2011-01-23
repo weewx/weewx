@@ -7,12 +7,15 @@ setup.py
 weewx.conf
 bin/configure.py
 bin/daemon.py
+bin/reports.py
 bin/weewxd.py
 bin/examples/__init__.py
 bin/examples/alarm.py
 bin/examples/daily.py
 bin/examples/lowBattery.py
 bin/examples/mygenerator.py
+bin/user/__init__.py
+bin/user/extensions.py
 bin/weeplot/__init__.py
 bin/weeplot/genplot.py
 bin/weeplot/utilities.py
@@ -20,6 +23,7 @@ bin/weeutil/Almanac.py
 bin/weeutil/Moon.py
 bin/weeutil/Sun.py
 bin/weeutil/__init__.py
+bin/weeutil/astral.py
 bin/weeutil/ftpupload.py
 bin/weeutil/weeutil.py
 bin/weewx/VantagePro.py
@@ -43,7 +47,10 @@ docs/sheeva.htm
 docs/upgrading.htm
 docs/weekgustoverlay.png
 skins/Ftp/skin.conf
+skins/Standard/favicon.ico
 skins/Standard/index.html.tmpl
+skins/Standard/mobile.css
+skins/Standard/mobile.html.tmpl
 skins/Standard/month.html.tmpl
 skins/Standard/skin.conf
 skins/Standard/week.html.tmpl

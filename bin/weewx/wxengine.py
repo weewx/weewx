@@ -390,23 +390,29 @@ class StdArchive(StdService):
         """Setup the main database archive"""
         archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                        config_dict['Archive']['archive_file'])
-        self.archive = weewx.archive.Archive(archiveFilename)
-
-        # Configure it if necessary (this will do nothing if the database has
-        # already been configured):
-        self.archive.config()
+        # Try to open up the database. If it doesn't exist or has not been initialized, an exception
+        # will be thrown. Catch it, configure the database, and then try again.
+        try:
+            self.archive = weewx.archive.Archive(archiveFilename)
+        except StandardError:
+            weewx.archive.config(archiveFilename)
+            self.archive = weewx.archive.Archive(archiveFilename)
 
     def setupStatsDatabase(self, config_dict):
-        """Prepare the stats database"""
+        """Setup the stats database"""
         statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                      config_dict['Stats']['stats_file'])
-        # statsDb is an instance of weewx.stats.StatsDb, which wraps the stats
-        # sqlite file
-        self.statsDb = weewx.stats.StatsDb(statsFilename,
-                                           int(config_dict['Station'].get('cache_loop_data', '1')))
-        # Configure it if necessary (this will do nothing if the database has
-        # already been configured):
-        self.statsDb.config(config_dict['Stats'].get('stats_types'))
+        # Try to open up the database. If it doesn't exist or has not been initialized, an exception
+        # will be thrown. Catch it, configure the database, and then try again.
+        try:
+            self.statsDb = weewx.stats.StatsDb(statsFilename,
+                                               int(config_dict['Station'].get('cache_loop_data', '1')))
+        except StandardError:
+            # It's uninitialized. Configure it:
+            weewx.stats.config(statsFilename, config_dict['Stats'].get('stats_types'))
+            # Try again to open it up:
+            self.statsDb = weewx.stats.StatsDb(statsFilename,
+                                               int(config_dict['Station'].get('cache_loop_data', '1')))
 
         # Backfill it with data from the archive. This will do nothing if 
         # the stats database is already up-to-date.

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -12,7 +12,7 @@
 """
 import time
 
-__version__="1.9.2"
+__version__="1.10.0a1"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'

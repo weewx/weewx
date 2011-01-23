@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -87,24 +87,27 @@ def createStatsDatabase(config_dict):
     # Open up the Stats database
     statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                  config_dict['Stats']['stats_file'])
-    statsDb = weewx.stats.StatsDb(statsFilename)
-    # Configure it if necessary (this will do nothing if the database has
-    # already been configured):
-    statsDb.config(config_dict['Stats'].get('stats_types'))
-    print "created statistical database %s" % statsFilename
+    try:
+        dummy_statsDb = weewx.stats.StatsDb(statsFilename)
+    except weewx.Uninitialized:
+        # Configure it:
+        weewx.stats.config(statsFilename, config_dict['Stats'].get('stats_types'))
+        print "Created statistical database %s" % statsFilename
+    else:
+        print "The statistical database %s already exists" % statsFilename
 
 def backfillStatsDatabase(config_dict):
     """Use the main archive database to backfill the stats database."""
+
+    # Configure if necessary. This will do nothing if the database
+    # has already been configured:
+    createStatsDatabase(config_dict)
 
     # Open up the Stats database
     statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                  config_dict['Stats']['stats_file'])
     statsDb = weewx.stats.StatsDb(statsFilename)
     
-    # Configure it if necessary (this will do nothing if the database has
-    # already been configured):
-    statsDb.config(config_dict['Stats'].get('stats_types'))
-
     # Open up the main database archive
     archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                    config_dict['Archive']['archive_file'])
@@ -112,7 +115,7 @@ def backfillStatsDatabase(config_dict):
 
     # Now backfill
     weewx.stats.backfill(archive, statsDb)
-    print "backfilled statistical database %s with archive data from %s" % (statsFilename, archiveFilename)
+    print "Backfilled statistical database %s with archive data from %s" % (statsFilename, archiveFilename)
     
 def configureVP(config_dict):
     """Configure a VantagePro as per the configuration file."""

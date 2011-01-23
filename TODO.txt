@@ -1,3 +1,5 @@
 TODO before the next release:
 
 Change setup.py to reflect new modules.
+
+Have setup.py preserve the user package when upgrading.

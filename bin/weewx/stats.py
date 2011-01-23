@@ -49,49 +49,11 @@ import weewx.accum
 import weewx.units
 import weewx.wxformulas
 import weeutil.weeutil
+import weeutil.dbutil
 
 #===============================================================================
-# The default types for which statistical data should be kept in the
-# SQL stats database. This list is used only if the user has not
-# specified anything in the configuration file. Note that this default
-# list includes pretty much all possible types, which can result in a
-# much bigger than necessary stats database.
-#
-# Types 'heatdeg' and 'cooldeg' are special because they are actually calculated
-# and not stored in the database.
-# ===============================================================================
-default_stats_types = ('barometer',
-                       'inTemp',
-                       'outTemp',
-                       'inHumidity',
-                       'outHumidity',
-                       'rainRate',
-                       'rain',
-                       'dewpoint',
-                       'windchill',
-                       'heatindex',
-                       'ET',
-                       'radiation',
-                       'UV',
-                       'extraTemp1',
-                       'extraTemp2',
-                       'extraTemp3',
-                       'soilTemp1',
-                       'soilTemp2',
-                       'soilTemp3',
-                       'soilTemp4',
-                       'leafTemp1',
-                       'leafTemp2',
-                       'extraHumid1',
-                       'extraHumid2',
-                       'soilMoist1',
-                       'soilMoist2',
-                       'soilMoist3',
-                       'soilMoist4',
-                       'leafWet1',
-                       'leafWet2',
-                       'rxCheckPercent',
-                       'wind')
+# The SQL statements used in the stats database
+#===============================================================================
 
 std_create_str  = """CREATE TABLE %s   ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
                   """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);"""
@@ -400,6 +362,9 @@ class StatsReadonlyDb(object):
     def __init__(self, statsFilename, cacheDayData = True):
         """Create an instance of StatsReadonlyDb to manage a database.
         
+        If the database does not exist or it is uninitialized, an
+        exception will be thrown. 
+        
         statsFilename: Path to the stats database file.
         
         cacheDayData: True if a days stats are to be cached after reading. 
@@ -688,23 +653,15 @@ class StatsReadonlyDb(object):
     def _getTypes(self):
         """Returns the types appearing in a stats database.
         
-        statsFilename: Path to the stats database.
-        
         returns: A list of types or None if the database has not been initialized."""
         
-        if not os.path.exists(self.statsFilename):
-            return None
-        
-        with sqlite3.connect(self.statsFilename) as _connection:
-            _cursor = _connection.execute('''SELECT name FROM sqlite_master WHERE type = 'table';''')
-            
-        stats_types = [str(_row[0]) for _row in _cursor if _row[0] != u'metadata']
-        if len(stats_types) == 0 :
-            return None
-
+        # Get the schema dictionary:
+        schema_dict = weeutil.dbutil.schema(self.statsFilename)
+        # Convert from unicode:
+        stats_types = [str(s) for s in schema_dict.keys()]
         # Some stats database have schemas for heatdeg and cooldeg (even though they are not
-        # used) due to an earlier bug. Filter them out.
-        results = filter(lambda x : x not in ('heatdeg', 'cooldeg'), stats_types)
+        # used) due to an earlier bug. Filter them out. Also, filter out the metadata table:
+        results = filter(lambda x : x not in ('heatdeg', 'cooldeg', 'metadata'), stats_types)
 
         return results
 
@@ -781,53 +738,6 @@ class StatsDb(StatsReadonlyDb):
         # in a single transaction:
         self._setDay(_allStatsDict, rec['dateTime'], writeThrough = False)
 
-        
-    def config(self, stats_types = None, unit_system = weewx.US):
-        """Initialize the StatsDb database
-        
-        Does nothing if the database has already been initialized.
-
-        stats_types: an iterable collection with the names of the types for
-        which statistics will be gathered [optional. Default is to use all
-        possible types]"""
-        # Check whether the database exists:
-        if os.path.exists(self.statsFilename):
-            syslog.syslog(syslog.LOG_INFO, "stats: statistical database %s already exists." % self.statsFilename)
-        else:
-            # If it doesn't exist, create the parent directories
-            archiveDirectory = os.path.dirname(self.statsFilename)
-            if not os.path.exists(archiveDirectory):
-                syslog.syslog(syslog.LOG_NOTICE, "stats: making archive directory %s." % archiveDirectory)
-                os.makedirs(archiveDirectory)
-            
-        # If it has no schema, initialize it:
-        if not self.statsTypes:
-            # No schema. Need to initialize the stats database.
-            
-            # If nothing has been specified, use the default stats types:
-            if not stats_types:
-                stats_types = default_stats_types
-            
-            # Heating and cooling degrees are not actually stored in the database:
-            stats_types = filter(lambda x : x not in ('heatdeg', 'cooldeg'), stats_types)
-
-            # Now create all the necessary tables as one transaction:
-            with sqlite3.connect(self.statsFilename) as _connection:
-            
-                for _stats_type in stats_types:
-                    # Slightly different SQL statement for wind
-                    if _stats_type == 'wind':
-                        _connection.execute(wind_create_str)
-                    else:
-                        _connection.execute(std_create_str % (_stats_type,))
-                _connection.execute(meta_create_str)
-                _connection.execute(meta_replace_str, ('unit_system', str(unit_system)))
-            
-            self.statsTypes = stats_types
-            syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % self.statsFilename)
-
-
-
     def _setDay(self, dayStatsDict, lastUpdate, writeThrough = True):
         """Write all statistics for a day to the database in a single transaction.
         
@@ -882,6 +792,52 @@ class StatsDb(StatsReadonlyDb):
 #===============================================================================
 #                          USEFUL FUNCTIONS
 #===============================================================================
+
+def config(statsFilename, stats_types = None, unit_system = weewx.US):
+    """Initialize the StatsDb database
+    
+    Does nothing if the database has already been initialized.
+
+    stats_types: an iterable collection with the names of the types for
+    which statistics will be gathered [optional. Default is to use all
+    possible types]"""
+    # Check whether the database exists:
+    if not os.path.exists(statsFilename):
+        # If it doesn't exist, create the parent directories
+        archiveDirectory = os.path.dirname(statsFilename)
+        if not os.path.exists(archiveDirectory):
+            syslog.syslog(syslog.LOG_NOTICE, "stats: making archive directory %s." % archiveDirectory)
+            os.makedirs(archiveDirectory)
+        
+    config_check = weeutil.dbutil.schema(statsFilename)
+    
+    # Check to see if it has already been configured. If it has, do
+    # nothing. We're done.
+    if config_check:
+        return
+    
+    # No schema, so we need to configure it.
+    # If nothing has been specified, use the default stats types:
+    if not stats_types:
+        import user.schemas
+        stats_types = user.schemas.defaultStatsTypes
+    
+    # Heating and cooling degrees are not actually stored in the database:
+    stats_types = filter(lambda x : x not in ('heatdeg', 'cooldeg'), stats_types)
+
+    # Now create all the necessary tables as one transaction:
+    with sqlite3.connect(statsFilename) as _connection:
+    
+        for _stats_type in stats_types:
+            # Slightly different SQL statement for wind
+            if _stats_type == 'wind':
+                _connection.execute(wind_create_str)
+            else:
+                _connection.execute(std_create_str % (_stats_type,))
+        _connection.execute(meta_create_str)
+        _connection.execute(meta_replace_str, ('unit_system', str(unit_system)))
+    
+    syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % statsFilename)
 
 def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
     """Fill the statistical database from an archive database.
