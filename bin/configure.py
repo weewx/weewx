@@ -21,7 +21,7 @@ import weewx.archive
 import weewx.stats
 import weewx.VantagePro
 
-usagestr = """%prog: config_path
+usagestr = """%prog: config_path [Options]
 
 Configuration program for the weewx weather system.
 
@@ -30,9 +30,10 @@ Arguments:
 
 def main():
     parser = OptionParser(usage=usagestr)
-    parser.add_option("--create-database", action="store_true", dest="create_database", help="To create the SQL database wview-archive.sdb")
-    parser.add_option("--create-stats",    action="store_true", dest="create_stats",    help="To create the statistical statistical database stats.sdb")
-    parser.add_option("--backfill-stats",  action="store_true", dest="backfill_stats",  help="To backfill the statistical database from the main database")
+    parser.add_option("--create-database",  action="store_true", dest="create_database",  help="To create the main database archive")
+    parser.add_option("--create-stats",     action="store_true", dest="create_stats",     help="To create the statistical database")
+    parser.add_option("--backfill-stats",   action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database")
+    parser.add_option("--reconfig-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive")
     parser.add_option("--configure-VantagePro", action="store_true", dest="configure_VP", help="To configure a VantagePro weather station")
     parser.add_option("--clear-VantagePro",     action="store_true", dest="clear_VP",     help="To clear the memory of the VantagePro weather station")
     
@@ -64,7 +65,10 @@ def main():
         
     if options.backfill_stats:
         backfillStatsDatabase(config_dict)
-    
+
+    if options.reconfig_database:
+        reconfigMainDatabase(config_dict)
+            
     if options.configure_VP:
         configureVP(config_dict)
 
@@ -76,11 +80,14 @@ def createMainDatabase(config_dict):
     # Open up the main database archive
     archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                    config_dict['Archive']['archive_file'])
-    archive = weewx.archive.Archive(archiveFilename)
-    # Configure it if necessary (this will do nothing if the database has
-    # already been configured):
-    archive.config()
-    print "created archive database %s" % archiveFilename
+    try:
+        dummy_archive = weewx.archive.Archive(archiveFilename)
+    except StandardError:
+        # Configure it
+        weewx.archive.config(archiveFilename)
+        print "Created archive database %s" % archiveFilename
+    else:
+        print "The archive database %s already exists" % archiveFilename
 
 def createStatsDatabase(config_dict):
     """Create the weewx statistical database"""
@@ -89,7 +96,7 @@ def createStatsDatabase(config_dict):
                                  config_dict['Stats']['stats_file'])
     try:
         dummy_statsDb = weewx.stats.StatsDb(statsFilename)
-    except weewx.Uninitialized:
+    except StandardError:
         # Configure it:
         weewx.stats.config(statsFilename, config_dict['Stats'].get('stats_types'))
         print "Created statistical database %s" % statsFilename
@@ -116,6 +123,15 @@ def backfillStatsDatabase(config_dict):
     # Now backfill
     weewx.stats.backfill(archive, statsDb)
     print "Backfilled statistical database %s with archive data from %s" % (statsFilename, archiveFilename)
+    
+def reconfigMainDatabase(config_dict):
+    """Change the schema of the old database"""
+    
+    # The old archive:
+    oldArchiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
+                                      config_dict['Archive']['archive_file'])
+    newArchiveFilename = oldArchiveFilename + ".new"
+    weewx.archive.reconfig(oldArchiveFilename, newArchiveFilename)
     
 def configureVP(config_dict):
     """Configure a VantagePro as per the configuration file."""

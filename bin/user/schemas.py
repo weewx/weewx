@@ -11,10 +11,14 @@
 
 #===============================================================================
 # This is a list containing the default schema of the archive database.  It is
-# only used for initialization. Afterwards, the schema is obtained dynamically
-# from the database.  Although a type may be listed here, it may not necessarily
-# be supported by your weather station hardware.
-#===============================================================================
+# identical to what is used by wview. It is only used for
+# initialization --- afterwards, the schema is obtained dynamically from the
+# database.  Although a type may be listed here, it may not necessarily be
+# supported by your weather station hardware.
+#
+# You may trim this list of any unused types if you wish, but it will not result
+# in as much space saving as you may think.
+# ===============================================================================
 defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
                         ('usUnits',              'INTEGER NOT NULL'),
                         ('interval',             'INTEGER NOT NULL'),
@@ -68,7 +72,7 @@ defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMAR
                         ('outTempBatteryStatus', 'REAL'),
                         ('inTempBatteryStatus',  'REAL')]
 
-# The default types for which statistics will be kept is pretty much all of the types that make
-# sense. We replace the wind types with special type 'wind'
+# The default types for which statistics will be kept is pretty much all of the types
+# above. We drop a few of the wind related types and replace them with special type 'wind'
 drop_list = ['dateTime', 'usUnits', 'interval', 'windSpeed', 'windDir', 'windGust', 'windGustDir']
 defaultStatsTypes = filter(lambda x : x not in drop_list, [_tuple[0] for _tuple in defaultArchiveSchema]) + ['wind']

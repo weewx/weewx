@@ -1,5 +1,13 @@
 TODO before the next release:
 
+Test adding a new sql type ("pipepressure")
+
+Test adding a new unit ("psi")
+
+Test adding a new archive query (number of nulls?)
+
+Test adding a new stats query
+
 Change setup.py to reflect new modules.
 
 Have setup.py preserve the user package when upgrading.

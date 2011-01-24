@@ -7,7 +7,7 @@
 #    $Author$
 #    $Date$
 #
-"Functions for querying sqlite databases about schema attributes"
+"Functions for querying sqlite databases"
 
 from __future__ import with_statement
 
@@ -63,16 +63,3 @@ def column_dict(schema_dict):
         results[table_name] = [s.split(' ')[0] for s in schema_dict[table_name]]
         
     return results
-
-                   
-        
-if __name__ == '__main__':
-    archiveFile = '/home/weewx/archive/stats.sdb'
-    
-    schema_dict = schema(archiveFile)
-    print schema_dict
-
-    columns = column_dict(schema_dict)
-    
-    print columns
-    

@@ -16,6 +16,7 @@ from pysqlite2 import dbapi2 as sqlite3
     
 import weewx.units
 import weeutil.weeutil
+import weeutil.dbutil
 
 #===============================================================================
 #                         class Archive
@@ -36,8 +37,6 @@ class Archive(object):
         """
         self.archiveFilename = archiveFilename
         self.sqlkeys = self._getTypes()
-#        if not self.sqlkeys:
-#            raise weewx.Uninitialized, "Archive database %s not initialized" % self.archiveFilename
     
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
@@ -55,43 +54,49 @@ class Archive(object):
         _row = self.getSql("SELECT MIN(dateTime) FROM archive")
         return _row[0]
 
-    def addRecord(self, record):
-        """Commit an archive record to the sqlite3 database.
+    def addRecord(self, record_obj):
+        """Commit a single record or a collection of records to the archive.
         
-        This function commits the record after adding it to the DB. 
-        
-        record: A data record. It must look like a dictionary, where the keys
+        record_obj: Either a data record, or an iterable that can return data
+        records. Each data record must look like a dictionary, where the keys
         are the SQL types and the values are the values to be stored in the
         database."""
-
-        if record['dateTime'] is None:
-            syslog.syslog(syslog.LOG_ERR, "Archive: archive record with null time encountered. Ignored.")
-            return
-
-        # Only data types that appear in the database schema can be inserted.
-        # To find them, form the intersection between the set of all record
-        # keys and the set of all sql keys
-        record_key_set = set(record.keys())
-        insert_key_set = record_key_set.intersection(self.sqlkeys)
-        # Convert to an ordered list:
-        key_list = list(insert_key_set)
-        # Get the values in the same order:
-        value_list = [record[k] for k in key_list]
         
-        # This will a string of sql types, separated by commas
-        k_str = ','.join(key_list)
-        # This will be a string with the correct number of placeholder question marks:
-        q_str = ','.join('?' * len(key_list))
-        # Form the SQL insert statement:
-        sql_insert_stmt = "INSERT INTO archive (%s) VALUES (%s)" % (k_str, q_str) 
-        try:
-            with sqlite3.connect(self.archiveFilename) as _connection:
-                _connection.execute(sql_insert_stmt, value_list)
-            syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
-        except Exception, e:
-            syslog.syslog(syslog.LOG_ERR, "Archive: unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
-            syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
-            raise weewx.ArchiveError, "Unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(record['datetime'])
+        # Determine if record_obj is just a single dictionary instance (in which
+        # case it will have method 'keys'). If so, wrap it in something iterable
+        # (a list):
+        record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
+
+        with sqlite3.connect(self.archiveFilename) as _connection:
+
+            for record in record_list:
+
+                if record['dateTime'] is None:
+                    syslog.syslog(syslog.LOG_ERR, "Archive: archive record with null time encountered. Ignored.")
+                    continue
+        
+                # Only data types that appear in the database schema can be inserted.
+                # To find them, form the intersection between the set of all record
+                # keys and the set of all sql keys
+                record_key_set = set(record.keys())
+                insert_key_set = record_key_set.intersection(self.sqlkeys)
+                # Convert to an ordered list:
+                key_list = list(insert_key_set)
+                # Get the values in the same order:
+                value_list = [record[k] for k in key_list]
+                
+                # This will a string of sql types, separated by commas
+                k_str = ','.join(key_list)
+                # This will be a string with the correct number of placeholder question marks:
+                q_str = ','.join('?' * len(key_list))
+                # Form the SQL insert statement:
+                sql_insert_stmt = "INSERT INTO archive (%s) VALUES (%s)" % (k_str, q_str) 
+                try:
+                    _connection.execute(sql_insert_stmt, value_list)
+                    syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
+                except Exception, e:
+                    syslog.syslog(syslog.LOG_ERR, "Archive: unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
+                    syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
 
     def genBatchRecords(self, startstamp, stopstamp):
         """Generator function that yields ValueRecords within a time interval.
@@ -454,9 +459,7 @@ class Archive(object):
 
 def config(archiveFilename, archiveSchema=None):
     """Configure a database for use with weewx. This will create the initial schema
-    if necessary.
-    
-    """
+    if necessary."""
 
     # Check whether the database exists:
     if not os.path.exists(archiveFilename):
@@ -466,13 +469,12 @@ def config(archiveFilename, archiveSchema=None):
             syslog.syslog(syslog.LOG_NOTICE, "archive: making archive directory %s." % archiveDirectory)
             os.makedirs(archiveDirectory)
 
-    config_check = weeutil.dbutil.schema(archiveFilename)
-    
     # Check to see if it has already been configured. If it has, do
     # nothing. We're done.
-    if config_check:
+    if weeutil.dbutil.schema(archiveFilename):
         return
     
+    # If the user has not supplied a schema, use the default schema 
     if not archiveSchema:
         import user.schemas
         archiveSchema = user.schemas.defaultArchiveSchema
@@ -487,4 +489,12 @@ def config(archiveFilename, archiveSchema=None):
     
     syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for archive file %s." % archiveFilename)
 
+def reconfig(oldArchiveFilename, newArchiveFilename):
+    """Copy over an old archive file to a new one, using the new schema."""
+
+    config(newArchiveFilename)
     
+    oldArchive = Archive(oldArchiveFilename)
+    newArchive = Archive(newArchiveFilename)
+    # This is very fast because it is done in a single transaction context:
+    newArchive.addRecord(oldArchive.genBatchRecords(None,None))
