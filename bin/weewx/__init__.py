@@ -30,9 +30,25 @@ IO_ERROR     = 4
 US     = 1
 METRIC = 2
 
-#
-# Define possible exceptions that could get thrown.
-#
+#===============================================================================
+#                        class ValueTuple
+#===============================================================================
+    
+class ValueTuple(tuple):
+    @property
+    def value(self):
+        return self[0]
+    @property
+    def unit(self):
+        return self[1]
+    @property
+    def obstype(self):
+        return self[2]
+
+#===============================================================================
+#           Define possible exceptions that could get thrown.
+#===============================================================================
+
 class WeeWxIOError(IOError):
     """Base class of exceptions thrown when encountering an I/O error with the console."""
 

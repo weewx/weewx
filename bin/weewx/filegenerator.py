@@ -25,6 +25,11 @@ import weewx.station
 import weewx.stats
 import weewx.units
 
+# Default base temperature and unit type for heating and cooling degree days
+# as a value tuple
+default_heatbase = (65.0, "degree_F")
+default_coolbase = (65.0, "degree_F")
+
 #===============================================================================
 #                    Class FileGenerator
 #===============================================================================
@@ -59,7 +64,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
     def initUnits(self):
         
-        self.unit_info = weewx.units.UnitInfo.fromSkinDict(self.skin_dict)
+        self.unit_info = weewx.units.UnitConversion.fromSkinDict(self.skin_dict)
 
     def getCurrentRec(self):
         # Open up the main database archive
@@ -216,28 +221,12 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         
         Can easily be overridden to add things to the search list.
         """
+        searchList = self.getCommonSearchList(timespan.stop)
+
         timespan_start_tt = time.localtime(timespan.start)
-        (_yr, unused_mo) = timespan_start_tt[0:2]
 
-        # Get a TaggedStats structure. This allows constructs such as
-        # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(self.statsdb, timespan.stop, 
-                                        self.station.rain_year_start,
-                                        self.unit_info)
-#        # Get a formatted view into it:
-#        statsFormatter = weewx.formatter.ModelFormatter(stats, self.formatter)
-
-        # Put together the search list:
-        searchList = [{'station'    : self.station,
-                       'unit'       : self.unit_info,
-                       'month_name' : time.strftime("%b", timespan_start_tt),
-                       'year_name'  : _yr},
-                       stats]
-
-        # IF the user has supplied an '[Extra]' section in the skin dictionary, include
-        # it in the search list. Otherwise, just include an empty dictionary.
-        extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
-        searchList += [{'Extras' : extra_dict}]
+        searchList += [{'month_name' : time.strftime("%b", timespan_start_tt),
+                        'year_name'  : timespan_start_tt[0]}]
 
         return searchList
 
@@ -247,30 +236,43 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         Can easily be overridden to add things to the search list.
         """
 
+        searchList = self.getCommonSearchList(stop_ts)
+
+        searchList += [self.outputted_dict, 
+                       {'current' : currentRec}] 
+
+        return searchList
+
+    def getCommonSearchList(self, stop_ts):
+
+        heatbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
+        coolbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
+        heatbase_t = (float(heatbase[0]), heatbase[1]) if heatbase else default_heatbase
+        coolbase_t = (float(coolbase[0]), coolbase[1]) if coolbase else default_coolbase
+
         # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(self.statsdb, stop_ts,
-                                        self.station.rain_year_start,
-                                        self.unit_info)
-
-        # Get the current conditions:
-        current = {'current' : currentRec}
-
-        # Put together the search list:
-        searchList = [{'station' : self.station,
-                       'almanac' : self.almanac,
-                       'unit'    : self.unit_info},
-                       self.outputted_dict,
-                       current,
-                       stats]
+        stats = weewx.stats.TaggedStats(stop_ts,
+                                        self.statsdb,
+                                        self.unit_info,
+                                        rain_year_start = self.station.rain_year_start,
+                                        heatbase = heatbase_t,
+                                        coolbase = coolbase_t)
         
         # IF the user has supplied an '[Extra]' section in the skin dictionary, include
         # it in the search list. Otherwise, just include an empty dictionary.
         extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
-        searchList += [{'Extras' : extra_dict}]
 
+        # Put together the search list:
+        searchList = [{'station'    : self.station,
+                       'almanac'    : self.almanac,
+                       'unit'       : self.unit_info,
+                       'heatbase'   : heatbase_t,
+                       'coolbase'   : coolbase_t,
+                       'Extras'     : extra_dict},
+                       stats]
         return searchList
-
+            
     def initAlmanac(self, celestial_ts):
         """ Initialize an instance of weeutil.Almanac.Almanac for the station's
         lat and lon, and for a specific time.
@@ -308,7 +310,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
             pass
 
         return (template, destination_dir, encoding)
-    
+
 #===============================================================================
 #                 Filters used for encoding
 #===============================================================================

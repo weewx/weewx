@@ -45,6 +45,7 @@ import os.path
 import syslog
 import time
 
+import weewx
 import weewx.accum
 import weewx.units
 import weewx.wxformulas
@@ -130,204 +131,6 @@ class DayStatsDict(dict):
                 self[_stats_type] = weewx.accum.StdAccum(_stats_type, startOfDay_ts)
 
 #===============================================================================
-#                    Class TaggedStats
-#===============================================================================
-
-class TaggedStats(object):
-    """Allows stats references like obj.month.outTemp.max.
-    
-    This class sits on the top of chain of helper classes that enable
-    syntax such as $month.rain.sum in the template classes. 
-    
-    When a time period is given as an attribute to it, such as obj.month,
-    the next item in the chain is returned, in this case an instance of
-    TimeSpanStats, which binds the stats database with the
-    time period. 
-    """
-    
-    def __init__(self, statsDb, endtime_ts, sory_mon=1, unit_info=None):
-        """Initialize an instance of TaggedStats.
-        statsDb: An instance of weewx.stats.StatsReadonly
-        
-        endtime_ts: The time the stats are to be current to.
-        
-        sory_mon: The month the rain year starts. [Optional. Default is 1 or January]
-        
-        unit_info: An instance of weewx.units.Units holding the target units. 
-        [Optional. If not specified, default formatting and units will be chosen.]
-        """
-        self.statsDb    = statsDb
-        self.endtime_ts = endtime_ts
-        self.sory_mon   = sory_mon
-        self.unit_info  = unit_info
-        
-    # What follows is the list of time period attributes:
-
-    @property
-    def day(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveDaySpan(self.endtime_ts),
-                             'day', self.unit_info)
-    @property
-    def week(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveWeekSpan(self.endtime_ts),
-                             'week', self.unit_info)
-    @property
-    def month(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveMonthSpan(self.endtime_ts),
-                             'month', self.unit_info)
-    @property
-    def year(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveYearSpan(self.endtime_ts),
-                             'year', self.unit_info)
-    @property
-    def rainyear(self):
-        return TimeSpanStats(self.statsDb, weeutil.weeutil.archiveRainYearSpan(self.endtime_ts, self.sory_mon), 
-                             'rainyear', self.unit_info)
-        
-   
-#===============================================================================
-#                    Class TimeSpanStats
-#===============================================================================
-
-class TimeSpanStats(object):
-    """Nearly stateless class that holds a binding to a stats database and a timespan.
-    
-    This class is the next class in the chain of helper classes.
-
-    This class allows syntax such as the following:
-    
-       statsdb = StatsDb('somestatsfile.sdb')
-       # This timespan runs from 2007-01-01 to 2008-01-01 (one year):
-       yearSpan = weeutil.Timespan(1167638400, 1199174400)
-       yearStats = TimeSpanStats(statsdb, yearSpan)
-       
-       # Print max temperature for the year:
-       print yearStats.outTemp.max
-       
-       # You can also iterate by day, month, or year:
-       for monthStats in yearStats.months:
-           # Print maximum temperature for each month in the year:
-           print monthStats.outTemp.max
-           
-       for dayStats in yearStats.days:
-           # Print max temperature for each day of the year:
-           print dayStats.outTemp.max
-    """
-
-    def __init__(self, statsDb, timespan, context='current', unit_info=None):
-        """Initialize an instance of TimeSpanStats.
-        
-        statsDb: An instance of StatsReadonlyDb or a subclass.
-        
-        timespan: An instance of weeutil.Timespan with the time span
-        over which the statistics are to be calculated.
-        
-        context: A tag name for the timespan. This is something like 'current', 'day',
-        'week', etc. This is used to find an appropriate label, if necessary.
-
-        unit_info: An instance of weewx.units.Units holding the target units. 
-        [Optional. If not specified, default formatting and units will be chosen.]
-        """
-        
-        self.statsDb   = statsDb
-        self.timespan  = timespan
-        self.context   = context
-        self.unit_info = unit_info
-        
-    @property
-    def days(self):
-        return _seqGenerator(self.statsDb, self.timespan, 'day', self.unit_info, weeutil.weeutil.genDaySpans)
-    @property
-    def months(self):
-        return _seqGenerator(self.statsDb, self.timespan, 'month', self.unit_info, weeutil.weeutil.genMonthSpans)
-    @property
-    def years(self):
-        return _seqGenerator(self.statsDb, self.timespan, 'year', self.unit_info, weeutil.weeutil.genYearSpans)
-    @property
-    def dateTime(self):
-        return weewx.units.ValueHelper((self.timespan.start, "unix_epoch"), self.context, self.unit_info)
-
-    def __getattr__(self, stats_type):
-        """Return a helper object for the given type.
-        
-        stats_type: A statistical type, such as 'outTemp', or 'heatDeg'
-        
-        returns: The helper class StatsTypeHelper bound to the type
-        and timespan.
-        """
-        # check to see if this is a valid stats type:
-        if stats_type not in self.statsDb.getUsableTypes():
-            raise AttributeError
-        # The attribute is probably a type such as 'barometer', or 'heatdeg'
-        # Return the helper class, bound to the type:
-        return StatsTypeHelper(self.statsDb, self.timespan, stats_type, self.context, self.unit_info)
-        
-def _seqGenerator(statsDb, timespan, context, unit_info, genSpanFunc):
-    """Generator function that returns TimeSpanStats for the appropriate timespans"""
-    for span in genSpanFunc(timespan.start, timespan.stop):
-        yield TimeSpanStats(statsDb, span, context, unit_info)
-        
-#===============================================================================
-#                    Class StatsTypeHelper
-#===============================================================================
-
-class StatsTypeHelper(object):
-    """Nearly stateless helper class that holds the database, timespan, and type
-    over which aggregation is to be done."""
-    
-    def __init__(self, statsDb, timespan, stats_type, context='current', unit_info=None):
-        """ Initialize an instance of StatsTypeHelper
-        
-        statsDb: The database against which the query is to be run.
-        
-        timespan: An instance of TimeSpan holding the time period over which the query is
-        to be run
-        
-        stats_type: A string with the stats type (e.g., 'outTemp') for which the query is
-        to be done.
-        
-        context: A tag name for the timespan. This is something like 'current', 'day',
-        'week', etc. This is used to find an appropriate label, if necessary.
-
-        unit_info: An instance of weewx.units.Units holding the target units. 
-        [Optional. If not specified, default formatting and units will be chosen.]
-        """
-        
-        self.statsDb    = statsDb
-        self.timespan   = timespan
-        self.stats_type = stats_type
-        self.context    = context
-        self.unit_info  = unit_info
-    
-    def max_ge(self, val):
-        result = self.statsDb.getAggregate(self.timespan, self.stats_type, 'max_ge', val)
-        return weewx.units.ValueHelper(result, self.context, self.unit_info)
-
-    def max_le(self, val):
-        result = self.statsDb.getAggregate(self.timespan, self.stats_type, 'max_le', val)
-        return weewx.units.ValueHelper(result, self.context, self.unit_info)
-    
-    def min_le(self, val):
-        result = self.statsDb.getAggregate(self.timespan, self.stats_type, 'min_le', val)
-        return weewx.units.ValueHelper(result, self.context, self.unit_info)
-    
-    def sum_ge(self, val):
-        result = self.statsDb.getAggregate(self.timespan, self.stats_type, 'sum_ge', val)
-        return weewx.units.ValueHelper(result, self.context, self.unit_info)
-    
-    def __getattr__(self, aggregateType):
-        """Attribute is an aggregation type, such as 'sum', 'max', etc."""
-        if self.stats_type in ('heatdeg', 'cooldeg'):
-            # Heating and cooling degree days use a different entry point into Stats:
-            result = self.statsDb.getHeatCool(self.timespan, self.stats_type, aggregateType,
-                                              self.unit_info.heatbase, self.unit_info.coolbase)
-        else:
-            result = self.statsDb.getAggregate(self.timespan, self.stats_type, aggregateType)
-        # Wrap the result in a ValueHelper:
-        return weewx.units.ValueHelper(result, self.context, self.unit_info)
-    
-        
-#===============================================================================
 #                    Class StatsReadonlyDb
 #===============================================================================
 
@@ -372,10 +175,9 @@ class StatsReadonlyDb(object):
     statsFilename: The path to the stats database
     
     statsTypes: The types of the statistics supported by this instance of
-    StatsReadonlyDb. None if the database has not been initialized.
+    StatsReadonlyDb. 
     
-    std_unit_system: The unit system in use (weewx.US or weewx.METRIC). None if the
-    database has not been initialized."""
+    std_unit_system: The unit system in use (weewx.US or weewx.METRIC)."""
     
     # In addition to the attributes listed above, if caching is used,
     # each instance has a private attribute self._dayCache. This is a two-way 
@@ -547,7 +349,7 @@ class StatsReadonlyDb(object):
         # Look up the unit type of this combination of stats type and aggregation:
         _result_unit_type = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
         # Form the value tuple:
-        return (_result, _result_unit_type)
+        return weewx.ValueTuple(_result, _result_unit_type, stats_type)
         
     def getHeatCool(self, timespan, stats_type, aggregateType, heatbase_t, coolbase_t):
         """Calculate heating or cooling degree days for a given timespan.
@@ -564,7 +366,8 @@ class StatsReadonlyDb(object):
         
         returns: A value tuple. First element is the aggregation value,
         or None if not enough data was available to calculate it, or if the aggregation
-        type is unknown. The second element is the unit type (eg, 'degree_F')"""
+        type is unknown. The second element is the unit type (eg, 'degree_F'),
+        third 'heatdeg' or 'cooldeg'"""
         
         # The requested type must be heatdeg or cooldeg
         if weewx.debug:
@@ -599,12 +402,8 @@ class StatsReadonlyDb(object):
         # Look up the type of the result:
         _result_unit_type = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
         # Return as a value tuple
-        return (_result, _result_unit_type)
+        return weewx.ValueTuple(_result, _result_unit_type, stats_type)
     
-    def getUsableTypes(self):
-        """Return all types for which we can offer statistics."""
-        return self.statsTypes + ['heatdeg', 'cooldeg']
-
     def _getFirstUpdate(self):
         """Returns the time of the first entry in the statistical database."""
         #=======================================================================
@@ -653,7 +452,9 @@ class StatsReadonlyDb(object):
     def _getTypes(self):
         """Returns the types appearing in a stats database.
         
-        returns: A list of types or None if the database has not been initialized."""
+        Throws an exception if the database has not been initialized.
+        
+        returns: A list of types"""
         
         # Get the schema dictionary:
         schema_dict = weeutil.dbutil.schema(self.statsFilename)
@@ -667,9 +468,6 @@ class StatsReadonlyDb(object):
 
     def _getStdUnitSystem(self):
         """Returns the unit system in use in the stats database."""
-        
-        if not os.path.exists(self.statsFilename):
-            return None
         
         _row = self._xeqSql("""SELECT value FROM metadata WHERE name = 'unit_system';""", {})
         # If the unit system is missing, then it is an older style stats database,
@@ -749,8 +547,6 @@ class StatsDb(StatsReadonlyDb):
         is the timestamp of the last archive record added to the instance
         dayStatsDict."""
 
-        assert(dayStatsDict)
-
         if self._dayCache:
             if self._dayCache[0] and self._dayCache[0].startOfDay_ts != dayStatsDict.startOfDay_ts:
                 # Write the old data
@@ -765,9 +561,6 @@ class StatsDb(StatsReadonlyDb):
         
         
     def __writeData(self, dayStatsDict, lastUpdate):
-        
-        assert(dayStatsDict)
-        assert(lastUpdate)
         
         _sod = dayStatsDict.startOfDay_ts
 
@@ -788,6 +581,208 @@ class StatsDb(StatsReadonlyDb):
             # Update the time of the last stats update:
             _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
             
+
+#===============================================================================
+#                    Class StatsTypeHelper
+#===============================================================================
+
+class StatsTypeHelper(object):
+    """Nearly stateless helper class that holds the timespan, statistical type, and database
+    over which aggregation is to be done."""
+    
+    def __init__(self, timespan, context, stats_type, statsDb, *option_list, **option_dict):
+        """ Initialize an instance of StatsTypeHelper
+        
+        timespan: An instance of TimeSpan holding the time period over which the query is
+        to be run
+        
+        context: A tag name for the timespan. This is something like 'current', 'day',
+        'week', etc. This is used to find an appropriate label, if necessary.
+
+        stats_type: A string with the stats type (e.g., 'outTemp') for which the query is
+        to be done.
+        
+        unit_info: An instance of weewx.units.Units holding the target units. 
+        [Optional. If not specified, default formatting and units will be chosen.]
+        """
+        
+        self.timespan    = timespan
+        self.context     = context
+        self.stats_type  = stats_type
+        self.statsDb     = statsDb
+        self.option_list = option_list
+        self.option_dict = option_dict
+    
+        # check to see if this is a valid stats type:
+        if stats_type not in self.statsDb.statsTypes + ['heatdeg', 'cooldeg']:
+            raise AttributeError
+
+    def max_ge(self, val):
+        result = self.statsDb.getAggregate(self.timespan, self.stats_type, 'max_ge', val)
+        return weewx.units.ValueHelper(result, self.context, *self.option_list, **self.option_dict)
+
+    def max_le(self, val):
+        result = self.statsDb.getAggregate(self.timespan, self.stats_type, 'max_le', val)
+        return weewx.units.ValueHelper(result, self.context, *self.option_list, **self.option_dict)
+    
+    def min_le(self, val):
+        result = self.statsDb.getAggregate(self.timespan, self.stats_type, 'min_le', val)
+        return weewx.units.ValueHelper(result, self.context, *self.option_list, **self.option_dict)
+    
+    def sum_ge(self, val):
+        result = self.statsDb.getAggregate(self.timespan, self.stats_type, 'sum_ge', val)
+        return weewx.units.ValueHelper(result, self.context, *self.option_list, **self.option_dict)
+    
+    def __getattr__(self, aggregateType):
+        """Attribute is an aggregation type, such as 'sum', 'max', etc."""
+        if self.stats_type in ('heatdeg', 'cooldeg'):
+            # Heating and cooling degree days use a different entry point into Stats:
+            result = self.statsDb.getHeatCool(self.timespan, self.stats_type, aggregateType, self.option_dict['heatbase'], self.option_dict['coolbase'])
+        else:
+            result = self.statsDb.getAggregate(self.timespan, self.stats_type, aggregateType)
+        # Wrap the result in a ValueHelper:
+        return weewx.units.ValueHelper(result, self.context, *self.option_list, **self.option_dict)
+    
+        
+#===============================================================================
+#                    Class TimeSpanStats
+#===============================================================================
+
+class TimeSpanStats(object):
+    """Nearly stateless class that holds a binding to a stats database and a timespan.
+    
+    This class is the next class in the chain of helper classes.
+
+    This class allows syntax such as the following:
+    
+       statsdb = StatsDb('somestatsfile.sdb')
+       # This timespan runs from 2007-01-01 to 2008-01-01 (one year):
+       yearSpan = weeutil.Timespan(1167638400, 1199174400)
+       yearStats = TimeSpanStats(statsdb, yearSpan)
+       
+       # Print max temperature for the year:
+       print yearStats.outTemp.max
+       
+       # You can also iterate by day, month, or year:
+       for monthStats in yearStats.months:
+           # Print maximum temperature for each month in the year:
+           print monthStats.outTemp.max
+           
+       for dayStats in yearStats.days:
+           # Print max temperature for each day of the year:
+           print dayStats.outTemp.max
+    """
+    # This static variable holds the type of the next class in the chain:
+    statsHelperClass = StatsTypeHelper
+
+    def __init__(self, timespan, context, *option_list, **option_dict):
+        """Initialize an instance of TimeSpanStats.
+        
+        statsDb: An instance of StatsReadonlyDb or a subclass.
+        
+        timespan: An instance of weeutil.Timespan with the time span
+        over which the statistics are to be calculated.
+        
+        context: A tag name for the timespan. This is something like 'current', 'day',
+        'week', etc. This is used to find an appropriate label, if necessary.
+
+        unit_info: An instance of weewx.units.Units holding the target units. 
+        [Optional. If not specified, default formatting and units will be chosen.]
+        
+        option_dict: A dictionary of options to be used for special calculations.
+        [Optional.]
+        """
+        
+        self.timespan    = timespan
+        self.context     = context
+        self.option_list = option_list
+        self.option_dict = option_dict
+        
+    @property
+    def days(self):
+        return _seqGenerator(self.timespan, 'day', weeutil.weeutil.genDaySpans, *self.option_list, **self.option_dict)
+    @property
+    def months(self):
+        return _seqGenerator(self.timespan, 'month', weeutil.weeutil.genMonthSpans, *self.option_list, **self.option_dict)
+    @property
+    def years(self):
+        return _seqGenerator(self.timespan, 'year', weeutil.weeutil.genYearSpans, *self.option_list, **self.option_dict)
+    @property
+    def dateTime(self):
+        val = weewx.ValueTuple(self.timespan.start, 'unix_epoch', 'dateTime')
+        return weewx.units.ValueHelper(val, self.context, *self.option_list, **self.option_dict)
+
+    def __getattr__(self, stats_type):
+        """Return a helper object for the given type.
+        
+        stats_type: A statistical type, such as 'outTemp', or 'heatDeg'
+        
+        returns: The helper class StatsTypeHelper bound to the type
+        and timespan.
+        """
+        # The attribute is probably a type such as 'barometer', or 'heatdeg'
+        # Return the helper class, bound to the type:
+        return TimeSpanStats.statsHelperClass(self.timespan, self.context, stats_type, *self.option_list, **self.option_dict)
+        
+def _seqGenerator(timespan, context, genSpanFunc, *option_list, **option_dict):
+    """Generator function that returns TimeSpanStats for the appropriate timespans"""
+    for span in genSpanFunc(timespan.start, timespan.stop):
+        yield TimeSpanStats(span, context, *option_list, **option_dict)
+        
+#===============================================================================
+#                    Class TaggedStats
+#===============================================================================
+
+class TaggedStats(object):
+    """Allows stats references like obj.month.outTemp.max.
+    
+    This class sits on the top of chain of helper classes that enable
+    syntax such as $month.rain.sum in the template classes. 
+    
+    When a time period is given as an attribute to it, such as obj.month,
+    the next item in the chain is returned, in this case an instance of
+    TimeSpanStats, which binds the stats database with the
+    time period. 
+    """
+    
+    # This static variable holds the type of the next class in the chain:
+    timeSpanClass = TimeSpanStats
+    
+    def __init__(self, endtime_ts, *option_list, **option_dict):
+        """Initialize an instance of TaggedStats.
+        statsDb: An instance of weewx.stats.StatsReadonly
+        
+        endtime_ts: The time the stats are to be current to.
+        
+        unit_info: An instance of weewx.units.Units holding the target units. 
+        [Optional. If not specified, default formatting and units will be chosen.]
+        
+        option_dict: Other options which can be used to customize calculations.
+        """
+        self.endtime_ts  = endtime_ts
+        self.option_list = option_list
+        self.option_dict = option_dict
+        
+    # What follows is the list of time period attributes:
+
+    @property
+    def day(self):
+        return TaggedStats.timeSpanClass(weeutil.weeutil.archiveDaySpan(self.endtime_ts), 'day', *self.option_list, **self.option_dict)
+    @property
+    def week(self):
+        return TaggedStats.timeSpanClass(weeutil.weeutil.archiveWeekSpan(self.endtime_ts), 'week', *self.option_list, **self.option_dict)
+    @property
+    def month(self):
+        return TaggedStats.timeSpanClass(weeutil.weeutil.archiveMonthSpan(self.endtime_ts), 'month', *self.option_list, **self.option_dict)
+    @property
+    def year(self):
+        return TaggedStats.timeSpanClass(weeutil.weeutil.archiveYearSpan(self.endtime_ts), 'year', *self.option_list, **self.option_dict)
+    @property
+    def rainyear(self):
+        return TaggedStats.timeSpanClass(weeutil.weeutil.archiveRainYearSpan(self.endtime_ts, self.option_dict['rain_year_start']), 'rainyear' 
+                             *self.option_list, **self.option_dict)
+        
+   
 
 #===============================================================================
 #                          USEFUL FUNCTIONS
@@ -907,6 +902,7 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
     else:
         syslog.syslog(syslog.LOG_INFO,
                       "stats: stats database up to date.")
+
 
 if __name__ == '__main__':
     #===========================================================================

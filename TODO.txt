@@ -1,8 +1,14 @@
 TODO before the next release:
 
+Move heating and cooling degree days base into templates, with default.
+
+Upgrade notes: the calling signature of TaggedStats has changed.
+
+Check that heating and cooling degree calculations are correct.
+
 Test adding a new sql type ("pipepressure")
 
-Test adding a new unit ("psi")
+Test adding a new unit group ("group_pipepressure"? "psi" and "kPa")
 
 Test adding a new archive query (number of nulls?)
 
