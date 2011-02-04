@@ -1,6 +1,14 @@
 CHANGE HISTORY
 --------------------------------
 
+1.9.3 02/04/11
+
+Now correctly decodes temperatures from LOOP and archive packets as signed
+shorts (rather than unsigned).
+
+Now does a CRC check on LOOP data.
+
+
 1.9.2  11/20/10
 
 Now catches exception of type OverflowError when calculating celsius dewpoint.

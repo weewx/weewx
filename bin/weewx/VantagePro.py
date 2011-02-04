@@ -149,8 +149,12 @@ class VantagePro (object) :
                     # Fetch a packet
                     buffer = serial_port.read(99)
                     if len(buffer) != 99 :
-                        syslog.syslog(syslog.LOG_DEBUG, 
-                                      "VantagePro: LOOP #%d; buffer not full (%d)... retrying" % (loop,len(buffer)))
+                        syslog.syslog(syslog.LOG_ERR, 
+                                      "VantagePro: LOOP #%d; buffer not full (%d) after timeout... retrying" % (loop,len(buffer)))
+                        continue
+                    if crc16(buffer) :
+                        syslog.syslog(syslog.LOG_ERR,
+                                      "VantagePro: LOOP #%d; CRC error... retrying" % loop)
                         continue
                     # ... decode it
                     pkt_dict = unpackLoopPacket(buffer[:89])
@@ -262,8 +266,15 @@ class VantagePro (object) :
         except (AttributeError, weewx.accum.OutOfSpan):
             # Initialize the accumulators:
             self.clearAccumulators(physicalLOOPPacket['dateTime'])
-            # Try again, calling myself recursively:
-            self.accumulateLoop(physicalLOOPPacket)
+            # Try again:
+            try:
+                for obs_type in self.special:
+                    self.current_accumulators[obs_type].addToSum(physicalLOOPPacket)
+                # For battery status, OR every status field together:
+                self.txBatteryStatus |= physicalLOOPPacket['txBatteryStatus']
+            except weewx.accum.OutOfSpan:
+                # Failed again. There's something wrong. Log it.
+                syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to initialize accumulators.")
             
     def clearAccumulators(self, time_ts):
         """Initialize or clear the accumulators"""
@@ -610,8 +621,8 @@ vp2loop = ('loop',            'loop_type',     'packet_type', 'next_record', 'ba
            'leafWet1',        'leafWet2',      'leafWet3',    'leafWet4',
            'txBatteryStatus', 'consBatteryVoltage')
 
-loop_format = struct.Struct("<3sbBHHHBHBBH7B4B4BB7BHBHHHHHHHHH4B4B16xBH")
-    
+loop_format = struct.Struct("<3sbBHHhBhBBH7B4B4BB7BHBHHHHHHHHH4B4B16xBH")
+
 def unpackLoopPacket(raw_packet) :
     """Decode a Davis LOOP packet, returning the results as a dictionary.
     
@@ -690,7 +701,7 @@ vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'high_outside_temperature', 'l
            'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
            'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4')
 
-archive_format = struct.Struct("<HHHHHHHHHHHBBBBBBBBHBB2B2B4BB2B3B4B")
+archive_format = struct.Struct("<HHhhhHHHHHhBBBBBBBBHBB2B2B4BB2B3B4B")
     
 def unpackArchivePacket(raw_packet):
     """Decode a Davis archive packet, returning the results as a dictionary.
@@ -710,8 +721,9 @@ def unpackArchivePacket(raw_packet):
         
     # As far as I know, the Davis supports only US units:
     packet['usUnits'] = weewx.US
-    # Sanity check that this is in fact a Rev B archive:
-    assert(packet['download_record_type'] == 0)
+    if weewx.debug:
+        # Sanity check that this is in fact a Rev B archive:
+        assert(packet['download_record_type'] == 0)
     return packet
 
 def translateArchiveToUS(packet):
@@ -775,7 +787,7 @@ def _archive_datetime(packet) :
     time_tuple = ((0xfe00 & datestamp) >> 9,    # year
                   (0x01e0 & datestamp) >> 5,    # month
                   (0x001f & datestamp),         # day
-                  timestamp / 100,              # hour
+                  timestamp // 100,             # hour
                   timestamp % 100,              # minute
                   0,                            # second
                   0, 0, -1)
