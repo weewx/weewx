@@ -9,6 +9,8 @@ an ability to reconfigure an existing database.
 Make the formatting and unit conversion machinery more accessible
 to the user. Perhaps remove it from weewx and move it to weeutil?
 
+Offer "cumulative" as an aggregation type.
+
 Allow rain-to-date to be added to a partial rainyear.
 
 Support for APT package.

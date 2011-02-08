@@ -86,48 +86,43 @@ agg_group = {'mintime'    : "group_time",
 
 # This dictionary maps unit groups to a standard unit type in the 
 # US customary unit system:
-USUnits       = {"group_altitude"     : "foot",
-                 "group_count"        : "count",
-                 "group_degree_day"   : "degree_F_day",
-                 "group_direction"    : "degree_compass",
-                 "group_interval"     : "minute",
-                 "group_moisture"     : "centibar",
-                 "group_percent"      : "percent",
-                 "group_pressure"     : "inHg",
-                 "group_radiation"    : "watt_per_meter_squared",
-                 "group_rain"         : "inch",
-                 "group_rainrate"     : "inch_per_hour",
-                 "group_speed"        : "mile_per_hour",
-                 "group_speed2"       : "mile_per_hour2",
-                 "group_temperature"  : "degree_F",
-                 "group_time"         : "unix_epoch",
-                 "group_uv"           : "uv_index",
-                 "group_volt"         : "volt"}
+USUnits     = {"group_altitude"    : "foot",
+               "group_count"       : "count",
+               "group_degree_day"  : "degree_F_day",
+               "group_direction"   : "degree_compass",
+               "group_interval"    : "minute",
+               "group_moisture"    : "centibar",
+               "group_percent"     : "percent",
+               "group_pressure"    : "inHg",
+               "group_radiation"   : "watt_per_meter_squared",
+               "group_rain"        : "inch",
+               "group_rainrate"    : "inch_per_hour",
+               "group_speed"       : "mile_per_hour",
+               "group_speed2"      : "mile_per_hour2",
+               "group_temperature" : "degree_F",
+               "group_time"        : "unix_epoch",
+               "group_uv"          : "uv_index",
+               "group_volt"        : "volt"}
 
 # This dictionary maps unit groups to a standard unit type in the 
 # metric unit system:
-MetricUnits   = {"group_altitude"     : "meter",
-                 "group_count"        : "count",
-                 "group_degree_day"   : "degree_C_day",
-                 "group_direction"    : "degree_compass",
-                 "group_interval"     : "minute",
-                 "group_moisture"     : "centibar",
-                 "group_percent"      : "percent",
-                 "group_pressure"     : "mbar",
-                 "group_radiation"    : "watt_per_meter_squared",
-                 "group_rain"         : "cm",
-                 "group_rainrate"     : "cm_per_hour",
-                 "group_speed"        : "km_per_hour",
-                 "group_speed2"       : "km_per_hour2",
-                 "group_temperature"  : "degree_C",
-                 "group_time"         : "unix_epoch",
-                 "group_uv"           : "uv_index",
-                 "group_volt"         : "volt"}
-
-# This dictionary maps the integer codes used in the databases to the
-# appropriate unit system dictionary:
-StdUnitSystem     = {weewx.US     : USUnits,
-                     weewx.METRIC : MetricUnits}
+MetricUnits = {"group_altitude"    : "meter",
+               "group_count"       : "count",
+               "group_degree_day"  : "degree_C_day",
+               "group_direction"   : "degree_compass",
+               "group_interval"    : "minute",
+               "group_moisture"    : "centibar",
+               "group_percent"     : "percent",
+               "group_pressure"    : "mbar",
+               "group_radiation"   : "watt_per_meter_squared",
+               "group_rain"        : "cm",
+               "group_rainrate"    : "cm_per_hour",
+               "group_speed"       : "km_per_hour",
+               "group_speed2"      : "km_per_hour2",
+               "group_temperature" : "degree_C",
+               "group_time"        : "unix_epoch",
+               "group_uv"          : "uv_index",
+               "group_volt"        : "volt"}
 
 # Conversion functions to go from one unit type to another.
 conversionDict = {
@@ -248,53 +243,97 @@ default_time_format_dict = {"day"      : "%H:%M",
 
 
 #===============================================================================
-#                            class UnitConversion
+#                        class ValueTuple
 #===============================================================================
+    
+class ValueTuple(tuple):
+    def __new__(cls, *args):
+        return tuple.__new__(cls, args)
+    @property
+    def value(self):
+        return self[0]
+    @property
+    def unit(self):
+        return self[1]
+    @property
+    def obstype(self):
+        return self[2]
 
-class UnitConversion(object):
-    """Converts units to a target unit."""
-
+#===============================================================================
+#                        class Converter
+#===============================================================================
+    
+class Converter(object):
+    """Holds everything necessary to do conversions to a target unit system"""
+    
     def __init__(self, group_unit_dict=USUnits):
-        """Initialize an instance of UnitConversion.
+        """Initialize an instance of Converter
         
-        group_unit_dict: Key is a unit_group (eg, 'group_pressure'), value is the target unit type ('mbar')
-        """
+        group_unit_dict: A dictionary holding the conversion information. 
+        Key is a unit_group (eg, 'group_pressure'), value is the target unit type ('mbar')"""
+
         self.group_unit_dict  = group_unit_dict
         
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
-
-        return UnitConversion(skin_dict['Units']['Groups'])
+        return UnitInfo(skin_dict['Units']['Groups'])
 
     def convert(self, val_t):
         """Convert a value from a given unit type to the target type.
+        
+        Throws an exception of type KeyError if the conversion cannot be done.
         
         val_t: A value tuple with the data, a unit type, and an observation type 
         Example: (30.02, 'inHg', 'barometer')
         
         returns: A value tuple in the new, target unit type 
-        Example: (1016.5, 'mbar', 'barometer') or None if the conversion cannot be performed."""
+        Example: (1016.5, 'mbar', 'barometer') """
         if weewx.debug:
             if val_t[1] is None or val_t[2] is None:
                 syslog.syslog(syslog.LOG_DEBUG, "units: None encountered in value tuple "+str(val_t))
         # Get which group (eg, "group_pressure") this observation type is in:
-        unit_group= obs_group_dict[val_t[2]]
+        unit_group= _getUnitGroup(val_t[2], val_t[1])
         # Determine which units (eg, "mbar") this group should be in:
         new_unit_type = self.group_unit_dict[unit_group]
         # Now convert to this new unit type: 
+        print "value tuple=", val_t, "unit group=", unit_group, "new unit type = ", new_unit_type
         new_val_t = convert(val_t, new_unit_type)
         return new_val_t
         
+    def getTargetUnit(self, obs_type, agg_type=None):
+        """Given an observation type and an aggregation type, return the 
+        target unit type.
+        
+        obs_type: An observation type ('outTemp', 'rain', etc.)
+        
+        agg_type: Type of aggregation ('mintime', 'count', etc.)
+        [Optional. default is no aggregation)
+        
+        returns the unit type of the given observation and aggregation type, 
+        or None if it cannot be determined.
+        """        
+        try:
+            unit_group = _getUnitGroup(obs_type, agg_type)
+            need observation type too
+            unit_type  = self.group_unit_dict[unit_group]
+        except KeyError:
+            print "setting unit_type to none"
+            unit_type = None
+        return unit_type
+    
+# This dictionary holds converters for the standard unit conversion systems. 
+StdUnitConverters = {weewx.US     : Converter(USUnits),
+                     weewx.METRIC : Converter(MetricUnits)}
+
 
 #===============================================================================
-#                            class Formatter
+#                        class Formatter
 #===============================================================================
-
+    
 class Formatter(object):
-    """Holds unit formatting and label information."""
 
-    def __init__(self, unit_format_dict = default_unit_format_dict,  
+    def __init__(self, unit_format_dict = default_unit_format_dict,
                        unit_label_dict  = default_unit_label_dict,
                        time_format_dict = default_time_format_dict):
         """
@@ -302,21 +341,20 @@ class Formatter(object):
         
         unit_label_dict: Key is unit type (eg, 'inHg'), value is a label (" inHg")
         
-        time_format_dict: Key is a context (eg, 'week'), value is a strftime format ("%d-%b-%Y %H:%M").
-        """
+        time_format_dict: Key is a context (eg, 'week'), value is a strftime format ("%d-%b-%Y %H:%M")."""
+
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
         self.time_format_dict = time_format_dict
-
+        
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
-        return Formatter(skin_dict['Units']['StringFormats'],
-                         skin_dict['Units']['Labels'],
-                         skin_dict['Units']['TimeFormats'])
-    
-    def toString(self, val_t, context='current', addLabel=True, 
-                 useThisFormat=None, NONE_string=None):
+        return UnitInfo(skin_dict['Units']['StringFormats'],
+                        skin_dict['Units']['Labels'],
+                        skin_dict['Units']['TimeFormats'])
+
+    def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
         """Format the value as a string.
         
         val_t: The value to be formatted as a value tuple. 
@@ -366,6 +404,45 @@ class Formatter(object):
         return val_str
 
 #===============================================================================
+#                        class UnitInfo
+#===============================================================================
+    
+class UnitInfo(Formatter, Converter):
+
+    def __init__(self, unit_format_dict = default_unit_format_dict,
+                       unit_label_dict  = default_unit_label_dict,
+                       time_format_dict = default_time_format_dict,
+                       group_unit_dict  = USUnits):
+        """
+        unit_format_dict: Key is unit type (eg, 'inHg'), value is a string format ("%.1f")
+        
+        unit_label_dict: Key is unit type (eg, 'inHg'), value is a label (" inHg")
+        
+        time_format_dict: Key is a context (eg, 'week'), value is a strftime format ("%d-%b-%Y %H:%M").
+    
+        group_unit_dict: Key is a unit_group (eg, 'group_pressure'), value is the target unit type ('mbar')"""
+
+        Formatter.__init__(self, unit_format_dict, unit_label_dict, time_format_dict)
+        Converter.__init__(self, group_unit_dict)
+        
+    @staticmethod
+    def fromSkinDict(skin_dict):
+        """Factory static method to initialize from a skin dictionary."""
+        return UnitInfo(skin_dict['Units']['StringFormats'],
+                        skin_dict['Units']['Labels'],
+                        skin_dict['Units']['TimeFormats'],
+                        skin_dict['Units']['Groups'])
+
+    def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
+        """Does unit conversion first, then converts to string"""
+        target_val_t = self.convert(val_t)
+        return super(UnitInfo, self).toString(target_val_t, context, addLabel, useThisFormat, NONE_string)
+    
+    def getTargetUnitLabel(self, obs_type):
+        target_unit = self.getTargetUnit(obs_type)
+        return self.unit_label_dict[target_unit]
+
+#===============================================================================
 #                        class ValueHelper
 #===============================================================================
     
@@ -373,7 +450,7 @@ class ValueHelper(object):
     """A helper class that binds together everything needed to do a
     context sensitive formatting"""
     
-    def __init__(self, value_t, context='current', formatter=Formatter()):
+    def __init__(self, value_t, context='current', formatter=None):
         """Initialize a ValueHelper.
         
         value_t: An instance of weewx.ValueTuple holding the data.
@@ -381,13 +458,14 @@ class ValueHelper(object):
         context: The time context. Something like 'current', 'day', 'week', etc.
         [Optional. If not given, context 'current' will be used.]
         
-        formatter: An instance of class Formatter() to be used to format the value
-        as a string. [Optional. If not given, the default Formatter will be used]
+        formatter: An instance of a class with methods toString() for formatting,
+        and convert() for unit conversion. Class UnitInfo() satisfies these
+        requirements. [Optional. If not given, the default UnitInfo will be used]
         """
         self.value_t   = value_t
         self.context   = context
-        self.formatter = formatter
-        
+        self.formatter = formatter if formatter else UnitInfo()
+    
     def __str__(self):
         """Return as string"""
         return self.formatter.toString(self.value_t, self.context)
@@ -397,11 +475,11 @@ class ValueHelper(object):
         return self.formatter.toString(self.value_t, self.context, NONE_string=NONE_string)
     
     def format(self, format_string, NONE_string=None):
-        """Return a formatted version of the data, using a user-supplied format."""
+        """Returns a formatted version of the data, using a user-supplied format."""
         return self.formatter.toString(self.value_t, self.context, useThisFormat=format_string, NONE_string=NONE_string)
     
     def nolabel(self, format_string, NONE_string=None):
-        """Return a formatted version of the data, using a user-supplied format. No label."""
+        """Returns a formatted version of the data, using a user-supplied format. No label."""
         return self.formatter.toString(self.value_t, self.context, addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
         
     @property
@@ -411,8 +489,17 @@ class ValueHelper(object):
         
     @property
     def raw(self):
-        """Return the raw value without any formatting."""
-        return self.value_t[0]
+        """Does unit conversion, then returns the raw converted value without any formatting."""
+        return self.formatter.convert(self.value_t)[0]
+    
+    def __getattr__(self, target_unit):
+        """Convert to a new unit type.
+        
+        Throws exception KeyError if the conversion cannot be done.
+        
+        returns: an instance of ValueHelper using the new unit."""
+        new_value_t = convert(self.value_t, target_unit)
+        return ValueHelper(new_value_t, self.context, self.formatter)
         
 #===============================================================================
 #                            class ValueDict
@@ -425,7 +512,7 @@ class ValueDict(dict):
     be used for context sensitive formatting. 
     """
     
-    def __init__(self, d, formatter=Formatter(), context='current'):
+    def __init__(self, d, context='current', formatter=UnitInfo()):
         """Initialize the ValueDict from another dictionary.
         
         d: A dictionary containing the key-value pairs for observation types
@@ -438,13 +525,12 @@ class ValueDict(dict):
 
         In this case, the standard unit system being used is "2", or Metric.
         
-        formatter: An instance of the class Formatter. This will be passed on to
-        the returned instance of ValueHelper. [Optional. If not given,
-        the default Formatter will be used]
-        
         context: The time context of the dictionary. This will be passed on to
         the returned instance of ValueHelper. [Optional. If not given,
         'current' will be used]
+
+        formatter: A unit formatter. This will be passed on to the returned
+        ValueHelpers. [Optional. If not given, the default UnitInfo will be used]
         """
         # Initialize my superclass, the dictionary:
         super(ValueDict, self).__init__(d)
@@ -458,9 +544,9 @@ class ValueDict(dict):
         std_unit_system = dict.__getitem__(self, 'usUnits')
         # Given this standard unit system, what is the unit type of this
         # particular observation type?
-        unit_type = getStandardUnitType(std_unit_system, obs_type)
+        unit_type = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
         # Form the value-tuple. 
-        val_t = weewx.ValueTuple(dict.__getitem__(self, obs_type), unit_type, obs_type)
+        val_t = ValueTuple(dict.__getitem__(self, obs_type), unit_type, obs_type)
         # Return the results as a ValueHelper
         vh = ValueHelper(val_t, context=self.context, formatter=self.formatter)
         return vh
@@ -475,6 +561,7 @@ def _getUnitGroup(obs_type, agg_type=None):
              obs_type  agg_type          Returns
              ________  ________         _________
             'outTemp',  None      -->  'group_temperature'
+            'outTemp', 'min'      -->  'group_temperature'
             'outTemp', 'mintime'  -->  'group_time'
             'wind',    'avg'      -->  'group_speed'
             'wind',    'vecdir'   -->  'group_direction'
@@ -489,27 +576,6 @@ def _getUnitGroup(obs_type, agg_type=None):
     else:
         unit_group = obs_group_dict.get(obs_type)
     return unit_group
-    
-def getStandardUnitType(std_unit_system, obs_type, agg_type=None):
-    """Given an observation type and an aggregation type, return the unit type
-    within a standardized unit system.
-    
-    std_unit_system: Either weewx.US or weewx.METRIC
-    
-    obs_type: An observation type ('outTemp', 'rain', etc.)
-    
-    agg_type: Type of aggregation ('mintime', 'count', etc.)
-    [Optional. default is no aggregation)
-    
-    returns the unit type of the given observation and aggregation type, 
-    or None if it cannot be determined.
-    """
-    try:
-        unit_group = _getUnitGroup(obs_type, agg_type)
-        unit_type  = StdUnitSystem[std_unit_system][unit_group]
-    except KeyError:
-        unit_type = None
-    return unit_type
     
 def convert(val_t, target_unit_type):
     """ Convert a value or a sequence of values between unit systems
@@ -533,7 +599,7 @@ def convert(val_t, target_unit_type):
     except TypeError:
         new_val = conversionDict[val_t[1]][target_unit_type](val_t[0])
     # Add on the unit type and the observation type and return the results:
-    return weewx.ValueTuple((new_val, target_unit_type, val_t[2]))
+    return ValueTuple(new_val, target_unit_type, val_t[2])
 
 def convertStd(val_t, target_std_unit_system):
     """Convert a value tuple to an appropriate unit in a target standardized
@@ -549,6 +615,25 @@ def convertStd(val_t, target_std_unit_system):
     
     Returns: A value tuple in the given standardized unit system.
     """
-    unit_group = obs_group_dict[val_t[2]]
-    target_unit_type = StdUnitSystem[target_std_unit_system][unit_group]
-    return convert(val_t, target_unit_type)
+    return StdUnitConverters[target_std_unit_system].convert(val_t)
+
+def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
+    """Given a standard unit system (weewx.US or weewx.METRIC), an observation type, and
+    an aggregation type, what is the unit system it uses?
+
+    target_std_unit_system: A standardized unit system. 
+    Example: weewx.US or weewx.METRIC.
+    
+    obs_type: An observation type. E.g., 'barometer'.
+        
+    agg_type: An aggregation type E.g., 'mintime', or 'avg'.
+    """
+    
+    return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
+
+if __name__ == "__main__":
+    c= Converter()
+    v = (20.0, "degree_C", "outTemp")
+    v2 = c.convert(v)
+    print v2
+    

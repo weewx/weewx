@@ -46,6 +46,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.initStats()
         self.initUnits()
         currentRec = self.getCurrentRec()
+        self.initAlmanac(self.stop_ts)
         
         self.generateSummaryBy('SummaryByMonth', self.start_ts, self.stop_ts)
         self.generateSummaryBy('SummaryByYear',  self.start_ts, self.stop_ts)
@@ -64,7 +65,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
     def initUnits(self):
         
-        self.unit_info = weewx.units.UnitConversion.fromSkinDict(self.skin_dict)
+        self.formatter = weewx.units.UnitInfo.fromSkinDict(self.skin_dict)
 
     def getCurrentRec(self):
         # Open up the main database archive
@@ -79,7 +80,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         current_dict = archive.getRecord(self.stop_ts)
         
         # Wrap it in a ValueDict
-        currentRec = weewx.units.ValueDict(current_dict, self.unit_info)
+        currentRec = weewx.units.ValueDict(current_dict, formatter=self.formatter)
         
         return currentRec
 
@@ -177,8 +178,6 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         ngen = 0
         t1 = time.time()
 
-        self.initAlmanac(stop_ts)
-    
         searchList = self.getToDateSearchList(currentRec, stop_ts)
             
         for subreport in self.skin_dict['FileGenerator']['ToDate'].sections:
@@ -254,7 +253,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # stats.month.outTemp.max
         stats = weewx.stats.TaggedStats(stop_ts,
                                         self.statsdb,
-                                        self.unit_info,
+                                        formatter = self.formatter,
                                         rain_year_start = self.station.rain_year_start,
                                         heatbase = heatbase_t,
                                         coolbase = coolbase_t)
@@ -266,7 +265,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Put together the search list:
         searchList = [{'station'    : self.station,
                        'almanac'    : self.almanac,
-                       'unit'       : self.unit_info,
+                       'unit'       : self.formatter,
                        'heatbase'   : heatbase_t,
                        'coolbase'   : coolbase_t,
                        'Extras'     : extra_dict},

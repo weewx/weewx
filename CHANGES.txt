@@ -8,19 +8,13 @@ Added a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
 Added a mobile formatted HTML page, courtesy of user Vince Skahan (thanks,
 Vince!!).
 
-Added executable module "reports.py", which will just run report generation.
+Added executable module "runreports.py", which will just run report generation.
 
 Y-axis plot labels (such as "°F") can now be overridden in the plot configuration
 section of skin.conf by using option "y_label".
 
 Added package "user", which can contain any user extensions. This package
 will not get overridden in the upgrade process.
-
-Changed VantagePro.accumulateLoop to make it slightly more robust.
-
-Added missing CRC check to LOOP data.
-
-Now unpacks below zero temperatures correctly.
 
 Now makes all of the LOOP and archive data available to services. This includes
 new keys:
@@ -36,6 +30,16 @@ new keys:
   Archive data:
     'forecastRule'   'highOutTemp'    'highRadiation'   'highUV'
     'lowOutTemp'
+
+
+1.9.3 02/04/11
+
+Now correctly decodes temperatures from LOOP packets as signed shorts (rather
+than unsigned).
+
+Now does a CRC check on LOOP data.
+
+Changed VantagePro.accumulateLoop to make it slightly more robust.
 
 
 1.9.2  11/20/10
