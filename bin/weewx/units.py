@@ -256,7 +256,7 @@ class ValueTuple(tuple):
     def unit(self):
         return self[1]
     @property
-    def obstype(self):
+    def group(self):
         return self[2]
 
 #===============================================================================
@@ -284,43 +284,35 @@ class Converter(object):
         
         Throws an exception of type KeyError if the conversion cannot be done.
         
-        val_t: A value tuple with the data, a unit type, and an observation type 
-        Example: (30.02, 'inHg', 'barometer')
+        val_t: A value tuple with the data, a unit type, and a unit group 
+        Example: (30.02, 'inHg', 'group_pressure')
         
         returns: A value tuple in the new, target unit type 
-        Example: (1016.5, 'mbar', 'barometer') """
+        Example: (1016.5, 'mbar', 'group_pressure') """
         if weewx.debug:
             if val_t[1] is None or val_t[2] is None:
                 syslog.syslog(syslog.LOG_DEBUG, "units: None encountered in value tuple "+str(val_t))
-        # Get which group (eg, "group_pressure") this observation type is in:
-        unit_group= _getUnitGroup(val_t[2], val_t[1])
         # Determine which units (eg, "mbar") this group should be in:
-        new_unit_type = self.group_unit_dict[unit_group]
+        new_unit_type = self.group_unit_dict[val_t[2]]
         # Now convert to this new unit type: 
-        print "value tuple=", val_t, "unit group=", unit_group, "new unit type = ", new_unit_type
+        print "value tuple=", val_t, "new unit type = ", new_unit_type
         new_val_t = convert(val_t, new_unit_type)
         return new_val_t
         
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
-        target unit type.
+        target unit type and group.
         
         obs_type: An observation type ('outTemp', 'rain', etc.)
         
         agg_type: Type of aggregation ('mintime', 'count', etc.)
         [Optional. default is no aggregation)
         
-        returns the unit type of the given observation and aggregation type, 
-        or None if it cannot be determined.
+        returns: A 2-way tuple holding the unit type and the group of the unit.
         """        
-        try:
-            unit_group = _getUnitGroup(obs_type, agg_type)
-            need observation type too
-            unit_type  = self.group_unit_dict[unit_group]
-        except KeyError:
-            print "setting unit_type to none"
-            unit_type = None
-        return unit_type
+        unit_group = _getUnitGroup(obs_type, agg_type)
+        unit_type  = self.group_unit_dict[unit_group]
+        return (unit_type, unit_group)
     
 # This dictionary holds converters for the standard unit conversion systems. 
 StdUnitConverters = {weewx.US     : Converter(USUnits),
@@ -332,6 +324,7 @@ StdUnitConverters = {weewx.US     : Converter(USUnits),
 #===============================================================================
     
 class Formatter(object):
+    """Holds formatting information for the various unit types."""
 
     def __init__(self, unit_format_dict = default_unit_format_dict,
                        unit_label_dict  = default_unit_label_dict,
@@ -408,6 +401,7 @@ class Formatter(object):
 #===============================================================================
     
 class UnitInfo(Formatter, Converter):
+    """Holds formatting and unit conversion information."""
 
     def __init__(self, unit_format_dict = default_unit_format_dict,
                        unit_label_dict  = default_unit_label_dict,
@@ -439,7 +433,8 @@ class UnitInfo(Formatter, Converter):
         return super(UnitInfo, self).toString(target_val_t, context, addLabel, useThisFormat, NONE_string)
     
     def getTargetUnitLabel(self, obs_type):
-        target_unit = self.getTargetUnit(obs_type)
+        """Returns a label suitable for the given observation type"""
+        (target_unit, target_group) = self.getTargetUnit(obs_type)
         return self.unit_label_dict[target_unit]
 
 #===============================================================================
@@ -453,7 +448,7 @@ class ValueHelper(object):
     def __init__(self, value_t, context='current', formatter=None):
         """Initialize a ValueHelper.
         
-        value_t: An instance of weewx.ValueTuple holding the data.
+        value_t: A value tuple holding the data.
         
         context: The time context. Something like 'current', 'day', 'week', etc.
         [Optional. If not given, context 'current' will be used.]
@@ -499,6 +494,7 @@ class ValueHelper(object):
         
         returns: an instance of ValueHelper using the new unit."""
         new_value_t = convert(self.value_t, target_unit)
+        needs no formatter!
         return ValueHelper(new_value_t, self.context, self.formatter)
         
 #===============================================================================
@@ -512,7 +508,7 @@ class ValueDict(dict):
     be used for context sensitive formatting. 
     """
     
-    def __init__(self, d, context='current', formatter=UnitInfo()):
+    def __init__(self, d, context='current', formatter=None):
         """Initialize the ValueDict from another dictionary.
         
         d: A dictionary containing the key-value pairs for observation types
@@ -530,7 +526,7 @@ class ValueDict(dict):
         'current' will be used]
 
         formatter: A unit formatter. This will be passed on to the returned
-        ValueHelpers. [Optional. If not given, the default UnitInfo will be used]
+        ValueHelper.
         """
         # Initialize my superclass, the dictionary:
         super(ValueDict, self).__init__(d)
@@ -544,9 +540,9 @@ class ValueDict(dict):
         std_unit_system = dict.__getitem__(self, 'usUnits')
         # Given this standard unit system, what is the unit type of this
         # particular observation type?
-        unit_type = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
+        (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
         # Form the value-tuple. 
-        val_t = ValueTuple(dict.__getitem__(self, obs_type), unit_type, obs_type)
+        val_t = ValueTuple(dict.__getitem__(self, obs_type), unit_type, unit_group)
         # Return the results as a ValueHelper
         vh = ValueHelper(val_t, context=self.context, formatter=self.formatter)
         return vh
@@ -570,12 +566,11 @@ def _getUnitGroup(obs_type, agg_type=None):
         
         agg_type: An aggregation type E.g., 'mintime', or 'avg'.
         
-        Returns: the unit group or None if it cannot be determined."""
+        Returns: the unit group."""
     if agg_type and agg_type in agg_group:
-        unit_group = agg_group[agg_type]
+        return agg_group[agg_type]
     else:
-        unit_group = obs_group_dict.get(obs_type)
-    return unit_group
+        return obs_group_dict[obs_type]
     
 def convert(val_t, target_unit_type):
     """ Convert a value or a sequence of values between unit systems
@@ -598,7 +593,7 @@ def convert(val_t, target_unit_type):
         new_val = map(conversionDict[val_t[1]][target_unit_type], val_t[0])
     except TypeError:
         new_val = conversionDict[val_t[1]][target_unit_type](val_t[0])
-    # Add on the unit type and the observation type and return the results:
+    # Add on the unit type and the group type and return the results:
     return ValueTuple(new_val, target_unit_type, val_t[2])
 
 def convertStd(val_t, target_std_unit_system):
@@ -627,13 +622,22 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     obs_type: An observation type. E.g., 'barometer'.
         
     agg_type: An aggregation type E.g., 'mintime', or 'avg'.
+    
+    returns: A 2-way tuple containing the target units, and the target group.
     """
     
     return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
 
 if __name__ == "__main__":
-    c= Converter()
-    v = (20.0, "degree_C", "outTemp")
-    v2 = c.convert(v)
-    print v2
+    value_t = (20.01, "degree_C", "group_temperature")
+
+    vh = ValueHelper(value_t)
+    print vh
+    print vh.string
+    print vh.nolabel("T=%.3f")
+    print vh.formatted
+    print vh.raw
+    print vh.degree_C
+    
+    
     

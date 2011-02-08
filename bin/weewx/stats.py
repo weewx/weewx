@@ -349,9 +349,9 @@ class StatsReadonlyDb(object):
             _result = None
 
         # Look up the unit type of this combination of stats type and aggregation:
-        _result_unit_type = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
+        _type_group_t = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
         # Form the value tuple:
-        return weewx.units.ValueTuple(_result, _result_unit_type, stats_type)
+        return weewx.units.ValueTuple(_result, *_type_group_t)
         
     def getHeatCool(self, timespan, stats_type, aggregateType, heatbase_t, coolbase_t):
         """Calculate heating or cooling degree days for a given timespan.
@@ -402,9 +402,9 @@ class StatsReadonlyDb(object):
             _result = sum / count if count else None 
 
         # Look up the type of the result:
-        _result_unit_type = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
+        _type_group_t = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
         # Return as a value tuple
-        return weewx.units.ValueTuple(_result, _result_unit_type, stats_type)
+        return weewx.units.ValueTuple(_result, *_type_group_t)
     
     def _getFirstUpdate(self):
         """Returns the time of the first entry in the statistical database."""
