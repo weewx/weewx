@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 #    Copyright (c) 2010, 2011 Tom Keffer <tkeffer@gmail.com>
 #
@@ -126,46 +127,45 @@ MetricUnits = {"group_altitude"    : "meter",
 
 # Conversion functions to go from one unit type to another.
 conversionDict = {
-      'inHg'             : {'mbar' : lambda x : 33.86 * x if x is not None else None, 
-                            'hPa'  : lambda x : 33.86 * x if x is not None else None},
-      'degree_F'         : {'degree_C'   : lambda x : (5.0/9.0) * (x - 32.0) if x is not None else None},
-      'degree_F_day'     : {'degree_C_day'      : lambda x : (5.0/9.0)   * x if x is not None else None},
-      'mile_per_hour'    : {'km_per_hour'       : lambda x : 1.609344    * x if x is not None else None,
-                            'knot'              : lambda x : 0.868976242 * x if x is not None else None,
-                            'meter_per_second'  : lambda x : 0.44704     * x if x is not None else None},
-      'mile_per_hour2'   : {'km_per_hour2'      : lambda x : 1.609344    * x if x is not None else None,
-                            'knot2'             : lambda x : 0.868976242 * x if x is not None else None,
-                            'meter_per_second2' : lambda x : 0.44704     * x if x is not None else None},
-      'inch_per_hour'    : {'cm_per_hour'       : lambda x : 2.54   * x if x is not None else None,
-                            'mm_per_hour'       : lambda x : 25.4   * x if x is not None else None},
-      'inch'             : {'cm'                : lambda x : 2.54   * x if x is not None else None,
-                            'mm'                : lambda x : 25.4   * x if x is not None else None},
-      'foot'             : {'meter'             : lambda x : 0.3048 * x if x is not None else None},
-      
-      'mbar'             : {'inHg'            : lambda x : 0.0295333727 * x if x is not None else None,
-                            'hPa'             : lambda x : 1.0 * x          if x is not None else None},
-      'hPa'              : {'inHg'            : lambda x : 0.0295333727 * x if x is not None else None,
-                            'mbar'            : lambda x : 1.0 * x          if x is not None else None},
-      'degree_C'         : {'degree_F'        : lambda x : (9.0/5.0 * x + 32.0) if x is not None else None},
-      'degree_C_day'     : {'degree_F_day'    : lambda x : (9.0/5.0 * x)   if x is not None else None},
-      'km_per_hour'      : {'mile_per_hour'   : lambda x : 0.621371192* x if x is not None else None,
-                            'knot'            : lambda x : 0.539956803* x if x is not None else None,
-                            'meter_per_second': lambda x : 0.277777778* x if x is not None else None},
-      'meter_per_second' : {'mile_per_hour'   : lambda x : 2.23693629 * x if x is not None else None,
-                            'knot'            : lambda x : 1.94384449 * x if x is not None else None,
-                            'km_per_hour'     : lambda x : 3.6        * x if x is not None else None},
-      'meter_per_second2': {'mile_per_hour2'  : lambda x : 2.23693629 * x if x is not None else None,
-                            'knot2'           : lambda x : 1.94384449 * x if x is not None else None,
-                            'km_per_hour2'    : lambda x : 3.6        * x if x is not None else None},
-      'cm_per_hour'      : {'inch_per_hour'   : lambda x : 0.393700787* x if x is not None else None,
-                            'mm_per_hour'     : lambda x : 10.0       * x if x is not None else None},
-      'mm_per_hour'      : {'inch_per_hour'   : lambda x : .0393700787* x if x is not None else None,
-                            'cm_per_hour'     : lambda x : 0.10       * x if x is not None else None},
-      'cm'               : {'inch'            : lambda x : 0.393700787* x if x is not None else None,
-                            'mm'              : lambda x : 10.0       * x if x is not None else None},
-      'mm'               : {'inch'            : lambda x : .0393700787* x if x is not None else None,
-                            'cm'              : lambda x : 0.10       * x if x is not None else None},
-      'meter'            : {'foot'            : lambda x : 3.2808399  * x if x is not None else None} }
+      'inHg'             : {'mbar'             : lambda x : 33.86 * x if x is not None else None, 
+                            'hPa'              : lambda x : 33.86 * x if x is not None else None},
+      'degree_F'         : {'degree_C'         : lambda x : (5.0/9.0) * (x - 32.0) if x is not None else None},
+      'degree_F_day'     : {'degree_C_day'     : lambda x : (5.0/9.0)   * x if x is not None else None},
+      'mile_per_hour'    : {'km_per_hour'      : lambda x : 1.609344    * x if x is not None else None,
+                            'knot'             : lambda x : 0.868976242 * x if x is not None else None,
+                            'meter_per_second' : lambda x : 0.44704     * x if x is not None else None},
+      'mile_per_hour2'   : {'km_per_hour2'     : lambda x : 1.609344    * x if x is not None else None,
+                            'knot2'            : lambda x : 0.868976242 * x if x is not None else None,
+                            'meter_per_second2': lambda x : 0.44704     * x if x is not None else None},
+      'inch_per_hour'    : {'cm_per_hour'      : lambda x : 2.54        * x if x is not None else None,
+                            'mm_per_hour'      : lambda x : 25.4        * x if x is not None else None},
+      'inch'             : {'cm'               : lambda x : 2.54        * x if x is not None else None,
+                            'mm'               : lambda x : 25.4        * x if x is not None else None},
+      'foot'             : {'meter'            : lambda x : 0.3048      * x if x is not None else None},
+      'mbar'             : {'inHg'             : lambda x : x / 33.86  if x is not None else None,
+                            'hPa'              : lambda x : 1.0 * x    if x is not None else None},
+      'hPa'              : {'inHg'             : lambda x : x / 33.86  if x is not None else None,
+                            'mbar'             : lambda x : 1.0 * x    if x is not None else None},
+      'degree_C'         : {'degree_F'         : lambda x : (9.0/5.0 * x + 32.0) if x is not None else None},
+      'degree_C_day'     : {'degree_F_day'     : lambda x : (9.0/5.0 * x)   if x is not None else None},
+      'km_per_hour'      : {'mile_per_hour'    : lambda x : 0.621371192* x if x is not None else None,
+                            'knot'             : lambda x : 0.539956803* x if x is not None else None,
+                            'meter_per_second' : lambda x : 0.277777778* x if x is not None else None},
+      'meter_per_second' : {'mile_per_hour'    : lambda x : 2.23693629 * x if x is not None else None,
+                            'knot'             : lambda x : 1.94384449 * x if x is not None else None,
+                            'km_per_hour'      : lambda x : 3.6        * x if x is not None else None},
+      'meter_per_second2': {'mile_per_hour2'   : lambda x : 2.23693629 * x if x is not None else None,
+                            'knot2'            : lambda x : 1.94384449 * x if x is not None else None,
+                            'km_per_hour2'     : lambda x : 3.6        * x if x is not None else None},
+      'cm_per_hour'      : {'inch_per_hour'    : lambda x : 0.393700787* x if x is not None else None,
+                            'mm_per_hour'      : lambda x : 10.0       * x if x is not None else None},
+      'mm_per_hour'      : {'inch_per_hour'    : lambda x : .0393700787* x if x is not None else None,
+                            'cm_per_hour'      : lambda x : 0.10       * x if x is not None else None},
+      'cm'               : {'inch'             : lambda x : 0.393700787* x if x is not None else None,
+                            'mm'               : lambda x : 10.0       * x if x is not None else None},
+      'mm'               : {'inch'             : lambda x : .0393700787* x if x is not None else None,
+                            'cm'               : lambda x : 0.10       * x if x is not None else None},
+      'meter'            : {'foot'             : lambda x : 3.2808399  * x if x is not None else None} }
 
 
 # Default unit formatting to be used in the absence of a skin configuration file
@@ -245,7 +245,22 @@ default_time_format_dict = {"day"      : "%H:%M",
 #===============================================================================
 #                        class ValueTuple
 #===============================================================================
-    
+
+# A value, along with the unit it is in, can be represented by a 3-way tuple
+# called a value tuple. All weewx routines can accept a simple unadorned
+# 3-way tuple as a value tuple, but they return the type ValueTuple. It is
+# useful because its contents can be accessed using named attributes.
+#
+# Item   attribute   Meaning
+#    0    value      The data value (eg, 20.2)
+#    1    unit       The unit it is in ("degree_C")
+#    2    group      The unit group ("group_temperature")
+#
+# It is valid to have a data value of None.
+#
+# It is valid to have a unit type of None (meaning there is no information about
+# the unit the value is in). In this case, the group must also be None.
+#
 class ValueTuple(tuple):
     def __new__(cls, *args):
         return tuple.__new__(cls, args)
@@ -262,9 +277,9 @@ class ValueTuple(tuple):
 #===============================================================================
 #                        class Converter
 #===============================================================================
-    
+
 class Converter(object):
-    """Holds everything necessary to do conversions to a target unit system"""
+    """Holds everything necessary to do conversions to a target unit system."""
     
     def __init__(self, group_unit_dict=USUnits):
         """Initialize an instance of Converter
@@ -277,41 +292,85 @@ class Converter(object):
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
-        return UnitInfo(skin_dict['Units']['Groups'])
+        return Converter(skin_dict['Units']['Groups'])
 
     def convert(self, val_t):
         """Convert a value from a given unit type to the target type.
         
-        Throws an exception of type KeyError if the conversion cannot be done.
+        val_t: A value tuple with the data, a unit type, and a unit group
         
-        val_t: A value tuple with the data, a unit type, and a unit group 
-        Example: (30.02, 'inHg', 'group_pressure')
+        returns: A value tuple in the new, target unit type. If the input
+        value tuple contains an unknown unit type an exception of type KeyError
+        will be thrown. If the input value tuple has either a unit
+        type of None, or a group type of None (but not both), then an
+        exception of type KeyError will be thrown. If both the
+        unit and group are None, then the original val_t will be
+        returned (i.e., no conversion is done).
         
-        returns: A value tuple in the new, target unit type 
-        Example: (1016.5, 'mbar', 'group_pressure') """
-        if weewx.debug:
-            if val_t[1] is None or val_t[2] is None:
-                syslog.syslog(syslog.LOG_DEBUG, "units: None encountered in value tuple "+str(val_t))
+        Examples:
+        >>> p_m = (1016.5, 'mbar', 'group_pressure')
+        >>> c = Converter()
+        >>> print c.convert(p_m)
+        (30.020673360897813, 'inHg', 'group_pressure')
+        
+        Try an unspecified unit type:
+        >>> p2 = (1016.5, None, None)
+        >>> print c.convert(p2)
+        (1016.5, None, None)
+        
+        Try a bad unit type:
+        >>> p3 = (1016.5, 'foo', 'group_pressure')
+        >>> try:
+        ...     print c.convert(p3)
+        ... except KeyError:
+        ...     print "Exception thrown"
+        Exception thrown
+        """
+        if val_t[1] is None and val_t[2] is None:
+            return val_t
         # Determine which units (eg, "mbar") this group should be in:
         new_unit_type = self.group_unit_dict[val_t[2]]
         # Now convert to this new unit type: 
-        print "value tuple=", val_t, "new unit type = ", new_unit_type
         new_val_t = convert(val_t, new_unit_type)
         return new_val_t
+
+    def convertDict(self, val_dict):
+        """Convert a dictionary of value tuples to target unit types.
+        
+        Throws an exception of type KeyError if the conversion cannot be done.
+        
+        val_dict: A dictionary with keys of observation type, values the
+        corresponding value tuple.
+        
+        returns: A dictionary with values of value tuples in the new, 
+        target unit type.
+        
+        Example:
+        >>> d_us = {'outTemp'   : (68.0, "degree_F", "group_temperature"),\
+                    'barometer' : (1002.3 / 33.86, "inHg", "group_pressure")}
+        >>> c = Converter(MetricUnits)
+        >>> print c.convertDict(d_us)
+        {'outTemp': (20.0, 'degree_C', 'group_temperature'), 'barometer': (1002.3, 'mbar', 'group_pressure')}
+        """
+        result = {}
+        for k in val_dict:
+            result[k] = self.convert(val_dict[k])
+        return result
         
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
-        target unit type and group.
+        target unit type and group, or (None, None) if they cannot be determined.
         
         obs_type: An observation type ('outTemp', 'rain', etc.)
         
         agg_type: Type of aggregation ('mintime', 'count', etc.)
         [Optional. default is no aggregation)
         
-        returns: A 2-way tuple holding the unit type and the group of the unit.
+        returns: A 2-way tuple holding the unit type and the unit group
+        or (None, None) if they cannot be determined.
         """        
         unit_group = _getUnitGroup(obs_type, agg_type)
-        unit_type  = self.group_unit_dict[unit_group]
+        unit_type  = self.group_unit_dict.get(unit_group)
         return (unit_type, unit_group)
     
 # This dictionary holds converters for the standard unit conversion systems. 
@@ -343,9 +402,9 @@ class Formatter(object):
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
-        return UnitInfo(skin_dict['Units']['StringFormats'],
-                        skin_dict['Units']['Labels'],
-                        skin_dict['Units']['TimeFormats'])
+        return Formatter(skin_dict['Units']['StringFormats'],
+                         skin_dict['Units']['Labels'],
+                         skin_dict['Units']['TimeFormats'])
 
     def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
         """Format the value as a string.
@@ -397,55 +456,22 @@ class Formatter(object):
         return val_str
 
 #===============================================================================
-#                        class UnitInfo
-#===============================================================================
-    
-class UnitInfo(Formatter, Converter):
-    """Holds formatting and unit conversion information."""
-
-    def __init__(self, unit_format_dict = default_unit_format_dict,
-                       unit_label_dict  = default_unit_label_dict,
-                       time_format_dict = default_time_format_dict,
-                       group_unit_dict  = USUnits):
-        """
-        unit_format_dict: Key is unit type (eg, 'inHg'), value is a string format ("%.1f")
-        
-        unit_label_dict: Key is unit type (eg, 'inHg'), value is a label (" inHg")
-        
-        time_format_dict: Key is a context (eg, 'week'), value is a strftime format ("%d-%b-%Y %H:%M").
-    
-        group_unit_dict: Key is a unit_group (eg, 'group_pressure'), value is the target unit type ('mbar')"""
-
-        Formatter.__init__(self, unit_format_dict, unit_label_dict, time_format_dict)
-        Converter.__init__(self, group_unit_dict)
-        
-    @staticmethod
-    def fromSkinDict(skin_dict):
-        """Factory static method to initialize from a skin dictionary."""
-        return UnitInfo(skin_dict['Units']['StringFormats'],
-                        skin_dict['Units']['Labels'],
-                        skin_dict['Units']['TimeFormats'],
-                        skin_dict['Units']['Groups'])
-
-    def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
-        """Does unit conversion first, then converts to string"""
-        target_val_t = self.convert(val_t)
-        return super(UnitInfo, self).toString(target_val_t, context, addLabel, useThisFormat, NONE_string)
-    
-    def getTargetUnitLabel(self, obs_type):
-        """Returns a label suitable for the given observation type"""
-        (target_unit, target_group) = self.getTargetUnit(obs_type)
-        return self.unit_label_dict[target_unit]
-
-#===============================================================================
 #                        class ValueHelper
 #===============================================================================
     
 class ValueHelper(object):
     """A helper class that binds together everything needed to do a
-    context sensitive formatting"""
+    context sensitive formatting
     
-    def __init__(self, value_t, context='current', formatter=None):
+    Example:
+    
+    >>> value_t = (20.01, "degree_C", "group_temperature")
+    >>> vh = ValueHelper(value_t, formatter=Formatter())
+    >>> print vh
+    20.0°C
+    """
+    
+    def __init__(self, value_t, context='current', formatter=Formatter()):
         """Initialize a ValueHelper.
         
         value_t: A value tuple holding the data.
@@ -453,13 +479,18 @@ class ValueHelper(object):
         context: The time context. Something like 'current', 'day', 'week', etc.
         [Optional. If not given, context 'current' will be used.]
         
-        formatter: An instance of a class with methods toString() for formatting,
-        and convert() for unit conversion. Class UnitInfo() satisfies these
-        requirements. [Optional. If not given, the default UnitInfo will be used]
+        formatter: An instance of a class Formatter. [Optional. If not given, the
+        default Formatter() will be used]
         """
-        self.value_t   = value_t
+        self.value_t = value_t
         self.context   = context
-        self.formatter = formatter if formatter else UnitInfo()
+        self.formatter = formatter
+        
+    @staticmethod
+    def convertOnInit(converter, value_t, context='current', formatter=Formatter()):
+        """Perform a unit conversion before initializing and returning the ValueHelper."""
+        v = converter.convert(value_t) if converter else value_t
+        return ValueHelper(v, context, formatter)
     
     def __str__(self):
         """Return as string"""
@@ -484,8 +515,8 @@ class ValueHelper(object):
         
     @property
     def raw(self):
-        """Does unit conversion, then returns the raw converted value without any formatting."""
-        return self.formatter.convert(self.value_t)[0]
+        """Returns the raw value without any formatting."""
+        return self.value_t[0]
     
     def __getattr__(self, target_unit):
         """Convert to a new unit type.
@@ -494,7 +525,6 @@ class ValueHelper(object):
         
         returns: an instance of ValueHelper using the new unit."""
         new_value_t = convert(self.value_t, target_unit)
-        needs no formatter!
         return ValueHelper(new_value_t, self.context, self.formatter)
         
 #===============================================================================
@@ -508,45 +538,77 @@ class ValueDict(dict):
     be used for context sensitive formatting. 
     """
     
-    def __init__(self, d, context='current', formatter=None):
-        """Initialize the ValueDict from another dictionary.
+    def __init__(self, d, context='current', formatter=Formatter()):
+        """Initialize the ValueDict from a dictionary with keys of observation
+        types, values of value tuples.
         
-        d: A dictionary containing the key-value pairs for observation types
-        and their values. It must include an entry 'usUnits', giving the
-        standard unit system the entries are in. An example would be:
-        
-            {'outTemp'   : 23.9,
-             'barometer' : 1002.3,
-             'usUnits'   : 2}
-
-        In this case, the standard unit system being used is "2", or Metric.
+        d: A dictionary with keys of observation types, values a ValueTuple.
+        Example:
+            {'outTemp'   : (20.3, 'degree_C', 'group_temperature'),
+             'barometer' : (30.02 , 'inHg', 'group_pressure') }
         
         context: The time context of the dictionary. This will be passed on to
         the returned instance of ValueHelper. [Optional. If not given,
         'current' will be used]
 
         formatter: A unit formatter. This will be passed on to the returned
-        ValueHelper.
+        ValueHelper. [Optional. If not given, the default Formatter() will
+        be passed on.]
         """
         # Initialize my superclass, the dictionary:
         super(ValueDict, self).__init__(d)
-        self.formatter = formatter
         self.context   = context
+        self.formatter = formatter
         
+    @staticmethod
+    def convertOnInit(converter, d, context='current', formatter=Formatter()):
+        """Alternative constructor that converts on initialization
+        
+        converter: An instance of Converter(). Unit conversion will happen to
+        each value in d before being returned in the ValueDict.
+        
+        d: A dictionary with key of an observation type, value a ValueTuple.
+        
+        context: The time context of the dictionary. This will be passed on to
+        the returned instance of ValueHelper. [Optional. If not given,
+        'current' will be used]
+
+        formatter: A unit formatter. This will be passed on to the returned
+        ValueHelper. [Optional. If not given, the default Formatter() will
+        be passed on.]"""
+        value_d = converter.convertDict(d) if converter else d
+        return ValueDict(value_d, context, formatter)
+
     def __getitem__(self, obs_type):
         """Look up an observation type (eg, 'outTemp') and return it as a 
-        value-tuple in the target unit system."""
-        # Find out what standard unit system (US or Metric) I am in:
-        std_unit_system = dict.__getitem__(self, 'usUnits')
-        # Given this standard unit system, what is the unit type of this
-        # particular observation type?
-        (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
-        # Form the value-tuple. 
-        val_t = ValueTuple(dict.__getitem__(self, obs_type), unit_type, unit_group)
+        ValueHelper."""
         # Return the results as a ValueHelper
-        vh = ValueHelper(val_t, context=self.context, formatter=self.formatter)
-        return vh
+        return ValueHelper(dict.__getitem__(self, obs_type), context=self.context, formatter=self.formatter)
+    
 
+#===============================================================================
+#                             class UnitInfoHelper
+#===============================================================================
+
+class UnitInfoHelper(object):
+    
+    def __init__(self, converter, formatter):
+        self.converter = converter
+        self.formatter = formatter
+    
+    def unit_type(self, obs_type):
+        """Returns the unit type of the given observation type
+        or None if it cannot be determined."""
+        return self.converter.getTargetUnit(obs_type)[0]
+    
+    def label(self, obs_type, default=''):
+        (t, dummy_g) = self.converter.getTargetUnit(obs_type)
+        return self.formatter.unit_label_dict.get(t, default)
+    
+    def format(self, obs_type, default='%s'):
+        (t, dummy_g) = self.converter.getTargetUnit(obs_type)
+        return self.formatter.unit_format_dict.get(t, default)
+    
 #===============================================================================
 #                             Helper functions
 #===============================================================================
@@ -566,11 +628,11 @@ def _getUnitGroup(obs_type, agg_type=None):
         
         agg_type: An aggregation type E.g., 'mintime', or 'avg'.
         
-        Returns: the unit group."""
+        Returns: the unit group or None if it cannot be determined."""
     if agg_type and agg_type in agg_group:
         return agg_group[agg_type]
     else:
-        return obs_group_dict[obs_type]
+        return obs_group_dict.get(obs_type)
     
 def convert(val_t, target_unit_type):
     """ Convert a value or a sequence of values between unit systems
@@ -580,11 +642,12 @@ def convert(val_t, target_unit_type):
     the unit type (e.g., "foot", or "inHg") it is in.
     
     target_unit_type: The unit type (e.g., "meter", or "mbar") to
-    which the value is to be converted. If None, it will not be converted.
+    which the value is to be converted. 
     
     returns: An instance of weewx.ValueTuple, converted into the desired units.
     """
-    if target_unit_type is None or val_t[1] == target_unit_type or val_t[0] is None:
+    # If the value is already in the target unit type, then just return it:
+    if val_t[1] == target_unit_type:
         return val_t
 
     # Try converting a sequence first. A TypeError exception will occur if
@@ -628,16 +691,39 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     
     return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
 
-if __name__ == "__main__":
-    value_t = (20.01, "degree_C", "group_temperature")
+def dictFromStd(d):
+    """Map an observation dictionary to a dictionary with values of ValueTuples.
+    
+    d: A dictionary containing the key-value pairs for observation types
+    and their values. It must include an entry 'usUnits', giving the
+    standard unit system the entries are in. An example would be:
+    
+        {'outTemp'   : 23.9,
+         'barometer' : 1002.3,
+         'usUnits'   : 2}
 
-    vh = ValueHelper(value_t)
-    print vh
-    print vh.string
-    print vh.nolabel("T=%.3f")
-    print vh.formatted
-    print vh.raw
-    print vh.degree_C
+    In this case, the standard unit system being used is "2", or Metric.
     
+    returns: a dictionary with keys of observation type, value the
+    corresponding ValueTuple. Example:
+        {'outTemp' : (23.9, 'degree_C', 'group_temperature'),
+         'barometer' : (1002.3, 'mbar', 'group_pressure')}
+    """
+        
+    # Find out what standard unit system (US or Metric) the dictionary is in:
+    std_unit_system = d['usUnits']
+    resultDict = {}
+    for obs_type in d:
+        # Given this standard unit system, what is the unit type of this
+        # particular observation type?
+        (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
+        # Form the value-tuple. 
+        resultDict[obs_type] = ValueTuple(d[obs_type], unit_type, unit_group)
+    return resultDict
+
     
+if __name__ == "__main__":
+    import doctest
+
+    doctest.testmod()
     
