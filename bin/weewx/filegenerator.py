@@ -27,8 +27,8 @@ import weewx.units
 
 # Default base temperature and unit type for heating and cooling degree days
 # as a value tuple
-default_heatbase = (65.0, "degree_F")
-default_coolbase = (65.0, "degree_F")
+default_heatbase = (65.0, "degree_F", "group_temperature")
+default_coolbase = (65.0, "degree_F", "group_temperature")
 
 #===============================================================================
 #                    Class FileGenerator
@@ -65,7 +65,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
     def initUnits(self):
         
-        self.formatter = weewx.units.UnitInfo.fromSkinDict(self.skin_dict)
+        self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
+        self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
 
     def getCurrentRec(self):
         # Open up the main database archive
@@ -78,9 +79,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         
         # Get a dictionary with the current record:
         current_dict = archive.getRecord(self.stop_ts)
-        
-        # Wrap it in a ValueDict
-        currentRec = weewx.units.ValueDict(current_dict, formatter=self.formatter)
+        # Convert to a dictionary with ValueTuples as values:
+        current_dict_vt = weewx.units.dictFromStd(current_dict)
+        # Now wrap it in a ValueDict, doing any unit conversions:
+        currentRec = weewx.units.ValueDict.convertOnInit(self.converter, 
+                                                         current_dict_vt, context='current', formatter=self.formatter)
         
         return currentRec
 
@@ -246,26 +249,27 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
         heatbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
         coolbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
-        heatbase_t = (float(heatbase[0]), heatbase[1]) if heatbase else default_heatbase
-        coolbase_t = (float(coolbase[0]), coolbase[1]) if coolbase else default_coolbase
+        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature") if heatbase else default_heatbase
+        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature") if coolbase else default_coolbase
 
         # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(stop_ts,
-                                        self.statsdb,
+        stats = weewx.stats.TaggedStats(self.statsdb,
+                                        stop_ts,
                                         formatter = self.formatter,
+                                        converter = self.converter,
                                         rain_year_start = self.station.rain_year_start,
                                         heatbase = heatbase_t,
                                         coolbase = coolbase_t)
         
-        # IF the user has supplied an '[Extra]' section in the skin dictionary, include
+        # IF the user has supplied an '[Extras]' section in the skin dictionary, include
         # it in the search list. Otherwise, just include an empty dictionary.
         extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
 
         # Put together the search list:
         searchList = [{'station'    : self.station,
                        'almanac'    : self.almanac,
-                       'unit'       : self.formatter,
+                       'unit'       : weewx.units.UnitInfoHelper(self.converter, self.formatter),
                        'heatbase'   : heatbase_t,
                        'coolbase'   : coolbase_t,
                        'Extras'     : extra_dict},

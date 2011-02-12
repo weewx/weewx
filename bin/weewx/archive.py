@@ -272,9 +272,9 @@ class Archive(object):
         _cursor.close()
         _connection.close()
 
-        time_unit_type = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
-        data_unit_type = weewx.units.getStandardUnitType(std_unit_system, sql_type, aggregate_type)
-        return ((time_vec, time_unit_type), (data_vec, data_unit_type))
+        (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
+        (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, sql_type, aggregate_type)
+        return ((time_vec, time_type, time_group), (data_vec, data_type, data_group))
 
     def getSqlVectorsExtended(self, ext_type, startstamp, stopstamp, 
                               aggregate_interval = None, 
@@ -437,9 +437,9 @@ class Archive(object):
         _cursor.close()
         _connection.close()
 
-        time_unit_type = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
-        data_unit_type = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
-        return ((time_vec, time_unit_type), (data_vec, data_unit_type))
+        (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
+        (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
+        return ((time_vec, time_type, time_group), (data_vec, data_type, data_group))
 
     def _getTypes(self):
         """Returns the types appearing in an archive database.

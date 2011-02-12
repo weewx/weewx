@@ -27,13 +27,15 @@ class Station(object):
 
         altitude_t           = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
         # This test is in here to catch any old-style altitudes:
-        if len(altitude_t) != 2:
+        if len(altitude_t) < 2:
             syslog.syslog(syslog.LOG_ERR,"station: Altitude must be expressed as a list with the unit as the second element.")
             altitude_t=(float(altitude_t[0]), 'foot')
             syslog.syslog(syslog.LOG_ERR,"   ****  Assuming altitude as (%f, %s)" % altitude_t)
         
-        self.altitude        = weewx.units.ValueHelper((float(altitude_t[0]), altitude_t[1]), 
-                                                       formatter=weewx.units.UnitInfo.fromSkinDict(skin_dict))
+        converter=weewx.units.Converter.fromSkinDict(skin_dict)
+        self.altitude = weewx.units.ValueHelper.convertOnInit(converter,
+                                                              (float(altitude_t[0]), altitude_t[1], "group_altitude"),
+                                                              formatter=weewx.units.Formatter.fromSkinDict(skin_dict))
 
         self.location        = config_dict['Station']['location']
         self.rain_year_start = int(config_dict['Station'].get('rain_year_start', 1))

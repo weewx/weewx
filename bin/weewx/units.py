@@ -127,45 +127,45 @@ MetricUnits = {"group_altitude"    : "meter",
 
 # Conversion functions to go from one unit type to another.
 conversionDict = {
-      'inHg'             : {'mbar'             : lambda x : 33.86 * x if x is not None else None, 
-                            'hPa'              : lambda x : 33.86 * x if x is not None else None},
-      'degree_F'         : {'degree_C'         : lambda x : (5.0/9.0) * (x - 32.0) if x is not None else None},
-      'degree_F_day'     : {'degree_C_day'     : lambda x : (5.0/9.0)   * x if x is not None else None},
-      'mile_per_hour'    : {'km_per_hour'      : lambda x : 1.609344    * x if x is not None else None,
-                            'knot'             : lambda x : 0.868976242 * x if x is not None else None,
-                            'meter_per_second' : lambda x : 0.44704     * x if x is not None else None},
-      'mile_per_hour2'   : {'km_per_hour2'     : lambda x : 1.609344    * x if x is not None else None,
-                            'knot2'            : lambda x : 0.868976242 * x if x is not None else None,
-                            'meter_per_second2': lambda x : 0.44704     * x if x is not None else None},
-      'inch_per_hour'    : {'cm_per_hour'      : lambda x : 2.54        * x if x is not None else None,
-                            'mm_per_hour'      : lambda x : 25.4        * x if x is not None else None},
-      'inch'             : {'cm'               : lambda x : 2.54        * x if x is not None else None,
-                            'mm'               : lambda x : 25.4        * x if x is not None else None},
-      'foot'             : {'meter'            : lambda x : 0.3048      * x if x is not None else None},
-      'mbar'             : {'inHg'             : lambda x : x / 33.86  if x is not None else None,
-                            'hPa'              : lambda x : 1.0 * x    if x is not None else None},
-      'hPa'              : {'inHg'             : lambda x : x / 33.86  if x is not None else None,
-                            'mbar'             : lambda x : 1.0 * x    if x is not None else None},
-      'degree_C'         : {'degree_F'         : lambda x : (9.0/5.0 * x + 32.0) if x is not None else None},
-      'degree_C_day'     : {'degree_F_day'     : lambda x : (9.0/5.0 * x)   if x is not None else None},
-      'km_per_hour'      : {'mile_per_hour'    : lambda x : 0.621371192* x if x is not None else None,
-                            'knot'             : lambda x : 0.539956803* x if x is not None else None,
-                            'meter_per_second' : lambda x : 0.277777778* x if x is not None else None},
-      'meter_per_second' : {'mile_per_hour'    : lambda x : 2.23693629 * x if x is not None else None,
-                            'knot'             : lambda x : 1.94384449 * x if x is not None else None,
-                            'km_per_hour'      : lambda x : 3.6        * x if x is not None else None},
-      'meter_per_second2': {'mile_per_hour2'   : lambda x : 2.23693629 * x if x is not None else None,
-                            'knot2'            : lambda x : 1.94384449 * x if x is not None else None,
-                            'km_per_hour2'     : lambda x : 3.6        * x if x is not None else None},
-      'cm_per_hour'      : {'inch_per_hour'    : lambda x : 0.393700787* x if x is not None else None,
-                            'mm_per_hour'      : lambda x : 10.0       * x if x is not None else None},
-      'mm_per_hour'      : {'inch_per_hour'    : lambda x : .0393700787* x if x is not None else None,
-                            'cm_per_hour'      : lambda x : 0.10       * x if x is not None else None},
-      'cm'               : {'inch'             : lambda x : 0.393700787* x if x is not None else None,
-                            'mm'               : lambda x : 10.0       * x if x is not None else None},
-      'mm'               : {'inch'             : lambda x : .0393700787* x if x is not None else None,
-                            'cm'               : lambda x : 0.10       * x if x is not None else None},
-      'meter'            : {'foot'             : lambda x : 3.2808399  * x if x is not None else None} }
+      'inHg'             : {'mbar'             : lambda x : x * 33.86, 
+                            'hPa'              : lambda x : x * 33.86},
+      'degree_F'         : {'degree_C'         : lambda x : (x-32.0) * (5.0/9.0)},
+      'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
+      'mile_per_hour'    : {'km_per_hour'      : lambda x : x * 1.609344,
+                            'knot'             : lambda x : x * 0.868976242,
+                            'meter_per_second' : lambda x : x * 0.44704},
+      'mile_per_hour2'   : {'km_per_hour2'     : lambda x : x * 1.609344,
+                            'knot2'            : lambda x : x * 0.868976242,
+                            'meter_per_second2': lambda x : x * 0.44704},
+      'inch_per_hour'    : {'cm_per_hour'      : lambda x : x * 2.54,
+                            'mm_per_hour'      : lambda x : x * 25.4},
+      'inch'             : {'cm'               : lambda x : x * 2.54,
+                            'mm'               : lambda x : x * 25.4},
+      'foot'             : {'meter'            : lambda x : x * 0.3048},
+      'mbar'             : {'inHg'             : lambda x : x / 33.86,
+                            'hPa'              : lambda x : x * 1.0},
+      'hPa'              : {'inHg'             : lambda x : x / 33.86,
+                            'mbar'             : lambda x : x * 1.0},
+      'degree_C'         : {'degree_F'         : lambda x : x * (9.0/5.0) + 32.0},
+      'degree_C_day'     : {'degree_F_day'     : lambda x : x * (9.0/5.0)},
+      'km_per_hour'      : {'mile_per_hour'    : lambda x : x * 0.621371192,
+                            'knot'             : lambda x : x * 0.539956803,
+                            'meter_per_second' : lambda x : x * 0.277777778},
+      'meter_per_second' : {'mile_per_hour'    : lambda x : x * 2.23693629,
+                            'knot'             : lambda x : x * 1.94384449,
+                            'km_per_hour'      : lambda x : x * 3.6},
+      'meter_per_second2': {'mile_per_hour2'   : lambda x : x * 2.23693629,
+                            'knot2'            : lambda x : x * 1.94384449,
+                            'km_per_hour2'     : lambda x : x * 3.6},
+      'cm_per_hour'      : {'inch_per_hour'    : lambda x : x * 0.393700787,
+                            'mm_per_hour'      : lambda x : x * 10.0},
+      'mm_per_hour'      : {'inch_per_hour'    : lambda x : x * .0393700787,
+                            'cm_per_hour'      : lambda x : x * 0.10},
+      'cm'               : {'inch'             : lambda x : x * 0.393700787,
+                            'mm'               : lambda x : x * 10.0},
+      'mm'               : {'inch'             : lambda x : x * .0393700787,
+                            'cm'               : lambda x : x * 0.10},
+      'meter'            : {'foot'             : lambda x : x * 3.2808399 } }
 
 
 # Default unit formatting to be used in the absence of a skin configuration file
@@ -593,21 +593,19 @@ class ValueDict(dict):
 class UnitInfoHelper(object):
     
     def __init__(self, converter, formatter):
-        self.converter = converter
-        self.formatter = formatter
+        self.group_unit_dict = converter.group_unit_dict
+        self.unit_type = {}
+        self.label     = {}
+        self.format    = {}
+        for obs_type in obs_group_dict:
+            self.unit_type[obs_type] = u = converter.getTargetUnit(obs_type)[0]
+            self.label[obs_type]  = formatter.unit_label_dict.get(u, '')
+            self.format[obs_type] = formatter.unit_format_dict.get(u, '%s')
     
-    def unit_type(self, obs_type):
-        """Returns the unit type of the given observation type
-        or None if it cannot be determined."""
-        return self.converter.getTargetUnit(obs_type)[0]
-    
-    def label(self, obs_type, default=''):
-        (t, dummy_g) = self.converter.getTargetUnit(obs_type)
-        return self.formatter.unit_label_dict.get(t, default)
-    
-    def format(self, obs_type, default='%s'):
-        (t, dummy_g) = self.converter.getTargetUnit(obs_type)
-        return self.formatter.unit_format_dict.get(t, default)
+    # This is here for backwards compatibility:
+    @property
+    def unit_type_dict(self):
+        return self.group_unit_dict
     
 #===============================================================================
 #                             Helper functions
@@ -650,12 +648,15 @@ def convert(val_t, target_unit_type):
     if val_t[1] == target_unit_type:
         return val_t
 
+    # Retrieve the conversion function. An exception of type KeyError
+    # will occur if the target or source units are invalid
+    conversion_func = conversionDict[val_t[1]][target_unit_type]
     # Try converting a sequence first. A TypeError exception will occur if
     # the value is actually a scalar:
     try:
-        new_val = map(conversionDict[val_t[1]][target_unit_type], val_t[0])
+        new_val = map(lambda x : conversion_func(x) if x is not None else None, val_t[0])
     except TypeError:
-        new_val = conversionDict[val_t[1]][target_unit_type](val_t[0])
+        new_val = conversion_func(val_t[0]) if val_t[0] is not None else None
     # Add on the unit type and the group type and return the results:
     return ValueTuple(new_val, target_unit_type, val_t[2])
 
