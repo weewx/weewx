@@ -390,13 +390,16 @@ class GeneralPlot(object):
                     yline_max = max(filter(lambda v : v is not None, line.y))
                 except ValueError:
                     yline_max = None
-            ymin = min(yline_min, ymin) if ymin is not None else yline_min
-            ymax = max(yline_max, ymax) if ymax is not None else yline_max
+            if ymin is None: ymin = yline_min
+            elif yline_min is not None : ymin = min(yline_min, ymin)
+            if ymax is None: ymax = yline_max
+            elif yline_max is not None : ymax = max(yline_max, ymax)
 
         if ymin is None and ymax is None :
             # No valid data. Pick an arbitrary scaling
             self.yscale=(0.0, 1.0, 0.2)
         else:
+            print ymin, ymax, self.yscale
             self.yscale = weeplot.utilities.scale(ymin, ymax, self.yscale)
 
     def _calcXLabelFormat(self):
