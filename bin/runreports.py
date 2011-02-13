@@ -42,10 +42,9 @@ def gen_all(config_path, gen_ts = None):
     socket.setdefaulttimeout(10)
     
     t = weewx.reportengine.StdReportEngine(config_path, gen_ts)
-    t.setDaemon(True)
-    t.start()
-    t.join()
 
+    # Although the report engine inherits from Thread, we can just run it in the main thread:
+    t.run()
     
 if len(sys.argv) < 2 :
     print "Usage: reports.py path-to-configuration-file [timestamp-to-be-generated]"

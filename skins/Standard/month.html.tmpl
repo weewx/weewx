@@ -155,7 +155,7 @@
                   $month.inTemp.min at $month.inTemp.mintime
                 </td>
               </tr>
-			  #if $month.extraTemp1.count.raw
+			  #if $month.extraTemp1.has_data
               <tr>
                 <td class="stats_label">
                   High Pond Temperature<br/>
@@ -167,7 +167,7 @@
                 </td>
               </tr>
               #end if
-              #if $month.UV.count.raw
+              #if $month.UV.has_data
               <tr>
                 <td class="stats_label">
                   High UV<br/>
@@ -179,7 +179,7 @@
                 </td>
               </tr>
               #end if
-              #if $month.ET.sum.raw >0.0
+              #if $month.ET.has_data and $month.ET.sum.raw >0.0
               <tr>
                 <td class="stats_label">
                   High ET<br/>
@@ -191,7 +191,7 @@
                 </td>
               </tr>
               #end if
-              #if $month.radiation.count.raw
+              #if $month.radiation.has_data
               <tr>
                 <td class="stats_label">
                   High Radiation<br/>
@@ -334,7 +334,7 @@
                   $year.inTemp.min at $year.inTemp.mintime
                 </td>
               </tr>
-			  #if $year.extraTemp1.count.raw
+			  #if $year.extraTemp1.has_data
               <tr>
                 <td class="stats_label">
                   High Pond Temperature<br/>
@@ -346,7 +346,7 @@
                 </td>
               </tr>
               #end if
-              #if $year.UV.count.raw
+              #if $year.UV.has_data
               <tr>
                 <td class="stats_label">
                   High UV<br/>
@@ -358,7 +358,7 @@
                 </td>
               </tr>
               #end if
-              #if $year.ET.sum.raw >0.0
+              #if $year.ET.has_data and $year.ET.sum.raw >0.0
               <tr>
                 <td class="stats_label">
                   High ET<br/>
@@ -370,7 +370,7 @@
                 </td>
               </tr>
               #end if
-              #if $year.radiation.count.raw
+              #if $year.radiation.has_data
               <tr>
                 <td class="stats_label">
                   High Radiation<br/>
@@ -403,7 +403,9 @@
           <img src="monthinside.png" alt="Inside" />
           <img src="monthwindvec.png" alt="Wind Vector" />
           <img src="monthrx.png" alt="month rx percent"/>
+          #if $month.extraTemp1.has_data
           <img src="monthpond.png" alt="Pond Temperatures" />
+          #end if
         </div>
       </div> <!-- End id "content" -->
 

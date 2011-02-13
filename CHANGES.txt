@@ -1,20 +1,29 @@
 CHANGE HISTORY
 --------------------------------
 
-1.10.0 01/17/11
+1.10.0 02/12/11
 
 Added a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
 
 Added a mobile formatted HTML page, courtesy of user Vince Skahan (thanks,
 Vince!!).
 
-Added executable module "runreports.py", which will just run report generation.
+Added executable module "runreports.py" for running report generation only.
 
 Y-axis plot labels (such as "°F") can now be overridden in the plot configuration
 section of skin.conf by using option "y_label".
 
-Added package "user", which can contain any user extensions. This package
-will not get overridden in the upgrade process.
+Added package "user", which can contain any user extensions. This package will
+not get overridden in the upgrade process.
+
+Added special tag "exists" to test whether an observation type exists. Example
+$year.foo.exists will return False if there is no type "foo" in the statistical
+database.
+
+Added special tag "has_data" to test whether an observation type exists and has
+a non-zero number of data points over the aggregation period. For example,
+$year.soilMoist1.has_data will return True if soilMoist1 both exists in the
+stats database and contains data (meaning, you have the hardware).
 
 Now makes all of the LOOP and archive data available to services. This includes
 new keys:

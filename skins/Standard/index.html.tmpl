@@ -79,25 +79,25 @@
                 <td class="stats_label">Inside Temperature</td>
                 <td class="stats_data">$current.inTemp</td>
               </tr>
-              #if $day.extraTemp1.count.raw
+              #if $day.extraTemp1.has_data
               <tr>
                 <td class="stats_label">Pond Temperature</td>
                 <td class="stats_data">$current.extraTemp1</td>
               </tr>
               #end if
-              #if $day.UV.count.raw
+              #if $day.UV.has_data
               <tr>
                 <td class="stats_label">UV</td>
                 <td class="stats_data">$current.UV</td>
               </tr>
               #end if
-              #if $day.ET.sum.raw > 0.0
+              #if $day.ET.has_data and $day.ET.sum.raw > 0.0
               <tr>
                 <td class="stats_label">ET</td>
                 <td class="stats_data">$current.ET</td>
               </tr>
               #end if
-              #if $day.radiation.count.raw
+              #if $day.radiation.has_data
               <tr>
                 <td class="stats_label">Solar Radiation</td>
                 <td class="stats_data">$current.radiation</td>
@@ -219,7 +219,7 @@
                   $day.inTemp.min at $day.inTemp.mintime
                 </td>
               </tr>
-			  #if $day.extraTemp1.count.raw
+			  #if $day.extraTemp1.has_data
               <tr>
                 <td class="stats_label">
                   High Pond Temperature<br/>
@@ -231,7 +231,7 @@
                 </td>
               </tr>
               #end if
-              #if $day.UV.count.raw
+              #if $day.UV.has_data
               <tr>
                 <td class="stats_label">
                   High UV<br/>
@@ -243,7 +243,7 @@
                 </td>
               </tr>
               #end if
-              #if $day.ET.sum.raw >0.0
+              #if $day.ET.has_data and $day.ET.sum.raw >0.0
               <tr>
                 <td class="stats_label">
                   High ET<br/>
@@ -255,7 +255,7 @@
                 </td>
               </tr>
               #end if
-              #if $day.radiation.count.raw
+              #if $day.radiation.has_data
               <tr>
                 <td class="stats_label">
                   High Radiation<br/>
@@ -334,7 +334,9 @@
           <img src="dayinside.png"    alt="Inside" />
           <img src="daywindvec.png"   alt="Wind Vector" />
           <img src="dayrx.png"        alt="day rx percent"/>
+          #if $day.extraTemp1.has_data
           <img src="daypond.png"      alt="Pond Temperatures" />
+          #end if
         </div> <!-- End id "plots" -->
       </div> <!-- End id "content" -->
 

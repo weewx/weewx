@@ -399,7 +399,6 @@ class GeneralPlot(object):
             # No valid data. Pick an arbitrary scaling
             self.yscale=(0.0, 1.0, 0.2)
         else:
-            print ymin, ymax, self.yscale
             self.yscale = weeplot.utilities.scale(ymin, ymax, self.yscale)
 
     def _calcXLabelFormat(self):

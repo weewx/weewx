@@ -155,7 +155,7 @@
                   $year.inTemp.min at $year.inTemp.mintime
                 </td>
               </tr>
-			  #if $year.extraTemp1.count.raw
+			  #if $year.extraTemp1.has_data
               <tr>
                 <td class="stats_label">
                   High Pond Temperature<br/>
@@ -167,7 +167,7 @@
                 </td>
               </tr>
               #end if
-              #if $year.UV.count.raw
+              #if $year.UV.has_data
               <tr>
                 <td class="stats_label">
                   High UV<br/>
@@ -179,7 +179,7 @@
                 </td>
               </tr>
               #end if
-              #if $year.ET.sum.raw >0.0
+              #if $year.ET.has_data and $year.ET.sum.raw >0.0
               <tr>
                 <td class="stats_label">
                   High ET<br/>
@@ -191,7 +191,7 @@
                 </td>
               </tr>
               #end if
-              #if $year.radiation.count.raw
+              #if $year.radiation.has_data
               <tr>
                 <td class="stats_label">
                   High Radiation<br/>
@@ -252,7 +252,9 @@
           <img src="yearinside.png" alt="Inside" />
           <img src="yearwindvec.png" alt="Wind Vector" />
           <img src="yearrx.png" alt="year rx percent"/>
+          #if $year.extraTemp1.has_data
           <img src="yearpond.png" alt="Pond Temperatures" />
+          #end if
         </div>
       </div> <!-- End id "content" -->
 

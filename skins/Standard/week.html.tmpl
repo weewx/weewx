@@ -155,7 +155,7 @@
                   $week.inTemp.min at $week.inTemp.mintime
                 </td>
               </tr>
-			  #if $week.extraTemp1.count.raw
+			  #if $week.extraTemp1.has_data
               <tr>
                 <td class="stats_label">
                   High Pond Temperature<br/>
@@ -167,7 +167,7 @@
                 </td>
               </tr>
               #end if
-              #if $week.UV.count.raw
+              #if $week.UV.has_data
               <tr>
                 <td class="stats_label">
                   High UV<br/>
@@ -179,7 +179,7 @@
                 </td>
               </tr>
               #end if
-              #if $week.ET.sum.raw >0.0
+              #if $week.ET.has_data and $week.ET.sum.raw >0.0
               <tr>
                 <td class="stats_label">
                   High ET<br/>
@@ -191,7 +191,7 @@
                 </td>
               </tr>
               #end if
-              #if $week.radiation.count.raw
+              #if $week.radiation.has_data
               <tr>
                 <td class="stats_label">
                   High Radiation<br/>
@@ -344,7 +344,7 @@
                   $month.extraTemp1.min at $month.extraTemp1.mintime
                 </td>
               </tr>
-              #if $month.UV.count.raw
+              #if $month.UV.has_data
               <tr>
                 <td class="stats_label">
                   High UV<br/>
@@ -356,7 +356,7 @@
                 </td>
               </tr>
               #end if
-              #if $month.ET.sum.raw >0.0
+              #if $month.ET.has_data and $month.ET.sum.raw >0.0
               <tr>
                 <td class="stats_label">
                   High ET<br/>
@@ -368,7 +368,7 @@
                 </td>
               </tr>
               #end if
-              #if $month.radiation.count.raw
+              #if $month.radiation.has_data
               <tr>
                 <td class="stats_label">
                   High Radiation<br/>
@@ -401,7 +401,9 @@
           <img src="weekinside.png" alt="Inside" />
           <img src="weekwindvec.png" alt="Wind Vector" />
           <img src="weekrx.png" alt="week rx percent"/>
+          #if $week.extraTemp1.has_data
           <img src="weekpond.png" alt="Pond Temperatures" />
+          #end if
         </div>
       </div> <!-- End id "content" -->
 

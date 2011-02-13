@@ -806,8 +806,24 @@ class StatsTypeHelper(object):
         return weewx.units.ValueHelper.convertOnInit(self.converter, result, self.context, self.formatter)
     
     def __getattr__(self, aggregateType):
-        """Attribute is an aggregation type, such as 'sum', 'max', etc."""
-        if self.stats_type in ('heatdeg', 'cooldeg'):
+        """Return statistical summary using a given aggregateType.
+        
+        aggregateType: The type of aggregation over which the summary is to be done.
+        This is normally something like 'sum', 'min', 'mintime', 'count', etc.
+        However, there are two special aggregation types that can be used to 
+        determine the existence of data:
+          'exists':   Return True if the observation type exists in the database.
+          'has_data': Return True if the type exists and there is a non-zero
+                      number of entries over the aggregation period.
+                      
+        returns: For special types 'exists' and 'has_data', returns a Boolean
+        value. Otherwise, a ValueHelper containing the aggregation data."""
+
+        if aggregateType == 'exists':
+            return self.stats_type in self.db.statsTypes
+        elif aggregateType == 'has_data':
+            return self.stats_type in self.db.statsTypes and self.db.getAggregate(self.timespan, self.stats_type, 'count')[0] != 0
+        elif self.stats_type in ('heatdeg', 'cooldeg'):
             # Heating and cooling degree days use a different entry point into Stats:
             result = self.db.getHeatCool(self.timespan, self.stats_type, aggregateType, self.option_dict['heatbase'], self.option_dict['coolbase'])
         else:
