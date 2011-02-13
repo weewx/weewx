@@ -10,107 +10,21 @@
 #
 """Unit test module weewx.stats"""
 
-import time
-import math
 import syslog
-import tempfile
+import time
 import unittest
 
-import weewx.archive
-import weewx.stats
 import weeutil.weeutil
+import weewx.stats
+from gen_fake_data import StatsTestBase, stats_types
 
-stats_types = ['barometer', 'outTemp', 'wind', 'rain']
-
-daily_temp_range = 20.0
-annual_temp_range = 40.0
-
-# Four day weather cycle:
-weather_cycle = 3600*24.0*4
-weather_baro_range = 1.0
-weather_wind_range = 10.0
-weather_rain_total = 0.5 # This is inches per weather cycle
-
-# Archive interval in seconds:
-interval = 600
-
-class StatsTest(unittest.TestCase):
+class StatsTest(StatsTestBase):
 
     def setUp(self):
-        syslog.openlog('stats_test', syslog.LOG_CONS)
-
-        # Create an archive database
-#        fa = tempfile.NamedTemporaryFile()
-#        self.archiveFilename = fa.name
-        self.archiveFilename = '/home/tkeffer/tmp/archive.sdb'
-        try:
-            self.archive = weewx.archive.Archive(self.archiveFilename)
-        except StandardError:
-            weewx.archive.config(self.archiveFilename)
-            self.archive = weewx.archive.Archive(self.archiveFilename)
-            # Because this can generate voluminous log information,
-            # suppress all but the essentials:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
-            
-            t1= time.time()
-            self.archive.addRecord(self.genFakeRecords())
-            t2 = time.time()
-            print "Time to create synthetic archive database = %6.2f" % (t2-t1,)
-            # Now go back to regular logging:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-
-        # Create a stats database:
-#        fs = tempfile.NamedTemporaryFile()
-#        self.statsFilename = fs.name
-        self.statsFilename = '/home/tkeffer/tmp/stats.sdb'
-        try:
-            self.stats = weewx.stats.StatsDb(self.statsFilename)
-        except:
-            weewx.stats.config(self.statsFilename, stats_types = stats_types)
-            self.stats = weewx.stats.StatsDb(self.statsFilename)
-            t1 = time.time()
-            weewx.stats.backfill(self.archive, self.stats)
-            t2 = time.time()
-            print "Time to backfill stats database from it   = %6.2f" % (t2-t1,)
+        syslog.openlog('test_stats', syslog.LOG_CONS)
+        # This will generate the test databases if necessary:
+        StatsTestBase.setUp(self)
         
-        
-    def genFakeRecords(self):
-        # Generator function that generates one year of data:
-        self.start_ts = int(time.mktime((2010,1,1,0,0,0,0,0,-1)))
-        self.stop_ts  = int(time.mktime((2011,1,1,0,0,0,0,0,-1)) - 1)
-        self.count = 0
-        
-        for ts in xrange(self.start_ts, self.stop_ts, interval):
-            daily_phase  = (ts - self.start_ts) * 2.0 * math.pi / (3600*24.0)
-            annual_phase = (ts - self.start_ts) * 2.0 * math.pi / (3600*24.0*365.0)
-            weather_phase= (ts - self.start_ts) * 2.0 * math.pi / weather_cycle
-            record = {}
-            record['dateTime']  = ts
-            record['usUnits']   = weewx.US
-            record['interval']  = interval
-            record['outTemp']   = daily_temp_range*math.sin(daily_phase) + annual_temp_range*math.sin(annual_phase) + 20.0
-            record['barometer'] = weather_baro_range*math.sin(weather_phase) + 30.0
-            record['windSpeed'] = abs(weather_wind_range*(1.0 + math.sin(weather_phase)))
-            record['windDir'] = math.degrees(weather_phase) % 360.0
-            record['windGust'] = 1.2*record['windSpeed']
-            record['windGustDir'] = record['windDir']
-            if math.sin(weather_phase) > .95:
-                record['rain'] = 0.02 if math.sin(weather_phase) > 0.98 else 0.01
-            else:
-                record['rain'] = 0.0
-        
-            self.saltWithNulls(record)
-                        
-            yield record
-        
-    def saltWithNulls(self, record):
-        # Make every 100th observation a null. This is a deterministic algorithm, so it
-        # can be reproduced.
-        for obs_type in filter(lambda x : x not in ['dateTime', 'usUnits', 'interval'], record):
-            self.count+=1
-            if self.count%100 == 0:
-                record[obs_type] = None
-                
     def test_types(self):
         self.assertEqual(sorted(self.stats.statsTypes), sorted(stats_types))
         
@@ -186,7 +100,7 @@ class StatsTest(unittest.TestCase):
                         stats_value_helper = getattr(getattr(getattr(tagStats, span), stats_type), aggregate +'time')
                         self.assertEqual(stats_value_helper.raw, res2[0])
 
-        self.assertEqual(str(tagStats.day.barometer.avg), "30.672 inHg")
+        self.assertEqual(str(tagStats.day.barometer.avg), "30.675 inHg")
         self.assertEqual(str(tagStats.day.barometer.min), "30.065 inHg")
         self.assertEqual(str(tagStats.day.barometer.max), "31.000 inHg")
         self.assertEqual(str(tagStats.day.barometer.mintime), "00:00")
@@ -206,6 +120,14 @@ class StatsTest(unittest.TestCase):
         self.assertEqual(str(tagStats.year.barometer.max), "31.000 inHg")
         self.assertEqual(str(tagStats.year.barometer.mintime), "04-Jan-2010 00:00")
         self.assertEqual(str(tagStats.year.barometer.maxtime), "02-Jan-2010 00:00")
+        
+        # Check the special aggregate types "exists" and "has_data":
+        self.assertTrue(tagStats.year.barometer.exists)
+        self.assertTrue(tagStats.year.barometer.has_data)
+        self.assertFalse(tagStats.year.bar.exists)
+        self.assertFalse(tagStats.year.bar.has_data)
+        self.assertTrue(tagStats.year.foo.exists)
+        self.assertFalse(tagStats.year.foo.has_data)
 
 if __name__ == '__main__':
     unittest.main()
