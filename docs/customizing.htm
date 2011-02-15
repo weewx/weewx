@@ -162,7 +162,7 @@ Version 1.10</h1>
 <p>This document covers the customization of weewx. It assumes that you have read 
 and are reasonably familiar with the <a href="readme.htm">Users Guide</a>.</p>
 <p>It starts with an overview of the architecture of weewx. If you are only interested 
-in customizing the generated skin reports you can probably skip the overview and 
+in customizing the generated reports you can probably skip the overview and 
 proceed directly to the section <em>
 <a href="#Reference:_The_Standard_skin_configuration_file">The Standard skin configuration 
 file</a></em>. With this approach you can easily add new plot images, change the 
@@ -211,7 +211,7 @@ includes the following services:</p>
 		<td>Start a thread to manage
 		<a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
 		(simple stateless client-server protocols) connections; such as those used 
-		by the Weather Underground or PWSweather.</td>
+		by the Weather Underground or PWSWeather.</td>
 	</tr>
 	<tr>
 		<td><span class="code">weewx.wxengine.StdReportService</span></td>
@@ -231,8 +231,8 @@ service, <span class="code">StdReportService</span></a></h3>
 the standard service for creating reports. This will be what most users want to 
 customize even if it means just changing a few options.</p>
 <h4>Reports</h4>
-<p>The Standard Report Service runs zero or more <em>Reports.</em> Which ones are 
-set in the weewx configuration file <span class="code">weewx.conf</span>, in section
+<p>The Standard Report Service runs zero or more <em>Reports.</em> Which reports 
+are to be run is set in the weewx configuration file <span class="code">weewx.conf</span>, in section
 <span class="code">[Reports]</span>.</p>
 <p>The default distribution of weewx includes two reports:</p>
 <table align="center" style="width: 60%">
@@ -252,7 +252,7 @@ set in the weewx configuration file <span class="code">weewx.conf</span>, in sec
 		subdirectory up to a remote webserver.</td>
 	</tr>
 </table>
-<p>Note that the FTP &quot;report&quot; is kind of a funny report in that it doesn&#39;t actually 
+<p>Note that the FTP &quot;report&quot; is a funny kind of report in that it doesn&#39;t actually 
 generate anything. Instead, it uses the reporting service engine to arrange for 
 things to be FTP&#39;d to a remote server.</p>
 <h4>Skins<br />
@@ -272,7 +272,7 @@ file, although it is quite minimal.</p>
 <p>Skins live in their own subdirectory located in <span class="code"><em>$HTML_ROOT</em>/skins</span>.</p>
 <h4>Generators</h4>
 <p>To create their output, skins rely on one or more <em>Generators, </em>code that 
-actually create useful things such as HTML files or plot images. They can also copy 
+actually create useful things such as HTML files or plot images. Generators can also copy 
 files around or FTP them to remote locations. The default install of
 <span class="code">weewx </span>includes the following generators:</p>
 <table align="center" style="width: 60%">
@@ -303,8 +303,8 @@ the presentation layer. Instead, they just move files around. </p>
 <p>Which generators are to be run for a given skin is specified in the skin&#39;s configuration 
 file <span class="code">skin.conf</span>.</p>
 <h2><a name="Databases">Databases</a></h2>
-<p>There are two databases used in weewx, both <a href="http://www.sqlite.org/">
-SQLITE3</a> databases:</p>
+<p>There are two databases used in weewx, both using <a href="http://www.sqlite.org/">
+SQLITE3</a>, a light-weight SQL database:</p>
 <ul>
 	<li>The <em>archive database</em>, nominally located at <span class="code">
 	<em>$WEEWX_ROOT</em>/archive/weewx.sdb</span>. It is a big flat table, one record 
@@ -334,16 +334,36 @@ reports</a></h1>
 changing options in one or more configuration file, or by changing the template 
 files. The former is generally easier, but occasionally the latter is necessary.</p>
 <h2>Changing options</h2>
-<p>Changing an option means going into either <span class="code">weewx.conf</span> 
-or the <span class="code">skin.conf</span> that comes with the standard distribution 
-and changing a value.</p>
+<p>Changing an option means modifying either the main configuration file
+<span class="code">weewx.conf</span>, 
+or the skin configuration file for the standard skin that comes with the 
+distribution (nominally, file <span class="code">skins/Standard/skin.conf</span>).</p>
 <h3>Changing options in <span class="code">skin.conf</span></h3>
 <p>With this approach, the user edits the skin configuration file for the standard 
 skin that comes with <span class="code">weewx</span>, located in
 <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>, using a 
-text editor. For example, suppose you wish to use metric units in the presentation 
-layer. Then, you would edit section <span class="code">[Units][[Groups]]</span> 
-to read:</p>
+text editor. For example, suppose you wish to use metric units in the 
+presentation layer, instead of the default US Customary Units. The section that 
+controls units is <span class="code">[Units][[Groups]]</span> 
+and looks like this:</p>
+<pre class="tty">[Units]</pre>
+<pre class="tty">  [[Groups]]</pre>
+<pre class="tty">    group_altitude    = foot</pre>
+<pre class="tty">    group_degree_day  = degree_F_day </pre>
+<pre class="tty">    group_direction   = degree_compass</pre>
+<pre class="tty">    group_moisture    = centibar</pre>
+<pre class="tty">    group_percent     = percent</pre>
+<pre class="tty">    group_pressure    = inHg</pre>
+<pre class="tty">    group_radiation   = watt_per_meter_squared</pre>
+<pre class="tty">    group_rain        = inch</pre>
+<pre class="tty">    group_rainrate    = inch_per_hour</pre>
+<pre class="tty">    group_speed       = mile_per_second</pre>
+<pre class="tty">    group_speed2      = mile_per_second2</pre>
+<pre class="tty">    group_temperature = degree_F</pre>
+<pre class="tty">&nbsp;  group_uv          = uv_index&nbsp;</pre>
+<pre class="tty">    group_volt        = volt</pre>
+<p>&nbsp;</p>
+<p>To use metric units, you would edit this section to read:</p>
 <pre>[Units]</pre>
 <pre>  [[Groups]]</pre>
 <pre class="highlight">    group_altitude    = meter</pre>
@@ -363,16 +383,17 @@ to read:</p>
 Details of the various unit options are given in <em><a href="#Units">Appendix B: 
 Units</a></em>.</p>
 <p>Other options are available, such as changing the text label for various observation 
-types. Suppose your weather instrument console is actually located in a barn, not 
+types. For example, suppose your weather console is actually located in a barn, not 
 indoors, and you want the plot for the temperature at the console to be labeled 
 &quot;Barn Temperature,&quot; rather than the default &quot;Inside Temperature.&quot; This can be done 
-by changing the &quot;inTemp&quot; option located in section [Labels][[Generic]] from </p>
+by changing the &quot;<span class="code">inTemp</span>&quot; option located in section 
+<span class="code">[Labels][[Generic]]</span> from the default</p>
 <pre>[Units]</pre>
 <pre>    [[Generic]]</pre>
 <pre>      inTemp  = Inside Temperature</pre>
 <pre>      outTemp = Outside Temperature</pre>
 <pre>      ...</pre>
-<p>so that it reads</p>
+<p>to:</p>
 <pre>[Units]</pre>
 <pre>    [[Generic]]</pre>
 <pre class="highlight">      inTemp  = Barn Temperature</pre>
@@ -479,11 +500,12 @@ The unit label <span class="code">°F</span> is from section <span class="code">
 <p>As we saw above, the dot codes can be very simple:</p>
 <pre>## Output max outside temperature using an appropriate format and label:
 $month.outTemp.max</pre>
-<p>Most of the time, this is all you will be using. However, <span class="code">
+<p>Most of the time, the dot code will &quot;do the right thing&quot; and is all you will 
+need. However, <span class="code">
 weewx</span> offers extensive customization of the generate output for specialized 
 applications such as XML RSS feeds, or ridgidly formatted reports (such as the NOAA 
 reports). This section specifies the various options available.</p>
-<p>There are two different versions, depending on whether the data is &quot;current&quot;, 
+<p>There are two different versions of the dot code, depending on whether the data is &quot;current&quot;, 
 or an aggregation over time. However, both versions are very similar</p>
 <h4>Time period <span class="code">$current</span></h4>
 <p>Time period <span class="code">$current</span> represents a <em>current observation</em>. 
@@ -492,15 +514,18 @@ An example would be the current barometric pressure:</p>
 <p>The dot code for a current observation looks like:</p>
 <pre><em>$current.obstype[.optional_formatting][.optional_unit_conversion]</em></pre>
 <p>Where:</p>
-<p class="indent"><span class="code"><em>obstype</em></span> is an observation type. 
+<p class="indent"><span class="code"><em>obstype</em></span> is an observation type, 
+such as <span class="code">barometer</span>. 
 See <em><a href="#Archive_types">Appendix A, Archive Types</a></em> for a table 
-of observation types valid for <span class="code">current.</span></p>
+of observation types valid for time period <span class="code">current.</span></p>
 <p class="indent"><span class="code"><em>optional_formatting</em></span> is an optional 
 formatting tag that controls how the value will appear. See the section <em>
 <a href="#Formatting_options">Formatting Options</a></em> below.</p>
 <p class="indent"><span class="code">optional_unit_conversion</span> is an 
 optional unit conversion tag. If provided, the results will be converted into 
-the specified units. See the section <em><a href="#Unit_conversion_options">Unit 
+the specified units, otherwise the default units specified in the skin 
+configuration file (in section <span class="code">[Units][[Groups]]</span>) will 
+be used. See the section <em><a href="#Unit_conversion_options">Unit 
 Conversion Options</a></em> below.</p>
 <h4>Aggregation periods <span class="code">$day</span>, <span class="code">$week</span>,
 <span class="code">$month</span>, <span class="code">$year</span>,
@@ -531,7 +556,9 @@ formatting tag that controls how the value will appear. See the section <em>
 <a href="#Formatting_options">Formatting Options</a></em> below.</p>
 <p class="indent"><span class="code">optional_unit_conversion</span> is an 
 optional unit conversion tag. If provided, the results will be converted into 
-the specified units. See the section <em><a href="#Unit_conversion_options">Unit 
+the specified units, otherwise the default units specified in the skin 
+configuration file (in section <span class="code">[Units][[Groups]]</span>) will 
+be used. See the section <em><a href="#Unit_conversion_options">Unit 
 Conversion Options</a></em> below.</p>
 <h4><a name="Formatting_options">Formatting options</a></h4>
 <p>The tag <span class="code"><em>optional_formatting</em></span> can be used with 
@@ -796,7 +823,7 @@ then the tag</p>
 <p>While not an observation type, in many ways the time of an observation,
 <span class="code">dateTime</span>, can be treated as one. A tag such as
 <span class="code">$current.dateTime</span> represents the <em>current time</em> 
-(more properly, the time as of the end of the last archive interval), a tag such 
+(more properly, the time as of the end of the last archive interval). Similarly, a tag such 
 as <span class="code">$month.dateTime</span> represents the start time of the month. 
 Like true observation types, explicit formats can be specified, except that they 
 require a
@@ -842,9 +869,9 @@ essentially reproducing the results of the simpler tag <span class="code">$day.o
 <h3>Iteration</h3>
 <p>For dot codes using an aggregation (<em>e.g.</em>, <span class="code">$day</span>,
 <span class="code">$week</span>, <span class="code">$month</span>,
-<span class="code">$year</span>, <span class="code">$rainyear</span>, then the aggregation 
-period can be iterated over by day or month. These are the only two iteration periods 
-available in Version 1.7. </p>
+<span class="code">$year</span>, <span class="code">$rainyear</span>, then the 
+aggregation period can be iterated over by day or month. These are the only two 
+iteration periods available as of this version. </p>
 <p>This example uses a Cheetah &#39;<span class="code">for</span>&#39; loop to iterate over 
 all months in a year, printing out each month&#39;s min and max temperature (the iteration 
 loop is highlighted):</p>
@@ -981,7 +1008,15 @@ in the skin configuration file <span class="code">skin.conf</span> to read:</p>
 <span class="code">weewxd.py</span> resides, you may have to specify its location 
 in the environment variable <span class="code">PYTHON_PATH</span>:</p>
 <pre>export PYTHON_PATH=/home/me/secret_location</pre>
-<h1>3. <a name="Reference:_The_Standard_skin_configuration_file">Reference: The 
+<h2>Upgrades and user extensions</h2>
+<p>In the examples above, we subclassed <span class="code">weewx</span> classes 
+to add functionality. Where should you put your new code? If you simply modify 
+the examples in place, then your changes will get overwritten the next time you 
+do an upgrade, forcing you to cut and paste any changes you have made. </p>
+<p>A better idea is to copy over the examples to the subdirectory <span class="code"><em>$WEEWX_ROOT</em>/user</span>,, then modify them there. 
+This subdirectory is preserved through upgrades, so you won&#39;t have to redo any 
+changes you might have made. </p>
+<h1>3. a name="Reference:_The_Standard_skin_configuration_file">Reference: The 
 Standard skin configuration file</a></h1>
 <p>This section is a reference to the options appearing in the Standard skin configuration 
 file, found in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>.</p>
@@ -997,7 +1032,7 @@ file includes two options: <span class="code">radar_url</span>, which is availab
 as tag <span class="code">$Extras.radar_url</span>, and <span class="code">googleAnalyticsId</span>, 
 available as tag <span class="code">$Extras.googleAnalyticsId</span>. If you take 
 a look at the template <span class="code">index.html.tmpl</span> you will see examples 
-of testing for these tags (search the file for the string &#39;<span class="code">radar_url</span>&#39; 
+of testing for these tags (search the file for the string <span class="code">radar_url</span> 
 or <span class="code">googleAnalyticsId</span> to find them).</p>
 <p class="config_option">radar_url</p>
 <p>If set, the NOAA radar image will be displayed. If commented out, no image will 

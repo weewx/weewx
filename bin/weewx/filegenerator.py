@@ -65,8 +65,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
     def initUnits(self):
         
-        self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
-        self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
+        self.unit_info = weewx.units.UnitInfo.fromSkinDict(self.skin_dict)
 
     def getCurrentRec(self):
         # Open up the main database archive
@@ -82,8 +81,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Convert to a dictionary with ValueTuples as values:
         current_dict_vt = weewx.units.dictFromStd(current_dict)
         # Now wrap it in a ValueDict, doing any unit conversions:
-        currentRec = weewx.units.ValueDict.convertOnInit(self.converter, 
-                                                         current_dict_vt, context='current', formatter=self.formatter)
+        currentRec = weewx.units.ValueDict.convertOnInit(self.unit_info,
+                                                         current_dict_vt, context='current', formatter=self.unit_info)
         
         return currentRec
 
@@ -256,8 +255,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # stats.month.outTemp.max
         stats = weewx.stats.TaggedStats(self.statsdb,
                                         stop_ts,
-                                        formatter = self.formatter,
-                                        converter = self.converter,
+                                        unit_info = self.unit_info,
                                         rain_year_start = self.station.rain_year_start,
                                         heatbase = heatbase_t,
                                         coolbase = coolbase_t)
@@ -269,7 +267,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Put together the search list:
         searchList = [{'station'    : self.station,
                        'almanac'    : self.almanac,
-                       'unit'       : weewx.units.UnitInfoHelper(self.converter, self.formatter),
+                       'unit'       : weewx.units.UnitInfoHelper(self.unit_info),
                        'heatbase'   : heatbase_t,
                        'coolbase'   : coolbase_t,
                        'Extras'     : extra_dict},

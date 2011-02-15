@@ -274,6 +274,84 @@ class ValueTuple(tuple):
     def group(self):
         return self[2]
 
+
+#===============================================================================
+#                        class Formatter
+#===============================================================================
+    
+class Formatter(object):
+    """Holds formatting information for the various unit types."""
+
+    def __init__(self, unit_format_dict = default_unit_format_dict,
+                       unit_label_dict  = default_unit_label_dict,
+                       time_format_dict = default_time_format_dict):
+        """
+        unit_format_dict: Key is unit type (eg, 'inHg'), value is a string format ("%.1f")
+        
+        unit_label_dict: Key is unit type (eg, 'inHg'), value is a label (" inHg")
+        
+        time_format_dict: Key is a context (eg, 'week'), value is a strftime format ("%d-%b-%Y %H:%M")."""
+
+        self.unit_format_dict = unit_format_dict
+        self.unit_label_dict  = unit_label_dict
+        self.time_format_dict = time_format_dict
+        
+    @staticmethod
+    def fromSkinDict(skin_dict):
+        """Factory static method to initialize from a skin dictionary."""
+        return Formatter(skin_dict['Units']['StringFormats'],
+                         skin_dict['Units']['Labels'],
+                         skin_dict['Units']['TimeFormats'])
+
+    def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
+        """Format the value as a string.
+        
+        val_t: The value to be formatted as a value tuple. 
+        
+        context: A time context (eg, 'day'). 
+        [Optional. If not given, context 'current' will be used.]
+        
+        addLabel: True to add a unit label (eg, 'mbar'), False to not.
+        [Optional. If not given, a label will be added.]
+        
+        useThisFormat: An optional string or strftime format to be used. 
+        [Optional. If not given, the format given in the initializer will be used.]
+        
+        NONE_string: A string to be used if the value val is None.
+        [Optional. If not given, the string given unit_format_dict['NONE'] will be used.]
+        """
+        if val_t is None or val_t[0] is None:
+            if NONE_string: 
+                return NONE_string
+            else:
+                return self.unit_format_dict.get('NONE', 'N/A')
+            
+        if val_t[1] == "unix_epoch":
+            # Different formatting routines are used if the value is a time.
+            try:
+                if useThisFormat:
+                    val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
+                else:
+                    val_str = time.strftime(self.time_format_dict[context], time.localtime(val_t[0]))
+            except (KeyError, TypeError):
+                # If all else fails, use this weeutil utility:
+                val_str = weeutil.weeutil.timestamp_to_string(val_t[0])
+        else:
+            # It's not a time. It's a regular value.
+            try:
+                if useThisFormat:
+                    val_str = useThisFormat % val_t[0]
+                else:
+                    val_str = self.unit_format_dict[val_t[1]] % val_t[0]
+            except (KeyError, TypeError):
+                # If all else fails, ask Python to convert to a string:
+                val_str = str(val_t[0])
+
+        if addLabel:
+            val_str += self.unit_label_dict.get(val_t[1],'')
+
+        return val_str
+
 #===============================================================================
 #                        class Converter
 #===============================================================================
@@ -377,83 +455,37 @@ class Converter(object):
 StdUnitConverters = {weewx.US     : Converter(USUnits),
                      weewx.METRIC : Converter(MetricUnits)}
 
-
 #===============================================================================
-#                        class Formatter
+#                        class UnitInfo
 #===============================================================================
     
-class Formatter(object):
-    """Holds formatting information for the various unit types."""
+class UnitInfo(Formatter, Converter):
+    """Multiply inherits from Formatter and Converter."""
 
     def __init__(self, unit_format_dict = default_unit_format_dict,
                        unit_label_dict  = default_unit_label_dict,
-                       time_format_dict = default_time_format_dict):
+                       time_format_dict = default_time_format_dict,
+                       group_unit_dict  = USUnits):
         """
         unit_format_dict: Key is unit type (eg, 'inHg'), value is a string format ("%.1f")
         
         unit_label_dict: Key is unit type (eg, 'inHg'), value is a label (" inHg")
         
-        time_format_dict: Key is a context (eg, 'week'), value is a strftime format ("%d-%b-%Y %H:%M")."""
-
-        self.unit_format_dict = unit_format_dict
-        self.unit_label_dict  = unit_label_dict
-        self.time_format_dict = time_format_dict
+        time_format_dict: Key is a context (eg, 'week'), value is a strftime format ("%d-%b-%Y %H:%M").
+        
+        group_unit_dict: A dictionary holding the conversion information. 
+        Key is a unit_group (eg, 'group_pressure'), value is the target unit type ('mbar')"""
+        
+        Formatter.__init__(self, unit_format_dict, unit_label_dict, time_format_dict)
+        Converter.__init__(self, group_unit_dict)
         
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
-        return Formatter(skin_dict['Units']['StringFormats'],
-                         skin_dict['Units']['Labels'],
-                         skin_dict['Units']['TimeFormats'])
-
-    def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
-        """Format the value as a string.
-        
-        val_t: The value to be formatted as a value tuple. 
-        
-        context: A time context (eg, 'day'). 
-        [Optional. If not given, context 'current' will be used.]
-        
-        addLabel: True to add a unit label (eg, 'mbar'), False to not.
-        [Optional. If not given, a label will be added.]
-        
-        useThisFormat: An optional string or strftime format to be used. 
-        [Optional. If not given, the format given in the initializer will be used.]
-        
-        NONE_string: A string to be used if the value val is None.
-        [Optional. If not given, the string given unit_format_dict['NONE'] will be used.]
-        """
-        if val_t is None or val_t[0] is None:
-            if NONE_string: 
-                return NONE_string
-            else:
-                return self.unit_format_dict.get('NONE', 'N/A')
-            
-        if val_t[1] == "unix_epoch":
-            # Different formatting routines are used if the value is a time.
-            try:
-                if useThisFormat:
-                    val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
-                else:
-                    val_str = time.strftime(self.time_format_dict[context], time.localtime(val_t[0]))
-            except (KeyError, TypeError):
-                # If all else fails, use this weeutil utility:
-                val_str = weeutil.weeutil.timestamp_to_string(val_t[0])
-        else:
-            # It's not a time. It's a regular value.
-            try:
-                if useThisFormat:
-                    val_str = useThisFormat % val_t[0]
-                else:
-                    val_str = self.unit_format_dict[val_t[1]] % val_t[0]
-            except (KeyError, TypeError):
-                # If all else fails, ask Python to convert to a string:
-                val_str = str(val_t[0])
-
-        if addLabel:
-            val_str += self.unit_label_dict.get(val_t[1],'')
-
-        return val_str
+        return UnitInfo(skin_dict['Units']['StringFormats'],
+                        skin_dict['Units']['Labels'],
+                        skin_dict['Units']['TimeFormats'],
+                        skin_dict['Units']['Groups'])
 
 #===============================================================================
 #                        class ValueHelper
@@ -591,16 +623,17 @@ class ValueDict(dict):
 #===============================================================================
 
 class UnitInfoHelper(object):
-    
-    def __init__(self, converter, formatter):
-        self.group_unit_dict = converter.group_unit_dict
+    """Helper class used for for the $unit template tag."""
+    def __init__(self, unit_info):
+        """unit_info: an instance of UnitInfo"""
+        self.group_unit_dict = unit_info.group_unit_dict
         self.unit_type = {}
         self.label     = {}
         self.format    = {}
         for obs_type in obs_group_dict:
-            self.unit_type[obs_type] = u = converter.getTargetUnit(obs_type)[0]
-            self.label[obs_type]  = formatter.unit_label_dict.get(u, '')
-            self.format[obs_type] = formatter.unit_format_dict.get(u, '%s')
+            self.unit_type[obs_type] = u = unit_info.getTargetUnit(obs_type)[0]
+            self.label[obs_type]  = unit_info.unit_label_dict.get(u, '')
+            self.format[obs_type] = unit_info.unit_format_dict.get(u, '%s')
     
     # This is here for backwards compatibility:
     @property

@@ -113,8 +113,9 @@
                   Low Temperature
                 </td>
                 <td class="stats_data">
-                  $day.outTemp.max at $day.outTemp.maxtime<br/>
-                  $day.outTemp.min at $day.outTemp.mintime
+                  ## Try unit conversion with aggregates:
+                  $day.outTemp.max ($day.outTemp.max.degree_C) at $day.outTemp.maxtime<br/>
+                  $day.outTemp.min ($day.outTemp.min.degree_C) at $day.outTemp.mintime
                 </td>
               </tr>
               <tr>
