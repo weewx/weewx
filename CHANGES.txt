@@ -1,31 +1,40 @@
 CHANGE HISTORY
 --------------------------------
 
-1.10.0 02/12/11
+1.10.0a1 02/14/11
 
 Added a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
 
-Added a mobile formatted HTML page, courtesy of user Vince Skahan (thanks,
+Added  a mobile  formatted HTML  page, courtesy  of user  Vince  Skahan (thanks,
 Vince!!).
 
 Added executable module "runreports.py" for running report generation only.
 
-Y-axis plot labels (such as "°F") can now be overridden in the plot configuration
-section of skin.conf by using option "y_label".
+Y-axis  plot  labels  (such  as  "°F")   can  now  be  overridden  in  the  plot
+configuration section of skin.conf by using option "y_label".
 
-Added package "user", which can contain any user extensions. This package will
+Added package "user",  which can contain any user  extensions. This package will
 not get overridden in the upgrade process.
 
-Added special tag "exists" to test whether an observation type exists. Example
-$year.foo.exists will return False if there is no type "foo" in the statistical
+Added  the ability  to reconfigure  the main  database, i.e.,  add or  drop data
+types.  Along   the  same  line,  statistical   types  can  also   be  added  or
+dropped. Email me for details on how to do this.
+
+Added special tag  "exists" to test whether an  observation type exists. Example
+"$year.foo.exists" will return False if there is no type "foo" in the statistical
 database.
 
-Added special tag "has_data" to test whether an observation type exists and has
-a non-zero number of data points over the aggregation period. For example,
-$year.soilMoist1.has_data will return True if soilMoist1 both exists in the
-stats database and contains data (meaning, you have the hardware).
+Added special tag "has_data" to test  whether an observation type exists and has
+a  non-zero number of  data points  over the  aggregation period.   For example,
+"$year.soilMoist1.has_data" will return "True"  if soilMoist1 both exists in the
+stats database and contains some data (meaning, you have the hardware).
 
-Now makes all of the LOOP and archive data available to services. This includes
+Tags can now  be ended with a unit  type to convert to a new  unit. For example,
+say your pressure group ("group_pressure") has been set to show inHg. The normal
+tag   notation  of   "$day.barometer.avg"  will   show  something   like  "30.05
+inHg". However, the tag "$day.barometer.avg.mbar" will show "1017.5 mbar".
+
+Now makes all of the LOOP  and archive data available to services. This includes
 new keys:
 
   LOOP data: 
@@ -40,6 +49,7 @@ new keys:
     'forecastRule'   'highOutTemp'    'highRadiation'   'highUV'
     'lowOutTemp'
 
+Started a more formal test suite. There are now tests for the report generators.
 
 1.9.3 02/04/11
 
@@ -51,33 +61,32 @@ Now does a CRC check on LOOP data.
 Changed VantagePro.accumulateLoop to make it slightly more robust.
 
 
-1.9.2  11/20/10
+1.9.2 11/20/10
 
-Now catches exception of type OverflowError when calculating celsius dewpoint.
-(Despite the documentation indicating otherwise, math.log() can still throw an
+Now catches  exception of type OverflowError when  calculating celsius dewpoint.
+(Despite the  documentation indicating otherwise, math.log() can  still throw an
 OverflowError)
 
-Fixed bug that causes crash in VantagePro.accumulateLoop() during fall DST
+Fixed  bug that  causes  crash in  VantagePro.accumulateLoop()  during fall  DST
 transition in certain situations.
 
-VP2 does not store records during the one hour fall DST transition.  Improved
+VP2 does  not store records during  the one hour fall  DST transition.  Improved
 logic in dealing with this.
 
-Changed install so that it backs up the ./bin subdirectory, then overwrites
-the old one. Also, does not install the ./skins subdirectory at all if one
-already exists (thus preserving any user customization).
+Changed install so that it backs  up the ./bin subdirectory, then overwrites the
+old one. Also,  does not install the ./skins subdirectory at  all if one already
+exists (thus preserving any user customization).
 
 
-1.9.1  9/9/10
+1.9.1 9/9/10
 
-Now catches exceptions of type httplib.BadStatusLine when doing RESTful
-posts.
+Now catches exceptions of type httplib.BadStatusLine when doing RESTful posts.
 
-Added an extra decimal point of precision to dew point reports to the Weather
+Added an  extra decimal point of precision  to dew point reports  to the Weather
 Underground and PWS.
 
 
-1.9.0  7/04/10
+1.9.0 7/04/10
 
 Added a new service, StdQC, that offers a rudimentary data check.
 
@@ -93,33 +102,33 @@ Added checks for bad dateTime.
 Simplified VantagePro module.
 
 
-1.8.4  6/06/10
+1.8.4 6/06/10
 
 Fixed problem that shows itself if weewx starts up at precisely the beginning of
-an archive interval. Symptom is max recursion depth exceeded. 
+an archive interval. Symptom is max recursion depth exceeded.
 
 Units for UV in LOOP records corrected. Also, introduced new group for UV,
 group_uv_index. Thanks to user A. Burriel for this fix!
 
 
-1.8.3  5/20/10
+1.8.3 5/20/10
 
 Problem with configuring archive interval found and fixed by user A. Burriel
 (thanks, Antonio!)
 
 
-1.8.2   5/9/10
+1.8.2 5/9/10
 
 Added check to skip calibration for a type that doesn't exist in LOOP or archive
 records. This allows windSpeed and windGust to be calibrated separately.
 
 
-1.8.1   5/1/10
+1.8.1 5/1/10
 
 Ported to Cheetah V2.4.X
 
 
-1.8.0   04/28/10
+1.8.0 04/28/10
 
 Added CWOP support.
 
@@ -148,7 +157,7 @@ Corrected error in units. getTargetType() that showed itself with when the
 console memory was freshly cleared, then tried to graph something immediately.
 
 
-1.7.0   04/15/10
+1.7.0 04/15/10
 
 Big update.
 
@@ -209,12 +218,12 @@ Included an example of a low-battery alarm.
 Rearranged distribution directory structure so that it matches the install
 directory structure.
 
-Moved base temperature for heating and cooling degree days into skin.conf.
-They now also require a unit.
+Moved base temperature for heating and cooling degree days into skin.conf.  They
+now also require a unit.
 
 Now require unit to be specified for 'altitude'.
 
-1.5.0   03/07/10
+1.5.0 03/07/10
 
 Added support for other units besides the U.S. Customary. Plots and HTML reports
 can be prepared using any arbitrary combination of units. For example, pressure
@@ -228,7 +237,7 @@ Added an exception handler for exception OSError, which is typically thrown when
 another piece of software attempts to access the same device port.  Weewx
 catches the exception, waits 10 seconds, then starts again from the top.
 
-1.4.0   02/22/10
+1.4.0 02/22/10
 
 Changed the architecture of stats.py to one that uses very late binding. The SQL
 statements are not run until template evaluation. This reduces the amount of
@@ -238,38 +247,38 @@ Execution time is slightly slower for NOAA file generation, slightly faster for
 HTML file generation, the same for image generation, although your actual
 results will depend on your disk speed.
 
-Now possible to tell weewx to reread the configuration file without
-stopping it. Send signal HUP to the process.
+Now possible to tell weewx to reread the configuration file without stopping
+it. Send signal HUP to the process.
 
 Added option week_start, for specifying which day a calendar week starts
 on. Default is 6 (Sunday).
 
-Fixed reporting bug when the reporting time falls on a calendar month
-or year boundary.
+Fixed reporting bug when the reporting time falls on a calendar month or year
+boundary.
 
-1.3.4   02/08/10
+1.3.4 02/08/10
 
 Fixed problem when plotting data where all data points are bad (None).
 
-1.3.3   01/10/10
+1.3.3 01/10/10
 
 Fixed reporting bug that shows itself if rain year does not start in January.
 
-1.3.2   12/26/09
+1.3.2 12/26/09
 
 LOOP data added to stats database.
 
-1.3.1   12/22/09
+1.3.1 12/22/09
 
-Added a call to syslog.openlog() that inadvertently got left out when 
-switching to the engine driven architecture.
+Added a call to syslog.openlog() that inadvertently got left out when switching
+to the engine driven architecture.
 
-1.3.0   12/21/09
+1.3.0 12/21/09
 
 Moved to a very different architecture to drive weewx. Consists of an engine,
-that manages a list of 'services.' At key events, each service is given
-a chance to participate. Services are easy to add, to allow easy
-customization. An example is offered of an 'alarm' service.
+that manages a list of 'services.' At key events, each service is given a chance
+to participate. Services are easy to add, to allow easy customization. An
+example is offered of an 'alarm' service.
 
 Checking the clock of the weather station for drift is now a service, so the
 option clock_check was moved from the station specific [VantagePro] section to
@@ -288,7 +297,7 @@ plot.
 Install now deletes public_html/#upstream.last, thus forcing all files to be
 uploaded to the web server at the next opportunity.
  
-1.2.0   11/22/09
+1.2.0 11/22/09
 
 Added progressive vector plots for wind data.
 
@@ -297,12 +306,11 @@ for ranges less than 1.0. The user can also hardwire in min and max values, as
 well as specify a minimum increment, through parameter 'yscale' in section
 [Images] in the configuration file.
 
-Now allows the same SQL type to be used more than once in a plot. This
-allows, say, instantaneous and average wind speed to be shown in
-the same plot. 
+Now allows the same SQL type to be used more than once in a plot. This allows,
+say, instantaneous and average wind speed to be shown in the same plot.
 
-Rain year is now parameterized in file templates/year.tmpl (instead of 
-being hardwired in).
+Rain year is now parameterized in file templates/year.tmpl (instead of being
+hardwired in).
 
 Now does LOOP caching by default.
 
@@ -312,11 +320,10 @@ database if it doesn't already exist.
 setup.py now more robust to upgrading the FTP and Wunderground sections
 
 
-1.1.0   11/14/09
+1.1.0 11/14/09
 
-Added the ability to cache LOOP data. This can dramatically reduce the
-number of writes to the stats database, reducing wear on solid-state
-disk stores.
+Added the ability to cache LOOP data. This can dramatically reduce the number of
+writes to the stats database, reducing wear on solid-state disk stores.
 
 Introduced module weewx.mainloop. Introduced class weewx.mainloop.MainLoop This
 class offers many opportunities to customize weewx through subclassing, then
@@ -333,12 +340,12 @@ and in the daemon start up scripts
 
 Now uses FTP passive mode by default.
 
-1.0.1   11/09/09
+1.0.1 11/09/09
 
 Fixed bug that prevented backfilling the stats database after modifying the main
 archive.
 
-1.0.0   10/26/09
+1.0.0 10/26/09
 
 Took the module weewx.factory back out, as it was too complicated and hard to
 understand.
@@ -372,22 +379,22 @@ Much more extensive DEBUG analysis.
 Nipped and tucked here and there, trying to simplify.
 
 
-0.6.5  10/11/09
+0.6.5 10/11/09
 
 Ported to Cheetah V2.2.X. Mostly, this is making sure that all strings that
 cannot be converted with the 'ascii' codec are converted to Unicode first before
 feeding to Cheetah.
 
-0.6.4   9/22/09
+0.6.4 9/22/09
 
 Fixed an error in the calculation of heat index.
 
-0.6.3   8/25/09
+0.6.3 8/25/09
 
 FTP transfers now default to ACTIVE mode, but a configuration file option allows
 PASSIVE mode. This was necessary to support Microsoft FTP servers.
 
-0.6.2   8/1/09
+0.6.2 8/1/09
 
 Exception handling in weewx/ftpdata.py used socket.error but failed to declare
 it. Added 'import socket' to fix.
@@ -396,11 +403,11 @@ Added more complete check for unused pages in weewx/VantagePro.py. Now the
 entire record must be filled with 0xff, not just the time field. This fixes a
 bug where certain time stamps could look like unused records.
 
-0.6.1   6/22/09
+0.6.1 6/22/09
 
 Fixed minor ftp bug.
 
-0.6.0   5/20/09
+0.6.0 5/20/09
 
 Changed the file, imaging, ftping functions into objects, so they can be more
 easily specialized by the user.
@@ -410,7 +417,7 @@ Introduced a StationData object.
 Introduced module weewx.factory that produces these things, so the user has a
 place to inject his/her new types.
 
-0.5.1	5/13/09
+0.5.1 5/13/09
 
 1. Weather Underground thread now run as daemon thread, allowing the program to
 exit even if it is running.

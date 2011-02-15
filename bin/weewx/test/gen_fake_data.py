@@ -27,14 +27,16 @@ stop_tt  = (2011,1,1,0,0,0,0,0,-1)
 start_ts = int(time.mktime(start_tt))
 stop_ts  = int(time.mktime(stop_tt))
 
-daily_temp_range = 20.0
-annual_temp_range = 40.0
+daily_temp_range = 40.0
+annual_temp_range = 80.0
+avg_temp = 40.0
 
 # Four day weather cycle:
 weather_cycle = 3600*24.0*4
-weather_baro_range = 1.0
+weather_baro_range = 2.0
 weather_wind_range = 10.0
 weather_rain_total = 0.5 # This is inches per weather cycle
+avg_baro = 30.0
 
 # Archive interval in seconds:
 interval = 600
@@ -121,8 +123,8 @@ class StatsTestBase(unittest.TestCase):
             record['dateTime']  = ts
             record['usUnits']   = weewx.US
             record['interval']  = interval
-            record['outTemp']   = daily_temp_range*math.sin(daily_phase) + annual_temp_range*math.sin(annual_phase) + 20.0
-            record['barometer'] = weather_baro_range*math.sin(weather_phase) + 30.0
+            record['outTemp']   = 0.5 * (daily_temp_range*math.sin(daily_phase) - annual_temp_range*math.cos(annual_phase)) + avg_temp
+            record['barometer'] = 0.5 * weather_baro_range*math.sin(weather_phase) + avg_baro
             record['windSpeed'] = abs(weather_wind_range*(1.0 + math.sin(weather_phase)))
             record['windDir'] = math.degrees(weather_phase) % 360.0
             record['windGust'] = 1.2*record['windSpeed']

@@ -46,7 +46,8 @@ class TemplateTest(StatsTestBase):
         test_html_dir = os.path.join(t.config_dict['Station']['WEEWX_ROOT'], t.config_dict['Reports']['HTML_ROOT'])
         expected_dir  = os.path.join(test_dir, 'expected')
         
-        for file in ['index.html']:
+        for file in ['index.html', 'bymonth.txt', 'byyear.txt', 
+                     'metric/index.html', 'metric/bymonth.txt', 'metric/byyear.txt']:
             actual_file   = os.path.join(test_html_dir, file)
             expected_file = os.path.join(expected_dir, file)
             print "Checking file: ", actual_file
@@ -63,7 +64,6 @@ class TemplateTest(StatsTestBase):
             print "Checked %d lines" % (n,)
 
 if __name__ == '__main__':
-    import sys
     if len(sys.argv) < 2 :
         print "Usage: python test_templates.py path-to-configuration-file"
         exit()

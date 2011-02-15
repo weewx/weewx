@@ -22,6 +22,7 @@ class StatsTest(StatsTestBase):
 
     def setUp(self):
         syslog.openlog('test_stats', syslog.LOG_CONS)
+        self.config_path = config_path
         # This will generate the test databases if necessary:
         StatsTestBase.setUp(self)
         
@@ -117,7 +118,27 @@ class StatsTest(StatsTestBase):
         self.assertEqual(str(tagStats.year.barometer.max), "31.000 inHg")
         self.assertEqual(str(tagStats.year.barometer.mintime), "04-Jan-2010 00:00")
         self.assertEqual(str(tagStats.year.barometer.maxtime), "02-Jan-2010 00:00")
-        
+        self.assertEqual(str(tagStats.day.outTemp.avg), "38.8°F")
+        self.assertEqual(str(tagStats.day.outTemp.min), "19.0°F")
+        self.assertEqual(str(tagStats.day.outTemp.max), "58.6°F")
+        self.assertEqual(str(tagStats.day.outTemp.mintime), "19:00")
+        self.assertEqual(str(tagStats.day.outTemp.maxtime), "07:00")
+        self.assertEqual(str(tagStats.week.outTemp.avg), "38.8°F")
+        self.assertEqual(str(tagStats.week.outTemp.min), "16.9°F")
+        self.assertEqual(str(tagStats.week.outTemp.max), "60.7°F")
+        self.assertEqual(str(tagStats.week.outTemp.mintime), "19:00 on Sunday")
+        self.assertEqual(str(tagStats.week.outTemp.maxtime), "07:00 on Saturday")
+        self.assertEqual(str(tagStats.month.outTemp.avg), "28.8°F")
+        self.assertEqual(str(tagStats.month.outTemp.min), "-0.6°F")
+        self.assertEqual(str(tagStats.month.outTemp.max), "58.6°F")
+        self.assertEqual(str(tagStats.month.outTemp.mintime), "01-Mar-2010 18:00")
+        self.assertEqual(str(tagStats.month.outTemp.maxtime), "31-Mar-2010 07:00")
+        self.assertEqual(str(tagStats.year.outTemp.avg), "40.0°F")
+        self.assertEqual(str(tagStats.year.outTemp.min), "-20.0°F")
+        self.assertEqual(str(tagStats.year.outTemp.max), "100.0°F")
+        self.assertEqual(str(tagStats.year.outTemp.mintime), "31-Dec-2010 18:00")
+        self.assertEqual(str(tagStats.year.outTemp.maxtime), "02-Jul-2010 07:00")
+
         # Check the special aggregate types "exists" and "has_data":
         self.assertTrue(tagStats.year.barometer.exists)
         self.assertTrue(tagStats.year.barometer.has_data)
@@ -127,4 +148,11 @@ class StatsTest(StatsTestBase):
         self.assertFalse(tagStats.year.foo.has_data)
 
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv) < 2 :
+        print "Usage: python test_templates.py path-to-configuration-file"
+        exit()
+
+    config_path = sys.argv[1]
+    del sys.argv[1:]
     unittest.main()

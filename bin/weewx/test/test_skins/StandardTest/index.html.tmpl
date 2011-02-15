@@ -30,15 +30,26 @@
             <tbody>
               <tr>
                 <td class="stats_label">Outside Temperature</td>
-                <td class="stats_data">$current.outTemp</td>
+                <td class="stats_data">$current.outTemp ($current.outTemp.degree_C)</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Outside Temperature</td>
+                ## Try it again with a nonsense conversion:
+                <td class="stats_data">$current.outTemp ($current.outTemp.foo)</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Barometer</td>
+                ## Try an inappropriate conversion on an existing type:
+                <td class="stats_data">$current.barometer ($current.barometer.degree_C)</td>
               </tr>
               <tr>
                 <td class="stats_label">Wind Chill</td>
-                <td class="stats_data">$current.windchill</td>
+                ## Try an inappropriate conversion on a non existing type:
+                <td class="stats_data">$current.windchill ($current.windchill.mbar)</td>
               </tr>
               <tr>
                 <td class="stats_label">Heat Index</td>
-                <td class="stats_data">$current.heatindex</td>
+                <td class="stats_data">$current.heatindex ($current.windchill.degree_C)</td>
               </tr>
               <tr>
                 <td class="stats_label">Dewpoint</td>
@@ -47,10 +58,6 @@
               <tr>
                 <td class="stats_label">Humidity</td>
                 <td class="stats_data">$current.outHumidity</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Barometer</td>
-                <td class="stats_data">$current.barometer</td>
               </tr>
               <tr>
                 <td class="stats_label">Wind</td>

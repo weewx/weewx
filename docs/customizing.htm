@@ -490,7 +490,7 @@ or an aggregation over time. However, both versions are very similar</p>
 An example would be the current barometric pressure:</p>
 <pre>$current.barometer</pre>
 <p>The dot code for a current observation looks like:</p>
-<pre><em>$current.obstype[.optional_formatting]</em></pre>
+<pre><em>$current.obstype[.optional_formatting][.optional_unit_conversion]</em></pre>
 <p>Where:</p>
 <p class="indent"><span class="code"><em>obstype</em></span> is an observation type. 
 See <em><a href="#Archive_types">Appendix A, Archive Types</a></em> for a table 
@@ -498,6 +498,10 @@ of observation types valid for <span class="code">current.</span></p>
 <p class="indent"><span class="code"><em>optional_formatting</em></span> is an optional 
 formatting tag that controls how the value will appear. See the section <em>
 <a href="#Formatting_options">Formatting Options</a></em> below.</p>
+<p class="indent"><span class="code">optional_unit_conversion</span> is an 
+optional unit conversion tag. If provided, the results will be converted into 
+the specified units. See the section <em><a href="#Unit_conversion_options">Unit 
+Conversion Options</a></em> below.</p>
 <h4>Aggregation periods <span class="code">$day</span>, <span class="code">$week</span>,
 <span class="code">$month</span>, <span class="code">$year</span>,
 <span class="code">$rainyear</span></h4>
@@ -507,7 +511,7 @@ to the time period over which the aggregation will occur, they also require an
 the aggregation type is <span class="code"><em>sum</em></span>):</p>
 <pre>$week.rain.sum</pre>
 <p>The dot code for an aggregation over time looks like:</p>
-<pre><em>$period.statstype.aggregation.[optional_formatting</em>]</pre>
+<pre><em>$period.statstype.aggregation.[optional_formatting][.optional_unit_conversion]</em></pre>
 <p>Where:</p>
 <p class="indent"><span class="code"><em>period</em></span> is the time period over 
 which the aggregation is to be done. Possible choices are <span class="code">day</span>,
@@ -525,6 +529,10 @@ aggregation types are available for which types.</p>
 <p class="indent"><span class="code"><em>optional_formatting</em></span> is an optional 
 formatting tag that controls how the value will appear. See the section <em>
 <a href="#Formatting_options">Formatting Options</a></em> below.</p>
+<p class="indent"><span class="code">optional_unit_conversion</span> is an 
+optional unit conversion tag. If provided, the results will be converted into 
+the specified units. See the section <em><a href="#Unit_conversion_options">Unit 
+Conversion Options</a></em> below.</p>
 <h4><a name="Formatting_options">Formatting options</a></h4>
 <p>The tag <span class="code"><em>optional_formatting</em></span> can be used with 
 either current observations or aggregations. It can be one of:</p>
@@ -766,6 +774,24 @@ either current observations or aggregations. It can be one of:</p>
 	<span class="code">$month.outTemp.string</span>, if you want the default value 
 	of <span class="code">NONE_string</span>. They produce the same results.</li>
 </ul>
+<h4><a name="Unit_conversion_options">Unit conversion options</a></h4>
+<p>The tag <span class="code"><em>optional_unit_conversion</em></span> can be 
+used with either current observations or aggregations. If supplied, the results 
+will be converted to the specified units. For example, if you have set
+<span class="code">group_pressure</span> to inches of mercury (<span class="code">inHg</span>), 
+then the tag</p>
+<p class="tty">Today&#39;s average pressure=$day.barometer.avg</p>
+<p>would normally give a result such as</p>
+<p class="Example_output">Today&#39;s average pressure=30.05 inHg</p>
+<p>However, if you add &quot;mbar&quot; to the end, </p>
+<p class="tty">$day.barometer.avg.mbar</p>
+<p>then the results will be in millibars:</p>
+<p class="Example_output">Today&#39;s average pressure=1017.5 mbar</p>
+<p>If an inappropriate conversion is asked for, <em>e.g.</em>,</p>
+<p class="tty">Today&#39;s average pressure=$day.barometer.degree_C</p>
+<p>then the offending tag will be put in the output:</p>
+<p class="Example_output">Today&#39;s average pressure=$day.barometer.degree_C</p>
+<p>&nbsp;</p>
 <h3><a name="Type_dateTime">Type <span class="code">dateTime</span></a></h3>
 <p>While not an observation type, in many ways the time of an observation,
 <span class="code">dateTime</span>, can be treated as one. A tag such as
