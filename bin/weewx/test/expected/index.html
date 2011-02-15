@@ -1,0 +1,240 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head profile="http://www.w3.org/2005/10/profile">
+    <title>TEST: Current Weather Conditions</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="masthead">
+        <h1>TEST TEST TEST</h1>
+        <h2>Current Weather Conditions</h2>
+          <h2>01-Jan-2011 00:00</h2>
+      </div>
+
+      <div id="stats_group">
+
+        <div class="stats">
+          <div class="stats_header">
+            Current Conditions
+          </div>
+
+          <table>
+            <tbody>
+              <tr>
+                <td class="stats_label">Outside Temperature</td>
+                <td class="stats_data">20.0&#176;F</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Wind Chill</td>
+                <td class="stats_data">   N/A</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Heat Index</td>
+                <td class="stats_data">   N/A</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Dewpoint</td>
+                <td class="stats_data">   N/A</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Humidity</td>
+                <td class="stats_data">   N/A</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Barometer</td>
+                <td class="stats_data">31.000 inHg</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Wind</td>
+                <td class="stats_data">20 mph from 90&#176;</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Rain Rate</td>
+                <td class="stats_data">   N/A</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Inside Temperature</td>
+                <td class="stats_data">   N/A</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>&nbsp;</p>
+
+        <div class="stats">
+          <div class="stats_header">
+            Daily Summary
+          </div>
+          <table>
+            <tbody>
+              <tr>
+                <td class="stats_label">
+                  High Temperature<br/>
+                  Low Temperature
+                </td>
+                <td class="stats_data">
+                  39.5&#176;F at 06:00<br/>
+                  -0.2&#176;F at 18:00
+                </td>
+              </tr>
+              <tr>
+                <td class="stats_label">
+                  High Heat Index<br/>
+                  Low Wind Chill
+                </td>
+                <td class="stats_data">
+                  $day.heatindex.max at $day.heatindex.maxtime<br/>
+                  $day.windchill.min at $day.windchill.mintime
+                </td>
+              </tr>
+              <tr>
+                <td class="stats_label">
+                  High Humidity<br/>
+                  Low Humidity
+                </td>
+                <td class="stats_data">
+                  $day.outHumidity.max at $day.outHumidity.maxtime<br/>
+                  $day.outHumidity.min at $day.outHumidity.mintime
+                </td>
+              </tr>
+              <tr>
+                <td class="stats_label">
+                  High Dewpoint<br/>
+                  Low Dewpoint
+                </td>
+                <td class="stats_data">
+                  $day.dewpoint.max at $day.dewpoint.maxtime<br/>
+                  $day.dewpoint.min at $day.dewpoint.mintime
+                </td>
+              </tr>
+              <tr>
+                <td class="stats_label">
+                  High Barometer<br/>
+                  Low Barometer
+                </td>
+                <td class="stats_data">
+                  31.000 inHg at 00:00<br/>
+                  30.011 inHg at 00:10
+                </td>
+              </tr>
+              <tr>
+                <td class="stats_label">Today's Rain</td>
+                <td class="stats_data">0.47 in</td>
+              </tr>
+              <tr>
+                <td class="stats_label">High Rain Rate</td>
+                <td class="stats_data">$day.rainRate.max at $day.rainRate.maxtime</td>
+              </tr>
+              <tr>
+                <td class="stats_label">
+                  High Wind
+                </td>
+                <td class="stats_data">
+                  24 mph from 90&#176; at 00:00
+                </td>
+              </tr>
+              <tr>
+                <td class="stats_label">
+                  Average Wind
+                </td>
+                <td class="stats_data">
+                  16 mph
+                </td>
+              </tr>
+              <tr>
+                <td class="stats_label">
+                  RMS Wind
+                </td>
+                <td class="stats_data">
+                     N/A
+                </td>
+              </tr>
+
+              <tr>
+                <td class="stats_label">
+                  Vector Average Speed<br/>
+                  Vector Average Direction
+                </td>
+                <td class="stats_data">
+                  15 mph<br/>
+                  50&#176;
+                </td>
+              </tr>
+
+              <tr>
+                <td class="stats_label">
+                  High Inside Temperature<br/>
+                  Low Inside Temperature
+                </td>
+                <td class="stats_data">
+                  $day.inTemp.max at $day.inTemp.maxtime<br/>
+                  $day.inTemp.min at $day.inTemp.mintime
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div> <!--End class "stats" -->
+
+        <p>&nbsp;</p>
+
+        Radar URL = "http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif"
+
+      </div> <!--End class "stats_group" -->
+
+      <div id="content">
+        <div class="header">
+          <h3>About this weather station:</h3>
+          <table>
+            <tr>
+              <td align="right">Latitude:</td>
+              <td align="left">45&deg; 41.16' N</td>
+            </tr>
+            <tr>
+              <td align="right">Longitude:</td>
+              <td align="left">121&deg; 33.96' W</td>
+            </tr>
+            <tr>
+              <td align="right">Altitude:</td>
+              <td align="left">328 feet</td>
+            </tr>
+            <tr>
+              <td align="right">Sunrise:</td>
+              <td align="left">07:46</td>
+            </tr>
+            <tr>
+              <td align="right">Sunset:</td>
+              <td align="left">16:32</td>
+            </tr>
+            <tr>
+              <td align="right">Moon:</td>
+              <td align="left">Waning crescent (15% full)</td>
+            </tr>
+          </table>
+        </div>
+        <div id="plots">
+          <img src="daytempdew.png"   alt="temperatures" />
+          <img src="daytempchill.png" alt="heatchill" />
+          <img src="dayrain.png"      alt="rain" />
+          <img src="daywind.png"      alt="wind" />
+          <img src="daybarometer.png" alt="barometer"/>
+          <img src="daywinddir.png"   alt="Hi Wind" />
+          <img src="dayinside.png"    alt="Inside" />
+          <img src="daywindvec.png"   alt="Wind Vector" />
+          <img src="dayrx.png"        alt="day rx percent"/>
+        </div> <!-- End id "plots" -->
+      </div> <!-- End id "content" -->
+
+      <div id="navbar">
+        <input type="button" value="   Current   " onclick="openURL('index.html')" />
+        <input type="button" value="    Week     " onclick="openURL('week.html')" />
+        <input type="button" value="    Month    " onclick="openURL('month.html')" />
+        <input type="button" value="    Year     " onclick="openURL('year.html')" />
+      </div>
+    </div>
+
+</body>
+
+</html>
+

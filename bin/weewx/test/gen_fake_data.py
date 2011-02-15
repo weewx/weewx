@@ -9,21 +9,17 @@
 #    $Date$
 #
 """Generate fake data used by the tests."""
-import time
 import math
-import sys
 import os.path
+import sys
 import syslog
-import tempfile
+import time
 import unittest
 
 import configobj
 
 import weewx.archive
 import weewx.stats
-import weeutil.weeutil
-
-stats_types = ['barometer', 'outTemp', 'wind', 'rain', 'foo']
 
 # One year of data:
 start_tt = (2010,1,1,0,0,0,0,0,-1)
@@ -70,31 +66,49 @@ class StatsTestBase(unittest.TestCase):
         print "Test archive database path:", self.archiveFilename
         print "Test stats database path:  ", self.statsFilename
 
+        # If the archive has not been configured, an exception will be raised:
         try:
             self.archive = weewx.archive.Archive(self.archiveFilename)
         except StandardError:
-            weewx.archive.config(self.archiveFilename)
-            self.archive = weewx.archive.Archive(self.archiveFilename)
-            # Because this can generate voluminous log information,
-            # suppress all but the essentials:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
-            
-            t1= time.time()
-            self.archive.addRecord(self.genFakeRecords())
-            t2 = time.time()
-            print "Time to create synthetic archive database = %6.2f" % (t2-t1,)
-            # Now go back to regular logging:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-    
+            # The archive was not configured. Go configure it:
+            self.configDatabases(stats_types=config_dict['Stats']['stats_types'])
+
+        self.stats = weewx.stats.StatsDb(self.statsFilename)
+        self.assertEqual(sorted(self.stats.statsTypes), sorted(config_dict['Stats']['stats_types']))
+
+    def configDatabases(self, stats_types):
+        """Configures the main and stats databases."""
+
+        # Configure the main database:            
+        weewx.archive.config(self.archiveFilename)
+        # Now open it
+        self.archive = weewx.archive.Archive(self.archiveFilename)
+        # Because this can generate voluminous log information,
+        # suppress all but the essentials:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
+        
+        # Now generate the fake records to populate the database:
+        t1= time.time()
+        self.archive.addRecord(self.genFakeRecords())
+        t2 = time.time()
+        print "Time to create synthetic archive database = %6.2fs" % (t2-t1,)
+        # Now go back to regular logging:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+        
+        # Remove any old stats database
         try:
-            self.stats = weewx.stats.StatsDb(self.statsFilename)
+            os.remove(self.statsFilename)
         except:
-            weewx.stats.config(self.statsFilename, stats_types = stats_types)
-            self.stats = weewx.stats.StatsDb(self.statsFilename)
-            t1 = time.time()
-            weewx.stats.backfill(self.archive, self.stats)
-            t2 = time.time()
-            print "Time to backfill stats database from it =   %6.2f" % (t2-t1,)
+            pass
+
+        # Configure a new stats databsae:            
+        weewx.stats.config(self.statsFilename, stats_types=stats_types)
+        self.stats = weewx.stats.StatsDb(self.statsFilename)
+        t1 = time.time()
+        # Now backfill the stats database from the main archive database.
+        weewx.stats.backfill(self.archive, self.stats)
+        t2 = time.time()
+        print "Time to backfill stats database from it =   %6.2fs" % (t2-t1,)
         
     def genFakeRecords(self):
         self.count = 0

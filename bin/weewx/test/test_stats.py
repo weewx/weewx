@@ -16,7 +16,7 @@ import unittest
 
 import weeutil.weeutil
 import weewx.stats
-from gen_fake_data import StatsTestBase, stats_types
+from gen_fake_data import StatsTestBase
 
 class StatsTest(StatsTestBase):
 
@@ -24,9 +24,6 @@ class StatsTest(StatsTestBase):
         syslog.openlog('test_stats', syslog.LOG_CONS)
         # This will generate the test databases if necessary:
         StatsTestBase.setUp(self)
-        
-    def test_types(self):
-        self.assertEqual(sorted(self.stats.statsTypes), sorted(stats_types))
         
     def testStatsTally(self):
         # Pick a random day, say 15 March:

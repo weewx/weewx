@@ -199,7 +199,7 @@ class StatsReadonlyDb(object):
         
         self._connection     = None
         self.statsFilename   = statsFilename
-        self.statsTypes      = self._getTypes()
+        self.statsTypes      = self.__getTypes()
         self.std_unit_system = self._getStdUnitSystem()
 
         if cacheDayData:
@@ -461,23 +461,6 @@ class StatsReadonlyDb(object):
             
         return self._connection
     
-    def _getTypes(self):
-        """Returns the types appearing in a stats database.
-        
-        Throws an exception if the database has not been initialized.
-        
-        returns: A list of types"""
-        
-        # Get the schema dictionary:
-        schema_dict = weeutil.dbutil.schema(self.statsFilename)
-        # Convert from unicode:
-        stats_types = [str(s) for s in schema_dict.keys()]
-        # Some stats database have schemas for heatdeg and cooldeg (even though they are not
-        # used) due to an earlier bug. Filter them out. Also, filter out the metadata table:
-        results = filter(lambda x : x not in ('heatdeg', 'cooldeg', 'metadata'), stats_types)
-
-        return results
-
     def _getStdUnitSystem(self):
         """Returns the unit system in use in the stats database."""
         
@@ -493,6 +476,22 @@ class StatsReadonlyDb(object):
             assert(unit_system in (weewx.US, weewx.METRIC))
         return unit_system
 
+    def __getTypes(self):
+        """Returns the types appearing in a stats database.
+        
+        Throws an exception if the database has not been initialized.
+        
+        returns: A list of types"""
+        
+        # Get the schema dictionary:
+        schema_dict = weeutil.dbutil.schema(self.statsFilename)
+        # Convert from unicode:
+        stats_types = [str(s) for s in schema_dict.keys()]
+        # Some stats database have schemas for heatdeg and cooldeg (even though they are not
+        # used) due to an earlier bug. Filter them out. Also, filter out the metadata table:
+        results = filter(lambda x : x not in ('heatdeg', 'cooldeg', 'metadata'), stats_types)
+
+        return results
         
 #===============================================================================
 #                    Class StatsDb

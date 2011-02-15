@@ -10,13 +10,10 @@
 #
 """Test tag notation for template generation."""
 import sys
-import os.path
 import syslog
 import unittest
+import os.path
 
-import Cheetah.Template
-
-import weewx.stats
 import weewx.reportengine
 
 from gen_fake_data import StatsTestBase, stop_ts
@@ -37,15 +34,33 @@ class TemplateTest(StatsTestBase):
         
         t = weewx.reportengine.StdReportEngine(self.config_path, stop_ts)
 
-        t.config_dict['Reports']['SKIN_ROOT'] = sys.path[0]
-        # Switch around the path to the archive and stats databases
-        # so they point to the test archive 
-        t.config_dict['Archive']['archive_file'] = self.archiveFilename
-        t.config_dict['Stats']['stats_file']     = self.statsFilename
+        # Find the test skins and then have SKIN_ROOT point to it:
+        test_dir = sys.path[0]
+        t.config_dict['Reports']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
 
         # Although the report engine inherits from Thread, we can just run it in the main thread:
+        print "Starting report engine test"
         t.run()
+        print "Done."
+        
+        test_html_dir = os.path.join(t.config_dict['Station']['WEEWX_ROOT'], t.config_dict['Reports']['HTML_ROOT'])
+        expected_dir  = os.path.join(test_dir, 'expected')
+        
+        for file in ['index.html']:
+            actual_file   = os.path.join(test_html_dir, file)
+            expected_file = os.path.join(expected_dir, file)
+            print "Checking file: ", actual_file
+            print "  against file:", expected_file
+            actual   = open(actual_file)
+            expected = open(expected_file)
 
+            n = 0            
+            for actual_line in actual:
+                n += 1
+                expected_line = expected.readline()
+                self.assertEqual(actual_line, expected_line)
+            
+            print "Checked %d lines" % (n,)
 
 if __name__ == '__main__':
     import sys
