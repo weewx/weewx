@@ -512,21 +512,21 @@ or an aggregation over time. However, both versions are very similar</p>
 An example would be the current barometric pressure:</p>
 <pre>$current.barometer</pre>
 <p>The dot code for a current observation looks like:</p>
-<pre><em>$current.obstype[.optional_formatting][.optional_unit_conversion]</em></pre>
+<pre><em>$current.obstype[.optional_unit_conversion][.optional_formatting]</em></pre>
 <p>Where:</p>
 <p class="indent"><span class="code"><em>obstype</em></span> is an observation type, 
 such as <span class="code">barometer</span>. 
 See <em><a href="#Archive_types">Appendix A, Archive Types</a></em> for a table 
 of observation types valid for time period <span class="code">current.</span></p>
-<p class="indent"><span class="code"><em>optional_formatting</em></span> is an optional 
-formatting tag that controls how the value will appear. See the section <em>
-<a href="#Formatting_options">Formatting Options</a></em> below.</p>
 <p class="indent"><span class="code">optional_unit_conversion</span> is an 
 optional unit conversion tag. If provided, the results will be converted into 
 the specified units, otherwise the default units specified in the skin 
 configuration file (in section <span class="code">[Units][[Groups]]</span>) will 
 be used. See the section <em><a href="#Unit_conversion_options">Unit 
 Conversion Options</a></em> below.</p>
+<p class="indent"><span class="code"><em>optional_formatting</em></span> is an optional 
+formatting tag that controls how the value will appear. See the section <em>
+<a href="#Formatting_options">Formatting Options</a></em> below.</p>
 <h4>Aggregation periods <span class="code">$day</span>, <span class="code">$week</span>,
 <span class="code">$month</span>, <span class="code">$year</span>,
 <span class="code">$rainyear</span></h4>
@@ -536,7 +536,7 @@ to the time period over which the aggregation will occur, they also require an
 the aggregation type is <span class="code"><em>sum</em></span>):</p>
 <pre>$week.rain.sum</pre>
 <p>The dot code for an aggregation over time looks like:</p>
-<pre><em>$period.statstype.aggregation.[optional_formatting][.optional_unit_conversion]</em></pre>
+<pre><em>$period.statstype.aggregation[.optional_unit_conversion][.optional_formatting]</em></pre>
 <p>Where:</p>
 <p class="indent"><span class="code"><em>period</em></span> is the time period over 
 which the aggregation is to be done. Possible choices are <span class="code">day</span>,
@@ -551,15 +551,33 @@ type. This is something like &#39;<span class="code">min</span>&#39;, &#39;<span
 you are asking for the <em>average</em> outside temperature for the month. The table
 <em><a href="#Statistical_types">Appendix C: Statistical types</a></em> shows what 
 aggregation types are available for which types.</p>
-<p class="indent"><span class="code"><em>optional_formatting</em></span> is an optional 
-formatting tag that controls how the value will appear. See the section <em>
-<a href="#Formatting_options">Formatting Options</a></em> below.</p>
 <p class="indent"><span class="code">optional_unit_conversion</span> is an 
 optional unit conversion tag. If provided, the results will be converted into 
 the specified units, otherwise the default units specified in the skin 
 configuration file (in section <span class="code">[Units][[Groups]]</span>) will 
 be used. See the section <em><a href="#Unit_conversion_options">Unit 
 Conversion Options</a></em> below.</p>
+<p class="indent"><span class="code"><em>optional_formatting</em></span> is an optional 
+formatting tag that controls how the value will appear. See the section <em>
+<a href="#Formatting_options">Formatting Options</a></em> below.</p>
+<h4><a name="Unit_conversion_options">Unit conversion options</a></h4>
+<p>The tag <span class="code"><em>optional_unit_conversion</em></span> can be 
+used with either current observations or aggregations. If supplied, the results 
+will be converted to the specified units. For example, if you have set
+<span class="code">group_pressure</span> to inches of mercury (<span class="code">inHg</span>), 
+then the tag</p>
+<p class="tty">Today&#39;s average pressure=$day.barometer.avg</p>
+<p>would normally give a result such as</p>
+<p class="Example_output">Today&#39;s average pressure=30.05 inHg</p>
+<p>However, if you add &quot;mbar&quot; to the end, </p>
+<p class="tty">$day.barometer.avg.mbar</p>
+<p>then the results will be in millibars:</p>
+<p class="Example_output">Today&#39;s average pressure=1017.5 mbar</p>
+<p>If an inappropriate conversion is asked for, <em>e.g.</em>,</p>
+<p class="tty">Today&#39;s average pressure=$day.barometer.degree_C</p>
+<p>then the offending tag will be put in the output:</p>
+<p class="Example_output">Today&#39;s average pressure=$day.barometer.degree_C</p>
+<p>&nbsp;</p>
 <h4><a name="Formatting_options">Formatting options</a></h4>
 <p>The tag <span class="code"><em>optional_formatting</em></span> can be used with 
 either current observations or aggregations. It can be one of:</p>
@@ -801,24 +819,6 @@ either current observations or aggregations. It can be one of:</p>
 	<span class="code">$month.outTemp.string</span>, if you want the default value 
 	of <span class="code">NONE_string</span>. They produce the same results.</li>
 </ul>
-<h4><a name="Unit_conversion_options">Unit conversion options</a></h4>
-<p>The tag <span class="code"><em>optional_unit_conversion</em></span> can be 
-used with either current observations or aggregations. If supplied, the results 
-will be converted to the specified units. For example, if you have set
-<span class="code">group_pressure</span> to inches of mercury (<span class="code">inHg</span>), 
-then the tag</p>
-<p class="tty">Today&#39;s average pressure=$day.barometer.avg</p>
-<p>would normally give a result such as</p>
-<p class="Example_output">Today&#39;s average pressure=30.05 inHg</p>
-<p>However, if you add &quot;mbar&quot; to the end, </p>
-<p class="tty">$day.barometer.avg.mbar</p>
-<p>then the results will be in millibars:</p>
-<p class="Example_output">Today&#39;s average pressure=1017.5 mbar</p>
-<p>If an inappropriate conversion is asked for, <em>e.g.</em>,</p>
-<p class="tty">Today&#39;s average pressure=$day.barometer.degree_C</p>
-<p>then the offending tag will be put in the output:</p>
-<p class="Example_output">Today&#39;s average pressure=$day.barometer.degree_C</p>
-<p>&nbsp;</p>
 <h3><a name="Type_dateTime">Type <span class="code">dateTime</span></a></h3>
 <p>While not an observation type, in many ways the time of an observation,
 <span class="code">dateTime</span>, can be treated as one. A tag such as
@@ -1013,10 +1013,10 @@ in the environment variable <span class="code">PYTHON_PATH</span>:</p>
 to add functionality. Where should you put your new code? If you simply modify 
 the examples in place, then your changes will get overwritten the next time you 
 do an upgrade, forcing you to cut and paste any changes you have made. </p>
-<p>A better idea is to copy over the examples to the subdirectory <span class="code"><em>$WEEWX_ROOT</em>/user</span>,, then modify them there. 
+<p>A better idea is to copy over the examples to the subdirectory <span class="code"><em>$WEEWX_ROOT</em>/bin/user</span>, then modify them there. 
 This subdirectory is preserved through upgrades, so you won&#39;t have to redo any 
 changes you might have made. </p>
-<h1>3. a name="Reference:_The_Standard_skin_configuration_file">Reference: The 
+<h1>3. <a name="Reference:_The_Standard_skin_configuration_file">Reference: The 
 Standard skin configuration file</a></h1>
 <p>This section is a reference to the options appearing in the Standard skin configuration 
 file, found in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>.</p>
@@ -1471,7 +1471,7 @@ list. The generators will be run in this order.</p>
 <p>This is an advance topic intended for those who wish to try their hand at extending 
 the internal engine in weewx. You should have a passing familiarity with Python 
 or, at least, be willing to learn it.</p>
-<p>At a high level, weewx consists of an <em>engine</em> that is responsible for 
+<p>At a high level, <span class="code">weewx</span> consists of an <em>engine</em> that is responsible for 
 managing a set of <em>services</em>. A service consists of a Python class with a 
 set of member functions. The engine arranges to have appropriate member functions 
 called when specific events happen. For example, when a new LOOP packet becomes 
@@ -1525,6 +1525,13 @@ services:</p>
 		or FTP files to a web server. New reports can be added easily by the user.</td>
 	</tr>
 </table>
+<h2><a name="Preserving_your_changes_across_an_upgrade">Preserving your changes 
+across an upgrade</a></h2>
+<p>Generally, if you change the code in <span class="code">weewx</span> you will 
+have to cut-and-paste any changes you have made to the new code. However, if you 
+put the changes in directory <span class="code"><em>$WEEWX_ROOT</em>/bin/user</span> 
+(usually, <span class="code">/home/weewx/bin/user</span>) the changes will be 
+preserved across an upgrade. </p>
 <h2>Customizing a Service</h2>
 <p>The service <span class="code">weewx.wxengine.StdPrint</span> prints out new 
 LOOP and archive packets to the console when they arrive. By default, it prints 
@@ -1533,7 +1540,7 @@ you don&#39;t like this, and want to print out humidity as well when a new LOOP 
 arrives. This could be done by subclassing the default print service
 <span class="code">StdPrint</span> and overriding member function
 <span class="code">newLoopPacket()</span>. </p>
-<p>In file <span class="code">myprint.py</span>:</p>
+<p>In file <span class="code">bin/user/myprint.py</span>:</p>
 <pre>from weewx.wxengine import StdPrint
 from weeutil.weeutil import timestamp_to_string
 
@@ -1553,8 +1560,8 @@ your service name for the standard print service name in the option
 <span class="code">service_list</span>, located in <span class="code">[Engines][[WxEngine]]</span>:</p>
 <pre>[Engines]
     [[WxEngine]]
-        service_list = weewx.wxengine.StdCalibrate, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReportService</pre>
-<p>e that this list must be all on one line. The parser <span class="code">ConfigObj</span> 
+        service_list = weewx.wxengine.StdCalibrate, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, user.myprint.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReportService</pre>
+<p>(Note that this list must be all on one line. Unfortunately, the parser <span class="code">ConfigObj</span> 
 does not allow options to be continued on to following lines.)</p>
 <h2>Adding a Service</h2>
 <p>Suppose there is no service that can be easily customized for your needs. In 
@@ -1562,7 +1569,7 @@ this case, a new one can easily be created by subclassing off the abstract base
 class <span class="code">StdService</span>, and then adding the functionality you 
 need. Here&#39;s an example that implements an alarm that sends off an email when an 
 arbitrary expression evaluates True. This example is included in the standard distribution 
-in subdirectory &quot;<span class="code">examples</span>&quot;.</p>
+in subdirectory &quot;<span class="code">examples</span>&quot;. </p>
 <p>File <span class="code">examples/alarm.py</span>:</p>
 <pre>import time
 import smtplib
