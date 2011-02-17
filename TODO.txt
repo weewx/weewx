@@ -1,10 +1,6 @@
 TODO before the next release:
 
-Move heating and cooling degree days base into templates, with default.
-
-Make sure the template tags $unit.label.outTemp, etc. still work.
-
-Upgrade notes: the calling signature of TaggedStats has changed.
+Figure out some way that the tag $current.foo.has_data would work.
 
 Check that heating and cooling degree calculations are correct.
 

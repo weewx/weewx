@@ -511,8 +511,8 @@ class ValueHelper(object):
         context: The time context. Something like 'current', 'day', 'week', etc.
         [Optional. If not given, context 'current' will be used.]
         
-        formatter: An instance of a class Formatter. [Optional. If not given, the
-        default Formatter() will be used]
+        formatter: An instance of class Formatter (or a subclass). [Optional. If not
+        given, the default Formatter() will be used]
         """
         self.value_t = value_t
         self.context   = context
@@ -520,7 +520,17 @@ class ValueHelper(object):
         
     @staticmethod
     def convertOnInit(converter, value_t, context='current', formatter=Formatter()):
-        """Perform a unit conversion before initializing and returning the ValueHelper."""
+        """Perform a unit conversion before initializing and returning the ValueHelper.
+        
+        converter: An instance of class Converter (or a subclass).
+        
+        value_t: A value tuple holding the data.
+        
+        context: The time context. Something like 'current', 'day', 'week', etc.
+        [Optional. If not given, context 'current' will be used.]
+        
+        formatter: An instance of class Formatter (or a subclass). [Optional. If not
+        given, the default Formatter() will be used]"""
         v = converter.convert(value_t) if converter else value_t
         return ValueHelper(v, context, formatter)
     
