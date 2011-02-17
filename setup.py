@@ -2,7 +2,7 @@
 #
 #    weewx --- A simple, high-performance weather station server
 #
-#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -317,7 +317,7 @@ setup(name='weewx',
       package_dir = {'' : 'bin'},
       packages    = ['weewx', 'weeplot', 'weeutil', 'examples', 'user'],
       py_modules  = ['daemon'],
-      scripts     = ['bin/configure.py', 'bin/weewxd.py', 'bin/reports.py'],
+      scripts     = ['bin/configure.py', 'bin/weewxd.py', 'bin/runreports.py'],
       data_files  = [('',                           ['CHANGES.txt', 'LICENSE.txt', 'README', 'weewx.conf']),
                      ('docs',                       ['docs/customizing.htm', 'docs/readme.htm', 
                                                      'docs/sheeva.htm', 'docs/upgrading.htm',

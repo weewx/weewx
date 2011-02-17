@@ -2,328 +2,248 @@
 ##    $Revision$
 ##    $Author$
 ##    $Date$
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head profile="http://www.w3.org/2005/10/profile">
-    #if $encoding == 'utf8'
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    #end if    
-    <title>TEST: Current Weather Conditions</title>
-  </head>
+<head profile="http://www.w3.org/2005/10/profile">
+  #if $encoding == 'utf8' 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+  #end if
+  <title>TEST: Current Weather Conditions</title>
+</head>
 
-  <body>
-    <div id="container">
-      <div id="masthead">
-        <h1>$station.location</h1>
-        <h2>Current Weather Conditions</h2>
-          <h2>$current.dateTime</h2>
-      </div>
+<body>
 
-      <div id="stats_group">
+  <h1>Tests for tag \$station</h1>
+  <table>
+    <tr>
+      <td>Station location:</td>
+      <td>$station.location</td>
+    </tr>
+    <tr>
+      <td align="right">Latitude:</td>
+      <td align="left">$station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2]</td>
+    </tr>
+    <tr>
+      <td align="right">Longitude:</td>
+      <td align="left">$station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (default unit):</td>
+      <td align="left">$station.altitude</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (feet):</td>
+      <td align="left">$station.altitude.foot</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (meters):</td>
+      <td align="left">$station.altitude.meter</td>
+    </tr>
+  </table>
 
-        <div class="stats">
-          <div class="stats_header">
-            Current Conditions
-          </div>
+  <h1>Tests for tag \$current</h1>
+  <table>
+    <tr>
+      <td>Current dateTime:</td>
+      <td>$current.dateTime</td>
+    <tr>
+      <td>Outside Temperature (normal formatting)</td>
+      <td>$current.outTemp</td>
+    </tr>
+	<tr>
+	  <td>Outside Temperature (explicit unit conversion to Celsius)</td>
+	  <td>$current.outTemp.degree_C</td>
+	</tr>
+	<tr>
+	  <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
+	  <td>$current.outTemp.degree_F</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (nonsense unit conversion)</td>
+      <td>$current.outTemp.foo</td>
+    </tr>
+    <tr>
+      <td>Barometer (normal)</td>
+      <td>$current.barometer</td>
+    </tr>
+    <tr>
+      <td>Barometer (inappropriate unit conversion to an existing obs type)</td>
+      <td>$current.barometer.degree_C</td>
+    </tr>
+    <tr>
+      <td>Wind Chill (normal)</td>
+      <td>$current.windchill</td>
+    </tr>
+    <tr>
+      <td>Wind Chill (inappropriate unit conversion to a nonexisting obs type)</td>
+      <td>$current.windchill.mbar</td>
+    </tr>
+    <tr>
+      <td>Heat Index (normal)</td>
+      <td>$current.heatindex</td>
+    </tr>
+    <tr>
+      <td>Heat Index (in Celsius)</td>
+      <td>$current.heatindex.degree_C</td>
+    </tr>
+    <tr>
+      <td>Heat Index (in Fahrenheit)</td>
+      <td>$current.heatindex.degree_F</td>
+    </tr>
+    <tr>
+      <td>Dewpoint</td>
+      <td>$current.dewpoint</td>
+    </tr>
+    <tr>
+      <td>Humidity</td>
+      <td>$current.outHumidity</td>
+    </tr>
+    <tr>
+      <td>Wind</td>
+      <td>$current.windSpeed from $current.windDir</td>
+    </tr>
+    <tr>
+      <td>Rain Rate</td>
+      <td>$current.rainRate</td>
+    </tr>
+    <tr>
+      <td>Inside Temperature</td>
+      <td>$current.inTemp</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for non-existent type:</td>
+    #if $current.foo.has_data
+      <td>FAIL</td>
+    #else
+      <td>PASS</td>
+    #end if
+    </tr> 
+    <tr>
+      <td>Test tag "has_data" for an existing type</td>
+    #if $current.outTemp.has_data
+      <td>PASS</td>
+    #else
+      <td>FAIL</td>
+    #end if
+  </table>
 
-          <table>
-            <tbody>
-              <tr>
-                <td class="stats_label">Outside Temperature</td>
-                <td class="stats_data">$current.outTemp ($current.outTemp.degree_C)</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Outside Temperature</td>
-                ## Try it again with a nonsense conversion:
-                <td class="stats_data">$current.outTemp ($current.outTemp.foo)</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Barometer</td>
-                ## Try an inappropriate conversion on an existing type:
-                <td class="stats_data">$current.barometer ($current.barometer.degree_C)</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Wind Chill</td>
-                ## Try an inappropriate conversion on a non existing type:
-                <td class="stats_data">$current.windchill ($current.windchill.mbar)</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Heat Index</td>
-                <td class="stats_data">$current.heatindex ($current.windchill.degree_C)</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Dewpoint</td>
-                <td class="stats_data">$current.dewpoint</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Humidity</td>
-                <td class="stats_data">$current.outHumidity</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Wind</td>
-                <td class="stats_data">$current.windSpeed from $current.windDir</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Rain Rate</td>
-                <td class="stats_data">$current.rainRate</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Inside Temperature</td>
-                <td class="stats_data">$current.inTemp</td>
-              </tr>
-              #if $day.extraTemp1.has_data
-              <tr>
-                <td class="stats_label">Pond Temperature</td>
-                <td class="stats_data">$current.extraTemp1</td>
-              </tr>
-              #end if
-              #if $day.UV.has_data
-              <tr>
-                <td class="stats_label">UV</td>
-                <td class="stats_data">$current.UV</td>
-              </tr>
-              #end if
-              #if $day.ET.has_data and $day.ET.sum.raw > 0.0
-              <tr>
-                <td class="stats_label">ET</td>
-                <td class="stats_data">$current.ET</td>
-              </tr>
-              #end if
-              #if $day.radiation.has_data
-              <tr>
-                <td class="stats_label">Solar Radiation</td>
-                <td class="stats_data">$current.radiation</td>
-              </tr>
-              #end if
-            </tbody>
-          </table>
-        </div>
+  <p>&nbsp;</p>
 
-        <p>&nbsp;</p>
+  <h1>Tests for tag \$day</h1>
+  <table>
+    <tr>
+      <td>Max Temperature</td>
+      <td>$day.outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Min Temperature</td>
+      <td>$day.outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature:</td>
+      <td>$day.outTemp.maxtime</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature:</td>
+      <td>$day.outTemp.mintime</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to Celsius</td>
+      <td>$day.outTemp.min.degree_C</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to Fahrenheit</td>
+      <td>$day.outTemp.min.degree_F</td>
+    </tr>
+    <tr>
+      <td>Nonexistent type:</td>
+      <td>$day.heatindex.max</td>
+    </tr>
+    <tr>
+      <td>Sum aggregation (rain)</td>
+      <td>$day.rain.sum</td>
+    </tr>
+    <tr>
+      <td>High Wind</td>
+      <td>$day.wind.max from $day.wind.gustdir at $day.wind.maxtime</td>
+    </tr>
+    <tr>
+      <td>Average aggregation (wind)</td>
+      <td>$day.wind.avg</td>
+    </tr>
+    <tr>
+      <td>RMS aggregation(wind)</td>
+      <td>$day.wind.rms</td>
+    </tr>
+    <tr>
+      <td>Aggregation Vector Average (wind)</td>
+      <td>$day.wind.vecavg</td>
+    </tr>
+    <td>
+      <td>Aggregation Vector Direction (wind)</td>
+      <td>$day.wind.vecdir</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with non-existent type</td>
+      #if $day.foo.has_data
+      <td>FAILS</td>
+      #else
+      <td>PASS</td>
+      #end if
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with existent type</td>
+      #if $day.outTemp.has_data
+      <td>PASS</td>
+      #else
+      <td>FAIL</td>
+      #end if
+    </tr>
+  </table>
 
-        <div class="stats">
-          <div class="stats_header">
-            Daily Summary
-          </div>
-          <table>
-            <tbody>
-              <tr>
-                <td class="stats_label">
-                  High Temperature<br/>
-                  Low Temperature
-                </td>
-                <td class="stats_data">
-                  $day.outTemp.max at $day.outTemp.maxtime<br/>
-                  $day.outTemp.min at $day.outTemp.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Heat Index<br/>
-                  Low Wind Chill
-                </td>
-                <td class="stats_data">
-                  $day.heatindex.max at $day.heatindex.maxtime<br/>
-                  $day.windchill.min at $day.windchill.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Humidity<br/>
-                  Low Humidity
-                </td>
-                <td class="stats_data">
-                  $day.outHumidity.max at $day.outHumidity.maxtime<br/>
-                  $day.outHumidity.min at $day.outHumidity.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Dewpoint<br/>
-                  Low Dewpoint
-                </td>
-                <td class="stats_data">
-                  $day.dewpoint.max at $day.dewpoint.maxtime<br/>
-                  $day.dewpoint.min at $day.dewpoint.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Barometer<br/>
-                  Low Barometer
-                </td>
-                <td class="stats_data">
-                  $day.barometer.max at $day.barometer.maxtime<br/>
-                  $day.barometer.min at $day.barometer.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">Today's Rain</td>
-                <td class="stats_data">$day.rain.sum</td>
-              </tr>
-              <tr>
-                <td class="stats_label">High Rain Rate</td>
-                <td class="stats_data">$day.rainRate.max at $day.rainRate.maxtime</td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Wind
-                </td>
-                <td class="stats_data">
-                  $day.wind.max from $day.wind.gustdir at $day.wind.maxtime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  Average Wind
-                </td>
-                <td class="stats_data">
-                  $day.wind.avg
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  RMS Wind
-                </td>
-                <td class="stats_data">
-                  $day.wind.rms
-                </td>
-              </tr>
+  <p>&nbsp;</p>
 
-              <tr>
-                <td class="stats_label">
-                  Vector Average Speed<br/>
-                  Vector Average Direction
-                </td>
-                <td class="stats_data">
-                  $day.wind.vecavg<br/>
-                  $day.wind.vecdir
-                </td>
-              </tr>
+  <h1>Tests for tag \$Extras</h1>
+  <table>
+    <tr>
+      #if $Extras.has_key('radar_url') 
+      <td>Radar URL</td>
+      <td>"$Extras.radar_url"</td>
+      #else
+      <td>FAIL<td> 
+      #end if
+    </tr>
+  </table>
 
-              <tr>
-                <td class="stats_label">
-                  High Inside Temperature<br/>
-                  Low Inside Temperature
-                </td>
-                <td class="stats_data">
-                  $day.inTemp.max at $day.inTemp.maxtime<br/>
-                  $day.inTemp.min at $day.inTemp.mintime
-                </td>
-              </tr>
-			  #if $day.extraTemp1.has_data
-              <tr>
-                <td class="stats_label">
-                  High Pond Temperature<br/>
-                  Low Pond Temperature
-                </td>
-                <td class="stats_data">
-                  $day.extraTemp1.max at $day.extraTemp1.maxtime<br/>
-                  $day.extraTemp1.min at $day.extraTemp1.mintime
-                </td>
-              </tr>
-              #end if
-              #if $day.UV.has_data
-              <tr>
-                <td class="stats_label">
-                  High UV<br/>
-                  Low UV
-                </td>
-                <td class="stats_data">
-                  $day.UV.max at $day.UV.maxtime<br/>
-                  $day.UV.min at $day.UV.mintime
-                </td>
-              </tr>
-              #end if
-              #if $day.ET.has_data and $day.ET.sum.raw >0.0
-              <tr>
-                <td class="stats_label">
-                  High ET<br/>
-                  Low ET
-                </td>
-                <td class="stats_data">
-                  $day.ET.max at $day.ET.maxtime<br/>
-                  $day.ET.min at $day.ET.mintime
-                </td>
-              </tr>
-              #end if
-              #if $day.radiation.has_data
-              <tr>
-                <td class="stats_label">
-                  High Radiation<br/>
-                  Low Radiation
-                </td>
-                <td class="stats_data">
-                  $day.radiation.max at $day.radiation.maxtime<br/>
-                  $day.radiation.min at $day.radiation.mintime
-                </td>
-              </tr>
-              #end if
-            </tbody>
-          </table>
-        </div> <!--End class "stats" -->
-
-        <p>&nbsp;</p>
-
-        #if $Extras.has_key('radar_url')
-        Radar URL = "$Extras.radar_url"
-        #end if
-
-      </div> <!--End class "stats_group" -->
-
-      <div id="content">
-        <div class="header">
-          <h3>About this weather station:</h3>
-          <table>
-            <tr>
-              <td align="right">Latitude:</td>
-              <td align="left">$station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2]</td>
-            </tr>
-            <tr>
-              <td align="right">Longitude:</td>
-              <td align="left">$station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</td>
-            </tr>
-            <tr>
-              <td align="right">Altitude:</td>
-              <td align="left">$station.altitude</td>
-            </tr>
-            <tr>
-              <td align="right">Sunrise:</td>
-              <td align="left">$almanac.sunrise</td>
-            </tr>
-            <tr>
-              <td align="right">Sunset:</td>
-              <td align="left">$almanac.sunset</td>
-            </tr>
-            <tr>
-              <td align="right">Moon:</td>
-              <td align="left">$almanac.moon_phase ($almanac.moon_fullness% full)</td>
-            </tr>
-          </table>
-        </div>
-        <div id="plots">
-          <img src="daytempdew.png"   alt="temperatures" />
-          <img src="daytempchill.png" alt="heatchill" />
-          <img src="dayrain.png"      alt="rain" />
-          <img src="daywind.png"      alt="wind" />
-          <img src="daybarometer.png" alt="barometer"/>
-          <img src="daywinddir.png"   alt="Hi Wind" />
-          <img src="dayinside.png"    alt="Inside" />
-          <img src="daywindvec.png"   alt="Wind Vector" />
-          <img src="dayrx.png"        alt="day rx percent"/>
-          #if $day.extraTemp1.has_data
-          <img src="daypond.png"      alt="Pond Temperatures" />
-          #end if
-        </div> <!-- End id "plots" -->
-      </div> <!-- End id "content" -->
-
-      <div id="navbar">
-        <input type="button" value="   Current   " onclick="openURL('index.html')" />
-        <input type="button" value="    Week     " onclick="openURL('week.html')" />
-        <input type="button" value="    Month    " onclick="openURL('month.html')" />
-        <input type="button" value="    Year     " onclick="openURL('year.html')" />
-      </div>
-    </div>
+  <h1>Tests for tag \$almanac</h1>
+  <table>
+    <tr>
+      <td align="right">Sunrise:</td>
+      <td align="left">$almanac.sunrise</td>
+    </tr>
+    <tr>
+      <td align="right">Sunset:</td>
+      <td align="left">$almanac.sunset</td>
+    </tr>
+    <tr>
+       <td align="right">Moon:</td>
+       <td align="left">$almanac.moon_phase ($almanac.moon_fullness%full)</td>
+    </tr>
+  </table>
+  
+  <img src="daytempdew.png" alt="temperatures" />
+  <img src="daytempchill.png" alt="heatchill" /> 
+  <img src="dayrain.png" alt="rain" />
+  <img src="daywind.png" alt="wind" />
+  <img src="daybarometer.png" alt="barometer"/>
+  <img src="daywinddir.png" alt="Hi Wind" />
+  <img src="dayinside.png"  alt="Inside" /> 
+  <img src="daywindvec.png" alt="Wind Vector" />
+  <img src="dayrx.png" alt="day rx percent"/>
+  #if $day.extraTemp1.has_data
+    <img src="daypond.png" alt="Pond Temperatures" /> 
+  #end if
 
 </body>
 

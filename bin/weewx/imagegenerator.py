@@ -50,9 +50,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         self.weewx_root = self.config_dict['Station']['WEEWX_ROOT']
         self.image_dict = self.skin_dict['ImageGenerator']
         self.title_dict = self.skin_dict['Labels']['Generic']
-        self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
-        self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
-        self.unit_info  = weewx.units.UnitInfoHelper(self.converter, self.formatter)
+        self.unit_info  = weewx.units.UnitInfo.fromSkinDict(self.skin_dict)
+        self.unit_helper= weewx.units.UnitInfoHelper(self.unit_info)
         
     def genImages(self, archive, time_ts):
         """Generate the images.
@@ -128,7 +127,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
                     unit_label = line_options.get('y_label',
-                                                  self.unit_info.label[var_type])
+                                                  self.unit_helper.label[var_type])
                     # PIL cannot handle UTF-8. So, convert to Latin1. Also, strip off
                     # any leading and trailing whitespace so it's easy to center
                     unit_label = weeutil.weeutil.utf8_to_latin1(unit_label).strip()
@@ -179,8 +178,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     (time_vec_t, data_vec_t) = archive.getSqlVectorsExtended(var_type, minstamp, maxstamp, 
                                                                          aggregate_interval, aggregate_type)
 
-                    new_time_vec_t = self.converter.convert(time_vec_t)
-                    new_data_vec_t = self.converter.convert(data_vec_t)
+                    new_time_vec_t = self.unit_info.convert(time_vec_t)
+                    new_data_vec_t = self.unit_info.convert(data_vec_t)
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(new_time_vec_t[0], new_data_vec_t[0],
                                                           label         = label, 
