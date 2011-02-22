@@ -17,11 +17,26 @@
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
 <h2>V1.9 or earlier</h2>
-<p>Version 1.10 introduces some new skin features. In particular, it now 
-includes a template formatted for smartphones and an icon (&quot;<span class="code">favicon.ico</span>&quot;) 
+<p>Version 1.10 introduced several new features. </p>
+<h3>Backwards compatibility</h3>
+<p>With the introduction of explicit control of output units in the templates 
+such as</p>
+<p class="tty">$day.outTemp.max.degree_C</p>
+<p>the calling signature of the following two Python classes was changed</p>
+<ul>
+	<li><span class="code">weewx.stats.TaggedStats</span></li>
+	<li><span class="code">weewx.stats.TimeSpanStats</span></li>
+</ul>
+<p>The example of writing a custom generator <span class="code">MyFileGenerator</span> 
+(which produced &quot;all time&quot; statistics) has been changed to reflect the new 
+signatures.</p>
+<p>This will only affect you if you have written a custom generator.</p>
+<h3>New icons and mobile templates</h3>
+<p>The skins now 
+include a template formatted for smartphones, as well as an icon (&quot;<span class="code">favicon.ico</span>&quot;) 
 that displays in your browser toolbar. If you do nothing, your old skins will 
 continue to work, but you will not take advantage of these new features. </p>
-<p>You have two choices:</p>
+<p>If you want these new features then you have two choices:</p>
 <ol>
 	<li>Rename your old skin directory (call it &quot;<span class="code">skin.old</span>&quot;) 
 	then do the install. This will install the new skin distribution. You can 

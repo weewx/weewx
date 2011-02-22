@@ -813,27 +813,26 @@ December: Min, max temperatures: N/A N/A
 from weewx.stats import TimeSpanStats
 from weeutil.weeutil import TimeSpan
 
-class MyFileGenerator(FileGenerator):                    # 1
-
-    def getToDateSearchList(self, currentRec, stop_ts):  # 2
+class MyFileGenerator(FileGenerator):                       # 1
+  
+    def getToDateSearchList(self, currentRec, stop_ts):     # 2
 
         # Get a TimeSpan object that represents all time up to the stop time:
-        all_time = TimeSpan(self.start_ts, stop_ts)      # 3
+        all_time = TimeSpan(self.start_ts, stop_ts)         # 3
 
         # Get a TimeSpanStats object :
-        all_stats = TimeSpanStats(self.statsdb,
-                                  all_time,
-                                  unit_info=self.unit_info) # 4
+        all_stats = TimeSpanStats(all_time,
+                                  self.statsdb,
+                                  formatter=self.formatter,
+                                  converter=self.converter) # 4
 
-        # Get the superclass&#39;s search list: 
+        # Get the superclass&#39;s search list:       
         search_list = FileGenerator.getToDateSearchList(self, currentRec, stop_ts) #5
 
         # Now tack on my addition as a small dictionary with key &#39;alltime&#39;:
-        search_list += [ {&#39;alltime&#39; : all_stats} ]       # 6
-
-        return search_list
-
-</pre>
+        search_list += [ {&#39;alltime&#39; : all_stats} ]          # 6
+        
+        return search_list</pre>
 	<p>Going through the example, line by line:</p>
 	<ol>
 		<li>Subclass from class <span class="code">FileGenerator</span>. The new 
@@ -850,13 +849,17 @@ class MyFileGenerator(FileGenerator):                    # 1
 		<span class="code">TimeSpan</span> that represents all time preceeding
 		<span class="code">stop_ts</span>.</li>
 		<li>Class <span class="code">TimeSpanStats</span> represents a statistical 
-		calculation over a time period. It takes 3 parameters. The first,
-		<span class="code">self.statsdb</span> is the statistical database the calculation 
-		is to be run against; the second is the timespan over which the calculation 
-		is to be done; and the third, <span class="code">self.unit_info</span>, 
-		is an instance of class <span class="code">weewx.units.UnitInfo</span>, 
-		which contains information about the target units the results are to be 
-		returned in as well as formatting and labeling information. </li>
+		calculation over a time period. It takes 4 parameters. The first,
+		<span class="code">all_time</span>, is the timespan over which the calculation is to be done; the 
+		second, <span class="code">self.statsdb</span>, is the statistical 
+		database the calculation is to be run against; the third, <span class="code">
+		self.formatter</span>, 
+		is an instance of class <span class="code">weewx.units.Formatter</span>, 
+		which contains information about how the results should be formatted; 
+		and finally, the fourth, <span class="code">self.converter</span>, is an 
+		instance of <span class="code">weewx.units.Converter</span>, which 
+		contains information about the target units (<em>e.g.</em>, &quot;<span class="code">degree_C</span>&quot;) 
+		that are to be used.</li>
 		<li>Get the search list from the superclass.</li>
 		<li>Tack on our addition and return the results. The search list will now 
 		consist of a list of dictionaries, including a small one we added on the 

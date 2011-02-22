@@ -1,7 +1,5 @@
 TODO before the next release:
 
-Figure out some way that the tag $current.foo.has_data would work.
-
 Check that heating and cooling degree calculations are correct.
 
 Test adding a new sql type ("pipepressure")
@@ -11,7 +9,3 @@ Test adding a new unit group ("group_pipepressure"? "psi" and "kPa")
 Test adding a new archive query (number of nulls?)
 
 Test adding a new stats query
-
-Change setup.py to reflect new modules.
-
-Have setup.py preserve the user package when upgrading.

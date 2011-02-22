@@ -79,13 +79,27 @@ class My_install_lib(install_lib):
     """ 
 
     def run(self):
+        # Back up any existing 'bin' subdirectory:
         if os.path.exists(self.install_dir):
             bin_backupdir = backup(self.install_dir)
             print "Backed up bin subdirectory to %s" % bin_backupdir
 
         # Run the superclass's version:
         install_lib.run(self)
-
+        
+        # An exception will get thrown if the variable bin_backupdir is
+        # undefined, meaning no backup was done
+        try:
+            user_backupdir = os.path.join(bin_backupdir, 'user')
+            user_dir = os.path.join(self.install_dir, 'user')
+            # If the user had a 'user' subdirectory, then retrieve it and copy it over
+            # the stock version:
+            if os.path.exists(user_backupdir):
+                outfiles = self.copy_tree(user_backupdir, user_dir)
+                self.byte_compile(outfiles)
+        except UnboundLocalError:
+            pass
+            
 #===============================================================================
 #                         install_data
 #===============================================================================
