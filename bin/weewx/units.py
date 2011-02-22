@@ -125,6 +125,9 @@ MetricUnits = {"group_altitude"    : "meter",
                "group_uv"          : "uv_index",
                "group_volt"        : "volt"}
 
+# This will only work if the user doesn't fiddle with the above two dictionaries
+allPossibleUnitTypes = set(USUnits.values()+MetricUnits.values())
+
 # Conversion functions to go from one unit type to another.
 conversionDict = {
       'inHg'             : {'mbar'             : lambda x : x * 33.86, 
@@ -258,8 +261,9 @@ default_time_format_dict = {"day"      : "%H:%M",
 #
 # It is valid to have a data value of None.
 #
-# It is valid to have a unit type of None (meaning there is no information about
-# the unit the value is in). In this case, the group must also be None.
+# It is also valid to have a unit type of None (meaning there is no information about
+# the unit the value is in). In this case, you won't be able to convert it to another
+# unit.
 #
 class ValueTuple(tuple):
     def __new__(cls, *args):
@@ -412,29 +416,6 @@ class Converter(object):
         new_val_t = convert(val_t, new_unit_type)
         return new_val_t
 
-    def convertDict(self, val_dict):
-        """Convert a dictionary of value tuples to target unit types.
-        
-        Throws an exception of type KeyError if the conversion cannot be done.
-        
-        val_dict: A dictionary with keys of observation type, values the
-        corresponding value tuple.
-        
-        returns: A dictionary with values of value tuples in the new, 
-        target unit type.
-        
-        Example:
-        >>> d_us = {'outTemp'   : (68.0, "degree_F", "group_temperature"),\
-                    'barometer' : (1002.3 / 33.86, "inHg", "group_pressure")}
-        >>> c = Converter(MetricUnits)
-        >>> print c.convertDict(d_us)
-        {'outTemp': (20.0, 'degree_C', 'group_temperature'), 'barometer': (1002.3, 'mbar', 'group_pressure')}
-        """
-        result = {}
-        for k in val_dict:
-            result[k] = self.convert(val_dict[k])
-        return result
-        
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
         target unit type and group, or (None, None) if they cannot be determined.
@@ -451,59 +432,104 @@ class Converter(object):
         unit_type  = self.group_unit_dict.get(unit_group)
         return (unit_type, unit_group)
     
+#===============================================================================
+#                         Standard Converters
+#===============================================================================
+
 # This dictionary holds converters for the standard unit conversion systems. 
 StdUnitConverters = {weewx.US     : Converter(USUnits),
                      weewx.METRIC : Converter(MetricUnits)}
 
 #===============================================================================
-#                        class UnitInfo
+#                        class FixedConverter
 #===============================================================================
+
+class FixedConverter(object):
+    """Dirt simple converter that can only convert to a specified unit."""
+    def __init__(self, target_units):
+        """Initialize an instance of FixedConverter
+        
+        target_units: The new, target unit (eg, "degree_C")"""
+        self.target_units = target_units
+        
+    def convert(self, val_t):
+        return convert(val_t, self.target_units)
     
-class UnitInfo(Formatter, Converter):
-    """Multiply inherits from Formatter and Converter."""
+#===============================================================================
+#                      class ValueOutputter
+#===============================================================================
 
-    def __init__(self, unit_format_dict = default_unit_format_dict,
-                       unit_label_dict  = default_unit_label_dict,
-                       time_format_dict = default_time_format_dict,
-                       group_unit_dict  = USUnits):
-        """
-        unit_format_dict: Key is unit type (eg, 'inHg'), value is a string format ("%.1f")
+class ValueOutputter(object):
+    """Abstract base class used to convert value tuples to a string, honoring
+    unit conversion and formatting along the way. Derived classes must
+    supply a method "getTuple()", which returns the value tuple to be turned
+    into a string."""
+    def __init__(self, context, formatter, converter):
+        self.context   = context
+        self.formatter = formatter
+        self.converter = converter
+            
+    def toString(self, addLabel=True, useThisFormat=None, NONE_string=None):
+        # Get the value tuple from my superclass:
+        vt = self.getValueTuple()
+        # Do the unit conversion:
+        vtx = self.converter.convert(vt)
+        # Then the format conversion:
+        s = self.formatter.toString(vtx, self.context, addLabel=addLabel, useThisFormat=useThisFormat, NONE_string=NONE_string)
+        return s
         
-        unit_label_dict: Key is unit type (eg, 'inHg'), value is a label (" inHg")
+    def __str__(self):
+        """Return as string"""
+        return self.toString()
+    
+    def string(self, NONE_string=None):
+        """Return as string with an optional user specified string to be used if None"""
+        return self.toString(NONE_string=NONE_string)
+    
+    def format(self, format_string, NONE_string=None):
+        """Returns a formatted version of the data, using a user-supplied format."""
+        return self.toString(useThisFormat=format_string, NONE_string=NONE_string)
+    
+    def nolabel(self, format_string, NONE_string=None):
+        """Returns a formatted version of the data, using a user-supplied format. No label."""
+        return self.toString(addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
         
-        time_format_dict: Key is a context (eg, 'week'), value is a strftime format ("%d-%b-%Y %H:%M").
+    @property
+    def formatted(self):
+        """Return a formatted version of the data. No label."""
+        return self.toString(addLabel=False)
         
-        group_unit_dict: A dictionary holding the conversion information. 
-        Key is a unit_group (eg, 'group_pressure'), value is the target unit type ('mbar')"""
-        
-        Formatter.__init__(self, unit_format_dict, unit_label_dict, time_format_dict)
-        Converter.__init__(self, group_unit_dict)
-        
-    @staticmethod
-    def fromSkinDict(skin_dict):
-        """Factory static method to initialize from a skin dictionary."""
-        return UnitInfo(skin_dict['Units']['StringFormats'],
-                        skin_dict['Units']['Labels'],
-                        skin_dict['Units']['TimeFormats'],
-                        skin_dict['Units']['Groups'])
-
+    @property
+    def raw(self):
+        """Returns the raw value without any formatting."""
+        vt = self.getValueTuple()
+        vtx=self.converter.convert(vt)
+        return vtx[0]
+    
 #===============================================================================
 #                        class ValueHelper
 #===============================================================================
     
-class ValueHelper(object):
-    """A helper class that binds together everything needed to do a
+class ValueHelper(ValueOutputter):
+    """A helper class that binds a value tuple together with everything needed to do a
     context sensitive formatting
     
     Example:
     
-    >>> value_t = (20.01, "degree_C", "group_temperature")
-    >>> vh = ValueHelper(value_t, formatter=Formatter())
+    >>> value_t = (68.01, "degree_F", "group_temperature")
+    >>> # Use the default converter and formatter:
+    >>> vh = ValueHelper(value_t)
+    >>> print vh
+    68.0°F
+    
+    Do it again, but using an explicit converter:
+    
+    >>> vh = ValueHelper(value_t, converter=Converter(MetricUnits))
     >>> print vh
     20.0°C
     """
     
-    def __init__(self, value_t, context='current', formatter=Formatter()):
+    def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
         """Initialize a ValueHelper.
         
         value_t: A value tuple holding the data.
@@ -511,139 +537,135 @@ class ValueHelper(object):
         context: The time context. Something like 'current', 'day', 'week', etc.
         [Optional. If not given, context 'current' will be used.]
         
-        formatter: An instance of class Formatter (or a subclass). [Optional. If not
-        given, the default Formatter() will be used]
+        formatter: An instance of class Formatter. [Optional. If not given, then
+        the default Formatter() will be used]
+        
+        converter: An instance of class Converter. [Optional. If not given, then
+        the default Converter() will be used, which will convert to US units]
         """
         self.value_t = value_t
-        self.context   = context
-        self.formatter = formatter
-        
-    @staticmethod
-    def convertOnInit(converter, value_t, context='current', formatter=Formatter()):
-        """Perform a unit conversion before initializing and returning the ValueHelper.
-        
-        converter: An instance of class Converter (or a subclass).
-        
-        value_t: A value tuple holding the data.
-        
-        context: The time context. Something like 'current', 'day', 'week', etc.
-        [Optional. If not given, context 'current' will be used.]
-        
-        formatter: An instance of class Formatter (or a subclass). [Optional. If not
-        given, the default Formatter() will be used]"""
-        v = converter.convert(value_t) if converter else value_t
-        return ValueHelper(v, context, formatter)
-    
-    def __str__(self):
-        """Return as string"""
-        return self.formatter.toString(self.value_t, self.context)
-    
-    def string(self, NONE_string=None):
-        """Return as string with an optional user specified string to be used if None"""
-        return self.formatter.toString(self.value_t, self.context, NONE_string=NONE_string)
-    
-    def format(self, format_string, NONE_string=None):
-        """Returns a formatted version of the data, using a user-supplied format."""
-        return self.formatter.toString(self.value_t, self.context, useThisFormat=format_string, NONE_string=NONE_string)
-    
-    def nolabel(self, format_string, NONE_string=None):
-        """Returns a formatted version of the data, using a user-supplied format. No label."""
-        return self.formatter.toString(self.value_t, self.context, addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
-        
-    @property
-    def formatted(self):
-        """Return a formatted version of the data. No label."""
-        return self.formatter.toString(self.value_t, self.context, addLabel=False)
-        
-    @property
-    def raw(self):
-        """Returns the raw value without any formatting."""
-        return self.value_t[0]
+        ValueOutputter.__init__(self, context, formatter, converter)
+
+    # Supply getValueTuple:
+    def getValueTuple(self):
+        return self.value_t
     
     def __getattr__(self, target_unit):
         """Convert to a new unit type.
         
-        Throws exception KeyError if the conversion cannot be done.
+        target_unit: The new target unit. 
         
-        returns: an instance of ValueHelper using the new unit."""
-        new_value_t = convert(self.value_t, target_unit)
-        return ValueHelper(new_value_t, self.context, self.formatter)
+        returns: A ValueHelper with a FixedConverter that converts to the specified units."""
         
+        # See if this is a valid unit type. If not, throw an AttributeError exception:
+        if target_unit not in allPossibleUnitTypes:
+            raise AttributeError, "Unit type %s unknown."%(target_unit,)
+        return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
+    
 #===============================================================================
 #                            class ValueDict
 #===============================================================================
 
 class ValueDict(dict):
-    """A dictionary that returns contents as a ValueHelper.
+    """A dictionary that returns contents as a DictBinder.
     
-    This dictionary, when keyed, returns a ValueHelper object, which can then
+    This dictionary is like any other dictionary except, when keyed, it returns a
+    DictBinder object that wraps around the returned value. It can then
     be used for context sensitive formatting. 
+    
+    Example:
+    >>> vd = ValueDict({'outTemp'   : (20.3, 'degree_C', 'group_temperature'),\
+                        'barometer' : (30.02 , 'inHg', 'group_pressure') })
+    >>> print vd['outTemp']
+    68.5°F
+    
+    Print barometric pressure, overriding the units to millibars:
+    >>> print vd['barometer'].mbar
+    1016.5 mbar
     """
     
-    def __init__(self, d, context='current', formatter=Formatter()):
+    def __init__(self, d, context='current', formatter=Formatter(), converter=Converter()):
         """Initialize the ValueDict from a dictionary with keys of observation
         types, values of value tuples.
         
-        d: A dictionary with keys of observation types, values a ValueTuple.
-        Example:
-            {'outTemp'   : (20.3, 'degree_C', 'group_temperature'),
-             'barometer' : (30.02 , 'inHg', 'group_pressure') }
-        
+        d: A dictionary with keys of observation types, values a ValueTuple
         context: The time context of the dictionary. This will be passed on to
         the returned instance of ValueHelper. [Optional. If not given,
         'current' will be used]
 
         formatter: A unit formatter. This will be passed on to the returned
-        ValueHelper. [Optional. If not given, the default Formatter() will
+        DictBinder. [Optional. If not given, the default Formatter() will
         be passed on.]
+        
+        converter: A unit converter. This will be passed on to the returned
+        DictBinder. [Optional. If not given, the default Converter() will
+        be passed on.] 
         """
         # Initialize my superclass, the dictionary:
         super(ValueDict, self).__init__(d)
         self.context   = context
         self.formatter = formatter
+        self.converter = converter
         
-    @staticmethod
-    def convertOnInit(converter, d, context='current', formatter=Formatter()):
-        """Alternative constructor that converts on initialization
-        
-        converter: An instance of Converter(). Unit conversion will happen to
-        each value in d before being returned in the ValueDict.
-        
-        d: A dictionary with key of an observation type, value a ValueTuple.
-        
-        context: The time context of the dictionary. This will be passed on to
-        the returned instance of ValueHelper. [Optional. If not given,
-        'current' will be used]
-
-        formatter: A unit formatter. This will be passed on to the returned
-        ValueHelper. [Optional. If not given, the default Formatter() will
-        be passed on.]"""
-        value_d = converter.convertDict(d) if converter else d
-        return ValueDict(value_d, context, formatter)
-
     def __getitem__(self, obs_type):
-        """Look up an observation type (eg, 'outTemp') and return it as a 
-        ValueHelper."""
-        # Return the results as a ValueHelper
-        return ValueHelper(dict.__getitem__(self, obs_type), context=self.context, formatter=self.formatter)
+        """Look up an observation type (eg, 'outTemp') and return it as a DictBinder."""
+        return DictBinder(obs_type, self, context=self.context, 
+                          formatter=self.formatter, converter=self.converter)
     
 
+class DictBinder(ValueOutputter):
+    
+    def __init__(self, obs_type, valuedict, context, formatter, converter):
+        self.obs_type  = obs_type
+        self.valuedict = valuedict
+        self.context   = context
+        self.formatter = formatter
+        self.converter = converter
+        
+    def getValueTuple(self):
+        # Get the value tuple from the underlying dictionary:
+        vt = dict.__getitem__(self.valuedict, self.obs_type)
+        return vt
+
+    def __getattr__(self, target_unit):
+        """Convert to a new unit type.
+        
+        target_unit: The new target unit. 
+        
+        returns: A DictBinder with a FixedConverter that converts to the specified units."""
+
+        # See if this is a valid unit type. If not, throw an AttributeError exception:
+        if target_unit not in allPossibleUnitTypes:
+            raise AttributeError, "Unit type %s unknown."%(target_unit,)
+        return DictBinder(self.obs_type, self.valuedict, self.context, self.formatter, FixedConverter(target_unit))
+    
+    @property
+    def exists(self):
+        return self.valuedict.has_key(self.obs_type)
+    
+    @property
+    def has_data(self):
+        return self.exists and self.getValueTuple()[0] is not None
+    
 #===============================================================================
 #                             class UnitInfoHelper
 #===============================================================================
 
 class UnitInfoHelper(object):
     """Helper class used for for the $unit template tag."""
-    def __init__(self, unit_info):
-        """unit_info: an instance of UnitInfo"""
-        self.group_unit_dict = unit_info.group_unit_dict
+    def __init__(self, formatter, converter):
+        """
+        formatter: an instance of Formatter
+        converter: an instance of Converter
+        """
+        self.group_unit_dict = converter.group_unit_dict
         self.unit_type = {}
         self.label     = {}
         self.format    = {}
         for obs_type in obs_group_dict:
-            self.unit_type[obs_type] = u = unit_info.getTargetUnit(obs_type)[0]
-            self.label[obs_type]  = unit_info.unit_label_dict.get(u, '')
-            self.format[obs_type] = unit_info.unit_format_dict.get(u, '%s')
+            self.unit_type[obs_type] = u = converter.getTargetUnit(obs_type)[0]
+            self.label[obs_type]  = formatter.unit_label_dict.get(u, '')
+            self.format[obs_type] = formatter.unit_format_dict.get(u, '%s')
     
     # This is here for backwards compatibility:
     @property
@@ -693,7 +715,12 @@ def convert(val_t, target_unit_type):
 
     # Retrieve the conversion function. An exception of type KeyError
     # will occur if the target or source units are invalid
-    conversion_func = conversionDict[val_t[1]][target_unit_type]
+    try:
+        conversion_func = conversionDict[val_t[1]][target_unit_type]
+    except KeyError:
+        if weewx.debug:
+            syslog.syslog(syslog.LOG_DEBUG, "units: Unable to convert from %s to %s" %(val_t[1], target_unit_type))
+        raise
     # Try converting a sequence first. A TypeError exception will occur if
     # the value is actually a scalar:
     try:

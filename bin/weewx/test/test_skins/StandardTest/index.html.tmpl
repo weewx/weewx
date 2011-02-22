@@ -41,6 +41,8 @@
       <td align="left">$station.altitude.meter</td>
     </tr>
   </table>
+  
+  <hr/>
 
   <h1>Tests for tag \$current</h1>
   <table>
@@ -60,24 +62,12 @@
 	  <td>$current.outTemp.degree_F</td>
     </tr>
     <tr>
-      <td>Outside Temperature (nonsense unit conversion)</td>
-      <td>$current.outTemp.foo</td>
-    </tr>
-    <tr>
       <td>Barometer (normal)</td>
       <td>$current.barometer</td>
     </tr>
     <tr>
-      <td>Barometer (inappropriate unit conversion to an existing obs type)</td>
-      <td>$current.barometer.degree_C</td>
-    </tr>
-    <tr>
       <td>Wind Chill (normal)</td>
       <td>$current.windchill</td>
-    </tr>
-    <tr>
-      <td>Wind Chill (inappropriate unit conversion to a nonexisting obs type)</td>
-      <td>$current.windchill.mbar</td>
     </tr>
     <tr>
       <td>Heat Index (normal)</td>
@@ -112,7 +102,23 @@
       <td>$current.inTemp</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" for non-existent type:</td>
+      <td>Test tag "exists" for an existent type:</td>
+    #if $current.outTemp.exists
+      <td>PASS</td>
+    #else
+      <td>FAIL</td>
+    #end if
+    </tr> 
+    <tr>
+      <td>Test tag "exists" for a nonsense type:</td>
+    #if $current.nonsense.exists
+      <td>FAIL</td>
+    #else
+      <td>PASS</td>
+    #end if
+    </tr> 
+    <tr>
+      <td>Test tag "has_data" for existent type with no data:</td>
     #if $current.foo.has_data
       <td>FAIL</td>
     #else
@@ -128,7 +134,7 @@
     #end if
   </table>
 
-  <p>&nbsp;</p>
+  <hr/>
 
   <h1>Tests for tag \$day</h1>
   <table>
@@ -155,6 +161,10 @@
     <tr>
       <td>Min temp with explicit conversion to Fahrenheit</td>
       <td>$day.outTemp.min.degree_F</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to nonsense type</td>
+      <td>$day.outTemp.min.badtype</td>
     </tr>
     <tr>
       <td>Nonexistent type:</td>
@@ -185,7 +195,23 @@
       <td>$day.wind.vecdir</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" with non-existent type</td>
+      <td>Test tag "has_data" with nonsense type</td>
+      #if $day.nonsense.has_data
+      <td>FAILS</td>
+      #else
+      <td>PASS</td>
+      #end if
+    </tr>
+    <tr>
+      <td>Test tag "exists" with an existing type that has no data</td>
+      #if $day.foo.exists
+      <td>PASS</td>
+      #else
+      <td>FAIL</td>
+      #end if
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with existent type that has no data</td>
       #if $day.foo.has_data
       <td>FAILS</td>
       #else
@@ -193,7 +219,7 @@
       #end if
     </tr>
     <tr>
-      <td>Test tag "has_data" with existent type</td>
+      <td>Test tag "has_data" with existent type that has data</td>
       #if $day.outTemp.has_data
       <td>PASS</td>
       #else
@@ -202,7 +228,7 @@
     </tr>
   </table>
 
-  <p>&nbsp;</p>
+  <hr/>
 
   <h1>Tests for tag \$Extras</h1>
   <table>
@@ -215,6 +241,8 @@
       #end if
     </tr>
   </table>
+
+  <hr/>
 
   <h1>Tests for tag \$almanac</h1>
   <table>
@@ -232,6 +260,8 @@
     </tr>
   </table>
   
+  <hr/>
+  <h1>Day images</h1>
   <img src="daytempdew.png" alt="temperatures" />
   <img src="daytempchill.png" alt="heatchill" /> 
   <img src="dayrain.png" alt="rain" />
@@ -242,8 +272,12 @@
   <img src="daywindvec.png" alt="Wind Vector" />
   <img src="dayrx.png" alt="day rx percent"/>
   #if $day.extraTemp1.has_data
-    <img src="daypond.png" alt="Pond Temperatures" /> 
+    <img src="daypond.png" alt="Pond Temperatures" />
+  #else
+    (No image for extraTemp1)
   #end if
+
+  <hr/>
 
 </body>
 

@@ -1,24 +1,17 @@
 CHANGE HISTORY
 --------------------------------
 
-1.10.0a1 02/14/11
+1.10.0a1 02/21/11
 
 Added a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
 
 Added  a mobile  formatted HTML  page, courtesy  of user  Vince  Skahan (thanks,
 Vince!!).
 
-Added executable module "runreports.py" for running report generation only.
-
-Y-axis  plot  labels  (such  as  "°F")   can  now  be  overridden  in  the  plot
-configuration section of skin.conf by using option "y_label".
-
-Added package "user",  which can contain any user  extensions. This package will
-not get overridden in the upgrade process.
-
-Added  the ability  to reconfigure  the main  database, i.e.,  add or  drop data
-types.  Along   the  same  line,  statistical   types  can  also   be  added  or
-dropped. Email me for details on how to do this.
+Tags can now  be ended with a unit  type to convert to a new  unit. For example,
+say your pressure group ("group_pressure") has been set to show inHg. The normal
+tag   notation  of   "$day.barometer.avg"  will   show  something   like  "30.05
+inHg". However, the tag "$day.barometer.avg.mbar" will show "1017.5 mbar".
 
 Added special tag  "exists" to test whether an  observation type exists. Example
 "$year.foo.exists" will return False if there is no type "foo" in the statistical
@@ -29,10 +22,17 @@ a  non-zero number of  data points  over the  aggregation period.   For example,
 "$year.soilMoist1.has_data" will return "True"  if soilMoist1 both exists in the
 stats database and contains some data (meaning, you have the hardware).
 
-Tags can now  be ended with a unit  type to convert to a new  unit. For example,
-say your pressure group ("group_pressure") has been set to show inHg. The normal
-tag   notation  of   "$day.barometer.avg"  will   show  something   like  "30.05
-inHg". However, the tag "$day.barometer.avg.mbar" will show "1017.5 mbar".
+Y-axis  plot  labels  (such  as  "°F")   can  now  be  overridden  in  the  plot
+configuration section of skin.conf by using option "y_label".
+
+Added executable module "runreports.py" for running report generation only.
+
+Added package "user",  which can contain any user  extensions. This package will
+not get overridden in the upgrade process.
+
+Added  the ability  to reconfigure  the main  database, i.e.,  add or  drop data
+types.  Along   the  same  line,  statistical   types  can  also   be  added  or
+dropped. Email me for details on how to do this.
 
 Now makes all of the LOOP  and archive data available to services. This includes
 new keys:

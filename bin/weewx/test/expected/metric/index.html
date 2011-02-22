@@ -1,238 +1,236 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head profile="http://www.w3.org/2005/10/profile">
-    <title>TEST: Current Weather Conditions</title>
-  </head>
+<head profile="http://www.w3.org/2005/10/profile">
+  <title>TEST: Current Weather Conditions</title>
+</head>
 
-  <body>
-    <div id="container">
-      <div id="masthead">
-        <h1>TEST TEST TEST</h1>
-        <h2>Current Weather Conditions</h2>
-          <h2>01-Jan-2011 00:00</h2>
-      </div>
+<body>
 
-      <div id="stats_group">
+  <h1>Tests for tag $station</h1>
+  <table>
+    <tr>
+      <td>Station location:</td>
+      <td>TEST TEST TEST</td>
+    </tr>
+    <tr>
+      <td align="right">Latitude:</td>
+      <td align="left">45&deg; 41.16' N</td>
+    </tr>
+    <tr>
+      <td align="right">Longitude:</td>
+      <td align="left">121&deg; 33.96' W</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (default unit):</td>
+      <td align="left">100 meters</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (feet):</td>
+      <td align="left">328 feet</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (meters):</td>
+      <td align="left">100 meters</td>
+    </tr>
+  </table>
+  
+  <hr/>
 
-        <div class="stats">
-          <div class="stats_header">
-            Current Conditions
-          </div>
+  <h1>Tests for tag $current</h1>
+  <table>
+    <tr>
+      <td>Current dateTime:</td>
+      <td>01-Jan-2011 00:00</td>
+    <tr>
+      <td>Outside Temperature (normal formatting)</td>
+      <td>-17.8&#176;C</td>
+    </tr>
+	<tr>
+	  <td>Outside Temperature (explicit unit conversion to Celsius)</td>
+	  <td>-17.8&#176;C</td>
+	</tr>
+	<tr>
+	  <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
+	  <td>0.0&#176;F</td>
+    </tr>
+    <tr>
+      <td>Barometer (normal)</td>
+      <td>1049.7 mbar</td>
+    </tr>
+    <tr>
+      <td>Wind Chill (normal)</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Heat Index (normal)</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Heat Index (in Celsius)</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Heat Index (in Fahrenheit)</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Dewpoint</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Humidity</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Wind</td>
+      <td>32 kph from 90&#176;</td>
+    </tr>
+    <tr>
+      <td>Rain Rate</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Inside Temperature</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Test tag "exists" for an existent type:</td>
+      <td>PASS</td>
+    </tr> 
+    <tr>
+      <td>Test tag "exists" for a nonsense type:</td>
+      <td>PASS</td>
+    </tr> 
+    <tr>
+      <td>Test tag "has_data" for existent type with no data:</td>
+      <td>PASS</td>
+    </tr> 
+    <tr>
+      <td>Test tag "has_data" for an existing type</td>
+      <td>PASS</td>
+  </table>
 
-          <table>
-            <tbody>
-              <tr>
-                <td class="stats_label">Outside Temperature</td>
-                <td class="stats_data">-17.8&#176;C</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Wind Chill</td>
-                <td class="stats_data">   N/A</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Heat Index</td>
-                <td class="stats_data">   N/A</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Dewpoint</td>
-                <td class="stats_data">   N/A</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Humidity</td>
-                <td class="stats_data">   N/A</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Barometer</td>
-                <td class="stats_data">1049.7 mbar</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Wind</td>
-                <td class="stats_data">32 kph from 90&#176;</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Rain Rate</td>
-                <td class="stats_data">   N/A</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Inside Temperature</td>
-                <td class="stats_data">   N/A</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <hr/>
 
-        <p>&nbsp;</p>
+  <h1>Tests for tag $day</h1>
+  <table>
+    <tr>
+      <td>Max Temperature</td>
+      <td>-6.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature</td>
+      <td>-28.9&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature:</td>
+      <td>06:00</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature:</td>
+      <td>18:00</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to Celsius</td>
+      <td>-28.9&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to Fahrenheit</td>
+      <td>-20.0&#176;F</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to nonsense type</td>
+      <td>$day.outTemp.min.badtype</td>
+    </tr>
+    <tr>
+      <td>Nonexistent type:</td>
+      <td>$day.heatindex.max</td>
+    </tr>
+    <tr>
+      <td>Sum aggregation (rain)</td>
+      <td>11.9 mm</td>
+    </tr>
+    <tr>
+      <td>High Wind</td>
+      <td>39 kph from 90&#176; at 00:00</td>
+    </tr>
+    <tr>
+      <td>Average aggregation (wind)</td>
+      <td>26 kph</td>
+    </tr>
+    <tr>
+      <td>RMS aggregation(wind)</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Aggregation Vector Average (wind)</td>
+      <td>24 kph</td>
+    </tr>
+    <td>
+      <td>Aggregation Vector Direction (wind)</td>
+      <td>50&#176;</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with nonsense type</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Test tag "exists" with an existing type that has no data</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with existent type that has no data</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with existent type that has data</td>
+      <td>PASS</td>
+    </tr>
+  </table>
 
-        <div class="stats">
-          <div class="stats_header">
-            Daily Summary
-          </div>
-          <table>
-            <tbody>
-              <tr>
-                <td class="stats_label">
-                  High Temperature<br/>
-                  Low Temperature
-                </td>
-                <td class="stats_data">
-                  -6.7&#176;C at 06:00<br/>
-                  -28.9&#176;C at 18:00
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Heat Index<br/>
-                  Low Wind Chill
-                </td>
-                <td class="stats_data">
-                  $day.heatindex.max at $day.heatindex.maxtime<br/>
-                  $day.windchill.min at $day.windchill.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Humidity<br/>
-                  Low Humidity
-                </td>
-                <td class="stats_data">
-                  $day.outHumidity.max at $day.outHumidity.maxtime<br/>
-                  $day.outHumidity.min at $day.outHumidity.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Dewpoint<br/>
-                  Low Dewpoint
-                </td>
-                <td class="stats_data">
-                  $day.dewpoint.max at $day.dewpoint.maxtime<br/>
-                  $day.dewpoint.min at $day.dewpoint.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Barometer<br/>
-                  Low Barometer
-                </td>
-                <td class="stats_data">
-                  1049.7 mbar at 00:00<br/>
-                  1016.2 mbar at 00:10
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">Today's Rain</td>
-                <td class="stats_data">11.9 mm</td>
-              </tr>
-              <tr>
-                <td class="stats_label">High Rain Rate</td>
-                <td class="stats_data">$day.rainRate.max at $day.rainRate.maxtime</td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Wind
-                </td>
-                <td class="stats_data">
-                  39 kph from 90&#176; at 00:00
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  Average Wind
-                </td>
-                <td class="stats_data">
-                  26 kph
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  RMS Wind
-                </td>
-                <td class="stats_data">
-                     N/A
-                </td>
-              </tr>
+  <hr/>
 
-              <tr>
-                <td class="stats_label">
-                  Vector Average Speed<br/>
-                  Vector Average Direction
-                </td>
-                <td class="stats_data">
-                  24 kph<br/>
-                  50&#176;
-                </td>
-              </tr>
+  <h1>Tests for tag $Extras</h1>
+  <table>
+    <tr>
+      <td>Radar URL</td>
+      <td>"http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif"</td>
+    </tr>
+  </table>
 
-              <tr>
-                <td class="stats_label">
-                  High Inside Temperature<br/>
-                  Low Inside Temperature
-                </td>
-                <td class="stats_data">
-                  $day.inTemp.max at $day.inTemp.maxtime<br/>
-                  $day.inTemp.min at $day.inTemp.mintime
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div> <!--End class "stats" -->
+  <hr/>
 
-        <p>&nbsp;</p>
+  <h1>Tests for tag $almanac</h1>
+  <table>
+    <tr>
+      <td align="right">Sunrise:</td>
+      <td align="left">07:46</td>
+    </tr>
+    <tr>
+      <td align="right">Sunset:</td>
+      <td align="left">16:32</td>
+    </tr>
+    <tr>
+       <td align="right">Moon:</td>
+       <td align="left">Waning crescent (15%full)</td>
+    </tr>
+  </table>
+  
+  <hr/>
+  <h1>Day images</h1>
+  <img src="daytempdew.png" alt="temperatures" />
+  <img src="daytempchill.png" alt="heatchill" /> 
+  <img src="dayrain.png" alt="rain" />
+  <img src="daywind.png" alt="wind" />
+  <img src="daybarometer.png" alt="barometer"/>
+  <img src="daywinddir.png" alt="Hi Wind" />
+  <img src="dayinside.png"  alt="Inside" /> 
+  <img src="daywindvec.png" alt="Wind Vector" />
+  <img src="dayrx.png" alt="day rx percent"/>
+    (No image for extraTemp1)
 
-        Radar URL = "http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif"
-
-      </div> <!--End class "stats_group" -->
-
-      <div id="content">
-        <div class="header">
-          <h3>About this weather station:</h3>
-          <table>
-            <tr>
-              <td align="right">Latitude:</td>
-              <td align="left">45&deg; 41.16' N</td>
-            </tr>
-            <tr>
-              <td align="right">Longitude:</td>
-              <td align="left">121&deg; 33.96' W</td>
-            </tr>
-            <tr>
-              <td align="right">Altitude:</td>
-              <td align="left">100 meters</td>
-            </tr>
-            <tr>
-              <td align="right">Sunrise:</td>
-              <td align="left">07:46</td>
-            </tr>
-            <tr>
-              <td align="right">Sunset:</td>
-              <td align="left">16:32</td>
-            </tr>
-            <tr>
-              <td align="right">Moon:</td>
-              <td align="left">Waning crescent (15% full)</td>
-            </tr>
-          </table>
-        </div>
-        <div id="plots">
-          <img src="daytempdew.png"   alt="temperatures" />
-          <img src="daytempchill.png" alt="heatchill" />
-          <img src="dayrain.png"      alt="rain" />
-          <img src="daywind.png"      alt="wind" />
-          <img src="daybarometer.png" alt="barometer"/>
-          <img src="daywinddir.png"   alt="Hi Wind" />
-          <img src="dayinside.png"    alt="Inside" />
-          <img src="daywindvec.png"   alt="Wind Vector" />
-          <img src="dayrx.png"        alt="day rx percent"/>
-        </div> <!-- End id "plots" -->
-      </div> <!-- End id "content" -->
-
-      <div id="navbar">
-        <input type="button" value="   Current   " onclick="openURL('index.html')" />
-        <input type="button" value="    Week     " onclick="openURL('week.html')" />
-        <input type="button" value="    Month    " onclick="openURL('month.html')" />
-        <input type="button" value="    Year     " onclick="openURL('year.html')" />
-      </div>
-    </div>
+  <hr/>
 
 </body>
 

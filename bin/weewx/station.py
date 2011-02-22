@@ -32,10 +32,9 @@ class Station(object):
             altitude_t=(float(altitude_t[0]), 'foot')
             syslog.syslog(syslog.LOG_ERR,"   ****  Assuming altitude as (%f, %s)" % altitude_t)
         
-        converter=weewx.units.Converter.fromSkinDict(skin_dict)
-        self.altitude = weewx.units.ValueHelper.convertOnInit(converter,
-                                                              (float(altitude_t[0]), altitude_t[1], "group_altitude"),
-                                                              formatter=weewx.units.Formatter.fromSkinDict(skin_dict))
+        self.altitude = weewx.units.ValueHelper(value_t=(float(altitude_t[0]), altitude_t[1], "group_altitude"),
+                                                formatter=weewx.units.Formatter.fromSkinDict(skin_dict),
+                                                converter=weewx.units.Converter.fromSkinDict(skin_dict))
 
         self.location        = config_dict['Station']['location']
         self.rain_year_start = int(config_dict['Station'].get('rain_year_start', 1))
