@@ -43,9 +43,12 @@ bin/weewx/wxformulas.py
 docs/customizing.htm
 docs/daytemp_with_avg.png
 docs/readme.htm
+docs/samaxesjs.toc-1.3.2.js
+docs/samaxesjs.toc-1.3.2.min.js
 docs/sheeva.htm
 docs/upgrading.htm
 docs/weekgustoverlay.png
+docs/weewx_docs.css
 skins/Ftp/skin.conf
 skins/Standard/favicon.ico
 skins/Standard/index.html.tmpl
