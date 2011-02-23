@@ -589,6 +589,7 @@ class ValueDict(dict):
         types, values of value tuples.
         
         d: A dictionary with keys of observation types, values a ValueTuple
+        
         context: The time context of the dictionary. This will be passed on to
         the returned instance of ValueHelper. [Optional. If not given,
         'current' will be used]

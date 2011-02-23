@@ -19,53 +19,6 @@ import traceback
 
 import configobj
 
-def min_no_None(seq):
-    """Searches sequence of tuples, returning tuple where the first member was a minimum.
-    
-    seq: a sequence of tuples.
-    
-    returns: Tuple where the first member was a maximum. None values are ignored.
-    If no non-None value was found, returns None"""
-            
-    v_min = None
-    for v_tuple in seq:
-        if v_tuple is None or v_tuple[0] is None: continue
-        if v_min is None or v_tuple[0] < v_min[0]:
-            v_min = v_tuple
-    return v_min
-
-def max_no_None(seq):
-    """Searches sequence of tuples, returning tuple where the first member was a maximum.
-    
-    seq: a sequence of tuples.
-    
-    returns: tuple where the first member was a maximum. None values are ignored.
-    If no non-None value was found, returns None."""
-            
-    v_max = None
-    for v_tuple in seq:
-        if v_tuple is None or v_tuple[0] is None: continue
-        if v_max is None or v_tuple[0] > v_max[0]:
-            v_max = v_tuple
-    return v_max
-
-def mean_no_None(seq):
-    "Returns mean (average), ignoring None values"
-    v_sum = 0.0
-    count = 0
-    for v in seq:
-        if v is not None:
-            v_sum += v
-            count += 1
-    return v_sum / count if count else None
-
-def sum_no_None(seq):
-    v_sum = 0.0
-    for v in seq:
-        if v is not None:
-            v_sum += v
-    return v_sum
-
 def get_font_handle(fontpath, *args):
     
     font = None
@@ -124,16 +77,24 @@ def stampgen(startstamp, stopstamp, interval):
     """Generator function yielding a sequence of timestamps, spaced interval apart.
     
     The sequence will fall on the same local time boundary as startstamp. 
-    For example, if startstamp is epoch time 1236560400 (local time 
-    8-Mar-2009 18:00 PST) and interval is 10800 (3 hours), then the yielded sequence 
-    will be (shown with local times):
+
+    Example:
     
-    1236560400 (8-Mar-2009 18:00 PST)
-    1236571200 (8-Mar-2009 21:00 PST)
-    1236582000 (9-Mar-2009 00:00 PST)
-    1236592800 (9-Mar-2009 03:00 PDT)
-    1236603600 (9-Mar-2009 06:00 PDT), etc.
+    >>> startstamp = 1236560400
+    >>> print timestamp_to_string(startstamp)
+    2009-03-08 18:00:00 PDT (1236560400)
+    >>> stopstamp = 1236607200
+    >>> print timestamp_to_string(stopstamp)
+    2009-03-09 07:00:00 PDT (1236607200)
     
+    >>> for stamp in stampgen(startstamp, stopstamp, 10800):
+    ...     print timestamp_to_string(stamp)
+    2009-03-08 18:00:00 PDT (1236560400)
+    2009-03-08 21:00:00 PDT (1236571200)
+    2009-03-09 00:00:00 PDT (1236582000)
+    2009-03-09 03:00:00 PDT (1236592800)
+    2009-03-09 06:00:00 PDT (1236603600)
+
     Note that DST started in the middle of the sequence and that therefore the
     actual time deltas between stamps is not necessarily 3 hours.
     
@@ -178,6 +139,23 @@ def intervalgen(start_ts, stop_ts, interval):
     the end points of any given interval is inclusive or exclusive to the
     interval.
     
+    Example:
+    
+    >>> startstamp = 1236560400
+    >>> print timestamp_to_string(startstamp)
+    2009-03-08 18:00:00 PDT (1236560400)
+    >>> stopstamp = 1236607200
+    >>> print timestamp_to_string(stopstamp)
+    2009-03-09 07:00:00 PDT (1236607200)
+    
+    >>> for start,stop in intervalgen(startstamp, stopstamp, 10800):
+    ...     print timestamp_to_string(start), timestamp_to_string(stop)
+    2009-03-08 18:00:00 PDT (1236560400) 2009-03-08 21:00:00 PDT (1236571200)
+    2009-03-08 21:00:00 PDT (1236571200) 2009-03-09 00:00:00 PDT (1236582000)
+    2009-03-09 00:00:00 PDT (1236582000) 2009-03-09 03:00:00 PDT (1236592800)
+    2009-03-09 03:00:00 PDT (1236592800) 2009-03-09 06:00:00 PDT (1236603600)
+    2009-03-09 06:00:00 PDT (1236603600) 2009-03-09 07:00:00 PDT (1236607200)
+
     start_ts: The start of the first interval in unix epoch time.
     
     stop_ts: The end of the last interval will be equal to or less than this.
@@ -187,9 +165,8 @@ def intervalgen(start_ts, stop_ts, interval):
     
     yields: A sequence of 2-tuples. First value is start of the interval, second 
     is the end. Both the start and end will be on the same time boundary as
-    start_ts
-    
-    """  
+    start_ts"""  
+
     dt1 = datetime.datetime.fromtimestamp(start_ts)
     stop_dt = datetime.datetime.fromtimestamp(stop_ts)
     
@@ -460,6 +437,38 @@ def archiveRainYearSpan(time_ts, sory_mon, grace=1):
                              int(time.mktime((_year + 1, sory_mon, 1, 0, 0, 0, 0, 0, -1))))
 
 def genDaySpans(start_ts, stop_ts):
+    """Generator function that generates start/stop of days in an inclusive range.
+    
+    Example:
+    
+    >>> start_ts = 1204796460
+    >>> stop_ts  = 1205265720
+    
+    >>> print timestamp_to_string(start_ts)
+    2008-03-06 01:41:00 PST (1204796460)
+    >>> print timestamp_to_string(stop_ts)
+    2008-03-11 13:02:00 PDT (1205265720)
+    
+    >>> for span in genDaySpans(start_ts, stop_ts):
+    ...   print span
+    [2008-03-06 00:00:00 PST (1204790400) -> 2008-03-07 00:00:00 PST (1204876800)]
+    [2008-03-07 00:00:00 PST (1204876800) -> 2008-03-08 00:00:00 PST (1204963200)]
+    [2008-03-08 00:00:00 PST (1204963200) -> 2008-03-09 00:00:00 PST (1205049600)]
+    [2008-03-09 00:00:00 PST (1205049600) -> 2008-03-10 00:00:00 PDT (1205132400)]
+    [2008-03-10 00:00:00 PDT (1205132400) -> 2008-03-11 00:00:00 PDT (1205218800)]
+    [2008-03-11 00:00:00 PDT (1205218800) -> 2008-03-12 00:00:00 PDT (1205305200)]
+    
+    Note that a daylight savings time change happened 8 March 2009.
+
+    start_ts: A time stamp somewhere in the first day.
+    
+    stop_ts: A time stamp somewhere in the last day.
+    
+    yields: Instance of TimeSpan, where the start is the time stamp
+    of the start of the day, the stop is the time stamp of the start
+    of the next day.
+    
+    """
     _start_dt = datetime.datetime.fromtimestamp(start_ts)
     _stop_dt = datetime.datetime.fromtimestamp(stop_ts)
     
@@ -476,14 +485,21 @@ def genMonthSpans(start_ts, stop_ts):
     """Generator function that generates start/stop of months in an
     inclusive range.
     
-    For example, if start_ts is 1196705700 (local time 2007-12-03 10:15:00 PST)
-    and stop_ts is 1206101100 (2008-03-21, 05:05:00 PST), the function
-    will generate:
-     
-    1196496000 (2007-12-01 00:00:00 PST) 1199174400 (2008-01-01 00:00:00 PST) 
-    1199174400 (2008-01-01 00:00:00 PST) 1201852800 (2008-02-01 00:00:00 PST)
-    1201852800 (2008-02-01 00:00:00 PST) 1204358400 (2009-03-01 00:00:00 PST)
-    1204358400 (2009-03-01 00:00:00 PST) 1207033200 (2009-04-01 00:00:00 PDT)
+    Example:
+    
+    >>> start_ts = 1196705700
+    >>> stop_ts  = 1206101100
+    >>> print "start time is", timestamp_to_string(start_ts)
+    start time is 2007-12-03 10:15:00 PST (1196705700)
+    >>> print "stop time is ", timestamp_to_string(stop_ts)
+    stop time is  2008-03-21 05:05:00 PDT (1206101100)
+    
+    >>> for span in genMonthSpans(start_ts, stop_ts):
+    ...   print span
+    [2007-12-01 00:00:00 PST (1196496000) -> 2008-01-01 00:00:00 PST (1199174400)]
+    [2008-01-01 00:00:00 PST (1199174400) -> 2008-02-01 00:00:00 PST (1201852800)]
+    [2008-02-01 00:00:00 PST (1201852800) -> 2008-03-01 00:00:00 PST (1204358400)]
+    [2008-03-01 00:00:00 PST (1204358400) -> 2008-04-01 00:00:00 PDT (1207033200)]
     
     Note that a daylight savings time change happened 8 March 2009.
 
@@ -491,10 +507,9 @@ def genMonthSpans(start_ts, stop_ts):
     
     stop_ts: A time stamp somewhere in the last month.
     
-    yields: An instance of TimeSpan, where the start is the time stamp
+    yields: Instance of TimeSpan, where the start is the time stamp
     of the start of the month, the stop is the time stamp of the start
     of the next month.
-    
     """
     if None in (start_ts, stop_ts):
         return
@@ -559,15 +574,12 @@ def startOfArchiveDay(time_ts, grace=1):
     grace: The number of seconds past midnight when the following
     day is considered to start [Optional. Default is 1 second]
     
-    returns: The timestamp for the start-of-day (00:00) in unix epoch time.
+    returns: The timestamp for the start-of-day (00:00) in unix epoch time."""
     
-    """
     return startOfDay(time_ts - grace)
     
 def secs_to_string(secs):
-    """
-    Convert seconds to a string with days, hours, and minutes
-    """
+    """Convert seconds to a string with days, hours, and minutes"""
     str_list = []
     for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60)):
         amt = int(secs / interval)
@@ -578,8 +590,12 @@ def secs_to_string(secs):
     return str
 
 def timestamp_to_string(ts):
-    """
-    Return a string formatted from the timestamp
+    """Return a string formatted from the timestamp
+    
+    Example:
+
+    >>> print timestamp_to_string(1196705700)
+    2007-12-03 10:15:00 PST (1196705700)
     """
     if ts:
         return "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime(ts)), ts)
@@ -623,274 +639,7 @@ def _get_object(module_class, *args, **kwargs):
     return obj
         
 if __name__ == '__main__':
+    import doctest
 
-    print "****** option_as_list *********"
-    assert( option_as_list("abc") == ['abc'])
-    assert( option_as_list(['a', 'b']) == ['a', 'b'])
-    assert( option_as_list(None) == None)
-    assert( option_as_list('') == [''])
-    print "PASSES"
-
-    
-    print "********startOfInterval*************"
-    
-    t_length = 1 * 60
-    t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 1, 57,  0, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    t_length = 5 * 60
-    t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 1, 55,  0, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    t_length = 1 * 60
-    t_test = time.mktime((2009, 3, 4, 1,  0, 0, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 0, 59, 0, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    t_length = 5 * 60
-    t_test = time.mktime((2009, 3, 4, 1,  0, 0, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 0, 55, 0, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    t_length = 10 * 60
-    t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 1, 50,  0, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    t_length = 15 * 60
-    t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 1, 45,  0, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    t_length = 20 * 60
-    t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 1, 40,  0, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    t_length = 30 * 60
-    t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 1, 30, 00, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    t_length = 60 * 60
-    t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 1, 00, 00, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    t_length = 120 * 60
-    t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-    t_ans  = time.mktime((2009, 3, 4, 0, 00, 00, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-    
-    # Do a test over the spring DST boundary
-    # This is 03:22:05 DST, just after the change over.
-    # The correct answer is 02:00:00 DST.
-    t_length = 120 * 60
-    t_test = time.mktime((2009, 3, 8, 3, 22, 05, 0, 0, 1))
-    t_ans  = time.mktime((2009, 3, 8, 2, 00, 00, 0, 0, 1))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-    
-    # Do a test over the fall DST boundary.
-    # This is 01:22:05 DST, just before the change over.
-    # The correct answer is 00:00:00 DST.
-    t_length = 120 * 60
-    t_test = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 1))
-    t_ans  = time.mktime((2009, 11, 1, 0,  0,  0, 0, 0, 1))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    # Do it again, except after the change over
-    # This is 01:22:05 ST, just after the change over.
-    # The correct answer is 00:00:00 ST (which is 01:00:00 DST).
-    t_length = 120 * 60
-    t_test = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 0))
-    t_ans  = time.mktime((2009, 11, 1, 0, 00, 00, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    # Once again at 01:22:05 ST, just before the change over, but w/shorter interval
-    t_length = 5 * 60
-    t_test = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 1))
-    t_ans  = time.mktime((2009, 11, 1, 1, 20, 00, 0, 0, 1))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    # Once again at 01:22:05 ST, just after the change over, but w/shorter interval
-    t_length = 5 * 60
-    t_test = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 0))
-    t_ans  = time.mktime((2009, 11, 1, 1, 20, 00, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    # Once again at 01:22:05 ST, just after the change over, but with 1 hour interval
-    t_length = 60 * 60
-    t_test = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 0))
-    t_ans  = time.mktime((2009, 11, 1, 1, 00, 00, 0, 0, 0))
-    t_start = startOfInterval(t_test, t_length)
-    print timestamp_to_string(t_test), t_length, timestamp_to_string(t_start)
-    assert(t_start == t_ans)
-
-    print "PASSES"
-    
-    print "********* TimeSpans ***********"
-
-    t = TimeSpan(1230000000, 1231000000)
-    print t
-    assert(t==t)
-    tsub = TimeSpan(1230500000, 1230600000)
-    assert(t.includes(tsub))
-    assert(not tsub.includes(t))
-    tleft = TimeSpan(1229000000, 1229100000)
-    assert(not t.includes(tleft))
-    tright = TimeSpan(1232000000, 1233000000)
-    assert(not t.includes(tright))
-    
-    dic={}
-    dic[t] = 't'
-    dic[tsub] = 'tsub'
-    dic[tleft] = 'tleft'
-    dic[tright] = 'tright'
-    
-    assert(dic[t] == 't')
-    print "PASSES"
-    
-    print "********* genYearSpans ***********"
-    print "Should print years 2007 through 2008:"
-    start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
-    stop_ts = time.mktime((2008, 3, 1, 0, 0, 0, 0, 0, -1))
-
-    for span in genYearSpans(start_ts, stop_ts):
-        print span
-        
-    print "********* genMonthSpans ***********"
-    print "Should print months 2007-12 through 2008-02:"
-    start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
-    stop_ts = time.mktime((2008, 3, 1, 0, 0, 0, 0, 0, -1))
-
-    for span in genMonthSpans(start_ts, stop_ts):
-        print span
-
-    print "\nShould print months 2007-12 through 2008-03:"
-    start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
-    stop_ts = time.mktime((2008, 3, 1, 0, 0, 1, 0, 0, -1))
-
-    for span in genMonthSpans(start_ts, stop_ts):
-        print span
-    print "********** genDaySpans ************"
-    
-    print "Should print 2007-12-23 through 2008-1-5:"
-    start_ts = time.mktime((2007, 12, 23, 10, 15, 0, 0, 0, -1))
-    stop_ts = time.mktime((2008, 1, 5, 9, 22, 0, 0, 0, -1))
-    for span in genDaySpans(start_ts, stop_ts):
-        print span
-    print "\nShould print the single date 2007-12-1:"
-    for span in genDaySpans(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
-                             time.mktime((2007, 12, 2, 0, 0, 0, 0, 0, -1))):
-        print span
-
-    print "******** daySpan ***************"
-    assert(archiveDaySpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
-    assert(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 12, 12, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))))
-    # Try it again with grace=0
-    assert(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)), grace=0) == 
-           TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
-    assert(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 1, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
-    print "PASSES"
-
-    print "******** weekSpan ***************"
-    assert(archiveWeekSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
-    assert(archiveWeekSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 12, 2, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1))))
-    assert(archiveWeekSpan(time.mktime((2007, 12, 9, 0, 0, 1, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
-    print "PASSES"
-
-    print "******** monthSpan ***************"
-    assert(archiveMonthSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
-    assert(archiveMonthSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 11, 1, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))))
-    assert(archiveMonthSpan(time.mktime((2007, 12, 1, 0, 0, 1, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
-    assert(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
-    print "PASSES"
-    
-    print "******** yearSpan ***************"
-    assert(archiveYearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 1, 1, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
-    assert(archiveYearSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2007, 1, 1, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
-    assert(archiveYearSpan(time.mktime((2008, 1, 1, 0, 0, 1, 0, 0, -1))) == 
-           TimeSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2009, 1, 1, 0, 0, 0, 0, 0, -1))))
-    print "PASSES"
-
-    print "******** rainYearSpan ***************"
-    assert(archiveRainYearSpan(time.mktime((2007, 2, 13, 10, 15, 0, 0, 0, -1)), 10) == 
-           TimeSpan(time.mktime((2006, 10, 1, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1))))
-    assert(archiveRainYearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)), 10) == 
-           TimeSpan(time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1)),
-                    time.mktime((2008, 10, 1, 0, 0, 0, 0, 0, -1))))
-    print "PASSES"
-
-    print "******** Start-of-days **********"
-
-    # Test start-of-day routines around a DST boundary:
-    start_ts = time.mktime((2007, 3, 11, 1, 0, 0, 0, 0, -1))
-    start_of_day = startOfDay(start_ts)
-    start2 = startOfArchiveDay(start_of_day)
-    print timestamp_to_string(start_ts)
-    print timestamp_to_string(start_of_day)
-    print timestamp_to_string(start2)
-    # Check that this is, in fact, a DST boundary:
-    assert(start_of_day == int(time.mktime((2007, 3, 11, 0, 0, 0, 0, 0, -1))))
-    assert(start2       == int(time.mktime((2007, 3, 10, 0, 0, 0, 0, 0, -1))))
-    print "PASSES"
+    doctest.testmod()
     

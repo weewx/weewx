@@ -58,6 +58,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.station = weewx.station.Station(self.config_dict, self.skin_dict)
         
     def initStats(self):
+
         # Open up the stats database:
         statsFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
                                      self.config_dict['Stats']['stats_file'])
@@ -69,6 +70,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
         
     def getCurrentRec(self):
+
         # Open up the main database archive
         archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
                                        self.config_dict['Archive']['archive_file'])
@@ -221,8 +223,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     def getSummaryBySearchList(self, timespan):
         """Return the searchList for the Cheetah Template engine for "summarize by" reports.
         
-        Can easily be overridden to add things to the search list.
-        """
+        Can easily be overridden to add things to the search list."""
+
         searchList = self.getCommonSearchList(timespan.stop)
 
         timespan_start_tt = time.localtime(timespan.start)
@@ -235,8 +237,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     def getToDateSearchList(self, currentRec, stop_ts):
         """Return the searchList for the Cheetah Template engine for "to date" generation.
         
-        Can easily be overridden to add things to the search list.
-        """
+        Can easily be overridden to add things to the search list."""
 
         searchList = self.getCommonSearchList(stop_ts)
 
@@ -246,6 +247,10 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         return searchList
 
     def getCommonSearchList(self, stop_ts):
+        """Assemble the common searchList elements to be used by both the "ToDate" and
+        "SummaryBy" reports.
+        
+        Can easily be overridden to add things to the common search list."""
 
         heatbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
         coolbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
@@ -281,8 +286,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         lat and lon, and for a specific time.
         
         celestial_ts: The timestamp of the time for which the Almanac is to
-        be initialized.
-        """
+        be initialized."""
+        
         self.moonphases = self.skin_dict['Almanac'].get('moon_phases')
 
         # almanac holds celestial information (sunrise, phase of moon). Its celestial

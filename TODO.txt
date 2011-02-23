@@ -1,6 +1,6 @@
 TODO before the next release:
 
-Check that heating and cooling degree calculations are correct.
+Can we unify how the set of statstypes is set with how the set of archive types are set?
 
 Test adding a new sql type ("pipepressure")
 
