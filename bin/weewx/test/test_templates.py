@@ -9,14 +9,16 @@
 #    $Date$
 #
 """Test tag notation for template generation."""
+import os.path
 import sys
 import syslog
+import time
 import unittest
-import os.path
 
 import weewx.reportengine
+import weeutil.weeutil
 
-from gen_fake_data import StatsTestBase, stop_ts
+from gen_fake_data import StatsTestBase
 
 config_path = None
 
@@ -32,7 +34,11 @@ class TemplateTest(StatsTestBase):
 
     def testReportEngine(self):
         
-        t = weewx.reportengine.StdReportEngine(self.config_path, stop_ts)
+        # Pick a random generation time (3-Sep-2010 11:20:00 local):
+        testtime_ts = int(time.mktime((2010,9,3,11,20,0,0,0,-1)))
+        print "test time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
+
+        t = weewx.reportengine.StdReportEngine(self.config_path, testtime_ts)
 
         # Find the test skins and then have SKIN_ROOT point to it:
         test_dir = sys.path[0]

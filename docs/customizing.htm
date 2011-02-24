@@ -25,7 +25,7 @@ Version 1.10</h1>
 	<div id="toc">
 	</div>
 	<h1><a name="Introduction">Introduction</a></h1>
-	<p>This document covers the customization of weewx. It assumes that you have 
+	<p>This document covers the customization of <span class="code">weewx</span>. It assumes that you have 
 	read and are reasonably familiar with the <a href="readme.htm">Users Guide</a>.</p>
 	<p>It starts with an overview of the architecture of weewx. If you are only 
 	interested in customizing the generated reports you can probably skip the overview 
@@ -217,22 +217,22 @@ Version 1.10</h1>
 	a text editor. For example, suppose you wish to use metric units in the presentation 
 	layer, instead of the default US Customary Units. The section that controls 
 	units is <span class="code">[Units][[Groups]]</span> and looks like this:</p>
-	<pre class="tty">[Units]</pre>
-	<pre class="tty">  [[Groups]]</pre>
-	<pre class="tty">    group_altitude    = foot</pre>
-	<pre class="tty">    group_degree_day  = degree_F_day </pre>
-	<pre class="tty">    group_direction   = degree_compass</pre>
-	<pre class="tty">    group_moisture    = centibar</pre>
-	<pre class="tty">    group_percent     = percent</pre>
-	<pre class="tty">    group_pressure    = inHg</pre>
-	<pre class="tty">    group_radiation   = watt_per_meter_squared</pre>
-	<pre class="tty">    group_rain        = inch</pre>
-	<pre class="tty">    group_rainrate    = inch_per_hour</pre>
-	<pre class="tty">    group_speed       = mile_per_second</pre>
-	<pre class="tty">    group_speed2      = mile_per_second2</pre>
-	<pre class="tty">    group_temperature = degree_F</pre>
-	<pre class="tty">   group_uv          = uv_index </pre>
-	<pre class="tty">    group_volt        = volt</pre>
+	<pre>[Units]</pre>
+	<pre>  [[Groups]]</pre>
+	<pre>    group_altitude    = foot</pre>
+	<pre>    group_degree_day  = degree_F_day </pre>
+	<pre>    group_direction   = degree_compass</pre>
+	<pre>    group_moisture    = centibar</pre>
+	<pre>    group_percent     = percent</pre>
+	<pre>    group_pressure    = inHg</pre>
+	<pre>    group_radiation   = watt_per_meter_squared</pre>
+	<pre>    group_rain        = inch</pre>
+	<pre>    group_rainrate    = inch_per_hour</pre>
+	<pre>    group_speed       = mile_per_second</pre>
+	<pre>    group_speed2      = mile_per_second2</pre>
+	<pre>    group_temperature = degree_F</pre>
+	<pre>    group_uv          = uv_index </pre>
+	<pre>    group_volt        = volt</pre>
 	<p>&nbsp;</p>
 	<p>To use metric units, you would edit this section to read:</p>
 	<pre>[Units]</pre>
@@ -249,6 +249,7 @@ Version 1.10</h1>
 	<pre class="highlight">    group_speed       = meter_per_second</pre>
 	<pre class="highlight">    group_speed2      = meter_per_second2</pre>
 	<pre class="highlight">    group_temperature = degree_C</pre>
+	<pre>    group_uv          = uv_index </pre>
 	<pre>    group_volt        = volt</pre>
 	<p>The options that were changed have been <span class="highlight">highlighted</span>. 
 	Details of the various unit options are given in <em><a href="#Units">Appendix 
@@ -1179,8 +1180,13 @@ outTemp = Outside Temperature</pre>
 	<p>Set to <span class="code">year.html.tmpl</span>, which contains the template 
 	for the year summary.</p>
 	<h4 class="config_section">[[[RSS]]]</h4>
+	<p class="config_option">template</p>
 	<p>Set to <span class="code">RSS/weewx_rss.xml.tmpl</span>, which contains a 
 	template for an RSS feed.</p>
+	<h4 class="config_section">[[[Mobile]]]</h4>
+	<p class="config_option">template</p>
+	<p>Set to <span class="code">mobile.html.tmpl</span>, which contains a 
+	template for a page formatted for mobile phones.</p>
 	<h2 class="config_section">[CopyGenerator]</h2>
 	<p>This section is used by generator <span class="code">weewx.reportengine.CopyGenerator</span> 
 	and controls which files are to be copied over from the skin subdirectory to 

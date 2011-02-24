@@ -21,17 +21,17 @@
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
 Version 1.10</h1>
 <h1>Table of Contents</h1>
-<div id="technical_content">
-	<div id="toc">
-	</div>
 	<p>For information on customizing <span class="code">weewx</span>, see the separate 
-	document <a href="customizing.htm"><em>Customizing </em><em>
+	document <a href="customizing.htm"><em>Customizing 
 	<span class="code">weewx</span></em></a>.</p>
 	<p>For instructions on upgrading from various versions, see the separate document
 	<em><a href="upgrading.htm">Upgrading <span class="code">weewx</span></a></em>.</p>
 	<p>For instructions on porting to the SheevaPlug, see the separate document
 	<em><a href="sheeva.htm">Notes on porting <span class="code">weewx</span> to 
 	the SheevaPlug</a></em>.</p>
+<div id="technical_content">
+	<div id="toc">
+	</div>
 	<h1><a name="Copyright">Copyright</a></h1>
 	<p>(c) 2009, 2010, 2011 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;</p>
 	<p>This program is free software: you can redistribute it and/or modify it under 
@@ -93,9 +93,8 @@ Version 1.10</h1>
 	<a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis VantagePro2</a> 
 	weather station.</p>
 	<h1><a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
-	<p><span class="code">weewx</span> can be downloaded from its
-	<a href="https://sourceforge.net">SourceForge</a> page:
-	<a href="https://sourceforge.net/projects/weewx">https://sourceforge.net/projects/weewx</a>.
+	<p><span class="code">Weewx</span> can be downloaded from its
+	SourceForge page:<a href="http://sourceforge.net/projects/weewx/">http://sourceforge.net/projects/weewx/</a>.
 	</p>
 	<h1><a name="Prerequisites">Prerequisites</a></h1>
 	<h2>Python</h2>
@@ -133,28 +132,18 @@ Version 1.10</h1>
 	<h3>Installation on Debian distributions (including Ubuntu) using
 	<span class="code">apt-get</span></h3>
 	<p>The instructions that follow are for using the Debian tool
-	<span class="code">apt_get</span>, but the same package names would be used 
+	<span class="code">apt-get</span>, but the same package names would be used 
 	should you chose to use a graphical interface such as the Synaptic Package Manager.</p>
-	<h4>sqlite3</h4>
-	<p>My Ubuntu 8.10 system came with V3.5.9 of sqlite, which works just fine. 
-	However, if you need to install:</p>
-	<p class="tty">sudo apt-get install sqlite3</p>
-	<h4>pysqlite</h4>
-	<p>Easily installed:</p>
-	<p class="tty">sudo apt-get install python-pysqlite2</p>
-	<h4>configobj</h4>
-	<p>Easily installed:</p>
-	<p class="tty">sudo apt-get install python-configobj</p>
-	<h4>pyserial</h4>
-	<p>Easily installed:</p>
-	<p class="tty">sudo apt-get install python-serial</p>
-	<h4>Cheetah</h4>
-	<p>Easily installed:</p>
-	<p class="tty">sudo apt-get install python-cheetah</p>
-	<h4>Python Imaging Library (PIL)</h4>
-	<p>My version of Python came with V1.1.6, which works great. However, some users 
-	have reported having to install PIL. In this case</p>
-	<p class="tty">sudo apt-get install python-imaging</p>
+	<p>To install the required packages:</p>
+	<p class="tty">sudo apt-get install sqlite3<br />
+	sudo apt-get install python-pysqlite2<br />
+	sudo apt-get install python-configobj<br />
+	sudo apt-get install python-serial<br />
+	sudo apt-get install python-cheetah<br />
+		sudo apt-get install python-imaging</p>
+	<p>Note that <span class="code">sqlite3</span> and the <span class="code">
+	python-imaging</span> (PIL) packages are preinstalled on many Debian 
+	distributions so the corresponding commands may not do anything.</p>
 	<h3>Installation on SuSE using <span class="code">yast</span></h3>
 	<p>My SuSE 11.1 system came with some of the prerequisites installed, some available 
 	through <span class="code">yast</span>, and three that required
@@ -234,9 +223,9 @@ Version 1.10</h1>
 	<p>Easily installed:</p>
 	<p class="tty">easy_install configobj</p>
 	<h4>pyserial</h4>
-	<p class="indent"><span class="code">easy_install pyserial</span></p>
+	<p class="tty"><span class="code">easy_install pyserial</span></p>
 	<h4>Cheetah</h4>
-	<p class="indent"><span class="code">easy_install Cheetah</span></p>
+	<p class="tty"><span class="code">easy_install Cheetah</span></p>
 	<h4>Python Imaging Library (PIL)</h4>
 	<p>My version of Python came with V1.1.6, which works great.</p>
 	<h2>System requirements</h2>
@@ -323,6 +312,9 @@ Version 1.10</h1>
 		<li>Save your old &#39;<span class="code">bin</span>&#39; subdirectory as
 		<span class="code"><em>$WEEWX_INSTALL</em>/bin.YYYYMMDDHHMMSS</span> where 
 		YYYYMMDDHHMMSS is a timestamp;</li>
+		<li>Install the new version in the &#39;<span class="code">bin</span>&#39; 
+		subdirectory, while preserving any user extensions in the &#39;<span class="code">bin/user</span>&#39; 
+		subdirectory;</li>
 		<li>Save a copy of your old <span class="code">weewx.conf</span> as
 		<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS;</span></li>
 		<li>Merge any changes you&#39;ve made to your old configuration file
@@ -377,7 +369,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	could take some time. On my modest 500 MHz
 	<a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC Slim</a> 
 	with 512 MB of memory it took a little over 4 minutes for a year and a half 
-	(25 MB) of data (while wview was running in the background).</p>
+	(25 MB) of data.</p>
 	<h2>Configuring your weather station</h2>
 	<p>The only two variables <span class="code">weewx</span> tries to manage on 
 	the VantagePro are the time and the archive interval. </p>
@@ -948,7 +940,7 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 	port to <span class="code">/dev/vpro</span>. </p>
 	<p>Your controller may have a different identifier!! I can recommend this article, 
 	&quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing udev 
-	rules</em></a><span class="style1">,</span>&quot; for how to find and write an appropriate
+	rules</em></a>,&quot; for how to find and write an appropriate
 	<span class="code">udev</span> rule for your controller. (Note, however, that 
 	this article uses the old <span class="code">udevinfo</span> command, rather 
 	than the newer <span class="code">udevadm</span> command.) In particular, run 
@@ -968,7 +960,6 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 	machine and then plug it back in while also pulling out the network connection 
 	in the middle of an FTP upload: weewx will recover.</p>
 	<p>Or, at least, it should!</p>
-	<p>&nbsp;</p>
 	<h2>&nbsp;Templates</h2>
 	<h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
 	<p>If you get errors of the sort:</p>
@@ -1107,7 +1098,7 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 			But, close enough). This is the time used on the sqlite archive and 
 			appears as type &#39;<span class="code">dateTime</span>&#39; in the SQL schema, 
 			perhaps an unfortunate name because of the similarity to the Python 
-			type &#39;datetime&#39;. Very easy to manipulate, but it&#39;s an opaque big number.
+			type &#39;<span class="code">datetime</span>&#39;. Very easy to manipulate, but it&#39;s an opaque big number.
 			</td>
 		</tr>
 		<tr>
@@ -1188,7 +1179,6 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 	<p class="tty">next_dt = time_dt + delta</p>
 	<p class="tty">next_ts = int(time.mktime(next_dt.timetuple()))</p>
 	<p>Other time conversion problems are handled in a similar manner.</p>
-	<p>&nbsp;</p>
 </div>
 
 </body>

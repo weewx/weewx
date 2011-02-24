@@ -3,8 +3,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head profile="http://www.w3.org/2005/10/profile">
   <title>TEST: Current Weather Conditions</title>
+  <style type="text/css">
+  table {
+    border: thin solid #000000;
+  }
+  td {
+    border: thin solid #000000;
+    padding: 2px;
+  }
+</style>
 </head>
-
 <body>
 
   <h1>Tests for tag $station</h1>
@@ -41,22 +49,39 @@
   <table>
     <tr>
       <td>Current dateTime:</td>
-      <td>01-Jan-2011 00:00</td>
+      <td>03-Sep-2010 11:20</td>
+    </tr>
+    <tr>
+      <td>Current dateTime with formatting:</td>
+      <td>11:20</td>
+    </tr>
+    <tr>
+      <td>Raw dateTime:</td>
+      <td>1283538000</td>
+    </tr>
     <tr>
       <td>Outside Temperature (normal formatting)</td>
-      <td>-17.8&#176;C</td>
+      <td>10.2&#176;C</td>
     </tr>
 	<tr>
 	  <td>Outside Temperature (explicit unit conversion to Celsius)</td>
-	  <td>-17.8&#176;C</td>
+	  <td>10.2&#176;C</td>
 	</tr>
 	<tr>
 	  <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
-	  <td>0.0&#176;F</td>
+	  <td>50.3&#176;F</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Celsius, plus formatting)</td>
+      <td>10.158&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Fahrenheit, plus formatting)</td>
+      <td>50.284&#176;F</td>
     </tr>
     <tr>
       <td>Barometer (normal)</td>
-      <td>1049.7 mbar</td>
+      <td>1042.2 mbar</td>
     </tr>
     <tr>
       <td>Wind Chill (normal)</td>
@@ -84,7 +109,7 @@
     </tr>
     <tr>
       <td>Wind</td>
-      <td>32 kph from 90&#176;</td>
+      <td>29 kph from 129&#176;</td>
     </tr>
     <tr>
       <td>Rain Rate</td>
@@ -117,27 +142,27 @@
   <table>
     <tr>
       <td>Max Temperature</td>
-      <td>-6.7&#176;C</td>
+      <td>25.9&#176;C</td>
     </tr>
     <tr>
       <td>Min Temperature</td>
-      <td>-28.9&#176;C</td>
+      <td>3.8&#176;C</td>
     </tr>
     <tr>
       <td>Time of max temperature:</td>
-      <td>06:00</td>
+      <td>19:00</td>
     </tr>
     <tr>
       <td>Time of min temperature:</td>
-      <td>18:00</td>
+      <td>07:00</td>
     </tr>
     <tr>
       <td>Min temp with explicit conversion to Celsius</td>
-      <td>-28.9&#176;C</td>
+      <td>3.8&#176;C</td>
     </tr>
     <tr>
       <td>Min temp with explicit conversion to Fahrenheit</td>
-      <td>-20.0&#176;F</td>
+      <td>38.8&#176;F</td>
     </tr>
     <tr>
       <td>Min temp with explicit conversion to nonsense type</td>
@@ -149,15 +174,15 @@
     </tr>
     <tr>
       <td>Sum aggregation (rain)</td>
-      <td>11.9 mm</td>
+      <td>14.7 mm</td>
     </tr>
     <tr>
       <td>High Wind</td>
-      <td>39 kph from 90&#176; at 00:00</td>
+      <td>39 kph from 90&#176; at 01:00</td>
     </tr>
     <tr>
       <td>Average aggregation (wind)</td>
-      <td>26 kph</td>
+      <td>27 kph</td>
     </tr>
     <tr>
       <td>RMS aggregation(wind)</td>
@@ -167,9 +192,9 @@
       <td>Aggregation Vector Average (wind)</td>
       <td>24 kph</td>
     </tr>
-    <td>
+    <tr>
       <td>Aggregation Vector Direction (wind)</td>
-      <td>50&#176;</td>
+      <td>127&#176;</td>
     </tr>
     <tr>
       <td>Test tag "has_data" with nonsense type</td>
@@ -190,12 +215,22 @@
   </table>
 
   <hr/>
+  
+  <h1>Tests for tag $rainyear</h1>
+  <table>
+    <tr>
+      <td>Rainyear total</td>
+      <td>2199.4 mm</td>
+    <tr>
+  </table>
+    
+  <hr/>
 
   <h1>Tests for tag $Extras</h1>
   <table>
     <tr>
       <td>Radar URL</td>
-      <td>"http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif"</td>
+      <td>&quot;http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif&quot;</td>
     </tr>
   </table>
 
@@ -205,19 +240,45 @@
   <table>
     <tr>
       <td align="right">Sunrise:</td>
-      <td align="left">07:46</td>
+      <td align="left">06:30</td>
     </tr>
     <tr>
       <td align="right">Sunset:</td>
-      <td align="left">16:32</td>
+      <td align="left">19:40</td>
     </tr>
     <tr>
        <td align="right">Moon:</td>
-       <td align="left">Waning crescent (15%full)</td>
+       <td align="left">Last quarter (32%full)</td>
     </tr>
   </table>
   
   <hr/>
+
+  <h1>Test for tag $unit</h1>
+  <table>
+    <tr>
+      <td align="right">Tag &quot;$unit.unit_type.outTemp&quot;</td>
+      <td align="left">degree_C</td>
+    </tr>
+    <tr>
+      <td align="right">Tag &quot;$unit.label.outTemp&quot;</td>
+      <td align="left">&#176;C</td>
+    </tr>
+    <tr>
+      <td align="right">Tag &quot;$unit.format.outTemp&quot;</td>
+      <td align="left">%.1f</td>
+    </tr>
+    <tr>
+      <td align="right">Example from customizing guide<br/>
+      (&quot;$day.outTemp.max.formatted$unit.label.outTemp&quot;)</td>
+      <td align="left">25.9&#176;C</td>
+    </tr>
+    
+
+  </table>
+  
+  <hr/>
+  
   <h1>Day images</h1>
   <img src="daytempdew.png" alt="temperatures" />
   <img src="daytempchill.png" alt="heatchill" /> 

@@ -74,7 +74,7 @@ class StatsTest(StatsTestBase):
             
             start_ts = spans[span].start
             stop_ts  = spans[span].stop
-            tagStats = weewx.stats.TaggedStats(self.stats, stop_ts, 
+            tagStats = weewx.stats.TaggedStats(self.stats, stop_ts,
                                                rain_year_start=1, 
                                                heatbase=(65.0, 'degree_F', 'group_temperature'),
                                                coolbase=(65.0, 'degree_F', 'group_temperature'))
@@ -119,26 +119,26 @@ class StatsTest(StatsTestBase):
         self.assertEqual(str(tagStats.year.barometer.mintime), "04-Jan-2010 00:00")
         self.assertEqual(str(tagStats.year.barometer.maxtime), "02-Jan-2010 00:00")
         self.assertEqual(str(tagStats.day.outTemp.avg), "38.8°F")
-        self.assertEqual(str(tagStats.day.outTemp.min), "19.0°F")
-        self.assertEqual(str(tagStats.day.outTemp.max), "58.6°F")
-        self.assertEqual(str(tagStats.day.outTemp.mintime), "19:00")
-        self.assertEqual(str(tagStats.day.outTemp.maxtime), "07:00")
+        self.assertEqual(str(tagStats.day.outTemp.min), "18.6°F")
+        self.assertEqual(str(tagStats.day.outTemp.max), "59.0°F")
+        self.assertEqual(str(tagStats.day.outTemp.mintime), "07:00")
+        self.assertEqual(str(tagStats.day.outTemp.maxtime), "19:00")
         self.assertEqual(str(tagStats.week.outTemp.avg), "38.8°F")
-        self.assertEqual(str(tagStats.week.outTemp.min), "16.9°F")
-        self.assertEqual(str(tagStats.week.outTemp.max), "60.7°F")
-        self.assertEqual(str(tagStats.week.outTemp.mintime), "19:00 on Sunday")
-        self.assertEqual(str(tagStats.week.outTemp.maxtime), "07:00 on Saturday")
-        self.assertEqual(str(tagStats.month.outTemp.avg), "28.8°F")
-        self.assertEqual(str(tagStats.month.outTemp.min), "-0.6°F")
-        self.assertEqual(str(tagStats.month.outTemp.max), "58.6°F")
-        self.assertEqual(str(tagStats.month.outTemp.mintime), "01-Mar-2010 18:00")
-        self.assertEqual(str(tagStats.month.outTemp.maxtime), "31-Mar-2010 07:00")
+        self.assertEqual(str(tagStats.week.outTemp.min), "16.6°F")
+        self.assertEqual(str(tagStats.week.outTemp.max), "61.0°F")
+        self.assertEqual(str(tagStats.week.outTemp.mintime), "07:00 on Sunday")
+        self.assertEqual(str(tagStats.week.outTemp.maxtime), "19:00 on Saturday")
+        self.assertEqual(str(tagStats.month.outTemp.avg), "28.7°F")
+        self.assertEqual(str(tagStats.month.outTemp.min), "-0.9°F")
+        self.assertEqual(str(tagStats.month.outTemp.max), "59.0°F")
+        self.assertEqual(str(tagStats.month.outTemp.mintime), "01-Mar-2010 06:00")
+        self.assertEqual(str(tagStats.month.outTemp.maxtime), "31-Mar-2010 19:00")
         self.assertEqual(str(tagStats.year.outTemp.avg), "40.0°F")
         self.assertEqual(str(tagStats.year.outTemp.min), "-20.0°F")
         self.assertEqual(str(tagStats.year.outTemp.max), "100.0°F")
-        self.assertEqual(str(tagStats.year.outTemp.mintime), "31-Dec-2010 18:00")
-        self.assertEqual(str(tagStats.year.outTemp.maxtime), "02-Jul-2010 07:00")
-
+        self.assertEqual(str(tagStats.year.outTemp.mintime), "01-Jan-2010 06:00")
+        self.assertEqual(str(tagStats.year.outTemp.maxtime), "02-Jul-2010 19:00")
+        
         # Check the special aggregate types "exists" and "has_data":
         self.assertTrue(tagStats.year.barometer.exists)
         self.assertTrue(tagStats.year.barometer.has_data)
@@ -147,12 +147,38 @@ class StatsTest(StatsTestBase):
         self.assertTrue(tagStats.year.foo.exists)
         self.assertFalse(tagStats.year.foo.has_data)
 
+    def test_rainYear(self):
+        stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
+        # Check for a rain year starting 1-Jan
+        tagStats = weewx.stats.TaggedStats(self.stats, stop_ts,
+                                           rain_year_start=1)
+            
+        self.assertEqual(str(tagStats.rainyear.rain.sum), "86.59 in")
+
+        # Do it again, for starting 1-Oct:
+        tagStats = weewx.stats.TaggedStats(self.stats, stop_ts,
+                                           rain_year_start=10)
+        self.assertEqual(str(tagStats.rainyear.rain.sum), "21.89 in")
+
+
+    def test_heatcool(self):
+        #Test heating and cooling degree days:
+        stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
+
+        tagStats = weewx.stats.TaggedStats(self.stats, stop_ts,
+                                           heatbase=(65.0, 'degree_F', 'group_temperature'),
+                                           coolbase=(65.0, 'degree_F', 'group_temperature'))
+            
+        self.assertEqual(str(tagStats.year.heatdeg.sum), "10150.7°F-day")
+        self.assertEqual(str(tagStats.year.cooldeg.sum), "1026.2°F-day")
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2 :
         print "Usage: python test_templates.py path-to-configuration-file"
         exit()
 
+    # Get the path to the configuration file, then delete it from the argument list:
     config_path = sys.argv[1]
     del sys.argv[1:]
     unittest.main()
