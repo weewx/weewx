@@ -68,6 +68,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
+        self.unitInfoHelper = weewx.units.UnitInfoHelper(self.formatter, self.converter)
         
     def getCurrentRec(self):
 
@@ -274,7 +275,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Put together the search list:
         searchList = [{'station'    : self.station,
                        'almanac'    : self.almanac,
-                       'unit'       : weewx.units.UnitInfoHelper(self.formatter, self.converter),
+                       'unit'       : self.unitInfoHelper,
                        'heatbase'   : heatbase_t,
                        'coolbase'   : coolbase_t,
                        'Extras'     : extra_dict},

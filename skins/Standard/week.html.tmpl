@@ -334,6 +334,7 @@
                   $month.inTemp.min at $month.inTemp.mintime
                 </td>
               </tr>
+              #if $month.extraTemp1.has_data
               <tr>
                 <td class="stats_label">
                   High Pond Temperature<br/>
@@ -343,6 +344,7 @@
                   $month.extraTemp1.max at $month.extraTemp1.maxtime<br/>
                   $month.extraTemp1.min at $month.extraTemp1.mintime
                 </td>
+              #end if
               </tr>
               #if $month.UV.has_data
               <tr>
