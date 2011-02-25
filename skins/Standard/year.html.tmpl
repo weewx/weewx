@@ -251,6 +251,9 @@
           <img src="yearwinddir.png" alt="Hi Wind" />
           <img src="yearinside.png" alt="Inside" />
           <img src="yearwindvec.png" alt="Wind Vector" />
+          #if $year.radiation.has_data
+          <img src="yearradiation.png" alt="Radiation" />
+          #end if
           <img src="yearrx.png" alt="year rx percent"/>
           #if $year.extraTemp1.has_data
           <img src="yearpond.png" alt="Pond Temperatures" />

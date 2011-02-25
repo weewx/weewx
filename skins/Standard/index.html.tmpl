@@ -333,6 +333,9 @@
           <img src="daywinddir.png"   alt="Hi Wind" />
           <img src="dayinside.png"    alt="Inside" />
           <img src="daywindvec.png"   alt="Wind Vector" />
+          #if $day.radiation.has_data
+          <img src="dayradiation.png" alt="Radiation" />
+          #end if
           <img src="dayrx.png"        alt="day rx percent"/>
           #if $day.extraTemp1.has_data
           <img src="daypond.png"      alt="Pond Temperatures" />

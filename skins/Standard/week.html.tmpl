@@ -400,6 +400,9 @@
           <img src="weekwinddir.png" alt="Hi Wind" />
           <img src="weekinside.png" alt="Inside" />
           <img src="weekwindvec.png" alt="Wind Vector" />
+          #if $week.radiation.has_data
+          <img src="weekradiation.png" alt="Radiation" />
+          #end if
           <img src="weekrx.png" alt="week rx percent"/>
           #if $week.extraTemp1.has_data
           <img src="weekpond.png" alt="Pond Temperatures" />
