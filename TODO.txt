@@ -2,10 +2,6 @@ TODO before the next release:
 
 Can we unify how the set of statstypes is set with how the set of archive types are set?
 
-Test adding a new sql type ("pipepressure")
-
-Test adding a new unit group ("group_pipepressure"? "psi" and "kPa")
-
 Test adding a new archive query (number of nulls?)
 
 Test adding a new stats query

@@ -3,9 +3,6 @@ NEW FEATURES to be added in decreasing order of importance.
 Make more sidereal calculations available within the templates.
 In particular, solar azimuth and elevation.
 
-Make it easy to add new types to the databases. May require
-an ability to reconfigure an existing database.
-
 Make the formatting and unit conversion machinery more accessible
 to the user. Perhaps remove it from weewx and move it to weeutil?
 

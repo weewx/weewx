@@ -10,9 +10,8 @@
 
 """User extensions module
 
-This module is imported from the main executable, so
-any user extensions put here will be executed before
-anything else happens. This makes it a good place
-to put any user extensions.
+This module is imported from the main executable, so anything put here will be
+executed before anything else happens. This makes it a good place to put user
+extensions.
 """
 
