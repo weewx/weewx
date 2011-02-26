@@ -16,11 +16,3 @@ anything else happens. This makes it a good place
 to put any user extensions.
 """
 
-#===============================================================================
-# As an example, extend the unit dictionaries with
-# a new unit type: linevoltage.
-#===============================================================================
-
-import weewx.units
-
-weewx.units.obs_group_dict['linevoltage'] = 'group_volt'

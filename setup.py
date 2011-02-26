@@ -42,6 +42,8 @@
  5. In a similar manner, it sets WEEWX_ROOT in the daemon startup script.
 
  6. It backs up any pre-existing bin subdirectory.
+ 
+ 7. It conserves the ./bin/user subdirectory.
 """
 
 import os
@@ -67,7 +69,7 @@ sys.path.insert(0, bin_dir)
 from weewx import __version__ as VERSION
 
 #===============================================================================
-#                              install_lib
+#                            My_install_lib
 #===============================================================================
 
 class My_install_lib(install_lib):
@@ -76,6 +78,7 @@ class My_install_lib(install_lib):
     This version:
     
     - Backs up the old ./bin subdirectory before installing.
+    - Conserves the ./bin/user subdirectory
     """ 
 
     def run(self):
@@ -83,22 +86,19 @@ class My_install_lib(install_lib):
         if os.path.exists(self.install_dir):
             bin_backupdir = backup(self.install_dir)
             print "Backed up bin subdirectory to %s" % bin_backupdir
+        else:
+            bin_backupdir = None
 
         # Run the superclass's version:
         install_lib.run(self)
         
-        # An exception will get thrown if the variable bin_backupdir is
-        # undefined, meaning no backup was done
-        try:
+        # If the bin subdirectory previously existed, and if it included
+        # a 'user' subsubdirectory, then restore it
+        if bin_backupdir:
             user_backupdir = os.path.join(bin_backupdir, 'user')
-            user_dir = os.path.join(self.install_dir, 'user')
-            # If the user had a 'user' subdirectory, then retrieve it and copy it over
-            # the stock version:
             if os.path.exists(user_backupdir):
-                outfiles = self.copy_tree(user_backupdir, user_dir)
-                self.byte_compile(outfiles)
-        except UnboundLocalError:
-            pass
+                user_dir = os.path.join(self.install_dir, 'user')
+                distutils.dir_util.copy_tree(user_backupdir, user_dir)                
             
 #===============================================================================
 #                         install_data
@@ -322,9 +322,9 @@ def backup(filepath):
 setup(name='weewx',
       version=VERSION,
       description='The weewx weather system',
-      long_description="The weewx weather system manages a Davis VantagePro "
-      "weather station. It generates plots, statistics, and HTML pages of the "
-      "current and historical weather",
+      long_description="""The weewx weather system manages a Davis VantagePro
+      weather station. It generates plots, statistics, and HTML pages of the
+      current and historical weather""",
       author='Tom Keffer',
       author_email='tkeffer@gmail.com',
       url='http://www.weewx.com',
@@ -347,7 +347,7 @@ setup(name='weewx',
                                                      'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 
                      ('start_scripts/Debian',       ['start_scripts/Debian/weewx']),
                      ('start_scripts/SuSE',          ['start_scripts/SuSE/weewx'])],
-      requires    = ['configobj(>=4.5)', 'pyserial(>=2.3)', 'Cheetah(>=2.0)', 'pysqlite(>=2.5)', 'PIL(>=1.1.6)'],
+      requires    = ['configobj(>=4.5)', 'serial(>=2.3)', 'Cheetah(>=2.0)', 'pysqlite2(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "install_lib"  : My_install_lib,
                      "sdist" :        My_sdist}

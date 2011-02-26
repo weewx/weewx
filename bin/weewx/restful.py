@@ -353,9 +353,9 @@ class CWOP(REST):
             baro_str = "b....."
         else:
             # Figure out what unit type barometric pressure is in for this record:
-            baro_unit = weewx.units.getStandardUnitType(record['usUnits'], 'barometer')
+            (u, g) = weewx.units.getStandardUnitType(record['usUnits'], 'barometer')
             # Convert to millibars:
-            baro = weewx.units.convert((record['barometer'], baro_unit), 'mbar')
+            baro = weewx.units.convert((record['barometer'], u, g), 'mbar')
             baro_str = "b%5d" % (baro[0]*10.0)
 
         # Humidity:

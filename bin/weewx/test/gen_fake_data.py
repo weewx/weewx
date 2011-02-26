@@ -8,7 +8,10 @@
 #    $Author$
 #    $Date$
 #
-"""Generate fake data used by the tests."""
+"""Generate fake data used by the tests.
+
+The idea is to create a deterministic database that reports
+can be run against, resulting in predictable, expected results"""
 import math
 import os.path
 import sys
@@ -123,7 +126,7 @@ class StatsTestBase(unittest.TestCase):
             record['dateTime']  = ts
             record['usUnits']   = weewx.US
             record['interval']  = interval
-            record['outTemp']   = 0.5 * (daily_temp_range*math.sin(daily_phase) - annual_temp_range*math.cos(annual_phase)) + avg_temp
+            record['outTemp']   = 0.5 * (-daily_temp_range*math.sin(daily_phase) - annual_temp_range*math.cos(annual_phase)) + avg_temp
             record['barometer'] = 0.5 * weather_baro_range*math.sin(weather_phase) + avg_baro
             record['windSpeed'] = abs(weather_wind_range*(1.0 + math.sin(weather_phase)))
             record['windDir'] = math.degrees(weather_phase) % 360.0

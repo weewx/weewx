@@ -21,17 +21,17 @@
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
 Version 1.10</h1>
 <h1>Table of Contents</h1>
-<div id="technical_content">
-	<div id="toc">
-	</div>
 	<p>For information on customizing <span class="code">weewx</span>, see the separate 
-	document <a href="customizing.htm"><em>Customizing </em><em>
+	document <a href="customizing.htm"><em>Customizing 
 	<span class="code">weewx</span></em></a>.</p>
 	<p>For instructions on upgrading from various versions, see the separate document
 	<em><a href="upgrading.htm">Upgrading <span class="code">weewx</span></a></em>.</p>
 	<p>For instructions on porting to the SheevaPlug, see the separate document
 	<em><a href="sheeva.htm">Notes on porting <span class="code">weewx</span> to 
 	the SheevaPlug</a></em>.</p>
+<div id="technical_content">
+	<div id="toc">
+	</div>
 	<h1><a name="Copyright">Copyright</a></h1>
 	<p>(c) 2009, 2010, 2011 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;</p>
 	<p>This program is free software: you can redistribute it and/or modify it under 
@@ -93,9 +93,8 @@ Version 1.10</h1>
 	<a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis VantagePro2</a> 
 	weather station.</p>
 	<h1><a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
-	<p><span class="code">weewx</span> can be downloaded from its
-	<a href="https://sourceforge.net">SourceForge</a> page:
-	<a href="https://sourceforge.net/projects/weewx">https://sourceforge.net/projects/weewx</a>.
+	<p><span class="code">Weewx</span> can be downloaded from its
+	SourceForge page:<a href="http://sourceforge.net/projects/weewx/">http://sourceforge.net/projects/weewx/</a>.
 	</p>
 	<h1><a name="Prerequisites">Prerequisites</a></h1>
 	<h2>Python</h2>
@@ -133,71 +132,49 @@ Version 1.10</h1>
 	<h3>Installation on Debian distributions (including Ubuntu) using
 	<span class="code">apt-get</span></h3>
 	<p>The instructions that follow are for using the Debian tool
-	<span class="code">apt_get</span>, but the same package names would be used 
+	<span class="code">apt-get</span>, but the same package names would be used 
 	should you chose to use a graphical interface such as the Synaptic Package Manager.</p>
-	<h4>sqlite3</h4>
-	<p>My Ubuntu 8.10 system came with V3.5.9 of sqlite, which works just fine. 
-	However, if you need to install:</p>
-	<p class="tty">sudo apt-get install sqlite3</p>
-	<h4>pysqlite</h4>
-	<p>Easily installed:</p>
-	<p class="tty">sudo apt-get install python-pysqlite2</p>
-	<h4>configobj</h4>
-	<p>Easily installed:</p>
-	<p class="tty">sudo apt-get install python-configobj</p>
-	<h4>pyserial</h4>
-	<p>Easily installed:</p>
-	<p class="tty">sudo apt-get install python-serial</p>
-	<h4>Cheetah</h4>
-	<p>Easily installed:</p>
-	<p class="tty">sudo apt-get install python-cheetah</p>
-	<h4>Python Imaging Library (PIL)</h4>
-	<p>My version of Python came with V1.1.6, which works great. However, some users 
-	have reported having to install PIL. In this case</p>
-	<p class="tty">sudo apt-get install python-imaging</p>
+	<p>To install the required packages:</p>
+	<p class="tty">sudo apt-get install sqlite3<br />
+	sudo apt-get install python-pysqlite2<br />
+	sudo apt-get install python-configobj<br />
+	sudo apt-get install python-serial<br />
+	sudo apt-get install python-cheetah<br />
+		sudo apt-get install python-imaging</p>
+	<p>Note that <span class="code">sqlite3</span> and the <span class="code">
+	python-imaging</span> (PIL) packages are preinstalled on many Debian 
+	distributions so the corresponding commands may not do anything.</p>
 	<h3>Installation on SuSE using <span class="code">yast</span></h3>
-	<p>My SuSE 11.1 system came with some of the prerequisites installed, some available 
-	through <span class="code">yast</span>, and three that required
-	<span class="code">easy_install</span>. To start, you will have to install the 
-	gcc compiler:</p>
-	<p class="tty">sudo yast -i gcc</p>
-	<p>Then install <span class="code">easy_install</span>:</p>
-	<p class="tty">sudo yast -i python-setuptools</p>
-	<p>On my system, some scripts wanted to install themselves into
-	<span class="code">/usr/local/lib/python2.6/site-packages</span>, which didn&#39;t 
-	exist. If this is the case, you may have to create these directories before 
+	<p>My SuSE 11.3 system came with some of the prerequisites installed, some available 
+	through <span class="code">yast</span>, and some that required
+	<span class="code">easy_install</span>. </p>
+	<p>To start, some packages want to install themselves into
+	<span class="code">/usr/local/lib/python2.6/site-packages</span>, which may 
+	or may not exist. If it does not, you may have to create it before 
 	running <span class="code">easy_install</span>:</p>
-	<p class="tty">sudo mkdir /usr/local/lib/python2.6</p>
-	<p class="tty">sudo mkdir /usr/local/lib/python2.6/site-packages</p>
-	<h4>sqlite3</h4>
-	<p>My SuSE 11.1 system came with V3.6.4, which works just fine. However, if 
+	<pre>sudo mkdir /usr/local/lib/python2.6</pre>
+	<pre>sudo mkdir /usr/local/lib/python2.6/site-packages</pre>
+	<p>Install the 
+	gcc compiler:</p>
+	<pre>sudo yast -i gcc</pre>
+	<p>Then install <span class="code">easy_install</span>:</p>
+	<pre>sudo yast -i python-setuptools</pre>
+	<p>Install <span class="code">configobj</span>:</p>
+	<pre>sudo yast -i python-configobj</pre>
+	<p>Install PIL:</p>
+	<pre>sudo yast -i python-imaging</pre>
+	<p>Install <span class="code">pyserial</span>:</p>
+	<pre>sudo yast -i python-serial</pre>
+	<p>Install <span class="code">sqlite3</span>. My SuSE 11.3 system came with V3.6.4, which works just fine. However, if 
 	you need to install:</p>
 	<p class="tty">sudo yast -i sqlite3</p>
-	<h4>pysqlite</h4>
-	<p>Install using <span class="code">easy_install</span>. See
-	<a href="#pysqlite_using_easy_install">comments below</a> about installing pysqlite 
-	using <span class="code">easy_install</span>. On my SuSE 11.1 system, I had 
-	to install the gcc compiler and the sqlite3 development environment first:</p>
-	<p class="tty">sudo yast -i gcc</p>
-	<p class="tty">sudo yast -i sqlite-devel</p>
-	<p>Then I was able to install pysqlite using <span class="code">easy_install</span>. 
-	However, because the hosting site for pysqlite had changed recently, I had to 
-	give the URL explicitly:</p>
-	<p class="tty">sudo easy_install
-	<a href="http://pysqlite.googlecode.com/files/pysqlite-2.5.5.tar.gz">http://pysqlite.googlecode.com/files/pysqlite-2.5.5.tar.gz</a></p>
-	<h4>configobj</h4>
-	<p>Install using <span class="code">easy_install</span>:</p>
-	<p class="tty">sudo easy_install configobj</p>
-	<h4>pyserial</h4>
-	<p>Install using <span class="code">yast</span>:</p>
-	<p class="tty">sudo yast-i python-serial</p>
-	<h4>Cheetah</h4>
-	<p>Install using <span class="code">easy_install</span> (My system emitted a 
-	bunch of, apparently, benign warnings):</p>
-	<p class="tty">sudo easy_install Cheetah</p>
-	<h4>Python Imaging Library (PIL)</h4>
-	<p>Install using <span class="code">yast</span></p>
-	<p class="tty">sudo yast -i python-imaging</p>
+	<p>Install the Python development package (need for <span class="code">
+	pysqlite</span>):</p>
+	<pre>sudo yast -i python-devel</pre>
+	<p>Install <span class="code">pysqlite</span>:</p>
+	<pre>easy_install pysqlite</pre>
+	<p>Install <span class="code">Cheetah</span>:</p>
+	<pre>easy_install Cheetah</pre>
 	<h3>Installation using <span class="code">easy_install</span></h3>
 	<p>An alternative approach to installing the required packages is by using the 
 	Python setup tool &quot;<span class="code">easy_install</span>&quot;, part of the
@@ -205,11 +182,9 @@ Version 1.10</h1>
 	Refer to their instructions on how to install this tool.</p>
 	<p>Once <span class="code">easy_install</span> has been installed, installing 
 	the rest of the packages is very easy.</p>
-	<h4>sqlite3</h4>
 	<p>My Ubuntu 8.10 system came with sqlite V3.5.9, which works just fine. If 
 	you do not have sqlite3, refer to <a href="http://www.sqlite.org">the sqlite 
 	webpage</a> for installation instructions.</p>
-	<h4><a name="pysqlite_using_easy_install">pysqlite</a></h4>
 	<p>While Version 2.3.X of <a href="http://pypi.python.org/pypi/pysqlite/">pysqlite</a> 
 	is included with many versions of Python, the more recent 2.5.X or greater is 
 	required in order to take advantage of transaction contexts. Hence, you may 
@@ -219,26 +194,26 @@ Version 1.10</h1>
 	to install the sqlite3 development environment as well.</p>
 	<p>With the development environment in place, you can easily build and install 
 	pysqlite:</p>
-	<p class="tty">easy_install pysqlite</p>
+	<pre>easy_install pysqlite</pre>
 	<p>If your system already has a version of pysqlite installed, but it is not 
 	a high enough version (<span class="code">easy_install</span> will tell you 
 	the version you have), then you may have to force an upgrade:</p>
-	<p class="tty">easy_install --upgrade pysqlite</p>
+	<pre>easy_install --upgrade pysqlite</pre>
 	<p>Note that at the time of this writing (24 Oct 2009), the hosting site for 
 	pysqlite has changed to one on <a href="http://pysqlite.googlecode.com">googlecode</a>, 
 	and <span class="code">easy_install</span> could not find it. You may have to 
 	find and give the URL explicitly to <span class="code">easy_install</span> (adjust 
 	version numbers as necessary):</p>
-	<p class="tty">easy_install http://pysqlite.googlecode.com/files/pysqlite-2.5.5.tar.gz</p>
-	<h4>configobj</h4>
-	<p>Easily installed:</p>
-	<p class="tty">easy_install configobj</p>
-	<h4>pyserial</h4>
-	<p class="indent"><span class="code">easy_install pyserial</span></p>
-	<h4>Cheetah</h4>
-	<p class="indent"><span class="code">easy_install Cheetah</span></p>
-	<h4>Python Imaging Library (PIL)</h4>
-	<p>My version of Python came with V1.1.6, which works great.</p>
+	<pre>easy_install http://pysqlite.googlecode.com/files/pysqlite-2.5.5.tar.gz</pre>
+	<p>The other packages are straightforward. Install configobj:</p>
+	<pre>easy_install configobj</pre>
+	<p>Install pyserial:</p>
+	<pre><span class="code">easy_install pyserial</span></pre>
+	<p>Install Cheetah:</p>
+	<pre><span class="code">easy_install Cheetah</span></pre>
+	<p>My version of Python came with V1.1.6, which works great, but if you need 
+	to install</p>
+	<pre>easy_install pil</pre>
 	<h2>System requirements</h2>
 	<p>I run <span class="code">weewx</span> on a 500MHz system with an AMD Geode 
 	processor and 512 MB of memory.&nbsp; Configured this way, it consumes about 
@@ -323,6 +298,9 @@ Version 1.10</h1>
 		<li>Save your old &#39;<span class="code">bin</span>&#39; subdirectory as
 		<span class="code"><em>$WEEWX_INSTALL</em>/bin.YYYYMMDDHHMMSS</span> where 
 		YYYYMMDDHHMMSS is a timestamp;</li>
+		<li>Install the new version in the &#39;<span class="code">bin</span>&#39; 
+		subdirectory, while preserving any user extensions in the &#39;<span class="code">bin/user</span>&#39; 
+		subdirectory;</li>
 		<li>Save a copy of your old <span class="code">weewx.conf</span> as
 		<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS;</span></li>
 		<li>Merge any changes you&#39;ve made to your old configuration file
@@ -377,7 +355,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	could take some time. On my modest 500 MHz
 	<a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC Slim</a> 
 	with 512 MB of memory it took a little over 4 minutes for a year and a half 
-	(25 MB) of data (while wview was running in the background).</p>
+	(25 MB) of data.</p>
 	<h2>Configuring your weather station</h2>
 	<p>The only two variables <span class="code">weewx</span> tries to manage on 
 	the VantagePro are the time and the archive interval. </p>
@@ -948,7 +926,7 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 	port to <span class="code">/dev/vpro</span>. </p>
 	<p>Your controller may have a different identifier!! I can recommend this article, 
 	&quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing udev 
-	rules</em></a><span class="style1">,</span>&quot; for how to find and write an appropriate
+	rules</em></a>,&quot; for how to find and write an appropriate
 	<span class="code">udev</span> rule for your controller. (Note, however, that 
 	this article uses the old <span class="code">udevinfo</span> command, rather 
 	than the newer <span class="code">udevadm</span> command.) In particular, run 
@@ -968,7 +946,6 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 	machine and then plug it back in while also pulling out the network connection 
 	in the middle of an FTP upload: weewx will recover.</p>
 	<p>Or, at least, it should!</p>
-	<p>&nbsp;</p>
 	<h2>&nbsp;Templates</h2>
 	<h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
 	<p>If you get errors of the sort:</p>
@@ -1107,7 +1084,7 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 			But, close enough). This is the time used on the sqlite archive and 
 			appears as type &#39;<span class="code">dateTime</span>&#39; in the SQL schema, 
 			perhaps an unfortunate name because of the similarity to the Python 
-			type &#39;datetime&#39;. Very easy to manipulate, but it&#39;s an opaque big number.
+			type &#39;<span class="code">datetime</span>&#39;. Very easy to manipulate, but it&#39;s an opaque big number.
 			</td>
 		</tr>
 		<tr>
@@ -1188,7 +1165,6 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 	<p class="tty">next_dt = time_dt + delta</p>
 	<p class="tty">next_ts = int(time.mktime(next_dt.timetuple()))</p>
 	<p>Other time conversion problems are handled in a similar manner.</p>
-	<p>&nbsp;</p>
 </div>
 
 </body>

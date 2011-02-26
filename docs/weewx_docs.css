@@ -1,4 +1,4 @@
-/*
+﻿/*
  * $Revision$
  * $Author$
  * $Date$
@@ -128,9 +128,6 @@ td {
 	border: thin #000000 dotted;
 	font-family: "Times New Roman", Times, serif;
 	margin-left: 40px;
-}
-.style1 {
-	border-style: solid;
 }
 
 div#toc ul {

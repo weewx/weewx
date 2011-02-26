@@ -10,8 +10,16 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
   #end if
   <title>TEST: Current Weather Conditions</title>
+  <style type="text/css">
+  table {
+    border: thin solid #000000;
+  }
+  td {
+    border: thin solid #000000;
+    padding: 2px;
+  }
+</style>
 </head>
-
 <body>
 
   <h1>Tests for tag \$station</h1>
@@ -49,6 +57,15 @@
     <tr>
       <td>Current dateTime:</td>
       <td>$current.dateTime</td>
+    </tr>
+    <tr>
+      <td>Current dateTime with formatting:</td>
+      <td>$current.dateTime.format("%H:%M")</td>
+    </tr>
+    <tr>
+      <td>Raw dateTime:</td>
+      <td>$current.dateTime.raw</td>
+    </tr>
     <tr>
       <td>Outside Temperature (normal formatting)</td>
       <td>$current.outTemp</td>
@@ -60,6 +77,14 @@
 	<tr>
 	  <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
 	  <td>$current.outTemp.degree_F</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Celsius, plus formatting)</td>
+      <td>$current.outTemp.degree_C.format("%.3f")</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Fahrenheit, plus formatting)</td>
+      <td>$current.outTemp.degree_F.format("%.3f")</td>
     </tr>
     <tr>
       <td>Barometer (normal)</td>
@@ -190,7 +215,7 @@
       <td>Aggregation Vector Average (wind)</td>
       <td>$day.wind.vecavg</td>
     </tr>
-    <td>
+    <tr>
       <td>Aggregation Vector Direction (wind)</td>
       <td>$day.wind.vecdir</td>
     </tr>
@@ -229,13 +254,23 @@
   </table>
 
   <hr/>
+  
+  <h1>Tests for tag \$rainyear</h1>
+  <table>
+    <tr>
+      <td>Rainyear total</td>
+      <td>$rainyear.rain.sum</td>
+    <tr>
+  </table>
+    
+  <hr/>
 
   <h1>Tests for tag \$Extras</h1>
   <table>
     <tr>
       #if $Extras.has_key('radar_url') 
       <td>Radar URL</td>
-      <td>"$Extras.radar_url"</td>
+      <td>&quot;$Extras.radar_url&quot;</td>
       #else
       <td>FAIL<td> 
       #end if
@@ -261,6 +296,32 @@
   </table>
   
   <hr/>
+
+  <h1>Test for tag \$unit</h1>
+  <table>
+    <tr>
+      <td align="right">Tag &quot;\$unit.unit_type.outTemp&quot;</td>
+      <td align="left">$unit.unit_type.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Tag &quot;\$unit.label.outTemp&quot;</td>
+      <td align="left">$unit.label.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Tag &quot;\$unit.format.outTemp&quot;</td>
+      <td align="left">$unit.format.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Example from customizing guide<br/>
+      (&quot;\$day.outTemp.max.formatted\$unit.label.outTemp&quot;)</td>
+      <td align="left">$day.outTemp.max.formatted$unit.label.outTemp</td>
+    </tr>
+    
+
+  </table>
+  
+  <hr/>
+  
   <h1>Day images</h1>
   <img src="daytempdew.png" alt="temperatures" />
   <img src="daytempchill.png" alt="heatchill" /> 

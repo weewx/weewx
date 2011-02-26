@@ -30,12 +30,12 @@ Arguments:
 
 def main():
     parser = OptionParser(usage=usagestr)
-    parser.add_option("--create-database",  action="store_true", dest="create_database",  help="To create the main database archive")
-    parser.add_option("--create-stats",     action="store_true", dest="create_stats",     help="To create the statistical database")
-    parser.add_option("--backfill-stats",   action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database")
-    parser.add_option("--reconfig-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive")
-    parser.add_option("--configure-VantagePro", action="store_true", dest="configure_VP", help="To configure a VantagePro weather station")
-    parser.add_option("--clear-VantagePro",     action="store_true", dest="clear_VP",     help="To clear the memory of the VantagePro weather station")
+    parser.add_option("--create-database",     action="store_true", dest="create_database",  help="To create the main database archive")
+    parser.add_option("--create-stats",        action="store_true", dest="create_stats",     help="To create the statistical database")
+    parser.add_option("--backfill-stats",      action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database")
+    parser.add_option("--reconfigure-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive")
+    parser.add_option("--configure-VantagePro",action="store_true", dest="configure_VP",     help="To configure a VantagePro weather station")
+    parser.add_option("--clear-VantagePro",    action="store_true", dest="clear_VP",         help="To clear the memory of the VantagePro weather station")
     
     (options, args) = parser.parse_args()
     
