@@ -71,7 +71,10 @@ defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMAR
                         ('windBatteryStatus',    'REAL'),
                         ('rainBatteryStatus',    'REAL'),
                         ('outTempBatteryStatus', 'REAL'),
-                        ('inTempBatteryStatus',  'REAL')]
+                        ('inTempBatteryStatus',  'REAL'),
+
+                        # Add a new observation:
+                        ('lineVoltage',          'REAL')]
 
 # The default types for which statistics will be kept is pretty much all of the types
 # above. We drop a few of the wind related types and replace them with special type 'wind'

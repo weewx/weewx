@@ -131,7 +131,12 @@ def reconfigMainDatabase(config_dict):
     oldArchiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                       config_dict['Archive']['archive_file'])
     newArchiveFilename = oldArchiveFilename + ".new"
+    # Because this can generate voluminous log information,
+    # suppress all but the essentials:
+    print "Starting reconfiguration..."
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
     weewx.archive.reconfig(oldArchiveFilename, newArchiveFilename)
+    print "DONE. New database can be found at %s" % (newArchiveFilename,)
     
 def configureVP(config_dict):
     """Configure a VantagePro as per the configuration file."""

@@ -103,6 +103,12 @@
                 <td class="stats_data">$current.radiation</td>
               </tr>
               #end if
+              #if $day.lineVoltage.has_data
+              <tr>
+                <td class="stats_label">Current line voltage</td>
+                <td class="stats_data">$current.lineVoltage</td>
+              </tr>
+              #end if
             </tbody>
           </table>
         </div>
@@ -267,6 +273,18 @@
                 </td>
               </tr>
               #end if
+              #if $day.lineVoltage.has_data
+              <tr>
+                <td class="stats_label">
+                  High Line Voltage<br/>
+                  Low Line Voltage
+                </td>
+                <td class="stats_data">
+                  $day.lineVoltage.max at $day.lineVoltage.maxtime<br/>
+                  $day.lineVoltage.min at $day.lineVoltage.mintime
+                </td>
+              </tr>
+              #end if
             </tbody>
           </table>
         </div> <!--End class "stats" -->
@@ -339,6 +357,9 @@
           <img src="dayrx.png"        alt="day rx percent"/>
           #if $day.extraTemp1.has_data
           <img src="daypond.png"      alt="Pond Temperatures" />
+          #end if
+          #if $day.lineVoltage.has_data
+          <img src="daylinevoltage.png"      alt="Line Voltage" />
           #end if
         </div> <!-- End id "plots" -->
       </div> <!-- End id "content" -->
