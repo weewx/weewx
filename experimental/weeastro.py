@@ -9,7 +9,7 @@
 #
 """Routines for astronomical calculations.
 
-These calculations were taken from the NASA spreadsheet explained at
+These calculations were taken from the NOAA spreadsheet explained at
 
   http://www.srrb.noaa.gov/highlights/sunrise/calcdetails.html
 
@@ -24,7 +24,7 @@ calculations are necessarily an approximation.
 
 """
 
-import math
+from math import cos, sin, tan, acos, asin, atan2, radians, degrees, pow
 
 def jd_from_timestamp(time_ts):
     """Julian day from a unix time epoch.
@@ -129,7 +129,7 @@ def sun_eq_of_center(jc):
     Equation of center: 0.464999
     """
     gmas = geom_mean_anom_sun(jc)    
-    return math.sin(math.radians(gmas))*(1.914602-jc*(0.004817+0.000014*jc))+math.sin(math.radians(2*gmas))*(0.019993-0.000101*jc)+math.sin(math.radians(3*gmas))*0.000289
+    return sin(radians(gmas))*(1.914602-jc*(0.004817+0.000014*jc))+sin(radians(2*gmas))*(0.019993-0.000101*jc)+sin(radians(3*gmas))*0.000289
 
 def sun_true_long(jc):
     """Given the Julian Century, find the Sun's true longitude.
@@ -169,7 +169,7 @@ def sun_rad_vector(jc):
     The Sun's radius vector: 0.983795
     """
     ec = earth_eccentricity(jc)
-    return (1.000001018 * (1.0 - ec*ec)) / (1.0 + ec * math.cos(math.radians(sun_true_anom(jc))))
+    return (1.000001018 * (1.0 - ec*ec)) / (1.0 + ec * cos(radians(sun_true_anom(jc))))
 
 def sun_apparent_long(jc):
     """Given the Julian Century, find the Sun's apparent longitude
@@ -182,7 +182,7 @@ def sun_apparent_long(jc):
     >>> print "The Sun's apparent longitude: %.4f" % sun_apparent_long(j2000_from_timestamp(time_ts))
     The Sun's apparent longitude: 297.3606
     """
-    return sun_true_long(jc) - 0.00569 - 0.00478 * math.sin(math.radians(125.04-1934.136*jc))
+    return sun_true_long(jc) - 0.00569 - 0.00478 * sin(radians(125.04-1934.136*jc))
 
 def mean_obliquity_ecliptic(jc):
     """Given the Julian Century, find the mean obliquity of the ecliptic.
@@ -208,7 +208,7 @@ def obliquity_correction(jc):
     >>> print "The obliquity correction: %.5f" % obliquity_correction(j2000_from_timestamp(time_ts))
     The obliquity correction: 23.43792
     """
-    return mean_obliquity_ecliptic(jc) + 0.00256 * math.cos(math.radians(125.04 - 1934.136*jc))
+    return mean_obliquity_ecliptic(jc) + 0.00256 * cos(radians(125.04 - 1934.136*jc))
 
 def sun_right_ascension(jc):
     """Given the Julian Century, find the right ascension of the Sun in degrees.
@@ -223,8 +223,7 @@ def sun_right_ascension(jc):
     """
     oc = obliquity_correction(jc)
     sal = sun_apparent_long(jc)
-    return math.degrees(math.atan2(math.cos(math.radians(sal)), 
-                                   math.cos(math.radians(oc))*math.sin(math.radians(sal))))
+    return degrees(atan2(cos(radians(sal)), cos(radians(oc))*sin(radians(sal))))
 
 def sun_declination(jc):
     """Given the Julian Century, find the declination of the Sun in degrees.
@@ -239,7 +238,7 @@ def sun_declination(jc):
     """
     oc = obliquity_correction(jc)
     sal = sun_apparent_long(jc)
-    return math.degrees(math.asin(math.sin(math.radians(oc)) * math.sin(math.radians(sal))))
+    return degrees(asin(sin(radians(oc)) * sin(radians(sal))))
 
 
 def equation_of_time(jc):
@@ -256,15 +255,15 @@ def equation_of_time(jc):
     # To keep the transcription from the spreadsheet straight, the letter before the underscore
     # is the column number in the original spreadsheet: 
     r_oc = obliquity_correction(jc)
-    x = math.tan(math.radians(r_oc/2.0))
+    x = tan(radians(r_oc/2.0))
     u_vy =  x**2
     i_gmls = geom_mean_long_sun(jc)
     k_ec = earth_eccentricity(jc)
     j_gmas = geom_mean_anom_sun(jc)
-    eot = 4.0*math.degrees(u_vy*math.sin(2.0*math.radians(i_gmls))-2.0*k_ec*math.sin(math.radians(j_gmas))\
-                           + 4.0 *  k_ec*u_vy*math.sin(    math.radians(j_gmas)) * math.cos(2.0*math.radians(i_gmls))\
-                           - 0.5 *  u_vy*u_vy*math.sin(4.0*math.radians(i_gmls))\
-                           - 1.25 * k_ec*k_ec*math.sin(2.0*math.radians(j_gmas)))
+    eot = 4.0*degrees(u_vy*sin(2.0*radians(i_gmls))-2.0*k_ec*sin(radians(j_gmas))\
+                           + 4.0 *  k_ec*u_vy*sin(    radians(j_gmas)) * cos(2.0*radians(i_gmls))\
+                           - 0.5 *  u_vy*u_vy*sin(4.0*radians(i_gmls))\
+                           - 1.25 * k_ec*k_ec*sin(2.0*radians(j_gmas)))
     return eot
 
 def ha_sunrise(jc, latitude):
@@ -279,8 +278,8 @@ def ha_sunrise(jc, latitude):
     The hour angle of sunrise is: 69.16806
     """
     t_sd = sun_declination(jc)
-    return math.degrees(math.acos(math.cos(math.radians(90.833))/(math.cos(math.radians(latitude)) * math.cos(math.radians(t_sd)))\
-                                  - math.tan(math.radians(latitude))*math.tan(math.radians(t_sd))))
+    return degrees(acos(cos(radians(90.833))/(cos(radians(latitude)) * cos(radians(t_sd)))\
+                                  - tan(radians(latitude))*tan(radians(t_sd))))
 
 def solar_noon(jc, longitude, timezone):
     """
@@ -492,7 +491,7 @@ def solar_zenith_angle(t, jc, latitude, longitude, timezone):
     """
     sd = sun_declination(jc)
     ha = hour_angle(t, jc, longitude, timezone)
-    return math.degrees(math.acos(math.sin(math.radians(latitude)) * math.sin(math.radians(sd)) + math.cos(math.radians(latitude))*math.cos(math.radians(sd))*math.cos(math.radians(ha))))
+    return degrees(acos(sin(radians(latitude)) * sin(radians(sd)) + cos(radians(latitude))*cos(radians(sd))*cos(radians(ha))))
     
 def solar_elevation_angle(t, jc, latitude, longitude, timezone):
     """
@@ -569,12 +568,12 @@ def atmospheric_refraction(t, jc, latitude, longitude, timezone):
     if sea > 85.0: return 0.0
     
     if sea > 5.0:
-        ar = 58.1 / math.tan(math.radians(sea))-0.07/math.pow(math.tan(math.radians(sea)),3) + 0.000086/math.pow(math.tan(math.radians(sea)),5)
+        ar = 58.1 / tan(radians(sea))-0.07/pow(tan(radians(sea)),3) + 0.000086/pow(tan(radians(sea)),5)
     else:
         if sea > -0.575:
             ar = 1735 + sea*(-518.2+sea*(103.4+sea*(-12.79+sea*0.711)))
         else:
-            ar = -20.772/math.tan(math.radians(sea))
+            ar = -20.772/tan(radians(sea))
     return ar/3600.0
         
         
@@ -612,6 +611,48 @@ def solar_elevation_angle_corrected(t, jc, latitude, longitude, timezone):
     """
     return solar_elevation_angle(t, jc, latitude, longitude, timezone)\
          + atmospheric_refraction(t, jc, latitude, longitude, timezone)
+
+def solar_azimuth(t, jc, latitude, longitude, timezone):
+    """
+    Return the solar azimuth in degrees.
+    
+    Comment: There is no reason why parameters t and jc could not be collapsed
+    into one parameter (indeed, they can be at odds), but this mimics what the
+    spreadsheet does.
+    
+    t: Time in fractions of a day (eg, 6am would be 0.25)
+    
+    jc: The time in Julian centuries since J2000.0
+    
+    latitude: The latitude
+    
+    longitude: The longitude (west longitude is negative)
+    
+    timezone: Timezone relative to GMT (eg, PST is -8)
+    
+    Returns: The solar azimuth in degrees.
+    
+    Example: Find the solar azimuth for 45N on 1/17/2011 at noon,
+    for longitudes 122W and 117W (this will exercise both branches of the formula).
+    
+    >>> time_ts = 1295294400.0
+    >>> print time.asctime(time.gmtime(time_ts))
+    Mon Jan 17 20:00:00 2011
+    >>> sa = solar_azimuth(0.5, j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
+    >>> print "Solar azimuth angle= %.4f" % sa
+    Solar azimuth angle= 175.3564
+    >>> sa = solar_azimuth(0.5, j2000_from_timestamp(time_ts), 45.0, -117.0, -8.0)
+    >>> print "Solar azimuth angle= %.4f" % sa
+    Solar azimuth angle= 180.4848
+    """
+    ha = hour_angle(t, jc, longitude, timezone)
+    sza = solar_zenith_angle(t, jc, latitude, longitude, timezone)
+    sd =  sun_declination(jc)
+    if ha>0:
+        saa = (degrees(acos(((sin(radians(latitude))*cos(radians(sza)))-sin(radians(sd)))/(cos(radians(latitude))*sin(radians(sza)))))+180 ) % 360
+    else:
+        saa = (540-degrees(acos(((sin(radians(latitude))*cos(radians(sza)))-sin(radians(sd)))/(cos(radians(latitude))*sin(radians(sza)))))) % 360
+    return saa
 
 if __name__ == "__main__":
     
