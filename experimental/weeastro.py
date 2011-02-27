@@ -62,25 +62,60 @@ def jd_from_j2000(jc2000):
     
     return jc2000 * 36525.0 + 2451545.0
 
-class WeeAstro(object):
+class WeeSolar(object):
     
     """
     Object that holds astronomical data for a specific time, lat/long, and timezone.
+    The data is then available as attributes.
     
+    Attributes:
+    
+        geom_mean_long_sun: Geometric mean longitude of the sun (degrees)
+        geom_mean_anom_sun: Geometric mean anomaly of the sun (degrees)
+        earth_eccentricity: The eccentricity of the earth's orbit (unitless number)
+        sun_eq_of_center: Equation of center of the sun
+        sun_true_long: The sun's true longitude (degrees)
+        sun_true_anom: The sun's true anomaly (degrees)
+        sun_rad_vector: The sun's radius vector in AUs
+        sun_apparent_long: The sun's apparent longitude (degrees)
+        mean_obliquity_ecliptic: The mean obliquity of the ecliptic (degrees)
+        obliquity_correction: Obliquity correction (degrees)
+        sun_right_ascension: The sun's right ascension (degrees)
+        sun_declination: The sun's declination (degrees)
+        equation_of_time: The equation of time (minutes)
+        solar_noon: Solar noon (LST in fraction of a day since midnight)
+        ha_sunrise: Hour angle of sunrise (degrees). 'None' if the sun does not rise
+        sunrise: Time of sunrise (LST in fraction of a day since midnight). 
+            'None' if the sun does not rise
+        sunset: Time of sunset (LST in fraction of a day since midnight). 
+            'None' if the sun does not set
+        total_sunlight: Sunlight duration (minutes)
+        true_solar_time: True time by the sun (minutes past midnight)
+        hour_angle: Hour angle of the sun (degrees)
+        solar_zenith_angle: Angle of the sun from the zenith (degrees)
+        solar_elevation_angle: Elevation of the sun above the horizon (degrees)
+        atmospheric_refraction: Correction due to atmospheric refraction (degrees)
+        solar_elevation_angle_corrected: Elevation of the sun above the horizon, 
+            corrected for atmospheric refraction (degrees)
+        solar_azimuth: Azimuth angle of the sun (degrees clockwise from North)
+
+
     Example:
-    Construct different WeeAstro objects for different lat/lons, but all for
-    1/17/2011 2000 UTC.
     
-    Set up the different WeeAstro objects:
+    Construct different WeeSolar objects for different lat/lons, but all for
+    1/17/2011 2000 UTC:
     
-    >>> time_ts = 1295294400.0
+    >>> utc_tt = (2011,1,17,20,0,0,0,0,-1)
+    >>> time_ts = time.mktime(utc_tt) - time.timezone
     >>> print time.asctime(time.gmtime(time_ts))
     Mon Jan 17 20:00:00 2011
     >>> jc2000 = j2000_from_timestamp(time_ts)
-    >>> wa45 = WeeAstro(0.5, jc2000, 45.0, -122.0, -8.0)
-    >>> wa65 = WeeAstro(0.5, jc2000, 65.0, -122.0, -8.0)
-    >>> wa75 = WeeAstro(0.5, jc2000, 75.0, -122.0, -8.0)
+    >>> wa45 = WeeSolar(0.5, jc2000, 45.0, -122.0, -8.0)
+    >>> wa65 = WeeSolar(0.5, jc2000, 65.0, -122.0, -8.0)
+    >>> wa75 = WeeSolar(0.5, jc2000, 75.0, -122.0, -8.0)
 
+    Now exercise the various attributes:
+    
     >>> print "Mean longitude of the sun: %.4f" % wa45.geom_mean_long_sun
     Mean longitude of the sun: 296.8965
 
@@ -120,37 +155,24 @@ class WeeAstro(object):
     >>> print "The equation of time is: %.5f" % wa45.equation_of_time
     The equation of time is: -10.11117
 
+    >>> # Solar noon.
+    >>> print "Solar noon is at %.5f (%s)" %(wa45.solar_noon, time_from_fday(wa45.solar_noon))
+    Solar noon is at 0.51258 (12:18:07)
+    
     >>> # Hour angle of sunrise. If we are far enough north, there is no sunrise
     >>> print "The hour angle of sunrise at 45N (sun above horizon) is: %.5f" % wa45.ha_sunrise
     The hour angle of sunrise at 45N (sun above horizon) is: 69.16806
     >>> print "The hour angle of sunrise at 75N (sun below horizon) is", wa75.ha_sunrise
     The hour angle of sunrise at 75N (sun below horizon) is None
-    >>> secs = wa45.solar_noon * 86400
-    >>> h = int(secs/3600.0)
-    >>> secs %= 3600.0
-    >>> m = int(secs/60.0)
-    >>> secs = int(round(secs % 60))
-    >>> print "Solar noon is at %.5f (%s)" %(wa45.solar_noon, datetime.time(h,m,secs))
-    Solar noon is at 0.51258 (12:18:07)
     
     >>> # Sunrise. If we are far enough north, there is no sunrise
-    >>> secs = wa45.sunrise * 86400
-    >>> h = int(secs/3600.0)
-    >>> secs %= 3600.0
-    >>> m = int(secs/60.0)
-    >>> secs = int(round(secs % 60))
-    >>> print "Sunrise at 45N is at %.5f (%s)" %(wa45.sunrise, datetime.time(h,m,secs))
+    >>> print "Sunrise at 45N is at %.5f (%s)" %(wa45.sunrise, time_from_fday(wa45.sunrise))
     Sunrise at 45N is at 0.32044 (07:41:26)
     >>> print "Sunrise at 75N (no sunrise):", wa75.sunrise
     Sunrise at 75N (no sunrise): None
 
     >>> # Sunset. If we are far enough north, there is no sunset
-    >>> secs = wa45.sunset * 86400
-    >>> h = int(secs/3600.0)
-    >>> secs %= 3600.0
-    >>> m = int(secs/60.0)
-    >>> secs = int(round(secs % 60))
-    >>> print "Sunset at 45N is at %.5f (%s)" %(wa45.sunset, datetime.time(h,m,secs))
+    >>> print "Sunset at 45N is at %.5f (%s)" %(wa45.sunset, time_from_fday(wa45.sunset))
     Sunset at 45N is at 0.70471 (16:54:47)
     >>> print "Sunset at 75N (no sunset):", wa75.sunset
     Sunset at 75N (no sunset): None
@@ -162,12 +184,7 @@ class WeeAstro(object):
     Total sunlight at 75N is 0.000 minutes
     
     >>> # True solar time
-    >>> secs = wa45.true_solar_time*60.0
-    >>> h = int(secs/3600.0)
-    >>> secs %= 3600.0
-    >>> m = int(secs/60.0)
-    >>> secs = int(round(secs % 60))
-    >>> print "True time is %.4f (%s)" %(wa45.true_solar_time, datetime.time(h,m,secs))
+    >>> print "True time is %.4f (%s)" %(wa45.true_solar_time, time_from_fday(wa45.true_solar_time/1440.0))
     True time is 701.8888 (11:41:53)
     
     >>> print "Hour angle= %.5f" % wa45.hour_angle
@@ -199,9 +216,11 @@ class WeeAstro(object):
     >>> print "Solar azimuth angle at 45N, 122W = %.4f" % wa45.solar_azimuth
     Solar azimuth angle at 45N, 122W = 175.3564
     >>> # Do it again, but for a longitude where the sun is to the west
-    >>> wa45117 = WeeAstro(0.5, jc2000, 45.0, -117.0, -8.0)
+    >>> wa45117 = WeeSolar(0.5, jc2000, 45.0, -117.0, -8.0)
     >>> print "Solar azimuth angle at 45N, 117W = %.4f" % wa45117.solar_azimuth
     Solar azimuth angle at 45N, 117W = 180.4848
+    
+
     """
     def __init__(self, tod, jc2000, latitude, longitude, timezone):
 
@@ -212,6 +231,10 @@ class WeeAstro(object):
         self.timezone = timezone
         self.recalc()
         
+    @staticmethod
+    def fromtimestamp(time_ts, latitude, longitude, timezone):
+        pass
+    
     def recalc(self):
         
         self.geom_mean_long_sun = (280.46646 + self.jc2000*(36000.76983 + self.jc2000*0.0003032)) % 360.0
@@ -269,18 +292,21 @@ class WeeAstro(object):
     
         self.solar_elevation_angle = 90.0 - self.solar_zenith_angle
 
+        # To calculate the atmospheric refraction effect, select which
+        # formula to use based on the elevation of the sun:
         if self.solar_elevation_angle > 85.0:
-            self.atmospheric_refraction = 0.0
+            # Sun very high in the sky. There is no effect.
+            ar = 0.0
+        elif    5.0 < self.solar_elevation_angle <= 85.0:
+            ar = 58.1 / tan(radians(self.solar_elevation_angle))-0.07/pow(tan(radians(self.solar_elevation_angle)),3) + 0.000086/pow(tan(radians(self.solar_elevation_angle)),5)
+        elif -0.575 < self.solar_elevation_angle <=  5.0:
+            # Sun near the horizon    
+            ar = 1735 + self.solar_elevation_angle*(-518.2+self.solar_elevation_angle*(103.4+self.solar_elevation_angle*(-12.79+self.solar_elevation_angle*0.711)))
         else:
-            if self.solar_elevation_angle > 5.0:
-                ar = 58.1 / tan(radians(self.solar_elevation_angle))-0.07/pow(tan(radians(self.solar_elevation_angle)),3) + 0.000086/pow(tan(radians(self.solar_elevation_angle)),5)
-            else:
-                if self.solar_elevation_angle > -0.575:
-                    ar = 1735 + self.solar_elevation_angle*(-518.2+self.solar_elevation_angle*(103.4+self.solar_elevation_angle*(-12.79+self.solar_elevation_angle*0.711)))
-                else:
-                    ar = -20.772/tan(radians(self.solar_elevation_angle))
-            self.atmospheric_refraction = ar/3600.0
-        
+            # Sun well below the horizon.
+            ar = -20.772/tan(radians(self.solar_elevation_angle))
+        self.atmospheric_refraction = ar/3600.0
+
         self.solar_elevation_angle_corrected = self.solar_elevation_angle + self.atmospheric_refraction
 
         if self.hour_angle>0:
@@ -292,7 +318,26 @@ if __name__ == "__main__":
     
     import time
     import datetime
-    
     import doctest
+
+    # Used in the doctest examples:
+    def time_from_fday(fday):
+        # Convert a fractional day into a time object
+        secs = fday * 86400
+        h = int(secs/3600.0)
+        secs %= 3600.0
+        m = int(secs/60.0)
+        secs = int(round(secs % 60))
+        return datetime.time(h,m,secs)
+            
     doctest.testmod()
-    
+
+    # Try some exercises near the vernal equinox
+    utc_tt = (2011,3,21,20,0,0,0,0,0)
+    time_ts = time.mktime(utc_tt) - time.timezone
+    print time.asctime(time.gmtime(time_ts))
+    jc2000 = j2000_from_timestamp(time_ts)
+    wa45 = WeeSolar(0.5, jc2000, 45.0, -122.0, -8.0)
+    print "Sunrise at 45N is at %.5f (%s)" %(wa45.sunrise, time_from_fday(wa45.sunrise))
+    print "Sunset  at 45N is at %.5f (%s)" %(wa45.sunset, time_from_fday(wa45.sunset))
+    print "Solar noon at 45N is at %.5f (%s)" %(wa45.solar_noon, time_from_fday(wa45.solar_noon))
