@@ -57,602 +57,236 @@ def j2000_from_jd(jd):
     
     return (jd-2451545.0)/36525.0
 
-def jd_from_j2000(jc):
+def jd_from_j2000(jc2000):
     """Convert from the number of centuries since J2000.0 to the Julian day."""
     
-    return jc * 36525.0 + 2451545.0
+    return jc2000 * 36525.0 + 2451545.0
+
+class WeeAstro(object):
     
-def geom_mean_long_sun(jc):
-    """Given the julian century, find the mean longitude of the sun in degrees
+    """
+    Object that holds astronomical data for a specific time, lat/long, and timezone.
     
-    jc: Julian century
+    Example:
+    Construct different WeeAstro objects for different lat/lons, but all for
+    1/17/2011 2000 UTC.
     
-    Returns: Geometric mean longitude of the Sun in degrees
-    
-    Example, find the mean longitude of the sun at 1/17/2011 2000 UTC.
+    Set up the different WeeAstro objects:
     
     >>> time_ts = 1295294400.0
     >>> print time.asctime(time.gmtime(time_ts))
     Mon Jan 17 20:00:00 2011
-    >>> print "Mean longitude of the sun: %.4f" % geom_mean_long_sun(j2000_from_timestamp(time_ts))
+    >>> jc2000 = j2000_from_timestamp(time_ts)
+    >>> wa45 = WeeAstro(0.5, jc2000, 45.0, -122.0, -8.0)
+    >>> wa65 = WeeAstro(0.5, jc2000, 65.0, -122.0, -8.0)
+    >>> wa75 = WeeAstro(0.5, jc2000, 75.0, -122.0, -8.0)
+
+    >>> print "Mean longitude of the sun: %.4f" % wa45.geom_mean_long_sun
     Mean longitude of the sun: 296.8965
-    """
-    return (280.46646 + jc*(36000.76983 + jc*0.0003032)) % 360.0
 
-def geom_mean_anom_sun(jc):
-    """Given the julian century, find the mean longitude of the sun in degrees
-    
-    jc: Julian century
-    
-    Returns: Geometric mean anomaly of the Sun in degrees
-    
-    Example, find mean anomaly of the sun at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "Mean anomaly of the sun: %.3f" % geom_mean_anom_sun(j2000_from_timestamp(time_ts))
+    >>> print "Mean anomaly of the sun: %.3f" % wa45.geom_mean_anom_sun
     Mean anomaly of the sun: 4333.769
-    """
-    return 357.52911 + jc*(35999.05029 - 0.0001536*jc)
 
-def earth_eccentricity(jc):
-    """Given the julian century, find the unitless eccentricity of the Earth's orbit
-    
-    jc: Julian century
-    
-    Returns: the Earth's eccentricity
-    
-    Example, find the Earth's eccentricity at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "Eccentricity of the earth's orbit: %.6f" % earth_eccentricity(j2000_from_timestamp(time_ts))
+    >>> print "Eccentricity of the earth's orbit: %.6f" % wa45.earth_eccentricity
     Eccentricity of the earth's orbit: 0.016702
-    """
-    return 0.016708634 - jc*(0.000042037+0.0001537*jc)
 
-def sun_eq_of_center(jc):
-    """Given the Julian Century, find the equation of the center of the sun
-    
-    jc: Julian century
-    
-    Returns: The equation of the center of the sun
-    
-    Example, find the Sun's Eqn of Center at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "Equation of center: %.6f" % sun_eq_of_center(j2000_from_timestamp(time_ts))
+    >>> print "Equation of center: %.6f" % wa45.sun_eq_of_center
     Equation of center: 0.464999
-    """
-    gmas = geom_mean_anom_sun(jc)    
-    return sin(radians(gmas))*(1.914602-jc*(0.004817+0.000014*jc))+sin(radians(2*gmas))*(0.019993-0.000101*jc)+sin(radians(3*gmas))*0.000289
 
-def sun_true_long(jc):
-    """Given the Julian Century, find the Sun's true longitude.
-    
-    Example, find the Sun's true longitude at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The Sun's true longitude: %.4f" % sun_true_long(j2000_from_timestamp(time_ts))
+    >>> print "The Sun's true longitude: %.4f" % wa45.sun_true_long
     The Sun's true longitude: 297.3615
-    """
-    return geom_mean_long_sun(jc) + sun_eq_of_center(jc)
 
-def sun_true_anom(jc):
-    """Given the Julian Century, find the Sun's true anomaly.
-    
-    Example, find the Sun's true anomaly at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The Sun's true longitude: %.3f" % sun_true_anom(j2000_from_timestamp(time_ts))
+    >>> print "The Sun's true longitude: %.3f" % wa45.sun_true_anom
     The Sun's true longitude: 4334.234
-    """
-    return geom_mean_anom_sun(jc) + sun_eq_of_center(jc)
 
-def sun_rad_vector(jc):
-    """Given the Julian Century, find the Sun's radius vector in AUs.
-    
-    Example, find the Sun's radius vector at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The Sun's radius vector: %.6f" % sun_rad_vector(j2000_from_timestamp(time_ts))
+    >>> print "The Sun's radius vector: %.6f" % wa45.sun_rad_vector
     The Sun's radius vector: 0.983795
-    """
-    ec = earth_eccentricity(jc)
-    return (1.000001018 * (1.0 - ec*ec)) / (1.0 + ec * cos(radians(sun_true_anom(jc))))
 
-def sun_apparent_long(jc):
-    """Given the Julian Century, find the Sun's apparent longitude
-    
-    Example, find the Sun's apparent longiutde at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The Sun's apparent longitude: %.4f" % sun_apparent_long(j2000_from_timestamp(time_ts))
+    >>> print "The Sun's apparent longitude: %.4f" % wa45.sun_apparent_long
     The Sun's apparent longitude: 297.3606
-    """
-    return sun_true_long(jc) - 0.00569 - 0.00478 * sin(radians(125.04-1934.136*jc))
 
-def mean_obliquity_ecliptic(jc):
-    """Given the Julian Century, find the mean obliquity of the ecliptic.
-    
-    Example, find the mean obliquity of the ecliptic at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The obliquity of the ecliptic: %.5f" % mean_obliquity_ecliptic(j2000_from_timestamp(time_ts))
+    >>> print "The obliquity of the ecliptic: %.5f" % wa45.mean_obliquity_ecliptic
     The obliquity of the ecliptic: 23.43785
-    """
-    return 23.0 + (26.0 + ((21.448 - jc*(46.815+jc*(0.00059-jc*0.001813))))/60.0)/60.0
 
-def obliquity_correction(jc):
-    """Given the Julian Century, find the obliquity correction in degrees
-    
-    Example, find the obliquity correction at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The obliquity correction: %.5f" % obliquity_correction(j2000_from_timestamp(time_ts))
+    >>> print "The obliquity correction: %.5f" % wa45.obliquity_correction
     The obliquity correction: 23.43792
-    """
-    return mean_obliquity_ecliptic(jc) + 0.00256 * cos(radians(125.04 - 1934.136*jc))
 
-def sun_right_ascension(jc):
-    """Given the Julian Century, find the right ascension of the Sun in degrees.
-    
-    Example, find the Sun's right ascension at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The Sun's right ascension: %.4f" % sun_right_ascension(j2000_from_timestamp(time_ts))
+    >>> print "The Sun's right ascension: %.4f" % wa45.sun_right_ascension
     The Sun's right ascension: 150.5764
-    """
-    oc = obliquity_correction(jc)
-    sal = sun_apparent_long(jc)
-    return degrees(atan2(cos(radians(sal)), cos(radians(oc))*sin(radians(sal))))
 
-def sun_declination(jc):
-    """Given the Julian Century, find the declination of the Sun in degrees.
-    
-    Example, find the Sun's declination at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The Sun's declination: %.4f" % sun_declination(j2000_from_timestamp(time_ts))
+    >>> print "The Sun's declination: %.4f" % wa45.sun_declination
     The Sun's declination: -20.6868
-    """
-    oc = obliquity_correction(jc)
-    sal = sun_apparent_long(jc)
-    return degrees(asin(sin(radians(oc)) * sin(radians(sal))))
 
-
-def equation_of_time(jc):
-    """Given the Julian Century, find the equation of time in minutes
-    
-    Example, find the Equation of Time at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The equation of time is: %.5f" % equation_of_time(j2000_from_timestamp(time_ts))
+    >>> print "The equation of time is: %.5f" % wa45.equation_of_time
     The equation of time is: -10.11117
-    """
-    # To keep the transcription from the spreadsheet straight, the letter before the underscore
-    # is the column number in the original spreadsheet: 
-    r_oc = obliquity_correction(jc)
-    x = tan(radians(r_oc/2.0))
-    u_vy =  x**2
-    i_gmls = geom_mean_long_sun(jc)
-    k_ec = earth_eccentricity(jc)
-    j_gmas = geom_mean_anom_sun(jc)
-    eot = 4.0*degrees(u_vy*sin(2.0*radians(i_gmls))-2.0*k_ec*sin(radians(j_gmas))\
-                           + 4.0 *  k_ec*u_vy*sin(    radians(j_gmas)) * cos(2.0*radians(i_gmls))\
-                           - 0.5 *  u_vy*u_vy*sin(4.0*radians(i_gmls))\
-                           - 1.25 * k_ec*k_ec*sin(2.0*radians(j_gmas)))
-    return eot
 
-def ha_sunrise(jc, latitude):
-    """Given the Julian Century and the latitude, find the hour angle of sunrise in degrees
-    
-    Example, find the hour angle of sunrise at 45.0 latitude at 1/17/2011 2000 UTC.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "The hour angle of sunrise is: %.5f" % ha_sunrise(j2000_from_timestamp(time_ts), 45.0)
-    The hour angle of sunrise is: 69.16806
-    """
-    t_sd = sun_declination(jc)
-    return degrees(acos(cos(radians(90.833))/(cos(radians(latitude)) * cos(radians(t_sd)))\
-                                  - tan(radians(latitude))*tan(radians(t_sd))))
-
-def solar_noon(jc, longitude, timezone):
-    """
-    Given a J2000 time, longitude, and timezone, find the solar noon/
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: Time of solar noon in days
-    
-    Example: Find solar noon for the longitude 122W on 1/17/2011
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> sn_days = solar_noon(j2000_from_timestamp(time_ts), -122.0, -8.0)
-    >>> secs = sn_days * 86400
+    >>> # Hour angle of sunrise. If we are far enough north, there is no sunrise
+    >>> print "The hour angle of sunrise at 45N (sun above horizon) is: %.5f" % wa45.ha_sunrise
+    The hour angle of sunrise at 45N (sun above horizon) is: 69.16806
+    >>> print "The hour angle of sunrise at 75N (sun below horizon) is", wa75.ha_sunrise
+    The hour angle of sunrise at 75N (sun below horizon) is None
+    >>> secs = wa45.solar_noon * 86400
     >>> h = int(secs/3600.0)
     >>> secs %= 3600.0
     >>> m = int(secs/60.0)
     >>> secs = int(round(secs % 60))
-    >>> print "Solar noon is at %.5f (%s)" %(sn_days, datetime.time(h,m,secs))
+    >>> print "Solar noon is at %.5f (%s)" %(wa45.solar_noon, datetime.time(h,m,secs))
     Solar noon is at 0.51258 (12:18:07)
-    """
-
-    return (720.0 - 4.0*longitude - equation_of_time(jc) + timezone * 60) / 1440.0
-
-def sunrise(jc, latitude, longitude, timezone):
-    """
-    Given a J2000 time, latitude, longitude, and timezone, find the sunrise.
     
-    jc: The time in Julian centuries since J2000.0
-    
-    latitude: The latitude
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: Time of sunrise in days
-    
-    Example: Find sunrise for the longitude 122W on 1/17/2011
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> sn_days = sunrise(j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
-    >>> secs = sn_days * 86400
+    >>> # Sunrise. If we are far enough north, there is no sunrise
+    >>> secs = wa45.sunrise * 86400
     >>> h = int(secs/3600.0)
     >>> secs %= 3600.0
     >>> m = int(secs/60.0)
     >>> secs = int(round(secs % 60))
-    >>> print "Sunrise is at %.5f (%s)" %(sn_days, datetime.time(h,m,secs))
-    Sunrise is at 0.32044 (07:41:26)
-    """
-    return solar_noon(jc, longitude, timezone) - ha_sunrise(jc, latitude)/360.0
-    
-def sunset(jc, latitude, longitude, timezone):
-    """
-    Given a J2000 time, latitude, longitude, and timezone, find the sunset.
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    latitude: The latitude
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: Time of sunset in days
-    
-    Example: Find sunset for the longitude 122W on 1/17/2011
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> sn_days = sunset(j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
-    >>> secs = sn_days * 86400
-    >>> h = int(secs/3600.0)
-    >>> secs %= 3600.0
-    >>> m = int(secs/60.0)
-    >>> secs = int(round(secs % 60))
-    >>> print "Sunset is at %.5f (%s)" %(sn_days, datetime.time(h,m,secs))
-    Sunset is at 0.70471 (16:54:47)
-    """
-    return solar_noon(jc, longitude, timezone) + ha_sunrise(jc, latitude)/360.0
-    
-def total_sunlight(jc, latitude):
-    """
-    Given a J2000 time and latitude, find the total sunlight in minutes
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    latitude: The latitude
-    
-    Returns: Amount of sunlight in minutes
-    
-    Example: Find the amount of sunlight at 45N on 1/17/2011
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> print "Total sunlight is %.3f minutes" % total_sunlight(j2000_from_timestamp(time_ts), 45.0)
-    Total sunlight is 553.344 minutes
-    """
-    return 8 * ha_sunrise(jc, latitude)
+    >>> print "Sunrise at 45N is at %.5f (%s)" %(wa45.sunrise, datetime.time(h,m,secs))
+    Sunrise at 45N is at 0.32044 (07:41:26)
+    >>> print "Sunrise at 75N (no sunrise):", wa75.sunrise
+    Sunrise at 75N (no sunrise): None
 
-def true_solar_time(t, jc, longitude, timezone):
-    """
-    Return the local, true solar time in minutes
-    
-    Comment: There is no reason why parameters t and jc could not be collapsed
-    into one parameter (indeed, they can be at odds), but this mimics what the
-    spreadsheet does.
-    
-    t: Time in fractions of a day (eg, 6am would be 0.25)
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: True time in minutes
-    
-    Example: Find the true time for the longitude 122W on 1/17/2011 at noon.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> sn_mins = true_solar_time(0.5, j2000_from_timestamp(time_ts), -122.0, -8.0)
-    >>> secs = sn_mins*60.0
+    >>> # Sunset. If we are far enough north, there is no sunset
+    >>> secs = wa45.sunset * 86400
     >>> h = int(secs/3600.0)
     >>> secs %= 3600.0
     >>> m = int(secs/60.0)
     >>> secs = int(round(secs % 60))
-    >>> print "True time is %.4f (%s)" %(sn_mins, datetime.time(h,m,secs))
+    >>> print "Sunset at 45N is at %.5f (%s)" %(wa45.sunset, datetime.time(h,m,secs))
+    Sunset at 45N is at 0.70471 (16:54:47)
+    >>> print "Sunset at 75N (no sunset):", wa75.sunset
+    Sunset at 75N (no sunset): None
+
+    >>> # Total sunlight If we are far enough north, there is no sunlight
+    >>> print "Total sunlight at 45N is %.3f minutes" % wa45.total_sunlight
+    Total sunlight at 45N is 553.344 minutes
+    >>> print "Total sunlight at 75N is %.3f minutes" % wa75.total_sunlight
+    Total sunlight at 75N is 0.000 minutes
+    
+    >>> # True solar time
+    >>> secs = wa45.true_solar_time*60.0
+    >>> h = int(secs/3600.0)
+    >>> secs %= 3600.0
+    >>> m = int(secs/60.0)
+    >>> secs = int(round(secs % 60))
+    >>> print "True time is %.4f (%s)" %(wa45.true_solar_time, datetime.time(h,m,secs))
     True time is 701.8888 (11:41:53)
-    """
     
-    return (t *1440.0 + equation_of_time(jc) + 4.0*longitude - 60.0*timezone) % 1440
-
-def hour_angle(t, jc, longitude, timezone):
-    """
-    Return the local hour angle of the sun in degrees.
-    
-    Comment: There is no reason why parameters t and jc could not be collapsed
-    into one parameter (indeed, they can be at odds), but this mimics what the
-    spreadsheet does.
-    
-    t: Time in fractions of a day (eg, 6am would be 0.25)
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: Hour angle of the sun in degrees.
-    
-    Example: Find hour angle of the sun for the longitude 122W on 1/17/2011 at noon.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> ha = hour_angle(0.5, j2000_from_timestamp(time_ts), -122.0, -8.0)
-    >>> print "Hour angle= %.5f" % ha
+    >>> print "Hour angle= %.5f" % wa45.hour_angle
     Hour angle= -4.52779
-    """
-    
-    ha = true_solar_time(t, jc, longitude, timezone) / 4.0
 
-    return ha + 180.0 if ha < 0 else ha - 180.0
+    >>> print "Solar zenith angle at 45N = %.5f" % wa45.solar_zenith_angle
+    Solar zenith angle at 45N = 65.81652
+    >>> print "Solar zenith angle at 65N = %.5f" % wa65.solar_zenith_angle
+    Solar zenith angle at 65N = 85.75768
 
-def solar_zenith_angle(t, jc, latitude, longitude, timezone):
-    """
-    Return the solar zenith angle in degrees.
-    
-    Comment: There is no reason why parameters t and jc could not be collapsed
-    into one parameter (indeed, they can be at odds), but this mimics what the
-    spreadsheet does.
-    
-    t: Time in fractions of a day (eg, 6am would be 0.25)
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    latitude: The latitude
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: The solar zenith angle in degrees.
-    
-    Example: Find the solar zenith angle for 45N, 122W on 1/17/2011 at noon.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> sza = solar_zenith_angle(0.5, j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
-    >>> print "Solar zenith angle= %.5f" % sza
-    Solar zenith angle= 65.81652
-    >>> sza = solar_zenith_angle(0.5, j2000_from_timestamp(time_ts), 65.0, -122.0, -8.0)
-    >>> print "Solar zenith angle= %.5f" % sza
-    Solar zenith angle= 85.75768
-    """
-    sd = sun_declination(jc)
-    ha = hour_angle(t, jc, longitude, timezone)
-    return degrees(acos(sin(radians(latitude)) * sin(radians(sd)) + cos(radians(latitude))*cos(radians(sd))*cos(radians(ha))))
-    
-def solar_elevation_angle(t, jc, latitude, longitude, timezone):
-    """
-    Return the solar elevation angle in degrees.
-    
-    Comment: There is no reason why parameters t and jc could not be collapsed
-    into one parameter (indeed, they can be at odds), but this mimics what the
-    spreadsheet does.
-    
-    t: Time in fractions of a day (eg, 6am would be 0.25)
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    latitude: The latitude
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: The solar elevation angle in degrees.
-    
-    Example: Find the solar elevation angle for 45N, 122W on 1/17/2011 at noon.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> sea = solar_elevation_angle(0.5, j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
-    >>> print "Solar elevation angle= %.5f" % sea
-    Solar elevation angle= 24.18348
-    >>> sea = solar_elevation_angle(0.5, j2000_from_timestamp(time_ts), 65.0, -122.0, -8.0)
-    >>> print "Solar elevation angle= %.5f" % sea
-    Solar elevation angle= 4.24232
-    """
-    return 90.0 - solar_zenith_angle(t, jc, latitude, longitude, timezone)
+    >>> print "Solar elevation angle at 45N = %.5f" % wa45.solar_elevation_angle
+    Solar elevation angle at 45N = 24.18348
+    >>> print "Solar elevation angle at 65N = %.5f" % wa65.solar_elevation_angle
+    Solar elevation angle at 65N = 4.24232
 
-def atmospheric_refraction(t, jc, latitude, longitude, timezone):
-    """
-    Return the atmospheric refraction in degrees.
-    
-    Comment: There is no reason why parameters t and jc could not be collapsed
-    into one parameter (indeed, they can be at odds), but this mimics what the
-    spreadsheet does.
-    
-    t: Time in fractions of a day (eg, 6am would be 0.25)
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    latitude: The latitude
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: The atmospheric refraction in degrees.
-    
-    Example: Find the atmospheric refraction for three different latitudes,
-    exercising all branches in the formulas, using longitude 122W on 1/17/2011
-    at noon.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> j2000 = j2000_from_timestamp(time_ts)
-    >>> print "Atmospheric refraction= %.6f" % atmospheric_refraction(0.5, j2000, 45.0, -122.0, -8.0)
-    Atmospheric refraction= 0.035725
-    >>> print "Atmospheric refraction= %.6f" % atmospheric_refraction(0.5, j2000, 65.0, -122.0, -8.0)
-    Atmospheric refraction= 0.180923
-    >>> print "Atmospheric refraction= %.4f" % atmospheric_refraction(0.5, j2000, 75.0, -122.0, -8.0)
-    Atmospheric refraction= 0.0575
-    """
+    >>> # Do 3 different refraction angles, exercising all branches in the algorithm:
+    >>> print "Atmospheric refraction at 45N = %.6f" % wa45.atmospheric_refraction
+    Atmospheric refraction at 45N = 0.035725
+    >>> print "Atmospheric refraction at 65N = %.6f" % wa65.atmospheric_refraction
+    Atmospheric refraction at 65N = 0.180923
+    >>> print "Atmospheric refraction at 75N = %.4f" % wa75.atmospheric_refraction
+    Atmospheric refraction at 75N = 0.0575
 
-    sea = solar_elevation_angle(t, jc, latitude, longitude, timezone)
+    >>> print "Corrected solar elevation angle at 45N = %.5f" % wa45.solar_elevation_angle_corrected
+    Corrected solar elevation angle at 45N = 24.21921
+    >>> print "Corrected solar elevation angle at 65N = %.5f" % wa65.solar_elevation_angle_corrected
+    Corrected solar elevation angle at 65N = 4.42324
+
+    >>> print "Solar azimuth angle at 45N, 122W = %.4f" % wa45.solar_azimuth
+    Solar azimuth angle at 45N, 122W = 175.3564
+    >>> # Do it again, but for a longitude where the sun is to the west
+    >>> wa45117 = WeeAstro(0.5, jc2000, 45.0, -117.0, -8.0)
+    >>> print "Solar azimuth angle at 45N, 117W = %.4f" % wa45117.solar_azimuth
+    Solar azimuth angle at 45N, 117W = 180.4848
+    """
+    def __init__(self, tod, jc2000, latitude, longitude, timezone):
+
+        self.tod = tod
+        self.jc2000 = jc2000
+        self.latitude = latitude
+        self.longitude = longitude
+        self.timezone = timezone
+        self.recalc()
+        
+    def recalc(self):
+        
+        self.geom_mean_long_sun = (280.46646 + self.jc2000*(36000.76983 + self.jc2000*0.0003032)) % 360.0
+
+        self.geom_mean_anom_sun = 357.52911 + self.jc2000*(35999.05029 - 0.0001536*self.jc2000)
+
+        self.earth_eccentricity = 0.016708634 - self.jc2000*(0.000042037+0.0001537*self.jc2000)
+
+        self.sun_eq_of_center = sin(radians(self.geom_mean_anom_sun))*(1.914602-self.jc2000*(0.004817+0.000014*self.jc2000))+sin(radians(2*self.geom_mean_anom_sun))*(0.019993-0.000101*self.jc2000)+sin(radians(3*self.geom_mean_anom_sun))*0.000289
+
+        self.sun_true_long = self.geom_mean_long_sun + self.sun_eq_of_center
+
+        self.sun_true_anom = self.geom_mean_anom_sun + self.sun_eq_of_center
+
+        self.sun_rad_vector = (1.000001018 * (1.0 - self.earth_eccentricity*self.earth_eccentricity)) / (1.0 + self.earth_eccentricity * cos(radians(self.sun_true_anom)))
+
+        self.sun_apparent_long = self.sun_true_long - 0.00569 - 0.00478 * sin(radians(125.04-1934.136*self.jc2000))
+
+        self.mean_obliquity_ecliptic = 23.0 + (26.0 + ((21.448 - self.jc2000*(46.815+self.jc2000*(0.00059-self.jc2000*0.001813))))/60.0)/60.0
+
+        self.obliquity_correction = self.mean_obliquity_ecliptic + 0.00256 * cos(radians(125.04 - 1934.136*self.jc2000))
+
+        self.sun_right_ascension = degrees(atan2(cos(radians(self.sun_apparent_long)), cos(radians(self.obliquity_correction))*sin(radians(self.sun_apparent_long))))
+
+        self.sun_declination = degrees(asin(sin(radians(self.obliquity_correction)) * sin(radians(self.sun_apparent_long))))
+
+        x = tan(radians(self.obliquity_correction/2.0))
+        u_vy =  x**2
+        self.equation_of_time = 4.0*degrees(u_vy*sin(2.0*radians(self.geom_mean_long_sun))-2.0*self.earth_eccentricity*sin(radians(self.geom_mean_anom_sun))\
+                                            + 4.0 *  self.earth_eccentricity*u_vy*sin(radians(self.geom_mean_anom_sun)) * cos(2.0*radians(self.geom_mean_long_sun))\
+                                            - 0.5 *  u_vy*u_vy*sin(4.0*radians(self.geom_mean_long_sun))\
+                                            - 1.25 * self.earth_eccentricity*self.earth_eccentricity*sin(2.0*radians(self.geom_mean_anom_sun)))
+
+        self.solar_noon = (720.0 - 4.0*self.longitude - self.equation_of_time + self.timezone * 60) / 1440.0
+
+        # A ValueError exception will get thrown if the sun never appears above the horizon:
+        try:
+            self.ha_sunrise = degrees(acos(cos(radians(90.833))/(cos(radians(self.latitude)) * cos(radians(self.sun_declination)))\
+                                           - tan(radians(self.latitude))*tan(radians(self.sun_declination))))
+            self.sunrise    = self.solar_noon - self.ha_sunrise/360.0
+            self.sunset     = self.solar_noon + self.ha_sunrise/360.0
+            self.total_sunlight = 8 * self.ha_sunrise
+        except ValueError:
+            self.ha_sunrise = None
+            self.sunrise    = None
+            self.sunset     = None
+            self.total_sunlight = 0.0
+
+        self.true_solar_time = (self.tod *1440.0 + self.equation_of_time + 4.0*self.longitude - 60.0*self.timezone) % 1440
+
+        ha = self.true_solar_time / 4.0
+        self.hour_angle = ha + 180.0 if ha < 0 else ha - 180.0
+
+        self.solar_zenith_angle = degrees(acos(sin(radians(self.latitude)) * sin(radians(self.sun_declination)) + cos(radians(self.latitude))*cos(radians(self.sun_declination))*cos(radians(self.hour_angle))))
     
-    if sea > 85.0: return 0.0
-    
-    if sea > 5.0:
-        ar = 58.1 / tan(radians(sea))-0.07/pow(tan(radians(sea)),3) + 0.000086/pow(tan(radians(sea)),5)
-    else:
-        if sea > -0.575:
-            ar = 1735 + sea*(-518.2+sea*(103.4+sea*(-12.79+sea*0.711)))
+        self.solar_elevation_angle = 90.0 - self.solar_zenith_angle
+
+        if self.solar_elevation_angle > 85.0:
+            self.atmospheric_refraction = 0.0
         else:
-            ar = -20.772/tan(radians(sea))
-    return ar/3600.0
+            if self.solar_elevation_angle > 5.0:
+                ar = 58.1 / tan(radians(self.solar_elevation_angle))-0.07/pow(tan(radians(self.solar_elevation_angle)),3) + 0.000086/pow(tan(radians(self.solar_elevation_angle)),5)
+            else:
+                if self.solar_elevation_angle > -0.575:
+                    ar = 1735 + self.solar_elevation_angle*(-518.2+self.solar_elevation_angle*(103.4+self.solar_elevation_angle*(-12.79+self.solar_elevation_angle*0.711)))
+                else:
+                    ar = -20.772/tan(radians(self.solar_elevation_angle))
+            self.atmospheric_refraction = ar/3600.0
         
-        
-def solar_elevation_angle_corrected(t, jc, latitude, longitude, timezone):
-    """
-    Return the solar elevation angle corrected for atmospheric refraction in degrees.
-    
-    Comment: There is no reason why parameters t and jc could not be collapsed
-    into one parameter (indeed, they can be at odds), but this mimics what the
-    spreadsheet does.
-    
-    t: Time in fractions of a day (eg, 6am would be 0.25)
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    latitude: The latitude
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: The corrected solar elevation angle in degrees.
-    
-    Example: Find the corrected solar elevation angle for 45N, 122W on 1/17/2011 at noon.
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> seac = solar_elevation_angle_corrected(0.5, j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
-    >>> print "Corrected solar elevation angle= %.5f" % seac
-    Corrected solar elevation angle= 24.21921
-    >>> seac = solar_elevation_angle_corrected(0.5, j2000_from_timestamp(time_ts), 65.0, -122.0, -8.0)
-    >>> print "Corrected solar elevation angle= %.5f" % seac
-    Corrected solar elevation angle= 4.42324
-    """
-    return solar_elevation_angle(t, jc, latitude, longitude, timezone)\
-         + atmospheric_refraction(t, jc, latitude, longitude, timezone)
+        self.solar_elevation_angle_corrected = self.solar_elevation_angle + self.atmospheric_refraction
 
-def solar_azimuth(t, jc, latitude, longitude, timezone):
-    """
-    Return the solar azimuth in degrees.
-    
-    Comment: There is no reason why parameters t and jc could not be collapsed
-    into one parameter (indeed, they can be at odds), but this mimics what the
-    spreadsheet does.
-    
-    t: Time in fractions of a day (eg, 6am would be 0.25)
-    
-    jc: The time in Julian centuries since J2000.0
-    
-    latitude: The latitude
-    
-    longitude: The longitude (west longitude is negative)
-    
-    timezone: Timezone relative to GMT (eg, PST is -8)
-    
-    Returns: The solar azimuth in degrees.
-    
-    Example: Find the solar azimuth for 45N on 1/17/2011 at noon,
-    for longitudes 122W and 117W (this will exercise both branches of the formula).
-    
-    >>> time_ts = 1295294400.0
-    >>> print time.asctime(time.gmtime(time_ts))
-    Mon Jan 17 20:00:00 2011
-    >>> sa = solar_azimuth(0.5, j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
-    >>> print "Solar azimuth angle= %.4f" % sa
-    Solar azimuth angle= 175.3564
-    >>> sa = solar_azimuth(0.5, j2000_from_timestamp(time_ts), 45.0, -117.0, -8.0)
-    >>> print "Solar azimuth angle= %.4f" % sa
-    Solar azimuth angle= 180.4848
-    """
-    ha = hour_angle(t, jc, longitude, timezone)
-    sza = solar_zenith_angle(t, jc, latitude, longitude, timezone)
-    sd =  sun_declination(jc)
-    if ha>0:
-        saa = (degrees(acos(((sin(radians(latitude))*cos(radians(sza)))-sin(radians(sd)))/(cos(radians(latitude))*sin(radians(sza)))))+180 ) % 360
-    else:
-        saa = (540-degrees(acos(((sin(radians(latitude))*cos(radians(sza)))-sin(radians(sd)))/(cos(radians(latitude))*sin(radians(sza)))))) % 360
-    return saa
+        if self.hour_angle>0:
+            self.solar_azimuth = (degrees(acos(((sin(radians(self.latitude))*cos(radians(self.solar_zenith_angle)))-sin(radians(self.sun_declination)))/(cos(radians(self.latitude))*sin(radians(self.solar_zenith_angle)))))+180 ) % 360
+        else:
+            self.solar_azimuth = (540-degrees(acos(((sin(radians(self.latitude))*cos(radians(self.solar_zenith_angle)))-sin(radians(self.sun_declination)))/(cos(radians(self.latitude))*sin(radians(self.solar_zenith_angle)))))) % 360
 
 if __name__ == "__main__":
     
