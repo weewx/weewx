@@ -486,11 +486,133 @@ def solar_zenith_angle(t, jc, latitude, longitude, timezone):
     >>> sza = solar_zenith_angle(0.5, j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
     >>> print "Solar zenith angle= %.5f" % sza
     Solar zenith angle= 65.81652
+    >>> sza = solar_zenith_angle(0.5, j2000_from_timestamp(time_ts), 65.0, -122.0, -8.0)
+    >>> print "Solar zenith angle= %.5f" % sza
+    Solar zenith angle= 85.75768
     """
     sd = sun_declination(jc)
     ha = hour_angle(t, jc, longitude, timezone)
     return math.degrees(math.acos(math.sin(math.radians(latitude)) * math.sin(math.radians(sd)) + math.cos(math.radians(latitude))*math.cos(math.radians(sd))*math.cos(math.radians(ha))))
     
+def solar_elevation_angle(t, jc, latitude, longitude, timezone):
+    """
+    Return the solar elevation angle in degrees.
+    
+    Comment: There is no reason why parameters t and jc could not be collapsed
+    into one parameter (indeed, they can be at odds), but this mimics what the
+    spreadsheet does.
+    
+    t: Time in fractions of a day (eg, 6am would be 0.25)
+    
+    jc: The time in Julian centuries since J2000.0
+    
+    latitude: The latitude
+    
+    longitude: The longitude (west longitude is negative)
+    
+    timezone: Timezone relative to GMT (eg, PST is -8)
+    
+    Returns: The solar elevation angle in degrees.
+    
+    Example: Find the solar elevation angle for 45N, 122W on 1/17/2011 at noon.
+    
+    >>> time_ts = 1295294400.0
+    >>> print time.asctime(time.gmtime(time_ts))
+    Mon Jan 17 20:00:00 2011
+    >>> sea = solar_elevation_angle(0.5, j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
+    >>> print "Solar elevation angle= %.5f" % sea
+    Solar elevation angle= 24.18348
+    >>> sea = solar_elevation_angle(0.5, j2000_from_timestamp(time_ts), 65.0, -122.0, -8.0)
+    >>> print "Solar elevation angle= %.5f" % sea
+    Solar elevation angle= 4.24232
+    """
+    return 90.0 - solar_zenith_angle(t, jc, latitude, longitude, timezone)
+
+def atmospheric_refraction(t, jc, latitude, longitude, timezone):
+    """
+    Return the atmospheric refraction in degrees.
+    
+    Comment: There is no reason why parameters t and jc could not be collapsed
+    into one parameter (indeed, they can be at odds), but this mimics what the
+    spreadsheet does.
+    
+    t: Time in fractions of a day (eg, 6am would be 0.25)
+    
+    jc: The time in Julian centuries since J2000.0
+    
+    latitude: The latitude
+    
+    longitude: The longitude (west longitude is negative)
+    
+    timezone: Timezone relative to GMT (eg, PST is -8)
+    
+    Returns: The atmospheric refraction in degrees.
+    
+    Example: Find the atmospheric refraction for three different latitudes,
+    exercising all branches in the formulas, using longitude 122W on 1/17/2011
+    at noon.
+    
+    >>> time_ts = 1295294400.0
+    >>> print time.asctime(time.gmtime(time_ts))
+    Mon Jan 17 20:00:00 2011
+    >>> j2000 = j2000_from_timestamp(time_ts)
+    >>> print "Atmospheric refraction= %.6f" % atmospheric_refraction(0.5, j2000, 45.0, -122.0, -8.0)
+    Atmospheric refraction= 0.035725
+    >>> print "Atmospheric refraction= %.6f" % atmospheric_refraction(0.5, j2000, 65.0, -122.0, -8.0)
+    Atmospheric refraction= 0.180923
+    >>> print "Atmospheric refraction= %.4f" % atmospheric_refraction(0.5, j2000, 75.0, -122.0, -8.0)
+    Atmospheric refraction= 0.0575
+    """
+
+    sea = solar_elevation_angle(t, jc, latitude, longitude, timezone)
+    
+    if sea > 85.0: return 0.0
+    
+    if sea > 5.0:
+        ar = 58.1 / math.tan(math.radians(sea))-0.07/math.pow(math.tan(math.radians(sea)),3) + 0.000086/math.pow(math.tan(math.radians(sea)),5)
+    else:
+        if sea > -0.575:
+            ar = 1735 + sea*(-518.2+sea*(103.4+sea*(-12.79+sea*0.711)))
+        else:
+            ar = -20.772/math.tan(math.radians(sea))
+    return ar/3600.0
+        
+        
+def solar_elevation_angle_corrected(t, jc, latitude, longitude, timezone):
+    """
+    Return the solar elevation angle corrected for atmospheric refraction in degrees.
+    
+    Comment: There is no reason why parameters t and jc could not be collapsed
+    into one parameter (indeed, they can be at odds), but this mimics what the
+    spreadsheet does.
+    
+    t: Time in fractions of a day (eg, 6am would be 0.25)
+    
+    jc: The time in Julian centuries since J2000.0
+    
+    latitude: The latitude
+    
+    longitude: The longitude (west longitude is negative)
+    
+    timezone: Timezone relative to GMT (eg, PST is -8)
+    
+    Returns: The corrected solar elevation angle in degrees.
+    
+    Example: Find the corrected solar elevation angle for 45N, 122W on 1/17/2011 at noon.
+    
+    >>> time_ts = 1295294400.0
+    >>> print time.asctime(time.gmtime(time_ts))
+    Mon Jan 17 20:00:00 2011
+    >>> seac = solar_elevation_angle_corrected(0.5, j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
+    >>> print "Corrected solar elevation angle= %.5f" % seac
+    Corrected solar elevation angle= 24.21921
+    >>> seac = solar_elevation_angle_corrected(0.5, j2000_from_timestamp(time_ts), 65.0, -122.0, -8.0)
+    >>> print "Corrected solar elevation angle= %.5f" % seac
+    Corrected solar elevation angle= 4.42324
+    """
+    return solar_elevation_angle(t, jc, latitude, longitude, timezone)\
+         + atmospheric_refraction(t, jc, latitude, longitude, timezone)
+
 if __name__ == "__main__":
     
     import time
