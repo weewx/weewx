@@ -458,6 +458,39 @@ def hour_angle(t, jc, longitude, timezone):
 
     return ha + 180.0 if ha < 0 else ha - 180.0
 
+def solar_zenith_angle(t, jc, latitude, longitude, timezone):
+    """
+    Return the solar zenith angle in degrees.
+    
+    Comment: There is no reason why parameters t and jc could not be collapsed
+    into one parameter (indeed, they can be at odds), but this mimics what the
+    spreadsheet does.
+    
+    t: Time in fractions of a day (eg, 6am would be 0.25)
+    
+    jc: The time in Julian centuries since J2000.0
+    
+    latitude: The latitude
+    
+    longitude: The longitude (west longitude is negative)
+    
+    timezone: Timezone relative to GMT (eg, PST is -8)
+    
+    Returns: The solar zenith angle in degrees.
+    
+    Example: Find the solar zenith angle for 45N, 122W on 1/17/2011 at noon.
+    
+    >>> time_ts = 1295294400.0
+    >>> print time.asctime(time.gmtime(time_ts))
+    Mon Jan 17 20:00:00 2011
+    >>> sza = solar_zenith_angle(0.5, j2000_from_timestamp(time_ts), 45.0, -122.0, -8.0)
+    >>> print "Solar zenith angle= %.5f" % sza
+    Solar zenith angle= 65.81652
+    """
+    sd = sun_declination(jc)
+    ha = hour_angle(t, jc, longitude, timezone)
+    return math.degrees(math.acos(math.sin(math.radians(latitude)) * math.sin(math.radians(sd)) + math.cos(math.radians(latitude))*math.cos(math.radians(sd))*math.cos(math.radians(ha))))
+    
 if __name__ == "__main__":
     
     import time
