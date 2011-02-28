@@ -16,7 +16,7 @@ These calculations were taken from the NOAA spreadsheet explained at
 and available as an Excel spreadsheet at:
 
   http://www.srrb.noaa.gov/highlights/sunrise/NOAA_Solar_Calculations_year.xls
-  
+
 Most of the test calculations are done for the date 17-Jan-2011, local time 12
 Noon, in the Pacific Standard Time Zone (UTC-8). For something like sunrise,
 which will actually happen a few hours earlier than noon, that means these
@@ -25,6 +25,7 @@ calculations are necessarily an approximation.
 """
 
 from math import cos, sin, tan, acos, asin, atan2, radians, degrees, pow
+import time
 
 #===============================================================================
 #                               class WeeSolar
@@ -59,8 +60,7 @@ class WeeSolar(object):
     >>> time_ts = time.mktime(utc_tt) - time.timezone
     >>> print time.asctime(time.gmtime(time_ts))
     Mon Jan 17 20:00:00 2011
-    >>> jc2000 = j2000_from_timestamp(time_ts)
-    >>> weesolar = WeeSolar(jc2000)
+    >>> weesolar = WeeSolar.fromtimestamp(time_ts)
 
     Now exercise the various attributes:
     
@@ -110,10 +110,15 @@ class WeeSolar(object):
         self.jc2000 = jc2000
         WeeSolar.__recalc(self)
     
+    @staticmethod
+    def fromtimestamp(time_ts):
+        """Alternative, more Python friendly, constructor"""
+        return WeeSolar(j2000_from_timestamp(time_ts))
+    
     def recalc(self):
         """Recalculate the quantities. Call after changing a parameter."""
-        self.__recalc()
-        
+        WeeSolar.__recalc(self)
+    
     def __recalc(self):
         """Private function that does the internal calculations specific to WeeSolar."""
         self.geom_mean_long_sun = (280.46646 + self.jc2000*(36000.76983 + self.jc2000*0.0003032)) % 360.0
@@ -253,7 +258,7 @@ class WeeSolarAlmanac(WeeSolar):
     >>> print "Solar azimuth angle at 45N, 117W = %.4f" % wa45117.solar_azimuth
     Solar azimuth angle at 45N, 117W = 180.4848
     """
-    def __init__(self, tod, jc2000, latitude, longitude, timezone):
+    def __init__(self, tod, jc2000, latitude, longitude, timezone=-time.timezone/3600.0):
 
         super(WeeSolarAlmanac,self).__init__(jc2000)
         self.tod = tod
@@ -262,15 +267,41 @@ class WeeSolarAlmanac(WeeSolar):
         self.timezone = timezone
         WeeSolarAlmanac.__recalc(self)
         
+    @staticmethod
+    def fromtimestamp(time_ts, latitude, longitude, timezone=-time.timezone/3600.0):
+        """More Pythonic constructor.
+        
+        time_ts: Time in unix epoch time
+        
+        latitude
+        longitude: Latitude / longitude
+        
+        timezone: The local times will be calculated using the given timezone.
+        
+        Example (using 21-Mar-2011 2200 UTC, a date after the DST boundary)
+
+        >>> utc_tt = (2011,3,21,22,0,0,0,0, 0)
+        >>> time_ts = time.mktime(utc_tt) - time.timezone
+        >>> print time.asctime(time.gmtime(time_ts))
+        Mon Mar 21 22:00:00 2011
+        >>> wsa = WeeSolarAlmanac.fromtimestamp(time_ts, 45, -122)
+        """
+        utc_dt = datetime.datetime.utcfromtimestamp(time_ts)
+        local_dt = utc_dt + datetime.timedelta(hours=timezone)
+        
+        tod = local_dt.hour / 24.0 + local_dt.minute / 1440.0 + local_dt.second / 86400.0 
+        return WeeSolarAlmanac(tod, j2000_from_timestamp(time_ts), latitude, longitude, timezone)
+
     def recalc(self):
         """Recalculate the quantities. Call after changing a parameter."""
         # First do the base class:
         super(WeeSolarAlmanac,self).recalc()
         # Then me:
-        self.__recalc()
+        WeeSolarAlmanac.__recalc(self)
         
     def __recalc(self):
         """Private function that does the internal calculations specific to WeeSolarAlmanac."""
+
         self.solar_noon = (720.0 - 4.0*self.longitude - self.equation_of_time + self.timezone * 60) / 1440.0
 
         # A ValueError exception will get thrown if the sun never appears above the horizon:
@@ -365,7 +396,7 @@ if __name__ == "__main__":
 
     # Used in the doctest examples:
     def time_from_fday(fday):
-        # Convert a fractional day into a time object
+        """Convert a fractional day into a time object"""
         secs = fday * 86400
         h = int(secs/3600.0)
         secs %= 3600.0
@@ -375,12 +406,14 @@ if __name__ == "__main__":
             
     doctest.testmod()
 
-    # Try some exercises near the vernal equinox
-    utc_tt = (2011,3,21,20,0,0,0,0,0)
-    time_ts = time.mktime(utc_tt) - time.timezone
-    print time.asctime(time.gmtime(time_ts))
-    jc2000 = j2000_from_timestamp(time_ts)
-    wa45 = WeeSolarAlmanac(0.5, jc2000, 45.0, -122.0, -8.0)
-    print "Sunrise at 45N is at %.5f (%s)" %(wa45.sunrise, time_from_fday(wa45.sunrise))
-    print "Sunset  at 45N is at %.5f (%s)" %(wa45.sunset, time_from_fday(wa45.sunset))
-    print "Solar noon at 45N is at %.5f (%s)" %(wa45.solar_noon, time_from_fday(wa45.solar_noon))
+    from weeutil.weeutil import timestamp_to_string, utcdatetime_to_timestamp
+
+    # Use 21-Mar-2011 2200 UTC:
+    time_ts = utcdatetime_to_timestamp(datetime.datetime(2011,3,21, 22, 0, 0))
+    print timestamp_to_string(time_ts)
+    wsa = WeeSolarAlmanac.fromtimestamp(time_ts, 45, -122)
+    print wsa.solar_noon
+    print time_from_fday(wsa.solar_noon)
+    print wsa.sunrise
+    print wsa.sunset
+    print wsa.total_sunlight
