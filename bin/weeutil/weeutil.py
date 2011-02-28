@@ -602,6 +602,24 @@ def timestamp_to_string(ts):
     else:
         return "****** N/A ******** (    N/A   )"
 
+def utcdatetime_to_timestamp(dt):
+    """Convert from a datetime object holding a UTC time, to a unix timestamp.
+    
+    dt: An instance of datetime.datetime holding the time in UTC.
+    
+    Returns: A timestamp
+    
+    Example (using 17-Jan-2011 19:21:05 UTC):
+    
+        >>> dt_utc = datetime.datetime(2011, 1, 17, 19, 21, 5)
+        >>> ts = utcdatetime_to_timestamp(dt_utc)
+        >>> print "%s UTC (unix epoch time %.1f)" % (time.asctime(time.gmtime(ts)), ts)
+        Mon Jan 17 19:21:05 2011 UTC (unix epoch time 1295292065.0)
+    """
+    # Amazingly, Python offers no easy way to do this. Here's the best
+    # hack I can some up with:
+    return time.mktime(dt.utctimetuple()) - time.timezone
+
 def latlon_string(ll, hemi, which):
     """Decimal degrees into a string for degrees, and one for minutes."""
     labs = abs(ll)
