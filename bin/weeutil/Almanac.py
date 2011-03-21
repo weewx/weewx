@@ -7,11 +7,10 @@
 #    $Author$
 #    $Date$
 #
-"""Almanac data
-
-"""
+"""Almanac data"""
 
 import datetime
+import calendar
 import time
 import Sun
 import Moon
@@ -82,32 +81,25 @@ class Almanac(object):
             self.moon_phase = self.moon_phases[moon_index] if self.moon_phases is not None else ''
             self.date_tt = _newdate_tt
             
-
     @staticmethod
-    def _adjustTime(y, m, d, hrs_utc):
-        """Take a time as y, m, d and floating point hours utc and adjust
-        it to a local time. Returns results as a time tuple in local time.
+    def _adjustTime(y, m, d,  hrs_utc):
+        """Converts from a UTC time to a local time.
         
-        """
-        # Subtract off the timezone delta
-        hrs_loc = hrs_utc - time.timezone/3600.0
-        # Now get the hours, minutes, and seconds
-        hours = int(hrs_loc)
-        minutes_f = (hrs_loc - hours) * 60.0
-        minutes = int(minutes_f)
-        seconds = int((minutes_f - minutes) * 60.0 + 0.5)
-        # We now have the local y, m, d, hours, minutes, and seconds,
-        # but they are in standard time. We need to apply DST, if necessary. The easy
-        # way to do that is run it through time.mktime, then convert back to
-        # local time:
-        time_utc_ts = time.mktime((y, m, d, hours, minutes, seconds, 0, 0, 0))
-        time_loc_tt = time.localtime(time_utc_ts)
-        # Return the results as a time tuple
-        return time_loc_tt
+        y,m,d: The year, month, day for which the conversion is desired.
         
+        hrs_tc: Floating point number with the number of hours since midnight in UTC.
         
+        Returns: A timetuple with the local time."""
+        # Construct a time tuple with the time at midnight, UTC:
+        daystart_utc_tt = (y,m,d,0,0,0,0,0,-1)
+        # Convert the time tuple to a time stamp and add on the number of seconds since midnight:
+        time_ts = int(calendar.timegm(daystart_utc_tt) + hrs_utc * 3600.0 + 0.5)
+        # Convert to local time:
+        time_local_tt = time.localtime(time_ts)
+        return time_local_tt
 
 if __name__ == '__main__':
+    # NB: DST is on for 27-Mar-2009
     day = datetime.datetime(2009, 3, 27)
     day_ts = time.mktime(day.timetuple())
     
