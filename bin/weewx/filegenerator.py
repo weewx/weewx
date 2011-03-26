@@ -293,9 +293,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
         # almanac holds celestial information (sunrise, phase of moon). Its celestial
         # data changes slowly.
+        altitude_vt = weewx.units.convert(self.station.altitude_vt, "meter")
         self.almanac = weeutil.Almanac.Almanac(celestial_ts, 
                                                self.station.latitude_f, 
-                                               self.station.longitude_f, 
+                                               self.station.longitude_f,
+                                               altitude_vt[0],
                                                self.moonphases)
 
     def _prepGen(self, subskin_dict):

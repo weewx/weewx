@@ -44,13 +44,3 @@ def moon_phase(year, month, day):
     index = int((position * 8) + 0.5) & 7
 
     return (index, fullness)
-    
-
-if __name__ == '__main__' :
-    year = 2009  # yyyy format
-    month = 3
-    day = 27
-    
-    day = datetime.datetime(year, month, day)
-    
-    print moon_phase(2009, 1, 16)

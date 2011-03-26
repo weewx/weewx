@@ -32,7 +32,9 @@ class Station(object):
             altitude_t=(float(altitude_t[0]), 'foot')
             syslog.syslog(syslog.LOG_ERR,"   ****  Assuming altitude as (%f, %s)" % altitude_t)
         
-        self.altitude = weewx.units.ValueHelper(value_t=(float(altitude_t[0]), altitude_t[1], "group_altitude"),
+        # Form a value-tuple:
+        self.altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+        self.altitude = weewx.units.ValueHelper(value_t=self.altitude_vt,
                                                 formatter=weewx.units.Formatter.fromSkinDict(skin_dict),
                                                 converter=weewx.units.Converter.fromSkinDict(skin_dict))
 
