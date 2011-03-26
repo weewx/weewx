@@ -1,4 +1,3 @@
-# -*- coding: iso-8859-1 -*-
 #
 #    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
 #
@@ -13,12 +12,13 @@
 This module can optionally use PyEphem, which offers high quality
 astronomical calculations. See http://rhodesmill.org/pyephem. """
 
-import datetime
 import calendar
 import time
 import sys
+
 import Moon
 
+# If the user has installed ephem, use it. Otherwise, fall back to the weeutil algorithms:
 try:
     import ephem
     import math
@@ -44,12 +44,17 @@ class Almanac(object):
     
     As a minimum, the following attributes are available:
     
-        sunrise: A string version of the above, formatted using the format 'timeformat'.
-        sunset: A string version of the above, formatted using the format 'timeformat'.
+        sunrise: Time (local) upper limb of the sun rises above the horizon, formatted using the format 'timeformat'.
+        sunset: Time (local) upper limb of the sun sinks below the horizon, formatted using the format 'timeformat'.
         moon_phase: A description of the moon phase(eg. "new moon", Waxing crescent", etc.)
         moon_fullness: Percent fullness of the moon (0=new moon, 100=full moon)
 
-    If the module 'ephem' is used, there are many others
+    If the module 'ephem' is used, the following attributes are also available:
+    
+        suntransit: Time (local) when the sun transits overhead, formatted using the format 'timeformat'.
+        moonrise: Time (local) when the upper limb of the moon rises above the horizon, formatted using the format 'timeformat'.
+        moonset: Time (local) when the upper limb of the moon sinks below the horizon, formatted using the format 'timeformat'.
+        moontransit: Time (local) when the moon transits overhead, formatted using the format 'timeformat'.
 
     EXAMPLES:
     
@@ -57,12 +62,14 @@ class Almanac(object):
     >>> print weeutil.timestamp_to_string(t)
     2009-03-27 12:00:00 PDT (1238180400)
     >>> almanac = Almanac(t, 46.0, -122.0)
-    >>> print "Sunrise, sunset:", almanac.sunrise, almanac.sunset
-    Sunrise, sunset: 06:54 19:30
+    >>> print "Sunrise, sun transit, sunset:", almanac.sunrise, almanac.suntransit, almanac.sunset
+    Sunrise, sun transit, sunset: 06:56 13:13 19:30
     >>> print "Fullness of the moon (rounded) is %.0f%%" % almanac.moon_fullness
     Fullness of the moon (rounded) is 2%
     >>> print "Fullness of the moon (more precise) is %.2f" % almanac.moon.moon_phase
     Fullness of the moon (more precise) is 1.70
+    >>> print "Moon rise, moon transit, moon set:", almanac.moonrise, almanac.moontransit, almanac.moonset
+    Moon rise, moon transit, moon set: 06:59 14:01 21:20
     >>> print weeutil.timestamp_to_string(almanac.next_vernal_equinox)
     2010-03-20 10:32:10 PDT (1269106330)
     >>> print weeutil.timestamp_to_string(almanac.next_autumnal_equinox)
@@ -75,17 +82,22 @@ class Almanac(object):
     2009-04-09 07:55:49 PDT (1239288949)
     >>> print weeutil.timestamp_to_string(almanac.next_new_moon)
     2009-04-24 20:22:33 PDT (1240629753)
-    >>> print "Solar azimuth, altitude = (%.2f°, %.2f°)" % (almanac.sun.az, almanac.sun.alt)
-    Solar azimuth, altitude = (154.14°, 44.02°)
-    >>> print "Moon azimuth, altitude = (%.2f°, %.2f°)" % (almanac.moon.az, almanac.moon.alt)
-    Moon azimuth, altitude = (133.55°, 47.89°)
+    >>> print "Solar azimuth, altitude = (%.2f, %.2f)" % (almanac.sun.az, almanac.sun.alt)
+    Solar azimuth, altitude = (154.14, 44.02)
+    >>> print "Moon azimuth, altitude = (%.2f, %.2f)" % (almanac.moon.az, almanac.moon.alt)
+    Moon azimuth, altitude = (133.55, 47.89)
     """
+    
+    # Unfortunately, sunrise and sunset have to be calculated dynamically when
+    # using ephem because of its unfortunate design decision to change the
+    # state of the body when calling next_rising() or next_setting(). 
+    
     def __init__(self, time_ts, lat, lon, altitude=0, moon_phases=Moon.moon_phases, timeformat="%H:%M"):
         self.lat = lat
         self.lon = lon
         self.altitude = altitude
         self.timeformat = timeformat
-        self.date_tt = (0, 0, 0)
+        self.date_tt = (0, 0, 0, 0, 0, 0)
 
         self.moon_phases = moon_phases
         self.moon_phase = ''
@@ -98,12 +110,10 @@ class Almanac(object):
     def setTime(self, time_ts):
         """Reset the observer's time for the almanac. 
         
-        If the date differs from the previous date, then it will
-        recalculate the astronomical data.
-        
-        """
+        If the time differs from the previous time, then it will
+        recalculate the astronomical data."""
         _newdate_tt = time.localtime(time_ts)
-        if _newdate_tt[0:3] != self.date_tt[0:3] :
+        if _newdate_tt[0:6] != self.date_tt[0:6] :
 
             (y,m,d) = _newdate_tt[0:3]
             (moon_index, _moon_fullness) = Moon.moon_phase(y, m, d)
@@ -112,15 +122,16 @@ class Almanac(object):
             # Check to see whether the user has module 'ephem'. If so, use it.
             if sys.modules.has_key('ephem'):
                 
-                # Set up the Observer object for our location:
+                # Set up an observer object holding the location and time:
                 self.stn = ephem.Observer()
                 self.stn.long = math.radians(self.lon)
                 self.stn.lat  = math.radians(self.lat)
                 self.stn.elev = self.altitude
                 self.stn.date = self.time_j1899 = timestamp_to_j1899(time_ts)
+                self.sod_j1899 = timestamp_to_j1899(time.mktime((y,m,d,0,0,0,0,0,-1)))
                 
                 # Sun calculations:
-                _sun = ephem.Sun()
+                _sun = ephem.Sun()          #@UndefinedVariable
                 _sun.compute(self.stn)
                 self.sun = BodyWrapper(_sun)
                 
@@ -147,32 +158,52 @@ class Almanac(object):
                 self._sunset  = time.strftime(self.timeformat, sunset_tt)
 
                 self.moon_fullness = _moon_fullness
+                
+                self.hasExtras = False
+                
             self.date_tt = _newdate_tt
 
     def __getattr__(self, attr):
         if attr in ['next_autumnal_equinox', 'next_vernal_equinox', 
                      'next_winter_solstice', 'next_summer_solstice',
                      'next_full_moon', 'next_new_moon']:
-            j1899 = ephem.__dict__[attr](self.time_j1899)
+            # This is how you call a function on an instance when all you have is its name:
+            j1899 = ephem.__dict__[attr](self.time_j1899)   #@UndefinedVariable
             t = j1899_to_timestamp(j1899)
             return t
-        elif attr in ['sunrise', 'sunset']:
+        elif attr in ['sunrise', 'sunset', 'suntransit']:
             if self.hasExtras:
-                # Unfortunately, sunrise and sunset have to be calculated dynamically when
-                # using ephem because of its unfortunate design decision to change the
-                # state of _sun. Hence, _sun has to be built and torn down every time.
-                _sun = ephem.Sun()
+                _sun = ephem.Sun()             #@UndefinedVariable
                 _sun.compute(self.stn)
                 if attr == 'sunrise':
-                    time_ephem = self.stn.next_rising(_sun)  # This stmt changes the state of _sun
+                    # This stmt changes the state of _sun:
+                    time_ephem = self.stn.next_rising(_sun, self.sod_j1899)
+                elif attr == 'sunset':
+                    # This stmt changes the state of _sun:
+                    time_ephem = self.stn.next_setting(_sun, self.sod_j1899)
                 else:
-                    time_ephem = self.stn.next_setting(_sun) # This one too
-                time_tt = time.localtime(j1899_to_timestamp(time_ephem))
-                return time.strftime(self.timeformat, time_tt)
+                    # This stmt changes the state of _sun:
+                    time_ephem = self.stn.next_transit(_sun, self.sod_j1899)
+                return self.j1899_to_string(time_ephem)
             else:
                 return self._sunrise if attr=='sunrise' else self._sunset
+        elif self.hasExtras and attr in ['moonrise', 'moonset', 'moontransit']:
+            _moon = ephem.Moon()
+            _moon.compute(self.stn)
+            if attr == 'moonrise':
+                time_ephem = self.stn.next_rising(_moon, self.sod_j1899)
+            elif attr == 'moonset':
+                time_ephem = self.stn.next_setting(_moon, self.sod_j1899)
+            else:
+                time_ephem = self.stn.next_transit(_moon, self.sod_j1899)
+            return self.j1899_to_string(time_ephem)
+        else:
+            raise AttributeError, "Unknown attribute "+attr
             
-        
+    def j1899_to_string(self, j1899):
+        time_tt = time.localtime(j1899_to_timestamp(j1899))
+        return time.strftime(self.timeformat, time_tt)
+    
     @staticmethod
     def _adjustTime(y, m, d,  hrs_utc):
         """Converts from a UTC time to a local time.
@@ -199,8 +230,10 @@ class BodyWrapper(object):
         v = getattr(self.body, attr)
         if attr in ['az', 'alt', 'a_ra', 'a_dec', 'g_ra', 'ra', 'g_dec', 'dec', 
                      'elong', 'radius', 'hlong', 'hlat', 'sublat', 'sublong']:
+            # Return the results in degrees rather than radians
             return math.degrees(v)
         elif attr=='moon_phase':
+            # Return the result in percent, rather than radians
             return 100.0 * v
         else:
             return v
@@ -218,7 +251,7 @@ def j1899_to_timestamp(j1899):
 if __name__ == '__main__':
     
     import doctest
-    import weeutil
+    import weeutil   #@UnusedImport
             
     doctest.testmod()
 
