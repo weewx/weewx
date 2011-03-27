@@ -35,6 +35,7 @@ body {
     background-color: #fafaff;
 }
 
+/* This holds the statistics (daily high/low, etc.) on the left: */
 #stats_group {
     width: 30%;
     min-height: 500px;
@@ -48,6 +49,7 @@ body {
     background-color: #fafaff;
 }
 
+/* This holds the "About", "Almanac", and plots. */
 #content {
     width: 62%;
     min-height: 500px;
@@ -59,21 +61,43 @@ body {
     border-bottom: 1px solid #808080;
     border-left: 1px solid #a9a9a9;
     background-color: #fafaff;
-}
-
-.header {
     text-align: center;
 }
 
-.header table {
+#content .header {
+    text-align: center;
+    font-size: 14pt;
+    font-weight: bolder;
+    color: #3d6c87;
+    margin-bottom: 10px;
+}
+
+
+#content table {
     text-align: center;
     width: 100%;
 }
 
-.header td {
+#content .caption{
+    font-weight: bolder;
+}
+
+#content td {
     width: 50%;
     padding: 0;
     margin: 0;
+}
+
+#content .label {
+    text-align: right;
+}
+
+#content .data {
+    text-align: left;
+}
+
+#about, #almanac {
+    margin-bottom: 30px;
 }
 
 #navbar {

@@ -46,7 +46,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.initStats()
         self.initUnits()
         currentRec = self.getCurrentRec()
-        self.initAlmanac(self.stop_ts)
+        self.initAlmanac(self.stop_ts, currentRec)
         
         self.generateSummaryBy('SummaryByMonth', self.start_ts, self.stop_ts)
         self.generateSummaryBy('SummaryByYear',  self.start_ts, self.stop_ts)
@@ -282,22 +282,34 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                        stats]
         return searchList
             
-    def initAlmanac(self, celestial_ts):
+    def initAlmanac(self, celestial_ts, currentRec):
         """ Initialize an instance of weeutil.Almanac.Almanac for the station's
         lat and lon, and for a specific time.
         
         celestial_ts: The timestamp of the time for which the Almanac is to
-        be initialized."""
+        be initialized.
+        
+        currentRec: A ValueDict containing the current atmospheric conditions
+        (used to get more precise rising and setting times)"""
         
         self.moonphases = self.skin_dict['Almanac'].get('moon_phases')
 
         # almanac holds celestial information (sunrise, phase of moon). Its celestial
         # data changes slowly.
         altitude_vt = weewx.units.convert(self.station.altitude_vt, "meter")
+        
+        temperature_C = currentRec['outTemp'].degree_C.raw
+        pressure_mbar = currentRec['barometer'].mbar.raw
+        
+        if temperature_C is None: temperature_C = 15.0
+        if pressure_mbar is None: pressure_mbar = 1010.0
+        
         self.almanac = weeutil.Almanac.Almanac(celestial_ts, 
                                                self.station.latitude_f, 
                                                self.station.longitude_f,
                                                altitude_vt[0],
+                                               temperature_C,
+                                               pressure_mbar,
                                                self.moonphases)
 
     def _prepGen(self, subskin_dict):
