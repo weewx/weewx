@@ -12,6 +12,20 @@
 This module can optionally use PyEphem, which offers high quality
 astronomical calculations. See http://rhodesmill.org/pyephem. """
 
+import calendar
+import time
+import sys
+
+import weeutil.Moon
+import weewx.units
+
+# If the user has installed ephem, use it. Otherwise, fall back to the weeutil algorithms:
+try:
+    import ephem
+    import math
+except:
+    import weeutil.Sun
+
 #===============================================================================
 #                 Architectural notes
 #
@@ -20,16 +34,8 @@ astronomical calculations. See http://rhodesmill.org/pyephem. """
 # state of the body when calling next_rising() or next_setting(). This leads
 # to some complications in the class BodyWrapper 
 #===============================================================================
-    
-import calendar
-import time
-import sys
 
-import Moon
-
-import ephem
-
-class Ephem(object):
+class Almanac(object):
     """Almanac data.
     
     time_ts: A timestamp within the date for which sunrise/sunset is desired.
@@ -74,7 +80,7 @@ class Ephem(object):
     >>> t = time.mktime((2009, 3, 27, 12, 0, 0, 0, 0, -1))
     >>> print timestamp_to_string(t)
     2009-03-27 12:00:00 PDT (1238180400)
-    >>> almanac = Ephem(t, 46.0, -122.0)
+    >>> almanac = Almanac(t, 46.0, -122.0)
     
     Test backwards compatiblity with attributes 'sunrise' and 'sunset'
     >>> print "Sunrise, sunset:", almanac.sunrise, almanac.sunset
@@ -130,7 +136,8 @@ class Ephem(object):
     """
     
     def __init__(self, time_ts, lat, lon,
-                 altitude=0.0, temperature=15.0, pressure=1010.0):
+                 altitude=0.0, temperature=15.0, pressure=1010.0,
+                 formatter=weewx.units.Formatter()):
         self.lat = lat
         self.lon = lon
         self.altitude = altitude
@@ -151,7 +158,7 @@ class Ephem(object):
         if _newdate_tt[0:6] != self.date_tt[0:6] :
 
             (y,m,d) = _newdate_tt[0:3]
-            (self.moon_index, _moon_fullness) = Moon.moon_phase(y, m, d)
+            (self.moon_index, _moon_fullness) = weeutil.Moon.moon_phase(y, m, d)
             
             # Check to see whether the user has module 'ephem'. If so, use it.
             if sys.modules.has_key('ephem'):
@@ -189,8 +196,8 @@ class Ephem(object):
                 (sunrise_utc, sunset_utc) = Sun.sunRiseSet(y, m, d, self.lon, self.lat)
                 # The above function returns its results in UTC hours. Convert
                 # to a local time tuple
-                sunrise_tt = Ephem._adjustTime(y, m, d, sunrise_utc)
-                sunset_tt  = Ephem._adjustTime(y, m, d, sunset_utc)
+                sunrise_tt = Almanac._adjustTime(y, m, d, sunrise_utc)
+                sunset_tt  = Almanac._adjustTime(y, m, d, sunset_utc)
                 self._sunrise = time.strftime(self.timeformat, sunrise_tt)
                 self._sunset  = time.strftime(self.timeformat, sunset_tt)
 
