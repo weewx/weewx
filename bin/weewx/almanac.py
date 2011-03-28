@@ -156,7 +156,7 @@ class Almanac(object):
                 stn.elev = self.altitude
                 stn.temp = self.temperature
                 stn.pressure = self.pressure
-                stn.date = self.time_j1899 = timestamp_to_j1899(time_ts)
+                stn.date = self.time_djd = timestamp_to_djd(time_ts)
                 
                 # The various celestial bodies offered by the almanac:
                 self.sun     = BodyWrapper(ephem.Sun, stn, self.formatter)     #@UndefinedVariable
@@ -198,8 +198,8 @@ class Almanac(object):
                                        'next_winter_solstice', 'next_summer_solstice',
                                        'next_full_moon', 'next_new_moon']:
             # This is how you call a function on an instance when all you have is its name:
-            j1899 = ephem.__dict__[attr](self.time_j1899)   #@UndefinedVariable
-            t = j1899_to_timestamp(j1899)
+            djd = ephem.__dict__[attr](self.time_djd)   #@UndefinedVariable
+            t = djd_to_timestamp(djd)
             vt = (t, "unix_epoch", "group_time")
             return weewx.units.ValueHelper(vt, context="year", formatter=self.formatter)
         else:
@@ -248,9 +248,9 @@ class BodyWrapper(object):
         self.formatter    = formatter
         self.body = body_factory(observer)
         
-        # Calculate and store the start-of-day in J1899:
-        (y,m,d) = time.localtime(j1899_to_timestamp(observer.date))[0:3]
-        self.sod_j1899 = timestamp_to_j1899(time.mktime((y,m,d,0,0,0,0,0,-1)))
+        # Calculate and store the start-of-day in Dublin Julian Days:
+        (y,m,d) = time.localtime(djd_to_timestamp(observer.date))[0:3]
+        self.sod_djd = timestamp_to_djd(time.mktime((y,m,d,0,0,0,0,0,-1)))
 
     def __getattr__(self, attr):
         if attr in ['az', 'alt', 'a_ra', 'a_dec', 'g_ra', 'ra', 'g_dec', 'dec', 
@@ -265,8 +265,8 @@ class BodyWrapper(object):
             # These functions have the unfortunate side effect of changing the state of the body
             # being examined. So, create a temporary body and then throw it away
             temp_body = self.body_factory()
-            time_j1899 = getattr(self.observer, attr)(temp_body)
-            time_ts = j1899_to_timestamp(time_j1899)
+            time_djd = getattr(self.observer, attr)(temp_body)
+            time_ts = djd_to_timestamp(time_djd)
             vh = weewx.units.ValueHelper((time_ts, "unix_epoch", "group_time"), context="day", formatter=self.formatter)
             return vh
         elif attr in fn_map:
@@ -278,23 +278,24 @@ class BodyWrapper(object):
             # Look up the function to be called for this attribute (eg, call 'next_rising' for 'rise')
             fn = fn_map[attr]
             # Call the function, with a second argument giving the start-of-day
-            time_j1899 = getattr(self.observer, fn)(temp_body, self.sod_j1899)
-            time_ts = j1899_to_timestamp(time_j1899)
+            time_djd = getattr(self.observer, fn)(temp_body, self.sod_djd)
+            time_ts = djd_to_timestamp(time_djd)
             vh = weewx.units.ValueHelper((time_ts, "unix_epoch", "group_time"), context="day", formatter=self.formatter)
             return vh
         else:
             # Just return the result unchanged.
             return getattr(self.body, attr)
 
-def timestamp_to_j1899(time_ts):
-    """Convert from a unix time stamp to the number of days since 12/31/1899 12:00 UTC"""
+def timestamp_to_djd(time_ts):
+    """Convert from a unix time stamp to the number of days since 12/31/1899 12:00 UTC
+    (aka "Dublin Julian Days")"""
     # The number 25567.5 is the start of the Unix epoch (1/1/1970). Just add on the
     # number of days since then
     return 25567.5 + time_ts/86400.0
     
-def j1899_to_timestamp(j1899):
-    """Convert from number of days since 12/31/1899 12:00 UTC to unix time stamp"""
-    return (j1899-25567.5) * 86400.0
+def djd_to_timestamp(djd):
+    """Convert from number of days since 12/31/1899 12:00 UTC ("Dublin Julian Days") to unix time stamp"""
+    return (djd-25567.5) * 86400.0
     
 if __name__ == '__main__':
     
