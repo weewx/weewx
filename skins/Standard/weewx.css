@@ -24,6 +24,9 @@ body {
     border: 0;
 }
 
+/*
+ * This is the big header at the top of the page
+ */
 #masthead {
     margin: 1% 1% 0 1%;
     padding: 5px;
@@ -35,7 +38,16 @@ body {
     background-color: #fafaff;
 }
 
-/* This holds the statistics (daily high/low, etc.) on the left: */
+#masthead h1 {
+    color: #3d6c87;
+}
+#masthead h3 {
+    color: #5f8ea9;
+}
+
+/*
+ * This holds the statistics (daily high/low, etc.) on the left: 
+ */
 #stats_group {
     width: 30%;
     min-height: 500px;
@@ -49,7 +61,33 @@ body {
     background-color: #fafaff;
 }
 
-/* This holds the "About", "Almanac", and plots. */
+.stats table {
+    border: thin solid #000000;
+    width: 100%;
+}
+.stats td {
+    border: thin solid #000000;
+    padding: 2px;
+}
+
+.stats_header  {
+    background-color: #000000;
+    color: #a8b8c8;
+    font-size: 14pt;
+    font-weight: bolder;
+}
+
+.stats_label {
+    color: green;
+}
+
+.stats_data {
+    color: red;
+}
+
+/*
+ * This holds the "About", "Almanac", and plots on the right
+ */
 #content {
     width: 62%;
     min-height: 500px;
@@ -79,7 +117,7 @@ body {
 }
 
 #content .caption{
-    font-weight: bolder;
+    font-weight: bold;
 }
 
 #content td {
@@ -90,6 +128,7 @@ body {
 
 #content .label {
     text-align: right;
+    font-style: italic;
 }
 
 #content .data {
@@ -100,57 +139,20 @@ body {
     margin-bottom: 30px;
 }
 
-#navbar {
-    margin: 0 1% 1% 1%;
-    padding: 5px;
-    text-align: center;
-    clear: both;
-    border-top: 1px solid #dcdcdc;
-    border-right: 1px solid #a9a9a9;
-    border-bottom: 1px solid #808080;
-    border-left: 1px solid #a9a9a9;
-    background-color: #fafaff;
+.celestial_group {
+    margin-left: auto;
+    margin-right: auto;
 }
 
-
-/* Masthead styles */
-#masthead h1 {
-    color: #3d6c87;
-}
-#masthead h3 {
-    color: #5f8ea9;
-}
-
-/* stats_group styles */
-
-.stats table {
-    border: thin solid #000000;
-    width: 100%;
-}
-.stats td {
-    border: thin solid #000000;
-    padding: 2px;
-}
-
-.stats_header  {
-    background-color: #000000;
-    color: #a8b8c8;
-    font-size: 14pt;
-    font-weight: bolder;
-}
-
-.stats_label {
-    color: green;
-}
-
-.stats_data {
-    color: red;
-}
-
-/* content styles */
-#content h1 {
-    color: #3d6c87;
-    clear: left;
+.celestial_body {
+    width: 48%;
+#    border: thin solid #3d6c87;
+    border-top: 1px solid #3d6c87;
+    border-left:1px solid #3d6c87;
+    border-bottom: 2px solid #3d6c87;
+    border-right: 2px solid #3d6c87;
+    display:inline-block;
+    vertical-align: top;
 }
 
 #plots {
@@ -162,7 +164,7 @@ body {
     
 #plots img {
     margin: 3px;
-    border: thin solid black;
+    border: thin solid #3d6c87;
     padding: 3px;
 }
 
@@ -179,9 +181,22 @@ body {
     margin: 3px;
 }
 
+/*
+ * Navigation bar (week, month, etc.) at the bottom
+ */
+#navbar {
+    margin: 0 1% 1% 1%;
+    padding: 5px;
+    text-align: center;
+    clear: both;
+    border-top: 1px solid #dcdcdc;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #808080;
+    border-left: 1px solid #a9a9a9;
+    background-color: #fafaff;
+}
+
 /*************** Global Styles ***************/
-
-
 
 h2, h3, h4, h5, h6 {
     color: #3d6c87;
