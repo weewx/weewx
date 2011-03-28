@@ -25,26 +25,9 @@ try:
     import math
 except:
     import weeutil.Sun
-    timeformat = "%H:%M"
 
 class Almanac(object):
     """Almanac data.
-    
-    time_ts: A timestamp within the date for which sunrise/sunset is desired.
-    
-    lat, lon: Location for which sunrise/sunset is desired.
-    
-    altitude: Elevation in **meters**. [Optional. Default is 0 (sea level)]
-    
-    temperature: The temperature in **degrees Celsius**. [Optional. Default is 15.0]
-    
-    pressure: The atmospheric pressure in **mBars**. [Optional. Default is 1010]
-    
-    moon_phases: An array of 8 strings with descriptions of the moon 
-    phase. [optional. If not given, then weeutil.Moon.moon_phases will be used]
-    
-    timeformat: A strftime style format to be used to format attributes sunrise and sunset.
-    [optional. If not given, then "%H:%M" will be used.
     
     ATTRIBUTES.
     
@@ -55,7 +38,7 @@ class Almanac(object):
         moon_phase: A description of the moon phase(eg. "new moon", Waxing crescent", etc.)
         moon_fullness: Percent fullness of the moon (0=new moon, 100=full moon)
 
-    If the module 'ephem' is used, many other attributes are available.
+    If the module 'ephem' is used, them many other attributes are available.
     Here are a few examples:
     
         sun.rise: Time upper limb of sun will rise above the horizon today in unix epoch time
@@ -121,6 +104,24 @@ class Almanac(object):
                  altitude=0.0, temperature=15.0, pressure=1010.0,
                  moon_phases=weeutil.Moon.moon_phases,
                  formatter=weewx.units.Formatter()):
+        """Initialize an instance of Almanac
+
+        time_ts: A unix epoch timestamp for which the almanac will be current.
+        
+        lat, lon: Observer's location
+        
+        altitude: Observer's elevation in **meters**. [Optional. Default is 0 (sea level)]
+        
+        temperature: Observer's temperature in **degrees Celsius**. [Optional. Default is 15.0]
+        
+        pressure: Observer's atmospheric pressure in **mBars**. [Optional. Default is 1010]
+        
+        moon_phases: An array of 8 strings with descriptions of the moon 
+        phase. [optional. If not given, then weeutil.Moon.moon_phases will be used]
+        
+        formatter: An instance of weewx.units.Formatter() with the formatting information
+        to be used.
+        """
         self.lat         = lat
         self.lon         = lon
         self.altitude    = altitude
@@ -175,14 +176,14 @@ class Almanac(object):
                 # to a local time tuple
                 sunrise_tt = Almanac._adjustTime(y, m, d, sunrise_utc)
                 sunset_tt  = Almanac._adjustTime(y, m, d, sunset_utc)
-                self._sunrise = time.strftime(timeformat, sunrise_tt)
-                self._sunset  = time.strftime(timeformat, sunset_tt)
+                self._sunrise = time.strftime("%H:%M", sunrise_tt)
+                self._sunset  = time.strftime("%H:%M", sunset_tt)
 
                 self.hasExtras = False
                 
             self.date_tt = _newdate_tt
     
-    # Short cuts, used for backwards compatibility
+    # Shortcuts, used for backwards compatibility
     @property
     def sunrise(self):
         return self.sun.rise if self.hasExtras else self._sunrise
@@ -194,14 +195,14 @@ class Almanac(object):
         return int(self.moon.moon_phase+0.5) if self.hasExtras else self._moon_fullness
 
     def __getattr__(self, attr):
-        if self.hasExtras and attr in ['next_autumnal_equinox', 'next_vernal_equinox', 
+        if self.hasExtras and attr in ['next_equinox', 'next_solstice', 
+                                       'next_autumnal_equinox', 'next_vernal_equinox', 
                                        'next_winter_solstice', 'next_summer_solstice',
                                        'next_full_moon', 'next_new_moon']:
             # This is how you call a function on an instance when all you have is its name:
             djd = ephem.__dict__[attr](self.time_djd)   #@UndefinedVariable
-            t = djd_to_timestamp(djd)
-            vt = (t, "unix_epoch", "group_time")
-            return weewx.units.ValueHelper(vt, context="year", formatter=self.formatter)
+            return weewx.units.ValueHelper((djd, "dublin_jd", "group_time"), 
+                                           context="year", formatter=self.formatter)
         else:
             raise AttributeError, "Unknown attribute "+attr
             
@@ -266,9 +267,7 @@ class BodyWrapper(object):
             # being examined. So, create a temporary body and then throw it away
             temp_body = self.body_factory()
             time_djd = getattr(self.observer, attr)(temp_body)
-            time_ts = djd_to_timestamp(time_djd)
-            vh = weewx.units.ValueHelper((time_ts, "unix_epoch", "group_time"), context="day", formatter=self.formatter)
-            return vh
+            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="day", formatter=self.formatter)
         elif attr in fn_map:
             # These attribute names have to be mapped to a different function name. Like the
             # attributes above, they also have the side effect of changing the state of the body.
@@ -279,9 +278,7 @@ class BodyWrapper(object):
             fn = fn_map[attr]
             # Call the function, with a second argument giving the start-of-day
             time_djd = getattr(self.observer, fn)(temp_body, self.sod_djd)
-            time_ts = djd_to_timestamp(time_djd)
-            vh = weewx.units.ValueHelper((time_ts, "unix_epoch", "group_time"), context="day", formatter=self.formatter)
-            return vh
+            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="day", formatter=self.formatter)
         else:
             # Just return the result unchanged.
             return getattr(self.body, attr)

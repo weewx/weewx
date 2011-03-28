@@ -17,8 +17,8 @@ import time
 import Cheetah.Template
 import Cheetah.Filters
 
-import weeutil.Almanac
 import weeutil.weeutil
+import weewx.almanac
 import weewx.archive
 import weewx.reportengine
 import weewx.station
@@ -304,13 +304,14 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         if temperature_C is None: temperature_C = 15.0
         if pressure_mbar is None: pressure_mbar = 1010.0
         
-        self.almanac = weeutil.Almanac.Almanac(celestial_ts, 
-                                               self.station.latitude_f, 
-                                               self.station.longitude_f,
-                                               altitude_vt[0],
-                                               temperature_C,
-                                               pressure_mbar,
-                                               self.moonphases)
+        self.almanac = weewx.almanac.Almanac(celestial_ts, 
+                                             self.station.latitude_f, 
+                                             self.station.longitude_f,
+                                             altitude_vt[0],
+                                             temperature_C,
+                                             pressure_mbar,
+                                             self.moonphases,
+                                             self.formatter)
 
     def _prepGen(self, subskin_dict):
         
