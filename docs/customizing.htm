@@ -781,6 +781,17 @@ December: Min, max temperatures: N/A N/A
 	<p>See the NOAA template files <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span> 
 	and <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> for examples using 
 	iteration, as well as explicit formatting.</p>
+	<h3>Almanac</h3>
+	<p>If module <a href="http://rhodesmill.org/pyephem">pyephem</a> has been 
+	installed, then <span class="code">weewx</span> can generate extensive 
+	almanac information. Here is a sampling:</p>
+	<pre>Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set</pre>
+	<pre>Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set</pre>
+	<pre>Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set</pre>
+	<pre>Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt</pre>
+	<pre>Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon</pre>
+	<pre>Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice</pre>
+	<pre>&nbsp;</pre>
 	<h2>Writing a custom generator</h2>
 	<p>To do more sophisticated customization it may be necessary to extend an existing 
 	generator, or write your own. </p>
