@@ -98,7 +98,15 @@ class My_install_lib(install_lib):
             user_backupdir = os.path.join(bin_backupdir, 'user')
             if os.path.exists(user_backupdir):
                 user_dir = os.path.join(self.install_dir, 'user')
-                distutils.dir_util.copy_tree(user_backupdir, user_dir)                
+                distutils.dir_util.copy_tree(user_backupdir, user_dir)
+
+        # Remove weeutil/Almanac, which is no longer in the distribution:
+        try:
+            os.remove(os.path.join(self.install_dir, 'weeutil/Almanac.py'))
+            os.remove(os.path.join(self.install_dir, 'weeutil/Almanac.pyc'))
+        except:
+            pass
+       
             
 #===============================================================================
 #                         install_data
