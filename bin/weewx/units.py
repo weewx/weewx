@@ -168,7 +168,9 @@ conversionDict = {
                             'mm'               : lambda x : x * 10.0},
       'mm'               : {'inch'             : lambda x : x * .0393700787,
                             'cm'               : lambda x : x * 0.10},
-      'meter'            : {'foot'             : lambda x : x * 3.2808399 } }
+      'meter'            : {'foot'             : lambda x : x * 3.2808399 },
+      'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * 86400.0},
+      'unix_epoch'       : {'dublin_jd'        : lambda x : x/86400.0 + 25567.5}}
 
 
 # Default unit formatting to be used in the absence of a skin configuration file
@@ -237,12 +239,14 @@ default_unit_label_dict = { "centibar"          : " cb",
 
 # Default strftime formatting to be used in the absence of a skin
 # configuration file:
-default_time_format_dict = {"day"      : "%H:%M",
-                            "week"     : "%H:%M on %A",
-                            "month"    : "%d-%b-%Y %H:%M",
-                            "year"     : "%d-%b-%Y %H:%M",
-                            "rainyear" : "%d-%b-%Y %H:%M",
-                            "current"  : "%d-%b-%Y %H:%M"}
+default_time_format_dict = {"day"        : "%H:%M",
+                            "week"       : "%H:%M on %A",
+                            "month"      : "%d-%b-%Y %H:%M",
+                            "year"       : "%d-%b-%Y %H:%M",
+                            "rainyear"   : "%d-%b-%Y %H:%M",
+                            "current"    : "%d-%b-%Y %H:%M",
+                            "ephem_day"  : "%H:%M",
+                            "ephem_year" : "%d-%b-%Y %H:%M"}
 
 
 #===============================================================================
@@ -299,6 +303,9 @@ class Formatter(object):
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
         self.time_format_dict = time_format_dict
+        # Add new keys for backwards compatibility on old skin dictionaries:
+        self.time_format_dict.setdefault('ephem_day', "%H:%M")
+        self.time_format_dict.setdefault('ephem_year', "%d-%b-%Y %H:%M")
         
     @staticmethod
     def fromSkinDict(skin_dict):
@@ -336,7 +343,7 @@ class Formatter(object):
                 if useThisFormat:
                     val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
                 else:
-                    val_str = time.strftime(self.time_format_dict[context], time.localtime(val_t[0]))
+                    val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), time.localtime(val_t[0]))
             except (KeyError, TypeError):
                 # If all else fails, use this weeutil utility:
                 val_str = weeutil.weeutil.timestamp_to_string(val_t[0])

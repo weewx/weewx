@@ -1,7 +1,10 @@
 CHANGE HISTORY
 --------------------------------
 
-1.10.0a6 02/26/11
+1.10.0 03/29/11
+
+Added extensive almanac information if the optional package 'pyephem' has been
+installed
 
 Added a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
 

@@ -99,7 +99,7 @@ Version 1.10</h1>
 	<h1><a name="Prerequisites">Prerequisites</a></h1>
 	<h2>Python</h2>
 	<p>Python V2.5 or V2.6 is required. The newer V3.0 distribution will not work.</p>
-	<h2>Required packages</h2>
+	<h2>External packages</h2>
 	<p>The following external packages are required to use <span class="code">weewx</span>.</p>
 	<ol>
 		<li><a href="http://www.sqlite.org/">sqlite3</a> (Version 3.5 or greater) 
@@ -118,6 +118,13 @@ Version 1.10</h1>
 		(Version 1.1.6 or greater) Also known as PIL, this is included in many Python 
 		distributions.</li>
 	</ol>
+	<p>In addition, there is one optional package:</p>
+	<ul>
+		<li><a href="http://rhodesmill.org/pyephem">pyephem</a> (Version V3.7.3 
+		or greater). For extended almanac information. If not installed, 
+		fallback information will be used. As of the time of this writing, this 
+		package could only be installed using <span class="code">easy_install</span>.</li>
+	</ul>
 	<p>There are two general strategies for installing these prerequisites:</p>
 	<ol>
 		<li>Use operating system tools, such as <span class="code">apt-get</span> 
@@ -127,7 +134,11 @@ Version 1.10</h1>
 		<a href="http://pypi.python.org/pypi/setuptools">easy_install</a></span>.</li>
 	</ol>
 	<p>Option #1 is easier, but if your Linux distribution does not come with such 
-	tools, you may have to use <span class="code">easy_install</span>. Brief instructions 
+	tools, you may have to use <span class="code">easy_install</span>. If you 
+	choose to install <a href="http://rhodesmill.org/pyephem">pyephem</a>, then 
+	it can only be installed using <span class="code">easy_install</span> (<a href="#Installing_pyephem">see 
+	instructions below</a>).</p>
+	<p>Brief instructions 
 	for both approaches are given below.</p>
 	<h3>Installation on Debian distributions (including Ubuntu) using
 	<span class="code">apt-get</span></h3>
@@ -214,6 +225,9 @@ Version 1.10</h1>
 	<p>My version of Python came with V1.1.6, which works great, but if you need 
 	to install</p>
 	<pre>easy_install pil</pre>
+	<p><a name="Installing_pyephem"></a>If you choose to install the optional 
+	package pyephem:</p>
+	<pre>easy_install pyephem</pre>
 	<h2>System requirements</h2>
 	<p>I run <span class="code">weewx</span> on a 500MHz system with an AMD Geode 
 	processor and 512 MB of memory.&nbsp; Configured this way, it consumes about 

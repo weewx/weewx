@@ -781,6 +781,45 @@ December: Min, max temperatures: N/A N/A
 	<p>See the NOAA template files <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span> 
 	and <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> for examples using 
 	iteration, as well as explicit formatting.</p>
+	<h3>Almanac</h3>
+	<p>If module <a href="http://rhodesmill.org/pyephem">pyephem</a> has been 
+	installed, then <span class="code">weewx</span> can generate extensive 
+	almanac information for the Sun, Moon, Venus, Mars, and Jupiter, including 
+	their rise, transit and set times, as well as their azimuth and altitude. 
+	Other information is also available. </p>
+	<p>Here is a small sampling:</p>
+	<pre>&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Almanac data&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;Current time is $current.dateTime&lt;p&gt;
+#if $almanac.hasExtras
+&lt;p&gt;Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set&lt;/p&gt;
+&lt;p&gt;Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set&lt;/p&gt;
+&lt;p&gt;Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set&lt;/p&gt;
+&lt;p&gt;Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt&lt;/p&gt;
+&lt;p&gt;Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon&lt;/p&gt;
+&lt;p&gt;Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice&lt;/p&gt;
+#else
+&lt;p&gt;Sunrise, sunset: $almanac.sunrise $almanac.sunset&lt;/p&gt;
+#end if
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+	<p>If your installation has pyephem installed this would result in:</p>
+	<pre>Current time is 29-Mar-2011 09:20
+Sunrise, transit, sunset: 06:51 13:11 19:30
+Moonrise, transit, moonset: 04:33 09:44 15:04
+Mars rise, transit, set: 06:35 12:30 18:26
+Azimuth, altitude of mars: 124.354959275 26.4808431952
+Next new, full moon: 03-Apr-2011 07:32 17-Apr-2011 19:43
+Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29</pre>
+	<p>Otherwise, a fallback position is used, resulting in</p>
+	<pre>Current time is 29-Mar-2011 09:20
+Sunrise, sunset: 06:51 19:30
+</pre>
+	<p>As shown in the example, you can test whether this extended almanac information is available with 
+	the value <span class="code">$almanac.hasExtras</span>.</p>
 	<h2>Writing a custom generator</h2>
 	<p>To do more sophisticated customization it may be necessary to extend an existing 
 	generator, or write your own. </p>
@@ -1039,6 +1078,13 @@ month = %d-%b-%Y %H:%M</pre>
 	<p>would specify that week data should use a format such as &quot;<span class="code">15:20 
 	on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
 	15:20</span>&quot;</p>
+	<p>It also allows the formatting to be set for almanac times:</p>
+	<pre>ephem_day  = %H:%M
+ephem_year = %d-%b-%Y %H:%M</pre>
+	<p>The first of these, <span class="code">ephem_day</span>, is used for 
+	almanac times within the day, such as sunrise or sunset. The second,
+	<span class="code">ephem_year</span>, is used for almanac times within the 
+	year, such as the next equinox or full moon.</p>
 	<h3 class="config_section">[[DegreeDays]] </h3>
 	<p class="config_important">heating_base<br />
 	cooling_base</p>

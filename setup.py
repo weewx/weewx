@@ -175,6 +175,8 @@ class My_install_data(install_data):
         new_config = configobj.ConfigObj(f)
         new_config.indent_type = '    '
         new_version_number = VERSION.split('.')
+        if len(new_version_number[1]) < 2: 
+            new_version_number[1] = '0'+new_version_number[1]
         
         # Sometimes I forget to turn the debug flag off:
         new_config['debug'] = 0
@@ -192,10 +194,14 @@ class My_install_data(install_data):
             # assume a very old version:
             if not old_version: old_version = '1.0.0'
             old_version_number = old_version.split('.')
+            # Take care of the collation problem when comparing things like 
+            # version '1.9' to '1.10' by prepending a '0' to the former:
+            if len(old_version_number[1]) < 2: 
+                old_version_number[1] = '0'+old_version_number[1]
 
             # If the user has a version >= 1.7, then merge in the old
             # config file.
-            if old_version_number[0:2] >= ['1','7']:
+            if old_version_number[0:2] >= ['1','07']:
                 # Any user changes in old_config will overwrite values in new_config
                 # with this merge
                 new_config.merge(old_config)
