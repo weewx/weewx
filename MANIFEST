@@ -19,7 +19,6 @@ bin/user/schemas.py
 bin/weeplot/__init__.py
 bin/weeplot/genplot.py
 bin/weeplot/utilities.py
-bin/weeutil/Almanac.py
 bin/weeutil/Moon.py
 bin/weeutil/Sun.py
 bin/weeutil/__init__.py
@@ -29,6 +28,7 @@ bin/weeutil/weeutil.py
 bin/weewx/VantagePro.py
 bin/weewx/__init__.py
 bin/weewx/accum.py
+bin/weewx/almanac.py
 bin/weewx/archive.py
 bin/weewx/crc16.py
 bin/weewx/filegenerator.py

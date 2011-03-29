@@ -370,10 +370,6 @@
             <div class="celestial_body">
               <table>
                 <caption class="caption">Moon</caption>  
-                <tr>
-                  <td class="label">Phase:</td>
-                  <td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
-                </tr>
                 #if $almanac.hasExtras
                 <tr>
                   <td class="label">Rise:</td>
@@ -404,6 +400,10 @@
                   <td class="data">$almanac.next_new_moon
                 </tr>
                 #end if
+                <tr>
+                  <td class="label">Phase:</td>
+                  <td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
+                </tr>
               </table>
             </div> <!-- end class "celestial_body" -->
           </div> <!-- end class "celestial_group" -->
