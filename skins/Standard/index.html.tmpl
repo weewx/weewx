@@ -348,15 +348,13 @@
                 </tr>
                 #end if
                 #if $almanac.hasExtras
-                #set $sun_az = "%.1f&deg;" % $almanac.sun.az
-                #set $sun_alt= "%.1f&deg;" % $almanac.sun.alt
                 <tr>
                   <td class="label">Azimuth:</td>
-                  <td class="data">$sun_az</td>
+                  <td class="data">$("%.1f&deg;" % $almanac.sun.az)</td>
                 </tr>
                 <tr>
                   <td class="label">Altitude:</td>
-                  <td class="data">$sun_alt</td>
+                  <td class="data">$("%.1f&deg;" % $almanac.sun.alt)</td>
                 </tr>
                 <tr>
                   <td class="label">Equinox:</td>
@@ -374,7 +372,7 @@
                 <caption class="caption">Moon</caption>  
                 <tr>
                   <td class="label">Phase:</td>
-                  <td class="data">$almanac.moon_phase ($almanac.moon_fullness% full)</td>
+                  <td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
                 </tr>
                 #if $almanac.hasExtras
                 <tr>
@@ -389,15 +387,13 @@
                   <td class="label">Set:</td>
                   <td class="data">$almanac.moon.set
                 </tr>
-                #set $moon_az = "%.1f&deg;" % $almanac.moon.az
-                #set $moon_alt= "%.1f&deg;" % $almanac.moon.alt
                 <tr>
                   <td class="label">Azimuth:</td>
-                  <td class="data">$moon_az</td>
+                  <td class="data">$("%.1f&deg;" % $almanac.moon.az)</td>
                 </tr>
                 <tr>
                   <td class="label">Altitude:</td>
-                  <td class="data">$moon_alt</td>
+                  <td class="data">$("%.1f&deg;" % $almanac.moon.alt)</td>
                 </tr>
                 <tr>
                   <td class="label">Full moon:</td>

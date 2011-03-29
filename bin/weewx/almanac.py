@@ -202,7 +202,7 @@ class Almanac(object):
             # This is how you call a function on an instance when all you have is its name:
             djd = ephem.__dict__[attr](self.time_djd)   #@UndefinedVariable
             return weewx.units.ValueHelper((djd, "dublin_jd", "group_time"), 
-                                           context="year", formatter=self.formatter)
+                                           context="ephem_year", formatter=self.formatter)
         else:
             raise AttributeError, "Unknown attribute "+attr
             
@@ -267,7 +267,7 @@ class BodyWrapper(object):
             # being examined. So, create a temporary body and then throw it away
             temp_body = self.body_factory()
             time_djd = getattr(self.observer, attr)(temp_body)
-            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="day", formatter=self.formatter)
+            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
         elif attr in fn_map:
             # These attribute names have to be mapped to a different function name. Like the
             # attributes above, they also have the side effect of changing the state of the body.
@@ -278,7 +278,7 @@ class BodyWrapper(object):
             fn = fn_map[attr]
             # Call the function, with a second argument giving the start-of-day
             time_djd = getattr(self.observer, fn)(temp_body, self.sod_djd)
-            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="day", formatter=self.formatter)
+            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
         else:
             # Just return the result unchanged.
             return getattr(self.body, attr)

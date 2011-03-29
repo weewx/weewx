@@ -239,12 +239,14 @@ default_unit_label_dict = { "centibar"          : " cb",
 
 # Default strftime formatting to be used in the absence of a skin
 # configuration file:
-default_time_format_dict = {"day"      : "%H:%M",
-                            "week"     : "%H:%M on %A",
-                            "month"    : "%d-%b-%Y %H:%M",
-                            "year"     : "%d-%b-%Y %H:%M",
-                            "rainyear" : "%d-%b-%Y %H:%M",
-                            "current"  : "%d-%b-%Y %H:%M"}
+default_time_format_dict = {"day"        : "%H:%M",
+                            "week"       : "%H:%M on %A",
+                            "month"      : "%d-%b-%Y %H:%M",
+                            "year"       : "%d-%b-%Y %H:%M",
+                            "rainyear"   : "%d-%b-%Y %H:%M",
+                            "current"    : "%d-%b-%Y %H:%M",
+                            "ephem_day"  : "%H:%M",
+                            "ephem_year" : "%d-%b-%Y %H:%M"}
 
 
 #===============================================================================
@@ -301,6 +303,9 @@ class Formatter(object):
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
         self.time_format_dict = time_format_dict
+        # Add new keys for backwards compatibility on old skin dictionaries:
+        self.time_format_dict.setdefault('ephem_day', "%H:%M")
+        self.time_format_dict.setdefault('ephem_year', "%d-%b-%Y %H:%M")
         
     @staticmethod
     def fromSkinDict(skin_dict):

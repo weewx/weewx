@@ -791,7 +791,8 @@ December: Min, max temperatures: N/A N/A
 	<pre>Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt</pre>
 	<pre>Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon</pre>
 	<pre>Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice</pre>
-	<pre>&nbsp;</pre>
+	<p>The included almanac includes information for the Sun, Moon, Venus, Mars, 
+	and Jupiter. </p>
 	<h2>Writing a custom generator</h2>
 	<p>To do more sophisticated customization it may be necessary to extend an existing 
 	generator, or write your own. </p>
@@ -1050,6 +1051,13 @@ month = %d-%b-%Y %H:%M</pre>
 	<p>would specify that week data should use a format such as &quot;<span class="code">15:20 
 	on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
 	15:20</span>&quot;</p>
+	<p>It also allows the formatting to be set for almanac times:</p>
+	<pre>ephem_day  = %H:%M
+ephem_year = %d-%b-%Y %H:%M</pre>
+	<p>The first of these, <span class="code">ephem_day</span>, is used for 
+	almanac times within the day, such as sunrise or sunset. The second,
+	<span class="code">ephem_year</span>, is used for almanac times within the 
+	year, such as the next equinox or full moon.</p>
 	<h3 class="config_section">[[DegreeDays]] </h3>
 	<p class="config_important">heating_base<br />
 	cooling_base</p>
