@@ -321,10 +321,10 @@
             Today's Almanac
           </div>
           <div class="celestial_group">
+            #if $almanac.hasExtras
             <div class="celestial_body">
               <table>
                 <caption class="caption">Sun</caption>
-                #if $almanac.hasExtras
                 <tr>
                   <td class="label">Sunrise:</td>
                   <td class="data">$almanac.sun.rise</td>
@@ -337,17 +337,6 @@
                   <td class="label">Sunset:</td>
                   <td class="data">$almanac.sun.set</td>
                 </tr>
-                #else
-                <tr>
-                  <td class="label">Sunrise:</td>
-                  <td class="data">$almanac.sunrise</td>
-                </tr>
-                <tr>
-                  <td class="label">Sunset:</td>
-                  <td class="data">$almanac.sunset</td>
-                </tr>
-                #end if
-                #if $almanac.hasExtras
                 <tr>
                   <td class="label">Azimuth:</td>
                   <td class="data">$("%.1f&deg;" % $almanac.sun.az)</td>
@@ -364,13 +353,11 @@
                   <td class="label">Solstice:</td>
                   <td class="data">$almanac.next_solstice
                 </tr>
-                #end if
               </table>
             </div> <!-- end class "celestial_body" -->
             <div class="celestial_body">
               <table>
                 <caption class="caption">Moon</caption>  
-                #if $almanac.hasExtras
                 <tr>
                   <td class="label">Rise:</td>
                   <td class="data">$almanac.moon.rise
@@ -399,13 +386,28 @@
                   <td class="label">New moon:</td>
                   <td class="data">$almanac.next_new_moon
                 </tr>
-                #end if
                 <tr>
                   <td class="label">Phase:</td>
                   <td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
                 </tr>
               </table>
             </div> <!-- end class "celestial_body" -->
+            #else
+            <table>
+              <tr>
+                <td class="label">Sunrise:</td>
+                <td class="data">$almanac.sunrise</td>
+              </tr>
+              <tr>
+                <td class="label">Sunset:</td>
+                <td class="data">$almanac.sunset</td>
+              </tr>
+              <tr>
+                <td class="label">Phase:</td>
+                <td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
+              </tr>
+            </table>
+            #end if
           </div> <!-- end class "celestial_group" -->
         </div> <!-- end id "almanac" -->
         

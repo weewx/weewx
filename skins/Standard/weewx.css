@@ -128,12 +128,6 @@ body {
     margin-bottom: 30px;
 }
 
-#almanac {
-    width:80%;
-    margin-left: auto;
-    margin-right: auto;
-}
-
 .celestial_group {
 }
 
@@ -323,20 +317,17 @@ body {
 }
 
 #almanac {
-#    border: thin solid #3d6c87;
-    width:60%;
+    width:90%;
     margin-left: auto;
     margin-right: auto;
 }
+
+
 .celestial_group {
 }
 
 .celestial_body {
     width: 48%;
-#    border-top: 1px solid #3d6c87;
-#    border-left:1px solid #3d6c87;
-#    border-bottom: 2px solid #3d6c87;
-#    border-right: 2px solid #3d6c87;
     display:inline-block;
     vertical-align: top;
 }
