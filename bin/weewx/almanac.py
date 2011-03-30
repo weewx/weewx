@@ -101,7 +101,7 @@ class Almanac(object):
     """
     
     def __init__(self, time_ts, lat, lon,
-                 altitude=0.0, temperature=15.0, pressure=1010.0,
+                 altitude=None, temperature=None, pressure=None,
                  moon_phases=weeutil.Moon.moon_phases,
                  formatter=weewx.units.Formatter()):
         """Initialize an instance of Almanac
@@ -124,9 +124,9 @@ class Almanac(object):
         """
         self.lat         = lat
         self.lon         = lon
-        self.altitude    = altitude
-        self.temperature = temperature
-        self.pressure    = pressure
+        self.altitude    = altitude if altitude is not None else 0.0
+        self.temperature = temperature if temperature is not None else 15.0
+        self.pressure    = pressure if pressure is not None else 1010.0
         self.moon_phases = moon_phases
         self.formatter   = formatter
         
