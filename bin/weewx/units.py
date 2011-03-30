@@ -414,11 +414,20 @@ class Converter(object):
         ... except KeyError:
         ...     print "Exception thrown"
         Exception thrown
+        
+        Try a bad group type:
+        >>> p4 = (1016.5, 'mbar', 'group_foo')
+        >>> try:
+        ...     print c.convert(p4)
+        ... except KeyError:
+        ...     print "Exception thrown"
+        Exception thrown
         """
         if val_t[1] is None and val_t[2] is None:
             return val_t
-        # Determine which units (eg, "mbar") this group should be in:
-        new_unit_type = self.group_unit_dict[val_t[2]]
+        # Determine which units (eg, "mbar") this group should be in.
+        # If the user has not specified anything, then fall back to US Units.
+        new_unit_type = self.group_unit_dict.get(val_t[2], USUnits[val_t[2]])
         # Now convert to this new unit type: 
         new_val_t = convert(val_t, new_unit_type)
         return new_val_t
