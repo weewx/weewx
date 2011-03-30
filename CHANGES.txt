@@ -1,9 +1,22 @@
 CHANGE HISTORY
 --------------------------------
 
+1.10.1 03/30/11
+
+Substitutes US Units  if a user does not specify  anything (instead of exception
+KeyError).
+
+Almanac uses default temperature and pressure if they are 'None'.
+
+Prettied  up web  page  almanac data  in the  case  where pyephem  has not  been
+installed.
+
+Fixed up malformed CSS script weewx.css.
+
+
 1.10.0 03/29/11
 
-Added extensive almanac information if the optional package 'pyephem' has been
+Added extensive almanac  information if the optional package  'pyephem' has been
 installed
 
 Added a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
