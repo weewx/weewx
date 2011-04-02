@@ -346,6 +346,15 @@
                   <td class="data">$("%.1f&deg;" % $almanac.sun.alt)</td>
                 </tr>
                 <tr>
+                  <td class="label">Right ascension:</td>
+                  <td class="data">$("%.1f&deg;" % $almanac.sun.ra)</td>
+                </tr>
+                <tr>
+                  <td class="label">Declination:</td>
+                  <td class="data">$("%.1f&deg;" % $almanac.sun.dec)</td>
+                </tr>
+                #if $almanac.next_equinox.raw < $almanac.next_solstice.raw
+                <tr>
                   <td class="label">Equinox:</td>
                   <td class="data">$almanac.next_equinox
                 </tr>
@@ -353,6 +362,16 @@
                   <td class="label">Solstice:</td>
                   <td class="data">$almanac.next_solstice
                 </tr>
+                #else
+                <tr>
+                  <td class="label">Solstice:</td>
+                  <td class="data">$almanac.next_solstice
+                </tr>
+                <tr>
+                  <td class="label">Equinox:</td>
+                  <td class="data">$almanac.next_equinox
+                </tr>
+                #end if
               </table>
             </div> <!-- end class "celestial_body" -->
             <div class="celestial_body">
@@ -379,6 +398,15 @@
                   <td class="data">$("%.1f&deg;" % $almanac.moon.alt)</td>
                 </tr>
                 <tr>
+                  <td class="label">Right ascension:</td>
+                  <td class="data">$("%.1f&deg;" % $almanac.moon.ra)</td>
+                </tr>
+                <tr>
+                  <td class="label">Declination:</td>
+                  <td class="data">$("%.1f&deg;" % $almanac.moon.dec)</td>
+                </tr>
+                #if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
+                <tr>
                   <td class="label">Full moon:</td>
                   <td class="data">$almanac.next_full_moon
                 </tr>
@@ -386,6 +414,16 @@
                   <td class="label">New moon:</td>
                   <td class="data">$almanac.next_new_moon
                 </tr>
+                #else
+                <tr>
+                  <td class="label">New moon:</td>
+                  <td class="data">$almanac.next_new_moon
+                </tr>
+                <tr>
+                  <td class="label">Full moon:</td>
+                  <td class="data">$almanac.next_full_moon
+                </tr>
+                #end if
                 <tr>
                   <td class="label">Phase:</td>
                   <td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
