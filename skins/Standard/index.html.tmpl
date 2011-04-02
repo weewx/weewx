@@ -322,6 +322,7 @@
           </div>
           <div class="celestial_group">
             #if $almanac.hasExtras
+            ## Extended almanac information is available. Do the full set of tables.
             <div class="celestial_body">
               <table>
                 <caption class="caption">Sun</caption>
@@ -354,6 +355,7 @@
                   <td class="data">$("%.1f&deg;" % $almanac.sun.dec)</td>
                 </tr>
                 #if $almanac.next_equinox.raw < $almanac.next_solstice.raw
+                ## The equinox is before the solstice. Display them in order.
                 <tr>
                   <td class="label">Equinox:</td>
                   <td class="data">$almanac.next_equinox
@@ -363,6 +365,7 @@
                   <td class="data">$almanac.next_solstice
                 </tr>
                 #else
+                ## The solstice is before the equinox. Display them in order.
                 <tr>
                   <td class="label">Solstice:</td>
                   <td class="data">$almanac.next_solstice
@@ -431,6 +434,7 @@
               </table>
             </div> <!-- end class "celestial_body" -->
             #else
+            ## No extended almanac information available. Fall back to a simple table.
             <table>
               <tr>
                 <td class="label">Sunrise:</td>
