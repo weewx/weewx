@@ -221,6 +221,7 @@ class VantagePro (object) :
                             # be unused records, which are filled with 0xff:
                             if _page[1+52*_index:53+52*_index] == 52*chr(0xff) :
                                 # This record has never been used. We're done.
+                                syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" % (unused_ipage, _index))
                                 return
                             # Unpack the raw archive packet:
                             _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
@@ -239,6 +240,8 @@ class VantagePro (object) :
                             # decline up to the DST delta.
                             if _record['dateTime'] is None or _record['dateTime'] + self.dst_delta <= _last_good_ts :
                                 # The time stamp is declining. We're done.
+                                syslog.syslog(syslog.LOG_DEBUG, "VantagePro: time stamp declining. Record timestamp " +\
+                                              str(_record['dateTime']) + "; last good timestamp " + str(_last_good_ts))
                                 return
                             # Augment the record with the data from the accumulators:
                             self.archiveAccumulators(_record)
