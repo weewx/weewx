@@ -110,6 +110,10 @@ class MyAlarm(StdService):
         
         # Get the time and convert to a string:
         t_str = timestamp_to_string(rec['dateTime'])
+
+        # Log it in the system log:
+        syslog.syslog(syslog.LOG_INFO, "alarm: Alarm expression \"%s\" evaluated True at %s" % (self.expression, t_str))
+
         # Form the message text:
         msg_text = "Alarm expression \"%s\" evaluated True at %s\nRecord:\n%s" % (self.expression, t_str, str(rec))
         # Convert to MIME:
@@ -129,17 +133,20 @@ class MyAlarm(StdService):
             s.ehlo()
             s.starttls()
             s.ehlo()
+            syslog.syslog(syslog.LOG_DEBUG, "  **** using encrypted transport")
         except smtplib.SMTPException:
-            pass
+            syslog.syslog(syslog.LOG_DEBUG, "  **** using unencrypted transport")
+
         # If a username has been given, assume that login is required for this host:
         if self.smtp_user:
             s.login(self.smtp_user, self.smtp_password)
+            syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
+            
         # Send the email:
         s.sendmail(msg['From'], [self.TO],  msg.as_string())
         # Log out of the server:
         s.quit()
-        # Log it in the system log:
-        syslog.syslog(syslog.LOG_INFO, "alarm: Alarm sounded for expression: \"%s\"" % self.expression)
-        syslog.syslog(syslog.LOG_INFO, "       *** email sent to: %s" % self.TO)
+        # Log sending the email:
+        syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)
         
         
