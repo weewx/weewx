@@ -21,14 +21,21 @@ weewx.conf:
   smtp_user = myusername
   smtp_password = mypassword
   from = me@mydomain.com
-  mailto = auser@adomain.com
+  mailto = auser@adomain.com, another@somewhere.com
+  subject = "Alarm message from weewx!"
   
 In this example, if the outside temperature falls below 40, it will send an
-email to the recipient auser@adomain.com.
+email to the the comma separated list of 
+recipients auser@adomain.com, another@somewhere.com
 
 The example assumes that your SMTP email server is at smtp.mymailserver.com and
 that it uses secure logins. If it does not use secure logins, leave out the
 lines for smtp_user and smtp_password and no login will be attempted.
+
+Setting an email "from" is optional. If not supplied, one will be filled in, but
+your SMTP server may or may not accept it.
+
+Setting an email "subject" is optional. If not supplied, one will be filled in.
 
 To avoid a flood of emails, one will only be sent every 3600 seconds (one hour).
 
@@ -57,7 +64,7 @@ import threading
 import syslog
 
 from weewx.wxengine import StdService
-from weeutil.weeutil import timestamp_to_string
+from weeutil.weeutil import timestamp_to_string, option_as_list
 
 # Inherit from the base class StdService:
 class MyAlarm(StdService):
@@ -68,7 +75,7 @@ class MyAlarm(StdService):
         super(MyAlarm, self).__init__(engine, config_dict)
         
         # This will hold the time when the last alarm message went out:
-        self.last_msg_ts = None
+        self.last_msg_ts = 0
         
         try:
             # Dig the needed options out of the configuration dictionary.
@@ -79,12 +86,14 @@ class MyAlarm(StdService):
             self.smtp_host     = config_dict['Alarm']['smtp_host']
             self.smtp_user     = config_dict['Alarm'].get('smtp_user')
             self.smtp_password = config_dict['Alarm'].get('smtp_password')
-            self.TO            = config_dict['Alarm']['mailto']
-            self.FROM          = config_dict['Alarm']['from']
+            self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
+            self.FROM          = config_dict['Alarm'].get('from', 'alarm@weewx.com')
+            self.TO            = option_as_list(config_dict['Alarm']['mailto'])
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
-        except:
+        except Exception, e:
             self.expression = None
             self.time_wait  = None
+            syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set. %s" % e)
 
     def newArchivePacket(self, rec):
         # Let the super class see the record first:
@@ -122,9 +131,9 @@ class MyAlarm(StdService):
         msg = MIMEText(msg_text)
         
         # Fill in MIME headers:
-        msg['Subject'] = "Alarm message from weewx"
+        msg['Subject'] = self.SUBJECT
         msg['From']    = self.FROM
-        msg['To']      = self.TO
+        msg['To']      = ','.join(self.TO)
         
         # Create an instance of class SMTP for the given SMTP host:
         s = smtplib.SMTP(self.smtp_host)
@@ -139,14 +148,14 @@ class MyAlarm(StdService):
         except smtplib.SMTPException:
             syslog.syslog(syslog.LOG_DEBUG, "  **** using unencrypted transport")
 
-        # If a username has been given, assume that login is required for this host:
-        if self.smtp_user:
-            s.login(self.smtp_user, self.smtp_password)
-            syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
-            
         try:
+            # If a username has been given, assume that login is required for this host:
+            if self.smtp_user:
+                s.login(self.smtp_user, self.smtp_password)
+                syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
+            
             # Send the email:
-            s.sendmail(msg['From'], [self.TO],  msg.as_string())
+            s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
         except Exception, e:

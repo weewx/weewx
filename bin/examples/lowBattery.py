@@ -21,11 +21,20 @@ weewx.conf:
   smtp_user = myusername
   smtp_password = mypassword
   from   = me@mydomain.com
-  mailto = auser@adomain.com
-  
+  mailto = auser@adomain.com, another@somewhere.com
+  subject = "Time to change the battery!"
+
+In this example, an email will be sent to the comma separated list of recipients
+auser@domain.com, another@somewhere.com
+
 The example assumes that your SMTP email server is at smtp.mymailserver.com and
 that it uses secure logins. If it does not use secure logins, leave out the
 lines for smtp_user and smtp_password and no login will be attempted.
+
+Setting an email "from" is optional. If not supplied, one will be filled in, but
+your SMTP server may or may not accept it.
+
+Setting an email "subject" is optional. If not supplied, one will be filled in.
 
 To avoid a flood of emails, one will only be sent every 3600 seconds (one hour).
 
@@ -58,7 +67,7 @@ import threading
 import syslog
 
 from weewx.wxengine import StdService
-from weeutil.weeutil import timestamp_to_string
+from weeutil.weeutil import timestamp_to_string, option_as_list
 
 # Inherit from the base class StdService:
 class BatteryAlarm(StdService):
@@ -83,11 +92,13 @@ class BatteryAlarm(StdService):
             self.smtp_host       = config_dict['Alarm']['smtp_host']
             self.smtp_user       = config_dict['Alarm'].get('smtp_user')
             self.smtp_password   = config_dict['Alarm'].get('smtp_password')
-            self.TO              = config_dict['Alarm']['mailto']
-            self.FROM            = config_dict['Alarm']['from']
+            self.SUBJECT         = config_dict['Alarm'].get('subject', "Low battery alarm message from weewx")
+            self.FROM            = config_dict['Alarm'].get('from', 'alarm@weewx.com')
+            self.TO              = option_as_list(config_dict['Alarm']['mailto'])
             syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm turned on. Count threshold is %d" % self.count_threshold)
-        except:
+        except Exception, e:
             self.time_wait  = None
+            syslog.syslog(syslog.LOG_INFO, "lowBattery: No alarm set. %s" % e)
 
     def newLoopPacket(self, loopPacket):
         """This function is called with the arrival of every new LOOP packet."""
@@ -129,6 +140,10 @@ class BatteryAlarm(StdService):
         
         # Get the time and convert to a string:
         t_str = timestamp_to_string(rec['dateTime'])
+
+        # Log it in the system log:
+        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery alarm (0x%04x) sounded at %s." % (rec['txBatteryStatus'], t_str))
+
         # Form the message text:
         msg_text = """The low battery alarm (0x%04x) has been seen %d times since the last archive period.\n\n"""\
                    """Alarm sounded at %s\n\n"""\
@@ -137,9 +152,9 @@ class BatteryAlarm(StdService):
         msg = MIMEText(msg_text)
         
         # Fill in MIME headers:
-        msg['Subject'] = "Low battery alarm message from weewx"
+        msg['Subject'] = self.SUBJECT
         msg['From']    = self.FROM
-        msg['To']      = self.TO
+        msg['To']      = ','.join(self.TO)
         
         # Create an instance of class SMTP for the given SMTP host:
         s = smtplib.SMTP(self.smtp_host)
@@ -150,21 +165,23 @@ class BatteryAlarm(StdService):
             s.ehlo()
             s.starttls()
             s.ehlo()
+            syslog.syslog(syslog.LOG_DEBUG, "  **** using encrypted transport")
         except smtplib.SMTPException:
-            pass
-        # If a username has been given, assume that login is required for this host:
-        if self.smtp_user:
-            s.login(self.smtp_user, self.smtp_password)
+            syslog.syslog(syslog.LOG_DEBUG, "  **** using unencrypted transport")
+
         try:
+            # If a username has been given, assume that login is required for this host:
+            if self.smtp_user:
+                s.login(self.smtp_user, self.smtp_password)
+                syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
+
             # Send the email:
-            s.sendmail(msg['From'], [self.TO],  msg.as_string())
+            s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
         except Exception, e:
-            syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % (e,))
+            syslog.syslog(syslog.LOG_ERR, "lowBattery: SMTP mailer refused message with error %s" % (e,))
             raise
         
-        # Log it in the system log:
-        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery alarm (0x%04x) sounded." % rec['txBatteryStatus'])
-        syslog.syslog(syslog.LOG_INFO, "       ***  email sent to: %s" % self.TO)
-        
+        # Log sending the email:
+        syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)
