@@ -20,6 +20,7 @@ weewx.conf:
   smtp_host = smtp.mymailserver.com
   smtp_user = myusername
   smtp_password = mypassword
+  from = me@mydomain.com
   mailto = auser@adomain.com
   
 In this example, if the outside temperature falls below 40, it will send an
@@ -79,6 +80,7 @@ class MyAlarm(StdService):
             self.smtp_user     = config_dict['Alarm'].get('smtp_user')
             self.smtp_password = config_dict['Alarm'].get('smtp_password')
             self.TO            = config_dict['Alarm']['mailto']
+            self.FROM          = config_dict['Alarm']['from']
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
         except:
             self.expression = None
@@ -121,7 +123,7 @@ class MyAlarm(StdService):
         
         # Fill in MIME headers:
         msg['Subject'] = "Alarm message from weewx"
-        msg['From']    = "weewx"
+        msg['From']    = self.FROM
         msg['To']      = self.TO
         
         # Create an instance of class SMTP for the given SMTP host:
@@ -150,3 +152,44 @@ class MyAlarm(StdService):
         syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)
         
         
+if __name__ == '__main__':
+           
+    import sys
+    import configobj
+    from optparse import OptionParser
+
+    import weewx
+        
+    usage_string ="""Usage: 
+    
+    alarm.py config_path 
+    
+    Arguments:
+    
+      config_path: Path to weewx.conf"""
+    parser = OptionParser(usage=usage_string)
+    (options, args) = parser.parse_args()
+    
+    if len(args) < 1:
+        sys.stderr.write("Missing argument(s).\n")
+        sys.stderr.write(parser.parse_args(["--help"]))
+        exit()
+        
+    config_path = args[0]
+    
+    weewx.debug = 1
+    
+    try :
+        config_dict = configobj.ConfigObj(config_path, file_error=True)
+    except IOError:
+        print "Unable to open configuration file ", config_path
+        exit()
+    
+    engine = None
+    alarm = MyAlarm(engine, config_dict)
+    
+    rec = {'extraTemp1': 1.0,
+           'dateTime'  : int(time.time())}
+
+    alarm.newArchivePacket(rec)
+    
