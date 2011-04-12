@@ -20,6 +20,7 @@ weewx.conf:
   smtp_host = smtp.mymailserver.com
   smtp_user = myusername
   smtp_password = mypassword
+  from   = me@mydomain.com
   mailto = auser@adomain.com
   
 The example assumes that your SMTP email server is at smtp.mymailserver.com and
@@ -83,6 +84,7 @@ class BatteryAlarm(StdService):
             self.smtp_user       = config_dict['Alarm'].get('smtp_user')
             self.smtp_password   = config_dict['Alarm'].get('smtp_password')
             self.TO              = config_dict['Alarm']['mailto']
+            self.FROM            = config_dict['Alarm']['from']
             syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm turned on. Count threshold is %d" % self.count_threshold)
         except:
             self.time_wait  = None
@@ -136,7 +138,7 @@ class BatteryAlarm(StdService):
         
         # Fill in MIME headers:
         msg['Subject'] = "Low battery alarm message from weewx"
-        msg['From']    = "weewx"
+        msg['From']    = self.FROM
         msg['To']      = self.TO
         
         # Create an instance of class SMTP for the given SMTP host:
@@ -153,10 +155,15 @@ class BatteryAlarm(StdService):
         # If a username has been given, assume that login is required for this host:
         if self.smtp_user:
             s.login(self.smtp_user, self.smtp_password)
-        # Send the email:
-        s.sendmail(msg['From'], [self.TO],  msg.as_string())
-        # Log out of the server:
-        s.quit()
+        try:
+            # Send the email:
+            s.sendmail(msg['From'], [self.TO],  msg.as_string())
+            # Log out of the server:
+            s.quit()
+        except Exception, e:
+            syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % (e,))
+            raise
+        
         # Log it in the system log:
         syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery alarm (0x%04x) sounded." % rec['txBatteryStatus'])
         syslog.syslog(syslog.LOG_INFO, "       ***  email sent to: %s" % self.TO)
