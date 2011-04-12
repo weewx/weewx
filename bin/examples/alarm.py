@@ -144,14 +144,18 @@ class MyAlarm(StdService):
             s.login(self.smtp_user, self.smtp_password)
             syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
             
-        # Send the email:
-        s.sendmail(msg['From'], [self.TO],  msg.as_string())
-        # Log out of the server:
-        s.quit()
+        try:
+            # Send the email:
+            s.sendmail(msg['From'], [self.TO],  msg.as_string())
+            # Log out of the server:
+            s.quit()
+        except Exception, e:
+            syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % (e,))
+            raise
+        
         # Log sending the email:
         syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)
-        
-        
+
 if __name__ == '__main__':
            
     import sys
