@@ -6,6 +6,10 @@ CHANGE HISTORY
 Added RA and declination for the Sun  and Moon to the Daily Almanac. Equinox and
 solstice are now displayed in chronological order. Same with new and full moons.
 
+Examples  alarm.py and  lowBattery.py now  include more  error checks,  allow an
+optional 'subject' line  to the sent email, and allow a  comma separated list of
+recipients.
+
 
 1.10.1 03/30/11
 
