@@ -1,7 +1,7 @@
 CHANGE HISTORY
 --------------------------------
 
-1.10.2 XX/XX/11
+1.10.2 04/14/11
 
 Added RA and declination for the Sun  and Moon to the Daily Almanac. Equinox and
 solstice are now displayed in chronological order. Same with new and full moons.

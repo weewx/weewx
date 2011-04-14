@@ -18,23 +18,12 @@
 <p>What follows are directions for upgrading from specific versions.</p>
 <h2>V1.9 or earlier</h2>
 <p>Version 1.10 introduced several new features. </p>
-<h3>Backwards compatibility</h3>
-<p>With the introduction of explicit control of output units in the templates 
-such as</p>
-<p class="tty">$day.outTemp.max.degree_C</p>
-<p>the calling signature of the following two Python classes was changed</p>
-<ul>
-	<li><span class="code">weewx.stats.TaggedStats</span></li>
-	<li><span class="code">weewx.stats.TimeSpanStats</span></li>
-</ul>
-<p>The example of writing a custom generator <span class="code">MyFileGenerator</span> 
-(which produced &quot;all time&quot; statistics) has been changed to reflect the new 
-signatures.</p>
-<p>This will only affect you if you have written a custom generator.</p>
-<h3>New icons and mobile templates</h3>
-<p>The skins now 
-include a template formatted for smartphones, as well as an icon (&quot;<span class="code">favicon.ico</span>&quot;) 
-that displays in your browser toolbar. If you do nothing, your old skins will 
+<h3>New almanac features, icon, and mobile template</h3>
+<p>Version 1.10 introduces some extra almanac features, such as the azimuth and 
+elevation of the sun and moon, or when the next solstice will be. It also 
+includes a template formatted for smartphones, as well as an icon (&quot;<span class="code">favicon.ico</span>&quot;) 
+that displays in your browser toolbar. The skins shipped with the distribution 
+take advantage of these features. If you do nothing, your old skins will 
 continue to work, but you will not take advantage of these new features. </p>
 <p>If you want these new features then you have two choices:</p>
 <ol>
@@ -46,7 +35,9 @@ continue to work, but you will not take advantage of these new features. </p>
 	advantage of the new features. If you take this approach, you will need to 
 	copy over files <span class="code">favicon.ico, mobile.css</span>, and
 	<span class="code">mobile.html.tmpl</span> from the distribution into your <span class="code">skin/Standard</span> 
-	directory. You will then need to modify your <span class="code">skin.conf</span>.
+	directory. Modify <span class="code">skins/Standard/index.html.tmpl</span> 
+	to take advantage of the new almanac features, using the version shipped 
+	with the distribution for guidance. You will then need to modify your <span class="code">skin.conf</span>.
 	<p>Add a new <span class="code">[[[Mobile]]]</span> section:</p>
 	<p class="tty">[FileGenerator]<br />
 &nbsp; .<br />
@@ -66,6 +57,19 @@ continue to work, but you will not take advantage of these new features. </p>
 <p>Which approach you should take will depend on how extensively you have 
 modified the stock skin distribution. If the modifications are slight, approach 
 #1 will be easier, otherwise use approach #2.</p>
+<h3>Backwards compatibility</h3>
+<p>With the introduction of explicit control of output units in the templates 
+such as</p>
+<p class="tty">$day.outTemp.max.degree_C</p>
+<p>the calling signature of the following two Python classes was changed</p>
+<ul>
+	<li><span class="code">weewx.stats.TaggedStats</span></li>
+	<li><span class="code">weewx.stats.TimeSpanStats</span></li>
+</ul>
+<p>The example of writing a custom generator <span class="code">MyFileGenerator</span> 
+(which produced &quot;all time&quot; statistics) has been changed to reflect the new 
+signatures.</p>
+<p>This will only affect you if you have written a custom generator.</p>
 <h2>V1.7.0 or earlier</h2>
 <p>With the introduction of a standard archiving service, <span class="code">
 StdArchive</span>, the names of some events have changed. This will not affect 

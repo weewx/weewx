@@ -20,13 +20,13 @@ weewx.conf:
   smtp_host = smtp.mymailserver.com
   smtp_user = myusername
   smtp_password = mypassword
+  mailto = auser@adomain.com, anotheruser@someplace.com
   from = me@mydomain.com
-  mailto = auser@adomain.com, another@somewhere.com
   subject = "Alarm message from weewx!"
   
 In this example, if the outside temperature falls below 40, it will send an
-email to the the comma separated list of 
-recipients auser@adomain.com, another@somewhere.com
+email to the the comma separated list specified in option "mailto", in this case
+auser@adomain.com, another@somewhere.com
 
 The example assumes that your SMTP email server is at smtp.mymailserver.com and
 that it uses secure logins. If it does not use secure logins, leave out the

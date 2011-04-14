@@ -1519,7 +1519,7 @@ class MyPrint(StdPrint):
 	base class <span class="code">StdService</span>, and then adding the functionality 
 	you need. Here&#39;s an example that implements an alarm that sends off an email 
 	when an arbitrary expression evaluates True. This example is included in the 
-	standard distribution in subdirectory &quot;<span class="code">examples</span>&quot;.
+	standard distribution in subdirectory &quot;<span class="code">bin.examples</span>&quot;.
 	</p>
 	<p>File <span class="code">examples/alarm.py</span>:</p>
 	<pre>import time
@@ -1529,7 +1529,7 @@ import threading
 import syslog
 
 from weewx.wxengine import StdService
-from weeutil.weeutil import timestamp_to_string
+from weeutil.weeutil import timestamp_to_string, option_as_list
 
 # Inherit from the base class StdService:
 class MyAlarm(StdService):
@@ -1540,7 +1540,7 @@ class MyAlarm(StdService):
         super(MyAlarm, self).__init__(engine, config_dict)
         
         # This will hold the time when the last alarm message went out:
-        self.last_msg_ts = None
+        self.last_msg_ts = 0
         
         try:
             # Dig the needed options out of the configuration dictionary.
@@ -1551,11 +1551,14 @@ class MyAlarm(StdService):
             self.smtp_host     = config_dict[&#39;Alarm&#39;][&#39;smtp_host&#39;]
             self.smtp_user     = config_dict[&#39;Alarm&#39;].get(&#39;smtp_user&#39;)
             self.smtp_password = config_dict[&#39;Alarm&#39;].get(&#39;smtp_password&#39;)
-            self.TO            = config_dict[&#39;Alarm&#39;][&#39;mailto&#39;]
+            self.SUBJECT       = config_dict[&#39;Alarm&#39;].get(&#39;subject&#39;, &quot;Alarm message from weewx&quot;)
+            self.FROM          = config_dict[&#39;Alarm&#39;].get(&#39;from&#39;, &#39;alarm@weewx.com&#39;)
+            self.TO            = option_as_list(config_dict[&#39;Alarm&#39;][&#39;mailto&#39;])
             syslog.syslog(syslog.LOG_INFO, &quot;alarm: Alarm set for expression: \&quot;%s\&quot;&quot; % self.expression)
-        except:
+        except Exception, e:
             self.expression = None
             self.time_wait  = None
+            syslog.syslog(syslog.LOG_INFO, &quot;alarm: No alarm set. %s&quot; % e)
 
     def newArchivePacket(self, rec):
         # Let the super class see the record first:
@@ -1583,15 +1586,19 @@ class MyAlarm(StdService):
         
         # Get the time and convert to a string:
         t_str = timestamp_to_string(rec[&#39;dateTime&#39;])
+
+        # Log it in the system log:
+        syslog.syslog(syslog.LOG_INFO, &quot;alarm: Alarm expression \&quot;%s\&quot; evaluated True at %s&quot; % (self.expression, t_str))
+
         # Form the message text:
         msg_text = &quot;Alarm expression \&quot;%s\&quot; evaluated True at %s\nRecord:\n%s&quot; % (self.expression, t_str, str(rec))
         # Convert to MIME:
         msg = MIMEText(msg_text)
         
         # Fill in MIME headers:
-        msg[&#39;Subject&#39;] = &quot;Alarm message from weewx&quot;
-        msg[&#39;From&#39;]    = &quot;weewx&quot;
-        msg[&#39;To&#39;]      = self.TO
+        msg[&#39;Subject&#39;] = self.SUBJECT
+        msg[&#39;From&#39;]    = self.FROM
+        msg[&#39;To&#39;]      = &#39;,&#39;.join(self.TO)
         
         # Create an instance of class SMTP for the given SMTP host:
         s = smtplib.SMTP(self.smtp_host)
@@ -1602,18 +1609,26 @@ class MyAlarm(StdService):
             s.ehlo()
             s.starttls()
             s.ehlo()
+            syslog.syslog(syslog.LOG_DEBUG, &quot;  **** using encrypted transport&quot;)
         except smtplib.SMTPException:
-            pass
-        # If a username has been given, assume that login is required for this host:
-        if self.smtp_user:
-            s.login(self.smtp_user, self.smtp_password)
-        # Send the email:
-        s.sendmail(msg[&#39;From&#39;], [self.TO],  msg.as_string())
-        # Log out of the server:
-        s.quit()
-        # Log it in the system log:
-        syslog.syslog(syslog.LOG_INFO, &quot;alarm: Alarm sounded for expression: \&quot;%s\&quot;&quot; % self.expression)
-        syslog.syslog(syslog.LOG_INFO, &quot;       *** email sent to: %s&quot; % self.TO)</pre>
+            syslog.syslog(syslog.LOG_DEBUG, &quot;  **** using unencrypted transport&quot;)
+
+        try:
+            # If a username has been given, assume that login is required for this host:
+            if self.smtp_user:
+                s.login(self.smtp_user, self.smtp_password)
+                syslog.syslog(syslog.LOG_DEBUG, &quot;  **** logged in with user name %s&quot; % (self.smtp_user,))
+            
+            # Send the email:
+            s.sendmail(msg[&#39;From&#39;], self.TO,  msg.as_string())
+            # Log out of the server:
+            s.quit()
+        except Exception, e:
+            syslog.syslog(syslog.LOG_ERR, &quot;alarm: SMTP mailer refused message with error %s&quot; % (e,))
+            raise
+        
+        # Log sending the email:
+        syslog.syslog(syslog.LOG_INFO, &quot;  **** email sent to: %s&quot; % self.TO)</pre>
 	<p>This service expects all the information it needs to be in the configuration 
 	file <span class="code">weewx.conf</span> in a new section called
 	<span class="code">[Alarm]</span>. So, add the following lines to your configuration 
@@ -1624,7 +1639,9 @@ class MyAlarm(StdService):
     smtp_host = smtp.mymailserver.com
     smtp_user = myusername
     smtp_password = mypassword
-    mailto = auser@adomain.com</pre>
+    mailto = auser@adomain.com, anotheruser@someplace.com
+    from   = me@mydomain.com
+    subject = &quot;Alarm message from weewx!&quot;</pre>
 	<p>These options specify that the alarm is to be sounded when &quot;<span class="code">outTemp 
 	&lt; 40.0</span>&quot; evaluates <span class="code">True</span>, that is when the outside 
 	temperature is below 40.0 degrees. Any valid Python expression can be used, 
@@ -1639,11 +1656,17 @@ class MyAlarm(StdService):
 	identical emails. The new service will wait this long before sending another 
 	email out.</p>
 	<p>Email will be sent through the SMTP host specified by option
-	<span class="code">smtp_host</span>. The recipient is specified in option
+	<span class="code">smtp_host</span>. The recipient(s) are specified by the 
+	comma separated option
 	<span class="code">mailto</span>.</p>
 	<p>Many SMTP hosts require user login. If this is the case, the user and password 
 	are specified with options <span class="code">smtp_user</span> and
 	<span class="code">smtp_password</span>, respectively.</p>
+	<p>The last two options, &quot;<span class="code">from</span>&quot; and &quot;<span class="code">subject</span>&quot; 
+	are optional. If not supplied, <span class="code">weewx</span> will supply 
+	something sensible. Note, however, that some mailers require a valid &quot;from&quot; 
+	email address and the one <span class="code">weewx</span> supplies may not 
+	satisfy its requirements.</p>
 	<p>To make this all work, you must tell the engine to load this new service. 
 	This is done by adding your service name to the list <span class="code">service_list</span>, 
 	located in <span class="code">[Engines][[WxEngine]]</span>:</p>
