@@ -45,7 +45,6 @@ import os.path
 import syslog
 import time
 
-import weewx
 import weewx.accum
 import weewx.units
 import weewx.wxformulas

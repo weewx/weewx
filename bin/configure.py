@@ -16,7 +16,7 @@ import os.path
 from optparse import OptionParser
 import configobj
 
-import user.extensions
+import user.extensions      #@UnusedImport
 import weewx.archive
 import weewx.stats
 import weewx.VantagePro

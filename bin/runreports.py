@@ -16,7 +16,7 @@ import sys
 import syslog
 import configobj
 
-import user.extensions
+import user.extensions #@UnusedImport
 import weewx.reportengine
 
 def gen_all(config_path, gen_ts = None):

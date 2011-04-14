@@ -12,7 +12,9 @@
 import unittest
 import time
 
-from weeutil.weeutil import *
+from weeutil.weeutil import startOfInterval, option_as_list, TimeSpan, genYearSpans, genMonthSpans, genDaySpans
+from weeutil.weeutil import archiveDaySpan, archiveWeekSpan, archiveMonthSpan, archiveYearSpan, archiveRainYearSpan
+from weeutil.weeutil import startOfDay, startOfArchiveDay
 
 class WeeutilTest(unittest.TestCase):
     

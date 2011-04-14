@@ -19,7 +19,7 @@ the call to the main entry point as parameter 'EngineClass'.
 See the document "customizing.htm" for details.
 """
 # First import any user extensions:
-import user.extensions
+import user.extensions       #@UnusedImport
 # Now the engine
 import weewx.wxengine
 

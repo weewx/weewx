@@ -21,7 +21,6 @@ import time
 
 import configobj
 
-import weewx
 import weeutil.ftpupload
 import weeutil.weeutil
 

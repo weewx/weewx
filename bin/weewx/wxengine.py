@@ -25,7 +25,6 @@ import configobj
 import daemon
 
 # weewx imports:
-import weewx
 import weewx.archive
 import weewx.stats
 import weewx.restful
