@@ -38,7 +38,7 @@ class REST(object):
     
     # The types to be retrieved from the arhive database:
     archive_types = ('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                    'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation')
+                    'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation', 'UV')
     # A SQL statement to do the retrieval:
     sql_select = "SELECT " + ", ".join(archive_types) + " FROM archive WHERE dateTime=?"  
     
@@ -111,7 +111,9 @@ class Ambient(REST):
                 'windGust'    : 'windgustmph=%03.0f',
                 'dewpoint'    : 'dewptf=%.1f',
                 'rain'        : 'rainin=%.2f',
-                'dailyrain'   : 'dailyrainin=%.2f'}
+                'dailyrain'   : 'dailyrainin=%.2f',
+                'radiation'   : 'solarradiation=%.2f',
+                'UV'          : 'UV=%.2f'}
 
 
     def __init__(self, site, **kwargs):
