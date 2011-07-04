@@ -39,7 +39,10 @@
 """
 
 from __future__ import with_statement
-from pysqlite2 import dbapi2 as sqlite3
+try:
+    from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+    from sqlite3 import dbapi2 as sqlite3
 import math
 import os.path
 import syslog

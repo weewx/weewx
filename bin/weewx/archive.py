@@ -12,7 +12,10 @@ from __future__ import with_statement
 import syslog
 import os.path
 import math
-from pysqlite2 import dbapi2 as sqlite3
+try:
+    from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+    from sqlite3 import dbapi2 as sqlite3
     
 import weewx.units
 import weeutil.weeutil
