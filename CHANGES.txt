@@ -1,6 +1,15 @@
 CHANGE HISTORY
 --------------------------------
 
+1.10.3 07/03/11
+
+Added  patch from  user  Dan Haller  that sends  UV  and radiation  data to  the
+WeatherUnderground if available. Thanks, Dan!
+
+Added  patch from  user Marijn  Vriens that  allows fallback  to the  version of
+pysqlite that comes with many versions of Python. Thanks, Marijn!
+
+
 1.10.2 04/14/11
 
 Added RA and declination for the Sun  and Moon to the Daily Almanac. Equinox and
