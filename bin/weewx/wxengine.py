@@ -19,6 +19,7 @@ import socket
 import sys
 import syslog
 import time
+import gc
 
 # 3rd party imports:
 import configobj
@@ -176,6 +177,12 @@ class StdEngine(object):
                 
                 # Get and process any new archive data. 
                 self.processArchiveData()
+                
+                # Before we start a new LOOP cycle, this would be a good time to 
+                # do garbage collection:
+                N = gc.collect()
+                syslog.syslog(syslog.LOG_DEBUG, "wxengine: %d objects garbage collected" % (N,))
+
         finally:
             # The main loop has exited. Shut the engine down.
             self.shutDown()

@@ -9,6 +9,9 @@ WeatherUnderground if available. Thanks, Dan!
 Added  patch from  user Marijn  Vriens that  allows fallback  to the  version of
 pysqlite that comes with many versions of Python. Thanks, Marijn!
 
+Now does garbage collection after an archive record is obtained and before the
+main loop is restarted.
+
 
 1.10.2 04/14/11
 
