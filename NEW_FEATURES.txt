@@ -1,7 +1,5 @@
 NEW FEATURES to be added in decreasing order of importance.
 
-Check out Werkzeug. http://werkzeug.pocoo.org
-
 Offer "cumulative" as an aggregation type.
 
 Allow rain-to-date to be added to a partial rainyear.
@@ -18,6 +16,8 @@ Add support for MySQL.
 Fix scaling for aggregate interval of a week, so it starts on a Sunday.
 
 Ability to set parameters such as lat, lon, altitude on the VP2
+
+More dynamic access to the database. Check out Werkzeug. http://werkzeug.pocoo.org
 
 Dynamic web updates, using AJAX.
 
