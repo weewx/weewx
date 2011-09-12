@@ -1,10 +1,6 @@
 TODO before the next release:
 
-Search for memory leaks. After 125d of uptime, weewx has grown to use 255MB memory.
-Here's a good article on how to do this: http://www.lshift.net/blog/2008/11/14/tracing-python-memory-leaks
-Alternative: use heapy http://pypi.python.org/pypi/guppy
-
-Clarify the install instructions for the case where pysqlite comes with Python.
+Investigate why memory usage slowly increases over time.
 
 Can we unify how the set of statstypes is set with how the set of archive types are set?
 
