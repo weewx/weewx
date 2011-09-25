@@ -892,6 +892,15 @@ Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </pre>
 	[[FTP]]]
 		... (details elided)</pre>
 	<p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.</p>
+	<h3>Cheetah errors</h3>
+	<p><a href="http://www.cheetahtemplate.org/">Cheetah</a> is the template 
+	software used by weewx. </p>
+	<h4>UTF-8 templates</h4>
+	<p>The standard templates that come with <span class="code">weewx</span> do 
+	not use UTF-8, but you are free to do so. However, if you choose to do this, 
+	make sure the template file starts with the line</p>
+	<p class="tty">#encoding UTF-8</p>
+	<p>so Cheetah knows the file will be in UTF-8.</p>
 	<h2>Hardware</h2>
 	<h3>Tips on a reliable system</h3>
 	<p>If you are having problems keeping your weather station up for long periods 
