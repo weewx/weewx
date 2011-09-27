@@ -1,5 +1,7 @@
 TODO before the next release:
 
+Investigate why memory usage slowly increases over time.
+
 Can we unify how the set of statstypes is set with how the set of archive types are set?
 
 Test adding a new archive query (number of nulls?)

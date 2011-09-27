@@ -98,16 +98,17 @@ Version 1.10</h1>
 	</p>
 	<h1><a name="Prerequisites">Prerequisites</a></h1>
 	<h2>Python</h2>
-	<p>Python V2.5 or V2.6 is required. The newer V3.0 distribution will not work.</p>
+	<p>Python V2.5, V2.6, or V2.7 is required. The newer V3.0 distribution will not work.</p>
 	<h2>External packages</h2>
 	<p>The following external packages are required to use <span class="code">weewx</span>.</p>
 	<ol>
 		<li><a href="http://www.sqlite.org/">sqlite3</a> (Version 3.5 or greater) 
 		A SQL database written in C, which <span class="code">weewx</span> uses 
-		to store data pulled from the weather station. Comes with Debian and many 
-		other Linux distributions.</li>
+		to store data pulled from the weather station. Comes with many versions 
+		of Debian and other Linux distributions.</li>
 		<li><a href="http://pypi.python.org/pypi/pysqlite/">pysqlite</a> (Version 
-		2.5 or greater) The Python interface to sqlite3.</li>
+		2.5 or greater) The Python interface to sqlite3. This is also included 
+		in many versions of Debian and other Linux distributions.</li>
 		<li><a href="http://pypi.python.org/pypi/configobj/">configobj</a> (Version 
 		4.5 or greater) Manages the configuration file <span class="code">weewx.conf</span>.</li>
 		<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 
@@ -122,8 +123,7 @@ Version 1.10</h1>
 	<ul>
 		<li><a href="http://rhodesmill.org/pyephem">pyephem</a> (Version V3.7.3 
 		or greater). For extended almanac information. If not installed, 
-		fallback information will be used. As of the time of this writing, this 
-		package could only be installed using <span class="code">easy_install</span>.</li>
+		fallback information will be used. </li>
 	</ul>
 	<p>There are two general strategies for installing these prerequisites:</p>
 	<ol>
@@ -136,7 +136,7 @@ Version 1.10</h1>
 	<p>Option #1 is easier, but if your Linux distribution does not come with such 
 	tools, you may have to use <span class="code">easy_install</span>. If you 
 	choose to install <a href="http://rhodesmill.org/pyephem">pyephem</a>, then 
-	it can only be installed using <span class="code">easy_install</span> (<a href="#Installing_pyephem">see 
+	as of the time of this writing, it can only be installed using <span class="code">easy_install</span> (<a href="#Installing_pyephem">see 
 	instructions below</a>).</p>
 	<p>Brief instructions 
 	for both approaches are given below.</p>
@@ -155,6 +155,10 @@ Version 1.10</h1>
 	<p>Note that <span class="code">sqlite3</span> and the <span class="code">
 	python-imaging</span> (PIL) packages are preinstalled on many Debian 
 	distributions so the corresponding commands may not do anything.</p>
+	<p>As noted above, if you choose to install the optional package 
+	<span class="code">pyephem</span>, 
+	then it will have to be installed using <span class="code">easy_install</span> (<a href="#Installing_pyephem">see 
+	instructions below</a>).</p>
 	<h3>Installation on SuSE using <span class="code">yast</span></h3>
 	<p>My SuSE 11.3 system came with some of the prerequisites installed, some available 
 	through <span class="code">yast</span>, and some that required
@@ -186,6 +190,10 @@ Version 1.10</h1>
 	<pre>easy_install pysqlite</pre>
 	<p>Install <span class="code">Cheetah</span>:</p>
 	<pre>easy_install Cheetah</pre>
+	<p>As noted above, if you choose to install the optional package 
+	<span class="code">pyephem</span>, 
+	then it will have to be installed using <span class="code">easy_install</span> (<a href="#Installing_pyephem">see 
+	instructions below</a>).</p>
 	<h3>Installation using <span class="code">easy_install</span></h3>
 	<p>An alternative approach to installing the required packages is by using the 
 	Python setup tool &quot;<span class="code">easy_install</span>&quot;, part of the
@@ -233,12 +241,16 @@ Version 1.10</h1>
 	processor and 512 MB of memory.&nbsp; Configured this way, it consumes about 
 	5% of the CPU and about 40MB of total memory.</p>
 	<h2>Weather station hardware requirements</h2>
-	<p>At this point, only the
-	<a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis VantagePro2</a> 
-	is supported, and even then, only the &quot;Revision B&quot; version (firmware dated on 
+	<p>At this point, only the following two variants of the Davis Vantage 
+	weather station architecture are supported:</p>
+	<ul>
+		<li><a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis VantagePro2</a> 
+		Only the &quot;Revision B&quot; version (firmware dated on 
 	or after 22 April 2002). It would be very easy to port to a &quot;Revision A&quot; station 
 	or even the original VantagePro, but I don&#39;t have access to the hardware to 
-	test it.</p>
+	test it.</li>
+		<li><a href="http://www.vantagevue.com/">Davis VantageVue</a></li>
+	</ul>
 	<h1><a name="Installing_weewx">Installing <span class="code">weewx</span></a></h1>
 	<p>Because <span class="code">weewx</span> is &quot;Pure Python&quot;, that is it is 100% 
 	Python with no &quot;C&quot; modules to compile, installing it is very easy. Furthermore, 
@@ -284,8 +296,7 @@ Version 1.10</h1>
 	</table>
 	<p>By default, the location for <span class="code"><em>WEEWX_INSTALL</em></span> 
 	is <span class="code">/home/weewx</span>. However, it can be changed by editing 
-	the file <span class="code">setup.cfg</span>. If you wish to install someplace 
-	else, open up <span class="code">setup.cfg</span> and change the line</p>
+	the file <span class="code">setup.cfg</span> and changing the following line</p>
 	<p class="tty">home = /home/weewx</p>
 	<p>to reflect your decision.</p>
 	<h2>Build and install</h2>
@@ -334,9 +345,11 @@ Version 1.10</h1>
 	a directory where you have write permissions, you can install and run
 	<span class="code">weewx</span> without any root privileges at all. </p>
 	<h2>Final note on installation</h2>
+	<p>This is an advanced topic. Ignore it if you are just getting started. </p>
 	<p>Because <span class="code">weewx</span> is pure Python, it does not actually 
 	have to be &quot;built&quot; and &quot;installed&quot; at all! You can just simply run it out of 
-	whatever directory you unpack it into. However, it must still be told where 
+	whatever directory you unpack it into. This can be useful for testing and 
+	experimentation of new versions. If you try this, <span class="code">weewx</span> must still be told where 
 	to find the skin templates and databases, as well as where to put the generated 
 	HTML files and plot images. This is done by setting <span class="code">WEEWX_ROOT</span> 
 	in <span class="code">weewx.conf</span> to reflect where your data files can 
@@ -372,7 +385,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	(25 MB) of data.</p>
 	<h2>Configuring your weather station</h2>
 	<p>The only two variables <span class="code">weewx</span> tries to manage on 
-	the VantagePro are the time and the archive interval. </p>
+	board the VantagePro are the time and the archive interval. </p>
 	<h3>Time</h3>
 	<p>The time on the VP is automatically synchronized with the
 	<span class="code">weewx</span> server nominally every four hours (changeable 
@@ -404,13 +417,13 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	$WEEWX_ROOT/weewx.conf</p>
 	<h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
 	<p>Station specific information is set in the configuration file
-	<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. There is another 
+	<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. (There is another 
 	configuration file <span class="code">skin.conf</span> for presentation-specific 
 	options, which is described in a separate document <em>
 	<a href="customizing.htm">Customizing <span class="code">weewx</span></a>
 	</em>under section <em>
 	<a href="customizing.htm#Reference:_The_Standard_skin_configuration_file">Reference: 
-	The standard skin configuration file</a></em>.</p>
+	The standard skin configuration file</a></em>.)</p>
 	<p>Most of the important options are up near the top of the file. They are all 
 	documented in this section, although you can safely ignore most of them. The 
 	truly important ones, the ones you are likely to have to customize for your 
@@ -441,7 +454,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	<p class="config_important">WEEWX_ROOT</p>
 	<p>Set to the root directory of the <span class="code">weewx</span> data file 
 	hierarchy for this station, nominally &#39;<span class="code">/home/weewx</span>&#39;. 
-	The weewx data subdirectories <span class="code">skins</span>,
+	The <span class="code">weewx</span> data subdirectories <span class="code">skins</span>,
 	<span class="code">archive</span>, and <span class="code">public_html</span> 
 	are expected to be found here. This value will be set automatically by the setup 
 	script <span class="code">setup.py</span> to reflect the choice you made in 
@@ -452,7 +465,8 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	Oregon</span>&#39;. Required. No default.</p>
 	<p class="config_important">latitude<br />
 	longitude</p>
-	<p>The lat/lon should be set in decimal degrees, negative for southern and eastern 
+	<p>The lat/lon should be set in decimal degrees, negative for southern and 
+	western 
 	hemispheres, respectively. Required. No default.</p>
 	<p class="config_important">altitude</p>
 	<p>Set to the altitude of the station and the unit used for the altitude. Required. 
@@ -487,7 +501,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	<p>Set to the baudrate of your station. The default is 19200.</p>
 	<p class="config_important">archive_interval</p>
 	<p>Set to the desired archive interval of your station, in seconds. This variable 
-	is only used when setting up your station. Otherwise, this value is read directly 
+	is only used when first setting up your station. Otherwise, this value is read directly 
 	from the station. Required if you <a href="#Archive_interval">configure your 
 	station</a>. No default.</p>
 	<p class="config_option">iss_id</p>
@@ -650,7 +664,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	instruments. It is very general and flexible.</p>
 	<p>If you do not wish to apply any calibrations, you can leave it out of
 	<span class="code"><a href="#service_list">service_list</a></span>, the list 
-	of services to be run, and it will not be loaded or run.</p>
+	of services to be run, and it will not be loaded or run at all.</p>
 	<h4 class="config_section">[[Corrections]]</h4>
 	<p>In this section you list all <em>correction expressions</em>. For example, 
 	say that you know your outside thermometer reads high by 0.2°F. You could add 
@@ -700,8 +714,8 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	number of observations that need to be checked. For example, the VP2 devotes 
 	only one unsigned byte to storing wind speed, and even then
 	<span class="code">0xff</span> is devoted to a bad value, so the only possible 
-	values that could appear are 0 through 126 mph, a reasonable range. So, there 
-	is no real point in checking wind speed for these instruments.</p>
+	values that could appear are 0 through 126 mph, a reasonable range. So, for 
+	the VP2, there is no real point in checking wind speed.</p>
 	<h3 class="config_section">[Engines]</h3>
 	<p>This section is used to configure the internal service engine in weewx. It 
 	is for advanced customization. Details on how to do this is found in the section
@@ -844,7 +858,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 		<li><a href="#Monitoring_weewx">Look at the log file</a>. I am always happy 
 		to take questions, but the first thing I will ask you is: &quot;Did you look 
 		at the log file?&quot;</li>
-		<li>Run from the command line. Generally, weewx will catch and log any unrecoverable 
+		<li>Run from the command line. Generally, <span class="code">weewx</span> will catch and log any unrecoverable 
 		exceptions. But if you are getting strange results, it is worth running 
 		from the command line and looking for any clues.</li>
 	</ul>
@@ -917,15 +931,17 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 	<p>In this example, the VantagePro was connected to <span class="code">/dev/ttyUSB0</span>, 
 	but then reconnected to <span class="code">/dev/ttyUSB1</span>. </p>
 	<p>If you put ferrite coils on the USB connection, you will eliminate 90% of 
-	this problem. I did this about 6 months ago, and have not had a problem since.
+	this problem. I did this about 18 months ago, and have not had a problem since.
 	</p>
-	<p>However, there is one final step you can take that will reallly harden up 
+	<p>However, there is one final step you can take that will really harden up 
 	your system: install a <span class="code">udev</span> script that will create 
 	a symbolic link to the VantagePro USB port, whatever it might be. With this 
 	approach, if the port jumps from <span class="code">ttyUSB0</span> to
 	<span class="code">ttyUSB1</span>, the symbolic link will move as well. You 
-	just specify port <span class="code">/dev/vpro</span> and be done with it. Here&#39;s 
-	how:</p>
+	just specify port <span class="code">/dev/vpro</span> in the configuration 
+	file <span class="code">weewx.conf</span> and be done with it. </p>
+	<p>Here&#39;s 
+	how to do this:</p>
 	<h4>Installing a udev script</h4>
 	<p>I have installed a file <span class="code">/etc/udev/rules.d/66-vpro.rules</span> 
 	on my fit-PC that looks like this:</p>
@@ -1033,8 +1049,10 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 	<p>Unfortunately, the architectural goal of one code base is likely to be broken 
 	with the arrival of Python V3.X. It has so many changes that are not backwards 
 	compatible with V2.X, that a separate code base will most likely be needed. 
-	My intention is to stick with the V2.5 and V2.6 versions until V3.X is so widespread 
-	it cannot be ignored, then make a permanent switch. I doubt this will affect 
+	My intention is to stick with the V2.X versions until V3.X is so widespread 
+	it cannot be ignored, then make a permanent switch. Given the slow adoption 
+	rate of V3.X this is unlikely to happen anytime soon. In any case, I doubt 
+	the transition will affect 
 	the average <span class="code">weewx</span> user. </p>
 	<p>All writes to the databases are protected by transactions. You can kill the 
 	program at any time (either Control-C if run from the command line or &quot;<span class="code">/etc/init.d/weewx 
@@ -1097,7 +1115,8 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 			Hence, it always represents UTC (well.... after adding a few leap seconds. 
 			But, close enough). This is the time used on the sqlite archive and 
 			appears as type &#39;<span class="code">dateTime</span>&#39; in the SQL schema, 
-			perhaps an unfortunate name because of the similarity to the Python 
+			perhaps an unfortunate name because of the similarity to the 
+			completely unrelated Python 
 			type &#39;<span class="code">datetime</span>&#39;. Very easy to manipulate, but it&#39;s an opaque big number.
 			</td>
 		</tr>
@@ -1168,7 +1187,7 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 	<p class="tty">next_ts = last_ts + 10800</p>
 	<p>But, if one wanted to plot something for every 3 hours <em>in local time</em> 
 	(that is, at 0000, 0300, 0600, etc.), despite a possible DST change in the middle, 
-	one could modify the above to recognize whether a DST transition occurs sometime 
+	then things get a bit more complicated. One could modify the above to recognize whether a DST transition occurs sometime 
 	between <span class="code">last_ts</span> and the next three hours and, if so, 
 	make the necessary adjustments. This is generally what <span class="code">wview</span> 
 	does. <span class="code">Weewx </span>takes a different approach and converts 

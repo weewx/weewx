@@ -17,6 +17,8 @@ Fix scaling for aggregate interval of a week, so it starts on a Sunday.
 
 Ability to set parameters such as lat, lon, altitude on the VP2
 
+More dynamic access to the database. Check out Werkzeug. http://werkzeug.pocoo.org
+
 Dynamic web updates, using AJAX.
 
 Port to Windows.
