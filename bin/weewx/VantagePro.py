@@ -195,12 +195,19 @@ class EthernetWrapper(BaseWrapper):
                 self._socket.close()
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._socket.settimeout(self.timeout)
-            self._socket.connect((self.host, self.port))
+            try:
+                self._socket.connect((self.host, self.port))
+            except:
+                syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Unable to connect to ethernet host.")
+                self._socket.close()
+                self._socket = None
 
     def __enter__(self):
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
+        if self._socket is None:
+            return
         try:
             if not self.keep_socket:
                 self.wakeup_console()
@@ -211,6 +218,8 @@ class EthernetWrapper(BaseWrapper):
 
     def flush_input(self):
         """Flush the input buffer from WeatherLinkIP"""
+        if self._socket is None:
+            return
         try:
             self._socket.settimeout(0)
             self.read(4096)
@@ -228,6 +237,8 @@ class EthernetWrapper(BaseWrapper):
 
     def queued_bytes(self):
         """Determine how many bytes are in the buffer"""
+        if self._socket is None:
+            return 0
         length = 0
         try:
             self._socket.settimeout(0)
@@ -243,6 +254,8 @@ class EthernetWrapper(BaseWrapper):
 
     def write(self, data):
         """Write to a WeatherLinkIP"""
+        if self._socket is None:
+            return False
         try:
             self._socket.sendall(data)
             time.sleep(self.tcp_send_delay)
@@ -254,10 +267,24 @@ class EthernetWrapper(BaseWrapper):
 
     def read(self, chars=1):
         """Read bytes from WeatherLinkIP"""
+        if self._socket is None:
+            return ""
+
+        buf = ""
         try:
-            return self._socket.recv(chars)
+            togo = chars
+            while togo != 0:
+                buf += self._socket.recv(togo)
+                togo = chars - len(buf)
+            return buf
         except socket.timeout:
             return ""
+        except socket.error, e:
+            # Here be Python dragons. 'e' can be a string, a tuple or an
+            # IOError depending on the Python version.  Let's just
+            # return the data received so far as the most likely
+            # scenario is that the socket ran out of data.
+            return buf
 
 class VantagePro (object) :
     """Class that represents a connection to a VantagePro console."""
@@ -319,7 +346,7 @@ class VantagePro (object) :
             self.hostname = vp_dict['host']
             self.tcp_port = int(vp_dict.get('tcp_port', 22222))
             self.tcp_send_delay = int(vp_dict.get('tcp_send_delay', 1))
-        elif self.conection_type == "serial":
+        elif self.connection_type == "serial":
             self.port = vp_dict.get['port']
             self.baudrate = int(vp_dict.get('baudrate', 19200))
         else:
