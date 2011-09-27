@@ -45,10 +45,13 @@ class SerialWrapper(object):
         try:
             # This will cancel any pending loop:
             _wakeup_console(self.serial_port)
+        except:
+            pass
+        try:
             self.serial_port.close()
         except:
             pass
-
+        
 class VantagePro (object) :
     """Class that represents a connection to a VantagePro console."""
 
