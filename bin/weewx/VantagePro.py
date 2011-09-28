@@ -28,21 +28,6 @@ _resend = chr(0x21)
 class BaseWrapper(object):
     """Base class for (Serial|Ethernet)Wrapper"""
 
-    def __enter__(self):
-        raise NotImplementedError
-
-    def __exit__(self, e_type, e_value, e_traceback):
-        raise NotImplementedError
-
-    def flush_input(self):
-        raise NotImplementedError
-
-    def flush_output(self):
-        raise NotImplementedError
-
-    def read(self, size=1):
-        raise NotImplementedError
-
     #===============================================================================
     #          Primitives for working with the Davis Console
     #===============================================================================
@@ -62,7 +47,7 @@ class BaseWrapper(object):
             time.sleep(0.5)
             self.flush_input()
             self.write('\n')
-            self.queued_bytes()
+#            self.queued_bytes()
             _resp = self.read(2)
             if _resp == '\n\r' : break
             print "Unable to wake up console... sleeping"
@@ -139,8 +124,8 @@ class BaseWrapper(object):
             syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to pass CRC16 check while getting data")
             raise weewx.CRCError, "Unable to pass CRC16 check while getting data from VantagePro console"
 
-# Unfortunately, package serial does not take advantage of the "with" transaction
-# semantics. So, we'll provide it ourself. This will insure that the serial connection
+# Unfortunately, packages serial and socket do not take advantage of the "with" transaction
+# semantics. So, we'll provide it ourself. This will insure that any connection
 # to the VP2 gets closed despite any exceptions. For a readable description
 # of the 'with' statement, see http://effbot.org/zone/python-with-statement.htm
 class SerialWrapper(BaseWrapper):
@@ -162,17 +147,22 @@ class SerialWrapper(BaseWrapper):
  
     def read(self, chars=1):
         return self.serial_port.read(chars)
+    
+    def write(self, data):
+        return self.serial_port.write(data)
         
     def __enter__(self):
         # Open up the port and store it
-        self.serial_port = serial.Serial(self.port, self.baudrate,
-            timeout=self.timeout)
+        self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
         return self
     
     def __exit__(self, dummy_etyp, dummy_einst, dummy_etb):
         try:
             # This will cancel any pending loop:
             self.wakeup_console()
+        except:
+            pass
+        try:
             self.serial_port.close()
         except:
             pass
@@ -180,53 +170,39 @@ class SerialWrapper(BaseWrapper):
 class EthernetWrapper(BaseWrapper):
     """Wrap a socket"""
 
-    def __init__(self, host, port, timeout, tcp_send_delay, reuse_socket=None,
-        keep_socket=False):
+    def __init__(self, host, port, timeout, tcp_send_delay):
 
         self.host           = host
         self.port           = port
         self.timeout        = timeout
         self.tcp_send_delay = tcp_send_delay
-        self._socket        = reuse_socket
-        self.keep_socket    = keep_socket
-        if self._socket is None or not self.write(""):
-            if self._socket is not None:
-                self._socket.shutdown(socket.SHUT_RDWR)
-                self._socket.close()
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._socket.settimeout(self.timeout)
-            try:
-                self._socket.connect((self.host, self.port))
-            except:
-                syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Unable to connect to ethernet host.")
-                self._socket.close()
-                self._socket = None
 
     def __enter__(self):
+        try:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._socket.settimeout(self.timeout)
+            self._socket.connect((self.host, self.port))
+        except:
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to connect to ethernet host %s on port %d." % (self.host, self.port))
+            raise
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
-        if self._socket is None:
-            return
         try:
-            if not self.keep_socket:
-                self.wakeup_console()
-                self._socket.shutdown(socket.SHUT_RDWR)
-                self._socket.close()
+            # This will cancel any pending loop:
+            self.wakeup_console()
+        except:
+            pass
+        try:
+            self._socket.shutdown(socket.SHUT_RDWR)
+            self._socket.close()
         except:
             pass
 
     def flush_input(self):
         """Flush the input buffer from WeatherLinkIP"""
-        if self._socket is None:
-            return
-        try:
-            self._socket.settimeout(0)
-            self.read(4096)
-        except:
-            pass
-        finally:
-            self._socket.settimeout(self.timeout)
+        # This is a bit of a hack, but there is no analogue to pyserial's flushInput()
+        self.read(4096)
 
     def flush_output(self):
         """Flush the output buffer to WeatherLinkIP
@@ -237,54 +213,16 @@ class EthernetWrapper(BaseWrapper):
 
     def queued_bytes(self):
         """Determine how many bytes are in the buffer"""
-        if self._socket is None:
-            return 0
-        length = 0
-        try:
-            self._socket.settimeout(0)
-            length = len(self._socket.recv(4096, socket.MSG_PEEK))
-        except socket.error:
-            pass
-        finally:
-            self._socket.settimeout(self.timeout)
-        return length
-
-    def get_socket(self):
-        return self._socket
+        return len(self._socket.recv(4096, socket.MSG_PEEK))
 
     def write(self, data):
         """Write to a WeatherLinkIP"""
-        if self._socket is None:
-            return False
-        try:
-            self._socket.sendall(data)
-            time.sleep(self.tcp_send_delay)
-            return True
-        except socket.error:
-            #Something went wrong writing, possibly the WeatherLinkIP reset
-            self._socket = None
-        return False
+        self._socket.sendall(data)
+        time.sleep(self.tcp_send_delay)
 
     def read(self, chars=1):
         """Read bytes from WeatherLinkIP"""
-        if self._socket is None:
-            return ""
-
-        buf = ""
-        try:
-            togo = chars
-            while togo != 0:
-                buf += self._socket.recv(togo)
-                togo = chars - len(buf)
-            return buf
-        except socket.timeout:
-            return ""
-        except socket.error, e:
-            # Here be Python dragons. 'e' can be a string, a tuple or an
-            # IOError depending on the Python version.  Let's just
-            # return the data received so far as the most likely
-            # scenario is that the socket ran out of data.
-            return buf
+        return self._socket.recv(4096)
 
 class VantagePro (object) :
     """Class that represents a connection to a VantagePro console."""
@@ -333,24 +271,11 @@ class VantagePro (object) :
         in this version.]
         """
 
-        # Persistent socket
-        self.reuse_socket = None
-
         # TODO: These values should really be retrieved dynamically from the VP:
         self.iss_id           = int(vp_dict.get('iss_id', 1))
         self.model_type       = 2 # = 1 for original VantagePro, = 2 for VP2
 
         # These come from the configuration dictionary:
-        self.connection_type  = vp_dict['type']
-        if self.connection_type == "ethernet":
-            self.hostname = vp_dict['host']
-            self.tcp_port = int(vp_dict.get('tcp_port', 22222))
-            self.tcp_send_delay = int(vp_dict.get('tcp_send_delay', 1))
-        elif self.connection_type == "serial":
-            self.port = vp_dict.get['port']
-            self.baudrate = int(vp_dict.get('baudrate', 19200))
-        else:
-            raise ValueError('Configuration option "type" is not one of ethernet or serial')
         self.timeout          = float(vp_dict.get('timeout', 5.0))
         self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
@@ -358,28 +283,25 @@ class VantagePro (object) :
         self.unit_system      = int(vp_dict.get('unit_system'  , 1))
         self.dst_delta        = 3600
 
+        # Get an appropriate port, depending on the connection type:
+        self.port             = self.port_factory(vp_dict)
+        
         # Get the archive interval dynamically:
         self.archive_interval = self.getArchiveInterval()
     
-    def port_factory(self):
+    def port_factory(self, vp_dict):
         """Produce a serial or ethernet port object"""
+        self.connection_type  = vp_dict['type']
         if self.connection_type == "serial":
-            return SerialWrapper(self.port, self.baudrate, self.timeout)
+            port = vp_dict['port']
+            baudrate = int(vp_dict.get('baudrate', 19200))
+            return SerialWrapper(port, baudrate, self.timeout)
         elif self.connection_type == "ethernet":
-            _port = EthernetWrapper(self.hostname, self.tcp_port,
-                self.timeout, self.tcp_send_delay,
-                reuse_socket=self.reuse_socket, keep_socket=True)
-            self.reuse_socket = _port.get_socket()
-            return _port
-        else:
-            return None
-
-    def __del__(self):
-        """Destructor which closes the reusable socket, if used"""
-        if self.reuse_socket:
-            self.reuse_socket.shutdown(socket.SHUT_RDWR)
-            self.reuse_socket.close()
-            self.reuse_socket = None
+            hostname = vp_dict['host']
+            tcp_port = int(vp_dict.get('tcp_port', 22222))
+            tcp_send_delay = int(vp_dict.get('tcp_send_delay', 1))
+            return EthernetWrapper(hostname, tcp_port, self.timeout, tcp_send_delay)
+        raise weewx.UnsupportedFeature(self.connection_type)
 
     def genLoopPackets(self):
         """Generator function that returns loop packets until the next archive record is due."""
@@ -416,7 +338,7 @@ class VantagePro (object) :
         
         # Open up the serial port. It will automatically be closed if an 
         # exception is raised:
-        with self.port_factory() as _port:
+        with self.port as _port:
 
             _port.wakeup_console(self.max_tries, self.wait_before_retry)
             
@@ -472,7 +394,7 @@ class VantagePro (object) :
         # Save the last good time:
         _last_good_ts = since_ts if since_ts else 0
         
-        with self.port_factory() as _port:
+        with self.port as _port:
 
             # Retry the dump up to max_tries times
             for unused_count in xrange(self.max_tries) :
@@ -598,7 +520,7 @@ class VantagePro (object) :
         
         returns: the time as a time-tuple
         """
-        with self.port_factory() as _port:
+        with self.port as _port:
     
             # Try up to 3 times:
             for unused_count in xrange(self.max_tries) :
@@ -639,7 +561,7 @@ class VantagePro (object) :
         _buffer = struct.pack("<bbbbbb", newtime_tt[5], newtime_tt[4], newtime_tt[3], newtime_tt[2],
                                          newtime_tt[1], newtime_tt[0] - 1900)
             
-        with self.port_factory() as _port:
+        with self.port as _port:
             for unused_count in xrange(self.max_tries) :
                 try :
                     _port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
@@ -668,7 +590,7 @@ class VantagePro (object) :
         if archive_interval_minutes not in (1, 5, 10, 15, 30, 60, 120):
             raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % archive_interval
 
-        with self.port_factory() as _port:
+        with self.port as _port:
             for unused_count in xrange(self.max_tries):
                 try :
                     _port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
@@ -699,7 +621,7 @@ class VantagePro (object) :
     
     def clearLog(self):
         """Clear the internal archive memory in the VantagePro."""
-        with self.port_factory() as _port:
+        with self.port as _port:
             for unused_count in xrange(self.max_tries):
                 try:
                     _port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
@@ -715,7 +637,7 @@ class VantagePro (object) :
     def getArchiveInterval(self):
         """Return the present archive interval in seconds."""
         
-        with self.port_factory() as _port:
+        with self.port as _port:
             for unused_count in xrange(self.max_tries):
                 try :
                     _port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
@@ -739,7 +661,7 @@ class VantagePro (object) :
         # of resynchronizations, the max # of packets received w/o an error,
         the # of CRC errors detected.)"""
         
-        with self.port_factory() as _port:
+        with self.port as _port:
             for unused_count in xrange(self.max_tries) :
                 try :
                     _port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
