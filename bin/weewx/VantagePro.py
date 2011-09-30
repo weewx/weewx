@@ -286,11 +286,15 @@ class VantagePro (object) :
         """Produce a serial or ethernet port object"""
         
         timeout = float(vp_dict.get('timeout', 5.0))
-        if vp_dict['type'] == "serial":
+        
+        # Get the connection type. If it is not specified, assume 'serial':
+        connection_type = vp_dict.get('type', 'serial').lower()
+
+        if connection_type == "serial":
             port = vp_dict['port']
             baudrate = int(vp_dict.get('baudrate', 19200))
             return SerialWrapper(port, baudrate, timeout)
-        elif vp_dict['type'] == "ethernet":
+        elif connection_type == "ethernet":
             hostname = vp_dict['host']
             tcp_port = int(vp_dict.get('tcp_port', 22222))
             tcp_send_delay = int(vp_dict.get('tcp_send_delay', 1))
