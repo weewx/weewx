@@ -78,7 +78,6 @@ class StdEngine(object):
         else:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
-
         # Set up the weather station hardware:
         self.setupStation(config_dict)
 
@@ -160,38 +159,34 @@ class StdEngine(object):
     def run(self):
         """This is where the work gets done."""
         
-        # Open the station connection using a "with" statement, thus insuring it
-        # will be closed in case of an exception:
-        with self.station:
-
-            # Start the main loop. Wrap it in a try block so we can do an orderly
-            # shutdown should an exception occur:
-            try:
-                self.setup()
-                
-                syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
-        
-                while True:
+        # Start the main loop. Wrap it in a try block so we can do an orderly
+        # shutdown should an exception occur:
+        try:
+            self.setup()
             
-                    self.preloop()
-        
-                    # Generate LOOP packets until the next archive record is due.
-                    for physicalPacket in self.station.genLoopPackets():
-                        
-                        # Process the new LOOP packet:
-                        self.newLoopPacket(physicalPacket)
-                    
-                    # Get and process any new archive data. 
-                    self.processArchiveData()
-                    
-                    # Before we start a new LOOP cycle, this would be a good time to 
-                    # do garbage collection:
-                    N = gc.collect()
-                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: %d objects garbage collected" % (N,))
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
     
-            finally:
-                # The main loop has exited. Shut the engine down.
-                self.shutDown()
+            while True:
+        
+                self.preloop()
+    
+                # Generate LOOP packets until the next archive record is due.
+                for physicalPacket in self.station.genLoopPackets():
+                    
+                    # Process the new LOOP packet:
+                    self.newLoopPacket(physicalPacket)
+                
+                # Get and process any new archive data. 
+                self.processArchiveData()
+                
+                # Before we start a new LOOP cycle, this would be a good time to 
+                # do garbage collection:
+                N = gc.collect()
+                syslog.syslog(syslog.LOG_DEBUG, "wxengine: %d objects garbage collected" % (N,))
+
+        finally:
+            # The main loop has exited. Shut the engine down.
+            self.shutDown()
 
     def setup(self):
         """Gets run before anything else."""
@@ -237,6 +232,13 @@ class StdEngine(object):
             # Unbind the list of service objects. This will allow
             # them to be garbage collected w/o a circular reference:
             del self.service_obj
+
+        try:
+            # Close the console:
+            self.station.close()
+        except:
+            pass
+
 
     def getArchivePacketsSince(self, lastgood_ts):
         """Retrieve new archive packets from the station since a specified time.

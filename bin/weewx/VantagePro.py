@@ -215,9 +215,7 @@ class EthernetWrapper(BaseWrapper):
 class VantagePro (object) :
     """Class that represents a connection to a VantagePro console.
     
-    The connection to the console must be opened before use. This
-    can either be done by calling method open(), or better, using
-    a 'with statement' to open and close the connection"""
+    The connection will be opened after initialization"""
 
     # List of types for which archive records will be explicitly calculated
     # from LOOP data. Right now there is only one, but if we ever support weather
@@ -276,10 +274,12 @@ class VantagePro (object) :
 
         # Get an appropriate port, depending on the connection type:
         self.port = VantagePro.port_factory(vp_dict)
+        
+        # Open it up:
+        self.port.open()
 
         # Get the archive interval off the console:
-        with self:
-            self.archive_interval = self.getArchiveInterval()
+        self.archive_interval = self.getArchiveInterval()
         
     @staticmethod
     def port_factory(vp_dict):
@@ -307,19 +307,7 @@ class VantagePro (object) :
 
     def close(self):
         """Close the connection to the console. """
-        try:
-            self.port.close()
-        except:
-            pass         
-        
-    def __enter__(self):
-        """When entering a 'with statement', open up the console connection"""
-        self.open()
-        return self
-    
-    def __exit__(self, e_type, e_value, e_traceback):
-        """When exiting a 'with statement', or upon an exception, close the console connection"""
-        self.close()
+        self.port.close()
         
     def genLoopPackets(self):
         """Generator function that returns loop packets until the next archive record is due."""
