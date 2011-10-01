@@ -8,7 +8,7 @@
 #    $Date$
 #
 """classes and functions for interfacing with a Davis VantagePro or VantagePro2"""
-from __future__ import with_statement
+
 import serial
 import struct
 import syslog

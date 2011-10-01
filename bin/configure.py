@@ -10,7 +10,6 @@
 #
 """Configure various resources used by weewx"""
 
-from __future__ import with_statement
 import sys
 import syslog
 import os.path

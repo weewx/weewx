@@ -10,8 +10,6 @@
 
 """Main engine for the weewx weather system."""
 
-from __future__ import with_statement
-
 # Python imports
 from optparse import OptionParser
 import Queue
