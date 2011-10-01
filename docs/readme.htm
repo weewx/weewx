@@ -19,7 +19,7 @@
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.10</h1>
+Version 1.11</h1>
 <h1>Table of Contents</h1>
 	<p>For information on customizing <span class="code">weewx</span>, see the separate 
 	document <a href="customizing.htm"><em>Customizing 
@@ -245,11 +245,13 @@ Version 1.10</h1>
 	weather station architecture are supported:</p>
 	<ul>
 		<li><a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis VantagePro2</a> 
-		Only the &quot;Revision B&quot; version (firmware dated on 
-	or after 22 April 2002). It would be very easy to port to a &quot;Revision A&quot; station 
-	or even the original VantagePro, but I don&#39;t have access to the hardware to 
-	test it.</li>
+		Both the &quot;Rev A&quot; (firmware dated before 22 April 2002) and &quot;Rev B&quot; 
+		versions are supported.</li>
 		<li><a href="http://www.vantagevue.com/">Davis VantageVue</a></li>
+		<li>
+		<a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">
+		Davis WeatherLinkIP</a> (uses an ethernet connection instead of a serial 
+		connection).</li>
 	</ul>
 	<h1><a name="Installing_weewx">Installing <span class="code">weewx</span></a></h1>
 	<p>Because <span class="code">weewx</span> is &quot;Pure Python&quot;, that is it is 100% 
@@ -493,17 +495,32 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	is accepted. Required.</p>
 	<h3 class="config_section">[VantagePro]</h3>
 	<p>This section is for options relating to the VantagePro hardware.</p>
-	<p class="config_important">port</p>
-	<p>Set to the port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
-	is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
-	for serial ports. Required. No default.</p>
-	<p class="config_option">baudrate</p>
-	<p>Set to the baudrate of your station. The default is 19200.</p>
 	<p class="config_important">archive_interval</p>
 	<p>Set to the desired archive interval of your station, in seconds. This variable 
 	is only used when first setting up your station. Otherwise, this value is read directly 
 	from the station. Required if you <a href="#Archive_interval">configure your 
 	station</a>. No default.</p>
+	<p class="config_important">type</p>
+	<p>Set to either &#39;<span class="code">serial</span>&#39;, if you have a serial or 
+	USB connection to your VantagePro (by far the most common), or to &#39;<span class="code">ethernet</span>&#39; 
+	if you have the WeatherLinkIP. No default.</p>
+	<p class="config_important">port</p>
+	<p>If you chose &#39;<span class="code">serial</span>&#39; above, then set to the 
+	serial port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
+	is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
+	for serial ports. Otherwise, not required. No default.</p>
+	<p class="config_important">host</p>
+	<p>If you chose &#39;<span class="code">ethernet</span>&#39; above, then give the 
+	either the IP address (<em>e.g.</em>, <span class="code">192.168.0.1</span>) 
+	or hostname (<em>e.g.</em>, <span class="code">console.mydomain.com</span>) 
+	to your console. Otherwise, not required. No default.</p>
+	<p class="config_option">baudrate</p>
+	<p>Set to the baudrate of your station. The default is 19200.</p>
+	<p class="config_option">tcp_port</p>
+	<p>The port where your WeatherLinkIP will be listening. Default is 22222.</p>
+	<p class="config_option">tcp_send_delay</p>
+	<p>How long to block after sending a socket packet to your WeatherLinkIP. 
+	Default is 1 second.</p>
 	<p class="config_option">iss_id</p>
 	<p>Set to the ID number of your Integrated Sensor Suite (ISS). This is used 
 	in the formula to calculate reception quality for wireless stations. The default 
