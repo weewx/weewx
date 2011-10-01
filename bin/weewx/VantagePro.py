@@ -14,46 +14,208 @@ import struct
 import syslog
 import datetime
 import time
+import socket
 
 from weewx.crc16 import crc16
 import weeutil.weeutil
 import weewx.accum
 import weewx.wxformulas
-    
+
 # A few handy constants:
 _ack    = chr(0x06)
 _resend = chr(0x21)
 
-# Unfortunately, package serial does not take advantage of the "with" transaction
-# semantics. So, we'll provide it ourself. This will insure that the serial connection
-# to the VP2 gets closed despite any exceptions. For a readable description
-# of the 'with' statement, see http://effbot.org/zone/python-with-statement.htm
-class SerialWrapper(object):
+class BaseWrapper(object):
+    """Base class for (Serial|Ethernet)Wrapper"""
+
+    #===============================================================================
+    #          Primitives for working with the Davis Console
+    #===============================================================================
+
+    def wakeup_console(self, max_tries=3, wait_before_retry=1.2):
+        """Wake up a Davis VantagePro console."""
+    
+        # Wake up the console. Try up to max_tries times
+        for unused_count in xrange(max_tries) :
+            # Clear out any pending input or output characters:
+            self.flush_output()
+            self.flush_input()
+            # It can be hard to get the console's attention, particularly
+            # when in the middle of a LOOP command. Send a whole bunch of line feeds,
+            # then flush everything, then look for the \n\r acknowledgment
+            self.write('\n\n\n')
+            time.sleep(0.5)
+            self.flush_input()
+            self.write('\n')
+#            self.queued_bytes()
+            _resp = self.read(2)
+            if _resp == '\n\r' : break
+            print "Unable to wake up console... sleeping"
+            time.sleep(wait_before_retry)
+            print "Unable to wake up console... retrying"
+        else :
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to wake up console")
+            raise weewx.WakeupError, "Unable to wake up VantagePro console"
+
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: successfully woke up console")
+
+
+    def send_data(self, data):
+        """Send data to the Davis console, waiting for an acknowledging <ack> 
+    
+        data: The data to send, as a string"""
+
+        self.write(data)
+    
+        # Look for the acknowledging ACK character
+        _resp = self.read()
+        if _resp != _ack : 
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: No <ACK> received from console")
+            raise weewx.AckError, "No <ACK> received from VantagePro console"
+    
+    def send_data_with_crc16(self, data, max_tries=3) :
+        """Send data to the Davis console along with a CRC check, waiting for an acknowledging <ack>.
+        If none received, resend up to 3 times.
+        
+        data: The data to send, as a string"""
+        
+        #Calculate the crc for the data:
+        _crc = crc16(data)
+        
+        # ...and pack that on to the end of the data in big-endian order:
+        _data_with_crc = data + struct.pack(">H", _crc)
+        
+        # Retry up to max_tries times:
+        for unused_count in xrange(max_tries) :
+            self.write(_data_with_crc)
+            # Look for the acknowledgment.
+            _resp = self.read()
+            if _resp == _ack : break
+        else :
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to pass CRC16 check while sending data")
+            raise weewx.CRCError, "Unable to pass CRC16 check while sending data to VantagePro console"
+
+
+    def get_data_with_crc16(self, nbytes, prompt=None, max_tries=3) :
+        """Get a packet of data and do a CRC16 check on it, asking for retransmit if necessary.
+        
+        It is guaranteed that the length of the returned data will be of the requested length.
+        An exception of type CRCError will be thrown if the data cannot pass the CRC test
+        in the requested number of retries.
+        
+        nbytes: The number of bytes (including the 2 byte CRC) to get. 
+        
+        prompt: Any string to be sent before requesting the data. Default=None
+        
+        max_tries: Number of tries before giving up. Default=3
+        
+        returns: the packet data as a string"""
+        if prompt :
+            self.write(prompt)
+            
+        for unused_count in xrange(max_tries):
+            _buffer = self.read(nbytes)
+            # If the right amount of data was returned and it passes the CRC check,
+            # return it. Otherwise, signal to resend
+            if len(_buffer) == nbytes and crc16(_buffer) == 0 : 
+                return _buffer
+            self.write(_resend)
+        else :
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to pass CRC16 check while getting data")
+            raise weewx.CRCError, "Unable to pass CRC16 check while getting data from VantagePro console"
+
+class SerialWrapper(BaseWrapper):
     """Wraps a serial connection returned from package serial"""
     
     def __init__(self, port, baudrate, timeout):
         self.port     = port
         self.baudrate = baudrate
         self.timeout  = timeout
-        
-    def __enter__(self):
-        # Open up the port and return it
-        self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
-        return self.serial_port
+
+    def flush_input(self):
+        self.serial_port.flushInput()
+
+    def flush_output(self):
+        self.serial_port.flushOutput()
+
+    def queued_bytes(self):
+        return self.serial_port.inWaiting()
+ 
+    def read(self, chars=1):
+        return self.serial_port.read(chars)
     
-    def __exit__(self, dummy_etyp, dummy_einst, dummy_etb):
+    def write(self, data):
+        return self.serial_port.write(data)
+        
+    def open(self):
+        # Open up the port and store it
+        self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
+    
+    def close(self):
         try:
             # This will cancel any pending loop:
-            _wakeup_console(self.serial_port)
+            self.wakeup_console()
         except:
             pass
+        self.serial_port.close()
+
+class EthernetWrapper(BaseWrapper):
+    """Wrap a socket"""
+
+    def __init__(self, host, port, timeout, tcp_send_delay):
+
+        self.host           = host
+        self.port           = port
+        self.timeout        = timeout
+        self.tcp_send_delay = tcp_send_delay
+
+    def open(self):
         try:
-            self.serial_port.close()
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.settimeout(self.timeout)
+            self.socket.connect((self.host, self.port))
+        except:
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to connect to ethernet host %s on port %d." % (self.host, self.port))
+            raise
+
+    def close(self):
+        try:
+            # This will cancel any pending loop:
+            self.wakeup_console()
         except:
             pass
-        
+        self.socket.shutdown(socket.SHUT_RDWR)
+        self.socket.close()
+
+    def flush_input(self):
+        """Flush the input buffer from WeatherLinkIP"""
+        # This is a bit of a hack, but there is no analogue to pyserial's flushInput()
+        self.read(4096)
+
+    def flush_output(self):
+        """Flush the output buffer to WeatherLinkIP
+
+        This function does nothing as there should never be anything left in
+        the buffer when using socket.sendall()"""
+        pass
+
+    def queued_bytes(self):
+        """Determine how many bytes are in the buffer"""
+        return len(self.socket.recv(4096, socket.MSG_PEEK))
+
+    def write(self, data):
+        """Write to a WeatherLinkIP"""
+        self.socket.sendall(data)
+        time.sleep(self.tcp_send_delay)
+
+    def read(self, chars=1):
+        """Read bytes from WeatherLinkIP"""
+        return self.socket.recv(4096)
+
 class VantagePro (object) :
-    """Class that represents a connection to a VantagePro console."""
+    """Class that represents a connection to a VantagePro console.
+    
+    The connection will be opened after initialization"""
 
     # List of types for which archive records will be explicitly calculated
     # from LOOP data. Right now there is only one, but if we ever support weather
@@ -62,14 +224,24 @@ class VantagePro (object) :
     special = ['consBatteryVoltage']
 
     def __init__(self, **vp_dict) :
-        """Initialize an object of type VantagePro. 
+        """Initialize an object of type VantagePro.
         
         NAMED ARGUMENTS:
         
-        port: The serial port of the VP. [Required]
+        connection_type: The type of connection (serial|ethernet) [Required]
+
+        port: The serial port of the VP. [Required if serial/USB
+        communication]
+
+        host: The VantagePro network host [Required if Ethernet communication]
         
         baudrate: Baudrate of the port. [Optional. Default 19200]
+
+        tcp_port: TCP port to connect to [Optional. Default 22222]
         
+        tcp_send_delay: Block after sending data to WeatherLinkIP to allow it
+        to process the command [Optional. Default is 1]
+
         timeout: How long to wait before giving up on a response from the
         serial port. [Optional. Default is 5]
         
@@ -88,22 +260,54 @@ class VantagePro (object) :
         Default is 1 (US Customary), and the only system supported
         in this version.]
         """
+
         # TODO: These values should really be retrieved dynamically from the VP:
         self.iss_id           = int(vp_dict.get('iss_id', 1))
         self.model_type       = 2 # = 1 for original VantagePro, = 2 for VP2
 
         # These come from the configuration dictionary:
-        self.port             = vp_dict['port']
-        self.baudrate         = int(vp_dict.get('baudrate'     , 19200))
-        self.timeout          = float(vp_dict.get('timeout', 5.0))
         self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
         self.archive_delay    = int(vp_dict.get('archive_delay', 15))
         self.unit_system      = int(vp_dict.get('unit_system'  , 1))
         self.dst_delta        = 3600
 
-        # Get the archive interval dynamically:
+        # Get an appropriate port, depending on the connection type:
+        self.port = VantagePro.port_factory(vp_dict)
+        
+        # Open it up:
+        self.port.open()
+
+        # Get the archive interval off the console:
         self.archive_interval = self.getArchiveInterval()
+        
+    @staticmethod
+    def port_factory(vp_dict):
+        """Produce a serial or ethernet port object"""
+        
+        timeout = float(vp_dict.get('timeout', 5.0))
+        
+        # Get the connection type. If it is not specified, assume 'serial':
+        connection_type = vp_dict.get('type', 'serial').lower()
+
+        if connection_type == "serial":
+            port = vp_dict['port']
+            baudrate = int(vp_dict.get('baudrate', 19200))
+            return SerialWrapper(port, baudrate, timeout)
+        elif connection_type == "ethernet":
+            hostname = vp_dict['host']
+            tcp_port = int(vp_dict.get('tcp_port', 22222))
+            tcp_send_delay = int(vp_dict.get('tcp_send_delay', 1))
+            return EthernetWrapper(hostname, tcp_port, timeout, tcp_send_delay)
+        raise weewx.UnsupportedFeature(vp_dict['type'])
+
+    def open(self):
+        """Open up the connection to the console"""
+        self.port.open()
+
+    def close(self):
+        """Close the connection to the console. """
+        self.port.close()
         
     def genLoopPackets(self):
         """Generator function that returns loop packets until the next archive record is due."""
@@ -138,37 +342,33 @@ class VantagePro (object) :
 
         syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Requesting %d LOOP packets." % N)
         
-        # Open up the serial port. It will automatically be closed if an 
-        # exception is raised:
-        with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-
-            _wakeup_console(serial_port, self.max_tries, self.wait_before_retry)
+        self.port.wakeup_console(self.max_tries, self.wait_before_retry)
+        
+        # Request N packets:
+        self.port.send_data("LOOP %d\n" % N)
+        
+        for loop in xrange(N) :
             
-            # Request N packets:
-            _send_data(serial_port, "LOOP %d\n" % N)
-            
-            for loop in xrange(N) :
-                
-                for unused_count in xrange(self.max_tries):
-                    # Fetch a packet
-                    buffer = serial_port.read(99)
-                    if len(buffer) != 99 :
-                        syslog.syslog(syslog.LOG_ERR, 
-                                      "VantagePro: LOOP #%d; buffer not full (%d) after timeout... retrying" % (loop,len(buffer)))
-                        continue
-                    if crc16(buffer) :
-                        syslog.syslog(syslog.LOG_ERR,
-                                      "VantagePro: LOOP #%d; CRC error... retrying" % loop)
-                        continue
-                    # ... decode it
-                    pkt_dict = unpackLoopPacket(buffer[:95])
-                    # Yield it
-                    yield pkt_dict
-                    break
-                else:
+            for unused_count in xrange(self.max_tries):
+                # Fetch a packet
+                buffer = self.port.read(99)
+                if len(buffer) != 99 :
                     syslog.syslog(syslog.LOG_ERR, 
-                                  "VantagePro: Max retries exceeded while getting LOOP packets")
-                    raise weewx.RetriesExceeded, "While getting LOOP packets"
+                                  "VantagePro: LOOP #%d; buffer not full (%d) after timeout... retrying" % (loop,len(buffer)))
+                    continue
+                if crc16(buffer) :
+                    syslog.syslog(syslog.LOG_ERR,
+                                  "VantagePro: LOOP #%d; CRC error... retrying" % loop)
+                    continue
+                # ... decode it
+                pkt_dict = unpackLoopPacket(buffer[:95])
+                # Yield it
+                yield pkt_dict
+                break
+            else:
+                syslog.syslog(syslog.LOG_ERR, 
+                              "VantagePro: Max retries exceeded while getting LOOP packets")
+                raise weewx.RetriesExceeded, "While getting LOOP packets"
 
     def genArchivePackets(self, since_ts):
         """A generator function to return archive packets from a VantagePro station.
@@ -196,71 +396,70 @@ class VantagePro (object) :
         # Save the last good time:
         _last_good_ts = since_ts if since_ts else 0
         
-        with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
+        # Retry the dump up to max_tries times
+        for unused_count in xrange(self.max_tries) :
+            try :
+                # Wake up the console...
+                self.port.wakeup_console(self.max_tries, self.wait_before_retry)
+                # ... request a dump...
+                self.port.send_data('DMPAFT\n')
+                # ... from the designated date:
+                self.port.send_data_with_crc16(_datestr, self.max_tries)
+                
+                # Get the response with how many pages and starting index and decode it:
+                _buffer = self.port.get_data_with_crc16(6, max_tries=self.max_tries)
+                (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
+              
+                syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
+                
+                # Cycle through the pages...
+                for unused_ipage in xrange(_npages) :
+                    # ... get a page of archive data
+                    _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
+                    # Now extract each record from the page
+                    for _index in xrange(_start_index, 5) :
+                        # If the console has been recently initialized, there will
+                        # be unused records, which are filled with 0xff. Detect this
+                        # by looking at the first 4 bytes (the date and time):
+                        if _page[1+52*_index:5+52*_index] == 4*chr(0xff) :
+                            # This record has never been used. We're done.
+                            syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" \
+                                          % (unused_ipage, _index))
+                            return
+                        # Unpack the raw archive packet:
+                        _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
+                        # Divide archive interval by 60 to keep consistent with wview
+                        _packet['interval']   = self.archive_interval / 60 
+                        _packet['model_type'] = self.model_type
+                        _packet['iss_id']     = self.iss_id
+                        _packet['rxCheckPercent'] = _rxcheck(_packet)
 
-            # Retry the dump up to max_tries times
-            for unused_count in xrange(self.max_tries) :
-                try :
-                    # Wake up the console...
-                    _wakeup_console(serial_port, self.max_tries, self.wait_before_retry)
-                    # ... request a dump...
-                    _send_data(serial_port, 'DMPAFT\n')
-                    # ... from the designated date:
-                    _send_data_with_crc16(serial_port, _datestr, self.max_tries)
-                    
-                    # Get the response with how many pages and starting index and decode it:
-                    _buffer = _get_data_with_crc16(serial_port, 6, max_tries=self.max_tries)
-                    (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
-                  
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
-                    
-                    # Cycle through the pages...
-                    for unused_ipage in xrange(_npages) :
-                        # ... get a page of archive data
-                        _page = _get_data_with_crc16(serial_port, 267, prompt=_ack, max_tries=self.max_tries)
-                        # Now extract each record from the page
-                        for _index in xrange(_start_index, 5) :
-                            # If the console has been recently initialized, there will
-                            # be unused records, which are filled with 0xff:
-                            if _page[1+52*_index:53+52*_index] == 52*chr(0xff) :
-                                # This record has never been used. We're done.
-                                syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" \
-                                              % (unused_ipage, _index))
-                                return
-                            # Unpack the raw archive packet:
-                            _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
-                            # Divide archive interval by 60 to keep consistent with wview
-                            _packet['interval']   = self.archive_interval / 60 
-                            _packet['model_type'] = self.model_type
-                            _packet['iss_id']     = self.iss_id
-                            _packet['rxCheckPercent'] = _rxcheck(_packet)
-    
-                            # Convert from the internal, Davis encoding to physical units:
-                            _record = self.translateArchivePacket(_packet)
-                            # Check to see if the time stamps are declining, which would
-                            # signal this is a wrap around record on the last page.
-                            # However, the time stamps may be declining just because of the
-                            # "fall back" from DST in the Fall, so allow times stamps to
-                            # decline up to the DST delta.
-                            if _record['dateTime'] is None or _record['dateTime'] + self.dst_delta <= _last_good_ts :
-                                # The time stamp is declining. We're done.
-                                syslog.syslog(syslog.LOG_DEBUG, "VantagePro: time stamps declining. Record timestamp %s" \
-                                              % weeutil.weeutil.timestamp_to_string(_record['dateTime']))
-                                syslog.syslog(syslog.LOG_DEBUG, "      ****  Last good timestamp %s" \
-                                              % weeutil.weeutil.timestamp_to_string(_last_good_ts))
-                                return
-                            # Augment the record with the data from the accumulators:
-                            self.archiveAccumulators(_record)
-                            # Set the last time to the current time, and yield the packet
-                            _last_good_ts = _record['dateTime']
-                            yield _record
-                        _start_index = 0
-                    return
-                except weewx.WeeWxIOError:
-                    # Caught an error. Keep retrying...
-                    continue
-            syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive packets")
-            raise weewx.RetriesExceeded, "Max retries exceeded while getting archive packets"
+                        # Convert from the internal, Davis encoding to physical units:
+                        _record = self.translateArchivePacket(_packet)
+                        # Check to see if the time stamps are declining, which would
+                        # signal this is a wrap around record on the last page.
+                        # However, the time stamps may be declining just because of the
+                        # "fall back" from DST in the Fall, so allow times stamps to
+                        # decline up to the DST delta.
+                        if _record['dateTime'] is None or _record['dateTime'] + self.dst_delta <= _last_good_ts :
+                            # The time stamp is declining. We're done.
+                            syslog.syslog(syslog.LOG_DEBUG, "VantagePro: time stamps declining. Record timestamp %s" \
+                                          % weeutil.weeutil.timestamp_to_string(_record['dateTime']))
+                            syslog.syslog(syslog.LOG_DEBUG, "      ****  Last good timestamp %s" \
+                                          % weeutil.weeutil.timestamp_to_string(_last_good_ts))
+                            return
+                        # Augment the record with the data from the accumulators:
+                        self.archiveAccumulators(_record)
+                        # Set the last time to the current time, and yield the packet
+                        _last_good_ts = _record['dateTime']
+                        yield _record
+                    _start_index = 0
+                return
+            except weewx.WeeWxIOError:
+                # Caught an error. Keep retrying...
+                continue
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive packets")
+        raise weewx.RetriesExceeded, "Max retries exceeded while getting archive packets"
 
     def accumulateLoop(self, physicalLOOPPacket):
         """Process LOOP data, calculating averages within an archive period."""
@@ -322,25 +521,23 @@ class VantagePro (object) :
         
         returns: the time as a time-tuple
         """
-        with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-    
-            # Try up to 3 times:
-            for unused_count in xrange(self.max_tries) :
-                try :
-                    # Wake up the console...
-                    _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                    # ... request the time...
-                    _send_data(serial_port, 'GETTIME\n')
-                    # ... get the binary data. No prompt, only one try:
-                    _buffer = _get_data_with_crc16(serial_port, 8, max_tries=1)
-                    (sec, min, hr, day, mon, yr, unused_crc) = struct.unpack("<bbbbbbH", _buffer)
-                    time_tt = (yr+1900, mon, day, hr, min, sec, 0, 0, -1)
-                    return time_tt
-                except weewx.WeeWxIOError :
-                    # Caught an error. Keep retrying...
-                    continue
-            syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting time")
-            raise weewx.RetriesExceeded, "While getting console time"
+        # Try up to 3 times:
+        for unused_count in xrange(self.max_tries) :
+            try :
+                # Wake up the console...
+                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                # ... request the time...
+                self.port.send_data('GETTIME\n')
+                # ... get the binary data. No prompt, only one try:
+                _buffer = self.port.get_data_with_crc16(8, max_tries=1)
+                (sec, min, hr, day, mon, yr, unused_crc) = struct.unpack("<bbbbbbH", _buffer)
+                time_tt = (yr+1900, mon, day, hr, min, sec, 0, 0, -1)
+                return time_tt
+            except weewx.WeeWxIOError :
+                # Caught an error. Keep retrying...
+                continue
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting time")
+        raise weewx.RetriesExceeded, "While getting console time"
             
     def setTime(self, newtime_ts, max_drift):
         """Set the clock on the Davis VantagePro console
@@ -363,21 +560,20 @@ class VantagePro (object) :
         _buffer = struct.pack("<bbbbbb", newtime_tt[5], newtime_tt[4], newtime_tt[3], newtime_tt[2],
                                          newtime_tt[1], newtime_tt[0] - 1900)
             
-        with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for unused_count in xrange(self.max_tries) :
-                try :
-                    _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                    _send_data(serial_port, 'SETTIME\n')
-                    _send_data_with_crc16(serial_port, _buffer, max_tries=self.max_tries)
-                    syslog.syslog(syslog.LOG_NOTICE,
-                                  "VantagePro: Clock set to %s (%d)" % (time.asctime(newtime_tt), 
-                                                                       time.mktime(newtime_tt)) )
-                    return
-                except weewx.WeeWxIOError :
-                    # Caught an error. Keep retrying...
-                    continue
-            syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while setting time")
-            raise weewx.RetriesExceeded, "While setting console time"
+        for unused_count in xrange(self.max_tries) :
+            try :
+                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                self.port.send_data('SETTIME\n')
+                self.port.send_data_with_crc16(_buffer, max_tries=self.max_tries)
+                syslog.syslog(syslog.LOG_NOTICE,
+                              "VantagePro: Clock set to %s (%d)" % (time.asctime(newtime_tt), 
+                                                                   time.mktime(newtime_tt)) )
+                return
+            except weewx.WeeWxIOError :
+                # Caught an error. Keep retrying...
+                continue
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while setting time")
+        raise weewx.RetriesExceeded, "While setting console time"
     
     def setArchiveInterval(self, archive_interval):
         """Set the archive interval of the VantagePro.
@@ -392,69 +588,65 @@ class VantagePro (object) :
         if archive_interval_minutes not in (1, 5, 10, 15, 30, 60, 120):
             raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % archive_interval
 
-        with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for unused_count in xrange(self.max_tries):
-                try :
-                    _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                
-                    # The Davis documentation is wrong about the SETPER command.
-                    # It actually returns an 'OK', not an <ACK>
-                    serial_port.write('SETPER %d\n' % archive_interval_minutes)
-                    # Takes a bit for the VP to react and fill up the buffer. Sleep for a sec
-                    time.sleep(1)
-                    # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
-                    # So, instead find how many bytes are waiting and fetch them all
-                    nc = serial_port.inWaiting()
-                    _buffer = serial_port.read(nc)
-                    # Split the buffer on white space
-                    rx_list = _buffer.split()
-                    # The first member should be the 'OK' in the VP response
-                    if len(rx_list) == 1 and rx_list[0] == 'OK' :
-                        self.archive_interval = archive_interval_minutes * 60
-                        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d" % (self.archive_interval,))
-                        return
-    
-                except weewx.WeeWxIOError:
-                    # Caught an error. Keep trying...
-                    continue
+        for unused_count in xrange(self.max_tries):
+            try :
+                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
             
-            syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while setting archive interval")
-            raise weewx.RetriesExceeded, "While setting archive interval"
+                # The Davis documentation is wrong about the SETPER command.
+                # It actually returns an 'OK', not an <ACK>
+                self.port.write('SETPER %d\n' % archive_interval_minutes)
+                # Takes a bit for the VP to react and fill up the buffer. Sleep for a sec
+                time.sleep(1)
+                # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
+                # So, instead find how many bytes are waiting and fetch them all
+                nc = self.port.queued_bytes()
+                _buffer = self.port.read(nc)
+                # Split the buffer on white space
+                rx_list = _buffer.split()
+                # The first member should be the 'OK' in the VP response
+                if len(rx_list) == 1 and rx_list[0] == 'OK' :
+                    self.archive_interval = archive_interval_minutes * 60
+                    syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d" % (self.archive_interval,))
+                    return
+
+            except weewx.WeeWxIOError:
+                # Caught an error. Keep trying...
+                continue
+        
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while setting archive interval")
+        raise weewx.RetriesExceeded, "While setting archive interval"
     
     def clearLog(self):
         """Clear the internal archive memory in the VantagePro."""
-        with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for unused_count in xrange(self.max_tries):
-                try:
-                    _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                    _send_data(serial_port, "CLRLOG\n")
-                    syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Archive memory cleared.")
-                    return
-                except weewx.WeeWxIOError:
-                    #Caught an error. Keey trying...
-                    continue
-            syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while clearing log")
-            raise weewx.RetriesExceeded
+        for unused_count in xrange(self.max_tries):
+            try:
+                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                self.port._send_data("CLRLOG\n")
+                syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Archive memory cleared.")
+                return
+            except weewx.WeeWxIOError:
+                #Caught an error. Keey trying...
+                continue
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while clearing log")
+        raise weewx.RetriesExceeded
     
     def getArchiveInterval(self):
         """Return the present archive interval in seconds."""
         
-        with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for unused_count in xrange(self.max_tries):
-                try :
-                    _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                    _send_data(serial_port, "EEBRD 2D 01\n")
-                    # ... get the binary data. No prompt, only one try:
-                    _buffer = _get_data_with_crc16(serial_port, 3, max_tries=1)
-                    _archive_interval = ord(_buffer[0]) * 60
-                    return _archive_interval
-                except weewx.WeeWxIOError:
-                    # Caught an error. Keep trying...
-                    continue
-            
-            syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive interval")
-            raise weewx.RetriesExceeded, "While getting archive interval"
+        for unused_count in xrange(self.max_tries):
+            try :
+                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                self.port.send_data("EEBRD 2D 01\n")
+                # ... get the binary data. No prompt, only one try:
+                _buffer = self.port.get_data_with_crc16(3, max_tries=1)
+                _archive_interval = ord(_buffer[0]) * 60
+                return _archive_interval
+            except weewx.WeeWxIOError:
+                # Caught an error. Keep trying...
+                continue
         
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive interval")
+        raise weewx.RetriesExceeded, "While getting archive interval"
         
     def getRX(self) :
         """Returns reception statistics from the console.
@@ -463,29 +655,28 @@ class VantagePro (object) :
         # of resynchronizations, the max # of packets received w/o an error,
         the # of CRC errors detected.)"""
         
-        with SerialWrapper(self.port, self.baudrate, self.timeout) as serial_port:
-            for unused_count in xrange(self.max_tries) :
-                try :
-                    _wakeup_console(serial_port, max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                    # Can't use function _send_data because the VP doesn't respond with an 
-                    # ACK for this command, it responds with 'OK'. Go figure.
-                    serial_port.write('RXCHECK\n')
-                    # Takes a bit for the VP to react and fill up the buffer. Sleep for 
-                    # half a sec
-                    time.sleep(0.5)
-                    # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
-                    # So, instead find how many bytes are waiting and fetch them all
-                    nc=serial_port.inWaiting()
-                    _buffer = serial_port.read(nc)
-                    # Split the buffer on white space
-                    rx_list = _buffer.split()
-                    # The first member should be the 'OK' in the VP response
-                    if len(rx_list) == 6 and rx_list[0] == 'OK' : return rx_list[1:]
-                except weewx.WeeWxIOError:
-                    # Caught an error. Keep retrying...
-                    continue
-            syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting RX data")
-            raise weewx.RetriesExceeded, "While getting RX data"
+        for unused_count in xrange(self.max_tries) :
+            try :
+                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                # Can't use function _send_data because the VP doesn't respond with an 
+                # ACK for this command, it responds with 'OK'. Go figure.
+                self.port.write('RXCHECK\n')
+                # Takes a bit for the VP to react and fill up the buffer. Sleep for 
+                # half a sec
+                time.sleep(0.5)
+                # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
+                # So, instead find how many bytes are waiting and fetch them all
+                nc=self.port.queued_bytes()
+                _buffer = self.port.read(nc)
+                # Split the buffer on white space
+                rx_list = _buffer.split()
+                # The first member should be the 'OK' in the VP response
+                if len(rx_list) == 6 and rx_list[0] == 'OK' : return rx_list[1:]
+            except weewx.WeeWxIOError:
+                # Caught an error. Keep retrying...
+                continue
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting RX data")
+        raise weewx.RetriesExceeded, "While getting RX data"
 
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
@@ -515,102 +706,6 @@ class VantagePro (object) :
         _packet = translateArchiveToUS(archivePacket)
         return _packet
     
-#===============================================================================
-#          Primitives for working with the Davis Console
-#===============================================================================
-
-def _wakeup_console(serial_port, max_tries=3, wait_before_retry=1.2):
-    """ Wake up a Davis VantagePro console."""
-    
-    # Wake up the console. Try up to max_tries times
-    for unused_count in xrange(max_tries) :
-        # Clear out any pending input or output characters:
-        serial_port.flushOutput()
-        serial_port.flushInput()
-        # It can be hard to get the console's attention, particularly
-        # when in the middle of a LOOP command. Send a whole bunch of line feeds,
-        # then flush everything, then look for the \n\r acknowledgment
-        serial_port.write('\n\n\n')
-        time.sleep(0.5)
-        serial_port.flushInput()
-        serial_port.write('\n')
-        _resp = serial_port.read(2)
-        if _resp == '\n\r' : break
-        print "Unable to wake up console... sleeping"
-        time.sleep(wait_before_retry)
-        print "Unable to wake up console... retrying"
-    else :
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to wake up console")
-        raise weewx.WakeupError, "Unable to wake up VantagePro console"
-
-    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: successfully woke up console")
-
-
-def _send_data(serial_port, data):
-    """Send data to the Davis console, waiting for an acknowledging <ack> 
-    
-    data: The data to send, as a string"""
-
-    serial_port.write(data)
-    
-    # Look for the acknowledging ACK character
-    _resp = serial_port.read()
-    if _resp != _ack : 
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: No <ACK> received from console")
-        raise weewx.AckError, "No <ACK> received from VantagePro console"
-    
-def _send_data_with_crc16(serial_port, data, max_tries=3) :
-    """Send data to the Davis console along with a CRC check, waiting for an acknowledging <ack>.
-    If none received, resend up to 3 times.
-    
-    data: The data to send, as a string"""
-    
-    #Calculate the crc for the data:
-    _crc = crc16(data)
-    
-    # ...and pack that on to the end of the data in big-endian order:
-    _data_with_crc = data + struct.pack(">H", _crc)
-    
-    # Retry up to max_tries times:
-    for unused_count in xrange(max_tries) :
-        serial_port.write(_data_with_crc)
-        # Look for the acknowledgment.
-        _resp = serial_port.read()
-        if _resp == _ack : break
-    else :
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to pass CRC16 check while sending data")
-        raise weewx.CRCError, "Unable to pass CRC16 check while sending data to VantagePro console"
-
-
-def _get_data_with_crc16(serial_port, nbytes, prompt=None, max_tries=3) :
-    """Get a packet of data and do a CRC16 check on it, asking for retransmit if necessary.
-    
-    It is guaranteed that the length of the returned data will be of the requested length.
-    An exception of type CRCError will be thrown if the data cannot pass the CRC test
-    in the requested number of retries.
-    
-    nbytes: The number of bytes (including the 2 byte CRC) to get. 
-    
-    prompt: Any string to be sent before requesting the data. Default=None
-    
-    max_tries: Number of tries before giving up. Default=3
-    
-    returns: the packet data as a string"""
-    if prompt :
-        serial_port.write(prompt)
-        
-    for unused_count in xrange(max_tries):
-        _buffer = serial_port.read(nbytes)
-        # If the right amount of data was returned and it passes the CRC check,
-        # return it. Otherwise, signal to resend
-        if len(_buffer) == nbytes and crc16(_buffer) == 0 : 
-            return _buffer
-        serial_port.write(_resend)
-    else :
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to pass CRC16 check while getting data")
-        raise weewx.CRCError, "Unable to pass CRC16 check while getting data from VantagePro console"
-
-
 #===============================================================================
 #                         LOOP packet helper functions
 #===============================================================================
@@ -705,8 +800,17 @@ def translateLoopToUS(packet):
 #                         archive packet helper functions
 #===============================================================================
 
-# A tuple of all the types held in a VantagePro2 Rev B archive packet in their native order.
-# TODO: Extend to Rev A type packet records
+# Tuples of all the types held in a VantagePro2 Rev A or Rev B archive packet in their native order.
+vp2archA =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
+           'rain', 'rainRate', 'barometer', 'radiation', 'number_of_wind_samples',
+           'inTemp', 'inHumidity', 'outHumidity', 'windSpeed', 'windGust', 'windGustDir', 'windDir',
+           'UV', 'ET', 'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4', 
+           'soilTemp1', 'soilTemp2', 'soilTemp3','soilTemp4', 
+           'leafWet1', 'leafWet2', 'leafWet3', 'leafWet4',
+           'extraTemp1', 'extraTemp2',
+           'extraHumid1', 'extraHumid2',
+           'readClosed', 'readOpened')
+
 vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
            'rain', 'rainRate', 'barometer', 'radiation', 'number_of_wind_samples',
            'inTemp', 'inHumidity', 'outHumidity', 'windSpeed', 'windGust', 'windGustDir', 'windDir',
@@ -716,29 +820,36 @@ vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
            'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
            'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4')
 
-archive_format = struct.Struct("<HHhhhHHHHHhBBBBBBBBHBB2B2B4BB2B3B4B")
+archive_format_revA = struct.Struct("<HHhhhHHHHHhBBBBBBBBx4B4B4B2B2BHHx")
+archive_format_revB = struct.Struct("<HHhhhHHHHHhBBBBBBBBHBB2B2B4BB2B3B4B")
     
 def unpackArchivePacket(raw_packet):
     """Decode a Davis archive packet, returning the results as a dictionary.
     
     raw_packet: The archive packet data buffer, passed in as a string. This will be unpacked and 
     the results placed a dictionary"""
-    # TODO: Add Rev A style packets.
-    
-    # Check that this is a Rev B style packet. We don't know how to handle any others
+
+    # Figure out the packet type:
     packet_type = ord(raw_packet[42])
-    if packet_type != 0x0000 :
+    
+    if packet_type == 0x00 :
+        # Rev B packet type:
+        format = archive_format_revB
+        dataTypes = vp2archB
+    elif packet_type == 0xff:
+        # Rev A packet type:
+        format = archive_format_revA
+        dataTypes = vp2archA
+    else:
         raise weewx.UnknownArchiveType, "Unknown archive type = 0x%x" % packet_type 
-    
-    data_tuple = archive_format.unpack(raw_packet)
-    
-    packet = dict(zip(vp2archB, data_tuple))
         
+    data_tuple = format.unpack(raw_packet)
+    
+    packet = dict(zip(dataTypes, data_tuple))
+    
     # As far as I know, the Davis supports only US units:
     packet['usUnits'] = weewx.US
-    if weewx.debug:
-        # Sanity check that this is in fact a Rev B archive:
-        assert(packet['download_record_type'] == 0)
+
     return packet
 
 def translateArchiveToUS(packet):
@@ -753,11 +864,13 @@ def translateArchiveToUS(packet):
 
     record = {}
     
-    for _type in _archive_map:
+    for _type in packet:
+        
         # Get the mapping function needed for this key
-        func = _archive_map[_type]
-        # Call it, with the value as an argument, storing the results:
-        record[_type] = func(packet[_type])
+        func = _archive_map.get(_type)
+        if func:
+            # Call it, with the value as an argument, storing the results:
+            record[_type] = func(packet[_type])
 
     # Add a few derived values that are not in the packet itself.
     T = record['outTemp']
@@ -990,8 +1103,12 @@ _archive_map={'interval'       : _null_int,
               'soilMoist4'     : _little_val,
               'leafWet1'       : _little_val,
               'leafWet2'       : _little_val,
+              'leafWet3'       : _little_val,
+              'leafWet4'       : _little_val,
               'rxCheckPercent' : _null_float,
-              'forecastRule'   : _null}
+              'forecastRule'   : _null,
+              'readClosed'     : _null,
+              'readOpened'     : _null}
 
 if __name__ == '__main__':
     import configobj

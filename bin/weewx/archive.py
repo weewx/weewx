@@ -186,11 +186,11 @@ class Archive(object):
         
         An example of a returned value is: (time_vec, Value(outTempVec, 'outTemp')). 
         
-        If aggregation is desired (archive_interval is not None), then each element represents
+        If aggregation is desired (aggregate_interval is not None), then each element represents
         a time interval exclusive on the left, inclusive on the right. The time
         elements will all fall on the same local time boundary as startstamp. 
         For example, if startstamp is 8-Mar-2009 18:00
-        and archive_interval is 10800 (3 hours), then the returned time vector will be
+        and aggregate_interval is 10800 (3 hours), then the returned time vector will be
         (shown in local times):
         
         8-Mar-2009 21:00

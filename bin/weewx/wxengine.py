@@ -10,6 +10,8 @@
 
 """Main engine for the weewx weather system."""
 
+from __future__ import with_statement
+
 # Python imports
 from optparse import OptionParser
 import Queue
@@ -75,7 +77,6 @@ class StdEngine(object):
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         else:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
-
 
         # Set up the weather station hardware:
         self.setupStation(config_dict)
@@ -231,6 +232,13 @@ class StdEngine(object):
             # Unbind the list of service objects. This will allow
             # them to be garbage collected w/o a circular reference:
             del self.service_obj
+
+        try:
+            # Close the console:
+            self.station.close()
+        except:
+            pass
+
 
     def getArchivePacketsSince(self, lastgood_ts):
         """Retrieve new archive packets from the station since a specified time.

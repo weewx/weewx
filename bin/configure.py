@@ -10,6 +10,7 @@
 #
 """Configure various resources used by weewx"""
 
+from __future__ import with_statement
 import sys
 import syslog
 import os.path
@@ -159,6 +160,8 @@ def configureVP(config_dict):
             print "Archive records cleared."
         else:
             print "Nothing done."
+
+    station.close()
             
 def clearVP(config_dict):
     """Clear the archive memory of a VantagePro"""
@@ -167,11 +170,13 @@ def clearVP(config_dict):
     # Open up the weather station:
     station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
     print "Proceeding will erase old archive records."
-    ans = raw_input("Are you sure you wish to proceed? (y/n) ")
-    if ans == 'y':
+    ans = raw_input("Are you sure you wish to proceed? (Y/n) ")
+    if ans == 'Y':
         station.clearLog()
         print "Archive records cleared."
     else:
         print "Nothing done."
 
+    station.close()
+    
 main()
