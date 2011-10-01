@@ -431,8 +431,9 @@ class VantagePro (object) :
                     # Now extract each record from the page
                     for _index in xrange(_start_index, 5) :
                         # If the console has been recently initialized, there will
-                        # be unused records, which are filled with 0xff:
-                        if _page[1+52*_index:53+52*_index] == 52*chr(0xff) :
+                        # be unused records, which are filled with 0xff. Detect this
+                        # by looking at the first 4 bytes (the date and time):
+                        if _page[1+52*_index:5+52*_index] == 4*chr(0xff) :
                             # This record has never been used. We're done.
                             syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" \
                                           % (unused_ipage, _index))
@@ -811,8 +812,17 @@ def translateLoopToUS(packet):
 #                         archive packet helper functions
 #===============================================================================
 
-# A tuple of all the types held in a VantagePro2 Rev B archive packet in their native order.
-# TODO: Extend to Rev A type packet records
+# Tuples of all the types held in a VantagePro2 Rev A or Rev B archive packet in their native order.
+vp2archA =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
+           'rain', 'rainRate', 'barometer', 'radiation', 'number_of_wind_samples',
+           'inTemp', 'inHumidity', 'outHumidity', 'windSpeed', 'windGust', 'windGustDir', 'windDir',
+           'UV', 'ET', 'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4', 
+           'soilTemp1', 'soilTemp2', 'soilTemp3','soilTemp4', 
+           'leafWet1', 'leafWet2', 'leafWet3', 'leafWet4',
+           'extraTemp1', 'extraTemp2',
+           'extraHumid1', 'extraHumid2',
+           'readClosed', 'readOpened')
+
 vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
            'rain', 'rainRate', 'barometer', 'radiation', 'number_of_wind_samples',
            'inTemp', 'inHumidity', 'outHumidity', 'windSpeed', 'windGust', 'windGustDir', 'windDir',
@@ -822,29 +832,36 @@ vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
            'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
            'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4')
 
-archive_format = struct.Struct("<HHhhhHHHHHhBBBBBBBBHBB2B2B4BB2B3B4B")
+archive_format_revA = struct.Struct("<HHhhhHHHHHhBBBBBBBBx4B4B4B2B2BHHx")
+archive_format_revB = struct.Struct("<HHhhhHHHHHhBBBBBBBBHBB2B2B4BB2B3B4B")
     
 def unpackArchivePacket(raw_packet):
     """Decode a Davis archive packet, returning the results as a dictionary.
     
     raw_packet: The archive packet data buffer, passed in as a string. This will be unpacked and 
     the results placed a dictionary"""
-    # TODO: Add Rev A style packets.
-    
-    # Check that this is a Rev B style packet. We don't know how to handle any others
+
+    # Figure out the packet type:
     packet_type = ord(raw_packet[42])
-    if packet_type != 0x0000 :
+    
+    if packet_type == 0x00 :
+        # Rev B packet type:
+        format = archive_format_revB
+        dataTypes = vp2archB
+    elif packet_type == 0xff:
+        # Rev A packet type:
+        format = archive_format_revA
+        dataTypes = vp2archA
+    else:
         raise weewx.UnknownArchiveType, "Unknown archive type = 0x%x" % packet_type 
-    
-    data_tuple = archive_format.unpack(raw_packet)
-    
-    packet = dict(zip(vp2archB, data_tuple))
         
+    data_tuple = format.unpack(raw_packet)
+    
+    packet = dict(zip(dataTypes, data_tuple))
+    
     # As far as I know, the Davis supports only US units:
     packet['usUnits'] = weewx.US
-    if weewx.debug:
-        # Sanity check that this is in fact a Rev B archive:
-        assert(packet['download_record_type'] == 0)
+
     return packet
 
 def translateArchiveToUS(packet):
@@ -859,11 +876,13 @@ def translateArchiveToUS(packet):
 
     record = {}
     
-    for _type in _archive_map:
+    for _type in packet:
+        
         # Get the mapping function needed for this key
-        func = _archive_map[_type]
-        # Call it, with the value as an argument, storing the results:
-        record[_type] = func(packet[_type])
+        func = _archive_map.get(_type)
+        if func:
+            # Call it, with the value as an argument, storing the results:
+            record[_type] = func(packet[_type])
 
     # Add a few derived values that are not in the packet itself.
     T = record['outTemp']
@@ -1096,8 +1115,12 @@ _archive_map={'interval'       : _null_int,
               'soilMoist4'     : _little_val,
               'leafWet1'       : _little_val,
               'leafWet2'       : _little_val,
+              'leafWet3'       : _little_val,
+              'leafWet4'       : _little_val,
               'rxCheckPercent' : _null_float,
-              'forecastRule'   : _null}
+              'forecastRule'   : _null,
+              'readClosed'     : _null,
+              'readOpened'     : _null}
 
 if __name__ == '__main__':
     import configobj
