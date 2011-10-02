@@ -224,7 +224,7 @@ class EthernetWrapper(BaseWrapper):
 
     def read(self, chars=1):
         """Read bytes from WeatherLinkIP"""
-        return self.socket.recv(4096)
+        return self.socket.recv(chars)
 
 class VantagePro (object) :
     """Class that represents a connection to a VantagePro console.
