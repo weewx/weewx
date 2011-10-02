@@ -10,8 +10,6 @@
 
 """Main engine for the weewx weather system."""
 
-from __future__ import with_statement
-
 # Python imports
 from optparse import OptionParser
 import Queue
@@ -77,6 +75,8 @@ class StdEngine(object):
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         else:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s." % weewx.__version__)
 
         # Set up the weather station hardware:
         self.setupStation(config_dict)

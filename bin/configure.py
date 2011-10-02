@@ -10,7 +10,6 @@
 #
 """Configure various resources used by weewx"""
 
-from __future__ import with_statement
 import sys
 import syslog
 import os.path
@@ -139,40 +138,44 @@ def configureVP(config_dict):
     
     print "Configuring VantagePro..."
     # Open up the weather station:
-    with weewx.VantagePro.VantagePro(**config_dict['VantagePro']) as station:
+    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
 
-        old_archive_interval = station.archive_interval
-        new_archive_interval = config_dict['VantagePro'].as_int('archive_interval')
-        
-        if old_archive_interval == new_archive_interval:
-            print "Old archive interval matches new archive interval (%d seconds). Nothing done" % old_archive_interval
+    old_archive_interval = station.archive_interval
+    new_archive_interval = config_dict['VantagePro'].as_int('archive_interval')
+    
+    if old_archive_interval == new_archive_interval:
+        print "Old archive interval matches new archive interval (%d seconds). Nothing done" % old_archive_interval
+    else:
+        print "VantagePro old archive interval is %d seconds, new one is %d" % (old_archive_interval, new_archive_interval)
+        print "Proceeding will erase old archive records."
+        ans = raw_input("Are you sure you want to proceed? (y/n) ")
+        if ans == 'y' :
+            station.setArchiveInterval(new_archive_interval)
+            print "Archive interval now set to %d." % (new_archive_interval,)
+            # The Davis documentation implies that the log is cleared after
+            # changing the archive interval, but that doesn't seem to be the
+            # case. Clear it explicitly:
+            station.clearLog()
+            print "Archive records cleared."
         else:
-            print "VantagePro old archive interval is %d seconds, new one is %d" % (old_archive_interval, new_archive_interval)
-            print "Proceeding will erase old archive records."
-            ans = raw_input("Are you sure you want to proceed? (y/n) ")
-            if ans == 'y' :
-                station.setArchiveInterval(new_archive_interval)
-                print "Archive interval now set to %d." % (new_archive_interval,)
-                # The Davis documentation implies that the log is cleared after
-                # changing the archive interval, but that doesn't seem to be the
-                # case. Clear it explicitly:
-                station.clearLog()
-                print "Archive records cleared."
-            else:
-                print "Nothing done."
+            print "Nothing done."
+
+    station.close()
             
 def clearVP(config_dict):
     """Clear the archive memory of a VantagePro"""
     
     print "Clearing the archive memory of the VantagePro..."
     # Open up the weather station:
-    with weewx.VantagePro.VantagePro(**config_dict['VantagePro']) as station:
-        print "Proceeding will erase old archive records."
-        ans = raw_input("Are you sure you wish to proceed? (y/n) ")
-        if ans == 'y':
-            station.clearLog()
-            print "Archive records cleared."
-        else:
-            print "Nothing done."
+    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+    print "Proceeding will erase old archive records."
+    ans = raw_input("Are you sure you wish to proceed? (Y/n) ")
+    if ans == 'Y':
+        station.clearLog()
+        print "Archive records cleared."
+    else:
+        print "Nothing done."
 
+    station.close()
+    
 main()

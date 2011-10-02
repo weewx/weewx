@@ -1,9 +1,11 @@
 CHANGE HISTORY
 --------------------------------
 
-1.10.3 07/03/11
+1.11.0 10/01/11
 
 Added support for the Davis WeatherLinkIP.
+
+Added support for older Rev A type archive records.
 
 Added  patch from  user  Dan Haller  that sends  UV  and radiation  data to  the
 WeatherUnderground if available. Thanks, Dan!

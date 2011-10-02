@@ -8,7 +8,7 @@
 #    $Date$
 #
 """classes and functions for interfacing with a Davis VantagePro or VantagePro2"""
-from __future__ import with_statement
+
 import serial
 import struct
 import syslog
@@ -189,8 +189,14 @@ class EthernetWrapper(BaseWrapper):
 
     def flush_input(self):
         """Flush the input buffer from WeatherLinkIP"""
-        # This is a bit of a hack, but there is no analogue to pyserial's flushInput()
-        self.read(4096)
+        try:
+            # This is a bit of a hack, but there is no analogue to pyserial's flushInput()
+            self.socket.settimeout(0)
+            self.read(4096)
+        except:
+            pass
+        finally:
+            self.socket.settimeout(self.timeout)
 
     def flush_output(self):
         """Flush the output buffer to WeatherLinkIP
@@ -201,7 +207,15 @@ class EthernetWrapper(BaseWrapper):
 
     def queued_bytes(self):
         """Determine how many bytes are in the buffer"""
-        return len(self.socket.recv(4096, socket.MSG_PEEK))
+        length = 0
+        try:
+            self.socket.settimeout(0)
+            length = len(self.socket.recv(4096, socket.MSG_PEEK))
+        except socket.error:
+            pass
+        finally:
+            self.socket.settimeout(self.timeout)
+        return length
 
     def write(self, data):
         """Write to a WeatherLinkIP"""
