@@ -76,6 +76,8 @@ class StdEngine(object):
         else:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s." % weewx.__version__)
+
         # Set up the weather station hardware:
         self.setupStation(config_dict)
 
