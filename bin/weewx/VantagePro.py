@@ -635,7 +635,7 @@ class VantagePro (object) :
         for unused_count in xrange(self.max_tries):
             try:
                 self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                self.port._send_data("CLRLOG\n")
+                self.port.send_data("CLRLOG\n")
                 syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Archive memory cleared.")
                 return
             except weewx.WeeWxIOError:
@@ -672,7 +672,7 @@ class VantagePro (object) :
         for unused_count in xrange(self.max_tries) :
             try :
                 self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                # Can't use function _send_data because the VP doesn't respond with an 
+                # Can't use function send_data because the VP doesn't respond with an 
                 # ACK for this command, it responds with 'OK'. Go figure.
                 self.port.write('RXCHECK\n')
                 # Takes a bit for the VP to react and fill up the buffer. Sleep for 
