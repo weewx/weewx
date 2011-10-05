@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -15,7 +15,6 @@ import syslog
 import datetime
 import time
 import socket
-import random
 
 from weewx.crc16 import crc16
 import weeutil.weeutil
@@ -132,7 +131,7 @@ class BaseWrapper(object):
                 if not first_time: 
                     self.write(_resend)
                 _buffer = self.read(nbytes)
-                if crc16(_buffer) == 0 : 
+                if crc16(_buffer) == 0 :
                     return _buffer
             except weewx.WeeWxIOError:
                 pass
@@ -159,11 +158,11 @@ class SerialWrapper(BaseWrapper):
         return self.serial_port.inWaiting()
  
     def read(self, chars=1):
-        buff = self.serial_port.read(chars)
-        N = len(buff)
+        _buffer = self.serial_port.read(chars)
+        N = len(_buffer)
         if N != chars:
             raise weewx.WeeWxIOError("Expected to read %d chars; got %d instead" % (chars, N))
-        return buff
+        return _buffer
     
     def write(self, data):
         N = self.serial_port.write(data)
@@ -243,11 +242,11 @@ class EthernetWrapper(BaseWrapper):
     def read(self, chars=1):
         """Read bytes from WeatherLinkIP"""
         try:
-            buff = self.socket.recv(chars)
-            N = len(buff)
+            _buffer = self.socket.recv(chars)
+            N = len(_buffer)
             if N != chars:
                 raise weewx.WeeWxIOError("Expected to read %d chars; got %d instead" % (chars, N))
-            return buff
+            return _buffer
         except:
             raise weewx.WeeWxIOError("Socket read error")
         
@@ -399,17 +398,17 @@ class VantagePro(object):
             for unused_count in xrange(self.max_tries):
                 try:
                     # Fetch a packet
-                    buff = self.port.read(99)
+                    _buffer = self.port.read(99)
                 except weewx.WeeWxIOError, e:
                     syslog.syslog(syslog.LOG_ERR, "VantagePro: LOOP #%d; read error" % (loop,))
                     syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
                     continue
-                if crc16(buff) :
+                if crc16(_buffer) :
                     syslog.syslog(syslog.LOG_ERR,
                                   "VantagePro: LOOP #%d; CRC error... retrying" % loop)
                     continue
                 # ... decode it
-                pkt_dict = unpackLoopPacket(buff[:95])
+                pkt_dict = unpackLoopPacket(_buffer[:95])
                 # Yield it
                 yield pkt_dict
                 break
@@ -506,6 +505,8 @@ class VantagePro(object):
             except weewx.WeeWxIOError:
                 # Caught an error. Keep retrying...
                 continue
+        
+        # All of the retries have failed. Declare an error
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive packets")
         raise weewx.RetriesExceeded("Max retries exceeded while getting archive packets")
 
