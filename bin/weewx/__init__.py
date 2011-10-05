@@ -12,7 +12,7 @@
 """
 import time
 
-__version__="1.11.0a4"
+__version__="1.11.0a5"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -39,9 +39,6 @@ class WeeWxIOError(IOError):
 
 class WakeupError(WeeWxIOError):
     """Exception thrown when unable to wake up the console"""
-    
-class AckError(WeeWxIOError):
-    """Exception thrown when unable to get an acknowledging <ACK> from the console."""
     
 class CRCError(WeeWxIOError):
     """Exception thrown when unable to pass a CRC check."""

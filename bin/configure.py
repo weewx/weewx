@@ -160,7 +160,7 @@ def configureVP(config_dict):
         else:
             print "Nothing done."
 
-    station.close()
+    station.closePort()
             
 def clearVP(config_dict):
     """Clear the archive memory of a VantagePro"""
@@ -176,6 +176,6 @@ def clearVP(config_dict):
     else:
         print "Nothing done."
 
-    station.close()
+    station.closePort()
     
 main()

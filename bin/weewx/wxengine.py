@@ -235,7 +235,7 @@ class StdEngine(object):
 
         try:
             # Close the console:
-            self.station.close()
+            self.station.closePort()
         except:
             pass
 
