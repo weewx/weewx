@@ -50,7 +50,6 @@ class BaseWrapper(object):
                 time.sleep(0.5)
                 self.flush_input()
                 self.write('\n')
-    #            self.queued_bytes()
                 _resp = self.read(2)
                 if _resp == '\n\r':
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: successfully woke up console")
@@ -365,7 +364,7 @@ class VantagePro(object):
         while True:
             # Get LOOP packets in big batches, then cancel as necessary when the expiration
             # time is up. This is necessary because there is an undocumented limit to how
-            # many LOOP records you can for on the VP (somewhere around 220).
+            # many LOOP records you can request for on the VP (somewhere around 220).
             for _loopPacket in self.genDavisLoopPackets(200):
                 # Translate the LOOP packet to one with physical units:
                 _physicalPacket = self.translateLoopPacket(_loopPacket)
