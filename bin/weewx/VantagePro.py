@@ -165,7 +165,8 @@ class SerialWrapper(BaseWrapper):
     
     def write(self, data):
         N = self.serial_port.write(data)
-        if N != len(data):
+        # Python version 2.5 and earlier returns 'None', so it cannot be used to test for completion.
+        if N is not None and N != len(data):
             raise weewx.WeeWxIOError("Expected to write %d chars; sent %d instead" % (len(data), N))
 
     def openPort(self):
