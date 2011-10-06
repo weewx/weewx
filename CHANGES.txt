@@ -1,9 +1,9 @@
 CHANGE HISTORY
 --------------------------------
 
-1.11.0 10/01/11
+1.11.0 10/06/11
 
-Added support for the Davis WeatherLinkIP.
+Added support for the Davis WeatherLinkIP. Thanks, Peter Nock and Travis Pickle!
 
 Added support for older Rev A type archive records.
 

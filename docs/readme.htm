@@ -230,7 +230,7 @@ Version 1.11</h1>
 	<pre><span class="code">easy_install pyserial</span></pre>
 	<p>Install Cheetah:</p>
 	<pre><span class="code">easy_install Cheetah</span></pre>
-	<p>My version of Python came with V1.1.6, which works great, but if you need 
+	<p>Install the Python Imaging Library (PIL). My version of Python came with V1.1.6, which works great, but if you need 
 	to install</p>
 	<pre>easy_install pil</pre>
 	<p><a name="Installing_pyephem"></a>If you choose to install the optional 
@@ -591,7 +591,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	<p>How old a record can be before it will not be used for a catch up. CWOP does 
 	not use the timestamp on a posted record. Instead, they use the wall clock time 
 	that it came in. This means that if your station is off the air for a long period 
-	of time, then weewx attempts a catch up, old data could be interpreted as the 
+	of time, then <span class="code">weewx</span> attempts a catch up, old data could be interpreted as the 
 	current conditions. [Optional. Default is 1800 seconds.]</p>
 	<h3 class="config_section">[Archive]</h3>
 	<p>This section is for configuring the sqlite3 database in which the station 
@@ -991,7 +991,7 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 	port it is actually attached to!</p>
 	<p>I have tested this system many times. You can yank the USB port out of the 
 	machine and then plug it back in while also pulling out the network connection 
-	in the middle of an FTP upload: weewx will recover.</p>
+	in the middle of an FTP upload: <span class="code">weewx</span> will recover.</p>
 	<p>Or, at least, it should!</p>
 	<h2>&nbsp;Templates</h2>
 	<h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
@@ -1005,12 +1005,12 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 	<h1>&nbsp;A<a name="Architectural_notes">rchitectural notes</a></h1>
 	<p>This section is not needed to get started. </p>
 	<h2>Goals</h2>
-	<p>The primary goals of <span class="code">weewx </span>are:</p>
+	<p>The primary design goals of <span class="code">weewx </span>are:</p>
 	<ul>
 		<li>Architectural simplicity. No semaphores, no named pipes, no inter-process 
 		communications, no complex multi-threading to manage. </li>
 		<li>&quot;Fast enough.&quot; In any design decision, architectural simplicity and 
-		elegance trumps speed. </li>
+		elegance trump speed. </li>
 		<li>One code base. The same code base should be used for all platforms, 
 		all weather stations, all reports, and any combination of features. Ample 
 		configuration and customization options should be provided so the user doesn&#39;t 
