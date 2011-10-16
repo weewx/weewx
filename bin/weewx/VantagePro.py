@@ -319,34 +319,15 @@ class VantagePro(object):
         self.dst_delta        = 3600
 
         # Get an appropriate port, depending on the connection type:
-        self.port = VantagePro.port_factory(vp_dict)
+        self.port = VantagePro._port_factory(vp_dict)
         
         # Open it up:
         self.port.openPort()
 
         # Get the archive interval off the console:
         self.archive_interval = self.getArchiveInterval()
+        self._setupUnits()
         
-    @staticmethod
-    def port_factory(vp_dict):
-        """Produce a serial or ethernet port object"""
-        
-        timeout = float(vp_dict.get('timeout', 5.0))
-        
-        # Get the connection type. If it is not specified, assume 'serial':
-        connection_type = vp_dict.get('type', 'serial').lower()
-
-        if connection_type == "serial":
-            port = vp_dict['port']
-            baudrate = int(vp_dict.get('baudrate', 19200))
-            return SerialWrapper(port, baudrate, timeout)
-        elif connection_type == "ethernet":
-            hostname = vp_dict['host']
-            tcp_port = int(vp_dict.get('tcp_port', 22222))
-            tcp_send_delay = int(vp_dict.get('tcp_send_delay', 1))
-            return EthernetWrapper(hostname, tcp_port, timeout, tcp_send_delay)
-        raise weewx.UnsupportedFeature(vp_dict['type'])
-
     def openPort(self):
         """Open up the connection to the console"""
         self.port.openPort()
@@ -682,21 +663,8 @@ class VantagePro(object):
     def getArchiveInterval(self):
         """Return the present archive interval in seconds."""
         
-        for unused_count in xrange(self.max_tries):
-            try :
-                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                self.port.send_data("EEBRD 2D 01\n")
-                # ... get the binary data. No prompt, only one try:
-                _buffer = self.port.get_data_with_crc16(3, max_tries=1)
-                _archive_interval = ord(_buffer[0]) * 60
-                return _archive_interval
-            except weewx.WeeWxIOError:
-                # Caught an error. Keep trying...
-                continue
-        
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive interval")
-        raise weewx.RetriesExceeded("While getting archive interval")
-        
+        return self._getEEPROM_byte(0x2D) * 60
+
     def getRX(self) :
         """Returns reception statistics from the console.
         
@@ -727,6 +695,21 @@ class VantagePro(object):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting RX data")
         raise weewx.RetriesExceeded("While getting RX data")
 
+    barometer_unit_code   = {0:'inHg', 1:'mmHg', 2:'hPa', 3:'mbar'}
+    temperature_unit_code = {0:'degree_F', 1:'degree_10F', 2:'degree_C', 3:'degree_10C'}
+    rain_unit_code        = {0:'inch', 1:'mm'}
+    
+    def _setupUnits(self):
+        """Set internal unit information."""
+        unit_bits = self._getEEPROM_byte(0x29)
+
+        barometer_bits   =  unit_bits & 0x03
+        temperature_bits = (unit_bits & 0x0C) >> 3
+        rain_bits        = (unit_bits & 0x20) >> 5
+        self.barometer_unit = VantagePro.barometer_unit_code[barometer_bits]
+        self.temperature_unit = VantagePro.temperature_unit_code[temperature_bits]
+        self.rain_unit = VantagePro.rain_unit_code[rain_bits]
+    
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
         
@@ -737,7 +720,7 @@ class VantagePro(object):
         if self.unit_system != weewx.US :
             raise weewx.UnsupportedFeature("Only US Customary Units are supported on the Davis VP2.")
 
-        _packet = translateLoopToUS(loopPacket)
+        _packet = self.translateLoopToUS(loopPacket)
         return _packet
     
 
@@ -752,9 +735,120 @@ class VantagePro(object):
         if self.unit_system != weewx.US :
             raise weewx.UnsupportedFeature("Only US Units are supported on the Davis VP2.")
 
-        _packet = translateArchiveToUS(archivePacket)
+        _packet = self.translateArchiveToUS(archivePacket)
         return _packet
     
+    #===========================================================================
+    #              VantagePro utility functions
+    #===========================================================================
+    
+    def translateLoopToUS(self, packet):
+        """Translates a loop packet from the internal units used by Davis, into US Customary Units.
+        
+        packet: A dictionary holding the LOOP data in the internal units used by Davis.
+        
+        returns: A dictionary with the values in US Customary Units."""
+        # This dictionary maps a type key to a function. The function should be able to
+        # decode a sensor value held in the loop packet in the internal, Davis form into US
+        # units and return it. From the Davis documentation, it's not clear what the
+        # 'dash' value is for some of these, so I'm assuming it's the same as for an archive
+        # packet.
+    
+        if packet['usUnits'] != weewx.US :
+            raise weewx.ViolatedPrecondition("Unit system on the VantagePro must be US Customary Units only")
+    
+        record = {}
+        
+        for _type in _loop_map:    
+            # Get the mapping function needed for this key
+            func = _loop_map[_type]
+            # Call it, with the value as an argument, storing the result:
+            record[_type] = func(packet[_type])
+    
+        # Add a few derived values that are not in the packet itself.
+        T = record['outTemp']
+        R = record['outHumidity']
+        W = record['windSpeed']
+    
+        record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
+        record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
+        record['windchill'] = weewx.wxformulas.windchillF(T, W)
+        
+        return record
+    
+
+    def translateArchiveToUS(self, packet):
+        """Translates an archive packet from the internal units used by Davis, into US units.
+        
+        packet: A dictionary holding an archive packet in the internal, Davis encoding
+        
+        returns: A dictionary with the values in US units."""
+    
+        if packet['usUnits'] != weewx.US :
+            raise weewx.ViolatedPrecondition("Unit system on the VantagePro must be U.S. units only")
+    
+        record = {}
+        
+        for _type in packet:
+            
+            # Get the mapping function needed for this key
+            func = _archive_map.get(_type)
+            if func:
+                # Call it, with the value as an argument, storing the results:
+                record[_type] = func(packet[_type])
+    
+        # Add a few derived values that are not in the packet itself.
+        T = record['outTemp']
+        R = record['outHumidity']
+        W = record['windSpeed']
+    
+        record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
+        record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
+        record['windchill'] = weewx.wxformulas.windchillF(T, W)
+        record['dateTime']  = _archive_datetime(packet)
+        record['usUnits']   = weewx.US
+        
+        return record
+
+    def _getEEPROM_byte(self, offset):
+        """Return the byte located at the specified offset."""
+        
+        command = "EEBRD %X 01\n" % offset
+        for unused_count in xrange(self.max_tries):
+            try :
+                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                self.port.send_data(command)
+                # ... get the binary data. No prompt, only one try:
+                _buffer = self.port.get_data_with_crc16(3, max_tries=1)
+                _byte = ord(_buffer[0])
+                return _byte
+            except weewx.WeeWxIOError:
+                # Caught an error. Keep trying...
+                continue
+        
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting EEPROM byte %x" % offset)
+        raise weewx.RetriesExceeded("While getting EEPROM byte")
+        
+    @staticmethod
+    def _port_factory(vp_dict):
+        """Produce a serial or ethernet port object"""
+        
+        timeout = float(vp_dict.get('timeout', 5.0))
+        
+        # Get the connection type. If it is not specified, assume 'serial':
+        connection_type = vp_dict.get('type', 'serial').lower()
+
+        if connection_type == "serial":
+            port = vp_dict['port']
+            baudrate = int(vp_dict.get('baudrate', 19200))
+            return SerialWrapper(port, baudrate, timeout)
+        elif connection_type == "ethernet":
+            hostname = vp_dict['host']
+            tcp_port = int(vp_dict.get('tcp_port', 22222))
+            tcp_send_delay = int(vp_dict.get('tcp_send_delay', 1))
+            return EthernetWrapper(hostname, tcp_port, timeout, tcp_send_delay)
+        raise weewx.UnsupportedFeature(vp_dict['type'])
+
 #===============================================================================
 #                         LOOP packet helper functions
 #===============================================================================
@@ -809,41 +903,6 @@ def unpackLoopPacket(raw_packet) :
     packet['usUnits'] = weewx.US
     
     return packet
-
-def translateLoopToUS(packet):
-    """Translates a loop packet from the internal units used by Davis, into US Customary Units.
-    
-    packet: A dictionary holding the LOOP data in the internal units used by Davis.
-    
-    returns: A dictionary with the values in US Customary Units."""
-    # This dictionary maps a type key to a function. The function should be able to
-    # decode a sensor value held in the loop packet in the internal, Davis form into US
-    # units and return it. From the Davis documentation, it's not clear what the
-    # 'dash' value is for some of these, so I'm assuming it's the same as for an archive
-    # packet.
-
-    if packet['usUnits'] != weewx.US :
-        raise weewx.ViolatedPrecondition("Unit system on the VantagePro must be US Customary Units only")
-
-    record = {}
-    
-    for _type in _loop_map:    
-        # Get the mapping function needed for this key
-        func = _loop_map[_type]
-        # Call it, with the value as an argument, storing the result:
-        record[_type] = func(packet[_type])
-
-    # Add a few derived values that are not in the packet itself.
-    T = record['outTemp']
-    R = record['outHumidity']
-    W = record['windSpeed']
-
-    record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
-    record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
-    record['windchill'] = weewx.wxformulas.windchillF(T, W)
-    
-    return record
-
 
 #===============================================================================
 #                         archive packet helper functions
@@ -900,39 +959,6 @@ def unpackArchivePacket(raw_packet):
     packet['usUnits'] = weewx.US
 
     return packet
-
-def translateArchiveToUS(packet):
-    """Translates an archive packet from the internal units used by Davis, into US units.
-    
-    packet: A dictionary holding an archive packet in the internal, Davis encoding
-    
-    returns: A dictionary with the values in US units."""
-
-    if packet['usUnits'] != weewx.US :
-        raise weewx.ViolatedPrecondition("Unit system on the VantagePro must be U.S. units only")
-
-    record = {}
-    
-    for _type in packet:
-        
-        # Get the mapping function needed for this key
-        func = _archive_map.get(_type)
-        if func:
-            # Call it, with the value as an argument, storing the results:
-            record[_type] = func(packet[_type])
-
-    # Add a few derived values that are not in the packet itself.
-    T = record['outTemp']
-    R = record['outHumidity']
-    W = record['windSpeed']
-
-    record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
-    record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
-    record['windchill'] = weewx.wxformulas.windchillF(T, W)
-    record['dateTime']  = _archive_datetime(packet)
-    record['usUnits']   = weewx.US
-    
-    return record
 
 def _rxcheck(packet):
     """Gives an estimate of the fraction of packets received.

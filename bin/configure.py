@@ -36,6 +36,7 @@ def main():
     parser.add_option("--reconfigure-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive")
     parser.add_option("--configure-VantagePro",action="store_true", dest="configure_VP",     help="To configure a VantagePro weather station")
     parser.add_option("--clear-VantagePro",    action="store_true", dest="clear_VP",         help="To clear the memory of the VantagePro weather station")
+    parser.add_option("--query-VantagePro",    action="store_true", dest="query_VP",         help="To query configuration of the VantagePro weather station")
     
     (options, args) = parser.parse_args()
     
@@ -74,6 +75,9 @@ def main():
 
     if options.clear_VP:
         clearVP(config_dict)
+        
+    if options.query_VP:
+        queryVP(config_dict)
 
 def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
@@ -177,5 +181,20 @@ def clearVP(config_dict):
         print "Nothing done."
 
     station.closePort()
+    
+def queryVP(config_dict):
+    """Query the configuration of the VantagePro"""
+    
+    print "Querying..."
+    # Open up the weather station:
+    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+
+    print "Station archive interval = ", station.archive_interval
+    print "Station barometric pressure unit = ", station.barometer_unit
+    print "Station temperature unit = ", station.temperature_unit
+    print "Station rain bucket unit = ", station.rain_unit
+
+    station.closePort()
+    
     
 main()
