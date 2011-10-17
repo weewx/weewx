@@ -699,17 +699,6 @@ class VantagePro(object):
     temperature_unit_code = {0:'degree_F', 1:'degree_10F', 2:'degree_C', 3:'degree_10C'}
     rain_unit_code        = {0:'inch', 1:'mm'}
     
-    def _setupUnits(self):
-        """Set internal unit information."""
-        unit_bits = self._getEEPROM_byte(0x29)
-
-        barometer_bits   =  unit_bits & 0x03
-        temperature_bits = (unit_bits & 0x0C) >> 3
-        rain_bits        = (unit_bits & 0x20) >> 5
-        self.barometer_unit = VantagePro.barometer_unit_code[barometer_bits]
-        self.temperature_unit = VantagePro.temperature_unit_code[temperature_bits]
-        self.rain_unit = VantagePro.rain_unit_code[rain_bits]
-    
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
         
@@ -721,6 +710,7 @@ class VantagePro(object):
             raise weewx.UnsupportedFeature("Only US Customary Units are supported on the Davis VP2.")
 
         _packet = self.translateLoopToUS(loopPacket)
+
         return _packet
     
 
@@ -765,6 +755,13 @@ class VantagePro(object):
             # Call it, with the value as an argument, storing the result:
             record[_type] = func(packet[_type])
     
+        # Adjust if the console is using non-standard units:
+        if self.rain_unit == 'mm':
+            record['rainRate']   = 0.0393700787 * record['rainRate']  if record['rainRate']  is not None else None
+            record['dayRain']    = 0.0393700787 * record['dayRain']   if record['dayRate']   is not None else None
+            record['monthRain']  = 0.0393700787 * record['monthRain'] if record['monthRate'] is not None else None
+            record['yearRain']   = 0.0393700787 * record['yearRain']  if record['yearRate']  is not None else None
+        
         # Add a few derived values that are not in the packet itself.
         T = record['outTemp']
         R = record['outHumidity']
@@ -797,6 +794,11 @@ class VantagePro(object):
                 # Call it, with the value as an argument, storing the results:
                 record[_type] = func(packet[_type])
     
+        # Adjust if the console is using non-standard units:
+        if self.rain_unit == "mm":
+            record['rain']     = 0.0393700787 * record['rain']     if record['rain']     is not None else None
+            record['rainRate'] = 0.0393700787 * record['rainRate'] if record['rainRate'] is not None else None
+
         # Add a few derived values that are not in the packet itself.
         T = record['outTemp']
         R = record['outHumidity']
@@ -829,6 +831,25 @@ class VantagePro(object):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting EEPROM byte %x" % offset)
         raise weewx.RetriesExceeded("While getting EEPROM byte")
         
+    def _setupUnits(self):
+        """Set internal unit information."""
+        unit_bits = self._getEEPROM_byte(0x29)
+
+        barometer_bits   =  unit_bits & 0x03
+        temperature_bits = (unit_bits & 0x0C) >> 3
+        rain_bits        = (unit_bits & 0x20) >> 5
+        self.barometer_unit   = VantagePro.barometer_unit_code[barometer_bits]
+        self.temperature_unit = VantagePro.temperature_unit_code[temperature_bits]
+        self.rain_unit        = VantagePro.rain_unit_code[rain_bits]
+
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Barometer unit = %s" % self.barometer_unit)
+        syslog.syslog(syslog.LOG_DEBUG, "      ****  Temperature unit = %s" % self.temperature_unit)
+        syslog.syslog(syslog.LOG_DEBUG, "      ****  Rain unit = %s" % self.rain_unit)
+        
+        if self.temperature_unit != 'degree_F' or self.barometer_unit != 'inHg':
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: Unsupported unit type")
+            raise weewx.UnsupportedFeature("Unsupport unit type")
+    
     @staticmethod
     def _port_factory(vp_dict):
         """Produce a serial or ethernet port object"""
