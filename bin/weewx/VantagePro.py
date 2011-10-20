@@ -105,7 +105,35 @@ class BaseWrapper(object):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to pass CRC16 check while sending data")
         raise weewx.CRCError("Unable to pass CRC16 check while sending data to VantagePro console")
 
+    def send_command(self, command, max_tries=3, wait_before_retry=1.2):
+        """Send a command to the console, then look for the string 'OK' in the response."""
+        
+        for unused_count in xrange(max_tries):
+            try :
+                self.wakeup_console(max_tries=max_tries, wait_before_retry=wait_before_retry)
 
+                self.write(command)
+                # Takes a bit for the VP to react and fill up the buffer. Sleep for a sec
+                time.sleep(1.0)
+                # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
+                # So, instead find how many bytes are waiting and fetch them all
+                nc = self.queued_bytes()
+                _buffer = self.read(nc)
+                # Split the buffer on the newlines
+                _buffer_list = _buffer.strip().split('\n\r')
+                # The first member should be the 'OK' in the VP response
+                if _buffer_list[0] == 'OK' :
+                    # Return the rest:
+                    return _buffer_list[1:]
+
+            except weewx.WeeWxIOError:
+                # Caught an error. Keep trying...
+                continue
+        
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while sending command %s" % command)
+        raise weewx.RetriesExceeded("Max retries exceeded while sending command %s" % command)
+    
+        
     def get_data_with_crc16(self, nbytes, prompt=None, max_tries=3) :
         """Get a packet of data and do a CRC16 check on it, asking for retransmit if necessary.
         
@@ -172,7 +200,7 @@ class SerialWrapper(BaseWrapper):
     def openPort(self):
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
-    
+
     def closePort(self):
         try:
             # This will cancel any pending loop:
@@ -232,7 +260,7 @@ class EthernetWrapper(BaseWrapper):
         length = 0
         try:
             self.socket.settimeout(0)
-            length = len(self.socket.recv(4096, socket.MSG_PEEK))
+            length = len(self.socket.recv(8192, socket.MSG_PEEK))
         except socket.error:
             pass
         finally:
@@ -324,9 +352,8 @@ class VantagePro(object):
         # Open it up:
         self.port.openPort()
 
-        # Get the archive interval off the console:
-        self.archive_interval = self.getArchiveInterval()
-        self._setupUnits()
+        # Read the EEPROM and fill in properties in this instance
+        self.retrieveProperties()
         
     def openPort(self):
         """Open up the connection to the console"""
@@ -608,8 +635,8 @@ class VantagePro(object):
     def setArchiveInterval(self, archive_interval):
         """Set the archive interval of the VantagePro.
         
-        archive_interval_sec: The new interval to use. Must be one of 
-        1, 5, 10, 15, 30, 60, or 120.
+        archive_interval: The new interval to use in seconds. Must be one of
+        60, 300, 600, 900, 1800, 3600, or 7200 
         """
         
         # Convert to minutes:
@@ -618,33 +645,15 @@ class VantagePro(object):
         if archive_interval_minutes not in (1, 5, 10, 15, 30, 60, 120):
             raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % archive_interval
 
-        for unused_count in xrange(self.max_tries):
-            try :
-                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-            
-                # The Davis documentation is wrong about the SETPER command.
-                # It actually returns an 'OK', not an <ACK>
-                self.port.write('SETPER %d\n' % archive_interval_minutes)
-                # Takes a bit for the VP to react and fill up the buffer. Sleep for a sec
-                time.sleep(1)
-                # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
-                # So, instead find how many bytes are waiting and fetch them all
-                nc = self.port.queued_bytes()
-                _buffer = self.port.read(nc)
-                # Split the buffer on white space
-                rx_list = _buffer.split()
-                # The first member should be the 'OK' in the VP response
-                if len(rx_list) == 1 and rx_list[0] == 'OK' :
-                    self.archive_interval = archive_interval_minutes * 60
-                    syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d" % (self.archive_interval,))
-                    return
-
-            except weewx.WeeWxIOError:
-                # Caught an error. Keep trying...
-                continue
+        command = 'SETPER %d\n' % archive_interval_minutes
         
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while setting archive interval")
-        raise weewx.RetriesExceeded("While setting archive interval")
+        rx_list = self.port.send_command(command, max_tries=self.max_tries)
+
+        if weewx.debug:
+            assert(len(rx_list) == 0)            
+
+        self.archive_interval = archive_interval_minutes * 60
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d" % (self.archive_interval,))
     
     def clearLog(self):
         """Clear the internal archive memory in the VantagePro."""
@@ -660,44 +669,95 @@ class VantagePro(object):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while clearing log")
         raise weewx.RetriesExceeded("While clearing log")
     
-    def getArchiveInterval(self):
-        """Return the present archive interval in seconds."""
+    # Various codes used internally by the VP2:
+    barometer_unit_dict   = {0:'inHg', 1:'mmHg', 2:'hPa', 3:'mbar'}
+    temperature_unit_dict = {0:'degree_F', 1:'degree_10F', 2:'degree_C', 3:'degree_10C'}
+    elevation_unit_dict   = {0:'foot', 1:'meter'}
+    rain_unit_dict        = {0:'inch', 1:'mm'}
+    wind_unit_dict        = {0:'mile_per_hour', 1:'meter_per_second', 2:'km_per_hour', 3:'knot'}
+    wind_cup_dict         = {0:'small', 1:'large'}
+    rain_bucket_dict      = {0: "0.01 inches", 1: "0.2 MM", 2: "0.1 MM"}
+    
+    def retrieveProperties(self):
+        """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
-        return self._getEEPROM_byte(0x2D) * 60
+        _buffer = self._getEEPROM()
+        
+        self.rain_season_start = ord(_buffer[0x2C])
+        self.archive_interval  = ord(_buffer[0x2D]) * 60
+        self.elevation = struct.unpack("<H", _buffer[15:17])[0]
 
+        unit_bits = ord(_buffer[0x29])        
+        barometer_unit_code   =  unit_bits & 0x03
+        temperature_unit_code = (unit_bits & 0x0C) >> 3
+        elevation_unit_code   = (unit_bits & 0x10) >> 4
+        rain_unit_code        = (unit_bits & 0x20) >> 5
+        wind_unit_code        = (unit_bits & 0xC0) >> 6
+
+        setup_bits = ord(_buffer[0x2B])
+        wind_cup_type    = (setup_bits & 0x08) >> 3
+        rain_bucket_type = (setup_bits & 0x30) >> 4
+
+        self.barometer_unit   = VantagePro.barometer_unit_dict[barometer_unit_code]
+        self.temperature_unit = VantagePro.temperature_unit_dict[temperature_unit_code]
+        self.elevation_unit   = VantagePro.elevation_unit_dict[elevation_unit_code]
+        self.rain_unit        = VantagePro.rain_unit_dict[rain_unit_code]
+        self.wind_unit        = VantagePro.wind_unit_dict[wind_unit_code]
+        self.wind_cup_size    = VantagePro.wind_cup_dict[wind_cup_type]
+        self.rain_bucket_size = VantagePro.rain_bucket_dict[rain_bucket_type]
+        
     def getRX(self) :
         """Returns reception statistics from the console.
         
         Returns a tuple with 5 values: (# of packets, # of missed packets,
         # of resynchronizations, the max # of packets received w/o an error,
         the # of CRC errors detected.)"""
-        
-        for unused_count in xrange(self.max_tries) :
-            try :
-                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                # Can't use function send_data because the VP doesn't respond with an 
-                # ACK for this command, it responds with 'OK'. Go figure.
-                self.port.write('RXCHECK\n')
-                # Takes a bit for the VP to react and fill up the buffer. Sleep for 
-                # half a sec
-                time.sleep(0.5)
-                # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
-                # So, instead find how many bytes are waiting and fetch them all
-                nc=self.port.queued_bytes()
-                _buffer = self.port.read(nc)
-                # Split the buffer on white space
-                rx_list = _buffer.split()
-                # The first member should be the 'OK' in the VP response
-                if len(rx_list) == 6 and rx_list[0] == 'OK' : return rx_list[1:]
-            except weewx.WeeWxIOError:
-                # Caught an error. Keep retrying...
-                continue
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting RX data")
-        raise weewx.RetriesExceeded("While getting RX data")
 
-    barometer_unit_code   = {0:'inHg', 1:'mmHg', 2:'hPa', 3:'mbar'}
-    temperature_unit_code = {0:'degree_F', 1:'degree_10F', 2:'degree_C', 3:'degree_10C'}
-    rain_unit_code        = {0:'inch', 1:'mm'}
+        rx_list = self.port.send_command('RXCHECK\n')
+        if weewx.debug:
+            assert(len(rx_list) == 1)
+        
+        # The following is a list of the reception statistics, but the elements are strings
+        rx_list_str = rx_list[0].split()
+        # Convert to numbers and return as a tuple:
+        rx_list = tuple(int(x) for x in rx_list_str)
+        return rx_list
+
+    def getSummary(self):
+        """Return a summary of the internal settings in the VP console."""
+        
+        _firmware_date = self.port.send_command('VER\n')[0]
+        
+        _rx_list = self.getRX()
+        
+        summary = """VantagePro EEPROM settings:
+        
+        CONSOLE FIRMWARE DATE: %s
+        
+        CONSOLE SETTINGS:
+          archive interval: %d (seconds)
+          elevation:        %d (%s)
+          wind cup type:    %s
+          rain bucket type: %s
+          rain year start:  %d
+          
+        CONSOLE UNITS:
+          barometer:   %s
+          temperature: %s
+          rain:        %s
+          wind:        %s
+
+        RECEPTION STATS:
+          Total packets received:       %d
+          Total packets missed:         %d
+          Number of resynchronizations: %d
+          Longest good stretch:         %d
+          Number of CRC errors:         %d""" % ((_firmware_date, 
+                                                  self.archive_interval, self.elevation, self.elevation_unit,
+                                                  self.wind_cup_size, self.rain_bucket_size, self.rain_season_start,
+                                                  self.barometer_unit, self.temperature_unit, 
+                                                  self.rain_unit, self.wind_unit) + _rx_list)
+        return summary
     
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
@@ -755,13 +815,6 @@ class VantagePro(object):
             # Call it, with the value as an argument, storing the result:
             record[_type] = func(packet[_type])
     
-        # Adjust if the console is using non-standard units:
-        if self.rain_unit == 'mm':
-            record['rainRate']   = 0.0393700787 * record['rainRate']  if record['rainRate']  is not None else None
-            record['dayRain']    = 0.0393700787 * record['dayRain']   if record['dayRate']   is not None else None
-            record['monthRain']  = 0.0393700787 * record['monthRain'] if record['monthRate'] is not None else None
-            record['yearRain']   = 0.0393700787 * record['yearRain']  if record['yearRate']  is not None else None
-        
         # Add a few derived values that are not in the packet itself.
         T = record['outTemp']
         R = record['outHumidity']
@@ -794,11 +847,6 @@ class VantagePro(object):
                 # Call it, with the value as an argument, storing the results:
                 record[_type] = func(packet[_type])
     
-        # Adjust if the console is using non-standard units:
-        if self.rain_unit == "mm":
-            record['rain']     = 0.0393700787 * record['rain']     if record['rain']     is not None else None
-            record['rainRate'] = 0.0393700787 * record['rainRate'] if record['rainRate'] is not None else None
-
         # Add a few derived values that are not in the packet itself.
         T = record['outTemp']
         R = record['outHumidity']
@@ -812,43 +860,21 @@ class VantagePro(object):
         
         return record
 
-    def _getEEPROM_byte(self, offset):
-        """Return the byte located at the specified offset."""
+    def _getEEPROM(self):
+        """Get the entire 4096 byte EEPROM data block"""
         
-        command = "EEBRD %X 01\n" % offset
         for unused_count in xrange(self.max_tries):
-            try :
+            try:
                 self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                self.port.send_data(command)
-                # ... get the binary data. No prompt, only one try:
-                _buffer = self.port.get_data_with_crc16(3, max_tries=1)
-                _byte = ord(_buffer[0])
-                return _byte
+                self.port.send_data("GETEE\n")
+                _buffer = self.port.get_data_with_crc16(4098, max_tries=1)
+                return _buffer[0:4096]
             except weewx.WeeWxIOError:
                 # Caught an error. Keep trying...
                 continue
-        
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting EEPROM byte %x" % offset)
-        raise weewx.RetriesExceeded("While getting EEPROM byte")
-        
-    def _setupUnits(self):
-        """Set internal unit information."""
-        unit_bits = self._getEEPROM_byte(0x29)
-
-        barometer_bits   =  unit_bits & 0x03
-        temperature_bits = (unit_bits & 0x0C) >> 3
-        rain_bits        = (unit_bits & 0x20) >> 5
-        self.barometer_unit   = VantagePro.barometer_unit_code[barometer_bits]
-        self.temperature_unit = VantagePro.temperature_unit_code[temperature_bits]
-        self.rain_unit        = VantagePro.rain_unit_code[rain_bits]
-
-        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Barometer unit = %s" % self.barometer_unit)
-        syslog.syslog(syslog.LOG_DEBUG, "      ****  Temperature unit = %s" % self.temperature_unit)
-        syslog.syslog(syslog.LOG_DEBUG, "      ****  Rain unit = %s" % self.rain_unit)
-        
-        if self.temperature_unit != 'degree_F' or self.barometer_unit != 'inHg':
-            syslog.syslog(syslog.LOG_ERR, "VantagePro: Unsupported unit type")
-            raise weewx.UnsupportedFeature("Unsupport unit type")
+            
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting EEPROM data block")
+        raise weewx.RetriesExceeded("While getting EEPROM data block")
     
     @staticmethod
     def _port_factory(vp_dict):

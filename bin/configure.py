@@ -189,12 +189,10 @@ def queryVP(config_dict):
     # Open up the weather station:
     station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
 
-    print "Station archive interval = ", station.archive_interval
-    print "Station barometric pressure unit = ", station.barometer_unit
-    print "Station temperature unit = ", station.temperature_unit
-    print "Station rain bucket unit = ", station.rain_unit
+    summary = station.getSummary()
 
     station.closePort()
-    
+
+    print summary
     
 main()
