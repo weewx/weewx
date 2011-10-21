@@ -19,7 +19,6 @@ import configobj
 import user.extensions      #@UnusedImport
 import weewx.archive
 import weewx.stats
-import weewx.VantagePro
 
 usagestr = """%prog: config_path [Options]
 
@@ -29,27 +28,19 @@ Arguments:
     config_path: Path to the configuration file to be used."""
 
 def main():
-    parser = OptionParser(usage=usagestr)
-    parser.add_option("--create-database",     action="store_true", dest="create_database",  help="To create the main database archive")
-    parser.add_option("--create-stats",        action="store_true", dest="create_stats",     help="To create the statistical database")
-    parser.add_option("--backfill-stats",      action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database")
-    parser.add_option("--reconfigure-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive")
-    parser.add_option("--configure-VantagePro",action="store_true", dest="configure_VP",     help="To configure a VantagePro weather station")
-    parser.add_option("--clear-VantagePro",    action="store_true", dest="clear_VP",         help="To clear the memory of the VantagePro weather station")
-    parser.add_option("--query-VantagePro",    action="store_true", dest="query_VP",         help="To query configuration of the VantagePro weather station")
-    
-    (options, args) = parser.parse_args()
-    
-    if len(args) < 1:
-        print "Missing argument(s)."
-        print parser.parse_args(["--help"])
-        sys.exit(weewx.CMD_ERROR)
-    
-    config_path = args[0]
-    
+
     # Set defaults for the system logger:
     syslog.openlog('configure', syslog.LOG_PID|syslog.LOG_CONS)
-    
+
+    # This is a bit of a cludge. Get the path for the configuration file:
+    for arg in sys.argv[1:]:
+        if arg[0] != '-':
+            config_path = arg
+            break
+    else:
+        sys.stderr.write("Missing configuration file")
+        sys.exit(weewx.CMD_ERROR)
+        
     # Try to open up the given configuration file. Declare an error if unable to.
     try :
         config_dict = configobj.ConfigObj(config_path, file_error=True)
@@ -57,6 +48,25 @@ def main():
         print "Unable to open configuration file ", config_path
         syslog.syslog(syslog.LOG_CRIT, "main: Unable to open configuration file %s" % config_path)
         sys.exit(weewx.CONFIG_ERROR)
+
+    # Now put together the command options:
+    parser = OptionParser(usage=usagestr)
+    parser.add_option("--create-database",     action="store_true", dest="create_database",  help="To create the main database archive")
+    parser.add_option("--create-stats",        action="store_true", dest="create_stats",     help="To create the statistical database")
+    parser.add_option("--backfill-stats",      action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database")
+    parser.add_option("--reconfigure-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive")
+
+    # Get the hardware type from the configuration dictionary
+    # (this will be a string such as "VantagePro"),
+    # then import the appropriate module:
+    stationType = config_dict['Station']['station_type']
+    station_mod = __import__('weewx.'+ stationType)
+
+    # Add its options to the list:
+    getattr(station_mod, stationType).getOptionGroup(parser)
+    
+    # Now we are ready to parse the command line:
+    (options, args) = parser.parse_args()
         
     if options.create_database:
         createMainDatabase(config_dict)
@@ -69,15 +79,9 @@ def main():
 
     if options.reconfig_database:
         reconfigMainDatabase(config_dict)
-            
-    if options.configure_VP:
-        configureVP(config_dict)
 
-    if options.clear_VP:
-        clearVP(config_dict)
-        
-    if options.query_VP:
-        queryVP(config_dict)
+    # Now run any hardware specific options:
+    getattr(station_mod, stationType).runOptions(config_dict, options, args)
 
 def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
@@ -136,63 +140,5 @@ def reconfigMainDatabase(config_dict):
                                       config_dict['Archive']['archive_file'])
     newArchiveFilename = oldArchiveFilename + ".new"
     weewx.archive.reconfig(oldArchiveFilename, newArchiveFilename)
-    
-def configureVP(config_dict):
-    """Configure a VantagePro as per the configuration file."""
-    
-    print "Configuring VantagePro..."
-    # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
-
-    old_archive_interval = station.archive_interval
-    new_archive_interval = config_dict['VantagePro'].as_int('archive_interval')
-    
-    if old_archive_interval == new_archive_interval:
-        print "Old archive interval matches new archive interval (%d seconds). Nothing done" % old_archive_interval
-    else:
-        print "VantagePro old archive interval is %d seconds, new one is %d" % (old_archive_interval, new_archive_interval)
-        print "Proceeding will erase old archive records."
-        ans = raw_input("Are you sure you want to proceed? (y/n) ")
-        if ans == 'y' :
-            station.setArchiveInterval(new_archive_interval)
-            print "Archive interval now set to %d." % (new_archive_interval,)
-            # The Davis documentation implies that the log is cleared after
-            # changing the archive interval, but that doesn't seem to be the
-            # case. Clear it explicitly:
-            station.clearLog()
-            print "Archive records cleared."
-        else:
-            print "Nothing done."
-
-    station.closePort()
-            
-def clearVP(config_dict):
-    """Clear the archive memory of a VantagePro"""
-    
-    print "Clearing the archive memory of the VantagePro..."
-    # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
-    print "Proceeding will erase old archive records."
-    ans = raw_input("Are you sure you wish to proceed? (Y/n) ")
-    if ans == 'Y':
-        station.clearLog()
-        print "Archive records cleared."
-    else:
-        print "Nothing done."
-
-    station.closePort()
-    
-def queryVP(config_dict):
-    """Query the configuration of the VantagePro"""
-    
-    print "Querying..."
-    # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
-
-    summary = station.getSummary()
-
-    station.closePort()
-
-    print summary
     
 main()

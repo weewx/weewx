@@ -9,12 +9,12 @@
 #
 """classes and functions for interfacing with a Davis VantagePro or VantagePro2"""
 
+import datetime
 import serial
+import socket
 import struct
 import syslog
-import datetime
 import time
-import socket
 
 from weewx.crc16 import crc16
 import weeutil.weeutil
@@ -632,18 +632,14 @@ class VantagePro(object):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while setting time")
         raise weewx.RetriesExceeded("While setting console time")
     
-    def setArchiveInterval(self, archive_interval):
+    def setArchiveInterval(self, archive_interval_minutes):
         """Set the archive interval of the VantagePro.
         
-        archive_interval: The new interval to use in seconds. Must be one of
-        60, 300, 600, 900, 1800, 3600, or 7200 
+        archive_interval_minutes: The new interval to use in minutes. Must be one of
+        1, 5, 10, 15, 30, 60, or 120 
         """
-        
-        # Convert to minutes:
-        archive_interval_minutes = int(archive_interval / 60)
-        
         if archive_interval_minutes not in (1, 5, 10, 15, 30, 60, 120):
-            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % archive_interval
+            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % archive_interval_minutes
 
         command = 'SETPER %d\n' % archive_interval_minutes
         
@@ -653,7 +649,7 @@ class VantagePro(object):
             assert(len(rx_list) == 0)            
 
         self.archive_interval = archive_interval_minutes * 60
-        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d" % (self.archive_interval,))
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d minutes" % (self.archive_interval_minutes,))
     
     def clearLog(self):
         """Clear the internal archive memory in the VantagePro."""
@@ -695,16 +691,16 @@ class VantagePro(object):
         wind_unit_code        = (unit_bits & 0xC0) >> 6
 
         setup_bits = ord(_buffer[0x2B])
-        wind_cup_type    = (setup_bits & 0x08) >> 3
-        rain_bucket_type = (setup_bits & 0x30) >> 4
+        self.wind_cup_type    = (setup_bits & 0x08) >> 3
+        self.rain_bucket_type = (setup_bits & 0x30) >> 4
 
         self.barometer_unit   = VantagePro.barometer_unit_dict[barometer_unit_code]
         self.temperature_unit = VantagePro.temperature_unit_dict[temperature_unit_code]
         self.elevation_unit   = VantagePro.elevation_unit_dict[elevation_unit_code]
         self.rain_unit        = VantagePro.rain_unit_dict[rain_unit_code]
         self.wind_unit        = VantagePro.wind_unit_dict[wind_unit_code]
-        self.wind_cup_size    = VantagePro.wind_cup_dict[wind_cup_type]
-        self.rain_bucket_size = VantagePro.rain_bucket_dict[rain_bucket_type]
+        self.wind_cup_size    = VantagePro.wind_cup_dict[self.wind_cup_type]
+        self.rain_bucket_size = VantagePro.rain_bucket_dict[self.rain_bucket_type]
         
     def getRX(self) :
         """Returns reception statistics from the console.
@@ -1232,42 +1228,124 @@ _archive_map={'interval'       : _null_int,
               'readClosed'     : _null,
               'readOpened'     : _null}
 
-if __name__ == '__main__':
-    import configobj
-    from optparse import OptionParser
+#===============================================================================
+#     Routines for configuring and querying the VP2.
+#     These are called dynamically from the configure.py utility.
+#===============================================================================
+
+import optparse
+
+def getOptionGroup(parser):
     
-    usagestr = """%prog: config_path
+    group = optparse.OptionGroup(parser," Options for Davis Vantage weather station", 
+                                 "These options are specific to the Davis Vantage series of weather stations")
+    group.add_option("--query", action="store_true", dest="query",
+                     help="To query the configuration of your weather station")
+    group.add_option("--set-archive-interval", dest="new_interval_minutes", type="int", metavar="INTERVAL-IN-MINUTES",
+                     help="To set a new archive interval")
+    group.add_option("--set-bucket-type", dest="new_bucket_type", type="int", metavar="BUCKET-CODE", 
+                     help="To set a new rain bucket type; bucket codes are "+str(VantagePro.rain_bucket_dict))
+    group.add_option("--clear", action="store_true", dest="clear",
+                     help="To clear the memory of your weather station")
+    parser.add_option_group(group)
 
-    Configuration utility for a Davis VantagePro.
+def runOptions(config_dict, options, args):
     
-    Sets the archive time interval. In the future, may set other
-    things such as altitude, lat, lon, etc.
-
-    Arguments:
-        config_path: Path to the configuration file to be used."""
-    parser = OptionParser(usage=usagestr)
-    (options, args) = parser.parse_args()
-
-    if len(args) < 1:
-        print "Missing argument(s)."
-        print parser.parse_args(["--help"])
-        exit()
+    print "new bucket type", options.new_bucket_type
     
-    config_path = args[0]
-
-    syslog.openlog('VantagePro_configuration', syslog.LOG_PID|syslog.LOG_CONS, syslog.LOG_USER|syslog.LOG_INFO)
-
-    try :
-        config_dict = configobj.ConfigObj(config_path, file_error=True)
-    except IOError:
-        print "Unable to open configuration file ", config_path
-        exit()
+    if options.query:
+        query(config_dict)
+    if options.new_interval_minutes is not None:
+        set_new_archive_interval(config_dict, options.new_interval_minutes)
+    if options.new_bucket_type is not None:
+        set_new_bucket_type(config_dict, options.new_bucket_type)
+    if options.clear:
+        clear(config_dict)
         
-    ans = raw_input("about to configure VantagePro. OK (y/n)? ")
-    if ans == 'y' :
+def query(config_dict):
+    """Query the configuration of the VantagePro"""
+    
+    print "Querying..."
+    
+    try:
         # Open up the weather station:
-        station = VantagePro(**config_dict['VantagePro'])
-        station.config(config_dict)
-        print "Done."
-    else :
-        print "Nothing done."
+        station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+    
+        summary = station.getSummary()
+        print summary
+    finally:
+        station.closePort()
+
+def set_new_archive_interval(config_dict, new_interval_minutes):
+    """Set a new archive interval on the console."""
+    
+    print "Setting new archive interval..."
+    
+    try:
+        # Open up the weather station:
+        station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+        
+        old_interval_minutes=int(station.archive_interval/60)
+    
+        print "Old archive interval is %d" % old_interval_minutes
+            
+        if old_interval_minutes == new_interval_minutes:
+            print "Old archive interval matches new archive interval (%d minutes). Nothing done." % old_interval_minutes
+        else:
+            print "VantagePro old archive interval is %d minutes, new one is %d" % (old_interval_minutes, new_interval_minutes)
+            print "Proceeding will erase old archive records."
+            ans = raw_input("Are you sure you want to proceed? (Y/n) ")
+            if ans == 'Y' :
+                station.setArchiveInterval(new_interval_minutes)
+                print "Archive interval now set to %d." % (new_interval_minutes,)
+                # The Davis documentation implies that the log is cleared after
+                # changing the archive interval, but that doesn't seem to be the
+                # case. Clear it explicitly:
+                station.clearLog()
+                print "Archive records cleared."
+            else:
+                print "Nothing done."
+    finally:
+        station.closePort()
+
+def set_new_bucket_type(config_dict, new_bucket_type):
+
+    print "Setting new rain bucket type..."
+    try:  
+        # Open up the weather station:
+        station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+    
+        print "\nRain bucket type is currently", station.rain_bucket_type
+    
+        if station.rain_bucket_type == new_bucket_type:
+            print "New bucket type is the same as the old one (%d). Nothing done." % station.rain_bucket_type
+        else:
+            print "VantagePro old bucket type is %d (%s), new one is %d (%s)" % (station.rain_bucket_type, station.rain_bucket_size,
+                                                                                 new_bucket_type, VantagePro.rain_bucket_dict[new_bucket_type])
+            print "Proceeding will change the bucket type."
+            ans = raw_input("Are you sure you want to proceed? (Y/n) ")
+            if ans == 'Y' :
+                print "to be done"
+                print "Also need to execute NEWSETUP"
+            else:
+                print "Nothing done."
+    finally:
+        station.closePort()
+
+def clear(config_dict):
+    """Clear the archive memory of a VantagePro"""
+    
+    print "Clearing the archive memory of the VantagePro..."
+    try:
+        # Open up the weather station:
+        station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+        print "Proceeding will erase old archive records."
+        ans = raw_input("Are you sure you wish to proceed? (Y/n) ")
+        if ans == 'Y':
+            station.clearLog()
+            print "Archive records cleared."
+        else:
+            print "Nothing done."
+    finally:
+        station.closePort()
+    
