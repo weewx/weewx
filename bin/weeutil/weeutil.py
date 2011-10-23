@@ -242,8 +242,8 @@ def startOfInterval(time_ts, interval, grace=1):
                                      0, 0, time_tt.tm_isdst))
     return start_interval_ts
 
-def _ord_to_ts(ord):
-    d = datetime.date.fromordinal(ord)
+def _ord_to_ts(_ord):
+    d = datetime.date.fromordinal(_ord)
     t = int(time.mktime(d.timetuple()))
     return t
 
@@ -477,8 +477,8 @@ def genDaySpans(start_ts, stop_ts):
     if (_stop_dt.hour, _stop_dt.minute, _stop_dt.second) == (0, 0, 0):
         _stop_ord -= 1
 
-    for ord in range(_start_ord, _stop_ord + 1):
-        yield TimeSpan(_ord_to_ts(ord), _ord_to_ts(ord + 1))
+    for _ord in range(_start_ord, _stop_ord + 1):
+        yield TimeSpan(_ord_to_ts(_ord), _ord_to_ts(_ord + 1))
  
    
 def genMonthSpans(start_ts, stop_ts):
@@ -586,8 +586,8 @@ def secs_to_string(secs):
         plural = '' if amt == 1 else 's'
         str_list.append("%d %s%s" % (amt, label, plural))
         secs %= interval
-    str = ', '.join(str_list)
-    return str
+    ans = ', '.join(str_list)
+    return ans
 
 def timestamp_to_string(ts):
     """Return a string formatted from the timestamp
@@ -624,8 +624,8 @@ def latlon_string(ll, hemi, which):
     """Decimal degrees into a string for degrees, and one for minutes."""
     labs = abs(ll)
     (frac, deg) = math.modf(labs)
-    min = frac * 60.0
-    return (("%02d" if which == 'lat' else "%03d") % (deg,), "%05.2f" % (min,), hemi[0] if ll >= 0 else hemi[1])
+    minutes = frac * 60.0
+    return (("%02d" if which == 'lat' else "%03d") % (deg,), "%05.2f" % (minutes,), hemi[0] if ll >= 0 else hemi[1])
 
 def utf8_to_latin1(instring):
     """Convert from UTF-8 to Latin-1 encoding."""
