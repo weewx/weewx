@@ -32,15 +32,24 @@ def main():
     # Set defaults for the system logger:
     syslog.openlog('configure', syslog.LOG_PID|syslog.LOG_CONS)
 
+    # Create a command line parser:
+    parser = OptionParser(usage=usagestr)
+    
     # This is a bit of a cludge. Get the path for the configuration file:
     for arg in sys.argv[1:]:
         if arg[0] != '-':
             config_path = arg
             break
     else:
-        sys.stderr.write("Missing configuration file")
+        sys.stderr.write("Missing configuration file\n\n")
+        print parser.parse_args(["--help"])
         sys.exit(weewx.CMD_ERROR)
         
+    parser.add_option("--create-database",     action="store_true", dest="create_database",  help="To create the main database archive")
+    parser.add_option("--create-stats",        action="store_true", dest="create_stats",     help="To create the statistical database")
+    parser.add_option("--backfill-stats",      action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database")
+    parser.add_option("--reconfigure-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive")
+
     # Try to open up the given configuration file. Declare an error if unable to.
     try :
         config_dict = configobj.ConfigObj(config_path, file_error=True)
@@ -48,13 +57,6 @@ def main():
         print "Unable to open configuration file ", config_path
         syslog.syslog(syslog.LOG_CRIT, "main: Unable to open configuration file %s" % config_path)
         sys.exit(weewx.CONFIG_ERROR)
-
-    # Now put together the command options:
-    parser = OptionParser(usage=usagestr)
-    parser.add_option("--create-database",     action="store_true", dest="create_database",  help="To create the main database archive")
-    parser.add_option("--create-stats",        action="store_true", dest="create_stats",     help="To create the statistical database")
-    parser.add_option("--backfill-stats",      action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database")
-    parser.add_option("--reconfigure-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive")
 
     # Get the hardware type from the configuration dictionary
     # (this will be a string such as "VantagePro"),

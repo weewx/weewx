@@ -63,7 +63,7 @@ class BaseWrapper(object):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to wake up console")
         raise weewx.WakeupError("Unable to wake up VantagePro console")
 
-    def send_data(self, data):
+    def send_data(self, data, ack_char=_ack):
         """Send data to the Davis console, waiting for an acknowledging <ACK>
         
         If the <ACK> is not received, no retry is attempted. Instead, an exception
@@ -75,7 +75,7 @@ class BaseWrapper(object):
     
         # Look for the acknowledging ACK character
         _resp = self.read()
-        if _resp != _ack : 
+        if _resp != ack_char: 
             syslog.syslog(syslog.LOG_ERR, "VantagePro: No <ACK> received from console")
             raise weewx.WeeWxIOError("No <ACK> received from VantagePro console")
     
@@ -671,6 +671,20 @@ class VantagePro(object):
         self.rain_season_start = new_rain_season_start
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain season start set to %d" % (self.rain_season_start,))
 
+    def setBarData(self, new_barometer_inHg, new_altitude_foot):
+        """Set the internal barometer calibration and altitude settings in the console.
+        
+        new_barometer_inHg: The local, reference barometric pressure in inHg.
+        
+        new_altitude_foot: The new altitude in feet."""
+        
+        new_barometer = int(new_barometer_inHg*1000.0)
+        new_altitude = int(new_altitude_foot)
+        
+        command = "BAR=%d %d\n" % (new_barometer, new_altitude)
+        print command
+        self.port.send_data(command, ack_char='\n')
+        
     def setArchiveInterval(self, archive_interval_seconds):
         """Set the archive interval of the VantagePro.
         
@@ -756,42 +770,26 @@ class VantagePro(object):
         rx_list = tuple(int(x) for x in rx_list_str)
         return rx_list
 
-    def getSummary(self):
-        """Return a summary of the internal settings in the VP console."""
+    def getBarData(self):
+        """Gets barometer calibration data. Returns as a 9 element list."""
+        _bardata = self.port.send_command("BARDATA\n")
+        _barometer = float(_bardata[0].split()[1])/1000.0
+        _altitude  = float(_bardata[1].split()[1])
+        _dewpoint  = float(_bardata[2].split()[2])
+        _virt_temp = float(_bardata[3].split()[2])
+        _c         = float(_bardata[4].split()[1])
+        _r         = float(_bardata[5].split()[1])/1000.0
+        _barcal    = float(_bardata[6].split()[1])/1000.0
+        _gain      = float(_bardata[7].split()[1])
+        _offset    = float(_bardata[8].split()[1])
         
-        _firmware_date = self.port.send_command('VER\n')[0]
-        
-        _rx_list = self.getRX()
-        
-        summary = """VantagePro EEPROM settings:
-        
-        CONSOLE FIRMWARE DATE: %s
-        
-        CONSOLE SETTINGS:
-          archive interval: %d (seconds)
-          elevation:        %d (%s)
-          wind cup type:    %s
-          rain bucket type: %s
-          rain year start:  %d
-          
-        CONSOLE UNITS:
-          barometer:   %s
-          temperature: %s
-          rain:        %s
-          wind:        %s
-
-        RECEPTION STATS:
-          Total packets received:       %d
-          Total packets missed:         %d
-          Number of resynchronizations: %d
-          Longest good stretch:         %d
-          Number of CRC errors:         %d""" % ((_firmware_date, 
-                                                  self.archive_interval, self.elevation, self.elevation_unit,
-                                                  self.wind_cup_size, self.rain_bucket_size, self.rain_season_start,
-                                                  self.barometer_unit, self.temperature_unit, 
-                                                  self.rain_unit, self.wind_unit) + _rx_list)
-        return summary
+        return (_barometer, _altitude, _dewpoint, _virt_temp,
+                _c, _r, _barcal, _gain, _offset)
     
+    def getFirmwareDate(self):
+        """Return the firmware date as a string. Returns None if unavailable."""
+        return self.port.send_command('VER\n')[0]
+        
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
         
@@ -1278,12 +1276,14 @@ _archive_map={'interval'       : _null_int,
 
 import optparse
 
+import weewx.units
+
 def getOptionGroup(parser):
     
-    group = optparse.OptionGroup(parser," Options for Davis Vantage weather station", 
+    group = optparse.OptionGroup(parser,"Options for Davis weather stations", 
                                  "These options are specific to the Davis Vantage series of weather stations")
-    group.add_option("--query", action="store_true", dest="query",
-                     help="To query the configuration of your weather station")
+    group.add_option("--info", action="store_true", dest="info",
+                     help="To print configuration information about your weather station")
     group.add_option("--configure", action="store_true", dest="configure",
                      help="To configure your weather station using settings in the specified configuration file")
     group.add_option("--clear", action="store_true", dest="clear",
@@ -1292,23 +1292,79 @@ def getOptionGroup(parser):
 
 def runOptions(config_dict, options, args):
     
-    if options.query:
-        query(config_dict)
+    if options.info:
+        info(config_dict)
     if options.configure:
         configure(config_dict)
     if options.clear:
         clear(config_dict)
         
-def query(config_dict):
-    """Query the configuration of the VantagePro"""
+def info(config_dict):
+    """Query the configuration of the VantagePro, printing out status information"""
     
     print "Querying..."
     
     try:
         # Open up the weather station:
         station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+
+        try:
+            _firmware_date = station.getFirmwareDate()
+        except:
+            _firmware_date = "<Unavailable>"
+        
+        print  """VantagePro EEPROM settings:
+        
+        CONSOLE FIRMWARE DATE: %s
+        
+        CONSOLE SETTINGS:
+          archive interval: %d (seconds)
+          elevation:        %d (%s)
+          wind cup type:    %s
+          rain bucket type: %s
+          rain year start:  %d
+          
+        CONSOLE UNITS:
+          barometer:   %s
+          temperature: %s
+          rain:        %s
+          wind:        %s
+          """ % (_firmware_date, 
+                 station.archive_interval, station.elevation, station.elevation_unit,
+                 station.wind_cup_size, station.rain_bucket_size, station.rain_season_start,
+                 station.barometer_unit, station.temperature_unit, 
+                 station.rain_unit, station.wind_unit)
+        
+        # Add reception statistics if we can:
+        try:
+            _rx_list = station.getRX()
+            print """        RECEPTION STATS:
+          Total packets received:       %d
+          Total packets missed:         %d
+          Number of resynchronizations: %d
+          Longest good stretch:         %d
+          Number of CRC errors:         %d
+          """ % _rx_list
+        except:
+            pass
+
+        # Add barometer calibration data if we can.
+        try:
+            _bar_list = station.getBarData()
+            print """        BAROMETER CALIBRATION DATA:
+          Current barometer reading:    %.3f inHg
+          Altitude:                     %.0f feet
+          Dew point:                    %.0f F
+          Virtual temperature:          %.0f F
+          Humidity correction factor:   %.0f
+          Correction ratio:             %.3f
+          Correction constant:          %+.3f inHg
+          Gain:                         %.3f
+          Offset:                       %.3f
+          """   % tuple(_bar_list)
+        except:
+            pass
     
-        print station.getSummary()
     finally:
         station.closePort()
 
@@ -1388,6 +1444,80 @@ def configure(config_dict):
                     print "Rain season start now set to %d." % (station.rain_season_start,)
                 else:
                     print "Nothing done."
+
+    
+        print "---"
+
+        #=======================================================================
+        # Configure the barometer calibrations
+        #=======================================================================
+        print "BAROMETER AND ALTITUDE CALIBRATION"
+        altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', None))
+        if altitude_t is None:
+            print "No altitude information found in configuration file. Nothing done."
+        else:
+            # This test is in here to catch any old-style altitudes:
+            if len(altitude_t) < 2:
+                altitude_t=(float(altitude_t[0]), 'foot')
+            
+            # Form a value-tuple:
+            altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+            # Convert to feet, if necessary:
+            new_altitude = int(weewx.units.convert(altitude_vt, 'foot')[0])
+
+            # Hit the console to get the current barometer calibration data:
+            _bardata = station.getBarData()
+            
+            old_altitude = _bardata[1]
+
+            current_barometer_inHg = _bardata[0]
+            current_barometer_mbar = weewx.units.convert((current_barometer_inHg, 'inHg', 'group_pressure'), 'mbar')[0]
+
+            print "Current barometer reading is %.3f inHg (%.1f mbar)." % (current_barometer_inHg, current_barometer_mbar)
+            print "For the following, you have three choices:\n"\
+            " 1. If you have a current barometer reading from a very reliable nearby\n"\
+            "    reference, you can use it to calibrate the barometer in your station.\n"\
+            "    In this case, give the value and the unit it is in.\n"\
+            "       Examples: \'30.15 inHg\'\n"\
+            "                 \'1024.5 mbar\'\n"\
+            "    (The console is currently reading %.3f inHg or %.1f mbar)\n"\
+            " 2. If you do not have such a reading, then you can use a value of zero,\n"\
+            "    which will result in a default, sensible calibration.\n"\
+            " 3. Finally, you can simply hit <enter>, which will leave the current calibration\n"\
+            "    value unchanged." % (current_barometer_inHg, current_barometer_mbar)
+            while True:
+                ans = raw_input("""Response: """)
+                if ans.strip()=='':
+                    new_barometer_inHg = current_barometer_inHg
+                    break
+                else:
+                    ans_t = ans.split()
+                    new_val = float(ans_t[0])
+                    if new_val == 0:
+                        new_barometer_inHg = 0
+                        break
+                    else:
+                        try:
+                            new_barometer_inHg = weewx.units.convert((new_val, ans_t[1], 'group_pressure'), 'inHg')[0]
+                            break
+                        except:
+                            print "Invalid or missing units. Try again."
+                    
+            if new_barometer_inHg == 0:
+                print "A sensible calibration will be picked."
+            else:
+                print "Calibrated pressure will be %.3f inHg" % (new_barometer_inHg,)
+
+            if old_altitude == new_altitude and new_barometer_inHg == current_barometer_inHg:
+                print "Old and new altitudes and barometer settings are the same. Nothing done."
+            else:
+                print "Proceeding will change the altitude and/or barometer calibration."
+                ans = raw_input("Are you sure you want to proceed? (Y/n) ")
+                if ans == 'Y' :
+                    station.setBarData(new_barometer_inHg, new_altitude)
+                else:
+                    print "Nothing done."
+    
     finally:
         station.closePort()
 
