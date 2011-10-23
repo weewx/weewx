@@ -106,15 +106,17 @@ class BaseWrapper(object):
         raise weewx.CRCError("Unable to pass CRC16 check while sending data to VantagePro console")
 
     def send_command(self, command, max_tries=3, wait_before_retry=1.2):
-        """Send a command to the console, then look for the string 'OK' in the response."""
+        """Send a command to the console, then look for the string 'OK' in the response.
+        
+        Any response from the console is split on \n\r characters and returned as a list."""
         
         for unused_count in xrange(max_tries):
             try :
                 self.wakeup_console(max_tries=max_tries, wait_before_retry=wait_before_retry)
 
                 self.write(command)
-                # Takes a bit for the VP to react and fill up the buffer. Sleep for a sec
-                time.sleep(1.0)
+                # Takes a bit for the VP to react and fill up the buffer. Sleep for a half sec:
+                time.sleep(0.5)
                 # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
                 # So, instead find how many bytes are waiting and fetch them all
                 nc = self.queued_bytes()
@@ -147,7 +149,7 @@ class BaseWrapper(object):
         
         max_tries: Number of tries before giving up. Default=3
         
-        returns: the packet data as a string"""
+        returns: the packet data as a string. The last 2 bytes will be the CRC"""
         if prompt:
             self.write(prompt)
             
@@ -632,24 +634,59 @@ class VantagePro(object):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while setting time")
         raise weewx.RetriesExceeded("While setting console time")
     
-    def setArchiveInterval(self, archive_interval_minutes):
+    def setBucketType(self, new_bucket_code):
+        """Set the rain bucket type.
+        
+        new_bucket_code: The new bucket type. Must be one of 0, 1, or 2
+        """
+        if new_bucket_code not in (0, 1, 2):
+            raise weewx.ViolatedPrecondition("Invalid bucket code %d" % new_bucket_code)
+        old_setup_bits = self._getEEPROM_value(0x2B)
+        new_setup_bits = (old_setup_bits & 0xCF) | (new_bucket_code << 4)
+        
+        # Tell the console to put one byte in hex location 0x2B
+        self.port.send_data("EEBWR 2B 01\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(new_setup_bits), max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+        
+        self.rain_bucket_type = new_bucket_code
+        self.rain_bucket_size = VantagePro.rain_bucket_dict[self.rain_bucket_type]
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain bucket type set to %d (%s)" %(self.rain_bucket_type, self.rain_bucket_size))
+
+    def setRainSeasonStart(self, new_rain_season_start):
+        """Set the start of the rain season.
+        
+        new_rain_season_start: Must be in the closed range 1...12
+        """
+        if new_rain_season_start not in range(1,13):
+            raise weewx.ViolatedPrecondition("Invalid rain season start %d" % (new_rain_season_start,))
+        
+        # Tell the console to put one byte in hex location 0x2C
+        self.port.send_data("EEBWR 2C 01\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(new_rain_season_start), max_tries=1)
+
+        self.rain_season_start = new_rain_season_start
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain season start set to %d" % (self.rain_season_start,))
+
+    def setArchiveInterval(self, archive_interval_seconds):
         """Set the archive interval of the VantagePro.
         
-        archive_interval_minutes: The new interval to use in minutes. Must be one of
-        1, 5, 10, 15, 30, 60, or 120 
+        archive_interval_seconds: The new interval to use in minutes. Must be one of
+        60, 300, 600, 900, 1800, 3600, or 7200 
         """
-        if archive_interval_minutes not in (1, 5, 10, 15, 30, 60, 120):
-            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % archive_interval_minutes
+        if archive_interval_seconds not in (60, 300, 600, 900, 1800, 3600, 7200):
+            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % (archive_interval_seconds,)
 
-        command = 'SETPER %d\n' % archive_interval_minutes
+        # The console expects the interval in minutes. Divide by 60.
+        command = 'SETPER %d\n' % (archive_interval_seconds / 60)
         
-        rx_list = self.port.send_command(command, max_tries=self.max_tries)
+        self.port.send_command(command, max_tries=self.max_tries)
 
-        if weewx.debug:
-            assert(len(rx_list) == 0)            
-
-        self.archive_interval = archive_interval_minutes * 60
-        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d minutes" % (self.archive_interval_minutes,))
+        self.archive_interval = archive_interval_seconds
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (self.archive_interval_seconds,))
     
     def clearLog(self):
         """Clear the internal archive memory in the VantagePro."""
@@ -677,20 +714,20 @@ class VantagePro(object):
     def retrieveProperties(self):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
-        _buffer = self._getEEPROM()
-        
-        self.rain_season_start = ord(_buffer[0x2C])
-        self.archive_interval  = ord(_buffer[0x2D]) * 60
-        self.elevation = struct.unpack("<H", _buffer[15:17])[0]
+        self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
 
-        unit_bits = ord(_buffer[0x29])        
+        unit_bits              = self._getEEPROM_value(0x29)
+        setup_bits             = self._getEEPROM_value(0x2B)
+        self.rain_season_start = self._getEEPROM_value(0x2C)
+        self.archive_interval  = self._getEEPROM_value(0x2D) * 60
+        self.elevation         = self._getEEPROM_value(0x0F, "<H") 
+
         barometer_unit_code   =  unit_bits & 0x03
         temperature_unit_code = (unit_bits & 0x0C) >> 3
         elevation_unit_code   = (unit_bits & 0x10) >> 4
         rain_unit_code        = (unit_bits & 0x20) >> 5
         wind_unit_code        = (unit_bits & 0xC0) >> 6
 
-        setup_bits = ord(_buffer[0x2B])
         self.wind_cup_type    = (setup_bits & 0x08) >> 3
         self.rain_bucket_type = (setup_bits & 0x30) >> 4
 
@@ -701,7 +738,7 @@ class VantagePro(object):
         self.wind_unit        = VantagePro.wind_unit_dict[wind_unit_code]
         self.wind_cup_size    = VantagePro.wind_cup_dict[self.wind_cup_type]
         self.rain_bucket_size = VantagePro.rain_bucket_dict[self.rain_bucket_type]
-        
+
     def getRX(self) :
         """Returns reception statistics from the console.
         
@@ -856,22 +893,28 @@ class VantagePro(object):
         
         return record
 
-    def _getEEPROM(self):
-        """Get the entire 4096 byte EEPROM data block"""
+    def _getEEPROM_value(self, offset, v_format="B"):
+        """Get the value located at a specified offset in the EEPROM."""
         
+        nbytes = struct.calcsize(v_format)
+        firsttime=True
+        
+        command = "EEBRD %X %d\n" % (offset, nbytes)
         for unused_count in xrange(self.max_tries):
             try:
-                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-                self.port.send_data("GETEE\n")
-                _buffer = self.port.get_data_with_crc16(4098, max_tries=1)
-                return _buffer[0:4096]
+                if not firsttime:
+                    self.port.wakup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                    firsttime = False
+                self.port.send_data(command)
+                _buffer = self.port.get_data_with_crc16(nbytes+2, max_tries=1)
+                _value = struct.unpack(v_format, _buffer[:-2])
+                return _value[0]
             except weewx.WeeWxIOError:
-                # Caught an error. Keep trying...
                 continue
-            
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting EEPROM data block")
-        raise weewx.RetriesExceeded("While getting EEPROM data block")
-    
+        
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting EEPROM data at address %X" % offset)
+        raise weewx.RetriesExceeded("While getting EEPROM data value at address %X" % offset)
+        
     @staticmethod
     def _port_factory(vp_dict):
         """Produce a serial or ethernet port object"""
@@ -1241,24 +1284,18 @@ def getOptionGroup(parser):
                                  "These options are specific to the Davis Vantage series of weather stations")
     group.add_option("--query", action="store_true", dest="query",
                      help="To query the configuration of your weather station")
-    group.add_option("--set-archive-interval", dest="new_interval_minutes", type="int", metavar="INTERVAL-IN-MINUTES",
-                     help="To set a new archive interval")
-    group.add_option("--set-bucket-type", dest="new_bucket_type", type="int", metavar="BUCKET-CODE", 
-                     help="To set a new rain bucket type; bucket codes are "+str(VantagePro.rain_bucket_dict))
+    group.add_option("--configure", action="store_true", dest="configure",
+                     help="To configure your weather station using settings in the specified configuration file")
     group.add_option("--clear", action="store_true", dest="clear",
                      help="To clear the memory of your weather station")
     parser.add_option_group(group)
 
 def runOptions(config_dict, options, args):
     
-    print "new bucket type", options.new_bucket_type
-    
     if options.query:
         query(config_dict)
-    if options.new_interval_minutes is not None:
-        set_new_archive_interval(config_dict, options.new_interval_minutes)
-    if options.new_bucket_type is not None:
-        set_new_bucket_type(config_dict, options.new_bucket_type)
+    if options.configure:
+        configure(config_dict)
     if options.clear:
         clear(config_dict)
         
@@ -1271,71 +1308,93 @@ def query(config_dict):
         # Open up the weather station:
         station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
     
-        summary = station.getSummary()
-        print summary
+        print station.getSummary()
     finally:
         station.closePort()
 
-def set_new_archive_interval(config_dict, new_interval_minutes):
-    """Set a new archive interval on the console."""
+def configure(config_dict):
+    """Configure a VP using settings in a configuration dictionary"""
     
-    print "Setting new archive interval..."
+    print "Configuring weather station in the Davis Vantage family..."
     
     try:
         # Open up the weather station:
         station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
-        
-        old_interval_minutes=int(station.archive_interval/60)
-    
-        print "Old archive interval is %d" % old_interval_minutes
-            
-        if old_interval_minutes == new_interval_minutes:
-            print "Old archive interval matches new archive interval (%d minutes). Nothing done." % old_interval_minutes
-        else:
-            print "VantagePro old archive interval is %d minutes, new one is %d" % (old_interval_minutes, new_interval_minutes)
-            print "Proceeding will erase old archive records."
-            ans = raw_input("Are you sure you want to proceed? (Y/n) ")
-            if ans == 'Y' :
-                station.setArchiveInterval(new_interval_minutes)
-                print "Archive interval now set to %d." % (new_interval_minutes,)
-                # The Davis documentation implies that the log is cleared after
-                # changing the archive interval, but that doesn't seem to be the
-                # case. Clear it explicitly:
-                station.clearLog()
-                print "Archive records cleared."
-            else:
-                print "Nothing done."
-    finally:
-        station.closePort()
 
-def set_new_bucket_type(config_dict, new_bucket_type):
-
-    print "Setting new rain bucket type..."
-    try:  
-        # Open up the weather station:
-        station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
-    
-        print "\nRain bucket type is currently", station.rain_bucket_type
-    
-        if station.rain_bucket_type == new_bucket_type:
-            print "New bucket type is the same as the old one (%d). Nothing done." % station.rain_bucket_type
+        #=======================================================================
+        # Configure the archive interval        
+        #=======================================================================
+        new_interval = config_dict['VantagePro'].get('archive_interval')
+        if new_interval is None:
+            print "Archive interval not found in configuration file. Nothing done."
         else:
-            print "VantagePro old bucket type is %d (%s), new one is %d (%s)" % (station.rain_bucket_type, station.rain_bucket_size,
-                                                                                 new_bucket_type, VantagePro.rain_bucket_dict[new_bucket_type])
-            print "Proceeding will change the bucket type."
-            ans = raw_input("Are you sure you want to proceed? (Y/n) ")
-            if ans == 'Y' :
-                print "to be done"
-                print "Also need to execute NEWSETUP"
+            new_interval_seconds = int(new_interval)
+            print "Old archive interval is %d seconds, new one is %d seconds." % (station.archive_interval, new_interval_seconds)
+            if station.archive_interval == new_interval_seconds:
+                print "Old and new archive intervals are the same. Nothing done."
             else:
-                print "Nothing done."
+                print "Proceeding will erase old archive records."
+                ans = raw_input("Are you sure you want to proceed? (Y/n) ")
+                if ans == 'Y' :
+                    station.setArchiveInterval(new_interval_seconds)
+                    print "Archive interval now set to %d seconds." % (station.archive_interval,)
+                    # The Davis documentation implies that the log is cleared after
+                    # changing the archive interval, but that doesn't seem to be the
+                    # case. Clear it explicitly:
+                    station.clearLog()
+                    print "Archive records cleared."
+                else:
+                    print "Nothing done."
+    
+        print "---"
+        #=======================================================================
+        # Configure the bucket type
+        #=======================================================================
+        new_bucket = config_dict['VantagePro'].get('rain_bucket_type')
+        if new_bucket is None:
+            print "No rain bucket type found in configuration file. Nothing done."
+        else:
+            new_bucket_type = int(new_bucket)
+            print "Old rain bucket type is %d (%s), new one is %d (%s)." % (station.rain_bucket_type, station.rain_bucket_size,
+                                                                                      new_bucket_type, VantagePro.rain_bucket_dict[new_bucket_type])
+            if station.rain_bucket_type == new_bucket_type:
+                print "Old and new bucket types are the same. Nothing done."
+            else:
+                print "Proceeding will change the rain bucket type."
+                ans = raw_input("Are you sure you want to proceed? (Y/n) ")
+                if ans == 'Y' :
+                    station.setBucketType(new_bucket_type)
+                    print "Bucket type now set to %d." % (station.rain_bucket_type,)
+                else:
+                    print "Nothing done."
+
+        print "---"
+        #=======================================================================
+        # Configure the rain season start
+        #=======================================================================
+        rain_year_start = config_dict['Station'].get('rain_year_start')
+        if rain_year_start is None:
+            print "No rain year start found in configuration file. Nothing done."
+        else:
+            rain_year_start = int(rain_year_start)
+            print "Old rain season start is %d, new one is %d." % (station.rain_season_start, rain_year_start)
+            if station.rain_season_start == rain_year_start:
+                print "Old and new rain season starts are the same. Nothing done."
+            else:
+                print "Proceeding will change the rain season start."
+                ans = raw_input("Are you sure you want to proceed? (Y/n) ")
+                if ans == 'Y' :
+                    station.setRainSeasonStart(rain_year_start)
+                    print "Rain season start now set to %d." % (station.rain_season_start,)
+                else:
+                    print "Nothing done."
     finally:
         station.closePort()
 
 def clear(config_dict):
     """Clear the archive memory of a VantagePro"""
     
-    print "Clearing the archive memory of the VantagePro..."
+    print "Clearing the archive memory ..."
     try:
         # Open up the weather station:
         station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
