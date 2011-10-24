@@ -13,7 +13,7 @@
 import sys
 import syslog
 import os.path
-from optparse import OptionParser
+import optparse
 import configobj
 
 import user.extensions      #@UnusedImport
@@ -33,8 +33,7 @@ def main():
     syslog.openlog('configure', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = OptionParser(usage=usagestr)
-    
+    parser = optparse.OptionParser(usage=usagestr)
     # This is a bit of a cludge. Get the path for the configuration file:
     for arg in sys.argv[1:]:
         if arg[0] != '-':
@@ -45,11 +44,6 @@ def main():
         print parser.parse_args(["--help"])
         sys.exit(weewx.CMD_ERROR)
         
-    parser.add_option("--create-database",     action="store_true", dest="create_database",  help="To create the main database archive")
-    parser.add_option("--create-stats",        action="store_true", dest="create_stats",     help="To create the statistical database")
-    parser.add_option("--backfill-stats",      action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database")
-    parser.add_option("--reconfigure-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive")
-
     # Try to open up the given configuration file. Declare an error if unable to.
     try :
         config_dict = configobj.ConfigObj(config_path, file_error=True)
@@ -66,6 +60,16 @@ def main():
 
     # Add its options to the list:
     getattr(station_mod, stationType).getOptionGroup(parser)
+
+    group = optparse.OptionGroup(parser,"Special database configuration options", 
+                                 "These options are for advanced needs and are not normally needed.")
+    
+    # Add the database options:
+    group.add_option("--create-database",     action="store_true", dest="create_database",  help="To create the main database archive.")
+    group.add_option("--create-stats",        action="store_true", dest="create_stats",     help="To create the statistical database.")
+    group.add_option("--backfill-stats",      action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database.")
+    group.add_option("--reconfigure-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive.")
+    parser.add_option_group(group)
     
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()

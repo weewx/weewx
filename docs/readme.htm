@@ -14,14 +14,21 @@
 <!-- JavaScript -->
 <script src="samaxesjs.toc-1.3.2.min.js" type="text/javascript"></script>
 <script type="text/javascript">samaxesJS.toc({exclude: 'h4, h5, h6', autoId: true, context: 'technical_content'});</script>
+<style type="text/css">
+</style>
 </head>
 
 <body>
 
 <h1 class="title">The <span class="code">weewx</span> weather system<br />
-Version 1.11</h1>
+Version 1.12</h1>
 <h1>Table of Contents</h1>
-	<p>For information on customizing <span class="code">weewx</span>, see the separate 
+	<p>This is the complete guide to installing <span class="code">weewx</span> &mdash; all details and options
+		are documented here. As such, it can get a bit tedious to follow. 
+		If you are running Ubuntu, you can save some time by following the
+		<em><a href="debian.htm">Quick Start Guide 
+for Debian (Ubuntu) Systems</a>.</em></p>
+<p>For information on customizing <span class="code">weewx</span>, see the separate 
 	document <a href="customizing.htm"><em>Customizing 
 	<span class="code">weewx</span></em></a>.</p>
 	<p>For instructions on upgrading from various versions, see the separate document
@@ -236,13 +243,20 @@ Version 1.11</h1>
 	<p><a name="Installing_pyephem"></a>If you choose to install the optional 
 	package pyephem:</p>
 	<pre>easy_install pyephem</pre>
+	<h2>Time</h2>
+	<p>The time on the VantagePro is automatically synchronized with the
+	<span class="code">weewx</span> server nominally every four hours (changeable 
+	by the user). You should run a <a href="http://www.ntp.org/">NTP</a> daemon 
+	on your server to insure that it is synchronized with the correct time. Doing 
+	so will greatly reduce errors, especially if you send data to services such 
+	as the Weather Underground.</p>
 	<h2>System requirements</h2>
 	<p>I run <span class="code">weewx</span> on a 500MHz system with an AMD Geode 
 	processor and 512 MB of memory.&nbsp; Configured this way, it consumes about 
 	5% of the CPU and about 40MB of total memory.</p>
 	<h2>Weather station hardware requirements</h2>
-	<p>At this point, only the following two variants of the Davis Vantage 
-	weather station architecture are supported:</p>
+	<p>At this point, the following Davis Vantage 
+	weather stations are supported:</p>
 	<ul>
 		<li><a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis VantagePro2</a> 
 		Both the &quot;Rev A&quot; (firmware dated before 22 April 2002) and &quot;Rev B&quot; 
@@ -385,16 +399,75 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	<a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC Slim</a> 
 	with 512 MB of memory it took a little over 4 minutes for a year and a half 
 	(25 MB) of data.</p>
-	<h2>Configuring your weather station</h2>
-	<p>The only two variables <span class="code">weewx</span> tries to manage on 
-	board the VantagePro are the time and the archive interval. </p>
-	<h3>Time</h3>
-	<p>The time on the VP is automatically synchronized with the
-	<span class="code">weewx</span> server nominally every four hours (changeable 
-	by the user). You should run a <a href="http://www.ntp.org/">NTP</a> daemon 
-	on your server to insure that it is synchronized with the correct time. Doing 
-	so will greatly reduce errors, especially if you send data to services such 
-	as the Weather Underground.</p>
+	<h2>Configuring your weather station hardware</h2>
+	<p>Weewx comes with a configuration utlity, <span class="code">configure.py</span>, 
+	that can set many of the on-board EEPROM constants in your weather station, 
+	such as its archive interval, altitude, rain bucket type, <em>etc.</em> It 
+	can also create and modify archive and stats databases, but this is an 
+	advanced topic that is not normally needed. </p>
+	<p>Run it with the configuration file as an argument
+	and <span class="code">--help</span> as an option to see its usage:</p>
+	<p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py <em>$WEEWX_ROOT</em>/weewx.conf 
+	--help</p>
+	<p>It is useful to run it with the <span class="code">--info</span> option 
+	to see what the current EEPROM settings are on your station:</p>
+	<p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py <em>$WEEWX_ROOT</em>/weewx.conf 
+	--info</p>
+	<p>This will print out something like:</p>
+	<p class="tty">VantagePro EEPROM settings:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CONSOLE FIRMWARE DATE: Nov 28 2005<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CONSOLE SETTINGS:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="highlight">Archive interval: 300 (seconds)</span><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="highlight">
+	Altitude:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 700 (foot</span>)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Wind cup type:&nbsp;&nbsp;&nbsp; large<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="highlight">Rain bucket type: 0.01 inches</span><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rain year start:&nbsp; 10<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CONSOLE UNITS:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Barometer:&nbsp;&nbsp; mbar<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Temperature: degree_F<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rain:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; inch<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Wind:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; knot<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; RECEPTION STATS:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Total packets received:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 18668<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Total packets missed:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2144<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Number of resynchronizations: 2<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Longest good stretch:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1887<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Number of CRC errors:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 659<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BAROMETER CALIBRATION DATA:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Current barometer reading:&nbsp;&nbsp;&nbsp; 30.060 inHg<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Altitude:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 700 feet<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Dew point:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 50 F<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Virtual temperature:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 61 F<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Humidity correction factor:&nbsp;&nbsp; 24<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Correction ratio:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.025<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="highlight">Correction constant:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +0.027 inHg</span><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Gain:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1.000<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Offset:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1.000</p>
+	<p>The values highlighted in <span class="highlight">yellow</span> above can be 
+	changed. They are:</p>
+	<ul>
+		<li>Archive interval</li>
+		<li>Altitude</li>
+		<li>Rain bucket type</li>
+		<li>Barometer correction constant (This is actually changed by providing 
+		an accurate reference value from a local station.)</li>
+	</ul>
+	<p>Set the value you would like in the appropriate place in your 
+	configuration file <span class="code">weewx.conf</span> (described below) 
+	and then run the utility with the option <span class="code">--configure</span>:</p>
+	<p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py $WEEWX_ROOT/weewx.conf 
+	--configure</p>
+	<p>The utility will read the new value from the configuration file and, if 
+	it is different from the old value, ask for your permission to change it.
+	If you agree, then it will send the necessary commands to your hardware to 
+	change the EEPROM settings.</p>
+	<p>The following discusses the details of these various parameters.</p>
 	<h3><a name="Archive_interval">Archive interval</a></h3>
 	<p>The archive interval is set in the main configuration file
 	<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf. </span>Look for the entry
@@ -411,12 +484,51 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	<p><em>Choose your archiving interval carefully! </em>Once chosen, it cannot 
 	be changed without messing up your statistics (highs and lows will be OK, but 
 	averages and rms wind speed will be wrong).</p>
-	<p>After setting the desired interval in the configuration file, run the
-	<span class="code">configure.py</span> script to set it on the VantagePro. If 
-	it differs from the old archive interval, the main memory log of the VantagePro 
-	will be cleared. </p>
-	<p class="tty"><em>$WEEWX_ROOT</em>/bin/configure.py --configure-VantagePro 
-	$WEEWX_ROOT/weewx.conf</p>
+	<h3><a name="Barometer_and_altitude">Barometer and altitude</a></h3>
+	<p>All barometer readings are referenced to sea level pressure. Hence, the 
+	console needs to know the station&#39;s altitude. You also may also want to 
+	calibrate your barometer if you have access to a known-accurate reading of a nearby 
+	station. </p>
+	<p>Look for the entry <span class="code">altitude</span> in the
+	<span class="code">Station</span> section. Change it to your station&#39;s 
+	altitude, along with the units used. For example:</p>
+	<p class="tty">altitude = 213, meter</p>
+	<p>for a station at 213 meters (700 feet). </p>
+	<p>When you run the configuration utility it will give you the opportunity 
+	to type in the reference pressure of the nearby station, or select a 
+	reasonably accurate default. You can also just hit &lt;enter&gt; to use the 
+	previous calibration setting. </p>
+	<p>Here&#39;s a sample session:</p>
+	<p class="tty">BAROMETER AND ALTITUDE CALIBRATION<br />
+	For the following, you have three choices:<br />
+	1. If you have a current barometer reading from a very reliable nearby<br />
+&nbsp;&nbsp; reference, you can use it to calibrate the barometer in your 
+	station.<br />
+&nbsp;&nbsp; In this case, give the value and the unit it is in.<br />
+&nbsp;&nbsp; Examples: &#39;30.15 inHg&#39;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &#39;1024.5 
+	mbar&#39;<br />
+&nbsp;&nbsp; (The console is currently reading 30.062 inHg or 1017.9 mbar)<br />
+	2. If you do not have such a reading, then you can use a value of zero,<br />
+&nbsp;&nbsp; which will result in a default, sensible calibration.<br />
+	3. Finally, you can simply hit &lt;enter&gt;, which will leave the current 
+	calibration<br />
+&nbsp;&nbsp; value unchanged.<br />
+	Response: <span class="bold_n_blue">30.055 inHg</span><br />
+	Calibrated pressure will be 30.055 inHg<br />
+	Altitude will be 700 feet.<br />
+	Proceeding will change the altitude and/or barometer calibration.<br />
+	Are you sure you want to proceed? (Y/n) <span class="bold_n_blue">Y</span><br />
+	New altitude is 700 feet, new barometer reading is 30.055 inHg</p>
+	<p>The user responses are in <span class="bold_n_blue">blue</span>. Note 
+	how the old pressure was 30.062, but the correction constant was changed so 
+	the pressure now reads 30.055. </p>
+	<h3>Rain bucket type</h3>
+	<p>Normally, this is set by Davis, but if you have replaced your bucket with 
+	a different kind, you might want to reconfigure. Look for <span class="code">rain_bucket_type</span> under section &#39;<span class="code">VantagePro</span>&#39;. 
+	You may have to uncomment the line. For example, you might change it to</p>
+	<p class="tty">rain_bucket_type = 1</p>
+	<p>if you had a 0.2 MM rain bucket.</p>
 	<h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
 	<p>Station specific information is set in the configuration file
 	<span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. (There is another 
@@ -471,7 +583,9 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	western 
 	hemispheres, respectively. Required. No default.</p>
 	<p class="config_important">altitude</p>
-	<p>Set to the altitude of the station and the unit used for the altitude. Required. 
+	<p>Set to the altitude of the station and the unit used for the altitude. 
+	See additional details under <a href="#Barometer_and_altitude">configuring 
+	your station altitude</a>. Required. 
 	No default. Example:</p>
 	<pre>altitude = 700, foot</pre>
 	<p class="config_important">rain_year_start</p>
@@ -496,10 +610,10 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 	<h3 class="config_section">[VantagePro]</h3>
 	<p>This section is for options relating to the VantagePro hardware.</p>
 	<p class="config_important">archive_interval</p>
-	<p>Set to the desired archive interval of your station, in seconds. This variable 
-	is only used when first setting up your station. Otherwise, this value is read directly 
-	from the station. Required if you <a href="#Archive_interval">configure your 
-	station</a>. No default.</p>
+	<p>Set to the desired archive interval of your station, in seconds. This 
+	variable is only used when first setting up your station. Otherwise, this 
+	value is read directly from the station. See additional details under
+	<a href="#Archive_interval">configure your station archive interval</a>. No default.</p>
 	<p class="config_important">type</p>
 	<p>Set to either &#39;<span class="code">serial</span>&#39;, if you have a serial or 
 	USB connection to your VantagePro (by far the most common), or to &#39;<span class="code">ethernet</span>&#39; 

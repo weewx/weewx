@@ -63,7 +63,7 @@ class BaseWrapper(object):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to wake up console")
         raise weewx.WakeupError("Unable to wake up VantagePro console")
 
-    def send_data(self, data, ack_char=_ack):
+    def send_data(self, data):
         """Send data to the Davis console, waiting for an acknowledging <ACK>
         
         If the <ACK> is not received, no retry is attempted. Instead, an exception
@@ -75,7 +75,7 @@ class BaseWrapper(object):
     
         # Look for the acknowledging ACK character
         _resp = self.read()
-        if _resp != ack_char: 
+        if _resp != _ack: 
             syslog.syslog(syslog.LOG_ERR, "VantagePro: No <ACK> received from console")
             raise weewx.WeeWxIOError("No <ACK> received from VantagePro console")
     
@@ -682,8 +682,7 @@ class VantagePro(object):
         new_altitude = int(new_altitude_foot)
         
         command = "BAR=%d %d\n" % (new_barometer, new_altitude)
-        print command
-        self.port.send_data(command, ack_char='\n')
+        self.port.send_command(command)
         
     def setArchiveInterval(self, archive_interval_seconds):
         """Set the archive interval of the VantagePro.
@@ -1281,13 +1280,13 @@ import weewx.units
 def getOptionGroup(parser):
     
     group = optparse.OptionGroup(parser,"Options for Davis weather stations", 
-                                 "These options are specific to the Davis Vantage series of weather stations")
+                                 "These options are specific to the Davis Vantage series of weather stations.")
     group.add_option("--info", action="store_true", dest="info",
-                     help="To print configuration information about your weather station")
+                     help="To print configuration, reception, and barometer calibration information about your weather station.")
     group.add_option("--configure", action="store_true", dest="configure",
-                     help="To configure your weather station using settings in the specified configuration file")
+                     help="To configure your weather station using settings in the specified configuration file.")
     group.add_option("--clear", action="store_true", dest="clear",
-                     help="To clear the memory of your weather station")
+                     help="To clear the memory of your weather station.")
     parser.add_option_group(group)
 
 def runOptions(config_dict, options, args):
@@ -1318,17 +1317,17 @@ def info(config_dict):
         CONSOLE FIRMWARE DATE: %s
         
         CONSOLE SETTINGS:
-          archive interval: %d (seconds)
-          elevation:        %d (%s)
-          wind cup type:    %s
-          rain bucket type: %s
-          rain year start:  %d
+          Archive interval: %d (seconds)
+          Altitude:         %d (%s)
+          Wind cup type:    %s
+          Rain bucket type: %s
+          Rain year start:  %d
           
         CONSOLE UNITS:
-          barometer:   %s
-          temperature: %s
-          rain:        %s
-          wind:        %s
+          Barometer:   %s
+          Temperature: %s
+          Rain:        %s
+          Wind:        %s
           """ % (_firmware_date, 
                  station.archive_interval, station.elevation, station.elevation_unit,
                  station.wind_cup_size, station.rain_bucket_size, station.rain_season_start,
@@ -1473,7 +1472,6 @@ def configure(config_dict):
             current_barometer_inHg = _bardata[0]
             current_barometer_mbar = weewx.units.convert((current_barometer_inHg, 'inHg', 'group_pressure'), 'mbar')[0]
 
-            print "Current barometer reading is %.3f inHg (%.1f mbar)." % (current_barometer_inHg, current_barometer_mbar)
             print "For the following, you have three choices:\n"\
             " 1. If you have a current barometer reading from a very reliable nearby\n"\
             "    reference, you can use it to calibrate the barometer in your station.\n"\
@@ -1508,6 +1506,7 @@ def configure(config_dict):
             else:
                 print "Calibrated pressure will be %.3f inHg" % (new_barometer_inHg,)
 
+            print "Altitude will be %d feet." % int(new_altitude)
             if old_altitude == new_altitude and new_barometer_inHg == current_barometer_inHg:
                 print "Old and new altitudes and barometer settings are the same. Nothing done."
             else:
@@ -1515,6 +1514,9 @@ def configure(config_dict):
                 ans = raw_input("Are you sure you want to proceed? (Y/n) ")
                 if ans == 'Y' :
                     station.setBarData(new_barometer_inHg, new_altitude)
+                    # Hit the console again and print out the new results:
+                    _bardata = station.getBarData()
+                    print "New altitude is %.0f feet, new barometer reading is %.3f inHg" % (_bardata[1], _bardata[0])
                 else:
                     print "Nothing done."
     
@@ -1537,4 +1539,3 @@ def clear(config_dict):
             print "Nothing done."
     finally:
         station.closePort()
-    

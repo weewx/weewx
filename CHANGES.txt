@@ -1,6 +1,15 @@
 CHANGE HISTORY
 --------------------------------
 
+1.12.0 10/23/11
+
+Added  the  ability  to change  bucket  type,  rain  year start,  and  barometer
+calibration data  in the console  using the utility configure.py.   Added option
+"--info",  which  queries  the  console  and returns  information  about  EEPROM
+settings.  Changed  configure.py so it can  do hardware-specific configurations,
+in anticipation of supporting hardware besides the Davis series.
+
+
 1.11.0 10/06/11
 
 Added support for the Davis WeatherLinkIP. Thanks, Peter Nock and Travis Pickle!
@@ -13,7 +22,7 @@ WeatherUnderground if available. Thanks, Dan!
 Added  patch from  user Marijn  Vriens that  allows fallback  to the  version of
 pysqlite that comes with many versions of Python. Thanks, Marijn!
 
-Now does garbage collection after an archive record is obtained and before the
+Now does garbage  collection after an archive record is  obtained and before the
 main loop is restarted.
 
 

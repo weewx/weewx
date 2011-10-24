@@ -113,6 +113,7 @@ td {
 }
 .bold_n_blue {
 	color: #0000FF;
+	font-weight:bold;
 }
 .xxsmall {
 	font-size: xx-small;
