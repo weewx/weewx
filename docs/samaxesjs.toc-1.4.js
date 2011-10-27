@@ -2,7 +2,7 @@
  * samaxesJS JavaScript Library
  * http://code.google.com/p/samaxesjs/
  *
- * Copyright (c) 2010 samaxes.com
+ * Copyright (c) 2011 samaxes.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,16 +25,8 @@
  */
 var samaxesJS = {
     /**
-     * Logging and debugging.
-     * @param {Object} obj The object to log.
-     */
-    debug: function(obj) {
-        if (window.console && window.console.log) {
-            window.console.log(obj);
-        }
-    },
-    /**
      * Adds a load event handler to the target object.
+     *
      * @param {Function} func Function to add a load event handler.
      */
     addLoadEvent: function(func) {
@@ -51,7 +43,8 @@ var samaxesJS = {
         }
     },
     /**
-     * Used for trimming whitespace.
+     * Trim whitespace.
+     *
      * @param {String} str The String to trim.
      * @return {String} The trimmed string.
      */
@@ -59,7 +52,8 @@ var samaxesJS = {
         return (str || '').replace(/^(\s|\u00A0)+|(\s|\u00A0)+$/g, '');
     },
     /**
-     * Used for getting the size of an associative array.
+     * Gets the size of an associative array.
+     *
      * @param {Object} obj Associative array to check size.
      * @return {Number} The size of the associative array.
      */
@@ -75,41 +69,49 @@ var samaxesJS = {
         return size;
     },
     /**
-     * Used for getting only the direct decendents of an element node by tag name.
+     * Gets an element children filtered by tag name.
+     *
      * @param {Object} parent The parent node element.
-     * @param {String} node The node name.
-     * @return {Array} The direct decendents of an element node.
+     * @param {String} name The tag name.
+     * @return {Array} The element children.
      */
-    getDirectElementsByTagName: function(parent, node) {
-        var directElementsByTagName = [];
-        var children = parent.childNodes;
+    getChildrenByTagName: function(parent, name) {
+        var children = parent.children;
         var length = children.length;
+        var filteredChildren = [];
 
         for (var i = 0; i < length; i++) {
-            // nodeType === 1 --> Node.ELEMENT_NODE
-            if (children[i].nodeType === 1 && children[i].nodeName.match(new RegExp(node, 'i'))) {
-                directElementsByTagName.push(children[i]);
+            if (children[i].tagName.match(new RegExp(name, 'i'))) {
+                filteredChildren.push(children[i]);
             }
         }
 
-        return directElementsByTagName;   
+        return filteredChildren;
     }
 };
 
+//String.prototype.trim = function() {
+//    return samaxesJS.trim(this);  
+//};
+Element.prototype.getChildrenByTagName = function(tagName) {
+    return samaxesJS.getChildrenByTagName(this, tagName);  
+};
 /*!
- * TOC JavaScript Library v1.3.2
+ * TOC JavaScript Library v1.4
  */
 
 /**
  * The TOC control dynamically builds a table of contents from the headings in
  * a document and prepends legal-style section numbers to each of the headings.
+ *
  * @namespace samaxesJS.toc
  */
 samaxesJS.toc = function() {
     var document = this.document;
 
     /**
-     * Creates a TOC element link.
+     * Creates a TOC link element.
+     *
      * @private
      * @param {String} nodeId The node id attribute.
      * @param {String} innerHTML The node text.
@@ -131,14 +133,21 @@ samaxesJS.toc = function() {
      * @param {Object} toc The container element.
      */
     function checkContainer(header, toc) {
-        if (header === 0 && toc.getElementsByTagName('li').length > 0 &&
-                !toc.getElementsByTagName('li')[toc.getElementsByTagName('li').length - 1].lastChild.nodeName.match(new RegExp('ul', 'i'))) {
-            toc.getElementsByTagName('li')[toc.getElementsByTagName('li').length - 1].appendChild(document.createElement('ul'));
+        var lastChildren = toc.querySelectorAll(':last-child');
+        var lastChildrenLength = lastChildren.length;
+
+        if (lastChildrenLength !== 0) {
+            var lastChildElement = lastChildren.item(lastChildrenLength - 1);
+
+            if (header === 0 && !lastChildElement.nodeName.match(new RegExp('ul', 'i'))) {
+                toc.querySelectorAll('li:last-child')[toc.querySelectorAll('li:last-child').length - 1].appendChild(document.createElement('ul'));
+            }
         }
     }
 
     /**
      * Updates headers numeration.
+     *
      * @private
      * @param {Object} headers The heading counters associative array.
      * @param {String} header The heading element node name.
@@ -155,6 +164,7 @@ samaxesJS.toc = function() {
 
     /**
      * Generate an anchor id from a string by replacing unwanted characters.
+     *
      * @private
      * @param {String} text The original string.
      * @return {String} The string without any unwanted characters.
@@ -165,6 +175,7 @@ samaxesJS.toc = function() {
 
     /**
      * Prepends the numeration to a heading.
+     *
      * @private
      * @param {Object} headers The heading counters associative array.
      * @param {String} header The heading element node name.
@@ -185,6 +196,7 @@ samaxesJS.toc = function() {
 
     /**
      * Appends a new node to the TOC.
+     *
      * @private
      * @param {Object} toc The container element.
      * @param {Number} index The heading element index.
@@ -195,12 +207,10 @@ samaxesJS.toc = function() {
         var parent = toc;
 
         for (var i = 1; i < index; i++) {
-            if (samaxesJS.getDirectElementsByTagName(parent, 'li').length > 0) {
-                /*if (samaxesJS.getDirectElementsByTagName(samaxesJS.getDirectElementsByTagName(parent, 'li')[samaxesJS.getDirectElementsByTagName(parent, 'li').length - 1], 'ul').length === 0) {
-                    parent.appendChild(document.createElement('li')).appendChild(document.createElement('ul'));
-                }*/
-                parent = samaxesJS.getDirectElementsByTagName(parent, 'li')[samaxesJS.getDirectElementsByTagName(parent, 'li').length - 1].getElementsByTagName('ul')[0];
+            if (parent.querySelectorAll('li:last-child > ul').length === 0) {
+                parent.appendChild(document.createElement('li')).appendChild(document.createElement('ul'));
             }
+            parent = parent.getChildrenByTagName('li')[parent.getChildrenByTagName('li').length - 1].getChildrenByTagName('ul')[0];
         }
 
         if (id == null) {
@@ -212,13 +222,14 @@ samaxesJS.toc = function() {
 
     return function(options) {
         samaxesJS.addLoadEvent(function() {
-            var headers = [];
+            var exclude = (!options || options.exclude === undefined) ? 'h1, h5, h6' : options.exclude;
             var context = (options && options.context) ? document.getElementById(options.context) : document.body;
             var autoId = options && options.autoId;
-            var nodes = context.getElementsByTagName('*');
-            var exclude = (!options || options.exclude === undefined) ? 'h1, h5, h6' : options.exclude;
+            var numerate = (!options || options.numerate === undefined) ? true : options.numerate;
+            var headers = [];
+            var nodes = context.querySelectorAll('h1, h2, h3, h4, h5, h6');
             for (var node in nodes) {
-                if (/h\d/i.test(nodes[node].nodeName) && !exclude.match(new RegExp(nodes[node].nodeName, 'i'))) {
+                if (/*/h\d/i.test(nodes[node].nodeName) && */!exclude.match(new RegExp(nodes[node].nodeName, 'i'))) {
                     headers.push(nodes[node]);
                 }
             }
@@ -234,20 +245,18 @@ samaxesJS.toc = function() {
                 }
 
                 for (var header in headers) {
-                    try {
-                        for (var i = 6; i >= 1; i--) {
-                            if (headers[header].nodeName.match(new RegExp('h' + i, 'i'))) {
+                    for (var i = 6; i >= 1; i--) {
+                        if (headers[header].nodeName.match(new RegExp('h' + i, 'i'))) {
+                            if (numerate) {
                                 checkContainer(headersNumber['h' + i], toc);
                                 updateNumeration(headersNumber, 'h' + i);
                                 if (autoId && !headers[header].getAttribute('id')) {
                                     headers[header].setAttribute('id', generateId(headers[header].innerHTML));
                                 }
                                 headers[header].innerHTML = addNumeration(headersNumber, 'h' + i, headers[header].innerHTML);
-                                appendToTOC(toc, indexes['h' + i], headers[header].getAttribute('id'), headers[header].innerHTML);
                             }
+                            appendToTOC(toc, indexes['h' + i], headers[header].getAttribute('id'), headers[header].innerHTML);
                         }
-                    } catch (error) {
-                        samaxesJS.debug('Error message: ' + error.message);
                     }
                 }
             }

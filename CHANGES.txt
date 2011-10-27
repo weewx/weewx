@@ -9,6 +9,8 @@ calibration data  in the console  using the utility configure.py.   Added option
 settings.  Changed  configure.py so it can  do hardware-specific configurations,
 in anticipation of supporting hardware besides the Davis series.
 
+Reorganized the documentation.
+
 
 1.11.0 10/06/11
 
