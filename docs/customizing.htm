@@ -3,6 +3,8 @@
 	<!-- $Revision$ -->
 	<!-- $Author$ -->
 	<!-- $Date$ -->
+	<!-- For some reason, the table of contents generator used in this document demands that all
+		heading elements be on one line. -->
 	<head>
 		<meta content="en-us" http-equiv="Content-Language" />
 		<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
@@ -98,8 +100,7 @@
 				section <em><a href="#Customizing_the_weewx_service_engine">Customizing the
 				weewx service engine</a></em>.
 			</p>
-			<h3><a name="The_standard_reporting_service,_StdReportService">The standard
-			reporting service, <span class="code">StdReportService</span></a></h3>
+			<h3><a name="The_standard_reporting_service,_StdReportService">The standard reporting service, <span class="code">StdReportService</span></a></h3>
 			<p>
 				For the moment, we focus on the last service, <span class="code">weewx.wxengine.StdReportService</span>,
 				the standard service for creating reports. This will be what most users want
@@ -135,9 +136,7 @@
 				generate anything. Instead, it uses the reporting service engine to arrange
 				for things to be FTP&#39;d to a remote server.
 			</p>
-			<h4>Skins
-			<br />
-			</h4>
+			<h4>Skins</h4>
 			<p>
 				Each report has a <em>Skin</em> associated with it. For most reports, the
 				relationship with the skin is an obvious one: it contains the templates, any
@@ -224,8 +223,7 @@
 				statistical database is used only in template generation (where it appears as
 				tags <span class="code">$day</span>, <span class="code">$week</span>, <span class="code">$month</span>, <span class="code">$year</span>, and <span class="code">$rainyear</span>, depending on the aggregation time period).
 			</p>
-			<h1><a name="Opportunities_for_customizing_reports">Opportunities for customizing
-			reports</a></h1>
+			<h1><a name="Opportunities_for_customizing_reports">Opportunities for customizing reports</a></h1>
 			<p>
 				This section discusses the two general strategies for customizing reports:
 				by changing options in one or more configuration file, or by changing the template
@@ -1099,8 +1097,7 @@ class MyFileGenerator(FileGenerator):                       # 1
 				This subdirectory is preserved through upgrades, so you won&#39;t have to redo any
 				changes you might have made.
 			</p>
-			<h1><a name="The_Standard_skin_configuration_file">Reference: The
-			Standard skin configuration file</a></h1>
+			<h1><a name="The_Standard_skin_configuration_file">Reference: The Standard skin configuration file</a></h1>
 			<p>
 				This section is a reference to the options appearing in the Standard skin
 				configuration file, found in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>.
@@ -1326,7 +1323,7 @@ ephem_year = %d-%b-%Y %H:%M</pre>
 				almanac times within the day, such as sunrise or sunset. The second, <span class="code">ephem_year</span>, is used for almanac times within the
 				year, such as the next equinox or full moon.
 			</p>
-			<h3 class="config_section">[[DegreeDays]] </h3>
+			<h3 class="config_section">[[DegreeDays]]</h3>
 			<p class="config_important">
 				heating_base
 				<br />
@@ -1851,8 +1848,7 @@ outTemp = Outside Temperature</pre>
 					by the user.</td>
 				</tr>
 			</table>
-			<h2><a name="Preserving_your_changes_across_an_upgrade">Preserving your changes
-			across an upgrade</a></h2>
+			<h2><a name="Preserving_your_changes_across_an_upgrade">Preserving your changes	across an upgrade</a></h2>
 			<p>
 				Generally, if you change the code in <span class="code">weewx</span> you
 				will have to cut-and-paste any changes you have made to the new code. However,
