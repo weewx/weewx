@@ -786,7 +786,7 @@ class VantagePro(object):
                 _c, _r, _barcal, _gain, _offset)
     
     def getFirmwareDate(self):
-        """Return the firmware date as a string. Returns None if unavailable."""
+        """Return the firmware date as a string. """
         return self.port.send_command('VER\n')[0]
         
     def translateLoopPacket(self, loopPacket):

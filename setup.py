@@ -159,6 +159,14 @@ class My_install_data(install_data):
         except:
             pass
         
+        # If the file $WEEWX_INSTALL/CHANGES.txt exists, delete it. It's
+        # been moved to the docs subdirectory
+        try:
+            print os.path.join(self.install_dir, 'CHANGES.txt')
+            os.remove(os.path.join(self.install_dir, 'CHANGES.txt'))
+        except:
+            pass
+        
         # Clean up after a bad install from earlier versions of setup.py:
         try:
             os.remove(os.path.join(self.install_dir, 'start_scripts/weewx'))
@@ -346,12 +354,13 @@ setup(name='weewx',
       packages    = ['weewx', 'weeplot', 'weeutil', 'examples', 'user'],
       py_modules  = ['daemon'],
       scripts     = ['bin/configure.py', 'bin/weewxd.py', 'bin/runreports.py'],
-      data_files  = [('',                           ['CHANGES.txt', 'LICENSE.txt', 'README', 'weewx.conf']),
-                     ('docs',                       ['docs/customizing.htm', 'docs/debian.htm', 'docs/default.html', 
-                                                     'docs/readme.htm', 'docs/sheeva.htm', 'docs/upgrading.htm',
-                                                     'docs/usersguide.htm',
-                                                     'docs/samaxesjs.toc-1.4.min.js', 'docs/weewx_docs.css',
-                                                     'docs/daytemp_with_avg.png', 'docs/weekgustoverlay.png']),
+      data_files  = [('',                           ['LICENSE.txt', 'README', 'weewx.conf']),
+                     ('docs',                       ['docs/CHANGES.txt', 'docs/customizing.htm', 
+                                                     'docs/daytemp_with_avg.png', 'docs/debian.htm', 
+                                                     'docs/readme.htm', 'docs/samaxesjs.toc-1.4.min.js', 
+                                                     'docs/sheeva.htm', 'docs/upgrading.htm',
+                                                     'docs/usersguide.htm', 'docs/weekgustoverlay.png', 
+                                                     'docs/weewx_docs.css']),
                      ('skins/Ftp',                  ['skins/Ftp/skin.conf']),
                      ('skins/Standard/backgrounds', ['skins/Standard/backgrounds/band.gif']),
                      ('skins/Standard/NOAA',        ['skins/Standard/NOAA/NOAA-YYYY.txt.tmpl', 'skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl']),
