@@ -4,7 +4,7 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-1.12.0 10/23/11
+1.12.0 10/29/11
 
 Added  the  ability  to change  bucket  type,  rain  year start,  and  barometer
 calibration data  in the console  using the utility configure.py.   Added option

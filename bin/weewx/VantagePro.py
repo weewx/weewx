@@ -1312,6 +1312,8 @@ def info(config_dict):
         except:
             _firmware_date = "<Unavailable>"
         
+        console_time = time.strftime("%x %X", station.getTime())
+        
         print  """VantagePro EEPROM settings:
         
         CONSOLE FIRMWARE DATE: %s
@@ -1322,15 +1324,16 @@ def info(config_dict):
           Wind cup type:    %s
           Rain bucket type: %s
           Rain year start:  %d
+          Onboard time:     %s
           
         CONSOLE UNITS:
           Barometer:   %s
           Temperature: %s
           Rain:        %s
           Wind:        %s
-          """ % (_firmware_date, 
+          """ % (_firmware_date,
                  station.archive_interval, station.elevation, station.elevation_unit,
-                 station.wind_cup_size, station.rain_bucket_size, station.rain_season_start,
+                 station.wind_cup_size, station.rain_bucket_size, station.rain_season_start, console_time,
                  station.barometer_unit, station.temperature_unit, 
                  station.rain_unit, station.wind_unit)
         
