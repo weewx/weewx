@@ -651,8 +651,7 @@ class VantagePro(object):
         # Then call NEWSETUP to get it to stick:
         self.port.send_data("NEWSETUP\n")
         
-        self.rain_bucket_type = new_bucket_code
-        self.rain_bucket_size = VantagePro.rain_bucket_dict[self.rain_bucket_type]
+        self.retrieveProperties()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain bucket type set to %d (%s)" %(self.rain_bucket_type, self.rain_bucket_size))
 
     def setRainSeasonStart(self, new_rain_season_start):
@@ -668,7 +667,7 @@ class VantagePro(object):
         # Follow it up with the data:
         self.port.send_data_with_crc16(chr(new_rain_season_start), max_tries=1)
 
-        self.rain_season_start = new_rain_season_start
+        self.retrieveProperties()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain season start set to %d" % (self.rain_season_start,))
 
     def setBarData(self, new_barometer_inHg, new_altitude_foot):
@@ -683,6 +682,8 @@ class VantagePro(object):
         
         command = "BAR=%d %d\n" % (new_barometer, new_altitude)
         self.port.send_command(command)
+        self.retrieveProperties()
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Set barometer calibration.")
         
     def setArchiveInterval(self, archive_interval_seconds):
         """Set the archive interval of the VantagePro.
@@ -698,7 +699,7 @@ class VantagePro(object):
         
         self.port.send_command(command, max_tries=self.max_tries)
 
-        self.archive_interval = archive_interval_seconds
+        self.retrieveProperties()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (self.archive_interval_seconds,))
     
     def clearLog(self):
@@ -751,6 +752,20 @@ class VantagePro(object):
         self.wind_unit        = VantagePro.wind_unit_dict[wind_unit_code]
         self.wind_cup_size    = VantagePro.wind_cup_dict[self.wind_cup_type]
         self.rain_bucket_size = VantagePro.rain_bucket_dict[self.rain_bucket_type]
+        
+        # Adjust the translation maps to reflect the rain bucket size:
+        if self.rain_bucket_type == 1:
+            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
+                _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_1
+            _loop_map['rainRate']    = _bucket_1_None
+        elif self.rain_bucket_type == 2:
+            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
+                _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_2
+            _loop_map['rainRate']    = _bucket_2_None
+        else:
+            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
+                _loop_map['monthRain'] = _loop_map['yearRain'] = _val100
+            _loop_map['rainRate']    = _big_val100
 
     def getRX(self) :
         """Returns reception statistics from the console.
@@ -881,7 +896,7 @@ class VantagePro(object):
         T = record['outTemp']
         R = record['outHumidity']
         W = record['windSpeed']
-    
+        
         record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
         record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
         record['windchill'] = weewx.wxformulas.windchillF(T, W)
@@ -1145,6 +1160,20 @@ def _null_int(v):
 
 def _windDir(v):
     return float(v) * 22.5 if v!= 0x00ff else None
+
+# Rain bucket type "1", a 0.2 mm bucket
+def _bucket_1(v):
+    return float(v)*0.00787401575
+
+def _bucket_1_None(v):
+    return float(v)*0.00787401575 if v != 0xffff else None
+
+# Rain bucket type "2", a 0.1 mm bucket
+def _bucket_2(v):
+    return float(v)*0.00393700787
+
+def _bucket_2_None(v):
+    return float(v)*0.00393700787 if v != 0xffff else None
 
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the LOOP packet in the internal, Davis form into US
