@@ -218,10 +218,10 @@ class CopyGenerator(ReportGenerator):
         ncopy = 0
         for pattern in copy_list:
             # Glob this pattern; then go through each resultant filename:
-            for file in glob.glob(pattern):
+            for _file in glob.glob(pattern):
                 # Final destination is the join of the html destination directory
                 # and any relative subdirectory on the filename:
-                dest_dir = os.path.join(html_dest_dir, os.path.dirname(file))
+                dest_dir = os.path.join(html_dest_dir, os.path.dirname(_file))
                 # Make the destination directory, wrapping it in a try block in
                 # case it already exists:
                 try:
@@ -231,7 +231,7 @@ class CopyGenerator(ReportGenerator):
                 # This version of copy does not copy over modification time,
                 # so it will look like a new file, causing it to be (for example)
                 # ftp'd to the server:
-                shutil.copy(file, dest_dir)
+                shutil.copy(_file, dest_dir)
                 ncopy += 1
         
         syslog.syslog(syslog.LOG_DEBUG, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))

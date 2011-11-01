@@ -151,10 +151,10 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                                                      filter     = encoding,
                                                      filtersLib = weewx.filegenerator)
                     # Open up the file that is to be created:
-                    file = open(_fullpath, mode='w')
+                    _file = open(_fullpath, mode='w')
                     try:
                         # Write it out
-                        print >> file, text
+                        print >> _file, text
                     except Cheetah.NameMapper.NotFound, e:
                         (cl, unused_ob, unused_tr) = sys.exc_info()
                         syslog.syslog(syslog.LOG_ERR, """filegenerator: Caught exception "%s" """ % cl) 
@@ -164,7 +164,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                         ngen += 1
                     finally:
                         # Close it
-                        file.close()
+                        _file.close()
             
             t2 = time.time()
             elapsed_time = t2 - t1
@@ -203,10 +203,10 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                                              filter     = encoding,
                                              filtersLib = weewx.filegenerator)
 
-            file = open(os.path.join(destination_dir, _fullpath), mode='w')
+            _file = open(os.path.join(destination_dir, _fullpath), mode='w')
             try:
                 # Write it out
-                print >> file, text
+                print >> _file, text
             except Cheetah.NameMapper.NotFound, e:
                 (cl, unused_ob, unused_tr) = sys.exc_info()
                 syslog.syslog(syslog.LOG_ERR, """filegenerator: Caught exception "%s" """ % cl) 
@@ -216,7 +216,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                 ngen += 1
             finally:
                 # Close it
-                file.close()
+                _file.close()
         
         elapsed_time = time.time() - t1
         syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
@@ -341,7 +341,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
 class html_entities(Cheetah.Filters.Filter):
 
-    def filter(self, val, **dummy_kw):
+    def filter(self, val, **dummy_kw): #@ReservedAssignment
         """Filter incoming strings so they use HTML entity characters"""
         if isinstance(val, unicode):
             filtered = val.encode('ascii', 'xmlcharrefreplace')
@@ -355,7 +355,7 @@ class html_entities(Cheetah.Filters.Filter):
 
 class strict_ascii(Cheetah.Filters.Filter):
 
-    def filter(self, val, **dummy_kw):
+    def filter(self, val, **dummy_kw): #@ReservedAssignment
         """Filter incoming strings to strip out any non-ascii characters"""
         if isinstance(val, unicode):
             filtered = val.encode('ascii', 'ignore')
@@ -369,7 +369,7 @@ class strict_ascii(Cheetah.Filters.Filter):
     
 class utf8(Cheetah.Filters.Filter):
 
-    def filter(self, val, **dummy_kw):
+    def filter(self, val, **dummy_kw): #@ReservedAssignment
         """Filter incoming strings, converting to UTF-8"""
         if isinstance(val, unicode):
             filtered = val.encode('utf8')

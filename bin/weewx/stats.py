@@ -391,8 +391,8 @@ class StatsReadonlyDb(object):
         if aggregateType not in ('sum', 'avg'):
             raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, stats_type)
 
-        sum = 0.0
-        count = 0
+        _sum = 0.0
+        _count = 0
         for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
             # Get the average temperature for the day as a value tuple:
             Tavg_t = self.getAggregate(daySpan, 'outTemp', 'avg')
@@ -401,17 +401,17 @@ class StatsReadonlyDb(object):
                 if stats_type == 'heatdeg':
                     # Convert average temperature to the same units as heatbase:
                     Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
-                    sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
+                    _sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
                 else:
                     # Convert average temperature to the same units as coolbase:
                     Tavg_target_t = weewx.units.convert(Tavg_t, coolbase_t[1])
-                    sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
-                count += 1
+                    _sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
+                _count += 1
 
         if aggregateType == 'sum':
-            _result = sum
+            _result = _sum
         else:
-            _result = sum / count if count else None 
+            _result = _sum / _count if _count else None 
 
         # Look up the unit type and group of the result:
         (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)

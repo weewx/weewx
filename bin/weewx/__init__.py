@@ -54,9 +54,3 @@ class UnsupportedFeature(StandardError):
     
 class ViolatedPrecondition(StandardError):
     """Exception thrown when a function is called with violated preconditions."""
-    
-class LogicError(StandardError):
-    """Exception thrown when there is an internal logic error in the code."""
-    
-class ArchiveError(StandardError):
-    """Exception thrown when there is an archive database error."""

@@ -349,23 +349,23 @@ class Archive(object):
             # Go through each aggregation interval, calculating the aggregation.
             for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
 
-                mag_extreme = dir_at_extreme = None
-                xsum = ysum = 0.0
-                count = 0
-                last_time = None
+                _mag_extreme = _dir_at_extreme = None
+                _xsum = _ysum = 0.0
+                _count = 0
+                _last_time = None
                 
                 _cursor.execute(sql_str, stamp)
 
                 for _rec in _cursor:
-                    (mag, dir) = _rec[1:3]
+                    (_mag, _dir) = _rec[1:3]
 
-                    if mag is None:
+                    if _mag is None:
                         continue
 
                     # A good direction is necessary unless the mag is zero:
-                    if mag == 0.0  or dir is not None:
-                        count += 1
-                        last_time  = _rec[0]
+                    if _mag == 0.0  or _dir is not None:
+                        _count += 1
+                        _last_time  = _rec[0]
                         if std_unit_system:
                             if std_unit_system != _rec[3]:
                                 raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
@@ -374,42 +374,42 @@ class Archive(object):
                         
                         # Pick the kind of aggregation:
                         if aggregate_type == 'min':
-                            if mag_extreme is None or mag < mag_extreme:
-                                mag_extreme = mag
-                                dir_at_extreme = dir
+                            if _mag_extreme is None or _mag < _mag_extreme:
+                                _mag_extreme = _mag
+                                _dir_at_extreme = _dir
                         elif aggregate_type == 'max':
-                            if mag_extreme is None or mag > mag_extreme:
-                                mag_extreme = mag
-                                dir_at_extreme = dir
+                            if _mag_extreme is None or _mag > _mag_extreme:
+                                _mag_extreme = _mag
+                                _dir_at_extreme = _dir
                         else:
                             # No need to do the arithmetic if mag is zero.
                             # We also need a good direction
-                            if mag > 0.0 and dir is not None:
-                                xsum += mag * math.cos(math.radians(90.0 - dir))
-                                ysum += mag * math.sin(math.radians(90.0 - dir))
+                            if _mag > 0.0 and _dir is not None:
+                                _xsum += _mag * math.cos(math.radians(90.0 - _dir))
+                                _ysum += _mag * math.sin(math.radians(90.0 - _dir))
                 # We've gone through the whole interval. Was their any good data?
-                if count:
+                if _count:
                     # Record the time of the last good data point:
-                    time_vec.append(last_time)
+                    time_vec.append(_last_time)
                     # Form the requested aggregation:
                     if aggregate_type in ('min', 'max'):
-                        if dir_at_extreme is None:
+                        if _dir_at_extreme is None:
                             # The only way direction can be zero with a non-zero count
                             # is if all wind velocities were zero
                             if weewx.debug:
-                                assert(mag_extreme <= 1.0e-6)
+                                assert(_mag_extreme <= 1.0e-6)
                             x_extreme = y_extreme = 0.0
                         else:
-                            x_extreme = mag_extreme * math.cos(math.radians(90.0 - dir_at_extreme))
-                            y_extreme = mag_extreme * math.sin(math.radians(90.0 - dir_at_extreme))
+                            x_extreme = _mag_extreme * math.cos(math.radians(90.0 - _dir_at_extreme))
+                            y_extreme = _mag_extreme * math.sin(math.radians(90.0 - _dir_at_extreme))
                         data_vec.append(complex(x_extreme, y_extreme))
                     elif aggregate_type == 'sum':
-                        data_vec.append(complex(xsum, ysum))
+                        data_vec.append(complex(_xsum, _ysum))
                     elif aggregate_type == 'count':
-                        data_vec.append(count)
+                        data_vec.append(_count)
                     else:
                         # Must be 'avg'
-                        data_vec.append(complex(xsum/count, ysum/count))
+                        data_vec.append(complex(_xsum/_count, _ysum/_count))
         else:
             # No aggregation desired. It's a lot simpler. Go get the
             # data in the requested time period
@@ -425,12 +425,12 @@ class Archive(object):
                 else:
                     std_unit_system = _rec[3]
                 # Break the mag and dir down into x- and y-components.
-                (mag, dir) = _rec[1:3]
-                if mag is None or dir is None:
+                (_mag, _dir) = _rec[1:3]
+                if _mag is None or _dir is None:
                     data_vec.append(None)
                 else:
-                    x = mag * math.cos(math.radians(90.0 - dir))
-                    y = mag * math.sin(math.radians(90.0 - dir))
+                    x = _mag * math.cos(math.radians(90.0 - _dir))
+                    y = _mag * math.sin(math.radians(90.0 - _dir))
                     if weewx.debug:
                         # There seem to be some little rounding errors that are driving
                         # my debugging crazy. Zero them out
@@ -483,7 +483,7 @@ def config(archiveFilename, archiveSchema=None):
         archiveSchema = user.schemas.defaultArchiveSchema
         
     # List comprehension of the types, joined together with commas:
-    _sqltypestr = ', '.join([' '.join(type) for type in archiveSchema])
+    _sqltypestr = ', '.join([' '.join(_type) for _type in archiveSchema])
     
     _createstr ="CREATE TABLE archive (%s);" % _sqltypestr
 

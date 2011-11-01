@@ -384,12 +384,9 @@ class StdArchive(StdService):
     def newArchivePacket(self, archivePacket):
         """Add a new archive record to the SQL archive and stats databases."""
 
-        try:
-            # Add the new record to the archive database and stats database:
-            self.archive.addRecord(archivePacket)
-            self.statsDb.addArchiveRecord(archivePacket)
-        except weewx.ArchiveError:
-            pass
+        # Add the new record to the archive database and stats database:
+        self.archive.addRecord(archivePacket)
+        self.statsDb.addArchiveRecord(archivePacket)
         
     def processArchiveData(self):
         """Retrieves that last timestamp in the database, then posts that time to the engine"""
