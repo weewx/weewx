@@ -299,6 +299,15 @@ class VantagePro(object):
     # this could be expanded, probably to include virtually every type.
     special = ['consBatteryVoltage']
 
+    # Various codes used internally by the VP2:
+    barometer_unit_dict   = {0:'inHg', 1:'mmHg', 2:'hPa', 3:'mbar'}
+    temperature_unit_dict = {0:'degree_F', 1:'degree_10F', 2:'degree_C', 3:'degree_10C'}
+    elevation_unit_dict   = {0:'foot', 1:'meter'}
+    rain_unit_dict        = {0:'inch', 1:'mm'}
+    wind_unit_dict        = {0:'mile_per_hour', 1:'meter_per_second', 2:'km_per_hour', 3:'knot'}
+    wind_cup_dict         = {0:'small', 1:'large'}
+    rain_bucket_dict      = {0: "0.01 inches", 1: "0.2 MM", 2: "0.1 MM"}
+    
     def __init__(self, **vp_dict) :
         """Initialize an object of type VantagePro.
         
@@ -355,7 +364,7 @@ class VantagePro(object):
         self.port.openPort()
 
         # Read the EEPROM and fill in properties in this instance
-        self.retrieveProperties()
+        self._setup()
         
     def openPort(self):
         """Open up the connection to the console"""
@@ -651,7 +660,7 @@ class VantagePro(object):
         # Then call NEWSETUP to get it to stick:
         self.port.send_data("NEWSETUP\n")
         
-        self.retrieveProperties()
+        self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain bucket type set to %d (%s)" %(self.rain_bucket_type, self.rain_bucket_size))
 
     def setRainSeasonStart(self, new_rain_season_start):
@@ -667,7 +676,7 @@ class VantagePro(object):
         # Follow it up with the data:
         self.port.send_data_with_crc16(chr(new_rain_season_start), max_tries=1)
 
-        self.retrieveProperties()
+        self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain season start set to %d" % (self.rain_season_start,))
 
     def setBarData(self, new_barometer_inHg, new_altitude_foot):
@@ -682,7 +691,7 @@ class VantagePro(object):
         
         command = "BAR=%d %d\n" % (new_barometer, new_altitude)
         self.port.send_command(command)
-        self.retrieveProperties()
+        self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Set barometer calibration.")
         
     def setArchiveInterval(self, archive_interval_seconds):
@@ -699,7 +708,7 @@ class VantagePro(object):
         
         self.port.send_command(command, max_tries=self.max_tries)
 
-        self.retrieveProperties()
+        self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (self.archive_interval_seconds,))
     
     def clearLog(self):
@@ -716,57 +725,6 @@ class VantagePro(object):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while clearing log")
         raise weewx.RetriesExceeded("While clearing log")
     
-    # Various codes used internally by the VP2:
-    barometer_unit_dict   = {0:'inHg', 1:'mmHg', 2:'hPa', 3:'mbar'}
-    temperature_unit_dict = {0:'degree_F', 1:'degree_10F', 2:'degree_C', 3:'degree_10C'}
-    elevation_unit_dict   = {0:'foot', 1:'meter'}
-    rain_unit_dict        = {0:'inch', 1:'mm'}
-    wind_unit_dict        = {0:'mile_per_hour', 1:'meter_per_second', 2:'km_per_hour', 3:'knot'}
-    wind_cup_dict         = {0:'small', 1:'large'}
-    rain_bucket_dict      = {0: "0.01 inches", 1: "0.2 MM", 2: "0.1 MM"}
-    
-    def retrieveProperties(self):
-        """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
-        
-        self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-
-        unit_bits              = self._getEEPROM_value(0x29)
-        setup_bits             = self._getEEPROM_value(0x2B)
-        self.rain_season_start = self._getEEPROM_value(0x2C)
-        self.archive_interval  = self._getEEPROM_value(0x2D) * 60
-        self.elevation         = self._getEEPROM_value(0x0F, "<H") 
-
-        barometer_unit_code   =  unit_bits & 0x03
-        temperature_unit_code = (unit_bits & 0x0C) >> 3
-        elevation_unit_code   = (unit_bits & 0x10) >> 4
-        rain_unit_code        = (unit_bits & 0x20) >> 5
-        wind_unit_code        = (unit_bits & 0xC0) >> 6
-
-        self.wind_cup_type    = (setup_bits & 0x08) >> 3
-        self.rain_bucket_type = (setup_bits & 0x30) >> 4
-
-        self.barometer_unit   = VantagePro.barometer_unit_dict[barometer_unit_code]
-        self.temperature_unit = VantagePro.temperature_unit_dict[temperature_unit_code]
-        self.elevation_unit   = VantagePro.elevation_unit_dict[elevation_unit_code]
-        self.rain_unit        = VantagePro.rain_unit_dict[rain_unit_code]
-        self.wind_unit        = VantagePro.wind_unit_dict[wind_unit_code]
-        self.wind_cup_size    = VantagePro.wind_cup_dict[self.wind_cup_type]
-        self.rain_bucket_size = VantagePro.rain_bucket_dict[self.rain_bucket_type]
-        
-        # Adjust the translation maps to reflect the rain bucket size:
-        if self.rain_bucket_type == 1:
-            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
-                _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_1
-            _loop_map['rainRate']    = _bucket_1_None
-        elif self.rain_bucket_type == 2:
-            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
-                _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_2
-            _loop_map['rainRate']    = _bucket_2_None
-        else:
-            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
-                _loop_map['monthRain'] = _loop_map['yearRain'] = _val100
-            _loop_map['rainRate']    = _big_val100
-
     def getRX(self) :
         """Returns reception statistics from the console.
         
@@ -904,6 +862,48 @@ class VantagePro(object):
         record['usUnits']   = weewx.US
         
         return record
+
+    def _setup(self):
+        """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
+        
+        self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+
+        unit_bits              = self._getEEPROM_value(0x29)
+        setup_bits             = self._getEEPROM_value(0x2B)
+        self.rain_season_start = self._getEEPROM_value(0x2C)
+        self.archive_interval  = self._getEEPROM_value(0x2D) * 60
+        self.elevation         = self._getEEPROM_value(0x0F, "<H") 
+
+        barometer_unit_code   =  unit_bits & 0x03
+        temperature_unit_code = (unit_bits & 0x0C) >> 3
+        elevation_unit_code   = (unit_bits & 0x10) >> 4
+        rain_unit_code        = (unit_bits & 0x20) >> 5
+        wind_unit_code        = (unit_bits & 0xC0) >> 6
+
+        self.wind_cup_type    = (setup_bits & 0x08) >> 3
+        self.rain_bucket_type = (setup_bits & 0x30) >> 4
+
+        self.barometer_unit   = VantagePro.barometer_unit_dict[barometer_unit_code]
+        self.temperature_unit = VantagePro.temperature_unit_dict[temperature_unit_code]
+        self.elevation_unit   = VantagePro.elevation_unit_dict[elevation_unit_code]
+        self.rain_unit        = VantagePro.rain_unit_dict[rain_unit_code]
+        self.wind_unit        = VantagePro.wind_unit_dict[wind_unit_code]
+        self.wind_cup_size    = VantagePro.wind_cup_dict[self.wind_cup_type]
+        self.rain_bucket_size = VantagePro.rain_bucket_dict[self.rain_bucket_type]
+        
+        # Adjust the translation maps to reflect the rain bucket size:
+        if self.rain_bucket_type == 1:
+            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
+                _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_1
+            _loop_map['rainRate']    = _bucket_1_None
+        elif self.rain_bucket_type == 2:
+            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
+                _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_2
+            _loop_map['rainRate']    = _bucket_2_None
+        else:
+            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
+                _loop_map['monthRain'] = _loop_map['yearRain'] = _val100
+            _loop_map['rainRate']    = _big_val100
 
     def _getEEPROM_value(self, offset, v_format="B"):
         """Get the value located at a specified offset in the EEPROM."""
