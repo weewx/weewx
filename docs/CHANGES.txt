@@ -4,7 +4,7 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-1.12.1 10/31/11
+1.12.1 11/03/11
 
 Now corrects  for rain bucket  size if it  is something other than  the standard
 0.01 inch bucket.
