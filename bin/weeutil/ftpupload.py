@@ -165,9 +165,13 @@ class FtpUpload:
                 ftp_server.mkd(remote_dir_path)
             except ftplib.all_errors, e:
                 # Got an exception. It might be because the remote directory already exists:
-                if sys.exc_info()[0] is ftplib.error_perm and str(e).strip().startswith('550'):
-                    # Directory already exists
-                    return
+                if sys.exc_info()[0] is ftplib.error_perm:
+                    msg =str(e).strip()
+                    # If a directory already exists, some servers respond with a '550' ("Requested action not taken") code,
+                    # others with a '521' ("Access denied" or "Pathname already exists") code.
+                    if msg.startswith('550') or msg.startswith('521'):
+                        # Directory already exists
+                        return
                 syslog.syslog(syslog.LOG_ERR, "ftpupload: Got error while attempting to make remote directory %s" % remote_dir_path)
                 syslog.syslog(syslog.LOG_ERR, "     ****  Error:" % e)
             else:
