@@ -1332,10 +1332,10 @@ def info(config_dict):
     
     print "Querying..."
     
-    try:
-        # Open up the weather station:
-        station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+    # Open up the weather station:
+    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
 
+    try:
         try:
             _firmware_date = station.getFirmwareDate()
         except:
@@ -1355,7 +1355,7 @@ def info(config_dict):
           Rain year start:  %d
           Onboard time:     %s
           
-        CONSOLE UNITS:
+        CONSOLE DISPLAY UNITS:
           Barometer:   %s
           Temperature: %s
           Rain:        %s
@@ -1397,17 +1397,20 @@ def info(config_dict):
             pass
     
     finally:
-        station.closePort()
+        try:
+            station.closePort()
+        except:
+            pass
 
 def configure(config_dict):
     """Configure a VP using settings in a configuration dictionary"""
     
     print "Configuring weather station in the Davis Vantage family..."
     
-    try:
-        # Open up the weather station:
-        station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+    # Open up the weather station:
+    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
 
+    try:
         #=======================================================================
         # Configure the archive interval        
         #=======================================================================
@@ -1553,15 +1556,18 @@ def configure(config_dict):
                     print "Nothing done."
     
     finally:
-        station.closePort()
+        try:
+            station.closePort()
+        except:
+            pass
 
 def clear(config_dict):
     """Clear the archive memory of a VantagePro"""
     
     print "Clearing the archive memory ..."
+    # Open up the weather station:
+    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
     try:
-        # Open up the weather station:
-        station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
         print "Proceeding will erase old archive records."
         ans = raw_input("Are you sure you wish to proceed? (Y/n) ")
         if ans == 'Y':
@@ -1570,4 +1576,7 @@ def clear(config_dict):
         else:
             print "Nothing done."
     finally:
-        station.closePort()
+        try:
+            station.closePort()
+        except:
+            pass
