@@ -642,22 +642,24 @@ def log_traceback(prefix=''):
     
 def _get_object(module_class, *args, **kwargs):
     """Given a path to a class, instantiates an instance of the class with the given args and returns it."""
-    
-    # Split the path into its parts
-    parts = module_class.split('.')
-    # Strip off the classname:
-    module = '.'.join(parts[:-1])
-    # Import the top level module
-    mod = __import__(module)
-    # Then recursively work down from the top level module to the class name:
-    for part in parts[1:]:
-        mod = getattr(mod, part)
-    # Instance 'mod' will now be a class. Instantiate an instance and return it:
-    obj = mod(*args, **kwargs)
-    return obj
-        
+    try:
+        # Split the path into its parts
+        parts = module_class.split('.')
+        # Strip off the classname:
+        module = '.'.join(parts[:-1])
+        # Import the top level module
+        mod = __import__(module)
+        # Then recursively work down from the top level module to the class name:
+        for part in parts[1:]:
+            mod = getattr(mod, part)
+        # Instance 'mod' will now be a class. Instantiate an instance and return it:
+        obj = mod(*args, **kwargs)
+        return obj
+    except Exception:
+        syslog.syslog(syslog.LOG_ERR, "weeutil: Not able to instantiate %s" % (module_class,))
+        raise
+
 if __name__ == '__main__':
     import doctest
 
     doctest.testmod()
-    
