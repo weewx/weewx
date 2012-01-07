@@ -125,9 +125,6 @@ MetricUnits = {"group_altitude"    : "meter",
                "group_uv"          : "uv_index",
                "group_volt"        : "volt"}
 
-# This will only work if the user doesn't fiddle with the above two dictionaries
-allPossibleUnitTypes = set(USUnits.values()+MetricUnits.values())
-
 # Conversion functions to go from one unit type to another.
 conversionDict = {
       'inHg'             : {'mbar'             : lambda x : x * 33.86, 
@@ -140,6 +137,12 @@ conversionDict = {
       'mile_per_hour2'   : {'km_per_hour2'     : lambda x : x * 1.609344,
                             'knot2'            : lambda x : x * 0.868976242,
                             'meter_per_second2': lambda x : x * 0.44704},
+      'knot'             : {'mile_per_hour'    : lambda x : x * 1.15077945,
+                            'km_per_hour'      : lambda x : x * 1.85200,
+                            'meter_per_second' : lambda x : x * 0.514444444},
+      'knot2'             : {'mile_per_hour2'  : lambda x : x * 1.15077945,
+                            'km_per_hour2'     : lambda x : x * 1.85200,
+                            'meter_per_second2': lambda x : x * 0.514444444},
       'inch_per_hour'    : {'cm_per_hour'      : lambda x : x * 2.54,
                             'mm_per_hour'      : lambda x : x * 25.4},
       'inch'             : {'cm'               : lambda x : x * 2.54,
@@ -172,6 +175,9 @@ conversionDict = {
       'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * 86400.0},
       'unix_epoch'       : {'dublin_jd'        : lambda x : x/86400.0 + 25567.5}}
 
+
+# This will extract all the target unit types in the above dictionary:
+allPossibleUnitTypes = set(z for d in conversionDict.values() for z in d.keys())
 
 # Default unit formatting to be used in the absence of a skin configuration file
 default_unit_format_dict = {"centibar"           : "%.0f",
@@ -575,7 +581,7 @@ class ValueHelper(ValueOutputter):
         
         # See if this is a valid unit type. If not, throw an AttributeError exception:
         if target_unit not in allPossibleUnitTypes:
-            raise AttributeError, "Unit type %s unknown."%(target_unit,)
+            raise AttributeError, "Unit type \"%s\" unknown."%(target_unit,)
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
     
 #===============================================================================

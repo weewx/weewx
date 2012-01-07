@@ -94,7 +94,13 @@ class ValueHelperTest(unittest.TestCase):
         # Try an impossible conversion:
         binder=vh.meter
         self.assertRaises(KeyError, str, binder)
-        
+
+    def testExplicitConversion(self):
+        value_t = (10.0, "meter_per_second", "group_speed")
+        vh = weewx.units.ValueHelper(value_t)
+        self.assertEqual(str(vh), "22 mph")
+        self.assertEqual(str(vh.knot), "19 knots")
+
     def testNoneValue(self):
         value_t = (None, "degree_C", "group_temperature")
         converter = weewx.units.Converter()
