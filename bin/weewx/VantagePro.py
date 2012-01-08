@@ -701,7 +701,7 @@ class VantagePro(object):
         60, 300, 600, 900, 1800, 3600, or 7200 
         """
         if archive_interval_seconds not in (60, 300, 600, 900, 1800, 3600, 7200):
-            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % (archive_interval_seconds,)
+            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % (self.archive_interval,)
 
         # The console expects the interval in minutes. Divide by 60.
         command = 'SETPER %d\n' % (archive_interval_seconds / 60)
@@ -709,7 +709,7 @@ class VantagePro(object):
         self.port.send_command(command, max_tries=self.max_tries)
 
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (self.archive_interval,))
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (self.archive_interval_seconds,))
     
     def clearLog(self):
         """Clear the internal archive memory in the VantagePro."""
