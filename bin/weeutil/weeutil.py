@@ -656,7 +656,7 @@ def _get_object(module_class, *args, **kwargs):
         obj = mod(*args, **kwargs)
         return obj
     except Exception:
-        syslog.syslog(syslog.LOG_ERR, "weeutil: Not able to instantiate %s" % (module_class,))
+        syslog.syslog(syslog.LOG_ERR, "weeutil: Not able to instantiate module \'%s\'" % (module_class,))
         raise
 
 if __name__ == '__main__':

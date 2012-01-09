@@ -4,6 +4,21 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
+1.12.2 01/06/12
+
+Added check for FTP error code '521' to the list of possiblities if a directory
+already exists. Thanks to user Clyde!
+
+More complete information when unable to load a module file. Thanks, Jason!
+
+Added a few new unit types to the list of possible target units when using
+explicit conversion. Thanks, Antonio!
+
+Improved robustness of VantagePro configuration utility.
+
+Fixed problem where an exception gets thrown when changing VP archive interval.
+
+ 
 1.12.1 11/03/11
 
 Now corrects  for rain bucket  size if it  is something other than  the standard

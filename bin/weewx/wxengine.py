@@ -117,8 +117,6 @@ class StdEngine(object):
         # Get the names of the services to be run:
         service_names = weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get('service_list'))
         
-        syslog.syslog(syslog.LOG_DEBUG, "wxengine: List of services to be run:")
-        
         # Wrap the instantiation of the services in a try block, so if an exception
         # occurs, any that may have already started can be shut down in an orderly way.
         try:
@@ -126,8 +124,9 @@ class StdEngine(object):
                 # For each listed service in service_list, instantiates an instance of
                 # the class, passing self and the configuration dictionary as the
                 # arguments:
+                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
                 self.service_obj.append(weeutil.weeutil._get_object(svc, self, config_dict))
-                syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % svc)
+                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
         except:
             # An exception occurred. Shut down any running services, 
             # then reraise the exception.
