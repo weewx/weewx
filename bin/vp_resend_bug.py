@@ -3,6 +3,9 @@
 The Davis documentation says that a page can be resent on request, but it
 does not seem to work.
 
+1/10/2012. According to 'Brett' at Davis, the correct resend code is decimal
+21, not hex 21. Indeed, this seems to fix the problem.
+
 Requires package "pyserial". This can be downloaded on Debian (Ubuntu) using
 
   apt-get install python-serial
@@ -26,7 +29,7 @@ import time
 
 # A few handy constants:
 _ack    = chr(0x06)
-_resend = chr(0x21)
+_resend = chr(0x21) # 1/10/2012. Should be decimal 21.
 
 # The time to request for the "DMPAFT" command:
 year   = 2011
@@ -39,7 +42,7 @@ minute =   00
 def main():
     print "Demonstrates resend bug in the DMPAFT command"
     # Open up the port:
-    serial_port = serial.Serial("/dev/ttyS0", baudrate=19200, timeout=5)
+    serial_port = serial.Serial("/dev/ttyUSB0", baudrate=19200, timeout=5)
     
     # Wake it up:
     serial_port.write('\n\n\n')
