@@ -23,7 +23,7 @@ import weewx.wxformulas
 
 # A few handy constants:
 _ack    = chr(0x06)
-_resend = chr(0x21)
+_resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
 
 class BaseWrapper(object):
     """Base class for (Serial|Ethernet)Wrapper"""
