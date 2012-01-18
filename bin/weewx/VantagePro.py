@@ -462,72 +462,63 @@ class VantagePro(object):
         # Save the last good time:
         _last_good_ts = since_ts if since_ts else 0
         
-        # Retry the dump up to max_tries times
-        for unused_count in xrange(self.max_tries) :
-            try :
-                # Wake up the console...
-                self.port.wakeup_console(self.max_tries, self.wait_before_retry)
-                # ... request a dump...
-                self.port.send_data('DMPAFT\n')
-                # ... from the designated date (allow only one try because that's all the console allows):
-                self.port.send_data_with_crc16(_datestr, max_tries=1)
-                
-                # Get the response with how many pages and starting index and decode it. Again, allow only one try:
-                _buffer = self.port.get_data_with_crc16(6, max_tries=1)
-                (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
-              
-                syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
-                
-                # Cycle through the pages...
-                for unused_ipage in xrange(_npages) :
-                    # ... get a page of archive data
-                    _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
-                    # Now extract each record from the page
-                    for _index in xrange(_start_index, 5) :
-                        # If the console has been recently initialized, there will
-                        # be unused records, which are filled with 0xff. Detect this
-                        # by looking at the first 4 bytes (the date and time):
-                        if _page[1+52*_index:5+52*_index] == 4*chr(0xff) :
-                            # This record has never been used. We're done.
-                            syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" \
-                                          % (unused_ipage, _index))
-                            return
-                        # Unpack the raw archive packet:
-                        _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
-                        # Divide archive interval by 60 to keep consistent with wview
-                        _packet['interval']   = self.archive_interval / 60 
-                        _packet['model_type'] = self.model_type
-                        _packet['iss_id']     = self.iss_id
-                        _packet['rxCheckPercent'] = _rxcheck(_packet)
-
-                        # Convert from the internal, Davis encoding to physical units:
-                        _record = self.translateArchivePacket(_packet)
-                        # Check to see if the time stamps are declining, which would
-                        # signal this is a wrap around record on the last page.
-                        # However, the time stamps may be declining just because of the
-                        # "fall back" from DST in the Fall, so allow times stamps to
-                        # decline up to the DST delta.
-                        if _record['dateTime'] is None or _record['dateTime'] + self.dst_delta <= _last_good_ts :
-                            # The time stamp is declining. We're done.
-                            syslog.syslog(syslog.LOG_DEBUG, "VantagePro: time stamps declining. Record timestamp %s" \
-                                          % weeutil.weeutil.timestamp_to_string(_record['dateTime']))
-                            syslog.syslog(syslog.LOG_DEBUG, "      ****  Last good timestamp %s" \
-                                          % weeutil.weeutil.timestamp_to_string(_last_good_ts))
-                            return
-                        # Augment the record with the data from the accumulators:
-                        self.archiveAccumulators(_record)
-                        # Set the last time to the current time, and yield the packet
-                        _last_good_ts = _record['dateTime']
-                        yield _record
-                    _start_index = 0
-                return
-            except weewx.WeeWxIOError:
-                # Caught an error. Keep retrying...
-                continue
+        # Wake up the console...
+        self.port.wakeup_console(self.max_tries, self.wait_before_retry)
+        # ... request a dump...
+        self.port.send_data('DMPAFT\n')
+        # ... from the designated date (allow only one try because that's all the console allows):
+        self.port.send_data_with_crc16(_datestr, max_tries=1)
         
-        # All of the retries have failed. Declare an error
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting archive packets")
-        raise weewx.RetriesExceeded("Max retries exceeded while getting archive packets")
+        # Get the response with how many pages and starting index and decode it. Again, allow only one try:
+        _buffer = self.port.get_data_with_crc16(6, max_tries=1)
+        (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
+      
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
+        
+        # Cycle through the pages...
+        for unused_ipage in xrange(_npages) :
+            # ... get a page of archive data
+            _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
+            # Now extract each record from the page
+            for _index in xrange(_start_index, 5) :
+                # If the console has been recently initialized, there will
+                # be unused records, which are filled with 0xff. Detect this
+                # by looking at the first 4 bytes (the date and time):
+                if _page[1+52*_index:5+52*_index] == 4*chr(0xff) :
+                    # This record has never been used. We're done.
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" \
+                                  % (unused_ipage, _index))
+                    return
+                # Unpack the raw archive packet:
+                _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
+                # Divide archive interval by 60 to keep consistent with wview
+                _packet['interval']   = self.archive_interval / 60 
+                _packet['model_type'] = self.model_type
+                _packet['iss_id']     = self.iss_id
+                _packet['rxCheckPercent'] = _rxcheck(_packet)
+
+                # Convert from the internal, Davis encoding to physical units:
+                _record = self.translateArchivePacket(_packet)
+                # Check to see if the time stamps are declining, which would
+                # signal that we are done. However, the time stamps may be declining
+                # just because of the "fall back" from DST in the Fall, so allow times stamps to
+                # decline up to the DST delta.
+                if _record['dateTime'] is None or _record['dateTime'] + self.dst_delta <= _last_good_ts :
+                    # The time stamp is declining. We're done.
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: time stamps declining. Record timestamp %s" \
+                                  % weeutil.weeutil.timestamp_to_string(_record['dateTime']))
+                    syslog.syslog(syslog.LOG_DEBUG, "      ****  Last good timestamp %s" \
+                                  % weeutil.weeutil.timestamp_to_string(_last_good_ts))
+                    return
+                # Augment the record with the data from the accumulators:
+                self.archiveAccumulators(_record)
+                # Set the last time to the current time, and yield the packet
+                _last_good_ts = _record['dateTime']
+                syslog.syslog(syslog.LOG_DEBUG, "Yielding record %d" % _record['dateTime'])
+                yield _record
+
+            # The starting index for pages other than the first is always zero
+            _start_index = 0
 
     def accumulateLoop(self, physicalLOOPPacket):
         """Process LOOP data, calculating averages within an archive period."""
@@ -589,7 +580,7 @@ class VantagePro(object):
         
         returns: the time as a time-tuple
         """
-        # Try up to 3 times:
+        # Try up to max_tries times:
         for unused_count in xrange(self.max_tries) :
             try :
                 # Wake up the console...
