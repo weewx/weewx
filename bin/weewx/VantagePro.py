@@ -402,7 +402,8 @@ class VantagePro(object):
         
         N: The number of packets to generate [default is 1]
         
-        yields: up to N DavisLoopPacket objects
+        yields: up to N DavisLoopPacket objects (could be less in the event of a 
+        read or CRC error).
         """
 
         syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Requesting %d LOOP packets." % N)
@@ -412,29 +413,23 @@ class VantagePro(object):
         # Request N packets:
         self.port.send_data("LOOP %d\n" % N)
         
-        for loop in xrange(N) :
+        for loop in range(N) :
             
-            for unused_count in xrange(self.max_tries):
-                try:
-                    # Fetch a packet
-                    _buffer = self.port.read(99)
-                except weewx.WeeWxIOError, e:
-                    syslog.syslog(syslog.LOG_ERR, "VantagePro: LOOP #%d; read error" % (loop,))
-                    syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
-                    continue
-                if crc16(_buffer) :
-                    syslog.syslog(syslog.LOG_ERR,
-                                  "VantagePro: LOOP #%d; CRC error... retrying" % loop)
-                    continue
-                # ... decode it
-                pkt_dict = unpackLoopPacket(_buffer[:95])
-                # Yield it
-                yield pkt_dict
-                break
-            else:
-                syslog.syslog(syslog.LOG_ERR, 
-                              "VantagePro: Max retries exceeded while getting LOOP packets")
-                raise weewx.RetriesExceeded("While getting LOOP packets")
+            try:
+                # Fetch a packet
+                _buffer = self.port.read(99)
+            except weewx.WeeWxIOError, e:
+                syslog.syslog(syslog.LOG_ERR, "VantagePro: LOOP #%d; read error." % (loop,))
+                syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
+                continue
+            if crc16(_buffer) :
+                syslog.syslog(syslog.LOG_ERR,
+                              "VantagePro: LOOP #%d; CRC error." % loop)
+                continue
+            # ... decode it
+            pkt_dict = unpackLoopPacket(_buffer[:95])
+            # Yield it
+            yield pkt_dict
 
     def genArchivePackets(self, since_ts):
         """A generator function to return archive packets from a VantagePro station.
@@ -514,7 +509,6 @@ class VantagePro(object):
                 self.archiveAccumulators(_record)
                 # Set the last time to the current time, and yield the packet
                 _last_good_ts = _record['dateTime']
-                syslog.syslog(syslog.LOG_DEBUG, "Yielding record %d" % _record['dateTime'])
                 yield _record
 
             # The starting index for pages other than the first is always zero

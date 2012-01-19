@@ -4,19 +4,24 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-1.12.2 01/06/12
+1.12.2 01/18/12
 
-Added check for FTP error code '521' to the list of possiblities if a directory
+Added check for FTP error code '521'  to the list of possiblities if a directory
 already exists. Thanks to user Clyde!
 
 More complete information when unable to load a module file. Thanks, Jason!
 
-Added a few new unit types to the list of possible target units when using
+Added a  few new  unit types  to the list  of possible  target units  when using
 explicit conversion. Thanks, Antonio!
+
+Discovered and fixed problem caused by  the Davis docs giving the wrong "resend"
+code (should be decimal 21, not hex 21).
 
 Improved robustness of VantagePro configuration utility.
 
 Fixed problem where an exception gets thrown when changing VP archive interval.
+
+Simplified some of the logic in the VP2 driver.
 
  
 1.12.1 11/03/11
