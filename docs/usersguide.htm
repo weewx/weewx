@@ -1662,7 +1662,8 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 				However, there is one final step you can take that will really harden up
 				your system: install a <span class="code">udev</span> script that will create
 				a symbolic link to the VantagePro USB port, whatever it might be. With this
-				approach, if the port jumps from <span class="code">ttyUSB0</span> to <span class="code">ttyUSB1</span>, the symbolic link will move as well. You
+				approach, if the port jumps from <span class="code">ttyUSB0</span> to <span class="code">ttyUSB1</span>, the symbolic link will 
+				follow it. You
 				just specify port <span class="code">/dev/vpro</span> in the configuration
 				file <span class="code">weewx.conf</span> and be done with it.
 			</p>
@@ -1672,20 +1673,27 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 			</p>
 			<h4>Installing a udev script</h4>
 			<p>
-				I have installed a file <span class="code">/etc/udev/rules.d/66-vpro.rules</span>
+				I have installed a file <span class="code">/etc/udev/rules.d/vpro.rules</span>
 				on my fit-PC that looks like this:
 			</p>
-			<pre># Automount the VantagePro2 to port /dev/vpro.</pre>
-			<pre># Install in /etc/udev/rules.d/66-vpro.rules</pre>
-			<pre>#</pre>
-			<pre>ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
+			<pre># Automount the VantagePro2 to port /dev/vpro.
+# Install in /etc/udev/rules.d/vpro.rules
+#
+ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
 			<p>
 				What this rule says is that when the USB port is plugged in (action <span class="code">add</span>), and it has an attribute with name <span class="code">interface</span> that is equal to &quot;<span class="code">CP2102
 					USB to UART Bridge Controller</span>&quot;, then add a symbolic link for its physical
 				port to <span class="code">/dev/vpro</span>.
 			</p>
 			<p>
-				Your controller may have a different identifier!! I can recommend this article,
+				Here&#39;s a rule that works for my Serial-to-USB cable, made by 
+				Prolific Technology, Inc.:</p>
+			<pre># Automount Serial-to-USB cable to port /dev/vpro
+# Install in /etc/udev/rules.d/cable.rules
+#
+ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
+			<p>
+				Your devices may, and probably will, have different identifiers!! I can recommend this article,
 				&quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing udev
 				rules</em></a>,&quot; for how to find and write an appropriate <span class="code">udev</span> rule for your controller. (Note, however, that
 				this article uses the old <span class="code">udevinfo</span> command, rather
@@ -1697,7 +1705,8 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 				where<span class="code"> /dev/ttyUSB0</span> is the port (substitute your
 				real USB port) the VP2 is attached to. It will print out various identifiers
 				that can be useful in identifying your VP2 to <span class="code">udev</span>.
-				While the example script above used a rule that matched attribute <span class="code">interface</span>, others are possible. For example, you might
+				While the first example script above used a rule that matched attribute <span class="code">interface</span>, others are possible. For example, 
+				the second example, for the serial-to-USB cable,
 				chose to match the attribute <span class="code">product</span>.
 			</p>
 			<p>
