@@ -800,7 +800,8 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 			<h3>Rain bucket type</h3>
 			<p>
 				Normally, this is set by Davis, but if you have replaced your bucket with
-				a different kind, you might want to reconfigure. Look for <span class="code">rain_bucket_type</span> under section &#39;<span class="code">VantagePro</span>&#39;.
+				a different kind, you might want to reconfigure. Look for <span class="code">rain_bucket_type</span> under section &#39;<span class="code">VantagePro</span>&#39; 
+				in the configuration file <span class="code">weewx.conf</span>.
 				You may have to uncomment the line. For example, you might change it to
 			</p>
 			<p class="tty">
@@ -950,8 +951,9 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 			</p>
 			<p>
 				Set to the desired archive interval of your station, in seconds. This
-				variable is only used when first setting up your station. Otherwise, this
-				value is read directly from the station. See additional details under <a href="#Archive_interval">configure your station archive interval</a>. No default.
+				variable is only used when first setting up your station using 
+				the configuration program <span class="code">configure.py</span>. Otherwise, this
+				value is read from the station hardware EEPROM. See additional details under <a href="#Archive_interval">configure your station archive interval</a>. No default.
 			</p>
 			<p class="config_important">
 				type
@@ -979,6 +981,18 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				or hostname (<em>e.g.</em>, <span class="code">console.mydomain.com</span>)
 				to your console. Otherwise, not required. No default.
 			</p>
+			<p class="config_option">
+				rain_bucket_type</p>
+			<p>
+				The type of rain bucket you have. This variable is used only by 
+				the configuration program <span class="code">configure.py</span>. 
+				The rest of the time, the bucket type is read from the station 
+				hardware EEPROM. Normally, this option is left commented out and 
+				therefore the configuration program leaves it alone. However, if 
+				for some reason you change your bucket type, or if your bucket 
+				type is wrong, uncomment the line and set it to the appropriate 
+				type (0=0.01 inch bucket; 1=0.2 MM bucket; 2=0.1 MM bucket) then 
+				run the configuration program.</p>
 			<p class="config_option">
 				baudrate
 			</p>
@@ -1723,6 +1737,20 @@ ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYML
 			<p>
 				Or, at least, it should!
 			</p>
+			<h3>
+				FreeBSD</h3>
+			<p>
+				User Fabian reports that the following had to be done to get the 
+				VantagePro2 working under FreeBSD:</p>
+			<pre>I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
+Loading the Driver:
+Put uslcom_load=&quot;YES&quot; in /boot/loader.conf (to load it as module).
+Which gives here an output like:
+uslcom0: <CP2102 USB to UART Bridge Controller> on usbus1
+And put in weewx.conf:
+    port = /dev/cuaU0</pre>
+			<p>
+				&nbsp;</p>
 			<h2>Templates</h2>
 			<h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
 			<p>
