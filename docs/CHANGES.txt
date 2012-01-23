@@ -4,9 +4,14 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
+1.XX.YY 01/22/12
+
+Added start script for FreeBSD, courtesy of user Fabian Abplanalp. Thanks, Fabian!
+
+
 1.12.2 01/18/12
 
-Added check for FTP error code '521'  to the list of possiblities if a directory
+Added check for FTP error code '521'  to the list of possibilities if a directory
 already exists. Thanks to user Clyde!
 
 More complete information when unable to load a module file. Thanks, Jason!
