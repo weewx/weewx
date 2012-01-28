@@ -8,6 +8,8 @@ For complete documentation, see http://www.weewx.com/docs
 
 Added start script for FreeBSD, courtesy of user Fabian Abplanalp. Thanks, Fabian!
 
+Added the ability to respond to a "status" query to the Debian startup script.
+
 
 1.12.2 01/18/12
 
