@@ -497,6 +497,9 @@ class RESTThread(threading.Thread):
                 except SkippedPost, e:
                     syslog.syslog(syslog.LOG_DEBUG, "restful: Skipped record %s to %s station %s" % (time_str, station.site, station.station))
                     syslog.syslog(syslog.LOG_DEBUG, "   ****  %s" % (e,))
+                except httplib.HTTPException, e:
+                    syslog.syslog(syslog.LOG_ERR, "restful: HTTP error from server. Skipped record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_ERR, "   ****  %s" % (e,))
                 except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "restful: Unrecoverable error when posting record %s to %s station %s" % (time_str, station.site, station.station))
                     syslog.syslog(syslog.LOG_CRIT, "   ****  %s" % (e,))
