@@ -39,14 +39,15 @@ bin/weewx/station.py
 bin/weewx/stats.py
 bin/weewx/units.py
 bin/weewx/wxengine.py
+bin/weewx/wxengine2.py
 bin/weewx/wxformulas.py
 docs/CHANGES.txt
 docs/customizing.htm
 docs/daytemp_with_avg.png
 docs/debian.htm
 docs/readme.htm
-docs/samaxesjs.toc-1.4.js
-docs/samaxesjs.toc-1.4.min.js
+docs/samaxesjs.toc-1.5.js
+docs/samaxesjs.toc-1.5.min.js
 docs/sheeva.htm
 docs/upgrading.htm
 docs/usersguide.htm
@@ -71,5 +72,6 @@ skins/Standard/backgrounds/drops.gif
 skins/Standard/backgrounds/flower.jpg
 skins/Standard/backgrounds/leaf.jpg
 skins/Standard/backgrounds/night.gif
+start_scripts/BSD/weewx
 start_scripts/Debian/weewx
 start_scripts/SuSE/weewx
