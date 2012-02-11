@@ -372,9 +372,9 @@ class CWOP(REST):
         if radiation is None:
             radiation_str = ""
         elif radiation < 1000.0:
-            radiation_str = "l%03d" % radiation
+            radiation_str = "L%03d" % radiation
         elif radiation < 2000.0:
-            radiation_str = "L%03d" % (radiation - 1000)
+            radiation_str = "l%03d" % (radiation - 1000)
         else:
             radiation_str = ""
 

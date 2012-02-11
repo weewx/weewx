@@ -4,11 +4,25 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-1.XX.YY 01/22/12
+1.12.4 02/11/12
 
-Added start script for FreeBSD, courtesy of user Fabian Abplanalp. Thanks, Fabian!
+User Alf Høgemark found an error in the encoding of solar data for CWOP and sent
+me a fix. Thanks, Alf!
+
+
+1.12.3 02/09/12
+
+Added  start script  for FreeBSD,  courtesy  of user  Fabian Abplanalp.  Thanks,
+Fabian!
 
 Added the ability to respond to a "status" query to the Debian startup script.
+
+RESTful posts can now recover from more HTTP errors.
+
+Station serial port can now recover from a SerialException error (usually caused
+when there is a process competing for the serial port).
+
+Continue to fiddle with the retry logic when reading LOOP data.
 
 
 1.12.2 01/18/12
