@@ -76,4 +76,4 @@ defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMAR
 # The default types for which statistics will be kept is pretty much all of the types
 # above. We drop a few of the wind related types and replace them with special type 'wind'
 drop_list = ['dateTime', 'usUnits', 'interval', 'windSpeed', 'windDir', 'windGust', 'windGustDir']
-defaultStatsTypes = filter(lambda x : x not in drop_list, [_tuple[0] for _tuple in defaultArchiveSchema]) + ['wind']
+defaultStatsTypes = [_tuple[0] for _tuple in defaultArchiveSchema if _tuple[0] not in drop_list] + ['wind']

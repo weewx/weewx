@@ -487,13 +487,12 @@ class StatsReadonlyDb(object):
         
         # Get the schema dictionary:
         schema_dict = weeutil.dbutil.schema(self.statsFilename)
-        # Convert from unicode:
-        stats_types = [str(s) for s in schema_dict.keys()]
-        # Some stats database have schemas for heatdeg and cooldeg (even though they are not
-        # used) due to an earlier bug. Filter them out. Also, filter out the metadata table:
-        results = filter(lambda x : x not in ('heatdeg', 'cooldeg', 'metadata'), stats_types)
+        # Convert from unicode. Also, some stats database have schemas for heatdeg
+        # and cooldeg (even though they are not used) due to an earlier bug. Filter them out.
+        # Finally, filter out the metadata table:
+        stats_types = [str(s) for s in schema_dict.keys() if s not in [U'heatdeg', U'cooldeg', U'metadata']]
 
-        return results
+        return stats_types
         
 #===============================================================================
 #                    Class StatsDb
