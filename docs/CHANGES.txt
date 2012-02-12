@@ -4,10 +4,12 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-1.12.4 02/11/12
+1.12.4 02/12/12
 
 User Alf Høgemark found an error in the encoding of solar data for CWOP and sent
 me a fix. Thanks, Alf!
+
+Now looks for latest version of pysqlite on the machine and uses that.
 
 
 1.12.3 02/09/12

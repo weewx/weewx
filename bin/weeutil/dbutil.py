@@ -13,10 +13,31 @@ from __future__ import with_statement
 
 import re
 
+# The following logic is intended to find the latest version of pysqlite
+# on the user's machine and bind it to attribute sqlite3
 try:
-    from pysqlite2 import dbapi2 as sqlite3
-except ImportError:
-    from sqlite3 import dbapi2 as sqlite3
+    from pysqlite2 import dbapi2 as pysqlite2_dbapi2        #@UnresolvedImport
+except:
+    pysqlite2_dbapi2 = None
+    
+try:
+    from sqlite3 import dbapi2 as sqlite3_dbapi2          #@UnresolvedImport
+except:
+    sqlite3_dbapi2 = None
+    
+if pysqlite2_dbapi2:
+    if sqlite3_dbapi2:
+        # Both imports worked. Pick the most recent version and delete the other
+        if pysqlite2_dbapi2.version > sqlite3_dbapi2.version:
+            sqlite3 = pysqlite2_dbapi2
+            del sqlite3_dbapi2
+        else:
+            sqlite3 = sqlite3_dbapi2
+            del pysqlite2_dbapi2
+    else:
+        sqlite3 = pysqlite2_dbapi2
+else:
+    sqlite3 = sqlite3_dbapi2
 
 # Regular expression that matches everything within the set
 # of parenthesis which marks the column definition:
