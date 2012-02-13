@@ -39,7 +39,6 @@ bin/weewx/station.py
 bin/weewx/stats.py
 bin/weewx/units.py
 bin/weewx/wxengine.py
-bin/weewx/wxengine2.py
 bin/weewx/wxformulas.py
 docs/CHANGES.txt
 docs/customizing.htm

@@ -9,7 +9,11 @@ For complete documentation, see http://www.weewx.com/docs
 User Alf Høgemark found an error in the encoding of solar data for CWOP and sent
 me a fix. Thanks, Alf!
 
-Now looks for latest version of pysqlite on the machine and uses that.
+Now always uses "import sqlite3", resulting in using the version of pysqlite that
+comes with Python. This means the install instructions have been simplified.
+
+Now doesn't choke when using the (rare) Python version of NameMapper used by 
+Cheetah.
 
 
 1.12.3 02/09/12

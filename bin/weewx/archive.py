@@ -9,11 +9,11 @@
 #
 """Classes and functions for interfacing with a weewx sqlite3 archive."""
 from __future__ import with_statement
-import syslog
-import os.path
 import math
+import os.path
+import sqlite3
+import syslog
 
-from weeutil.dbutil import sqlite3
 import weewx.units
 import weeutil.weeutil
 import weeutil.dbutil

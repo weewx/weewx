@@ -41,10 +41,10 @@
 from __future__ import with_statement
 import math
 import os.path
+import sqlite3
 import syslog
 import time
 
-from weeutil.dbutil import sqlite3
 import weewx.accum
 import weewx.units
 import weewx.wxformulas
@@ -745,6 +745,11 @@ class TimeSpanStats(object):
         stats_type: A statistical type, such as 'outTemp', or 'heatDeg'
         
         returns: An instance of class StatsTypeHelper."""
+        
+        # The following is so the Python version of Cheetah's NameMapper doesn't think
+        # I'm a dictionary:
+        if stats_type == 'has_key':
+            raise AttributeError
 
         # Return the helper class, bound to the type:
         return StatsTypeHelper(stats_type, self.timespan, self.db, self.context, self.formatter, self.converter, **self.option_dict)
