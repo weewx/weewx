@@ -4,7 +4,7 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-1.12.4 02/12/12
+1.12.4 02/13/12
 
 User Alf Høgemark found an error in the encoding of solar data for CWOP and sent
 me a fix. Thanks, Alf!

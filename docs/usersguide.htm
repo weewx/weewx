@@ -166,7 +166,7 @@
 			</p>
 			<ul>
 				<li>
-					<span class="code"><a href="http://rhodesmill.org/pyephem">pyephem</a></span> (Version V3.7.3
+					<span class="code"><a href="http://pypi.python.org/pypi/pyephem/">pyephem</a></span> (Version V3.7.3
 					or greater). For extended almanac information. If not installed,
 					fallback information will be used.
 				</li>
@@ -187,10 +187,7 @@
 			</ol>
 			<p>
 				Option #1 is easier, but if your Linux distribution does not come with such
-				tools, you may have to use <span class="code">pip</span>. If you
-				choose to install <span class="code"><a href="http://rhodesmill.org/pyephem">pyephem</a></span>, then
-				as of the time of this writing, it can only be installed using <span class="code">
-				pip</span>.
+				tools, you may have to use <span class="code">pip</span>. 
 			</p>
 			<p>
 				Brief instructions
@@ -225,6 +222,22 @@
 			</p>
 			<pre>sudo pip install pyephem</pre>
 			
+			<h3>Installation on Fedora using <span class="code">yum</span></h3>
+			<p>
+				Installing on Fedora v16 can be done entirely by using <span class="code">yum</span>.
+			</p>
+			<p class="tty">
+				sudo yum install python-configobj<br/>
+				sudo yum install python-imaging<br/>
+				sudo yum install python-cheetah<br/>
+				sudo yum install pyserial<br/>
+			</p>
+			<p>The optional package <span class="code">pyephem</span> can also be installed by using
+			<span class="code">yum</span>:
+			<p class="tty">
+				sudo yum install pyephem
+			</p>	
+				
 			<h3>Installation on SuSE using <span class="code">yast</span></h3>
 			<p>
 				My SuSE 11.3 system came with some of the prerequisites installed, some available
