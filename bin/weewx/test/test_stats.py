@@ -175,7 +175,7 @@ class StatsTest(StatsTestBase):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2 :
-        print "Usage: python test_templates.py path-to-configuration-file"
+        print "Usage: python test_stats.py path-to-configuration-file"
         exit()
 
     # Get the path to the configuration file, then delete it from the argument list:
