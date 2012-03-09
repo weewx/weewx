@@ -37,6 +37,8 @@ class Archive(object):
         """
         self.archiveFilename = archiveFilename
         self.sqlkeys = self._getTypes()
+        if not self.sqlkeys:
+            raise StandardError("Database %s not initialized"% (archiveFilename,))
     
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
@@ -451,8 +453,8 @@ class Archive(object):
         # Get the columns in the table
         column_dict = weeutil.dbutil.column_dict(schema_dict)
         # If there is no 'archive' table, the database has not been initialized
-#        if not 'archive' in column_dict:
-#            return None
+        if not 'archive' in column_dict:
+            return None
         # Convert from unicode to strings
         column_names = [str(s) for s in column_dict['archive']]
         return column_names
