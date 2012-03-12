@@ -35,42 +35,29 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         
         self.setup()
         
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.config_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        stop_ts = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-
         # Generate any images
-        self.genImages(archive, stop_ts)
+        self.genImages(self.gen_ts)
         
     def setup(self):
         
-        self.weewx_root = self.config_dict['Station']['WEEWX_ROOT']
         self.image_dict = self.skin_dict['ImageGenerator']
         self.title_dict = self.skin_dict['Labels']['Generic']
         self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.unit_helper= weewx.units.UnitInfoHelper(self.formatter, self.converter)
         
-    def genImages(self, archive, time_ts):
+    def genImages(self, gen_ts):
         """Generate the images.
         
         The time scales will be chosen to include the given timestamp, with nice beginning
         and ending times.
     
-        time_ts: The time around which plots are to be generated. This will also be used as
+        gen_ts: The time around which plots are to be generated. This will also be used as
         the bottom label in the plots. [optional. Default is to use the time of the last record
         in the archive database.]
         """
         t1 = time.time()
         ngen = 0
-
-        if not time_ts:
-            time_ts = archive.lastGoodStamp()
-            if not time_ts:
-                time_ts = time.time()
 
         # Loop over each time span class (day, week, month, etc.):
         for timespan in self.image_dict.sections :
@@ -81,13 +68,23 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 # Accumulate all options from parent nodes:
                 plot_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname])
 
-                image_root = os.path.join(self.weewx_root, plot_options['HTML_ROOT'])
+                # Open up the database archive
+                archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], plot_options['archive_file'])
+                archivedb = weewx.archive.Archive(archiveFilename)
+            
+                plotgen_ts = gen_ts
+                if not plotgen_ts:
+                    plotgen_ts = archivedb.lastGoodStamp()
+                    if not plotgen_ts:
+                        plotgen_ts = time.time()
+
+                image_root = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], plot_options['HTML_ROOT'])
                 # Get the path of the file that the image is going to be saved to:
                 img_file = os.path.join(image_root, '%s.png' % plotname)
                 
                 # Check whether this plot needs to be done at all:
                 ai = plot_options.as_int('aggregate_interval') if plot_options.has_key('aggregate_interval') else None
-                if skipThisPlot(time_ts, ai, img_file) :
+                if skipThisPlot(plotgen_ts, ai, img_file) :
                     continue
                 
                 # Create the subdirectory that the image is to be put in.
@@ -98,7 +95,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     pass
                 
                 # Calculate a suitable min, max time for the requested time span
-                (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(time_ts - plot_options.as_int('time_length'), time_ts)
+                (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - plot_options.as_int('time_length'), plotgen_ts)
                 
                 # Create a new instance of a time plot and start adding to it
                 plot = weeplot.genplot.TimePlot(plot_options)
@@ -111,7 +108,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 
                 # Get a suitable bottom label:
                 bottom_label_format = plot_options.get('bottom_label_format', '%m/%d/%y %H:%M')
-                bottom_label = time.strftime(bottom_label_format, time.localtime(time_ts))
+                bottom_label = time.strftime(bottom_label_format, time.localtime(plotgen_ts))
                 plot.setBottomLabel(bottom_label)
         
                 # Loop over each line to be added to the plot.
@@ -176,8 +173,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             continue
 
                     # Get the time and data vectors from the database:
-                    (time_vec_t, data_vec_t) = archive.getSqlVectorsExtended(var_type, minstamp, maxstamp, 
-                                                                         aggregate_interval, aggregate_type)
+                    (time_vec_t, data_vec_t) = archivedb.getSqlVectorsExtended(var_type, minstamp, maxstamp, 
+                                                                               aggregate_interval, aggregate_type)
 
                     new_time_vec_t = self.converter.convert(time_vec_t)
                     new_data_vec_t = self.converter.convert(data_vec_t)
