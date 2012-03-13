@@ -6,11 +6,12 @@ For complete documentation, see http://www.weewx.com/docs
 
 1.13.0 03/13/12
 
-When running reports, the binding to the actual database to be used now happens
-much later. This allows multiple databases to be used when running a report.
-Extra databases can be specified in the option list for a report. Email
-me for details on how to do this. Introducing  this feature changed the 
-signature of a few functions. See the upgrade guide for details.
+The  binding to the  database to  be used  now happens  much later  when running
+reports. This  allows more than one database  to be used when  running a report.
+Extra databases can be specified in the  option list for a report. I use this to
+display  broadband bandwidth  information,  which was  collected  by a  separate
+program.  Email me  for details  on  how to  do this.  Introducing this  feature
+changed the signature of a few functions. See the upgrade guide for details.
 
 
 1.12.4 02/13/12
@@ -18,16 +19,17 @@ signature of a few functions. See the upgrade guide for details.
 User Alf Høgemark found an error in the encoding of solar data for CWOP and sent
 me a fix. Thanks, Alf!
 
-Now always uses "import sqlite3", resulting in using the version of pysqlite that
-comes with Python. This means the install instructions have been simplified.
+Now always  uses "import  sqlite3", resulting in  using the version  of pysqlite
+that  comes  with  Python.  This   means  the  install  instructions  have  been
+simplified.
 
-Now doesn't choke when using the (rare) Python version of NameMapper used by 
+Now doesn't  choke when using  the (rare) Python  version of NameMapper  used by
 Cheetah.
 
 
 1.12.3 02/09/12
 
-Added  start script  for FreeBSD,  courtesy  of user  Fabian Abplanalp.  Thanks,
+Added  start script  for FreeBSD,  courtesy of  user Fabian  Abplanalp.  Thanks,
 Fabian!
 
 Added the ability to respond to a "status" query to the Debian startup script.
