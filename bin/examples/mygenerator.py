@@ -8,7 +8,7 @@
 #    $Date$
 #
 
-"""Example of how to extend a generator.
+"""Example of how to extend a report generator.
 
 This generator offers tag 'alltime' that makes all-time statistics available,
 such as the all-time max temperature.
@@ -21,26 +21,22 @@ You can then use tags such as $alltime.outTemp.max for the all-time max temperat
 
 from weewx.filegenerator import FileGenerator
 from weewx.stats import TimeSpanStats
-from weeutil.weeutil import TimeSpan
 
-class MyFileGenerator(FileGenerator):                       # 1
+class MyFileGenerator(FileGenerator):                            # 1
   
-    def getToDateSearchList(self, currentRec, stop_ts):     # 2
-
-        # Get a TimeSpan object that represents all time up to the stop time:
-        all_time = TimeSpan(self.start_ts, stop_ts)         # 3
+    def getToDateSearchList(self, archivedb, statsdb, timespan): # 2
 
         # Get a TimeSpanStats object :
-        all_stats = TimeSpanStats(all_time,
-                                  self.statsdb,
+        all_stats = TimeSpanStats(timespan,
+                                  statsdb,
                                   formatter=self.formatter,
-                                  converter=self.converter) # 4
+                                  converter=self.converter)      # 3
 
         # Get the superclass's search list:       
-        search_list = FileGenerator.getToDateSearchList(self, currentRec, stop_ts) #5
+        search_list = FileGenerator.getToDateSearchList(self, archivedb, statsdb, timespan) # 4
 
         # Now tack on my addition as a small dictionary with key 'alltime':
-        search_list += [ {'alltime' : all_stats} ]          # 6
+        search_list += [ {'alltime' : all_stats} ]               # 5
         
         return search_list
 

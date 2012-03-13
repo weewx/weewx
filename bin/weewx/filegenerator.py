@@ -149,22 +149,26 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
             # Loop through each timespan in the summary period
             for timespan in _genfunc(start_ts, stop_ts):
 
-                # Get the start time as a timetuple.
+                #===============================================================
+                # Calculate the destination filename using the template name.
+                # Replace 'YYYY' with the year, 'MM' with the month, and
+                # strip off the trailing '.tmpl':
+                #===============================================================
+                
+                # Start by getting the start time as a timetuple.
                 timespan_start_tt = time.localtime(timespan.start)
-                #===============================================================
-                # Calculate the output filename
-                #===============================================================
-                # Form the destination filename from the template name, replacing 'YYYY' with
-                # the year, 'MM' with the month, and strip off the trailing '.tmpl':
+                # Get a string representing the year (e.g., '2009'):
                 _yr_str = "%4d"  % timespan_start_tt[0]
-                _filename = os.path.basename(template).replace('.tmpl','').replace('YYYY', _yr_str) 
+                # Replace any instances of 'YYYY' with the string
+                _filename = os.path.basename(template).replace('.tmpl','').replace('YYYY', _yr_str)
                 if by_time == 'SummaryByMonth' :
+                    # If this is a summary by month, do something similar for them month 
                     _mo_str = "%02d" % timespan_start_tt[1]
                     _filename = _filename.replace('MM', _mo_str)
-                    # Save the included Year-Months so they can be used in an HTML drop down list:
+                    # Save the resultant Year-Months so they can be used in an HTML drop down list:
                     self.outputted_dict['SummaryByMonth'].append("%s-%s" %(_yr_str, _mo_str))
                 elif by_time == 'SummaryByYear' :
-                    # Save the included years so they can be used in an HTML drop down list:
+                    # Save the resultant years so they can be used in an HTML drop down list:
                     self.outputted_dict['SummaryByYear'].append(_yr_str)
 
                 _fullpath = os.path.join(destination_dir, _filename)
@@ -173,8 +177,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                 # we must generate it
                 if not os.path.exists(_fullpath) or timespan.includesArchiveTime(stop_ts):
     
-                    searchList = self.getCommonSearchList(statsdb, timespan.stop) + self.getSummaryBySearchList(timespan)
-                    # Run everything through the template engine
+                    searchList = self.getCommonSearchList(archivedb, statsdb, timespan) + self.getSummaryBySearchList(archivedb, statsdb, timespan)
+                    #===================================================================
+                    # Cheetah will use introspection on the searchList to populate the
+                    # parameters in the template file.
+                    # ===================================================================
                     text = Cheetah.Template.Template(file       = template,
                                                      searchList = searchList + [{'encoding' : encoding}],
                                                      filter     = encoding,
@@ -213,17 +220,22 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
             (template, statsdb, archivedb, destination_dir, encoding) = self._prepGen(self.skin_dict['FileGenerator']['ToDate'][subreport])
             
-            stop_ts = gen_ts if gen_ts else archivedb.lastGoodStamp()
-            currentRec = self.getRecord(archivedb, stop_ts)
-            searchList = self.getCommonSearchList(statsdb, stop_ts) + self.getToDateSearchList(currentRec, stop_ts)
+            start_ts = archivedb.firstGoodStamp()
+            if not start_ts:
+                syslog.syslog(syslog.LOG_NOTICE, "filegenerator: No data for to date subreport %s" % (subreport,))
+                return
+            stop_ts  = gen_ts if gen_ts else archivedb.lastGoodStamp()
+            
+            timespan = weeutil.weeutil.TimeSpan(start_ts, stop_ts)
+            
+            searchList = self.getCommonSearchList(archivedb, statsdb, timespan) + self.getToDateSearchList(archivedb, statsdb, timespan)
             
             # Form the destination filename:
             _fullpath = os.path.basename(template).replace('.tmpl','')
     
             #===================================================================
-            # Here's where the heavy lifting occurs. Use Cheetah to actually
-            # generate the files. It will use introspection on the searchList to
-            # populate the parameters in the template file.
+            # Cheetah will use introspection on the searchList to populate the
+            # parameters in the template file.
             # ===================================================================
             text = Cheetah.Template.Template(file       = template,
                                              searchList = searchList + [{'encoding' : encoding}],
@@ -248,7 +260,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         elapsed_time = time.time() - t1
         syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
     
-    def getSummaryBySearchList(self, timespan):
+    def getSummaryBySearchList(self, archivedb, statsdb, timespan):
         """Return the searchList for the Cheetah Template engine for "summarize by" reports.
         
         Can easily be overridden to add things to the search list."""
@@ -260,17 +272,18 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
         return searchList
 
-    def getToDateSearchList(self, currentRec, stop_ts):
+    def getToDateSearchList(self, archivedb, statsdb, timespan):
         """Return the searchList for the Cheetah Template engine for "to date" generation.
         
         Can easily be overridden to add things to the search list."""
 
+        currentRec = self.getRecord(archivedb, timespan.stop)
         searchList = [self.outputted_dict,
                       {'current' : currentRec}] 
 
         return searchList
 
-    def getCommonSearchList(self, statsdb, stop_ts):
+    def getCommonSearchList(self, archivedb, statsdb, timespan):
         """Assemble the common searchList elements to be used by both the "ToDate" and
         "SummaryBy" reports.
         
@@ -284,7 +297,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
         stats = weewx.stats.TaggedStats(statsdb,
-                                        stop_ts,
+                                        timespan.stop,
                                         formatter = self.formatter,
                                         converter = self.converter,
                                         rain_year_start = self.station.rain_year_start,

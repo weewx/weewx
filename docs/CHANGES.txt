@@ -4,6 +4,15 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
+1.13.0 03/13/12
+
+When running reports, the binding to the actual database to be used now happens
+much later. This allows multiple databases to be used when running a report.
+Extra databases can be specified in the option list for a report. Email
+me for details on how to do this. Introducing  this feature changed the 
+signature of a few functions. See the upgrade guide for details.
+
+
 1.12.4 02/13/12
 
 User Alf Høgemark found an error in the encoding of solar data for CWOP and sent

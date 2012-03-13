@@ -13,9 +13,19 @@
 
 <body>
 
-<h1 class="title">Upgrading to <span class="code">weewx</span> v1.12</h1>
+<h1 class="title">Upgrading to <span class="code">weewx</span> v1.13</h1>
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
+<h2>V1.12 or earlier</h2>
+<p>Version 1.13 changed the way binding happens to the databases used in reports 
+so that it happens much later. The upshot is that the signature of a few 
+functions changed. Most you are unlikely to encounter. The exception is if you 
+have written custom template <em>search lists</em>, as described in the section <em>
+<a href="customizing.htm#Extending_an_existing_generator">Extending an existing report generator</a></em> in the
+<a href="customizing.htm">Customizing weewx guide</a>. This section has been 
+updated to reflect the new function signatures. As a side effect, the 
+illustrated example actually has become much simpler!</p>
+<p>No changes to skins.</p>
 <h2>V1.9 or earlier</h2>
 <p>Version 1.10 introduced several new features. </p>
 <h3>New almanac features, icon, and mobile template</h3>

@@ -19,7 +19,7 @@
 	<body>
 		<h1 class="title">Customizing <span class="code">weewx</span>
 		<br />
-		Version 1.12</h1>
+		Version 1.13</h1>
 		<h1>Table of contents</h1>
 		<div id="technical_content">
 			<div id="toc"></div>
@@ -967,7 +967,7 @@ Sunrise, sunset: 06:51 19:30
 				To do more sophisticated customization it may be necessary to extend an existing
 				generator, or write your own.
 			</p>
-			<h4>Extending an existing generator</h4>
+			<h4 id="Extending_an_existing_generator">Extending an existing report generator</h4>
 			<p>
 				In the section on <em><a href="#Customizing_templates">Customizing templates</a></em>,
 				we have seen how you can change a template and make use of the various tags
@@ -1006,26 +1006,22 @@ Sunrise, sunset: 06:51 19:30
 			</p>
 			<pre>from weewx.filegenerator import FileGenerator
 from weewx.stats import TimeSpanStats
-from weeutil.weeutil import TimeSpan
 
-class MyFileGenerator(FileGenerator):                       # 1
+class MyFileGenerator(FileGenerator):                            # 1
   
-    def getToDateSearchList(self, currentRec, stop_ts):     # 2
-
-        # Get a TimeSpan object that represents all time up to the stop time:
-        all_time = TimeSpan(self.start_ts, stop_ts)         # 3
+    def getToDateSearchList(self, archivedb, statsdb, timespan): # 2
 
         # Get a TimeSpanStats object :
-        all_stats = TimeSpanStats(all_time,
-                                  self.statsdb,
+        all_stats = TimeSpanStats(timespan,
+                                  statsdb,
                                   formatter=self.formatter,
-                                  converter=self.converter) # 4
+                                  converter=self.converter)      # 3
 
         # Get the superclass&#39;s search list:       
-        search_list = FileGenerator.getToDateSearchList(self, currentRec, stop_ts) #5
+        search_list = FileGenerator.getToDateSearchList(self, archivedb, statsdb, timespan) # 4
 
         # Now tack on my addition as a small dictionary with key &#39;alltime&#39;:
-        search_list += [ {&#39;alltime&#39; : all_stats} ]          # 6
+        search_list += [ {&#39;alltime&#39; : all_stats} ]               # 5
         
         return search_list</pre>
 			<p>
@@ -1039,19 +1035,18 @@ class MyFileGenerator(FileGenerator):                       # 1
 				<li>
 					Override member function <span class="code">getToDateSearchList()</span>.
 					The parameters are <span class="code">self</span> (Python&#39;s way of indicating
-					the instance we are working with), <span class="code">currentRec</span>
-					(a dictionary with the current conditions), and <span class="code">stop_ts</span>
-					(the ending time for the &quot;to date&quot; summary, in Unix epoch time).
-				</li>
-				<li>
-					Attribute <span class="code">self.start_ts</span> is available as the
-					earliest time seen in the main archive database. The class <span class="code">TimeSpan</span> is a utility class that represents an
-					interval of time. Here, we are creating an instance of <span class="code">TimeSpan</span> that represents all time preceeding <span class="code">stop_ts</span>.
+					the instance we are working with), <span class="code">archivedb</span>
+					(the archive database), <span class="code">statsdb</span> 
+					(the stats database), and <span class="code">timespan</span>
+					(an instance of the utility class <span class="code">
+					TimeSpan</span>, that contains the start and ending times of the &quot;to date&quot; summary 
+					period).
 				</li>
 				<li>
 					Class <span class="code">TimeSpanStats</span> represents a statistical
-					calculation over a time period. It takes 4 parameters. The first, <span class="code">all_time</span>, is the timespan over which the calculation is to be done; the
-					second, <span class="code">self.statsdb</span>, is the statistical
+					calculation over a time period. It takes 4 parameters. The first, <span class="code">
+					timespan</span>, is the timespan over which the calculation is to be done; the
+					second, <span class="code">statsdb</span>, is the statistical
 					database the calculation is to be run against; the third, <span class="code"> self.formatter</span>,
 					is an instance of class <span class="code">weewx.units.Formatter</span>,
 					which contains information about how the results should be formatted;
