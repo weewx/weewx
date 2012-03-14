@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -118,7 +118,7 @@ class GeneralPlot(object):
         line: an instance of PlotLine
         
         """
-        if line.x.count(None) != 0 :
+        if None in line.x:
             raise weeplot.ViolatedPrecondition, "X vector cannot have any values 'None' "
         self.line_list.append(line)
         
@@ -203,54 +203,51 @@ class GeneralPlot(object):
         for i in xrange(nygridlines) :
             y = self.yscale[0] + i * self.yscale[2]
             sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=self.chart_gridline_color)
-            # Draw a bel on every other line:
+            # Draw a label on every other line:
             if i%2 == 0 :
                 ylabel = self._genYLabel(y)
                 axis_label_size = sdraw.draw.textsize(ylabel, font=axis_label_font)
                 ypos = sdraw.ytranslate(y)
                 sdraw.draw.text((self.lmargin - axis_label_size[0] - 2, ypos - axis_label_size[1]/2),
                                 ylabel, fill=self.axis_label_font_color, font=axis_label_font)
-            
+
     def _renderPlotLines(self, sdraw):
         """Draw the collection of lines, using a different color for each one. Because there is
         a limited set of colors, they need to be recycled if there are very many lines.
         
         """
         nlines = len(self.line_list)
+        
         # Draw them in reverse order, so the first line comes out on top of the image
-        for iline in xrange(nlines-1, -1, -1):
-            color = self.line_list[iline].color
-            if color is None :
-                color = self.chart_line_colors[iline%nlines]
-            width = self.line_list[iline].width
-            if width is None :
-                width = self.chart_line_widths[iline%nlines]
+        for iline, this_line in enumerate(self.line_list[::-1]):
+            
+            color = self.chart_line_colors[iline%nlines] if this_line.color is None else this_line.color
+            width = self.chart_line_widths[iline%nlines] if this_line.width is None else this_line.width
 
-            if self.line_list[iline].line_type == 'line' :
-                sdraw.line(self.line_list[iline].x, 
-                           self.line_list[iline].y, 
+            if this_line.line_type == 'line' :
+                sdraw.line(this_line.x, 
+                           this_line.y, 
                            fill  = color,
                            width = width)
-            elif self.line_list[iline].line_type == 'bar' :
-                interval = self.line_list[iline].interval
-                for ibox in xrange(len(self.line_list[iline].x)):
-                    x = self.line_list[iline].x[ibox]
-                    y = self.line_list[iline].y[ibox]
+            elif this_line.line_type == 'bar' :
+                for ibox in xrange(len(this_line.x)):
+                    x = this_line.x[ibox]
+                    y = this_line.y[ibox]
                     if y is None :
                         continue
                     if ibox > 0:
-                        xleft = self.line_list[iline].x[ibox-1]
+                        xleft = this_line.x[ibox-1]
                     else:
-                        xleft = x - interval
+                        xleft = x - this_line.interval
                     sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=color, outline=color)
-            elif self.line_list[iline].line_type == 'vector' :
-                for (x, vec) in zip(self.line_list[iline].x, self.line_list[iline].y):
+            elif this_line.line_type == 'vector' :
+                for (x, vec) in zip(this_line.x, this_line.y):
                     sdraw.vector(x, vec,
-                                 vector_rotate = self.line_list[iline].vector_rotate,
+                                 vector_rotate = this_line.vector_rotate,
                                  fill  = color,
                                  width = width)
                 self.render_rose = True
-                self.rose_rotation = self.line_list[iline].vector_rotate
+                self.rose_rotation = this_line.vector_rotate
                 if self.rose_color is None:
                     self.rose_color = color
 
@@ -292,16 +289,14 @@ class GeneralPlot(object):
         
         x = (self.image_width - top_label_size[0])/2
         y = 0
-        nlabels = len(self.line_list)
         
-        for i in xrange(nlabels) :
-            color = self.line_list[i].color
-            if color is None :
-                color = self.chart_line_colors[i%nlabels]
+        nlabels = len(self.line_list)
+        for i, this_line in enumerate(self.line_list):
+            color = self.chart_line_colors[i%nlabels] if this_line.color is None else this_line.color
             # Draw a label
-            draw.text( (x,y), self.line_list[i].label, fill = color, font = top_label_font)
+            draw.text( (x,y), this_line.label, fill = color, font = top_label_font)
             # Now advance the width of the label we just drew, plus a space:
-            label_size = draw.textsize(self.line_list[i].label + ' ', font= top_label_font)
+            label_size = draw.textsize(this_line.label + ' ', font= top_label_font)
             x += label_size[0]
 
     def _renderRose(self, image, draw):
