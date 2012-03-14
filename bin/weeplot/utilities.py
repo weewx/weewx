@@ -54,8 +54,8 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         else :
             fmx = fmn + .01*abs(fmn)
 
-    range = fmx - fmn
-    steps = range / nsteps
+    frange = fmx - fmn
+    steps = frange / nsteps
     
     mag = math.floor(math.log10(steps))
     magPow = math.pow(10.0, mag)
