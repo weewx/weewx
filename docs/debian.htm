@@ -17,42 +17,37 @@
 		<h1 class="title">Quick start guide for Debian (Ubuntu) systems</h1>
 		<p>
 			This guide is to get you quickly started using <span class="code">weewx</span> on Debian systems,
-			particularly Ubuntu. It assumes you have already downloaded the <span class="code">weewx</span> tarball.
+			particularly Ubuntu.
 		</p>
 		<h3>Prerequisites</h3>
 		<p>
 			Install the required libraries:
 		</p>
 		<p class="tty">
-			sudo apt-get install python-configobj
-			<br />
-			sudo apt-get install python-serial
-			<br />
-			sudo apt-get install python-cheetah
-			<br />
-			sudo apt-get install python-imaging
-			<br />
-			sudo apt-get install python-dev
-			<br />
-			sudo apt-get install python-pip
+			sudo apt-get install python-configobj <br />
+			sudo apt-get install python-serial    <br />
+			sudo apt-get install python-cheetah   <br />
+			sudo apt-get install python-imaging   <br />
 		</p>
 		<p>
-			The last two allow the optional package <span class="code">pyephem</span> to
-			be installed:
+			If you wish to install the optional package <a href="http://rhodesmill.org/pyephem"><span class="code">pyephem</span></a> for
+			extended almanac information, then add:
 		</p>
 		<p class="tty">
-			sudo pip install pyephem
+			sudo apt-get install python-dev	<br />
+			sudo apt-get install python-pip <br />
+			sudo pip install pyephem        <br />
 		</p>
 		<h3>Installing</h3>
 		<p>
-			Unpack the tar ball (substitute your version for X.Y.Z) into any
+			Download the tar ball from the <a href="http://sourceforge.net/projects/weewx"><span class="code">weewx</span> homepage on Sourceforge</a>, then unpack (substitute your version for X.Y.Z) into any
 			convenient directory where you have write permission
 		</p>
 		<p class="tty">
 			tar xvf weewx-X.Y.Z
 		</p>
 		<p>
-			Then change directory into it:
+			Change directory into it:
 		</p>
 		<p class="tty">
 			cd weewx-X.Y.Z
@@ -61,8 +56,7 @@
 			Then build and install:
 		</p>
 		<p class="tty">
-			./setup.py build
-			<br />
+			./setup.py build <br />
 			sudo ./setup.py install
 		</p>
 		<p>
