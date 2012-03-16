@@ -88,19 +88,17 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     continue
                 
                 # Create the subdirectory that the image is to be put in.
-                # Wrap in a try block in case it already does.
+                # Wrap in a try block in case it already exists.
                 try:
                     os.makedirs(os.path.dirname(img_file))
                 except:
                     pass
                 
-                # Calculate a suitable min, max time for the requested time span
-                (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - plot_options.as_int('time_length'), plotgen_ts)
-                
                 # Create a new instance of a time plot and start adding to it
                 plot = weeplot.genplot.TimePlot(plot_options)
                 
-                # Set the min, max time axis
+                # Calculate a suitable min, max time for the requested time span and set it
+                (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - int(plot_options.get('time_length', 86400)), plotgen_ts)
                 plot.setXScaling((minstamp, maxstamp, timeinc))
                 
                 # Set the y-scaling, using any user-supplied hints: 
@@ -141,21 +139,30 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     label = weeutil.weeutil.utf8_to_latin1(label)
     
                     # See if a color has been explicitly requested.
-                    color_str = line_options.get('color')
-                    color = int(color_str,0) if color_str is not None else None
+                    color = line_options.get('color')
+                    if color is not None: color = int(color,0)
                     
                     # Get the line width, if explicitly requested.
-                    width_str = line_options.get('width')
-                    width = int(width_str) if width_str is not None else None
+                    width = line_options.get('width')
+                    if width is not None: width = int(width)
                     
-                    # Get the type of line ("bar', 'line', or 'vector')
-                    line_type = line_options.get('plot_type', 'line')
+                    # Get the type of plot ("bar', 'line', or 'vector')
+                    plot_type = line_options.get('plot_type', 'line')
                     
-                    if line_type == 'vector':
+                    if plot_type == 'vector':
                         vector_rotate_str = line_options.get('vector_rotate')
                         vector_rotate = -float(vector_rotate_str) if vector_rotate_str is not None else None
                     else:
                         vector_rotate = None
+                        
+                    # Get the type of line ('solid' or 'none' is all that's offered now)
+                    line_type = line_options.get('line_type', 'solid')
+                    if line_type.strip().lower() in ['', 'none']:
+                        line_type = None
+                        
+                    marker_type  = line_options.get('marker_type')
+                    marker_size = line_options.get('marker_size')
+                    if marker_size is not None: marker_size = int(marker_size)
                     
                     # Look for aggregation type:
                     aggregate_type = line_options.get('aggregate_type')
@@ -183,7 +190,10 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                                                           label         = label, 
                                                           color         = color,
                                                           width         = width,
-                                                          line_type     = line_type, 
+                                                          plot_type     = plot_type,
+                                                          line_type     = line_type,
+                                                          marker_type   = marker_type,
+                                                          marker_size   = marker_size,
                                                           interval      = aggregate_interval,
                                                           vector_rotate = vector_rotate))
                     

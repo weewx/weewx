@@ -224,33 +224,58 @@ class ScaledDraw(object):
 
         self.draw    = draw
         
-    def line(self, x, y, line_type='connect', **options) :
+    def line(self, x, y, line_type='solid', marker_type=None, marker_size=8, **options) :
         """Draw a scaled line on the instance's ImageDraw object.
         
         x: sequence of x coordinates
         
         y: sequence of y coordinates, some of which are possibly null (value of None)
         
-        type: 'connect' for line that connect the coordinates
-              'scatter' for a scatter plot
+        line_type: 'solid' for line that connect the coordinates
+              None for no line
+        
+        marker_type: None or 'none' for no marker.
+                     'cross' for a cross
+                     'circle' for a circle
+                     'box' for a box
+                     'x' for an X
+
+        For a scatter plot, set line_type to None and marker_type to something other than None.
         """
-        if line_type == 'scatter':
-            # Create a list with the scaled coordinates...
-            xy_seq_scaled = [(self.xtranslate(xc), self.ytranslate(yc)) for (xc,yc) in zip(x,y) if yc is not None]
-            # ... and pass it to PIL:
-            self.draw.point(xy_seq_scaled, fill=options['fill'])
-        elif line_type == 'connect':
-            
-            # Break the line up around any nulls
-            for xy_seq in xy_seq_line(x, y):
-            # Create a list with the scaled coordinates...
-                xy_seq_scaled = [(self.xtranslate(xc), self.ytranslate(yc)) for (xc,yc) in xy_seq]
+        # Break the line up around any nulls
+        for xy_seq in xy_seq_line(x, y):
+        # Create a list with the scaled coordinates...
+            xy_seq_scaled = [(self.xtranslate(xc), self.ytranslate(yc)) for (xc,yc) in xy_seq]
+            if line_type == 'solid':
                 # Now pick the appropriate drawing function, depending on the length of the line:
                 if len(xy_seq) == 1 :
                     self.draw.point(xy_seq_scaled, fill=options['fill'])
                 else :
                     self.draw.line(xy_seq_scaled, **options)
-                   
+            if marker_type and marker_type.lower().strip() not in ['none', '']:
+                self.marker(xy_seq_scaled, marker_type, marker_size=marker_size, **options)
+        
+    def marker(self, xy_seq, marker_type, marker_size=10, **options):
+        half_size = marker_size/2
+        marker=marker_type.lower()
+        for x, y in xy_seq:
+            if marker == 'cross':
+                self.draw.line([(x-half_size, y), (x+half_size, y)], **options)
+                self.draw.line([(x, y-half_size), (x, y+half_size)], **options)
+            elif marker == 'x':
+                self.draw.line([(x-half_size, y-half_size), (x+half_size, y+half_size)], **options)
+                self.draw.line([(x-half_size, y+half_size), (x+half_size, y-half_size)], **options)
+            elif marker == 'circle':
+                self.draw.ellipse([(x-half_size, y-half_size), 
+                                   (x+half_size, y+half_size)], outline=options['fill'])
+            elif marker == 'box':
+                self.draw.line([(x-half_size, y-half_size), 
+                                (x+half_size, y-half_size),
+                                (x+half_size, y+half_size),
+                                (x-half_size, y+half_size),
+                                (x-half_size, y-half_size)], **options)
+                 
+        
     def rectangle(self, box, **options) :
         """Draw a scaled rectangle.
         

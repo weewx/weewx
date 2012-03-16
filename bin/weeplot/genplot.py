@@ -46,7 +46,7 @@ class GeneralPlot(object):
 
         self.chart_background_color = int(config_dict.get('chart_background_color', '0xd8d8d8'), 0)
         self.chart_gridline_color   = int(config_dict.get('chart_gridline_color',   '0xa0a0a0'), 0)
-        color_list                  = config_dict.get('chart_line_colors', [0xff0000, 0x00ff00, 0x0000ff])
+        color_list                  = config_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff'])
         width_list                  = config_dict.get('chart_line_width',  [1, 1, 1])
         self.chart_line_colors      = [int(v,0) for v in color_list]
         self.chart_line_widths      = [int(v) for v in width_list]
@@ -85,7 +85,7 @@ class GeneralPlot(object):
         self.rose_color             = config_dict.get('rose_color')
         if self.rose_color is not None:
             self.rose_color = int(self.rose_color, 0)
-
+            
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot.
         
@@ -224,12 +224,15 @@ class GeneralPlot(object):
             color = self.chart_line_colors[iline%nlines] if this_line.color is None else this_line.color
             width = self.chart_line_widths[iline%nlines] if this_line.width is None else this_line.width
 
-            if this_line.line_type == 'line' :
+            if this_line.plot_type == 'line' :
                 sdraw.line(this_line.x, 
                            this_line.y, 
+                           line_type=this_line.line_type,
+                           marker_type=this_line.marker_type,
+                           marker_size=this_line.marker_size,
                            fill  = color,
                            width = width)
-            elif this_line.line_type == 'bar' :
+            elif this_line.plot_type == 'bar' :
                 for ibox in xrange(len(this_line.x)):
                     x = this_line.x[ibox]
                     y = this_line.y[ibox]
@@ -240,7 +243,7 @@ class GeneralPlot(object):
                     else:
                         xleft = x - this_line.interval
                     sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=color, outline=color)
-            elif this_line.line_type == 'vector' :
+            elif this_line.plot_type == 'vector' :
                 for (x, vec) in zip(this_line.x, this_line.y):
                     sdraw.vector(x, vec,
                                  vector_rotate = this_line.vector_rotate,
@@ -370,7 +373,7 @@ class GeneralPlot(object):
         # ValueError exception.
         ymin = ymax = None
         for line in self.line_list:
-            if line.line_type == 'vector':
+            if line.plot_type == 'vector':
                 try:
                     yline_max = max(abs(c) for c in filter(lambda v : v is not None, line.y))
                 except ValueError:
@@ -451,13 +454,18 @@ class PlotLine(object):
     """Represents a single line (or bar) in a plot.
     
     """
-    def __init__(self, x, y, label='', color=None, width=None, line_type='line', interval=None, vector_rotate = None):
-        self.x         = x
-        self.y         = y
-        self.label     = label
-        self.line_type = line_type
-        self.color     = color
-        self.width     = width
-        self.interval  = interval
+    def __init__(self, x, y, label='', color=None, width=None, plot_type='line',
+                 line_type='solid', marker_type=None, marker_size=10, 
+                 interval=None, vector_rotate = None):
+        self.x           = x
+        self.y           = y
+        self.label       = label
+        self.plot_type   = plot_type
+        self.line_type   = line_type
+        self.marker_type = marker_type
+        self.marker_size = marker_size
+        self.color       = color
+        self.width       = width
+        self.interval    = interval
         self.vector_rotate = vector_rotate
 
