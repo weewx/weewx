@@ -4,9 +4,49 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-1.XX.YY 01/22/12
+1.X 03/15/12
 
-Added start script for FreeBSD, courtesy of user Fabian Abplanalp. Thanks, Fabian!
+Added  finer control  over the  line plots.  Can now  add optional  markers. The
+marker_type  can be  'none' (the  default),  'cross', 'box',  'circle', or  'x'.
+Also, line_type can  now either be 'solid' (the default)  or 'none' (for scatter
+plots). Same day I'll add 'dashed', but not now. :-)
+
+1.13.0 03/13/12
+
+The binding to the SQL database to be used now happens  much later  when running
+reports. This  allows more than one database  to be used when  running a report.
+Extra databases can be specified in the  option list for a report. I use this to
+display  broadband bandwidth  information,  which was  collected  by a  separate
+program.  Email me  for details  on  how to  do this.  Introducing this  feature
+changed the signature of a few functions. See the upgrade guide for details.
+
+
+1.12.4 02/13/12
+
+User Alf Høgemark found an error in the encoding of solar data for CWOP and sent
+me a fix. Thanks, Alf!
+
+Now always  uses "import  sqlite3", resulting in  using the version  of pysqlite
+that  comes  with  Python.  This   means  the  install  instructions  have  been
+simplified.
+
+Now doesn't  choke when using  the (rare) Python  version of NameMapper  used by
+Cheetah.
+
+
+1.12.3 02/09/12
+
+Added  start script  for FreeBSD,  courtesy of  user Fabian  Abplanalp.  Thanks,
+Fabian!
+
+Added the ability to respond to a "status" query to the Debian startup script.
+
+RESTful posts can now recover from more HTTP errors.
+
+Station serial port can now recover from a SerialException error (usually caused
+when there is a process competing for the serial port).
+
+Continue to fiddle with the retry logic when reading LOOP data.
 
 
 1.12.2 01/18/12

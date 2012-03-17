@@ -33,6 +33,19 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     
     Returns: a three-way tuple. First value is the lowest scale value, second the highest.
     The third value is the step (increment) between them.
+
+    Examples:
+    >>> print scale(1.1, 12.3)
+    (0.0, 14.0, 2.0)
+    >>> print scale(-1.1, 12.3)
+    (-2.0, 14.0, 2.0)
+    >>> print scale(-12.1, -5.3)
+    (-13.0, -5.0, 1.0)
+    >>> print scale(0.0, 0.05, (None, None, .1), 10)
+    (0.0, 1.0, 0.1)
+    >>> print scale(0.0, 0.21, (None, None, .02))
+    (0.0, 0.22, 0.02)
+    
     """
     
     if all(x is not None for x in prescale):
@@ -54,8 +67,8 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         else :
             fmx = fmn + .01*abs(fmn)
 
-    range = fmx - fmn
-    steps = range / nsteps
+    frange = fmx - fmn
+    steps = frange / nsteps
     
     mag = math.floor(math.log10(steps))
     magPow = math.pow(10.0, mag)
@@ -116,9 +129,7 @@ def scaletime(tmin_ts, tmax_ts) :
     
     Returns a scaling 3-tuple. First element is the start time, second the stop
     time, third the increment. All are in seconds (epoch time in the case of the 
-    first two).
-
-    """
+    first two).    """
     if tmax_ts <= tmin_ts :
         raise weeplot.ViolatedPrecondition, "scaletime called with tmax <= tmin"
     
@@ -213,25 +224,58 @@ class ScaledDraw(object):
 
         self.draw    = draw
         
-    def line(self, x, y, **options) :
+    def line(self, x, y, line_type='solid', marker_type=None, marker_size=8, **options) :
         """Draw a scaled line on the instance's ImageDraw object.
         
         x: sequence of x coordinates
         
         y: sequence of y coordinates, some of which are possibly null (value of None)
         
+        line_type: 'solid' for line that connect the coordinates
+              None for no line
+        
+        marker_type: None or 'none' for no marker.
+                     'cross' for a cross
+                     'circle' for a circle
+                     'box' for a box
+                     'x' for an X
+
+        For a scatter plot, set line_type to None and marker_type to something other than None.
         """
         # Break the line up around any nulls
-        for (x_seq, y_seq) in seq_line(x, y):
-            # Scale it
-            xy_seq_scaled = zip([self.xtranslate(x) for x in x_seq], 
-                                [self.ytranslate(y) for y in y_seq])
-            # Draw it:
-            if len(xy_seq_scaled) == 1 :
-                self.draw.point(xy_seq_scaled, fill = options['fill'])
-            else :
-                self.draw.line(xy_seq_scaled, **options)
-                   
+        for xy_seq in xy_seq_line(x, y):
+        # Create a list with the scaled coordinates...
+            xy_seq_scaled = [(self.xtranslate(xc), self.ytranslate(yc)) for (xc,yc) in xy_seq]
+            if line_type == 'solid':
+                # Now pick the appropriate drawing function, depending on the length of the line:
+                if len(xy_seq) == 1 :
+                    self.draw.point(xy_seq_scaled, fill=options['fill'])
+                else :
+                    self.draw.line(xy_seq_scaled, **options)
+            if marker_type and marker_type.lower().strip() not in ['none', '']:
+                self.marker(xy_seq_scaled, marker_type, marker_size=marker_size, **options)
+        
+    def marker(self, xy_seq, marker_type, marker_size=10, **options):
+        half_size = marker_size/2
+        marker=marker_type.lower()
+        for x, y in xy_seq:
+            if marker == 'cross':
+                self.draw.line([(x-half_size, y), (x+half_size, y)], **options)
+                self.draw.line([(x, y-half_size), (x, y+half_size)], **options)
+            elif marker == 'x':
+                self.draw.line([(x-half_size, y-half_size), (x+half_size, y+half_size)], **options)
+                self.draw.line([(x-half_size, y+half_size), (x+half_size, y-half_size)], **options)
+            elif marker == 'circle':
+                self.draw.ellipse([(x-half_size, y-half_size), 
+                                   (x+half_size, y+half_size)], outline=options['fill'])
+            elif marker == 'box':
+                self.draw.line([(x-half_size, y-half_size), 
+                                (x+half_size, y-half_size),
+                                (x+half_size, y+half_size),
+                                (x-half_size, y+half_size),
+                                (x-half_size, y-half_size)], **options)
+                 
+        
     def rectangle(self, box, **options) :
         """Draw a scaled rectangle.
         
@@ -271,45 +315,72 @@ class ScaledDraw(object):
         return int(y * self.yscale + self.yoffset + 0.5)
     
                    
-def seq_line(x, y):
+def xy_seq_line(x, y):
     """Generator function that breaks a line up into individual segments around any nulls held in y.
-    
-    Example: if x=[0,   1,    2,  3,    4,  5,  6,    7]
-                y=[10, 20, None, 40, None, 60, 70, None]
-    then
-        seq_line(x,y) yields
-            ([0,1], [10,20])
-            ([3], [40])
-            ([5,6], [60,70])
     
     x: iterable sequence of x coordinates. All values must be non-null
     
     y: iterable sequence of y coordinates, possibly with some embedded 
     nulls (that is, their value==None)
     
-    yields: tuples, first value of which is a list of x-coordinates, and second value a list of y-coordinates,
-    of a contiguous line
+    yields: Lists of (x,y) coordinates
+    
+    Example 1
+    >>> x=[ 1,  2,  3]
+    >>> y=[10, 20, 30]
+    >>> for xy_seq in xy_seq_line(x,y):
+    ...     print xy_seq
+    [(1, 10), (2, 20), (3, 30)]
+    
+    Example 2
+    >>> x=[None, 0,  1,    2,  3,    4,    5,  6,  7,   8,    9]
+    >>> y=[None, 0, 10, None, 30, None, None, 60, 70,  80, None]
+    >>> for xy_seq in xy_seq_line(x,y):
+    ...     print xy_seq
+    [(0, 0), (1, 10)]
+    [(3, 30)]
+    [(6, 60), (7, 70), (8, 80)]
+    
+    Example 3
+    >>> x=[  0 ]
+    >>> y=[None]
+    >>> for xy_seq in xy_seq_line(x,y):
+    ...     print xy_seq
+    
+    Example 4
+    >>> x=[   0,    1,    2]
+    >>> y=[None, None, None]
+    >>> for xy_seq in xy_seq_line(x,y):
+    ...     print xy_seq
     
     """
-    istart = iend = 0
     
-    while iend < len(y):
-        if y[iend] is None:
-            if istart != iend :
-                yield (x[istart:iend], y[istart:iend])
-            istart = iend + 1
-            while istart < len(y) :
-                if y[istart] is not None :
-                    break
-                istart += 1
-            iend = istart
-        iend += 1
-    
-    if istart < len(y) :
-        yield (x[istart:iend], y[istart:iend])
-           
+    line = []
+    for xy in zip(x, y):
+        # If the y coordinate is None, that marks a break
+        if xy[1] is None:
+            # If the length of the line is non-zero, yield it
+            if len(line):
+                yield line
+                line = []
+        else:
+            line.append(xy)
+    if len(line):
+        yield line
 
 def pickLabelFormat(increment):
+    """Pick an appropriate label format for the given increment.
+    
+    Examples:
+    >>> print pickLabelFormat(1)
+    %.0f
+    >>> print pickLabelFormat(20)
+    %.0f
+    >>> print pickLabelFormat(.2)
+    %.1f
+    >>> print pickLabelFormat(.01)
+    %.2f
+    """
 
     i_log = math.log10(increment)
     if i_log < 0 :
@@ -323,23 +394,9 @@ def pickLabelFormat(increment):
     return "%%.%df" % decimal_places
 
 
+if __name__ == "__main__":
+    import doctest
 
- 
-if __name__ == '__main__' :
-
-    # Unit test:
-    assert(scale(1.1, 12.3) == (0.0, 14.0, 2.0))
-    assert(scale(-1.1, 12.3) == (-2.0, 14.0, 2.0))
-    assert(scale(-12.1, -5.3) == (-13.0, -5.0, 1.0))
-    assert(scale(0.0, 0.05, (None, None, .1), 10) == (0.0, 1.0, 0.1))
-    assert(scale(0.0, 0.21, (None, None, .02)) == (0.0, 0.22, 0.02))
+    if not doctest.testmod().failed:
+        print "PASSED"
     
-    t= time.time()
-    scaletime(t - 24*3600 - 20, t)
-    
-    assert(pickLabelFormat(1) == "%.0f")
-    assert(pickLabelFormat(20) == "%.0f")
-    assert(pickLabelFormat(.2) == "%.1f")
-    assert(pickLabelFormat(.1) == "%.1f")
-    
-    print "test successful"

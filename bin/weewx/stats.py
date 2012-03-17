@@ -39,12 +39,9 @@
 """
 
 from __future__ import with_statement
-try:
-    from pysqlite2 import dbapi2 as sqlite3
-except ImportError:
-    from sqlite3 import dbapi2 as sqlite3
 import math
 import os.path
+import sqlite3
 import syslog
 import time
 
@@ -487,13 +484,12 @@ class StatsReadonlyDb(object):
         
         # Get the schema dictionary:
         schema_dict = weeutil.dbutil.schema(self.statsFilename)
-        # Convert from unicode:
-        stats_types = [str(s) for s in schema_dict.keys()]
-        # Some stats database have schemas for heatdeg and cooldeg (even though they are not
-        # used) due to an earlier bug. Filter them out. Also, filter out the metadata table:
-        results = filter(lambda x : x not in ('heatdeg', 'cooldeg', 'metadata'), stats_types)
+        # Convert from unicode. Also, some stats database have schemas for heatdeg
+        # and cooldeg (even though they are not used) due to an earlier bug. Filter them out.
+        # Finally, filter out the metadata table:
+        stats_types = [str(s) for s in schema_dict.keys() if s not in [U'heatdeg', U'cooldeg', U'metadata']]
 
-        return results
+        return stats_types
         
 #===============================================================================
 #                    Class StatsDb
@@ -749,6 +745,11 @@ class TimeSpanStats(object):
         stats_type: A statistical type, such as 'outTemp', or 'heatDeg'
         
         returns: An instance of class StatsTypeHelper."""
+        
+        # The following is so the Python version of Cheetah's NameMapper doesn't think
+        # I'm a dictionary:
+        if stats_type == 'has_key':
+            raise AttributeError
 
         # Return the helper class, bound to the type:
         return StatsTypeHelper(stats_type, self.timespan, self.db, self.context, self.formatter, self.converter, **self.option_dict)

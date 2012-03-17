@@ -39,67 +39,90 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
     
     def run(self):
 
+        self.setup()
+
+        self.generateSummaryBy('SummaryByMonth', self.gen_ts)
+        self.generateSummaryBy('SummaryByYear', self.gen_ts)
+        self.generateToDate(self.gen_ts)
+
+    def setup(self):
+        
         self.outputted_dict = {'SummaryByMonth' : [],
                                'SummaryByYear'  : []}
         
         self.initStation()
-        self.initStats()
         self.initUnits()
-        currentRec = self.getCurrentRec()
-        self.initAlmanac(self.stop_ts, currentRec)
+        self.initAlmanac(self.gen_ts)
         
-        self.generateSummaryBy('SummaryByMonth', self.start_ts, self.stop_ts)
-        self.generateSummaryBy('SummaryByYear',  self.start_ts, self.stop_ts)
-        self.generateToDate(currentRec, self.stop_ts)
-
     def initStation(self):
 
         # station holds info such as 'altitude', 'latitude', etc. It seldom changes
         self.station = weewx.station.Station(self.config_dict, self.skin_dict)
         
-    def initStats(self):
-
-        # Open up the stats database:
-        statsFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                     self.config_dict['Stats']['stats_file'])
-        self.statsdb = weewx.stats.StatsReadonlyDb(statsFilename)
-    
     def initUnits(self):
         
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
         self.unitInfoHelper = weewx.units.UnitInfoHelper(self.formatter, self.converter)
         
-    def getCurrentRec(self):
-
-        # Open up the main database archive
-        archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                       self.config_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-    
-        self.stop_ts  = archive.lastGoodStamp() if self.gen_ts is None else self.gen_ts
-        self.start_ts = archive.firstGoodStamp()
+    def initAlmanac(self, celestial_ts):
+        """ Initialize an instance of weeutil.Almanac.Almanac for the station's
+        lat and lon, and for a specific time.
         
-        # Get a dictionary with the current record:
-        current_dict = archive.getRecord(self.stop_ts)
-        # Convert to a dictionary with ValueTuples as values:
-        current_dict_vt = weewx.units.dictFromStd(current_dict)
-        # Now wrap it in a ValueDict:
-        currentRec = weewx.units.ValueDict(current_dict_vt, context='current', 
+        celestial_ts: The timestamp of the time for which the Almanac is to
+        be initialized."""
+                
+        # For better accuracy, the almanac requires the current temperature and barometric
+        # pressure, so retrieve them from the default archive, using celestial_ts
+        # as the time
+        archivedb = weewx.archive.Archive(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                                       self.skin_dict['archive_file']))
+        if not celestial_ts:
+            celestial_ts = archivedb.lastGoodStamp()
+
+        temperature_C = pressure_mbar = None
+        rec = self.getRecord(archivedb, celestial_ts)
+        if rec is not None:
+            if rec.has_key('outTemp') :  temperature_C = rec['outTemp'].degree_C.raw 
+            if rec.has_key('barometer'): pressure_mbar = rec['barometer'].mbar.raw
+        if temperature_C is None: temperature_C = 15.0
+        if pressure_mbar is None: pressure_mbar = 1010.0
+
+        self.moonphases = self.skin_dict['Almanac'].get('moon_phases')
+
+        altitude_vt = weewx.units.convert(self.station.altitude_vt, "meter")
+        
+        self.almanac = weewx.almanac.Almanac(celestial_ts, 
+                                             self.station.latitude_f, 
+                                             self.station.longitude_f,
+                                             altitude_vt[0],
+                                             temperature_C,
+                                             pressure_mbar,
+                                             self.moonphases,
+                                             self.formatter)
+
+    def getRecord(self, archivedb, time_ts):
+        """Get an observation record from the archive database, returning
+        it as a ValueDict."""
+
+        # Get the record...:
+        record_dict = archivedb.getRecord(time_ts)
+        # ... convert to a dictionary with ValueTuples as values...
+        record_dict_vt = weewx.units.dictFromStd(record_dict)
+        # ... then wrap it in a ValueDict:
+        record_vd = weewx.units.ValueDict(record_dict_vt, context='current', 
                                            formatter=self.formatter, converter=self.converter)
         
-        return currentRec
+        return record_vd
 
-    def generateSummaryBy(self, by_time, start_ts, stop_ts):
+    def generateSummaryBy(self, by_time, gen_ts):
         """This entry point is used for "SummaryBy" reports, such as NOAA monthly
         or yearly reports.
         
-        by_time: Set to "SummaryByMonth" to run the template for each month between
-        start_ts and stop_ts. Set to "SummaryByYear" for each year.
+        by_time: "SummaryByMonth" to run the template for each month between start_ts and stop_ts. 
+                 "SummaryByYear"  to run the template for each year  between start_ts and stop_ts. 
         
-        start_ts: The first timestamp to be included.
-        
-        stop_ts: The last timestamp to be included.
+        gen_ts: The summary will be current as of this timestamp.
         """
         
         if by_time == 'SummaryByMonth':
@@ -112,30 +135,40 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
         for subreport in self.skin_dict['FileGenerator'][by_time].sections:
     
-            (template, destination_dir, encoding) = self._prepGen(self.skin_dict['FileGenerator'][by_time][subreport])
+            (template, statsdb, archivedb, destination_dir, encoding) = self._prepGen(self.skin_dict['FileGenerator'][by_time][subreport])
 
+            start_ts = archivedb.firstGoodStamp()
+            if not start_ts:
+                syslog.syslog(syslog.LOG_NOTICE, "filegenerator: No data for summary interval %s for subreport %s" % (by_time, subreport))
+                return
+            stop_ts  = gen_ts if gen_ts else archivedb.lastGoodStamp()
+            
             ngen = 0
             t1 = time.time()
 
             # Loop through each timespan in the summary period
             for timespan in _genfunc(start_ts, stop_ts):
 
-                # Get the start time as a timetuple.
+                #===============================================================
+                # Calculate the destination filename using the template name.
+                # Replace 'YYYY' with the year, 'MM' with the month, and
+                # strip off the trailing '.tmpl':
+                #===============================================================
+                
+                # Start by getting the start time as a timetuple.
                 timespan_start_tt = time.localtime(timespan.start)
-                #===============================================================
-                # Calculate the output filename
-                #===============================================================
-                # Form the destination filename from the template name, replacing 'YYYY' with
-                # the year, 'MM' with the month, and strip off the trailing '.tmpl':
+                # Get a string representing the year (e.g., '2009'):
                 _yr_str = "%4d"  % timespan_start_tt[0]
-                _filename = os.path.basename(template).replace('.tmpl','').replace('YYYY', _yr_str) 
+                # Replace any instances of 'YYYY' with the string
+                _filename = os.path.basename(template).replace('.tmpl','').replace('YYYY', _yr_str)
                 if by_time == 'SummaryByMonth' :
+                    # If this is a summary by month, do something similar for them month 
                     _mo_str = "%02d" % timespan_start_tt[1]
                     _filename = _filename.replace('MM', _mo_str)
-                    # Save the included Year-Months so they can be used in an HTML drop down list:
+                    # Save the resultant Year-Months so they can be used in an HTML drop down list:
                     self.outputted_dict['SummaryByMonth'].append("%s-%s" %(_yr_str, _mo_str))
                 elif by_time == 'SummaryByYear' :
-                    # Save the included years so they can be used in an HTML drop down list:
+                    # Save the resultant years so they can be used in an HTML drop down list:
                     self.outputted_dict['SummaryByYear'].append(_yr_str)
 
                 _fullpath = os.path.join(destination_dir, _filename)
@@ -144,8 +177,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                 # we must generate it
                 if not os.path.exists(_fullpath) or timespan.includesArchiveTime(stop_ts):
     
-                    searchList = self.getSummaryBySearchList(timespan)
-                    # Run everything through the template engine
+                    searchList = self.getCommonSearchList(archivedb, statsdb, timespan) + self.getSummaryBySearchList(archivedb, statsdb, timespan)
+                    #===================================================================
+                    # Cheetah will use introspection on the searchList to populate the
+                    # parameters in the template file.
+                    # ===================================================================
                     text = Cheetah.Template.Template(file       = template,
                                                      searchList = searchList + [{'encoding' : encoding}],
                                                      filter     = encoding,
@@ -170,33 +206,36 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
             elapsed_time = t2 - t1
             syslog.syslog(syslog.LOG_INFO, """filegenerator: generated %d '%s' files in %.2f seconds""" % (ngen, by_time, elapsed_time))
 
-    def generateToDate(self, currentRec, stop_ts):
+    def generateToDate(self, gen_ts):
         """This entry point is used for "To Date" reports, such as observations for
         this day, week, month, year, etc.
         
-        currentRec: A dictionary containing current observation. Key is a type
-        ('outTemp', 'barometer', etc.), value the value of the
-        variable. Usually, this is an archive record.
-
-        stop_ts: A timestamp. The HTML files generated will be current as of
+        gen_ts: A timestamp. The HTML files generated will be current as of
         this time."""
         
         ngen = 0
         t1 = time.time()
 
-        searchList = self.getToDateSearchList(currentRec, stop_ts)
-            
         for subreport in self.skin_dict['FileGenerator']['ToDate'].sections:
     
-            (template, destination_dir, encoding) = self._prepGen(self.skin_dict['FileGenerator']['ToDate'][subreport])
+            (template, statsdb, archivedb, destination_dir, encoding) = self._prepGen(self.skin_dict['FileGenerator']['ToDate'][subreport])
+            
+            start_ts = archivedb.firstGoodStamp()
+            if not start_ts:
+                syslog.syslog(syslog.LOG_NOTICE, "filegenerator: No data for to date subreport %s" % (subreport,))
+                return
+            stop_ts  = gen_ts if gen_ts else archivedb.lastGoodStamp()
+            
+            timespan = weeutil.weeutil.TimeSpan(start_ts, stop_ts)
+            
+            searchList = self.getCommonSearchList(archivedb, statsdb, timespan) + self.getToDateSearchList(archivedb, statsdb, timespan)
             
             # Form the destination filename:
             _fullpath = os.path.basename(template).replace('.tmpl','')
     
             #===================================================================
-            # Here's where the heavy lifting occurs. Use Cheetah to actually
-            # generate the files. It will use introspection on the searchList to
-            # populate the parameters in the template file.
+            # Cheetah will use introspection on the searchList to populate the
+            # parameters in the template file.
             # ===================================================================
             text = Cheetah.Template.Template(file       = template,
                                              searchList = searchList + [{'encoding' : encoding}],
@@ -221,33 +260,30 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         elapsed_time = time.time() - t1
         syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
     
-    def getSummaryBySearchList(self, timespan):
+    def getSummaryBySearchList(self, archivedb, statsdb, timespan):
         """Return the searchList for the Cheetah Template engine for "summarize by" reports.
         
         Can easily be overridden to add things to the search list."""
 
-        searchList = self.getCommonSearchList(timespan.stop)
-
         timespan_start_tt = time.localtime(timespan.start)
 
-        searchList += [{'month_name' : time.strftime("%b", timespan_start_tt),
-                        'year_name'  : timespan_start_tt[0]}]
+        searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
+                       'year_name'  : timespan_start_tt[0]}]
 
         return searchList
 
-    def getToDateSearchList(self, currentRec, stop_ts):
+    def getToDateSearchList(self, archivedb, statsdb, timespan):
         """Return the searchList for the Cheetah Template engine for "to date" generation.
         
         Can easily be overridden to add things to the search list."""
 
-        searchList = self.getCommonSearchList(stop_ts)
-
-        searchList += [self.outputted_dict, 
-                       {'current' : currentRec}] 
+        currentRec = self.getRecord(archivedb, timespan.stop)
+        searchList = [self.outputted_dict,
+                      {'current' : currentRec}] 
 
         return searchList
 
-    def getCommonSearchList(self, stop_ts):
+    def getCommonSearchList(self, archivedb, statsdb, timespan):
         """Assemble the common searchList elements to be used by both the "ToDate" and
         "SummaryBy" reports.
         
@@ -260,8 +296,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
 
         # Get a TaggedStats structure. This allows constructs such as
         # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(self.statsdb,
-                                        stop_ts,
+        stats = weewx.stats.TaggedStats(statsdb,
+                                        timespan.stop,
                                         formatter = self.formatter,
                                         converter = self.converter,
                                         rain_year_start = self.station.rain_year_start,
@@ -282,39 +318,12 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                        stats]
         return searchList
             
-    def initAlmanac(self, celestial_ts, currentRec):
-        """ Initialize an instance of weeutil.Almanac.Almanac for the station's
-        lat and lon, and for a specific time.
-        
-        celestial_ts: The timestamp of the time for which the Almanac is to
-        be initialized.
-        
-        currentRec: A ValueDict containing the current atmospheric conditions
-        (used to get more precise rising and setting times)"""
-        
-        self.moonphases = self.skin_dict['Almanac'].get('moon_phases')
-
-        # almanac holds celestial information (sunrise, phase of moon). Its celestial
-        # data changes slowly.
-        altitude_vt = weewx.units.convert(self.station.altitude_vt, "meter")
-        
-        temperature_C = currentRec['outTemp'].degree_C.raw
-        pressure_mbar = currentRec['barometer'].mbar.raw
-        
-        if temperature_C is None: temperature_C = 15.0
-        if pressure_mbar is None: pressure_mbar = 1010.0
-        
-        self.almanac = weewx.almanac.Almanac(celestial_ts, 
-                                             self.station.latitude_f, 
-                                             self.station.longitude_f,
-                                             altitude_vt[0],
-                                             temperature_C,
-                                             pressure_mbar,
-                                             self.moonphases,
-                                             self.formatter)
-
     def _prepGen(self, subskin_dict):
+        """Gather the options together for a specific report, then
+        retrieve the template file, stats database, archive database, the destination directory,
+        and the encoding from those options."""
         
+        # Walk the tree back to the root, accumulating options:
         accum_dict = weeutil.weeutil.accumulateLeaves(subskin_dict)
         template = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
                                 self.config_dict['Reports']['SKIN_ROOT'],
@@ -325,6 +334,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                                        os.path.dirname(accum_dict['template']))
         encoding = accum_dict['encoding']
 
+        statsdb = weewx.stats.StatsReadonlyDb(os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
+                                                           accum_dict['stats_file']))
+        archivedb = weewx.archive.Archive(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                                       accum_dict['archive_file']))
+
         try:
             # Create the directory that is to receive the generated files.  If
             # it already exists an exception will be thrown, so be prepared to
@@ -333,7 +347,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         except OSError:
             pass
 
-        return (template, destination_dir, encoding)
+        return (template, statsdb, archivedb, destination_dir, encoding)
 
 #===============================================================================
 #                 Filters used for encoding

@@ -96,6 +96,10 @@ class StdReportEngine(threading.Thread):
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
                 continue
                 
+            # Add the default archive and stats files:
+            skin_dict['archive_file'] = self.config_dict['Archive']['archive_file']
+            skin_dict['stats_file']   = self.config_dict['Stats']['stats_file']
+
             # Inject any overrides the user may have specified in the weewx.conf
             # configuration file for all reports:
             for scalar in self.config_dict['Reports'].scalars:

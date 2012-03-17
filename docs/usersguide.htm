@@ -12,12 +12,12 @@
 		<!-- CSS -->
 		<link href="weewx_docs.css" rel="stylesheet" />
 		<!-- JavaScript -->
-		<script src="samaxesjs.toc-1.4.min.js" type="text/javascript"></script>
+		<script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
 		<style type="text/css">
 		</style>
 	</head>
 	<body>
-		<h1 class="title">User's guide to the <span class="code">weewx</span> weather system <br />Version 1.12</h1>
+		<h1 class="title">User's guide to the <span class="code">weewx</span> weather system <br />Version 1.13</h1>
 		<h1>Table of Contents</h1>
 		<p>
 			This is the complete guide to installing <span class="code">weewx</span> &mdash; all details and options
@@ -40,7 +40,7 @@
 		</p>
 		<div id="technical_content">
 			<div id="toc"></div>
-			<h1><a name="Copyright">Copyright</a></h1>
+			<h1 id="Copyright">Copyright</h1>
 			<p>
 				(c) 2009, 2010, 2011 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;
 			</p>
@@ -59,7 +59,7 @@
 				this program. If not, see
 				<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses</a>.
 			</p>
-			<h1><a name="About_weewx">About <span class="code">weewx</span></a></h1>
+			<h1 id="About_weewx">About <span class="code">weewx</span></h1>
 			<p>
 				<span class="code">weewx</span> is a piece of software, written in <a href="http://www.python.org">Python</a>, that interacts with your weather
 				station to produce plots, reports, and HTML pages. It can optionally upload
@@ -128,12 +128,12 @@
 				only the&nbsp; <a href="http://www.davisnet.com/weather/products/vantagepro.asp">Davis VantagePro2</a>
 				weather station.
 			</p>
-			<h1><a name="Downloading_weewx">Downloading <span class="code">weewx</span></a></h1>
+			<h1 id="Downloading_weewx">Downloading <span class="code">weewx</span></h1>
 			<p>
 				<span class="code">Weewx</span> can be downloaded from its
 				SourceForge page:<a href="http://sourceforge.net/projects/weewx/">http://sourceforge.net/projects/weewx/</a>.
 			</p>
-			<h1><a name="Prerequisites">Prerequisites</a></h1>
+			<h1 id="Prerequisites">Prerequisites</h1>
 			<h2>Python</h2>
 			<p>
 				Python V2.5, V2.6, or V2.7 is required. The newer V3.0 distribution will not work.
@@ -143,17 +143,6 @@
 				The following external packages are required to use <span class="code">weewx</span>.
 			</p>
 			<ol>
-				<li>
-					<a href="http://www.sqlite.org/">sqlite3</a> (Version 3.5 or greater)
-					A SQL database written in C, which <span class="code">weewx</span> uses
-					to store data pulled from the weather station. Comes with many versions
-					of Debian and other Linux distributions.
-				</li>
-				<li>
-					<a href="http://pypi.python.org/pypi/pysqlite/">pysqlite</a> (Version
-					2.5 or greater) The Python interface to sqlite3. This is also included
-					in many versions of Debian and other Linux distributions.
-				</li>
 				<li>
 					<a href="http://pypi.python.org/pypi/configobj/">configobj</a> (Version
 					4.5 or greater) Manages the configuration file <span class="code">weewx.conf</span>.
@@ -177,7 +166,7 @@
 			</p>
 			<ul>
 				<li>
-					<a href="http://rhodesmill.org/pyephem">pyephem</a> (Version V3.7.3
+					<span class="code"><a href="http://pypi.python.org/pypi/pyephem/">pyephem</a></span> (Version V3.7.3
 					or greater). For extended almanac information. If not installed,
 					fallback information will be used.
 				</li>
@@ -198,17 +187,13 @@
 			</ol>
 			<p>
 				Option #1 is easier, but if your Linux distribution does not come with such
-				tools, you may have to use <span class="code">pip</span>. If you
-				choose to install <a href="http://rhodesmill.org/pyephem">pyephem</a>, then
-				as of the time of this writing, it can only be installed using <span class="code">
-				pip</span> (<a href="#Installing_pyephem">see
-				instructions below</a>).
+				tools, you may have to use <span class="code">pip</span>. 
 			</p>
 			<p>
 				Brief instructions
 				for both approaches are given below.
 			</p>
-			<h3>Installation on Debian distributions (including Ubuntu) using <span class="code">apt-get</span></h3>
+			<h3>Installation on Debian distributions (including Ubuntu and Mint) using <span class="code">apt-get</span></h3>
 			<p>
 				The instructions that follow are for using the Debian tool <span class="code">apt-get</span>, but the same package names would be used
 				should you chose to use a graphical interface such as the Synaptic Package Manager.
@@ -217,10 +202,6 @@
 				To install the required packages:
 			</p>
 			<p class="tty">
-				sudo apt-get install sqlite3
-				<br />
-				sudo apt-get install python-pysqlite2
-				<br />
 				sudo apt-get install python-configobj
 				<br />
 				sudo apt-get install python-serial
@@ -230,71 +211,65 @@
 				sudo apt-get install python-imaging
 			</p>
 			<p>
-				Note that <span class="code">sqlite3</span> and the <span class="code"> python-imaging</span> (PIL) packages are preinstalled on many Debian
-				distributions so the corresponding commands may not do anything.
+				Note that the <span class="code"> python-imaging</span> (PIL) package is often preinstalled on many Debian
+				distributions so the install may not actually do anything.
 			</p>
 			<p>
 				As noted above, if you choose to install the optional package <span class="code">pyephem</span>,
-				then it will have to be installed using <span class="code">pip</span> (<a href="#Installing_pyephem">see
-				instructions below</a>).
+				then it will have to be installed using <span class="code"><a href="http://pypi.python.org/pypi/pip">pip</a></span>.
+				See their website for instructions on how to install this tool. Once installed, then installing
+				<span class="code">pyephem</span> is easy:
 			</p>
+			<pre>sudo pip install pyephem</pre>
+			
+			<h3>Installation on Fedora using <span class="code">yum</span></h3>
+			<p>
+				Installing on Fedora v16 can be done entirely by using <span class="code">yum</span>.
+			</p>
+			<p class="tty">
+				sudo yum install python-configobj<br/>
+				sudo yum install python-imaging<br/>
+				sudo yum install python-cheetah<br/>
+				sudo yum install pyserial<br/>
+			</p>
+			<p>The optional package <span class="code">pyephem</span> can also be installed by using
+			<span class="code">yum</span>:
+			<p class="tty">
+				sudo yum install pyephem
+			</p>	
+				
 			<h3>Installation on SuSE using <span class="code">yast</span></h3>
 			<p>
 				My SuSE 11.3 system came with some of the prerequisites installed, some available
-				through <span class="code">yast</span>, and some that required <span class="code">easy_install</span>.
+				through <span class="code">yast</span>, and some that required <span class="code"><a href="http://pypi.python.org/pypi/pip">pip</a></span>.
 			</p>
 			<p>
-				To start, some packages want to install themselves into <span class="code">/usr/local/lib/python2.6/site-packages</span>, which may
-				or may not exist. If it does not, you may have to create it before
-				running <span class="code">easy_install</span>:
-			</p>
-			<pre>sudo mkdir /usr/local/lib/python2.6</pre>
-			<pre>sudo mkdir /usr/local/lib/python2.6/site-packages</pre>
-			<p>
-				Install the
-				gcc compiler:
-			</p>
-			<pre>sudo yast -i gcc</pre>
-			<p>
-				Then install <span class="code">pip</span>:
-			</p>
-			<pre>sudo yast -i python-pip</pre>
-			<p>
-				Install <span class="code">configobj</span>:
-			</p>
-			<pre>sudo yast -i python-configobj</pre>
-			<p>
-				Install PIL:
-			</p>
-			<pre>sudo yast -i python-imaging</pre>
-			<p>
-				Install <span class="code">pyserial</span>:
-			</p>
-			<pre>sudo yast -i python-serial</pre>
-			<p>
-				Install <span class="code">sqlite3</span>. My SuSE 11.3 system came with V3.6.4, which works just fine. However, if
-				you need to install:
+				Using <span class="code">yast</span>, install the following:
 			</p>
 			<p class="tty">
-				sudo yast -i sqlite3
+				sudo yast -i gcc<br/>
+				sudo yast -i python-devel<br/>
+				sudo yast -i python-configobj<br/>
+				sudo yast -i python-serial<br/>
+				sudo yast -i python-imaging<br/>
+				sudo yast -i python-setuptools
 			</p>
+			
 			<p>
-				Install the Python development package (need for <span class="code"> pysqlite</span>):
+				Now install <span class="code">pip</span>. There are many ways to do this (see the 
+				<span class="code"><a href="http://pypi.python.org/pypi/pip">pip</a></span> website), but perhaps
+				the simplest is by using <span class="code">get-pip.py</span>:
 			</p>
-			<pre>sudo yast -i python-devel</pre>
+			<pre>sudo curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python</pre>
 			<p>
-				Install <span class="code">pysqlite</span>:
-			</p>
-			<pre>pip install pysqlite</pre>
-			<p>
-				Install <span class="code">Cheetah</span>:
+				Now using <span class="code">pip</span>, install Cheetah:
 			</p>
 			<pre>pip install Cheetah</pre>
 			<p>
-				As noted above, if you choose to install the optional package <span class="code">pyephem</span>,
-				then it will have to be installed using <span class="code">pip</span> (<a href="#Installing_pyephem">see
-				instructions below</a>).
+				Finally, if you choose to install the optional package <span class="code">pyephem</span>,
+				then install it using <span class="code">pip</span>:
 			</p>
+			<pre>pip install pyephem</pre>
 			<h3>Installation using <span class="code">pip</span></h3>
 			<p>
 				An alternative approach to installing the required packages is by using the
@@ -305,51 +280,14 @@
 				Once <span class="code">pip</span> has been installed, installing
 				the rest of the packages is very easy.
 			</p>
+			<p class="tty">
+			pip install configobj</br>
+			pip install pyserial</br>
+			pip install Cheetah</br>
+			pip install pil
 			<p>
-				My Ubuntu 8.10 system came with sqlite V3.5.9, which works just fine. If
-				you do not have sqlite3, refer to <a href="http://www.sqlite.org">the sqlite
-				webpage</a> for installation instructions.
-			</p>
-			<p>
-				While Version 2.3.X of <a href="http://pypi.python.org/pypi/pysqlite/">pysqlite</a>
-				is included with many versions of Python, the more recent 2.5.X or greater is
-				required in order to take advantage of transaction contexts. Hence, you may
-				have to install or upgrade. Because pysqlite builds a C library, you may have
-				to install the Python development environment first, if you have not already
-				done so. Generally, this means installing the gcc compiler. You may also have
-				to install the sqlite3 development environment as well.
-			</p>
-			<p>
-				With the development environment in place, you can easily build and install
-				pysqlite:
-			</p>
-			<pre>pip install pysqlite</pre>
-			<p>
-				If your system already has a version of pysqlite installed, but it is not
-				a high enough version (<span class="code">pip</span> will tell you
-				the version you have), then you may have to force an upgrade:
-			</p>
-			<pre>pip install --upgrade pysqlite</pre>
-			<p>
-				The other packages are straightforward. Install configobj:
-			</p>
-			<pre>pip install configobj</pre>
-			<p>
-				Install pyserial:
-			</p>
-			<pre><span class="code">pip install pyserial</span></pre>
-			<p>
-				Install Cheetah:
-			</p>
-			<pre><span class="code">pip install Cheetah</span></pre>
-			<p>
-				Install the Python Imaging Library (PIL). My version of Python came with V1.1.6, which works great, but if you need
-				to install
-			</p>
-			<pre>pip install pil</pre>
-			<p>
-				<a name="Installing_pyephem"></a>If you choose to install the optional
-				package pyephem:
+				If you choose to install the optional
+				package <span class="code">pyephem</span>:
 			</p>
 			<pre>pip install pyephem</pre>
 			<h2>Time</h2>
@@ -385,7 +323,7 @@
 					connection).
 				</li>
 			</ul>
-			<h1><a name="Installing_weewx">Installing <span class="code">weewx</span></a></h1>
+			<h1 id="Installing_weewx">Installing <span class="code">weewx</span></h1>
 			<p>
 				Because <span class="code">weewx</span> is &quot;Pure Python&quot;, that is it is 100%
 				Python with no &quot;C&quot; modules to compile, installing it is very easy. Furthermore,
@@ -544,7 +482,7 @@
 &gt; vi ./weewx-X.Y.Z/weewx.conf
 &gt; # Now run weewxd.py out of the directory you unpacked weewx into:
 &gt; ./weewx-X.Y.Z/bin/weewxd.py ./weewx-X.Y.Z/weewx.conf</pre>
-			<h1><a name="Configuring_weewx">Configuring <span class="code">weewx</span></a></h1>
+			<h1 id="Configuring_weewx">Configuring <span class="code">weewx</span></h1>
 			<p>
 				This section covers configuring <span class="code">weewx</span>, in particular
 				the configuration files <span class="code">weewx.conf</span> and <span class="code">skin.conf</span>.
@@ -706,7 +644,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 			<p>
 				The following discusses the details of these various parameters.
 			</p>
-			<h3><a name="Archive_interval">Archive interval</a></h3>
+			<h3 id="Archive_interval">Archive interval</h3>
 			<p>
 				The archive interval is set in the main configuration file <span class="code"><em>$WEEWX_ROOT</em>/weewx.conf. </span>Look for the entry <span class="code">archive_interval</span> in the <span class="code">VantagePro</span>
 				section. Set it to the number of seconds. Valid entries are 60, 300, 600, 900,
@@ -726,7 +664,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				be changed without messing up your statistics (highs and lows will be OK, but
 				averages and rms wind speed will be wrong).
 			</p>
-			<h3><a name="Barometer_and_altitude">Barometer and altitude</a></h3>
+			<h3 id="Barometer_and_altitude">Barometer and altitude</h3>
 			<p>
 				All barometer readings are referenced to sea level pressure. Hence, the
 				console needs to know the station&#39;s altitude. You also may also want to
@@ -814,7 +752,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 			<p>
 				Station specific information is set in the configuration file <span class="code"><em>$WEEWX_ROOT</em>/weewx.conf</span>. (There is another
 				configuration file <span class="code">skin.conf</span> for presentation-specific
-				options, which is described in a separate document <em> <a href="customizing.htm">Customizing <span class="code">weewx</span></a> </em>under section <em> <a href="customizing.htm#Reference:_The_Standard_skin_configuration_file">Reference:
+				options, which is described in a separate document <em> <a href="customizing.htm">Customizing <span class="code">weewx</span></a> </em>under section <em> <a href="customizing.htm#The_Standard_skin_configuration_file">Reference:
 				The standard skin configuration file</a></em>.)
 			</p>
 			<p>
@@ -1167,7 +1105,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				What unit system to use inside the database. Required. The only one supported
 				right now is &#39;1&#39;, the U.S. Customary system
 			</p>
-			<h3 class="config_section"><a name="[Stats]">[Stats]</a></h3>
+			<h3 class="config_section" id="[Stats]">[Stats]</h3>
 			<p>
 				This section is for configuring the sqlite3 database in which the station
 				statistics are stored.
@@ -1179,8 +1117,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				The path, relative to the <span class="code">WEEWX_ROOT </span>directory
 				to the statistical database. Required.
 			</p>
-			<p class="config_option">
-				<a name="stats_types">stats_types</a>
+			<p class="config_option" id="stats_types">stats_types
 			</p>
 			<p>
 				The list of types for which statistics will be kept. Types not listed will
@@ -1189,7 +1126,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				have four different soil moisture sensors?) The list that ships with the configuration
 				file will work for most stations and probably will not have to be modified.
 			</p>
-			<h3 class="config_section"><a name="[Reports]">[Reports]</a></h3>
+			<h3 class="config_section" id="[Reports]">[Reports]</h3>
 			<p>
 				This section controls which reports are to be generated. While it can be
 				highly customized for your individual situation, this documentation describes
@@ -1286,7 +1223,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				<span class="code">Weewx</span> will try up to this many times to FTP a file
 				up to your server before giving up. Default is 3.
 			</p>
-			<h3 class="config_section">[<a name="Calibrate">Calibrate</a>]</h3>
+			<h3 class="config_section" id="Calibrate">[Calibrate]</h3>
 			<p>
 				One of the services that <span class="code">weewx</span> can run is a <em> calibration service</em> called <span class="code">StdCalibrate</span>. This
 				service offers an opportunity to correct for any calibration errors in your
@@ -1329,7 +1266,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				If all you require is a simple correction offset, this can also be done in
 				the Davis VantagePro hardware. See your manual for instructions.
 			</p>
-			<h3 class="config_section">[<a name="QC">QC</a>]</h3>
+			<h3 class="config_section" id="QC">[QC]</h3>
 			<p>
 				Another service that weewx can run is a <em>quality control service</em>
 				called <span class="code">StdQC</span>. This service is very simple and only
@@ -1375,15 +1312,20 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 			</p>
 			<h3 class="config_section">[Engines]</h3>
 			<p>
-				This section is used to configure the internal service engine in weewx. It
-				is for advanced customization. Details on how to do this is found in the section <em> <a href="file://RAVEN/tkeffer/workspace/weewx/docs/customizing.htm#Customizing_the_weewx_service_engine"> Customizing the weewx service engine</a> </em>in the document <a href="customizing.htm"><em>Customizing </em><span class="code"><em>weewx</em></span></a>.
+				This section is used to configure the internal
+				service engine in weewx. It is for advanced
+				customization. Details on how to do this is
+				found in the
+				section <em> <a href="customizing.htm#Customizing_the_weewx_service_engine">
+				Customizing the weewx service engine</a> </em>in
+				the
+				document <a href="customizing.htm"><em>Customizing </em><span class="code"><em>weewx</em></span></a>.
 			</p>
 			<h4 class="config_section">[[WxEngine]]</h4>
 			<p>
 				This section is for options used by the service engine.
 			</p>
-			<p class="config_option">
-				<a name="service_list">service_list</a>
+			<p class="config_option" id="service_list">service_list
 			</p>
 			<p>
 				This option is the list of <em>services</em> that are to be run by the service
@@ -1399,7 +1341,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				You can leave some of these services out if you do not need them. However,
 				this will only make a slight difference in execution speed.
 			</p>
-			<h1><a name="Running_weewx">Running <span class="code">weewx</span></a></h1>
+			<h1 id="Running_weewx">Running <span class="code">weewx</span></h1>
 			<p>
 				<span class="code">Weewx</span> can be run either from the command line (useful
 				for diagnostic purposes because it will print out a summary of every LOOP data),
@@ -1448,7 +1390,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 			<p class="tty">
 				kill -HUP <em>pid</em> # Send it a HUP signal
 			</p>
-			<h2><a name="Running_as_a_daemon">Running as a daemon</a></h2>
+			<h2 id="Running_as_a_daemon">Running as a daemon</h2>
 			<p>
 				For unattended operations it is best to have <span class="code">weewx</span>
 				run as a daemon, started automatically when the server is rebooted. Start by
@@ -1537,14 +1479,14 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 			<p class="tty">
 				/etc/init.d/weewx reload
 			</p>
-			<h1><a name="Compatibility_with_wview">Compatibility with <span class="code"> wview</span></a></h1>
+			<h1 id="Compatibility_with_wview">Compatibility with <span class="code"> wview</span></h1>
 			<p>
 				The sqlite3 archive database used by <span class="code">weewx</span> (nominally, <span class="code">weewx.sdb</span>) is completely compatible with the database
 				used by <a href="http://www.wviewweather.com">wview</a> (usually called <span class="code">wview-archive.sdb</span>), at least as of wview Version 5.2.X.
 				The schema and its semantics is identical. However, the statistical file <span class="code">stats.sdb</span> is different, and must be rebuilt. This
 				will be done automatically on startup by <span class="code">weewx</span>.
 			</p>
-			<h1><a name="Monitoring_weewx">Monitoring <span class="code">weewx</span></a></h1>
+			<h1 id="Monitoring_weewx">Monitoring <span class="code">weewx</span></h1>
 			<p>
 				<span class="code">Weewx</span> logs many events to the system log. On Debian
 				systems, this is <span class="code">/var/log/syslog</span>, on SuSE, <span class="code">/var/log/messages</span>. Your system may use yet another
@@ -1554,7 +1496,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				Setting the option <span class="code">debug </span>in <span class="code"> weewx.conf</span> to <span class="code">1</span> (one) will generate many more
 				checks and output and can be useful for debugging.
 			</p>
-			<h1><a name="Troubleshooting">Troubleshooting</a></h1>
+			<h1 id="Troubleshooting">Troubleshooting</h1>
 			<p>
 				If you get stuck, be sure to
 			</p>
@@ -1737,8 +1679,7 @@ ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYML
 			<p>
 				Or, at least, it should!
 			</p>
-			<h3>
-				FreeBSD</h3>
+			<h3>FreeBSD</h3>
 			<p>
 				User Fabian reports that the following had to be done to get the 
 				VantagePro2 working under FreeBSD:</p>
@@ -1749,8 +1690,39 @@ Which gives here an output like:
 uslcom0: <CP2102 USB to UART Bridge Controller> on usbus1
 And put in weewx.conf:
     port = /dev/cuaU0</pre>
+			<h3>Weewx generates HTML pages, but it does not update them</h3>
 			<p>
-				&nbsp;</p>
+				If you are getting a symptom that everything appears normal, 
+				that is HTML is getting generated and getting FTP&#39;d to your 
+				webserver <em>(look in the log to be sure</em>!), but your web 
+				pages are not being updated, it could be because the data on 
+				board your console has gotten garbled. The way the Davis Vantage 
+				series works is that the software (<span class="code">weewx</span> 
+				in this case) asks the console for all archive data &quot;since&quot; some 
+				time. The console then downloads the records one at a time. The 
+				software can detect when the console has sent the last one 
+				because the timestamps on the records, instead of monitonically 
+				increasing, suddenly jump backwards in time. You&#39;ve wrapped 
+				around the memory space of the console. </p>
+			<p>
+				However, if the internal memory gets garbled, the console will 
+				immediately return archives in the past, and so it looks like 
+				the timestamps have decreased in value and so <span class="code">
+				weewx</span> figures that&#39;s it: no more data.</p>
+			<p>
+				I have received reports from a couple of users that this has 
+				happened. There seems to be two fixes:</p>
+			<ol>
+				<li>Unplug the console, take out the batteries, and wait a 
+				minute or two. This will cause the console software to 
+				internally reboot. In one case this has fixed the problem 
+				without data loss.</li>
+				<li>If all else fails, clear the memory of the console using the 
+				utility <span class="code">configure.py</span>. This may cause 
+				loss of data, but usually works. Adjust paths as necessary:</li>
+			</ol>
+			<p class="tty">cd /home/weewx<br />
+			./bin/configure.py weewx.conf --clear </p>
 			<h2>Templates</h2>
 			<h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
 			<p>
@@ -1764,7 +1736,7 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 				not recognize (in this example, it&#39;s the tag <span class="code">$fubar</span>
 				in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
 			</p>
-			<h1>&nbsp;A<a name="Architectural_notes">rchitectural notes</a></h1>
+			<h1 id="Architectural_notes">Architectural notes</h1>
 			<p>
 				This section is not needed to get started.
 			</p>

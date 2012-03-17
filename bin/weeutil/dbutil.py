@@ -12,11 +12,7 @@
 from __future__ import with_statement
 
 import re
-
-try:
-    from pysqlite2 import dbapi2 as sqlite3
-except ImportError:
-    from sqlite3 import dbapi2 as sqlite3
+import sqlite3
 
 # Regular expression that matches everything within the set
 # of parenthesis which marks the column definition:

@@ -63,10 +63,10 @@ class StatsTestBase(unittest.TestCase):
         else:
             print "Using configuration file:  ", self.config_path
 
-        weewx_root = config_dict['Station']['WEEWX_ROOT']
-        archive_reldir = os.path.dirname(config_dict['Archive']['archive_file'])
-        self.archiveFilename = os.path.join(weewx_root, archive_reldir, 'test_archive.sdb')
-        self.statsFilename   = os.path.join(weewx_root, archive_reldir, 'test_stats.sdb')
+        self.archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'],
+                                            config_dict['Archive']['archive_file'])
+        self.statsFilename   = os.path.join(config_dict['Station']['WEEWX_ROOT'],
+                                            config_dict['Stats']['stats_file'])
         
         print "Test archive database path:", self.archiveFilename
         print "Test stats database path:  ", self.statsFilename

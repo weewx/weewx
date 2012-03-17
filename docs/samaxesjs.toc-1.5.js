@@ -25,20 +25,63 @@
  */
 var samaxesJS = {
     /**
-     * Adds a load event handler to the target object.
+     * Crossbrowser DOMContentLoaded handling code.
      *
-     * @param {Function} func Function to add a load event handler.
+     * @param {function} handler The handler called when the ready event fires.
      */
-    addLoadEvent: function(func) {
-        var oldonload = window.onload;
-        if (typeof window.onload != 'function') {
-            window.onload = func;
-        } else {
-            window.onload = function() {
-                if (oldonload) {
-                    oldonload();
+    bindReady: function(handler){
+        var called = false;
+
+        function ready() {
+            if (called) {
+                return;
+            }
+            called = true;
+            handler();
+        }
+
+        if (document.addEventListener) { // native event
+            document.addEventListener('DOMContentLoaded', ready, false);
+        } else if (document.attachEvent) { // IE
+            try {
+                var isFrame = window.frameElement != null;
+            } catch(e) {
+            }
+
+            // IE, the document is not inside a frame
+            if (document.documentElement.doScroll && !isFrame) {
+                function tryScroll() {
+                    if (called) {
+                        return;
+                    }
+                    try {
+                        document.documentElement.doScroll('left');
+                        ready();
+                    } catch(e) {
+                        setTimeout(tryScroll, 20);
+                    }
                 }
-                func();
+                tryScroll();
+            }
+
+            // IE, the document is inside a frame
+            document.attachEvent('onreadystatechange', function() {
+                if (document.readyState === 'complete') {
+                    ready();
+                }
+            });
+        }
+
+        // Old browsers
+        if (window.addEventListener) {
+            window.addEventListener('load', ready, false);
+        } else if (window.attachEvent) {
+            window.attachEvent('onload', ready);
+        } else {
+            var fn = window.onload; // very old browser, copy old onload
+            window.onload = function() { // replace by new onload and call the old one
+                fn && fn();
+                ready();
             };
         }
     },
@@ -90,21 +133,13 @@ var samaxesJS = {
     }
 };
 
-//String.prototype.trim = function() {
-//    return samaxesJS.trim(this);  
-//};
-Element.prototype.getChildrenByTagName = function(tagName) {
-    return samaxesJS.getChildrenByTagName(this, tagName);  
-};
 /*!
- * TOC JavaScript Library v1.4
+ * samaxesJS TOC v1.5
  */
 
 /**
- * The TOC control dynamically builds a table of contents from the headings in
- * a document and prepends legal-style section numbers to each of the headings.
- *
- * @namespace samaxesJS.toc
+ * Dynamically builds a table of contents from the headings in a document and prepends legal-style section numbers to
+ * each of the headings.
  */
 samaxesJS.toc = function() {
     var document = this.document;
@@ -133,15 +168,9 @@ samaxesJS.toc = function() {
      * @param {Object} toc The container element.
      */
     function checkContainer(header, toc) {
-        var lastChildren = toc.querySelectorAll(':last-child');
-        var lastChildrenLength = lastChildren.length;
-
-        if (lastChildrenLength !== 0) {
-            var lastChildElement = lastChildren.item(lastChildrenLength - 1);
-
-            if (header === 0 && !lastChildElement.nodeName.match(new RegExp('ul', 'i'))) {
-                toc.querySelectorAll('li:last-child')[toc.querySelectorAll('li:last-child').length - 1].appendChild(document.createElement('ul'));
-            }
+        if (header === 0 && toc.getElementsByTagName('li').length > 0 &&
+                !toc.getElementsByTagName('li')[toc.getElementsByTagName('li').length - 1].lastChild.nodeName.match(new RegExp('ul', 'i'))) {
+            toc.getElementsByTagName('li')[toc.getElementsByTagName('li').length - 1].appendChild(document.createElement('ul'));
         }
     }
 
@@ -170,7 +199,7 @@ samaxesJS.toc = function() {
      * @return {String} The string without any unwanted characters.
      */
     function generateId(text) {
-        return text.replace(/[ <#\/\\?&]/g, '_');
+        return text.replace(/[ <>#\/\\?&\n]/g, '_');
     }
 
     /**
@@ -207,10 +236,10 @@ samaxesJS.toc = function() {
         var parent = toc;
 
         for (var i = 1; i < index; i++) {
-            if (parent.querySelectorAll('li:last-child > ul').length === 0) {
+            if (samaxesJS.getChildrenByTagName(parent, 'li').length === 0) {
                 parent.appendChild(document.createElement('li')).appendChild(document.createElement('ul'));
             }
-            parent = parent.getChildrenByTagName('li')[parent.getChildrenByTagName('li').length - 1].getChildrenByTagName('ul')[0];
+            parent = samaxesJS.getChildrenByTagName(samaxesJS.getChildrenByTagName(parent, 'li')[samaxesJS.getChildrenByTagName(parent, 'li').length - 1], 'ul')[0];
         }
 
         if (id == null) {
@@ -221,15 +250,15 @@ samaxesJS.toc = function() {
     }
 
     return function(options) {
-        samaxesJS.addLoadEvent(function() {
+        samaxesJS.bindReady(function() {
             var exclude = (!options || options.exclude === undefined) ? 'h1, h5, h6' : options.exclude;
             var context = (options && options.context) ? document.getElementById(options.context) : document.body;
             var autoId = options && options.autoId;
             var numerate = (!options || options.numerate === undefined) ? true : options.numerate;
             var headers = [];
-            var nodes = context.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            var nodes = context.getElementsByTagName('*');
             for (var node in nodes) {
-                if (/*/h\d/i.test(nodes[node].nodeName) && */!exclude.match(new RegExp(nodes[node].nodeName, 'i'))) {
+                if (/h\d/i.test(nodes[node].nodeName) && !exclude.match(new RegExp(nodes[node].nodeName, 'i'))) {
                     headers.push(nodes[node]);
                 }
             }

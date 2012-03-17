@@ -9,14 +9,11 @@
 #
 """Classes and functions for interfacing with a weewx sqlite3 archive."""
 from __future__ import with_statement
-import syslog
-import os.path
 import math
-try:
-    from pysqlite2 import dbapi2 as sqlite3
-except ImportError:
-    from sqlite3 import dbapi2 as sqlite3
-    
+import os.path
+import sqlite3
+import syslog
+
 import weewx.units
 import weeutil.weeutil
 import weeutil.dbutil
@@ -40,6 +37,8 @@ class Archive(object):
         """
         self.archiveFilename = archiveFilename
         self.sqlkeys = self._getTypes()
+        if not self.sqlkeys:
+            raise StandardError("Database %s not initialized"% (archiveFilename,))
     
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
@@ -454,8 +453,8 @@ class Archive(object):
         # Get the columns in the table
         column_dict = weeutil.dbutil.column_dict(schema_dict)
         # If there is no 'archive' table, the database has not been initialized
-#        if not 'archive' in column_dict:
-#            return None
+        if not 'archive' in column_dict:
+            return None
         # Convert from unicode to strings
         column_names = [str(s) for s in column_dict['archive']]
         return column_names

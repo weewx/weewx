@@ -206,7 +206,7 @@ class SerialWrapper(BaseWrapper):
     def closePort(self):
         try:
             # This will cancel any pending loop:
-            self.wakeup_console()
+            self.wakeup_console(max_tries=1)
         except:
             pass
         self.serial_port.close()
@@ -233,7 +233,7 @@ class EthernetWrapper(BaseWrapper):
     def closePort(self):
         try:
             # This will cancel any pending loop:
-            self.wakeup_console()
+            self.wakeup_console(max_tries=1)
         except:
             pass
         self.socket.shutdown(socket.SHUT_RDWR)
@@ -413,23 +413,38 @@ class VantagePro(object):
         # Request N packets:
         self.port.send_data("LOOP %d\n" % N)
         
+        ntries = 1
+        
         for loop in range(N) :
             
+            if ntries > self.max_tries:
+                syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries (%d) exceeded." % self.max_tries)
+                raise weewx.RetriesExceeded("Max retries exceeded while getting LOOP data.")
+
             try:
                 # Fetch a packet
                 _buffer = self.port.read(99)
             except weewx.WeeWxIOError, e:
-                syslog.syslog(syslog.LOG_ERR, "VantagePro: LOOP #%d; read error." % (loop,))
+                syslog.syslog(syslog.LOG_ERR, "VantagePro: LOOP #%d; read error. Try #%d" % (loop, ntries))
                 syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
+                ntries += 1
+                continue
+            except serial.serialutil.SerialException, e:
+                syslog.syslog(syslog.LOG_ERR, "VantagePro: LOOP #%d; SerialException.  Try #%d" % (loop, ntries))
+                syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
+                syslog.syslog(syslog.LOG_ERR, "      ****  Is there a competing process running??")
+                ntries += 1
                 continue
             if crc16(_buffer) :
                 syslog.syslog(syslog.LOG_ERR,
-                              "VantagePro: LOOP #%d; CRC error." % loop)
+                              "VantagePro: LOOP #%d; CRC error. Try #%d" % (loop, ntries))
+                ntries += 1
                 continue
             # ... decode it
             pkt_dict = unpackLoopPacket(_buffer[:95])
             # Yield it
             yield pkt_dict
+            ntries = 1
 
     def genArchivePackets(self, since_ts):
         """A generator function to return archive packets from a VantagePro station.
