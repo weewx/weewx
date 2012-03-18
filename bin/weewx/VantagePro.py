@@ -375,27 +375,18 @@ class VantagePro(object):
         self.port.closePort()
         
     def genLoopPackets(self):
-        """Generator function that returns loop packets until the next archive record is due."""
-
-        # Next time to ask for archive records:
-        nextArchive_ts = (int(time.time() / self.archive_interval) + 1) *\
-                            self.archive_interval + self.archive_delay
+        """Generator function that returns loop packets"""
         
         while True:
-            # Get LOOP packets in big batches, then cancel as necessary when the expiration
-            # time is up. This is necessary because there is an undocumented limit to how
-            # many LOOP records you can request for on the VP (somewhere around 220).
+            # Get LOOP packets in big batches This is necessary because there is
+            # an undocumented limit to how many LOOP records you can request
+            # on the VP (somewhere around 220).
             for _loopPacket in self.genDavisLoopPackets(200):
                 # Translate the LOOP packet to one with physical units:
                 _physicalPacket = self.translateLoopPacket(_loopPacket)
                 self.accumulateLoop(_physicalPacket)
                 yield _physicalPacket
                 
-                # Check to see if it's time to get new archive data. If so, cancel the loop
-                # and return
-                if time.time() >= nextArchive_ts:
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: new archive record due. Canceling loop")
-                    return
 
     def genDavisLoopPackets(self, N=1):
         """Generator function to return N LoopPacket objects from a VantagePro console
