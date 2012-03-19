@@ -1,8 +1,11 @@
 TODO before the next release:
 
-Update the "Upgrading" guide for v1.13
+Add the other services (QC, Calibrations, Reporting, etc.).
 
-Update the "Customizing guide" (to reflect how you provide custom search lists, and custom reports).
+Add an ability to do the archive records in software (rather than downloading
+off the logger).
 
-Can we unify how the set of statstypes is set with how the set of archive types are set?
+Port to another (any!) WX station hardware.
+
+Update the "Customizing guide" reflecting the new engine architecture.
 

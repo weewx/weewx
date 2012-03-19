@@ -78,12 +78,10 @@ class StdEngine(object):
 
         syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s." % weewx.__version__)
 
-        self.event_queue = Queue.Queue()
-        
         # Set up the services to be run:
         self.setupServices(config_dict)
         
-    def getConfiguration(self, dummy_options, args):
+    def getConfiguration(self, options, args):
 
         # Get and set the absolute path of the configuration file.  
         # A service might to a chdir(), and then another service would be unable to
@@ -117,7 +115,7 @@ class StdEngine(object):
         service_names = weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get('service_list'))
         
         # Wrap the instantiation of the services in a try block, so if an exception
-        # occurs, any that may have already started can be shut down in an orderly way.
+        # occurs, any service that may have started can be shut down in an orderly way.
         try:
             for svc in service_names:
                 # For each listed service in service_list, instantiates an instance of
@@ -127,79 +125,68 @@ class StdEngine(object):
                 self.service_obj.append(weeutil.weeutil._get_object(svc, self, config_dict))
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
         except:
-            # An exception occurred. Shut down any running services, 
-            # then reraise the exception.
+            # An exception occurred. Shut down any running services, then
+            # reraise the exception.
             self.shutDown()
             raise
 
+    def setLoopFunction(self, fn):
+        """Set the main loop generator function. This loop will be called to generate
+        LOOP packets""" 
+        self.genLoopPackets = fn
+
     def run(self):
-        """This is where the work gets done."""
+        """Main execution entry point. The main loop is executed here."""
         
         # Start the main loop. Wrap it in a try block so we can do an orderly
         # shutdown should an exception occur:
         try:
-            event = weewx.event.Event(weewx.event.STARTUP)
-            self.addEvent(event)
+            # Send out a STARTUP event:
+            self.dispatchEvent(weewx.event.Event(weewx.event.STARTUP))
             
             syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
-    
-            event = weewx.event.Event(weewx.event.PRELOOP)
-            self.addEvent(event)
-            
+
+            # This is the main loop. 
             while True:
-                self.dispatchEvent(weewx.event.Event(weewx.event.LOOP))
-                event = weewx.event.Event(weewx.event.ARCHIVE_RECORD_DUE)
-                self.addEvent(event)
-                break
+                # First, let any interested services know the packet LOOP is about to start
+                self.dispatchEvent(weewx.event.Event(weewx.event.PRE_LOOP))
+    
+                # Run the packet loop. It will break when an archive record is due.
+                for packet in self.genLoopPackets():
+                    # Package the packet as an event, then dispatch it.            
+                    event = weewx.event.Event(weewx.event.NEW_LOOP_PACKET, packet=packet)
+                    self.dispatchEvent(event)
+                
+                # Send out an event saying that the archive record is due:
+                self.dispatchEvent(weewx.event.Event(weewx.event.ARCHIVE_RECORD_DUE))
 
         finally:
             # The main loop has exited. Shut the engine down.
             self.shutDown()
 
-    def addEvent(self, event):
-        
-        self.event_queue.put(event)
-        self.processEvents()
-        
-    def processEvents(self):
-        
-        while True:
-            try:
-                event = self.event_queue.get_nowait()
-            except Queue.Empty:
-                return
-            self.dispatchEvent(event)
-                    
     def dispatchEvent(self, event):
-
-        print "Dispatching event", event.event_type
+        """Let all interested services have a crack at an event."""
         for obj in self.service_obj:
-            event = obj.newEvent(event)
+            event = obj.processEvent(event)
+            # Check to see if someone consumed this event:
             if not event: return
 
     def shutDown(self):
         """Run when an engine shutdown is requested."""
-        # If we've gotten as far as having a list of service objects,
-        # then shut them all down:
+        # If we've gotten as far as having a list of service objects, then shut
+        # them all down:
         if hasattr(self, 'service_obj'):
             # Shutdown all the services:
             for obj in self.service_obj:
-                # Wrap each individual service shutdown, in case
-                # of a problem.
+                # Wrap each individual service shutdown, in case of a problem.
                 try:
                     obj.shutDown()
                 except:
                     pass
-            # Unbind the list of service objects. This will allow
-            # them to be garbage collected w/o a circular reference:
+            # Unbind the service. This will allow it to be garbage collected w/o
+            # a circular reference:
+                del obj
             del self.service_obj
-
-        try:
-            # Close the console:
-            self.station.closePort()
-        except:
-            pass
-
 
 #===============================================================================
 #                    Class StdService
@@ -211,7 +198,7 @@ class StdService(object):
     def __init__(self, engine, *dummy, **dummy_kwargs):
         self.engine = engine
 
-    def newEvent(self, event):
+    def processEvent(self, event):
         return event
     
 
@@ -234,11 +221,9 @@ class StdStation(StdService):
         __import__(_moduleName)
     
         try:
-    
             # Now open up the weather station:
             self.station = weeutil.weeutil._get_object(_moduleName + '.' + stationType, 
                                                        **config_dict[stationType])
-    
         except Exception, ex:
             # Caught unrecoverable error. Log it:
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
@@ -252,35 +237,45 @@ class StdStation(StdService):
             self.archive_interval = int(config_dict[stationType]['archive_interval'])
         self.archive_delay = int(config_dict[stationType]['archive_delay'])
 
-    def newEvent(self, event):
+        self.engine.setLoopFunction(self.genLoopPackets)
         
-        if event.event_type == weewx.event.LOOP:
-            # When the next archive record is due:
-            nextArchive_ts = (int(time.time() / self.archive_interval) + 1) *\
+    def genLoopPackets(self):
+        """Main packet LOOP."""
+        for packet in self.station.genLoopPackets():
+            yield packet
+            if time.time() >= self.nextArchive_ts:
+                return
+
+    def processEvent(self, event):
+        """Process any events for the weather station."""
+        
+        if event.event_type == weewx.event.PRE_LOOP:
+            # This event is sent when the main packet loop is about to be entered.
+            # Set when the next archive record is due:
+            self.nextArchive_ts = (int(time.time() / self.archive_interval) + 1) *\
                                 self.archive_interval + self.archive_delay
 
-            for packet in self.station.genLoopPackets():
-                event = weewx.event.Event(weewx.event.NEW_LOOP_PACKET, packet=packet)
-                self.engine.addEvent(event)
-                if time.time() >= nextArchive_ts:
-                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: new archive record due. Canceling loop")
-                    break
-            
         elif event.event_type == weewx.event.CATCHUP_ARCHIVE:
-            # Add all missed archive records since the last good record in the
-            # database
+            # This event requests that we catch up on the archive. Add all
+            # missed archive records since the last good record in the database
             for record in self.station.genArchivePackets(event.timestamp):
-                event = weewx.event.Event(weewx.event.NEW_ARCHIVE_RECORD, record=record)
-                self.engine.addEvent(event)
+                archive_event = weewx.event.Event(weewx.event.NEW_ARCHIVE_RECORD, record=record)
+                self.engine.dispatchEvent(archive_event)
 
-        return super(StdStation, self).newEvent(event)
+        return super(StdStation, self).processEvent(event)
+    
+    def shutDown(self):
+        try:
+            self.station.closePort()
+        except:
+            pass
         
 #===============================================================================
 #                    Class StdArchive
 #===============================================================================
 
 class StdArchive(StdService):
-    """Archives data in the SQL database."""
+    """Archives data in the SQL databases."""
     
     def __init__(self, engine, config_dict):
         super(StdArchive, self).__init__(engine, config_dict)
@@ -288,38 +283,29 @@ class StdArchive(StdService):
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
     
-    def newEvent(self, event):
+    def processEvent(self, event):
         
         if event.event_type == weewx.event.STARTUP:
-            # This will do a catch up on any data still on the
-            # station, but not yet put in the database.
-            # Get the last timestamp in the archive:
+            # The engine is starting up. The main task is to do a catch
+            # up on any data still on the station, but not yet put in the
+            # database. Get the last timestamp in the archive:
             lastgood_ts = self.archive.lastGoodStamp()
-            event=weewx.event.Event(weewx.event.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
-            self.engine.addEvent(event)
-        elif event.event_type == weewx.event.NEW_LOOP_PACKET:
-            # Add the LOOP record to the stats database:
-            self.statsDb.addLoopRecord(event.packet)
+            catchup_event=weewx.event.Event(weewx.event.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
+            self.engine.dispatchEvent(catchup_event)
         elif event.event_type == weewx.event.ARCHIVE_RECORD_DUE:
             # (Clear accumulators; emit new archive record)
             lastgood_ts = self.archive.lastGoodStamp()
-            event=weewx.event.Event(weewx.event.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
-            self.engine.addEvent(event)
-        elif event.event_type == weewx.event.NEW_ARCHIVE_RECORD:                
-            # Add the new record to the archive database and stats database:
+            catchup_event=weewx.event.Event(weewx.event.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
+            self.engine.dispatchEvent(catchup_event)
+        elif event.event_type == weewx.event.NEW_LOOP_PACKET:
+            # A new LOOP record has arrived. Put it in the stats database.
+            self.statsDb.addLoopRecord(event.packet)
+        elif event.event_type == weewx.event.NEW_ARCHIVE_RECORD:
+            # A new archive record has arrived. Put it in the stats and archive database.
             self.archive.addRecord(event.record)
             self.statsDb.addArchiveRecord(event.record)
-        return super(StdArchive, self).newEvent(event)
+        return super(StdArchive, self).processEvent(event)
 
-    def processArchiveData(self):
-        """Retrieves that last timestamp in the database, then posts that time to the engine"""
-        
-        # Get the last timestamp in the archive:
-        lastgood_ts = self.archive.lastGoodStamp()
-        
-        # Tell the engine to get all packets off the station since that time:
-        self.engine.getArchivePacketsSince(lastgood_ts)
-        
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
         archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
@@ -360,7 +346,7 @@ class StdPrint(StdService):
     """Service that prints diagnostic information when a LOOP
     or archive packet is received."""
     
-    def newEvent(self, event):
+    def processEvent(self, event):
         
         if event.event_type == weewx.event.NEW_LOOP_PACKET:
             print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']),\
@@ -376,7 +362,7 @@ class StdPrint(StdService):
                             event.record['windSpeed'],\
                             event.record['windDir'], " <-"
 
-        return super(StdPrint, self).newEvent(event)
+        return super(StdPrint, self).processEvent(event)
 
 
 #===============================================================================

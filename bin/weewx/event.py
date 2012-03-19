@@ -17,7 +17,7 @@
 #
 class STARTUP(object):
     pass
-class PRELOOP(object):
+class PRE_LOOP(object):
     pass
 class NEW_LOOP_PACKET(object):
     pass
@@ -27,7 +27,9 @@ class NEW_ARCHIVE_RECORD(object):
     pass
 class CATCHUP_ARCHIVE(object):
     pass
-class LOOP(object):
+#class START_LOOP(object):
+#    pass
+class END_LOOP(object):
     pass
 
 #===============================================================================
