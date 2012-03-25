@@ -42,6 +42,9 @@ from __future__ import with_statement
 import math
 import os.path
 import sqlite3
+if not hasattr(sqlite3.Connection, "__exit__"):
+    del sqlite3
+    from pysqlite2 import dbapi2 as sqlite3 #@Reimport
 import syslog
 import time
 

@@ -4,12 +4,16 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-1.X 03/15/12
+1.13.1 03/24/12
 
 Added  finer control  over the  line plots.  Can now  add optional  markers. The
 marker_type  can be  'none' (the  default),  'cross', 'box',  'circle', or  'x'.
 Also, line_type can  now either be 'solid' (the default)  or 'none' (for scatter
 plots). Same day I'll add 'dashed', but not now. :-)
+
+Conditionally imports sqlite3. If it does not support the "with" statement, then
+imports pysqlite2 as sqlite3.
+
 
 1.13.0 03/13/12
 
