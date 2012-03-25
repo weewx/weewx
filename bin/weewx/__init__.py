@@ -54,3 +54,45 @@ class UnsupportedFeature(StandardError):
     
 class ViolatedPrecondition(StandardError):
     """Exception thrown when a function is called with violated preconditions."""
+
+#===============================================================================
+#                       Possible event types.
+#===============================================================================
+#
+# These could be constants, but classes are much easier to debug.
+#
+class STARTUP(object):
+    pass
+class PRE_LOOP(object):
+    pass
+class NEW_LOOP_PACKET(object):
+    pass
+class ARCHIVE_RECORD_DUE(object):
+    pass
+class NEW_ARCHIVE_RECORD(object):
+    pass
+class CATCHUP_ARCHIVE(object):
+    pass
+#class START_LOOP(object):
+#    pass
+class END_LOOP(object):
+    pass
+
+#===============================================================================
+#                       Class Event
+#===============================================================================
+class Event(object):
+    """Represents an event."""
+    def __init__(self, event_type, **argv):
+        self.event_type = event_type
+
+        for key in argv:
+            setattr(self, key, argv[key])
+
+    def __str__(self):
+        """Return a string with a reasonable representation of the event."""
+        et = "Event type: %s | " % self.event_type
+        s = "; ".join("%s: %s" %(k, self.__dict__[k]) for k in self.__dict__ if k!="event_type")
+        return et + s
+
+

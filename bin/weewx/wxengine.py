@@ -25,8 +25,8 @@ import configobj
 import daemon
 
 # weewx imports:
+import weewx
 import weewx.archive
-import weewx.event
 import weewx.stats
 import weewx.restful
 import weewx.reportengine
@@ -78,6 +78,9 @@ class StdEngine(object):
 
         syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s." % weewx.__version__)
 
+        # Set up the callback dictionary:
+        self.callbacks = dict()
+        
         # Set up the services to be run:
         self.setupServices(config_dict)
         
@@ -142,34 +145,47 @@ class StdEngine(object):
         # shutdown should an exception occur:
         try:
             # Send out a STARTUP event:
-            self.dispatchEvent(weewx.event.Event(weewx.event.STARTUP))
+            self.dispatchEvent(weewx.Event(weewx.STARTUP))
             
             syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
 
             # This is the main loop. 
             while True:
                 # First, let any interested services know the packet LOOP is about to start
-                self.dispatchEvent(weewx.event.Event(weewx.event.PRE_LOOP))
+                self.dispatchEvent(weewx.Event(weewx.PRE_LOOP))
     
                 # Run the packet loop. It will break when an archive record is due.
                 for packet in self.genLoopPackets():
                     # Package the packet as an event, then dispatch it.            
-                    event = weewx.event.Event(weewx.event.NEW_LOOP_PACKET, packet=packet)
+                    event = weewx.Event(weewx.NEW_LOOP_PACKET, packet=packet)
                     self.dispatchEvent(event)
                 
                 # Send out an event saying that the archive record is due:
-                self.dispatchEvent(weewx.event.Event(weewx.event.ARCHIVE_RECORD_DUE))
+                self.dispatchEvent(weewx.Event(weewx.ARCHIVE_RECORD_DUE))
 
         finally:
             # The main loop has exited. Shut the engine down.
             self.shutDown()
 
+    def bind(self, event_type, callback):
+        """Binds an event to a callback function."""
+
+        # Each event type has a list of callback functions to be called.
+        # If we have not seen the event type yet, then create an empty list        
+        if not self.callbacks.has_key(event_type):
+            self.callbacks[event_type] = list()
+        # Add this callback to the end of the list. This will result in them getting
+        # called in the order they were originally bound.
+        self.callbacks[event_type].append(callback)
+    
     def dispatchEvent(self, event):
-        """Let all interested services have a crack at an event."""
-        for obj in self.service_obj:
-            event = obj.processEvent(event)
-            # Check to see if someone consumed this event:
-            if not event: return
+        """Call all registered callbacks for an event."""
+        # See if any callbacks have been registered for this event type:
+        if self.callbacks.has_key(event.event_type):
+            # Yes, at least one has been registered. Call them in order:
+            for callback in self.callbacks[event.event_type]:
+                # Call the function with the event as an argument:
+                callback(event)
 
     def shutDown(self):
         """Run when an engine shutdown is requested."""
@@ -187,6 +203,11 @@ class StdEngine(object):
             # a circular reference:
                 del obj
             del self.service_obj
+            
+        try:
+            del self.callbacks
+        except:
+            pass
 
 #===============================================================================
 #                    Class StdService
@@ -198,9 +219,10 @@ class StdService(object):
     def __init__(self, engine, *dummy, **dummy_kwargs):
         self.engine = engine
 
-    def processEvent(self, event):
-        return event
-    
+    def bind(self, event_type, callback):
+        """Bind the specified event to a callback."""
+        # Just forward the request to the main engine:
+        self.engine.bind(event_type, callback)
 
 #===============================================================================
 #                    Class StdStation
@@ -239,6 +261,9 @@ class StdStation(StdService):
 
         self.engine.setLoopFunction(self.genLoopPackets)
         
+        self.bind(weewx.PRE_LOOP,        self.pre_loop)
+        self.bind(weewx.CATCHUP_ARCHIVE, self.catchup_archive)
+        
     def genLoopPackets(self):
         """Main packet LOOP."""
         for packet in self.station.genLoopPackets():
@@ -246,25 +271,21 @@ class StdStation(StdService):
             if time.time() >= self.nextArchive_ts:
                 return
 
-    def processEvent(self, event):
-        """Process any events for the weather station."""
-        
-        if event.event_type == weewx.event.PRE_LOOP:
-            # This event is sent when the main packet loop is about to be entered.
-            # Set when the next archive record is due:
-            self.nextArchive_ts = (int(time.time() / self.archive_interval) + 1) *\
-                                self.archive_interval + self.archive_delay
+    def pre_loop(self, event):
+        """Called on a PRE_LOOP event. Calculates when the next archive record is due."""
 
-        elif event.event_type == weewx.event.CATCHUP_ARCHIVE:
-            # This event requests that we catch up on the archive. Add all
-            # missed archive records since the last good record in the database
-            for record in self.station.genArchivePackets(event.timestamp):
-                archive_event = weewx.event.Event(weewx.event.NEW_ARCHIVE_RECORD, record=record)
-                self.engine.dispatchEvent(archive_event)
+        self.nextArchive_ts = (int(time.time() / self.archive_interval) + 1) *\
+                            self.archive_interval + self.archive_delay
+                            
+    def catchup_archive(self, event):
+        """Called on a CATCHUP_ARCHIVE event. Adds all archive records stored in the console, 
+        but not yet in the database."""
+        for record in self.station.genArchivePackets(event.timestamp):
+            archive_event = weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record)
+            self.engine.dispatchEvent(archive_event)
 
-        return super(StdStation, self).processEvent(event)
-    
     def shutDown(self):
+        """Shut down the weather station. Closes the port."""
         try:
             self.station.closePort()
         except:
@@ -275,36 +296,45 @@ class StdStation(StdService):
 #===============================================================================
 
 class StdArchive(StdService):
-    """Archives data in the SQL databases."""
+    """Service that archives LOOP and archive data in the SQL databases."""
     
     def __init__(self, engine, config_dict):
         super(StdArchive, self).__init__(engine, config_dict)
 
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
-    
-    def processEvent(self, event):
         
-        if event.event_type == weewx.event.STARTUP:
-            # The engine is starting up. The main task is to do a catch
-            # up on any data still on the station, but not yet put in the
-            # database. Get the last timestamp in the archive:
-            lastgood_ts = self.archive.lastGoodStamp()
-            catchup_event=weewx.event.Event(weewx.event.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
-            self.engine.dispatchEvent(catchup_event)
-        elif event.event_type == weewx.event.ARCHIVE_RECORD_DUE:
-            # (Clear accumulators; emit new archive record)
-            lastgood_ts = self.archive.lastGoodStamp()
-            catchup_event=weewx.event.Event(weewx.event.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
-            self.engine.dispatchEvent(catchup_event)
-        elif event.event_type == weewx.event.NEW_LOOP_PACKET:
-            # A new LOOP record has arrived. Put it in the stats database.
-            self.statsDb.addLoopRecord(event.packet)
-        elif event.event_type == weewx.event.NEW_ARCHIVE_RECORD:
-            # A new archive record has arrived. Put it in the stats and archive database.
-            self.archive.addRecord(event.record)
-            self.statsDb.addArchiveRecord(event.record)
-        return super(StdArchive, self).processEvent(event)
+        self.bind(weewx.STARTUP,            self.startup)
+        self.bind(weewx.ARCHIVE_RECORD_DUE, self.archive_record_due)
+        self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+    
+    def startup(self, event):
+        """Called when the engine is starting up."""
+        # The engine is starting up. The main task is to do a catch
+        # up on any data still on the station, but not yet put in the
+        # database. Get the last timestamp in the archive:
+        lastgood_ts = self.archive.lastGoodStamp()
+        catchup_event=weewx.Event(weewx.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
+        self.engine.dispatchEvent(catchup_event)
+        
+    def archive_record_due(self, event):
+        """Called when a new archive record is due. Issues a CATCHUP_ARCHIVE event."""
+        # (Clear accumulators; emit new archive record)
+        lastgood_ts = self.archive.lastGoodStamp()
+        # Request a catchup
+        catchup_event=weewx.Event(weewx.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
+        self.engine.dispatchEvent(catchup_event)
+        
+    def new_loop_packet(self, event):
+        """Called when A new LOOP record has arrived. Put it in the stats database."""
+        self.statsDb.addLoopRecord(event.packet)
+        
+    def new_archive_record(self, event):
+        """Called when a new archive record has arrived. 
+        Put it in the stats and archive database."""
+        self.archive.addRecord(event.record)
+        self.statsDb.addArchiveRecord(event.record)
 
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
@@ -346,24 +376,27 @@ class StdPrint(StdService):
     """Service that prints diagnostic information when a LOOP
     or archive packet is received."""
     
-    def processEvent(self, event):
+    def __init__(self, engine, config_dict):
+        super(StdPrint, self).__init__(engine, config_dict)
+
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_packet)
         
-        if event.event_type == weewx.event.NEW_LOOP_PACKET:
-            print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']),\
-                             event.packet['barometer'],\
-                             event.packet['outTemp'],\
-                             event.packet['windSpeed'],\
-                             event.packet['windDir']
+    def new_loop_packet(self, event):
+        """Print out a summary of the new LOOP packet"""
+        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']),\
+                         event.packet['barometer'],\
+                         event.packet['outTemp'],\
+                         event.packet['windSpeed'],\
+                         event.packet['windDir']
     
-        elif event.event_type == weewx.event.NEW_ARCHIVE_RECORD:
-            print "REC:-> ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']),\
-                            event.record['barometer'],\
-                            event.record['outTemp'],\
-                            event.record['windSpeed'],\
-                            event.record['windDir'], " <-"
-
-        return super(StdPrint, self).processEvent(event)
-
+    def new_archive_record(self, event):
+        """Print out a summary of the new archive record."""
+        print "REC:-> ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']),\
+                        event.record['barometer'],\
+                        event.record['outTemp'],\
+                        event.record['windSpeed'],\
+                        event.record['windDir'], " <-"
 
 #===============================================================================
 #                       function parseArgs()
