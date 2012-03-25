@@ -924,8 +924,8 @@ class VantagePro(object):
             except weewx.WeeWxIOError:
                 continue
         
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting EEPROM data at address %X" % offset)
-        raise weewx.RetriesExceeded("While getting EEPROM data value at address %X" % offset)
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting EEPROM data at address 0x%X" % offset)
+        raise weewx.RetriesExceeded("While getting EEPROM data value at address 0x%X" % offset)
         
     @staticmethod
     def _port_factory(vp_dict):
