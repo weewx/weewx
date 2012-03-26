@@ -1,7 +1,5 @@
 TODO before the next release:
 
-Add the other services (QC, Calibrations, Reporting, etc.).
-
 Add an ability to do the archive records in software (rather than downloading
 off the logger).
 
