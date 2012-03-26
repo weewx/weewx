@@ -9,3 +9,8 @@ Port to another (any!) WX station hardware.
 
 Update the "Customizing guide" reflecting the new engine architecture.
 
+Get rid of cache LOOP data.
+
+Change how to configure the VP. Maybe separate config programs?  Maybe specify options 
+on the command line then take them out of weewx.conf
+

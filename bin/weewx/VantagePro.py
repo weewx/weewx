@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -355,7 +355,6 @@ class VantagePro(object):
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
         self.archive_delay    = int(vp_dict.get('archive_delay', 15))
         self.unit_system      = int(vp_dict.get('unit_system'  , 1))
-        self.dst_delta        = 3600
 
         # Get an appropriate port, depending on the connection type:
         self.port = VantagePro._port_factory(vp_dict)
@@ -501,10 +500,8 @@ class VantagePro(object):
                 # Convert from the internal, Davis encoding to physical units:
                 _record = self.translateArchivePacket(_packet)
                 # Check to see if the time stamps are declining, which would
-                # signal that we are done. However, the time stamps may be declining
-                # just because of the "fall back" from DST in the Fall, so allow times stamps to
-                # decline up to the DST delta.
-                if _record['dateTime'] is None or _record['dateTime'] + self.dst_delta <= _last_good_ts :
+                # signal that we are done. 
+                if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts :
                     # The time stamp is declining. We're done.
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: time stamps declining. Record timestamp %s" \
                                   % weeutil.weeutil.timestamp_to_string(_record['dateTime']))

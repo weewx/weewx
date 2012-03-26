@@ -4,6 +4,14 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
+2.0.0 XX/YY/12
+
+Changed the engine architecture so it is more event driven. It now uses callbacks.
+This makes it easier to add new events.
+
+When doing DMPAFT, no longer tries to correct for DST.
+
+
 1.13.1 03/24/12
 
 Added  finer control  over the  line plots.  Can now  add optional  markers. The

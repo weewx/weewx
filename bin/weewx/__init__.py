@@ -67,14 +67,12 @@ class PRE_LOOP(object):
     pass
 class NEW_LOOP_PACKET(object):
     pass
-class ARCHIVE_RECORD_DUE(object):
-    pass
 class NEW_ARCHIVE_RECORD(object):
     pass
 class CATCHUP_ARCHIVE(object):
     pass
-#class START_LOOP(object):
-#    pass
+class SET_TIME(object):
+    pass
 class END_LOOP(object):
     pass
 
