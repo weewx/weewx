@@ -11,6 +11,8 @@ it's effective archive interval is 60 minutes. Does this carry through?
 
 Support other weather station hardware (will probably require a rewrite of wxengine)
 
+Can we unify how the set of statstypes is set with how the set of archive types are set?
+
 Add support for MySQL.
 
 Fix scaling for aggregate interval of a week, so it starts on a Sunday.

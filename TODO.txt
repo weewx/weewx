@@ -1,8 +1,2 @@
 TODO before the next release:
 
-Update the "Upgrading" guide for v1.13
-
-Update the "Customizing guide" (to reflect how you provide custom search lists, and custom reports).
-
-Can we unify how the set of statstypes is set with how the set of archive types are set?
-
