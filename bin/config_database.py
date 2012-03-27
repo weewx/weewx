@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,86 +8,73 @@
 #    $Author$
 #    $Date$
 #
-"""Configure various resources used by weewx"""
+"""Configure the databases used by weewx"""
 
+import argparse
+import os.path
 import sys
 import syslog
-import os.path
-import optparse
+
 import configobj
 
 import user.extensions      #@UnusedImport
 import weewx.archive
 import weewx.stats
 
-usagestr = """%prog: config_path [Options]
-
-Configuration program for the weewx weather system.
-
-Arguments:
-    config_path: Path to the configuration file to be used."""
+description="""Configures the weewx databases. Most of these functions are handled automatically
+by weewx, but they may be useful as a utility in special cases. In particular, 
+the reconfigure-database option can be useful if you decide to add or drop data types
+from the database schema."""
 
 def main():
 
     # Set defaults for the system logger:
-    syslog.openlog('configure', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('config_database', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = optparse.OptionParser(usage=usagestr)
-    # This is a bit of a cludge. Get the path for the configuration file:
-    for arg in sys.argv[1:]:
-        if arg[0] != '-':
-            config_path = arg
-            break
-    else:
-        sys.stderr.write("Missing configuration file\n\n")
-        print parser.parse_args(["--help"])
-        sys.exit(weewx.CMD_ERROR)
-        
-    # Try to open up the given configuration file. Declare an error if unable to.
-    try :
-        config_dict = configobj.ConfigObj(config_path, file_error=True)
-    except IOError:
-        print "Unable to open configuration file ", config_path
-        syslog.syslog(syslog.LOG_CRIT, "main: Unable to open configuration file %s" % config_path)
-        sys.exit(weewx.CONFIG_ERROR)
-
-    # Get the hardware type from the configuration dictionary
-    # (this will be a string such as "VantagePro"),
-    # then import the appropriate module:
-    stationType = config_dict['Station']['station_type']
-    station_mod = __import__('weewx.'+ stationType)
-
-    # Add its options to the list:
-    getattr(station_mod, stationType).getOptionGroup(parser)
-
-    group = optparse.OptionGroup(parser,"Special database configuration options", 
-                                 "These options are for advanced needs and are not normally needed.")
+    parser = argparse.ArgumentParser(description=description)
     
-    # Add the database options:
-    group.add_option("--create-database",     action="store_true", dest="create_database",  help="To create the main database archive.")
-    group.add_option("--create-stats",        action="store_true", dest="create_stats",     help="To create the statistical database.")
-    group.add_option("--backfill-stats",      action="store_true", dest="backfill_stats",   help="To backfill the statistical database from the main database.")
-    group.add_option("--reconfigure-database",action="store_true", dest="reconfig_database",help="To reconfigure the main database archive.")
-    parser.add_option_group(group)
-    
+    # Add the various options:
+    parser.add_argument("config_path",
+                        help="Path to the configuration file (Required)")
+    parser.add_argument("--create-database", dest="create_database", action='store_true',
+                        help="Create the archive database.")
+    parser.add_argument("--create-stats", dest="create_stats", action='store_true',
+                        help="Create the statistical database.")
+    parser.add_argument("--backfill-stats", dest="backfill_stats", action='store_true',
+                        help="Backfill the statistical database using the archive database")
+    parser.add_argument("--reconfigure-database", dest="reconfigure_database", action='store_true',
+                        help="""Reconfigure the archive database. The schema found in bin/user/schemas.py will
+                        be used for the new database. It will have the same name as the old database, but with
+                        suffic '.new'. It will then be populated with the data from the old database. """)
     # Now we are ready to parse the command line:
-    (options, args) = parser.parse_args()
-        
-    if options.create_database:
+    args = parser.parse_args()
+
+    # Try to open up the configuration file. Declare an error if unable to.
+    try :
+        config_dict = configobj.ConfigObj(args.config_path, file_error=True)
+    except IOError:
+        print >>sys.stderr, "Unable to open configuration file ", args.config_path
+        syslog.syslog(syslog.LOG_CRIT, "Unable to open configuration file %s" % args.config_path)
+        exit(1)
+    except configobj.ConfigObjError:
+        print >>sys.stderr, "Error wile parsing configuration file %s" % args.config_path
+        syslog.syslog(syslog.LOG_CRIT, "Error while parsing configuration file %s" % args.config_path)
+        exit(1)
+
+    syslog.syslog(syslog.LOG_INFO, "Using configuration file %s." % args.config_path)
+
+    if args.create_database:
         createMainDatabase(config_dict)
     
-    if options.create_stats:
+    if args.create_stats:
         createStatsDatabase(config_dict)
         
-    if options.backfill_stats:
+    if args.backfill_stats:
         backfillStatsDatabase(config_dict)
 
-    if options.reconfig_database:
+    if args.reconfig_database:
         reconfigMainDatabase(config_dict)
-
-    # Now run any hardware specific options:
-    getattr(station_mod, stationType).runOptions(config_dict, options, args)
 
 def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
@@ -147,4 +134,5 @@ def reconfigMainDatabase(config_dict):
     newArchiveFilename = oldArchiveFilename + ".new"
     weewx.archive.reconfig(oldArchiveFilename, newArchiveFilename)
     
-main()
+if __name__=="__main__" :
+    main()

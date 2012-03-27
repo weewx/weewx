@@ -22,7 +22,7 @@ import time
 
 # 3rd party imports:
 import configobj
-import daemon
+import weeutil.daemon
 
 # weewx imports:
 import weewx.archive
@@ -642,7 +642,7 @@ def parseArgs():
         sys.exit(weewx.CMD_ERROR)
     
     if options.daemon:
-        daemon.daemonize(pidfile='/var/run/weewx.pid')
+        weeutil.daemon.daemonize(pidfile='/var/run/weewx.pid')
 
     return (options, args)
 

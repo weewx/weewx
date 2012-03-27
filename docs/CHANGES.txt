@@ -6,12 +6,17 @@ For complete documentation, see http://www.weewx.com/docs
 
 2.0.0 XX/YY/12
 
-Changed the engine architecture so it is more event driven. It now uses callbacks.
-This makes it easier to add new events.
+Changed  the  engine architecture  so  it  is more  event  driven.  It now  uses
+callbacks, making it easier to add new event types.
 
 Added utility config_vp, for configuring the VantagePro hardware.
 
-Added utility config_database, for configuring the databases. 
+Added utility config_database, for configuring the databases.
+
+Both utilities use argparse (instead of optparse), which is included with Python
+2.7. For earlier versions of Python,  it will have to be supplied.  Installation
+is  trivial:  just  download from  http://pypi.python.org/pypi/argparse  and put 
+argparse.py in any sys.path directory.
 
 When doing DMPAFT, no longer tries to correct for DST.
 

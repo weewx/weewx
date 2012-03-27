@@ -26,34 +26,34 @@ epilog = """Mutating actions will request confirmation before proceeding."""
 def main():
 
     # Set defaults for the system logger:
-    syslog.openlog('vpconfig', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('config_vp', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
     parser = argparse.ArgumentParser(description=description, epilog=epilog)
     
     # Add the various options:
     parser.add_argument("config_path",
-                        help="Path to the configuration file (weewx.conf)")
+                        help="Path to the configuration file (Required)")
     parser.add_argument("--info", action="store_true", dest="info",
                         help="To print configuration, reception, and barometer calibration information about your weather station.")
     parser.add_argument("--clear", action="store_true", dest="clear",
                         help="To clear the memory of your weather station.")
-    parser.add_argument("--set_interval", type=int,
+    parser.add_argument("--set-interval", type=int, dest="set_interval",
                         help="Sets the archive interval to the specified value in seconds. "\
                         "Valid values are 60, 300, 600, 900, 1800, 3600, or 7200.",
                         metavar="SECONDS")
-    parser.add_argument("--set_altitude", type=float, 
+    parser.add_argument("--set-altitude", type=float, dest="set_altitude", 
                         help="Sets the altitude of the station to the specified number of feet.", 
                         metavar="FEET")
-    parser.add_argument("--set_barometer", type=float, 
+    parser.add_argument("--set-barometer", type=float, dest="set_barometer",
                         help="Sets the barometer reading of the station to a known correct value in inches of mercury. "\
                         "Specify 0 (zero) to have the console pick a sensible value.", 
                         metavar="INHG")
-    parser.add_argument("--set_bucket", type=int,
+    parser.add_argument("--set-bucket", type=int, dest="set_bucket",
                         help="Set the type of rain bucket. "\
                         "Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM",
                         metavar="CODE")
-    parser.add_argument("--set_rain_year_start", type=int,
+    parser.add_argument("--set-rain-year-start", type=int, dest="set_rain_year_start",
                         choices=[i for i in range(1,13)],
                         help="Set the rain year start (1=Jan, 2=Feb, etc.)",
                         metavar="MM")
@@ -66,12 +66,12 @@ def main():
         config_dict = configobj.ConfigObj(args.config_path, file_error=True)
     except IOError:
         print >>sys.stderr, "Unable to open configuration file ", args.config_path
-        syslog.syslog(syslog.LOG_CRIT, "main: Unable to open configuration file %s" % args.config_path)
-        raise
+        syslog.syslog(syslog.LOG_CRIT, "Unable to open configuration file %s" % args.config_path)
+        exit(1)
     except configobj.ConfigObjError:
         print >>sys.stderr, "Error wile parsing configuration file %s" % args.config_path
         syslog.syslog(syslog.LOG_CRIT, "Error while parsing configuration file %s" % args.config_path)
-        raise
+        exit(1)
 
     syslog.syslog(syslog.LOG_INFO, "Using configuration file %s." % args.config_path)
 
@@ -251,4 +251,3 @@ def set_rain_year_start(station, rain_year_start):
 
 if __name__=="__main__" :
     main()
-    

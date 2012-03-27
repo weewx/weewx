@@ -2,7 +2,7 @@
 #
 #    weewx --- A simple, high-performance weather station server
 #
-#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -44,6 +44,8 @@
  6. It backs up any pre-existing bin subdirectory.
  
  7. It conserves the ./bin/user subdirectory.
+ 
+ 8. Finally, it tries to tidy up things left behind from earlier versions.
 """
 
 import os
@@ -53,8 +55,8 @@ import shutil
 import sys
 import tempfile
 import time
-import configobj
 
+import configobj
 from distutils.core import setup
 from distutils.command.install_data import install_data
 from distutils.command.install_lib  import install_lib
@@ -353,7 +355,7 @@ setup(name='weewx',
       package_dir = {'' : 'bin'},
       packages    = ['weewx', 'weeplot', 'weeutil', 'examples', 'user'],
       py_modules  = ['daemon'],
-      scripts     = ['bin/configure.py', 'bin/weewxd.py', 'bin/runreports.py'],
+      scripts     = ['bin/config_database.py', 'bin/config_vp.py', 'bin/weewxd.py', 'bin/runreports.py'],
       data_files  = [('',                           ['LICENSE.txt', 'README', 'weewx.conf']),
                      ('docs',                       ['docs/CHANGES.txt', 'docs/customizing.htm', 
                                                      'docs/daytemp_with_avg.png', 'docs/debian.htm', 
