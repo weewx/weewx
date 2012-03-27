@@ -9,7 +9,9 @@ For complete documentation, see http://www.weewx.com/docs
 Changed the engine architecture so it is more event driven. It now uses callbacks.
 This makes it easier to add new events.
 
-Added utility vpconfig, for configuring the VantagePro hardware. 
+Added utility config_vp, for configuring the VantagePro hardware.
+
+Added utility config_database, for configuring the databases. 
 
 When doing DMPAFT, no longer tries to correct for DST.
 
