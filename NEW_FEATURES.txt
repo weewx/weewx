@@ -1,6 +1,8 @@
 NEW FEATURES to be added in decreasing order of importance.
 
-Support other weather station hardware (will probably require a rewrite of wxengine)
+Support other weather station hardware (will probably require a rewrite of wxengine).
+
+Allow optional archive generation in software (instead of on the VP).
 
 Offer "cumulative" as an aggregation type.
 
