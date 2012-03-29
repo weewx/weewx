@@ -750,6 +750,23 @@ class VantagePro(object):
         """Return the firmware date as a string. """
         return self.port.send_command('VER\n')[0]
         
+    def getStnInfo(self):
+        """Return lat / lon, time zone, etc."""
+        
+        stnlat      = self._getEEPROM_value(0x0B, "<h") / 10.0
+        stnlon      = self._getEEPROM_value(0x0D, "<h") / 10.0
+        time_zone   = self._getEEPROM_value(0x11)
+        if self._getEEPROM_value(0x12):
+            man_or_auto = "MANUAL"
+            dst     = "ON" if self._getEEPROM_value(0x13) else "OFF"
+        else:
+            man_or_auto = "AUTO"
+            dst     = "N/A"
+        gmt_offset  = self._getEEPROM_value(0x14, "<h") / 100.0
+        gmt_or_zone = "GMT_OFFSET" if self._getEEPROM_value(0x16) else "TIME_ZONE"
+        
+        return(stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone)
+
     def translateLoopPacket(self, loopPacket):
         """Given a LOOP packet in vendor units, this function translates to physical units.
         

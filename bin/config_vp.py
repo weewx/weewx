@@ -118,15 +118,29 @@ def info(station):
       Onboard time:     %s
       
     CONSOLE DISPLAY UNITS:
-      Barometer:   %s
-      Temperature: %s
-      Rain:        %s
-      Wind:        %s
+      Barometer:        %s
+      Temperature:      %s
+      Rain:             %s
+      Wind:             %s
       """ % (_firmware_date,
              station.archive_interval, station.elevation, station.elevation_unit,
              station.wind_cup_size, station.rain_bucket_size, station.rain_season_start, console_time,
              station.barometer_unit, station.temperature_unit, 
              station.rain_unit, station.wind_unit)
+    try:
+        (stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone) = station.getStnInfo()
+        print """    CONSOLE STATION INFO:
+      Latitude (onboard):           %0.1f
+      Longitude (onboard):          %0.1f
+      Time zone code:               %s
+      Use manual or auto DST?       %s
+      DST setting:                  %s
+      GMT offset:                   %+.1f
+      Use GMT offset or time zone?  %s
+        """ % (stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone)
+    except:
+        pass
+    
     
     # Add reception statistics if we can:
     try:
