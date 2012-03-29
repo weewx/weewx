@@ -7,8 +7,8 @@ Port to another (any!) WX station hardware.
 
 Update the "Customizing guide" reflecting the new engine architecture.
 
+Update the "User's Guide" to update the new config utilities.
+
 Get rid of cache LOOP data.
 
-Change how to configure the VP. Maybe separate config programs?  Maybe specify options 
-on the command line then take them out of weewx.conf
-
+Abstract the database type a little more (in preparation for supporting MySQL).
