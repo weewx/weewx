@@ -107,21 +107,21 @@ def info(station):
     
     print  """VantagePro EEPROM settings:
     
-    CONSOLE FIRMWARE DATE: %s
+    CONSOLE FIRMWARE DATE:          %s
     
     CONSOLE SETTINGS:
-      Archive interval: %d (seconds)
-      Altitude:         %d (%s)
-      Wind cup type:    %s
-      Rain bucket type: %s
-      Rain year start:  %d
-      Onboard time:     %s
+      Archive interval:             %d (seconds)
+      Altitude:                     %d (%s)
+      Wind cup type:                %s
+      Rain bucket type:             %s
+      Rain year start:              %d
+      Onboard time:                 %s
       
     CONSOLE DISPLAY UNITS:
-      Barometer:        %s
-      Temperature:      %s
-      Rain:             %s
-      Wind:             %s
+      Barometer:                    %s
+      Temperature:                  %s
+      Rain:                         %s
+      Wind:                         %s
       """ % (_firmware_date,
              station.archive_interval, station.elevation, station.elevation_unit,
              station.wind_cup_size, station.rain_bucket_size, station.rain_season_start, console_time,
@@ -135,7 +135,7 @@ def info(station):
       Time zone code:               %s
       Use manual or auto DST?       %s
       DST setting:                  %s
-      GMT offset:                   %+.1f
+      GMT offset:                   %+.1f hours
       Use GMT offset or time zone?  %s
         """ % (stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone)
     except:

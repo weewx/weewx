@@ -288,6 +288,10 @@ class EthernetWrapper(BaseWrapper):
         except:
             raise weewx.WeeWxIOError("Socket write error")
 
+#===============================================================================
+#                           Class VantagePro
+#===============================================================================
+
 class VantagePro(object):
     """Class that represents a connection to a VantagePro console.
     
@@ -638,7 +642,7 @@ class VantagePro(object):
         """
         if new_bucket_code not in (0, 1, 2):
             raise weewx.ViolatedPrecondition("Invalid bucket code %d" % new_bucket_code)
-        old_setup_bits = self._getEEPROM_value(0x2B)
+        old_setup_bits = self._getEEPROM_value(0x2B)[0]
         new_setup_bits = (old_setup_bits & 0xCF) | (new_bucket_code << 4)
         
         # Tell the console to put one byte in hex location 0x2B
@@ -753,17 +757,18 @@ class VantagePro(object):
     def getStnInfo(self):
         """Return lat / lon, time zone, etc."""
         
-        stnlat      = self._getEEPROM_value(0x0B, "<h") / 10.0
-        stnlon      = self._getEEPROM_value(0x0D, "<h") / 10.0
-        time_zone   = self._getEEPROM_value(0x11)
-        if self._getEEPROM_value(0x12):
+        (stnlat, stnlon) = self._getEEPROM_value(0x0B, "<2h")
+        stnlat /= 10.0
+        stnlon /= 10.0
+        time_zone   = self._getEEPROM_value(0x11)[0]
+        if self._getEEPROM_value(0x12)[0]:
             man_or_auto = "MANUAL"
-            dst     = "ON" if self._getEEPROM_value(0x13) else "OFF"
+            dst     = "ON" if self._getEEPROM_value(0x13)[0] else "OFF"
         else:
             man_or_auto = "AUTO"
             dst     = "N/A"
-        gmt_offset  = self._getEEPROM_value(0x14, "<h") / 100.0
-        gmt_or_zone = "GMT_OFFSET" if self._getEEPROM_value(0x16) else "TIME_ZONE"
+        gmt_offset  = self._getEEPROM_value(0x14, "<h")[0] / 100.0
+        gmt_or_zone = "GMT_OFFSET" if self._getEEPROM_value(0x16)[0] else "TIME_ZONE"
         
         return(stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone)
 
@@ -873,11 +878,11 @@ class VantagePro(object):
         
         self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
 
-        unit_bits              = self._getEEPROM_value(0x29)
-        setup_bits             = self._getEEPROM_value(0x2B)
-        self.rain_season_start = self._getEEPROM_value(0x2C)
-        self.archive_interval  = self._getEEPROM_value(0x2D) * 60
-        self.elevation         = self._getEEPROM_value(0x0F, "<H") 
+        unit_bits              = self._getEEPROM_value(0x29)[0]
+        setup_bits             = self._getEEPROM_value(0x2B)[0]
+        self.rain_season_start = self._getEEPROM_value(0x2C)[0]
+        self.archive_interval  = self._getEEPROM_value(0x2D)[0] * 60
+        self.elevation         = self._getEEPROM_value(0x0F, "<H")[0] 
 
         barometer_unit_code   =  unit_bits & 0x03
         temperature_unit_code = (unit_bits & 0x0C) >> 3
@@ -911,12 +916,15 @@ class VantagePro(object):
             _loop_map['rainRate']    = _big_val100
 
     def _getEEPROM_value(self, offset, v_format="B"):
-        """Get the value located at a specified offset in the EEPROM."""
+        """Return a list of values from the EEPROM starting at a specified offset, using a specified format"""
         
         nbytes = struct.calcsize(v_format)
+        # Don't bother waking up the console for the first try. It's probably
+        # already awake from opening the port. However, if we fail, then do a
+        # wakeup.
         firsttime=True
         
-        command = "EEBRD %X %d\n" % (offset, nbytes)
+        command = "EEBRD %X %X\n" % (offset, nbytes)
         for unused_count in xrange(self.max_tries):
             try:
                 if not firsttime:
@@ -925,7 +933,7 @@ class VantagePro(object):
                 self.port.send_data(command)
                 _buffer = self.port.get_data_with_crc16(nbytes+2, max_tries=1)
                 _value = struct.unpack(v_format, _buffer[:-2])
-                return _value[0]
+                return _value
             except weewx.WeeWxIOError:
                 continue
         
