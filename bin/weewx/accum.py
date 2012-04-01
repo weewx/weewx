@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -88,6 +88,9 @@ class StdAccum(object):
         self.sum += val
         self.count += 1
 
+    def addToRms(self):
+        pass
+    
     @property
     def avg(self):
         return self.sum/self.count if self.count else None
@@ -137,9 +140,6 @@ class WindAccum(StdAccum):
         wind gust data if it's available. It also keeps track
         of the *direction* of the high wind, as well as its time 
         and magnitude."""
-        # Sanity check:
-        assert(self.obs_type == 'wind')
-
         if not self.timespan.includesArchiveTime(rec['dateTime']):
             raise OutOfSpan, "Attempt to add out-of-interval record to hi/low"
 
@@ -166,11 +166,9 @@ class WindAccum(StdAccum):
         """Specialized version for wind data. It differs from
         the standard addToSum in that it calculates a vector
         average as well."""
-        # Sanity check:
-        assert(self.obs_type == 'wind')
 
         if not self.timespan.includesArchiveTime(rec['dateTime']):
-            raise OutOfSpan, "Attempt to add out-of-interval record to hi/low"
+            raise OutOfSpan, "Attempt to add out-of-interval record to sum"
 
         # Get the wind speed & direction, breaking them down into vector
         # components.
@@ -184,16 +182,13 @@ class WindAccum(StdAccum):
             # a significant number of bad theta's (equal to None), then vecavg
             # could be off slightly.  
             if theta is not None :
-                self.xsum      += speed * math.cos(math.radians(90.0 - theta))
-                self.ysum      += speed * math.sin(math.radians(90.0 - theta))
+                self.xsum += speed * math.cos(math.radians(90.0 - theta))
+                self.ysum += speed * math.sin(math.radians(90.0 - theta))
     
     def addToRms(self, rec):
-        """Add a record to the wind-specific rms stats"""
-        # Sanity check:
-        assert(self.obs_type == 'wind')
-
+        
         if not self.timespan.includesArchiveTime(rec['dateTime']):
-            raise OutOfSpan, "Attempt to add out-of-interval record to hi/low"
+            raise OutOfSpan, "Attempt to add out-of-interval record to RMS sum"
 
         speed = rec.get('windSpeed')
         if speed is not None:
@@ -204,3 +199,29 @@ class WindAccum(StdAccum):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics."""
         return (StdAccum.getStatsTuple(self) +
                 (self.gustdir, self.xsum, self.ysum, self.squaresum, self.squarecount))
+
+class RecordAccum(dict):
+    
+    def __init__(self, obs_types, timespan):
+        self.timespan = timespan
+        
+        for obs_type in obs_types:
+            if obs_type == 'wind':
+                self[obs_type] = WindAccum(obs_type, timespan)
+            else:
+                self[obs_type] = StdAccum(obs_type, timespan)
+    
+    def addToHiLow(self, record):
+        
+        for obs_type in self.keys():
+            self[obs_type].addToHiLow(record)
+            
+    def addToSum(self, record):
+        
+        for obs_type in self.keys():
+            self[obs_type].addToSum(record)
+
+    def addToRms(self, record):
+        
+        for obs_type in self.keys():
+            self[obs_type].addtoRMS(record)

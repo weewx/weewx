@@ -69,11 +69,13 @@ class NEW_LOOP_PACKET(object):
     pass
 class NEW_ARCHIVE_RECORD(object):
     pass
+class END_ARCHIVE_PERIOD(object):
+    pass
+class END_ARCHIVE_DELAY(object):
+    pass
 class CATCHUP_ARCHIVE(object):
     pass
 class SET_TIME(object):
-    pass
-class END_LOOP(object):
     pass
 
 #===============================================================================
