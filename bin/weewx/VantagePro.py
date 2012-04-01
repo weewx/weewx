@@ -507,10 +507,10 @@ class VantagePro(object):
                 # signal that we are done. 
                 if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts :
                     # The time stamp is declining. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: time stamps declining. Record timestamp %s" \
-                                  % weeutil.weeutil.timestamp_to_string(_record['dateTime']))
-                    syslog.syslog(syslog.LOG_DEBUG, "      ****  Last good timestamp %s" \
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Catch up complete. Started at %s" \
                                   % weeutil.weeutil.timestamp_to_string(_last_good_ts))
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Page timestamp %s" \
+                                  % weeutil.weeutil.timestamp_to_string(_record['dateTime']))
                     return
                 # Augment the record with the data from the accumulators:
                 self.archiveAccumulators(_record)
