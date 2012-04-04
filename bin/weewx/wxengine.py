@@ -435,6 +435,14 @@ class StdArchive(StdService):
     def new_loop_packet(self, event):
         """Called when A new LOOP record has arrived. Put it in the stats database."""
         self.statsDb.addLoopRecord(event.packet)
+        if not hasattr(self, "accumulator"):
+            start_archive_ts = weeutil.weeutil.startOfInterval(event.packet['dateTime'],
+                                                               self.engine.archive_interval)
+            end_archive_ts = start_archive_ts + self.engine.archive_interval
+            self.accumulator = weewx.accum.RecordAccum(self.archive.sqlkeys,
+                                                       weeutil.weeutil.TimeSpan(start_archive_ts,
+                                                                                end_archive_ts))
+        self.accumulator.addToHiLow(event.packet)
         
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 

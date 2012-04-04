@@ -240,7 +240,7 @@ def startOfInterval(time_ts, interval, grace=1):
                                      time_tt.tm_mday,
                                      h, m, 0,
                                      0, 0, time_tt.tm_isdst))
-    return start_interval_ts
+    return int(start_interval_ts)
 
 def _ord_to_ts(_ord):
     d = datetime.date.fromordinal(_ord)
