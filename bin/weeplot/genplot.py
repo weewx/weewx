@@ -175,7 +175,7 @@ class GeneralPlot(object):
         
         """
 
-        axis_label_font = weeutil.weeutil.get_font_handle(self.axis_label_font_path,
+        axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
                                                           self.axis_label_font_size)
 
         drawlabel = False
@@ -196,7 +196,7 @@ class GeneralPlot(object):
         
         """
         nygridlines     = int((self.yscale[1] - self.yscale[0]) / self.yscale[2] + 1.5)
-        axis_label_font = weeutil.weeutil.get_font_handle(self.axis_label_font_path,
+        axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
                                                                 self.axis_label_font_size)
         
         # Draw the (constant y) grid lines 
@@ -259,7 +259,7 @@ class GeneralPlot(object):
         """Draw anything at the bottom (just some text right now).
         
         """
-        bottom_label_font = weeutil.weeutil.get_font_handle(self.bottom_label_font_path, self.bottom_label_font_size)
+        bottom_label_font = weeplot.utilities.get_font_handle(self.bottom_label_font_path, self.bottom_label_font_size)
         bottom_label_size = draw.textsize(self.bottom_label, font=bottom_label_font)
         
         draw.text(((self.image_width - bottom_label_size[0])/2, self.image_height - bottom_label_size[1] - 3),
@@ -277,13 +277,13 @@ class GeneralPlot(object):
                         fill = self.chart_background_color)
 
         # Put the units in the upper left corner
-        unit_label_font = weeutil.weeutil.get_font_handle(self.unit_label_font_path, self.unit_label_font_size)
+        unit_label_font = weeplot.utilities.get_font_handle(self.unit_label_font_path, self.unit_label_font_size)
         if self.unit_label_dict:
             draw.text(self.unit_label_position,
                       self.unit_label_dict,
                       fill=self.unit_label_font_color, font=unit_label_font)
 
-        top_label_font = weeutil.weeutil.get_font_handle(self.top_label_font_path, self.top_label_font_size)
+        top_label_font = weeplot.utilities.get_font_handle(self.top_label_font_path, self.top_label_font_size)
         
         # The top label is the appended label_list. However, it has to be drawn in segments 
         # because each label may be in a different color. For now, append them together to get
@@ -338,7 +338,7 @@ class GeneralPlot(object):
             rose_draw = ImageDraw.Draw(rose_image)
         
         # Calculate the position of the "N" label:
-        rose_label_font = weeutil.weeutil.get_font_handle(self.rose_label_font_path, self.rose_label_font_size)
+        rose_label_font = weeplot.utilities.get_font_handle(self.rose_label_font_path, self.rose_label_font_size)
         rose_label_size = draw.textsize(self.rose_label, font=rose_label_font)
         
         # Draw the label in the middle of the (possibly) rotated arrow

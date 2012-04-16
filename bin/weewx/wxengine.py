@@ -185,7 +185,7 @@ class StdEngine(object):
 
                     # Has the end of the archive period passed? If so, send out the event.
                     if the_time > end_archive_period_ts:
-                        self.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD))
+                        self.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD, timestamp=the_time))
 
                     # Package the packet as an event, then dispatch it.            
                     self.dispatchEvent(weewx.Event(weewx.NEW_LOOP_PACKET, packet=packet))
@@ -410,6 +410,7 @@ class StdArchive(StdService):
         self.setupStatsDatabase(config_dict)
         
         self.bind(weewx.STARTUP,            self.startup)
+        self.bind(weewx.END_ARCHIVE_PERIOD, self.end_archive_period)
         self.bind(weewx.END_ARCHIVE_DELAY,  self.end_archive_delay)
         self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
@@ -423,6 +424,11 @@ class StdArchive(StdService):
         catchup_event=weewx.Event(weewx.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
         self.engine.dispatchEvent(catchup_event)
         
+    def end_archive_period(self, event):
+        # shuffle the accumulators:
+        self.accumulator, self.last_accumulator = (self._new_accumulator(event.timestamp),
+                                                   self.accumulator)
+
     def end_archive_delay(self, event):
         """Called after the packet LOOP is done and a new archive record is due.
         Issues a CATCHUP_ARCHIVE event."""
@@ -436,12 +442,7 @@ class StdArchive(StdService):
         """Called when A new LOOP record has arrived. Put it in the stats database."""
         self.statsDb.addLoopRecord(event.packet)
         if not hasattr(self, "accumulator"):
-            start_archive_ts = weeutil.weeutil.startOfInterval(event.packet['dateTime'],
-                                                               self.engine.archive_interval)
-            end_archive_ts = start_archive_ts + self.engine.archive_interval
-            self.accumulator = weewx.accum.RecordAccum(self.archive.sqlkeys,
-                                                       weeutil.weeutil.TimeSpan(start_archive_ts,
-                                                                                end_archive_ts))
+            self.accumulator = self._new_accumulator(event.packet['dateTime'])
         self.accumulator.addToHiLow(event.packet)
         
     def new_archive_record(self, event):
@@ -482,6 +483,16 @@ class StdArchive(StdService):
         # the stats database is already up-to-date.
         weewx.stats.backfill(self.archive, self.statsDb)
         
+    def _new_accumulator(self, timestamp):
+        start_archive_ts = weeutil.weeutil.startOfInterval(timestamp,
+                                                           self.engine.archive_interval)
+        end_archive_ts = start_archive_ts + self.engine.archive_interval
+        
+        new_accumulator =  weewx.accum.RecordAccum(self.archive.sqlkeys,
+                                                   weeutil.weeutil.TimeSpan(start_archive_ts,
+                                                                            end_archive_ts))
+        return new_accumulator
+                                                  
 #===============================================================================
 #                    Class StdTimeSynch
 #===============================================================================

@@ -9,7 +9,6 @@
 #
 """Various handy utilities that don't belong anywhere else."""
 
-import ImageFont
 import StringIO
 import datetime
 import math
@@ -18,23 +17,6 @@ import time
 import traceback
 
 import configobj
-
-def get_font_handle(fontpath, *args):
-    
-    font = None
-    if fontpath is not None :
-        try :
-            if fontpath.endswith('.ttf'):
-                font = ImageFont.truetype(fontpath, *args)
-            else :
-                font = ImageFont.load_path(fontpath)
-        except IOError :
-            pass
-    
-    if font is None :
-        font = ImageFont.load_default()
-        
-    return font 
 
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""

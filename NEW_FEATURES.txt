@@ -4,6 +4,8 @@ Support other weather station hardware (will probably require a rewrite of wxeng
 
 Allow optional archive generation in software (instead of on the VP).
 
+Make it easier to subclass a new RESTful protocol.
+
 Offer "cumulative" as an aggregation type.
 
 Allow rain-to-date to be added to a partial rainyear.
