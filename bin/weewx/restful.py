@@ -250,7 +250,7 @@ class CWOP(REST):
         """
         self.site      = site
         self.station   = kwargs['station'].upper()
-        if self.station[0:2] in ('CW', 'DW'):
+        if self.station[0:2] in ('CW', 'DW', 'EW'):
             self.passcode = "-1"
         else:
             self.passcode = kwargs['passcode']

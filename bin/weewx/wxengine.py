@@ -498,8 +498,9 @@ class StdRESTful(StdService):
                 # enough information is available to instantiate.
                 obj_class = 'weewx.restful.' + site_dict['protocol']
                 new_station = weeutil.weeutil._get_object(obj_class, site, **site_dict)
-            except KeyError:
+            except KeyError, e:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
+                syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % e)
             else:
                 station_list.append(new_station)
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will be posted to %s" % (site,))
