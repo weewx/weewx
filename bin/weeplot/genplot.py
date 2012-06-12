@@ -221,7 +221,7 @@ class GeneralPlot(object):
         # Draw them in reverse order, so the first line comes out on top of the image
         for j, this_line in enumerate(self.line_list[::-1]):
             
-            iline=nlines-j+1
+            iline=nlines-j-1
             color = self.chart_line_colors[iline%nlines] if this_line.color is None else this_line.color
             width = self.chart_line_widths[iline%nlines] if this_line.width is None else this_line.width
 

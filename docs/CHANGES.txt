@@ -21,6 +21,15 @@ argparse.py in any sys.path directory.
 When doing DMPAFT, no longer tries to correct for DST.
 
 
+1.13.2 05/02/12
+
+Now allows CWOP stations with prefix 'EW'.
+
+Fixed bug that showed itself in the line color with plots with 3 or more lines.
+
+Changed debug message when reaching the end  of memory in the  VP2 to something 
+slightly less alarming.
+
 1.13.1 03/25/12
 
 Added  finer control  over the  line plots.  Can now  add optional  markers. The

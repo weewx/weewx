@@ -1,5 +1,9 @@
 TODO before the next release:
 
+When using UTF8 characters in a template file, either find a way to automatically 
+include the Cheetah directive
+  #encoding UTF-8
+automatically, or put in the customizing manual that the user must include it.=======
 Add an ability to do the archive records in software (rather than downloading
 off the logger).
 
