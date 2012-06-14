@@ -6,8 +6,11 @@ For complete documentation, see http://www.weewx.com/docs
 
 1.13.X 06/14/12
 
-Changed umask in daemon.py to 0022. Thanks, Charlie!
-
+Three changes suggested by user Charlie Spirakis:
+  o Changed umask in daemon.py to 0022.
+  o Allow location of process ID file to be specified on the command line.
+  o Start script allows daemon to be run as a specific user.
+Thanks, Charlie!
 
 1.13.2 05/02/12
 
