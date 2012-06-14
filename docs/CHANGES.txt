@@ -21,6 +21,11 @@ argparse.py in any sys.path directory.
 When doing DMPAFT, no longer tries to correct for DST.
 
 
+1.13.X 06/14/12
+
+Changed umask in daemon.py to 0022. Thanks, Charlie!
+
+
 1.13.2 05/02/12
 
 Now allows CWOP stations with prefix 'EW'.
