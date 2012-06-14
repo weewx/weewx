@@ -576,8 +576,9 @@ class StdRESTful(StdService):
                 # enough information is available to instantiate.
                 obj_class = 'weewx.restful.' + site_dict['protocol']
                 new_station = weeutil.weeutil._get_object(obj_class, site, **site_dict)
-            except KeyError:
+            except KeyError, e:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
+                syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % e)
             else:
                 station_list.append(new_station)
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will be posted to %s" % (site,))
@@ -671,6 +672,7 @@ def parseArgs():
 
     parser = OptionParser(usage=usagestr)
     parser.add_option("-d", "--daemon",  action="store_true", dest="daemon",  help="Run as a daemon")
+    parser.add_option("-p", "--pidfile", type="string",       dest="pidfile", help="Path to process ID file", default="/var/run/weewx.pid")     
     parser.add_option("-v", "--version", action="store_true", dest="version", help="Give version number then exit")
     parser.add_option("-x", "--exit",    action="store_true", dest="exit"   , help="Exit on I/O error (rather than restart)")
     (options, args) = parser.parse_args()
@@ -685,7 +687,7 @@ def parseArgs():
         sys.exit(weewx.CMD_ERROR)
     
     if options.daemon:
-        weeutil.daemon.daemonize(pidfile='/var/run/weewx.pid')
+        weeutil.daemon.daemonize(pidfile=options.pidfile)
 
     return (options, args)
 
