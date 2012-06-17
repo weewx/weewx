@@ -25,8 +25,8 @@ DESC="Weewx weather system"
 NAME=weewx
 WEEWX_USER=root:root 
 DAEMON=$WEEWX_ROOT/bin/weewxd.py
-DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_ROOT/weewx.conf" 
 PIDFILE=/var/run/$NAME.pid
+DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_ROOT/weewx.conf" 
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
