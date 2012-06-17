@@ -13,9 +13,53 @@
 
 <body>
 
-<h1 class="title">Upgrading to <span class="code">weewx</span> v1.13</h1>
+<h1 class="title">Upgrading to <span class="code">weewx</span> v1.14</h1>
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
+<h2>V1.13 or earlier</h2>
+<p>&nbsp;Version 1.14 introduces some webpages that have been expressly formatted for 
+the smartphone, using <a href="http://jquery.com/">jQuery</a>. If you are 
+installing <span class="code">weewx</span> for the first time, or doing a fresh 
+install, then these will be included automatically.</p>
+<p>If you have existing, custom templates, you may want to include them. You 
+will have to make two changes to your skin configuration file,
+<span class="code">skin.conf</span>:</p>
+<p>1. First, you must indicate to the template engine to include these new 
+templates in the list of files to be run through the engine. You can do this by 
+replacing the section that looks like</p>
+<pre>       [[[Mobile]]]
+            template = mobile.html.tmpl</pre>
+<p>with a section that looks like</p>
+<pre>        [[[Mobile]]]
+            template = mobile/index.html.tmpl
+            
+        [[[MobileTempOutside]]]
+            template = mobile/temp_outside.html.tmpl
+
+        [[[MobileRain]]]
+            template = mobile/rain.html.tmpl
+
+        [[[MobileBarometer]]]
+            template = mobile/barometer.html.tmpl
+
+        [[[MobileWind]]]
+            template = mobile/wind.html.tmpl
+            
+        [[[MobileRadar]]]
+            template = mobile/radar.html.tmpl</pre>
+<p>2. Secondly, there are some additional data files that must be included in 
+the one-time copy list. Modify section <span class="code">[CopyGenerator]</span> 
+so it looks like (changes have been <span class="highlight">highlighted</span>):</p>
+<pre>[CopyGenerator]
+    
+    #
+    # This section is used by the generator CopyGenerator
+    #
+
+    # List of files that are to be copied at the first invocation of the generator only
+    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">mobile/icons/*, mobile/custom.js</span></pre>
+<p>Naturally, you will want to adjust as necessary if you have other, custom 
+files, that you&#39;ve already added to this list.</p>
 <h2>V1.12 or earlier</h2>
 <p>Version 1.13 changed the way binding happens to the databases used in reports 
 so that it happens much later. The upshot is that the signature of a few 
