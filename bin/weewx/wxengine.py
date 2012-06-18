@@ -23,7 +23,7 @@ import gc
 
 # 3rd party imports:
 import configobj
-import daemon
+import weeutil.daemon
 
 # weewx imports:
 import weewx.archive
@@ -608,7 +608,7 @@ def parseArgs():
         sys.exit(weewx.CMD_ERROR)
     
     if options.daemon:
-        daemon.daemonize(pidfile=options.pidfile)
+        weeutil.daemon.daemonize(pidfile=options.pidfile)
 
     return (options, args)
 
