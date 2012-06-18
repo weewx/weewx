@@ -23,11 +23,11 @@
 <p>What follows are directions for upgrading from specific versions.</p>
 <h2>V1.13 or earlier</h2>
 <p>Version 1.14 introduces some new webpages that have been expressly formatted for 
-the smartphone, using <a href="http://jquery.com/">jQuery</a>.</p>
+the smartphone by using <a href="http://jquery.com/">jQuery</a>.</p>
 <p>The skins shipped with the distribution take advantage of these features. If 
-you do nothing, your old skins will continue to work, but you will not take 
+you do nothing, your old skins will continue to work, but you will not be taking 
 advantage of these new webpages.</p>
-<p>If you want these new webpages, then you have two choices:</p>
+<p>If you want them, then you have two choices:</p>
 <ol>
 	<li>Rename your old skin directory (call it &quot;<span class="code">skins.old</span>&quot;) 
 	then do the install. This will install the new skin distribution. You can 
@@ -40,11 +40,11 @@ advantage of these new webpages.</p>
 	skins/Standard/mobile</span> from the distribution into your <span class="code">skins/Standard</span> 
 	directory. You will then need to modify your <span class="code">skin.conf</span>.
 </ol>
-<p class="indent">Replace the section that looks like</p>
+<p class="indent">After the section that looks like</p>
 <pre class="style1">       [[[Mobile]]]
             template = mobile.html.tmpl</pre>
-<p class="indent">with a section that looks like</p>
-<pre class="style1">        [[[Mobile]]]
+<p class="indent">add the following directives:</p>
+<pre class="style1">        [[[MobileSmartphone]]]
             template = mobile/index.html.tmpl
             
         [[[MobileTempOutside]]]
@@ -73,7 +73,9 @@ to add the <span class="highlight">highlighted</span> files:</p>
     copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">mobile/icons/*, mobile/custom.js</span></pre>
 <p>Whichever approach you chose, the generated files will appear in
 <span class="code">public_html/mobile</span>. The start of the document root 
-will be at <span class="code">public_html/mobile/index.html</span>.</p>
+will be at <span class="code">public_html/mobile/index.html</span>. You may want 
+to add a link to this in the template for your main index page
+<span class="code">skins/Standard/index.html.tmpl</span>.</p>
 <h2>V1.12 or earlier</h2>
 <p>Version 1.13 changed the way binding happens to the databases used in reports 
 so that it happens much later. The upshot is that the signature of a few 
