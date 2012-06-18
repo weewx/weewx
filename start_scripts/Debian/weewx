@@ -25,8 +25,8 @@ DESC="Weewx weather system"
 NAME=weewx
 WEEWX_USER=root:root 
 DAEMON=$WEEWX_ROOT/bin/weewxd.py
-DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_ROOT/weewx.conf" 
 PIDFILE=/var/run/$NAME.pid
+DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_ROOT/weewx.conf" 
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
@@ -51,7 +51,7 @@ do_start()
 	#   0 if daemon has been started
 	#   1 if daemon was already running
 	#   2 if daemon could not be started
-    start-stop-daemon --start --chuid $WEEWX_USER --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \ 
+    start-stop-daemon --start --chuid $WEEWX_USER --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
 		|| return 1
 	start-stop-daemon --start --chuid $WEEWX_USER --pidfile $PIDFILE --exec $DAEMON -- \
 		$DAEMON_ARGS \

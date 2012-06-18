@@ -32,7 +32,7 @@ import weewx.reportengine
 import weeutil.weeutil
 
 usagestr = """
-  %prog config_path [--help] [--daemon] [--version] [--exit]
+  %prog config_path [--help] [--daemon] [--pidfile pidfile] [--version] [--exit]
 
   Entry point to the weewx weather program. Can be run from the command
   line or, by specifying the '--daemon' option, as a daemon.
@@ -631,7 +631,9 @@ class StdRESTful(StdService):
         # Some protocols require extra entries:
         site_dict['latitude']  = config_dict['Station']['latitude']
         site_dict['longitude'] = config_dict['Station']['longitude']
-        site_dict['hardware']  = config_dict['Station']['station_type']
+        # If a hardware type has not been specified, then provide a default:
+        if not site_dict.has_key('hardware'):
+            site_dict['hardware'] = config_dict['Station']['station_type']
         return site_dict
     
     

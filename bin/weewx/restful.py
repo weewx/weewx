@@ -365,7 +365,7 @@ class CWOP(REST):
         if humidity is None:
             humid_str = "h.."
         else:
-            humid_str = ("h%2d" % humidity) if humidity < 100.0 else "h00"
+            humid_str = ("h%02d" % humidity) if humidity < 100.0 else "h00"
             
         # Radiation:
         radiation = record['radiation']
@@ -378,11 +378,11 @@ class CWOP(REST):
         else:
             radiation_str = ""
 
-        # Station hardware:
-        hardware_str = ".DsVP" if self.hardware=="VantagePro" else ".Unkn"
+        # Station equipment
+        equipment_str = ".weewx-%s-%s" % (weewx.__version__, self.hardware)
         
         tnc_packet = prefix + time_str + latlon_str + wt_str + rain_str +\
-                     baro_str + humid_str + radiation_str + hardware_str + "\r\n"
+                     baro_str + humid_str + radiation_str + equipment_str + "\r\n"
 
         return tnc_packet
     
