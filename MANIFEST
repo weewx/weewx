@@ -5,7 +5,6 @@ setup.cfg
 setup.py
 weewx.conf
 bin/configure.py
-bin/daemon.py
 bin/runreports.py
 bin/weewxd.py
 bin/examples/__init__.py

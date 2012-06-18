@@ -33,7 +33,7 @@ import weewx.reportengine
 import weeutil.weeutil
 
 usagestr = """
-  %prog config_path [--help] [--daemon] [--pidfile pidfile] [--version] [--exit]
+  %prog config_path [--help] [--daemon] [--pidfile=PIDFILE] [--version] [--exit]
 
   Entry point to the weewx weather program. Can be run from the command
   line or, by specifying the '--daemon' option, as a daemon.
