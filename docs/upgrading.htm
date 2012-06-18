@@ -37,7 +37,7 @@ advantage of these new webpages.</p>
 	<li>Alternatively, change the contents of your existing skin directory to 
 	include the new webpages. If you take this approach, you will need to copy 
 	over the contents of the subdirectory <span class="code">
-	skins/Standard/mobile</span> from the distribution into your <span class="code">skins/Standard</span> 
+	skins/Standard/smartphone</span> from the distribution into your <span class="code">skins/Standard</span> 
 	directory. You will then need to modify your <span class="code">skin.conf</span>.
 </ol>
 <p class="indent">After the section that looks like</p>
@@ -45,22 +45,22 @@ advantage of these new webpages.</p>
             template = mobile.html.tmpl</pre>
 <p class="indent">add the following directives:</p>
 <pre class="style1">        [[[MobileSmartphone]]]
-            template = mobile/index.html.tmpl
+            template = smartphone/index.html.tmpl
             
         [[[MobileTempOutside]]]
-            template = mobile/temp_outside.html.tmpl
+            template = smartphone/temp_outside.html.tmpl
 
         [[[MobileRain]]]
-            template = mobile/rain.html.tmpl
+            template = smartphone/rain.html.tmpl
 
         [[[MobileBarometer]]]
-            template = mobile/barometer.html.tmpl
+            template = smartphone/barometer.html.tmpl
 
         [[[MobileWind]]]
-            template = mobile/wind.html.tmpl
+            template = smartphone/wind.html.tmpl
             
         [[[MobileRadar]]]
-            template = mobile/radar.html.tmpl</pre>
+            template = smartphone/radar.html.tmpl</pre>
 <p class="indent">Then modify section <span class="code">[CopyGenerator]</span> 
 to add the <span class="highlight">highlighted</span> files:</p>
 <pre class="style1">[CopyGenerator]
@@ -70,10 +70,10 @@ to add the <span class="highlight">highlighted</span> files:</p>
     #
 
     # List of files that are to be copied at the first invocation of the generator only
-    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">mobile/icons/*, mobile/custom.js</span></pre>
+    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></pre>
 <p>Whichever approach you chose, the generated files will appear in
 <span class="code">public_html/mobile</span>. The start of the document root 
-will be at <span class="code">public_html/mobile/index.html</span>. You may want 
+will be at <span class="code">public_html/smartphone/index.html</span>. You may want 
 to add a link to this in the template for your main index page
 <span class="code">skins/Standard/index.html.tmpl</span>.</p>
 <h2>V1.12 or earlier</h2>
