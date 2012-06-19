@@ -2,7 +2,7 @@
 #
 #    weewx --- A simple, high-performance weather station server
 #
-#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -44,8 +44,6 @@
  6. It backs up any pre-existing bin subdirectory.
  
  7. It conserves the ./bin/user subdirectory.
- 
- 8. Finally, it tries to tidy up things left behind from earlier versions.
 """
 
 import os
@@ -55,8 +53,8 @@ import shutil
 import sys
 import tempfile
 import time
-
 import configobj
+
 from distutils.core import setup
 from distutils.command.install_data import install_data
 from distutils.command.install_lib  import install_lib
@@ -354,7 +352,8 @@ setup(name='weewx',
       url='http://www.weewx.com',
       package_dir = {'' : 'bin'},
       packages    = ['weewx', 'weeplot', 'weeutil', 'examples', 'user'],
-      scripts     = ['bin/config_database.py', 'bin/config_vp.py', 'bin/weewxd.py', 'bin/runreports.py'],
+      py_modules  = ['daemon'],
+      scripts     = ['bin/configure.py', 'bin/weewxd.py', 'bin/runreports.py'],
       data_files  = [('',                           ['LICENSE.txt', 'README', 'weewx.conf']),
                      ('docs',                       ['docs/CHANGES.txt', 'docs/customizing.htm', 
                                                      'docs/daytemp_with_avg.png', 'docs/debian.htm', 
@@ -366,12 +365,12 @@ setup(name='weewx',
                      ('skins/Standard/backgrounds', ['skins/Standard/backgrounds/band.gif']),
                      ('skins/Standard/NOAA',        ['skins/Standard/NOAA/NOAA-YYYY.txt.tmpl', 'skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl']),
                      ('skins/Standard/RSS',         ['skins/Standard/RSS/weewx_rss.xml.tmpl']),
-                     ('skins/Standard/mobile',      ['skins/Standard/mobile/barometer.html.tmpl',    'skins/Standard/mobile/custom.js',
-                                                     'skins/Standard/mobile/humidity.html.tmpl',     'skins/Standard/mobile/index.html.tmpl',
-                                                     'skins/Standard/mobile/radar.html.tmpl',        'skins/Standard/mobile/rain.html.tmpl',
-                                                     'skins/Standard/mobile/temp_outside.html.tmpl', 'skins/Standard/mobile/wind.html.tmpl']),
-                     ('skins/Standard/mobile/icons',['skins/Standard/mobile/icons/icon_ipad_x1.png', 'skins/Standard/mobile/icons/icon_ipad_x2.png',
-                                                     'skins/Standard/mobile/icons/icon_iphone_x1.png','skins/Standard/mobile/icons/icon_iphone_x2.png']),
+                     ('skins/Standard/smartphone',  ['skins/Standard/smartphone/barometer.html.tmpl',    'skins/Standard/smartphone/custom.js',
+                                                     'skins/Standard/smartphone/humidity.html.tmpl',     'skins/Standard/smartphone/index.html.tmpl',
+                                                     'skins/Standard/smartphone/radar.html.tmpl',        'skins/Standard/smartphone/rain.html.tmpl',
+                                                     'skins/Standard/smartphone/temp_outside.html.tmpl', 'skins/Standard/smartphone/wind.html.tmpl']),
+                     ('skins/Standard/smartphone/icons',['skins/Standard/smartphone/icons/icon_ipad_x1.png', 'skins/Standard/smartphone/icons/icon_ipad_x2.png',
+                                                     'skins/Standard/smartphone/icons/icon_iphone_x1.png','skins/Standard/smartphone/icons/icon_iphone_x2.png']),
                      ('skins/Standard',             ['skins/Standard/favicon.ico',
                                                      'skins/Standard/mobile.css', 'skins/Standard/mobile.html.tmpl',
                                                      'skins/Standard/index.html.tmpl', 'skins/Standard/month.html.tmpl',

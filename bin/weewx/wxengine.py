@@ -22,7 +22,7 @@ import time
 
 # 3rd party imports:
 import configobj
-import weeutil.daemon
+import daemon
 
 # weewx imports:
 import weewx.archive
@@ -32,7 +32,7 @@ import weewx.reportengine
 import weeutil.weeutil
 
 usagestr = """
-  %prog config_path [--help] [--daemon] [--pidfile pidfile] [--version] [--exit]
+  %prog config_path [--help] [--daemon] [--pidfile=PIDFILE] [--version] [--exit]
 
   Entry point to the weewx weather program. Can be run from the command
   line or, by specifying the '--daemon' option, as a daemon.
@@ -689,7 +689,7 @@ def parseArgs():
         sys.exit(weewx.CMD_ERROR)
     
     if options.daemon:
-        weeutil.daemon.daemonize(pidfile=options.pidfile)
+        daemon.daemonize(pidfile=options.pidfile)
 
     return (options, args)
 

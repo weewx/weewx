@@ -1625,10 +1625,11 @@ outTemp = Outside Temperature</pre>
     label = Rain (daily avg)</pre>
 			<p>
 				This will generate an image file with name <span class="code">monthrain.png</span>.
-				It will be a bar plot. Option <span class="code">yscale</span> controls the
-				y-axis scaling — if left out, the scale will automatically be chosen. However,
-				in this example we are choosing to exercise some degree of control by specifying
-				values explicitly. It is a 3-way tuple (<span class="code">ylow</span>, <span class="code">yhigh</span>, <span class="code">min_interval</span>), where <span class="code">ymin</span> and <span class="code">ymax</span> are the minimum
+				It will be a bar plot. Option <span class="code">yscale</span> 
+				controls the y-axis scaling — if left out, the scale will 
+				automatically be chosen. However, in this example we are 
+				choosing to exercise some degree of control by specifying values 
+				explicitly. The option takes a 3-way tuple (<span class="code">ylow</span>, <span class="code">yhigh</span>, <span class="code">min_interval</span>), where <span class="code">ylow</span> and <span class="code">yhigh</span> are the minimum
 				and maximum y-axis values, respectively, and <span class="code">min_interval</span>
 				is the minimum tick interval. If set to &#39;<span class="code">None</span>&#39;, the
 				corresponding value will be automatically chosen. So, in this example, we are
