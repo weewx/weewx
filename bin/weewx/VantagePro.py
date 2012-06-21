@@ -278,7 +278,9 @@ class EthernetWrapper(BaseWrapper):
         _buffer = ''
         _remaining = chars
         _ntry = 0
-        while _ntry<max_tries and _remaining:
+        while _ntry<max_tries:
+            if _remaining <= 0:
+                return _buffer
             _N = min(4096, _remaining)
             try:
                 _recv = self.socket.recv(_N)
@@ -291,11 +293,8 @@ class EthernetWrapper(BaseWrapper):
             _buffer += _recv
             _remaining -= _nread
             _ntry = 0
-        else:
-            syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries (%d) exceeded in socket read" % (max_tries,))
-            raise weewx.WeeWxIOError("Max retries (%d) exceeded in socket read" % (max_tries,))
-        
-        return _buffer
+        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries (%d) exceeded in socket read" % (max_tries,))
+        raise weewx.WeeWxIOError("Max retries (%d) exceeded in socket read" % (max_tries,))
 
     def write(self, data):
         """Write to a WeatherLinkIP"""
