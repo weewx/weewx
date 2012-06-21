@@ -277,25 +277,19 @@ class EthernetWrapper(BaseWrapper):
         """Read bytes from WeatherLinkIP"""
         _buffer = ''
         _remaining = chars
-        _ntry = 0
-        while _ntry<max_tries:
-            if _remaining <= 0:
-                return _buffer
+        while _remaining:
             _N = min(4096, _remaining)
             try:
                 _recv = self.socket.recv(_N)
             except socket.timeout:
-                _ntry += 1
-                continue
+                raise weewx.WeeWxIOError("VantagePro: Socket timeout.")
             _nread = len(_recv)
             if _nread==0:
-                raise weewx.WeeWxIOError("Expected %d characters; got zero instead" % (_N,))
+                raise weewx.WeeWxIOError("VantagePro: Expected %d characters; got zero instead" % (_N,))
             _buffer += _recv
             _remaining -= _nread
-            _ntry = 0
-        syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries (%d) exceeded in socket read" % (max_tries,))
-        raise weewx.WeeWxIOError("Max retries (%d) exceeded in socket read" % (max_tries,))
-
+        return _buffer
+    
     def write(self, data):
         """Write to a WeatherLinkIP"""
         try:
