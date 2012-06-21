@@ -226,6 +226,10 @@ class EthernetWrapper(BaseWrapper):
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(self.timeout)
             self.socket.connect((self.host, self.port))
+        except socket.error, ex:
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: Socket error while opening port %d to ethernet host %s." % (self.port, self.host))
+            # Reraise as a weewx I/O error:
+            raise weewx.WeeWxIOError(ex)
         except:
             syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to connect to ethernet host %s on port %d." % (self.host, self.port))
             raise
@@ -269,17 +273,30 @@ class EthernetWrapper(BaseWrapper):
             self.socket.settimeout(self.timeout)
         return length
 
-    def read(self, chars=1):
+    def read(self, chars=1, max_tries=3):
         """Read bytes from WeatherLinkIP"""
-        try:
-            _buffer = self.socket.recv(chars)
-            N = len(_buffer)
-            if N != chars:
-                raise weewx.WeeWxIOError("Expected to read %d chars; got %d instead" % (chars, N))
-            return _buffer
-        except:
-            raise weewx.WeeWxIOError("Socket read error")
+        _buffer = ''
+        _remaining = chars
+        _ntry = 0
+        while _ntry<max_tries and _remaining:
+            _N = min(4096, _remaining)
+            try:
+                _recv = self.socket.recv(_N)
+            except socket.timeout:
+                _ntry += 1
+                continue
+            _nread = len(_recv)
+            if _nread==0:
+                raise weewx.WeeWxIOError("Expected %d characters; got zero instead" % (_N,))
+            _buffer += _recv
+            _remaining -= _nread
+            _ntry = 0
+        else:
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries (%d) exceeded in socket read" % (max_tries,))
+            raise weewx.WeeWxIOError("Max retries (%d) exceeded in socket read" % (max_tries,))
         
+        return _buffer
+
     def write(self, data):
         """Write to a WeatherLinkIP"""
         try:

@@ -4,6 +4,13 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
+1.14.1 06/XX/12
+
+Hardened retry strategy for the WeatherLink IP. If the port fails to open at all, it
+will retry in 60 seconds. If a socket returns an incomplete result, it will continue
+to retry.
+
+
 1.14.0 06/18/12
 
 Added smartphone formatted mobile webpage, contributed by user Torbjörn Einarsson.
