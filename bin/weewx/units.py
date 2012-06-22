@@ -294,7 +294,17 @@ class ValueTuple(tuple):
 #===============================================================================
     
 class Formatter(object):
-    """Holds formatting information for the various unit types."""
+    """Holds formatting information for the various unit types.
+    
+    Examples (using the default formatters):
+    >>> f = Formatter()
+    >>> print f.toString((20.0, "degree_C", "group_temperature"))
+    20.0°C
+    >>> print f.toString((83.2, "degree_F", "group_temperature"))
+    83.2°F
+    >>> print f.toString((123456789,  "unix_epoch", "group_time"))
+    29-Nov-1973 13:33
+    """
 
     def __init__(self, unit_format_dict = default_unit_format_dict,
                        unit_label_dict  = default_unit_label_dict,
