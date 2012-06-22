@@ -226,7 +226,7 @@ class EthernetWrapper(BaseWrapper):
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(self.timeout)
             self.socket.connect((self.host, self.port))
-        except socket.error, ex:
+        except (socket.error, socket.timeout, socket.herror), ex:
             syslog.syslog(syslog.LOG_ERR, "VantagePro: Socket error while opening port %d to ethernet host %s." % (self.port, self.host))
             # Reraise as a weewx I/O error:
             raise weewx.WeeWxIOError(ex)
@@ -281,8 +281,10 @@ class EthernetWrapper(BaseWrapper):
             _N = min(4096, _remaining)
             try:
                 _recv = self.socket.recv(_N)
-            except socket.timeout:
-                raise weewx.WeeWxIOError("VantagePro: Socket timeout.")
+            except (socket.timeout, socket.error), ex:
+                syslog.syslog(syslog.LOG_ERR, "VantagePro: Socket error while reading %d bytes." % (chars,))
+                # Reraise as a weewx I/O error:
+                raise weewx.WeeWxIOError(ex)
             _nread = len(_recv)
             if _nread==0:
                 raise weewx.WeeWxIOError("VantagePro: Expected %d characters; got zero instead" % (_N,))
@@ -295,8 +297,10 @@ class EthernetWrapper(BaseWrapper):
         try:
             self.socket.sendall(data)
             time.sleep(self.tcp_send_delay)
-        except:
-            raise weewx.WeeWxIOError("Socket write error")
+        except (socket.timeout, socket.error), ex:
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: Socket write error.")
+            # Reraise as a weewx I/O error:
+            raise weewx.WeeWxIOError(ex)
 
 class VantagePro(object):
     """Class that represents a connection to a VantagePro console.

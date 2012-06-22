@@ -7,7 +7,7 @@ For complete documentation, see http://www.weewx.com/docs
 1.14.1 06/XX/12
 
 Hardened retry strategy for the WeatherLink IP. If the port fails to open at all, or
-a socket timeout occurs, it will thrown an exception (resulting in a retry in 60 seconds).
+a socket error occurs, it will thrown an exception (resulting in a retry in 60 seconds).
 If a socket returns an incomplete result, it will continue to retry until everything 
 has been read.
 
