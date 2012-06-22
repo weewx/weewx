@@ -273,7 +273,7 @@ class EthernetWrapper(BaseWrapper):
             self.socket.settimeout(self.timeout)
         return length
 
-    def read(self, chars=1, max_tries=3):
+    def read(self, chars=1):
         """Read bytes from WeatherLinkIP"""
         _buffer = ''
         _remaining = chars
