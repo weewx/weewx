@@ -173,7 +173,7 @@ class FtpUpload(object):
                         # Directory already exists
                         return
                 syslog.syslog(syslog.LOG_ERR, "ftpupload: Got error while attempting to make remote directory %s" % remote_dir_path)
-                syslog.syslog(syslog.LOG_ERR, "     ****  Error:" % e)
+                syslog.syslog(syslog.LOG_ERR, "     ****  Error: %s" % e)
             else:
                 syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Made directory %s" % remote_dir_path)
                 return

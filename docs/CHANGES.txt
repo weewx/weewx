@@ -21,12 +21,15 @@ argparse.py in any sys.path directory.
 When doing DMPAFT, no longer tries to correct for DST.
 
 
-1.14.1 06/XX/12
+1.14.1 07/06/12
 
 Hardened retry strategy for the WeatherLink IP. If the port fails to open at all, or
 a socket error occurs, it will thrown an exception (resulting in a retry in 60 seconds).
 If a socket returns an incomplete result, it will continue to retry until everything 
 has been read.
+
+Fixed minor bug that causes the reporting thread to prematurely terminate if an exception
+is thrown while doing an FTP.
 
 
 1.14.0 06/18/12
