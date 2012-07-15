@@ -641,6 +641,58 @@ def _get_object(module_class, *args, **kwargs):
         syslog.syslog(syslog.LOG_ERR, "weeutil: Not able to instantiate module \'%s\'" % (module_class,))
         raise
 
+class GenWithPeek(object):
+    """Generator object which allows a peek at the next object to be returned.
+    
+    Example:
+    >>> # Define a generator function:
+    >>> def genfunc(N):
+    ...     for i in range(N):
+    ...        yield i
+    >>>
+    >>> # Now wrap it with the GenWithPeek object:
+    >>> g_with_peek = GenWithPeek(genfunc(5))
+    >>> # We can iterate of the object as normal:
+    >>> for i in g_with_peek:
+    ...    print i
+    ...    if i%2:
+    ...        # But we can get a peek at the next object without disturbing the wrapped generator:
+    ...        print "peek: ", g_with_peek.peek()
+    0
+    1
+    peek:  2
+    2
+    3
+    peek:  4
+    4
+    """
+    
+    def __init__(self, generator):
+        """Initialize the generator object.
+        
+        generator: A generator object to be wrapped
+        """
+        self.generator = generator
+        self.have_peek = False
+        
+    def __iter__(self):
+        return self
+    
+    def next(self):  #@ReservedAssignment
+        """Advance to the next object"""
+        if self.have_peek:
+            self.have_peek = False
+            return self.peek_obj
+        else:
+            return self.generator.next()
+        
+    def peek(self):
+        """Take a peek at the next object"""
+        if not self.have_peek:
+            self.peek_obj = self.generator.next()
+            self.have_peek = True
+            return self.peek_obj
+
 if __name__ == '__main__':
     import doctest
 
