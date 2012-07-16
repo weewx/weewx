@@ -1,5 +1,8 @@
 TODO before the next release:
 
+Calculate altimeter pressure to send off to CWOP. 
+See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
+
 When using UTF8 characters in a template file, either find a way to automatically 
 include the Cheetah directive
   #encoding UTF-8
