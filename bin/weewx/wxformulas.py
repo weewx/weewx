@@ -74,6 +74,20 @@ def heatindexF(T, R) :
     R: Relative humidity in percent
     
     Returns heat index in Fahrenheit
+    
+    Examples:
+    
+    >>> print heatindexF(75.0, 50.0)
+    75.0
+    >>> print heatindexF(80.0, 50.0)
+    80.8029049
+    >>> print heatindexF(80.0, 95.0)
+    86.3980618
+    >>> print heatindexF(90.0, 50.0)
+    94.5969412
+    >>> print heatindexF(90.0, 95.0)
+    126.6232036
+
     """
     if T is None or R is None :
         return None
@@ -94,9 +108,40 @@ def heating_degrees(t, base):
 def cooling_degrees(t, base):
     return max(t - base, 0) if t is not None else None
 
+def altimeter_pressure_US(SP_inHg, Z_feet):
+    """Calculate the altimeter pressure, given the raw, station pressure in inHg and the
+    altitude in feet.
+    
+    Formula from:
+        http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
+        
+    Examples:
+    >>> print "%.2f" % altimeter_pressure_US(28.0, 0.0)
+    28.00
+    >>> print "%.2f" % altimeter_pressure_US(28.0, 1000.0)
+    29.04
+    """
+    if SP_inHg is None or Z_feet is None:
+        return None
+    N = 0.1903
+    K = 1.313e-5
+    return (SP_inHg**N + K*Z_feet)**(1/N)
+
+def altimeter_pressure_Metric(SP_mbars, Z_meters):
+    """Convert from (uncorrected) station pressure, altitude-corrected pressure.
+    Example:
+    >>> print "%.1f" % altimeter_pressure_Metric(948.08, 0.0)
+    948.1
+    >>> print "%.1f" % altimeter_pressure_Metric(948.08, 304.8)
+    983.3
+    """
+    if SP_mbars is None or Z_meters is None:
+        return None
+    SP_inHg = 0.0295333727*SP_mbars
+    Z_feet  = 3.28084*Z_meters
+    return altimeter_pressure_US(SP_inHg, Z_feet) / 0.0295333727
+
 if __name__ == '__main__':
-    print heatindexF(75.0, 50.0)
-    print heatindexF(80.0, 50.0)
-    print heatindexF(80.0, 95.0)
-    print heatindexF(90.0, 50.0)
-    print heatindexF(90.0, 95.0)
+    import doctest
+
+    doctest.testmod()
