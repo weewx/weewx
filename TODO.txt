@@ -2,3 +2,23 @@ TODO before the next release:
 
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
+
+Make sure the unit type can change between LOOP records. NB: rain uses US units, everything else
+metric.
+
+When using UTF8 characters in a template file, either find a way to automatically 
+include the Cheetah directive
+  #encoding UTF-8
+automatically, or put in the customizing manual that the user must include it.=======
+Add an ability to do the archive records in software (rather than downloading
+off the logger).
+
+Port to another (any!) WX station hardware.
+
+Update the "Customizing guide" reflecting the new engine architecture.
+
+Update the "User's Guide" to update the new config utilities.
+
+Get rid of cache LOOP data.
+
+Abstract the database type a little more (in preparation for supporting MySQL).
