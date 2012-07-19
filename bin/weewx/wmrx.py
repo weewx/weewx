@@ -48,6 +48,9 @@ class WMR100(object):
         timeout: How long to wait, in seconds, before giving up on a response from the
         USB port. [Optional. Default is 15 seconds]
         
+        wait_before_retry: How long to wait before retrying. [Optional.
+        Default is 5 seconds]
+
         max_tries: How many times to try before giving up. [Optional.
         Default is 3]
         
@@ -62,6 +65,7 @@ class WMR100(object):
         
         self.altitude          = stn_dict['altitude']
         self.timeout           = stn_dict.get('timeout', 15.0)
+        self.wait_before_retry = stn_dict.get('wait_before_retry', 5.0)
         self.max_tries         = stn_dict.get('max_tries', 3)
         self.vendor_id         = stn_dict.get('vendor_id',  0x0fde)
         self.product_id        = stn_dict.get('product_id', 0xca01)
@@ -198,6 +202,7 @@ class WMR100(object):
                 if nerrors>self.max_tries:
                     syslog.syslog(syslog.LOG_ERR, "wmrx: Max retries exceeded while fetching USB reports")
                     raise weewx.WeeWxIOError("Max retries exceeded while fetching USB reports")
+                time.sleep(self.wait_before_retry)
     
     #===============================================================================
     #                         LOOP packet decoding functions

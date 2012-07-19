@@ -41,6 +41,9 @@ Arguments:
     config_path: Path to the weewx configuration file to be used.
 """
 
+class BreakLoop(Exception):
+    pass
+
 #===============================================================================
 #                    Class StdEngine
 #===============================================================================
@@ -79,6 +82,9 @@ class StdEngine(object):
         timeout = int(config_dict.get('socket_timeout', 20))
         socket.setdefaulttimeout(timeout)
 
+        # Set up the weather station hardware:
+        self.setupStation(config_dict)
+
         # Hook for performing any chores before loading the services:
         self.preLoadServices(config_dict)
         
@@ -112,6 +118,28 @@ class StdEngine(object):
         
         return config_dict
     
+    def setupStation(self, config_dict):
+        """Set up the weather station hardware."""
+        # Get the hardware type from the configuration dictionary.
+        # This will be a string such as "VantagePro"
+        stationType = config_dict['Station']['station_type']
+    
+        # Look for and load the module of that name:
+        _moduleName = "weewx." + stationType
+        __import__(_moduleName)
+    
+        try:
+    
+            # Now open up the weather station:
+            self.station = weeutil.weeutil._get_object(_moduleName + '.' + stationType, 
+                                                       **config_dict[stationType])
+    
+        except Exception, ex:
+            # Caught unrecoverable error. Log it:
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
+            # Reraise the exception:
+            raise
+        
     def preLoadServices(self, config_dict):
         
         # Set up the callback dictionary:
@@ -145,15 +173,6 @@ class StdEngine(object):
     def postLoadServices(self, config_dict):
         pass
 
-    def setLoopFunction(self, fn):
-        """Set the generator function to be called to generate LOOP packets""" 
-        self.genLoopPackets = fn
-        
-    def setArchiveInterval(self, archive_interval, archive_delay):
-        """Set the archive interval and the archive delay interval"""
-        self.archive_interval = archive_interval
-        self.archive_delay    = archive_delay
-
     def run(self):
         """Main execution entry point."""
         
@@ -167,36 +186,28 @@ class StdEngine(object):
 
             # This is the outer loop. 
             while True:
-                
+
                 # First, let any interested services know the packet LOOP is about to start
                 self.dispatchEvent(weewx.Event(weewx.PRE_LOOP))
-
-                # Calculate the end of the archive period, and the end of the
-                # archive delay period.
-                end_archive_period_ts = (int(time.time() / self.archive_interval) + 1) * self.archive_interval
-                end_archive_delay_ts  =  end_archive_period_ts + self.archive_delay
+    
+                # Get ready to enter the main packet loop. An exception of type
+                # BreakLoop will get thrown when the archive data is due.
+                try:
                 
-                # And this is the main packet LOOP. It will continuously
-                # generate LOOP packets until the archive delay time has passed.
-                for packet in self.genLoopPackets():
+                    # And this is the main packet LOOP. It will continuously
+                    # generate LOOP packets until the archive delay time has passed.
+                    for packet in self.station.genLoopPackets():
+                        
+                        # Package the packet as an event, then dispatch it.            
+                        self.dispatchEvent(weewx.Event(weewx.NEW_LOOP_PACKET, packet=packet))
+
+                        # Allow any non-packet related work to get done:
+                        self.dispatchEvent(weewx.Event(weewx.WORK_LOOP))
+    
+                except BreakLoop:
                     
-                    # Extract the time in case an event handler monkeys with it:
-                    the_time = packet['dateTime']
-
-                    # Has the end of the archive period passed? If so, send out the event.
-                    if the_time > end_archive_period_ts:
-                        self.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD, timestamp=the_time))
-
-                    # Package the packet as an event, then dispatch it.            
-                    self.dispatchEvent(weewx.Event(weewx.NEW_LOOP_PACKET, packet=packet))
-
-                    # Has the end of the archive delay period ended? If so, break the loop.
-                    if the_time >= end_archive_delay_ts:
-                        break
-                    
-                # Send out an event saying the packet LOOP is done and that we
-                # are at the end of the archive delay period:
-                self.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_DELAY))
+                    # Send out an event saying the packet LOOP is done:
+                    self.dispatchEvent(weewx.Event(weewx.POST_LOOP))
 
         finally:
             # The main loop has exited. Shut the engine down.
@@ -244,6 +255,13 @@ class StdEngine(object):
         except:
             pass
 
+        try:
+            # Close the console:
+            self.station.closePort()
+        except:
+            pass
+
+
 #===============================================================================
 #                    Class StdService
 #===============================================================================
@@ -259,63 +277,6 @@ class StdService(object):
         # Just forward the request to the main engine:
         self.engine.bind(event_type, callback)
 
-#===============================================================================
-#                    Class StdStation
-#===============================================================================
-
-class StdStation(StdService):
-    """Holds a reference to the actual weather station hardware."""
-    
-    def __init__(self, engine, config_dict):
-        """Set up the weather station hardware."""
-        # Initialize my base class:
-        super(StdStation, self).__init__(engine, config_dict)
-        # Get the hardware type from the configuration dictionary.
-        # This will be a string such as "VantagePro"
-        stationType = config_dict['Station']['station_type']
-    
-        # Look for and load the module of that name:
-        _moduleName = "weewx." + stationType
-        __import__(_moduleName)
-    
-        try:
-            # Now open up the weather station:
-            self.station = weeutil.weeutil._get_object(_moduleName + '.' + stationType, 
-                                                       **config_dict[stationType])
-        except Exception, ex:
-            # Caught unrecoverable error. Log it:
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
-            # Reraise the exception:
-            raise
-
-        # Tell the engine what the archive interval and archive delay interval
-        # are:
-        self.engine.setArchiveInterval(self.station.archive_interval, self.station.archive_delay)
-
-        # Set the packet loop function:
-        self.engine.setLoopFunction(self.station.genLoopPackets)
-        
-        # Bind callbacks to the events we want to handle:
-        self.bind(weewx.CATCHUP_ARCHIVE, self.catchup_archive)
-        self.bind(weewx.SET_TIME,        self.set_time)
-        
-    def catchup_archive(self, event):
-        """Called on a CATCHUP_ARCHIVE event. Adds all archive records stored in the console, 
-        but not yet in the database."""
-        for record in self.station.genArchivePackets(event.timestamp):
-            self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
-
-    def set_time(self, event):
-        """Called on a SET_TIME event. Set the station clock."""
-        self.station.setTime(event.clock_time, event.max_drift)
-        
-    def shutDown(self):
-        """Shut down the weather station. Closes the port."""
-        try:
-            self.station.closePort()
-        except:
-            pass
-        
 #===============================================================================
 #                    Class StdCalibrate
 #===============================================================================
@@ -410,8 +371,7 @@ class StdArchive(StdService):
         self.setupStatsDatabase(config_dict)
         
         self.bind(weewx.STARTUP,            self.startup)
-        self.bind(weewx.END_ARCHIVE_PERIOD, self.end_archive_period)
-        self.bind(weewx.END_ARCHIVE_DELAY,  self.end_archive_delay)
+        self.bind(weewx.WORK_LOOP,          self.catchup)
         self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
     
@@ -419,32 +379,45 @@ class StdArchive(StdService):
         """Called when the engine is starting up."""
         # The engine is starting up. The main task is to do a catch
         # up on any data still on the station, but not yet put in the
-        # database. Get the last timestamp in the archive:
-        lastgood_ts = self.archive.lastGoodStamp()
-        catchup_event=weewx.Event(weewx.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
-        self.engine.dispatchEvent(catchup_event)
-        
-    def end_archive_period(self, event):
-        # shuffle the accumulators:
-        self.accumulator, self.last_accumulator = (self._new_accumulator(event.timestamp),
-                                                   self.accumulator)
+        # database. 
+        self._catchup_archive()
+        # Calculate the end of the archive period, and the end of the
+        # archive delay period.
+        self.end_archive_period_ts = (int(time.time() / self.archive_interval) + 1) * self.archive_interval
+        self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
+                    
+    def catchup(self, event):
+        """Pull any unarchived records off the console and archive them. 
+        Called after the main packet LOOP finishes. """
 
-    def end_archive_delay(self, event):
-        """Called after the packet LOOP is done and a new archive record is due.
-        Issues a CATCHUP_ARCHIVE event."""
-        # (Clear accumulators; emit new archive record)
-        lastgood_ts = self.archive.lastGoodStamp()
-        # Request a catchup
-        catchup_event=weewx.Event(weewx.CATCHUP_ARCHIVE, timestamp=lastgood_ts)
-        self.engine.dispatchEvent(catchup_event)
+        self._catchup_archive()
         
     def new_loop_packet(self, event):
         """Called when A new LOOP record has arrived. Put it in the stats database."""
-        self.statsDb.addLoopRecord(event.packet)
-        if not hasattr(self, "accumulator"):
-            self.accumulator = self._new_accumulator(event.packet['dateTime'])
-        self.accumulator.addToHiLow(event.packet)
+        the_time = event.packet['dateTime']
         
+        if not hasattr(self, "accumulator"):
+            self.accumulator = self._new_accumulator(the_time)
+
+        try:
+            self.accumulator.addToHiLow(event.packet)
+        except weewx.accum.OutOfSpan:
+            # shuffle the accumulators:
+            self.accumulator, self.last_accumulator = (self._new_accumulator(event.timestamp),
+                                                       self.accumulator)
+            # TODO: Stow away the accumulated results
+            record = self.last_accumulator.getRecord()
+            self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+
+        self.statsDb.addLoopRecord(event.packet)
+        
+    def work_loop(self, event):
+        
+            # Has the end of the archive delay period ended? If so, break the loop.
+        if time.time() >= self.end_archive_delay_ts:
+            self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
+            raise BreakLoop
+
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
         Put it in the stats and archive database."""
@@ -462,6 +435,8 @@ class StdArchive(StdService):
         except StandardError:
             weewx.archive.config(archiveFilename)
             self.archive = weewx.archive.Archive(archiveFilename)
+        self.archive_interval = config_dict['Archive']['archive_interval']
+        self.archive_delay    = config_dict['Archive']['archive_delay']
 
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
@@ -482,11 +457,18 @@ class StdArchive(StdService):
         # Backfill it with data from the archive. This will do nothing if 
         # the stats database is already up-to-date.
         weewx.stats.backfill(self.archive, self.statsDb)
+
+    def _catchup_archive(self):        
+        lastgood_ts = self.archive.lastGoodStamp()
+        # Now ask the console for any new records since that timestamp.
+        # (Not all consoles support this feature).
+        for record in self.engine.station.genArchivePackets(lastgood_ts):
+            self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
         
     def _new_accumulator(self, timestamp):
         start_archive_ts = weeutil.weeutil.startOfInterval(timestamp,
-                                                           self.engine.archive_interval)
-        end_archive_ts = start_archive_ts + self.engine.archive_interval
+                                                           self.archive_interval)
+        end_archive_ts = start_archive_ts + self.archive_interval
         
         new_accumulator =  weewx.accum.RecordAccum(self.archive.sqlkeys,
                                                    weeutil.weeutil.TimeSpan(start_archive_ts,
@@ -516,8 +498,7 @@ class StdTimeSynch(StdService):
         # seconds since the last check:
         now_ts = time.time()
         if now_ts - self.last_synch_ts >= self.clock_check:
-            settime_event = weewx.Event(weewx.SET_TIME, clock_time=now_ts, max_drift=self.max_drift)
-            self.engine.dispatchEvent(settime_event)
+            # TODO: Set time on the console
             self.last_synch_ts = now_ts
             
 #===============================================================================
@@ -649,9 +630,9 @@ class StdReportService(StdService):
         self.thread = None
         self.first_run = True
         
-        self.bind(weewx.END_ARCHIVE_DELAY, self.end_archive_delay)
+        self.bind(weewx.POST_LOOP, self.launch_report_thread)
         
-    def end_archive_delay(self, event):
+    def launch_report_thread(self, event):
         """Called after the packet LOOP. Processes any new data."""
         # Now process the data, using a separate thread
         self.thread = weewx.reportengine.StdReportEngine(self.engine.config_path,

@@ -58,25 +58,24 @@ class ViolatedPrecondition(StandardError):
 #===============================================================================
 #                       Possible event types.
 #===============================================================================
-#
-# These could be constants, but classes are much easier to debug.
-#
+
 class STARTUP(object):
-    pass
+    """Event issued when the engine first starts up. Services have not been loaded."""
 class PRE_LOOP(object):
-    pass
+    """Event issued just before the main packet loop is started. Services have been loaded."""
 class NEW_LOOP_PACKET(object):
-    pass
+    """Event issued when a new LOOP packet is available. The event contains attribute 'packet',
+    which is the new LOOP packet."""
+class WORK_LOOP(object):
+    """Event issued in the main loop, right after a new LOOP packet has been processed. Generally,
+    it is used to throw an exception, breaking the main loop, so the console can be used
+    for other things."""
 class NEW_ARCHIVE_RECORD(object):
-    pass
-class END_ARCHIVE_PERIOD(object):
-    pass
-class END_ARCHIVE_DELAY(object):
-    pass
-class CATCHUP_ARCHIVE(object):
-    pass
-class SET_TIME(object):
-    pass
+    """Event issued when a new archive record is available. The event contains attribute 'record',
+    which is the new archive record."""
+class POST_LOOP(object):
+    """Event issued right after the main loop has been broken. Services hook into this to
+    access the console for things other than generating LOOP packet."""
 
 #===============================================================================
 #                       Class Event
