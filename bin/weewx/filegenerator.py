@@ -334,8 +334,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                                        os.path.dirname(accum_dict['template']))
         encoding = accum_dict['encoding']
 
-        statsdb = weewx.stats.StatsReadonlyDb(os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                                           accum_dict['stats_file']))
+        statsdb = weewx.stats.StatsDb(os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
+                                                   accum_dict['stats_file']))
         archivedb = weewx.archive.Archive(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
                                                        accum_dict['archive_file']))
 

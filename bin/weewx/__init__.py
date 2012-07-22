@@ -54,6 +54,9 @@ class UnsupportedFeature(StandardError):
     
 class ViolatedPrecondition(StandardError):
     """Exception thrown when a function is called with violated preconditions."""
+    
+class NotImplemented(StandardError):
+    """Exception thrown when invoking a function in an abstract base class."""
 
 #===============================================================================
 #                       Possible event types.
@@ -66,7 +69,7 @@ class PRE_LOOP(object):
 class NEW_LOOP_PACKET(object):
     """Event issued when a new LOOP packet is available. The event contains attribute 'packet',
     which is the new LOOP packet."""
-class WORK_LOOP(object):
+class CHECK_LOOP(object):
     """Event issued in the main loop, right after a new LOOP packet has been processed. Generally,
     it is used to throw an exception, breaking the main loop, so the console can be used
     for other things."""

@@ -20,6 +20,7 @@ from weewx.crc16 import crc16
 import weeutil.weeutil
 import weewx.accum
 import weewx.wxformulas
+import weewx.abstractstation
 
 # A few handy constants:
 _ack    = chr(0x06)
@@ -306,7 +307,7 @@ class EthernetWrapper(BaseWrapper):
 #                           Class VantagePro
 #===============================================================================
 
-class VantagePro(object):
+class VantagePro(weewx.abstractstation.AbstractStation):
     """Class that represents a connection to a VantagePro console.
     
     The connection will be opened after initialization"""
@@ -354,9 +355,6 @@ class VantagePro(object):
         max_tries: How many times to try again before giving up. [Optional.
         Default is 4]
         
-        archive_delay: How long to wait after an archive record is due
-        before retrieving it. [Optional. Default is 15 seconds]
-        
         iss_id: The station number of the ISS [Optional. Default is 1]
         
         unit_system: What unit system to use on the VP. [Optional.
@@ -371,7 +369,6 @@ class VantagePro(object):
         # These come from the configuration dictionary:
         self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
-        self.archive_delay    = int(vp_dict.get('archive_delay', 15))
         self.unit_system      = int(vp_dict.get('unit_system'  , 1))
 
         # Get an appropriate port, depending on the connection type:
@@ -454,7 +451,7 @@ class VantagePro(object):
             yield pkt_dict
             ntries = 1
 
-    def genArchivePackets(self, since_ts):
+    def genArchiveRecords(self, since_ts):
         """A generator function to return archive packets from a VantagePro station.
         
         since_ts: A timestamp. All data since (but not including) this time will be returned.

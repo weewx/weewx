@@ -32,11 +32,12 @@ import syslog
 
 import usb
 
-import weewx.wxformulas
-import weewx.units
 import weeutil.weeutil
+import weewx.abstractstation
+import weewx.units
+import weewx.wxformulas
 
-class WMR100(object):
+class WMR100(weewx.abstractstation.AbstractStation):
     
     def __init__(self, **stn_dict) :
         """Initialize an object of type WMR100.
@@ -267,9 +268,11 @@ class WMR100(object):
         
     
     def _wind_packet(self, packet):
-        _record = {'windDir'     : (packet[2] & 0x0f) * 360.0 / 16.0,
-                   'windSpeed'   : ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0,
-                   'windGust'    : (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0,
+        windSpeed = ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0,
+        windDir   = (packet[2] & 0x0f) * 360.0 / 16.0,
+        windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0
+        _record = {'wind'        : (windSpeed, windDir),
+                   'windGust'    : (windGustSpeed, None),
                    'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
         return _record

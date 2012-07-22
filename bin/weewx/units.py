@@ -804,9 +804,9 @@ def dictFromStd(d):
     
         {'outTemp'   : 23.9,
          'barometer' : 1002.3,
-         'usUnits'   : 2}
+         'usUnits'   : 0}
 
-    In this case, the standard unit system being used is "2", or Metric.
+    In this case, the standard unit system being used is "0", or Metric.
     
     returns: a dictionary with keys of observation type, value the
     corresponding ValueTuple. Example:

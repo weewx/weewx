@@ -124,14 +124,15 @@ class StdEngine(object):
         # This will be a string such as "VantagePro"
         stationType = config_dict['Station']['station_type']
     
-        # Look for and load the module of that name:
-        _moduleName = "weewx." + stationType
-        __import__(_moduleName)
+        driver = config_dict[stationType]['driver']
+        
+        # Import the driver:
+        __import__(driver)
     
         try:
     
             # Now open up the weather station:
-            self.station = weeutil.weeutil._get_object(_moduleName + '.' + stationType, 
+            self.station = weeutil.weeutil._get_object(driver + '.' + stationType, 
                                                        **config_dict[stationType])
     
         except Exception, ex:
@@ -191,18 +192,20 @@ class StdEngine(object):
                 self.dispatchEvent(weewx.Event(weewx.PRE_LOOP))
     
                 # Get ready to enter the main packet loop. An exception of type
-                # BreakLoop will get thrown when the archive data is due.
+                # BreakLoop will get thrown when a service wants to break the loop and
+                # interact with the console.
                 try:
                 
                     # And this is the main packet LOOP. It will continuously
-                    # generate LOOP packets until the archive delay time has passed.
+                    # generate LOOP packets until some service breaks it
+                    # (usually when an archive period has passed).
                     for packet in self.station.genLoopPackets():
                         
                         # Package the packet as an event, then dispatch it.            
                         self.dispatchEvent(weewx.Event(weewx.NEW_LOOP_PACKET, packet=packet))
 
-                        # Allow any non-packet related work to get done:
-                        self.dispatchEvent(weewx.Event(weewx.WORK_LOOP))
+                        # Allow services to break the loop by throwing an exception:
+                        self.dispatchEvent(weewx.Event(weewx.CHECK_LOOP))
     
                 except BreakLoop:
                     
@@ -371,7 +374,9 @@ class StdArchive(StdService):
         self.setupStatsDatabase(config_dict)
         
         self.bind(weewx.STARTUP,            self.startup)
-        self.bind(weewx.WORK_LOOP,          self.catchup)
+        self.bind(weewx.PRE_LOOP,           self.pre_loop)
+        self.bind(weewx.POST_LOOP,          self.catchup)
+        self.bind(weewx.CHECK_LOOP,         self.check_loop)
         self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
     
@@ -380,49 +385,65 @@ class StdArchive(StdService):
         # The engine is starting up. The main task is to do a catch
         # up on any data still on the station, but not yet put in the
         # database. 
-        self._catchup_archive()
-        # Calculate the end of the archive period, and the end of the
-        # archive delay period.
+        self.catchup(event)
+                    
+    def pre_loop(self, event):
+        """Called before the main packet loop is entered."""
+#        # Calculate the end of the archive period, and the end of the
+#        # archive delay period.
         self.end_archive_period_ts = (int(time.time() / self.archive_interval) + 1) * self.archive_interval
         self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
-                    
+
     def catchup(self, event):
         """Pull any unarchived records off the console and archive them. 
         Called after the main packet LOOP finishes. """
-
-        self._catchup_archive()
+        lastgood_ts = self.archive.lastGoodStamp()
+        # Now ask the console for any new records since that timestamp.
+        # (Not all consoles support this feature).
+        try:
+            for record in self.engine.station.genArchiveRecords(lastgood_ts):
+                self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+        except weewx.NotImplemented:
+            pass
         
     def new_loop_packet(self, event):
         """Called when A new LOOP record has arrived. Put it in the stats database."""
-        the_time = event.packet['dateTime']
         
+        # Save the time from the packet in case some other service monkeys with it:
+        the_time = event.packet['dateTime']
+        # Do we have an accumulator at all? If not, create one:
         if not hasattr(self, "accumulator"):
             self.accumulator = self._new_accumulator(the_time)
 
+        # Try adding the LOOP packet to the existing accumulator. If the timestamp is
+        # outside the timespan of the accumulator, an exception will be thrown:
         try:
-            self.accumulator.addToHiLow(event.packet)
+            self.accumulator.addRecord(event.packet)
         except weewx.accum.OutOfSpan:
-            # shuffle the accumulators:
-            self.accumulator, self.last_accumulator = (self._new_accumulator(event.timestamp),
-                                                       self.accumulator)
-            # TODO: Stow away the accumulated results
-            record = self.last_accumulator.getRecord()
+            # Extract a record out of the existing accumulator and dispatch it as 
+            # an event:
+            record = self.accumulator.getRecord()
             self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+            # Get a new accumulator:
+            self.accumulator = self._new_accumulator(event.timestamp)
+            # Add the LOOP packet to it:
+            self.accumulator.addRecord(event.packet)
 
-        self.statsDb.addLoopRecord(event.packet)
-        
-    def work_loop(self, event):
-        
-            # Has the end of the archive delay period ended? If so, break the loop.
+#        # TODO: is this necessary?
+#        self.statsDb.addLoopRecord(event.packet)
+#        
+    def check_loop(self, event):
+        """Called after any loop packets have been processed. This is the opportunity
+        to break the main loop by throwing an exception."""
+        # Has the end of the archive delay period ended? If so, break the loop.
         if time.time() >= self.end_archive_delay_ts:
-            self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
             raise BreakLoop
 
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
         Put it in the stats and archive database."""
         self.archive.addRecord(event.record)
-        self.statsDb.addArchiveRecord(event.record)
+        self.statsDb.addRecord(event.record)
 
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
@@ -435,8 +456,12 @@ class StdArchive(StdService):
         except StandardError:
             weewx.archive.config(archiveFilename)
             self.archive = weewx.archive.Archive(archiveFilename)
-        self.archive_interval = config_dict['Archive']['archive_interval']
-        self.archive_delay    = config_dict['Archive']['archive_delay']
+        self.archive_interval = config_dict['Archive'].as_int('archive_interval')
+        self.archive_delay    = config_dict['Archive'].as_int('archive_delay')
+        if hasattr(self.engine.station, 'archive_interval') and self.engine.station.archive_interval!=self.archive_interval:
+            raise weewx.ViolatedPrecondition("Archive interval in configuration file (%d) "
+                                             "does not match hardware interval (%d)" % \
+                                             (self.archive_interval, self.engine.station.archive_interval))
 
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
@@ -451,28 +476,19 @@ class StdArchive(StdService):
             # It's uninitialized. Configure it:
             weewx.stats.config(statsFilename, config_dict['Stats'].get('stats_types'))
             # Try again to open it up:
-            self.statsDb = weewx.stats.StatsDb(statsFilename,
-                                               int(config_dict['Station'].get('cache_loop_data', '1')))
+            self.statsDb = weewx.stats.StatsDb(statsFilename)
 
         # Backfill it with data from the archive. This will do nothing if 
         # the stats database is already up-to-date.
         weewx.stats.backfill(self.archive, self.statsDb)
 
-    def _catchup_archive(self):        
-        lastgood_ts = self.archive.lastGoodStamp()
-        # Now ask the console for any new records since that timestamp.
-        # (Not all consoles support this feature).
-        for record in self.engine.station.genArchivePackets(lastgood_ts):
-            self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
-        
     def _new_accumulator(self, timestamp):
         start_archive_ts = weeutil.weeutil.startOfInterval(timestamp,
                                                            self.archive_interval)
         end_archive_ts = start_archive_ts + self.archive_interval
         
-        new_accumulator =  weewx.accum.RecordAccum(self.archive.sqlkeys,
-                                                   weeutil.weeutil.TimeSpan(start_archive_ts,
-                                                                            end_archive_ts))
+        new_accumulator =  weewx.accum.DictAccum(weeutil.weeutil.TimeSpan(start_archive_ts,
+                                                                          end_archive_ts))
         return new_accumulator
                                                   
 #===============================================================================
@@ -517,11 +533,13 @@ class StdPrint(StdService):
         
     def new_loop_packet(self, event):
         """Print out a summary of the new LOOP packet"""
+#        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']),\
+#                         event.packet['barometer'],\
+#                         event.packet['outTemp'],\
+#                         event.packet['windSpeed'],\
+#                         event.packet['windDir']
         print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']),\
-                         event.packet['barometer'],\
-                         event.packet['outTemp'],\
-                         event.packet['windSpeed'],\
-                         event.packet['windDir']
+                         event.packet
     
     def new_archive_record(self, event):
         """Print out a summary of the new archive record."""
