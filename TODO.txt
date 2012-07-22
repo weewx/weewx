@@ -1,5 +1,20 @@
 TODO before the next release:
 
+Hardware drivers must return packet with observation type 'wind' (not windSpeed, windDir).
+
+The archive database needs averages from the accumulator, but the stats database needs min
+and maxes as well.
+
+Put clock drift stuff in its own section in weewx.conf.
+
+Remove clock drift logic from class VantagePro. It should just get the time or set the time.
+
+Allow archives to store data in metric units
+
+Change calibration service so it can take any units (not just the native hardware units)
+
+See if the accumulator stuff is still needed in class VantagePro
+
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
 
@@ -12,8 +27,6 @@ include the Cheetah directive
 automatically, or put in the customizing manual that the user must include it.=======
 Add an ability to do the archive records in software (rather than downloading
 off the logger).
-
-Port to another (any!) WX station hardware.
 
 Update the "Customizing guide" reflecting the new engine architecture.
 
