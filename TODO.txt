@@ -15,6 +15,9 @@ Change calibration service so it can take any units (not just the native hardwar
 
 See if the accumulator stuff is still needed in class VantagePro
 
+Add info about bad USB to serial converters to the "Troubleshooting" section. In particular,
+how to use minicom to send a "TEST" command to the VP2.
+
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
 
