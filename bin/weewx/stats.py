@@ -160,16 +160,8 @@ class StatsDb(object):
 
         _allStats = weewx.accum.DictAccum(timespan)
         
-        _connection = self._getConnection()
-        _cursor = _connection.cursor()
-    
         for stats_type in self.statsTypes:
-            # Form a SQL select statement for the type
-            _sql_str = "SELECT * FROM %s WHERE dateTime = ?" % stats_type
-            # Peform the select, against the desired timestamp
-            _cursor.execute(_sql_str, (sod_ts,))
-            # Get the result
-            _row = _cursor.fetchone()
+            _row = self._xeqSql("SELECT * FROM %s WHERE dateTime = %d" % (stats_type, sod_ts), {})
     
             if weewx.debug:
                 if _row:

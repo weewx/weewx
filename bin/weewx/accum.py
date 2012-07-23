@@ -82,11 +82,24 @@ class DictAccum(dict):
                 self._addVector(record, obs_type)
             except TypeError:
                 self._addScalar(record, obs_type)
+                
+    def mergeStats(self, accumulator):
+        """Merge the stats of another accumulator into me."""
+        if accumulator.timespan.start < self.timespan.start or accumulator.timespan.stop > self.timespan.stop:
+            raise OutOfSpan("Attempt to merge an accumulator whose timespan is not a subset")
 
+        for obs_type in accumulator:
+            if self[obs_type].min is None or accumulator[obs_type].min < self[obs_type].min:
+                self[obs_type].min = accumulator[obs_type].min
+                self[obs_type].mintime = accumulator[obs_type].mintime
+                
+                blah, blah!
+                
     def getRecord(self):
         
         record = {}
         for obs_type in self:
+            # TODO: What about 'wind'?
             record[obs_type] = self[obs_type].avg
             
     def _addVector(self, record, obs_type):
