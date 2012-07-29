@@ -140,14 +140,20 @@ class WMR100(weewx.abstractstation.AbstractStation):
             # If both this byte and the next one are 0xff, then we are at the end of a record
             if ibyte==0xff and genBytes.peek()==0xff:
                 # We are at the end of a packet.
-                # Compute its checksum and compare
-                computed_checksum = reduce(operator.iadd, buff[:-2])
-                actual_checksum   = (buff[-1] << 8) + buff[-2]
-                if computed_checksum == actual_checksum:
-                    # Looks good. Yield the packet
-                    yield buff
-                elif weewx.debug:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmrx: Bad checksum on buffer of length %d" % len(buff))
+                # Compute its checksum. This can throw an exception if the packet is empty.
+                try:
+                    computed_checksum = reduce(operator.iadd, buff[:-2])
+                except TypeError, e:
+                    if weewx.debug:
+                        syslog.syslog(syslog.LOG_DEBUG, "wmrx: Exception while calculating checksum.")
+                        syslog.syslog(syslog.LOG_DEBUG, "****  %s" % e)
+                else:
+                    actual_checksum   = (buff[-1] << 8) + buff[-2]
+                    if computed_checksum == actual_checksum:
+                        # Looks good. Yield the packet
+                        yield buff
+                    elif weewx.debug:
+                        syslog.syslog(syslog.LOG_DEBUG, "wmrx: Bad checksum on buffer of length %d" % len(buff))
                 # Throw away the next character (which will be 0xff):
                 genBytes.next()
                 # Start with a fresh buffer

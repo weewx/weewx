@@ -20,6 +20,11 @@ argparse.py in any sys.path directory.
 
 When doing DMPAFT, no longer tries to correct for DST.
 
+The stats type 'squarecount' now contains the number of valid wind directions that
+went into calculating 'xsum' and 'ysum'. It used to be the number of valid wind speeds.
+Wind direction is now calculated using 'squarecount' (instead of 'count'). This is
+a small difference and unlikely to show in any reports.
+
 
 1.14.1 07/06/12
 

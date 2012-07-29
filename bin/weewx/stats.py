@@ -80,8 +80,8 @@ sqlDict = {'min'        : "SELECT MIN(min) FROM %(stats_type)s WHERE dateTime >=
            'sum'        : "SELECT SUM(sum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'count'      : "SELECT SUM(count) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'avg'        : "SELECT SUM(sum),SUM(count) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'rms'        : "SELECT SUM(squaresum),SUM(squarecount) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(count)  FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'rms'        : "SELECT SUM(squaresum),SUM(count) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(squarecount)  FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'max_ge'     : "SELECT SUM(max >= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'max_le'     : "SELECT SUM(max <= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
@@ -122,7 +122,8 @@ class StatsDb(object):
     
     'xsum' and 'ysum' are the sums of the x- and y-components of the wind vector.
     'squaresum' is the sum of squares of the windspeed (useful for calculating rms speed).
-    'squarecount' is the number of items added to 'squaresum'.
+    'squarecount' (perhaps not the best name, but it's there for historical reasons)
+    is the number of items added to 'xsum' and 'ysum'.
     
     In addition to all the tables for each type, there is also a separate table
     called 'metadata'. Currently, it only holds the time of last update, but more could
@@ -150,7 +151,43 @@ class StatsDb(object):
         self.statsTypes      = self.__getTypes()
         self.std_unit_system = self._getStdUnitSystem()
 
-    def day(self, sod_ts):
+
+    def addRecord(self, rec):
+        """Add an archive record to the statistical database."""
+
+        if rec['dateTime'] is None:
+            syslog.syslog(syslog.LOG_ERR, "stats: archive record with null time encountered. Ignored.")
+            return
+        
+        # Get the start-of-day for this archive record.
+        _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
+
+        # Retrieve a dictionary containing the day's statistics:
+        _allStatsDict = self.getDayStats(_sod_ts)
+
+        # Add the data from this new record
+        _allStatsDict.addRecord(rec)
+
+        # Now write the results for all types back to the database
+        # in a single transaction:
+        self.setDayStats(_allStatsDict, rec['dateTime'])
+
+    def addAccum(self, accumulator):
+        
+        # Get the start-of-day for this accumulator.
+        _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.start)
+
+        # Retrieve a dictionary containing the day's statistics:
+        _allStatsDict = self.getDayStats(_sod_ts)
+
+        # Add the data from this new record
+        _allStatsDict.mergeStats(accumulator)
+
+        # Now write the results for all types back to the database
+        # in a single transaction:
+        self.setDayStats(_allStatsDict, accumulator.timespan.start)
+
+    def getDayStats(self, sod_ts):
         """Return an instance of accum.DictAccum initialized to a given day's statistics.
 
         sod_ts: The timestamp of the start-of-day of the desired day."""
@@ -172,30 +209,39 @@ class StatsDb(object):
             # be 'None'
             _stats_tuple = _row[1:] if _row else None
         
-            _allStats.initObservation(stats_type, _stats_tuple)
+            _allStats.initStats(stats_type, _stats_tuple)
         
         return _allStats
 
-    def addRecord(self, rec):
-        """Add an archive record to the statistical database."""
-
-        if rec['dateTime'] is None:
-            syslog.syslog(syslog.LOG_ERR, "stats: archive record with null time encountered. Ignored.")
-            return
+    def setDayStats(self, dayStatsDict, lastUpdate):
+        """Write all statistics for a day to the database in a single transaction.
         
-        # Get the start-of-day for this archive record.
-        _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
+        dayStatsDict: A dictionary. Key is the type to be written, value is holds
+        a object that has method "getStatsTuple"
+        
+        lastUpdate: the time of the last update will be set to this. Normally, this
+        is the timestamp of the last archive record added to the instance
+        dayStatsDict."""
 
-        # Retrieve a dictionary containing the day's statistics:
-        _allStatsDict = self.day(_sod_ts)
+        _sod = dayStatsDict.timespan.start
 
-        # Add the data from this new record
-        _allStatsDict.addRecord(rec)
-
-        # Now write the results for all types back to the database
-        # in a single transaction:
-        self._setDay(_allStatsDict, rec['dateTime'])
-
+        # Using the _connection as a context manager means that
+        # in case of an error, all tables will get rolled back.
+        with sqlite3.connect(self.statsFilename) as _connection:
+            for _stats_type in self.statsTypes:
+                
+                # Slightly different SQL statement for wind
+                if _stats_type == 'wind':
+                    _replace_str = wind_replace_str
+                else:
+                    _replace_str = std_replace_str % _stats_type
+                
+                # Get the stats-tuple, then write the results
+                _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
+                _connection.execute(_replace_str,_write_tuple)
+            # Update the time of the last stats update:
+            _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
+            
     def getAggregate(self, timespan, stats_type, aggregateType, val=None):
         """Returns an aggregation of a statistical type for a given time period.
         
@@ -420,36 +466,6 @@ class StatsDb(object):
         return stats_types
         
             
-    def _setDay(self, dayStatsDict, lastUpdate):
-        """Write all statistics for a day to the database in a single transaction.
-        
-        dayStatsDict: A dictionary. Key is the type to be written, value is holds
-        a object that has method "getStatsTuple"
-        
-        lastUpdate: the time of the last update will be set to this. Normally, this
-        is the timestamp of the last archive record added to the instance
-        dayStatsDict."""
-
-        _sod = dayStatsDict.timespan.start
-
-        # Using the _connection as a context manager means that
-        # in case of an error, all tables will get rolled back.
-        with sqlite3.connect(self.statsFilename) as _connection:
-            for _stats_type in self.statsTypes:
-                
-                # Slightly different SQL statement for wind
-                if _stats_type == 'wind':
-                    _replace_str = wind_replace_str
-                else:
-                    _replace_str = std_replace_str % _stats_type
-                
-                # Get the stats-tuple, then write the results
-                _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
-                _connection.execute(_replace_str,_write_tuple)
-            # Update the time of the last stats update:
-            _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
-            
-
 #===============================================================================
 #                    Class TaggedStats
 #===============================================================================
@@ -797,10 +813,10 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
         if _allStats is None or _allStats.startOfDay_ts != _rec_sod_ts:
                 # If this is not the first day, then write it out:
                 if _allStats:
-                    statsDb._setDay(_allStats, _lastTime)
+                    statsDb.setDayStats(_allStats, _lastTime)
                     ndays += 1
                 # Get the stats for the new day:
-                _allStats = statsDb.day(_rec_sod_ts)
+                _allStats = statsDb.getDayStats(_rec_sod_ts)
         
         # Add the stats for this record to the running total for this day:
         for _stats_type in _allStats:
@@ -813,7 +829,7 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
 
     # We're done. Record the stats for the last day.
     if _allStats:
-        statsDb._setDay(_allStats, _lastTime)
+        statsDb.setDayStats(_allStats, _lastTime)
         ndays += 1
     
     t2 = time.time()

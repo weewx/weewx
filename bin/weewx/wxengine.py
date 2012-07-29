@@ -420,6 +420,9 @@ class StdArchive(StdService):
         try:
             self.accumulator.addRecord(event.packet)
         except weewx.accum.OutOfSpan:
+            # Merge the high-resolution high/lows in the accumulator
+            # into the stats database
+            self.statsDb.addAccum(self.accumulator)
             # Extract a record out of the existing accumulator and dispatch it as 
             # an event:
             record = self.accumulator.getRecord()
@@ -429,9 +432,6 @@ class StdArchive(StdService):
             # Add the LOOP packet to it:
             self.accumulator.addRecord(event.packet)
 
-#        # TODO: is this necessary?
-#        self.statsDb.addLoopRecord(event.packet)
-#        
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
         to break the main loop by throwing an exception."""
