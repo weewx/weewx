@@ -38,3 +38,6 @@ Update the "User's Guide" to update the new config utilities.
 Get rid of cache LOOP data.
 
 Abstract the database type a little more (in preparation for supporting MySQL).
+
+An archive object probably should not be shared between the main thread and the RESTful thread.
+
