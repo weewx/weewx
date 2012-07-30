@@ -123,7 +123,7 @@ def info(station):
       Rain:                         %s
       Wind:                         %s
       """ % (_firmware_date,
-             station.archive_interval, station.elevation, station.elevation_unit,
+             station.archive_interval, station.altitude, station.altitude_unit,
              station.wind_cup_size, station.rain_bucket_size, station.rain_season_start, console_time,
              station.barometer_unit, station.temperature_unit, 
              station.rain_unit, station.wind_unit)
@@ -193,7 +193,7 @@ def set_interval(station, new_interval_seconds):
             print "Nothing done."
     
 def set_altitude(station, altitude_ft):
-    """Set the console station elevation"""
+    """Set the console station altitude"""
     # Hit the console to get the current barometer calibration data:
     _bardata = station.getBarData()
     

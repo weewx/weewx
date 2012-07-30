@@ -18,7 +18,6 @@ import time
 
 from weewx.crc16 import crc16
 import weeutil.weeutil
-import weewx.accum
 import weewx.wxformulas
 import weewx.abstractstation
 
@@ -312,16 +311,10 @@ class VantagePro(weewx.abstractstation.AbstractStation):
     
     The connection will be opened after initialization"""
 
-    # List of types for which archive records will be explicitly calculated
-    # from LOOP data. Right now there is only one, but if we ever support weather
-    # stations that do not have onboard storage of archive data (and most don't),
-    # this could be expanded, probably to include virtually every type.
-    special = ['consBatteryVoltage']
-
     # Various codes used internally by the VP2:
     barometer_unit_dict   = {0:'inHg', 1:'mmHg', 2:'hPa', 3:'mbar'}
     temperature_unit_dict = {0:'degree_F', 1:'degree_10F', 2:'degree_C', 3:'degree_10C'}
-    elevation_unit_dict   = {0:'foot', 1:'meter'}
+    altitude_unit_dict    = {0:'foot', 1:'meter'}
     rain_unit_dict        = {0:'inch', 1:'mm'}
     wind_unit_dict        = {0:'mile_per_hour', 1:'meter_per_second', 2:'km_per_hour', 3:'knot'}
     wind_cup_dict         = {0:'small', 1:'large'}
@@ -393,7 +386,6 @@ class VantagePro(weewx.abstractstation.AbstractStation):
             for _loopPacket in self.genDavisLoopPackets(200):
                 # Translate the LOOP packet to one with physical units:
                 _physicalPacket = self.translateLoopPacket(_loopPacket)
-                self.accumulateLoop(_physicalPacket)
                 yield _physicalPacket
                 
 
@@ -518,8 +510,6 @@ class VantagePro(weewx.abstractstation.AbstractStation):
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Page timestamp %s" \
                                   % weeutil.weeutil.timestamp_to_string(_record['dateTime']))
                     return
-                # Augment the record with the data from the accumulators:
-                self.archiveAccumulators(_record)
                 # Set the last time to the current time, and yield the packet
                 _last_good_ts = _record['dateTime']
                 yield _record
@@ -527,61 +517,6 @@ class VantagePro(weewx.abstractstation.AbstractStation):
             # The starting index for pages other than the first is always zero
             _start_index = 0
 
-    def accumulateLoop(self, physicalLOOPPacket):
-        """Process LOOP data, calculating averages within an archive period."""
-        try:
-            # Gather the LOOP data for each special type. An exception
-            # will be thrown if either the accumulators have not been initialized 
-            # yet, or if the timestamp of the packet is outside the timespan held
-            # by the accumulator.
-            for obs_type in self.special:
-                self.current_accumulators[obs_type].addToSum(physicalLOOPPacket)
-            # For battery status, OR every status field together:
-            self.txBatteryStatus |= physicalLOOPPacket['txBatteryStatus']
-        except (AttributeError, weewx.accum.OutOfSpan):
-            # Initialize the accumulators:
-            self.clearAccumulators(physicalLOOPPacket['dateTime'])
-            # Try again:
-            try:
-                for obs_type in self.special:
-                    self.current_accumulators[obs_type].addToSum(physicalLOOPPacket)
-                # For battery status, OR every status field together:
-                self.txBatteryStatus |= physicalLOOPPacket['txBatteryStatus']
-            except weewx.accum.OutOfSpan:
-                # Failed again. There's something wrong. Log it.
-                syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to initialize accumulators.")
-            
-    def clearAccumulators(self, time_ts):
-        """Initialize or clear the accumulators"""
-        try:
-            # Shuffle accumulators. An exception will be thrown
-            # if they have never been initialized.
-            self.last_accumulators=self.current_accumulators
-        except:
-            pass
-        # Calculate the interval timespan that contains time_ts
-        start_of_interval = weeutil.weeutil.startOfInterval(time_ts, self.archive_interval)
-        timespan = weeutil.weeutil.TimeSpan(start_of_interval, start_of_interval+self.archive_interval)
-        # Initialize current_accumulators with instances of StdAccum
-        self.current_accumulators = {}
-        for obs_type in VantagePro.special:
-            self.current_accumulators[obs_type] = weewx.accum.StdAccum(obs_type, timespan)
-        self.txBatteryStatus = 0  
-
-    def archiveAccumulators(self, record):
-        """Add the results of the accumulators to the current archive record."""
-        try:
-            # For each special type, add its average to the archive record. An exception
-            # will be thrown if there is no accumulator (first time through).
-            for obs_type in VantagePro.special:
-                # Make sure the times match:
-                if self.last_accumulators[obs_type].timespan.stop == record['dateTime']:
-                    record[obs_type] = self.last_accumulators[obs_type].avg
-            # Save the battery status:
-            record['txBatteryStatus'] = self.txBatteryStatus
-        except AttributeError:
-            pass
-        
     def getTime(self) :
         """Get the current time from the console and decode it, returning it as a time-tuple
         
@@ -880,11 +815,11 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         setup_bits             = self._getEEPROM_value(0x2B)[0]
         self.rain_season_start = self._getEEPROM_value(0x2C)[0]
         self.archive_interval  = self._getEEPROM_value(0x2D)[0] * 60
-        self.elevation         = self._getEEPROM_value(0x0F, "<H")[0] 
+        self.altitude          = self._getEEPROM_value(0x0F, "<H")[0] 
 
         barometer_unit_code   =  unit_bits & 0x03
         temperature_unit_code = (unit_bits & 0x0C) >> 3
-        elevation_unit_code   = (unit_bits & 0x10) >> 4
+        altitude_unit_code    = (unit_bits & 0x10) >> 4
         rain_unit_code        = (unit_bits & 0x20) >> 5
         wind_unit_code        = (unit_bits & 0xC0) >> 6
 
@@ -893,7 +828,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
 
         self.barometer_unit   = VantagePro.barometer_unit_dict[barometer_unit_code]
         self.temperature_unit = VantagePro.temperature_unit_dict[temperature_unit_code]
-        self.elevation_unit   = VantagePro.elevation_unit_dict[elevation_unit_code]
+        self.altitude_unit    = VantagePro.altitude_unit_dict[altitude_unit_code]
         self.rain_unit        = VantagePro.rain_unit_dict[rain_unit_code]
         self.wind_unit        = VantagePro.wind_unit_dict[wind_unit_code]
         self.wind_cup_size    = VantagePro.wind_cup_dict[self.wind_cup_type]
