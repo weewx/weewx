@@ -7,7 +7,8 @@
 #    $Author$
 #    $Date$
 #
-"""Statistical accumulators"""
+"""Statistical accumulators. They accumulate the highs, lows, averages,
+etc., of a sequence of records."""
 
 import math
 
@@ -26,6 +27,7 @@ class ScalarStats(object):
         return (self.min, self.mintime, self.max, self.maxtime, self.sum, self.count)
     
     def mergeHiLo(self, x_stats):
+        """Merge the highs and lows of another accumulator into myself."""
         if x_stats.min is not None:
             if self.min is None or x_stats.min < self.min:
                 self.min     = x_stats.min
@@ -36,10 +38,15 @@ class ScalarStats(object):
                 self.maxtime = x_stats.maxtime
 
     def mergeSum(self, x_stats):
+        """Merge the sum and count of another accumulator into myself."""
         self.sum   += x_stats.sum
         self.count += x_stats.count
 
     def addHiLo(self, val, ts):
+        """Include a scalar value in my highs and lows.
+        val: A scalar value
+        ts:  The timestamp.
+        """
         if val is not None:
             if self.min is None or val < self.min:
                 self.min     = val
@@ -49,6 +56,7 @@ class ScalarStats(object):
                 self.maxtime = ts
 
     def addSum(self, val):
+        """Add a scalar value to my running sum and count."""
         if val is not None:
             self.sum += val
             self.count += 1
@@ -146,6 +154,7 @@ class DictAccum(dict):
                 self['wind'].addHiLo(record['windGust'], record['dateTime'])
             else:
                 self.initStats(obs_type)
+                print obs_type, type(self[obs_type]), record
                 self[obs_type].addHiLo(record[obs_type], record['dateTime'])
                 self[obs_type].addSum(record[obs_type])
                 

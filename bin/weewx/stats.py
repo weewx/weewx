@@ -151,43 +151,6 @@ class StatsDb(object):
         self.statsTypes      = self.__getTypes()
         self.std_unit_system = self._getStdUnitSystem()
 
-
-    def addRecord(self, rec):
-        """Add an archive record to the statistical database."""
-
-        if rec['dateTime'] is None:
-            syslog.syslog(syslog.LOG_ERR, "stats: archive record with null time encountered. Ignored.")
-            return
-        
-        # Get the start-of-day for this archive record.
-        _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
-
-        # Retrieve a dictionary containing the day's statistics:
-        _allStatsDict = self.getDayStats(_sod_ts)
-
-        # Add the data from this new record
-        _allStatsDict.addRecord(rec)
-
-        # Now write the results for all types back to the database
-        # in a single transaction:
-        self.setDayStats(_allStatsDict, rec['dateTime'])
-
-    def addAccum(self, accumulator):
-        #TODO: Check that I got the start-of-day correct. Should it be the
-        # the start or stop of the accumulator's timespan??
-        # Get the start-of-day for this accumulator.
-        _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.start)
-
-        # Retrieve a dictionary containing the day's statistics:
-        _allStatsDict = self.getDayStats(_sod_ts)
-
-        # Add the data from this new record
-        _allStatsDict.mergeStats(accumulator)
-
-        # Now write the results for all types back to the database
-        # in a single transaction:
-        self.setDayStats(_allStatsDict, accumulator.timespan.start)
-
     def getDayStats(self, sod_ts):
         """Return an instance of accum.DictAccum initialized to a given day's statistics.
 
@@ -196,7 +159,7 @@ class StatsDb(object):
         # Get the TimeSpan for the day starting with sod_ts:
         timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
 
-        _allStats = weewx.accum.DictAccum(timespan)
+        _stats_dict = weewx.accum.DictAccum(timespan)
         
         for stats_type in self.statsTypes:
             _row = self._xeqSql("SELECT * FROM %s WHERE dateTime = %d" % (stats_type, sod_ts), {})
@@ -210,9 +173,9 @@ class StatsDb(object):
             # be 'None'
             _stats_tuple = _row[1:] if _row else None
         
-            _allStats.initStats(stats_type, _stats_tuple)
+            _stats_dict.initStats(stats_type, _stats_tuple)
         
-        return _allStats
+        return _stats_dict
 
     def setDayStats(self, dayStatsDict, lastUpdate):
         """Write all statistics for a day to the database in a single transaction.

@@ -420,13 +420,7 @@ class StdArchive(StdService):
         try:
             self.accumulator.addRecord(event.packet)
         except weewx.accum.OutOfSpan:
-            # Merge the high-resolution high/lows in the accumulator
-            # into the stats database
-            self.statsDb.addAccum(self.accumulator)
-            # Extract a record out of the existing accumulator and dispatch it as 
-            # an event:
-            record = self.accumulator.getRecord()
-            self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+            self._mergeStats()
             # Get a new accumulator:
             self.accumulator = self._new_accumulator(event.timestamp)
             # Add the LOOP packet to it:
@@ -441,9 +435,8 @@ class StdArchive(StdService):
 
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
-        Put it in the stats and archive database."""
+        Put it in the archive database."""
         self.archive.addRecord(event.record)
-        self.statsDb.addRecord(event.record)
 
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
@@ -481,6 +474,28 @@ class StdArchive(StdService):
         # Backfill it with data from the archive. This will do nothing if 
         # the stats database is already up-to-date.
         weewx.stats.backfill(self.archive, self.statsDb)
+
+    def _mergeStats(self):
+        """Add the accumulated statistics to the stats database."""
+        
+        # Extract a record out of the accumulator. 
+        record = self.accumulator.getRecord()
+
+        # Get the start-of-day for the accumulator.
+        _sod_ts = weeutil.weeutil.startOfArchiveDay(self.accumulator.timespan.stop)
+
+        # Retrieve a dictionary containing the day's statistics from the stats database
+        _allStatsDict = self.statsDb.getDayStats(_sod_ts)
+        # Add the accumulator to it
+        _allStatsDict.mergeStats(self.accumulator)
+        # And the record:
+        _allStatsDict.addRecord(record)
+        # Now write the results for all types back to the database in a single
+        # transaction:
+        self.statsDb.setDayStats(_allStatsDict, self.accumulator.timespan.stop)
+
+        # Finally, send out the record as a new event:
+        self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
 
     def _new_accumulator(self, timestamp):
         start_archive_ts = weeutil.weeutil.startOfInterval(timestamp,
