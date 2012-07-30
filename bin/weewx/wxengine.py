@@ -422,7 +422,7 @@ class StdArchive(StdService):
         except weewx.accum.OutOfSpan:
             self._mergeStats()
             # Get a new accumulator:
-            self.accumulator = self._new_accumulator(event.timestamp)
+            self.accumulator = self._new_accumulator(the_time)
             # Add the LOOP packet to it:
             self.accumulator.addRecord(event.packet)
 
@@ -480,6 +480,9 @@ class StdArchive(StdService):
         
         # Extract a record out of the accumulator. 
         record = self.accumulator.getRecord()
+        print "Record: ", record
+        # Add the archive interval
+        record['interval'] = self.archive_interval / 60
 
         # Get the start-of-day for the accumulator.
         _sod_ts = weeutil.weeutil.startOfArchiveDay(self.accumulator.timespan.stop)

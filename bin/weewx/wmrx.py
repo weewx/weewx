@@ -279,17 +279,19 @@ class WMR100(weewx.abstractstation.AbstractStation):
         
     
     def _wind_packet(self, packet):
-        # TODO: Often the average wind is higher than the wind gust.
-        windDir   = (packet[2] & 0x0f) * 360.0 / 16.0
-        windSpeed = ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0
-        windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0
-        _record = {'wind'        : (windSpeed, windDir),
+        """Decode a wind packet. Wind speed will be in m/s"""
+        _record = {'windSpeed'   : ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0,
+                   'windDir'     : (packet[2] & 0x0f) * 360.0 / 16.0, 
                    'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
         # Sometimes the station emits a wind gust that is less than the average wind.
         # Ignore it if this is the case.
-        if windGustSpeed >= windSpeed:
-            _record['windGust'] = (windGustSpeed, None)
+        windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0
+        if windGustSpeed >= _record['windSpeed']:
+            _record['windGust'] = windGustSpeed
+        windSpeed=_record['windSpeed']
+        print "Wind speed: ", windSpeed, "m/s; (", windSpeed*2.23694, " mph)"
+        print "Wind gust : ", windGustSpeed, "m/s; (", windGustSpeed*2.23694, " mph)"
         return _record
     
     def _clock_packet(self, packet):
