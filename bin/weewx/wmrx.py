@@ -269,6 +269,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
                    'altimeter'   : SA,
                    'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
+        print "Barometer record:", _record
         return _record
         
     def _uv_packet(self, packet):

@@ -329,7 +329,8 @@ class StdCalibrate(StdService):
 
 class StdQC(StdService):
     """Performs quality check on incoming data."""
-    
+
+# TODO: Allow the units to be specified in the configuration dictionary.
     def __init__(self, engine, config_dict):
         super(StdQC, self).__init__(engine, config_dict)
 
@@ -561,12 +562,14 @@ class StdPrint(StdService):
     
     def new_archive_record(self, event):
         """Print out a summary of the new archive record."""
-        print "REC:-> ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']),\
-                        event.record['barometer'],\
-                        event.record['outTemp'],\
-                        event.record['windSpeed'],\
-                        event.record['windDir'], " <-"
+#        print "REC:-> ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']),\
+#                        event.record['barometer'],\
+#                        event.record['outTemp'],\
+#                        event.record['windSpeed'],\
+#                        event.record['windDir'], " <-"
 
+        print "REC:->  ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']),\
+                          event.record
 #===============================================================================
 #                    Class StdRESTful
 #===============================================================================
