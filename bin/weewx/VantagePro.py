@@ -356,10 +356,6 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         Default is 4]
         
         iss_id: The station number of the ISS [Optional. Default is 1]
-        
-        unit_system: What unit system to use on the VP. [Optional.
-        Default is 1 (US Customary), and the only system supported
-        in this version.]
         """
 
         # TODO: These values should really be retrieved dynamically from the VP:
@@ -369,7 +365,6 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         # These come from the configuration dictionary:
         self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
-        self.unit_system      = int(vp_dict.get('unit_system'  , 1))
 
         # Get an appropriate port, depending on the connection type:
         self.port = VantagePro._port_factory(vp_dict)
@@ -789,12 +784,8 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         loopPacket: A dictionary holding the LOOP data in the internal units used by Davis.
         
         returns: A dictionary with the values in physical units."""
-        # Right now, only US customary units are supported
-        if self.unit_system != weewx.US :
-            raise weewx.UnsupportedFeature("Only US Customary Units are supported on the Davis VP2.")
 
         _packet = self.translateLoopToUS(loopPacket)
-
         return _packet
     
 
@@ -804,10 +795,6 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         archivePacket: A dictionary holding an archive packet in the internal, Davis encoding
         
         returns: A dictionary with the values in physical units."""
-        
-        # Right now, only US units are supported
-        if self.unit_system != weewx.US :
-            raise weewx.UnsupportedFeature("Only US Units are supported on the Davis VP2.")
 
         _packet = self.translateArchiveToUS(archivePacket)
         return _packet

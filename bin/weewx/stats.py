@@ -173,7 +173,8 @@ class StatsDb(object):
         self.setDayStats(_allStatsDict, rec['dateTime'])
 
     def addAccum(self, accumulator):
-        
+        #TODO: Check that I got the start-of-day correct. Should it be the
+        # the start or stop of the accumulator's timespan??
         # Get the start-of-day for this accumulator.
         _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.start)
 

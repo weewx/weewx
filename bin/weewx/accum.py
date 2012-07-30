@@ -33,7 +33,7 @@ class ScalarStats(object):
         if x_stats.max is not None:
             if self.max is None or x_stats.max > self.max:
                 self.max     = x_stats.max
-                self.maxtime = x_stats.max_time
+                self.maxtime = x_stats.maxtime
 
     def mergeSum(self, x_stats):
         self.sum   += x_stats.sum
@@ -49,8 +49,9 @@ class ScalarStats(object):
                 self.maxtime = ts
 
     def addSum(self, val):
-        self.sum += val
-        self.count += 1
+        if val is not None:
+            self.sum += val
+            self.count += 1
         
     @property
     def avg(self):
@@ -79,7 +80,7 @@ class VecStats(object):
         if x_stats.max is not None:
             if self.max is None or x_stats.max > self.max:
                 self.max     = x_stats.max
-                self.maxtime = x_stats.max_time
+                self.maxtime = x_stats.maxtime
                 self.max_dir = x_stats.max_dir
 
     def mergeSum(self, x_stats):
@@ -113,6 +114,10 @@ class VecStats(object):
                 self.squarecount += 1
             
     @property
+    def avg(self):
+        return self.sum / self.count if self.count else None
+
+    @property
     def vec_avg(self):
         if self.count:
             return math.sqrt((self.xsum**2 + self.ysum**2) / self.count**2)
@@ -136,10 +141,11 @@ class DictAccum(dict):
         for obs_type in record:
             if obs_type=='dateTime':
                 continue
-            self.initStats(obs_type)
             if obs_type=='windGust':
+                self.initStats('wind')
                 self['wind'].addHiLo(record['windGust'], record['dateTime'])
             else:
+                self.initStats(obs_type)
                 self[obs_type].addHiLo(record[obs_type], record['dateTime'])
                 self[obs_type].addSum(record[obs_type])
                 
@@ -154,13 +160,14 @@ class DictAccum(dict):
                     
     def getRecord(self):
         
-        record = {}
+        record = {'dateTime': self.timespan.stop}
         for obs_type in self:
             record[obs_type] = self[obs_type].avg
             if obs_type == 'wind':
                 record['windDir']     = self[obs_type].vec_dir
                 record['windGust']    = self[obs_type].max
                 record['windGustDir'] = self[obs_type].max_dir
+        return record
             
     def initStats(self, obs_type, stats_tuple=None):
         # 

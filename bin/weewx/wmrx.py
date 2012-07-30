@@ -44,7 +44,8 @@ class WMR100(weewx.abstractstation.AbstractStation):
         
         NAMED ARGUMENTS:
         
-        altitude: The station altitude in meters. Required.
+        altitude: A 2-way tuple. First element is altitude, second element is the unit
+        it is in. Example: (700, 'foot'). Required.
         
         timeout: How long to wait, in seconds, before giving up on a response from the
         USB port. [Optional. Default is 15 seconds]
@@ -64,14 +65,18 @@ class WMR100(weewx.abstractstation.AbstractStation):
         IN_endpoint: The IN USB endpoint used by the WMR. [Optional. Default is usb.ENDPOINT_IN + 1]
         """
         
-        self.altitude          = stn_dict['altitude']
-        self.timeout           = stn_dict.get('timeout', 15.0)
-        self.wait_before_retry = stn_dict.get('wait_before_retry', 5.0)
-        self.max_tries         = stn_dict.get('max_tries', 3)
-        self.vendor_id         = stn_dict.get('vendor_id',  0x0fde)
-        self.product_id        = stn_dict.get('product_id', 0xca01)
-        self.interface         = stn_dict.get('interface', 0)
-        self.IN_endpoint       = stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1)
+        altitude_t           = weeutil.weeutil.option_as_list(stn_dict['altitude'])
+        # Form a value-tuple:
+        altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+        # Now perform the conversion, extracting only the value:
+        self.altitude          = weewx.units.convert(altitude_vt, 'meter').value
+        self.timeout           = float(stn_dict.get('timeout', 15.0))
+        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
+        self.max_tries         = int(stn_dict.get('max_tries', 3))
+        self.vendor_id         = int(stn_dict.get('vendor_id',  '0x0fde'), 0)
+        self.product_id        = int(stn_dict.get('product_id', '0xca01'), 0)
+        self.interface         = int(stn_dict.get('interface', 0))
+        self.IN_endpoint       = int(stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1))
 
         self.lastRainTotal = None
         self.openPort()
@@ -274,13 +279,17 @@ class WMR100(weewx.abstractstation.AbstractStation):
         
     
     def _wind_packet(self, packet):
-        windSpeed = ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0,
-        windDir   = (packet[2] & 0x0f) * 360.0 / 16.0,
+        # TODO: Often the average wind is higher than the wind gust.
+        windDir   = (packet[2] & 0x0f) * 360.0 / 16.0
+        windSpeed = ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0
         windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0
         _record = {'wind'        : (windSpeed, windDir),
-                   'windGust'    : (windGustSpeed, None),
                    'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
+        # Sometimes the station emits a wind gust that is less than the average wind.
+        # Ignore it if this is the case.
+        if windGustSpeed >= windSpeed:
+            _record['windGust'] = (windGustSpeed, None)
         return _record
     
     def _clock_packet(self, packet):
