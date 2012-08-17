@@ -1,28 +1,23 @@
 TODO before the next release:
 
-Hardware drivers must return packet with observation type 'wind' (not windSpeed, windDir).
-
-The archive database needs averages from the accumulator, but the stats database needs min
-and maxes as well.
-
-Put clock drift stuff in its own section in weewx.conf.
-
-Remove clock drift logic from class VantagePro. It should just get the time or set the time.
+Make sure the unit type can change between LOOP records. NB: rain uses US units, everything else
+metric.
 
 Allow archives to store data in metric units
 
 Change calibration service so it can take any units (not just the native hardware units)
 
-See if the accumulator stuff is still needed in class VantagePro
+Put clock drift stuff in its own section in weewx.conf.
+
+Remove clock drift logic from class VantagePro. It should just get the time or set the time.
+
+Consider changing the name of VantagePro.py to VantageSeries.py or something similar.
 
 Add info about bad USB to serial converters to the "Troubleshooting" section. In particular,
 how to use minicom to send a "TEST" command to the VP2.
 
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
-
-Make sure the unit type can change between LOOP records. NB: rain uses US units, everything else
-metric.
 
 When using UTF8 characters in a template file, either find a way to automatically 
 include the Cheetah directive
@@ -35,9 +30,6 @@ Update the "Customizing guide" reflecting the new engine architecture.
 
 Update the "User's Guide" to update the new config utilities.
 
-Get rid of cache LOOP data.
-
 Abstract the database type a little more (in preparation for supporting MySQL).
 
 An archive object probably should not be shared between the main thread and the RESTful thread.
-
