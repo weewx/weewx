@@ -37,15 +37,26 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
+def loader(config_dict):
+
+    altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
+    # Form a value-tuple:
+    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
+    
+    station = WMR100(altitude=altitude_m, **config_dict['WMR100'])
+    
+    return station
+        
 class WMR100(weewx.abstractstation.AbstractStation):
+    """Driver for the WMR100 station."""
     
     def __init__(self, **stn_dict) :
         """Initialize an object of type WMR100.
         
         NAMED ARGUMENTS:
         
-        altitude: A 2-way tuple. First element is altitude, second element is the unit
-        it is in. Example: (700, 'foot'). Required.
+        altitude: The altitude in meters. Required.
         
         timeout: How long to wait, in seconds, before giving up on a response from the
         USB port. [Optional. Default is 15 seconds]
@@ -65,11 +76,8 @@ class WMR100(weewx.abstractstation.AbstractStation):
         IN_endpoint: The IN USB endpoint used by the WMR. [Optional. Default is usb.ENDPOINT_IN + 1]
         """
         
-        altitude_t           = weeutil.weeutil.option_as_list(stn_dict['altitude'])
-        # Form a value-tuple:
-        altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-        # Now perform the conversion, extracting only the value:
-        self.altitude          = weewx.units.convert(altitude_vt, 'meter').value
+        self.altitude          = stn_dict['altitude']
+        # TODO: Consider changing this so these go in the driver loader instead:
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))

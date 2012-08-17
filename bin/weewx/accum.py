@@ -157,7 +157,7 @@ class DictAccum(dict):
                 self[obs_type].addHiLo(record[obs_type], record['dateTime'])
                 self[obs_type].addSum(record[obs_type])
                 
-    def mergeStats(self, accumulator):
+    def updateHiLo(self, accumulator):
         """Merge the stats of another accumulator into me."""
         if accumulator.timespan.start < self.timespan.start or accumulator.timespan.stop > self.timespan.stop:
             raise OutOfSpan("Attempt to merge an accumulator whose timespan is not a subset")
