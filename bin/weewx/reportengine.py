@@ -97,8 +97,8 @@ class StdReportEngine(threading.Thread):
                 continue
                 
             # Add the default archive and stats files:
-            skin_dict['archive_file'] = self.config_dict['Archive']['archive_file']
-            skin_dict['stats_file']   = self.config_dict['Stats']['stats_file']
+            skin_dict['archive_file'] = self.config_dict['StdArchive']['archive_file']
+            skin_dict['stats_file']   = self.config_dict['StdArchive']['stats_file']
 
             # Inject any overrides the user may have specified in the weewx.conf
             # configuration file for all reports:

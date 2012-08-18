@@ -16,6 +16,9 @@ import syslog
 import weewx
 import weeutil.weeutil
 
+unit_nicknames = {'US'     : weewx.US,
+                  'METRIC' : weewx.METRIC}
+
 # This data structure maps observation types to a "unit group"
 obs_group_dict = {"barometer"          : "group_pressure",
                   "pressure"           : "group_pressure",
@@ -448,6 +451,41 @@ class Converter(object):
         new_val_t = convert(val_t, new_unit_type)
         return new_val_t
 
+    def convertDict(self, obs_dict):
+        """Convert an observation dictionary into the target unit system.
+        
+        The source dictionary must include the key 'usUnits' in order for the
+        converter to figure out what unit system it is in.
+        
+        Example: convert a dictionary which is in the metric unit system into US units
+        
+        >>> # Construct a default converter, which will be to US units
+        >>> c = Converter()
+        >>> # Source dictionary is in metric units
+        >>> source_dict = {'dateTime': 194758100, 'outTemp': 20.0, 'usUnits': weewx.METRIC,\
+            'barometer':1015.8, 'interval':15}
+        >>> target_dict = c.convertDict(source_dict)
+        >>> print target_dict
+        {'outTemp': 68.0, 'interval': 15, 'barometer': 30.0, 'dateTime': 194758100}
+        """
+        # Get the unit system the source is in. This will be something like weewx.US or weewx.METRIC.
+        source_unit_system = obs_dict['usUnits']
+        
+        # Get a converter for the source unit system. We won't be actually using it to convert
+        # anything; instead, we'll be using it to get the source units and unit groups.
+        source_converter = StdUnitConverters[source_unit_system]
+
+        target_dict = {}
+        for obs_type in obs_dict:
+            if obs_type in ['usUnits']: continue
+            # Construct a value tuple for the source observation
+            val_t = (obs_dict[obs_type], ) + source_converter.getTargetUnit(obs_type)
+            # Now use it to convert into a value tuple in the target units. Strip
+            # off and save only the first element (the observation value):
+            target_dict[obs_type] = self.convert(val_t)[0]
+        return target_dict
+            
+            
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
         target unit type and group, or (None, None) if they cannot be determined.
@@ -827,6 +865,7 @@ def dictFromStd(d):
 
     
 if __name__ == "__main__":
+    
     import doctest
 
     if not doctest.testmod().failed:

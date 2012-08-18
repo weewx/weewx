@@ -80,7 +80,7 @@ def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
     # Open up the main database archive
     archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                   config_dict['Archive']['archive_file'])
+                                   config_dict['StdArchive']['archive_file'])
     try:
         dummy_archive = weewx.archive.Archive(archiveFilename)
     except StandardError:
@@ -94,12 +94,12 @@ def createStatsDatabase(config_dict):
     """Create the weewx statistical database"""
     # Open up the Stats database
     statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                 config_dict['Stats']['stats_file'])
+                                 config_dict['StdArchive']['stats_file'])
     try:
         dummy_statsDb = weewx.stats.StatsDb(statsFilename)
     except StandardError:
         # Configure it:
-        weewx.stats.config(statsFilename, config_dict['Stats'].get('stats_types'))
+        weewx.stats.config(statsFilename, config_dict['StdArchive'].get('stats_types'))
         print "Created statistical database %s" % statsFilename
     else:
         print "The statistical database %s already exists" % statsFilename
@@ -113,12 +113,12 @@ def backfillStatsDatabase(config_dict):
 
     # Open up the Stats database
     statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                 config_dict['Stats']['stats_file'])
+                                 config_dict['StdArchive']['stats_file'])
     statsDb = weewx.stats.StatsDb(statsFilename)
     
     # Open up the main database archive
     archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                   config_dict['Archive']['archive_file'])
+                                   config_dict['StdArchive']['archive_file'])
     archive = weewx.archive.Archive(archiveFilename)
 
     # Now backfill
@@ -130,7 +130,7 @@ def reconfigMainDatabase(config_dict):
     
     # The old archive:
     oldArchiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                      config_dict['Archive']['archive_file'])
+                                      config_dict['StdArchive']['archive_file'])
     newArchiveFilename = oldArchiveFilename + ".new"
     weewx.archive.reconfig(oldArchiveFilename, newArchiveFilename)
     

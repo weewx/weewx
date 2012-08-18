@@ -572,7 +572,7 @@ if __name__ == '__main__':
             
         # Open up the main database archive
         archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                       config_dict['Archive']['archive_file'])
+                                       config_dict['StdArchive']['archive_file'])
         archive = weewx.archive.Archive(archiveFilename)
         
         stop_ts  = archive.lastGoodStamp()

@@ -24,3 +24,6 @@ class AbstractStation(object):
     
     def setTime(self, newtime_ts):
         raise weewx.NotImplemented("Method setTime not implemented")
+    
+    def closePort(self):
+        pass

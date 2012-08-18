@@ -120,14 +120,15 @@ class WMR100(weewx.abstractstation.AbstractStation):
     def genLoopPackets(self):
         """Generator function that continuously returns loop packets"""
         
-        while True:
-            for _packet in self.genPackets():
-                _packet_type = _packet[1]
-                print "packet: ", len(_packet)*" 0x%x" % tuple(_packet)
-                if _packet_type in WMR100._dispatch_dict:
-                    _record = WMR100._dispatch_dict[_packet_type](self, _packet)
-                    if _record is not None : 
-                        yield _record
+        # Get a stream of raw packets, then convert them, depending on the
+        # observation type.
+        
+        for _packet in self.genPackets():
+            _packet_type = _packet[1]
+            if _packet_type in WMR100._dispatch_dict:
+                _record = WMR100._dispatch_dict[_packet_type](self, _packet)
+                if _record is not None : 
+                    yield _record
                 
     def genPackets(self):
         """Generate measurement packets. These are 8 to 17 byte long packets containing
@@ -203,7 +204,6 @@ class WMR100(weewx.abstractstation.AbstractStation):
             report = self.devh.interruptRead(self.IN_endpoint,
                                              8, # bytes to read
                                              int(self.timeout*1000))
-            print report
             try:
                 # While the report is 8 bytes long, only a smaller, variable portion of it
                 # has measurement data. This amount is given by byte zero:
@@ -277,7 +277,6 @@ class WMR100(weewx.abstractstation.AbstractStation):
                    'altimeter'   : SA,
                    'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
-        print "Barometer record:", _record
         return _record
         
     def _uv_packet(self, packet):
@@ -298,9 +297,6 @@ class WMR100(weewx.abstractstation.AbstractStation):
         windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0
         if windGustSpeed >= _record['windSpeed']:
             _record['windGust'] = windGustSpeed
-        windSpeed=_record['windSpeed']
-        print "Wind speed: ", windSpeed, "m/s; (", windSpeed*2.23694, " mph)"
-        print "Wind gust : ", windGustSpeed, "m/s; (", windGustSpeed*2.23694, " mph)"
         return _record
     
     def _clock_packet(self, packet):

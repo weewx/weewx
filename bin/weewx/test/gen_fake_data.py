@@ -64,9 +64,9 @@ class StatsTestBase(unittest.TestCase):
             print "Using configuration file:  ", self.config_path
 
         self.archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                            config_dict['Archive']['archive_file'])
+                                            config_dict['StdArchive']['archive_file'])
         self.statsFilename   = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                            config_dict['Stats']['stats_file'])
+                                            config_dict['StdArchive']['stats_file'])
         
         print "Test archive database path:", self.archiveFilename
         print "Test stats database path:  ", self.statsFilename
@@ -76,10 +76,10 @@ class StatsTestBase(unittest.TestCase):
             self.archive = weewx.archive.Archive(self.archiveFilename)
         except StandardError:
             # The archive was not configured. Go configure it:
-            self.configDatabases(stats_types=config_dict['Stats']['stats_types'])
+            self.configDatabases(stats_types=config_dict['StdArchive']['stats_types'])
 
         self.stats = weewx.stats.StatsDb(self.statsFilename)
-        self.assertEqual(sorted(self.stats.statsTypes), sorted(config_dict['Stats']['stats_types']))
+        self.assertEqual(sorted(self.stats.statsTypes), sorted(config_dict['StdArchive']['stats_types']))
 
     def configDatabases(self, stats_types):
         """Configures the main and stats databases."""

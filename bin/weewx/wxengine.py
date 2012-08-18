@@ -282,6 +282,44 @@ class StdService(object):
         self.engine.bind(event_type, callback)
 
 #===============================================================================
+#                    Class StdConvert
+#===============================================================================
+
+class StdConvert(StdService):
+    """Service for performing unit conversions.
+    
+    This service should be run before most of the others, so observations appear
+    in the correct unit."""
+    
+    def __init__(self, engine, config_dict):
+        # Initialize my base class:
+        super(StdConvert, self).__init__(engine, config_dict)
+
+        # Get the target unit nickname (something like 'US' or 'METRIC'):
+        target_unit_nickname = config_dict['StdConvert']['target_unit']
+        # Get the target unit. This will be weewx.US or weewx.METRIC
+        self.target_unit = weewx.units.unit_nicknames[target_unit_nickname.upper()]
+        # Bind self.converter to the appropriate standard converter
+        self.converter = weewx.units.StdUnitConverters[self.target_unit]
+        
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        
+    def new_loop_packet(self, event):
+        """Do unit conversions for a LOOP packet"""
+        if event.packet['usUnits'] == self.target_unit: return
+        converted_packet = self.converter.convertDict(event.packet)
+        converted_packet['usUnits'] = self.target_unit
+        event.packet = converted_packet
+
+    def new_archive_record(self, event):
+        """Do unit conversions for an archive packet."""
+        if event.record['usUnits'] == self.target_unit: return
+        converted_record = self.converter.convertDict(event.record)
+        converted_record['usUnits'] = self.target_unit
+        event.record = converted_record
+        
+#===============================================================================
 #                    Class StdCalibrate
 #===============================================================================
 
@@ -299,7 +337,7 @@ class StdCalibrate(StdService):
         # Get the list of calibration corrections to apply. If a section
         # is missing, a KeyError exception will get thrown:
         try:
-            correction_dict = config_dict['Calibrate']['Corrections']
+            correction_dict = config_dict['StdCalibrate']['Corrections']
         except KeyError:
             return
         
@@ -336,10 +374,10 @@ class StdQC(StdService):
         super(StdQC, self).__init__(engine, config_dict)
 
         self.min_max_dict = {}
-        # Nothing to do if the 'QC' section does not exist in the configuration
+        # Nothing to do if the 'StdQC' section does not exist in the configuration
         # dictionary.
-        if config_dict.has_key('QC'):
-            min_max_dict = config_dict['QC']['MinMax']
+        if config_dict.has_key('StdQC'):
+            min_max_dict = config_dict['StdQC']['MinMax']
     
             for obs_type in min_max_dict.scalars:
                 self.min_max_dict[obs_type] = (float(min_max_dict[obs_type][0]),
@@ -425,7 +463,13 @@ class StdArchive(StdService):
 
     def post_loop(self, event):
         """The main event loop has ended. Time to process the old accumulator."""
-        self.statsDb.updateHiLo(self.old_accumulator)
+        # If we happen to startup in the small time interval between the end of
+        # the archive interval and the end of the archive delay period, then
+        # there will be no old accumulator and an exception will be thrown.
+        try:
+            self.statsDb.updateHiLo(self.old_accumulator)
+        except AttributeError:
+            return
         # Extract a record out of the old accumulator. 
         record = self.old_accumulator.getRecord()
         # Add the archive interval
@@ -444,7 +488,7 @@ class StdArchive(StdService):
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
         archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                       config_dict['Archive']['archive_file'])
+                                       config_dict['StdArchive']['archive_file'])
         # Try to open up the database. If it doesn't exist or has not been initialized, an exception
         # will be thrown. Catch it, configure the database, and then try again.
         try:
@@ -452,8 +496,8 @@ class StdArchive(StdService):
         except StandardError:
             weewx.archive.config(archiveFilename)
             self.archive = weewx.archive.Archive(archiveFilename)
-        self.archive_interval = config_dict['Archive'].as_int('archive_interval')
-        self.archive_delay    = config_dict['Archive'].as_int('archive_delay')
+        self.archive_interval = config_dict['StdArchive'].as_int('archive_interval')
+        self.archive_delay    = config_dict['StdArchive'].as_int('archive_delay')
         if hasattr(self.engine.station, 'archive_interval') and self.engine.station.archive_interval!=self.archive_interval:
             raise weewx.ViolatedPrecondition("Archive interval in configuration file (%d) "
                                              "does not match hardware interval (%d)" % \
@@ -462,7 +506,7 @@ class StdArchive(StdService):
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
         statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                     config_dict['Stats']['stats_file'])
+                                     config_dict['StdArchive']['stats_file'])
         # Try to open up the database. If it doesn't exist or has not been initialized, an exception
         # will be thrown. Catch it, configure the database, and then try again.
         try:
@@ -470,7 +514,7 @@ class StdArchive(StdService):
                                                int(config_dict['Station'].get('cache_loop_data', '1')))
         except StandardError:
             # It's uninitialized. Configure it:
-            weewx.stats.config(statsFilename, config_dict['Stats'].get('stats_types'))
+            weewx.stats.config(statsFilename, config_dict['StdArchive'].get('stats_types'))
             # Try again to open it up:
             self.statsDb = weewx.stats.StatsDb(statsFilename)
 
@@ -598,7 +642,7 @@ class StdRESTful(StdService):
             
             # Create an instance of weewx.archive.Archive
             archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                           config_dict['Archive']['archive_file'])
+                                           config_dict['StdArchive']['archive_file'])
             archive = weewx.archive.Archive(archiveFilename)
             # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
