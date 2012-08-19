@@ -39,9 +39,12 @@ import weewx.wxformulas
 
 def loader(config_dict):
 
+    # The WMR driver needs the altitude in meters. Get it from the Station data
+    # and do any necessary conversions.
     altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
     # Form a value-tuple:
     altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+    # Now convert to meters, using only the first element of the returned value-tuple:
     altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
     
     station = WMR100(altitude=altitude_m, **config_dict['WMR100'])
@@ -57,6 +60,9 @@ class WMR100(weewx.abstractstation.AbstractStation):
         NAMED ARGUMENTS:
         
         altitude: The altitude in meters. Required.
+        
+        stale_wind: Max time wind speed can be used to calculate wind chill
+        before being declared unusable. [Optional. Default is 30 seconds]
         
         timeout: How long to wait, in seconds, before giving up on a response from the
         USB port. [Optional. Default is 15 seconds]
@@ -78,6 +84,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
         
         self.altitude          = stn_dict['altitude']
         # TODO: Consider changing this so these go in the driver loader instead:
+        self.stale_wind        = float(stn_dict.get('stale_wind', 30.0))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
@@ -245,8 +252,12 @@ class WMR100(weewx.abstractstation.AbstractStation):
     def _temperature_packet(self, packet):
         _record = {'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
-        T = ((packet[4] << 8) + packet[3])/10.0
-        D = ((packet[4] << 8) + packet[3])/10.0
+        # Per Ejeklint's notes don't mention what to do if temperature
+        # or dewpoint are negative. I think the following is correct
+        T = (((packet[4] & 0x7f) << 8) + packet[3])/10.0
+        if packet[4] & 0x80 : T = -T
+        D = (((packet[7] & 0x7f) << 8) + packet[6])/10.0
+        if packet[7] % 0x80 : D = -D
         R = float(packet[5])
         channel = packet[2] & 0x0f
         if channel == 0:
@@ -256,16 +267,22 @@ class WMR100(weewx.abstractstation.AbstractStation):
             _record['outTemp']     = T
             _record['dewpoint']    = D
             _record['outHumidity'] = R
-        elif channel == 2:
-            _record['extraTemp1']  = T
-            _record['extraHumid1'] = R
-
-        # Does this packet include a wind chill?
-        if packet[8] >> 4 == 1:
-            # The WMR inexplicably returns wind chill in degrees F, but everything
-            # else in degrees C...
-            windchill_F = (((packet[8] & 0x0f) << 8) + packet[7]) / 10.0
-            _record['windchill'] = weewx.units.conversionDict['degree_F']['degree_C'](windchill_F)
+            _record['heatindex']   = weewx.wxformulas.heatindexC(T, R)
+            # The WMR does not provide wind information in a temperature packet,
+            # so we have to use old wind data to calculate wind chill, provided
+            # it isn't too old and has gone stale. If no wind data has been seen
+            # yet, then this will raise an AttributeError exception.
+            try:
+                if _record['dateTime'] - self.last_wind_record['dateTime'] <= self.stale_wind:
+                    _record['windchill'] = weewx.wxformulas.windchillC(T, self.last_wind_record['windSpeed'])
+            except AttributeError:
+                pass
+        elif channel >= 2:
+            # If additional temperature sensors exist (channel>=2), then
+            # use observation types 'extraTemp1', 'extraTemp2', etc.
+            _record['extraTemp%d'  % channel] = T
+            _record['extraHumid%d' % channel] = R
+            
         return _record
         
     def _barometer_packet(self, packet):
@@ -287,16 +304,21 @@ class WMR100(weewx.abstractstation.AbstractStation):
         
     
     def _wind_packet(self, packet):
-        """Decode a wind packet. Wind speed will be in m/s"""
-        _record = {'windSpeed'   : ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0,
+        """Decode a wind packet. Wind speed will be in kph"""
+
+        # The console returns wind speeds in m/s. Our metric system requires kph,
+        # so the result needs to be multiplied by 3.6        
+        _record = {'windSpeed'   : ((packet[6] << 4) + ((packet[5]) >> 4)) * 3.6 / 10.0,
                    'windDir'     : (packet[2] & 0x0f) * 360.0 / 16.0, 
                    'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
         # Sometimes the station emits a wind gust that is less than the average wind.
         # Ignore it if this is the case.
-        windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0
+        windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) * 3.6 / 10.0
         if windGustSpeed >= _record['windSpeed']:
             _record['windGust'] = windGustSpeed
+        # Save the wind record to be used for windchill and heat index
+        self.last_wind_record = _record
         return _record
     
     def _clock_packet(self, packet):
@@ -310,8 +332,3 @@ class WMR100(weewx.abstractstation.AbstractStation):
                       0x47: _uv_packet,
                       0x48: _wind_packet,
                       0x60: _clock_packet}
-    
-if __name__ == "__main__":
-    station = WMR100(altitude=213.36)
-    for pack in station.genLoopPackets():
-        print pack

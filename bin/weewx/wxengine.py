@@ -198,8 +198,8 @@ class StdEngine(object):
                 try:
                 
                     # And this is the main packet LOOP. It will continuously
-                    # generate LOOP packets until some service breaks it
-                    # (usually when an archive period has passed).
+                    # generate LOOP packets until some service breaks it by throwing
+                    # an exception (usually when an archive period has passed).
                     for packet in self.station.genLoopPackets():
                         
                         # Package the packet as an event, then dispatch it.            
@@ -288,6 +288,9 @@ class StdService(object):
 class StdConvert(StdService):
     """Service for performing unit conversions.
     
+    This service acts as a filter. Whatever packets and records come in are
+    converted to a target unit system.
+    
     This service should be run before most of the others, so observations appear
     in the correct unit."""
     
@@ -307,16 +310,26 @@ class StdConvert(StdService):
         
     def new_loop_packet(self, event):
         """Do unit conversions for a LOOP packet"""
+        # No need to do anything if the packet is already in the target
+        # unit system
         if event.packet['usUnits'] == self.target_unit: return
+        # Perform the conversion
         converted_packet = self.converter.convertDict(event.packet)
+        # Add the new unit system
         converted_packet['usUnits'] = self.target_unit
+        # Replace the old packet with the new, converted packet:
         event.packet = converted_packet
 
     def new_archive_record(self, event):
-        """Do unit conversions for an archive packet."""
+        """Do unit conversions for an archive record."""
+        # No need to do anything if the record is already in the target
+        # unit system
         if event.record['usUnits'] == self.target_unit: return
+        # Perform the conversion
         converted_record = self.converter.convertDict(event.record)
+        # Add the new unit system
         converted_record['usUnits'] = self.target_unit
+        # Replace the old record with the new, converted record
         event.record = converted_record
         
 #===============================================================================
@@ -333,23 +346,23 @@ class StdCalibrate(StdService):
         # Initialize my base class:
         super(StdCalibrate, self).__init__(engine, config_dict)
         
-        self.corrections = {}
         # Get the list of calibration corrections to apply. If a section
         # is missing, a KeyError exception will get thrown:
         try:
             correction_dict = config_dict['StdCalibrate']['Corrections']
+            self.corrections = {}
+
+            # For each correction, compile it, then save in a dictionary of
+            # corrections to be applied:
+            for obs_type in correction_dict.scalars:
+                self.corrections[obs_type] = compile(correction_dict[obs_type], 
+                                                     'StdCalibrate', 'eval')
+            
+            self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         except KeyError:
-            return
-        
-        # For each correction, compile it, then save in a dictionary of
-        # corrections to be applied:
-        for obs_type in correction_dict.scalars:
-            self.corrections[obs_type] = compile(correction_dict[obs_type], 
-                                                 'StdCalibrate', 'eval')
-        
-        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        
+            syslog.syslog(syslog.LOG_NOTICE, "wxengine: No calibration information in config file. Ignored.")
+            
     def new_loop_packet(self, event):
         """Apply a calibration correction to a LOOP packet"""
         for obs_type in self.corrections:
@@ -369,22 +382,24 @@ class StdCalibrate(StdService):
 class StdQC(StdService):
     """Performs quality check on incoming data."""
 
-# TODO: Allow the units to be specified in the configuration dictionary.
     def __init__(self, engine, config_dict):
         super(StdQC, self).__init__(engine, config_dict)
 
-        self.min_max_dict = {}
-        # Nothing to do if the 'StdQC' section does not exist in the configuration
-        # dictionary.
-        if config_dict.has_key('StdQC'):
+        # If the 'StdQC' or 'MinMax' sections do not exist in the configuration
+        # dictionary, then an exception will get thrown and nothing will be
+        # done.
+        try:
             min_max_dict = config_dict['StdQC']['MinMax']
+            self.min_max_dict = {}
     
             for obs_type in min_max_dict.scalars:
                 self.min_max_dict[obs_type] = (float(min_max_dict[obs_type][0]),
                                                float(min_max_dict[obs_type][1]))
             
-        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+            self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        except KeyError:
+            syslog.syslog(syslog.LOG_NOTICE, "wxengine: No QC information in config file. Ignored.")
         
     def new_loop_packet(self, event):
         """Apply quality check to the data in a LOOP packet"""
@@ -406,6 +421,10 @@ class StdQC(StdService):
 
 class StdArchive(StdService):
     """Service that archives LOOP and archive data in the SQL databases."""
+    
+    # This service manages an "accumulator", that records high/lows and averages
+    # of LOOP packets over an archive period. At the end of the archive period
+    # it then emits an archive record.
     
     def __init__(self, engine, config_dict):
         super(StdArchive, self).__init__(engine, config_dict)

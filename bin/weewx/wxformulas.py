@@ -47,25 +47,44 @@ def dewpointC(T, R):
         TdC = None
     return TdC
 
-def windchillF(T, V) :
+def windchillF(T_F, V_mph) :
     """Calculate wind chill. From http://www.nws.noaa.gov/om/windchill
     
-    T: Temperature in Fahrenheit
+    T_F: Temperature in Fahrenheit
     
-    V: Wind speed in mph
+    V_mph: Wind speed in mph
     
     Returns Wind Chill in Fahrenheit
     """
     
-    if T is None or V is None:
+    if T_F is None or V_mph is None:
         return None
 
     # Formula only valid for temperatures below 50F and wind speeds over 3.0 mph
-    if T >= 50.0 or V <= 3.0 : 
-        return T
-    WcF = 35.74 + 0.6215 * T + (-35.75  + 0.4275 * T) * math.pow(V, 0.16) 
+    if T_F >= 50.0 or V_mph <= 3.0 : 
+        return T_F
+    WcF = 35.74 + 0.6215 * T_F + (-35.75  + 0.4275 * T_F) * math.pow(V_mph, 0.16) 
     return WcF
 
+def windchillC(T_C, V_kph):
+    """Wind chill, metric version.
+    
+    T: Temperature in Celsius
+    
+    V: Wind speed in kph
+    
+    Returns wind chill in Celsius"""
+    
+    if T_C is None or V_kph is None:
+        return None
+    
+    T_F = T_C * (9.0/5.0) + 32.0
+    V_mph = 0.621371192 * V_kph
+    
+    WcF = windchillF(T_F, V_mph)
+    
+    return (WcF - 32.0) * (5.0 / 9.0) if WcF is not None else None
+    
 def heatindexF(T, R) :
     """Calculate heat index. From http://www.crh.noaa.gov/jkl/?n=heat_index_calculator
     
@@ -101,6 +120,11 @@ def heatindexF(T, R) :
     if hiF < T :
         hiF = T
     return hiF
+
+def heatindexC(T_C, R):
+    T_F = T_C * (9.0/5.0) + 32.0
+    hiF = heatindexF(T_F, R)
+    return (hiF - 32.0) * (5.0/9.0) if hiF is not None else None
 
 def heating_degrees(t, base):
     return max(base - t, 0) if t is not None else None
