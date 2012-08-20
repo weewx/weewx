@@ -57,9 +57,14 @@ class ScalarStats(object):
 
     def addSum(self, val):
         """Add a scalar value to my running sum and count."""
-        if val is not None:
-            self.sum += val
-            self.count += 1
+        # TODO: Clean this up
+        try:
+            if val is not None:
+                self.sum   += val
+                self.count += 1
+        except TypeError:
+            print "Tried to add", self.sum, "to ", val
+            raise
         
     @property
     def avg(self):
@@ -127,6 +132,7 @@ class VecStats(object):
     def vec_avg(self):
         if self.count:
             return math.sqrt((self.xsum**2 + self.ysum**2) / self.count**2)
+
     @property
     def vec_dir(self):
         if self.squarecount:
@@ -167,7 +173,7 @@ class DictAccum(dict):
             self[obs_type].mergeHiLo(accumulator[obs_type])
                     
     def getRecord(self):
-        
+        """Extract a record out of the results in the accumulator."""
         record = {'dateTime': self.timespan.stop}
         for obs_type in self:
             if obs_type == 'wind':
@@ -175,16 +181,22 @@ class DictAccum(dict):
                 record['windDir']     = self[obs_type].vec_dir
                 record['windGust']    = self[obs_type].max
                 record['windGustDir'] = self[obs_type].max_dir
+            elif obs_type == 'rain':
+                record['rain']        = self[obs_type].sum
+            elif obs_type in ['hourRain', 'dayRain', 'totalRain']:
+                # This assumes no reset happened in the archive period:
+                record[obs_type]      = self[obs_type].max
             else:
                 record[obs_type]      = self[obs_type].avg
         return record
             
     def initStats(self, obs_type, stats_tuple=None):
-        # 
+        # TODO: Clean this up.
+        assert(obs_type != 'windSpeed')
+
         if obs_type in ['dateTime', 'windDir', 'windGust', 'windGustDir'] or obs_type in self:
             return
-        # TODO: Not sure this is right. 
-        if obs_type in ['windSpeed', 'wind']:
+        if obs_type == 'wind':
             self['wind'] = VecStats(stats_tuple)
         else:
             self[obs_type] = ScalarStats(stats_tuple)

@@ -25,6 +25,12 @@ import weewx.abstractstation
 _ack    = chr(0x06)
 _resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
 
+def loader(config_dict):
+
+    station = VantagePro(**config_dict['VantagePro'])
+    
+    return station
+
 class BaseWrapper(object):
     """Base class for (Serial|Ethernet)Wrapper"""
 
@@ -520,7 +526,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
     def getTime(self) :
         """Get the current time from the console and decode it, returning it as a time-tuple
         
-        returns: the time as a time-tuple
+        returns: the time in unix epoch time
         """
         # Try up to max_tries times:
         for unused_count in xrange(self.max_tries) :
@@ -533,28 +539,20 @@ class VantagePro(weewx.abstractstation.AbstractStation):
                 _buffer = self.port.get_data_with_crc16(8, max_tries=1)
                 (sec, minute, hr, day, mon, yr, unused_crc) = struct.unpack("<bbbbbbH", _buffer)
                 time_tt = (yr+1900, mon, day, hr, minute, sec, 0, 0, -1)
-                return time_tt
+                return time.mktime(time_tt)
             except weewx.WeeWxIOError :
                 # Caught an error. Keep retrying...
                 continue
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting time")
         raise weewx.RetriesExceeded("While getting console time")
             
-    def setTime(self, newtime_ts, max_drift):
+    def setTime(self, newtime_ts):
         """Set the clock on the Davis VantagePro console
 
-        newtime_ts: The time the internal clock should be set to.
-        
-        max_drift: The request to set the time will be ignored
-        if the clock error is less than this value."""
+        newtime_ts: The time the internal clock should be set to in unix epoch time."""
         
         # Unfortunately, this algorithm takes a little while to execute, so the clock
         # usually ends up a few hundred milliseconds slow
-        _diff = time.mktime(self.getTime()) - newtime_ts
-        syslog.syslog(syslog.LOG_INFO, 
-                      "VantagePro: Clock error is %.2f seconds (positive is fast)" % _diff)
-        if abs(_diff) < max_drift:
-            return
         newtime_tt = time.localtime(int(newtime_ts + 0.5))
             
         # The Davis expects the time in reversed order, and the year is since 1900
@@ -713,32 +711,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         
         return(stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone)
 
-    def translateLoopPacket(self, loopPacket):
-        """Given a LOOP packet in vendor units, this function translates to physical units.
-        
-        loopPacket: A dictionary holding the LOOP data in the internal units used by Davis.
-        
-        returns: A dictionary with the values in physical units."""
-
-        _packet = self.translateLoopToUS(loopPacket)
-        return _packet
-    
-
-    def translateArchivePacket(self, archivePacket):
-        """Translates an archive packet from the internal units used by Davis, into physical units.
-        
-        archivePacket: A dictionary holding an archive packet in the internal, Davis encoding
-        
-        returns: A dictionary with the values in physical units."""
-
-        _packet = self.translateArchiveToUS(archivePacket)
-        return _packet
-    
-    #===========================================================================
-    #              VantagePro utility functions
-    #===========================================================================
-    
-    def translateLoopToUS(self, packet):
+    def translateLoopPacket(self, packet):
         """Translates a loop packet from the internal units used by Davis, into US Customary Units.
         
         packet: A dictionary holding the LOOP data in the internal units used by Davis.
@@ -760,6 +733,11 @@ class VantagePro(weewx.abstractstation.AbstractStation):
             func = _loop_map[_type]
             # Call it, with the value as an argument, storing the result:
             record[_type] = func(packet[_type])
+            
+        # Adjust sunrise and sunset:
+        start_of_day = weeutil.weeutil.startOfDay(record['dateTime'])
+        record['sunrise'] += start_of_day
+        record['sunset']  += start_of_day
     
         # Add a few derived values that are not in the packet itself.
         T = record['outTemp']
@@ -770,10 +748,12 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
         record['windchill'] = weewx.wxformulas.windchillF(T, W)
         
+        record['usUnits'] = weewx.US
+        
         return record
     
 
-    def translateArchiveToUS(self, packet):
+    def translateArchivePacket(self, packet):
         """Translates an archive packet from the internal units used by Davis, into US units.
         
         packet: A dictionary holding an archive packet in the internal, Davis encoding
@@ -806,6 +786,11 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         
         return record
 
+    
+    #===========================================================================
+    #              VantagePro utility functions
+    #===========================================================================
+    
     def _setup(self):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
@@ -1066,7 +1051,10 @@ def _loop_date(v):
     return ts
     
 def _stime(v):
-    return datetime.time(v//100, v%100)
+    h = v/100
+    m = v%100
+    # Return seconds since midnight
+    return 3600*h + 60*m
 
 def _big_val(v) :
     return float(v) if v != 0x7fff else None

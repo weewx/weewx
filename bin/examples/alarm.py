@@ -46,7 +46,7 @@ configuration option service_list, located in sub-section [Engines][[WxEngine]]:
 
 [Engines]
   [[WxEngine]]
-    service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.alarm.MyAlarm
+    service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReport, examples.alarm.MyAlarm
 
 ********************************************************************************
 

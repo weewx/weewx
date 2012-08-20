@@ -13,11 +13,11 @@
 import syslog
 import argparse
 import sys
-import time
 
 import configobj
 
 import weewx.VantagePro
+import weeutil.weeutil
 
 description = """Configures the VantagePro weather station."""
 
@@ -103,7 +103,7 @@ def info(station):
     except:
         _firmware_date = "<Unavailable>"
     
-    console_time = time.strftime("%x %X", station.getTime())
+    console_time = weeutil.weeutil.timestamp_to_string(station.getTime())
     
     print  """VantagePro EEPROM settings:
     
@@ -180,7 +180,7 @@ def set_interval(station, new_interval_seconds):
         print "Old and new archive intervals are the same. Nothing done."
     else:
         print "Proceeding will change the archive interval as well as erase all old archive records."
-        ans = raw_input("Are you sure you want to proceed? (Y/n) ")
+        ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
         if ans == 'Y' :
             station.setArchiveInterval(new_interval_seconds)
             print "Archive interval now set to %d seconds." % (station.archive_interval,)
@@ -198,7 +198,7 @@ def set_altitude(station, altitude_ft):
     _bardata = station.getBarData()
     
     print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (_bardata[0], altitude_ft)
-    ans = raw_input("Are you sure you wish to proceed? (Y/n) ")
+    ans = raw_input("Are you sure you wish to proceed? (Y/n; note the capital 'Y') ")
     if ans == 'Y':
         station.setBarData(_bardata[0], altitude_ft)
     else:
@@ -213,7 +213,7 @@ def set_barometer(station, barometer_inHg):
         print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (barometer_inHg, _bardata[1])
     else:
         print "Proceeding will have the console pick a sensible barometer calibration and set the station altitude to %.1f feet," % (_bardata[1],)
-    ans = raw_input("Are you sure you wish to proceed? (Y/n) ")
+    ans = raw_input("Are you sure you wish to proceed? (Y/n; note the capital 'Y') ")
     if ans == 'Y':
         station.setBarData(barometer_inHg, _bardata[1])
     else:
@@ -224,7 +224,7 @@ def clear(station):
     
     print "Clearing the archive memory ..."
     print "Proceeding will erase old archive records."
-    ans = raw_input("Are you sure you wish to proceed? (Y/n) ")
+    ans = raw_input("Are you sure you wish to proceed? (Y/n; note the capital 'Y') ")
     if ans == 'Y':
         station.clearLog()
         print "Archive records cleared."
@@ -242,7 +242,7 @@ def set_bucket(station, new_bucket_type):
         print "Old and new bucket types are the same. Nothing done."
     else:
         print "Proceeding will change the rain bucket type."
-        ans = raw_input("Are you sure you want to proceed? (Y/n) ")
+        ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
         if ans == 'Y' :
             station.setBucketType(new_bucket_type)
             print "Bucket type now set to %d." % (station.rain_bucket_type,)
@@ -256,7 +256,7 @@ def set_rain_year_start(station, rain_year_start):
         print "Old and new rain season starts are the same. Nothing done."
     else:
         print "Proceeding will change the rain season start."
-        ans = raw_input("Are you sure you want to proceed? (Y/n) ")
+        ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
         if ans == 'Y' :
             station.setRainSeasonStart(rain_year_start)
             print "Rain season start now set to %d." % (station.rain_season_start,)

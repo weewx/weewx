@@ -93,7 +93,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
         self.interface         = int(stn_dict.get('interface', 0))
         self.IN_endpoint       = int(stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1))
 
-        self.lastRainTotal = None
+        self.last_totalRain = None
         self.openPort()
 
     def openPort(self):
@@ -182,6 +182,15 @@ class WMR100(weewx.abstractstation.AbstractStation):
             else:
                 buff.append(ibyte)
              
+    def getTime(self):
+        """Return the current time."""
+        
+        # This version actually returns the last time seen
+        try:
+            return self.last_time
+        except AttributeError:
+            return None
+        
     #===============================================================================
     #                         USB functions
     #===============================================================================
@@ -236,16 +245,25 @@ class WMR100(weewx.abstractstation.AbstractStation):
     #===============================================================================
 
     def _rain_packet(self, packet):
-        rainTotal = ((packet[9] << 8) + packet[8]) / 10.0
-        if self.lastRainTotal is not None:
-            rain = rainTotal - self.lastRainTotal
-        else:
-            rain = None
-        self.lastRainTotal = rainTotal
-        _record = {'rainRate'    : ((packet[3] << 8) + packet[2]) / 10.0,
-                   'rain'        : rain,
-                   'dateTime'    : int(time.time() + 0.5),
-                   'usUnits'     : weewx.US}
+        
+        # NB: in my experiments with the WMR100, it registers in increments of
+        # 0.04 inches. Per Ejeklint's notes have you divide the packet values by
+        # 10, but this would result in an 0.4 inch bucket --- too big. So, I'm
+        # dividing by 100.
+        _record = {'rainRate'          : ((packet[3] << 8) + packet[2]) / 100.0,
+                   'hourRain'          : ((packet[5] << 8) + packet[4]) / 100.0,
+                   'dayRain'           : ((packet[7] << 8) + packet[6]) / 100.0,
+                   'totalRain'         : ((packet[9] << 8) + packet[8]) / 100.0,
+                   'rainBatteryStatus' : packet[0] >> 4,
+                   'dateTime'          : int(time.time() + 0.5),
+                   'usUnits'           : weewx.US}
+
+        # Because the WMR does not offer anything like bucket tips, we must
+        # calculate it by looking for the change in total rain. Of course, this
+        # won't work for the very first rain packet.
+        _record['rain'] = (_record['totalRain']-self.last_totalRain) if self.last_totalRain is not None else None
+        self.last_totalRain = _record['totalRain']
+        print "RAIN: Reset date ", packet[10:15], " Rain total:", _record['totalRain'], " Rain hour:", _record['hourRain'], " rain day:", _record['dayRain'], " Battery", (packet[0]>>4)
         return _record
 
 
@@ -263,6 +281,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
         if channel == 0:
             _record['inTemp']      = T
             _record['inHumidity']  = R
+            _record['inTempBatteryStatus'] = (packet[0] & 0x40) >> 6
         elif channel == 1:
             _record['outTemp']     = T
             _record['dewpoint']    = D
@@ -277,6 +296,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
                     _record['windchill'] = weewx.wxformulas.windchillC(T, self.last_wind_record['windSpeed'])
             except AttributeError:
                 pass
+            _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
         elif channel >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -297,9 +317,10 @@ class WMR100(weewx.abstractstation.AbstractStation):
         return _record
         
     def _uv_packet(self, packet):
-        _record = {'UV'          : float(packet[5]),
-                   'dateTime'    : int(time.time() + 0.5),
-                   'usUnits'     : weewx.METRIC}
+        _record = {'UV'              : float(packet[5]),
+                   'UVBatteryStatus' : packet[0] >> 4,
+                   'dateTime'        : int(time.time() + 0.5),
+                   'usUnits'         : weewx.METRIC}
         return _record
         
     
@@ -308,10 +329,11 @@ class WMR100(weewx.abstractstation.AbstractStation):
 
         # The console returns wind speeds in m/s. Our metric system requires kph,
         # so the result needs to be multiplied by 3.6        
-        _record = {'windSpeed'   : ((packet[6] << 4) + ((packet[5]) >> 4)) * 3.6 / 10.0,
-                   'windDir'     : (packet[2] & 0x0f) * 360.0 / 16.0, 
-                   'dateTime'    : int(time.time() + 0.5),
-                   'usUnits'     : weewx.METRIC}
+        _record = {'windSpeed'         : ((packet[6] << 4) + ((packet[5]) >> 4)) * 3.6 / 10.0,
+                   'windDir'           : (packet[2] & 0x0f) * 360.0 / 16.0,
+                   'windBatteryStatus' : (packet[0] >> 4),
+                   'dateTime'          : int(time.time() + 0.5),
+                   'usUnits'           : weewx.METRIC}
         # Sometimes the station emits a wind gust that is less than the average wind.
         # Ignore it if this is the case.
         windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) * 3.6 / 10.0
@@ -322,7 +344,11 @@ class WMR100(weewx.abstractstation.AbstractStation):
         return _record
     
     def _clock_packet(self, packet):
-        """The clock packet is not used by weewx."""
+        """The clock packet is not used by weewx.
+        
+        However, the last time is saved in case getTime() is called."""
+        tt = (2000+packet[8], packet[7], packet[6], packet[5], packet[4], 0, 0, 0, -1)
+        self.last_time = time.mktime(tt)
         return None
     
     # Dictionary that maps a measurement code, to a function that can decode it:

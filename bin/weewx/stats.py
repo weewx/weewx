@@ -368,16 +368,6 @@ class StatsDb(object):
             # Update the time of the last stats update:
             _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
             
-    def _getFirstUpdate(self):
-        """Returns the time of the first entry in the statistical database."""
-        #=======================================================================
-        # This is a bit of a hack because it actually returns the first entry
-        # for the barometer, which may or may not be the earliest entry in
-        # the stats database.
-        #=======================================================================
-        _row = self._xeqSql("SELECT min(dateTime) FROM barometer", {})
-        return int(_row[0]) if _row else None
-
     def _getLastUpdate(self):
         """Returns the time of the last update to the statistical database."""
 

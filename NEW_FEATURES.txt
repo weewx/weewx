@@ -1,8 +1,6 @@
 NEW FEATURES to be added in decreasing order of importance.
 
-Support other weather station hardware (will probably require a rewrite of wxengine).
-
-Allow optional archive generation in software (instead of on the VP).
+Abstract databases to allow the use of a DB server (such as MySQL).
 
 Make it easier to subclass a new RESTful protocol.
 

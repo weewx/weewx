@@ -422,12 +422,22 @@ class StdQC(StdService):
 class StdArchive(StdService):
     """Service that archives LOOP and archive data in the SQL databases."""
     
-    # This service manages an "accumulator", that records high/lows and averages
+    # This service manages an "accumulator", which records high/lows and averages
     # of LOOP packets over an archive period. At the end of the archive period
     # it then emits an archive record.
     
     def __init__(self, engine, config_dict):
         super(StdArchive, self).__init__(engine, config_dict)
+
+        self.archive_interval = config_dict['StdArchive'].as_int('archive_interval')
+        self.archive_delay    = config_dict['StdArchive'].as_int('archive_delay')
+        
+        # If the station hardware supports an archive interval, check that it matches
+        # what's in the configuration file.
+        if hasattr(self.engine.station, 'archive_interval') and self.engine.station.archive_interval!=self.archive_interval:
+            raise weewx.ViolatedPrecondition("Archive interval in configuration file (%d) "
+                                             "does not match hardware interval (%d)" % \
+                                             (self.archive_interval, self.engine.station.archive_interval))
 
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
@@ -447,15 +457,15 @@ class StdArchive(StdService):
                     
     def pre_loop(self, event):
         """Called before the main packet loop is entered."""
-#        # Calculate the end of the archive period, and the end of the archive
-#        delay period.
+        
+        # The only thing that needs to be done is to calculate the end of the
+        # archive period, and the end of the archive delay period.
         self.end_archive_period_ts = (int(time.time() / self.archive_interval) + 1) * self.archive_interval
         self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
 
     def new_loop_packet(self, event):
         """Called when A new LOOP record has arrived."""
         
-        # Save the time from the packet in case some other service messes with it:
         the_time = event.packet['dateTime']
         
         # Do we have an accumulator at all? If not, create one:
@@ -468,8 +478,7 @@ class StdArchive(StdService):
             self.accumulator.addRecord(event.packet)
         except weewx.accum.OutOfSpan:
             # Shuffle accumulators:
-            self.old_accumulator = self.accumulator
-            self.accumulator = self._new_accumulator(the_time)
+            (self.old_accumulator, self.accumulator) = (self.accumulator, self._new_accumulator(the_time))
             # Add the LOOP packet to the new accumulator:
             self.accumulator.addRecord(event.packet)
 
@@ -481,10 +490,11 @@ class StdArchive(StdService):
             raise BreakLoop
 
     def post_loop(self, event):
-        """The main event loop has ended. Time to process the old accumulator."""
+        """The main packet loop has ended. Time to process the old accumulator."""
         # If we happen to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
-        # there will be no old accumulator and an exception will be thrown.
+        # there will be no old accumulator and an exception will be thrown. Be
+        # prepared to catch it.
         try:
             self.statsDb.updateHiLo(self.old_accumulator)
         except AttributeError:
@@ -493,7 +503,7 @@ class StdArchive(StdService):
         record = self.old_accumulator.getRecord()
         # Add the archive interval
         record['interval'] = self.archive_interval / 60
-        print "Record: ", record
+        # TODO: need to set 'usUnits'
         
         # Send out an event with the new record:
         self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
@@ -513,14 +523,10 @@ class StdArchive(StdService):
         try:
             self.archive = weewx.archive.Archive(archiveFilename)
         except StandardError:
+            # It's uninitialized. Configure it:
             weewx.archive.config(archiveFilename)
+            # Try again to open it up:
             self.archive = weewx.archive.Archive(archiveFilename)
-        self.archive_interval = config_dict['StdArchive'].as_int('archive_interval')
-        self.archive_delay    = config_dict['StdArchive'].as_int('archive_delay')
-        if hasattr(self.engine.station, 'archive_interval') and self.engine.station.archive_interval!=self.archive_interval:
-            raise weewx.ViolatedPrecondition("Archive interval in configuration file (%d) "
-                                             "does not match hardware interval (%d)" % \
-                                             (self.archive_interval, self.engine.station.archive_interval))
 
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
@@ -529,24 +535,24 @@ class StdArchive(StdService):
         # Try to open up the database. If it doesn't exist or has not been initialized, an exception
         # will be thrown. Catch it, configure the database, and then try again.
         try:
-            self.statsDb = weewx.stats.StatsDb(statsFilename,
-                                               int(config_dict['Station'].get('cache_loop_data', '1')))
+            self.statsDb = weewx.stats.StatsDb(statsFilename)
         except StandardError:
             # It's uninitialized. Configure it:
             weewx.stats.config(statsFilename, config_dict['StdArchive'].get('stats_types'))
             # Try again to open it up:
             self.statsDb = weewx.stats.StatsDb(statsFilename)
 
-        # Backfill it with data from the archive. This will do nothing if 
-        # the stats database is already up-to-date.
+        # Backfill it with data from the archive. This will do nothing if the
+        # stats database is already up-to-date.
         weewx.stats.backfill(self.archive, self.statsDb)
 
     def _catchup(self, event):
-        """Pull any unarchived records off the console and archive them. 
-        Called after the main packet LOOP finishes. """
+        """Pull any unarchived records off the console and archive them.""" 
+
+        # Find out when the archive was last updated.
         lastgood_ts = self.archive.lastGoodStamp()
-        # Now ask the console for any new records since that timestamp.
-        # (Not all consoles support this feature).
+        # Now ask the console for any new records since then. (Not all consoles
+        # support this feature).
         try:
             for record in self.engine.station.genArchiveRecords(lastgood_ts):
                 self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
@@ -585,9 +591,21 @@ class StdTimeSynch(StdService):
         # seconds since the last check:
         now_ts = time.time()
         if now_ts - self.last_synch_ts >= self.clock_check:
-            # TODO: Set time on the console
             self.last_synch_ts = now_ts
-            
+            try:
+                console_time = self.engine.station.getTime()
+                if console_time is None: return
+                diff = console_time - now_ts
+                syslog.syslog(syslog.LOG_INFO, 
+                              "StdTimeSynch: Clock error is %.2f seconds (positive is fast)" % diff)
+                if abs(now_ts - console_time) > self.max_drift:
+                    try:
+                        self.engine.station.setTime(now_ts)
+                    except weewx.NotImplemented:
+                        syslog.syslog(syslog.LOG_DEBUG, "StdTimeSynch: Station does not support setting the time")
+            except weewx.NotImplemented:
+                syslog.syslog(syslog.LOG_DEBUG, "StdTimeSynch: Station does not support reading the time")
+
 #===============================================================================
 #                    Class StdPrint
 #===============================================================================
@@ -603,25 +621,13 @@ class StdPrint(StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
     def new_loop_packet(self, event):
-        """Print out a summary of the new LOOP packet"""
-#        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']),\
-#                         event.packet['barometer'],\
-#                         event.packet['outTemp'],\
-#                         event.packet['windSpeed'],\
-#                         event.packet['windDir']
-        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']),\
-                         event.packet
+        """Print out the new LOOP packet"""
+        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), event.packet
     
     def new_archive_record(self, event):
-        """Print out a summary of the new archive record."""
-#        print "REC:-> ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']),\
-#                        event.record['barometer'],\
-#                        event.record['outTemp'],\
-#                        event.record['windSpeed'],\
-#                        event.record['windDir'], " <-"
-
-        print "REC:->  ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']),\
-                          event.record
+        """Print out the new archive record."""
+        print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), event.record
+        
 #===============================================================================
 #                    Class StdRESTful
 #===============================================================================
@@ -635,9 +641,9 @@ class StdRESTful(StdService):
 
         station_list = []
 
-        # Each subsection in section [RESTful] represents a different upload
+        # Each subsection in section [StdRESTful] represents a different upload
         # site:
-        for site in config_dict['RESTful'].sections:
+        for site in config_dict['StdRESTful'].sections:
 
             # Get the site dictionary:
             site_dict = self.getSiteDict(config_dict, site)
@@ -699,7 +705,7 @@ class StdRESTful(StdService):
         extra in the site dictionary.
         """
         # Get the dictionary for this site out of the config dictionary:
-        site_dict = config_dict['RESTful'][site]
+        site_dict = config_dict['StdRESTful'][site]
         # Some protocols require extra entries:
         site_dict['latitude']  = config_dict['Station']['latitude']
         site_dict['longitude'] = config_dict['Station']['longitude']
@@ -710,14 +716,14 @@ class StdRESTful(StdService):
     
     
 #===============================================================================
-#                    Class StdReportService
+#                    Class StdReport
 #===============================================================================
 
-class StdReportService(StdService):
+class StdReport(StdService):
     """Launches a separate thread to do reporting."""
     
     def __init__(self, engine, config_dict):
-        super(StdReportService, self).__init__(engine, config_dict)
+        super(StdReport, self).__init__(engine, config_dict)
         self.thread = None
         self.first_run = True
         
@@ -734,7 +740,7 @@ class StdReportService(StdService):
     def shutDown(self):
         if self.thread:
             self.thread.join(20.0)
-            syslog.syslog(syslog.LOG_DEBUG, "Shut down StdReportService thread.")
+            syslog.syslog(syslog.LOG_DEBUG, "Shut down StdReport thread.")
         self.first_run = True
 
 #===============================================================================

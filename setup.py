@@ -317,7 +317,7 @@ class My_sdist(sdist):
                 sys.stderr.write("\n*** FTP password found in configuration file. Aborting ***\n\n")
                 exit()
 
-            rest_dict = config['RESTful']
+            rest_dict = config['StdRESTful']
             if rest_dict.has_key('Wunderground') and rest_dict['Wunderground'].has_key('password'):
                 sys.stderr.write("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
                 exit()

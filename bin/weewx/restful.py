@@ -584,7 +584,7 @@ if __name__ == '__main__':
         """Publishes records to site 'site' from start_ts to stop_ts. 
         Makes a useful test."""
         
-        site_dict = config_dict['RESTful'][site]
+        site_dict = config_dict['StdRESTful'][site]
         site_dict['latitude']  = config_dict['Station']['latitude']
         site_dict['longitude'] = config_dict['Station']['longitude']
         site_dict['hardware']  = config_dict['Station']['station_type']
