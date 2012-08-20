@@ -1,15 +1,9 @@
 TODO before the next release:
 
-Make sure the unit type can change between LOOP records. NB: rain uses US units, everything else
-metric.
+Put archive_interval in the station hardware section of weewx.conf. Then, get it
+from engine.station.archive_interval.
 
-Allow archives to store data in metric units
-
-Change calibration service so it can take any units (not just the native hardware units)
-
-Put clock drift stuff in its own section in weewx.conf.
-
-Remove clock drift logic from class VantagePro. It should just get the time or set the time.
+Rain for an archive period is the *sum* of bucket tips, not the average.
 
 Consider changing the name of VantagePro.py to VantageSeries.py or something similar.
 
