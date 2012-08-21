@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2010, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -131,7 +131,8 @@ MetricUnits = {"group_altitude"    : "meter",
 # Conversion functions to go from one unit type to another.
 conversionDict = {
       'inHg'             : {'mbar'             : lambda x : x * 33.86, 
-                            'hPa'              : lambda x : x * 33.86},
+                            'hPa'              : lambda x : x * 33.86,
+                            'mmHg'             : lambda x : x * 25.4},
       'degree_F'         : {'degree_C'         : lambda x : (x-32.0) * (5.0/9.0)},
       'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
       'mile_per_hour'    : {'km_per_hour'      : lambda x : x * 1.609344,
@@ -151,9 +152,14 @@ conversionDict = {
       'inch'             : {'cm'               : lambda x : x * 2.54,
                             'mm'               : lambda x : x * 25.4},
       'foot'             : {'meter'            : lambda x : x * 0.3048},
+      'mmHg'             : {'inHg'             : lambda x : x / 25.4,
+                            'mbar'             : lambda x : x / 0.75006168,
+                            'hPa'              : lambda x : x / 0.75006168},
       'mbar'             : {'inHg'             : lambda x : x / 33.86,
+                            'mmHg'             : lambda x : x * 0.75006168,
                             'hPa'              : lambda x : x * 1.0},
       'hPa'              : {'inHg'             : lambda x : x / 33.86,
+                            'mmHg'             : lambda x : x * 0.75006168,
                             'mbar'             : lambda x : x * 1.0},
       'degree_C'         : {'degree_F'         : lambda x : x * (9.0/5.0) + 32.0},
       'degree_C_day'     : {'degree_F_day'     : lambda x : x * (9.0/5.0)},
