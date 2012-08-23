@@ -1,9 +1,9 @@
 TODO before the next release:
 
+Close open files. Particularly statsdb.
+
 Put archive_interval in the station hardware section of weewx.conf. Then, get it
 from engine.station.archive_interval.
-
-Rain for an archive period is the *sum* of bucket tips, not the average.
 
 Consider changing the name of VantagePro.py to VantageSeries.py or something similar.
 
