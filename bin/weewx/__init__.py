@@ -55,9 +55,6 @@ class UnsupportedFeature(StandardError):
 class ViolatedPrecondition(StandardError):
     """Exception thrown when a function is called with violated preconditions."""
     
-class NotImplemented(StandardError):
-    """Exception thrown when invoking a function in an abstract base class."""
-
 #===============================================================================
 #                       Possible event types.
 #===============================================================================

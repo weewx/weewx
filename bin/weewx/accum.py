@@ -57,14 +57,9 @@ class ScalarStats(object):
 
     def addSum(self, val):
         """Add a scalar value to my running sum and count."""
-        # TODO: Clean this up
-        try:
-            if val is not None:
-                self.sum   += val
-                self.count += 1
-        except TypeError:
-            print "Tried to add", self.sum, "to ", val
-            raise
+        if val is not None:
+            self.sum   += val
+            self.count += 1
         
     @property
     def avg(self):
@@ -145,6 +140,7 @@ class DictAccum(dict):
     """Accumulates statistics for a set of observation types."""
     def __init__(self, timespan):
         self.timespan = timespan
+        self.unit_system = None
         
     def addRecord(self, record):
         if not self.timespan.includesArchiveTime(record['dateTime']):
@@ -153,11 +149,13 @@ class DictAccum(dict):
         for obs_type in record:
             if obs_type in ['dateTime', 'windDir', 'windGust', 'windGustDir']:
                 continue
-            if obs_type=='windSpeed':
+            elif obs_type=='windSpeed':
                 self.initStats('wind')
                 self['wind'].addHiLo(record['windSpeed'], record.get('windDir'), record['dateTime'])
                 self['wind'].addHiLo(record.get('windGust'), record.get('windGustDir'), record['dateTime'])
                 self['wind'].addSum(record['windSpeed'], record.get('windDir'))
+            elif obs_type=='usUnits':
+                self._check_units(record['usUnits'])
             else:
                 self.initStats(obs_type)
                 self[obs_type].addHiLo(record[obs_type], record['dateTime'])
@@ -168,13 +166,16 @@ class DictAccum(dict):
         if accumulator.timespan.start < self.timespan.start or accumulator.timespan.stop > self.timespan.stop:
             raise OutOfSpan("Attempt to merge an accumulator whose timespan is not a subset")
 
+        self._check_units(accumulator.unit_system)
+        
         for obs_type in accumulator:
             self.initStats(obs_type)
             self[obs_type].mergeHiLo(accumulator[obs_type])
                     
     def getRecord(self):
         """Extract a record out of the results in the accumulator."""
-        record = {'dateTime': self.timespan.stop}
+        record = {'dateTime': self.timespan.stop,
+                  'usUnits' : self.unit_system}
         for obs_type in self:
             if obs_type == 'wind':
                 record['windSpeed']   = self[obs_type].avg
@@ -191,9 +192,6 @@ class DictAccum(dict):
         return record
             
     def initStats(self, obs_type, stats_tuple=None):
-        # TODO: Clean this up.
-        assert(obs_type != 'windSpeed')
-
         if obs_type in ['dateTime', 'windDir', 'windGust', 'windGustDir'] or obs_type in self:
             return
         if obs_type == 'wind':
@@ -201,3 +199,12 @@ class DictAccum(dict):
         else:
             self[obs_type] = ScalarStats(stats_tuple)
     
+    def _check_units(self, other_system):
+        
+        if self.unit_system is None:
+            self.unit_system = other_system
+        else:
+            if self.unit_system != other_system:
+                raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, other_system))
+
+

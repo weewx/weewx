@@ -9,7 +9,6 @@
 #
 """classes and functions for interfacing with a Davis VantagePro or VantagePro2"""
 
-import datetime
 import serial
 import socket
 import struct
@@ -208,6 +207,7 @@ class SerialWrapper(BaseWrapper):
     def openPort(self):
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up serial port %s, baudrate %d" % (self.port, self.baudrate))
 
     def closePort(self):
         try:
@@ -239,6 +239,7 @@ class EthernetWrapper(BaseWrapper):
         except:
             syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to connect to ethernet host %s on port %d." % (self.host, self.port))
             raise
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up ethernet host %s on port %d" % (self.host, self.port))
 
     def closePort(self):
         try:
@@ -367,7 +368,12 @@ class VantagePro(weewx.abstractstation.AbstractStation):
 
         # Get an appropriate port, depending on the connection type:
         self.port = VantagePro._port_factory(vp_dict)
-        
+
+        if isinstance(self.port, SerialWrapper):
+            self.hardware_name = "Davis VantagePro2"
+        else:
+            self.hardware_name = "Davis Vantage IP"
+                
         # Open it up:
         self.port.openPort()
 

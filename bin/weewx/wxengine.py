@@ -429,16 +429,16 @@ class StdArchive(StdService):
     def __init__(self, engine, config_dict):
         super(StdArchive, self).__init__(engine, config_dict)
 
-        self.archive_interval = config_dict['StdArchive'].as_int('archive_interval')
+        # If the station hardware supports an archive interval, use that.
+        # Otherwise, get it out of the configuration file.
+        if hasattr(self.engine.station, 'archive_interval'):
+            self.archive_interval = self.engine.station.archive_interval
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Using station archive interval of %d" % self.archive_interval)
+        else:
+            self.archive_interval = config_dict['StdArchive'].as_int('archive_interval')
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Using archive interval of %d from config file" % self.archive_interval)
         self.archive_delay    = config_dict['StdArchive'].as_int('archive_delay')
         
-        # If the station hardware supports an archive interval, check that it matches
-        # what's in the configuration file.
-        if hasattr(self.engine.station, 'archive_interval') and self.engine.station.archive_interval!=self.archive_interval:
-            raise weewx.ViolatedPrecondition("Archive interval in configuration file (%d) "
-                                             "does not match hardware interval (%d)" % \
-                                             (self.archive_interval, self.engine.station.archive_interval))
-
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
         
@@ -503,7 +503,6 @@ class StdArchive(StdService):
         record = self.old_accumulator.getRecord()
         # Add the archive interval
         record['interval'] = self.archive_interval / 60
-        # TODO: need to set 'usUnits'
         
         # Send out an event with the new record:
         self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
@@ -530,6 +529,7 @@ class StdArchive(StdService):
 
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
+        
         statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                      config_dict['StdArchive']['stats_file'])
         # Try to open up the database. If it doesn't exist or has not been initialized, an exception
@@ -538,25 +538,30 @@ class StdArchive(StdService):
             self.statsDb = weewx.stats.StatsDb(statsFilename)
         except StandardError:
             # It's uninitialized. Configure it:
-            weewx.stats.config(statsFilename, config_dict['StdArchive'].get('stats_types'))
+            weewx.stats.config(statsFilename, 
+                               config_dict['StdArchive'].get('stats_types'))
             # Try again to open it up:
             self.statsDb = weewx.stats.StatsDb(statsFilename)
 
         # Backfill it with data from the archive. This will do nothing if the
         # stats database is already up-to-date.
         weewx.stats.backfill(self.archive, self.statsDb)
-
+        
+    def shutDown(self):
+        self.archive.close()
+        self.statsDb.close()
+        
     def _catchup(self, event):
         """Pull any unarchived records off the console and archive them.""" 
 
         # Find out when the archive was last updated.
-        lastgood_ts = self.archive.lastGoodStamp()
+        lastgood_ts = self.archive.lastGoodStamp()      
         # Now ask the console for any new records since then. (Not all consoles
         # support this feature).
         try:
             for record in self.engine.station.genArchiveRecords(lastgood_ts):
                 self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
-        except weewx.NotImplemented:
+        except NotImplementedError:
             pass
         
     def _new_accumulator(self, timestamp):
@@ -597,14 +602,14 @@ class StdTimeSynch(StdService):
                 if console_time is None: return
                 diff = console_time - now_ts
                 syslog.syslog(syslog.LOG_INFO, 
-                              "StdTimeSynch: Clock error is %.2f seconds (positive is fast)" % diff)
+                              "wxengine: Clock error is %.2f seconds (positive is fast)" % diff)
                 if abs(now_ts - console_time) > self.max_drift:
                     try:
                         self.engine.station.setTime(now_ts)
-                    except weewx.NotImplemented:
-                        syslog.syslog(syslog.LOG_DEBUG, "StdTimeSynch: Station does not support setting the time")
-            except weewx.NotImplemented:
-                syslog.syslog(syslog.LOG_DEBUG, "StdTimeSynch: Station does not support reading the time")
+                    except NotImplementedError:
+                        syslog.syslog(syslog.LOG_DEBUG, "wxengine: Station does not support setting the time")
+            except NotImplementedError:
+                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Station does not support reading the time")
 
 #===============================================================================
 #                    Class StdPrint
@@ -696,7 +701,10 @@ class StdRESTful(StdService):
             self.queue.put(None)
             # Wait up to 20 seconds for the thread to exit:
             self.thread.join(20.0)
-            syslog.syslog(syslog.LOG_DEBUG, "Shut down RESTful thread.")
+            if self.thread.isAlive():
+                syslog.syslog(syslog.LOG_ERR, "wxengine: Unable to shut down StdRESTful thread")
+            else:
+                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Shut down StdRESTful thread.")
             
     def getSiteDict(self, config_dict, site):
         """Return the site dictionary for the given site.
@@ -710,6 +718,7 @@ class StdRESTful(StdService):
         site_dict['latitude']  = config_dict['Station']['latitude']
         site_dict['longitude'] = config_dict['Station']['longitude']
         # If a hardware type has not been specified, then provide a default:
+        # TODO: Can now get this directly from the hardware
         if not site_dict.has_key('hardware'):
             site_dict['hardware'] = config_dict['Station']['station_type']
         return site_dict
@@ -740,7 +749,11 @@ class StdReport(StdService):
     def shutDown(self):
         if self.thread:
             self.thread.join(20.0)
-            syslog.syslog(syslog.LOG_DEBUG, "Shut down StdReport thread.")
+            if self.thread.isAlive():
+                syslog.syslog(syslog.LOG_ERR, "wxengine: Unable to shut down StdReport thread")
+            else:
+                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Shut down StdReport thread.")
+                self.thread = None
         self.first_run = True
 
 #===============================================================================

@@ -202,6 +202,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                         # Close it
                         _file.close()
             
+            archivedb.close()
+            statsdb.close()
             t2 = time.time()
             elapsed_time = t2 - t1
             syslog.syslog(syslog.LOG_INFO, """filegenerator: generated %d '%s' files in %.2f seconds""" % (ngen, by_time, elapsed_time))
@@ -256,7 +258,10 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
             finally:
                 # Close it
                 _file.close()
-        
+                    
+            archivedb.close()
+            statsdb.close()
+
         elapsed_time = time.time() - t1
         syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
     
@@ -326,7 +331,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # Walk the tree back to the root, accumulating options:
         accum_dict = weeutil.weeutil.accumulateLeaves(subskin_dict)
         template = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                self.config_dict['Reports']['SKIN_ROOT'],
+                                self.config_dict['StdReport']['SKIN_ROOT'],
                                 accum_dict['skin'],
                                 accum_dict['template'])
         destination_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],

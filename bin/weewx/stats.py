@@ -136,7 +136,8 @@ class StatsDb(object):
     statsTypes: The types of the statistics supported by this instance of
     StatsDb. 
     
-    std_unit_system: The unit system in use (weewx.US or weewx.METRIC)."""
+    std_unit_system: The unit system in use (weewx.US or weewx.METRIC), or
+    None if no system has been specified."""
     
     def __init__(self, statsFilename):
         """Create an instance of StatsDb to manage a database.
@@ -151,6 +152,10 @@ class StatsDb(object):
         self.statsTypes      = self.__getTypes()
         self.std_unit_system = self._getStdUnitSystem()
 
+    def close(self):
+        if self._connection:
+            self._connection.close()
+        
     def updateHiLo(self, accumulator):
         """Use the contents of an accumulator to update the highs/lows of a stats database."""
         # Get the start-of-day for the timespan in the accumulator
@@ -365,8 +370,23 @@ class StatsDb(object):
                 # Get the stats-tuple, then write the results
                 _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
                 _connection.execute(_replace_str,_write_tuple)
+            # Set the unit system if it has not been set before. First see
+            # if this file has ever been used:
+            last_update = self._getLastUpdate()
+            if last_update is None:
+                # File has never been used. Set the unit system:
+                _connection.execute(meta_replace_str, ('unit_system', str(int(dayStatsDict.unit_system))))
+            else:
+                # The file has been used. If the debug flag has been set, make
+                # sure the unit system of the file matches the new data.
+                if weewx.debug:
+                    unit_system = self._getStdUnitSystem()
+                    # TODO: What if the unit system is None?
+                    if unit_system != dayStatsDict.unit_system:
+                        raise ValueError("stats: Data uses different unit system (%d) than stats file (%d)" % (dayStatsDict.unit_system, unit_system))
             # Update the time of the last stats update:
             _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
+            
             
     def _getLastUpdate(self):
         """Returns the time of the last update to the statistical database."""
@@ -406,16 +426,19 @@ class StatsDb(object):
     def _getStdUnitSystem(self):
         """Returns the unit system in use in the stats database."""
         
+        # If the metadata "unit_system" is missing, then it is an older style
+        # stats database, which are always in the US Customary standard unit
+        # system. If it exists, but is 'None', then the units have not been
+        # specified yet. Otherwise, it equals the unit system used by the
+        # database.
+
         _row = self._xeqSql("""SELECT value FROM metadata WHERE name = 'unit_system';""", {})
-        # If the unit system is missing, then it is an older style stats database,
-        # which are always in the US Customary standard unit system:
+        
         if not _row:
             return weewx.US
         
         # Otherwise, extract it from the row and, if debugging, test for validity
-        unit_system = int(_row[0])
-        if weewx.debug:
-            assert(unit_system in (weewx.US, weewx.METRIC))
+        unit_system = int(_row[0]) if str(_row[0])!='None' else None
         return unit_system
 
     def __getTypes(self):
@@ -693,16 +716,14 @@ class StatsTypeHelper(object):
 # For backwards compatibility:
 StatsReadonlyDb = StatsDb
 
-def config(statsFilename, stats_types = None, unit_system = weewx.US):
+def config(statsFilename, stats_types = None):
     """Initialize the StatsDb database
     
     Does nothing if the database has already been initialized.
 
     stats_types: an iterable collection with the names of the types for
     which statistics will be gathered [optional. Default is to use all
-    possible types]
-    
-    unit_system: The unit system to be used inside the database."""
+    possible types]"""
     # Check whether the database exists:
     if not os.path.exists(statsFilename):
         # If it doesn't exist, create the parent directories
@@ -737,7 +758,7 @@ def config(statsFilename, stats_types = None, unit_system = weewx.US):
             else:
                 _connection.execute(std_create_str % (_stats_type,))
         _connection.execute(meta_create_str)
-        _connection.execute(meta_replace_str, ('unit_system', str(unit_system)))
+        _connection.execute(meta_replace_str, ('unit_system', 'None'))
     
     syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % statsFilename)
 

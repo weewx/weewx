@@ -93,6 +93,8 @@ class WMR100(weewx.abstractstation.AbstractStation):
         self.interface         = int(stn_dict.get('interface', 0))
         self.IN_endpoint       = int(stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1))
 
+        self.hardware_name = "WMR100N"
+
         self.last_totalRain = None
         self.openPort()
 
@@ -263,9 +265,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
         # won't work for the very first rain packet.
         _record['rain'] = (_record['totalRain']-self.last_totalRain) if self.last_totalRain is not None else None
         self.last_totalRain = _record['totalRain']
-        print "RAIN: Reset date ", packet[10:15], " Rain total:", _record['totalRain'], " Rain hour:", _record['hourRain'], " rain day:", _record['dayRain'], " Battery", (packet[0]>>4)
         return _record
-
 
     def _temperature_packet(self, packet):
         _record = {'dateTime'    : int(time.time() + 0.5),

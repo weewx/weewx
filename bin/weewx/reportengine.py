@@ -76,14 +76,14 @@ class StdReportEngine(threading.Thread):
         self.setup()
 
         # Iterate over each requested report
-        for report in self.config_dict['Reports'].sections:
+        for report in self.config_dict['StdReport'].sections:
             
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
             
             # Figure out where the configuration file is for the skin used for this report:
             skin_config_path = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                            self.config_dict['Reports']['SKIN_ROOT'],
-                                            self.config_dict['Reports'][report].get('skin', 'Standard'),
+                                            self.config_dict['StdReport']['SKIN_ROOT'],
+                                            self.config_dict['StdReport'][report].get('skin', 'Standard'),
                                             'skin.conf')
             # Retrieve the configuration dictionary for the skin. Wrap it in a try
             # block in case we fail
@@ -102,11 +102,11 @@ class StdReportEngine(threading.Thread):
 
             # Inject any overrides the user may have specified in the weewx.conf
             # configuration file for all reports:
-            for scalar in self.config_dict['Reports'].scalars:
-                skin_dict[scalar] = self.config_dict['Reports'][scalar]
+            for scalar in self.config_dict['StdReport'].scalars:
+                skin_dict[scalar] = self.config_dict['StdReport'][scalar]
             
             # Now inject any overrides for this specific report:
-            skin_dict.merge(self.config_dict['Reports'][report])
+            skin_dict.merge(self.config_dict['StdReport'][report])
             
             # Finally, add the report name:
             skin_dict['REPORT_NAME'] = report
@@ -165,7 +165,7 @@ class FtpGenerator(ReportGenerator):
                                                   user        = self.skin_dict['user'],
                                                   password    = self.skin_dict['password'],
                                                   local_root  = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                                                             self.config_dict['Reports']['HTML_ROOT']),
+                                                                             self.config_dict['StdReport']['HTML_ROOT']),
                                                   remote_root = self.skin_dict['path'],
                                                   name        = self.skin_dict['REPORT_NAME'],
                                                   passive     = bool(self.skin_dict.get('passive', True)),

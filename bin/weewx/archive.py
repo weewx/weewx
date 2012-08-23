@@ -42,7 +42,10 @@ class Archive(object):
         self.sqlkeys = self._getTypes()
         if not self.sqlkeys:
             raise StandardError("Database %s not initialized"% (archiveFilename,))
-    
+        
+    def close(self):
+        pass
+
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
         

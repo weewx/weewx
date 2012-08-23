@@ -9,21 +9,19 @@
 #
 """Abstract base class for station hardware."""
 
-import weewx
-
 class AbstractStation(object):
     """Station drivers should inherit from this class."""    
     def genLoopPackets(self):
-        raise weewx.NotImplemented("Method genLoopPackets not implemented")
+        raise NotImplementedError("Method genLoopPackets not implemented")
     
     def genArchiveRecords(self, lastgood_ts):
-        raise weewx.NotImplemented("Method genArchiveRecords not implemented")
+        raise NotImplementedError("Method genArchiveRecords not implemented")
         
     def getTime(self):
-        raise weewx.NotImplemented("Method getTime not implemented")
+        raise NotImplementedError("Method getTime not implemented")
     
     def setTime(self, newtime_ts):
-        raise weewx.NotImplemented("Method setTime not implemented")
+        raise NotImplementedError("Method setTime not implemented")
     
     def closePort(self):
         pass
