@@ -153,22 +153,33 @@ class StatsDb(object):
         self.std_unit_system = self._getStdUnitSystem()
 
     def close(self):
-        if self._connection:
+        try:
             self._connection.close()
+        except:
+            pass
         
     def updateHiLo(self, accumulator):
         """Use the contents of an accumulator to update the highs/lows of a stats database."""
+        
         # Get the start-of-day for the timespan in the accumulator
         _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.stop)
+        # Retrieve the stats seen so far:
         _stats_dict = self._getDayStats(_sod_ts)
+        # Update them with the contents of the accumulator:
         _stats_dict.updateHiLo(accumulator)
+        # Then save the results:
         self._setDayStats(_stats_dict, accumulator.timespan.stop)
         
     def addRecord(self, record):
         """Using an archive record, update the high/lows and count of a stats database."""
+        
+        # Get the start-of-day for the record:
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
+        # Get the stats seen so far:
         _stats_dict = self._getDayStats(_sod_ts)
+        # Update them with the contents of the record:
         _stats_dict.addRecord(record)
+        # Then save the results:
         self._setDayStats(_stats_dict, record['dateTime'])
         
     def getAggregate(self, timespan, stats_type, aggregateType, val=None):
@@ -325,7 +336,7 @@ class StatsDb(object):
                 
         # Get the TimeSpan for the day starting with sod_ts:
         timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
-
+        # Initialize an empty DictAccum
         _stats_dict = weewx.accum.DictAccum(timespan)
         
         for stats_type in self.statsTypes:
@@ -336,10 +347,11 @@ class StatsDb(object):
                     if stats_type =='wind': assert(len(_row) == 12)
                     else: assert(len(_row) == 7)
     
-            # The date may not exist in the database, in which case _row will
-            # be 'None'
+            # The date may not exist in the database, in which case _row will be 'None'
             _stats_tuple = _row[1:] if _row else None
         
+            # Now initialize the observation type in the DictAccum with the
+            # results seen so far, as retrieved from the database
             _stats_dict.initStats(stats_type, _stats_tuple)
         
         return _stats_dict
@@ -347,8 +359,7 @@ class StatsDb(object):
     def _setDayStats(self, dayStatsDict, lastUpdate):
         """Write all statistics for a day to the database in a single transaction.
         
-        dayStatsDict: A dictionary. Key is the type to be written, value is holds
-        a object that has method "getStatsTuple"
+        dayStatsDict: an instance of accum.DictAccum.
         
         lastUpdate: the time of the last update will be set to this. Normally, this
         is the timestamp of the last archive record added to the instance
@@ -370,8 +381,9 @@ class StatsDb(object):
                 # Get the stats-tuple, then write the results
                 _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
                 _connection.execute(_replace_str,_write_tuple)
-            # Set the unit system if it has not been set before. First see
-            # if this file has ever been used:
+                
+            # Set the unit system if it has not been set before. 
+            # To do this, first see if this file has ever been used:
             last_update = self._getLastUpdate()
             if last_update is None:
                 # File has never been used. Set the unit system:
@@ -381,12 +393,10 @@ class StatsDb(object):
                 # sure the unit system of the file matches the new data.
                 if weewx.debug:
                     unit_system = self._getStdUnitSystem()
-                    # TODO: What if the unit system is None?
                     if unit_system != dayStatsDict.unit_system:
-                        raise ValueError("stats: Data uses different unit system (%d) than stats file (%d)" % (dayStatsDict.unit_system, unit_system))
+                        raise ValueError("stats: Data uses different unit system (0x%x) than stats file (0x%x)" % (dayStatsDict.unit_system, unit_system))
             # Update the time of the last stats update:
             _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
-            
             
     def _getLastUpdate(self):
         """Returns the time of the last update to the statistical database."""
@@ -800,6 +810,7 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
     # Go through all the archiveDb records in the time span, adding them to the
     # database
     for _rec in archiveDb.genBatchRecords(start_ts, stop_ts):
+        #TODO: This should use the new accumulator capabilities:
         _rec_time_ts = _rec['dateTime']
         _rec_sod_ts = weeutil.weeutil.startOfArchiveDay(_rec_time_ts)
         # Check whether this is the first day, or we have entered a new day:

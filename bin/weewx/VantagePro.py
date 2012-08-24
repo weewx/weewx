@@ -371,9 +371,9 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         self.port = VantagePro._port_factory(vp_dict)
 
         if isinstance(self.port, SerialWrapper):
-            self.hardware_name = "Davis VantagePro2"
+            self.hardware_name = "VantagePro2"
         else:
-            self.hardware_name = "Davis Vantage IP"
+            self.hardware_name = "VantageIP"
                 
         # Open it up:
         self.port.openPort()
@@ -792,7 +792,6 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         record['usUnits']   = weewx.US
         
         return record
-
     
     #===========================================================================
     #              VantagePro utility functions

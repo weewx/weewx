@@ -27,7 +27,8 @@
     following:
 
  1. When building a source distribution ('sdist') it checks for
-    password information in the configuration file weewx.conf
+    password information in the configuration file weewx.conf and
+    that US units are the standard units.
 
  2. It merges any existing weewx.conf configuration files into the new, thus
     preserving any user changes.
@@ -197,10 +198,13 @@ class My_install_data(install_data):
         # Sometimes I forget to turn the debug flag off:
         new_config['debug'] = 0
         
-        # And forget that while mine starts in October, 
-        # most people's rain year starts in January!
+        # And forget that while my rain year starts in October, 
+        # for most people it starts in January!
         new_config['Station']['rain_year_start'] = 1
 
+        # The default target conversion units should be 'US':
+        new_config['StdConvert']['target_unit'] = 'US'
+                
         # Check to see if there is an existing config file.
         # If so, merge its contents with the new one
         if os.path.exists(config_path):
@@ -215,9 +219,9 @@ class My_install_data(install_data):
             if len(old_version_number[1]) < 2: 
                 old_version_number[1] = '0'+old_version_number[1]
 
-            # If the user has a version >= 1.7, then merge in the old
-            # config file.
-            if old_version_number[0:2] >= ['1','07']:
+            # I don't know how to merge older, V1.X configuration files, only
+            # newer V2.X ones.
+            if old_version_number[0:2] >= ['2','00']:
                 # Any user changes in old_config will overwrite values in new_config
                 # with this merge
                 new_config.merge(old_config)
@@ -226,26 +230,6 @@ class My_install_data(install_data):
         new_config['Station']['WEEWX_ROOT'] = self.install_dir
         # Add the version:
         new_config['version'] = VERSION
-
-        # Options heating_base and cooling_base have moved.
-        new_config['Station'].pop('heating_base', None)
-        new_config['Station'].pop('cooling_base', None)
-
-        # Wunderground has been put under section ['RESTful']:
-        new_config.pop('Wunderground', None)
-
-        # Option max_drift has been moved from section VantagePro
-        new_config['VantagePro'].pop('max_drift', None)
-
-        # Service StdCatchUp is no longer used. Filter it from the list:
-        new_config['Engines']['WxEngine']['service_list'] =\
-            filter(lambda svc_name : svc_name != 'weewx.wxengine.StdCatchUp', 
-                new_config['Engines']['WxEngine']['service_list'])
-
-        # Service StdWunderground has changed its name to StdRESTful:
-        new_config['Engines']['WxEngine']['service_list'] =\
-            [svc.replace('StdWunderground', 'StdRESTful') for svc in\
-             new_config['Engines']['WxEngine']['service_list']]
 
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
@@ -309,9 +293,10 @@ class My_sdist(sdist):
         # If this is the configuration file, then massage it to eliminate
         # the password info
         if f == 'weewx.conf':
+            config = configobj.ConfigObj(f)
+
             # If we're working with the configuration file, make sure it doesn't
             # have any private data in it.
-            config = configobj.ConfigObj(f)
 
             if config.has_key('Reports') and config['Reports'].has_key('FTP') and config['Reports']['FTP'].has_key('password'):
                 sys.stderr.write("\n*** FTP password found in configuration file. Aborting ***\n\n")
@@ -377,7 +362,7 @@ setup(name='weewx',
                                                      'skins/Standard/skin.conf', 'skins/Standard/week.html.tmpl',
                                                      'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 
                      ('start_scripts/Debian',       ['start_scripts/Debian/weewx']),
-                     ('start_scripts/SuSE',          ['start_scripts/SuSE/weewx'])],
+                     ('start_scripts/SuSE',         ['start_scripts/SuSE/weewx'])],
       requires    = ['configobj(>=4.5)', 'serial(>=2.3)', 'Cheetah(>=2.0)', 'sqlite3(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "install_lib"  : My_install_lib,

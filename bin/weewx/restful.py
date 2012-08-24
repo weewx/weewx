@@ -64,9 +64,6 @@ class REST(object):
         # Make a dictionary out of them:
         datadict = dict(zip(REST.archive_types, sqlrec))
     
-        if datadict['usUnits'] != weewx.US:
-            raise weewx.UnsupportedFeature, "Only U.S. Units are supported for the Ambient protocol."
-        
         # CWOP says rain should be "rain that fell in the past hour".  WU says
         # it should be "the accumulated rainfall in the past 60 min".
         # Presumably, this is exclusive of the archive record 60 minutes before,
@@ -84,8 +81,18 @@ class REST(object):
         # SELECT statement is inclusive on both time ends:
         datadict['dailyrain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>=? AND dateTime<=?", 
                                               sod_ts, time_ts)[0]
-                                              
-        return datadict
+
+        # All these online weather sites require US units. 
+        if datadict['usUnits'] == weewx.US:
+            return datadict
+        
+        # It's in something other than US units. We need to perform a conversion
+        # with US units as the target:
+        converted_datadict = weewx.units.StdUnitConverters[weewx.US].convertDict(datadict)
+        # Add the new unit system
+        converted_datadict['usUnits'] = weewx.US
+        # And return that:
+        return converted_datadict
     
 #===============================================================================
 #                             class Ambient
@@ -291,11 +298,6 @@ class CWOP(REST):
         # Get the data record for this time:
         _record = self.extractRecordFrom(archive, time_ts)
 
-        # 4. Units must be US Customary. We could add code to convert, but for
-        # now this will do:
-        if _record['usUnits'] != weewx.US:
-            raise SkippedPost, "CWOP: Units must be US Customary."
-        
         # Get the login and packet strings:
         _login = self.getLoginString()
         _tnc_packet = self.getTNCPacket(_record)
@@ -323,8 +325,6 @@ class CWOP(REST):
     
     def getTNCPacket(self, record):
         """Form the TNC2 packet used by CWOP."""
-        
-        # TODO: Allow native metric units. Convert as necessary for CWOP.
         
         # Preamble to the TNC packet:
         prefix = "%s>APRS,TCPIP*:" % (self.station, )

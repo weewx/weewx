@@ -308,6 +308,8 @@ class StdConvert(StdService):
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
+        syslog.syslog(syslog.LOG_INFO, "wxengine: StdConvert target unit is 0x%x" % self.target_unit)
+        
     def new_loop_packet(self, event):
         """Do unit conversions for a LOOP packet"""
         # No need to do anything if the packet is already in the target
