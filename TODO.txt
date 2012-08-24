@@ -1,6 +1,11 @@
 TODO before the next release:
 
-Close open files. Particularly statsdb.
+Missing keys in records generated from LOOP data. Check 'em out. 
+	set(['lowOutTemp', 'highUV', 'highRadiation', 'rain', 'rxCheckPercent', 'ET', 'highOutTemp'])
+The type 'rain' is the one that's worrisome: there's no way to get it from LOOP data!
+
+Allow the user to decide whether to calculate archive data from the LOOP packets,
+or get it directly from the console (if possible).
 
 Put archive_interval in the station hardware section of weewx.conf. Then, get it
 from engine.station.archive_interval.
