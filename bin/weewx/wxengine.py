@@ -453,7 +453,7 @@ class StdArchive(StdService):
         """Called when the engine is starting up."""
         # The engine is starting up. The main task is to do a catch up on any
         # data still on the station, but not yet put in the database.
-        self._catchup(event)
+        self._catchup()
                     
     def pre_loop(self, event):
         """Called before the main packet loop is entered."""
@@ -499,13 +499,19 @@ class StdArchive(StdService):
             self.statsDb.updateHiLo(self.old_accumulator)
         except AttributeError:
             return
-        # Extract a record out of the old accumulator. 
-        record = self.old_accumulator.getRecord()
-        # Add the archive interval
-        record['interval'] = self.archive_interval / 60
         
-        # Send out an event with the new record:
-        self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+        if self.engine.station.record_generation.lower() == 'software':
+            # Extract a record out of the old accumulator. 
+            record = self.old_accumulator.getRecord()
+            # Add the archive interval
+            record['interval'] = self.archive_interval / 60
+            
+            # Send out an event with the new record:
+            self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+        elif self.engine.station.record_generation.lower() == 'hardware':
+            self._catchup()
+        else:
+            raise ValueError("Unknown station record generation value %s" % self.engine.station.record_generation)
 
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
@@ -551,7 +557,7 @@ class StdArchive(StdService):
         self.archive.close()
         self.statsDb.close()
         
-    def _catchup(self, event):
+    def _catchup(self):
         """Pull any unarchived records off the console and archive them.""" 
 
         # Find out when the archive was last updated.
@@ -632,6 +638,42 @@ class StdPrint(StdService):
     def new_archive_record(self, event):
         """Print out the new archive record."""
         print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), event.record
+        
+#===============================================================================
+#                    Class TestAccum
+#===============================================================================
+
+class TestAccum(StdService):
+    """Allows comparison of archive records generated in software from
+    LOOP data, versus archive records retrieved from the console. This only
+    works for hardware that has an internal data logger."""
+
+    def __init__(self, engine, config_dict):
+        super(TestAccum, self).__init__(engine, config_dict)
+
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        
+    def new_archive_record(self, event):
+        # Nothing to do unless the record generation is being done in software:
+        if self.engine.station.record_generation.lower() != 'software':
+            return
+        accum_record = event.record
+        
+        timestamp = accum_record['dateTime']
+        last_timestamp = timestamp - self.engine.station.archive_interval
+        
+        for stn_record in self.engine.station.genArchiveRecords(last_timestamp):
+            
+            if timestamp==stn_record['dateTime']:
+            
+                for obs_type in sorted(accum_record.keys()):
+                    print "%10s, %10s, %10s" % (obs_type, accum_record[obs_type], stn_record.get(obs_type, 'N/A'))
+
+                accum_set = set(accum_record.keys())
+                stn_set   = set(stn_record.keys())
+                
+                missing = stn_set - accum_set
+                print "Missing keys:", missing
         
 #===============================================================================
 #                    Class StdRESTful

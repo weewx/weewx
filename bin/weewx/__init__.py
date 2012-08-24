@@ -27,8 +27,8 @@ CONFIG_ERROR = 3
 IO_ERROR     = 4
 
 # Constants used to indicate a unit system:
-METRIC = 0
-US     = 1
+METRIC = 0x10
+US     = 0x01
 
 #===============================================================================
 #           Define possible exceptions that could get thrown.

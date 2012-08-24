@@ -408,12 +408,14 @@ class StatsDb(object):
         
         # Do the string interpolation:
         sqlStmt = rawsqlStmt % interDict
-        # Get a _connection
+        # Get a _connection and cursor
         _connection = self._getConnection()
+        _cursor = _connection.cursor()
         # Execute the statement:
-        _cursor = _connection.execute(sqlStmt)
+        _cursor = _cursor.execute(sqlStmt)
         # Fetch the first row and return it.
         _row = _cursor.fetchone()
+        _cursor.close()
         return _row 
         
     def _getConnection(self):
@@ -434,10 +436,11 @@ class StatsDb(object):
 
         _row = self._xeqSql("""SELECT value FROM metadata WHERE name = 'unit_system';""", {})
         
+        # Check for an older database:
         if not _row:
             return weewx.US
         
-        # Otherwise, extract it from the row and, if debugging, test for validity
+        # It's a newer style database. Check for 'None' and return.
         unit_system = int(_row[0]) if str(_row[0])!='None' else None
         return unit_system
 

@@ -84,6 +84,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
         
         self.altitude          = stn_dict['altitude']
         # TODO: Consider changing this so these go in the driver loader instead:
+        self.record_generation = stn_dict.get('record_generation', 'software')
         self.stale_wind        = float(stn_dict.get('stale_wind', 30.0))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))

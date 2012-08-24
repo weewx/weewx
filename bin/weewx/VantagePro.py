@@ -358,6 +358,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         iss_id: The station number of the ISS [Optional. Default is 1]
         """
 
+        self.record_generation = vp_dict.get('record_generation', 'hardware')
         # TODO: These values should really be retrieved dynamically from the VP:
         self.iss_id           = int(vp_dict.get('iss_id', 1))
         self.model_type       = 2 # = 1 for original VantagePro, = 2 for VP2
@@ -517,10 +518,10 @@ class VantagePro(weewx.abstractstation.AbstractStation):
                 # signal that we are done. 
                 if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts :
                     # The time stamp is declining. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Catch up complete. Started at %s" \
-                                  % weeutil.weeutil.timestamp_to_string(_last_good_ts))
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Page timestamp %s" \
-                                  % weeutil.weeutil.timestamp_to_string(_record['dateTime']))
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Page timestamp %s earlier than last good timestamp %s"\
+                                  % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
+                                     weeutil.weeutil.timestamp_to_string(_last_good_ts)))
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Catch up complete.")
                     return
                 # Set the last time to the current time, and yield the packet
                 _last_good_ts = _record['dateTime']
