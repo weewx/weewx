@@ -799,7 +799,7 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
     nrecs = 0
     ndays = 0
     
-    _allStats  = None
+    _statsDict = None
     _lastTime  = None
     
     # If a start time for the backfill wasn't given, then start with the time of
@@ -810,30 +810,33 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
     # Go through all the archiveDb records in the time span, adding them to the
     # database
     for _rec in archiveDb.genBatchRecords(start_ts, stop_ts):
-        #TODO: This should use the new accumulator capabilities:
-        _rec_time_ts = _rec['dateTime']
-        _rec_sod_ts = weeutil.weeutil.startOfArchiveDay(_rec_time_ts)
-        # Check whether this is the first day, or we have entered a new day:
-        if _allStats is None or _allStats.startOfDay_ts != _rec_sod_ts:
-                # If this is not the first day, then write it out:
-                if _allStats:
-                    statsDb._setDayStats(_allStats, _lastTime)
-                    ndays += 1
-                # Get the stats for the new day:
-                _allStats = statsDb._getDayStats(_rec_sod_ts)
-        
-        # Add the stats for this record to the running total for this day:
-        for _stats_type in _allStats:
-            _allStats[_stats_type].addToHiLow(_rec)
-            _allStats[_stats_type].addToSum(_rec)
-            
+
+        # Get the start-of-day for the record:
+        _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
+        # If this is the very first record, fetch a new accumulator
+        if not _statsDict:
+            _statsDict = statsDb._getDayStats(_sod_ts)
+        # Try updating. If the time is out of the accumulator's time span, an
+        # exception will get thrown.
+        try:
+            _statsDict.addRecord(_rec)
+        except weewx.accum.OutOfSpan:
+            # The record is out of the time span.
+            # Save the old accumulator:
+            statsDb._setDayStats(_statsDict, _rec['dateTime'])
+            ndays += 1
+            # Get a new accumulator:
+            _statsDict = statsDb._getDayStats(_sod_ts)
+            # try again
+            _statsDict.addRecord(_rec)
+         
         nrecs += 1
         # Remember the timestamp for this record.
-        _lastTime = _rec_time_ts
+        _lastTime = _rec['dateTime']
 
     # We're done. Record the stats for the last day.
-    if _allStats:
-        statsDb._setDayStats(_allStats, _lastTime)
+    if _statsDict:
+        statsDb._setDayStats(_statsDict, _lastTime)
         ndays += 1
     
     t2 = time.time()
