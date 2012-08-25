@@ -298,7 +298,7 @@ class My_sdist(sdist):
             # If we're working with the configuration file, make sure it doesn't
             # have any private data in it.
 
-            if config.has_key('Reports') and config['Reports'].has_key('FTP') and config['Reports']['FTP'].has_key('password'):
+            if config.has_key('StdReport') and config['StdReport'].has_key('FTP') and config['StdReport']['FTP'].has_key('password'):
                 sys.stderr.write("\n*** FTP password found in configuration file. Aborting ***\n\n")
                 exit()
 

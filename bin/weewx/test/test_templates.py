@@ -42,14 +42,14 @@ class TemplateTest(StatsTestBase):
 
         # Find the test skins and then have SKIN_ROOT point to it:
         test_dir = sys.path[0]
-        t.config_dict['Reports']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
+        t.config_dict['StdReport']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
 
         # Although the report engine inherits from Thread, we can just run it in the main thread:
         print "Starting report engine test"
         t.run()
         print "Done."
         
-        test_html_dir = os.path.join(t.config_dict['Station']['WEEWX_ROOT'], t.config_dict['Reports']['HTML_ROOT'])
+        test_html_dir = os.path.join(t.config_dict['Station']['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
         expected_dir  = os.path.join(test_dir, 'expected')
         
         for file_name in ['index.html', 'bymonth.txt', 'byyear.txt', 

@@ -53,8 +53,8 @@ class Station(object):
             self.os_uptime = ''
     
         try:
-            website = "http://" + config_dict['Reports']['FTP']['server']
-            self.webpath = urlparse.urljoin(website, config_dict['Reports']['FTP']['path'])
+            website = "http://" + config_dict['StdReport']['FTP']['server']
+            self.webpath = urlparse.urljoin(website, config_dict['StdReport']['FTP']['path'])
         except KeyError:
             self.webpath = "http://www.weewx.com"
              
