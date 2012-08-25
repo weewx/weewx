@@ -405,7 +405,9 @@
           #if $week.radiation.has_data
           <img src="weekradiation.png" alt="Radiation" />
           #end if
+          #if $week.rxCheckPercent.has_data
           <img src="weekrx.png" alt="week rx percent"/>
+          #end if
           #if $week.extraTemp1.has_data
           <img src="weekpond.png" alt="Pond Temperatures" />
           #end if
