@@ -170,8 +170,6 @@ if __name__ == '__main__':
     import configobj
     from optparse import OptionParser
 
-    import weewx
-        
     usage_string ="""Usage: 
     
     alarm.py config_path 
