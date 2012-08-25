@@ -4,10 +4,6 @@ Missing keys in records generated from LOOP data. Check 'em out.
 	set(['lowOutTemp', 'highUV', 'highRadiation', 'rain', 'rxCheckPercent', 'ET', 'highOutTemp'])
 The type 'rain' is the one that's worrisome: there's no way to get it from LOOP data!
 
-Look into using ConfigObj's 'validator' capability.
-
-Dynamically obtain the hardware configuration for index.html
-
 Consider changing the name of VantagePro.py to VantageSeries.py or something similar.
 
 Add info about bad USB to serial converters to the "Troubleshooting" section. In particular,
