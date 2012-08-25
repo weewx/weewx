@@ -717,11 +717,10 @@ class StdRESTful(StdService):
             # Create an instance of weewx.archive.Archive
             archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                            config_dict['StdArchive']['archive_file'])
-            archive = weewx.archive.Archive(archiveFilename)
             # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
             # Start up the thread:
-            self.thread = weewx.restful.RESTThread(archive, self.queue, station_list)
+            self.thread = weewx.restful.RESTThread(archiveFilename, self.queue, station_list)
             self.thread.start()
             syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started thread for RESTful upload sites.")
         

@@ -17,6 +17,7 @@ import urllib2
 import socket
 import time
 
+import weewx.archive
 import weewx.units
 import weeutil.weeutil
 
@@ -448,10 +449,10 @@ class RESTThread(threading.Thread):
     Basically, it watches a queue, and if anything appears in it, it publishes it.
     The queue should be populated with the timestamps of the data records to be published.
     """
-    def __init__(self, archive, queue, station_list):
+    def __init__(self, archiveFilename, queue, station_list):
         """Initialize an instance of RESTThread.
         
-        archive: The archive database. Usually an instance of weewx.archive.Archive 
+        archiveFilename: The file name for hte archive database.  
         
         queue: An instance of Queue.Queue where the timestamps will appear
 
@@ -461,7 +462,7 @@ class RESTThread(threading.Thread):
         # In the strange vocabulary of Python, declaring yourself a "daemon thread"
         # allows the program to exit even if this thread is running:
         self.setDaemon(True)
-        self.archive = archive
+        self.archive = weewx.archive.Archive(archiveFilename)
         self.queue   = queue # Fifo queue where new records will appear
         self.station_list = station_list
 
@@ -472,6 +473,7 @@ class RESTThread(threading.Thread):
             
             # A 'None' value appearing in the queue is our signal to exit
             if time_ts is None:
+                self.archive.close()
                 return
             
             # This string is just used for logging:
@@ -505,6 +507,7 @@ class RESTThread(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "   ****  %s" % (e,))
                     weeutil.weeutil.log_traceback("   ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "   ****  Thread terminating.")
+                    self.archive.close()
                     raise
                 else:
                     syslog.syslog(syslog.LOG_INFO, "restful: Published record %s to %s station %s" % (time_str, station.site, station.station))
