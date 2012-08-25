@@ -24,5 +24,3 @@ Update the "Customizing guide" reflecting the new engine architecture.
 Update the "User's Guide" to update the new config utilities.
 
 Abstract the database type a little more (in preparation for supporting MySQL).
-
-An archive object probably should not be shared between the main thread and the RESTful thread.
