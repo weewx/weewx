@@ -9,40 +9,42 @@
 #
 """Defines the default station data, available for processing data."""
 import time
-import urlparse
-import syslog
 
 import weeutil.weeutil
 import weewx.units
 
+class StationInfo(object):
+    """Readonly class with static station information."""
+    
+    def __init__(self, **stn_dict):
+        """Extracts info from the stn_dict and stores it in self."""
+        self.latitude_f  = float(stn_dict['latitude'])
+        self.longitude_f = float(stn_dict['longitude'])
+        self.location    = stn_dict.get('location', 'Unknown')
+        self.hardware    = stn_dict.get('hardware', stn_dict.get('station_type', 'Unknown'))
+        altitude_t       = weeutil.weeutil.option_as_list(stn_dict.get('altitude', (None, None)))
+        self.altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+        self.rain_year_start = int(stn_dict.get('rain_year_start', 1))
+        self.week_start      = int(stn_dict.get('week_start', 6))
+
 class Station(object):
-    """Static data about the station. Rarely changes."""
-    def __init__(self, config_dict, skin_dict):
+    """Formatted data about the station. Rarely changes."""
+    def __init__(self, stn_info,  webpath, formatter, converter, skin_dict):
         """Extracts info from the config_dict and stores it in self."""
         self.hemispheres = skin_dict['Labels'].get('hemispheres', ('N','S','E','W'))
-        self.latitude_f  = config_dict['Station'].as_float('latitude')
-        self.latitude    = weeutil.weeutil.latlon_string(self.latitude_f, self.hemispheres[0:2], 'lat')
-        self.longitude_f = config_dict['Station'].as_float('longitude')
-        self.longitude   = weeutil.weeutil.latlon_string(self.longitude_f, self.hemispheres[2:4], 'lon')
-
-        altitude_t           = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
-        # This test is in here to catch any old-style altitudes:
-        if len(altitude_t) < 2:
-            syslog.syslog(syslog.LOG_ERR,"station: Altitude must be expressed as a list with the unit as the second element.")
-            altitude_t=(float(altitude_t[0]), 'foot')
-            syslog.syslog(syslog.LOG_ERR,"   ****  Assuming altitude as (%f, %s)" % altitude_t)
-        
-        # Form a value-tuple:
-        self.altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-        self.altitude = weewx.units.ValueHelper(value_t=self.altitude_vt,
-                                                formatter=weewx.units.Formatter.fromSkinDict(skin_dict),
-                                                converter=weewx.units.Converter.fromSkinDict(skin_dict))
-
-        self.location        = config_dict['Station']['location']
-        self.rain_year_start = int(config_dict['Station'].get('rain_year_start', 1))
+        self.latitude_f  = stn_info.latitude_f
+        self.longitude_f = stn_info.longitude_f
+        self.latitude    = weeutil.weeutil.latlon_string(stn_info.latitude_f,  self.hemispheres[0:2], 'lat')
+        self.longitude   = weeutil.weeutil.latlon_string(stn_info.longitude_f, self.hemispheres[2:4], 'lon')
+        self.location    = stn_info.location
+        self.hardware    = stn_info.hardware
+        self.altitude_vt = stn_info.altitude_vt
+        self.altitude    = weewx.units.ValueHelper(value_t=stn_info.altitude_vt,
+                                                   formatter=formatter,
+                                                   converter=converter)
+        self.rain_year_start = stn_info.rain_year_start
         self.rain_year_str   = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
-        self.week_start      = int(config_dict['Station'].get('week_start', 6))
-
+        self.week_start      = stn_info.week_start
         self.uptime = weeutil.weeutil.secs_to_string(time.time() - weewx.launchtime_ts) if weewx.launchtime_ts else ''
         self.version = weewx.__version__
         # The following works on Linux only:
@@ -52,9 +54,4 @@ class Station(object):
         except (IOError, KeyError):
             self.os_uptime = ''
     
-        try:
-            website = "http://" + config_dict['StdReport']['FTP']['server']
-            self.webpath = urlparse.urljoin(website, config_dict['StdReport']['FTP']['path'])
-        except KeyError:
-            self.webpath = "http://www.weewx.com"
-             
+        self.webpath = webpath

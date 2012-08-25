@@ -17,6 +17,7 @@ import syslog
 import configobj
 
 import user.extensions #@UnusedImport
+import weewx.station
 import weewx.reportengine
 
 def gen_all(config_path, gen_ts = None):
@@ -41,7 +42,9 @@ def gen_all(config_path, gen_ts = None):
 
     socket.setdefaulttimeout(10)
     
-    t = weewx.reportengine.StdReportEngine(config_path, gen_ts)
+    stn_info = weewx.station.StationInfo(**config_dict['Station'])
+    
+    t = weewx.reportengine.StdReportEngine(config_path, stn_info, gen_ts)
 
     # Although the report engine inherits from Thread, we can just run it in the main thread:
     t.run()

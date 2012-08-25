@@ -13,6 +13,7 @@ import os.path
 import sys
 import syslog
 import time
+import urlparse
 
 import Cheetah.Template
 import Cheetah.Filters
@@ -50,20 +51,26 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.outputted_dict = {'SummaryByMonth' : [],
                                'SummaryByYear'  : []}
         
-        self.initStation()
         self.initUnits()
+        self.initStation()
         self.initAlmanac(self.gen_ts)
-        
-    def initStation(self):
-
-        # station holds info such as 'altitude', 'latitude', etc. It seldom changes
-        self.station = weewx.station.Station(self.config_dict, self.skin_dict)
         
     def initUnits(self):
         
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
         self.unitInfoHelper = weewx.units.UnitInfoHelper(self.formatter, self.converter)
+        
+    def initStation(self):
+
+        try:
+            website = "http://" + self.config_dict['StdReport']['FTP']['server']
+            webpath = urlparse.urljoin(website, self.config_dict['StdReport']['FTP']['path'])
+        except KeyError:
+            webpath = "http://www.weewx.com"
+
+        # station holds info such as 'altitude', 'latitude', etc. It seldom changes
+        self.station = weewx.station.Station(self.stn_info, webpath, self.formatter, self.converter, self.skin_dict)
         
     def initAlmanac(self, celestial_ts):
         """ Initialize an instance of weeutil.Almanac.Almanac for the station's

@@ -39,10 +39,12 @@ class StdReportEngine(threading.Thread):
     See below for examples of generators.
     """
     
-    def __init__(self, config_path, gen_ts = None, first_run = True):
+    def __init__(self, config_path, stn_info, gen_ts=None, first_run=True):
         """Initializer for the report engine. 
         
         config_path: File path to the configuration dictionary.
+        
+        stn_info: An instance of weewx.station.StationInfo, with static station information.
         
         gen_ts: The timestamp for which the output is to be current [Optional; default
         is the last time in the database]
@@ -57,8 +59,9 @@ class StdReportEngine(threading.Thread):
             print "Unable to open configuration file ", config_path
             raise
             
-        self.gen_ts      = gen_ts
-        self.first_run   = first_run
+        self.stn_info  = stn_info
+        self.gen_ts    = gen_ts
+        self.first_run = first_run
         
     def setup(self):
         if self.gen_ts:
@@ -118,7 +121,8 @@ class StdReportEngine(threading.Thread):
                                                       self.config_dict, 
                                                       skin_dict, 
                                                       self.gen_ts, 
-                                                      self.first_run)
+                                                      self.first_run,
+                                                      self.stn_info)
                 except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
@@ -139,11 +143,12 @@ class StdReportEngine(threading.Thread):
 
 class ReportGenerator(object):
     """Base class for all report generators."""
-    def __init__(self, config_dict, skin_dict, gen_ts, first_run):
+    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info):
         self.config_dict = config_dict
         self.skin_dict   = skin_dict
         self.gen_ts      = gen_ts
         self.first_run   = first_run
+        self.stn_info    = stn_info
         
     def start(self):
         self.run()

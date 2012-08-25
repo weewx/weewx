@@ -27,6 +27,7 @@ import daemon
 # weewx imports:
 import weewx.archive
 import weewx.stats
+import weewx.station
 import weewx.restful
 import weewx.reportengine
 import weeutil.weeutil
@@ -146,6 +147,11 @@ class StdEngine(object):
         
         # Set up the callback dictionary:
         self.callbacks = dict()
+        if hasattr(self.station, 'hardware_name'):
+            hardware = self.station.hardware_name
+        else:
+            hardware = 'Unknown'
+        self.stn_info = weewx.station.StationInfo(hardware=hardware, **config_dict['Station'])
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""
@@ -785,6 +791,7 @@ class StdReport(StdService):
         """Called after the packet LOOP. Processes any new data."""
         # Now process the data, using a separate thread
         self.thread = weewx.reportengine.StdReportEngine(self.engine.config_path,
+                                                         self.engine.stn_info,
                                                          first_run=self.first_run) 
         self.thread.start()
         self.first_run = False
