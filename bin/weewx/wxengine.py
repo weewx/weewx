@@ -688,7 +688,7 @@ class StdRESTful(StdService):
     def __init__(self, engine, config_dict):
         super(StdRESTful, self).__init__(engine, config_dict)
 
-        station_list = []
+        obj_list = []
 
         # Each subsection in section [StdRESTful] represents a different upload
         # site:
@@ -702,16 +702,16 @@ class StdRESTful(StdService):
                 # protocol used by this site. It will throw an exception if not
                 # enough information is available to instantiate.
                 obj_class = 'weewx.restful.' + site_dict['protocol']
-                new_station = weeutil.weeutil._get_object(obj_class, site, **site_dict)
+                obj = weeutil.weeutil._get_object(obj_class, site, **site_dict)
             except KeyError, e:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
                 syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % e)
             else:
-                station_list.append(new_station)
+                obj_list.append(obj)
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will be posted to %s" % (site,))
         
         # Were there any valid upload sites?
-        if len(station_list) > 0 :
+        if len(obj_list) > 0 :
             # Yes. Proceed by setting up the queue and thread.
             
             # Create an instance of weewx.archive.Archive
@@ -720,14 +720,14 @@ class StdRESTful(StdService):
             # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
             # Start up the thread:
-            self.thread = weewx.restful.RESTThread(archiveFilename, self.queue, station_list)
+            self.thread = weewx.restful.RESTThread(archiveFilename, self.queue, obj_list)
             self.thread.start()
             syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started thread for RESTful upload sites.")
         
         else:
             self.queue  = None
             self.thread = None
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: No RESTful upload sites. Thread not started.")
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: No RESTful upload sites. No need to start thread.")
             
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
