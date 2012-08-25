@@ -717,7 +717,7 @@ class StdRESTful(StdService):
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will be posted to %s" % (site,))
         
         # Were there any valid upload sites?
-        if len(obj_list) > 0 :
+        if obj_list:
             # Yes. Proceed by setting up the queue and thread.
             
             # Create an instance of weewx.archive.Archive

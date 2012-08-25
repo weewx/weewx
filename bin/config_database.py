@@ -73,7 +73,7 @@ def main():
     if args.backfill_stats:
         backfillStatsDatabase(config_dict)
 
-    if args.reconfig_database:
+    if args.reconfigure_database:
         reconfigMainDatabase(config_dict)
 
 def createMainDatabase(config_dict):

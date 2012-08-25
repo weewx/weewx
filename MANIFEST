@@ -4,7 +4,8 @@ README
 setup.cfg
 setup.py
 weewx.conf
-bin/configure.py
+bin/config_database.py
+bin/config_vp.py
 bin/daemon.py
 bin/runreports.py
 bin/weewxd.py
@@ -27,6 +28,7 @@ bin/weeutil/ftpupload.py
 bin/weeutil/weeutil.py
 bin/weewx/VantagePro.py
 bin/weewx/__init__.py
+bin/weewx/abstractstation.py
 bin/weewx/accum.py
 bin/weewx/almanac.py
 bin/weewx/archive.py
@@ -38,6 +40,7 @@ bin/weewx/restful.py
 bin/weewx/station.py
 bin/weewx/stats.py
 bin/weewx/units.py
+bin/weewx/wmrx.py
 bin/weewx/wxengine.py
 bin/weewx/wxformulas.py
 docs/CHANGES.txt

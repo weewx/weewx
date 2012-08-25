@@ -63,6 +63,7 @@ from email.mime.text import MIMEText
 import threading
 import syslog
 
+import weewx
 from weewx.wxengine import StdService
 from weeutil.weeutil import timestamp_to_string, option_as_list
 
@@ -90,31 +91,29 @@ class MyAlarm(StdService):
             self.FROM          = config_dict['Alarm'].get('from', 'alarm@weewx.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
+            
+            # If we got this far, it's ok to start intercepting events:
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
+            
         except Exception, e:
-            self.expression = None
-            self.time_wait  = None
             syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set. %s" % e)
+            
+    def newArchivePacket(self, event):
 
-    def newArchivePacket(self, rec):
-        # Let the super class see the record first:
-        StdService.newArchivePacket(self, rec)
-
-        # See if the alarm has been set:
-        if self.expression:
-            # To avoid a flood of nearly identical emails, this will do
-            # the check only if we have never sent an email, or if we haven't
-            # sent one in the last self.time_wait seconds:
-            if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait :
-                
-                # Evaluate the expression in the context of 'rec'.
-                # Sound the alarm if it evaluates true:
-                if eval(self.expression, None, rec):            # NOTE 1
-                    # Sound the alarm!
-                    # Launch in a separate thread so it doesn't block the main LOOP thread:
-                    t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, rec))
-                    t.start()
-                    # Record when the message went out:
-                    self.last_msg_ts = time.time()
+        # To avoid a flood of nearly identical emails, this will do
+        # the check only if we have never sent an email, or if we haven't
+        # sent one in the last self.time_wait seconds:
+        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait :
+            
+            # Evaluate the expression in the context of 'rec'.
+            # Sound the alarm if it evaluates true:
+            if eval(self.expression, None, rec):            # NOTE 1
+                # Sound the alarm!
+                # Launch in a separate thread so it doesn't block the main LOOP thread:
+                t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, event.record))
+                t.start()
+                # Record when the message went out:
+                self.last_msg_ts = time.time()
 
     def soundTheAlarm(self, rec):
         """This function is called when the given expression evaluates True."""
