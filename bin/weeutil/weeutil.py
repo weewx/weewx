@@ -250,10 +250,10 @@ class TimeSpan(object):
         stop_ts: The stopping time stamp of the interval
         '''
         
-        if start_ts >= stop_ts :
-            raise ValueError, "start time must be less than stop time"
         self.start = int(start_ts)
         self.stop = int(stop_ts)
+        if self.start > self.stop:
+            raise ValueError, "start time (%d) is greater than stop time (%d)" % (self.start, self.stop)
         
     def includesArchiveTime(self, timestamp):
         """
