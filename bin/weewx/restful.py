@@ -224,6 +224,9 @@ class Ambient(REST):
 
 class CWOP(REST):
     """Upload using the CWOP protocol. """
+    
+    # Station IDs must start with one of these:
+    valid_prefixes = ['CW', 'DW', 'EW']
 
     def __init__(self, site, **kwargs):
         """Initialize for a post to CWOP.
@@ -258,7 +261,7 @@ class CWOP(REST):
         """
         self.site      = site
         self.station   = kwargs['station'].upper()
-        if self.station[0:2] in ('CW', 'DW', 'EW'):
+        if self.station[0:2] in CWOP.valid_prefixes:
             self.passcode = "-1"
         else:
             self.passcode = kwargs['passcode']
@@ -524,8 +527,6 @@ if __name__ == '__main__':
     import os.path
     from optparse import OptionParser
     import Queue
-    
-    import weewx.archive
     
     def main():
         usage_string ="""Usage: 
