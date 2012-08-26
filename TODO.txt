@@ -1,5 +1,7 @@
 TODO before the next release:
 
+Install wview and set it up to use metric units in the database. See what unit types it chooses.
+
 Missing keys in records generated from LOOP data. Check 'em out. 
 	set(['lowOutTemp', 'highUV', 'highRadiation', 'rain', 'rxCheckPercent', 'ET', 'highOutTemp'])
 The type 'rain' is the one that's worrisome: there's no way to get it from LOOP data!
