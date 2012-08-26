@@ -4,6 +4,8 @@ Abstract databases to allow the use of a DB server (such as MySQL).
 
 Make it easier to subclass a new RESTful protocol.
 
+Port to WMR968? Or La Crosse WS2355?
+
 Offer "cumulative" as an aggregation type.
 
 Allow rain-to-date to be added to a partial rainyear.

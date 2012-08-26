@@ -6,7 +6,19 @@ For complete documentation, see http://www.weewx.com/docs
 
 2.0.0 XX/YY/12
 
-Changed  the  engine architecture  so  it  is more  event  driven.  It now  uses
+A  big release  with lots  of changes.  All skin  configurations  are backwardly
+compatible, but the configuration file,  weewx.conf, is not. The install utility
+setup.py will install a fresh version, which you will have to edit as necessary.
+
+Added the ability to generate archive records in software, thus opening the door
+for supporting weather stations that do not have a logger.
+
+Support for the  Oregon Scientific WMR100, the cheapest  weather station I could
+find to demonstrate the above!
+
+The databases can now be in Metric units, as well as US Customary.
+
+Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
 callbacks, making it easier to add new event types.
 
 Added utility config_vp, for configuring the VantagePro hardware.
@@ -15,34 +27,42 @@ Added utility config_database, for configuring the databases.
 
 Both utilities use argparse (instead of optparse), which is included with Python
 2.7. For earlier versions of Python,  it will have to be supplied.  Installation
-is  trivial:  just  download from  http://pypi.python.org/pypi/argparse  and put 
+is  trivial:  just download  from  http://pypi.python.org/pypi/argparse and  put
 argparse.py in any sys.path directory.
 
 When doing DMPAFT, no longer tries to correct for DST.
 
-The stats type 'squarecount' now contains the number of valid wind directions that
-went into calculating 'xsum' and 'ysum'. It used to be the number of valid wind speeds.
-Wind direction is now calculated using 'squarecount' (instead of 'count'). This is
-a small difference and unlikely to show in any reports.
+Now  explicitly closes  the  stats  database connection  instead  of relying  on
+garbage collection to  do it. This seems to be reducing  the long-term growth of
+memory usage.
+
+The stats  type 'squarecount' now contains  the number of  valid wind directions
+that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid
+wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
+'count'). This is a small difference and unlikely to show in any reports.
+
+Lots of  little nips  and tucks here  and there,  mostly to reduce  the coupling
+between  different  modules.  In   particular,  now  a  service  generally  gets
+configured only using its section of weewx.conf.
 
 
 1.14.1 07/06/12
 
-Hardened retry strategy for the WeatherLink IP. If the port fails to open at all, or
-a socket error occurs, it will thrown an exception (resulting in a retry in 60 seconds).
-If a socket returns an incomplete result, it will continue to retry until everything 
-has been read.
+Hardened retry  strategy for the  WeatherLink IP. If  the port fails to  open at
+all, or a socket error occurs, it will thrown an exception (resulting in a retry
+in 60 seconds).   If a socket returns an incomplete result,  it will continue to
+retry until everything has been read.
 
-Fixed minor bug that causes the reporting thread to prematurely terminate if an exception
-is thrown while doing an FTP.
+Fixed minor bug that causes the  reporting thread to prematurely terminate if an
+exception is thrown while doing an FTP.
 
 
 1.14.0 06/18/12
 
-Added smartphone formatted mobile webpage, contributed by user Torbjörn Einarsson.
-If you are doing a fresh install, then these pages will be generated automatically.
-If you are doing an upgrade, then see the upgrade guide on how to have these webpages
-generated. Thanks, Tobbe!
+Added  smartphone  formatted  mobile   webpage,  contributed  by  user  Torbjörn
+Einarsson.  If you are doing a fresh install, then these pages will be generated
+automatically.  If you  are doing an upgrade, then see the  upgrade guide on how
+to have these webpages generated. Thanks, Tobbe!
 
 Three changes suggested by user Charlie Spirakis:
   o Changed umask in daemon.py to 0022;
