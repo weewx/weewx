@@ -483,6 +483,7 @@ class RESTThread(threading.Thread):
             time_str = weeutil.weeutil.timestamp_to_string(time_ts)
             
             # Cycle through all the RESTful stations in the list:
+            # TODO: Is this the best variable name?
             for station in self.station_list:
     
                 # Post the data to the upload site. Be prepared to catch any exceptions:

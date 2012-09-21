@@ -136,7 +136,7 @@ class StdEngine(object):
             # Now find the function 'loader' within the module:
             loader_function = getattr(driver_module, 'loader')
             # Now call it with the configuration dictionary as the only argument:
-            self.station = loader_function(config_dict)
+            self.console = loader_function(config_dict)
         except Exception, ex:
             # Caught unrecoverable error. Log it:
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
@@ -147,8 +147,8 @@ class StdEngine(object):
         
         # Set up the callback dictionary:
         self.callbacks = dict()
-        if hasattr(self.station, 'hardware_name'):
-            hardware = self.station.hardware_name
+        if hasattr(self.console, 'hardware_name'):
+            hardware = self.console.hardware_name
         else:
             hardware = 'Unknown'
         self.stn_info = weewx.station.StationInfo(hardware=hardware, **config_dict['Station'])
@@ -206,7 +206,7 @@ class StdEngine(object):
                     # And this is the main packet LOOP. It will continuously
                     # generate LOOP packets until some service breaks it by throwing
                     # an exception (usually when an archive period has passed).
-                    for packet in self.station.genLoopPackets():
+                    for packet in self.console.genLoopPackets():
                         
                         # Package the packet as an event, then dispatch it.            
                         self.dispatchEvent(weewx.Event(weewx.NEW_LOOP_PACKET, packet=packet))
@@ -267,7 +267,7 @@ class StdEngine(object):
 
         try:
             # Close the console:
-            self.station.closePort()
+            self.console.closePort()
         except:
             pass
 
@@ -439,8 +439,8 @@ class StdArchive(StdService):
 
         # If the station hardware supports an archive interval, use that.
         # Otherwise, get it out of the configuration file.
-        if hasattr(self.engine.station, 'archive_interval'):
-            self.archive_interval = self.engine.station.archive_interval
+        if hasattr(self.engine.console, 'archive_interval'):
+            self.archive_interval = self.engine.console.archive_interval
             syslog.syslog(syslog.LOG_DEBUG, "wxengine: Using station archive interval of %d" % self.archive_interval)
         else:
             self.archive_interval = config_dict['StdArchive'].as_int('archive_interval')
@@ -508,7 +508,7 @@ class StdArchive(StdService):
         except AttributeError:
             return
         
-        if self.engine.station.record_generation.lower() == 'software':
+        if self.engine.console.record_generation.lower() == 'software':
             # Extract a record out of the old accumulator. 
             record = self.old_accumulator.getRecord()
             # Add the archive interval
@@ -516,10 +516,10 @@ class StdArchive(StdService):
             
             # Send out an event with the new record:
             self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
-        elif self.engine.station.record_generation.lower() == 'hardware':
+        elif self.engine.console.record_generation.lower() == 'hardware':
             self._catchup()
         else:
-            raise ValueError("Unknown station record generation value %s" % self.engine.station.record_generation)
+            raise ValueError("Unknown station record generation value %s" % self.engine.console.record_generation)
 
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
@@ -573,7 +573,7 @@ class StdArchive(StdService):
         # Now ask the console for any new records since then. (Not all consoles
         # support this feature).
         try:
-            for record in self.engine.station.genArchiveRecords(lastgood_ts):
+            for record in self.engine.console.genArchiveRecords(lastgood_ts):
                 self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
         except NotImplementedError:
             pass
@@ -612,14 +612,14 @@ class StdTimeSynch(StdService):
         if now_ts - self.last_synch_ts >= self.clock_check:
             self.last_synch_ts = now_ts
             try:
-                console_time = self.engine.station.getTime()
+                console_time = self.engine.console.getTime()
                 if console_time is None: return
                 diff = console_time - now_ts
                 syslog.syslog(syslog.LOG_INFO, 
                               "wxengine: Clock error is %.2f seconds (positive is fast)" % diff)
                 if abs(now_ts - console_time) > self.max_drift:
                     try:
-                        self.engine.station.setTime(now_ts)
+                        self.engine.console.setTime(now_ts)
                     except NotImplementedError:
                         syslog.syslog(syslog.LOG_DEBUG, "wxengine: Station does not support setting the time")
             except NotImplementedError:
@@ -663,14 +663,14 @@ class TestAccum(StdService):
         
     def new_archive_record(self, event):
         # Nothing to do unless the record generation is being done in software:
-        if self.engine.station.record_generation.lower() != 'software':
+        if self.engine.console.record_generation.lower() != 'software':
             return
         accum_record = event.record
         
         timestamp = accum_record['dateTime']
-        last_timestamp = timestamp - self.engine.station.archive_interval
+        last_timestamp = timestamp - self.engine.console.archive_interval
         
-        for stn_record in self.engine.station.genArchiveRecords(last_timestamp):
+        for stn_record in self.engine.console.genArchiveRecords(last_timestamp):
             
             if timestamp==stn_record['dateTime']:
             
