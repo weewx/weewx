@@ -11,7 +11,6 @@ bin/runreports.py
 bin/weewxd.py
 bin/examples/__init__.py
 bin/examples/alarm.py
-bin/examples/daily.py
 bin/examples/lowBattery.py
 bin/examples/mygenerator.py
 bin/user/__init__.py

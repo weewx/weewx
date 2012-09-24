@@ -366,6 +366,8 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         # These come from the configuration dictionary:
         self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
+        
+        self.save_monthRain = None
 
         # Get an appropriate port, depending on the connection type:
         self.port = VantagePro._port_factory(vp_dict)
@@ -755,10 +757,21 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
         record['windchill'] = weewx.wxformulas.windchillF(T, W)
         
+        # Because the Davis stations do not offer bucket tips in LOOP data, we
+        # must calculate it by looking for changes in rain totals. This won't
+        # work for the very first rain packet.
+        if self.save_monthRain is None:
+            delta = None
+        else:
+            delta = record['monthRain']-self.save_monthRain
+            # If the difference is negative, we're at the beginning of a month.
+            if delta < 0: delta = None
+        record['rain'] = delta
+        self.save_monthRain = record['monthRain']
+
         record['usUnits'] = weewx.US
         
         return record
-    
 
     def translateArchivePacket(self, packet):
         """Translates an archive packet from the internal units used by Davis, into US units.

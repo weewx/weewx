@@ -16,7 +16,7 @@ for supporting weather stations that do not have a logger.
 Support for the  Oregon Scientific WMR100, the cheapest  weather station I could
 find to demonstrate the above!
 
-The databases can now be in Metric units, as well as US Customary.
+The databases can now use either Metric units, or US Customary.
 
 Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
 callbacks, making it easier to add new event types.
@@ -40,6 +40,8 @@ The stats  type 'squarecount' now contains  the number of  valid wind directions
 that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid
 wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
 'count'). This is a small difference and unlikely to show in any reports.
+
+Simplified and reduced the memory requirements of the CRC16 calculations.
 
 Lots of  little nips  and tucks here  and there,  mostly to reduce  the coupling
 between  different  modules.  In   particular,  now  a  service  generally  gets

@@ -201,7 +201,7 @@ class DictAccum(dict):
             elif obs_type == 'rain':
                 # We need total rain during the timespan, not the average:
                 record['rain']        = self[obs_type].sum
-            elif obs_type in ['hourRain', 'dayRain', 'totalRain']:
+            elif obs_type in ['hourRain', 'dayRain', 'monthRain', 'yearRain', 'totalRain']:
                 # This assumes no reset happened in the archive period:
                 record[obs_type]      = self[obs_type].max
             else:
