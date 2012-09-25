@@ -1,7 +1,5 @@
 TODO before the next release:
 
-Install wview and set it up to use metric units in the database. See what unit types it chooses.
-
 Make sure the VP altitude matches the station altitude.
 
 Missing keys in records generated from LOOP data. Check 'em out. 
