@@ -372,11 +372,6 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         # Get an appropriate port, depending on the connection type:
         self.port = VantagePro._port_factory(vp_dict)
 
-        if isinstance(self.port, SerialWrapper):
-            self.hardware_name = "VantagePro2"
-        else:
-            self.hardware_name = "VantageIP"
-                
         # Open it up:
         self.port.openPort()
 
@@ -814,6 +809,16 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
         self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+        
+        # Determine the type of hardware:
+        self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
+        self.hardware_type = ord(self.port.read())
+        if self.hardware_type == 16:
+            self.hardware_name = "VantagePro2"
+        elif self.hardware_type == 17:
+            self.hardware_name = "VantageVue"
+        else:
+            raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
 
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]

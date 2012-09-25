@@ -107,6 +107,8 @@ def info(station):
     
     print  """VantagePro EEPROM settings:
     
+    CONSOLE TYPE:                   %s
+    
     CONSOLE FIRMWARE DATE:          %s
     
     CONSOLE SETTINGS:
@@ -122,7 +124,7 @@ def info(station):
       Temperature:                  %s
       Rain:                         %s
       Wind:                         %s
-      """ % (_firmware_date,
+      """ % (station.hardware_name, _firmware_date,
              station.archive_interval, station.altitude, station.altitude_unit,
              station.wind_cup_size, station.rain_bucket_size, station.rain_season_start, console_time,
              station.barometer_unit, station.temperature_unit, 
