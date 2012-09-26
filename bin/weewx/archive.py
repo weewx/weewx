@@ -30,21 +30,22 @@ class Archive(object):
     for managing the archive file. These functions encapsulate whatever sql statements
     are needed."""
     
-    def __init__(self, archiveFilename):
+    def __init__(self, connection):
         """Initialize an object of type weewx.Archive. 
         
         If the database does not exist or it is uninitialized, an
         exception will be thrown. 
         
-        archiveFilename: The path to the sqlite3 archive file.
+        connection: An instance of weeutil.db.Connection()
         """
-        self.archiveFilename = archiveFilename
+        self.connection = connection
         self.sqlkeys = self._getTypes()
         if not self.sqlkeys:
-            raise StandardError("Database %s not initialized"% (archiveFilename,))
+            raise StandardError("Database not initialized")
         
     def close(self):
-        pass
+        self.connection.close()
+        del self.connection
 
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
@@ -75,10 +76,11 @@ class Archive(object):
         # (a list):
         record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
 
-        with sqlite3.connect(self.archiveFilename) as _connection:
+        cursor = self.connection.cursor()
 
+        try:
             for record in record_list:
-
+    
                 if record['dateTime'] is None:
                     syslog.syslog(syslog.LOG_ERR, "Archive: archive record with null time encountered. Ignored.")
                     continue
@@ -100,11 +102,15 @@ class Archive(object):
                 # Form the SQL insert statement:
                 sql_insert_stmt = "INSERT INTO archive (%s) VALUES (%s)" % (k_str, q_str) 
                 try:
-                    _connection.execute(sql_insert_stmt, value_list)
+                    cursor.execute(sql_insert_stmt, value_list)
                     syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
                 except Exception, e:
                     syslog.syslog(syslog.LOG_ERR, "Archive: unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
                     syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
+    
+            self.connection.commit()
+        finally:
+            cursor.close()
 
     def genBatchRecords(self, startstamp, stopstamp):
         """Generator function that yields ValueRecords within a time interval.
@@ -454,16 +460,9 @@ class Archive(object):
         
         returns: A list of types or None if the database has not been initialized."""
         
-        # Get the schema dictionary:
-        schema_dict = weeutil.dbutil.schema(self.archiveFilename)
         # Get the columns in the table
-        column_dict = weeutil.dbutil.column_dict(schema_dict)
-        # If there is no 'archive' table, the database has not been initialized
-        if not 'archive' in column_dict:
-            return None
-        # Convert from unicode to strings
-        column_names = [str(s) for s in column_dict['archive']]
-        return column_names
+        column_list = self.connection.columnsOf('archive')
+        return column_list
 
 def config(archiveFilename, archiveSchema=None):
     """Configure a database for use with weewx. This will create the initial schema
