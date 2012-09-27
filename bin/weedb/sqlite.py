@@ -11,12 +11,6 @@
 
 import os.path
 
-class OperationalError(StandardError):
-    """Unable to open a database."""
-    
-class DatabaseExists(StandardError):
-    """Attempt to create a database that already exists"""
-
 def connect(**argv):
     """Factory function, to keep things compatible with DBAPI. 
     
