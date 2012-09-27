@@ -13,6 +13,9 @@ import os.path
 
 class OperationalError(StandardError):
     """Unable to open a database."""
+    
+class DatabaseExists(StandardError):
+    """Attempt to create a database that already exists"""
 
 def connect(**argv):
     """Factory function, to keep things compatible with DBAPI. 
@@ -20,10 +23,41 @@ def connect(**argv):
     Arguments are as in Connection object below."""
     return Connection(**argv)
 
+def create(**db_dict):
+    """Create the database specified by the db_dict. If it already exists,
+    an exception of type DatabaseExists will be thrown."""
+    if db_dict['type'].lower() == 'sqlite':
+        filename = db_dict['file']
+        # Check whether the database file exists:
+        if os.path.exists(filename):
+            raise DatabaseExists("Database %s already exists" % (filename,))
+        else:
+            # If it doesn't exist, create the parent directories
+            fileDirectory = os.path.dirname(filename)
+            if not os.path.exists(fileDirectory):
+                os.makedirs(fileDirectory)
+            
+    elif db_dict['type'].lower() == 'mysql':
+        import MySQLdb, _mysql_exceptions
+        # Open up a connection w/o specifying the database.
+        connect = MySQLdb.connect(host   = db_dict['host'],
+                                  user   = db_dict['user'],
+                                  passwd = db_dict['password'])
+        cursor = connect.cursor()
+        # An exception will get thrown if the database already exists.
+        try:
+            # Now create the database.
+            cursor.execute("CREATE DATABASE %s" % (db_dict['database'],))
+        except _mysql_exceptions.ProgrammingError:
+            # The database already exists. Change the type of exception.
+            raise DatabaseExists("Database %s already exists" % (db_dict['database'],))
+        finally:
+            cursor.close()
+    
 class Connection(object):
     """A database independent connection object."""
     
-    def __init__(self, **argv):
+    def __init__(self, **db_dict):
         """Initialize an instance of Connection.
 
         Parameters:
@@ -48,7 +82,7 @@ class Connection(object):
             
         If the operation fails, an exception of type weeutil.db.OperationalError will be raised.
         """
-        self.dbtype = argv['type'].lower()
+        self.dbtype = db_dict['type'].lower()
         
         if self.dbtype == 'sqlite':
             import sqlite3
@@ -56,7 +90,7 @@ class Connection(object):
                 del sqlite3
                 from pysqlite2 import dbapi2 as sqlite3 #@Reimport @UnresolvedImport
                 
-            file_path = os.path.join(argv.get('fileroot',''), argv['file'])
+            file_path = os.path.join(db_dict.get('fileroot',''), db_dict['file'])
             try:
                 self.connection = sqlite3.connect(file_path)
             except sqlite3.OperationalError:
@@ -69,14 +103,14 @@ class Connection(object):
             import _mysql_exceptions
             
             try:
-                self.connection = MySQLdb.connect(host   = argv['host'],
-                                                  user   = argv['user'],
-                                                  passwd = argv['password'],
-                                                  db     = argv['database'])
+                self.connection = MySQLdb.connect(host   = db_dict['host'],
+                                                  user   = db_dict['user'],
+                                                  passwd = db_dict['password'],
+                                                  db     = db_dict['database'])
             except _mysql_exceptions.OperationalError, e:
                 # The MySQL driver does not include the database in the
                 # exception information. Tack it on, in case it might be useful.
-                raise OperationalError(str(e) + " and database '%s'" % (argv['database'],))
+                raise OperationalError(str(e) + " and database '%s'" % (db_dict['database'],))
         else:
             raise ValueError("Unknown database type %s" % self.dbtype)
         

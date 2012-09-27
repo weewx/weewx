@@ -19,7 +19,6 @@ import syslog
 
 import weewx.units
 import weeutil.weeutil
-import weeutil.dbutil
 
 #===============================================================================
 #                         class Archive
@@ -464,21 +463,19 @@ class Archive(object):
         column_list = self.connection.columnsOf('archive')
         return column_list
 
-def config(archiveFilename, archiveSchema=None):
+def config(archiveSchema=None, **db_dict):
     """Configure a database for use with weewx. This will create the initial schema
     if necessary."""
 
-    # Check whether the database exists:
-    if not os.path.exists(archiveFilename):
-        # If it doesn't exist, create the parent directories
-        archiveDirectory = os.path.dirname(archiveFilename)
-        if not os.path.exists(archiveDirectory):
-            syslog.syslog(syslog.LOG_NOTICE, "archive: making archive directory %s." % archiveDirectory)
-            os.makedirs(archiveDirectory)
-
+    try:
+        weeutil.db.create(**db_dict)
+    except weeutil.db.DatabaseExists:
+        pass
+        
     # Check to see if it has already been configured. If it has, do
     # nothing. We're done.
-    if weeutil.dbutil.schema(archiveFilename):
+    connect = weeutil.db.connect(**db_dict)
+    if 'archive' in connect.tables():
         return
     
     # If the user has not supplied a schema, use the default schema 
@@ -488,13 +485,15 @@ def config(archiveFilename, archiveSchema=None):
         
     # List comprehension of the types, joined together with commas:
     _sqltypestr = ', '.join([' '.join(_type) for _type in archiveSchema])
+    print _sqltypestr
     
     _createstr ="CREATE TABLE archive (%s);" % _sqltypestr
+    print _createstr
 
-    with sqlite3.connect(archiveFilename) as _connection:
-        _connection.execute(_createstr)
+    with weeutil.db.Transaction(connect) as transaction:
+        transaction.execute(_createstr)
     
-    syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for archive file %s." % archiveFilename)
+    syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for " + str(db_dict))
 
 def reconfig(oldArchiveFilename, newArchiveFilename):
     """Copy over an old archive file to a new one, using the new schema."""
