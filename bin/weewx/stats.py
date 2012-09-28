@@ -33,18 +33,14 @@
 from __future__ import with_statement
 import math
 import os.path
-import sqlite3
-if not hasattr(sqlite3.Connection, "__exit__"):
-    del sqlite3
-    from pysqlite2 import dbapi2 as sqlite3 #@Reimport @UnresolvedImport
 import syslog
 import time
 
+import weedb
+import weeutil.weeutil
 import weewx.accum
 import weewx.units
 import weewx.wxformulas
-import weeutil.weeutil
-import weeutil.dbutil
 
 #===============================================================================
 # The SQL statements used in the stats database
@@ -57,7 +53,7 @@ wind_create_str = """CREATE TABLE wind ( dateTime INTEGER NOT NULL UNIQUE PRIMAR
                   """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, """\
                   """gustdir REAL, xsum REAL, ysum REAL, squaresum REAL, squarecount INTEGER);"""
 
-meta_create_str = """CREATE TABLE metadata (name TEXT NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
+meta_create_str = """CREATE TABLE metadata (name TEXT NOT NULL, value TEXT, PRIMARY KEY(name(20)));"""
                  
 std_replace_str  = """REPLACE INTO %s   VALUES(?, ?, ?, ?, ?, ?, ?)"""
 wind_replace_str = """REPLACE INTO wind VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
@@ -139,24 +135,21 @@ class StatsDb(object):
     std_unit_system: The unit system in use (weewx.US or weewx.METRIC), or
     None if no system has been specified."""
     
-    def __init__(self, statsFilename):
+    def __init__(self, connection):
         """Create an instance of StatsDb to manage a database.
         
         If the database does not exist or it is uninitialized, an
-        exception will be thrown. 
+        exception of type weedb.OperationalError will be thrown. 
         
-        statsFilename: Path to the stats database file."""
+        connection: An instance of weedb.Connection"""
         
-        self._connection     = None
-        self.statsFilename   = statsFilename
+        self.connection     = connection
         self.statsTypes      = self.__getTypes()
         self.std_unit_system = self._getStdUnitSystem()
 
     def close(self):
-        try:
-            self._connection.close()
-        except:
-            pass
+        self.connection.close()
+        del self.connection
         
     def updateHiLo(self, accumulator):
         """Use the contents of an accumulator to update the highs/lows of a stats database."""
@@ -369,7 +362,7 @@ class StatsDb(object):
 
         # Using the _connection as a context manager means that
         # in case of an error, all tables will get rolled back.
-        with sqlite3.connect(self.statsFilename) as _connection:
+        with weedb.Transaction(self.connection) as _cursor:
             for _stats_type in self.statsTypes:
                 
                 # Slightly different SQL statement for wind
@@ -380,14 +373,14 @@ class StatsDb(object):
                 
                 # Get the stats-tuple, then write the results
                 _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
-                _connection.execute(_replace_str,_write_tuple)
+                _cursor.execute(_replace_str,_write_tuple)
                 
             # Set the unit system if it has not been set before. 
             # To do this, first see if this file has ever been used:
             last_update = self._getLastUpdate()
             if last_update is None:
                 # File has never been used. Set the unit system:
-                _connection.execute(meta_replace_str, ('unit_system', str(int(dayStatsDict.unit_system))))
+                _cursor.execute(meta_replace_str, ('unit_system', str(int(dayStatsDict.unit_system))))
             else:
                 # The file has been used. If the debug flag has been set, make
                 # sure the unit system of the file matches the new data.
@@ -396,7 +389,7 @@ class StatsDb(object):
                     if unit_system != dayStatsDict.unit_system:
                         raise ValueError("stats: Data uses different unit system (0x%x) than stats file (0x%x)" % (dayStatsDict.unit_system, unit_system))
             # Update the time of the last stats update:
-            _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
+            _cursor.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
             
     def _getLastUpdate(self):
         """Returns the time of the last update to the statistical database."""
@@ -418,23 +411,13 @@ class StatsDb(object):
         
         # Do the string interpolation:
         sqlStmt = rawsqlStmt % interDict
-        # Get a _connection and cursor
-        _connection = self._getConnection()
-        _cursor = _connection.cursor()
-        # Execute the statement:
-        _cursor = _cursor.execute(sqlStmt)
-        # Fetch the first row and return it.
-        _row = _cursor.fetchone()
-        _cursor.close()
+        try:
+            _cursor = self.connection.cursor()
+            _row = _cursor.execute(sqlStmt)
+        finally:
+            _cursor.close()
         return _row 
         
-    def _getConnection(self):
-        """Return a sqlite _connection"""
-        if not self._connection:
-            self._connection = sqlite3.connect(self.statsFilename)
-            
-        return self._connection
-    
     def _getStdUnitSystem(self):
         """Returns the unit system in use in the stats database."""
         
@@ -457,16 +440,17 @@ class StatsDb(object):
     def __getTypes(self):
         """Returns the types appearing in a stats database.
         
-        Throws an exception if the database has not been initialized.
+        Throws an exception of type weedb.OperationalError
+        if the database has not been initialized.
         
         returns: A list of types"""
         
-        # Get the schema dictionary:
-        schema_dict = weeutil.dbutil.schema(self.statsFilename)
-        # Convert from unicode. Also, some stats database have schemas for heatdeg
-        # and cooldeg (even though they are not used) due to an earlier bug. Filter them out.
-        # Finally, filter out the metadata table:
-        stats_types = [str(s) for s in schema_dict.keys() if s not in [U'heatdeg', U'cooldeg', U'metadata']]
+        raw_stats_types = self.connection.tables()
+        
+        # Some stats database have schemas for heatdeg and cooldeg (even though
+        # they are not used) due to an earlier bug. Filter them out. Also,
+        # filter out the metadata table:
+        stats_types = filter(lambda s : s not in ['heatdeg', 'cooldeg', 'metadata'], raw_stats_types)
 
         return stats_types
         
@@ -726,10 +710,7 @@ class StatsTypeHelper(object):
 #                          USEFUL FUNCTIONS
 #===============================================================================
 
-# For backwards compatibility:
-StatsReadonlyDb = StatsDb
-
-def config(statsFilename, stats_types = None):
+def config(db_dict, stats_types=None):
     """Initialize the StatsDb database
     
     Does nothing if the database has already been initialized.
@@ -737,19 +718,20 @@ def config(statsFilename, stats_types = None):
     stats_types: an iterable collection with the names of the types for
     which statistics will be gathered [optional. Default is to use all
     possible types]"""
-    # Check whether the database exists:
-    if not os.path.exists(statsFilename):
-        # If it doesn't exist, create the parent directories
-        archiveDirectory = os.path.dirname(statsFilename)
-        if not os.path.exists(archiveDirectory):
-            syslog.syslog(syslog.LOG_NOTICE, "stats: making archive directory %s." % archiveDirectory)
-            os.makedirs(archiveDirectory)
+    # Try to create the database. If it already exists, an exception will
+    # be thrown.
+    db = weedb.Database(**db_dict)
+    try:
+        db.create()
+    except weedb.DatabaseExists:
+        pass
         
-    config_check = weeutil.dbutil.schema(statsFilename)
+    _connect = db.connect()
+    _table_check = _connect.tables()
     
     # Check to see if it has already been configured. If it has, do
     # nothing. We're done.
-    if config_check:
+    if _table_check:
         return
     
     # No schema, so we need to configure it.
@@ -759,21 +741,20 @@ def config(statsFilename, stats_types = None):
         stats_types = user.schemas.defaultStatsTypes
     
     # Heating and cooling degrees are not actually stored in the database:
-    stats_types = filter(lambda x : x not in ('heatdeg', 'cooldeg'), stats_types)
+    final_stats_types = filter(lambda x : x not in ['heatdeg', 'cooldeg'], stats_types)
 
     # Now create all the necessary tables as one transaction:
-    with sqlite3.connect(statsFilename) as _connection:
-    
-        for _stats_type in stats_types:
+    with weedb.Transaction(_connect) as _cursor:
+        for _stats_type in final_stats_types:
             # Slightly different SQL statement for wind
             if _stats_type == 'wind':
-                _connection.execute(wind_create_str)
+                _cursor.execute(wind_create_str)
             else:
-                _connection.execute(std_create_str % (_stats_type,))
-        _connection.execute(meta_create_str)
-        _connection.execute(meta_replace_str, ('unit_system', 'None'))
+                _cursor.execute(std_create_str % (_stats_type,))
+        _cursor.execute(meta_create_str)
+        _cursor.execute(meta_replace_str, ('unit_system', 'None'))
     
-    syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % statsFilename)
+    syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database")
 
 def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
     """Fill the statistical database from an archive database.

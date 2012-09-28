@@ -35,8 +35,19 @@ class Connection(object):
         self.connection = connection
         
     def cursor(self):
+        """Returns an appropriate database cursor."""
         raise NotImplementedError
         
+    def tables(self):
+        """Returns a list of the tables in the database.
+        
+        Should raise exception weedb.OperationalError of the database does not exist."""
+        raise NotImplementedError
+    
+    def columnsOf(self, table):
+        """Returns a list of the column names in the specified table."""
+        raise NotImplementedError
+            
     def commit(self):
         self.connection.commit()
         
@@ -48,7 +59,7 @@ class Connection(object):
             self.connection.close()
         except:
             pass
-        
+
     def execute(self, sql_string, sql_tuple=() ):
         """Execute a sql statement. This version does not return a cursor,
         so it can only be used for statements that do not return a result set."""

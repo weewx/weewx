@@ -45,7 +45,10 @@ Simplified and reduced the memory requirements of the CRC16 calculations.
 
 Lots of  little nips  and tucks here  and there,  mostly to reduce  the coupling
 between  different  modules.  In   particular,  now  a  service  generally  gets
-configured only using its section of weewx.conf.
+configured  only using  its section  of weewx.conf. I also worked hard at making
+sure that  cursors, connections,  files, and lots  of other  bits and pieces get
+properly closed instead  of relying on garbage collection.  Hopefully, this will
+reduce memory requirements for long runtimes.
 
 
 1.14.1 07/06/12

@@ -73,6 +73,8 @@ class Connection(weedb.Connection):
             # Extract the table name. Sqlite returns unicode, so always
             # convert to a regular string:
             table_list.append(str(row[0]))
+        if not table_list:
+            raise weedb.OperationalError
         return table_list
                 
     def columnsOf(self, table):
