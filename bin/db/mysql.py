@@ -36,7 +36,7 @@ def create(database='', host='localhost', **db_dict):
     finally:
         cursor.close()
     
-class Connection(object):
+class Connection(weedb.Connection):
     """A database independent connection object."""
     
     def __init__(self, **db_dict):
@@ -52,7 +52,7 @@ class Connection(object):
         If the operation fails, an exception of type weeutil.db.OperationalError will be raised.
         """
         try:
-            self.connection = MySQLdb.connect(host   = db_dict['host'],
+            connection = MySQLdb.connect(host   = db_dict['host'],
                                               user   = db_dict['user'],
                                               passwd = db_dict['password'],
                                               db     = db_dict['database'])
@@ -60,19 +60,8 @@ class Connection(object):
             # The MySQL driver does not include the database in the
             # exception information. Tack it on, in case it might be useful.
             raise weedb.OperationalError(str(e) + " and database '%s'" % (db_dict['database'],))
-        
-    def commit(self):
-        self.connection.commit()
-        
-    def rollback(self):
-        self.connection.rollback()
-        
-    def close(self):
-        try:
-            self.connection.close()
-            del self.connection
-        except:
-            pass
+
+        weedb.Connection.__init__(self, connection)
         
     def cursor(self):
         return Cursor(self)
@@ -115,7 +104,7 @@ class Connection(object):
             cursor.close()
         # If there are no columns (which means the table did not exist) return None
         return column_list if column_list else None
-                
+    
 class Cursor(object):
     """A database independent cursor object"""
     
@@ -137,6 +126,7 @@ class Cursor(object):
         mysql_string = sql_string.replace('?','%s')
             
         self.cursor.execute(mysql_string, sql_tuple)
+        return self
         
     def fetchone(self):
         return self.cursor.fetchone()
@@ -148,3 +138,12 @@ class Cursor(object):
         except:
             pass
         
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        result = self.fetchone()
+        if result is None:
+            raise StopIteration
+        return result
+

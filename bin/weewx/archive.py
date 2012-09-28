@@ -11,14 +11,11 @@
 from __future__ import with_statement
 import math
 import os.path
-import sqlite3
-if not hasattr(sqlite3.Connection, "__exit__"):
-    del sqlite3
-    from pysqlite2 import dbapi2 as sqlite3 #@Reimport @UnresolvedImport
 import syslog
 
 import weewx.units
 import weeutil.weeutil
+import weedb
 
 #===============================================================================
 #                         class Archive
@@ -75,9 +72,8 @@ class Archive(object):
         # (a list):
         record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
 
-        cursor = self.connection.cursor()
+        with weedb.Transaction(self.connection) as cursor:
 
-        try:
             for record in record_list:
     
                 if record['dateTime'] is None:
@@ -94,8 +90,10 @@ class Archive(object):
                 # Get the values in the same order:
                 value_list = [record[k] for k in key_list]
                 
-                # This will a string of sql types, separated by commas
-                k_str = ','.join(key_list)
+                # This will a string of sql types, separated by commas. Because
+                # some of the weewx sql keys (notably 'interval') are reserved
+                # words in MySQL, put them in backquotes.
+                k_str = ','.join(["`%s`" % k for k in key_list])
                 # This will be a string with the correct number of placeholder question marks:
                 q_str = ','.join('?' * len(key_list))
                 # Form the SQL insert statement:
@@ -106,10 +104,6 @@ class Archive(object):
                 except Exception, e:
                     syslog.syslog(syslog.LOG_ERR, "Archive: unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
                     syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
-    
-            self.connection.commit()
-        finally:
-            cursor.close()
 
     def genBatchRecords(self, startstamp, stopstamp):
         """Generator function that yields ValueRecords within a time interval.
@@ -122,27 +116,22 @@ class Archive(object):
         
         yields: A dictionary for each time or None if there is no 
         record at that time. """
-        _connection = sqlite3.connect(self.archiveFilename)
-        _connection.row_factory = sqlite3.Row
-        _cursor=_connection.cursor()
-        try:
-            if startstamp is None:
-                if stopstamp is None:
-                    _cursor.execute("SELECT * FROM archive")
-                else:
-                    _cursor.execute("SELECT * from archive where dateTime <= ?", (stopstamp,))
+        
+        _cursor = self.connection.cursor()
+        if startstamp is None:
+            if stopstamp is None:
+                _gen = _cursor.execute("SELECT * FROM archive")
             else:
-                if stopstamp is None:
-                    _cursor.execute("SELECT * from archive where dateTime > ?", (startstamp,))
-                else:
-                    _cursor.execute("SELECT * FROM archive WHERE dateTime > ? AND dateTime <= ?", (startstamp, stopstamp))
-            
-            for _row in _cursor :
-                yield dict(zip(_row.keys(), _row)) if _row else None
-        finally:
-            _cursor.close()
-            _connection.close()
-
+                _gen = _cursor.execute("SELECT * from archive where dateTime <= ?", (stopstamp,))
+        else:
+            if stopstamp is None:
+                _gen = _cursor.execute("SELECT * from archive where dateTime > ?", (startstamp,))
+            else:
+                _gen = _cursor.execute("SELECT * FROM archive WHERE dateTime > ? AND dateTime <= ?", (startstamp, stopstamp))
+        
+        for _row in _gen :
+            yield dict(zip(self.sqlkeys, _row)) if _row else None
+        
     def getRecord(self, timestamp):
         """Get a single archive record with a given epoch time stamp.
         
@@ -150,12 +139,12 @@ class Archive(object):
         
         returns: a dictionary. Key is a sql type, value its value"""
 
-        with sqlite3.connect(self.archiveFilename) as _connection:
-            _connection.row_factory = sqlite3.Row
-            _cursor = _connection.execute("SELECT * FROM archive WHERE dateTime=?;", (timestamp,))
-            _row = _cursor.fetchone()
-
-        return dict(zip(_row.keys(), _row)) if _row else None
+        try:
+            cursor = self.connection.cursor()
+            _row = cursor.execute("SELECT * FROM archive WHERE dateTime=?;", (timestamp,))
+            return dict(zip(self.sqlkeys, _row)) if _row else None
+        finally:
+            cursor.close()
 
     def getSql(self, sql, *sqlargs):
         """Executes an arbitrary SQL statement on the database.
@@ -164,27 +153,34 @@ class Archive(object):
         
         sqlargs: The arguments for the SQL statement
         
-        returns: an instance of sqlite3.Row
+        returns: a tuple containing the results
         """
-        with sqlite3.connect(self.archiveFilename) as _connection:
-            _connection.row_factory = sqlite3.Row
-            _cursor = _connection.execute(sql, sqlargs)
+        try:
+            _cursor = self.connection.cursor()
+            _cursor.execute(sql, sqlargs)
             _row = _cursor.fetchone()
             return _row
+        finally:
+            try:
+                _cursor.close()
+            except:
+                pass
 
     def genSql(self, sql, *sqlargs):
         """Generator function that executes an arbitrary SQL statement on the database."""
-        _connection = sqlite3.connect(self.archiveFilename)
-        _connection.row_factory = sqlite3.Row
-        _cursor=_connection.cursor()
-        try:
-            _cursor.execute(sql, sqlargs)
-            for _row in _cursor:
-                yield _row
-        finally:
-            _cursor.close()
-            _connection.close()
-
+        
+        for _row in self.connection.execute(sql, sqlargs):
+            yield _row
+#        _connection = sqlite3.connect(self.archiveFilename)
+#        _connection.row_factory = sqlite3.Row
+#        _cursor=_connection.cursor()
+#        try:
+#            _cursor.execute(sql, sqlargs)
+#            for _row in _cursor:
+#                yield _row
+#        finally:
+#            _cursor.close()
+#            _connection.close()
     def getSqlVectors(self, sql_type, startstamp, stopstamp,
                       aggregate_interval=None, 
                       aggregate_type=None):
@@ -248,8 +244,7 @@ class Archive(object):
         time_vec = list()
         data_vec = list()
         std_unit_system = None
-        _connection = sqlite3.connect(self.archiveFilename)
-        _cursor=_connection.cursor()
+        _cursor=self.connection.cursor()
 
         if aggregate_interval :
             if not aggregate_type:
@@ -467,14 +462,16 @@ def config(archiveSchema=None, **db_dict):
     """Configure a database for use with weewx. This will create the initial schema
     if necessary."""
 
+    db = weedb.Database(**db_dict)
     try:
-        weeutil.db.create(**db_dict)
-    except weeutil.db.DatabaseExists:
+        db.create()
+    except weedb.DatabaseExists:
         pass
         
     # Check to see if it has already been configured. If it has, do
     # nothing. We're done.
-    connect = weeutil.db.connect(**db_dict)
+    connect = db.connect()
+
     if 'archive' in connect.tables():
         return
     
@@ -483,15 +480,15 @@ def config(archiveSchema=None, **db_dict):
         import user.schemas
         archiveSchema = user.schemas.defaultArchiveSchema
         
-    # List comprehension of the types, joined together with commas:
-    _sqltypestr = ', '.join([' '.join(_type) for _type in archiveSchema])
-    print _sqltypestr
+    # List comprehension of the types, joined together with commas. Put
+    # the SQL type in backquotes, because at least one of them ('interval')
+    # is a reserved word (at  least, for MySQL)
+    _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
     
     _createstr ="CREATE TABLE archive (%s);" % _sqltypestr
-    print _createstr
 
-    with weeutil.db.Transaction(connect) as transaction:
-        transaction.execute(_createstr)
+    with weedb.Transaction(connect) as cursor:
+        cursor.execute(_createstr)
     
     syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for " + str(db_dict))
 

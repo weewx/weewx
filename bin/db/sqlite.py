@@ -37,7 +37,7 @@ def create(database='', root=''):
         if not os.path.exists(fileDirectory):
             os.makedirs(fileDirectory)
 
-class Connection(object):
+class Connection(weedb.Connection):
     """A database independent connection object."""
     
     def __init__(self, database='', root=''):
@@ -55,24 +55,13 @@ class Connection(object):
                 
         file_path = os.path.join(root, database)
         try:
-            self.connection = sqlite3.connect(file_path)
+            connection = sqlite3.connect(file_path)
         except sqlite3.OperationalError:
             # The Pysqlite driver does not include the database file path.
             # Include it in case it might be useful.
             raise weedb.OperationalError("Unable to open database '%s'" % (file_path,))
+        weedb.Connection.__init__(self, connection)
 
-    def commit(self):
-        self.connection.commit()
-        
-    def rollback(self):
-        self.connection.rollback()
-        
-    def close(self):
-        try:
-            self.connection.close()
-        except:
-            pass
-        
     def cursor(self):
         return self.connection.cursor()
     
@@ -95,4 +84,3 @@ class Connection(object):
             column_list.append(str(row[1]))
         # If there are no columns (which means the table did not exist) return None
         return column_list if column_list else None
-                
