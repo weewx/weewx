@@ -16,19 +16,21 @@ class OperationalError(StandardError):
 class DatabaseExists(StandardError):
     """Attempt to create a database that already exists"""
 
-class Database(object):
-    
-    def __init__(self, driver='', **db_dict):
-        __import__(driver)
-        self.db = sys.modules[driver]
-        self.db_dict = db_dict
-        
-    def create(self):
-        self.db.create(**self.db_dict)
-        
-    def connect(self):
-        return self.db.connect(**self.db_dict)
-        
+def create(driver='', **db_dict):
+    __import__(driver)
+    driver_mod = sys.modules[driver]
+    driver_mod.create(**db_dict)
+
+def connect(driver='', **db_dict):
+    __import__(driver)
+    driver_mod = sys.modules[driver]
+    return driver_mod.connect(**db_dict)
+
+def drop(driver='', **db_dict):
+    __import__(driver)
+    driver_mod = sys.modules[driver]
+    driver_mod.drop(**db_dict)
+
 class Connection(object):
 
     def __init__(self, connection):

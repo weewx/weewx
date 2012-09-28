@@ -36,7 +36,7 @@
  3. It installs the skins subdirectory only if the user doesn't already 
     have one.
     
- 4. It sets the option ['Station']['WEEWX_ROOT'] in weewx.conf to reflect
+ 4. It sets the option ['WEEWX_ROOT'] in weewx.conf to reflect
     the actual installation directory (as set in setup.cfg or specified
     in the command line to setup.py install)
     
@@ -182,7 +182,7 @@ class My_install_data(install_data):
         """Merges any old config file into the new one, and sets WEEWX_ROOT
         
         If an old configuration file exists, it will merge the contents
-        into the new file. It also sets variable ['Station']['WEEWX_ROOT']
+        into the new file. It also sets variable ['WEEWX_ROOT']
         to reflect the installation directory"""
         
         # The path name of the weewx.conf configuration file:
@@ -227,7 +227,7 @@ class My_install_data(install_data):
                 new_config.merge(old_config)
                         
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
-        new_config['Station']['WEEWX_ROOT'] = self.install_dir
+        new_config['WEEWX_ROOT'] = self.install_dir
         # Add the version:
         new_config['version'] = VERSION
 

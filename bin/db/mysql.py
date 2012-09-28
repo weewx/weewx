@@ -14,17 +14,17 @@ import _mysql_exceptions
 
 import weedb
 
-def connect(**argv):
-    """Factory function, to keep things compatible with DBAPI. """
-    return Connection(**argv)
+def connect(host='localhost', user='', password='', database='', **argv):
+    """Connect to the specified database"""
+    return Connection(host=host, user=user, password=password, database=database, **argv)
 
-def create(database='', host='localhost', **db_dict):
-    """Create the database specified by the db_dict. If it already exists,
-    an exception of type DatabaseExists will be thrown."""
+def create(host='localhost', user='', password='', database='', **argv):
+    """Create the specified database. If it already exists,
+    an exception of type weedb.DatabaseExists will be thrown."""
     # Open up a connection w/o specifying the database.
     connect = MySQLdb.connect(host   = host,
-                              user   = db_dict['user'],
-                              passwd = db_dict['password'])
+                              user   = user,
+                              passwd = password, **argv)
     cursor = connect.cursor()
     # An exception will get thrown if the database already exists.
     try:
@@ -36,10 +36,22 @@ def create(database='', host='localhost', **db_dict):
     finally:
         cursor.close()
     
+def drop(host='localhost', user='', password='', database='', **argv):
+    """Drop (delete) the specified database."""
+    # Open up a connection
+    connect = MySQLdb.connect(host   = host,
+                              user   = user,
+                              passwd = password, **argv)
+    cursor = connect.cursor()
+    try:
+        cursor.execute("DROP DATABASE %s" % database)
+    finally:
+        cursor.close()
+    
 class Connection(weedb.Connection):
     """A database independent connection object."""
     
-    def __init__(self, **db_dict):
+    def __init__(self, host='localhost', user='', password='', database='', **argv):
         """Initialize an instance of Connection.
 
         Parameters:
@@ -52,10 +64,7 @@ class Connection(weedb.Connection):
         If the operation fails, an exception of type weeutil.db.OperationalError will be raised.
         """
         try:
-            connection = MySQLdb.connect(host   = db_dict['host'],
-                                              user   = db_dict['user'],
-                                              passwd = db_dict['password'],
-                                              db     = db_dict['database'])
+            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database, **argv)
         except _mysql_exceptions.OperationalError, e:
             # The MySQL driver does not include the database in the
             # exception information. Tack it on, in case it might be useful.

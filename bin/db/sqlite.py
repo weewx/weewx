@@ -20,11 +20,11 @@ if not hasattr(sqlite3.Connection, "__exit__"):
 
 import weedb
 
-def connect(**argv):
+def connect(database='', root='', **argv):
     """Factory function, to keep things compatible with DBAPI. """
-    return Connection(**argv)
+    return Connection(database=database, root=root, **argv)
 
-def create(database='', root=''):
+def create(database='', root='', **argv):
     """Create the database specified by the db_dict. If it already exists,
     an exception of type DatabaseExists will be thrown."""
     filename = os.path.join(root, database)
@@ -37,10 +37,14 @@ def create(database='', root=''):
         if not os.path.exists(fileDirectory):
             os.makedirs(fileDirectory)
 
+def drop(database='', root='', **argv):
+    filename = os.path.join(root, database)
+    os.remove(filename)
+    
 class Connection(weedb.Connection):
     """A database independent connection object."""
     
-    def __init__(self, database='', root=''):
+    def __init__(self, database='', root='', **argv):
         """Initialize an instance of Connection.
 
         Parameters:
@@ -55,7 +59,7 @@ class Connection(weedb.Connection):
                 
         file_path = os.path.join(root, database)
         try:
-            connection = sqlite3.connect(file_path)
+            connection = sqlite3.connect(file_path, **argv)
         except sqlite3.OperationalError:
             # The Pysqlite driver does not include the database file path.
             # Include it in case it might be useful.

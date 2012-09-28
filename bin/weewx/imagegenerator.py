@@ -78,7 +78,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     if not plotgen_ts:
                         plotgen_ts = time.time()
 
-                image_root = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], plot_options['HTML_ROOT'])
+                image_root = os.path.join(self.config_dict['WEEWX_ROOT'], plot_options['HTML_ROOT'])
                 # Get the path of the file that the image is going to be saved to:
                 img_file = os.path.join(image_root, '%s.png' % plotname)
                 

@@ -84,7 +84,7 @@ class StdReportEngine(threading.Thread):
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
             
             # Figure out where the configuration file is for the skin used for this report:
-            skin_config_path = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+            skin_config_path = os.path.join(self.config_dict['WEEWX_ROOT'],
                                             self.config_dict['StdReport']['SKIN_ROOT'],
                                             self.config_dict['StdReport'][report].get('skin', 'Standard'),
                                             'skin.conf')
@@ -169,7 +169,7 @@ class FtpGenerator(ReportGenerator):
             ftpData = weeutil.ftpupload.FtpUpload(server      = self.skin_dict['server'],
                                                   user        = self.skin_dict['user'],
                                                   password    = self.skin_dict['password'],
-                                                  local_root  = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+                                                  local_root  = os.path.join(self.config_dict['WEEWX_ROOT'],
                                                                              self.config_dict['StdReport']['HTML_ROOT']),
                                                   remote_root = self.skin_dict['path'],
                                                   name        = self.skin_dict['REPORT_NAME'],
@@ -215,11 +215,11 @@ class CopyGenerator(ReportGenerator):
             pass
 
         # Change directory to the skin subdirectory:
-        os.chdir(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+        os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
                               self.skin_dict['SKIN_ROOT'],
                               self.skin_dict['skin']))
         # Figure out the destination of the files
-        html_dest_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+        html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                      self.skin_dict['HTML_ROOT'])
         
         # The copy list can contain wildcard characters. Go through the

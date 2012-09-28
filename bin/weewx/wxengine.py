@@ -529,33 +529,31 @@ class StdArchive(StdService):
 
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
-        archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                       config_dict['StdArchive']['archive_file'])
+        archive_db_dict = config_dict['Databases']['archive']
         # Try to open up the database. If it doesn't exist or has not been initialized, an exception
         # will be thrown. Catch it, configure the database, and then try again.
         try:
-            self.archive = weewx.archive.Archive(archiveFilename)
+            self.archive = weewx.archive.Archive(archive_db_dict)
         except StandardError:
             # It's uninitialized. Configure it:
-            weewx.archive.config(archiveFilename)
+            weewx.archive.config(archive_db_dict)
             # Try again to open it up:
-            self.archive = weewx.archive.Archive(archiveFilename)
+            self.archive = weewx.archive.Archive(archive_db_dict)
 
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
         
-        statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                     config_dict['StdArchive']['stats_file'])
+        stats_db_dict   = config_dict['Databases']['stats']
         # Try to open up the database. If it doesn't exist or has not been initialized, an exception
         # will be thrown. Catch it, configure the database, and then try again.
         try:
-            self.statsDb = weewx.stats.StatsDb(statsFilename)
+            self.statsDb = weewx.stats.StatsDb(stats_db_dict)
         except StandardError:
             # It's uninitialized. Configure it:
-            weewx.stats.config(statsFilename, 
-                               config_dict['StdArchive'].get('stats_types'))
+            weewx.stats.config(stats_db_dict, 
+                               stats_types=config_dict['StdArchive'].get('stats_types'))
             # Try again to open it up:
-            self.statsDb = weewx.stats.StatsDb(statsFilename)
+            self.statsDb = weewx.stats.StatsDb(stats_db_dict)
 
         # Backfill it with data from the archive. This will do nothing if the
         # stats database is already up-to-date.
@@ -720,13 +718,12 @@ class StdRESTful(StdService):
         if obj_list:
             # Yes. Proceed by setting up the queue and thread.
             
-            # Create an instance of weewx.archive.Archive
-            archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                           config_dict['StdArchive']['archive_file'])
+            # Get the archive database dictionary
+            archive_db_dict = config_dict['Databases']['archive']
             # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
             # Start up the thread:
-            self.thread = weewx.restful.RESTThread(archiveFilename, self.queue, obj_list)
+            self.thread = weewx.restful.RESTThread(archive_db_dict, self.queue, obj_list)
             self.thread.start()
             syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started thread for RESTful upload sites.")
         

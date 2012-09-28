@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 2:
         try:
-            ftp_dir = os.path.join(config_dict['Station']['WEEWX_ROOT'],
+            ftp_dir = os.path.join(config_dict['WEEWX_ROOT'],
                                    config_dict['StdReport']['HTML_ROOT'])
         except KeyError:
             print "No HTML_ROOT in configuration dictionary."

@@ -455,16 +455,15 @@ def config(db_dict, archiveSchema=None):
 
     # Try to create the database. If it already exists, an exception will
     # be thrown.
-    db = weedb.Database(**db_dict)
     try:
-        db.create()
+        weedb.create(**db_dict)
     except weedb.DatabaseExists:
         pass
         
     # Check to see if it has already been configured. If it has, do
     # nothing. We're done.
-    connect = db.connect()
-    if 'archive' in connect.tables():
+    _connect = weedb.connect(**db_dict)
+    if 'archive' in _connect.tables():
         return
     
     # If the user has not supplied a schema, use the default schema 
@@ -477,8 +476,8 @@ def config(db_dict, archiveSchema=None):
     # is a MySQL reserved word
     _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
     
-    with weedb.Transaction(connect) as cursor:
-        cursor.execute("CREATE TABLE archive (%s);" % _sqltypestr)
+    with weedb.Transaction(_connect) as _cursor:
+        _cursor.execute("CREATE TABLE archive (%s);" % _sqltypestr)
     
     syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for database 'archive'")
 

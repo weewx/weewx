@@ -413,10 +413,10 @@ class StatsDb(object):
         sqlStmt = rawsqlStmt % interDict
         try:
             _cursor = self.connection.cursor()
-            _row = _cursor.execute(sqlStmt)
+            _cursor.execute(sqlStmt)
+            return _cursor.fetchone()
         finally:
             _cursor.close()
-        return _row 
         
     def _getStdUnitSystem(self):
         """Returns the unit system in use in the stats database."""
@@ -720,22 +720,18 @@ def config(db_dict, stats_types=None):
     possible types]"""
     # Try to create the database. If it already exists, an exception will
     # be thrown.
-    db = weedb.Database(**db_dict)
     try:
-        db.create()
+        weedb.create(**db_dict)
     except weedb.DatabaseExists:
         pass
-        
-    _connect = db.connect()
-    _table_check = _connect.tables()
-    
-    # Check to see if it has already been configured. If it has, do
-    # nothing. We're done.
-    if _table_check:
+
+    # Check to see if it has already been configured. If it has,
+    # there will be some tables in it. We can just return.
+    _connect = weedb.connect(**db_dict)
+    if _connect.tables():
         return
     
-    # No schema, so we need to configure it.
-    # If nothing has been specified, use the default stats types:
+    # If no schema has been specified, use the default stats types:
     if not stats_types:
         import user.schemas
         stats_types = user.schemas.defaultStatsTypes

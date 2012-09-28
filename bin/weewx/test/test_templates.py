@@ -49,7 +49,7 @@ class TemplateTest(StatsTestBase):
         t.run()
         print "Done."
         
-        test_html_dir = os.path.join(t.config_dict['Station']['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
+        test_html_dir = os.path.join(t.config_dict['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
         expected_dir  = os.path.join(test_dir, 'expected')
         
         for file_name in ['index.html', 'bymonth.txt', 'byyear.txt', 

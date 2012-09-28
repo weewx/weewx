@@ -337,7 +337,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         
         # Walk the tree back to the root, accumulating options:
         accum_dict = weeutil.weeutil.accumulateLeaves(subskin_dict)
-        template = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+        template = os.path.join(self.config_dict['WEEWX_ROOT'],
                                 self.config_dict['StdReport']['SKIN_ROOT'],
                                 accum_dict['skin'],
                                 accum_dict['template'])
