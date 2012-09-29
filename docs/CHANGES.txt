@@ -6,17 +6,26 @@ For complete documentation, see http://www.weewx.com/docs
 
 2.0.0 XX/YY/12
 
-A  big release  with lots  of changes.  All skin  configurations  are backwardly
-compatible, but the configuration file,  weewx.conf, is not. The install utility
-setup.py will install a fresh version, which you will have to edit as necessary.
+A  big release with  lots of  changes.  The  two most  important are  that other
+weather  hardware besides the  Davis stations  is now  supported, and  the MySQL
+database is now supported.
+
+All skin  configurations are backwardly compatible, but  the configuration file,
+weewx.conf, is not.  The install utility setup.py will  install a fresh version,
+which you will have to edit as necessary.
 
 Added the ability to generate archive records in software, thus opening the door
 for supporting weather stations that do not have a logger.
 
 Support for the  Oregon Scientific WMR100, the cheapest  weather station I could
-find to demonstrate the above!
+find, in order to demonstrate the above!
 
-The databases can now use either Metric units, or US Customary.
+Introduced  weedb, a  database-independent  Python  wrapper  around sqlite3  and 
+MySQLdb, which fixes some of their flaws.
+
+Ported everything to use weedb, and thus MySQL (as well as sqlite)
+
+The databases can now use either Metric units, or US Customary, internally.
 
 Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
 callbacks, making it easier to add new event types.
@@ -44,11 +53,12 @@ wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
 Simplified and reduced the memory requirements of the CRC16 calculations.
 
 Lots of  little nips  and tucks here  and there,  mostly to reduce  the coupling
-between  different  modules.  In   particular,  now  a  service  generally  gets
-configured  only using  its section  of weewx.conf. I also worked hard at making
-sure that  cursors, connections,  files, and lots  of other  bits and pieces get
-properly closed instead  of relying on garbage collection.  Hopefully, this will
-reduce memory requirements for long runtimes.
+between  different  modules.   In  particular,  now  a  service  generally  gets
+configured only using its section of weewx.conf.
+
+I also worked hard at making  sure that cursors, connections, files, and lots of
+other  bits  and  pieces get  properly  closed  instead  of relying  on  garbage
+collection.  Hopefully, this will reduce the long-term growth of memory usage.
 
 
 1.14.1 07/06/12

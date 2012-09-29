@@ -59,8 +59,9 @@ def drop(db_dict):
 
 class Connection(object):
 
-    def __init__(self, connection):
+    def __init__(self, connection, database):
         self.connection = connection
+        self.database = database
         
     def cursor(self):
         """Returns an appropriate database cursor."""
@@ -119,9 +120,8 @@ class Transaction(object):
             pass
 
 #
-# This is a utility function for converting a result set that might possibly
-# have longs or decimal.Decimals in it to something with just ints.
-# This is useful because MySQL can return longs or decimal.Decimals
+# This is a utility function for converting a result set that might contain
+# longs or decimal.Decimals (which MySQLdb uses) to something containing just ints.
 #
 import decimal
 def massage(seq):

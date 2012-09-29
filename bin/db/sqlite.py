@@ -47,7 +47,7 @@ def drop(database='', root='', driver='', **argv):
         raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (file_path,))
     
 class Connection(weedb.Connection):
-    """A database independent connection object."""
+    """A wrapper around a sqlite3 connection object."""
     
     def __init__(self, database='', root='', **argv):
         """Initialize an instance of Connection.
@@ -59,7 +59,7 @@ class Connection(weedb.Connection):
             fileroot: An optional path to be prefixed to parameter 'file'. If not given,
             nothing will be prefixed.
             
-        If the operation fails, an exception of type weeutil.db.OperationalError will be raised.
+        If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
                 
         self.file_path = os.path.join(root, database)
@@ -69,9 +69,12 @@ class Connection(weedb.Connection):
             # The Pysqlite driver does not include the database file path.
             # Include it in case it might be useful.
             raise weedb.OperationalError("Unable to open database '%s'" % (self.file_path,))
-        weedb.Connection.__init__(self, connection)
+        weedb.Connection.__init__(self, connection, database)
 
     def cursor(self):
+        """Return a cursor object."""
+        # The sqlite3 cursor object is very full featured. We can simply return
+        # it (with no wrapper)
         return self.connection.cursor()
     
     def tables(self):

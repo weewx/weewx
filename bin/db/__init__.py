@@ -7,4 +7,4 @@
 #    $Author$
 #    $Date$
 #
-"""Package for database drivers."""
+"""Package for the weedb database drivers."""

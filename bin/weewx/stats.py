@@ -151,6 +151,16 @@ class StatsDb(object):
             raise
         self.std_unit_system = self._getStdUnitSystem()
 
+    @staticmethod
+    def fromConfigDict(config_dict):
+        stats_db = config_dict['StdArchive']['stats_database']
+        stats_db_dict = config_dict['Databases'][stats_db]
+        return StatsDb(stats_db_dict)
+        
+    @property
+    def database(self):
+        return self.connection.database
+    
     def close(self):
         self.connection.close()
         

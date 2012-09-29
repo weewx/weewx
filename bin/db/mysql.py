@@ -7,24 +7,24 @@
 #    $Author$
 #    $Date$
 #
-"""Driver for mysql"""
+"""Driver for the MySQL database"""
 
 import MySQLdb
 import _mysql_exceptions
 
 import weedb
 
-def connect(host='localhost', user='', password='', database='', driver='', **argv):
+def connect(host='localhost', user='', password='', database='', driver='', **kwargs):
     """Connect to the specified database"""
-    return Connection(host=host, user=user, password=password, database=database, **argv)
+    return Connection(host=host, user=user, password=password, database=database, **kwargs)
 
-def create(host='localhost', user='', password='', database='', driver='', **argv):
+def create(host='localhost', user='', password='', database='', driver='', **kwargs):
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExists will be thrown."""
     # Open up a connection w/o specifying the database.
     connect = MySQLdb.connect(host   = host,
                               user   = user,
-                              passwd = password, **argv)
+                              passwd = password, **kwargs)
     cursor = connect.cursor()
     # An exception will get thrown if the database already exists.
     try:
@@ -36,12 +36,12 @@ def create(host='localhost', user='', password='', database='', driver='', **arg
     finally:
         cursor.close()
     
-def drop(host='localhost', user='', password='', database='', driver='', **argv):
+def drop(host='localhost', user='', password='', database='', driver='', **kwargs):
     """Drop (delete) the specified database."""
     # Open up a connection
     connect = MySQLdb.connect(host   = host,
                               user   = user,
-                              passwd = password, **argv)
+                              passwd = password, **kwargs)
     cursor = connect.cursor()
     try:
         cursor.execute("DROP DATABASE %s" % database)
@@ -53,7 +53,7 @@ def drop(host='localhost', user='', password='', database='', driver='', **argv)
 class Connection(weedb.Connection):
     """A database independent connection object."""
     
-    def __init__(self, host='localhost', user='', password='', database='', **argv):
+    def __init__(self, host='localhost', user='', password='', database='', **kwargs):
         """Initialize an instance of Connection.
 
         Parameters:
@@ -62,19 +62,23 @@ class Connection(weedb.Connection):
             user: User name (required)
             password: The password for the username (required)
             database: The database to be used. (required)
+            kwargs:   Any extra arguments you may wish to pass on to MySQL (optional)
             
-        If the operation fails, an exception of type weeutil.db.OperationalError will be raised.
+        If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
         try:
-            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database, **argv)
+            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database, **kwargs)
         except _mysql_exceptions.OperationalError, e:
             # The MySQL driver does not include the database in the
             # exception information. Tack it on, in case it might be useful.
             raise weedb.OperationalError(str(e) + " while opening database '%s'" % (database,))
 
-        weedb.Connection.__init__(self, connection)
+        weedb.Connection.__init__(self, connection, database)
         
     def cursor(self):
+        """Return a cursor object."""
+        # The implementation of the MySQLdb cursor is so lame we are obliged to include 
+        # a wrapper around it:
         return Cursor(self)
     
     def tables(self):
@@ -119,16 +123,18 @@ class Connection(weedb.Connection):
         return column_list if column_list else None
     
 class Cursor(object):
-    """A database independent cursor object"""
+    """A wrapper around the MySQLdb cursor object"""
     
     def __init__(self, connection):
-        """Initialize a Cursor.
+        """Initialize a Cursor from a connection.
         
-        connection: An instance of weeutil.db.Connection"""
+        connection: An instance of db.mysql.Connection"""
+        
+        # Get the MySQLdb cursor and store it internally:
         self.cursor = connection.connection.cursor()
     
     def execute(self, sql_string, sql_tuple=() ):
-        """Execute a SQL statement in a database-independent manner.
+        """Execute a SQL statement on the MySQL server.
         
         sql_string: A SQL statement to be executed. It should use ? as
         a placeholder.
@@ -150,7 +156,10 @@ class Cursor(object):
             del self.cursor
         except:
             pass
-        
+    
+    #
+    # Supplying functions __iter__ and next allows the cursor to be used as an iterator.
+    #
     def __iter__(self):
         return self
     
@@ -159,4 +168,3 @@ class Cursor(object):
         if result is None:
             raise StopIteration
         return result
-

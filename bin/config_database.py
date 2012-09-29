@@ -78,56 +78,57 @@ def main():
 
 def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
-    # Open up the main database archive
-    archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                   config_dict['StdArchive']['archive_file'])
+    archive_db = config_dict['StdArchive']['archive_database']
+    archive_db_dict = config_dict['Databases'][archive_db]
+    # Try to open up the database. If it doesn't exist or has not been
+    # initialized, an exception will be thrown. Catch it, configure the
+    # database, and then try again.
     try:
-        dummy_archive = weewx.archive.Archive(archiveFilename)
-    except StandardError:
-        # Configure it
-        weewx.archive.config(archiveFilename)
-        print "Created archive database %s" % archiveFilename
+        archive = weewx.archive.Archive(archive_db_dict)
+    except (StandardError, weedb.OperationalError):
+        # It's uninitialized. Configure it:
+        weewx.archive.config(archive_db_dict)
+        print "Created archive database %s" % (archive_db,)
     else:
-        print "The archive database %s already exists" % archiveFilename
+        print "The archive database %s already exists" % (archive_db,)
 
 def createStatsDatabase(config_dict):
     """Create the weewx statistical database"""
-    # Open up the Stats database
-    statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                 config_dict['StdArchive']['stats_file'])
+    stats_db = config_dict['StdArchive']['stats_database']
+    stats_db_dict = config_dict['Databases'][stats_db]
+    # Try to open up the database. If it doesn't exist or has not been
+    # initialized, an exception will be thrown. Catch it, configure the
+    # database, and then try again.
     try:
-        dummy_statsDb = weewx.stats.StatsDb(statsFilename)
-    except StandardError:
-        # Configure it:
-        weewx.stats.config(statsFilename, config_dict['StdArchive'].get('stats_types'))
-        print "Created statistical database %s" % statsFilename
+        statsDb = weewx.stats.StatsDb(stats_db_dict)
+    except (StandardError, weedb.OperationalError):
+        # It's uninitialized. Configure it:
+        weewx.stats.config(stats_db_dict, 
+                           stats_types=config_dict['StdArchive'].get('stats_types'))
+        print "Created statistical database %s" % (stats_db,)
     else:
-        print "The statistical database %s already exists" % statsFilename
+        print "The statistical database %s already exists" % (stats_db,)
 
 def backfillStatsDatabase(config_dict):
     """Use the main archive database to backfill the stats database."""
 
-    # Configure if necessary. This will do nothing if the database
-    # has already been configured:
+    # Open up the main database archive
+    archive = weewx.archive.Archive.fromConfigDict(config_dict)
+
+    # Configure the stats database if necessary. This will do nothing if the
+    # database has already been configured:
     createStatsDatabase(config_dict)
 
     # Open up the Stats database
-    statsFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                 config_dict['StdArchive']['stats_file'])
-    statsDb = weewx.stats.StatsDb(statsFilename)
+    statsDb = weewx.stats.StatsDb.fromConfigDict(config_dict)
     
-    # Open up the main database archive
-    archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                   config_dict['StdArchive']['archive_file'])
-    archive = weewx.archive.Archive(archiveFilename)
-
     # Now backfill
     weewx.stats.backfill(archive, statsDb)
-    print "Backfilled statistical database %s with archive data from %s" % (statsFilename, archiveFilename)
+    print "Backfilled statistical database %s with archive data from %s" % (statsDb.database, archive.database)
     
 def reconfigMainDatabase(config_dict):
     """Change the schema of the old database"""
-    
+    # TODO: this needs to be updated
     # The old archive:
     oldArchiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
                                       config_dict['StdArchive']['archive_file'])

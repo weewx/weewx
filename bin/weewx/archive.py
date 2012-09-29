@@ -39,7 +39,17 @@ class Archive(object):
         if not self.sqlkeys:
             self.close()
             raise StandardError("Database not initialized")
+
+    @staticmethod
+    def fromConfigDict(config_dict):
+        archive_db = config_dict['StdArchive']['archive_database']
+        archive_db_dict = config_dict['Databases'][archive_db]
+        return Archive(archive_db_dict)
         
+    @property
+    def database(self):
+        return self.connection.database
+    
     def close(self):
         self.connection.close()
 
