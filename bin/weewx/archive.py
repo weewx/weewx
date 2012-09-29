@@ -42,7 +42,6 @@ class Archive(object):
         
     def close(self):
         self.connection.close()
-        del self.connection
 
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.

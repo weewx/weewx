@@ -40,7 +40,6 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
     def run(self):
 
         self.setup()
-
         self.generateSummaryBy('SummaryByMonth', self.gen_ts)
         self.generateSummaryBy('SummaryByYear', self.gen_ts)
         self.generateToDate(self.gen_ts)
@@ -208,8 +207,6 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
                         # Close it
                         _file.close()
             
-            archivedb.close()
-            statsdb.close()
             t2 = time.time()
             elapsed_time = t2 - t1
             syslog.syslog(syslog.LOG_INFO, """filegenerator: generated %d '%s' files in %.2f seconds""" % (ngen, by_time, elapsed_time))
@@ -265,9 +262,6 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
                 # Close it
                 _file.close()
                     
-            archivedb.close()
-            statsdb.close()
-
         elapsed_time = time.time() - t1
         syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
     

@@ -438,16 +438,23 @@ class StdArchive(StdService):
     def __init__(self, engine, config_dict):
         super(StdArchive, self).__init__(engine, config_dict)
 
-        # If the station hardware supports an archive interval, use that.
-        # Otherwise, get it out of the configuration file.
+        # Get the archive interval from the configuration file
+        software_archive_interval = config_dict['StdArchive'].as_int('archive_interval')
+        # If the hardware supports an achive interval, compare it to that.
         if hasattr(self.engine.console, 'archive_interval'):
+            if software_archive_interval != self.engine.console.archive_interval:
+                syslog.syslog(syslog.LOG_ERR, "wxengine: The archive interval in the configuration file (%d)"\
+                              " does not match the station hardware interval (%d)." % \
+                              (software_archive_interval, self.engine.console.archive_interval))
             self.archive_interval = self.engine.console.archive_interval
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Using station archive interval of %d" % self.archive_interval)
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Using station hardware archive interval of %d" % self.archive_interval)
         else:
-            self.archive_interval = config_dict['StdArchive'].as_int('archive_interval')
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Using archive interval of %d from config file" % self.archive_interval)
+            self.archive_interval = software_archive_interval
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d from config file" % self.archive_interval)
         self.archive_delay    = config_dict['StdArchive'].as_int('archive_delay')
-        
+
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be done in %s" % (self.engine.console.record_generation,))
+
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
         
@@ -543,6 +550,8 @@ class StdArchive(StdService):
             # Try again.
             self.archive = weewx.archive.Archive(archive_db_dict)
 
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (config_dict['StdArchive']['archive_database'],))
+
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
         
@@ -562,6 +571,8 @@ class StdArchive(StdService):
         # Backfill it with data from the archive. This will do nothing if the
         # stats database is already up-to-date.
         weewx.stats.backfill(self.archive, self.statsDb)
+
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Using stats database: %s" % (config_dict['StdArchive']['stats_database'],))
         
     def shutDown(self):
         self.archive.close()

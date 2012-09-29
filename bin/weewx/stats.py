@@ -153,7 +153,6 @@ class StatsDb(object):
 
     def close(self):
         self.connection.close()
-        del self.connection
         
     def updateHiLo(self, accumulator):
         """Use the contents of an accumulator to update the highs/lows of a stats database."""
@@ -418,7 +417,9 @@ class StatsDb(object):
         _cursor = self.connection.cursor()
         try:
             _cursor.execute(sqlStmt)
-            return _cursor.fetchone()
+            # Take the result set and run it through weedb.massage to convert
+            # any long's or decimal.Decimals to ints
+            return weedb.massage(_cursor.fetchone())
         finally:
             _cursor.close()
         

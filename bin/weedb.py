@@ -118,6 +118,16 @@ class Transaction(object):
         except:
             pass
 
+#
+# This is a utility function for converting a result set that might possibly
+# have longs or decimal.Decimals in it to something with just ints.
+# This is useful because MySQL can return longs or decimal.Decimals
+#
+import decimal
+def massage(seq):
+    result = [int(i) if isinstance(i, long) or isinstance(i,decimal.Decimal) else i for i in seq]
+    return result
+
 ########################################################
 #          TESTING
 ########################################################
