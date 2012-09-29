@@ -466,7 +466,7 @@ class RESTThread(threading.Thread):
         # In the strange vocabulary of Python, declaring yourself a "daemon thread"
         # allows the program to exit even if this thread is running:
         self.setDaemon(True)
-        self.archive = weewx.archive.Archive(weedb.connect(**archive_db_dict))
+        self.archive = weewx.archive.Archive(archive_db_dict)
         self.queue   = queue # Fifo queue where new records will appear
         self.station_list = station_list
 
@@ -577,9 +577,8 @@ if __name__ == '__main__':
             exit()
             
         # Open up the main database archive
-        archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                       config_dict['StdArchive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
+        archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+        archive = weewx.archive.Archive(archive_db_dict)
         
         stop_ts  = archive.lastGoodStamp()
         start_ts = weeutil.weeutil.startOfDay(stop_ts) if options.do_today else stop_ts

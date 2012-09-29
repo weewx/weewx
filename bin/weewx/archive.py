@@ -34,9 +34,10 @@ class Archive(object):
         
         db_dict: A dictionary containing the database connection information.
         """
-        self.connection = weedb.connect(**db_dict)
+        self.connection = weedb.connect(db_dict)
         self.sqlkeys = self._getTypes()
         if not self.sqlkeys:
+            self.close()
             raise StandardError("Database not initialized")
         
     def close(self):
@@ -141,9 +142,10 @@ class Archive(object):
         
         returns: a record dictionary or None if the record does not exist."""
 
+        _cursor = self.connection.cursor()
         try:
-            _cursor = self.connection.cursor()
-            _row = _cursor.execute("SELECT * FROM archive WHERE dateTime=?;", (timestamp,))
+            _cursor.execute("SELECT * FROM archive WHERE dateTime=?;", (timestamp,))
+            _row = _cursor.fetchone()
             return dict(zip(self.sqlkeys, _row)) if _row else None
         finally:
             _cursor.close()
@@ -157,8 +159,8 @@ class Archive(object):
         
         returns: a tuple containing the results
         """
+        _cursor = self.connection.cursor()
         try:
-            _cursor = self.connection.cursor()
             _cursor.execute(sql, sqlargs)
             return _cursor.fetchone()
         finally:
@@ -456,13 +458,13 @@ def config(db_dict, archiveSchema=None):
     # Try to create the database. If it already exists, an exception will
     # be thrown.
     try:
-        weedb.create(**db_dict)
+        weedb.create(db_dict)
     except weedb.DatabaseExists:
         pass
 
     try:        
         # Check to see if it has already been configured. 
-        _connect = weedb.connect(**db_dict)
+        _connect = weedb.connect(db_dict)
         if 'archive' in _connect.tables():
             return
         
@@ -479,8 +481,6 @@ def config(db_dict, archiveSchema=None):
         with weedb.Transaction(_connect) as _cursor:
             _cursor.execute("CREATE TABLE archive (%s);" % _sqltypestr)
             
-        print _connect.columnsOf('archive')
-    
     except Exception, e:
         syslog.syslog(syslog.LOG_ERR, "archive: Unable to create database archive.")
         syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))

@@ -531,7 +531,7 @@ class StdArchive(StdService):
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
 
-        archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']].dict()
+        archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
         # Try to open up the database. If it doesn't exist or has not been
         # initialized, an exception will be thrown. Catch it, configure the
         # database, and then try again.
@@ -540,27 +540,24 @@ class StdArchive(StdService):
         except (StandardError, weedb.OperationalError):
             # It's uninitialized. Configure it:
             weewx.archive.config(archive_db_dict)
-            archive_connect = weedb.connect(**archive_db_dict)
-            print "in wxengine", archive_connect.columnsOf('archive')
-            # Try again to open it up:
-            self.archive = weewx.archive.Archive(archive_connect)
+            # Try again.
+            self.archive = weewx.archive.Archive(archive_db_dict)
 
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
         
-        stats_db_dict = config_dict['Databases'][config_dict['StdArchive']['stats_database']].dict()
-        stats_connect = weedb.connect(**stats_db_dict)
-        
-        # Try to open up the database. If it doesn't exist or has not been initialized, an exception
-        # will be thrown. Catch it, configure the database, and then try again.
+        stats_db_dict = config_dict['Databases'][config_dict['StdArchive']['stats_database']]
+        # Try to open up the database. If it doesn't exist or has not been
+        # initialized, an exception will be thrown. Catch it, configure the
+        # database, and then try again.
         try:
-            self.statsDb = weewx.stats.Statsdb(stats_connect)
-        except StandardError:
+            self.statsDb = weewx.stats.StatsDb(stats_db_dict)
+        except (StandardError, weedb.OperationalError):
             # It's uninitialized. Configure it:
             weewx.stats.config(stats_db_dict, 
                                stats_types=config_dict['StdArchive'].get('stats_types'))
-            # Try again to open it up:
-            self.statsDb = weewx.stats.StatsDb(stats_connect)
+            # Try again:
+            self.statsDb = weewx.stats.StatsDb(stats_db_dict)
 
         # Backfill it with data from the archive. This will do nothing if the
         # stats database is already up-to-date.
@@ -726,7 +723,7 @@ class StdRESTful(StdService):
             # Yes. Proceed by setting up the queue and thread.
             
             # Get the archive database dictionary
-            archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']].dict()
+            archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
             # Create the queue into which we'll put the timestamps of new data
             self.queue = Queue.Queue()
             # Start up the thread:

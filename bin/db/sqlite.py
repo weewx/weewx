@@ -20,26 +20,31 @@ if not hasattr(sqlite3.Connection, "__exit__"):
 
 import weedb
 
-def connect(database='', root='', **argv):
+def connect(database='', root='', driver='', **argv):
     """Factory function, to keep things compatible with DBAPI. """
     return Connection(database=database, root=root, **argv)
 
-def create(database='', root='', **argv):
+def create(database='', root='', driver='', **argv):
     """Create the database specified by the db_dict. If it already exists,
     an exception of type DatabaseExists will be thrown."""
-    filename = os.path.join(root, database)
+    file_path = os.path.join(root, database)
     # Check whether the database file exists:
-    if os.path.exists(filename):
-        raise weedb.DatabaseExists("Database %s already exists" % (filename,))
+    if os.path.exists(file_path):
+        raise weedb.DatabaseExists("Database %s already exists" % (file_path,))
     else:
         # If it doesn't exist, create the parent directories
-        fileDirectory = os.path.dirname(filename)
+        fileDirectory = os.path.dirname(file_path)
         if not os.path.exists(fileDirectory):
             os.makedirs(fileDirectory)
+        connection = sqlite3.connect(file_path, **argv)
+        connection.close()
 
-def drop(database='', root='', **argv):
-    filename = os.path.join(root, database)
-    os.remove(filename)
+def drop(database='', root='', driver='', **argv):
+    file_path = os.path.join(root, database)
+    try:
+        os.remove(file_path)
+    except OSError:
+        raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (file_path,))
     
 class Connection(weedb.Connection):
     """A database independent connection object."""

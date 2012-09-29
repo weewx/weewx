@@ -53,7 +53,7 @@ wind_create_str = """CREATE TABLE wind ( dateTime INTEGER NOT NULL UNIQUE PRIMAR
                   """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, """\
                   """gustdir REAL, xsum REAL, ysum REAL, squaresum REAL, squarecount INTEGER);"""
 
-meta_create_str = """CREATE TABLE metadata (name TEXT NOT NULL, value TEXT, PRIMARY KEY(name(20)));"""
+meta_create_str = """CREATE TABLE metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
                  
 std_replace_str  = """REPLACE INTO %s   VALUES(?, ?, ?, ?, ?, ?, ?)"""
 wind_replace_str = """REPLACE INTO wind VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
@@ -143,8 +143,12 @@ class StatsDb(object):
         
         db_dict: A dictionary containing the database connection information"""
         
-        self.connection     = weedb.connect(**db_dict)
-        self.statsTypes      = self.__getTypes()
+        self.connection      = weedb.connect(db_dict)
+        try:
+            self.statsTypes      = self.__getTypes()
+        except weedb.OperationalError:
+            self.close()
+            raise
         self.std_unit_system = self._getStdUnitSystem()
 
     def close(self):
@@ -411,8 +415,8 @@ class StatsDb(object):
         
         # Do the string interpolation:
         sqlStmt = rawsqlStmt % interDict
+        _cursor = self.connection.cursor()
         try:
-            _cursor = self.connection.cursor()
             _cursor.execute(sqlStmt)
             return _cursor.fetchone()
         finally:
@@ -440,7 +444,7 @@ class StatsDb(object):
     def __getTypes(self):
         """Returns the types appearing in a stats database.
         
-        Throws an exception of type weedb.OperationalError
+        Raises an exception of type weedb.OperationalError
         if the database has not been initialized.
         
         returns: A list of types"""
@@ -721,13 +725,13 @@ def config(db_dict, stats_types=None):
     # Try to create the database. If it already exists, an exception will
     # be thrown.
     try:
-        weedb.create(**db_dict)
+        weedb.create(db_dict)
     except weedb.DatabaseExists:
         pass
 
     # Check to see if it has already been configured. If it has,
     # there will be some tables in it. We can just return.
-    _connect = weedb.connect(**db_dict)
+    _connect = weedb.connect(db_dict)
     if _connect.tables():
         return
     

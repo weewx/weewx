@@ -14,11 +14,11 @@ import _mysql_exceptions
 
 import weedb
 
-def connect(host='localhost', user='', password='', database='', **argv):
+def connect(host='localhost', user='', password='', database='', driver='', **argv):
     """Connect to the specified database"""
     return Connection(host=host, user=user, password=password, database=database, **argv)
 
-def create(host='localhost', user='', password='', database='', **argv):
+def create(host='localhost', user='', password='', database='', driver='', **argv):
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExists will be thrown."""
     # Open up a connection w/o specifying the database.
@@ -36,7 +36,7 @@ def create(host='localhost', user='', password='', database='', **argv):
     finally:
         cursor.close()
     
-def drop(host='localhost', user='', password='', database='', **argv):
+def drop(host='localhost', user='', password='', database='', driver='', **argv):
     """Drop (delete) the specified database."""
     # Open up a connection
     connect = MySQLdb.connect(host   = host,
@@ -45,6 +45,8 @@ def drop(host='localhost', user='', password='', database='', **argv):
     cursor = connect.cursor()
     try:
         cursor.execute("DROP DATABASE %s" % database)
+    except _mysql_exceptions.OperationalError:
+        raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database,))
     finally:
         cursor.close()
     

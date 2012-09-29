@@ -23,6 +23,8 @@ import configobj
 
 import weeutil.ftpupload
 import weeutil.weeutil
+import weewx.archive
+import weewx.stats
 
 class StdReportEngine(threading.Thread):
     """Reporting engine for weewx.
@@ -279,9 +281,8 @@ class CachedReportGenerator(ReportGenerator):
             
     def _getArchive(self, archive_name):
         if archive_name not in self.archive_cache:
-            archive_dict = self.config_dict['Databases'][archive_name].dict()
-            archive_connect = weedb.connect(**archive_dict)
-            self.archive_cache[archive_name] = weewx.archive.Archive(archive_connect)
+            archive_dict = self.config_dict['Databases'][archive_name]
+            self.archive_cache[archive_name] = weewx.archive.Archive(archive_dict)
         return self.archive_cache[archive_name]
         
     def _initStatsCache(self):
@@ -299,7 +300,6 @@ class CachedReportGenerator(ReportGenerator):
             
     def _getStats(self, stats_name):
         if stats_name not in self.stats_cache:
-            stats_dict = self.config_dict['Databases'][stats_name].dict()
-            stats_connect = weedb.connect(**stats_dict)
-            self.stats_cache[stats_name] = weewx.stats.StatsDb(stats_connect)
+            stats_dict = self.config_dict['Databases'][stats_name]
+            self.stats_cache[stats_name] = weewx.stats.StatsDb(stats_dict)
         return self.stats_cache[stats_name]

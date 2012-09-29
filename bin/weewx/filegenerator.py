@@ -340,7 +340,7 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
                                 self.config_dict['StdReport']['SKIN_ROOT'],
                                 accum_dict['skin'],
                                 accum_dict['template'])
-        destination_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+        destination_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                        accum_dict['HTML_ROOT'],
                                        os.path.dirname(accum_dict['template']))
         encoding = accum_dict['encoding']
