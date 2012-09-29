@@ -57,13 +57,13 @@ class Connection(weedb.Connection):
         If the operation fails, an exception of type weeutil.db.OperationalError will be raised.
         """
                 
-        file_path = os.path.join(root, database)
+        self.file_path = os.path.join(root, database)
         try:
-            connection = sqlite3.connect(file_path, **argv)
+            connection = sqlite3.connect(self.file_path, **argv)
         except sqlite3.OperationalError:
             # The Pysqlite driver does not include the database file path.
             # Include it in case it might be useful.
-            raise weedb.OperationalError("Unable to open database '%s'" % (file_path,))
+            raise weedb.OperationalError("Unable to open database '%s'" % (self.file_path,))
         weedb.Connection.__init__(self, connection)
 
     def cursor(self):
@@ -72,21 +72,24 @@ class Connection(weedb.Connection):
     def tables(self):
         """Returns a list of tables in the database."""
         
+        if not os.path.exists(self.file_path):
+            raise weedb.OperationalError
+        
         table_list = list()
         for row in self.connection.execute("""SELECT tbl_name FROM sqlite_master WHERE type='table';"""):
             # Extract the table name. Sqlite returns unicode, so always
             # convert to a regular string:
             table_list.append(str(row[0]))
-        if not table_list:
-            raise weedb.OperationalError
         return table_list
                 
     def columnsOf(self, table):
         """Return a list of columns in the specified table. If the table does not exist,
         None is returned."""
         column_list = list()
+
         for row in self.connection.execute("""PRAGMA table_info(%s);""" % table):
             # Append this column to the list of columns. 
             column_list.append(str(row[1]))
+
         # If there are no columns (which means the table did not exist) return None
         return column_list if column_list else None

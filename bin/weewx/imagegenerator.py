@@ -20,7 +20,6 @@ import os.path
 import weeplot.genplot
 import weeplot.utilities
 import weeutil.weeutil
-import weewx.archive
 import weewx.reportengine
 import weewx.units
 
@@ -28,7 +27,7 @@ import weewx.units
 #                    Class ImageGenerator
 #===============================================================================
 
-class ImageGenerator(weewx.reportengine.ReportGenerator):
+class ImageGenerator(weewx.reportengine.CachedReportGenerator):
     """Class for managing the image generator."""
 
     def run(self):
@@ -68,9 +67,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 # Accumulate all options from parent nodes:
                 plot_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname])
 
-                # Open up the database archive
-                archiveFilename = os.path.join(self.config_dict['Station']['WEEWX_ROOT'], plot_options['archive_file'])
-                archivedb = weewx.archive.Archive(archiveFilename)
+                # Get the database archive
+                archivedb = self._getArchive(plot_options['archive_database'])
             
                 plotgen_ts = gen_ts
                 if not plotgen_ts:

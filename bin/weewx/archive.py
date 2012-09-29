@@ -26,15 +26,15 @@ class Archive(object):
     for managing the archive file. These functions encapsulate whatever sql statements
     are needed."""
     
-    def __init__(self, connection):
+    def __init__(self, db_dict):
         """Initialize an object of type weewx.Archive. 
         
         If the database does not exist or it is uninitialized, an
         exception will be thrown. 
         
-        connection: An instance of weeutil.db.Connection()
+        db_dict: A dictionary containing the database connection information.
         """
-        self.connection = connection
+        self.connection = weedb.connect(**db_dict)
         self.sqlkeys = self._getTypes()
         if not self.sqlkeys:
             raise StandardError("Database not initialized")
@@ -159,8 +159,8 @@ class Archive(object):
         """
         try:
             _cursor = self.connection.cursor()
-            _row = _cursor.execute(sql, sqlargs)
-            return _row
+            _cursor.execute(sql, sqlargs)
+            return _cursor.fetchone()
         finally:
             _cursor.close()
 
@@ -459,26 +459,36 @@ def config(db_dict, archiveSchema=None):
         weedb.create(**db_dict)
     except weedb.DatabaseExists:
         pass
+
+    try:        
+        # Check to see if it has already been configured. 
+        _connect = weedb.connect(**db_dict)
+        if 'archive' in _connect.tables():
+            return
         
-    # Check to see if it has already been configured. If it has, do
-    # nothing. We're done.
-    _connect = weedb.connect(**db_dict)
-    if 'archive' in _connect.tables():
-        return
-    
-    # If the user has not supplied a schema, use the default schema 
-    if not archiveSchema:
-        import user.schemas
-        archiveSchema = user.schemas.defaultArchiveSchema
+        # If the user has not supplied a schema, use the default schema 
+        if not archiveSchema:
+            import user.schemas
+            archiveSchema = user.schemas.defaultArchiveSchema
+            
+        # List comprehension of the types, joined together with commas. Put
+        # the SQL type in backquotes, because at least one of them ('interval')
+        # is a MySQL reserved word
+        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
         
-    # List comprehension of the types, joined together with commas. Put
-    # the SQL type in backquotes, because at least one of them ('interval')
-    # is a MySQL reserved word
-    _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
+        with weedb.Transaction(_connect) as _cursor:
+            _cursor.execute("CREATE TABLE archive (%s);" % _sqltypestr)
+            
+        print _connect.columnsOf('archive')
     
-    with weedb.Transaction(_connect) as _cursor:
-        _cursor.execute("CREATE TABLE archive (%s);" % _sqltypestr)
-    
+    except Exception, e:
+        syslog.syslog(syslog.LOG_ERR, "archive: Unable to create database archive.")
+        syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
+        raise
+
+    finally:
+        _connect.close()
+        
     syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for database 'archive'")
 
 def reconfig(old_db_dict, new_db_dict):

@@ -135,15 +135,15 @@ class StatsDb(object):
     std_unit_system: The unit system in use (weewx.US or weewx.METRIC), or
     None if no system has been specified."""
     
-    def __init__(self, connection):
+    def __init__(self, db_dict):
         """Create an instance of StatsDb to manage a database.
         
         If the database does not exist or it is uninitialized, an
         exception of type weedb.OperationalError will be thrown. 
         
-        connection: An instance of weedb.Connection"""
+        db_dict: A dictionary containing the database connection information"""
         
-        self.connection     = connection
+        self.connection     = weedb.connect(**db_dict)
         self.statsTypes      = self.__getTypes()
         self.std_unit_system = self._getStdUnitSystem()
 

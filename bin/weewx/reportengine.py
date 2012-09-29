@@ -99,9 +99,9 @@ class StdReportEngine(threading.Thread):
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
                 continue
                 
-            # Add the default archive and stats files:
-            skin_dict['archive_file'] = self.config_dict['StdArchive']['archive_file']
-            skin_dict['stats_file']   = self.config_dict['StdArchive']['stats_file']
+            # Add the default archive and stats databases:
+            skin_dict['archive_database'] = self.config_dict['StdArchive']['archive_database']
+            skin_dict['stats_database']   = self.config_dict['StdArchive']['stats_database']
 
             # Inject any overrides the user may have specified in the weewx.conf
             # configuration file for all reports:
@@ -139,6 +139,9 @@ class StdReportEngine(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
+                    
+                finally:
+                    obj.finalize()
 
 
 class ReportGenerator(object):
@@ -154,6 +157,9 @@ class ReportGenerator(object):
         self.run()
     
     def run(self):
+        pass
+    
+    def finalize(self):
         pass
 
 class FtpGenerator(ReportGenerator):
@@ -245,3 +251,55 @@ class CopyGenerator(ReportGenerator):
         
         syslog.syslog(syslog.LOG_DEBUG, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))
         
+
+class CachedReportGenerator(ReportGenerator):
+    """Report generator that can cache archive and stats database connections."""
+    
+    def start(self):
+        self._initArchiveCache()
+        self._initStatsCache()
+        self.run()
+    
+    def finalize(self):
+        self._closeStatsCache()
+        self._closeArchiveCache()
+
+    def _initArchiveCache(self):
+        self.archive_cache = {}
+        
+    def _closeArchiveCache(self):
+        try:
+            for archive in self.archive_cache.values():
+                try:
+                    archive.close()
+                except:
+                    pass
+        except:
+            pass
+            
+    def _getArchive(self, archive_name):
+        if archive_name not in self.archive_cache:
+            archive_dict = self.config_dict['Databases'][archive_name].dict()
+            archive_connect = weedb.connect(**archive_dict)
+            self.archive_cache[archive_name] = weewx.archive.Archive(archive_connect)
+        return self.archive_cache[archive_name]
+        
+    def _initStatsCache(self):
+        self.stats_cache = {}
+        
+    def _closeStatsCache(self):
+        try:
+            for stats in self.stats_cache.values():
+                try:
+                    stats.close()
+                except:
+                    pass
+        except:
+            pass
+            
+    def _getStats(self, stats_name):
+        if stats_name not in self.stats_cache:
+            stats_dict = self.config_dict['Databases'][stats_name].dict()
+            stats_connect = weedb.connect(**stats_dict)
+            self.stats_cache[stats_name] = weewx.stats.StatsDb(stats_connect)
+        return self.stats_cache[stats_name]

@@ -68,7 +68,7 @@ class Connection(weedb.Connection):
         except _mysql_exceptions.OperationalError, e:
             # The MySQL driver does not include the database in the
             # exception information. Tack it on, in case it might be useful.
-            raise weedb.OperationalError(str(e) + " and database '%s'" % (db_dict['database'],))
+            raise weedb.OperationalError(str(e) + " while opening database '%s'" % (database,))
 
         weedb.Connection.__init__(self, connection)
         
@@ -87,6 +87,8 @@ class Connection(weedb.Connection):
                 if row is None: break
                 # Extract the table name. In case it's in unicode, convert to a regular string.
                 table_list.append(str(row[0]))
+        except _mysql_exceptions.OperationalError, e:
+            raise weedb.OperationalError(e)
         finally:
             cursor.close()
         return table_list

@@ -18,12 +18,11 @@ import urlparse
 import Cheetah.Template
 import Cheetah.Filters
 
+import weedb
 import weeutil.weeutil
 import weewx.almanac
-import weewx.archive
 import weewx.reportengine
 import weewx.station
-import weewx.stats
 import weewx.units
 
 # Default base temperature and unit type for heating and cooling degree days
@@ -35,7 +34,7 @@ default_coolbase = (65.0, "degree_F", "group_temperature")
 #                    Class FileGenerator
 #===============================================================================
 
-class FileGenerator(weewx.reportengine.ReportGenerator):
+class FileGenerator(weewx.reportengine.CachedReportGenerator):
     """Class for managing the template based generators"""
     
     def run(self):
@@ -50,7 +49,6 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         
         self.outputted_dict = {'SummaryByMonth' : [],
                                'SummaryByYear'  : []}
-        
         self.initUnits()
         self.initStation()
         self.initAlmanac(self.gen_ts)
@@ -82,13 +80,14 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # For better accuracy, the almanac requires the current temperature and barometric
         # pressure, so retrieve them from the default archive, using celestial_ts
         # as the time
-        archivedb = weewx.archive.Archive(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                                       self.skin_dict['archive_file']))
+        
+        temperature_C = pressure_mbar = None
+
+        archivedb = self._getArchive(self.skin_dict['archive_database'])
         if not celestial_ts:
             celestial_ts = archivedb.lastGoodStamp()
-
-        temperature_C = pressure_mbar = None
         rec = self.getRecord(archivedb, celestial_ts)
+
         if rec is not None:
             if rec.has_key('outTemp') :  temperature_C = rec['outTemp'].degree_C.raw 
             if rec.has_key('barometer'): pressure_mbar = rec['barometer'].mbar.raw
@@ -346,10 +345,8 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
                                        os.path.dirname(accum_dict['template']))
         encoding = accum_dict['encoding']
 
-        statsdb = weewx.stats.StatsDb(os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                                   accum_dict['stats_file']))
-        archivedb = weewx.archive.Archive(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                                       accum_dict['archive_file']))
+        statsdb   = self._getStats(accum_dict['stats_database'])
+        archivedb = self._getArchive(accum_dict['archive_database'])
 
         try:
             # Create the directory that is to receive the generated files.  If

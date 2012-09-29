@@ -17,6 +17,7 @@ import urllib2
 import socket
 import time
 
+import weedb
 import weewx.archive
 import weewx.units
 import weeutil.weeutil
@@ -452,10 +453,10 @@ class RESTThread(threading.Thread):
     Basically, it watches a queue, and if anything appears in it, it publishes it.
     The queue should be populated with the timestamps of the data records to be published.
     """
-    def __init__(self, archiveFilename, queue, station_list):
+    def __init__(self, archive_db_dict, queue, station_list):
         """Initialize an instance of RESTThread.
         
-        archiveFilename: The file name for hte archive database.  
+        archive_db_dict: The database dictionary for the archive database  
         
         queue: An instance of Queue.Queue where the timestamps will appear
 
@@ -465,7 +466,7 @@ class RESTThread(threading.Thread):
         # In the strange vocabulary of Python, declaring yourself a "daemon thread"
         # allows the program to exit even if this thread is running:
         self.setDaemon(True)
-        self.archive = weewx.archive.Archive(archiveFilename)
+        self.archive = weewx.archive.Archive(weedb.connect(**archive_db_dict))
         self.queue   = queue # Fifo queue where new records will appear
         self.station_list = station_list
 

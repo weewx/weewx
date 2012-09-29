@@ -1,5 +1,7 @@
 TODO before the next release:
 
+Check how the MySQL driver responds to a network outage.
+
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
 
