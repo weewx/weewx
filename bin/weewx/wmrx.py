@@ -7,7 +7,7 @@
 #    $Author$
 #    $Date$
 #
-"""Classes and functions for interfacing with an Oregon Scientific WMR100 (WMR100N) station
+"""Classes and functions for interfacing with an Oregon Scientific WMR-USB (WMR100N) station
 
     The following references were useful for figuring out the WMR protocol:
     
@@ -47,15 +47,15 @@ def loader(config_dict):
     # Now convert to meters, using only the first element of the returned value-tuple:
     altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
     
-    station = WMR100(altitude=altitude_m, **config_dict['WMR100'])
+    station = WMR_USB(altitude=altitude_m, **config_dict['WMR-USB'])
     
     return station
         
-class WMR100(weewx.abstractstation.AbstractStation):
-    """Driver for the WMR100 station."""
+class WMR_USB(weewx.abstractstation.AbstractStation):
+    """Driver for the WMR_USB station."""
     
     def __init__(self, **stn_dict) :
-        """Initialize an object of type WMR100.
+        """Initialize an object of type WMR_USB.
         
         NAMED ARGUMENTS:
         
@@ -77,7 +77,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
         
         product_id: The USB product ID for the WM [Optional. Default is 0xca01.
         
-        interface: The USB interface [Optional. Default is 1]
+        interface: The USB interface [Optional. Default is 0]
         
         IN_endpoint: The IN USB endpoint used by the WMR. [Optional. Default is usb.ENDPOINT_IN + 1]
         """
@@ -94,7 +94,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
         self.interface         = int(stn_dict.get('interface', 0))
         self.IN_endpoint       = int(stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1))
 
-        self.hardware_name = "WMR100N"
+        self.hardware_name = "WMR-USB"
 
         self.last_totalRain = None
         self.openPort()
@@ -135,8 +135,8 @@ class WMR100(weewx.abstractstation.AbstractStation):
         
         for _packet in self.genPackets():
             _packet_type = _packet[1]
-            if _packet_type in WMR100._dispatch_dict:
-                _record = WMR100._dispatch_dict[_packet_type](self, _packet)
+            if _packet_type in WMR_USB._dispatch_dict:
+                _record = WMR_USB._dispatch_dict[_packet_type](self, _packet)
                 if _record is not None : 
                     yield _record
                 
