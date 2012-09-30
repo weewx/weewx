@@ -10,8 +10,8 @@
 #
 """Command line utility for configuring the Davis VantagePro"""
 
+import optparse
 import syslog
-import argparse
 import sys
 
 import configobj
@@ -21,6 +21,9 @@ import weeutil.weeutil
 
 description = """Configures the VantagePro weather station."""
 
+usage="""%prog: config_path [--help] [--info] [--clear] [--set-interval secs] [--set-altitude feet]
+                            [--set-barometer inHg] [--set-bucket code] [--set-rain-year-start month]"""
+
 epilog = """Mutating actions will request confirmation before proceeding."""
 
 def main():
@@ -29,69 +32,65 @@ def main():
     syslog.openlog('config_vp', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = argparse.ArgumentParser(description=description, epilog=epilog)
+    parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
     
     # Add the various options:
-    parser.add_argument("config_path",
-                        help="Path to the configuration file (Required)")
-    parser.add_argument("--info", action="store_true", dest="info",
+    parser.add_option("--info", action="store_true", dest="info",
                         help="To print configuration, reception, and barometer calibration information about your weather station.")
-    parser.add_argument("--clear", action="store_true", dest="clear",
+    parser.add_option("--clear", action="store_true", dest="clear",
                         help="To clear the memory of your weather station.")
-    parser.add_argument("--set-interval", type=int, dest="set_interval",
-                        help="Sets the archive interval to the specified value in seconds. "\
-                        "Valid values are 60, 300, 600, 900, 1800, 3600, or 7200.",
-                        metavar="SECONDS")
-    parser.add_argument("--set-altitude", type=float, dest="set_altitude", 
-                        help="Sets the altitude of the station to the specified number of feet.", 
-                        metavar="FEET")
-    parser.add_argument("--set-barometer", type=float, dest="set_barometer",
+    parser.add_option("--set-interval", type=int, dest="set_interval", metavar="SECONDS",
+                        help="Sets the archive interval to the specified number of seconds. "\
+                        "Valid values are 60, 300, 600, 900, 1800, 3600, or 7200.")
+    parser.add_option("--set-altitude", type=float, dest="set_altitude", metavar="FEET",
+                        help="Sets the altitude of the station to the specified number of feet.") 
+    parser.add_option("--set-barometer", type=float, dest="set_barometer", metavar="inHg",
                         help="Sets the barometer reading of the station to a known correct value in inches of mercury. "\
-                        "Specify 0 (zero) to have the console pick a sensible value.", 
-                        metavar="INHG")
-    parser.add_argument("--set-bucket", type=int, dest="set_bucket",
+                        "Specify 0 (zero) to have the console pick a sensible value.")
+    parser.add_option("--set-bucket", type=int, dest="set_bucket", metavar="CODE",
                         help="Set the type of rain bucket. "\
-                        "Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM",
-                        metavar="CODE")
-    parser.add_argument("--set-rain-year-start", type=int, dest="set_rain_year_start",
-                        choices=[i for i in range(1,13)],
-                        help="Set the rain year start (1=Jan, 2=Feb, etc.)",
-                        metavar="MM")
+                        "Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM")
+    parser.add_option("--set-rain-year-start", type=int, dest="set_rain_year_start", metavar="MM", 
+                        help="Set the rain year start (1=Jan, 2=Feb, etc.)")
     
     # Now we are ready to parse the command line:
-    args = parser.parse_args()
+    (options, args) = parser.parse_args()
+    if not args:
+        parser.error("Missing configuration file.")
 
+    config_path = args[0]
+    
     # Try to open up the configuration file. Declare an error if unable to.
     try :
-        config_dict = configobj.ConfigObj(args.config_path, file_error=True)
+        config_dict = configobj.ConfigObj(config_path, file_error=True)
     except IOError:
-        print >>sys.stderr, "Unable to open configuration file ", args.config_path
-        syslog.syslog(syslog.LOG_CRIT, "Unable to open configuration file %s" % args.config_path)
+        print >>sys.stderr, "Unable to open configuration file ", config_path
+        syslog.syslog(syslog.LOG_CRIT, "Unable to open configuration file %s" % config_path)
         exit(1)
     except configobj.ConfigObjError:
-        print >>sys.stderr, "Error wile parsing configuration file %s" % args.config_path
-        syslog.syslog(syslog.LOG_CRIT, "Error while parsing configuration file %s" % args.config_path)
+        print >>sys.stderr, "Error wile parsing configuration file %s" % config_path
+        syslog.syslog(syslog.LOG_CRIT, "Error while parsing configuration file %s" % config_path)
         exit(1)
 
-    syslog.syslog(syslog.LOG_INFO, "Using configuration file %s." % args.config_path)
+    syslog.syslog(syslog.LOG_INFO, "Using configuration file %s." % config_path)
 
     # Open up the weather station:
     station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
 
-    if args.info:
+    if options.info:
         info(station)
-    if args.clear:
+    if options.clear:
         clear(station)
-    if args.set_interval:
-        set_interval(station, args.set_interval)
-    if args.set_altitude is not None:
-        set_altitude(station, args.set_altitude)
-    if args.set_barometer is not None:
-        set_barometer(station, args.set_barometer)
-    if args.set_bucket:
-        set_bucket(station, args.set_bucket)
-    if args.set_rain_year_start:
-        set_rain_year_start(station, args.set_rain_year_start)
+    if options.set_interval is not None:
+        set_interval(station, options.set_interval)
+    if options.set_altitude is not None:
+        set_altitude(station, options.set_altitude)
+    if options.set_barometer is not None:
+        set_barometer(station, options.set_barometer)
+    if options.set_bucket is not None:
+        set_bucket(station, options.set_bucket)
+    if options.set_rain_year_start is not None:
+        set_rain_year_start(station, options.set_rain_year_start)
            
 def info(station):
     """Query the configuration of the VantagePro, printing out status information"""
@@ -184,13 +183,17 @@ def set_interval(station, new_interval_seconds):
         print "Proceeding will change the archive interval as well as erase all old archive records."
         ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
         if ans == 'Y' :
-            station.setArchiveInterval(new_interval_seconds)
-            print "Archive interval now set to %d seconds." % (station.archive_interval,)
-            # The Davis documentation implies that the log is cleared after
-            # changing the archive interval, but that doesn't seem to be the
-            # case. Clear it explicitly:
-            station.clearLog()
-            print "Archive records cleared."
+            try:
+                station.setArchiveInterval(new_interval_seconds)
+            except StandardError, e:
+                print >>sys.stderr, "Unable to set new archive interval. Reason:\n\t****", e
+            else:
+                print "Archive interval now set to %d seconds." % (station.archive_interval,)
+                # The Davis documentation implies that the log is cleared after
+                # changing the archive interval, but that doesn't seem to be the
+                # case. Clear it explicitly:
+                station.clearLog()
+                print "Archive records cleared."
         else:
             print "Nothing done."
     
@@ -246,12 +249,17 @@ def set_bucket(station, new_bucket_type):
         print "Proceeding will change the rain bucket type."
         ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
         if ans == 'Y' :
-            station.setBucketType(new_bucket_type)
-            print "Bucket type now set to %d." % (station.rain_bucket_type,)
+            try:
+                station.setBucketType(new_bucket_type)
+            except StandardError, e:
+                print >>sys.stderr, "Unable to set new bucket type. Reason:\n\t****", e
+            else:
+                print "Bucket type now set to %d." % (station.rain_bucket_type,)
         else:
             print "Nothing done."
 
 def set_rain_year_start(station, rain_year_start):
+        
     print "Old rain season start is %d, new one is %d." % (station.rain_season_start, rain_year_start)
 
     if station.rain_season_start == rain_year_start:
@@ -260,8 +268,12 @@ def set_rain_year_start(station, rain_year_start):
         print "Proceeding will change the rain season start."
         ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
         if ans == 'Y' :
-            station.setRainSeasonStart(rain_year_start)
-            print "Rain season start now set to %d." % (station.rain_season_start,)
+            try:
+                station.setRainSeasonStart(rain_year_start)
+            except StandardError, e:
+                print >>sys.stderr, "Unable to set new rain year start. Reason:\n\t****", e
+            else:
+                print "Rain season start now set to %d." % (station.rain_season_start,)
         else:
             print "Nothing done."
 

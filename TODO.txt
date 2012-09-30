@@ -2,6 +2,8 @@ TODO before the next release:
 
 Check how the MySQL driver responds to a network outage.
 
+Get reconfigure database to work again.
+
 Allow conversion from a metric database for use in the RESTful sites.
 
 Calculate altimeter pressure to send off to CWOP. 

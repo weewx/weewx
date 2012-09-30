@@ -839,3 +839,5 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
     else:
         syslog.syslog(syslog.LOG_INFO,
                       "stats: stats database up to date.")
+
+    return nrecs

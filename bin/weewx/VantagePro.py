@@ -636,7 +636,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         60, 300, 600, 900, 1800, 3600, or 7200 
         """
         if archive_interval_seconds not in (60, 300, 600, 900, 1800, 3600, 7200):
-            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % (self.archive_interval,)
+            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%d)" % (archive_interval_seconds,)
 
         # The console expects the interval in minutes. Divide by 60.
         command = 'SETPER %d\n' % (archive_interval_seconds / 60)
