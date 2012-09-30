@@ -125,8 +125,9 @@ class Transaction(object):
 #
 import decimal
 def massage(seq):
-    result = [int(i) if isinstance(i, long) or isinstance(i,decimal.Decimal) else i for i in seq]
-    return result
+    # Return the massaged sequence if it exists, otherwise, return None
+    if seq is not None:
+        return [int(i) if isinstance(i, long) or isinstance(i,decimal.Decimal) else i for i in seq]
 
 ########################################################
 #          TESTING

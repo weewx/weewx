@@ -12,6 +12,7 @@ import syslog
 import datetime
 import threading
 import httplib
+import os
 import urllib
 import urllib2
 import socket
@@ -463,14 +464,20 @@ class RESTThread(threading.Thread):
         station_list: An iterable list of RESTStations.
         """
         threading.Thread.__init__(self, name="RESTThread")
+
+        self.archive_db_dict = archive_db_dict
+        self.queue           = queue 
+        self.station_list    = station_list
         # In the strange vocabulary of Python, declaring yourself a "daemon thread"
         # allows the program to exit even if this thread is running:
         self.setDaemon(True)
-        self.archive = weewx.archive.Archive(archive_db_dict)
-        self.queue   = queue # Fifo queue where new records will appear
-        self.station_list = station_list
 
     def run(self):
+
+        # Open up the archive. This cannot be done in the initializer because
+        # then the connection would have been created in a different thread.
+        self.archive = weewx.archive.Archive(self.archive_db_dict)
+
         while True :
             # This will block until something appears in the queue:
             time_ts = self.queue.get()
@@ -543,7 +550,7 @@ if __name__ == '__main__':
           
         Options:
         
-            --today: Publish all of today's day
+            --today: Publish all of today's data
             
             --last: Just do the last archive record. [default]
           """
@@ -589,6 +596,8 @@ if __name__ == '__main__':
         """Publishes records to site 'site' from start_ts to stop_ts. 
         Makes a useful test."""
         
+        archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+
         site_dict = config_dict['StdRESTful'][site]
         site_dict['latitude']  = config_dict['Station']['latitude']
         site_dict['longitude'] = config_dict['Station']['longitude']
@@ -608,11 +617,11 @@ if __name__ == '__main__':
         # Create the queue into which we'll put the timestamps of new data
         queue = Queue.Queue()
         # Start up the thread:
-        thread = RESTThread(archive, queue, [station])
+        thread = RESTThread(archive_db_dict, queue, [station])
         thread.start()
 
         for row in archive.genSql("SELECT dateTime FROM archive WHERE dateTime >=? and dateTime <= ?", start_ts, stop_ts):
-            ts = row['dateTime']
+            ts = row[0]
             print "Posting station %s for time %s" % (stationName, weeutil.weeutil.timestamp_to_string(ts))
             queue.put(ts)
             

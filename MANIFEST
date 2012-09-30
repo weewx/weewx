@@ -22,7 +22,6 @@ bin/weeplot/utilities.py
 bin/weeutil/Moon.py
 bin/weeutil/Sun.py
 bin/weeutil/__init__.py
-bin/weeutil/dbutil.py
 bin/weeutil/ftpupload.py
 bin/weeutil/weeutil.py
 bin/weewx/VantagePro.py
