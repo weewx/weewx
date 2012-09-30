@@ -222,8 +222,11 @@ class My_install_data(install_data):
             # I don't know how to merge older, V1.X configuration files, only
             # newer V2.X ones.
             if old_version_number[0:2] >= ['2','00']:
-                # Any user changes in old_config will overwrite values in new_config
-                # with this merge
+                # Merge the old configuration file into the new file, thus
+                # saving any user modifications.
+                # First, turn interpolation off:
+                old_config.interpolation = False
+                # Now do the merge:
                 new_config.merge(old_config)
                         
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
