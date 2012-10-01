@@ -1192,9 +1192,10 @@ Mutating actions will request confirmation before proceeding.</pre>
 				values that could appear are 0 through 126 mph, a reasonable range. So, for
 				the VP2, there is no real point in checking wind speed.
 			</p>
-			<h3 class="config_section">[StdArchive]</h3>
+			<h3 class="config_section" id="[StdArchive]">[StdArchive]</h3>
 			<p>This section is for configuring <span class="code">StdArchive</span>, the service that stores data in 
-			the databases.</p>
+			the databases. It also binds the database symbolic names to the real 
+			database that will be used.</p>
 			<p class="config_option">archive_database</p>
 			<p>The symbolic name of the database to be used to store the archive 
 			data. This should match a section given in the section 
@@ -1235,8 +1236,8 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<p>The maximum amount of clock drift to tolerate, in seconds, before 
 			resetting the clock. Default is 5.</p>
 			<h3 class="config_section" id="[Databases]">[Databases]</h3>
-			<p>This section binds the symbolic name of a database, to the actual 
-			database service to be used. The symbolic names are given in double 
+			<p>This section lists all the actual 
+			database to be used. The name of each database is given in double 
 			brackets below (for example, <span class="code">[[archive_sqlite]]</span>). The details of the 
 			binding follow. You are free to add new bindings.</p>
 			<p>Note that if you choose the MySQL database it is assumed that you 

@@ -227,7 +227,7 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
             
             start_ts = archivedb.firstGoodStamp()
             if not start_ts:
-                syslog.syslog(syslog.LOG_NOTICE, "filegenerator: No data for to date subreport %s" % (subreport,))
+                syslog.syslog(syslog.LOG_NOTICE, "filegenerator: No data for subreport %s" % (subreport,))
                 return
             stop_ts  = gen_ts if gen_ts else archivedb.lastGoodStamp()
             

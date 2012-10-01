@@ -1,9 +1,5 @@
 TODO before the next release:
 
-Make sure that the values for rain year start and altitude are from the console. 
-
-Check how the MySQL driver responds to a network outage.
-
 Get reconfigure database to work again.
 
 Allow conversion from a metric database for use in the RESTful sites.
@@ -15,10 +11,3 @@ When using UTF8 characters in a template file, either find a way to automaticall
 include the Cheetah directive
   #encoding UTF-8
 automatically, or put in the customizing manual that the user must include it.=======
-Add an ability to do the archive records in software (rather than downloading
-off the logger).
-
-Update the "Customizing guide" reflecting the new engine architecture.
-
-Update the "User's Guide" to update the new config utilities.
-

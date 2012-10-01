@@ -22,33 +22,39 @@ def create(host='localhost', user='', password='', database='', driver='', **kwa
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExists will be thrown."""
     # Open up a connection w/o specifying the database.
-    connect = MySQLdb.connect(host   = host,
-                              user   = user,
-                              passwd = password, **kwargs)
-    cursor = connect.cursor()
-    # An exception will get thrown if the database already exists.
     try:
-        # Now create the database.
-        cursor.execute("CREATE DATABASE %s" % (database,))
-    except _mysql_exceptions.ProgrammingError:
-        # The database already exists. Change the type of exception.
-        raise weedb.DatabaseExists("Database %s already exists" % (database,))
-    finally:
-        cursor.close()
+        connect = MySQLdb.connect(host   = host,
+                                  user   = user,
+                                  passwd = password, **kwargs)
+        cursor = connect.cursor()
+        # An exception will get thrown if the database already exists.
+        try:
+            # Now create the database.
+            cursor.execute("CREATE DATABASE %s" % (database,))
+        except _mysql_exceptions.ProgrammingError:
+            # The database already exists. Change the type of exception.
+            raise weedb.DatabaseExists("Database %s already exists" % (database,))
+        finally:
+            cursor.close()
+    except _mysql_exceptions.OperationalError, e:
+        raise weedb.OperationalError(e)
     
 def drop(host='localhost', user='', password='', database='', driver='', **kwargs):
     """Drop (delete) the specified database."""
     # Open up a connection
-    connect = MySQLdb.connect(host   = host,
-                              user   = user,
-                              passwd = password, **kwargs)
-    cursor = connect.cursor()
     try:
-        cursor.execute("DROP DATABASE %s" % database)
-    except _mysql_exceptions.OperationalError:
-        raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database,))
-    finally:
-        cursor.close()
+        connect = MySQLdb.connect(host   = host,
+                                  user   = user,
+                                  passwd = password, **kwargs)
+        cursor = connect.cursor()
+        try:
+            cursor.execute("DROP DATABASE %s" % database)
+        except _mysql_exceptions.OperationalError:
+            raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database,))
+        finally:
+            cursor.close()
+    except _mysql_exceptions.OperationalError, e:
+        raise weedb.OperationalError(e)
     
 class Connection(weedb.Connection):
     """A database independent connection object."""
@@ -77,8 +83,8 @@ class Connection(weedb.Connection):
         
     def cursor(self):
         """Return a cursor object."""
-        # The implementation of the MySQLdb cursor is so lame we are obliged to include 
-        # a wrapper around it:
+        # The implementation of the MySQLdb cursor is lame enough that we are
+        # obliged to include a wrapper around it:
         return Cursor(self)
     
     def tables(self):
@@ -86,7 +92,8 @@ class Connection(weedb.Connection):
         
         table_list = list()
         try:
-            cursor = self.cursor()
+            # Get a cursor directly from MySQL
+            cursor = self.connection.cursor()
             cursor.execute("""SHOW TABLES;""")
             while True:
                 row = cursor.fetchone()
@@ -104,7 +111,8 @@ class Connection(weedb.Connection):
         None is returned."""
         column_list = list()
         try:
-            cursor = self.cursor()
+            # Get a cursor directly from MySQL:
+            cursor = self.connection.cursor()
             # MySQL throws an exception if you try to show the columns of a
             # non-existing table
             try:

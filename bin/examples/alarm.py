@@ -42,11 +42,11 @@ To avoid a flood of emails, one will only be sent every 3600 seconds (one hour).
 ********************************************************************************
 
 To specify that this new service be loaded and run, it must be added to the
-configuration option service_list, located in sub-section [Engines][[WxEngine]]:
+configuration option service_list, located in sub-section [Engines][[WxEngine]].
 
 [Engines]
   [[WxEngine]]
-    service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReport, examples.alarm.MyAlarm
+    service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.alarm.MyAlarm
 
 ********************************************************************************
 
@@ -93,24 +93,26 @@ class MyAlarm(StdService):
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
             
             # If we got this far, it's ok to start intercepting events:
-            self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)    # NOTE 1
             
         except Exception, e:
             syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set. %s" % e)
             
-    def newArchivePacket(self, event):
-
+    def newArchiveRecord(self, event):
+        """Gets called on a new archive record event."""
+        
         # To avoid a flood of nearly identical emails, this will do
         # the check only if we have never sent an email, or if we haven't
         # sent one in the last self.time_wait seconds:
         if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait :
-            
-            # Evaluate the expression in the context of 'rec'.
+            # Get the new archive record:
+            record = event.record
+            # Evaluate the expression in the context of the event archive record.
             # Sound the alarm if it evaluates true:
-            if eval(self.expression, None, rec):            # NOTE 1
+            if eval(self.expression, None, record):                       # NOTE 2
                 # Sound the alarm!
                 # Launch in a separate thread so it doesn't block the main LOOP thread:
-                t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, event.record))
+                t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, record))
                 t.start()
                 # Record when the message went out:
                 self.last_msg_ts = time.time()
@@ -165,10 +167,11 @@ class MyAlarm(StdService):
         syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)
 
 if __name__ == '__main__':
-           
+    """This section is used for testing the code. """
     import sys
     import configobj
     from optparse import OptionParser
+
 
     usage_string ="""Usage: 
     
@@ -199,7 +202,9 @@ if __name__ == '__main__':
     alarm = MyAlarm(engine, config_dict)
     
     rec = {'extraTemp1': 1.0,
+           'outTemp'   : 38.2,
            'dateTime'  : int(time.time())}
 
-    alarm.newArchivePacket(rec)
+    event = weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=rec)
+    alarm.newArchivePacket(event)
     

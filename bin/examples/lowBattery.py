@@ -49,7 +49,7 @@ configuration option service_list, located in sub-section [Engines][[WxEngine]]:
 
 [Engines]
   [[WxEngine]]
-    service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReport, examples.lowBattery.BatteryAlarm
+    service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.lowBattery.BatteryAlarm
 
 ********************************************************************************
 
@@ -99,7 +99,7 @@ class BatteryAlarm(StdService):
             syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm turned on. Count threshold is %d" % self.count_threshold)
 
             # If we got this far, it's ok to start intercepting events:
-            self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
+            self.bind(weewx.NEW_LOOP_PACKET,    self.newLoopPacket)
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
 
         except Exception, e:
