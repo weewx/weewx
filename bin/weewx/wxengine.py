@@ -893,6 +893,16 @@ def main(EngineClass=StdEngine) :
             time.sleep(60)
             syslog.syslog(syslog.LOG_NOTICE, "wxengine: retrying...")
             
+        except weedb.OperationalError, e:
+            # Caught a database error. Log it, wait 120 seconds, then try again
+            syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught database OperationalError: %s" % e)
+            if options.exit :
+                syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
+                sys.exit(weewx.DB_ERROR)
+            syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 2 minutes then retrying...")
+            time.sleep(120)
+            syslog.syslog(syslog.LOG_NOTICE, "wxengine: retrying...")
+            
         except OSError, e:
             # Caught an OS error. Log it, wait 10 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught OSError: %s" % e)

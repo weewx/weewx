@@ -12,7 +12,7 @@
 """
 import time
 
-__version__="2.0.0a5"
+__version__="2.0.0a6"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -25,6 +25,7 @@ debug = False
 CMD_ERROR    = 2
 CONFIG_ERROR = 3
 IO_ERROR     = 4
+DB_ERROR     = 5
 
 # Constants used to indicate a unit system:
 METRIC = 0x10

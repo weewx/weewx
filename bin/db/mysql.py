@@ -144,7 +144,10 @@ class Cursor(object):
         # MySQL uses '%s' as placeholders, so replace the ?'s with %s
         mysql_string = sql_string.replace('?','%s')
             
-        self.cursor.execute(mysql_string, sql_tuple)
+        try:
+            self.cursor.execute(mysql_string, sql_tuple)
+        except _mysql_exceptions.OperationalError, e:
+            raise weedb.OperationalError(e)
         return self
         
     def fetchone(self):
