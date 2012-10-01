@@ -21,8 +21,8 @@ import weeutil.weeutil
 
 description = """Configures the VantagePro weather station."""
 
-usage="""%prog: config_path [--help] [--info] [--clear] [--set-interval secs] [--set-altitude feet]
-                            [--set-barometer inHg] [--set-bucket code] [--set-rain-year-start month]"""
+usage="""%prog: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
+                            [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
@@ -104,7 +104,7 @@ def info(station):
     
     console_time = weeutil.weeutil.timestamp_to_string(station.getTime())
     
-    print  """VantagePro EEPROM settings:
+    print  """Davis Vantage EEPROM settings:
     
     CONSOLE TYPE:                   %s
     

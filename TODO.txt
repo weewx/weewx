@@ -1,5 +1,7 @@
 TODO before the next release:
 
+Make sure that the values for rain year start and altitude are from the console. 
+
 Check how the MySQL driver responds to a network outage.
 
 Get reconfigure database to work again.

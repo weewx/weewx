@@ -1,7 +1,5 @@
 NEW FEATURES to be added in decreasing order of importance.
 
-Abstract databases to allow the use of a DB server (such as MySQL).
-
 Add ordinate wind descriptions "N, NE, E,", etc. Same with barometer
 trends.
 
