@@ -332,9 +332,8 @@ def backup(filepath):
 setup(name='weewx',
       version=VERSION,
       description='The weewx weather system',
-      long_description="""The weewx weather system manages a Davis VantagePro
-      weather station. It generates plots, statistics, and HTML pages of the
-      current and historical weather""",
+      long_description="""The weewx weather system manages a weather station. """\
+        """It generates plots, statistics, and HTML pages of the current and historical weather""",
       author='Tom Keffer',
       author_email='tkeffer@gmail.com',
       url='http://www.weewx.com',

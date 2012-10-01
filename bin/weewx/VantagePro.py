@@ -7,7 +7,7 @@
 #    $Author$
 #    $Date$
 #
-"""classes and functions for interfacing with a Davis VantagePro or VantagePro2"""
+"""Classes and functions for interfacing with a Davis VantagePro, VantagePro2, or VantageVue weather station"""
 
 import serial
 import socket
@@ -17,6 +17,7 @@ import time
 
 from weewx.crc16 import crc16
 import weeutil.weeutil
+import weewx.units
 import weewx.wxformulas
 import weewx.abstractstation
 
@@ -26,7 +27,7 @@ _resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but i
 
 def loader(config_dict):
 
-    station = VantagePro(**config_dict['VantagePro'])
+    station = Vantage(**config_dict['Vantage'])
     
     return station
 
@@ -38,7 +39,7 @@ class BaseWrapper(object):
     #===============================================================================
 
     def wakeup_console(self, max_tries=3, wait_before_retry=1.2):
-        """Wake up a Davis VantagePro console.
+        """Wake up a Davis Vantage console.
         
         If unsuccessful, an exception of type weewx.WakeupError is thrown"""
     
@@ -66,7 +67,7 @@ class BaseWrapper(object):
                 pass
 
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to wake up console")
-        raise weewx.WakeupError("Unable to wake up VantagePro console")
+        raise weewx.WakeupError("Unable to wake up Vantage console")
 
     def send_data(self, data):
         """Send data to the Davis console, waiting for an acknowledging <ACK>
@@ -82,7 +83,7 @@ class BaseWrapper(object):
         _resp = self.read()
         if _resp != _ack: 
             syslog.syslog(syslog.LOG_ERR, "VantagePro: No <ACK> received from console")
-            raise weewx.WeeWxIOError("No <ACK> received from VantagePro console")
+            raise weewx.WeeWxIOError("No <ACK> received from Vantage console")
     
     def send_data_with_crc16(self, data, max_tries=3) :
         """Send data to the Davis console along with a CRC check, waiting for an acknowledging <ack>.
@@ -108,7 +109,7 @@ class BaseWrapper(object):
                 pass
 
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to pass CRC16 check while sending data")
-        raise weewx.CRCError("Unable to pass CRC16 check while sending data to VantagePro console")
+        raise weewx.CRCError("Unable to pass CRC16 check while sending data to Vantage console")
 
     def send_command(self, command, max_tries=3, wait_before_retry=1.2):
         """Send a command to the console, then look for the string 'OK' in the response.
@@ -313,8 +314,8 @@ class EthernetWrapper(BaseWrapper):
 #                           Class VantagePro
 #===============================================================================
 
-class VantagePro(weewx.abstractstation.AbstractStation):
-    """Class that represents a connection to a VantagePro console.
+class Vantage(weewx.abstractstation.AbstractStation):
+    """Class that represents a connection to a Davis Vantage console.
     
     The connection will be opened after initialization"""
 
@@ -328,7 +329,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
     rain_bucket_dict      = {0: "0.01 inches", 1: "0.2 MM", 2: "0.1 MM"}
     
     def __init__(self, **vp_dict) :
-        """Initialize an object of type VantagePro.
+        """Initialize an object of type Vantage.
         
         NAMED ARGUMENTS:
         
@@ -337,7 +338,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         port: The serial port of the VP. [Required if serial/USB
         communication]
 
-        host: The VantagePro network host [Required if Ethernet communication]
+        host: The Vantage network host [Required if Ethernet communication]
         
         baudrate: Baudrate of the port. [Optional. Default 19200]
 
@@ -370,7 +371,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         self.save_monthRain = None
 
         # Get an appropriate port, depending on the connection type:
-        self.port = VantagePro._port_factory(vp_dict)
+        self.port = Vantage._port_factory(vp_dict)
 
         # Open it up:
         self.port.openPort()
@@ -400,7 +401,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
                 
 
     def genDavisLoopPackets(self, N=1):
-        """Generator function to return N LoopPacket objects from a VantagePro console
+        """Generator function to return N LoopPacket objects from a Vantage console
         
         N: The number of packets to generate [default is 1]
         
@@ -449,7 +450,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
             ntries = 1
 
     def genArchiveRecords(self, since_ts):
-        """A generator function to return archive packets from a VantagePro station.
+        """A generator function to return archive packets from a Davis Vantage station.
         
         since_ts: A timestamp. All data since (but not including) this time will be returned.
         Pass in None for all data
@@ -551,7 +552,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         raise weewx.RetriesExceeded("While getting console time")
             
     def setTime(self, newtime_ts):
-        """Set the clock on the Davis VantagePro console
+        """Set the clock on the Davis Vantage console
 
         newtime_ts: The time the internal clock should be set to in unix epoch time."""
         
@@ -598,21 +599,21 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain bucket type set to %d (%s)" %(self.rain_bucket_type, self.rain_bucket_size))
 
-    def setRainSeasonStart(self, new_rain_season_start):
+    def setRainYearStart(self, new_rain_year_start):
         """Set the start of the rain season.
         
-        new_rain_season_start: Must be in the closed range 1...12
+        new_rain_year_start: Must be in the closed range 1...12
         """
-        if new_rain_season_start not in range(1,13):
-            raise weewx.ViolatedPrecondition("Invalid rain season start %d" % (new_rain_season_start,))
+        if new_rain_year_start not in range(1,13):
+            raise weewx.ViolatedPrecondition("Invalid rain season start %d" % (new_rain_year_start,))
         
         # Tell the console to put one byte in hex location 0x2C
         self.port.send_data("EEBWR 2C 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(new_rain_season_start), max_tries=1)
+        self.port.send_data_with_crc16(chr(new_rain_year_start), max_tries=1)
 
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain season start set to %d" % (self.rain_season_start,))
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain year start set to %d" % (self.rain_year_start,))
 
     def setBarData(self, new_barometer_inHg, new_altitude_foot):
         """Set the internal barometer calibration and altitude settings in the console.
@@ -630,7 +631,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Set barometer calibration.")
         
     def setArchiveInterval(self, archive_interval_seconds):
-        """Set the archive interval of the VantagePro.
+        """Set the archive interval of the Vantage.
         
         archive_interval_seconds: The new interval to use in minutes. Must be one of
         60, 300, 600, 900, 1800, 3600, or 7200 
@@ -647,7 +648,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (self.archive_interval_seconds,))
     
     def clearLog(self):
-        """Clear the internal archive memory in the VantagePro."""
+        """Clear the internal archive memory in the Vantage."""
         for unused_count in xrange(self.max_tries):
             try:
                 self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
@@ -728,7 +729,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         # packet.
     
         if packet['usUnits'] != weewx.US :
-            raise weewx.ViolatedPrecondition("Unit system on the VantagePro must be US Customary Units only")
+            raise weewx.ViolatedPrecondition("Unit system on the Vantage must be US Customary Units only")
     
         record = {}
         
@@ -776,7 +777,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         returns: A dictionary with the values in US units."""
     
         if packet['usUnits'] != weewx.US :
-            raise weewx.ViolatedPrecondition("Unit system on the VantagePro must be U.S. units only")
+            raise weewx.ViolatedPrecondition("Unit system on the Vantage must be U.S. units only")
     
         record = {}
         
@@ -802,7 +803,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         return record
     
     #===========================================================================
-    #              VantagePro utility functions
+    #              Davis Vantage utility functions
     #===========================================================================
     
     def _setup(self):
@@ -822,9 +823,10 @@ class VantagePro(weewx.abstractstation.AbstractStation):
 
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
-        self.rain_season_start = self._getEEPROM_value(0x2C)[0]
+        self.rain_year_start   = self._getEEPROM_value(0x2C)[0]
         self.archive_interval  = self._getEEPROM_value(0x2D)[0] * 60
-        self.altitude          = self._getEEPROM_value(0x0F, "<H")[0] 
+        self.altitude          = self._getEEPROM_value(0x0F, "<H")[0]
+        self.altitude_vt       = weewx.units.ValueTuple(self.altitude, "foot", "group_altitude") 
 
         barometer_unit_code   =  unit_bits & 0x03
         temperature_unit_code = (unit_bits & 0x0C) >> 3
@@ -835,13 +837,13 @@ class VantagePro(weewx.abstractstation.AbstractStation):
         self.wind_cup_type    = (setup_bits & 0x08) >> 3
         self.rain_bucket_type = (setup_bits & 0x30) >> 4
 
-        self.barometer_unit   = VantagePro.barometer_unit_dict[barometer_unit_code]
-        self.temperature_unit = VantagePro.temperature_unit_dict[temperature_unit_code]
-        self.altitude_unit    = VantagePro.altitude_unit_dict[altitude_unit_code]
-        self.rain_unit        = VantagePro.rain_unit_dict[rain_unit_code]
-        self.wind_unit        = VantagePro.wind_unit_dict[wind_unit_code]
-        self.wind_cup_size    = VantagePro.wind_cup_dict[self.wind_cup_type]
-        self.rain_bucket_size = VantagePro.rain_bucket_dict[self.rain_bucket_type]
+        self.barometer_unit   = Vantage.barometer_unit_dict[barometer_unit_code]
+        self.temperature_unit = Vantage.temperature_unit_dict[temperature_unit_code]
+        self.altitude_unit    = Vantage.altitude_unit_dict[altitude_unit_code]
+        self.rain_unit        = Vantage.rain_unit_dict[rain_unit_code]
+        self.wind_unit        = Vantage.wind_unit_dict[wind_unit_code]
+        self.wind_cup_size    = Vantage.wind_cup_dict[self.wind_cup_type]
+        self.rain_bucket_size = Vantage.rain_bucket_dict[self.rain_bucket_type]
         
         # Adjust the translation maps to reflect the rain bucket size:
         if self.rain_bucket_type == 1:
@@ -906,7 +908,7 @@ class VantagePro(weewx.abstractstation.AbstractStation):
 #                         LOOP packet helper functions
 #===============================================================================
 
-# A tuple of all the types held in a VantagePro2 LOOP packet in their native order.
+# A tuple of all the types held in a Vantage LOOP packet in their native order.
 vp2loop = ('loop',            'loop_type',     'packet_type', 'next_record', 'barometer', 
            'inTemp',          'inHumidity',    'outTemp', 
            'windSpeed',       'windSpeed10',   'windDir', 

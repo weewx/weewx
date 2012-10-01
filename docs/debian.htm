@@ -65,20 +65,27 @@
 		<h3>Configure</h3>
 		<p>
 			Edit the configuration file <span class="code">/home/weewx/weewx.conf</span>.
-			Pay particular attention to which serial port your weather station uses (option <span class="code">port</span>), the archive interval (option <span class="code"> archive_interval</span>), and the altitude of your station (option <span class="code">altitude</span>).
-		</p>
+			Pay particular attention to which serial port your weather station uses (option <span class="code">port</span>).</p>
 		<p>
-			Then run the configuration program to configure your hardware:
-		</p>
+			If you have a weather station from the Davis Vantage series, all 
+			other data will be downloaded from your hardware, including 
+			altitude, archive interval, and the start of your rain year. If you 
+			have not set these, you can either do so by following the 
+			instructions in the manual that came with your weather station, or 
+			by using the configuration utility <span class="code">
+			<a href="usersguide.htm#Configuring_your_Davis_console">config_vp.py</a></span>, 
+			which is included with <span class="code">weewx</span>. To see how 
+			to run <span class="code">config_vp.py</span>:</p>
 		<p class="tty">
-			/home/weewx/bin/configure.py /home/weewx/weewx.conf --configure
-		</p>
+			cd /home/weewx<br />
+			./bin/config_vp.py weewx.conf --help</p>
 		<h3>Running</h3>
 		<p>
 			Now you can either run the main program from the command line:
 		</p>
 		<p class="tty">
-			/home/weewx/bin/weewxd.py /home/weewx/weewx.conf
+			cd /home/weewx<br />
+			./bin/weewxd.py weewx.conf
 		</p>
 		<p>
 			Or, if you prefer to run as a daemon, then do the following:

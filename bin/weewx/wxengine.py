@@ -148,11 +148,7 @@ class StdEngine(object):
         
         # Set up the callback dictionary:
         self.callbacks = dict()
-        if hasattr(self.console, 'hardware_name'):
-            hardware = self.console.hardware_name
-        else:
-            hardware = 'Unknown'
-        self.stn_info = weewx.station.StationInfo(hardware=hardware, **config_dict['Station'])
+        self.stn_info = weewx.station.StationInfo(self.console, **config_dict['Station'])
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""

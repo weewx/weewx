@@ -16,15 +16,28 @@ import weewx.units
 class StationInfo(object):
     """Readonly class with static station information."""
     
-    def __init__(self, **stn_dict):
-        """Extracts info from the stn_dict and stores it in self."""
-        self.latitude_f  = float(stn_dict['latitude'])
-        self.longitude_f = float(stn_dict['longitude'])
-        self.location    = stn_dict.get('location', 'Unknown')
-        self.hardware    = stn_dict.get('hardware', stn_dict.get('station_type', 'Unknown'))
-        altitude_t       = weeutil.weeutil.option_as_list(stn_dict.get('altitude', (None, None)))
-        self.altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-        self.rain_year_start = int(stn_dict.get('rain_year_start', 1))
+    def __init__(self, console=None, **stn_dict):
+        """Extracts info from the console and stn_dict and stores it in self."""
+        
+        if console and hasattr(console, "altitude_vt"):
+            self.altitude_vt = console.altitude_vt
+        else:
+            altitude_t       = weeutil.weeutil.option_as_list(stn_dict.get('altitude', (None, None)))
+            self.altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+
+        if console and hasattr(console, 'hardware_name'):
+            self.hardware = console.hardware_name
+        else:
+            self.hardware = stn_dict.get('station_type', 'Unknown')
+
+        if console and hasattr(console, 'rain_year_start'):
+            self.rain_year_start = getattr(console, 'rain_year_start')
+        else:
+            self.rain_year_start = int(stn_dict.get('rain_year_start', 1))
+
+        self.latitude_f      = float(stn_dict['latitude'])
+        self.longitude_f     = float(stn_dict['longitude'])
+        self.location        = stn_dict.get('location', 'Unknown')
         self.week_start      = int(stn_dict.get('week_start', 6))
 
 class Station(object):

@@ -13,11 +13,6 @@
 		<link href="weewx_docs.css" rel="stylesheet" />
 		<!-- JavaScript -->
 		<script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
-		<style type="text/css">
-		.style1 {
-			font-family: "Times New Roman";
-		}
-		</style>
 	</head>
 	<body>
 		<h1 class="title">User's guide to the <span class="code">weewx</span> weather system <br />
@@ -134,12 +129,12 @@
 				Supported hardware</h2>
 			<ul>
 				<li>Davis
+				&quot;Vantage&quot; series of weather stations, including the
 				<a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">
-				VantagePro2</a><span class="style1">™</span> and
-				<a href="http://www.vantagevue.com/">VantageVue</a><span class="style1">™</span> 
-				weather stations, using serial, USB, or
+				VantagePro2</a>&trade; and
+				<a href="http://www.vantagevue.com/">VantageVue</a>&trade;, using serial, USB, or
 				<a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">
-				WeatherLinkIP</a><span class="style1">™</span> connections.
+				WeatherLinkIP</a>&trade; connections.
 					Both the &quot;Rev A&quot; (firmware dated before 22 April 2002) and &quot;Rev B&quot;
 					versions are supported.
 				</li>
@@ -173,11 +168,6 @@
 					(Version 1.1.6 or greater) Also known as PIL, this is included in many Python
 					distributions.
 				</li>
-			</ul>
-			<p>
-				For the Davis instruments with serial or USB connectors you will 
-				also need:</p>
-			<ul>
 				<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version
 					2.3 or greater) Manages the serial connection to the weather station.</li>
 			</ul>
@@ -194,7 +184,7 @@
 			<ul>
 				<li><a href="https://sourceforge.net/projects/mysql-python/">
 				MySQLdb for Python</a> (Version 1.2.3 or greater). This is the 
-				DBAPI2 adapter for MySQL.</li>
+				Python DBAPI2 adapter for MySQL.</li>
 			</ul>
 			<p>
 				Finally, there is one optional package:</p>
@@ -256,8 +246,9 @@
 			</p>
 			<p>
 				As noted above, if you choose to install the optional package <span class="code">pyephem</span>,
-				then it will have to be installed using <span class="code"><a href="http://pypi.python.org/pypi/pip">pip</a></span>.
-				See the pip website for instructions on how to install this tool. Once installed, then installing
+				then it will have to be installed using <span class="code">pip</span>.
+				See the <a href="http://pypi.python.org/pypi/pip">pip</a> website for instructions on how to install
+				<span class="code">pip</span>. Once installed, then installing
 				<span class="code">pyephem</span> is easy:
 			</p>
 			<pre>sudo pip install pyephem</pre>
@@ -532,7 +523,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				with 512 MB of memory it took a little over 4 minutes for a year and a half
 				(25 MB) of data.
 			</p>
-			<h2>Configuring your Davis Vantage console</h2>
+			<h2 id="Configuring_your_Davis_console">Configuring your Davis Vantage console</h2>
 			<p>
 				Weewx comes with a configuration utlity, <span class="code">config_vp.py</span>,
 				that can set many of the on-board EEPROM constants in the Davis 
@@ -689,7 +680,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 				--set-bucket=2</p>
 			<h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
 			<p>
-				Station specific information is set in the configuration file <em> <span class="code">$WEEWX_ROOT/em>/weewx.conf</span>. (There is another
+				Station specific information is set in the configuration file <em> <span class="code">$WEEWX_ROOT/weewx.conf</span></em>. (There is another
 				configuration file <span class="code">skin.conf</span> for presentation-specific
 				options, which is described in a separate document <em> <a href="customizing.htm">Customizing <span class="code">weewx</span></a> </em>under section <em> <a href="customizing.htm#The_Standard_skin_configuration_file">Reference:
 				The standard skin configuration file</a></em>.)
@@ -715,21 +706,20 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<h3>General</h3>
 			<p>
-				TThe options declared at the top are not actually part of any section. There
-				are three:
-			</p>
+				The options declared at the top are not actually part of any 
+				section.</p>
 			<p class="config_option">
 				debug
 			</p>
 			<p>
-				SSet to 1 to have the program perform extra debug checks, as well as emit
+				Set to 1 to have the program perform extra debug checks, as well as emit
 				extra information in the log file. Otherwise, set to 0. Default is 0 (no debug).
 			</p>
 			<p class="config_important">
 				WEEWX_ROOT
 			</p>
 			<p>
-				Set to the root directory of the <span class="code">weewx</span> data file
+				Set to the root directory of the <span class="code">weewx</span> file
 				hierarchy for this station, nominally &#39;<span class="code">/home/weewx</span>&#39;.
 				The <span class="code">weewx</span> data subdirectories <span class="code">skins</span>, <span class="code">archive</span>, and <span class="code">public_html</span>
 				are expected to be found here. This value will be set automatically by the setup
@@ -766,7 +756,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 				western
 				hemispheres, respectively. Required. No default.
 				</p>
-			<p class="config_option">altitude</p>
+			<p class="config_option"><span class="config_important">altitude</span></p>
 			<p>
 				Normally the station altitude is downloaded from your hardware, 
 				but not all stations support this. Set to the altitude of the 
@@ -774,7 +764,8 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<pre>altitude = 700, foot</pre>
 			<p class="config_option">
-				rain_year_start
+				<span class="config_important">rain_year_start
+			</span>
 			</p>
 			<p>
 				Normally the start of the rain year is downloaded from your hardware, 
@@ -794,12 +785,13 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<p>
 				Set to the type of hardware you are using. It must match a 
 				section name below. For this version, the only two options 
-				accepted are &#39;<span class="code">VantagePro</span>&#39; or &#39;<span class="code">WMR-USB</span>&#39;. Required.
+				accepted are &#39;<span class="code">Vantage</span>&#39; or &#39;<span class="code">WMR-USB</span>&#39;. Required.
 			</p>
-			<h3 class="config_section">[VantagePro]</h3>
+			<h3 class="config_section">[Vantage]</h3>
 			<p>
-				This section is for options relating to the VantagePro hardware.
-			</p>
+				This section is for options relating to the 
+				Davis Vantage series of hardware (<em>VantagePro, VantagePro2</em> 
+				or <em>VantageVue</em>).</p>
 			<p class="config_important">
 				type
 			</p>
@@ -1082,17 +1074,17 @@ Mutating actions will request confirmation before proceeding.</pre>
 				<span class="code">Weewx</span> will try up to this many times to FTP a file
 				up to your server before giving up. Default is 3.
 			</p>
-			<h3 class="config_section">[StdConvert]</h3>
+			<h3 class="config_section" id="[StdConvert]">[StdConvert]</h3>
 			<p>This section is for configuring the <span class="code">StdConvert</span> 
-			service. It acts as a filter, converting the unit system used in the 
-			input data to a target output unit system. Everything that follows, 
+			service. This service acts as a filter, converting the unit system 
+			coming off your hardware to a target output unit system. Everything that follows, 
 			including the archiving service, will use the target system. Hence, 
 			your data will be stored in the database in the target system. <em>Once chosen, it cannot be changed!</em> Note that whatever you choose here, it does not affect your 
 			options 
 			for the unit system to be used for <i>reporting</i>.</p>
 			<p>Users of the Davis Vantage hardware who wish to store their data 
 			in U.S. Customary units do not need to run this service as the Davis 
-			instruments already emit the right units. However, it doesn&#39;t hurt 
+			instruments already U.S. Customary. However, it doesn&#39;t hurt 
 			to run it anyway.</p>
 			<p class="config_option">target_unit</p>
 			<p>Set to either &#39;<span class="code">US</span>&#39; or &#39;<span class="code">METRIC</span>&#39;. 
@@ -1134,7 +1126,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 				Because this service is normally run after <span class="code">
 				StdConvert</span>, the units to be used should be the 
 				same as the target unit system chosen in <span class="code">
-				StdConvert</span>. It is also important that the calibration 
+				<a href="#[StdConvert]">StdConvert</span></a>. It is also important that the calibration 
 				service, <span class="code">StdCalibrate</span>, be run before
 				the archiving service <span class="code">StdArchive</span>, so that it is the
 				corrected data that is stored.
@@ -1156,11 +1148,13 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<h4 class="config_section">[[MinMax]]</h4>
 			<p>
-				In this section you list the observation types you wish to have checked,
-				along with their minimum and maximum values. The units should be in the native
-				units of the weather station hardware (<em>e.g.</em>, US Customary in the case
-				of the Davis VantagePro2). For example,
+				In this section you list the observation types you wish to have 
+				checked, along with their minimum and maximum values. The units 
+				should be in <em>the same unit system as specified in section
+				<span class="code"><a href="#[StdConvert]">StdConvert</a></span> above</em>. 
 			</p>
+			<p>
+				Example, 			</p>
 			<p class="tty">
 				[[MinMax]]
 				<br />
@@ -1177,9 +1171,19 @@ Mutating actions will request confirmation before proceeding.</pre>
 				through 100%.
 			</p>
 			<p>
-				Both LOOP and archive data will be checked. It is important that the quality
-				control service be run <em>after</em> the calibration service <span class="code">StdCalibrate</span> and <em>before</em> the archiving service <span class="code">StdArchive</span>, so that it is the calibrated data that
-				is checked and then stored.
+				Both LOOP and archive data will be checked.
+			</p>
+			<p>
+				Because this service is normally run after <span class="code">
+				StdConvert</span>, the units to be used should be the 
+				same as the target unit system chosen in 
+				<a href="#[StdConvert]"> <span class="code">
+				StdConvert</span></a>. It is also important that the calibration 
+				service, <span class="code">StdCalibrate</span>, be run after
+				<span class="code">StdCalibrate</span> and before
+				the archiving service <span class="code">StdArchive</span>, so that it is the
+				calibrated and corrected data that is stored.
+			
 			</p>
 			<p>
 				Knowing the details of how your hardware encodes data helps to minimize the
@@ -1194,12 +1198,12 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<p class="config_option">archive_database</p>
 			<p>The symbolic name of the database to be used to store the archive 
 			data. This should match a section given in the section 
-			<span class="code">[Databases]</span> 
+			<span class="code"><a href="#[Databases]">[Databases]</a></span> 
 			below. </p>
 			<p class="config_option">stats_database</p>
 			<p>The symbolic name of the database to be used to store the 
 			statistical data. This should match a section given in the section 
-			<span class="code">[Databases]</span> below.</p>
+			<span class="code"><a href="#[Databases]">[Databases]</a></span> below.</p>
 			<p class="config_option">
 				archive_delay
 			</p>
@@ -1230,7 +1234,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<p class="config_option">max_drift</p>
 			<p>The maximum amount of clock drift to tolerate, in seconds, before 
 			resetting the clock. Default is 5.</p>
-			<h3 class="config_section">[Databases]</h3>
+			<h3 class="config_section" id="[Databases]">[Databases]</h3>
 			<p>This section binds the symbolic name of a database, to the actual 
 			database service to be used. The symbolic names are given in double 
 			brackets below (for example, <span class="code">[[archive_sqlite]]</span>). The details of the 
@@ -1546,7 +1550,7 @@ Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </pre>
 			<span class="code">&lt;enter&gt;</span> key. It should echo back
 			<span class="code">TEST</span>.</p>
 			<p>If this works, then you have established connectivity with the 
-			Davis and the problem must lie somewhere else.</p>
+			Davis and the problem must lie elsewhere.</p>
 			<h3>Tips on a reliable system</h3>
 			<p>
 				If you are having problems keeping your weather station up for long periods
@@ -1780,7 +1784,7 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 				</li>
 				<li>
 					A largely stateless design style. For example, many of the processing
-					routines read their own data from the database, rather than caching it and
+					routines read the data they directly from the database, rather than caching it and
 					sharing with other processing routines. While this means the same data may
 					be read multiple times, it also means the only point of possible cache incoherence
 					is through the database, where transactions are easily controlled. This
@@ -1930,7 +1934,10 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 					<td>A dictionary with all the data necessary to bind to a 
 					database. An example for sqlite would be <span class="code">
 					{&#39;driver&#39; : &#39;db.sqlite&#39;, &#39;root&#39;:&#39;/home/weewx&#39;, 
-					&#39;database&#39;:&#39;archive/weewx.sdb&#39;}</span></td>
+					&#39;database&#39;:&#39;archive/weewx.sdb&#39;}</span>, an 
+					example for MySQL would be <span class="code">{'driver' : 
+					'db.mysql', 'host': 'localhost', 'user' : 'weewx', 
+					'password' : 'mypassword', 'database' : 'weewx'}</span>.</td>
 				</tr>
 			</table>
 			<h2>Units</h2>
@@ -1940,15 +1947,13 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 			</p>
 			<ol>
 				<li>
-					On the weather station. As far as I know, the Davis VantagePro series
+					On the weather station. As far as I know, the Davis 
+					Vantage series
 					supports only U.S. Customary units internally.
 					The Oregon Scientific WMR-USB series uses an odd mix of US 
 					and metric.</li>
 				<li>
-					In the database. The unit system of any individual record is indicated
-					by the &quot;<span class="code">usUnits</span>&quot; field. The numerical value 1
-					indicates U.S. Customary, 16 indicates Metric. New varients 
-					may be added in the future. Weewx supports either.</li>
+					In the database. Either US or Metric can be used.</li>
 				<li>
 					In the presentation (i.e., html and image files).
 				</li>
@@ -1956,7 +1961,7 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 			<p>
 				The general strategy is that measurements are converted by 
 				service <span class="code">StdConvert</span> as they come off 
-				the instrument into a target unit system, then stored internally in 
+				the weather station into a target unit system, then stored internally in 
 				the database. Then, as they come off the database to be used for 
 				a report, they are converted into a target unit, specified by 
 				the skin.

@@ -8,7 +8,7 @@
 #    $Author$
 #    $Date$
 #
-"""Command line utility for configuring the Davis VantagePro"""
+"""Command line utility for configuring the Davis Vantage series of weather stations"""
 
 import optparse
 import syslog
@@ -19,7 +19,7 @@ import configobj
 import weewx.VantagePro
 import weeutil.weeutil
 
-description = """Configures the VantagePro weather station."""
+description = """Configures the Davis Vantage weather station."""
 
 usage="""%prog: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
                             [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM]"""
@@ -75,7 +75,7 @@ def main():
     syslog.syslog(syslog.LOG_INFO, "Using configuration file %s." % config_path)
 
     # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
+    station = weewx.VantagePro.Vantage(**config_dict['Vantage'])
 
     if options.info:
         info(station)
@@ -93,7 +93,7 @@ def main():
         set_rain_year_start(station, options.set_rain_year_start)
            
 def info(station):
-    """Query the configuration of the VantagePro, printing out status information"""
+    """Query the configuration of the Vantage, printing out status information"""
     
     print "Querying..."
     
@@ -125,7 +125,7 @@ def info(station):
       Wind:                         %s
       """ % (station.hardware_name, _firmware_date,
              station.archive_interval, station.altitude, station.altitude_unit,
-             station.wind_cup_size, station.rain_bucket_size, station.rain_season_start, console_time,
+             station.wind_cup_size, station.rain_bucket_size, station.rain_year_start, console_time,
              station.barometer_unit, station.temperature_unit, 
              station.rain_unit, station.wind_unit)
     try:
@@ -242,7 +242,7 @@ def set_bucket(station, new_bucket_type):
     print "Old rain bucket type is %d (%s), new one is %d (%s)." % (station.rain_bucket_type, 
                                                                     station.rain_bucket_size,
                                                                     new_bucket_type, 
-                                                                    weewx.VantagePro.VantagePro.rain_bucket_dict[new_bucket_type])
+                                                                    weewx.VantagePro.Vantage.rain_bucket_dict[new_bucket_type])
     if station.rain_bucket_type == new_bucket_type:
         print "Old and new bucket types are the same. Nothing done."
     else:
@@ -260,20 +260,20 @@ def set_bucket(station, new_bucket_type):
 
 def set_rain_year_start(station, rain_year_start):
         
-    print "Old rain season start is %d, new one is %d." % (station.rain_season_start, rain_year_start)
+    print "Old rain season start is %d, new one is %d." % (station.rain_year_start, rain_year_start)
 
-    if station.rain_season_start == rain_year_start:
+    if station.rain_year_start == rain_year_start:
         print "Old and new rain season starts are the same. Nothing done."
     else:
         print "Proceeding will change the rain season start."
         ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
         if ans == 'Y' :
             try:
-                station.setRainSeasonStart(rain_year_start)
+                station.setRainYearStart(rain_year_start)
             except StandardError, e:
                 print >>sys.stderr, "Unable to set new rain year start. Reason:\n\t****", e
             else:
-                print "Rain season start now set to %d." % (station.rain_season_start,)
+                print "Rain year start now set to %d." % (station.rain_year_start,)
         else:
             print "Nothing done."
 
