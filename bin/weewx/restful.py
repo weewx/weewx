@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -460,20 +460,20 @@ class RESTThread(threading.Thread):
     Basically, it watches a queue, and if anything appears in it, it publishes it.
     The queue should be populated with the timestamps of the data records to be published.
     """
-    def __init__(self, archive_db_dict, queue, station_list):
+    def __init__(self, archive_db_dict, queue, protocol_list):
         """Initialize an instance of RESTThread.
         
         archive_db_dict: The database dictionary for the archive database  
         
         queue: An instance of Queue.Queue where the timestamps will appear
 
-        station_list: An iterable list of RESTStations.
+        protocol_list: An iterable list of RESTful upload sites.
         """
         threading.Thread.__init__(self, name="RESTThread")
 
         self.archive_db_dict = archive_db_dict
         self.queue           = queue 
-        self.station_list    = station_list
+        self.protocol_list   = protocol_list
         # In the strange vocabulary of Python, declaring yourself a "daemon thread"
         # allows the program to exit even if this thread is running:
         self.setDaemon(True)
@@ -497,38 +497,37 @@ class RESTThread(threading.Thread):
             time_str = weeutil.weeutil.timestamp_to_string(time_ts)
             
             # Cycle through all the RESTful stations in the list:
-            # TODO: Is this the best variable name?
-            for station in self.station_list:
+            for protocol in self.protocol_list:
     
                 # Post the data to the upload site. Be prepared to catch any exceptions:
                 try :
-                    station.postData(self.archive, time_ts)
+                    protocol.postData(self.archive, time_ts)
                 # The urllib2 library throws exceptions of type urllib2.URLError, a subclass
                 # of IOError. Hence all relevant exceptions are caught by catching IOError.
                 # Starting with Python v2.6, socket.error is a subclass of IOError as well,
                 # but we keep them separate to support V2.5:
                 except (IOError, socket.error), e:
-                    syslog.syslog(syslog.LOG_ERR, "restful: Unable to publish record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_ERR, "restful: Unable to publish record %s to %s station %s" % (time_str, protocol.site, protocol.station))
                     syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
                     if hasattr(e, 'reason'):
                         syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Reason: %s" % e.reason)
                     if hasattr(e, 'code'):
                         syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Error code: %s" % e.code)
                 except SkippedPost, e:
-                    syslog.syslog(syslog.LOG_DEBUG, "restful: Skipped record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_DEBUG, "restful: Skipped record %s to %s station %s" % (time_str, protocol.site, protocol.station))
                     syslog.syslog(syslog.LOG_DEBUG, "   ****  %s" % (e,))
                 except httplib.HTTPException, e:
-                    syslog.syslog(syslog.LOG_ERR, "restful: HTTP error from server. Skipped record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_ERR, "restful: HTTP error from server. Skipped record %s to %s station %s" % (time_str, protocol.site, protocol.station))
                     syslog.syslog(syslog.LOG_ERR, "   ****  %s" % (e,))
                 except Exception, e:
-                    syslog.syslog(syslog.LOG_CRIT, "restful: Unrecoverable error when posting record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_CRIT, "restful: Unrecoverable error when posting record %s to %s station %s" % (time_str, protocol.site, protocol.station))
                     syslog.syslog(syslog.LOG_CRIT, "   ****  %s" % (e,))
                     weeutil.weeutil.log_traceback("   ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "   ****  Thread terminating.")
                     self.archive.close()
                     raise
                 else:
-                    syslog.syslog(syslog.LOG_INFO, "restful: Published record %s to %s station %s" % (time_str, station.site, station.station))
+                    syslog.syslog(syslog.LOG_INFO, "restful: Published record %s to %s station %s" % (time_str, protocol.site, protocol.station))
 
 
 #===============================================================================
