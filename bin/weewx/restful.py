@@ -611,11 +611,10 @@ if __name__ == '__main__':
         
         # Instantiate an instance of the class that implements the
         # protocol used by this site:
-        obj_class = 'weewx.restful.' + site_dict['protocol']
         try:
-            station = weeutil.weeutil._get_object(obj_class, site, **site_dict)
+            station = weeutil.weeutil._get_object(site_dict['protocol'], site, **site_dict)
         except Exception:
-            print "Unable to instantiate %s" % obj_class
+            print "Unable to instantiate %s" % (site_dict['protocol'],)
             raise 
 
         # Create the queue into which we'll put the timestamps of new data

@@ -463,6 +463,9 @@ class Converter(object):
         The source dictionary must include the key 'usUnits' in order for the
         converter to figure out what unit system it is in.
         
+        The output dictionary will contain no information about the unit
+        system (that is, it will not contain a 'usUnits' entry).
+        
         Example: convert a dictionary which is in the metric unit system into US units
         
         >>> # Construct a default converter, which will be to US units
