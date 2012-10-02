@@ -12,13 +12,11 @@ import syslog
 import datetime
 import threading
 import httplib
-import os
 import urllib
 import urllib2
 import socket
 import time
 
-import weedb
 import weewx.archive
 import weewx.units
 import weeutil.weeutil
@@ -87,16 +85,15 @@ class REST(object):
 
         # All these online weather sites require US units. 
         if datadict['usUnits'] == weewx.US:
+            # It's already in US units.
             return datadict
+        else:
+            # It's in something else. Perform the conversion
+            datadict_us = weewx.units.StdUnitConverters[weewx.US].convertDict(datadict)
+            # Add the new unit system
+            datadict_us['usUnits'] = weewx.US
+            return datadict_us
         
-        # It's in something other than US units. We need to perform a conversion
-        # with US units as the target:
-        converted_datadict = weewx.units.StdUnitConverters[weewx.US].convertDict(datadict)
-        # Add the new unit system
-        converted_datadict['usUnits'] = weewx.US
-        # And return that:
-        return converted_datadict
-    
 #===============================================================================
 #                             class Ambient
 #===============================================================================
@@ -304,9 +301,22 @@ class CWOP(REST):
         # Get the data record for this time:
         _record = self.extractRecordFrom(archive, time_ts)
 
+        # Send it to its destination:
+        self.sendRecord(_record)
+
+        self._lastpost = time_ts
+
+    def sendRecord(self, record):
+        """This method sends the record to its destination.
+        If you have some exotic setup, such as a ham radio TNC, it
+        can be overridden and customized to send the record out whatever
+        port it needs to go.
+        
+        This version sends it out a socket."""
+        
         # Get the login and packet strings:
         _login = self.getLoginString()
-        _tnc_packet = self.getTNCPacket(_record)
+        _tnc_packet = self.getTNCPacket(record)
 
         # Get a socket connection:
         _sock = self._get_connect()
@@ -321,10 +331,7 @@ class CWOP(REST):
             _sock.close()
         except:
             pass
-
-        self._lastpost = time_ts
-        
-
+    
     def getLoginString(self):
         login = "user %s pass %s vers weewx %s\r\n" % (self.station, self.passcode, weewx.__version__ )
         return login
@@ -391,7 +398,6 @@ class CWOP(REST):
                      baro_str + humid_str + radiation_str + equipment_str + "\r\n"
 
         return tnc_packet
-    
 
     def _get_connect(self):
         
@@ -533,7 +539,6 @@ if __name__ == '__main__':
            
     import sys
     import configobj
-    import os.path
     from optparse import OptionParser
     import Queue
     
