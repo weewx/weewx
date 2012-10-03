@@ -79,7 +79,7 @@ class Connection(weedb.Connection):
             # exception information. Tack it on, in case it might be useful.
             raise weedb.OperationalError(str(e) + " while opening database '%s'" % (database,))
 
-        weedb.Connection.__init__(self, connection, database)
+        weedb.Connection.__init__(self, connection, database, 'mysql')
         
     def cursor(self):
         """Return a cursor object."""
@@ -129,6 +129,10 @@ class Connection(weedb.Connection):
             cursor.close()
         # If there are no columns (which means the table did not exist) return None
         return column_list if column_list else None
+    
+    def begin(self):
+        """Begin a transaction."""
+        self.connection.begin()
     
 class Cursor(object):
     """A wrapper around the MySQLdb cursor object"""

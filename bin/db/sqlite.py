@@ -69,7 +69,7 @@ class Connection(weedb.Connection):
             # The Pysqlite driver does not include the database file path.
             # Include it in case it might be useful.
             raise weedb.OperationalError("Unable to open database '%s'" % (self.file_path,))
-        weedb.Connection.__init__(self, connection, database)
+        weedb.Connection.__init__(self, connection, database, 'sqlite')
 
     def cursor(self):
         """Return a cursor object."""
@@ -101,3 +101,7 @@ class Connection(weedb.Connection):
 
         # If there are no columns (which means the table did not exist) return None
         return column_list if column_list else None
+
+    def begin(self):
+        self.connection.execute("BEGIN TRANSACTION")
+        
