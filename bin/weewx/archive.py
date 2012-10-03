@@ -59,7 +59,7 @@ class Archive(object):
         returns: Time of the last good archive record as an epoch time, or
         None if there are no records."""
         _row = self.getSql("SELECT MAX(dateTime) FROM archive")
-        return _row[0]
+        return _row[0] if _row else None
     
     def firstGoodStamp(self):
         """Retrieves earliest timestamp in the archive.
@@ -67,7 +67,7 @@ class Archive(object):
         returns: Time of the first good archive record as an epoch time, or
         None if there are no records."""
         _row = self.getSql("SELECT MIN(dateTime) FROM archive")
-        return _row[0]
+        return _row[0] if _row else None
 
     def addRecord(self, record_obj):
         """Commit a single record or a collection of records to the archive.
@@ -159,23 +159,26 @@ class Archive(object):
         finally:
             _cursor.close()
 
-    def getSql(self, sql, *sqlargs):
+    def getSql(self, sql, sqlargs=()):
         """Executes an arbitrary SQL statement on the database.
         
         sql: The SQL statement
         
-        sqlargs: The arguments for the SQL statement
+        sqlargs: A tuple containing the arguments for the SQL statement
         
         returns: a tuple containing the results
         """
         _cursor = self.connection.cursor()
         try:
             _cursor.execute(sql, sqlargs)
-            return _cursor.fetchone()
+            _row = _cursor.fetchone()
+            if _row is None:
+                print "executed", sql, sqlargs
+            return _row
         finally:
             _cursor.close()
 
-    def genSql(self, sql, *sqlargs):
+    def genSql(self, sql, sqlargs=()):
         """Generator function that executes an arbitrary SQL statement on the database."""
         
         try:
