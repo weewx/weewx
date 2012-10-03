@@ -38,11 +38,11 @@ class REST(object):
     """Abstract base class for RESTful protocols."""
     
     # The types to be retrieved from the arhive database:
-    archive_types = ('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                    'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation', 'UV')
+    archive_types = ['dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
+                     'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation', 'UV']
     # A SQL statement to do the retrieval:
     sql_select = "SELECT " + ", ".join(archive_types) + " FROM archive WHERE dateTime=?"  
-    
+
     def extractRecordFrom(self, archive, time_ts):
         """Get a record from the archive database. 
         
@@ -60,28 +60,33 @@ class REST(object):
         
         sod_ts = weeutil.weeutil.startOfDay(time_ts)
         
-        # Get the values off the archive database:
-        sqlrec = archive.getSql(REST.sql_select, time_ts)
-        # Make a dictionary out of them:
+        # Get the data record off the archive database:
+        sqlrec = archive.getSql(REST.sql_select, (time_ts,))
+        # There is no reason why the record would not be in the database,
+        # but check just in case:
+        if sqlrec is None:
+            raise SkippedPost("Non existent record %s" % (weeutil.weeutil.timestamp_to_string(time_ts),))
+
+        # Make a dictionary out of the types:
         datadict = dict(zip(REST.archive_types, sqlrec))
-    
+        
         # CWOP says rain should be "rain that fell in the past hour".  WU says
         # it should be "the accumulated rainfall in the past 60 min".
         # Presumably, this is exclusive of the archive record 60 minutes before,
         # so the SQL statement is exclusive on the left, inclusive on the right.
         datadict['rain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
-                                         time_ts - 3600.0, time_ts)[0]
+                                         (time_ts - 3600.0, time_ts))[0]
 
         # Similar issue, except for last 24 hours:
         datadict['rain24'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
-                                            time_ts - 24*3600.0, time_ts)[0]
+                                            (time_ts - 24*3600.0, time_ts))[0]
 
         # NB: The WU considers the archive with time stamp 00:00 (midnight) as
         # (wrongly) belonging to the current day (instead of the previous
         # day). But, it's their site, so we'll do it their way.  That means the
         # SELECT statement is inclusive on both time ends:
         datadict['dailyrain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>=? AND dateTime<=?", 
-                                              sod_ts, time_ts)[0]
+                                              (sod_ts, time_ts))[0]
 
         # All these online weather sites require US units. 
         if datadict['usUnits'] == weewx.US:
@@ -153,7 +158,7 @@ class Ambient(REST):
         time_ts: The record desired as a unix epoch time."""
         
         _url = self.getURL(archive, time_ts)
-        
+
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
             # Now use an HTTP GET to post the data. Wrap in a try block
@@ -487,7 +492,7 @@ class RESTThread(threading.Thread):
         while True :
             # This will block until something appears in the queue:
             time_ts = self.queue.get()
-            
+
             # A 'None' value appearing in the queue is our signal to exit
             if time_ts is None:
                 self.archive.close()
@@ -612,9 +617,9 @@ if __name__ == '__main__':
         # Instantiate an instance of the class that implements the
         # protocol used by this site:
         try:
-            station = weeutil.weeutil._get_object(site_dict['protocol'], site, **site_dict)
+            station = weeutil.weeutil._get_object(site_dict['driver'], site, **site_dict)
         except Exception:
-            print "Unable to instantiate %s" % (site_dict['protocol'],)
+            print "Unable to instantiate %s" % (site_dict['driver'],)
             raise 
 
         # Create the queue into which we'll put the timestamps of new data
@@ -623,7 +628,7 @@ if __name__ == '__main__':
         thread = RESTThread(archive_db_dict, queue, [station])
         thread.start()
 
-        for row in archive.genSql("SELECT dateTime FROM archive WHERE dateTime >=? and dateTime <= ?", start_ts, stop_ts):
+        for row in archive.genSql("SELECT dateTime FROM archive WHERE dateTime >=? and dateTime <= ?", (start_ts, stop_ts)):
             ts = row[0]
             print "Posting station %s for time %s" % (stationName, weeutil.weeutil.timestamp_to_string(ts))
             queue.put(ts)

@@ -21,6 +21,7 @@ import unittest
 
 import configobj
 
+import config_database
 import weewx.archive
 import weewx.stats
 
@@ -63,31 +64,25 @@ class StatsTestBase(unittest.TestCase):
         else:
             print "Using configuration file:  ", self.config_path
 
-        self.archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                            config_dict['StdArchive']['archive_file'])
-        self.statsFilename   = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                            config_dict['StdArchive']['stats_file'])
-        
-        print "Test archive database path:", self.archiveFilename
-        print "Test stats database path:  ", self.statsFilename
-
-        # If the archive has not been configured, an exception will be raised:
-        try:
-            self.archive = weewx.archive.Archive(self.archiveFilename)
-        except StandardError:
-            # The archive was not configured. Go configure it:
-            self.configDatabases(stats_types=config_dict['StdArchive']['stats_types'])
-
-        self.stats = weewx.stats.StatsDb(self.statsFilename)
+        self.configDatabases(config_dict, config_dict['StdArchive']['stats_types'])
         self.assertEqual(sorted(self.stats.statsTypes), sorted(config_dict['StdArchive']['stats_types']))
 
-    def configDatabases(self, stats_types):
+    def configDatabases(self, config_dict, stats_types):
         """Configures the main and stats databases."""
 
-        # Configure the main database:            
-        weewx.archive.config(self.archiveFilename)
-        # Now open it
-        self.archive = weewx.archive.Archive(self.archiveFilename)
+        archive_db = config_dict['StdArchive']['archive_database']
+        stats_db   = config_dict['StdArchive']['stats_database']
+        archive_db_dict = config_dict['Databases'][stats_db]        
+        stats_db_dict   = config_dict['Databases'][stats_db]
+
+        weedb.drop(archive_db_dict)
+        # Rather than code all the stuff to create a database, we'll just use
+        # the code from config_database:
+        config_database.createMainDatabase(config_dict)
+
+        # Now open the main archive database:
+        self.archive = weewx.archive.Archive.fromConfigDict(config_dict)
+        
         # Because this can generate voluminous log information,
         # suppress all but the essentials:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
@@ -100,15 +95,11 @@ class StatsTestBase(unittest.TestCase):
         # Now go back to regular logging:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         
-        # Remove any old stats database
-        try:
-            os.remove(self.statsFilename)
-        except:
-            pass
-
+        weedb.drop(stats_db_dict)
         # Configure a new stats databsae:            
-        weewx.stats.config(self.statsFilename, stats_types=stats_types)
-        self.stats = weewx.stats.StatsDb(self.statsFilename)
+        config_database.createStatsDatabase(config_dict)
+
+        self.stats = weewx.stats.StatsDb.fromConfigDict(config_dict)
         t1 = time.time()
         # Now backfill the stats database from the main archive database.
         weewx.stats.backfill(self.archive, self.stats)

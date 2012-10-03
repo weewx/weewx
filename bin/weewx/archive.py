@@ -171,10 +171,7 @@ class Archive(object):
         _cursor = self.connection.cursor()
         try:
             _cursor.execute(sql, sqlargs)
-            _row = _cursor.fetchone()
-            if _row is None:
-                print "executed", sql, sqlargs
-            return _row
+            return _cursor.fetchone()
         finally:
             _cursor.close()
 

@@ -12,7 +12,10 @@ database is now supported.
 
 All skin  configurations are backwardly compatible, but  the configuration file,
 weewx.conf, is not.  The install utility setup.py will  install a fresh version,
-which you will have to edit as necessary.
+which you will have to edit by hand.
+
+If you have written a custom service,  see the upgrade guide on how to port your
+service to the new architecture.
 
 Added the ability to generate archive records in software, thus opening the door
 for supporting weather stations that do not have a logger.
@@ -34,10 +37,8 @@ Added utility config_vp, for configuring the VantagePro hardware.
 
 Added utility config_database, for configuring the databases.
 
-Both utilities use argparse (instead of optparse), which is included with Python
-2.7. For earlier versions of Python,  it will have to be supplied.  Installation
-is  trivial:  just download  from  http://pypi.python.org/pypi/argparse and  put
-argparse.py in any sys.path directory.
+Made it  easier to write  custom RESTful protocols. Thanks to user Brad, for the 
+idea and the use case!
 
 When doing DMPAFT, no longer tries to correct for DST.
 
