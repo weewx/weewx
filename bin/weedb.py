@@ -59,9 +59,10 @@ def drop(db_dict):
 
 class Connection(object):
 
-    def __init__(self, connection, database):
+    def __init__(self, connection, database, dbtype):
         self.connection = connection
-        self.database = database
+        self.database   = database
+        self.dbtype     = dbtype
         
     def cursor(self):
         """Returns an appropriate database cursor."""
@@ -78,6 +79,9 @@ class Connection(object):
         """Returns a list of the column names in the specified table."""
         raise NotImplementedError
             
+    def begin(self):
+        raise NotImplementedError
+        
     def commit(self):
         self.connection.commit()
         
@@ -107,6 +111,7 @@ class Transaction(object):
         self.cursor = self.connection.cursor()
         
     def __enter__(self):
+        self.connection.begin()
         return self.cursor
     
     def __exit__(self, etyp, einst, etb):
@@ -138,7 +143,6 @@ if __name__=="__main__" :
     import configobj
     import sys
     
-    import weedb
     import weewx.archive
     import weewx.stats
     
@@ -169,8 +173,8 @@ if __name__=="__main__" :
     exit()
     # First the archive database:
     try:
-        weedb.drop(archive_db_dict)
-    except weedb.NoDatabase:
+        drop(archive_db_dict)
+    except NoDatabase:
         pass
     archive = weewx.archive.Archive(archive_db_dict)
     exit()
@@ -179,8 +183,8 @@ if __name__=="__main__" :
 
     # Now the stats database:
     try:
-        weedb.drop(stats_db_dict)
-    except weedb.NoDatabase:
+        drop(stats_db_dict)
+    except NoDatabase:
         pass
     weewx.stats.config(stats_db_dict)
     stats = weewx.stats.StatsDb(stats_db_dict)
