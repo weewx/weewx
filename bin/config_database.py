@@ -18,6 +18,7 @@ import syslog
 import configobj
 
 import user.extensions      #@UnusedImport
+import weedb
 import weewx.archive
 import weewx.stats
 
@@ -44,10 +45,10 @@ def main():
                         help="Create the statistical database.")
     parser.add_option("--backfill-stats", dest="backfill_stats", action='store_true',
                         help="Backfill the statistical database using the archive database")
-    parser.add_option("--reconfigure-database", dest="reconfigure_database", action='store_true',
-                        help="""Reconfigure the archive database. The schema found in bin/user/schemas.py will"""\
-                        """be used for the new database. It will have the same name as the old database, but with"""\
-                        """suffix '.new'. It will then be populated with the data from the old database. """)
+    parser.add_option("--reconfigure-database", dest="new_database", action='store', type='string', metavar='NEW-DATABASE',
+                        help="""Reconfigure the archive database and put the results in NEW-DATABASE, which must appear """\
+                        """in the [Databases] section of the configuration file. The schema found in bin/user/schemas.py will """\
+                        """be used for the new database.""")
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
 
@@ -79,8 +80,8 @@ def main():
     if options.backfill_stats:
         backfillStatsDatabase(config_dict)
 
-    if options.reconfigure_database:
-        reconfigMainDatabase(config_dict)
+    if options.new_database:
+        reconfigMainDatabase(config_dict, options.new_database)
 
 def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
@@ -132,14 +133,13 @@ def backfillStatsDatabase(config_dict):
     nrecs = weewx.stats.backfill(archive, statsDb)
     print "Backfilled %d records from the archive database '%s' into the statistical database '%s'" % (nrecs, archive.database, statsDb.database)
     
-def reconfigMainDatabase(config_dict):
+def reconfigMainDatabase(config_dict, new_archive_db):
     """Change the schema of the old database"""
-    # TODO: this needs to be updated
-    # The old archive:
-    oldArchiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                      config_dict['StdArchive']['archive_file'])
-    newArchiveFilename = oldArchiveFilename + ".new"
-    weewx.archive.reconfig(oldArchiveFilename, newArchiveFilename)
+
+    old_archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+    new_archive_db_dict = config_dict['Databases'][new_archive_db]
+    
+    weewx.archive.reconfig(old_archive_db_dict, new_archive_db_dict)
     
 if __name__=="__main__" :
     main()

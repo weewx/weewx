@@ -106,12 +106,12 @@ Version 2.0</h1>
 	weewx service engine</a></em>. </p>
 	<h3 id="The_standard_reporting_service,_StdReportService">The standard reporting 
 	service, <span class="code">StdReport</span></h3>
-	<p>For the moment, we focus on the last service, <span class="code">weewx.wxengine.StdReport</span>, 
-	the standard service for creating reports. This will be what most users want 
-	to customize even if it means just changing a few options. </p>
+	<p>For the moment, let us focus on the last service, <span class="code">weewx.wxengine.StdReport</span>, 
+	the standard service for creating reports. This will be what most users will want 
+	to customize even if it means changing just a few options. </p>
 	<h4>Reports</h4>
 	<p>The Standard Report Service runs zero or more <em>Reports.</em> Which reports 
-	is set in the weewx configuration file <span class="code">weewx.conf</span>, 
+	get run is set in the configuration file <span class="code">weewx.conf</span>, 
 	in section <span class="code">[StdReport]</span>. </p>
 	<p>The default distribution of weewx includes two reports: </p>
 	<table align="center" style="width: 60%" summary="Standard reports included in weewx">
@@ -179,7 +179,7 @@ Version 2.0</h1>
 	</table>
 	<p>Note that the two generators <span class="code">FtpGenerator </span>and
 	<span class="code">CopyGenerator </span>don&#39;t actually generate anything 
-	to do with the presentation layer. Instead, they just move files around. </p>
+	having to do with the presentation layer. Instead, they just move files around. </p>
 	<p>Which generators are to be run for a given skin is specified in the skin&#39;s 
 	configuration file <span class="code">skin.conf</span>. </p>
 	<h2 id="Databases">Databases</h2>
@@ -193,7 +193,8 @@ Version 2.0</h1>
 		<span class="code">dateTime</span>, the time at the end of the archive interval.
 		</li>
 		<li>The <em>statistical database</em>, given symbolic name '<span class="code">stats_database</span>'. It consists 
-		of a separate table for each type, one record per day, keyed by the start 
+		of a separate table for each observation type (that is, one for '<span class="code">outTemp</span>', 
+		one for '<span class="code">barometer</span>', etc.), each containing one record per day, keyed by the start 
 		time of the day. </li>
 	</ul>
 	<p>How these abstract databases are bound to the real database is covered in 
@@ -219,7 +220,7 @@ Version 2.0</h1>
 	files. The former is generally easier, but occasionally the latter is necessary.
 	</p>
 	<h2>Changing options</h2>
-	<p>Changing an option means modifying either the main configuration file
+	<p>Changing an option means either modifying the main configuration file
 	<span class="code">weewx.conf</span>, or the skin configuration file for the 
 	standard skin that comes with the distribution (nominally, file
 	<span class="code">skins/Standard/skin.conf</span>). </p>
@@ -229,7 +230,7 @@ Version 2.0</h1>
 	<span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>, using 
 	a text editor. For example, suppose you wish to use metric units in the presentation 
 	layer, instead of the default US Customary Units. The section that controls 
-	units is <span class="code">[Units][[Groups]]</span> and looks like this:
+	units is <span class="code">[Units][[Groups]]</span>. It looks like this:
 	</p>
 	<pre>[Units]</pre>
 	<pre>  [[Groups]]</pre>
@@ -302,8 +303,8 @@ Version 2.0</h1>
 	<span class="code">skin.conf</span>. The trouble with this approach is that 
 	you would then have <em>two</em> skins you would have to maintain. If you change 
 	something, you have to remember to change it in both places. </p>
-	<p>But, there&#39;s a better approach: reuse the same skin, but overriding some 
-	options. Here&#39;s what your <span class="code">[StdReport]</span> section in
+	<p>But, there's a better approach: reuse the same skin, but override some 
+	of its options. Here&#39;s what your <span class="code">[StdReport]</span> section in
 	<span class="code">weewx.conf</span> would look like: </p>
 	<pre>[StdReport]
   #
@@ -1328,16 +1329,18 @@ outTemp = Outside Temperature</pre>
 	<span class="code">yhigh</span>, <span class="code">min_interval</span>), where
 	<span class="code">ylow</span> and <span class="code">yhigh</span> are the minimum 
 	and maximum y-axis values, respectively, and <span class="code">min_interval</span> 
-	is the minimum tick interval. If set to &#39;<span class="code">None</span>&#39;, 
-	the corresponding value will be automatically chosen. So, in this example, we 
-	are letting <span class="code">weewx</span> pick sensible y minimum and maximum 
-	values, but we are requiring that the tick increment (<span class="code">min_interval</span>) 
+	is the minimum tick interval. If set to &#39;<span class="code">None</span>', 
+	the corresponding value will be automatically chosen. So, in this example, 
+	the setting</p>
+	<p class="tty">yscale = None, None, 0.02</p>
+	<p>will cause <span class="code">weewx</span> to pick sensible y minimum and maximum 
+	values, but require that the tick increment (<span class="code">min_interval</span>) 
 	be at least 0.02. </p>
 	<p>Continuing on with the example above, there will be only one plot &quot;line&quot; 
 	(it will actually be a series of bars) and it will have logical name &quot;<span class="code">rain</span>&quot;. 
 	Because we haven&#39;t said otherwise, the SQL data type to be used for this 
 	line will be the same as its logical name, that is, <span class="code">rain</span>, 
-	b, but this can be overridden (see below). The aggregation type will be summing 
+	but this can be overridden (see below). The aggregation type will be summing 
 	(overriding the averaging specified in sub-section <span class="code">[[month_images]]</span>), 
 	so you get the total rain over the aggregate period (rather than the average) 
 	over an aggregation interval of 86,400 seconds (one day). The plot line will 
@@ -1971,10 +1974,10 @@ class MyAlarm(StdService):
 			<td>X</td>
 		</tr>
 		<tr>
-			<td class="code">soilMoist3</td>
-			<td>X</td>
-			<td>X</td>
-			<td>X</td>
+			<td class="code" style="height: 33px">soilMoist3</td>
+			<td style="height: 33px">X</td>
+			<td style="height: 33px">X</td>
+			<td style="height: 33px">X</td>
 		</tr>
 		<tr>
 			<td class="code">soilMoist4</td>

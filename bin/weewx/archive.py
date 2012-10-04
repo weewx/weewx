@@ -10,7 +10,6 @@
 """Classes and functions for interfacing with a weewx archive."""
 from __future__ import with_statement
 import math
-import os.path
 import syslog
 
 import weewx.units
@@ -481,7 +480,7 @@ def config(db_dict, archiveSchema=None):
         if not archiveSchema:
             import user.schemas
             archiveSchema = user.schemas.defaultArchiveSchema
-            
+
         # List comprehension of the types, joined together with commas. Put
         # the SQL type in backquotes, because at least one of them ('interval')
         # is a MySQL reserved word

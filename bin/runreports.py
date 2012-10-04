@@ -44,7 +44,7 @@ def gen_all(config_path, gen_ts = None):
     
     stn_info = weewx.station.StationInfo(**config_dict['Station'])
     
-    t = weewx.reportengine.StdReportEngine(config_path, stn_info, gen_ts)
+    t = weewx.reportengine.StdReportEngine(config_dict, stn_info, gen_ts)
 
     # Although the report engine inherits from Thread, we can just run it in the main thread:
     t.run()

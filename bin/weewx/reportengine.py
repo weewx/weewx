@@ -41,10 +41,10 @@ class StdReportEngine(threading.Thread):
     See below for examples of generators.
     """
     
-    def __init__(self, config_path, stn_info, gen_ts=None, first_run=True):
+    def __init__(self, config_dict, stn_info, gen_ts=None, first_run=True):
         """Initializer for the report engine. 
         
-        config_path: File path to the configuration dictionary.
+        config_dict: The configuration dictionary.
         
         stn_info: An instance of weewx.station.StationInfo, with static station information.
         
@@ -55,15 +55,11 @@ class StdReportEngine(threading.Thread):
         If this is the case, then any 'one time' events should be done.
         """
         threading.Thread.__init__(self, name="ReportThread")
-        try :
-            self.config_dict = configobj.ConfigObj(config_path, file_error=True)
-        except IOError:
-            print "Unable to open configuration file ", config_path
-            raise
-            
-        self.stn_info  = stn_info
-        self.gen_ts    = gen_ts
-        self.first_run = first_run
+
+        self.config_dict = config_dict
+        self.stn_info    = stn_info
+        self.gen_ts      = gen_ts
+        self.first_run   = first_run
         
     def setup(self):
         if self.gen_ts:

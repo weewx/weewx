@@ -98,13 +98,11 @@ class StdEngine(object):
         
     def getConfiguration(self, options, args):
 
-        # Get and set the absolute path of the configuration file. A service
-        # might to a chdir(), and then another service would be unable to find it.
-        self.config_path = os.path.abspath(args[0])
+        config_path = os.path.abspath(args[0])
         # Try to open up the given configuration file. Declare an error if
         # unable to.
         try :
-            config_dict = configobj.ConfigObj(self.config_path, file_error=True)
+            config_dict = configobj.ConfigObj(config_path, file_error=True)
         except IOError:
             sys.stderr.write("Unable to open configuration file %s" % args[0])
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open configuration file %s" % args[0])
@@ -114,7 +112,7 @@ class StdEngine(object):
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Error while parsing configuration file %s" % args[0])
             raise
 
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % self.config_path)
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % config_path)
         
         return config_dict
     
@@ -276,8 +274,9 @@ class StdEngine(object):
 class StdService(object):
     """Abstract base class for all services."""
     
-    def __init__(self, engine, *dummy, **dummy_kwargs):
+    def __init__(self, engine, config_dict):
         self.engine = engine
+        self.config_dict = config_dict
 
     def bind(self, event_type, callback):
         """Bind the specified event to a callback."""
@@ -798,7 +797,7 @@ class StdReport(StdService):
     def launch_report_thread(self, event):
         """Called after the packet LOOP. Processes any new data."""
         # Now process the data, using a separate thread
-        self.thread = weewx.reportengine.StdReportEngine(self.engine.config_path,
+        self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
                                                          self.engine.stn_info,
                                                          first_run=self.first_run) 
         self.thread.start()

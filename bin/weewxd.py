@@ -8,16 +8,8 @@
 #    $Author$
 #    $Date$
 #
-"""weewxd.py
+"""Entry point to the weewx weather system."""
 
-Entry point to the weewx weather system.
-
-If you wish to use a different engine than the default, 
-then subclass the default engine "StdEngine" and specify that class in
-the call to the main entry point as parameter 'EngineClass'.
-
-See the document "customizing.htm" for details.
-"""
 # First import any user extensions:
 import user.extensions       #@UnusedImport
 # Now the engine

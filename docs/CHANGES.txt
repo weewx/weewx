@@ -6,12 +6,11 @@ For complete documentation, see http://www.weewx.com/docs
 
 2.0.0 XX/YY/12
 
-A  big release with  lots of  changes.  The  two most  important are  that other
-weather  hardware besides the  Davis stations  is now  supported, and  the MySQL
-database is now supported.
+A big release with  lots of changes.  The two most important  are the support of
+additional weather hardware, and the support of the MySQL database.
 
 All skin  configurations are backwardly compatible, but  the configuration file,
-weewx.conf, is not.  The install utility setup.py will  install a fresh version,
+weewx.conf, is not.  The install  utility setup.py will install a fresh version,
 which you will have to edit by hand.
 
 If you have written a custom service,  see the upgrade guide on how to port your
@@ -23,7 +22,7 @@ for supporting weather stations that do not have a logger.
 Support for the  Oregon Scientific WMR100, the cheapest  weather station I could
 find, in order to demonstrate the above!
 
-Introduced  weedb, a  database-independent  Python  wrapper  around sqlite3  and 
+Introduced  weedb,  a database-independent  Python  wrapper  around sqlite3  and
 MySQLdb, which fixes some of their flaws.
 
 Ported everything to use weedb, and thus MySQL (as well as sqlite)
@@ -37,10 +36,13 @@ Added utility config_vp, for configuring the VantagePro hardware.
 
 Added utility config_database, for configuring the databases.
 
-Made it  easier to write  custom RESTful protocols. Thanks to user Brad, for the 
+Made it easier  to write custom RESTful protocols. Thanks to  user Brad, for the
 idea and the use case!
 
 When doing DMPAFT, no longer tries to correct for DST.
+
+Explicitly starts the logger in  the Vantage stations by issuing command 'START'
+on engine start up.
 
 Now  explicitly closes  the  stats  database connection  instead  of relying  on
 garbage collection to  do it. This seems to be reducing  the long-term growth of

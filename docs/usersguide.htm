@@ -138,7 +138,7 @@
 					Both the &quot;Rev A&quot; (firmware dated before 22 April 2002) and &quot;Rev B&quot;
 					versions are supported.
 				</li>
-				<li>Oregon Scientific WMR-USB series (<a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">WMR100N</a>). 
+				<li>Oregon Scientific WMR-USB series (tested on the <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">WMR100N</a>). 
 				Not nearly as reliable as the Davis instruments, but a lot less 
 				expensive.</li>
 			</ul>
@@ -164,22 +164,22 @@
 				<li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or
 					greater) The HTML templating engine.
 				</li>
+				<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version
+					2.3 or greater) Manages the serial connection to the weather station.</li>
 				<li><a href="http://pypi.python.org/pypi/PIL">Python Imaging Library</a>
 					(Version 1.1.6 or greater) Also known as PIL, this is included in many Python
 					distributions.
 				</li>
-				<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version
-					2.3 or greater) Manages the serial connection to the weather station.</li>
 			</ul>
-			<p>For the Oregon Scientific WMR-USB series you will need</p>
+			<p>For the Oregon Scientific WMR-USB series you will also need:</p>
 			<ul>
 				<li><a href="https://sourceforge.net/projects/pyusb/">PyUSB</a> 
-				(Version 0.4 or greater). Allows finding the weather station on 
+				(Version 0.4 or greater). Driver for 
 				the USB bus. </li>
 			</ul>
 			<p>
 				If you wish to use MySQL as your database (instead of the 
-				default sqlite), then you will need (in addition to a MySQL 
+				default <span class="code">sqlite</span>), then you will need (in addition to a MySQL 
 				server, of course):</p>
 			<ul>
 				<li><a href="https://sourceforge.net/projects/mysql-python/">
@@ -227,9 +227,9 @@
 				list if you are not using all features):</p>
 			<p class="tty">
 				sudo apt-get install python-configobj<br />
-				sudo apt-get install python-serial<br />
 				sudo apt-get install python-cheetah
 				<br />
+				sudo apt-get install python-serial<br />
 				sudo apt-get install python-imaging&nbsp;&nbsp;&nbsp; # Already 
 				present in most systems, but it doesn&#39;t<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
@@ -392,7 +392,7 @@
 			</table>
 			<p>
 				By default, the location for <span class="code"><em>WEEWX_INSTALL</em></span>
-				is <span class="highlight">/home/weewx</span>. However, it can be changed by editing
+				is <span class="code">/home/weewx</span>. However, it can be changed by editing
 				the file <span class="code">setup.cfg</span> and changing the following line
 			</p>
 			<p class="tty">
@@ -433,9 +433,11 @@
 				You then generally follow the procedure above.
 			</p>
 			<p>
-				<strong>In particular, before starting, be sure to set </strong>
-				<span class="code"><strong>home</strong></span><strong> in the file </strong>
-				<span class="code"><strong>setup.cfg</strong></span><strong>. </strong>
+				<strong><em>In particular, before starting, be sure to set </em> </strong>
+				<span class="code"><strong><em>home</em></strong></span><strong><em> in the file 
+				</em> </strong>
+				<span class="code"><strong><em>setup.cfg</em></strong></span><strong><em>. 
+				</em> </strong>
 			</p>
 			<p>
 				The build and install process will do the following for you.
@@ -623,27 +625,6 @@ Mutating actions will request confirmation before proceeding.</pre>
       Gain:                         -1.000
       Offset:                       -1.000</pre>
 			<p>
-				The values highlighted in <span class="highlight">yellow</span> above can be
-				changed. They are:
-			</p>
-			<ul>
-				<li>
-					Archive interval
-				</li>
-				<li>
-					Altitude
-				</li>
-				<li>
-					Rain bucket type
-				</li>
-				<li>
-					Start of the rain year</li>
-				<li>
-					Barometer correction constant (This is actually changed by providing
-					an accurate reference value from a local station.)
-				</li>
-			</ul>
-			<p>
 				For example, to change the archive interval to 10 minutes (600 
 				seconds):</p>
 			<p class="tty">
@@ -662,11 +643,11 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<p>
 				I have found that a five minute (300 seconds) archive interval works well
-				for the VantagePro. Because of the large amount of onboard memory it carries,
+				for the VantagePro2. Because of the large amount of onboard memory it carries,
 				going to a larger interval really does not have any advantages.
 			</p>
 			<p>
-				<em>Choose your archiving interval carefully! </em>OOnce chosen, it cannot
+				<em>Choose your archiving interval carefully! </em>Once chosen, it cannot
 				be changed without messing up your statistics (highs and lows will be OK, but
 				averages and rms wind speed will be wrong).
 			</p>
@@ -784,8 +765,8 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<p>
 				Set to the type of hardware you are using. It must match a 
-				section name below. For this version, the only two options 
-				accepted are &#39;<span class="code">Vantage</span>&#39; or &#39;<span class="code">WMR-USB</span>&#39;. Required.
+				section name below. For this version, the only two valid options 
+				are &#39;<span class="code">Vantage</span>&#39; or &#39;<span class="code">WMR-USB</span>&#39;. Required.
 			</p>
 			<h3 class="config_section">[Vantage]</h3>
 			<p>
@@ -1084,7 +1065,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 			for the unit system to be used for <i>reporting</i>.</p>
 			<p>Users of the Davis Vantage hardware who wish to store their data 
 			in U.S. Customary units do not need to run this service as the Davis 
-			instruments already U.S. Customary. However, it doesn&#39;t hurt 
+			instruments already emit U.S. Customary. However, it doesn&#39;t hurt 
 			to run it anyway.</p>
 			<p class="config_option">target_unit</p>
 			<p>Set to either &#39;<span class="code">US</span>&#39; or &#39;<span class="code">METRIC</span>&#39;. 
@@ -1095,6 +1076,17 @@ Mutating actions will request confirmation before proceeding.</pre>
 				StdCalibrate</span> service. This
 				service offers an opportunity to correct for any calibration errors in your
 				instruments. It is very general and flexible.
+			</p>
+			<p>
+				Because this service is normally run after <span class="code">
+				StdConvert</span>, the units to be used should be the 
+				same as the target unit system chosen in 
+				<a href="#[StdConvert]"> <span class="code">
+				StdConvert</span></a> above. It is also important that this 
+				service be run before
+				the archiving service <span class="code">StdArchive</span>, so that it is the
+				corrected data that is stored.
+			
 			</p>
 			<p>
 				If you do not wish to apply any calibrations, you can leave it out of <span class="code"><a href="#service_list">service_list</a></span>, the list
@@ -1123,16 +1115,6 @@ Mutating actions will request confirmation before proceeding.</pre>
 				Both LOOP data and archive data will be corrected.
 			</p>
 			<p>
-				Because this service is normally run after <span class="code">
-				StdConvert</span>, the units to be used should be the 
-				same as the target unit system chosen in <span class="code">
-				<a href="#[StdConvert]">StdConvert</span></a>. It is also important that the calibration 
-				service, <span class="code">StdCalibrate</span>, be run before
-				the archiving service <span class="code">StdArchive</span>, so that it is the
-				corrected data that is stored.
-			
-			</p>
-			<p>
 				If you are using a Davis Vantage instrument and all you require is a simple correction offset, this can also be done in
 				the hardware. See your manual for instructions.
 			</p>
@@ -1142,6 +1124,17 @@ Mutating actions will request confirmation before proceeding.</pre>
 				offers a very simple <em>Quality 
 				Control</em> that only
 				checks that values are within a minimum and maximum range.</p>
+			<p>
+				Because this service is normally run after <span class="code">
+				StdConvert</span>, the units to be used should be the 
+				same as the target unit system chosen in 
+				<a href="#[StdConvert]"> <span class="code">
+				StdConvert</span></a>. It is also important that it be run after the calibration 
+				service, <span class="code">StdCalibrate </span>and before
+				the archiving service <span class="code">StdArchive</span>, so that it is the
+				calibrated and corrected data that is stored.
+			
+			</p>
 			<p>
 				If you do not wish to use this service, you can leave it out of <span class="code"><a href="#service_list">service_list</a></span>, the list
 				of services to be run, and it will not be loaded or run.
@@ -1174,18 +1167,6 @@ Mutating actions will request confirmation before proceeding.</pre>
 				Both LOOP and archive data will be checked.
 			</p>
 			<p>
-				Because this service is normally run after <span class="code">
-				StdConvert</span>, the units to be used should be the 
-				same as the target unit system chosen in 
-				<a href="#[StdConvert]"> <span class="code">
-				StdConvert</span></a>. It is also important that the calibration 
-				service, <span class="code">StdCalibrate</span>, be run after
-				<span class="code">StdCalibrate</span> and before
-				the archiving service <span class="code">StdArchive</span>, so that it is the
-				calibrated and corrected data that is stored.
-			
-			</p>
-			<p>
 				Knowing the details of how your hardware encodes data helps to minimize the
 				number of observations that need to be checked. For example, the VP2 devotes
 				only one unsigned byte to storing wind speed, and even then <span class="code">0xff</span> is devoted to a bad value, so the only possible
@@ -1193,18 +1174,19 @@ Mutating actions will request confirmation before proceeding.</pre>
 				the VP2, there is no real point in checking wind speed.
 			</p>
 			<h3 class="config_section" id="[StdArchive]">[StdArchive]</h3>
-			<p>This section is for configuring <span class="code">StdArchive</span>, the service that stores data in 
-			the databases. It also binds the database symbolic names to the real 
-			database that will be used.</p>
+			<p>This section is for configuring <span class="code">StdArchive</span>, 
+			the service that stores data in the databases. Options allow chosing 
+			which database to use for archiving and statistics.</p>
 			<p class="config_option">archive_database</p>
-			<p>The symbolic name of the database to be used to store the archive 
+			<p>The database to be used to store the archive 
 			data. This should match a section given in the section 
 			<span class="code"><a href="#[Databases]">[Databases]</a></span> 
-			below. </p>
+			below. Normally, this is set to <span class="code">archive_sqlite</span>.</p>
 			<p class="config_option">stats_database</p>
-			<p>The symbolic name of the database to be used to store the 
+			<p>The database to be used to store the 
 			statistical data. This should match a section given in the section 
-			<span class="code"><a href="#[Databases]">[Databases]</a></span> below.</p>
+			<span class="code"><a href="#[Databases]">[Databases]</a></span> below. 
+			Normally, this is set to <span class="code">stats_sqlite</span>.</p>
 			<p class="config_option">
 				archive_delay
 			</p>
@@ -1224,7 +1206,8 @@ Mutating actions will request confirmation before proceeding.</pre>
 				resulting in a possibly much bigger than necessary stats database (do you really
 				have four different soil moisture sensors?) The list that ships with the configuration
 				file will work for most stations and probably will not have to be modified.
-			</p>
+				This list is only accessed when the stats database is first 
+				created, thereafter it is downloaded off the database.</p>
 			<h3 class="config_section">[StdTimeSynch]</h3>
 			<p>This section is for configuring <span class="code">StdTymeSynch</span>, 
 			a service that can synchronize the onboard clock of your Vantage 
@@ -1236,8 +1219,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<p>The maximum amount of clock drift to tolerate, in seconds, before 
 			resetting the clock. Default is 5.</p>
 			<h3 class="config_section" id="[Databases]">[Databases]</h3>
-			<p>This section lists all the actual 
-			database to be used. The name of each database is given in double 
+			<p>This section lists actual database bindings. The name of each database is given in double 
 			brackets below (for example, <span class="code">[[archive_sqlite]]</span>). The details of the 
 			binding follow. You are free to add new bindings.</p>
 			<p>Note that if you choose the MySQL database it is assumed that you 
@@ -1249,14 +1231,14 @@ Mutating actions will request confirmation before proceeding.</pre>
 			data. It is open-source, simple, lightweight, highly portable, and 
 			memory efficient. For most purposes it serves nicely.</p>
 			<p class="config_option">database</p>
-			<p>The path, relative to WEEWX_ROOT, to the archive sqlite file. 
+			<p>The path, relative to <span class="code">WEEWX_ROOT</span>, to the archive sqlite file. 
 			Required.</p>
 			<h4 class="config_section">[[stats_sqlite]]</h4>
 			<p>This definition uses the sqlite database engine to store the 
 			statistical data. It is open-source, simple, lightweight, highly 
 			portable, and memory efficient. For most purposes it serves nicely.</p>
 			<p class="config_option">database</p>
-			<p>The path, relative to WEEWX_ROOT, to the stats sqlite file. 
+			<p>The path, relative to <span class="code">WEEWX_ROOT</span>, to the stats sqlite file. 
 			Required.</p>
 			<h4 class="config_section">[[archive_mysql]]</h4>
 			<p>This definition uses the MySQL database engine to store archive 

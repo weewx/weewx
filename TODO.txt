@@ -1,9 +1,5 @@
 TODO before the next release:
 
-Get reconfigure database to work again.
-
-Check the implementation of db.mysql.Connection.columnsOf in case of network outage.
-
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
 
