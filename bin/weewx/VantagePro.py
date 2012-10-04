@@ -379,6 +379,9 @@ class Vantage(weewx.abstractstation.AbstractStation):
         # Read the EEPROM and fill in properties in this instance
         self._setup()
         
+        # Make sure the logger is started:
+        self.port.send_command("START\n")
+        
     def openPort(self):
         """Open up the connection to the console"""
         self.port.openPort()
