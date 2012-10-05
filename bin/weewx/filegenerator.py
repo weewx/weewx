@@ -18,7 +18,6 @@ import urlparse
 import Cheetah.Template
 import Cheetah.Filters
 
-import weedb
 import weeutil.weeutil
 import weewx.almanac
 import weewx.reportengine

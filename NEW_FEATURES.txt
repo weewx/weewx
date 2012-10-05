@@ -1,9 +1,7 @@
-NEW FEATURES to be added in decreasing order of importance.
+                    Possible NEW FEATURES
 
 Add ordinate wind descriptions "N, NE, E,", etc. Same with barometer
 trends.
-
-Make it easier to subclass a new RESTful protocol.
 
 Port to WMR968? Or La Crosse WS2355?
 
