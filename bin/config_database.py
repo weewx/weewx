@@ -11,7 +11,6 @@
 """Configure the databases used by weewx"""
 
 import optparse
-import os.path
 import sys
 import syslog
 
@@ -91,7 +90,7 @@ def createMainDatabase(config_dict):
     # initialized, an exception will be thrown. Catch it, configure the
     # database, and then try again.
     try:
-        archive = weewx.archive.Archive(archive_db_dict)
+        archive = weewx.archive.Archive(archive_db_dict) #@UnusedVariable
     except (StandardError, weedb.OperationalError):
         # It's uninitialized. Configure it:
         weewx.archive.config(archive_db_dict)
@@ -107,7 +106,7 @@ def createStatsDatabase(config_dict):
     # initialized, an exception will be thrown. Catch it, configure the
     # database, and then try again.
     try:
-        statsDb = weewx.stats.StatsDb(stats_db_dict)
+        statsDb = weewx.stats.StatsDb(stats_db_dict) #@UnusedVariable
     except (StandardError, weedb.OperationalError):
         # It's uninitialized. Configure it:
         weewx.stats.config(stats_db_dict, 

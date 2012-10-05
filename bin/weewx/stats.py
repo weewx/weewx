@@ -32,7 +32,7 @@
 
 from __future__ import with_statement
 import math
-import os.path
+import sys
 import syslog
 import time
 
@@ -822,9 +822,12 @@ def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
             # try again
             _statsDict.addRecord(_rec)
          
-        nrecs += 1
         # Remember the timestamp for this record.
         _lastTime = _rec['dateTime']
+        nrecs += 1
+        if nrecs%1000 == 0:
+            print >>sys.stdout, "Records processed: %d; Last date: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)),
+            sys.stdout.flush()
 
     # We're done. Record the stats for the last day.
     if _statsDict:
