@@ -1,0 +1,665 @@
+CHANGE HISTORY
+--------------------------------
+
+For complete documentation, see http://www.weewx.com/docs
+
+
+2.0.0 XX/YY/12
+
+A big release with  lots of changes.  The two most important  are the support of
+additional weather hardware, and the support of the MySQL database.
+
+All skin  configurations are backwardly compatible, but  the configuration file,
+weewx.conf, is not.  The install  utility setup.py will install a fresh version,
+which you will have to edit by hand.
+
+If you have written a custom service,  see the upgrade guide on how to port your
+service to the new architecture.
+
+Added the ability to generate archive records in software, thus opening the door
+for supporting weather stations that do not have a logger.
+
+Support for the  Oregon Scientific WMR100, the cheapest  weather station I could
+find, in order to demonstrate the above!
+
+Introduced  weedb,  a database-independent  Python  wrapper  around sqlite3  and
+MySQLdb, which fixes some of their flaws.
+
+Ported everything to use weedb, and thus MySQL (as well as sqlite)
+
+The databases can now use either Metric units, or US Customary, internally.
+
+Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
+callbacks, making it easier to add new event types.
+
+Added utility config_vp, for configuring the VantagePro hardware.
+
+Added utility config_database, for configuring the databases.
+
+Made it easier  to write custom RESTful protocols. Thanks to  user Brad, for the
+idea and the use case!
+
+When doing DMPAFT, no longer tries to correct for DST.
+
+Explicitly starts the logger in  the Vantage stations by issuing command 'START'
+on engine start up.
+
+Now  explicitly closes  the  stats  database connection  instead  of relying  on
+garbage collection to  do it. This seems to be reducing  the long-term growth of
+memory usage.
+
+The stats  type 'squarecount' now contains  the number of  valid wind directions
+that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid
+wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
+'count'). This is a small difference and unlikely to show in any reports.
+
+Simplified and reduced the memory requirements of the CRC16 calculations.
+
+Lots of  little nips  and tucks here  and there,  mostly to reduce  the coupling
+between  different  modules.   In  particular,  now  a  service  generally  gets
+configured only using its section of weewx.conf.
+
+I also worked hard at making  sure that cursors, connections, files, and lots of
+other  bits  and  pieces get  properly  closed  instead  of relying  on  garbage
+collection.  Hopefully, this will reduce the long-term growth of memory usage.
+
+
+1.14.1 07/06/12
+
+Hardened retry  strategy for the  WeatherLink IP. If  the port fails to  open at
+all, or a socket error occurs, it will thrown an exception (resulting in a retry
+in 60 seconds).   If a socket returns an incomplete result,  it will continue to
+retry until everything has been read.
+
+Fixed minor bug that causes the  reporting thread to prematurely terminate if an
+exception is thrown while doing an FTP.
+
+
+1.14.0 06/18/12
+
+Added  smartphone  formatted  mobile   webpage,  contributed  by  user  Torbjörn
+Einarsson.  If you are doing a fresh install, then these pages will be generated
+automatically.  If you  are doing an upgrade, then see the  upgrade guide on how
+to have these webpages generated. Thanks, Tobbe!
+
+Three changes suggested by user Charlie Spirakis:
+  o Changed umask in daemon.py to 0022;
+  o Allow location of process ID file to be specified on the command line
+    of weewx;
+  o Start script allows daemon to be run as a specific user.
+Thanks, Charlie!
+
+Corrected bug in humidity reports to CWOP that shows itself when the humidity is
+in the single digits.
+
+Now includes software in CWOP APRS equipment field.
+
+
+1.13.2 05/02/12
+
+Now allows CWOP stations with prefix 'EW'.
+
+Fixed bug that showed itself in the line color with plots with 3 or more lines.
+
+Changed debug  message when reaching the end  of memory in the  VP2 to something
+slightly less alarming.
+
+
+1.13.1 03/25/12
+
+Added  finer control  over the  line plots.  Can now  add optional  markers. The
+marker_type  can be  'none' (the  default),  'cross', 'box',  'circle', or  'x'.
+Also, line_type can  now either be 'solid' (the default)  or 'none' (for scatter
+plots). Same day I'll add 'dashed', but not now. :-)
+
+Conditionally imports sqlite3. If it does not support the "with" statement, then
+imports pysqlite2 as sqlite3.
+
+
+1.13.0 03/13/12
+
+The binding to the SQL database to be used now happens  much later  when running
+reports. This  allows more than one database  to be used when  running a report.
+Extra databases can be specified in the  option list for a report. I use this to
+display  broadband bandwidth  information,  which was  collected  by a  separate
+program.  Email me  for details  on  how to  do this.  Introducing this  feature
+changed the signature of a few functions. See the upgrade guide for details.
+
+
+1.12.4 02/13/12
+
+User Alf Høgemark found an error in the encoding of solar data for CWOP and sent
+me a fix. Thanks, Alf!
+
+Now always  uses "import  sqlite3", resulting in  using the version  of pysqlite
+that  comes  with  Python.  This   means  the  install  instructions  have  been
+simplified.
+
+Now doesn't  choke when using  the (rare) Python  version of NameMapper  used by
+Cheetah.
+
+
+1.12.3 02/09/12
+
+Added  start script  for FreeBSD,  courtesy of  user Fabian  Abplanalp.  Thanks,
+Fabian!
+
+Added the ability to respond to a "status" query to the Debian startup script.
+
+RESTful posts can now recover from more HTTP errors.
+
+Station serial port can now recover from a SerialException error (usually caused
+when there is a process competing for the serial port).
+
+Continue to fiddle with the retry logic when reading LOOP data.
+
+
+1.12.2 01/18/12
+
+Added check for FTP error code '521'  to the list of possibilities if a directory
+already exists. Thanks to user Clyde!
+
+More complete information when unable to load a module file. Thanks, Jason!
+
+Added a  few new  unit types  to the list  of possible  target units  when using
+explicit conversion. Thanks, Antonio!
+
+Discovered and fixed problem caused by  the Davis docs giving the wrong "resend"
+code (should be decimal 21, not hex 21).
+
+Improved robustness of VantagePro configuration utility.
+
+Fixed problem where an exception gets thrown when changing VP archive interval.
+
+Simplified some of the logic in the VP2 driver.
+
+ 
+1.12.1 11/03/11
+
+Now corrects  for rain bucket  size if it  is something other than  the standard
+0.01 inch bucket.
+
+
+1.12.0 10/29/11
+
+Added  the  ability  to change  bucket  type,  rain  year start,  and  barometer
+calibration data  in the console  using the utility configure.py.   Added option
+"--info",  which  queries  the  console  and returns  information  about  EEPROM
+settings.  Changed  configure.py so it can  do hardware-specific configurations,
+in anticipation of supporting hardware besides the Davis series.
+
+Reorganized the documentation.
+
+
+1.11.0 10/06/11
+
+Added support for the Davis WeatherLinkIP. Thanks, Peter Nock and Travis Pickle!
+
+Added support for older Rev A type archive records.
+
+Added  patch from  user  Dan Haller  that sends  UV  and radiation  data to  the
+WeatherUnderground if available. Thanks, Dan!
+
+Added  patch from  user Marijn  Vriens that  allows fallback  to the  version of
+pysqlite that comes with many versions of Python. Thanks, Marijn!
+
+Now does garbage  collection after an archive record is  obtained and before the
+main loop is restarted.
+
+
+1.10.2 04/14/11
+
+Added RA and declination for the Sun  and Moon to the Daily Almanac. Equinox and
+solstice are now displayed in chronological order. Same with new and full moons.
+
+Examples  alarm.py and  lowBattery.py now  include more  error checks,  allow an
+optional 'subject' line  to the sent email, and allow a  comma separated list of
+recipients.
+
+
+1.10.1 03/30/11
+
+Substitutes US Units  if a user does not specify  anything (instead of exception
+KeyError).
+
+Almanac uses default temperature and pressure if they are 'None'.
+
+Prettied  up web  page  almanac data  in the  case  where pyephem  has not  been
+installed.
+
+Fixed up malformed CSS script weewx.css.
+
+
+1.10.0 03/29/11
+
+Added extensive almanac  information if the optional package  'pyephem' has been
+installed
+
+Added a weewx "favorite icon" favicon.ico that displays in your browser toolbar.
+
+Added  a mobile  formatted HTML  page, courtesy  of user  Vince  Skahan (thanks,
+Vince!!).
+
+Tags can now  be ended with a unit  type to convert to a new  unit. For example,
+say your pressure group ("group_pressure") has been set to show inHg. The normal
+tag   notation  of   "$day.barometer.avg"  will   show  something   like  "30.05
+inHg". However, the tag "$day.barometer.avg.mbar" will show "1017.5 mbar".
+
+Added special tag  "exists" to test whether an  observation type exists. Example
+"$year.foo.exists"  will  return  False  if  there  is  no  type  "foo"  in  the
+statistical database.
+
+Added special tag "has_data" to test  whether an observation type exists and has
+a  non-zero number of  data points  over the  aggregation period.   For example,
+"$year.soilMoist1.has_data" will return "True"  if soilMoist1 both exists in the
+stats database and contains some data (meaning, you have the hardware).
+
+Y-axis  plot  labels  (such  as  "°F")   can  now  be  overridden  in  the  plot
+configuration section of skin.conf by using option "y_label".
+
+Added executable module "runreports.py" for running report generation only.
+
+Added package "user",  which can contain any user  extensions. This package will
+not get overridden in the upgrade process.
+
+Added  the ability  to reconfigure  the main  database, i.e.,  add or  drop data
+types.   Along  the   same  line,  statistical  types  can   also  be  added  or
+dropped. Email me for details on how to do this.
+
+Now makes all of the LOOP  and archive data available to services. This includes
+new keys:
+
+  LOOP data: 
+    'extraAlarm1'    'extraAlarm2'    'extraAlarm3'    'extraAlarm4'
+    'extraAlarm5'    'extraAlarm6'    'extraAlarm7'    'extraAlarm8'
+    'forecastIcon'   'forecastRule'
+    'insideAlarm'    'outsideAlarm1'  'outsideAlarm2'  'rainAlarm'
+    'soilLeafAlarm1' 'soilLeafAlarm2' 'soilLeafAlarm3' 'soilLeafAlarm4'
+    'sunrise'        'sunset'
+
+  Archive data:
+    'forecastRule'   'highOutTemp'    'highRadiation'   'highUV'
+    'lowOutTemp'
+
+Started a more formal test suite. There are now tests for the report generators.
+These are  not included in  the normal distribution,  but can be  retrieved from
+SourceForge via svn.
+
+
+1.9.3 02/04/11
+
+Now correctly decodes temperatures from LOOP packets as signed shorts (rather
+than unsigned).
+
+Now does a CRC check on LOOP data.
+
+Changed VantagePro.accumulateLoop to make it slightly more robust.
+
+
+1.9.2 11/20/10
+
+Now catches  exception of type OverflowError when  calculating celsius dewpoint.
+(Despite the  documentation indicating otherwise, math.log() can  still throw an
+OverflowError)
+
+Fixed  bug that  causes  crash in  VantagePro.accumulateLoop()  during fall  DST
+transition in certain situations.
+
+VP2 does  not store records during  the one hour fall  DST transition.  Improved
+logic in dealing with this.
+
+Changed install so that it backs  up the ./bin subdirectory, then overwrites the
+old one. Also,  does not install the ./skins subdirectory at  all if one already
+exists (thus preserving any user customization).
+
+
+1.9.1 9/9/10
+
+Now catches exceptions of type httplib.BadStatusLine when doing RESTful posts.
+
+Added an  extra decimal point of precision  to dew point reports  to the Weather
+Underground and PWS.
+
+
+1.9.0 7/04/10
+
+Added a new service, StdQC, that offers a rudimentary data check.
+
+Corrected error in rain year total if rain year does not start in January.
+
+Moved option max_drift (the max amount of clock drift to tolerate) to section
+[Station].
+
+Added check for a bad storm start time.
+
+Added checks for bad dateTime.
+
+Simplified VantagePro module.
+
+
+1.8.4 6/06/10
+
+Fixed problem that shows itself if weewx starts up at precisely the beginning of
+an archive interval. Symptom is max recursion depth exceeded.
+
+Units for UV in LOOP records corrected. Also, introduced new group for UV,
+group_uv_index. Thanks to user A. Burriel for this fix!
+
+
+1.8.3 5/20/10
+
+Problem with configuring archive interval found and fixed by user A. Burriel
+(thanks, Antonio!)
+
+
+1.8.2 5/9/10
+
+Added check to skip calibration for a type that doesn't exist in LOOP or archive
+records. This allows windSpeed and windGust to be calibrated separately.
+
+
+1.8.1 5/1/10
+
+Ported to Cheetah V2.4.X
+
+
+1.8.0 04/28/10
+
+Added CWOP support.
+
+Storage of LOOP and archive data into the SQL databases is now just another
+service, StdArchive.
+
+Added a calibration service, StdCalibrate, that can correct LOOP and archive
+data.
+
+Average console battery voltage is now calculated from LOOP data, and saved to
+the archive as 'consBatteryVoltage'.
+
+Transmitter battery status is now ORd together from LOOP data, and saved to the
+archive as 'txBatteryStatus'.
+
+Added stack tracebacks for unrecoverable exceptions.
+
+Added a wrapper to the serial port in the VantagePro code. When used in a Python
+"with" statement, it automatically releases the serial port if an exception
+happens, allowing a more orderly shutdown.
+
+Offered some hints in the documentation on how to automount your VP2 when using
+a USB connection.
+
+Corrected error in units. getTargetType() that showed itself with when the
+console memory was freshly cleared, then tried to graph something immediately.
+
+
+1.7.0 04/15/10
+
+Big update.
+
+Reports now use skins for their "look or feel."  Options specific to the
+presentation layer have been moved out of the weewx configuration file
+'weewx.conf' to a skin configuration file, 'skin.conf'. Other options have
+remained behind.
+
+Because the configuration file weewx.conf was split, the installation script
+setup.py will NOT merge your old configuration file into the new one. You will
+have to reedit weewx.conf to put in your customizations.
+
+FTP is treated as just another report, albeit with an unusual generator. You can
+have multiple FTP sessions, each to a different server, or uploading to or from
+a different area.
+
+Rewrote the FTP upload package so that it allows more than one FTP session to be
+active in the same local directory. This version also does fewer hits on the
+server, so it is significantly faster.
+
+The configuration files weewx.conf and skin.conf now expect UTF-8 characters
+throughout.
+
+The encoding for reports generated from templates can be chosen. By default, the
+day, week, month, and year HTML files are encoded using HTML entities; the NOAA
+reports encoded using 'strict ascii.' Optionally, reports can be encoded using
+UTF-8.
+
+Revamped the template formatting. No longer use class ModelView. Went to a
+simpler system built around classes ValueHelper and UnitInfo.
+
+Optional formatting was added to all tags in the templates. There are now
+optional endings:
+  'string': Use specified string for None value.
+  'formatted': No label.
+  'format': Format using specified string format.
+  'nolabel': Format using specified string format; no label.
+  'raw': return the underlying data with no string formatting or label.
+
+For the index, week, month, and year template files, added conditional to not
+include ISS extended types (UV, radiation, ET) unless they exist.
+
+Added an RSS feed.
+
+Added support for PWSweather.com
+
+Both WeatherUnderground and PWSweather posts are now retried up to 3 times
+before giving up.
+
+Now offer a section 'Extras' in the skin configuration file for including tags
+added by the user. As an example, the tag radar_url has been moved into here.
+ 
+Data files used in reports (such as weewx.css) are copied over to the HTML
+directory on program startup.
+
+Included an example of a low-battery alarm.
+
+Rearranged distribution directory structure so that it matches the install
+directory structure.
+
+Moved base temperature for heating and cooling degree days into skin.conf.  They
+now also require a unit.
+
+Now require unit to be specified for 'altitude'.
+
+1.5.0 03/07/10
+
+Added support for other units besides the U.S. Customary. Plots and HTML reports
+can be prepared using any arbitrary combination of units. For example, pressure
+could be in millibars, while everything else is in U.S. Customary.
+
+Because the configuration file weewx.conf changed significantly, the
+installation script setup.py will NOT merge your old configuration file into the
+new one. You will have to reedit weewx.conf to put in your customizations.
+
+Added an exception handler for exception OSError, which is typically thrown when
+another piece of software attempts to access the same device port.  Weewx
+catches the exception, waits 10 seconds, then starts again from the top.
+
+1.4.0 02/22/10
+
+Changed the architecture of stats.py to one that uses very late binding. The SQL
+statements are not run until template evaluation. This reduces the amount of
+memory required (by about 1/2), reduces memory fragmentation, as well as greatly
+simplifying the code (file stats.py shed over 150 lines of non-test code).
+Execution time is slightly slower for NOAA file generation, slightly faster for
+HTML file generation, the same for image generation, although your actual
+results will depend on your disk speed.
+
+Now possible to tell weewx to reread the configuration file without stopping
+it. Send signal HUP to the process.
+
+Added option week_start, for specifying which day a calendar week starts
+on. Default is 6 (Sunday).
+
+Fixed reporting bug when the reporting time falls on a calendar month or year
+boundary.
+
+1.3.4 02/08/10
+
+Fixed problem when plotting data where all data points are bad (None).
+
+1.3.3 01/10/10
+
+Fixed reporting bug that shows itself if rain year does not start in January.
+
+1.3.2 12/26/09
+
+LOOP data added to stats database.
+
+1.3.1 12/22/09
+
+Added a call to syslog.openlog() that inadvertently got left out when switching
+to the engine driven architecture.
+
+1.3.0 12/21/09
+
+Moved to a very different architecture to drive weewx. Consists of an engine,
+that manages a list of 'services.' At key events, each service is given a chance
+to participate. Services are easy to add, to allow easy customization. An
+example is offered of an 'alarm' service.
+
+Checking the clock of the weather station for drift is now a service, so the
+option clock_check was moved from the station specific [VantagePro] section to
+the more general [Station] section.
+
+Added an example service 'MyAlarm', which sends out an email should the outside
+temperature drop below 40 degrees.
+
+In a similar manner, all generated files, images, and reports are the product of
+a report engine, which can run any number of reports. New reports are easily
+added.
+
+Moved the compass rose used in progressive vector plots into the interior of the
+plot.
+
+Install now deletes public_html/#upstream.last, thus forcing all files to be
+uploaded to the web server at the next opportunity.
+ 
+1.2.0 11/22/09
+
+Added progressive vector plots for wind data.
+
+Improved axis scaling. The automatic axis scaling routine now does a better job
+for ranges less than 1.0. The user can also hardwire in min and max values, as
+well as specify a minimum increment, through parameter 'yscale' in section
+[Images] in the configuration file.
+
+Now allows the same SQL type to be used more than once in a plot. This allows,
+say, instantaneous and average wind speed to be shown in the same plot.
+
+Rain year is now parameterized in file templates/year.tmpl (instead of being
+hardwired in).
+
+Now does LOOP caching by default.
+
+When doing backfilling to the stats database, configure now creates the stats
+database if it doesn't already exist.
+
+setup.py now more robust to upgrading the FTP and Wunderground sections
+
+
+1.1.0 11/14/09
+
+Added the ability to cache LOOP data. This can dramatically reduce the number of
+writes to the stats database, reducing wear on solid-state disk stores.
+
+Introduced module weewx.mainloop. Introduced class weewx.mainloop.MainLoop This
+class offers many opportunities to customize weewx through subclassing, then
+overriding an appropriate member function.
+
+Refactored module weewx.wunderground so it more closely resembles the (better)
+logic in wunderfixer.
+
+setup.py no longer installs a daemon startup script to /etc/init.d. It must now
+be done by hand.
+
+setup.py now uses the 'home' value in setup.cfg to set WEEWX_ROOT in weewx.conf
+and in the daemon start up scripts
+
+Now uses FTP passive mode by default.
+
+1.0.1 11/09/09
+
+Fixed bug that prevented backfilling the stats database after modifying the main
+archive.
+
+1.0.0 10/26/09
+
+Took the module weewx.factory back out, as it was too complicated and hard to
+understand.
+
+Added support for generating NOAA monthly and yearly reports. Completely rewrote
+the filegenerator.py module, to allow easy subclassing and specialization.
+
+Completely rewrote the stats.py module. All aggregate quantities are now
+calculated dynamically.
+
+Labels for HTML generation are now held separately from labels used for image
+generation. This allows entities such as '&deg;' to be used for the former.
+
+LOOP mode now requests only 200 LOOP records (instead of the old 2000). It then
+renews the request should it run out. This was to get around an (undocumented)
+limitation in the VP2 that limits the number of LOOP records that can be
+requested to something like 220. This was a problem when supporting VP2s that
+use long archive intervals.
+
+Cut down the amount of computing that went on before the processing thread was
+spawned, thus allowing the main thread to get back into LOOP mode more quickly.
+
+Added type 'rainRate' to the types decoded from a Davis archive record. For some
+reason it was left out.
+
+Added retries when doing FTP uploads. It will now attempt the upload several
+times before giving up.
+
+Much more extensive DEBUG analysis.
+
+Nipped and tucked here and there, trying to simplify.
+
+
+0.6.5 10/11/09
+
+Ported to Cheetah V2.2.X. Mostly, this is making sure that all strings that
+cannot be converted with the 'ascii' codec are converted to Unicode first before
+feeding to Cheetah.
+
+0.6.4 9/22/09
+
+Fixed an error in the calculation of heat index.
+
+0.6.3 8/25/09
+
+FTP transfers now default to ACTIVE mode, but a configuration file option allows
+PASSIVE mode. This was necessary to support Microsoft FTP servers.
+
+0.6.2 8/1/09
+
+Exception handling in weewx/ftpdata.py used socket.error but failed to declare
+it. Added 'import socket' to fix.
+
+Added more complete check for unused pages in weewx/VantagePro.py. Now the
+entire record must be filled with 0xff, not just the time field. This fixes a
+bug where certain time stamps could look like unused records.
+
+0.6.1 6/22/09
+
+Fixed minor ftp bug.
+
+0.6.0 5/20/09
+
+Changed the file, imaging, ftping functions into objects, so they can be more
+easily specialized by the user.
+
+Introduced a StationData object.
+
+Introduced module weewx.factory that produces these things, so the user has a
+place to inject his/her new types.
+
+0.5.1 5/13/09
+
+1. Weather Underground thread now run as daemon thread, allowing the program to
+exit even if it is running.
+
+2. WU queue now hold an instance of archive and the time to be published, rather
+than a record. This allows dailyrain to be published as well.
+
+3. WU date is now given in the format "2009-05-13+12%3A35%3A00" rather than
+"2009-05-13 12:35:00". Seems to be more reliable. But, maybe I'm imagining
+things...

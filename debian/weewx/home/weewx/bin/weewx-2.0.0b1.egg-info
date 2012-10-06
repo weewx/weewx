@@ -1,0 +1,15 @@
+Metadata-Version: 1.1
+Name: weewx
+Version: 2.0.0b1
+Summary: The weewx weather system
+Home-page: http://www.weewx.com
+Author: Tom Keffer
+Author-email: tkeffer@gmail.com
+License: UNKNOWN
+Description: The weewx weather system manages a weather station. It generates plots, statistics, and HTML pages of the current and historical weather
+Platform: UNKNOWN
+Requires: configobj(>=4.5)
+Requires: serial(>=2.3)
+Requires: Cheetah(>=2.0)
+Requires: sqlite3(>=2.5)
+Requires: PIL(>=1.1.6)

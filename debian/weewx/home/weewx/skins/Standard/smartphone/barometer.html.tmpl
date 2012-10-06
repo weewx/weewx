@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <title>Barometer in $station.location</title>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+  <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <div data-role="page" data-add-back-btn="true" data-theme="a">
+    <div data-role="header">
+      <h1>Barometer</h1>
+   </div>
+   <div data-role="content">
+     <h4>24h barometer</h4>
+     <img src="../daybarometer.png"/>
+     <ul>
+       <li>Today's min: $day.barometer.min at $day.barometer.mintime</li>
+       <li>Today's max: $day.barometer.max at $day.barometer.maxtime</li>
+     </ul>
+
+     <h4>7-day barometer</h4>
+     <img src="../weekbarometer.png" />
+     <ul>
+       <li>This week's min: $week.barometer.min at $week.barometer.mintime</li>
+       <li>This week's max: $week.barometer.max at $week.barometer.maxtime</li>
+     </ul>
+    </div>
+    <div data-role="footer">
+      <h4>weewx v $station.version</h4>
+    </div>
+  </div>
+</body>

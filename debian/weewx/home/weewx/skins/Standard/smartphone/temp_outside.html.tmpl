@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <title>Outside temperature in $station.location</title>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+  <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <div data-role="page" data-add-back-btn="true" data-theme="a">
+    <div data-role="header">
+      <h1>Outside temperature</h1>
+    </div>
+    <div data-role="content">
+      <h4>24h temperature</h4>
+      <img src="../daytempdew.png"/>
+      <ul>
+	<li>Today's min: $day.outTemp.min at $day.outTemp.mintime</li>
+	<li>Today's max: $day.outTemp.max at $day.outTemp.maxtime</li>
+      </ul>
+      <h4>7-day temperature</h4>
+      <img src="../weektempdew.png"/>
+      <ul>
+	<li>This week's min: $week.outTemp.min at $week.outTemp.mintime</li>
+	<li>This week's max: $week.outTemp.max at $week.outTemp.maxtime</li>
+      </ul>
+    </div>
+    <div data-role="footer">
+      <h4>weewx v$station.version</h4>
+    </div>
+  </div>
+</body>
+

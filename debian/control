@@ -1,0 +1,19 @@
+Source: weewx
+Section: science
+Priority: extra
+Maintainer: Tom Keffer <tkeffer@gmail.com>
+Build-Depends: debhelper (>= 8.0.0), python-support, python (>=2.5)
+Standards-Version: 3.9.2
+Homepage: http://www.weewx.com
+#Vcs-Git: git://git.debian.org/collab-maint/weewx.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/weewx.git;a=summary
+
+Package: weewx
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Description: Unix weather software
+ weewx is software program, written in Python, which interacts with your
+ weather station to produce graphs, reports, and HTML pages, which
+ can then be optionally uploaded to your website. It can optionally 
+ publish to the WeatherUnderground, PWSweather.com, or CWOP. It uses
+ an easy to understand, extensible, architecture.

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <title>$station.location Current Weather Conditions</title>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+  <link rel="apple-touch-icon" href="icons/icon_iphone_x1.png" />
+  <link rel="apple-touch-icon" sizes="72x72" href="icons/icon_ipad_x2.png" />
+  <link rel="apple-touch-icon" sizes="114x114" href="icons/icon_iphone_x2.png" />
+  <link rel="apple-touch-icon" sizes="144x144" href="icons/icon_ipad_x2.png" />
+  <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+  <script src="custom.js"></script>
+  <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <div data-role="page" data-theme="a">
+    <div data-role="header">
+      <h1>$station.location</h1>
+    </div>
+    <div data-role="content">
+
+      <ul data-role="listview" data-inset="true" data-divider-theme="c">
+	<li data-role="list-divider">Time: $current.dateTime</li>
+        <li><a href="temp_outside.html">Temp: $current.outTemp [$day.outTemp.min, $day.outTemp.max]</a></li>
+        <li><a href="rain.html">Rain: $current.rainRate ($day.rain.sum)</a></li>
+	<li><a href="barometer.html">Barometer: $current.barometer</a></li>
+	<li><a href="wind.html">Wind: $current.windSpeed from $current.windDir</a></li>
+      </ul>
+
+      <ul data-role="listview" data-inset="true" data-divider-theme="b">
+        <li><a href="radar.html">Radar</a></li>
+        <li><a href="../index.html" rel="external">Big page</a></li>
+      </ul>
+
+    </div>
+    <div data-role="footer">
+      <h4>weewx v$station.version</h4>
+    </div>
+  </div> 
+</body>
+
