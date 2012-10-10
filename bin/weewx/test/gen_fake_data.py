@@ -12,16 +12,13 @@
 
 The idea is to create a deterministic database that reports
 can be run against, resulting in predictable, expected results"""
+
 import math
-import os.path
-import sys
 import syslog
 import time
-import unittest
-
-import configobj
 
 import config_database
+import weedb
 import weewx.archive
 import weewx.stats
 
@@ -45,98 +42,91 @@ avg_baro = 30.0
 # Archive interval in seconds:
 interval = 600
 
-class StatsTestBase(unittest.TestCase):
+def configDatabases(config_dict):
+    """Configures the main and stats databases."""
 
-    def setUp(self):
+    archive_db      = config_dict['StdArchive']['archive_database']
+    stats_db        = config_dict['StdArchive']['stats_database']
+    archive_db_dict = config_dict['Databases'][archive_db]        
+    stats_db_dict   = config_dict['Databases'][stats_db]
 
-        weewx.debug = 1
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    try:
+        # Open the main archive database:
+        archive = weewx.archive.Archive.fromConfigDict(config_dict)
+        if archive.firstGoodStamp() == start_ts:
+            if archive.lastGoodStamp() == stop_ts:
+                archive.close()
+                return
+    except (StandardError, weedb.OperationalError):
+        pass
 
-        try :
-            config_dict = configobj.ConfigObj(self.config_path, file_error=True)
-        except IOError:
-            sys.stderr.write("Unable to open configuration file %s" % self.config_path)
-            # Reraise the exception (this will eventually cause the program to exit)
-            raise
-        except configobj.ConfigObjError:
-            sys.stderr.write("Error while parsing configuration file %s" % self.config_path)
-            raise
-        else:
-            print "Using configuration file:  ", self.config_path
-
-        self.configDatabases(config_dict, config_dict['StdArchive']['stats_types'])
-        self.assertEqual(sorted(self.stats.statsTypes), sorted(config_dict['StdArchive']['stats_types']))
-
-    def configDatabases(self, config_dict, stats_types):
-        """Configures the main and stats databases."""
-
-        archive_db = config_dict['StdArchive']['archive_database']
-        stats_db   = config_dict['StdArchive']['stats_database']
-        archive_db_dict = config_dict['Databases'][stats_db]        
-        stats_db_dict   = config_dict['Databases'][stats_db]
-
+    print "The archive test database '%s' is malformed. Dropping it then recreating it" % (archive_db,)
+    try:
         weedb.drop(archive_db_dict)
-        # Rather than code all the stuff to create a database, we'll just use
-        # the code from config_database:
-        config_database.createMainDatabase(config_dict)
+    except weedb.NoDatabase:
+        pass
+    
+    weewx.archive.config(archive_db_dict)
+    print "Created archive database '%s'" % (archive_db,)
 
-        # Now open the main archive database:
-        self.archive = weewx.archive.Archive.fromConfigDict(config_dict)
-        
-        # Because this can generate voluminous log information,
-        # suppress all but the essentials:
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
-        
-        # Now generate the fake records to populate the database:
-        t1= time.time()
-        self.archive.addRecord(self.genFakeRecords())
-        t2 = time.time()
-        print "Time to create synthetic archive database = %6.2fs" % (t2-t1,)
-        # Now go back to regular logging:
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        
+    archive = weewx.archive.Archive.fromConfigDict(config_dict)
+
+    # Because this can generate voluminous log information,
+    # suppress all but the essentials:
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
+    
+    # Now generate the fake records to populate the database:
+    t1= time.time()
+    archive.addRecord(genFakeRecords())
+    t2 = time.time()
+    print "Time to create synthetic archive database = %6.2fs" % (t2-t1,)
+    # Now go back to regular logging:
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    
+    try:
         weedb.drop(stats_db_dict)
-        # Configure a new stats databsae:            
-        config_database.createStatsDatabase(config_dict)
+    except weedb.NoDatabase:
+        pass
+    # Configure a new stats databsae:            
+    config_database.createStatsDatabase(config_dict)
 
-        self.stats = weewx.stats.StatsDb.fromConfigDict(config_dict)
-        t1 = time.time()
-        # Now backfill the stats database from the main archive database.
-        weewx.stats.backfill(self.archive, self.stats)
-        t2 = time.time()
-        print "Time to backfill stats database from it =   %6.2fs" % (t2-t1,)
-        
-    def genFakeRecords(self):
-        self.count = 0
-        
-        for ts in xrange(start_ts, stop_ts+interval, interval):
-            daily_phase  = (ts - start_ts) * 2.0 * math.pi / (3600*24.0)
-            annual_phase = (ts - start_ts) * 2.0 * math.pi / (3600*24.0*365.0)
-            weather_phase= (ts - start_ts) * 2.0 * math.pi / weather_cycle
-            record = {}
-            record['dateTime']  = ts
-            record['usUnits']   = weewx.US
-            record['interval']  = interval
-            record['outTemp']   = 0.5 * (-daily_temp_range*math.sin(daily_phase) - annual_temp_range*math.cos(annual_phase)) + avg_temp
-            record['barometer'] = 0.5 * weather_baro_range*math.sin(weather_phase) + avg_baro
-            record['windSpeed'] = abs(weather_wind_range*(1.0 + math.sin(weather_phase)))
-            record['windDir'] = math.degrees(weather_phase) % 360.0
-            record['windGust'] = 1.2*record['windSpeed']
-            record['windGustDir'] = record['windDir']
-            if math.sin(weather_phase) > .95:
-                record['rain'] = 0.02 if math.sin(weather_phase) > 0.98 else 0.01
-            else:
-                record['rain'] = 0.0
-        
-            self.saltWithNulls(record)
-                        
-            yield record
-        
-    def saltWithNulls(self, record):
+    stats = weewx.stats.StatsDb.fromConfigDict(config_dict)
+    t1 = time.time()
+    # Now backfill the stats database from the main archive database.
+    nrecs = stats.backfillFrom(archive)
+    t2 = time.time()
+    print "Time to backfill stats database with %d records: %6.2fs" % (nrecs, t2-t1)
+    archive.close()
+    stats.close()
+    
+def genFakeRecords():
+    count = 0
+    
+    for ts in xrange(start_ts, stop_ts+interval, interval):
+        daily_phase  = (ts - start_ts) * 2.0 * math.pi / (3600*24.0)
+        annual_phase = (ts - start_ts) * 2.0 * math.pi / (3600*24.0*365.0)
+        weather_phase= (ts - start_ts) * 2.0 * math.pi / weather_cycle
+        record = {}
+        record['dateTime']  = ts
+        record['usUnits']   = weewx.US
+        record['interval']  = interval
+        record['outTemp']   = 0.5 * (-daily_temp_range*math.sin(daily_phase) - annual_temp_range*math.cos(annual_phase)) + avg_temp
+        record['barometer'] = 0.5 * weather_baro_range*math.sin(weather_phase) + avg_baro
+        record['windSpeed'] = abs(weather_wind_range*(1.0 + math.sin(weather_phase)))
+        record['windDir'] = math.degrees(weather_phase) % 360.0
+        record['windGust'] = 1.2*record['windSpeed']
+        record['windGustDir'] = record['windDir']
+        if math.sin(weather_phase) > .95:
+            record['rain'] = 0.02 if math.sin(weather_phase) > 0.98 else 0.01
+        else:
+            record['rain'] = 0.0
+    
         # Make every 71st observation (a prime number) a null. This is a deterministic algorithm, so it
         # will produce the same results every time.
         for obs_type in filter(lambda x : x not in ['dateTime', 'usUnits', 'interval'], record):
-            self.count+=1
-            if self.count%71 == 0:
+            count+=1
+            if count%71 == 0:
                 record[obs_type] = None
-            
+                    
+        yield record
+    

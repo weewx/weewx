@@ -14,18 +14,40 @@ import syslog
 import time
 import unittest
 
+import configobj
+
 import weeutil.weeutil
 import weewx.stats
-from gen_fake_data import StatsTestBase
+import gen_fake_data 
 
-class StatsTest(StatsTestBase):
-
+class StatsTest(unittest.TestCase):
+    
     def setUp(self):
-        syslog.openlog('test_stats', syslog.LOG_CONS)
-        self.config_path = config_path
-        # This will generate the test databases if necessary:
-        StatsTestBase.setUp(self)
+        global config_path
         
+        weewx.debug = 1
+
+        syslog.openlog('test_stats', syslog.LOG_CONS)
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+
+        try :
+            config_dict = configobj.ConfigObj(config_path, file_error=True)
+        except IOError:
+            sys.stderr.write("Unable to open configuration file %s" % self.config_path)
+            # Reraise the exception (this will eventually cause the program to exit)
+            raise
+        except configobj.ConfigObjError:
+            sys.stderr.write("Error while parsing configuration file %s" % config_path)
+            raise
+
+        # This will generate the test databases if necessary:
+        gen_fake_data.configDatabases(config_dict)
+        
+        # Now open the main archive database:
+        self.archive = weewx.archive.Archive.fromConfigDict(config_dict)
+        # And the stats database:
+        self.stats = weewx.stats.StatsDb.fromConfigDict(config_dict)
+
     def testStatsTally(self):
         # Pick a random day, say 15 March:
         start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
@@ -33,29 +55,25 @@ class StatsTest(StatsTestBase):
         # Sanity check that this is truly the start of day:
         self.assertEqual(start_ts, weeutil.weeutil.startOfDay(start_ts))
 
-        allStats = self.stats.day(start_ts)
+        allStats = self.stats._getDayStats(start_ts)
 
         # Test it against some types
         # Should really do a test for 'wind' as well.
         # Should also test monthly, yearly summaries
-        for stats_type in ('barometer', 'outTemp', 'rain'):
-            # Get the StatsDict for this day and this stats_type:
-            typeStats = self.stats.getStatsForType(stats_type, start_ts)
-        
+        for stats_type in ['barometer', 'outTemp', 'rain']:
+
             # Now test all the aggregates:
-            for aggregate in ('min', 'max', 'sum', 'count', 'avg'):
+            for aggregate in ['min', 'max', 'sum', 'count', 'avg']:
                 # Compare to the main archive:
-                res = self.archive.getSql("SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, stats_type), start_ts, stop_ts)
+                res = self.archive.getSql("SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, stats_type), (start_ts, stop_ts))
                 # From StatsDb:
-                typeStats_res = getattr(typeStats, aggregate)
                 allStats_res  = getattr(allStats[stats_type], aggregate)
-                self.assertEqual(typeStats_res, res[0])
                 self.assertEqual(allStats_res, res[0])
                 
                 # Check the times of min and max as well:
-                if aggregate in ('min','max'):
-                    res2 = self.archive.getSql("SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (stats_type,), res[0], start_ts, stop_ts)
-                    stats_time =  getattr(typeStats, aggregate+'time')
+                if aggregate in ['min','max']:
+                    res2 = self.archive.getSql("SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (stats_type,), (res[0], start_ts, stop_ts))
+                    stats_time =  getattr(allStats[stats_type], aggregate+'time')
                     self.assertEqual(stats_time, res2[0])
         
     def testTags(self):
@@ -85,7 +103,7 @@ class StatsTest(StatsTestBase):
                 # Now test all the aggregates:
                 for aggregate in ('min', 'max', 'sum', 'count', 'avg'):
                     # Compare to the main archive:
-                    res = self.archive.getSql("SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, stats_type), start_ts, stop_ts)
+                    res = self.archive.getSql("SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, stats_type), (start_ts, stop_ts))
                     archive_result = res[0]
                     # This is how you form a tag such as tagStats.month.barometer.avg when
                     # all you have is strings holding the attributes:
@@ -94,7 +112,7 @@ class StatsTest(StatsTestBase):
                     
                     # Check the times of min and max as well:
                     if aggregate in ('min','max'):
-                        res2 = self.archive.getSql("SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (stats_type,), archive_result, start_ts, stop_ts)
+                        res2 = self.archive.getSql("SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (stats_type,), (archive_result, start_ts, stop_ts))
                         stats_value_helper = getattr(getattr(getattr(tagStats, span), stats_type), aggregate +'time')
                         self.assertEqual(stats_value_helper.raw, res2[0])
 
@@ -144,8 +162,8 @@ class StatsTest(StatsTestBase):
         self.assertTrue(tagStats.year.barometer.has_data)
         self.assertFalse(tagStats.year.bar.exists)
         self.assertFalse(tagStats.year.bar.has_data)
-        self.assertTrue(tagStats.year.foo.exists)
-        self.assertFalse(tagStats.year.foo.has_data)
+        self.assertTrue(tagStats.year.radiation.exists)
+        self.assertFalse(tagStats.year.radiation.has_data)
 
     def test_rainYear(self):
         stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
@@ -174,6 +192,8 @@ class StatsTest(StatsTestBase):
 
 if __name__ == '__main__':
     import sys
+    global config_path
+    
     if len(sys.argv) < 2 :
         print "Usage: python test_stats.py path-to-configuration-file"
         exit()
