@@ -129,7 +129,7 @@ def backfillStatsDatabase(config_dict):
     statsDb = weewx.stats.StatsDb.fromConfigDict(config_dict)
     
     # Now backfill
-    nrecs = weewx.stats.backfill(archive, statsDb)
+    nrecs = statsDb.backfillFrom(archive)
     print "Backfilled %d records from the archive database '%s' into the statistical database '%s'" % (nrecs, archive.database, statsDb.database)
     
 def reconfigMainDatabase(config_dict, new_archive_db):

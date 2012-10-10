@@ -143,9 +143,9 @@ class StatsDb(object):
         
         db_dict: A dictionary containing the database connection information"""
         
-        self.connection      = weedb.connect(db_dict)
+        self.connection = weedb.connect(db_dict)
         try:
-            self.statsTypes      = self.__getTypes()
+            self.statsTypes = self.__getTypes()
         except weedb.OperationalError:
             self.close()
             raise
@@ -335,6 +335,84 @@ class StatsDb(object):
         # Return as a value tuple
         return weewx.units.ValueTuple(_result, t, g)
     
+    def backfillFrom(self, archiveDb, start_ts = None, stop_ts = None):
+        """Fill the statistical database from an archive database.
+        
+        Normally, the stats database if filled by LOOP packets (to get maximum time
+        resolution), but if the database gets corrupted, or if a new user is
+        starting up with imported wview data, it's necessary to recreate it from
+        straight archive data. The Hi/Lows will all be there, but the times won't be
+        any more accurate than the archive period.
+        
+        archiveDb: An instance of weewx.archive.Archive
+        
+        start_ts: Archive data with a timestamp greater than this will be
+        used. [Optional. Default is to start with the first datum in the archive.]
+        
+        stop_ts: Archive data with a timestamp less than or equal to this will be
+        used. [Optional. Default is to end with the last datum in the archive.]
+        
+        returns: The number of records backfilled."""
+        
+        syslog.syslog(syslog.LOG_DEBUG, "stats: Backfilling stats database.")
+        t1 = time.time()
+        nrecs = 0
+        ndays = 0
+        
+        _statsDict = None
+        _lastTime  = None
+        
+        # If a start time for the backfill wasn't given, then start with the time of
+        # the last statistics recorded:
+        if start_ts is None:
+            start_ts = self._getLastUpdate()
+        
+        # Go through all the archiveDb records in the time span, adding them to the
+        # database
+        for _rec in archiveDb.genBatchRecords(start_ts, stop_ts):
+    
+            # Get the start-of-day for the record:
+            _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
+            # If this is the very first record, fetch a new accumulator
+            if not _statsDict:
+                _statsDict = self._getDayStats(_sod_ts)
+            # Try updating. If the time is out of the accumulator's time span, an
+            # exception will get thrown.
+            try:
+                _statsDict.addRecord(_rec)
+            except weewx.accum.OutOfSpan:
+                # The record is out of the time span.
+                # Save the old accumulator:
+                self._setDayStats(_statsDict, _rec['dateTime'])
+                ndays += 1
+                # Get a new accumulator:
+                _statsDict = self._getDayStats(_sod_ts)
+                # try again
+                _statsDict.addRecord(_rec)
+             
+            # Remember the timestamp for this record.
+            _lastTime = _rec['dateTime']
+            nrecs += 1
+            if nrecs%1000 == 0:
+                print >>sys.stdout, "Records processed: %d; Last date: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)),
+                sys.stdout.flush()
+    
+        # We're done. Record the stats for the last day.
+        if _statsDict:
+            self._setDayStats(_statsDict, _lastTime)
+            ndays += 1
+        
+        t2 = time.time()
+        tdiff = t2 - t1
+        if nrecs:
+            syslog.syslog(syslog.LOG_NOTICE, 
+                          "stats: backfilled %d days of statistics with %d records in %.2f seconds" % (ndays, nrecs, tdiff))
+        else:
+            syslog.syslog(syslog.LOG_INFO,
+                          "stats: stats database up to date.")
+    
+        return nrecs
+
     def _getDayStats(self, sod_ts):
         """Return an instance of accum.DictAccum initialized to a given day's statistics.
 
@@ -767,80 +845,3 @@ def config(db_dict, stats_types=None):
     
     syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database")
 
-def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
-    """Fill the statistical database from an archive database.
-    
-    Normally, the stats database if filled by LOOP packets (to get maximum time
-    resolution), but if the database gets corrupted, or if a new user is
-    starting up with imported wview data, it's necessary to recreate it from
-    straight archive data. The Hi/Lows will all be there, but the times won't be
-    any more accurate than the archive period.
-    
-    archiveDb: An instance of weewx.archive.Archive
-    
-    statsDb: An instance of weewx.stats.StatsDb
-    
-    start_ts: Archive data with a timestamp greater than this will be
-    used. [Optional. Default is to start with the first datum in the archive.]
-    
-    stop_ts: Archive data with a timestamp less than or equal to this will be
-    used. [Optional. Default is to end with the last datum in the archive.]"""
-    
-    syslog.syslog(syslog.LOG_DEBUG, "stats: Backfilling stats database.")
-    t1 = time.time()
-    nrecs = 0
-    ndays = 0
-    
-    _statsDict = None
-    _lastTime  = None
-    
-    # If a start time for the backfill wasn't given, then start with the time of
-    # the last statistics recorded:
-    if start_ts is None:
-        start_ts = statsDb._getLastUpdate()
-    
-    # Go through all the archiveDb records in the time span, adding them to the
-    # database
-    for _rec in archiveDb.genBatchRecords(start_ts, stop_ts):
-
-        # Get the start-of-day for the record:
-        _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
-        # If this is the very first record, fetch a new accumulator
-        if not _statsDict:
-            _statsDict = statsDb._getDayStats(_sod_ts)
-        # Try updating. If the time is out of the accumulator's time span, an
-        # exception will get thrown.
-        try:
-            _statsDict.addRecord(_rec)
-        except weewx.accum.OutOfSpan:
-            # The record is out of the time span.
-            # Save the old accumulator:
-            statsDb._setDayStats(_statsDict, _rec['dateTime'])
-            ndays += 1
-            # Get a new accumulator:
-            _statsDict = statsDb._getDayStats(_sod_ts)
-            # try again
-            _statsDict.addRecord(_rec)
-         
-        # Remember the timestamp for this record.
-        _lastTime = _rec['dateTime']
-        nrecs += 1
-        if nrecs%1000 == 0:
-            print >>sys.stdout, "Records processed: %d; Last date: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)),
-            sys.stdout.flush()
-
-    # We're done. Record the stats for the last day.
-    if _statsDict:
-        statsDb._setDayStats(_statsDict, _lastTime)
-        ndays += 1
-    
-    t2 = time.time()
-    tdiff = t2 - t1
-    if nrecs:
-        syslog.syslog(syslog.LOG_NOTICE, 
-                      "stats: backfilled %d days of statistics with %d records in %.2f seconds" % (ndays, nrecs, tdiff))
-    else:
-        syslog.syslog(syslog.LOG_INFO,
-                      "stats: stats database up to date.")
-
-    return nrecs

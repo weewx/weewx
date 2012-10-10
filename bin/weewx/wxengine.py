@@ -565,7 +565,7 @@ class StdArchive(StdService):
 
         # Backfill it with data from the archive. This will do nothing if the
         # stats database is already up-to-date.
-        weewx.stats.backfill(self.archive, self.statsDb)
+        self.statsDb.backfillFrom(self.archive)
 
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using stats database: %s" % (config_dict['StdArchive']['stats_database'],))
         
