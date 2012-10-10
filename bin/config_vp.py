@@ -180,61 +180,69 @@ def set_interval(station, new_interval_seconds):
     if station.archive_interval == new_interval_seconds:
         print "Old and new archive intervals are the same. Nothing done."
     else:
-        print "Proceeding will change the archive interval as well as erase all old archive records."
-        ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
-        if ans == 'Y' :
-            try:
-                station.setArchiveInterval(new_interval_seconds)
-            except StandardError, e:
-                print >>sys.stderr, "Unable to set new archive interval. Reason:\n\t****", e
-            else:
-                print "Archive interval now set to %d seconds." % (station.archive_interval,)
-                # The Davis documentation implies that the log is cleared after
-                # changing the archive interval, but that doesn't seem to be the
-                # case. Clear it explicitly:
-                station.clearLog()
-                print "Archive records cleared."
-        else:
-            print "Nothing done."
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will change the archive interval as well as erase all old archive records."
+            ans = raw_input("Are you sure you want to proceed? (y/n) ")
+            if ans == 'y' :
+                try:
+                    station.setArchiveInterval(new_interval_seconds)
+                except StandardError, e:
+                    print >>sys.stderr, "Unable to set new archive interval. Reason:\n\t****", e
+                else:
+                    print "Archive interval now set to %d seconds." % (station.archive_interval,)
+                    # The Davis documentation implies that the log is cleared after
+                    # changing the archive interval, but that doesn't seem to be the
+                    # case. Clear it explicitly:
+                    station.clearLog()
+                    print "Archive records cleared."
+            elif ans == 'n':
+                print "Nothing done."
     
 def set_altitude(station, altitude_ft):
     """Set the console station altitude"""
     # Hit the console to get the current barometer calibration data:
     _bardata = station.getBarData()
-    
-    print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (_bardata[0], altitude_ft)
-    ans = raw_input("Are you sure you wish to proceed? (Y/n; note the capital 'Y') ")
-    if ans == 'Y':
-        station.setBarData(_bardata[0], altitude_ft)
-    else:
-        print "Nothing done."
+
+    ans = None
+    while ans not in ['y', 'n']:    
+        print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (_bardata[0], altitude_ft)
+        ans = raw_input("Are you sure you wish to proceed? (y/n) ")
+        if ans == 'y':
+            station.setBarData(_bardata[0], altitude_ft)
+        elif ans == 'n':
+            print "Nothing done."
 
 def set_barometer(station, barometer_inHg):
     """Set the barometer reading to a known correct value."""
     # Hit the console to get the current barometer calibration data:
     _bardata = station.getBarData()
     
-    if barometer_inHg:
-        print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (barometer_inHg, _bardata[1])
-    else:
-        print "Proceeding will have the console pick a sensible barometer calibration and set the station altitude to %.1f feet," % (_bardata[1],)
-    ans = raw_input("Are you sure you wish to proceed? (Y/n; note the capital 'Y') ")
-    if ans == 'Y':
-        station.setBarData(barometer_inHg, _bardata[1])
-    else:
-        print "Nothing done."
+    ans = None
+    while ans not in ['y', 'n']:
+        if barometer_inHg:
+            print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (barometer_inHg, _bardata[1])
+        else:
+            print "Proceeding will have the console pick a sensible barometer calibration and set the station altitude to %.1f feet," % (_bardata[1],)
+        ans = raw_input("Are you sure you wish to proceed? (y/n) ")
+        if ans == 'y':
+            station.setBarData(barometer_inHg, _bardata[1])
+        elif ans == 'n':
+            print "Nothing done."
     
 def clear(station):
     """Clear the archive memory of a VantagePro"""
     
-    print "Clearing the archive memory ..."
-    print "Proceeding will erase old archive records."
-    ans = raw_input("Are you sure you wish to proceed? (Y/n; note the capital 'Y') ")
-    if ans == 'Y':
-        station.clearLog()
-        print "Archive records cleared."
-    else:
-        print "Nothing done."
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Clearing the archive memory ..."
+        print "Proceeding will erase old archive records."
+        ans = raw_input("Are you sure you wish to proceed? (y/n) ")
+        if ans == 'y':
+            station.clearLog()
+            print "Archive records cleared."
+        elif ans == 'n':
+            print "Nothing done."
 
 def set_bucket(station, new_bucket_type):
     """Set the bucket type on the console."""
@@ -246,17 +254,19 @@ def set_bucket(station, new_bucket_type):
     if station.rain_bucket_type == new_bucket_type:
         print "Old and new bucket types are the same. Nothing done."
     else:
-        print "Proceeding will change the rain bucket type."
-        ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
-        if ans == 'Y' :
-            try:
-                station.setBucketType(new_bucket_type)
-            except StandardError, e:
-                print >>sys.stderr, "Unable to set new bucket type. Reason:\n\t****", e
-            else:
-                print "Bucket type now set to %d." % (station.rain_bucket_type,)
-        else:
-            print "Nothing done."
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will change the rain bucket type."
+            ans = raw_input("Are you sure you want to proceed? (y/n) ")
+            if ans == 'y' :
+                try:
+                    station.setBucketType(new_bucket_type)
+                except StandardError, e:
+                    print >>sys.stderr, "Unable to set new bucket type. Reason:\n\t****", e
+                else:
+                    print "Bucket type now set to %d." % (station.rain_bucket_type,)
+            elif ans == 'n':
+                print "Nothing done."
 
 def set_rain_year_start(station, rain_year_start):
         
@@ -265,17 +275,19 @@ def set_rain_year_start(station, rain_year_start):
     if station.rain_year_start == rain_year_start:
         print "Old and new rain season starts are the same. Nothing done."
     else:
-        print "Proceeding will change the rain season start."
-        ans = raw_input("Are you sure you want to proceed? (Y/n; note the capital 'Y') ")
-        if ans == 'Y' :
-            try:
-                station.setRainYearStart(rain_year_start)
-            except StandardError, e:
-                print >>sys.stderr, "Unable to set new rain year start. Reason:\n\t****", e
-            else:
-                print "Rain year start now set to %d." % (station.rain_year_start,)
-        else:
-            print "Nothing done."
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will change the rain season start."
+            ans = raw_input("Are you sure you want to proceed? (y/n) ")
+            if ans == 'y' :
+                try:
+                    station.setRainYearStart(rain_year_start)
+                except StandardError, e:
+                    print >>sys.stderr, "Unable to set new rain year start. Reason:\n\t****", e
+                else:
+                    print "Rain year start now set to %d." % (station.rain_year_start,)
+            elif ans == 'n':
+                print "Nothing done."
 
 if __name__=="__main__" :
     main()
