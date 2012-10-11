@@ -13,6 +13,7 @@
 import syslog
 import time
 import unittest
+import math
 
 import configobj
 
@@ -48,7 +49,7 @@ class StatsTest(unittest.TestCase):
         # And the stats database:
         self.stats = weewx.stats.StatsDb.fromConfigDict(config_dict)
 
-    def testStatsTally(self):
+    def testScalarTally(self):
         # Pick a random day, say 15 March:
         start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
         stop_ts  = int(time.mktime((2010,3,16,0,0,0,0,0,-1)))
@@ -58,7 +59,6 @@ class StatsTest(unittest.TestCase):
         allStats = self.stats._getDayStats(start_ts)
 
         # Test it against some types
-        # Should really do a test for 'wind' as well.
         # Should also test monthly, yearly summaries
         for stats_type in ['barometer', 'outTemp', 'rain']:
 
@@ -68,14 +68,47 @@ class StatsTest(unittest.TestCase):
                 res = self.archive.getSql("SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, stats_type), (start_ts, stop_ts))
                 # From StatsDb:
                 allStats_res  = getattr(allStats[stats_type], aggregate)
-                self.assertEqual(allStats_res, res[0])
+                self.assertEqual(allStats_res, res[0], "Value check. Failing type %s, aggregate: %s" % (stats_type, aggregate))
                 
                 # Check the times of min and max as well:
                 if aggregate in ['min','max']:
                     res2 = self.archive.getSql("SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (stats_type,), (res[0], start_ts, stop_ts))
                     stats_time =  getattr(allStats[stats_type], aggregate+'time')
-                    self.assertEqual(stats_time, res2[0])
-        
+                    self.assertEqual(stats_time, res2[0], "Time check. Failing type %s, aggregate: %s" % (stats_type, aggregate))
+    
+    def testWindTally(self):
+        # Pick a random day, say 15 March:
+        start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
+        stop_ts  = int(time.mktime((2010,3,16,0,0,0,0,0,-1)))
+        # Sanity check that this is truly the start of day:
+        self.assertEqual(start_ts, weeutil.weeutil.startOfDay(start_ts))
+
+        allStats = self.stats._getDayStats(start_ts)
+
+        # Test all the aggregates:
+        for aggregate in ['min', 'max', 'sum', 'count', 'avg']:
+            if aggregate == 'max':
+                res = self.archive.getSql("SELECT MAX(windGust) FROM archive WHERE dateTime>? AND dateTime <=?;", (start_ts, stop_ts))
+            else:
+                res = self.archive.getSql("SELECT %s(windSpeed) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, ), (start_ts, stop_ts))
+
+            # From StatsDb:
+            allStats_res  = getattr(allStats['wind'], aggregate)
+            self.assertEqual(allStats_res, res[0])
+            
+            # Check the times of min and max as well:
+            if aggregate == 'min':
+                resmin = self.archive.getSql("SELECT dateTime FROM archive WHERE windSpeed = ? AND dateTime>? AND dateTime <=?", (res[0], start_ts, stop_ts))
+                self.assertEqual(allStats['wind'].mintime, resmin[0])
+            elif aggregate == 'max':
+                resmax = self.archive.getSql("SELECT dateTime FROM archive WHERE windGust = ?  AND dateTime>? AND dateTime <=?", (res[0], start_ts, stop_ts))
+                self.assertEqual(allStats['wind'].maxtime, resmax[0])
+
+        # Check RMS:
+        (squaresum, count) = self.archive.getSql("SELECT SUM(windSpeed*windSpeed), COUNT(windSpeed) from archive where dateTime>? AND dateTime<=?;", (start_ts, stop_ts))
+        rms = math.sqrt(squaresum/count) if count else None
+        self.assertEqual(allStats['wind'].rms, rms)
+
     def testTags(self):
 
         spans = {'day'  : weeutil.weeutil.TimeSpan(time.mktime((2010,3,15,0,0,0,0,0,-1)),

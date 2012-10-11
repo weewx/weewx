@@ -94,14 +94,15 @@ class StatsDb(object):
     This class acts as a wrapper around the stats database, with a set
     of methods for retrieving records from the statistical compilation. 
 
-    After initialization, the attribute self.statsTypes will contain a list
-    of the types for which statistics are being gathered, or None if
-    the database has not been initialized. This can be used to determine
-    whether this is a virgin database.
+    An attempt to open an uninitialized or nonexistent database will result
+    in an exception of type weedb.OperationalError being thrown.
     
-    As for the SQL database itself, it consists of a separate table for each
-    type. The columns of a table are things like min, max, the timestamps for
-    min and max, count and sum. A count and sum are kept to make it easy to
+    After initialization, the attribute self.statsTypes will contain a list
+    of the observation types in the statistical database.
+    
+    The SQL database consists of a separate table for each type. The columns 
+    of a table are things like min, max, the timestamps for min and max, 
+    count and sum. A count and sum are kept to make it easy to
     calculate averages for different time periods.  The wind data table also
     includes sum of squares (for calculating rms speeds) and wind gust
     direction.
@@ -122,12 +123,10 @@ class StatsDb(object):
     is the number of items added to 'xsum' and 'ysum'.
     
     In addition to all the tables for each type, there is also a separate table
-    called 'metadata'. Currently, it only holds the time of last update, but more could
-    be added later.
+    called 'metadata'. Currently, it holds the time of the last update, and the
+    unit system in use in the database.
     
     ATTRIBUTES
-    
-    statsFilename: The path to the stats database
     
     statsTypes: The types of the statistics supported by this instance of
     StatsDb. 

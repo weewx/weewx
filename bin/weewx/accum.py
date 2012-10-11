@@ -125,6 +125,10 @@ class VecStats(object):
         return self.sum / self.count if self.count else None
 
     @property
+    def rms(self):
+        return math.sqrt(self.squaresum / self.count) if self.count else None
+
+    @property
     def vec_avg(self):
         if self.count:
             return math.sqrt((self.xsum**2 + self.ysum**2) / self.count**2)
