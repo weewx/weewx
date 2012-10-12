@@ -472,12 +472,11 @@ class StatsDb(object):
                 # File has never been used. Set the unit system:
                 _cursor.execute(meta_replace_str, ('unit_system', str(int(dayStatsDict.unit_system))))
             else:
-                # The file has been used. If the debug flag has been set, make
-                # sure the unit system of the file matches the new data.
-                if weewx.debug:
-                    unit_system = self._getStdUnitSystem()
-                    if unit_system != dayStatsDict.unit_system:
-                        raise ValueError("stats: Data uses different unit system (0x%x) than stats file (0x%x)" % (dayStatsDict.unit_system, unit_system))
+                # The file has been used. Make sure the new data uses
+                # the same unit system as the database.
+                unit_system = self._getStdUnitSystem()
+                if unit_system != dayStatsDict.unit_system:
+                    raise ValueError("stats: Data uses different unit system (0x%x) than stats file (0x%x)" % (dayStatsDict.unit_system, unit_system))
             # Update the time of the last stats update:
             _cursor.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
             
@@ -820,27 +819,33 @@ def config(db_dict, stats_types=None):
     # Check to see if it has already been configured. If it has,
     # there will be some tables in it. We can just return.
     _connect = weedb.connect(db_dict)
-    if _connect.tables():
-        return
+    try:
+        if _connect.tables():
+            return
+        
+        # If no schema has been specified, use the default stats types:
+        if not stats_types:
+            import user.schemas
+            stats_types = user.schemas.defaultStatsTypes
+        
+        # Heating and cooling degrees are not actually stored in the database:
+        final_stats_types = filter(lambda x : x not in ['heatdeg', 'cooldeg'], stats_types)
     
-    # If no schema has been specified, use the default stats types:
-    if not stats_types:
-        import user.schemas
-        stats_types = user.schemas.defaultStatsTypes
-    
-    # Heating and cooling degrees are not actually stored in the database:
-    final_stats_types = filter(lambda x : x not in ['heatdeg', 'cooldeg'], stats_types)
+        # Now create all the necessary tables as one transaction:
+        with weedb.Transaction(_connect) as _cursor:
+            for _stats_type in final_stats_types:
+                # Slightly different SQL statement for wind
+                if _stats_type == 'wind':
+                    _cursor.execute(wind_create_str)
+                else:
+                    _cursor.execute(std_create_str % (_stats_type,))
+            _cursor.execute(meta_create_str)
+            _cursor.execute(meta_replace_str, ('unit_system', 'None'))
+    except Exception, e:
+        syslog.syslog(syslog.LOG_ERR, "archive: Unable to create stats database.")
+        syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
+        raise
+    finally:
+        _connect.close()
 
-    # Now create all the necessary tables as one transaction:
-    with weedb.Transaction(_connect) as _cursor:
-        for _stats_type in final_stats_types:
-            # Slightly different SQL statement for wind
-            if _stats_type == 'wind':
-                _cursor.execute(wind_create_str)
-            else:
-                _cursor.execute(std_create_str % (_stats_type,))
-        _cursor.execute(meta_create_str)
-        _cursor.execute(meta_replace_str, ('unit_system', 'None'))
-    
     syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database")
-

@@ -38,6 +38,12 @@ class Archive(object):
         if not self.sqlkeys:
             self.close()
             raise StandardError("Database not initialized")
+        
+        # Fetch the first row in the database to determine the unit system in
+        # use. If the database has never been used, then the unit system is
+        # still indeterminate --- set it to 'None'.
+        _row = self.getSql("SELECT usUnits FROM archive LIMIT 1;")
+        self.unitSystem = _row[0] if _row is not None else None
 
     @staticmethod
     def fromConfigDict(config_dict):
@@ -86,9 +92,20 @@ class Archive(object):
             for record in record_list:
     
                 if record['dateTime'] is None:
-                    syslog.syslog(syslog.LOG_ERR, "Archive: archive record with null time encountered. Ignored.")
-                    continue
-        
+                    syslog.syslog(syslog.LOG_ERR, "Archive: archive record with null time encountered.")
+                    raise weewx.ViolatedPrecondition("Archive record with null time encountered.")
+
+                # Check to make sure the incoming record is in the same unit system as the
+                # records already in the database:
+                if self.unitSystem:
+                    if record['usUnits'] != self.unitSystem:
+                        raise ValueError("Unit system of incoming record (0x%x) "\
+                                         "differs from the archive database (0x%x)" % (record['usUnits'], self.unitSystem))
+                else:
+                    # This is the first record. Remember the unit system to check
+                    # against subsequent records:
+                    self.unitSystem = record['usUnits']
+
                 # Only data types that appear in the database schema can be inserted.
                 # To find them, form the intersection between the set of all record
                 # keys and the set of all sql keys
@@ -508,3 +525,5 @@ def reconfig(old_db_dict, new_db_dict):
     newArchive = Archive(new_db_dict)
     # This is very fast because it is done in a single transaction context:
     newArchive.addRecord(oldArchive.genBatchRecords())
+    newArchive.close()
+    oldArchive.close()

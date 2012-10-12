@@ -58,8 +58,8 @@ class StdEngine(object):
         """
         config_dict = self.getConfiguration(options, args)
 
-        # Set the logging facility.        
-        syslog.openlog('weewx', syslog.LOG_PID|syslog.LOG_CONS)
+        # Set the logging facility.
+        syslog.openlog('weewx', syslog.LOG_PID | syslog.LOG_CONS)
         # Look for the debug flag. If set, ask for extra logging
         weewx.debug = int(config_dict.get('debug', 0))
         if weewx.debug:
@@ -78,10 +78,10 @@ class StdEngine(object):
 
         # Hook for performing any chores before loading the services:
         self.preLoadServices(config_dict)
-        
+
         # Load the services:
         self.loadServices(config_dict)
-        
+
         # Another hook for after the services load.
         self.postLoadServices(config_dict)
         
@@ -102,7 +102,7 @@ class StdEngine(object):
             raise
 
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % config_path)
-        
+
         return config_dict
     
     def setupStation(self, config_dict):
@@ -150,9 +150,9 @@ class StdEngine(object):
         # occurs, any service that may have started can be shut down in an orderly way.
         try:
             for svc in service_names:
-                # For each listed service in service_list, instantiates an instance of
-                # the class, passing self and the configuration dictionary as the
-                # arguments:
+                # For each listed service in service_list, instantiates an
+                # instance of the class, passing self and the configuration
+                # dictionary as the arguments:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
                 self.service_obj.append(weeutil.weeutil._get_object(svc, self, config_dict))
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)

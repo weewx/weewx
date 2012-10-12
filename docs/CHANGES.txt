@@ -11,7 +11,7 @@ additional weather hardware, and the support of the MySQL database.
 
 All skin  configurations are backwardly compatible, but  the configuration file,
 weewx.conf, is not.  The install  utility setup.py will install a fresh version,
-which you will have to edit by hand.
+which you will then have to edit by hand.
 
 If you have written a custom service,  see the upgrade guide on how to port your
 service to the new architecture.
@@ -27,7 +27,11 @@ MySQLdb, which fixes some of their flaws.
 
 Ported everything to use weedb, and thus MySQL (as well as sqlite)
 
-The databases can now use either Metric units, or US Customary, internally.
+Internally,   the  databases   can  now   use   either  Metric   units,  or   US
+Customary. However,  you cannot  mix and match  within a database.  Once chosen,
+you're stuck with your choice.
+
+You can now use "mmHg" as a unit of pressure.
 
 Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
 callbacks, making it easier to add new event types.
@@ -48,9 +52,6 @@ The stats  type 'squarecount' now contains  the number of  valid wind directions
 that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid
 wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
 'count'). This is a small difference and unlikely to show in any reports.
-
-The  main engine  can now  be invoking  programmatically, not  just  through the
-command line.
 
 Simplified and reduced the memory requirements of the CRC16 calculations.
 
