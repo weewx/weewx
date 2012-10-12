@@ -44,16 +44,12 @@ When doing DMPAFT, no longer tries to correct for DST.
 Explicitly starts the logger in  the Vantage stations by issuing command 'START'
 on engine start up.
 
-Now  explicitly closes  the  stats  database connection  instead  of relying  on
-garbage collection to  do it. This seems to be reducing  the long-term growth of
-memory usage.
-
 The stats  type 'squarecount' now contains  the number of  valid wind directions
 that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid
 wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
 'count'). This is a small difference and unlikely to show in any reports.
 
-The  main  engine can now  be invoking  programmatically,  not  just through the
+The  main engine  can now  be invoking  programmatically, not  just  through the
 command line.
 
 Simplified and reduced the memory requirements of the CRC16 calculations.
