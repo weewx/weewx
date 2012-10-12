@@ -53,6 +53,9 @@ that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid
 wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
 'count'). This is a small difference and unlikely to show in any reports.
 
+The  main  engine can now  be invoking  programmatically,  not  just through the
+command line.
+
 Simplified and reduced the memory requirements of the CRC16 calculations.
 
 Lots of  little nips  and tucks here  and there,  mostly to reduce  the coupling

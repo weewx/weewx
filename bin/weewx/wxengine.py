@@ -11,7 +11,6 @@
 """Main engine for the weewx weather system."""
 
 # Python imports
-from optparse import OptionParser
 import Queue
 import os.path
 import signal
@@ -32,16 +31,6 @@ import weewx.station
 import weewx.restful
 import weewx.reportengine
 import weeutil.weeutil
-
-usagestr = """
-  %prog config_path [--help] [--daemon] [--pidfile=PIDFILE] [--version] [--exit]
-
-  Entry point to the weewx weather program. Can be run from the command
-  line or, by specifying the '--daemon' option, as a daemon.
-
-Arguments:
-    config_path: Path to the weewx configuration file to be used.
-"""
 
 class BreakLoop(Exception):
     pass
@@ -814,34 +803,6 @@ class StdReport(StdService):
         self.first_run = True
 
 #===============================================================================
-#                       function parseArgs()
-#===============================================================================
-
-def parseArgs():
-    """Parse any command line options."""
-
-    parser = OptionParser(usage=usagestr)
-    parser.add_option("-d", "--daemon",  action="store_true", dest="daemon",  help="Run as a daemon")
-    parser.add_option("-p", "--pidfile", type="string",       dest="pidfile", help="Path to process ID file", default="/var/run/weewx.pid")     
-    parser.add_option("-v", "--version", action="store_true", dest="version", help="Give version number then exit")
-    parser.add_option("-x", "--exit",    action="store_true", dest="exit"   , help="Exit on I/O error (rather than restart)")
-    (options, args) = parser.parse_args()
-    
-    if options.version:
-        print weewx.__version__
-        sys.exit()
-        
-    if len(args) < 1:
-        sys.stderr.write("Missing argument(s).\n")
-        sys.stderr.write(parser.parse_args(["--help"]))
-        sys.exit(weewx.CMD_ERROR)
-    
-    if options.daemon:
-        daemon.daemonize(pidfile=options.pidfile)
-
-    return (options, args)
-
-#===============================================================================
 #                       Signal handler
 #===============================================================================
 
@@ -856,7 +817,7 @@ def sigHUPhandler(dummy_signum, dummy_frame):
 #                    Function main
 #===============================================================================
 
-def main(EngineClass=StdEngine) :
+def main(options, args, EngineClass=StdEngine) :
     """Prepare the main loop and run it. 
 
     Mostly consists of a bunch of high-level preparatory calls, protected
@@ -866,9 +827,9 @@ def main(EngineClass=StdEngine) :
     # change it. In case of a restart, we need to change it back.
     cwd = os.getcwd()
 
-    # Get the command line options and arguments:
-    (options, args) = parseArgs()
-    
+    if options.daemon:
+        daemon.daemonize(pidfile=options.pidfile)
+
     while True:
 
         try:
