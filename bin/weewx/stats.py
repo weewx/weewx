@@ -268,10 +268,10 @@ class StatsDb(object):
             _result = math.sqrt((_row[0]**2 + _row[1]**2) / _row[2]**2) if _row[2] else None
         
         elif aggregateType in ('vecdir',):
-            if _row[0:2] == (0.0, 0.0):
+            if _row == (0.0, 0.0):
                 _result = None
             deg = 90.0 - math.degrees(math.atan2(_row[1], _row[0]))
-            _result = deg if deg > 0 else deg + 360.0
+            _result = deg if deg >= 0 else deg + 360.0
         else:
             # Unknown aggregation. Return None
             _result = None

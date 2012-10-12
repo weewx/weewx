@@ -15,22 +15,39 @@ import syslog
 import time
 import unittest
 
+import configobj
+
 import weewx.reportengine
+import weewx.station
 import weeutil.weeutil
 
-from gen_fake_data import StatsTestBase
+import gen_fake_data
 
 config_path = None
 
     
-class TemplateTest(StatsTestBase):
+class TemplateTest(unittest.TestCase):
 
     def setUp(self):
+        global config_path
+        
+        weewx.debug = 1
+
         syslog.openlog('test_templates', syslog.LOG_CONS)
-        self.config_path = config_path
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+
+        try :
+            self.config_dict = configobj.ConfigObj(config_path, file_error=True)
+        except IOError:
+            sys.stderr.write("Unable to open configuration file %s" % self.config_path)
+            # Reraise the exception (this will eventually cause the program to exit)
+            raise
+        except configobj.ConfigObjError:
+            sys.stderr.write("Error while parsing configuration file %s" % config_path)
+            raise
 
         # This will generate the test databases if necessary:
-        StatsTestBase.setUp(self)
+        gen_fake_data.configDatabases(self.config_dict)
 
     def testReportEngine(self):
         
@@ -38,7 +55,9 @@ class TemplateTest(StatsTestBase):
         testtime_ts = int(time.mktime((2010,9,3,11,20,0,0,0,-1)))
         print "test time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
 
-        t = weewx.reportengine.StdReportEngine(self.config_path, testtime_ts)
+        stn_info = weewx.station.StationInfo(**self.config_dict['Station'])
+    
+        t = weewx.reportengine.StdReportEngine(self.config_dict, stn_info, testtime_ts)
 
         # Find the test skins and then have SKIN_ROOT point to it:
         test_dir = sys.path[0]
@@ -70,6 +89,8 @@ class TemplateTest(StatsTestBase):
             print "Checked %d lines" % (n,)
 
 if __name__ == '__main__':
+    global config_path
+    
     if len(sys.argv) < 2 :
         print "Usage: python test_templates.py path-to-configuration-file"
         exit()

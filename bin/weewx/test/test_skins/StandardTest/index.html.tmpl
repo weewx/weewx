@@ -229,7 +229,7 @@
     </tr>
     <tr>
       <td>Test tag "exists" with an existing type that has no data</td>
-      #if $day.foo.exists
+      #if $day.heatindex.exists
       <td>PASS</td>
       #else
       <td>FAIL</td>
@@ -237,7 +237,7 @@
     </tr>
     <tr>
       <td>Test tag "has_data" with existent type that has no data</td>
-      #if $day.foo.has_data
+      #if $day.heatindex.has_data
       <td>FAILS</td>
       #else
       <td>PASS</td>
