@@ -290,7 +290,6 @@ class EthernetWrapper(BaseWrapper):
             try:
                 _recv = self.socket.recv(_N)
             except (socket.timeout, socket.error), ex:
-                syslog.syslog(syslog.LOG_ERR, "VantagePro: Socket error while reading %d bytes." % (chars,))
                 # Reraise as a weewx I/O error:
                 raise weewx.WeeWxIOError(ex)
             _nread = len(_recv)
@@ -317,7 +316,7 @@ class EthernetWrapper(BaseWrapper):
 class Vantage(weewx.abstractstation.AbstractStation):
     """Class that represents a connection to a Davis Vantage console.
     
-    The connection will be opened after initialization"""
+    The connection to the console will be open after initialization"""
 
     # Various codes used internally by the VP2:
     barometer_unit_dict   = {0:'inHg', 1:'mmHg', 2:'hPa', 3:'mbar'}
