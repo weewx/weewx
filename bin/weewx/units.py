@@ -194,9 +194,9 @@ default_unit_format_dict = {"centibar"           : "%.0f",
                             "cm_per_hour"        : "%.2f",
                             "degree_C"           : "%.1f",
                             "degree_C_day"       : "%.1f",
-                            "degree_compass"     : "%.0f",
                             "degree_F"           : "%.1f",
                             "degree_F_day"       : "%.1f",
+                            "degree_compass"     : "%.0f",
                             "foot"               : "%.0f",
                             "hPa"                : "%.1f",
                             "inHg"               : "%.3f",
@@ -213,6 +213,7 @@ default_unit_format_dict = {"centibar"           : "%.0f",
                             "mile_per_hour"      : "%.0f",
                             "mile_per_hour2"     : "%.1f",
                             "mm"                 : "%.1f",
+                            "mmHg"               : "%.1f",
                             "mm_per_hour"        : "%.1f",
                             "percent"            : "%.0f",
                             "uv_index"           : "%.1f",
@@ -226,9 +227,9 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "cm_per_hour"       : " cm/hr",
                             "degree_C"          : "\xc2\xb0C",
                             "degree_C_day"      : "\xc2\xb0C-day",
-                            "degree_compass"    : "\xc2\xb0",
                             "degree_F"          : "\xc2\xb0F",
                             "degree_F_day"      : "\xc2\xb0F-day",
+                            "degree_compass"    : "\xc2\xb0",
                             "foot"              : " feet",
                             "hPa"               : " hPa",
                             "inHg"              : " inHg",
@@ -245,6 +246,7 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "mile_per_hour"     : " mph",
                             "mile_per_hour2"    : " mph",
                             "mm"                : " mm",
+                            "mmHg"              : " mmHg",
                             "mm_per_hour"       : " mm/hr",
                             "percent"           : "%",
                             "uv_index"          : "",
@@ -814,30 +816,42 @@ def convertStd(val_t, target_std_unit_system):
     """Convert a value tuple to an appropriate unit in a target standardized
     unit system
     
-        Example: convertStd((30.02, 'inHg', 'barometer'), weewx.METRIC)
-        returns: (1016.5 'mbar', 'barometer')
+    val_t: A value tuple.
     
-    val_t: A value tuple. Example: (30.02, 'inHg', 'barometer')
-    
-    target_std_unit_system: A standardized unit system. 
-    Example: weewx.US or weewx.METRIC.
+    target_std_unit_system: A standardized unit system (weewx.US or weewx.METRIC)
     
     Returns: A value tuple in the given standardized unit system.
+    
+    Example:
+    >>> value_t = (30.02, 'inHg', 'group_pressure')
+    >>> print convertStd(value_t, weewx.METRIC)
+    (1016.4771999999999, 'mbar', 'group_pressure')
     """
     return StdUnitConverters[target_std_unit_system].convert(val_t)
 
 def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     """Given a standard unit system (weewx.US or weewx.METRIC), an observation type, and
-    an aggregation type, what is the unit system it uses?
+    an aggregation type, what units would it be in?
 
     target_std_unit_system: A standardized unit system. 
-    Example: weewx.US or weewx.METRIC.
     
-    obs_type: An observation type. E.g., 'barometer'.
+    obs_type: An observation type.
         
     agg_type: An aggregation type E.g., 'mintime', or 'avg'.
     
     returns: A 2-way tuple containing the target units, and the target group.
+
+    Examples:
+    >>> print getStandardUnitType(weewx.US,     'barometer')
+    ('inHg', 'group_pressure')
+    >>> print getStandardUnitType(weewx.METRIC, 'barometer')
+    ('mbar', 'group_pressure')
+    >>> print getStandardUnitType(weewx.US, 'barometer', 'mintime')
+    ('unix_epoch', 'group_time')
+    >>> print getStandardUnitType(weewx.METRIC, 'barometer', 'avg')
+    ('mbar', 'group_pressure')
+    >>> print getStandardUnitType(weewx.METRIC, 'wind', 'rms')
+    ('km_per_hour', 'group_speed')
     """
     
     return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
@@ -847,24 +861,24 @@ def dictFromStd(d):
     
     d: A dictionary containing the key-value pairs for observation types
     and their values. It must include an entry 'usUnits', giving the
-    standard unit system the entries are in. An example would be:
-    
-        {'outTemp'   : 23.9,
-         'barometer' : 1002.3,
-         'usUnits'   : 0}
-
-    In this case, the standard unit system being used is "0", or Metric.
-    
+    standard unit system the entries are in.
+        
     returns: a dictionary with keys of observation type, value the
-    corresponding ValueTuple. Example:
-        {'outTemp' : (23.9, 'degree_C', 'group_temperature'),
-         'barometer' : (1002.3, 'mbar', 'group_pressure')}
+    corresponding ValueTuple.
+         
+    Example where the input dictionary is Metric:
+    >>> d = {'outTemp'   : 23.9,
+    ...      'barometer' : 1002.3,
+    ...      'usUnits'   : 16}
+    >>> print dictFromStd(d)
+    {'outTemp': (23.9, 'degree_C', 'group_temperature'), 'barometer': (1002.3, 'mbar', 'group_pressure')}
     """
         
     # Find out what standard unit system (US or Metric) the dictionary is in:
     std_unit_system = d['usUnits']
     resultDict = {}
     for obs_type in d:
+        if obs_type == 'usUnits': continue
         # Given this standard unit system, what is the unit type of this
         # particular observation type?
         (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
@@ -872,7 +886,38 @@ def dictFromStd(d):
         resultDict[obs_type] = ValueTuple(d[obs_type], unit_type, unit_group)
     return resultDict
 
+class GenWithConvert(object):
+    """Generator wrapper. Converts the output of the wrapped generator to a target
+    unit system.
     
+    Example:
+    >>> def genfunc():
+    ...    for i in range(3):
+    ...        _rec = {'dateTime' : 194758100 + i*300,
+    ...            'outTemp' : 68.0 + i * 9.0/5.0,
+    ...            'usUnits' : weewx.US}
+    ...        yield _rec
+    >>> genwrap = GenWithConvert(genfunc(), weewx.METRIC)
+    >>> for _out in genwrap:
+    ...    print "Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits'])
+    Timestamp: 194758100; Temperature: 20.00; Unit system: 16
+    Timestamp: 194758400; Temperature: 21.00; Unit system: 16
+    Timestamp: 194758700; Temperature: 22.00; Unit system: 16
+    """
+    
+    def __init__(self, input_generator, target_unit_system=weewx.METRIC):
+        self.input_generator = input_generator
+        self.target_unit_system = target_unit_system
+        
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        _record = self.input_generator.next()
+        _record_c = StdUnitConverters[self.target_unit_system].convertDict(_record)
+        _record_c['usUnits'] = self.target_unit_system
+        return _record_c
+
 if __name__ == "__main__":
     
     import doctest
