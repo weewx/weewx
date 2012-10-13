@@ -640,7 +640,10 @@ def _get_object(module_class, *args, **kwargs):
 class GenWithPeek(object):
     """Generator object which allows a peek at the next object to be returned.
     
-    Example:
+    Sometimes Python solves a complicated problem with such elegance! This is
+    one of them.
+    
+    Example of usage:
     >>> # Define a generator function:
     >>> def genfunc(N):
     ...     for i in range(N):
@@ -648,18 +651,19 @@ class GenWithPeek(object):
     >>>
     >>> # Now wrap it with the GenWithPeek object:
     >>> g_with_peek = GenWithPeek(genfunc(5))
-    >>> # We can iterate of the object as normal:
+    >>> # We can iterate through the object as normal:
     >>> for i in g_with_peek:
     ...    print i
+    ...    # Every second object, let's take a peek ahead
     ...    if i%2:
-    ...        # But we can get a peek at the next object without disturbing the wrapped generator:
-    ...        print "peek: ", g_with_peek.peek()
+    ...        # We can get a peek at the next object without disturbing the wrapped generator:
+    ...        print "peeking ahead, the next object will be: ", g_with_peek.peek()
     0
     1
-    peek:  2
+    peeking ahead, the next object will be:  2
     2
     3
-    peek:  4
+    peeking ahead, the next object will be:  4
     4
     """
     

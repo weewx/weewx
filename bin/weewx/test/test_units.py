@@ -42,6 +42,12 @@ class ConverterTest(unittest.TestCase):
         self.assertRaises(KeyError, c.convert, (20.01, "degree_C", None))
         self.assertEqual(c.convert((20.01, None, None)), (20.01, None, None))
         
+        # Test mmHg
+        value_t = (760.0, "mmHg", "group_pressure")
+        converted = cm.convert(value_t)
+        # Do a formatted comparison to compensate for small rounding errors: 
+        self.assertEqual(("%.2f" % converted[0],)+converted[1:3], ("1013.25", "mbar", "group_pressure"))
+        
 #    def testConvertDict(self):
 #        d_m =  {'outTemp'   : (20.01, 'degree_C', 'group_temperature'),
 #                'barometer' : (1002.3, 'mbar', 'group_pressure')}
