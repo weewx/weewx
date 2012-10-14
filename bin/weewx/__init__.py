@@ -12,7 +12,7 @@
 """
 import time
 
-__version__="2.0.0b2"
+__version__="2.0.0b3"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
