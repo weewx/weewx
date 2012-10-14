@@ -1060,13 +1060,18 @@ Mutating actions will request confirmation before proceeding.</pre>
 			service. This service acts as a filter, converting the unit system 
 			coming off your hardware to a target output unit system. Everything that follows, 
 			including the archiving service, will use the target system. Hence, 
-			your data will be stored in the database in the target system. <em>Once chosen, it cannot be changed!</em> Note that whatever you choose here, it does not affect your 
+			your data will be stored in the database in the target system. </p>
+			<p><em>Once chosen, it cannot be changed!</em> Weewx does not allow 
+			you to mix unit systems within the databases. You must chose one or 
+			the other and then stick with it. This means that users coming from 
+			wview (which uses US Customary) should not change the default 
+			setting. Having said this, there is a way of reconfiguring the 
+			database to use another unit system. See the section
+			<a href="customizing.htm#Changing_the_unit_system">Changing the Unit 
+			System in the Customizing Guide</a>.</p>
+			<p>Note that whatever you choose here, it does not affect your 
 			options 
 			for the unit system to be used for <i>reporting</i>.</p>
-			<p>Users of the Davis Vantage hardware who wish to store their data 
-			in U.S. Customary units do not need to run this service as the Davis 
-			instruments already emit U.S. Customary. However, it doesn&#39;t hurt 
-			to run it anyway.</p>
 			<p class="config_option">target_unit</p>
 			<p>Set to either &#39;<span class="code">US</span>&#39; or &#39;<span class="code">METRIC</span>&#39;. 
 			Default is &#39;<span class="code">US</span>&#39;.</p>

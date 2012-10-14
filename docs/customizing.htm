@@ -1737,6 +1737,239 @@ class MyAlarm(StdService):
 	<p>In addition to the example above, the distribution also includes a low-battery 
 	alarm (<span class="code">lowBattery.py</span>), which is very similar, except 
 	that it intercepts LOOP events (instead of archiving events). </p>
+	<h1>Customizing the archive database</h1>
+	<p>For most users the default database will work just fine. 
+	It has the added advantage of being compatible with the wview database. 
+	Nevertheless, there may be occasions where you may want to add a SQL type to 
+	your database, or change its unit system. This section shows you how to do 
+	this, using 
+	the utility <span class="code">./bin/config_database.py</span>.</p>
+	<p>Before starting, it's worth running the utility with the
+	<span class="code">--help</span> flag to see how it is used:</p>
+	<p class="tty">cd /home/weewx<br />
+	./bin/config_database.py --help</p>
+	<h2>Adding a new observation type</h2>
+	<p>Suppose you have installed an electric meter at your house and you wish 
+	to correlate electrical usage with the weather. The meter has some sort of connection to 
+	your computer, allowing you to download the consumption. At the end of every archive interval you want to sample the 
+	meter for the electricity consumed during the interval, then store the 
+	results in the archive database, along with the weather data. How would you 
+	do this?</p>
+	<p>First, you would write a custom service that retrieves the electrical 
+	consumption data and adds it to the archive record. See the section
+	<a href="#Customizing_the_weewx_service_engine">Customizing the weewx 
+	service engine</a> for details on how to write a custom service. However, 
+	when you are done it will look something like this:</p>
+	<p class="tty">from weewx.wxengine import StdService<br />
+	<br />
+	class AddElectricity(StdService):<br />
+	<br />
+&nbsp; def new_archive_packet(self, event):<br />
+&nbsp;&nbsp;&nbsp; <br />
+&nbsp;&nbsp;&nbsp; (code that downloads the consumption data from the connection 
+	to the meter)<br />
+	<br />
+&nbsp;&nbsp;&nbsp; event.record['electricity'] = retrieved_value</p>
+	<p>This adds a new key '<span class="code">electricity</span>' to the record dictionary and sets it 
+	equal to some value. As an aside, if you do something like this, you would 
+	want to make sure that the code to retrieve the current electrical 
+	consumption does not delay very long so it does not slow down the main loop. 
+	If it's going to cause a delay of more than a couple seconds you might want to put it in a separate thread and feed the results to
+	<span class="code">AddElectricity</span> through a queue.</p>
+	<p>As usual, you would add your new service to the option <span class="code">
+	service_list</span> in <span class="code">
+	weewx.conf</span>, making sure it appears before <span class="code">
+	StdArchive</span> so your new value is inserted into the record <em>before</em> the data is archived.</p>
+	<h3><a id="Adding_a_new_type_to_the_archive_database">Adding a new type to the archive database</a></h3>
+	<p>So, now you have created a new observation type, '<span class="code">electricity</span>'. Trouble 
+	is, there is no corresponding type in the schema of the SQL database and, 
+	therefore, it won't be stored there. How 
+	would you add such a type?</p>
+	<p>Here's our general strategy:</p>
+	<ol>
+		<li>Add a new type to the database schema.</li>
+		<li>Make sure you have the necessary permissions to create the new 
+		database.</li>
+		<li>Populate it with data from the old database.</li>
+		<li>Shuffle databases around so <span class="code">weewx</span> will use 
+		the new database.</li>
+		<li>Modify the stats database so it includes the new type as well 
+		(Optional).</li>
+	</ol>
+	<p>1. <strong>Adding a new type to the schema.</strong> When creating a database the schema is obtained from file
+	<span class="code">./bin/user/schemas.py</span>. Take a look at it now. You will see a list 
+	called <span class="code">defaultArchiveSchema</span> that holds all the observation names and their 
+	SQL types. It looks something like:</p>
+	<pre>defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+                        ('usUnits',              'INTEGER NOT NULL'),
+                        ('interval',             'INTEGER NOT NULL'),
+                        ('barometer',            'REAL'),
+                        ('pressure',             'REAL'),
+                        ('altimeter',            'REAL'),
+                        ('inTemp',               'REAL'),
+                        ('outTemp',              'REAL'),
+                        ...
+                        ('inTempBatteryStatus',  'REAL')]</pre>
+	<p>Let's modify it to add our new type, '<span class="code">electricity</span>'. Now it looks like this:</p>
+	<pre>defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+                        ('usUnits',              'INTEGER NOT NULL'),
+                        ('interval',             'INTEGER NOT NULL'),
+                        ('barometer',            'REAL'),
+                        ('pressure',             'REAL'),
+                        ('altimeter',            'REAL'),
+                        ('inTemp',               'REAL'),
+                        ('outTemp',              'REAL'),
+                        ...
+<span class="highlight">                        ('electricity',          'REAL'),</span>
+                        ('inTempBatteryStatus',  'REAL')]</pre>
+	<p>The new line has been highlighted in <span class="highlight">yellow</span>.</p>
+	<p>2. <strong>Check permissions.</strong> The reconfiguration utility will 
+	create a new database with the same name as the old, except with the suffix 
+	'<span class="code">_new</span>' 
+	attached to the end. Make sure you have the necessary permissions to do 
+	this. In particular, if you are using MySQL, you will need '<span class="code">CREATE</span>' 
+	privileges.</p>
+	<p>3. <strong>Run <span class="code">config_database.py</span>.</strong> Now 
+	run the utility <span class="code">config_database.py</span> with the
+	<span class="code">--reconfigure</span> option and the path to the 
+	configuration file:</p>
+	<p class="tty">prompt: <strong>cd /home/weewx<br />
+	</strong>prompt: <strong>./bin/config_database.py --reconfigure ./weewx.conf</strong></p>
+	<p>This will create a new database (nominally, <span class="code">
+	weewx.sdb_new</span> if you are using sqlite, <span class="code">weewx_new</span> 
+	if you are using MySQL) using the new schema and populate it with data from 
+	the old database. </p>
+	<p>4. <strong><a name="Shuffle_the_databases">Shuffle the databases</a>.</strong> Now arrange things so
+	<span class="code">weewx</span> can find the new database. You can either 
+	shuffle the databases around so the new database has the same name as the 
+	old database, or edit <span class="code">weewx.conf</span> to use the new 
+	database name. To do the former:</p>
+	<p><em>First do a backup!</em></p>
+	<p>For sqlite:</p>
+	<p class="tty">prompt: <strong>cd /home/weewx/archive<br />
+	</strong>prompt: <strong>mv weewx.sdb_new weewx.sdb</strong></p>
+	<p>For MySQL:</p>
+	<p class="tty">prompt: <strong>mysql -u &lt;username&gt; --password=&lt;mypassword&gt;<br />
+	</strong>mysql&gt; <strong>DROP DATABASE weewx;&nbsp;&nbsp; # Drops the old 
+	database<br />
+	</strong>mysql&gt; <strong>CREATE DATABASE weewx; # Create a new one with the 
+	same name<br />
+	</strong>mysql&gt; <strong>RENAME TABLE weewx_new.archive TO weewx.archive;&nbsp;&nbsp;&nbsp; 
+	# Rename to the nominal name</strong></p>
+	<p>5. <strong>Modify the stats database.</strong> At this point, you can use 
+	the new observation type in the plots. However, if you wish to use it in the 
+	statistical summaries, you will also have to add it to the stats database. 
+	To do this, add the type to the option <span class="code">stats_types</span> in section <span class="code">
+	[StdArchive]</span> so it reads something like this:</p>
+	<p class="tty">&nbsp;stats_types = wind, barometer, inTemp, outTemp, 
+	inHumidity, outHumidity, rainRate, rain, dewpoint, windchill, heatindex, ET, 
+	radiation, UV, extraTemp1, rxCheckPercent, <span class="highlight">
+	electricity</span></p>
+	<p>Now delete the stats database (nominally <span class="code">stats.sdb</span> 
+	for sqlite, <span class="code">stats</span> for MySQL). Weewx will 
+	automatically rebuild it, including your new type.</p>
+	<h3>Using the new type</h3>
+	<p>Now you've added a new type. How do you use it? </p>
+	<p>Pretty much like any other type. For example, to do a plot of the month's 
+	electric consumption, totaled by day, add this section to the <span class="code">
+	[[month_images]]</span> section of <span class="code">skin.conf</span>:</p>
+	<p class="tty">[[[monthelectric]]]<br />
+&nbsp; [[[[electricity]]]]<br />
+&nbsp;&nbsp;&nbsp; aggregate_type = sum<br />
+&nbsp;&nbsp;&nbsp; aggregate_interval = 86400<br />
+&nbsp;&nbsp;&nbsp; label = Electric consumption (daily total)</p>
+	<p>This will cause the generation of an image <span class="code">
+	monthelectric.png</span>, showing a plot of each day's consumption for the 
+	past month.</p>
+	<p>If you wish to use the new type in the templates, it will be available 
+	using the same syntax as any other type. Here are some other tags that might 
+	be useful:</p>
+	<table style="width: 70%">
+		<tr>
+			<td><strong>Tag</strong></td>
+			<td><strong>Meaning</strong></td>
+		</tr>
+		<tr>
+			<td class="code">$day.electricity.sum</td>
+			<td>Total consumption since midnight</td>
+		</tr>
+		<tr>
+			<td class="code">$year.electricity.sum</td>
+			<td>Total consumption since the first of the year</td>
+		</tr>
+		<tr>
+			<td class="code">$year.electricity.max</td>
+			<td>The most consumed during any archive period</td>
+		</tr>
+		<tr>
+			<td class="code">$year.electricity.maxsum</td>
+			<td>The most consumed during a day</td>
+		</tr>
+		<tr>
+			<td class="code">$year.electricity.maxsumtime</td>
+			<td>The day it happened.</td>
+		</tr>
+		<tr>
+			<td class="code">$year.electricity.sum_ge(5.0)</td>
+			<td>The number of days where more than 5.0 kWH of energy was 
+			consumed.</td>
+		</tr>
+	</table>
+	<h2 id="Changing_the_unit_system">Changing the unit system</h2>
+	<p>Normally, data is stored in the databases using US Customary units and, 
+	normally, you don't care --- data can always be displayed using any 
+	units you choose. It's an "implementation detail." Nevertheless, there may be 
+	special situations where you wish to store the data in Metric units. For 
+	example, you may need to allow direct programmatic access to the databases from another 
+	piece of software that expects metric units. </p>
+	<p>Weewx does not allow you to change the database unit 
+	system midstream. You can't start with one unit system then, in the middle of 
+	the database, switch to another. See the section <span class="code">
+	<a href="usersguide.htm#[StdConvert]">[StdConvert]</a></span> in the Weewx 
+	User's Guide. However, you can reconfigure the database by coping it to a 
+	new database, performing the unit conversion along the way. You then use 
+	this new database.</p>
+	<p>The steps are pretty much the same as
+	<a href="#Adding_a_new_type_to_the_archive_database">Adding a New Type to 
+	the ArchiveDatabase</a>, described above.</p>
+	<ol>
+		<li>Modify <span class="code">weewx.conf</span> to reflect your choice 
+		of the new unit system to use.</li>
+		<li>Make sure you have the necessary permissions to create the new 
+		database.</li>
+		<li>Populate it with data from the old database.</li>
+		<li>Shuffle databases around so <span class="code">weewx</span> will use 
+		the new database.</li>
+		<li>Rebuild the stats database to use the new unit system.</li>
+	</ol>
+	<p>1. <strong>Modify <span class="code">weewx.conf</span>.</strong> Edit the 
+	configuration file to change option <span class="code">target_unit</span> in 
+	section <span class="code"><a href="usersguide.htm#[StdConvert]">
+	[StdConvert]</a></span> to reflect your choice. If you are switching to 
+	metric units, the option will look like</p>
+	<p class="tty">[StdConvert]<br />
+&nbsp; target_unit = METRIC</p>
+	<p>2. <strong>Check permissions.</strong> The reconfiguration utility will 
+	create a new database with the same name as the old, except with the suffix 
+	'<span class="code">_new</span>' 
+	attached to the end. Make sure you have the necessary permissions to do 
+	this. In particular, if you are using MySQL, you will need '<span class="code">CREATE</span>' 
+	privileges.</p>
+	<p>3. <strong>Run <span class="code">config_database.py</span>.</strong> Now 
+	run the utility <span class="code">config_database.py</span> with the
+	<span class="code">--reconfigure</span> option:</p>
+	<p class="tty">prompt: <strong>cd /home/weewx<br />
+	</strong>prompt: <strong>./bin/config_database.py --reconfigure ./weewx.conf</strong></p>
+	<p>This will create a new database (nominally, <span class="code">
+	weewx.sdb_new</span> if you are using sqlite, <span class="code">weewx_new</span> 
+	if you are using MySQL), using the schema found in <span class="code">
+	./bin/user/schemas.py</span>, and populate it with data from the old 
+	database, while performing the unit conversion.</p>
+	<p>4. <strong>Shuffle the databases.</strong> This is identical to the 
+	description <a href="#Shuffle_the_databases">above</a>.</p>
+	<p>5. <strong>Recreate the stats database.</strong> Delete the stats 
+	database, then let <span class="code">weewx</span> regenerate it. It will 
+	use the new unit system.</p>
 	<h1 id="Archive_types">Appendix A: Archive types</h1>
 	<p><em>Archive types</em> are weather observations that have come from your 
 	instrument and been stored in the <em>archive database, </em>&nbsp;a SQL database. 

@@ -27,18 +27,20 @@ MySQLdb, which fixes some of their flaws.
 
 Ported everything to use weedb, and thus MySQL (as well as sqlite)
 
-Internally,   the  databases   can  now   use   either  Metric   units,  or   US
-Customary. However,  you cannot  mix and match  within a database.  Once chosen,
-you're stuck with your choice.
+Internally, the databases can now use  either Metric units, or US Customary. NB:
+you cannot switch systems in the middle  of a database. You have to stick to one
+or other other. However, the  utility config_database.py does have a reconfigure
+option that allows copying the data to a new database, performing the conversion
+along the way. See the Customizing Guide.
 
 You can now use "mmHg" as a unit of pressure.
 
 Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
 callbacks, making it easier to add new event types.
 
-Added utility config_vp, for configuring the VantagePro hardware.
+Added utility config_vp.py, for configuring the VantagePro hardware.
 
-Added utility config_database, for configuring the databases.
+Added utility config_database.py, for configuring the databases.
 
 Made it easier  to write custom RESTful protocols. Thanks to  user Brad, for the
 idea and the use case!
@@ -51,7 +53,7 @@ on engine start up.
 The stats  type 'squarecount' now contains  the number of  valid wind directions
 that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid
 wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
-'count'). This is a small difference and unlikely to show in any reports.
+'count').
 
 Simplified and reduced the memory requirements of the CRC16 calculations.
 
