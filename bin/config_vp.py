@@ -183,7 +183,7 @@ def set_interval(station, new_interval_seconds):
         ans = None
         while ans not in ['y', 'n']:
             print "Proceeding will change the archive interval as well as erase all old archive records."
-            ans = raw_input("Are you sure you want to proceed? (y/n) ")
+            ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y' :
                 try:
                     station.setArchiveInterval(new_interval_seconds)
@@ -207,7 +207,7 @@ def set_altitude(station, altitude_ft):
     ans = None
     while ans not in ['y', 'n']:    
         print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (_bardata[0], altitude_ft)
-        ans = raw_input("Are you sure you wish to proceed? (y/n) ")
+        ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
             station.setBarData(_bardata[0], altitude_ft)
         elif ans == 'n':
@@ -224,7 +224,7 @@ def set_barometer(station, barometer_inHg):
             print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (barometer_inHg, _bardata[1])
         else:
             print "Proceeding will have the console pick a sensible barometer calibration and set the station altitude to %.1f feet," % (_bardata[1],)
-        ans = raw_input("Are you sure you wish to proceed? (y/n) ")
+        ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
             station.setBarData(barometer_inHg, _bardata[1])
         elif ans == 'n':
@@ -237,7 +237,7 @@ def clear(station):
     while ans not in ['y', 'n']:
         print "Clearing the archive memory ..."
         print "Proceeding will erase old archive records."
-        ans = raw_input("Are you sure you wish to proceed? (y/n) ")
+        ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
             station.clearLog()
             print "Archive records cleared."
@@ -257,7 +257,7 @@ def set_bucket(station, new_bucket_type):
         ans = None
         while ans not in ['y', 'n']:
             print "Proceeding will change the rain bucket type."
-            ans = raw_input("Are you sure you want to proceed? (y/n) ")
+            ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y' :
                 try:
                     station.setBucketType(new_bucket_type)
@@ -278,7 +278,7 @@ def set_rain_year_start(station, rain_year_start):
         ans = None
         while ans not in ['y', 'n']:
             print "Proceeding will change the rain season start."
-            ans = raw_input("Are you sure you want to proceed? (y/n) ")
+            ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y' :
                 try:
                     station.setRainYearStart(rain_year_start)

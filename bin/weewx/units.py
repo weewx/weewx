@@ -16,8 +16,11 @@ import syslog
 import weewx
 import weeutil.weeutil
 
-unit_nicknames = {'US'     : weewx.US,
+unit_constants = {'US'     : weewx.US,
                   'METRIC' : weewx.METRIC}
+
+unit_nicknames = {weewx.US     : 'US',
+                  weewx.METRIC : 'METRIC'}
 
 # This data structure maps observation types to a "unit group"
 obs_group_dict = {"barometer"          : "group_pressure",
@@ -897,8 +900,7 @@ class GenWithConvert(object):
     ...            'outTemp' : 68.0 + i * 9.0/5.0,
     ...            'usUnits' : weewx.US}
     ...        yield _rec
-    >>> genwrap = GenWithConvert(genfunc(), weewx.METRIC)
-    >>> for _out in genwrap:
+    >>> for _out in GenWithConvert(genfunc(), weewx.METRIC):
     ...    print "Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits'])
     Timestamp: 194758100; Temperature: 20.00; Unit system: 16
     Timestamp: 194758400; Temperature: 21.00; Unit system: 16
@@ -906,14 +908,22 @@ class GenWithConvert(object):
     """
     
     def __init__(self, input_generator, target_unit_system=weewx.METRIC):
+        """Initialize an instance of GenWithConvert
+        
+        input_generator: An iterator which will return dictionary records.
+        
+        target_unit_system: The unit system the output of the generator should use, or 
+        'None' if it should leave the output unchanged."""
         self.input_generator = input_generator
         self.target_unit_system = target_unit_system
         
     def __iter__(self):
         return self
     
-    def next(self):
+    def next(self): 
         _record = self.input_generator.next()
+        if self.target_unit_system is None or _record['usUnits'] == self.target_unit_system:
+            return _record
         _record_c = StdUnitConverters[self.target_unit_system].convertDict(_record)
         _record_c['usUnits'] = self.target_unit_system
         return _record_c

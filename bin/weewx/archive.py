@@ -516,14 +516,18 @@ def config(db_dict, archiveSchema=None):
         
     syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for database 'archive'")
 
-def reconfig(old_db_dict, new_db_dict):
+def reconfig(old_db_dict, new_db_dict, target_unit_system=None):
     """Copy over an old archive to a new one, using the new schema."""
 
     config(new_db_dict)
     
     oldArchive = Archive(old_db_dict)
     newArchive = Archive(new_db_dict)
+    
+    # Wrap the input generator in a unit converter.
+    record_generator = weewx.units.GenWithConvert(oldArchive.genBatchRecords(), target_unit_system)
+
     # This is very fast because it is done in a single transaction context:
-    newArchive.addRecord(oldArchive.genBatchRecords())
+    newArchive.addRecord(record_generator)
     newArchive.close()
     oldArchive.close()

@@ -20,14 +20,18 @@ import user.extensions      #@UnusedImport
 import weedb
 import weewx.archive
 import weewx.stats
+import weewx.units
 
 description="""Configures the weewx databases. Most of these functions are handled automatically
 by weewx, but they may be useful as a utility in special cases. In particular, 
-the reconfigure-database option can be useful if you decide to add or drop data types
-from the database schema."""
+the 'reconfigure' option can be useful if you decide to add or drop data types
+from the database schema or change unit systems."""
  
 usage="""%prog: config_path [--help] [--create-database] 
-                            [--create-stats] [--backfill-stats] [--reconfigure-database]"""
+                            [--create-stats] [--reconfigure] [--backfill-stats] """
+
+epilog="""If you are using the MySQL database it is assumed that you have the appropriate
+permissions for the requested operation."""
 
 def main():
 
@@ -35,19 +39,21 @@ def main():
     syslog.openlog('config_database', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = optparse.OptionParser(description=description, usage=usage)
+    parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
     
     # Add the various options:
     parser.add_option("--create-archive", dest="create_archive", action='store_true',
                         help="Create the archive database.")
     parser.add_option("--create-stats", dest="create_stats", action='store_true',
                         help="Create the statistical database.")
+    parser.add_option("--reconfigure", action='store_true',
+                        help="""Create a new archive database using configuration information found """\
+                        """in the configuration file. In particular, the new database will use the """\
+                        """unit system found in option [StdConvert][target_unit]. It will use """\
+                        """the schema found in './bin/user/schemas.py'. """\
+                        """The new database will have the same name as the old database, with a '_new' on the end.""")
     parser.add_option("--backfill-stats", dest="backfill_stats", action='store_true',
                         help="Backfill the statistical database using the archive database")
-    parser.add_option("--reconfigure-database", dest="new_database", action='store', type='string', metavar='NEW-DATABASE',
-                        help="""Reconfigure the archive database and put the results in NEW-DATABASE, which must appear """\
-                        """in the [Databases] section of the configuration file. The schema found in bin/user/schemas.py will """\
-                        """be used for the new database.""")
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
 
@@ -76,11 +82,11 @@ def main():
     if options.create_stats:
         createStatsDatabase(config_dict)
         
+    if options.reconfigure:
+        reconfigMainDatabase(config_dict)
+
     if options.backfill_stats:
         backfillStatsDatabase(config_dict)
-
-    if options.new_database:
-        reconfigMainDatabase(config_dict, options.new_database)
 
 def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
@@ -115,6 +121,57 @@ def createStatsDatabase(config_dict):
     else:
         print "The statistical database '%s' already exists" % (stats_db,)
 
+def reconfigMainDatabase(config_dict):
+    """Create a new database, then populate it with the contents of an old database"""
+
+    archive_db = config_dict['StdArchive']['archive_database']
+    old_archive_db_dict = config_dict['Databases'][archive_db]
+    
+    # For the new database, make a copy of the old database dictionary
+    new_archive_db_dict = old_archive_db_dict.dict()
+    # Now modify the database name
+    new_archive_db_dict['database'] = new_archive_db_dict['database']+'_new'
+
+    try:
+        weedb.create(new_archive_db_dict)
+    except weedb.DatabaseExists:
+        ans = None
+        while ans not in ['y', 'n']:
+            ans = raw_input("New database '%s' already exists. Delete it first (y/n)? " % (new_archive_db_dict['database'],))
+            if ans == 'y':
+                weedb.drop(new_archive_db_dict)
+            elif ans == 'n':
+                print "Nothing done."
+                return
+
+    # Get the unit system of the old archive:
+    old_archive = weewx.archive.Archive(old_archive_db_dict)
+    old_unit_system = old_archive.unitSystem
+    old_archive.close()
+    
+    # Get the unit system of the new archive:
+    try:
+        target_unit_nickname = config_dict['StdConvert']['target_unit']
+    except KeyError:
+        target_unit_system = None
+    else:
+        target_unit_system = weewx.units.unit_constants[target_unit_nickname.upper()]
+        
+        
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Copying archive database '%s' to '%s'" % (old_archive_db_dict['database'], new_archive_db_dict['database'])
+        if target_unit_system is None or old_unit_system==target_unit_system:
+            print "The new archive will use the same unit system as the old ('%s')." % (weewx.units.unit_nicknames[old_unit_system],)
+        else:
+            print "Units will be converted from the '%s' system to the '%s' system." % (weewx.units.unit_nicknames[old_unit_system],
+                                                                                        weewx.units.unit_nicknames[target_unit_system])
+        ans = raw_input("Are you sure you wish to proceed (y/n)? ")
+        if ans == 'y':
+            weewx.archive.reconfig(old_archive_db_dict, new_archive_db_dict, target_unit_system)
+        elif ans == 'n':
+            print "Nothing done."
+    
 def backfillStatsDatabase(config_dict):
     """Use the main archive database to backfill the stats database."""
 
@@ -131,14 +188,6 @@ def backfillStatsDatabase(config_dict):
     # Now backfill
     nrecs = statsDb.backfillFrom(archive)
     print "Backfilled %d records from the archive database '%s' into the statistical database '%s'" % (nrecs, archive.database, statsDb.database)
-    
-def reconfigMainDatabase(config_dict, new_archive_db):
-    """Change the schema of the old database"""
-
-    old_archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
-    new_archive_db_dict = config_dict['Databases'][new_archive_db]
-    
-    weewx.archive.reconfig(old_archive_db_dict, new_archive_db_dict)
     
 if __name__=="__main__" :
     main()
