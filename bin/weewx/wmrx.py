@@ -219,21 +219,17 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
             
         nerrors=0
         while True:
-            # Continually loop, retrieving "USB reports". They are 8 bytes long each.
-            report = self.devh.interruptRead(self.IN_endpoint,
-                                             8, # bytes to read
-                                             int(self.timeout*1000))
             try:
+                # Continually loop, retrieving "USB reports". They are 8 bytes long each.
+                report = self.devh.interruptRead(self.IN_endpoint,
+                                                 8, # bytes to read
+                                                 int(self.timeout*1000))
                 # While the report is 8 bytes long, only a smaller, variable portion of it
-                # has measurement data. This amount is given by byte zero:
-                nbytes = report[0]
-                # Index of the first good byte:
-                i = 1
-                while nbytes:
+                # has measurement data. This amount is given by byte zero. Return each
+                # byte, starting with byte one:
+                for i in range(1, report[0]+1):
                     yield report[i]
-                    i      += 1     # Advance to the next index
-                    nbytes -= 1     # Decrement the number of bytes left in this report
-                nerrors=0
+                nerrors = 0
             except (IndexError, usb.USBError), e:
                 syslog.syslog(syslog.LOG_DEBUG, "wmrx: Bad USB report received.")
                 syslog.syslog(syslog.LOG_DEBUG, "***** %s" % e)
