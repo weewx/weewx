@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -23,17 +23,23 @@ import weedb
 class Archive(object):
     """Manages a weewx archive file. Offers a number of convenient member functions
     for managing the archive file. These functions encapsulate whatever sql statements
-    are needed."""
+    are needed.
     
-    def __init__(self, db_dict):
+    ATTRIBUTES
+    
+    sqlkeys: A list of the SQL keys that the database supports.
+    
+    std_unit_system: The unit system used by the database."""
+    
+    def __init__(self, connection):
         """Initialize an object of type weewx.Archive. 
         
         If the database does not exist or it is uninitialized, an
         exception will be thrown. 
         
-        db_dict: A dictionary containing the database connection information.
+        connection: A weedb connection to the archive database.
         """
-        self.connection = weedb.connect(db_dict)
+        self.connection = connection
         self.sqlkeys = self._getTypes()
         if not self.sqlkeys:
             self.close()
@@ -43,14 +49,70 @@ class Archive(object):
         # use. If the database has never been used, then the unit system is
         # still indeterminate --- set it to 'None'.
         _row = self.getSql("SELECT usUnits FROM archive LIMIT 1;")
-        self.unitSystem = _row[0] if _row is not None else None
+        self.std_unit_system = _row[0] if _row is not None else None
 
+    @staticmethod
+    def fromDbDict(archive_db_dict):
+        connection = weedb.connect(archive_db_dict)
+        return Archive(connection)
+    
     @staticmethod
     def fromConfigDict(config_dict):
         archive_db = config_dict['StdArchive']['archive_database']
         archive_db_dict = config_dict['Databases'][archive_db]
-        return Archive(archive_db_dict)
+        return Archive.fromDbDict(archive_db_dict)
         
+    @staticmethod
+    def open(archive_db_dict, archiveSchema=None):
+        """Open an Archive database, initializing it if necessary.
+        
+        archive_db_dict: A database dictionary holding the information necessary
+        to open the database.
+        
+        archiveSchema: The schema. If not provided, a default schema
+        will be used.
+        
+        returns: An instance of Archive""" 
+    
+        try:
+            archive = Archive.fromDbDict(archive_db_dict)
+            # The database exists and has been initialized. Return it.
+            return archive
+        except weedb.OperationalError:
+            pass
+        
+        # First try to create the database. If it already exists, an exception will
+        # be thrown.
+        try:
+            weedb.create(archive_db_dict)
+        except weedb.DatabaseExists:
+            pass
+    
+        # Next, get the schema 
+        if not archiveSchema:
+            import user.schemas
+            archiveSchema = user.schemas.defaultArchiveSchema
+
+        # List comprehension of the types, joined together with commas. Put
+        # the SQL type in backquotes, because at least one of them ('interval')
+        # is a MySQL reserved word
+        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
+
+        _connect = weedb.connect(archive_db_dict)
+        try:
+            with weedb.Transaction(_connect) as _cursor:
+                _cursor.execute("CREATE TABLE archive (%s);" % _sqltypestr)
+                
+        except Exception, e:
+            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create database archive.")
+            syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
+            raise
+    
+        syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for database 'archive'")
+
+        return Archive(_connect)
+    
+    
     @property
     def database(self):
         return self.connection.database
@@ -97,14 +159,14 @@ class Archive(object):
 
                 # Check to make sure the incoming record is in the same unit system as the
                 # records already in the database:
-                if self.unitSystem:
-                    if record['usUnits'] != self.unitSystem:
+                if self.std_unit_system:
+                    if record['usUnits'] != self.std_unit_system:
                         raise ValueError("Unit system of incoming record (0x%x) "\
-                                         "differs from the archive database (0x%x)" % (record['usUnits'], self.unitSystem))
+                                         "differs from the archive database (0x%x)" % (record['usUnits'], self.std_unit_system))
                 else:
                     # This is the first record. Remember the unit system to check
                     # against subsequent records:
-                    self.unitSystem = record['usUnits']
+                    self.std_unit_system = record['usUnits']
 
                 # Only data types that appear in the database schema can be inserted.
                 # To find them, form the intersection between the set of all record
@@ -476,45 +538,45 @@ class Archive(object):
         column_list = self.connection.columnsOf('archive')
         return column_list
 
-def config(db_dict, archiveSchema=None):
-    """Configure a database for use with weewx. This will create the initial schema
-    if necessary."""
-
-    # Try to create the database. If it already exists, an exception will
-    # be thrown.
-    try:
-        weedb.create(db_dict)
-    except weedb.DatabaseExists:
-        pass
-
-    try:        
-        # Check to see if it has already been configured. 
-        _connect = weedb.connect(db_dict)
-        if 'archive' in _connect.tables():
-            return
-        
-        # If the user has not supplied a schema, use the default schema 
-        if not archiveSchema:
-            import user.schemas
-            archiveSchema = user.schemas.defaultArchiveSchema
-
-        # List comprehension of the types, joined together with commas. Put
-        # the SQL type in backquotes, because at least one of them ('interval')
-        # is a MySQL reserved word
-        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
-        
-        with weedb.Transaction(_connect) as _cursor:
-            _cursor.execute("CREATE TABLE archive (%s);" % _sqltypestr)
-            
-    except Exception, e:
-        syslog.syslog(syslog.LOG_ERR, "archive: Unable to create database archive.")
-        syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
-        raise
-
-    finally:
-        _connect.close()
-        
-    syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for database 'archive'")
+#def config(db_dict, archiveSchema=None):
+#    """Configure a database for use with weewx. This will create the initial schema
+#    if necessary."""
+#
+#    # Try to create the database. If it already exists, an exception will
+#    # be thrown.
+#    try:
+#        weedb.create(db_dict)
+#    except weedb.DatabaseExists:
+#        pass
+#
+#    try:        
+#        # Check to see if it has already been configured. 
+#        _connect = weedb.connect(db_dict)
+#        if 'archive' in _connect.tables():
+#            return
+#        
+#        # If the user has not supplied a schema, use the default schema 
+#        if not archiveSchema:
+#            import user.schemas
+#            archiveSchema = user.schemas.defaultArchiveSchema
+#
+#        # List comprehension of the types, joined together with commas. Put
+#        # the SQL type in backquotes, because at least one of them ('interval')
+#        # is a MySQL reserved word
+#        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
+#        
+#        with weedb.Transaction(_connect) as _cursor:
+#            _cursor.execute("CREATE TABLE archive (%s);" % _sqltypestr)
+#            
+#    except Exception, e:
+#        syslog.syslog(syslog.LOG_ERR, "archive: Unable to create database archive.")
+#        syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
+#        raise
+#
+#    finally:
+#        _connect.close()
+#        
+#    syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for database 'archive'")
 
 def reconfig(old_db_dict, new_db_dict, target_unit_system=None):
     """Copy over an old archive to a new one, using the new schema."""

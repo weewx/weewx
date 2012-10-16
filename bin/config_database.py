@@ -146,7 +146,7 @@ def reconfigMainDatabase(config_dict):
 
     # Get the unit system of the old archive:
     old_archive = weewx.archive.Archive(old_archive_db_dict)
-    old_unit_system = old_archive.unitSystem
+    old_unit_system = old_archive.std_unit_system
     old_archive.close()
     
     # Get the unit system of the new archive:
