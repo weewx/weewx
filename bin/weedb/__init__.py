@@ -71,9 +71,7 @@ class Connection(object):
         
     def tables(self):
         """Returns a list of the tables in the database.
-        
-        Should raise exception weedb.OperationalError if the database does not exist.
-        Returns an empty list if the database exists, but there is nothing in it."""
+        Returns an empty list if there is nothing in it."""
         raise NotImplementedError
     
     def columnsOf(self, table):

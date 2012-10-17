@@ -63,6 +63,8 @@ class Connection(weedb.Connection):
         """
                 
         self.file_path = os.path.join(root, database)
+        if not os.path.exists(self.file_path):
+            raise weedb.OperationalError("Attempt to open a non-existent database %s" % database)
         try:
             connection = sqlite3.connect(self.file_path, **argv)
         except sqlite3.OperationalError:
@@ -99,8 +101,10 @@ class Connection(weedb.Connection):
             # Append this column to the list of columns. 
             column_list.append(str(row[1]))
 
-        # If there are no columns (which means the table did not exist) return None
-        return column_list if column_list else None
+        # If there are no columns (which means the table did not exist) raise an exceptional
+        if not column_list:
+            raise weedb.OperationalError("No such table %s" % table)
+        return column_list
 
     def begin(self):
         self.connection.execute("BEGIN TRANSACTION")
