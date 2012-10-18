@@ -204,7 +204,7 @@ class My_install_data(install_data):
 
         # The default target conversion units should be 'US':
         new_config['StdConvert']['target_unit'] = 'US'
-                
+        
         # Check to see if there is an existing config file.
         # If so, merge its contents with the new one
         if os.path.exists(config_path):
@@ -234,6 +234,12 @@ class My_install_data(install_data):
         # Add the version:
         new_config['version'] = VERSION
 
+        # This is to fix a name change from the alpha and beta versions of v2.0:
+        new_config['Databases']['archive_sqlite']['driver'] = 'weedb.sqlite'
+        new_config['Databases']['stats_sqlite']['driver'] = 'weedb.sqlite'
+        new_config['Databases']['archive_mysql']['driver'] = 'weedb.mysql'
+        new_config['Databases']['stats_mysql']['driver'] = 'weedb.mysql'
+                
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         

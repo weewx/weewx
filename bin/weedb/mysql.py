@@ -9,6 +9,8 @@
 #
 """Driver for the MySQL database"""
 
+import decimal
+
 import MySQLdb
 import _mysql_exceptions
 
@@ -169,7 +171,9 @@ class Cursor(object):
         return self
         
     def fetchone(self):
-        return self.cursor.fetchone()
+        # Get a result from the MySQL cursor, then run it through the massage
+        # filter below
+        return massage(self.cursor.fetchone())
 
     def close(self):
         try:
@@ -189,3 +193,12 @@ class Cursor(object):
         if result is None:
             raise StopIteration
         return result
+
+#
+# This is a utility function for converting a result set that might contain
+# longs or decimal.Decimals (which MySQLdb uses) to something containing just ints.
+#
+def massage(seq):
+    # Return the massaged sequence if it exists, otherwise, return None
+    if seq is not None:
+        return [int(i) if isinstance(i, long) or isinstance(i,decimal.Decimal) else i for i in seq]

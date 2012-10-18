@@ -151,30 +151,24 @@ class StatsDb(object):
         self.std_unit_system = self._getStdUnitSystem()
         
     @staticmethod
-    def fromDbDict(stats_db_dict):
+    def open(stats_db_dict):
         connection = weedb.connect(stats_db_dict)
         return StatsDb(connection)
 
     @staticmethod
-    def fromConfigDict(config_dict):
-        stats_db = config_dict['StdArchive']['stats_database']
-        stats_db_dict = config_dict['Databases'][stats_db]
-        return StatsDb.fromDbDict(stats_db_dict)
-    
-    @staticmethod
-    def open(stats_db_dict, stats_types=None):
+    def open_with_create(stats_db_dict, stats_types):
         """Open a StatsDb database, initializing it if necessary.
         
-        Does nothing if the database has already been initialized.
-    
         stats_types: an iterable collection with the names of the types for
-        which statistics will be gathered [optional. Default is to use all
-        possible types]"""
+        which statistics will be gathered.
+        
+        Returns:
+        An instance of StatsDb"""
 
         # If the database exists and has been initialized, then
         # this will be successful. If not, an exception will be thrown.
         try:
-            stats = StatsDb.fromDbDict(stats_db_dict)
+            stats = StatsDb.open(stats_db_dict)
             # The database exists and has been initialized. Return it.
             return stats
         except weedb.OperationalError:
@@ -187,10 +181,6 @@ class StatsDb(object):
         except weedb.DatabaseExists:
             pass
 
-        # Next, get the schema. 
-        if not stats_types:
-            import user.schemas
-            stats_types = user.schemas.defaultStatsTypes
         # Heating and cooling degrees are not actually stored in the database:
         final_stats_types = [s for s in stats_types if s not in ['heatdeg', 'cooldeg']]
             
@@ -207,6 +197,7 @@ class StatsDb(object):
                 _cursor.execute(meta_create_str)
                 _cursor.execute(meta_replace_str, ('unit_system', 'None'))
         except Exception, e:
+            _connect.close()
             syslog.syslog(syslog.LOG_ERR, "archive: Unable to create stats database.")
             syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
             raise
@@ -222,6 +213,12 @@ class StatsDb(object):
     def close(self):
         self.connection.close()
         
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, etyp, einst, etb):
+        self.close()    
+    
     def updateHiLo(self, accumulator):
         """Use the contents of an accumulator to update the highs/lows of a stats database."""
         
@@ -562,9 +559,7 @@ class StatsDb(object):
         _cursor = self.connection.cursor()
         try:
             _cursor.execute(sqlStmt)
-            # Take the result set and run it through weedb.massage to convert
-            # any long's or decimal.Decimals to ints
-            return weedb.massage(_cursor.fetchone())
+            return _cursor.fetchone()
         finally:
             _cursor.close()
         
@@ -855,56 +850,3 @@ class StatsTypeHelper(object):
             result = self.db.getAggregate(self.timespan, self.stats_type, aggregateType)
         # Wrap the result in a ValueHelper:
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
-    
-#===============================================================================
-#                          USEFUL FUNCTIONS
-#===============================================================================
-
-#def config(db_dict, stats_types=None):
-#    """Initialize the StatsDb database
-#    
-#    Does nothing if the database has already been initialized.
-#
-#    stats_types: an iterable collection with the names of the types for
-#    which statistics will be gathered [optional. Default is to use all
-#    possible types]"""
-#    # Try to create the database. If it already exists, an exception will
-#    # be thrown.
-#    try:
-#        weedb.create(db_dict)
-#    except weedb.DatabaseExists:
-#        pass
-#
-#    # Check to see if it has already been configured. If it has,
-#    # there will be some tables in it. We can just return.
-#    _connect = weedb.connect(db_dict)
-#    try:
-#        if _connect.tables():
-#            return
-#        
-#        # If no schema has been specified, use the default stats types:
-#        if not stats_types:
-#            import user.schemas
-#            stats_types = user.schemas.defaultStatsTypes
-#        
-#        # Heating and cooling degrees are not actually stored in the database:
-#        final_stats_types = filter(lambda x : x not in ['heatdeg', 'cooldeg'], stats_types)
-#    
-#        # Now create all the necessary tables as one transaction:
-#        with weedb.Transaction(_connect) as _cursor:
-#            for _stats_type in final_stats_types:
-#                # Slightly different SQL statement for wind
-#                if _stats_type == 'wind':
-#                    _cursor.execute(wind_create_str)
-#                else:
-#                    _cursor.execute(std_create_str % (_stats_type,))
-#            _cursor.execute(meta_create_str)
-#            _cursor.execute(meta_replace_str, ('unit_system', 'None'))
-#    except Exception, e:
-#        syslog.syslog(syslog.LOG_ERR, "archive: Unable to create stats database.")
-#        syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
-#        raise
-#    finally:
-#        _connect.close()
-#
-#    syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database")
