@@ -21,6 +21,9 @@ import weeutil.weeutil
 import weewx.stats
 import gen_fake_data 
 
+drop_list = ['dateTime', 'usUnits', 'interval', 'windSpeed', 'windDir', 'windGust', 'windGustDir']
+stats_types = [_tuple[0] for _tuple in archive_schema if _tuple[0] not in drop_list] + ['wind']
+
 class StatsTest(unittest.TestCase):
     
     def setUp(self):
@@ -49,6 +52,20 @@ class StatsTest(unittest.TestCase):
         # And the stats database:
         self.stats = weewx.stats.StatsDb.fromConfigDict(config_dict)
 
+    def test_create_stats(self):
+        stats = weewx.stats.StatsDb.open_with_create(self.stats_db_dict, stats_types)
+        self.assertItemsEqual(stats.connection.tables(), ['barometer', 'inTemp', 'outTemp', 'wind', 'metadata'])
+        self.assertEqual(stats.connection.columnsOf('barometer'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count'])
+        self.assertEqual(stats.connection.columnsOf('wind'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'gustdir', 'xsum', 'ysum', 'squaresum', 'squarecount'])
+        stats.close()
+        
+        # Now that the database exists, these should also succeed:
+        stats = weewx.stats.StatsDb.open(self.stats_db_dict)
+        self.assertItemsEqual(stats.connection.tables(), ['barometer', 'inTemp', 'outTemp', 'wind', 'metadata'])
+        self.assertEqual(stats.connection.columnsOf('barometer'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count'])
+        self.assertEqual(stats.connection.columnsOf('wind'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'gustdir', 'xsum', 'ysum', 'squaresum', 'squarecount'])
+        stats.close()
+        
     def testScalarTally(self):
         # Pick a random day, say 15 March:
         start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
