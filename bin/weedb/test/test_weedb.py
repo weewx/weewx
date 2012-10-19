@@ -23,7 +23,13 @@ class Common(unittest.TestCase):
             weedb.drop(self.db_dict)
         except:
             pass
-        
+
+    def tearDown(self):
+        try:
+            weedb.drop(self.db_dict)
+        except:
+            pass
+
     def populate_db(self):
         weedb.create(self.db_dict)
         self.assertRaises(weedb.DatabaseExists, weedb.create, self.db_dict)
