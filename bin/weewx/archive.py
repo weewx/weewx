@@ -335,21 +335,20 @@ class Archive(object):
             if aggregate_interval :
                 if not aggregate_type:
                     raise weewx.ViolatedPrecondition, "Aggregation type missing"
-                sql_str = 'SELECT dateTime, %s(%s), usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % (aggregate_type, sql_type)
+                sql_str = 'SELECT %s(%s), usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % (aggregate_type, sql_type)
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                     _cursor.execute(sql_str, stamp)
                     _rec = _cursor.fetchone()
                     # Don't accumulate any results where there wasn't a record
-                    # (signified by a null key)
+                    # (signified by a null result)
                     if _rec:
-                        if _rec[0] is not None:
-                            time_vec.append(_rec[0])
-                            data_vec.append(_rec[1])
-                            if std_unit_system:
-                                if std_unit_system != _rec[2]:
-                                    raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
-                            else:
-                                std_unit_system = _rec[2]
+                        if std_unit_system:
+                            if std_unit_system != _rec[1]:
+                                raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                        else:
+                            std_unit_system = _rec[1]
+                        time_vec.append(stamp[1])   # The timestamp on the right gets associated with the aggregation
+                        data_vec.append(_rec[0])
             else:
                 sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime >= ? AND dateTime <= ?' % sql_type
                 for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
@@ -434,7 +433,7 @@ class Archive(object):
                     raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
                 
                 # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
+                sql_str = 'SELECT %s, usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
     
@@ -444,7 +443,7 @@ class Archive(object):
                     _last_time = None
     
                     for _rec in _cursor.execute(sql_str, stamp):
-                        (_mag, _dir) = _rec[1:3]
+                        (_mag, _dir) = _rec[0:2]
     
                         if _mag is None:
                             continue
@@ -452,12 +451,12 @@ class Archive(object):
                         # A good direction is necessary unless the mag is zero:
                         if _mag == 0.0  or _dir is not None:
                             _count += 1
-                            _last_time  = _rec[0]
+                            _last_time  = stamp[1]
                             if std_unit_system:
-                                if std_unit_system != _rec[3]:
+                                if std_unit_system != _rec[2]:
                                     raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
                             else:
-                                std_unit_system = _rec[3]
+                                std_unit_system = _rec[2]
                             
                             # Pick the kind of aggregation:
                             if aggregate_type == 'min':
