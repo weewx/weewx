@@ -18,6 +18,7 @@ import math
 import syslog
 import time
 
+import user.schemas
 import weedb
 import weewx.archive
 import weewx.stats
@@ -54,7 +55,10 @@ archive_schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'
                   ('windDir',              'REAL'),
                   ('windGust',             'REAL'),
                   ('windGustDir',          'REAL'),
-                  ('rain',                 'REAL')]
+                  ('rain',                 'REAL'),
+                  ('dewpoint',             'REAL'),
+                  ('windchill',            'REAL'),
+                  ('heatindex',            'REAL')]
 
 stats_types = ['wind', 'barometer', 'inTemp', 'outTemp', 'inHumidity', 'outHumidity', 'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', 'radiation', 'UV', 'extraTemp', 'rxCheckPercent']
 
@@ -77,7 +81,7 @@ def configDatabases(archive_db_dict, stats_db_dict):
         pass
     
     # Now build a new one:
-    with weewx.archive.Archive.open_with_create(archive_db_dict, archive_schema) as archive:
+    with weewx.archive.Archive.open_with_create(archive_db_dict, user.schemas.defaultArchiveSchema) as archive:
     
         # Because this can generate voluminous log information,
         # suppress all but the essentials:
@@ -97,7 +101,7 @@ def configDatabases(archive_db_dict, stats_db_dict):
         except weedb.NoDatabase:
             pass
         # Now create and configure a new one:
-        with weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_types) as stats:
+        with weewx.stats.StatsDb.open_with_create(stats_db_dict, user.schemas.defaultStatsTypes) as stats:
             t1 = time.time()
             # Now backfill the stats database from the main archive database.
             nrecs = stats.backfillFrom(archive)

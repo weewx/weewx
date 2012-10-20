@@ -48,8 +48,11 @@ class Common(unittest.TestCase):
         self.archive_db_dict = self.config_dict['Databases'][self.archive_db]        
         self.stats_db_dict   = self.config_dict['Databases'][self.stats_db]
 
-        self.config_dict['StdReport']['HTML_ROOT'] = self.HTML_ROOT
-        self.config_dict['StdReport']['MetricTest']['HTML_ROOT'] = self.HTML_ROOT + '/metric'
+        # Remove the old directory:
+        try:
+            os.rmdir(self.config_dict['StdReport']['HTML_ROOT'])
+        except OSError:
+            pass
 
         # This will generate the test databases if necessary:
         gen_fake_data.configDatabases(self.archive_db_dict, self.stats_db_dict)
@@ -109,7 +112,6 @@ class TestMySQL(Common):
     def __init__(self, *args, **kwargs):
         self.archive_db = "archive_mysql"
         self.stats_db   = "stats_mysql"
-        self.HTML_ROOT  = 'test_skins_mysql'
         super(TestMySQL, self).__init__(*args, **kwargs)
         
     
