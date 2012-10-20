@@ -342,13 +342,15 @@ class Archive(object):
                     # Don't accumulate any results where there wasn't a record
                     # (signified by a null result)
                     if _rec:
-                        if std_unit_system:
-                            if std_unit_system != _rec[2]:
-                                raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
-                        else:
-                            std_unit_system = _rec[2]
-                        time_vec.append(_rec[0])
-                        data_vec.append(_rec[1])
+                        # Also, there may be records, but there may not be any non-Null results.
+                        if _rec[0] is not None:
+                            if std_unit_system:
+                                if std_unit_system != _rec[2]:
+                                    raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                            else:
+                                std_unit_system = _rec[2]
+                            time_vec.append(_rec[0])
+                            data_vec.append(_rec[1])
             else:
                 sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime >= ? AND dateTime <= ?' % sql_type
                 for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
