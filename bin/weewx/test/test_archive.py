@@ -56,10 +56,10 @@ def genRecords():
                    'outTemp': temperfunc(irec), 'barometer': barfunc(irec), 'inTemp': 70.0 + 0.1*irec}
         yield _record
 
-for rec in genRecords():
-    print weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec
+#for rec in genRecords():
+#    print weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec
+#time.sleep(0.5)
 
-time.sleep(0.5)
 class Common(unittest.TestCase):
     
     def setUp(self):

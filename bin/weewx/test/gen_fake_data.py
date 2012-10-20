@@ -13,11 +13,11 @@
 The idea is to create a deterministic database that reports
 can be run against, resulting in predictable, expected results"""
 
+from __future__ import with_statement
 import math
 import syslog
 import time
 
-import config_database
 import weedb
 import weewx.archive
 import weewx.stats
@@ -42,62 +42,67 @@ avg_baro = 30.0
 # Archive interval in seconds:
 interval = 600
 
-def configDatabases(config_dict):
+archive_schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+                  ('usUnits',              'INTEGER NOT NULL'),
+                  ('interval',             'INTEGER NOT NULL'),
+                  ('barometer',            'REAL'),
+                  ('inTemp',               'REAL'),
+                  ('outTemp',              'REAL'),
+                  ('inHumidity',           'REAL'),
+                  ('outHumidity',          'REAL'),
+                  ('windSpeed',            'REAL'),
+                  ('windDir',              'REAL'),
+                  ('windGust',             'REAL'),
+                  ('windGustDir',          'REAL'),
+                  ('rain',                 'REAL')]
+
+stats_types = ['wind', 'barometer', 'inTemp', 'outTemp', 'inHumidity', 'outHumidity', 'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', 'radiation', 'UV', 'extraTemp', 'rxCheckPercent']
+
+def configDatabases(archive_db_dict, stats_db_dict):
     """Configures the main and stats databases."""
 
-    archive_db      = config_dict['StdArchive']['archive_database']
-    stats_db        = config_dict['StdArchive']['stats_database']
-    archive_db_dict = config_dict['Databases'][archive_db]        
-    stats_db_dict   = config_dict['Databases'][stats_db]
-
+    # Check to see if it already exists and is configured correctly.
     try:
-        # Open the main archive database:
-        archive = weewx.archive.Archive.fromConfigDict(config_dict)
-        if archive.firstGoodStamp() == start_ts:
-            if archive.lastGoodStamp() == stop_ts:
-                archive.close()
+        with weewx.archive.Archive.open(archive_db_dict) as archive:
+            if archive.firstGoodStamp() == start_ts and archive.lastGoodStamp() == stop_ts:
+                # Database already exists. We're done.
                 return
-    except (StandardError, weedb.OperationalError):
+    except:
         pass
-
-    print "The archive test database '%s' is malformed. Dropping it then recreating it" % (archive_db,)
+        
+    # Delete anything that might already be there.
     try:
         weedb.drop(archive_db_dict)
-    except weedb.NoDatabase:
+    except:
         pass
     
-    weewx.archive.config(archive_db_dict)
-    print "Created archive database '%s'" % (archive_db,)
-
-    archive = weewx.archive.Archive.fromConfigDict(config_dict)
-
-    # Because this can generate voluminous log information,
-    # suppress all but the essentials:
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
+    # Now build a new one:
+    with weewx.archive.Archive.open_with_create(archive_db_dict, archive_schema) as archive:
     
-    # Now generate the fake records to populate the database:
-    t1= time.time()
-    archive.addRecord(genFakeRecords())
-    t2 = time.time()
-    print "Time to create synthetic archive database = %6.2fs" % (t2-t1,)
-    # Now go back to regular logging:
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+        # Because this can generate voluminous log information,
+        # suppress all but the essentials:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
+        
+        # Now generate and add the fake records to populate the database:
+        t1= time.time()
+        archive.addRecord(genFakeRecords())
+        t2 = time.time()
+        print "Time to create synthetic archive database = %6.2fs" % (t2-t1,)
+        # Now go back to regular logging:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     
-    try:
-        weedb.drop(stats_db_dict)
-    except weedb.NoDatabase:
-        pass
-    # Configure a new stats databsae:            
-    config_database.createStatsDatabase(config_dict)
-
-    stats = weewx.stats.StatsDb.fromConfigDict(config_dict)
-    t1 = time.time()
-    # Now backfill the stats database from the main archive database.
-    nrecs = stats.backfillFrom(archive)
-    t2 = time.time()
-    print "Time to backfill stats database with %d records: %6.2fs" % (nrecs, t2-t1)
-    archive.close()
-    stats.close()
+        # Delete any old stats database:
+        try:
+            weedb.drop(stats_db_dict)
+        except weedb.NoDatabase:
+            pass
+        # Now create and configure a new one:
+        with weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_types) as stats:
+            t1 = time.time()
+            # Now backfill the stats database from the main archive database.
+            nrecs = stats.backfillFrom(archive)
+            t2 = time.time()
+            print "Time to backfill stats database with %d records: %6.2fs" % (nrecs, t2-t1)
     
 def genFakeRecords():
     count = 0
