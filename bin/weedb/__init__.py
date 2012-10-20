@@ -75,7 +75,8 @@ class Connection(object):
         raise NotImplementedError
     
     def columnsOf(self, table):
-        """Returns a list of the column names in the specified table."""
+        """Returns a list of the column names in the specified table.
+        Raises exception weedb.OperationalError if the table does not exist."""
         raise NotImplementedError
             
     def begin(self):

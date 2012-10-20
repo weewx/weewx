@@ -9,6 +9,7 @@
 #    $Date$
 #
 """Configure the databases used by weewx"""
+from __future__ import with_statement
 
 import optparse
 import sys
@@ -21,6 +22,7 @@ import weedb
 import weewx.archive
 import weewx.stats
 import weewx.units
+import user.schemas
 
 description="""Configures the weewx databases. Most of these functions are handled automatically
 by weewx, but they may be useful as a utility in special cases. In particular, 
@@ -92,34 +94,34 @@ def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
     archive_db = config_dict['StdArchive']['archive_database']
     archive_db_dict = config_dict['Databases'][archive_db]
-    # Try to open up the database. If it doesn't exist or has not been
-    # initialized, an exception will be thrown. Catch it, configure the
-    # database, and then try again.
+    
+    # Try a simple open. If it succeeds, that means the database
+    # exists and is initialized. Otherwise, an exception will be thrown.
     try:
-        archive = weewx.archive.Archive(archive_db_dict) #@UnusedVariable
-    except (StandardError, weedb.OperationalError):
-        # It's uninitialized. Configure it:
-        weewx.archive.config(archive_db_dict)
-        print "Created archive database '%s'" % (archive_db,)
+        archive = weewx.archive.Archive.open(archive_db_dict)
+        archive.close()
+    except weedb.OperationalError:
+        # Database does not exist. Do an open_with_create:
+        archive = weewx.archive.Archive.open_with_create(archive_db_dict, user.schemas.defaultArchiveSchema)
+        archive.close()
+        print "Created database '%s'" % (archive_db,)
     else:
-        print "The archive database '%s' already exists" % (archive_db,)
+        print "Database '%s' already exists. Nothing done." % (archive_db,)
 
 def createStatsDatabase(config_dict):
     """Create the weewx statistical database"""
     stats_db = config_dict['StdArchive']['stats_database']
     stats_db_dict = config_dict['Databases'][stats_db]
-    # Try to open up the database. If it doesn't exist or has not been
-    # initialized, an exception will be thrown. Catch it, configure the
-    # database, and then try again.
     try:
-        statsDb = weewx.stats.StatsDb(stats_db_dict) #@UnusedVariable
-    except (StandardError, weedb.OperationalError):
-        # It's uninitialized. Configure it:
-        weewx.stats.config(stats_db_dict, 
-                           stats_types=config_dict['StdArchive'].get('stats_types'))
-        print "Created statistical database '%s'" % (stats_db,)
+        stats = weewx.stats.StatsDb.open(stats_db_dict)
+        stats.close()
+    except weedb.OperationalError:
+        stats_types = config_dict['StdArchive'].get('stats_types', user.schemas.defaultStatsTypes)
+        stats = weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_types)
+        stats.close()
+        print "Created database '%s'" % (stats_db,)
     else:
-        print "The statistical database '%s' already exists" % (stats_db,)
+        print "Database '%s' already exists. Nothing done." % (stats_db,)
 
 def reconfigMainDatabase(config_dict):
     """Create a new database, then populate it with the contents of an old database"""
@@ -132,6 +134,8 @@ def reconfigMainDatabase(config_dict):
     # Now modify the database name
     new_archive_db_dict['database'] = new_archive_db_dict['database']+'_new'
 
+    # First check and see if the new database already exists. If it does, check
+    # with the user whether it's ok to delete it.
     try:
         weedb.create(new_archive_db_dict)
     except weedb.DatabaseExists:
@@ -145,9 +149,8 @@ def reconfigMainDatabase(config_dict):
                 return
 
     # Get the unit system of the old archive:
-    old_archive = weewx.archive.Archive(old_archive_db_dict)
-    old_unit_system = old_archive.std_unit_system
-    old_archive.close()
+    with weewx.archive.Archive.open(old_archive_db_dict) as old_archive:
+        old_unit_system = old_archive.std_unit_system
     
     # Get the unit system of the new archive:
     try:
@@ -175,18 +178,20 @@ def reconfigMainDatabase(config_dict):
 def backfillStatsDatabase(config_dict):
     """Use the main archive database to backfill the stats database."""
 
+    archive_db = config_dict['StdArchive']['archive_database']
+    archive_db_dict = config_dict['Databases'][archive_db]
+    stats_db = config_dict['StdArchive']['stats_database']
+    stats_db_dict = config_dict['Databases'][stats_db]
+    stats_types = config_dict['StdArchive'].get('stats_types', user.schemas.defaultStatsTypes)
+
     # Open up the main database archive
-    archive = weewx.archive.Archive.fromConfigDict(config_dict)
+    with weewx.archive.Archive.open(archive_db_dict) as archive:
 
-    # Configure the stats database if necessary. This will do nothing if the
-    # database has already been configured:
-    createStatsDatabase(config_dict)
+        # Open up the Stats database. This will create it if it doesn't already exist.
+        with weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_types) as statsDb:
+            # Now backfill
+            nrecs = statsDb.backfillFrom(archive)
 
-    # Open up the Stats database
-    statsDb = weewx.stats.StatsDb.fromConfigDict(config_dict)
-    
-    # Now backfill
-    nrecs = statsDb.backfillFrom(archive)
     print "Backfilled %d records from the archive database '%s' into the statistical database '%s'" % (nrecs, archive.database, statsDb.database)
     
 if __name__=="__main__" :

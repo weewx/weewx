@@ -30,6 +30,7 @@ import weewx.stats
 import weewx.station
 import weewx.restful
 import weewx.reportengine
+import user.schemas
 import weeutil.weeutil
 
 class BreakLoop(Exception):
@@ -522,35 +523,22 @@ class StdArchive(StdService):
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
 
-        archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
-        # Try to open up the database. If it doesn't exist or has not been
-        # initialized, an exception will be thrown. Catch it, configure the
-        # database, and then try again.
-        try:
-            self.archive = weewx.archive.Archive(archive_db_dict)
-        except (StandardError, weedb.OperationalError):
-            # It's uninitialized. Configure it:
-            weewx.archive.config(archive_db_dict)
-            # Try again.
-            self.archive = weewx.archive.Archive(archive_db_dict)
-
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (config_dict['StdArchive']['archive_database'],))
+        archive_db = config_dict['StdArchive']['archive_database']
+        # This will create the database if it doesn't exist, the return an
+        # opened instance of Archive:
+        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], 
+                                                              user.schemas.defaultArchiveSchema)
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (archive_db,))
 
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
         
-        stats_db_dict = config_dict['Databases'][config_dict['StdArchive']['stats_database']]
-        # Try to open up the database. If it doesn't exist or has not been
-        # initialized, an exception will be thrown. Catch it, configure the
-        # database, and then try again.
-        try:
-            self.statsDb = weewx.stats.StatsDb(stats_db_dict)
-        except (StandardError, weedb.OperationalError):
-            # It's uninitialized. Configure it:
-            weewx.stats.config(stats_db_dict, 
-                               stats_types=config_dict['StdArchive'].get('stats_types'))
-            # Try again:
-            self.statsDb = weewx.stats.StatsDb(stats_db_dict)
+        stats_types = config_dict['StdArchive'].get('stats_types', user.schemas.defaultStatsTypes)
+        stats_db = config_dict['StdArchive']['stats_database']
+        # This will create the database if it doesn't exist, then return an 
+        # opened instance of StatsDb:
+        self.statsDb = weewx.stats.StatsDb.open_with_create(config_dict['Databases'][stats_db],
+                                                            stats_types)
 
         # Backfill it with data from the archive. This will do nothing if the
         # stats database is already up-to-date.

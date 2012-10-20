@@ -38,7 +38,7 @@ def parseArgs():
     parser.add_option("-d", "--daemon",  action="store_true", dest="daemon",  help="Run as a daemon")
     parser.add_option("-p", "--pidfile", type="string",       dest="pidfile", help="Path to process ID file", default="/var/run/weewx.pid")     
     parser.add_option("-v", "--version", action="store_true", dest="version", help="Give version number then exit")
-    parser.add_option("-x", "--exit",    action="store_true", dest="exit"   , help="Exit on I/O error (rather than restart)")
+    parser.add_option("-x", "--exit",    action="store_true", dest="exit"   , help="Exit on I/O error (instead of restarting)")
     (options, args) = parser.parse_args()
     
     if options.version:

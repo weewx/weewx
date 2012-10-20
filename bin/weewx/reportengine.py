@@ -280,7 +280,7 @@ class CachedReportGenerator(ReportGenerator):
     def _getArchive(self, archive_name):
         if archive_name not in self.archive_cache:
             archive_dict = self.config_dict['Databases'][archive_name]
-            self.archive_cache[archive_name] = weewx.archive.Archive(archive_dict)
+            self.archive_cache[archive_name] = weewx.archive.Archive.open(archive_dict)
         return self.archive_cache[archive_name]
         
     def _initStatsCache(self):
@@ -301,5 +301,5 @@ class CachedReportGenerator(ReportGenerator):
     def _getStats(self, stats_name):
         if stats_name not in self.stats_cache:
             stats_dict = self.config_dict['Databases'][stats_name]
-            self.stats_cache[stats_name] = weewx.stats.StatsDb(stats_dict)
+            self.stats_cache[stats_name] = weewx.stats.StatsDb.open(stats_dict)
         return self.stats_cache[stats_name]
