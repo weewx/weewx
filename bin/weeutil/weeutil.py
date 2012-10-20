@@ -691,7 +691,7 @@ class GenWithPeek(object):
         if not self.have_peek:
             self.peek_obj = self.generator.next()
             self.have_peek = True
-            return self.peek_obj
+        return self.peek_obj
 
 if __name__ == '__main__':
     import doctest
