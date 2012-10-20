@@ -8,11 +8,7 @@ bin/config_database.py
 bin/config_vp.py
 bin/daemon.py
 bin/runreports.py
-bin/weedb.py
 bin/weewxd.py
-bin/db/__init__.py
-bin/db/mysql.py
-bin/db/sqlite.py
 bin/examples/__init__.py
 bin/examples/alarm.py
 bin/examples/lowBattery.py
@@ -20,6 +16,9 @@ bin/examples/mygenerator.py
 bin/user/__init__.py
 bin/user/extensions.py
 bin/user/schemas.py
+bin/weedb/__init__.py
+bin/weedb/mysql.py
+bin/weedb/sqlite.py
 bin/weeplot/__init__.py
 bin/weeplot/genplot.py
 bin/weeplot/utilities.py

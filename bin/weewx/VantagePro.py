@@ -518,7 +518,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 # signal that we are done. 
                 if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts :
                     # The time stamp is declining. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Page timestamp %s earlier than last good timestamp %s"\
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: DMPAFT complete: page timestamp %s less than final timestamp %s"\
                                   % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
                                      weeutil.weeutil.timestamp_to_string(_last_good_ts)))
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Catch up complete.")

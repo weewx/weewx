@@ -9,6 +9,7 @@
 #    $Date$
 #
 """Test tag notation for template generation."""
+from __future__ import with_statement
 import os.path
 import sys
 import syslog
@@ -23,10 +24,8 @@ import weeutil.weeutil
 
 import gen_fake_data
 
-config_path = None
-
     
-class TemplateTest(unittest.TestCase):
+class Common(unittest.TestCase):
 
     def setUp(self):
         global config_path
@@ -46,10 +45,19 @@ class TemplateTest(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
-        # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.config_dict)
+        self.archive_db_dict = self.config_dict['Databases'][self.archive_db]        
+        self.stats_db_dict   = self.config_dict['Databases'][self.stats_db]
 
-    def testReportEngine(self):
+        self.config_dict['StdReport']['HTML_ROOT'] = self.HTML_ROOT
+        self.config_dict['StdReport']['MetricTest']['HTML_ROOT'] = self.HTML_ROOT + '/metric'
+
+        # This will generate the test databases if necessary:
+        gen_fake_data.configDatabases(self.archive_db_dict, self.stats_db_dict)
+
+    def tearDown(self):
+        pass
+    
+    def test_report_engine(self):
         
         # Pick a random generation time (3-Sep-2010 11:20:00 local):
         testtime_ts = int(time.mktime((2010,9,3,11,20,0,0,0,-1)))
@@ -88,6 +96,27 @@ class TemplateTest(unittest.TestCase):
             
             print "Checked %d lines" % (n,)
 
+class TestSqlite(Common):
+
+    def __init__(self, *args, **kwargs):
+        self.archive_db = "archive_sqlite"
+        self.stats_db   = "stats_sqlite"
+        self.HTML_ROOT  = 'test_skins_sqlite'
+        super(TestSqlite, self).__init__(*args, **kwargs)
+        
+class TestMySQL(Common):
+    
+    def __init__(self, *args, **kwargs):
+        self.archive_db = "archive_mysql"
+        self.stats_db   = "stats_mysql"
+        self.HTML_ROOT  = 'test_skins_mysql'
+        super(TestMySQL, self).__init__(*args, **kwargs)
+        
+    
+def suite():
+    tests = ['test_report_engine']
+    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+
 if __name__ == '__main__':
     global config_path
     
@@ -97,4 +126,4 @@ if __name__ == '__main__':
 
     config_path = sys.argv[1]
     del sys.argv[1:]
-    unittest.main()
+    unittest.TextTestRunner(verbosity=2).run(suite())
