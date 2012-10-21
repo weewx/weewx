@@ -435,7 +435,7 @@ class Archive(object):
                     raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
                 
                 # This SQL select string will select the proper wind types
-                sql_str = 'SELECT MAX(dateTime), %s, usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
+                sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % windvec_types[ext_type]
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
     
