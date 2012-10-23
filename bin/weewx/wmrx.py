@@ -94,8 +94,6 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
         self.interface         = int(stn_dict.get('interface', 0))
         self.IN_endpoint       = int(stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1))
 
-        self.hardware_name = "WMR-USB"
-
         self.last_totalRain = None
         self.openPort()
 
@@ -193,6 +191,10 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
             return self.last_time
         except AttributeError:
             return None
+        
+    @property
+    def hardware_name(self):
+        return "WMR-USB"
         
     #===============================================================================
     #                         USB functions

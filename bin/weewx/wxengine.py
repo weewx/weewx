@@ -437,8 +437,9 @@ class StdArchive(StdService):
             self.archive_interval = software_archive_interval
             syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d from config file" % self.archive_interval)
         self.archive_delay    = config_dict['StdArchive'].as_int('archive_delay')
-
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be done in %s" % (self.engine.console.record_generation,))
+        
+        self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be done in %s" % (self.record_generation,))
 
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
@@ -453,8 +454,12 @@ class StdArchive(StdService):
     def startup(self, event):
         """Called when the engine is starting up."""
         # The engine is starting up. The main task is to do a catch up on any
-        # data still on the station, but not yet put in the database.
-        self._catchup()
+        # data still on the station, but not yet put in the database. Not
+        # all consoles can do this, so be prepared to catch the exception:
+        try:
+            self._catchup()
+        except NotImplementedError:
+            pass
                     
     def pre_loop(self, event):
         """Called before the main packet loop is entered."""
@@ -501,18 +506,19 @@ class StdArchive(StdService):
         except AttributeError:
             return
         
-        if self.engine.console.record_generation.lower() == 'software':
-            # Extract a record out of the old accumulator. 
-            record = self.old_accumulator.getRecord()
-            # Add the archive interval
-            record['interval'] = self.archive_interval / 60
-            
-            # Send out an event with the new record:
-            self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
-        elif self.engine.console.record_generation.lower() == 'hardware':
-            self._catchup()
+        # If the user has requested software generation, then do that:
+        if self.record_generation == 'software':
+            self._software_catchup()
+        elif self.record_generation == 'hardware':
+            # Otherwise, try to honor hardware generation. An exception will
+            # be raised if the console does not support it. In that case, fall
+            # back to software generation.
+            try:
+                self._catchup()
+            except NotImplementedError:
+                self._software_catchup()
         else:
-            raise ValueError("Unknown station record generation value %s" % self.engine.console.record_generation)
+            raise ValueError("Unknown station record generation value %s" % self.record_generation)
 
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
@@ -551,19 +557,27 @@ class StdArchive(StdService):
         self.statsDb.close()
         
     def _catchup(self):
-        """Pull any unarchived records off the console and archive them.""" 
+        """Pull any unarchived records off the console and archive them.
+        
+        If the hardware does not support hardware archives, an exception of type
+        NotImplementedError will be thrown.""" 
 
         # Find out when the archive was last updated.
         lastgood_ts = self.archive.lastGoodStamp()
 
         # Now ask the console for any new records since then. (Not all consoles
         # support this feature).
-        try:
-            for record in self.engine.console.genArchiveRecords(lastgood_ts):
-                self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
-        except NotImplementedError:
-            pass
+        for record in self.engine.console.genArchiveRecords(lastgood_ts):
+            self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
         
+    def _software_catchup(self):
+        # Extract a record out of the old accumulator. 
+        record = self.old_accumulator.getRecord()
+        # Add the archive interval
+        record['interval'] = self.archive_interval / 60
+        # Send out an event with the new record:
+        self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+    
     def _new_accumulator(self, timestamp):
         start_archive_ts = weeutil.weeutil.startOfInterval(timestamp,
                                                            self.archive_interval)

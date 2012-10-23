@@ -11,17 +11,22 @@
 
 class AbstractStation(object):
     """Station drivers should inherit from this class."""    
+
+    @property
+    def hardware_name(self):
+        raise NotImplementedError("Property 'hardware_name' not implemented")
+    
     def genLoopPackets(self):
-        raise NotImplementedError("Method genLoopPackets not implemented")
+        raise NotImplementedError("Method 'genLoopPackets' not implemented")
     
     def genArchiveRecords(self, lastgood_ts):
-        raise NotImplementedError("Method genArchiveRecords not implemented")
+        raise NotImplementedError("Method 'genArchiveRecords' not implemented")
         
     def getTime(self):
-        raise NotImplementedError("Method getTime not implemented")
+        raise NotImplementedError("Method 'getTime' not implemented")
     
     def setTime(self, newtime_ts):
-        raise NotImplementedError("Method setTime not implemented")
+        raise NotImplementedError("Method 'setTime' not implemented")
     
     def closePort(self):
         pass

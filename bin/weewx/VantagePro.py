@@ -358,7 +358,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
         iss_id: The station number of the ISS [Optional. Default is 1]
         """
 
-        self.record_generation = vp_dict.get('record_generation', 'hardware')
         # TODO: These values should really be retrieved dynamically from the VP:
         self.iss_id           = int(vp_dict.get('iss_id', 1))
         self.model_type       = 2 # = 1 for original VantagePro, = 2 for VP2
@@ -807,7 +806,16 @@ class Vantage(weewx.abstractstation.AbstractStation):
     #===========================================================================
     #              Davis Vantage utility functions
     #===========================================================================
-    
+
+    @property
+    def hardware_name(self):    
+        if self.hardware_type == 16:
+            return "VantagePro2"
+        elif self.hardware_type == 17:
+            return "VantageVue"
+        else:
+            raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
+
     def _setup(self):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
@@ -816,12 +824,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
         # Determine the type of hardware:
         self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
         self.hardware_type = ord(self.port.read())
-        if self.hardware_type == 16:
-            self.hardware_name = "VantagePro2"
-        elif self.hardware_type == 17:
-            self.hardware_name = "VantageVue"
-        else:
-            raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
 
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
