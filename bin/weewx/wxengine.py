@@ -786,23 +786,25 @@ class StdReport(StdService):
     
     def __init__(self, engine, config_dict):
         super(StdReport, self).__init__(engine, config_dict)
-        self.thread = None
-        self.first_run = True
+        self.max_wait    = int(config_dict['StdReport'].get('max_wait', 60))
+        self.thread      = None
+        self.launch_time = None
         
         self.bind(weewx.POST_LOOP, self.launch_report_thread)
         
     def launch_report_thread(self, event):
         """Called after the packet LOOP. Processes any new data."""
-        # Now process the data, using a separate thread. First check to see
-        # if the previous thread has finished. If not, don't launch.
-        if self.thread and self.thread.isAlive():
+        # Do not launch the reporting thread if an old one is still alive. To guard
+        # against a zombie thread (alive, but doing nothing) launch anyway if
+        # enough time has passed.
+        if self.thread and self.thread.isAlive() and time.time()-self.launch_time < self.max_wait:
             return
             
         self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
                                                          self.engine.stn_info,
-                                                         first_run=self.first_run) 
+                                                         first_run= not self.launch_time) 
         self.thread.start()
-        self.first_run = False
+        self.launch_time = time.time()
 
     def shutDown(self):
         if self.thread:
@@ -811,8 +813,8 @@ class StdReport(StdService):
                 syslog.syslog(syslog.LOG_ERR, "wxengine: Unable to shut down StdReport thread")
             else:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Shut down StdReport thread.")
-                self.thread = None
-        self.first_run = True
+        self.thread = None
+        self.launch_time = None
 
 #===============================================================================
 #                       Signal handler
