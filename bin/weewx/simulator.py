@@ -47,7 +47,7 @@ class Simulator(weewx.abstractstation.AbstractStation):
 
         self.mode = stn_dict['mode']
         self.loop_interval = float(stn_dict.get('loop_interval', 2.5))
-        self.start_ts = stn_dict['start_ts']
+        self.start_ts = stn_dict.get('start_ts', time.time())
         self.the_time = self.start_ts if self.start_ts else time.time()
         
         sod = weeutil.weeutil.startOfDay(self.the_time)

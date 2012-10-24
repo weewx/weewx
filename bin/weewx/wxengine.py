@@ -793,7 +793,11 @@ class StdReport(StdService):
         
     def launch_report_thread(self, event):
         """Called after the packet LOOP. Processes any new data."""
-        # Now process the data, using a separate thread
+        # Now process the data, using a separate thread. First check to see
+        # if the previous thread has finished. If not, don't launch.
+        if self.thread and self.thread.isAlive():
+            return
+            
         self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
                                                          self.engine.stn_info,
                                                          first_run=self.first_run) 
