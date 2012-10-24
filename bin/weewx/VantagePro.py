@@ -530,7 +530,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
             _start_index = 0
 
     def getTime(self) :
-        """Get the current time from the console and decode it, returning it as a time-tuple
+        """Get the current time from the console and decode it, returning it as timestamp
         
         returns: the time in unix epoch time
         """

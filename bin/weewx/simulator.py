@@ -46,8 +46,8 @@ class Simulator(weewx.abstractstation.AbstractStation):
         """
 
         self.mode = stn_dict['mode']
-        self.loop_interval = stn_dict.get('loop_interval', 2.5)
-        self.start_ts = stn_dict.get('start_ts')
+        self.loop_interval = float(stn_dict.get('loop_interval', 2.5))
+        self.start_ts = stn_dict['start_ts']
         self.the_time = self.start_ts if self.start_ts else time.time()
         
         sod = weeutil.weeutil.startOfDay(self.the_time)
@@ -59,31 +59,34 @@ class Simulator(weewx.abstractstation.AbstractStation):
     def genLoopPackets(self):
 
         while True:
-            _packet = {'dateTime': int(self.the_time+0.5)}
+            _packet = {'dateTime': int(self.the_time+0.5),
+                       'usUnits' : weewx.US }
             for obs_type in self.observations:
                 _packet[obs_type] = self.observations[obs_type].value_at(self.the_time)
+
+            self.the_time += self.loop_interval
+            
             yield _packet
 
+            # Determine how long to sleep (if any)
             if self.mode == 'simulator':
                 if self.start_ts:
                     # A start time was specified, so we are not in realtime. Just sleep
                     # the appropriate interval
                     time.sleep(self.loop_interval)
-                    self.the_time += self.loop_interval
                 else:
                     # No start time was specified, so we are in real time. Try to keep
                     # synched up with the wall clock
-                    time.sleep(self.the_time + self.loop_interval - time.time())
-                    self.the_time = time.time()
-            elif self.mode == 'generator':
-                self.the_time += self.loop_interval
-                
+                    time.sleep(self.the_time - time.time())
                 
     def getTime(self):
         return self.the_time
     
     def setTime(self, newtime_ts):
-        self.the_time = newtime_ts
+        # If the Simulator is not running in real time, you don't want to
+        # change the time.
+        if self.start_ts is None:
+            self.the_time = newtime_ts
         
     @property
     def hardware_name(self):

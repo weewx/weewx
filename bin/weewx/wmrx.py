@@ -186,11 +186,11 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
     def getTime(self):
         """Return the current time."""
         
-        # This version actually returns the last time seen
+        # This version actually returns the last time seen.
         try:
             return self.last_time
         except AttributeError:
-            return None
+            raise NotImplementedError("No time packet seen.")
         
     @property
     def hardware_name(self):

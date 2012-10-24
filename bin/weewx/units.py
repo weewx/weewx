@@ -840,8 +840,9 @@ def convertStd(val_t, target_std_unit_system):
 def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     """Given a standard unit system (weewx.US or weewx.METRIC), an observation type, and
     an aggregation type, what units would it be in?
-
-    target_std_unit_system: A standardized unit system. 
+    
+    target_std_unit_system: A standardized unit system. If None, then
+    the the output units are indeterminate, so (None, None) is returned. 
     
     obs_type: An observation type.
         
@@ -860,9 +861,14 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     ('mbar', 'group_pressure')
     >>> print getStandardUnitType(weewx.METRIC, 'wind', 'rms')
     ('km_per_hour', 'group_speed')
+    >>> print getStandardUnitType(None, 'barometer', 'avg')
+    (None, None)
     """
     
-    return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
+    if target_std_unit_system is not None:
+        return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
+    else:
+        return (None, None)
 
 def dictFromStd(d):
     """Map an observation dictionary to a dictionary with values of ValueTuples.

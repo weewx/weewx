@@ -307,14 +307,14 @@
             #if $station.hardware[0:7] == 'Vantage'
             	This station uses a <a href="http://davisnet.com/weather/products/professional-home-weather-stations.asp">
                 Davis $station.hardware</a> weather station,
-            #end if
-            #if $station.hardware == 'VantageIP'
+            #elif $station.hardware == 'VantageIP'
             	with a <a href="http://davisnet.com/weather/products/weather_product.asp?pnum=06555">
             	WeatherLinkIP connection</a>, 
-            #end if
-            #if $station.hardware == 'WMR-USB'
+            #elif $station.hardware == 'WMR-USB'
             	This station uses an <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">
             	Oregon Scientific WMR100N</a> weather station,
+            #else
+                This station uses a $station.hardware weather station,
             #end if
             controlled by <a href="http://www.weewx.com">'weewx'</a>, an
             experimental weather software system written in Python. Weewx was designed to be simple,

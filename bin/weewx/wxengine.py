@@ -197,7 +197,7 @@ class StdEngine(object):
                         self.dispatchEvent(weewx.Event(weewx.NEW_LOOP_PACKET, packet=packet))
 
                         # Allow services to break the loop by throwing an exception:
-                        self.dispatchEvent(weewx.Event(weewx.CHECK_LOOP))
+                        self.dispatchEvent(weewx.Event(weewx.CHECK_LOOP, packet=packet))
     
                 except BreakLoop:
                     
@@ -256,7 +256,13 @@ class StdEngine(object):
         except:
             pass
 
-
+    def _get_console_time(self):
+        try:
+            return self.console.getTime()
+        except NotImplementedError:
+            return int(time.time()+0.5)
+        
+        
 #===============================================================================
 #                    Class StdService
 #===============================================================================
@@ -466,7 +472,7 @@ class StdArchive(StdService):
         
         # The only thing that needs to be done is to calculate the end of the
         # archive period, and the end of the archive delay period.
-        self.end_archive_period_ts = (int(time.time() / self.archive_interval) + 1) * self.archive_interval
+        self.end_archive_period_ts = (int(self.engine._get_console_time() / self.archive_interval) + 1) * self.archive_interval
         self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
 
     def new_loop_packet(self, event):
@@ -492,7 +498,7 @@ class StdArchive(StdService):
         """Called after any loop packets have been processed. This is the opportunity
         to break the main loop by throwing an exception."""
         # Has the end of the archive delay period ended? If so, break the loop.
-        if time.time() >= self.end_archive_delay_ts:
+        if event.packet['dateTime'] >= self.end_archive_delay_ts:
             raise BreakLoop
 
     def post_loop(self, event):
