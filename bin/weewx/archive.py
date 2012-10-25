@@ -12,6 +12,7 @@ from __future__ import with_statement
 import math
 import syslog
 
+from weewx.units import ValueTuple
 import weewx.units
 import weeutil.weeutil
 import weedb
@@ -316,12 +317,9 @@ class Archive(object):
         is non-None. Default: None (no aggregation)
 
         returns: a 2-way tuple of value tuples: 
-          ((time_vec, time_unit_type), (data_vec, data_unit_type))
+          (time_vec_value_tuple, data_vec_value_tuple)
         The first element holds the time value tuple, the second the data value tuple.
-        The first element of the time value tuple is a time vector (as a list), the
-        second element the unit it is in ('unix_epoch'). The first element
-        of the data value tuple is the data vector (as a list), the second
-        element the unit type it is in. 
+        See the file weewx.units for the definition of a value tuple.
         """
         # There is an assumption here that the unit type does not change in the
         # middle of the time interval.
@@ -366,7 +364,7 @@ class Archive(object):
 
         (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
         (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, sql_type, aggregate_type)
-        return ((time_vec, time_type, time_group), (data_vec, data_type, data_group))
+        return (ValueTuple(time_vec, time_type, time_group), ValueTuple(data_vec, data_type, data_group))
 
     def getSqlVectorsExtended(self, ext_type, startstamp, stopstamp, 
                               aggregate_interval = None, 
@@ -397,12 +395,10 @@ class Archive(object):
         aggregation (e.g., 'sum', 'avg', etc.)  Required if aggregate_interval
         is non-None. Default: None (no aggregation)
         
-        returns: a 2-way tuple of 2-way tuples: 
-          ((time_vec, time_unit_type), (data_vec, data_unit_type))
-        The first tuple hold the time information: the first element 
-        is the time vector, the second the unit type of the time vector. 
-        The second tuple holds the data information. The first element is
-        the data vector, the second the unit type of the data vector.
+        returns: a 2-way tuple of value tuples: 
+          (time_vec_value_tuple, data_vec_value_tuple)
+        The first element holds the time value tuple, the second the data value tuple.
+        See the file weewx.units for the definition of a value tuple.
         If sql_type is 'windvec' or 'windgustvec', the data
         vector will be a vector of types complex. The real part is the x-component
         of the wind, the imaginary part the y-component. 
@@ -530,7 +526,7 @@ class Archive(object):
 
         (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
         (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
-        return ((time_vec, time_type, time_group), (data_vec, data_type, data_group))
+        return (weewx.units.ValueTuple(time_vec, time_type, time_group), weewx.units.ValueTuple(data_vec, data_type, data_group))
 
     def _getTypes(self):
         """Returns the types appearing in an archive database.

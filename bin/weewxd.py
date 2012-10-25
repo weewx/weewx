@@ -52,15 +52,17 @@ def parseArgs():
     
     return (options, args)
 
-if __name__ == "__main__":
-    
-    # Get the command line options and arguments:
-    (options, args) = parseArgs()
-    
-    # Enter the main loop. This call will use the default
-    # engine, StdEngine, but this can be overridden with
-    # keyword EngineClass. E.g.,
-    #
-    # weewx.wxengine.main(options, args, EngineClass = MyEngine)
-    #
-    weewx.wxengine.main(options, args)
+#===============================================================================
+#                       Main entry point
+#===============================================================================
+
+# Get the command line options and arguments:
+(options, args) = parseArgs()
+
+# Fire up the engine. This call uses the default
+# engine, StdEngine, but it can be overridden with
+# keyword EngineClass. E.g.,
+#
+# weewx.wxengine.main(options, args, EngineClass = MyEngine)
+#
+weewx.wxengine.main(options, args)
