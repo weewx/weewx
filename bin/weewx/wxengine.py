@@ -668,26 +668,28 @@ class TestAccum(StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
     def new_archive_record(self, event):
-        # Nothing to do unless the record generation is being done in software:
-        if self.engine.console.record_generation.lower() != 'software':
-            return
+
         accum_record = event.record
         
         timestamp = accum_record['dateTime']
         last_timestamp = timestamp - self.engine.console.archive_interval
         
-        for stn_record in self.engine.console.genArchiveRecords(last_timestamp):
+        # This will only work if the hardware supports archive logging.
+        try:
+            for stn_record in self.engine.console.genArchiveRecords(last_timestamp):
             
-            if timestamp==stn_record['dateTime']:
-            
-                for obs_type in sorted(accum_record.keys()):
-                    print "%10s, %10s, %10s" % (obs_type, accum_record[obs_type], stn_record.get(obs_type, 'N/A'))
-
-                accum_set = set(accum_record.keys())
-                stn_set   = set(stn_record.keys())
+                if timestamp==stn_record['dateTime']:
                 
-                missing = stn_set - accum_set
-                print "Missing keys:", missing
+                    for obs_type in sorted(accum_record.keys()):
+                        print "%10s, %10s, %10s" % (obs_type, accum_record[obs_type], stn_record.get(obs_type, 'N/A'))
+    
+                    accum_set = set(accum_record.keys())
+                    stn_set   = set(stn_record.keys())
+                    
+                    missing = stn_set - accum_set
+                    print "Missing keys:", missing
+        except NotImplementedError:
+            pass
         
 #===============================================================================
 #                    Class StdRESTful
