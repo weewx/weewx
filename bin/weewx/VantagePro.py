@@ -377,9 +377,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
         # Read the EEPROM and fill in properties in this instance
         self._setup()
         
-        # Make sure the logger is started:
-        self.port.send_command("START\n")
-        
     def openPort(self):
         """Open up the connection to the console"""
         self.port.openPort()
@@ -717,6 +714,12 @@ class Vantage(weewx.abstractstation.AbstractStation):
         
         return(stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone)
 
+    def startLogger(self):
+        self.port.send_command("START\n")
+        
+    def stopLogger(self):
+        self.port.send_command('STOP\n')
+        
     def translateLoopPacket(self, packet):
         """Translates a loop packet from the internal units used by Davis, into US Customary Units.
         

@@ -22,7 +22,8 @@ import weeutil.weeutil
 description = """Configures the Davis Vantage weather station."""
 
 usage="""%prog: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
-                            [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM]"""
+                            [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM]
+                            [--start | --stop]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
@@ -52,11 +53,16 @@ def main():
                         "Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM")
     parser.add_option("--set-rain-year-start", type=int, dest="set_rain_year_start", metavar="MM", 
                         help="Set the rain year start (1=Jan, 2=Feb, etc.)")
+    parser.add_option("--start", action="store_true", help="Start the logger")
+    parser.add_option("--stop",  action="store_true", help="Stop the logger")
     
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
     if not args:
         parser.error("Missing configuration file.")
+        
+    if options.start and options.stop:
+        parser.error("Cannot specify both --start and --stop")
 
     config_path = args[0]
     
@@ -91,6 +97,10 @@ def main():
         set_bucket(station, options.set_bucket)
     if options.set_rain_year_start is not None:
         set_rain_year_start(station, options.set_rain_year_start)
+    if options.start:
+        start_logger(station)
+    if options.stop:
+        stop_logger(station)
            
 def info(station):
     """Query the configuration of the Vantage, printing out status information"""
@@ -289,5 +299,15 @@ def set_rain_year_start(station, rain_year_start):
             elif ans == 'n':
                 print "Nothing done."
 
+def start_logger(station):
+    print "Starting logger ..."
+    station.startLogger()
+    print "Logger started"
+    
+def stop_logger(station):
+    print "Stopping logger ..."
+    station.stopLogger()
+    print "Logger stopped"
+    
 if __name__=="__main__" :
     main()
