@@ -544,6 +544,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 				This will print out something like:</p>
 <pre>Usage: config_vp.py: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
                             [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM]
+                            [--start | -- stop]
 
 Configures the VantagePro weather station.
 
@@ -565,6 +566,8 @@ Options:
                         inches; '1' for 0.2 MM; '2' for 0.1 MM
   --set-rain-year-start=MM
                         Set the rain year start (1=Jan, 2=Feb, etc.)
+  --start               Start the logger
+  --stop                Stop the logger
 
 Mutating actions will request confirmation before proceeding.</pre>
 			<p>

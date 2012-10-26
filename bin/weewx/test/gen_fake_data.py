@@ -43,25 +43,6 @@ avg_baro = 30.0
 # Archive interval in seconds:
 interval = 600
 
-archive_schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
-                  ('usUnits',              'INTEGER NOT NULL'),
-                  ('interval',             'INTEGER NOT NULL'),
-                  ('barometer',            'REAL'),
-                  ('inTemp',               'REAL'),
-                  ('outTemp',              'REAL'),
-                  ('inHumidity',           'REAL'),
-                  ('outHumidity',          'REAL'),
-                  ('windSpeed',            'REAL'),
-                  ('windDir',              'REAL'),
-                  ('windGust',             'REAL'),
-                  ('windGustDir',          'REAL'),
-                  ('rain',                 'REAL'),
-                  ('dewpoint',             'REAL'),
-                  ('windchill',            'REAL'),
-                  ('heatindex',            'REAL')]
-
-stats_types = ['wind', 'barometer', 'inTemp', 'outTemp', 'inHumidity', 'outHumidity', 'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', 'radiation', 'UV', 'extraTemp', 'rxCheckPercent']
-
 def configDatabases(archive_db_dict, stats_db_dict):
     """Configures the main and stats databases."""
 

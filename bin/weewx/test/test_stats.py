@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -20,7 +20,8 @@ import configobj
 
 import weeutil.weeutil
 import weewx.stats
-import gen_fake_data 
+import gen_fake_data
+import user.schemas
 
 class Common(unittest.TestCase):
     
@@ -53,7 +54,7 @@ class Common(unittest.TestCase):
     
     def test_create_stats(self):
         with weewx.stats.StatsDb.open(self.stats_db_dict) as stats:
-            self.assertItemsEqual(stats.connection.tables(), gen_fake_data.stats_types + ['metadata'])
+            self.assertItemsEqual(stats.connection.tables(), user.schemas.defaultStatsTypes + ['metadata'])
             self.assertEqual(stats.connection.columnsOf('barometer'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count'])
             self.assertEqual(stats.connection.columnsOf('wind'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'gustdir', 'xsum', 'ysum', 'squaresum', 'squarecount'])
         

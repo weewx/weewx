@@ -34,21 +34,19 @@ class Simulator(weewx.abstractstation.AbstractStation):
         
         NAMED ARGUMENTS:
         
-        altitude: The altitude in meters. Required.
+        loop_interval: The time (in seconds) between emitting LOOP packets. [Optional. Default is 2.5]
         
-        loop_interval: The time (in seconds) between emitting LOOP packets.
-        
-        mode: One of either:
+        start_ts: The start time in unix epoch time [Optional. Default is to use the present time.]
+
+        mode: Required. One of either:
             'simulator': Real-time simulator. It will sleep between emitting LOOP packets.
             'generator': Emit packets as fast as it can (useful for testing).
-            
-        start_ts: The start time in unix epoch time [Optional. Default is to use the present time.]
         """
 
-        self.mode = stn_dict['mode']
         self.loop_interval = float(stn_dict.get('loop_interval', 2.5))
-        self.start_ts = stn_dict.get('start_ts', time.time())
-        self.the_time = self.start_ts if self.start_ts else time.time()
+        self.start_ts      = float(stn_dict.get('start_ts', time.time()))
+        self.mode          = stn_dict['mode']
+        self.the_time      = self.start_ts if self.start_ts else time.time()
         
         sod = weeutil.weeutil.startOfDay(self.the_time)
                 
@@ -59,17 +57,11 @@ class Simulator(weewx.abstractstation.AbstractStation):
     def genLoopPackets(self):
 
         while True:
-            _packet = {'dateTime': int(self.the_time+0.5),
-                       'usUnits' : weewx.US }
-            for obs_type in self.observations:
-                _packet[obs_type] = self.observations[obs_type].value_at(self.the_time)
 
-            self.the_time += self.loop_interval
-            
-            yield _packet
-
-            # Determine how long to sleep (if any)
+            # If we are in simulator mode, sleep first (as if we are gathering
+            # observations). If we are in generator mode, don't sleep at all.
             if self.mode == 'simulator':
+                # Determine how long to sleep
                 if self.start_ts:
                     # A start time was specified, so we are not in realtime. Just sleep
                     # the appropriate interval
@@ -77,8 +69,32 @@ class Simulator(weewx.abstractstation.AbstractStation):
                 else:
                     # No start time was specified, so we are in real time. Try to keep
                     # synched up with the wall clock
-                    time.sleep(self.the_time - time.time())
+                    time.sleep(self.the_time + self.loop_interval - time.time())
+
+            # Update the simulator clock:
+            self.the_time += self.loop_interval
+            
+            # Because a packet represents the measurements observed over the
+            # time interval, we want the measurement values at the middle
+            # of the interval.
+            avg_time = self.the_time - self.loop_interval/2.0
+            
+            _packet = {'dateTime': int(self.the_time+0.5),
+                       'usUnits' : weewx.US }
+            for obs_type in self.observations:
+                _packet[obs_type] = self.observations[obs_type].value_at(avg_time)
+
+            yield _packet
+
                 
+    def genArchiveRecords(self, lastgood_ts):
+        # What this will do is bring the simulator in synch with the last good
+        # time in the database. The result is that it will resume starting at
+        # that time.
+        if lastgood_ts:
+            self.the_time = lastgood_ts
+        raise NotImplementedError
+    
     def getTime(self):
         return self.the_time
     
@@ -103,11 +119,13 @@ class Observation(object):
         phase_lag: The number of hours after the start time when the observation hits its max
         start: Time zero for the observation in unix epoch time."""
          
+        if not start:
+            raise ValueError("No start time specified")
         self.magnitude = magnitude
-        self.average = average
-        self.period = period * 3660.0
+        self.average   = average
+        self.period    = period * 3660.0
         self.phase_lag = phase_lag * 3660.0
-        self.start = start
+        self.start     = start
         
     def value_at(self, time_ts):
         """Return the observation value at the given time.
@@ -122,7 +140,7 @@ class Observation(object):
 
 if __name__ == "__main__":
 
-    station = Simulator(mode='generator',loop_interval=2.0)
+    station = Simulator(mode='simulator',loop_interval=2.0)
     for packet in station.genLoopPackets():
         print weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet
         

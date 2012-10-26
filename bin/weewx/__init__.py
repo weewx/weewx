@@ -56,6 +56,9 @@ class UnsupportedFeature(StandardError):
 class ViolatedPrecondition(StandardError):
     """Exception thrown when a function is called with violated preconditions."""
     
+class StopNow(StandardError):
+    """Exception thrown to stop the engine."""
+    
 #===============================================================================
 #                       Possible event types.
 #===============================================================================
