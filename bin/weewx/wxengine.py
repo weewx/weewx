@@ -49,27 +49,10 @@ class StdEngine(object):
     When a service loads, it binds callbacks to events. When an event occurs,
     the bound callback will be called."""
     
-    def __init__(self, options, args):
+    def __init__(self, config_dict):
         """Initialize an instance of StdEngine.
         
-        options: An object containing values for all options, as returned
-        by OptionParser
-        
-        args: The command line arguments, as returned by OptionParser.
-        """
-        config_dict = self.getConfiguration(options, args)
-
-        # Set the logging facility.
-        syslog.openlog('weewx', syslog.LOG_PID | syslog.LOG_CONS)
-        # Look for the debug flag. If set, ask for extra logging
-        weewx.debug = int(config_dict.get('debug', 0))
-        if weewx.debug:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        else:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
-
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s." % weewx.__version__)
-
+        config_dict: The configuration dictionary. """
         # Set a default socket time out, in case FTP or HTTP hang:
         timeout = int(config_dict.get('socket_timeout', 20))
         socket.setdefaulttimeout(timeout)
@@ -86,26 +69,6 @@ class StdEngine(object):
         # Another hook for after the services load.
         self.postLoadServices(config_dict)
         
-    def getConfiguration(self, options, args):
-
-        config_path = os.path.abspath(args[0])
-        # Try to open up the given configuration file. Declare an error if
-        # unable to.
-        try :
-            config_dict = configobj.ConfigObj(config_path, file_error=True)
-        except IOError:
-            sys.stderr.write("Unable to open configuration file %s" % args[0])
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open configuration file %s" % args[0])
-            # Reraise the exception (this will eventually cause the program to exit)
-            raise
-        except configobj.ConfigObjError:
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Error while parsing configuration file %s" % args[0])
-            raise
-
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % config_path)
-
-        return config_dict
-    
     def setupStation(self, config_dict):
         """Set up the weather station hardware."""
         # Get the hardware type from the configuration dictionary. This will be
@@ -498,7 +461,7 @@ class StdArchive(StdService):
         """Called after any loop packets have been processed. This is the opportunity
         to break the main loop by throwing an exception."""
         # Has the end of the archive delay period ended? If so, break the loop.
-        if event.packet['dateTime'] >= self.end_archive_delay_ts:
+        if event.packet['dateTime'] > self.end_archive_delay_ts:
             raise BreakLoop
 
     def post_loop(self, event):
@@ -839,6 +802,12 @@ def main(options, args, EngineClass=StdEngine) :
     Mostly consists of a bunch of high-level preparatory calls, protected
     by try blocks in the case of an exception."""
 
+    # Set the logging facility.
+    syslog.openlog('weewx', syslog.LOG_PID | syslog.LOG_CONS)
+
+    # Set up the reload signal handler:
+    signal.signal(signal.SIGHUP, sigHUPhandler)
+
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
     cwd = os.getcwd()
@@ -851,11 +820,21 @@ def main(options, args, EngineClass=StdEngine) :
         try:
     
             os.chdir(cwd)
+
+            config_path = os.path.abspath(args[0])
+            config_dict = getConfiguration(config_path)
+    
+            # Look for the debug flag. If set, ask for extra logging
+            weewx.debug = int(config_dict.get('debug', 0))
+            if weewx.debug:
+                syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+            else:
+                syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
             # Create and initialize the engine
-            engine = EngineClass(options, args)
-            # Set up the reload signal handler:
-            signal.signal(signal.SIGHUP, sigHUPhandler)
-            # Run the main event loop:
+            engine = EngineClass(config_dict)
+            # Start the engine
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s." % weewx.__version__)
             engine.run()
     
         # Catch any recoverable weewx I/O errors:
@@ -905,3 +884,23 @@ def main(options, args, EngineClass=StdEngine) :
             syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise
+
+def getConfiguration(config_path):
+    """Return the configuration file at the given path."""
+    # Try to open up the given configuration file. Declare an error if
+    # unable to.
+    try :
+        config_dict = configobj.ConfigObj(config_path, file_error=True)
+    except IOError:
+        sys.stderr.write("Unable to open configuration file %s" % config_path)
+        syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open configuration file %s" % config_path)
+        # Reraise the exception (this will eventually cause the program to exit)
+        raise
+    except configobj.ConfigObjError:
+        syslog.syslog(syslog.LOG_CRIT, "wxengine: Error while parsing configuration file %s" % config_path)
+        raise
+
+    syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % config_path)
+
+    return config_dict
+    
