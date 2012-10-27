@@ -93,6 +93,8 @@ class Simulator(weewx.abstractstation.AbstractStation):
         # that time.
         if lastgood_ts:
             self.the_time = lastgood_ts
+        # However, it does not actually emit any records, so we still have
+        # to signal that there is no implementation.
         raise NotImplementedError
     
     def getTime(self):

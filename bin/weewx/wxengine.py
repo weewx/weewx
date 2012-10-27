@@ -406,6 +406,8 @@ class StdArchive(StdService):
             self.archive_interval = software_archive_interval
             syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d from config file" % self.archive_interval)
         self.archive_delay    = config_dict['StdArchive'].as_int('archive_delay')
+        if self.archive_delay <= 0:
+            raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % (self.archive_delay,))
         
         self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
         syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be done in %s" % (self.record_generation,))
@@ -461,7 +463,7 @@ class StdArchive(StdService):
         """Called after any loop packets have been processed. This is the opportunity
         to break the main loop by throwing an exception."""
         # Has the end of the archive delay period ended? If so, break the loop.
-        if event.packet['dateTime'] > self.end_archive_delay_ts:
+        if event.packet['dateTime'] >= self.end_archive_delay_ts:
             raise BreakLoop
 
     def post_loop(self, event):

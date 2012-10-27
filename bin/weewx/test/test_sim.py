@@ -18,6 +18,7 @@ import os
 
 import configobj
 
+import weeutil.weeutil
 import weewx.wxengine
 import weedb
 
@@ -52,7 +53,7 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
-        (self.start_ts, self.stop_ts) = _get_start_stop(config_dict)
+        (first_ts, last_ts) = _get_first_last(config_dict)
 
         # Set the database to be used in the configuration dictionary
         config_dict['StdArchive']['archive_database'] = self.archive_db
@@ -61,9 +62,7 @@ class Common(unittest.TestCase):
 
         try:
             with weewx.archive.Archive.open(archive_db_dict) as archive:
-                print "Start timestamp:", archive.firstGoodStamp(), self.start_ts
-                print "Stop timestamp: ", archive.lastGoodStamp(), self.stop_ts
-                if archive.firstGoodStamp() == self.start_ts and archive.lastGoodStamp() == self.stop_ts:
+                if archive.firstGoodStamp() == first_ts and archive.lastGoodStamp() == last_ts:
                     print "Simulator need not be run"
                     return 
         except weedb.OperationalError:
@@ -91,12 +90,21 @@ class Stopper(weewx.wxengine.StdService):
         global run_length
         super(Stopper, self).__init__(engine, config_dict)
 
-        (self.start_ts, self.stop_ts) = _get_start_stop(config_dict)
+        (self.first_ts, self.last_ts) = _get_first_last(config_dict)
 
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        
+        self.nloop = self.nrecords = 0
         
     def new_loop_packet(self, event):
-        if event.packet['dateTime'] > self.stop_ts:
+        if self.nloop % 10 == 0:
+            print >>sys.stdout, "LOOP packets processed: %d; Last date: %s\r" % (self.nloop, weeutil.weeutil.timestamp_to_string(event.packet['dateTime'])),
+            sys.stdout.flush()
+        self.nloop += 1
+            
+    def new_archive_record(self, event):
+        if event.record['dateTime'] >= self.last_ts:
             raise weewx.StopNow("Time to stop!")
         
 class TestSqlite(Common):
@@ -113,12 +121,13 @@ class TestMySQL(Common):
         self.stats_db   = "stats_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
-def _get_start_stop(config_dict):
-    
+def _get_first_last(config_dict):
+    """Get the first and last archive record timestamps."""
     start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%d %H:%M")
     start_ts = time.mktime(start_tt)
-    stop_ts = start_ts + run_length *3600.0
-    return (start_ts, stop_ts)
+    first_ts = start_ts + config_dict['StdArchive'].as_int('archive_interval')
+    last_ts = start_ts + run_length *3600.0
+    return (first_ts, last_ts)
 
 def suite():
     tests = ['test_create_sim']
