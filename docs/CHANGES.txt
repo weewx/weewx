@@ -22,6 +22,8 @@ for supporting weather stations that do not have a logger.
 Support for the  Oregon Scientific WMR100, the cheapest  weather station I could
 find, in order to demonstrate the above!
 
+Added a software weather station simulator.
+
 Introduced  weedb,  a database-independent  Python  wrapper  around sqlite3  and
 MySQLdb, which fixes some of their flaws.
 
@@ -56,6 +58,8 @@ wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
 'count').
 
 Simplified and reduced the memory requirements of the CRC16 calculations.
+
+Improved test suites.
 
 Lots of  little nips  and tucks here  and there,  mostly to reduce  the coupling
 between  different  modules.   In  particular,  now  a  service  generally  gets
