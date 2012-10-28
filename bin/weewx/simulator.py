@@ -20,29 +20,34 @@ import weewx.wxformulas
 
 def loader(config_dict):
 
-    # This loader uses a bit of a hack to have the simulator resume at a time
-    # after the last record in the database. It's not bad, but I'm not
-    # enthusiastic about having special knowledge about the database in a
-    # driver, albeit just the loader.
+    # This loader uses a bit of a hack to have the simulator resume at a later
+    # time. It's not bad, but I'm not enthusiastic about having special
+    # knowledge about the database in a driver, albeit just the loader.
 
-    start_ts = None
+    start_ts = resume_ts = None
     if config_dict['Simulator'].has_key('start'):
-        # A start time has been specified. Resume with the last time in the
-        # database. If there is no such time, use the time specified in the
-        # configuration dictionary.
-        archive_db = config_dict['StdArchive']['archive_database']        
-        archive_db_dict = config_dict['Databases'][archive_db]
-        try:
-            with weewx.archive.Archive.open(archive_db_dict) as archive:
-                start_ts = archive.lastGoodStamp()
-        except weedb.OperationalError:
-            pass
-        if start_ts is None:
-            # No database, or it has no data in it. Use the specified time.
-            start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%d %H:%M")
-            start_ts = time.mktime(start_tt)
+        # A start has been specified. Extract the time stamp.
+        start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%d %H:%M")
+        start_ts = time.mktime(start_tt)
+        # If the 'resume' keyword is present and True, then get the last archive
+        # record out of the database and resume with that.
+        if int(config_dict['Simulator'].get('resume', 1)):
+            import weewx.archive
+            # Resume with the last time in the database. If there is no such
+            # time, then fall back to the time specified in the configuration
+            # dictionary.
+            archive_db = config_dict['StdArchive']['archive_database']        
+            archive_db_dict = config_dict['Databases'][archive_db]
+            try:
+                with weewx.archive.Archive.open(archive_db_dict) as archive:
+                    resume_ts = archive.lastGoodStamp()
+            except weedb.OperationalError:
+                pass
+        else:
+            # The resume keyword is not present. Start with the seed time:
+            resume_ts = start_ts
             
-    station = Simulator(start_ts=start_ts, **config_dict['Simulator'])
+    station = Simulator(start_time=start_ts, resume_time=resume_ts, **config_dict['Simulator'])
     
     return station
         
@@ -56,29 +61,45 @@ class Simulator(weewx.abstractstation.AbstractStation):
         
         loop_interval: The time (in seconds) between emitting LOOP packets. [Optional. Default is 2.5]
         
-        start_ts: The start time in unix epoch time [Optional. Default is to use the present time.]
+        start_time: The start (seed) time for the generator in unix epoch time [Optional. If 'None',
+                    or not present, then the present time will be used.]
 
+        resume_time: The start time for the loop. [Optional. If 'None', 
+                     or not present, then start_time will be used].
+        
         mode: Required. One of either:
             'simulator': Real-time simulator. It will sleep between emitting LOOP packets.
             'generator': Emit packets as fast as it can (useful for testing).
         """
 
         self.loop_interval = float(stn_dict.get('loop_interval', 2.5))
-        self.start_ts      = float(stn_dict.get('start_ts', time.time()))
-        self.mode          = stn_dict['mode']
-        self.the_time      = self.start_ts if self.start_ts else time.time()
+        if stn_dict.has_key('start_time') and stn_dict['start_time'] is not None:
+            # A start time has been specified. We are not in real time mode.
+            self.real_time = False
+            # Extract the generator start time:
+            start_ts = float(stn_dict['start_time'])
+            # If a resume time keyword is present (and it's not None), 
+            # then have the generator resume with that time.
+            if stn_dict.has_key('resume_time') and stn_dict['resume_time'] is not None:
+                self.the_time = float(stn_dict['resume_time'])
+            else:
+                self.the_time = start_ts
+        else:
+            # No start time specified. We are in realtime mode.
+            self.real_time = True
+            start_ts = self.the_time = time.time()
+            
+        self.mode = stn_dict['mode']
         
-        sod = weeutil.weeutil.startOfDay(self.the_time)
-                
         # The following doesn't make much meteorological sense, but it is easy to program!
-        self.observations = {'outTemp'    : Observation(magnitude=20.0,  average= 50.0, period=24.0, phase_lag=14.0, start=sod),
-                             'inTemp'     : Observation(magnitude=5.0,   average= 68.0, period=24.0, phase_lag=12.0, start=sod),
-                             'barometer'  : Observation(magnitude=1.0,   average= 30.1, period=96.0, phase_lag=48.0, start=sod),
-                             'windSpeed'  : Observation(magnitude=10.0,  average=  5.0, period=96.0, phase_lag=24.0, start=sod),
-                             'windDir'    : Observation(magnitude=360.0, average=180.0, period=96.0, phase_lag= 0.0, start=sod),
-                             'windGust'   : Observation(magnitude=12.0,  average=  6.0, period=96.0, phase_lag=24.0, start=sod),
-                             'windGustDir': Observation(magnitude=360.0, average=180.0, period=96.0, phase_lag= 0.0, start=sod),
-                             'humidity'   : Observation(magnitude=30.0,  average= 50.0, period=96.0, phase_lag= 0.0, start=sod),
+        self.observations = {'outTemp'    : Observation(magnitude=20.0,  average= 50.0, period=24.0, phase_lag=14.0, start=start_ts),
+                             'inTemp'     : Observation(magnitude=5.0,   average= 68.0, period=24.0, phase_lag=12.0, start=start_ts),
+                             'barometer'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
+                             'windSpeed'  : Observation(magnitude=10.0,  average=  5.0, period=48.0, phase_lag=24.0, start=start_ts),
+                             'windDir'    : Observation(magnitude=360.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
+                             'windGust'   : Observation(magnitude=12.0,  average=  6.0, period=48.0, phase_lag=24.0, start=start_ts),
+                             'windGustDir': Observation(magnitude=360.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
+                             'humidity'   : Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts),
                              'rain'       : Rain(rain_start=0, rain_length=3, total_rain=0.2, loop_interval=self.loop_interval)}
 
     def genLoopPackets(self):
@@ -89,14 +110,14 @@ class Simulator(weewx.abstractstation.AbstractStation):
             # observations). If we are in generator mode, don't sleep at all.
             if self.mode == 'simulator':
                 # Determine how long to sleep
-                if self.start_ts:
-                    # A start time was specified, so we are not in realtime. Just sleep
+                if self.real_time:
+                    # We are in real time mode. Try to keep synched up with the
+                    # wall clock
+                    time.sleep(self.the_time + self.loop_interval - time.time())
+                else:
+                    # A start time was specified, so we are not in real time. Just sleep
                     # the appropriate interval
                     time.sleep(self.loop_interval)
-                else:
-                    # No start time was specified, so we are in real time. Try to keep
-                    # synched up with the wall clock
-                    time.sleep(self.the_time + self.loop_interval - time.time())
 
             # Update the simulator clock:
             self.the_time += self.loop_interval
@@ -137,8 +158,8 @@ class Observation(object):
             raise ValueError("No start time specified")
         self.magnitude = magnitude
         self.average   = average
-        self.period    = period * 3660.0
-        self.phase_lag = phase_lag * 3660.0
+        self.period    = period * 3600.0
+        self.phase_lag = phase_lag * 3600.0
         self.start     = start
         
     def value_at(self, time_ts):
