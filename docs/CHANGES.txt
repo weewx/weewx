@@ -49,9 +49,6 @@ idea and the use case!
 
 When doing DMPAFT, no longer tries to correct for DST.
 
-Explicitly starts the logger in  the Vantage stations by issuing command 'START'
-on engine start up.
-
 The stats  type 'squarecount' now contains  the number of  valid wind directions
 that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid
 wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of

@@ -867,7 +867,7 @@ Sunrise, sunset: 06:51 19:30
 	in the skin configuration file. More information on how to do this can be found 
 	there. </p>
 	<p>But, what if you wish to introduce a more dynamic tag, one that requires 
-	some calculation? Simply putting it in the <span class="code">[Extras]</span> 
+	some calculation, or that uses the database? Simply putting it in the <span class="code">[Extras]</span> 
 	section won&#39;t do, because then it cannot change. </p>
 	<p>The answer is to extend the default file generator<span class="code"> weewx.filegenerator.FileGenerator</span> 
 	by subclassing, then override the function that returns the <em>search list</em>. 
@@ -878,28 +878,54 @@ Sunrise, sunset: 06:51 19:30
 	with your tag as the key to the list returned by the superclass. </p>
 	<p>Let's look at an example. The regular version of <span class="code">weewx</span> 
 	offers statistical summaries by day, week, month, and year. Suppose we would 
-	like to add one more: all-time statistics. This would allow us to display statistics 
-	such as the all-time high or low temperature seen at your station. </p>
-	<p>This example is included in the distribution as <span class="code">examples/mygenerator.py</span>:
+	like to add two more: </p>
+	<ul>
+		<li>All-time statistics. This would allow us to display statistics such 
+		as the all-time high or low temperature seen at your station;</li>
+		<li>Seven days statistics. While weewx offers the tag <span class="code">
+		$week</span>, this is statistics <em>since Sunday at midnight</em>. We 
+		would like to have statistics for a full week, that is since midnight 
+		seven days ago.</li>
+	</ul>
+	<p>This example is included in the distribution as <span class="code">bin/examples/mygenerator.py</span>:
 	</p>
-	<pre>from weewx.filegenerator import FileGenerator
+	<pre>import datetime
+import time
+
+from weewx.filegenerator import FileGenerator
 from weewx.stats import TimeSpanStats
+from weeutil.weeutil import TimeSpan
 
 class MyFileGenerator(FileGenerator):                            # 1
   
-    def getToDateSearchList(self, archivedb, statsdb, timespan): # 2
+    def getToDateSearchList(self, archivedb, statsdb, valid_timespan): # 2
 
-        # Get a TimeSpanStats object :
-        all_stats = TimeSpanStats(timespan,
+        # First, get a TimeSpanStats object for all time. This one is easy
+        # because the object valid_timespan already holds all valid times to be
+        # used in the report.
+        all_stats = TimeSpanStats(valid_timespan,
                                   statsdb,
                                   formatter=self.formatter,
-                                  converter=self.converter)      # 3
+                                  converter=self.converter)         # 3
+        
+        # Now get a TimeSpanStats object for the last seven days. This one we
+        # will have to calculate. First, calculate the time at midnight, seven
+        # days ago. The variable week_dt will be an instance of datetime.date.
+        week_dt = datetime.date.fromtimestamp(valid_timespan.stop) - datetime.timedelta(weeks=1) #4
+        # Now convert it to unix epoch time:
+        week_ts = time.mktime(week_dt.timetuple())                  # 5
+        # Now form a TimeSpanStats object, using the time span we just calculated:
+        seven_day_stats = TimeSpanStats(TimeSpan(week_ts, valid_timespan.stop),
+                                        statsdb,
+                                        formatter=self.formatter,
+                                        converter=self.converter)   #6
 
-        # Get the superclass&#39;s search list:       
-        search_list = FileGenerator.getToDateSearchList(self, archivedb, statsdb, timespan) # 4
+        # Get the superclass's search list:       
+        search_list = FileGenerator.getToDateSearchList(self, archivedb, statsdb, valid_timespan) # 7
 
-        # Now tack on my addition as a small dictionary with key &#39;alltime&#39;:
-        search_list += [ {&#39;alltime&#39; : all_stats} ]               # 5
+        # Now tack on my two additions as a small dictionary with keys 'alltime' and 'seven_day':
+        search_list += [ {'alltime'   : all_stats,
+                          'seven_day' : seven_day_stats} ]               # 8
         
         return search_list</pre>
 	<p>Going through the example, line by line: </p>
@@ -907,32 +933,69 @@ class MyFileGenerator(FileGenerator):                            # 1
 		<li>Subclass from class <span class="code">FileGenerator</span>. The new 
 		class will be caled <span class="code">MyFileGenerator</span> </li>
 		<li>Override member function <span class="code">getToDateSearchList()</span>. 
-		The parameters are <span class="code">self</span> (Python&#39;s way of indicating 
-		the instance we are working with), <span class="code">archivedb</span> (the 
-		archive database), <span class="code">statsdb</span> (the stats database), 
-		and <span class="code">timespan</span> (an instance of the utility class
-		<span class="code">TimeSpan</span>, that contains the start and ending times 
-		of the &quot;to date&quot; summary period; nominally all possible times, 
-		a lucky coincidence for our project). </li>
-		<li>Class <span class="code">TimeSpanStats</span> represents a statistical 
-		calculation over a time period. It takes 4 parameters. The first,
-		<span class="code">timespan</span>, is the timespan over which the calculation 
-		is to be done; the second, <span class="code">statsdb</span>, is the statistical 
-		database the calculation is to be run against; the third,
-		<span class="code">self.formatter</span>, is an instance of class
-		<span class="code">weewx.units.Formatter</span>, which contains information 
-		about how the results should be formatted; and finally, the fourth,
-		<span class="code">self.converter</span>, is an instance of
-		<span class="code">weewx.units.Converter</span>, which contains information 
+		The parameters that will be passed in are:
+		<ul>
+			<li><span class="code">self</span> Python's way of indicating the 
+			instance we are working with;</li>
+			<li><span class="code">archivedb</span> An instance of
+			<span class="code">weewx.archive.Archive</span>, holding the archive 
+			database;</li>
+			<li><span class="code">statsdb</span> An instance of
+			<span class="code">weewx.stats.StatsDb</span>, holding the 
+			statistical database;</li>
+			<li><span class="code">valid_timespan</span> An instance of the utility class
+			<span class="code">TimeSpan</span>. This will contain the valid start and ending times 
+		of the &quot;to date&quot; summary period; nominally all possible times.
+			</li>
+		</ul>
+		</li>
+		<li>The class <span class="code">TimeSpanStats</span> represents a statistical 
+		calculation over a time period. In our case, we will set it up to 
+		represent the statistics over all possible times. The class takes 4 parameters.
+		<ul>
+			<li>The first is the timespan over which the calculation is to be 
+			done. Here, we have a lucky coincidence: the variable
+			<span class="code">valid_timespan</span> already holds a
+			<span class="code">TimeSpan</span> object representing the domain of 
+			valid timespans, so we simply pass it in.</li>
+			<li>The second is the statistical database the calculation is to be 
+			run against. We simply pass in <span class="code">statsdb</span>.</li>
+			<li>The third should be an instance of class <span class="code">weewx.units.Formatter</span>, 
+			which contains information about how the results should be 
+			formatted. We just pass in the formatter set up by our superclass,
+			<span class="code">self.formatter</span>.</li>
+			<li>The fourth should be an instance of <span class="code">weewx.units.Converter</span>, which contains information 
 		about the target units (<em>e.g.</em>, &quot;<span class="code">degree_C</span>&quot;) 
-		that are to be used.</li>
+		that are to be used. Again, we just pass in the instance set up by our 
+			superclass, <span class="code">self.converter</span>.</li>
+		</ul>
+		</li>
+	</ol>
+	<p>That one was relatively easy because we already had an instance of
+	<span class="code">TimeSpan</span>, <span class="code">valid_timespan</span>, 
+	that represented the time over which we wanted to do the calculations. 
+	Setting up an instance that will work for the last seven days is a bit 
+	trickier. Continuing our example...</p>
+	<ol start="4">
+		<li>The object <span class="code">valid_timespan</span> holds the domain 
+		of valid times, but we need not the time of the report, which will be
+		<span class="code">valid_timespan.stop</span>, but the time at midnight 
+		seven days ago. So, we do a little Python date arithmetic to calculate 
+		this. The object <span class="code">week_dt</span> will be an instance 
+		of <span class="code">datetime.date</span>.</li>
+		<li>We convert it to unix epoch time.</li>
+		<li>Now we are ready to initialize an appropriate <span class="code">
+		TimeSpanStats</span> object. It's the same as in step #3, except we use 
+		our new timespan object.</li>
 		<li>Get the search list from the superclass. </li>
 		<li>Tack on our addition and return the results. The search list will now 
 		consist of a list of dictionaries, including a small one we added on the 
-		end that has a single key, &#39;<span class="code">alltime</span>&#39;, 
-		with value an instance of <span class="code">TimeSpanStats</span>. </li>
+		end that has two keys, &#39;<span class="code">alltime</span>', and '<span class="code">seven_day</span>'. 
+		If one of these keys is used, the appropriate <span class="code">
+		TimeSpanStats</span> object will be returned.</li>
 	</ol>
-	<p>With this approach, you can now include &quot;all time&quot; statistics in 
+	<p>With this approach, you can now include &quot;all time&quot; or "seven 
+	day" statistics in 
 	your HTML templates: </p>
 	<pre>...
 ...
@@ -944,6 +1007,10 @@ class MyFileGenerator(FileGenerator):                            # 1
   &lt;tr&gt;
     &lt;td&gt;Minimum temperature to date: &lt;/td&gt;
     &lt;td&gt;$alltime.outTemp.min
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;Rain over the last seven days: &lt;/td&gt;
+    &lt;td&gt;$seven_day.rain.sum
   &lt;/tr&gt;
   ... (more table entries)</pre>
 	<pre class="tty"> </pre>

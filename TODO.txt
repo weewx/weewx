@@ -1,4 +1,6 @@
 TODO before the next release:
 
+Improve the documentation on writing a custom search list.
+
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
