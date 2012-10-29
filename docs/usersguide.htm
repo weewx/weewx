@@ -141,6 +141,8 @@
 				<li>Oregon Scientific WMR-USB series (tested on the <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">WMR100N</a>). 
 				Not nearly as reliable as the Davis instruments, but a lot less 
 				expensive.</li>
+				<li>In addition, <span class="code">weewx</span> comes with a 
+				software simulator, useful for testing and evaluation.</li>
 			</ul>
 			<h1 id="Downloading_weewx">Downloading <span class="code">weewx</span></h1>
 			<p>
@@ -768,9 +770,17 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<p>
 				Set to the type of hardware you are using. It must match a 
-				section name below. For this version, the only two valid options 
-				are &#39;<span class="code">Vantage</span>&#39; or &#39;<span class="code">WMR-USB</span>&#39;. Required.
-			</p>
+				section name below. For this version, valid options 
+				are:</p>
+			<p class="indent">
+				&nbsp;<span class="code">Vantage</span> For Davis Vantage (<em>VantagePro</em>,
+				<em>VantagePro2</em>, and <em>VantageVue</em>) weather stations.</p>
+			<p class="indent">
+				<span class="code">WMR-USB</span> For Oregon Scientific WMR-USB 
+				series station (only the WMR100N has been tested).</p>
+			<p class="indent">
+				<span class="code">Simulator</span> For a software weather 
+				station simulator</p>
 			<h3 class="config_section">[Vantage]</h3>
 			<p>
 				This section is for options relating to the 
@@ -859,6 +869,29 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<p class="config_option">stale_wind</p>
 			<p>How long a wind record can be used to calculate wind chill (in 
 			seconds). Default is 30.</p>
+			<h3 class="config_section">[Simulator]</h3>
+			<p>This section is for options relating to the software weather 
+			station simulator that comes with <span class="code">weewx</span>.</p>
+			<p class="config_option">loop_interval</p>
+			<p>The time (in seconds) between emitting loop packets. Default is 
+			2.5</p>
+			<p class="config_option">mode</p>
+			<p>One of either</p>
+			<table class="indent" style="width: 50%">
+				<tr>
+					<td class="code">simulator</td>
+					<td>Real-time simulator. It will sleep between emitting 
+					packets [Default]</td>
+				</tr>
+				<tr>
+					<td class="code">generator</td>
+					<td>Emit packets as fast as it can. Useful for testing.</td>
+				</tr>
+			</table>
+			<p class="config_option">start</p>
+			<p>The start time for the generator in the format <span class="code">
+			YYYY-MM-DD hh:mm</span>. Optional. Default is the present time.</p>
+			<p>&nbsp;</p>
 			<h3 class="config_section">[StdRESTful]</h3>
 			<p>
 				This section is for configuring the <span class="code">StdRESTful</span> 

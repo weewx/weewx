@@ -101,6 +101,7 @@ td {
 .config_option {
 	font-family: "Courier New", Courier, monospace;
 	font-weight: bold;
+	margin-bottom: -12px;
 }
 .config_section {
 	font-family: "Courier New", Courier, monospace;
@@ -110,6 +111,7 @@ td {
 	font-family: "Courier New", Courier, monospace;
 	font-weight: bold;
 	color: #0000FF;
+	margin-bottom: -12px;
 }
 .bold_n_blue {
 	color: #0000FF;
