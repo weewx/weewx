@@ -541,7 +541,10 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 # ... get the binary data. No prompt, only one try:
                 _buffer = self.port.get_data_with_crc16(8, max_tries=1)
                 (sec, minute, hr, day, mon, yr, unused_crc) = struct.unpack("<bbbbbbH", _buffer)
-                time_tt = (yr+1900, mon, day, hr, minute, sec, 0, 0, -1)
+                # Unforunately, there is no way of determining whether the time returned from
+                # the console is DST or not. Assume it is the same as local time.
+                local_tt = time.localtime()
+                time_tt = (yr+1900, mon, day, hr, minute, sec, 0, 0, local_tt.tm_isdst)
                 return time.mktime(time_tt)
             except weewx.WeeWxIOError :
                 # Caught an error. Keep retrying...
@@ -568,8 +571,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 self.port.send_data('SETTIME\n')
                 self.port.send_data_with_crc16(_buffer, max_tries=self.max_tries)
                 syslog.syslog(syslog.LOG_NOTICE,
-                              "VantagePro: Clock set to %s (%d)" % (time.asctime(newtime_tt), 
-                                                                   time.mktime(newtime_tt)) )
+                              "VantagePro: Clock set to %s" % weeutil.weeutil.timestamp_to_string(time.mktime(newtime_tt)))
                 return
             except weewx.WeeWxIOError :
                 # Caught an error. Keep retrying...
@@ -1048,6 +1050,9 @@ def _archive_datetime(packet) :
     datestamp = packet['date_stamp']
     timestamp = packet['time_stamp']
     
+    # Unforunately, there is no way of determining whether the time in the
+    # archive packet is DST or not. Assume it is the same as local time.
+    local_tt = time.localtime()
     # Decode the Davis time, constructing a time-tuple from it:
     time_tuple = ((0xfe00 & datestamp) >> 9,    # year
                   (0x01e0 & datestamp) >> 5,    # month
@@ -1055,7 +1060,7 @@ def _archive_datetime(packet) :
                   timestamp // 100,             # hour
                   timestamp % 100,              # minute
                   0,                            # second
-                  0, 0, -1)
+                  0, 0, local_tt.tm_isdst)
     # Convert to epoch time:
     try:
         ts = int(time.mktime(time_tuple))

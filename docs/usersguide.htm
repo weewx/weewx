@@ -545,7 +545,7 @@ cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_
 			<p>
 				This will print out something like:</p>
 <pre>Usage: config_vp.py: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
-                            [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM]
+                            [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
                             [--start | -- stop]
 
 Configures the VantagePro weather station.
@@ -567,9 +567,10 @@ Options:
   --set-bucket=CODE     Set the type of rain bucket. Specify '0' for 0.01
                         inches; '1' for 0.2 MM; '2' for 0.1 MM
   --set-rain-year-start=MM
-                        Set the rain year start (1=Jan, 2=Feb, etc.)
-  --start               Start the logger
-  --stop                Stop the logger
+                        Set the rain year start (1=Jan, 2=Feb, etc.).
+  --set-time            Set the onboard clock to the current time.
+  --start               Start the logger.
+  --stop                Stop the logger.
 
 Mutating actions will request confirmation before proceeding.</pre>
 			<p>
@@ -595,7 +596,7 @@ Mutating actions will request confirmation before proceeding.</pre>
       Wind cup type:                large
       <span class="highlight">Rain bucket type:             0.01 inches</span>
       <span class="highlight">Rain year start:              10</span>
-      Onboard time:                 2012-09-30 16:48:27 PDT (1349048907)
+      <span class="highlight">Onboard time:                 2012-09-30 16:48:27 PDT (1349048907)</span>
       
     CONSOLE DISPLAY UNITS:
       Barometer:                    mbar
@@ -629,6 +630,9 @@ Mutating actions will request confirmation before proceeding.</pre>
       Correction constant:          +0.027 inHg
       Gain:                         -1.000
       Offset:                       -1.000</pre>
+			<p>
+				Values in <span class="highlight">yellow</span> can be 
+				changed.</p>
 			<p>
 				For example, to change the archive interval to 10 minutes (600 
 				seconds):</p>

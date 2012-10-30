@@ -47,7 +47,8 @@ Added utility config_database.py, for configuring the databases.
 Made it easier  to write custom RESTful protocols. Thanks to  user Brad, for the
 idea and the use case!
 
-When doing DMPAFT, no longer tries to correct for DST.
+When decoding Davis packet times,  now looks to wall clock  to determine whether
+DST is in effect.
 
 The stats  type 'squarecount' now contains  the number of  valid wind directions
 that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid

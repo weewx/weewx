@@ -13,6 +13,7 @@
 import optparse
 import syslog
 import sys
+import time
 
 import configobj
 
@@ -22,7 +23,7 @@ import weeutil.weeutil
 description = """Configures the Davis Vantage weather station."""
 
 usage="""%prog: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
-                            [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM]
+                            [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
                             [--start | --stop]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
@@ -52,9 +53,10 @@ def main():
                         help="Set the type of rain bucket. "\
                         "Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM")
     parser.add_option("--set-rain-year-start", type=int, dest="set_rain_year_start", metavar="MM", 
-                        help="Set the rain year start (1=Jan, 2=Feb, etc.)")
-    parser.add_option("--start", action="store_true", help="Start the logger")
-    parser.add_option("--stop",  action="store_true", help="Stop the logger")
+                        help="Set the rain year start (1=Jan, 2=Feb, etc.).")
+    parser.add_option("--set-time", action="store_true", dest="set_time", help="Set the onboard clock to the current time.")
+    parser.add_option("--start", action="store_true", help="Start the logger.")
+    parser.add_option("--stop",  action="store_true", help="Stop the logger.")
     
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -97,6 +99,8 @@ def main():
         set_bucket(station, options.set_bucket)
     if options.set_rain_year_start is not None:
         set_rain_year_start(station, options.set_rain_year_start)
+    if options.set_time:
+        set_time(station)
     if options.start:
         start_logger(station)
     if options.stop:
@@ -298,6 +302,12 @@ def set_rain_year_start(station, rain_year_start):
                     print "Rain year start now set to %d." % (station.rain_year_start,)
             elif ans == 'n':
                 print "Nothing done."
+
+def set_time(station):
+    print "Setting time on console..."
+    station.setTime(time.time())
+    newtime_ts = station.getTime()
+    print "Current console time is %s" % weeutil.weeutil.timestamp_to_string(newtime_ts)
 
 def start_logger(station):
     print "Starting logger ..."
