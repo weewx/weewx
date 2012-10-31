@@ -578,12 +578,28 @@ def timestamp_to_string(ts):
 
     >>> print timestamp_to_string(1196705700)
     2007-12-03 10:15:00 PST (1196705700)
+    >>> print timestamp_to_string(None)
+    ******* N/A *******     (    N/A   )
     """
     if ts:
         return "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime(ts)), ts)
     else:
-        return "****** N/A ******** (    N/A   )"
+        return "******* N/A *******     (    N/A   )"
 
+def timestamp_to_gmtime(ts):
+    """Return a string formatted for GMT
+    
+    >>> print timestamp_to_gmtime(1196705700)
+    2007-12-03 18:15:00 UTC (1196705700)
+    >>> print timestamp_to_gmtime(None)
+    ******* N/A *******     (    N/A   )
+    """
+    if ts:
+        return "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(ts)), ts)
+    else:
+        return "******* N/A *******     (    N/A   )"
+        
+    
 def utcdatetime_to_timestamp(dt):
     """Convert from a datetime object holding a UTC time, to a unix timestamp.
     

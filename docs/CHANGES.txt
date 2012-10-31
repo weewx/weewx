@@ -37,6 +37,8 @@ along the way. See the Customizing Guide.
 
 You can now use "mmHg" as a unit of pressure.
 
+Added new almanac information such as first and last quarter moons.
+
 Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
 callbacks, making it easier to add new event types.
 
