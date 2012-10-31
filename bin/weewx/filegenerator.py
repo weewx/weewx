@@ -99,11 +99,11 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
         self.almanac = weewx.almanac.Almanac(celestial_ts, 
                                              self.station.latitude_f, 
                                              self.station.longitude_f,
-                                             altitude_vt[0],
-                                             temperature_C,
-                                             pressure_mbar,
-                                             self.moonphases,
-                                             self.formatter)
+                                             altitude=altitude_vt[0],
+                                             temperature=temperature_C,
+                                             pressure=pressure_mbar,
+                                             moon_phases=self.moonphases,
+                                             formatter=self.formatter)
 
     def getRecord(self, archivedb, time_ts):
         """Get an observation record from the archive database, returning
