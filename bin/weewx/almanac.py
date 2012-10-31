@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -50,9 +50,9 @@ class Almanac(object):
         mars.ra: Right ascension of mars
         etc.
     
-    EXAMPLES:
+    EXAMPLES (note that these will only work in the Pacific Time Zone)
     
-    >>> t = time.mktime((2009, 3, 27, 12, 0, 0, 0, 0, -1))
+    >>> t = 1238180400
     >>> print timestamp_to_string(t)
     2009-03-27 12:00:00 PDT (1238180400)
     >>> almanac = Almanac(t, 46.0, -122.0)
@@ -102,10 +102,24 @@ class Almanac(object):
     Solar azimuth, altitude = (154.14, 44.02)
     >>> print "Moon azimuth, altitude = (%.2f, %.2f)" % (almanac.moon.az, almanac.moon.alt)
     Moon azimuth, altitude = (133.55, 47.89)
+    
+    Try the pyephem "Naval Observatory" example.
+    >>> t = 1252252800
+    >>> print timestamp_to_gmtime(t)
+    2009-09-06 16:00:00 UTC (1252252800)
+    >>> atlanta = Almanac(t, 33.8, -84.4, pressure=0, horizon=-34.0/60.0)
+    >>> # Print it in GMT, so it can easily be compared to the example:
+    >>> print timestamp_to_gmtime(atlanta.sun.previous_rising.raw) 
+    2009-09-06 11:14:56 UTC (1252235696)
+    >>> print timestamp_to_gmtime(atlanta.moon.next_setting.raw)
+    2009-09-07 14:05:29 UTC (1252332329)
     """
     
     def __init__(self, time_ts, lat, lon,
-                 altitude=None, temperature=None, pressure=None,
+                 altitude=None,     # Use 'None' in case a bad value is passed in
+                 temperature=None,  # "
+                 pressure=None,     # "
+                 horizon=None,      # "
                  moon_phases=weeutil.Moon.moon_phases,
                  formatter=weewx.units.Formatter()):
         """Initialize an instance of Almanac
@@ -120,6 +134,8 @@ class Almanac(object):
         
         pressure: Observer's atmospheric pressure in **mBars**. [Optional. Default is 1010]
         
+        horizon: Angle of the horizon in degrees [Optional. Default is zero]
+        
         moon_phases: An array of 8 strings with descriptions of the moon 
         phase. [optional. If not given, then weeutil.Moon.moon_phases will be used]
         
@@ -131,6 +147,7 @@ class Almanac(object):
         self.altitude    = altitude if altitude is not None else 0.0
         self.temperature = temperature if temperature is not None else 15.0
         self.pressure    = pressure if pressure is not None else 1010.0
+        self.horizon     = horizon if horizon is not None else 0.0
         self.moon_phases = moon_phases
         self.formatter   = formatter
         
@@ -154,14 +171,8 @@ class Almanac(object):
             # Check to see whether the user has module 'ephem'. If so, use it.
             if sys.modules.has_key('ephem'):
                 
-                # Set up an observer object holding the location and time:
-                stn = ephem.Observer()
-                stn.lat  = math.radians(self.lat)
-                stn.long = math.radians(self.lon)
-                stn.elev = self.altitude
-                stn.temp = self.temperature
-                stn.pressure = self.pressure
-                stn.date = self.time_djd = timestamp_to_djd(time_ts)
+                # Get an observer object holding the location and time:
+                stn = self.get_observer(time_ts)
                 
                 # The various celestial bodies offered by the almanac:
                 self.sun     = BodyWrapper(ephem.Sun, stn, self.formatter)     #@UndefinedVariable
@@ -187,6 +198,19 @@ class Almanac(object):
                 
             self.date_tt = _newdate_tt
     
+    def get_observer(self, time_ts):
+        """Returns an ephem Observer object."""
+        # Set up an observer object holding the location and time:
+        stn = ephem.Observer()
+        stn.lat  = math.radians(self.lat)
+        stn.long = math.radians(self.lon)
+        stn.elev = self.altitude
+        stn.horizon = math.radians(self.horizon)
+        stn.temp = self.temperature
+        stn.pressure = self.pressure
+        stn.date = self.time_djd = timestamp_to_djd(time_ts)
+        return stn
+        
     # Shortcuts, used for backwards compatibility
     @property
     def sunrise(self):
@@ -307,7 +331,7 @@ def djd_to_timestamp(djd):
 if __name__ == '__main__':
     
     import doctest
-    from weeutil.weeutil import timestamp_to_string  #@UnusedImport
+    from weeutil.weeutil import timestamp_to_string, timestamp_to_gmtime  #@UnusedImport
             
     doctest.testmod()
 
