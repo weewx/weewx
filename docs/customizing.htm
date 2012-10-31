@@ -15,11 +15,17 @@
 <link href="weewx_docs.css" rel="stylesheet" />
 <!-- JavaScript -->
 <script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
+<style type="text/css">
+.auto-style1 {
+	font-family: "Courier New", Courier, monospace;
+	margin-left: 40px;
+}
+</style>
 </head>
 
 <body>
 
-<h1 class="title">Customizing <span class="code">`</span> <br />
+<h1 class="title">Customizing<br />
 Version 2.0</h1>
 <h1>Table of contents</h1>
 <div id="technical_content">
@@ -849,6 +855,39 @@ Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29</pre>
 	<pre>Current time is 29-Mar-2011 09:20
 Sunrise, sunset: 06:51 19:30
 </pre>
+	<p>Here's a table of available extended almanac information:</p>
+	<table class="auto-style1" style="width: 60%">
+		<tr>
+			<td>previous_equinox</td>
+			<td>next_equinox</td>
+			<td>previous_solstice</td>
+			<td>next_solstice</td>
+		</tr>
+		<tr>
+			<td>previous_autumnal_equinox</td>
+			<td>next_autumnal_equinox</td>
+			<td>previous_vernal_equinox</td>
+			<td>next_vernal_equinox</td>
+		</tr>
+		<tr>
+			<td>previous_winter_solstice</td>
+			<td>next_winter_solstice</td>
+			<td>previous_summer_solstice</td>
+			<td>next_summer_solstice</td>
+		</tr>
+		<tr>
+			<td>previous_new_moon</td>
+			<td>next_new_moon</td>
+			<td>previous_first_quarter_moon</td>
+			<td>next_first_quarter_moon</td>
+		</tr>
+		<tr>
+			<td>previous_full_moon</td>
+			<td>next_full_moon</td>
+			<td>previous_last_quarter_moon</td>
+			<td>next_last_quarter_moon</td>
+		</tr>
+	</table>
 	<p>As shown in the example, you can test whether this extended almanac information 
 	is available with the value <span class="code">$almanac.hasExtras</span>.
 	</p>

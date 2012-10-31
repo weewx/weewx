@@ -84,6 +84,8 @@ class Almanac(object):
     22-Sep-2009 14:18
     >>> print almanac.next_summer_solstice
     20-Jun-2009 22:45
+    >>> print almanac.previous_winter_solstice
+    21-Dec-2008 04:03
     >>> print almanac.next_winter_solstice
     21-Dec-2009 09:46
     
@@ -92,6 +94,8 @@ class Almanac(object):
     09-Apr-2009 07:55
     >>> print almanac.next_new_moon
     24-Apr-2009 20:22
+    >>> print almanac.next_first_quarter_moon
+    02-Apr-2009 07:33
     
     Now location of the sun and moon
     >>> print "Solar azimuth, altitude = (%.2f, %.2f)" % (almanac.sun.az, almanac.sun.alt)
@@ -195,10 +199,16 @@ class Almanac(object):
         return int(self.moon.moon_phase+0.5) if self.hasExtras else self._moon_fullness
 
     def __getattr__(self, attr):
-        if self.hasExtras and attr in ['next_equinox', 'next_solstice', 
-                                       'next_autumnal_equinox', 'next_vernal_equinox', 
-                                       'next_winter_solstice', 'next_summer_solstice',
-                                       'next_full_moon', 'next_new_moon']:
+        if self.hasExtras and attr in ['previous_equinox', 'next_equinox', 
+                                       'previous_solstice', 'next_solstice',
+                                       'previous_autumnal_equinox', 'next_autumnal_equinox', 
+                                       'previous_vernal_equinox', 'next_vernal_equinox', 
+                                       'previous_winter_solstice', 'next_winter_solstice', 
+                                       'previous_summer_solstice', 'next_summer_solstice',
+                                       'previous_new_moon', 'next_new_moon',
+                                       'previous_first_quarter_moon', 'next_first_quarter_moon',
+                                       'previous_full_moon', 'next_full_moon',
+                                       'previous_last_quarter_moon', 'next_last_quarter_moon']:
             # This is how you call a function on an instance when all you have is its name:
             djd = ephem.__dict__[attr](self.time_djd)   #@UndefinedVariable
             return weewx.units.ValueHelper((djd, "dublin_jd", "group_time"), 
