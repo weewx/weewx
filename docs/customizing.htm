@@ -15,8 +15,6 @@
 <link href="weewx_docs.css" rel="stylesheet" />
 <!-- JavaScript -->
 <script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
-<style type="text/css">
-</style>
 </head>
 
 <body>
@@ -817,9 +815,9 @@ December: Min, max temperatures: N/A N/A
 	<h3>Almanac</h3>
 	<p>If module <a href="http://rhodesmill.org/pyephem">pyephem</a> has been installed, 
 	then <span class="code">weewx</span> can generate extensive almanac information 
-	for the Sun, Moon, Venus, Mars, and Jupiter, including their rise, transit and 
-	set times, as well as their azimuth and altitude. Other information is also 
-	available. </p>
+	for the Sun, Moon, Venus, Mars, Jupiter, and other heavenly bodies, including 
+	their rise, transit and set times, as well as their azimuth and altitude. Other 
+	information is also available. </p>
 	<p>Here is a small sampling: </p>
 	<pre>&lt;html&gt;
 &lt;head&gt;
@@ -851,7 +849,24 @@ Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29</pre>
 	<pre>Current time is 29-Mar-2011 09:20
 Sunrise, sunset: 06:51 19:30
 </pre>
-	<p>Here's a table of available extended almanac information:</p>
+	<p>As shown in the example, you can test whether this extended almanac information 
+	is available with the value <span class="code">$almanac.hasExtras</span>.
+	</p>
+	<p>The almanac information falls in two categories:</p>
+	<ul>
+		<li>Calendar events</li>
+		<li>Heavenly bodies</li>
+	</ul>
+	<p>We will cover each of these separately.</p>
+	<h4>Calendar events</h4>
+	<p>"Calendar events" 
+	do not require a heavenly body. They cover things such as "<span class="code">next_solstice</span>", 
+	or "<span class="code">next_first_quarter_moon</span>". The syntax here is
+	</p>
+	<p class="tty">$almanac.next_solstice </p>
+	<p>or </p>
+	<p class="tty">$almanac.next_first_quarter_moon</p>
+	<p>&nbsp;Here's a table of the information that falls into this category:</p>
 	<table class="code" style="width: 60%">
 		<tr>
 			<td>previous_equinox</td>
@@ -884,9 +899,80 @@ Sunrise, sunset: 06:51 19:30
 			<td>next_last_quarter_moon</td>
 		</tr>
 	</table>
-	<p>As shown in the example, you can test whether this extended almanac information 
-	is available with the value <span class="code">$almanac.hasExtras</span>.
-	</p>
+	<h4>Heavenly bodies</h4>
+	<p>The second category does require a heavenly body. This covers queries 
+	such as, "When does Jupiter rise", or, "When does the sun transit?" Examples 
+	are</p>
+	<p class="tty">$almanac.jupiter.rise</p>
+	<p>or</p>
+	<p class="tty">$almanac.sun.transit</p>
+	<p>To accurately calculate these times, <span class="code">weewx</span> automatically uses the present 
+	temperature and pressure to calculate refraction effects. However, you can override 
+	these values, which will be necessary if you wish to match the almanac times 
+	published by the Naval Observatory
+	<a href="http://rhodesmill.org/pyephem/rise-set.html">as explained in the pyephem 
+	documentation</a>. For example, to match the sunrise time as published by the 
+	Observatory, instead of</p>
+	<p class="tty">$almanac.sun.rise</p>
+	<p>use</p>
+	<p class="tty">$almanac(pressure=0, horizon=-34.0/60.0).sun.rise</p>
+	<p>If you wish to calculate the start of civil twilight, you can set the horizon 
+	to -6, and also tell weewx to use the center of the sun (instead of the upper 
+	limb) to do the calcuation:</p>
+	<p class="tty">$almanac(pressure=0, horizon=-6.sun(use_center=1).rise</p>
+	<p>The general syntax is:</p>
+	<p class="tty">$almanac(pressure=<em>pressure</em>, horizon=<em>horizon</em>,<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; temperature=<em>temperature_C</em>).<em>heavenly_body</em>(use_center=[01]).<em>attribute</em></p>
+	<p>As you can see, in addition to the horizon angle, you can also override 
+	atmospheric pressure and temperature (degrees Celsius).</p>
+	<p>PyEphem offers an extensive list of objects that can be used for the
+	<span class="code"><em>heavenly_body</em></span> tag. All the planets and 
+	many stars are in the list.&nbsp;</p>
+	<p>The <span class="code">attribute</span> tag can be one of </p>
+	<table class="code" style="width: 60%">
+		<tr>
+			<td>az</td>
+			<td>alt</td>
+			<td>a_ra</td>
+			<td>a_dec</td>
+		</tr>
+		<tr>
+			<td>g_ra</td>
+			<td>ra</td>
+			<td>g_dec</td>
+			<td>dec</td>
+		</tr>
+		<tr>
+			<td>elong</td>
+			<td>radius</td>
+			<td>hlong</td>
+			<td>hlat</td>
+		</tr>
+		<tr>
+			<td>sublat</td>
+			<td>sublong</td>
+			<td>next_rising</td>
+			<td>next_setting</td>
+		</tr>
+		<tr>
+			<td>next_transit</td>
+			<td>next_antitransit</td>
+			<td>previous_rising</td>
+			<td>previous_setting</td>
+		</tr>
+		<tr>
+			<td>previous_transit</td>
+			<td>previous_antitransit</td>
+			<td>rise</td>
+			<td>set</td>
+		</tr>
+		<tr>
+			<td>transit</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+	</table>
 	<h2>Writing a custom generator</h2>
 	<p>To do more sophisticated customization it may be necessary to extend an existing 
 	generator, or write your own. </p>
@@ -902,8 +988,9 @@ Sunrise, sunset: 06:51 19:30
 	in the skin configuration file. More information on how to do this can be found 
 	there. </p>
 	<p>But, what if you wish to introduce a more dynamic tag, one that requires 
-	some calculation, or that uses the database? Simply putting it in the <span class="code">[Extras]</span> 
-	section won&#39;t do, because then it cannot change. </p>
+	some calculation, or that uses the database? Simply putting it in the
+	<span class="code">[Extras]</span> section won&#39;t do, because then it cannot 
+	change. </p>
 	<p>The answer is to extend the default file generator<span class="code"> weewx.filegenerator.FileGenerator</span> 
 	by subclassing, then override the function that returns the <em>search list</em>. 
 	The search list is a list of dictionaries that the template engine searches 
@@ -918,9 +1005,9 @@ Sunrise, sunset: 06:51 19:30
 		<li>All-time statistics. This would allow us to display statistics such 
 		as the all-time high or low temperature seen at your station;</li>
 		<li>Seven days statistics. While weewx offers the tag <span class="code">
-		$week</span>, this is statistics <em>since Sunday at midnight</em>. We 
-		would like to have statistics for a full week, that is since midnight 
-		seven days ago.</li>
+		$week</span>, this is statistics <em>since Sunday at midnight</em>. We would 
+		like to have statistics for a full week, that is since midnight seven days 
+		ago.</li>
 	</ul>
 	<p>This example is included in the distribution as <span class="code">bin/examples/mygenerator.py</span>:
 	</p>
@@ -970,68 +1057,65 @@ class MyFileGenerator(FileGenerator):                            # 1
 		<li>Override member function <span class="code">getToDateSearchList()</span>. 
 		The parameters that will be passed in are:
 		<ul>
-			<li><span class="code">self</span> Python's way of indicating the 
-			instance we are working with;</li>
+			<li><span class="code">self</span> Python's way of indicating the instance 
+			we are working with;</li>
 			<li><span class="code">archivedb</span> An instance of
 			<span class="code">weewx.archive.Archive</span>, holding the archive 
 			database;</li>
 			<li><span class="code">statsdb</span> An instance of
-			<span class="code">weewx.stats.StatsDb</span>, holding the 
-			statistical database;</li>
-			<li><span class="code">valid_timespan</span> An instance of the utility class
-			<span class="code">TimeSpan</span>. This will contain the valid start and ending times 
-		of the &quot;to date&quot; summary period; nominally all possible times.
-			</li>
+			<span class="code">weewx.stats.StatsDb</span>, holding the statistical 
+			database;</li>
+			<li><span class="code">valid_timespan</span> An instance of the utility 
+			class <span class="code">TimeSpan</span>. This will contain the valid 
+			start and ending times of the &quot;to date&quot; summary period; nominally 
+			all possible times. </li>
 		</ul>
 		</li>
 		<li>The class <span class="code">TimeSpanStats</span> represents a statistical 
-		calculation over a time period. In our case, we will set it up to 
-		represent the statistics over all possible times. The class takes 4 parameters.
+		calculation over a time period. In our case, we will set it up to represent 
+		the statistics over all possible times. The class takes 4 parameters.
 		<ul>
-			<li>The first is the timespan over which the calculation is to be 
-			done. Here, we have a lucky coincidence: the variable
-			<span class="code">valid_timespan</span> already holds a
-			<span class="code">TimeSpan</span> object representing the domain of 
-			valid timespans, so we simply pass it in.</li>
+			<li>The first is the timespan over which the calculation is to be done. 
+			Here, we have a lucky coincidence: the variable <span class="code">valid_timespan</span> 
+			already holds a <span class="code">TimeSpan</span> object representing 
+			the domain of valid timespans, so we simply pass it in.</li>
 			<li>The second is the statistical database the calculation is to be 
 			run against. We simply pass in <span class="code">statsdb</span>.</li>
 			<li>The third should be an instance of class <span class="code">weewx.units.Formatter</span>, 
-			which contains information about how the results should be 
-			formatted. We just pass in the formatter set up by our superclass,
+			which contains information about how the results should be formatted. 
+			We just pass in the formatter set up by our superclass,
 			<span class="code">self.formatter</span>.</li>
-			<li>The fourth should be an instance of <span class="code">weewx.units.Converter</span>, which contains information 
-		about the target units (<em>e.g.</em>, &quot;<span class="code">degree_C</span>&quot;) 
-		that are to be used. Again, we just pass in the instance set up by our 
+			<li>The fourth should be an instance of <span class="code">weewx.units.Converter</span>, 
+			which contains information about the target units (<em>e.g.</em>, &quot;<span class="code">degree_C</span>&quot;) 
+			that are to be used. Again, we just pass in the instance set up by our 
 			superclass, <span class="code">self.converter</span>.</li>
 		</ul>
 		</li>
 	</ol>
 	<p>That one was relatively easy because we already had an instance of
 	<span class="code">TimeSpan</span>, <span class="code">valid_timespan</span>, 
-	that represented the time over which we wanted to do the calculations. 
-	Setting up an instance that will work for the last seven days is a bit 
-	trickier. Continuing our example...</p>
+	that represented the time over which we wanted to do the calculations. Setting 
+	up an instance that will work for the last seven days is a bit trickier. Continuing 
+	our example...</p>
 	<ol start="4">
 		<li>The object <span class="code">valid_timespan</span> holds the domain 
 		of valid times, but we need not the time of the report, which will be
 		<span class="code">valid_timespan.stop</span>, but the time at midnight 
-		seven days ago. So, we do a little Python date arithmetic to calculate 
-		this. The object <span class="code">week_dt</span> will be an instance 
-		of <span class="code">datetime.date</span>.</li>
+		seven days ago. So, we do a little Python date arithmetic to calculate this. 
+		The object <span class="code">week_dt</span> will be an instance of
+		<span class="code">datetime.date</span>.</li>
 		<li>We convert it to unix epoch time.</li>
-		<li>Now we are ready to initialize an appropriate <span class="code">
-		TimeSpanStats</span> object. It's the same as in step #3, except we use 
-		our new timespan object.</li>
+		<li>Now we are ready to initialize an appropriate <span class="code">TimeSpanStats</span> 
+		object. It's the same as in step #3, except we use our new timespan object.</li>
 		<li>Get the search list from the superclass. </li>
 		<li>Tack on our addition and return the results. The search list will now 
 		consist of a list of dictionaries, including a small one we added on the 
 		end that has two keys, &#39;<span class="code">alltime</span>', and '<span class="code">seven_day</span>'. 
-		If one of these keys is used, the appropriate <span class="code">
-		TimeSpanStats</span> object will be returned.</li>
+		If one of these keys is used, the appropriate <span class="code">TimeSpanStats</span> 
+		object will be returned.</li>
 	</ol>
-	<p>With this approach, you can now include &quot;all time&quot; or "seven 
-	day" statistics in 
-	your HTML templates: </p>
+	<p>With this approach, you can now include &quot;all time&quot; or "seven day" 
+	statistics in your HTML templates: </p>
 	<pre>...
 ...
 &lt;table&gt;
@@ -2068,10 +2152,10 @@ class MyAlarm(StdService):
 	unit system.</p>
 	<h1>Porting to new weather station hardware</h1>
 	<p>Naturally, this is an advanced topic but, nevertheless, I'd really like to 
-	encourage any Python whizzes out there to give it a 
-	try. Of course, I have selfish reasons for encouraging you: I don't want to 
-	have to go out and buy every type of hardware there is! It's expensive and my roof would look 
-	like a weather station farm.</p>
+	encourage any Python whizzes out there to give it a try. Of course, I have selfish 
+	reasons for encouraging you: I don't want to have to go out and buy every type 
+	of hardware there is! It's expensive and my roof would look like a weather station 
+	farm.</p>
 	<p>Here's the general strategy for doing a port:</p>
 	<p>Inherit from the abstract base class <span class="code">weewx.abstractstation.AbstractStation</span>. 
 	Try to implement as many of its methods as you can. At the very minimum, you 
@@ -2096,19 +2180,19 @@ class MyAlarm(StdService):
 			for the exact definition of each.</td>
 		</tr>
 	</table>
-	<p>Then include any observation types you have in the dictionary. Every packet need not contain 
-	the same set of observation types. Different packets can use different unit 
-	systems, but all observations within a packet must use the same unit system. 
-	If your hardware has an error and you don't have a value, you can either leave 
-	it out of the dictionary or (preferred) set its value to <span class="code">
-	None</span>.</p>
+	<p>Then include any observation types you have in the dictionary. Every packet 
+	need not contain the same set of observation types. Different packets can use 
+	different unit systems, but all observations within a packet must use the same 
+	unit system. If your hardware has an error and you don't have a value, you can 
+	either leave it out of the dictionary or (preferred) set its value to
+	<span class="code">None</span>.</p>
 	<p>If your hardware does not have an archive record logger, then
 	<span class="code">weewx</span> can do the record generation for you. It will 
 	automatically collect all the types it sees in your loop packets then emit a 
 	record with the averages (in some cases the sum or max value) of all those types. 
 	If it doesn't see a type, then it won't appear in the emitted record. If it 
-	does have a logger, then you should implement method <span class="code">
-	genArchiveRecords</span> as well.</p>
+	does have a logger, then you should implement method <span class="code">genArchiveRecords</span> 
+	as well.</p>
 	<p>A couple of observation types are tricky. In particular, rain. Generally,
 	<span class="code">weewx</span> expects to see a packet with the amount of rain 
 	that fell in that packet period included as observation '<span class="code">rain</span>'. 
@@ -2126,18 +2210,16 @@ class MyAlarm(StdService):
 	It is a factory function that will return an instance of your driver. Its only 
 	argument is the configuration dictionary. </p>
 	<p>You then include a new section in the configuration file
-	<span class="code">weewx.conf</span> that includes any options your driver 
-	needs. It should also include an entry '<span class="code">driver</span>' that 
-	points to where your driver can be found. Set option <span class="code">
-	station_type</span> to your new section type and your 
-	driver will be loaded.</p>
+	<span class="code">weewx.conf</span> that includes any options your driver needs. 
+	It should also include an entry '<span class="code">driver</span>' that points 
+	to where your driver can be found. Set option <span class="code">station_type</span> 
+	to your new section type and your driver will be loaded.</p>
 	<p>Take a look at the simulator code in <span class="code">bin/weewx/simulator.py</span> 
 	for a dirt simple example of a driver. The next most complicated is the driver 
 	for the WMR-USB series, located in <span class="code">bin/weewx/wmrx.py</span>. 
 	The driver for the Vantage series is by far the most complicated.</p>
-	<p>Naturally, there are a lot of subtleties that I've glossed over in this 
-	high-level description. If your game, give it a try &mdash; I'm happy to help 
-	you out!</p>
+	<p>Naturally, there are a lot of subtleties that I've glossed over in this high-level 
+	description. If your game, give it a try &mdash; I'm happy to help you out!</p>
 	<h1 id="Archive_types">Appendix A: Archive types</h1>
 	<p><em>Archive types</em> are weather observations that have come from your 
 	instrument and been stored in the <em>archive database, </em>&nbsp;a SQL database. 

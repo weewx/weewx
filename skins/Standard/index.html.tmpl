@@ -339,6 +339,9 @@
               <table>
                 <caption class="caption">Sun</caption>
                 <tr>
+                  <td class="label">Start civil twilight:</td>
+                  <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
+                <tr>
                   <td class="label">Sunrise:</td>
                   <td class="data">$almanac.sun.rise</td>
                 </tr>
@@ -349,6 +352,10 @@
                 <tr>
                   <td class="label">Sunset:</td>
                   <td class="data">$almanac.sun.set</td>
+                </tr>
+                <tr>
+                  <td class="label">End civil twilight:</td>
+                  <td class="data">$almanac(horizon=-6).sun(use_center=1).set</td>
                 </tr>
                 <tr>
                   <td class="label">Azimuth:</td>

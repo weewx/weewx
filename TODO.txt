@@ -1,6 +1,6 @@
 TODO before the next release:
 
-Offer a way to change the horizon for the almanac.
+Add Dan Haller's presentation suggestions
 
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf

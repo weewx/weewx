@@ -25,7 +25,7 @@ def loader(config_dict):
     # knowledge about the database in a driver, albeit just the loader.
 
     start_ts = resume_ts = None
-    if config_dict['Simulator'].has_key('start'):
+    if 'start' in config_dict['Simulator']:
         # A start has been specified. Extract the time stamp.
         start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%d %H:%M")
         start_ts = time.mktime(start_tt)
@@ -73,14 +73,14 @@ class Simulator(weewx.abstractstation.AbstractStation):
         """
 
         self.loop_interval = float(stn_dict.get('loop_interval', 2.5))
-        if stn_dict.has_key('start_time') and stn_dict['start_time'] is not None:
+        if 'start_time' in stn_dict and stn_dict['start_time'] is not None:
             # A start time has been specified. We are not in real time mode.
             self.real_time = False
             # Extract the generator start time:
             start_ts = float(stn_dict['start_time'])
             # If a resume time keyword is present (and it's not None), 
             # then have the generator resume with that time.
-            if stn_dict.has_key('resume_time') and stn_dict['resume_time'] is not None:
+            if 'resume_time' in stn_dict and stn_dict['resume_time'] is not None:
                 self.the_time = float(stn_dict['resume_time'])
             else:
                 self.the_time = start_ts

@@ -175,17 +175,14 @@ class StdEngine(object):
         """Binds an event to a callback function."""
 
         # Each event type has a list of callback functions to be called.
-        # If we have not seen the event type yet, then create an empty list        
-        if not self.callbacks.has_key(event_type):
-            self.callbacks[event_type] = list()
-        # Add this callback to the end of the list. This will result in them getting
-        # called in the order they were originally bound.
-        self.callbacks[event_type].append(callback)
-    
+        # If we have not seen the event type yet, then create an empty list,
+        # otherwise append to the existing list:
+        self.callbacks.setdefault(event_type, []).append(callback)
+
     def dispatchEvent(self, event):
         """Call all registered callbacks for an event."""
         # See if any callbacks have been registered for this event type:
-        if self.callbacks.has_key(event.event_type):
+        if event.event_type in self.callbacks:
             # Yes, at least one has been registered. Call them in order:
             for callback in self.callbacks[event.event_type]:
                 # Call the function with the event as an argument:

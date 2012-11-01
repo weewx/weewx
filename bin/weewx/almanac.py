@@ -15,6 +15,7 @@ astronomical calculations. See http://rhodesmill.org/pyephem. """
 import calendar
 import time
 import sys
+import math
 
 import weeutil.Moon
 import weewx.units
@@ -22,7 +23,6 @@ import weewx.units
 # If the user has installed ephem, use it. Otherwise, fall back to the weeutil algorithms:
 try:
     import ephem
-    import math
 except:
     import weeutil.Sun
 
@@ -113,13 +113,19 @@ class Almanac(object):
     2009-09-06 11:14:56 UTC (1252235696)
     >>> print timestamp_to_gmtime(atlanta.moon.next_setting.raw)
     2009-09-07 14:05:29 UTC (1252332329)
+    
+    Now try the civil twilight examples:
+    >>> print timestamp_to_gmtime(atlanta(horizon=-6).sun(use_center=1).previous_rising.raw)
+    2009-09-06 10:49:40 UTC (1252234180)
+    >>> print timestamp_to_gmtime(atlanta(horizon=-6).sun(use_center=1).next_setting.raw)
+    2009-09-07 00:21:22 UTC (1252282882)
     """
     
     def __init__(self, time_ts, lat, lon,
                  altitude=None,     # Use 'None' in case a bad value is passed in
-                 temperature=None,  # "
-                 pressure=None,     # "
-                 horizon=None,      # "
+                 temperature=None,  #  "
+                 pressure=None,     #  "
+                 horizon=None,      #  "
                  moon_phases=weeutil.Moon.moon_phases,
                  formatter=weewx.units.Formatter()):
         """Initialize an instance of Almanac
@@ -142,75 +148,38 @@ class Almanac(object):
         formatter: An instance of weewx.units.Formatter() with the formatting information
         to be used.
         """
-        self.lat         = lat
-        self.lon         = lon
-        self.altitude    = altitude if altitude is not None else 0.0
-        self.temperature = temperature if temperature is not None else 15.0
-        self.pressure    = pressure if pressure is not None else 1010.0
-        self.horizon     = horizon if horizon is not None else 0.0
-        self.moon_phases = moon_phases
-        self.formatter   = formatter
-        
-        self.date_tt = (0, 0, 0, 0, 0, 0)
-        self.hasExtras = False
-                
-        self.setTime(time_ts)
-        
-    def setTime(self, time_ts):
-        """Reset the observer's time for the almanac. 
-        
-        If the time differs from the previous time, then it will
-        recalculate the astronomical data."""
-        _newdate_tt = time.localtime(time_ts)
-        if _newdate_tt[0:6] != self.date_tt[0:6] :
+        self.time_djd     = timestamp_to_djd(time_ts)
+        self.lat          = lat
+        self.lon          = lon
+        self.altitude     = altitude if altitude is not None else 0.0
+        self.temperature  = temperature if temperature is not None else 15.0
+        self.pressure     = pressure if pressure is not None else 1010.0
+        self.horizon      = horizon if horizon is not None else 0.0
+        self.moon_phases  = moon_phases
+        self.formatter    = formatter
 
-            (y,m,d) = _newdate_tt[0:3]
-            (self.moon_index, self._moon_fullness) = weeutil.Moon.moon_phase(y, m, d)
-            self.moon_phase = self.moon_phases[self.moon_index]
+        (y,m,d) = time.localtime(time_ts)[0:3]
+        (self.moon_index, self._moon_fullness) = weeutil.Moon.moon_phase(y, m, d)
+        self.moon_phase = self.moon_phases[self.moon_index]
             
-            # Check to see whether the user has module 'ephem'. If so, use it.
-            if sys.modules.has_key('ephem'):
-                
-                # Get an observer object holding the location and time:
-                stn = self.get_observer(time_ts)
-                
-                # The various celestial bodies offered by the almanac:
-                self.sun     = BodyWrapper(ephem.Sun, stn, self.formatter)     #@UndefinedVariable
-                self.moon    = BodyWrapper(ephem.Moon, stn, self.formatter)
-                self.venus   = BodyWrapper(ephem.Venus, stn, self.formatter)   #@UndefinedVariable
-                self.mars    = BodyWrapper(ephem.Mars, stn, self.formatter)    #@UndefinedVariable
-                self.jupiter = BodyWrapper(ephem.Jupiter, stn, self.formatter)
-                
-                self.hasExtras = True
+        # Check to see whether the user has module 'ephem'. 
+        if 'ephem' in sys.modules:
+            
+            self.hasExtras = True
 
-            else:
-                
-                # No ephem package. Use the weeutil algorithms, which supply a minimum of functionality
-                (sunrise_utc, sunset_utc) = weeutil.Sun.sunRiseSet(y, m, d, self.lon, self.lat)
-                # The above function returns its results in UTC hours. Convert
-                # to a local time tuple
-                sunrise_tt = Almanac._adjustTime(y, m, d, sunrise_utc)
-                sunset_tt  = Almanac._adjustTime(y, m, d, sunset_utc)
-                self._sunrise = time.strftime("%H:%M", sunrise_tt)
-                self._sunset  = time.strftime("%H:%M", sunset_tt)
+        else:
+            
+            # No ephem package. Use the weeutil algorithms, which supply a minimum of functionality
+            (sunrise_utc, sunset_utc) = weeutil.Sun.sunRiseSet(y, m, d, self.lon, self.lat)
+            # The above function returns its results in UTC hours. Convert
+            # to a local time tuple
+            sunrise_tt = Almanac._adjustTime(y, m, d, sunrise_utc)
+            sunset_tt  = Almanac._adjustTime(y, m, d, sunset_utc)
+            self._sunrise = time.strftime("%H:%M", sunrise_tt)
+            self._sunset  = time.strftime("%H:%M", sunset_tt)
 
-                self.hasExtras = False
-                
-            self.date_tt = _newdate_tt
+            self.hasExtras = False            
     
-    def get_observer(self, time_ts):
-        """Returns an ephem Observer object."""
-        # Set up an observer object holding the location and time:
-        stn = ephem.Observer()
-        stn.lat  = math.radians(self.lat)
-        stn.long = math.radians(self.lon)
-        stn.elev = self.altitude
-        stn.horizon = math.radians(self.horizon)
-        stn.temp = self.temperature
-        stn.pressure = self.pressure
-        stn.date = self.time_djd = timestamp_to_djd(time_ts)
-        return stn
-        
     # Shortcuts, used for backwards compatibility
     @property
     def sunrise(self):
@@ -222,6 +191,39 @@ class Almanac(object):
     def moon_fullness(self):
         return int(self.moon.moon_phase+0.5) if self.hasExtras else self._moon_fullness
 
+    # What follows is a bit of Python wizardry to allow syntax such as:
+    #   almanac(horizon=-0.5).sun.rise
+    def __call__(self, **kwargs):
+        """Call an almanac object as a functor. This allows overriding the observer values."""
+        class ObserverBinder(object):
+            
+            # Default values are those provided to build the almanac:
+            def __init__(self, formatter=self.formatter, date=self.time_djd, lat=self.lat, lon=self.lon, 
+                         altitude=self.altitude, horizon=self.horizon, temperature=self.temperature, 
+                         pressure=self.pressure):
+                self.formatter = formatter
+                # Build an ephem Observer object
+                self.observer = ephem.Observer()
+                self.observer.date = date
+                self.observer.lat = math.radians(lat)
+                self.observer.lon = math.radians(lon)
+                self.observer.elev = altitude
+                self.observer.horizon = math.radians(horizon)
+                self.observer.temp = temperature
+                self.observer.pressure = pressure
+                
+            def __getattr__(self, body):
+                # Find the module used by pyephem. For example, the module used for
+                # 'mars' is 'ephem.Mars'. If there is no such module, an exception
+                # of type AttributeError will get thrown.
+                ephem_module = getattr(ephem, body.capitalize())
+                # Now, together with the observer's station, return an appropriate
+                # BodyWrapper
+                return BodyWrapper(ephem_module, self.observer, self.formatter)
+
+        # This will override the default values with any explicit parameters in kwargs:
+        return ObserverBinder(**kwargs)
+                
     def __getattr__(self, attr):
         if self.hasExtras and attr in ['previous_equinox', 'next_equinox', 
                                        'previous_solstice', 'next_solstice',
@@ -233,12 +235,19 @@ class Almanac(object):
                                        'previous_first_quarter_moon', 'next_first_quarter_moon',
                                        'previous_full_moon', 'next_full_moon',
                                        'previous_last_quarter_moon', 'next_last_quarter_moon']:
-            # This is how you call a function on an instance when all you have is its name:
+            # This is how you call a function on an instance when all you have
+            # is the function's name as a string
             djd = ephem.__dict__[attr](self.time_djd)   #@UndefinedVariable
             return weewx.units.ValueHelper((djd, "dublin_jd", "group_time"), 
                                            context="ephem_year", formatter=self.formatter)
+        elif self.hasExtras:
+            # This will call the __call__ function in Almanac, but with no parameters 
+            binder = self()
+            # Take the results (which will be an ObserverBinder object, and find the attribute
+            # in it.
+            return getattr(binder, attr)
         else:
-            raise AttributeError, "Unknown attribute "+attr
+            raise AttributeError, "Unknown attribute %s" % attr
             
     @staticmethod
     def _adjustTime(y, m, d,  hrs_utc):
@@ -282,11 +291,16 @@ class BodyWrapper(object):
         self.observer     = observer
         self.formatter    = formatter
         self.body = body_factory(observer)
+        self.use_center = False
         
         # Calculate and store the start-of-day in Dublin Julian Days:
         (y,m,d) = time.localtime(djd_to_timestamp(observer.date))[0:3]
         self.sod_djd = timestamp_to_djd(time.mktime((y,m,d,0,0,0,0,0,-1)))
 
+    def __call__(self, use_center=False):
+        self.use_center = use_center
+        return self
+    
     def __getattr__(self, attr):
         if attr in ['az', 'alt', 'a_ra', 'a_dec', 'g_ra', 'ra', 'g_dec', 'dec', 
                      'elong', 'radius', 'hlong', 'hlat', 'sublat', 'sublong']:
@@ -300,7 +314,7 @@ class BodyWrapper(object):
             # These functions have the unfortunate side effect of changing the state of the body
             # being examined. So, create a temporary body and then throw it away
             temp_body = self.body_factory()
-            time_djd = getattr(self.observer, attr)(temp_body)
+            time_djd = getattr(self.observer, attr)(temp_body, use_center=self.use_center)
             return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
         elif attr in fn_map:
             # These attribute names have to be mapped to a different function name. Like the
@@ -329,9 +343,7 @@ def djd_to_timestamp(djd):
     return (djd-25567.5) * 86400.0
     
 if __name__ == '__main__':
-    
     import doctest
     from weeutil.weeutil import timestamp_to_string, timestamp_to_gmtime  #@UnusedImport
             
     doctest.testmod()
-
