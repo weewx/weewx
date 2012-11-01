@@ -1,6 +1,6 @@
 TODO before the next release:
 
-Check chmod for generated files
+Make sure the almanac still works if you do not have pyephem
 
 Add Dan Haller's presentation suggestions
 

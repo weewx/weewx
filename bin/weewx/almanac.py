@@ -26,7 +26,9 @@ try:
 except:
     import weeutil.Sun
 
-class Almanac(object):
+# NB: In order to avoid an 'autocall' bug in Cheetah versions before 2.1,
+# this class must not be a "new-style" class.
+class Almanac():
     """Almanac data.
     
     ATTRIBUTES.
