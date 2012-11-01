@@ -333,7 +333,9 @@
             Today's Almanac
           </div>
           <div class="celestial_group">
-            #if $almanac.hasExtras
+            ## This rather tortured syntax is to get around a bug in early versions
+            ## of Cheetah. Later versions can simply say $almanas.hasExtras 
+            #if $getVar('almanac', autoCall=False).hasExtras
             ## Extended almanac information is available. Do the full set of tables.
             <div class="celestial_body">
               <table>
@@ -341,6 +343,7 @@
                 <tr>
                   <td class="label">Start civil twilight:</td>
                   <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
+                </tr>
                 <tr>
                   <td class="label">Sunrise:</td>
                   <td class="data">$almanac.sun.rise</td>
@@ -373,7 +376,7 @@
                   <td class="label">Declination:</td>
                   <td class="data">$("%.1f&deg;" % $almanac.sun.dec)</td>
                 </tr>
-                #if $almanac.next_equinox.raw < $almanac.next_solstice.raw
+                #if $getVar('almanac', autoCall=False).next_equinox.raw < $getVar('almanac', autoCall=False).next_solstice.raw
                 ## The equinox is before the solstice. Display them in order.
                 <tr>
                   <td class="label">Equinox:</td>
@@ -427,7 +430,7 @@
                   <td class="label">Declination:</td>
                   <td class="data">$("%.1f&deg;" % $almanac.moon.dec)</td>
                 </tr>
-                #if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
+                #if $getVar('almanac', autoCall=False).next_full_moon.raw < $getVar('almanac', autoCall=False).next_new_moon.raw
                 <tr>
                   <td class="label">Full moon:</td>
                   <td class="data">$almanac.next_full_moon

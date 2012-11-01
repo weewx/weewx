@@ -69,7 +69,7 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
         self.station = weewx.station.Station(self.stn_info, webpath, self.formatter, self.converter, self.skin_dict)
         
     def initAlmanac(self, celestial_ts):
-        """ Initialize an instance of weeutil.Almanac.Almanac for the station's
+        """ Initialize an instance of weewx.almanac.Almanac for the station's
         lat and lon, and for a specific time.
         
         celestial_ts: The timestamp of the time for which the Almanac is to
