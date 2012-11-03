@@ -1,0 +1,192 @@
+# -*- coding: utf-8 -*-
+#
+#    Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
+#    $Revision: 670 $
+#    $Author: tkeffer $
+#    $Date: 2012-10-11 16:55:54 -0700 (Thu, 11 Oct 2012) $
+#
+"""Test archive and stats database modules"""
+from __future__ import with_statement
+import unittest
+import time
+
+import weewx.archive
+import weedb
+import weeutil.weeutil
+
+archive_sqlite = {'database': '/tmp/weedb.sdb', 'driver':'weedb.sqlite'}
+archive_mysql  = {'database': 'test_weedb', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
+
+archive_schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+                  ('usUnits',              'INTEGER NOT NULL'),
+                  ('interval',             'INTEGER NOT NULL'),
+                  ('barometer',            'REAL'),
+                  ('inTemp',               'REAL'),
+                  ('outTemp',              'REAL'),
+                  ('windSpeed',            'REAL')]
+
+std_unit_system = 1
+interval = 3600     # One hour
+nrecs = 48          # Two days
+start_ts = int(time.mktime((2012, 07, 01, 00, 00, 0, 0, 0, -1))) # 1 July 2012
+stop_ts = start_ts + interval * (nrecs-1)
+timevec = [start_ts+i*interval for i in range(nrecs)]
+
+def timefunc(i):
+    return start_ts + i*interval
+def barfunc(i):
+    return 30.0 + 0.01*i
+def temperfunc(i):
+    return 68.0 + 0.1*i
+
+def gen_included_recs(timevec, start_ts, stop_ts, agg_interval):
+    for stamp in weeutil.weeutil.intervalgen(start_ts, stop_ts, agg_interval):
+        included = []
+        for (irec, ts) in enumerate(timevec):
+            if stamp[0] < ts <= stamp[1]:
+                included.append(irec)
+        yield included
+    
+def genRecords():
+    for irec in range(nrecs):
+        _record = {'dateTime': timefunc(irec), 'interval': interval, 'usUnits' : 1, 
+                   'outTemp': temperfunc(irec), 'barometer': barfunc(irec), 'inTemp': 70.0 + 0.1*irec}
+        yield _record
+
+#for rec in genRecords():
+#    print weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec
+#time.sleep(0.5)
+
+class Common(unittest.TestCase):
+    
+    def setUp(self):
+        try:
+            weedb.drop(self.archive_db_dict)
+        except:
+            pass
+
+    def tearDown(self):
+        try:
+            weedb.drop(self.archive_db_dict)
+        except:
+            pass
+        
+    def test_no_archive(self):
+        # Attempt to open a non-existent database results in an exception:
+        self.assertRaises(weedb.OperationalError, weewx.archive.Archive.open, self.archive_db_dict)
+
+    def test_create_archive(self):
+        archive = weewx.archive.Archive.open_with_create(self.archive_db_dict, archive_schema)
+        self.assertItemsEqual(archive.connection.tables(), ['archive'])
+        self.assertEqual(archive.connection.columnsOf('archive'), ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
+        archive.close()
+        
+        # Now that the database exists, these should also succeed:
+        archive = weewx.archive.Archive.open(self.archive_db_dict)
+        self.assertItemsEqual(archive.connection.tables(), ['archive'])
+        self.assertEqual(archive.connection.columnsOf('archive'), ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
+        self.assertEqual(archive.sqlkeys, ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
+        self.assertEqual(archive.std_unit_system, None)
+        archive.close()
+        
+    def test_empty_archive(self):
+        archive = weewx.archive.Archive.open_with_create(self.archive_db_dict, archive_schema)
+        self.assertEqual(archive.firstGoodStamp(), None)
+        self.assertEqual(archive.lastGoodStamp(), None)
+        self.assertEqual(archive.getRecord(123456789), None)
+        
+    def test_add_archive_records(self):
+        # Test adding records using a 'with' statement:
+        with weewx.archive.Archive.open_with_create(self.archive_db_dict, archive_schema) as archive:
+            archive.addRecord(genRecords())
+
+        # Now test to see what's in there:            
+        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+            self.assertEqual(archive.firstGoodStamp(), start_ts)
+            self.assertEqual(archive.lastGoodStamp(), stop_ts)
+            self.assertEqual(archive.std_unit_system, std_unit_system)
+            
+            expected_iterator = genRecords()
+            for _rec in archive.genBatchRecords():
+                try:
+                    _expected_rec = expected_iterator.next()
+                except StopIteration:
+                    break
+                # Check that the missing windSpeed is None, then remove it in order to do the compare:
+                self.assertEqual(_rec.pop('windSpeed'), None)
+                self.assertEqual(_expected_rec, _rec)
+                
+            
+            # Test adding an existing record. It should just quietly swallow it:
+            existing_record = {'dateTime': start_ts, 'interval': interval, 'usUnits' : 1, 'outTemp': 68.0}
+            archive.addRecord(existing_record)
+            
+            # Test changing the unit system. It should raise a ValueError exception:
+            metric_record = {'dateTime': stop_ts + interval, 'interval': interval, 'usUnits' : 16, 'outTemp': 20.0}
+            self.assertRaises(ValueError, archive.addRecord, metric_record)
+
+    def test_get_records(self):
+        # Add a bunch of records:
+        with weewx.archive.Archive.open_with_create(self.archive_db_dict, archive_schema) as archive:
+            archive.addRecord(genRecords())
+
+        # Now fetch them:
+        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+            # Test getSql:
+            bar0 = archive.getSql("SELECT barometer FROM archive WHERE dateTime=?", (start_ts,))
+            self.assertEqual(bar0[0], barfunc(0))
+            
+            # Test genSql:
+            for (irec,_row) in enumerate(archive.genSql("SELECT barometer FROM archive;")):
+                self.assertEqual(_row[0], barfunc(irec))
+                
+        # Now try fetching them as vectors:
+        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+            barvec = archive.getSqlVectors('barometer', start_ts, stop_ts)
+            # Recall that barvec will be a 2-way tuple. The first element is the value tuple of
+            # the time vector, the second of the data vector.
+            self.assertEqual(barvec[0], ([timefunc(irec) for irec in range(nrecs)], "unix_epoch", "group_time"))
+            self.assertEqual(barvec[1], ([barfunc(irec)  for irec in range(nrecs)], "inHg",       "group_pressure"))
+
+        # Now try fetching the vectora gain, but using aggregation.
+        # Start by setting up a generator function that will return the records to be
+        # included in each aggregation
+        gen = gen_included_recs(timevec, start_ts, stop_ts, 6*interval)
+        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+            barvec = archive.getSqlVectors('barometer', start_ts, stop_ts, aggregate_interval=6*interval, aggregate_type='avg')
+            n_expected = int(nrecs / 6)
+            self.assertEqual(n_expected, len(barvec[0][0]))
+            for irec in range(n_expected):
+                # Get the set of records to be included in this aggregation:
+                recs = gen.next()
+                # Make sure the timestamp of the aggregation interval is the same as the last
+                # record to be included in the aggregation:
+                self.assertEqual(timevec[max(recs)], barvec[0][0][irec])
+                # Calculate the expected average of the records included in the aggregation.
+                expected_avg = sum((barfunc(i) for i in recs)) / len(recs)
+                # Compare them.
+                self.assertAlmostEqual(expected_avg, barvec[1][0][irec])
+
+class TestSqlite(Common):
+
+    def __init__(self, *args, **kwargs):
+        self.archive_db_dict = archive_sqlite
+        super(TestSqlite, self).__init__(*args, **kwargs)
+        
+class TestMySQL(Common):
+    
+    def __init__(self, *args, **kwargs):
+        self.archive_db_dict = archive_mysql
+        super(TestMySQL, self).__init__(*args, **kwargs)
+        
+    
+def suite():
+    tests = ['test_no_archive', 'test_create_archive', 
+             'test_empty_archive', 'test_add_archive_records', 'test_get_records']
+    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+            
+if __name__ == '__main__':
+    unittest.TextTestRunner(verbosity=2).run(suite())

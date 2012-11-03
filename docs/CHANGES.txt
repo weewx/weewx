@@ -4,23 +4,89 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
+2.0.0 XX/YY/12
+
+A big release with  lots of changes.  The two most important  are the support of
+additional weather hardware, and the support of the MySQL database.
+
+All skin  configurations are backwardly compatible, but  the configuration file,
+weewx.conf, is not.  The install  utility setup.py will install a fresh version,
+which you will then have to edit by hand.
+
+If you have written a custom service,  see the upgrade guide on how to port your
+service to the new architecture.
+
+Added the ability to generate archive records in software, thus opening the door
+for supporting weather stations that do not have a logger.
+
+Support for the  Oregon Scientific WMR100, the cheapest  weather station I could
+find, in order to demonstrate the above!
+
+Added a software weather station simulator.
+
+Introduced  weedb,  a database-independent  Python  wrapper  around sqlite3  and
+MySQLdb, which fixes some of their flaws.
+
+Ported everything to use weedb, and thus MySQL (as well as sqlite)
+
+Internally, the databases can now use  either Metric units, or US Customary. NB:
+you cannot switch systems in the middle  of a database. You have to stick to one
+or other other. However, the  utility config_database.py does have a reconfigure
+option that allows copying the data to a new database, performing the conversion
+along the way. See the Customizing Guide.
+
+You can now use "mmHg" as a unit of pressure.
+
+Added new almanac information such as first and last quarter moons.
+
+Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
+callbacks, making it easier to add new event types.
+
+Added utility config_vp.py, for configuring the VantagePro hardware.
+
+Added utility config_database.py, for configuring the databases.
+
+Made it easier  to write custom RESTful protocols. Thanks to  user Brad, for the
+idea and the use case!
+
+When decoding Davis packet times,  now looks to wall clock  to determine whether
+DST is in effect.
+
+The stats  type 'squarecount' now contains  the number of  valid wind directions
+that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid
+wind speeds.  Wind  direction is now calculated using  'squarecount' (instead of
+'count').
+
+Simplified and reduced the memory requirements of the CRC16 calculations.
+
+Improved test suites.
+
+Lots of  little nips  and tucks here  and there,  mostly to reduce  the coupling
+between  different  modules.   In  particular,  now  a  service  generally  gets
+configured only using its section of weewx.conf.
+
+I also worked hard at making  sure that cursors, connections, files, and lots of
+other  bits  and  pieces get  properly  closed  instead  of relying  on  garbage
+collection.  Hopefully, this will reduce the long-term growth of memory usage.
+
+
 1.14.1 07/06/12
 
-Hardened retry strategy for the WeatherLink IP. If the port fails to open at all, or
-a socket error occurs, it will thrown an exception (resulting in a retry in 60 seconds).
-If a socket returns an incomplete result, it will continue to retry until everything 
-has been read.
+Hardened retry  strategy for the  WeatherLink IP. If  the port fails to  open at
+all, or a socket error occurs, it will thrown an exception (resulting in a retry
+in 60 seconds).   If a socket returns an incomplete result,  it will continue to
+retry until everything has been read.
 
-Fixed minor bug that causes the reporting thread to prematurely terminate if an exception
-is thrown while doing an FTP.
+Fixed minor bug that causes the  reporting thread to prematurely terminate if an
+exception is thrown while doing an FTP.
 
 
 1.14.0 06/18/12
 
-Added smartphone formatted mobile webpage, contributed by user Torbjörn Einarsson.
-If you are doing a fresh install, then these pages will be generated automatically.
-If you are doing an upgrade, then see the upgrade guide on how to have these webpages
-generated. Thanks, Tobbe!
+Added  smartphone  formatted  mobile   webpage,  contributed  by  user  Torbjörn
+Einarsson.  If you are doing a fresh install, then these pages will be generated
+automatically.  If you  are doing an upgrade, then see the  upgrade guide on how
+to have these webpages generated. Thanks, Tobbe!
 
 Three changes suggested by user Charlie Spirakis:
   o Changed umask in daemon.py to 0022;

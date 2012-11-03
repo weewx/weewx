@@ -10,6 +10,7 @@
 """Various utilities used by the plot package.
 
 """
+import ImageFont
 import datetime
 import time
 import math
@@ -393,6 +394,22 @@ def pickLabelFormat(increment):
         
     return "%%.%df" % decimal_places
 
+def get_font_handle(fontpath, *args):
+    
+    font = None
+    if fontpath is not None :
+        try :
+            if fontpath.endswith('.ttf'):
+                font = ImageFont.truetype(fontpath, *args)
+            else :
+                font = ImageFont.load_path(fontpath)
+        except IOError :
+            pass
+    
+    if font is None :
+        font = ImageFont.load_default()
+        
+    return font 
 
 if __name__ == "__main__":
     import doctest

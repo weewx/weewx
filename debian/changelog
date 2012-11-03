@@ -1,0 +1,5 @@
+weewx (2.0.0b1-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Tom Keffer <tkeffer@gmail.com>  Sat, 06 Oct 2012 06:50:47 -0700

@@ -2,6 +2,7 @@
 ##    $Revision$
 ##    $Author$
 ##    $Date$
+#encoding UTF-8
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head profile="http://www.w3.org/2005/10/profile">
@@ -405,7 +406,9 @@
           #if $week.radiation.has_data
           <img src="weekradiation.png" alt="Radiation" />
           #end if
+          #if $week.rxCheckPercent.has_data
           <img src="weekrx.png" alt="week rx percent"/>
+          #end if
           #if $week.extraTemp1.has_data
           <img src="weekpond.png" alt="Pond Temperatures" />
           #end if

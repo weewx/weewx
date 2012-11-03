@@ -13,16 +13,15 @@ import os.path
 import sys
 import syslog
 import time
+import urlparse
 
 import Cheetah.Template
 import Cheetah.Filters
 
 import weeutil.weeutil
 import weewx.almanac
-import weewx.archive
 import weewx.reportengine
 import weewx.station
-import weewx.stats
 import weewx.units
 
 # Default base temperature and unit type for heating and cooling degree days
@@ -34,13 +33,12 @@ default_coolbase = (65.0, "degree_F", "group_temperature")
 #                    Class FileGenerator
 #===============================================================================
 
-class FileGenerator(weewx.reportengine.ReportGenerator):
+class FileGenerator(weewx.reportengine.CachedReportGenerator):
     """Class for managing the template based generators"""
     
     def run(self):
 
         self.setup()
-
         self.generateSummaryBy('SummaryByMonth', self.gen_ts)
         self.generateSummaryBy('SummaryByYear', self.gen_ts)
         self.generateToDate(self.gen_ts)
@@ -49,15 +47,9 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         
         self.outputted_dict = {'SummaryByMonth' : [],
                                'SummaryByYear'  : []}
-        
-        self.initStation()
         self.initUnits()
+        self.initStation()
         self.initAlmanac(self.gen_ts)
-        
-    def initStation(self):
-
-        # station holds info such as 'altitude', 'latitude', etc. It seldom changes
-        self.station = weewx.station.Station(self.config_dict, self.skin_dict)
         
     def initUnits(self):
         
@@ -65,8 +57,19 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
         self.unitInfoHelper = weewx.units.UnitInfoHelper(self.formatter, self.converter)
         
+    def initStation(self):
+
+        try:
+            website = "http://" + self.config_dict['StdReport']['FTP']['server']
+            webpath = urlparse.urljoin(website, self.config_dict['StdReport']['FTP']['path'])
+        except KeyError:
+            webpath = "http://www.weewx.com"
+
+        # station holds info such as 'altitude', 'latitude', etc. It seldom changes
+        self.station = weewx.station.Station(self.stn_info, webpath, self.formatter, self.converter, self.skin_dict)
+        
     def initAlmanac(self, celestial_ts):
-        """ Initialize an instance of weeutil.Almanac.Almanac for the station's
+        """ Initialize an instance of weewx.almanac.Almanac for the station's
         lat and lon, and for a specific time.
         
         celestial_ts: The timestamp of the time for which the Almanac is to
@@ -75,13 +78,14 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         # For better accuracy, the almanac requires the current temperature and barometric
         # pressure, so retrieve them from the default archive, using celestial_ts
         # as the time
-        archivedb = weewx.archive.Archive(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                                       self.skin_dict['archive_file']))
+        
+        temperature_C = pressure_mbar = None
+
+        archivedb = self._getArchive(self.skin_dict['archive_database'])
         if not celestial_ts:
             celestial_ts = archivedb.lastGoodStamp()
-
-        temperature_C = pressure_mbar = None
         rec = self.getRecord(archivedb, celestial_ts)
+
         if rec is not None:
             if rec.has_key('outTemp') :  temperature_C = rec['outTemp'].degree_C.raw 
             if rec.has_key('barometer'): pressure_mbar = rec['barometer'].mbar.raw
@@ -95,11 +99,11 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         self.almanac = weewx.almanac.Almanac(celestial_ts, 
                                              self.station.latitude_f, 
                                              self.station.longitude_f,
-                                             altitude_vt[0],
-                                             temperature_C,
-                                             pressure_mbar,
-                                             self.moonphases,
-                                             self.formatter)
+                                             altitude=altitude_vt[0],
+                                             temperature=temperature_C,
+                                             pressure=pressure_mbar,
+                                             moon_phases=self.moonphases,
+                                             formatter=self.formatter)
 
     def getRecord(self, archivedb, time_ts):
         """Get an observation record from the archive database, returning
@@ -222,7 +226,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
             
             start_ts = archivedb.firstGoodStamp()
             if not start_ts:
-                syslog.syslog(syslog.LOG_NOTICE, "filegenerator: No data for to date subreport %s" % (subreport,))
+                syslog.syslog(syslog.LOG_NOTICE, "filegenerator: No data for subreport %s" % (subreport,))
                 return
             stop_ts  = gen_ts if gen_ts else archivedb.lastGoodStamp()
             
@@ -256,7 +260,7 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
             finally:
                 # Close it
                 _file.close()
-        
+                    
         elapsed_time = time.time() - t1
         syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
     
@@ -325,19 +329,17 @@ class FileGenerator(weewx.reportengine.ReportGenerator):
         
         # Walk the tree back to the root, accumulating options:
         accum_dict = weeutil.weeutil.accumulateLeaves(subskin_dict)
-        template = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                self.config_dict['Reports']['SKIN_ROOT'],
+        template = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                self.config_dict['StdReport']['SKIN_ROOT'],
                                 accum_dict['skin'],
                                 accum_dict['template'])
-        destination_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+        destination_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                        accum_dict['HTML_ROOT'],
                                        os.path.dirname(accum_dict['template']))
         encoding = accum_dict['encoding']
 
-        statsdb = weewx.stats.StatsReadonlyDb(os.path.join(self.config_dict['Station']['WEEWX_ROOT'], 
-                                                           accum_dict['stats_file']))
-        archivedb = weewx.archive.Archive(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                                       accum_dict['archive_file']))
+        statsdb   = self._getStats(accum_dict['stats_database'])
+        archivedb = self._getArchive(accum_dict['archive_database'])
 
         try:
             # Create the directory that is to receive the generated files.  If

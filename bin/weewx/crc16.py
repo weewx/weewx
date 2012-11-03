@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,12 +7,9 @@
 #    $Author$
 #    $Date$
 #
-"""Routines for calculating a 16 bit CRC check.
+"""Routines for calculating a 16 bit CRC check. """
 
-"""
-import array
-
-_table=(
+_table=[
 0x0000,  0x1021,  0x2042,  0x3063,  0x4084,  0x50a5,  0x60c6,  0x70e7,  # 0x00
 0x8108,  0x9129,  0xa14a,  0xb16b,  0xc18c,  0xd1ad,  0xe1ce,  0xf1ef,  # 0x08  
 0x1231,  0x0210,  0x3273,  0x2252,  0x52b5,  0x4294,  0x72f7,  0x62d6,  # 0x10
@@ -44,21 +41,19 @@ _table=(
 0xfd2e,  0xed0f,  0xdd6c,  0xcd4d,  0xbdaa,  0xad8b,  0x9de8,  0x8dc9,  # 0xE0
 0x7c26,  0x6c07,  0x5c64,  0x4c45,  0x3ca2,  0x2c83,  0x1ce0,  0x0cc1,  # 0xE8
 0xef1f,  0xff3e,  0xcf5d,  0xdf7c,  0xaf9b,  0xbfba,  0x8fd9,  0x9ff8,  # 0xF0
-0x6e17,  0x7e36,  0x4e55,  0x5e74,  0x2e93,  0x3eb2,  0x0ed1,  0x1ef0,  # 0xF8
-)
+0x6e17,  0x7e36,  0x4e55,  0x5e74,  0x2e93,  0x3eb2,  0x0ed1,  0x1ef0   # 0xF8
+]
 
-table = array.array('H',_table)
-
-def crc16(string, crc=0):
+def crc16(string, crc_start=0):
     """ Calculate CRC16 sum"""
 
-    for ch in string:
-        crc = (table[((crc>>8)^ord(ch)) & 0xff] ^ (crc<<8)) & 0xffff
-    return crc
+    crc_sum = reduce(lambda crc, ch : (_table[(crc >> 8) ^ ord(ch)] ^ (crc << 8)) & 0xffff, string, crc_start)
 
+    return crc_sum
 
 if __name__ == '__main__' :
     import struct
-    str = struct.pack("<HH", 0xCEC6, 0x03A2)
-    crc = crc16(str)
+    # This is the example given in the Davis documentation:
+    test_str = struct.pack("<HH", 0xCEC6, 0x03A2)
+    crc = crc16(test_str)
     assert(crc==0xe2b4)

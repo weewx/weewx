@@ -47,25 +47,44 @@ def dewpointC(T, R):
         TdC = None
     return TdC
 
-def windchillF(T, V) :
+def windchillF(T_F, V_mph) :
     """Calculate wind chill. From http://www.nws.noaa.gov/om/windchill
     
-    T: Temperature in Fahrenheit
+    T_F: Temperature in Fahrenheit
     
-    V: Wind speed in mph
+    V_mph: Wind speed in mph
     
     Returns Wind Chill in Fahrenheit
     """
     
-    if T is None or V is None:
+    if T_F is None or V_mph is None:
         return None
 
     # Formula only valid for temperatures below 50F and wind speeds over 3.0 mph
-    if T >= 50.0 or V <= 3.0 : 
-        return T
-    WcF = 35.74 + 0.6215 * T + (-35.75  + 0.4275 * T) * math.pow(V, 0.16) 
+    if T_F >= 50.0 or V_mph <= 3.0 : 
+        return T_F
+    WcF = 35.74 + 0.6215 * T_F + (-35.75  + 0.4275 * T_F) * math.pow(V_mph, 0.16) 
     return WcF
 
+def windchillC(T_C, V_kph):
+    """Wind chill, metric version.
+    
+    T: Temperature in Celsius
+    
+    V: Wind speed in kph
+    
+    Returns wind chill in Celsius"""
+    
+    if T_C is None or V_kph is None:
+        return None
+    
+    T_F = T_C * (9.0/5.0) + 32.0
+    V_mph = 0.621371192 * V_kph
+    
+    WcF = windchillF(T_F, V_mph)
+    
+    return (WcF - 32.0) * (5.0 / 9.0) if WcF is not None else None
+    
 def heatindexF(T, R) :
     """Calculate heat index. From http://www.crh.noaa.gov/jkl/?n=heat_index_calculator
     
@@ -74,6 +93,20 @@ def heatindexF(T, R) :
     R: Relative humidity in percent
     
     Returns heat index in Fahrenheit
+    
+    Examples:
+    
+    >>> print heatindexF(75.0, 50.0)
+    75.0
+    >>> print heatindexF(80.0, 50.0)
+    80.8029049
+    >>> print heatindexF(80.0, 95.0)
+    86.3980618
+    >>> print heatindexF(90.0, 50.0)
+    94.5969412
+    >>> print heatindexF(90.0, 95.0)
+    126.6232036
+
     """
     if T is None or R is None :
         return None
@@ -88,15 +121,51 @@ def heatindexF(T, R) :
         hiF = T
     return hiF
 
+def heatindexC(T_C, R):
+    T_F = T_C * (9.0/5.0) + 32.0
+    hiF = heatindexF(T_F, R)
+    return (hiF - 32.0) * (5.0/9.0) if hiF is not None else None
+
 def heating_degrees(t, base):
     return max(base - t, 0) if t is not None else None
 
 def cooling_degrees(t, base):
     return max(t - base, 0) if t is not None else None
 
+def altimeter_pressure_US(SP_inHg, Z_feet):
+    """Calculate the altimeter pressure, given the raw, station pressure in inHg and the
+    altitude in feet.
+    
+    Formula from:
+        http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
+        
+    Examples:
+    >>> print "%.2f" % altimeter_pressure_US(28.0, 0.0)
+    28.00
+    >>> print "%.2f" % altimeter_pressure_US(28.0, 1000.0)
+    29.04
+    """
+    if SP_inHg is None or Z_feet is None:
+        return None
+    N = 0.1903
+    K = 1.313e-5
+    return (SP_inHg**N + K*Z_feet)**(1/N)
+
+def altimeter_pressure_Metric(SP_mbars, Z_meters):
+    """Convert from (uncorrected) station pressure, altitude-corrected pressure.
+    Example:
+    >>> print "%.1f" % altimeter_pressure_Metric(948.08, 0.0)
+    948.1
+    >>> print "%.1f" % altimeter_pressure_Metric(948.08, 304.8)
+    983.3
+    """
+    if SP_mbars is None or Z_meters is None:
+        return None
+    SP_inHg = 0.0295333727*SP_mbars
+    Z_feet  = 3.28084*Z_meters
+    return altimeter_pressure_US(SP_inHg, Z_feet) / 0.0295333727
+
 if __name__ == '__main__':
-    print heatindexF(75.0, 50.0)
-    print heatindexF(80.0, 50.0)
-    print heatindexF(80.0, 95.0)
-    print heatindexF(90.0, 50.0)
-    print heatindexF(90.0, 95.0)
+    import doctest
+
+    doctest.testmod()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2010, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -16,61 +16,72 @@ import syslog
 import weewx
 import weeutil.weeutil
 
+unit_constants = {'US'     : weewx.US,
+                  'METRIC' : weewx.METRIC}
+
+unit_nicknames = {weewx.US     : 'US',
+                  weewx.METRIC : 'METRIC'}
+
 # This data structure maps observation types to a "unit group"
-obs_group_dict = {"barometer"          : "group_pressure",
-                  "pressure"           : "group_pressure",
-                  "altimeter"          : "group_pressure",
-                  "inTemp"             : "group_temperature",
-                  "outTemp"            : "group_temperature",
-                  "inHumidity"         : "group_percent",
-                  "outHumidity"        : "group_percent",
-                  "windSpeed"          : "group_speed",
-                  "windDir"            : "group_direction",
-                  "windGust"           : "group_speed",
-                  "windGustDir"        : "group_direction",
-                  "windvec"            : "group_speed",
-                  "windgustvec"        : "group_speed",
-                  "wind"               : "group_speed",
-                  "vecdir"             : "group_direction",
-                  "vecavg"             : "group_speed2",
-                  "rms"                : "group_speed2",
+obs_group_dict = {"altitude"           : "group_altitude",
+                  "cooldeg"            : "group_degree_day",
+                  "heatdeg"            : "group_degree_day",
                   "gustdir"            : "group_direction",
-                  "rainRate"           : "group_rainrate",
-                  "rain"               : "group_rain",
-                  "dewpoint"           : "group_temperature",
-                  "windchill"          : "group_temperature",
-                  "heatindex"          : "group_temperature",
-                  "ET"                 : "group_rain",
-                  "radiation"          : "group_radiation",
-                  "UV"                 : "group_uv",
-                  "extraTemp1"         : "group_temperature",
-                  "extraTemp2"         : "group_temperature",
-                  "extraTemp3"         : "group_temperature",
-                  "soilTemp1"          : "group_temperature",
-                  "soilTemp2"          : "group_temperature",
-                  "soilTemp3"          : "group_temperature",
-                  "soilTemp4"          : "group_temperature",
-                  "leafTemp1"          : "group_temperature",
-                  "leafTemp2"          : "group_temperature",
-                  "extraHumid1"        : "group_percent",
-                  "extraHumid2"        : "group_percent",
+                  "vecdir"             : "group_direction",
+                  "windDir"            : "group_direction",
+                  "windGustDir"        : "group_direction",
+                  "interval"           : "group_interval",
                   "soilMoist1"         : "group_moisture",
                   "soilMoist2"         : "group_moisture",
                   "soilMoist3"         : "group_moisture",
                   "soilMoist4"         : "group_moisture",
+                  "extraHumid1"        : "group_percent",
+                  "extraHumid2"        : "group_percent",
+                  "inHumidity"         : "group_percent",
+                  "outHumidity"        : "group_percent",
                   "rxCheckPercent"     : "group_percent",
-                  "consBatteryVoltage" : "group_volt",
+                  "altimeter"          : "group_pressure",
+                  "barometer"          : "group_pressure",
+                  "pressure"           : "group_pressure",
+                  "radiation"          : "group_radiation",
+                  "ET"                 : "group_rain",
+                  "dayRain"            : "group_rain",
                   "hail"               : "group_rain",
+                  "hourRain"           : "group_rain",
+                  "monthRain"          : "group_rain",
+                  "rain"               : "group_rain",
+                  "totalRain"          : "group_rain",                  
+                  "yearRain"           : "group_rain",
                   "hailRate"           : "group_rainrate",
+                  "rainRate"           : "group_rainrate",
+                  "wind"               : "group_speed",
+                  "windGust"           : "group_speed",
+                  "windSpeed"          : "group_speed",
+                  "windgustvec"        : "group_speed",
+                  "windvec"            : "group_speed",
+                  "rms"                : "group_speed2",
+                  "vecavg"             : "group_speed2",
+                  "dewpoint"           : "group_temperature",
+                  "extraTemp1"         : "group_temperature",
+                  "extraTemp2"         : "group_temperature",
+                  "extraTemp3"         : "group_temperature",
+                  "heatindex"          : "group_temperature",
                   "heatingTemp"        : "group_temperature",
-                  "heatingVoltage"     : "group_volt",
-                  "supplyVoltage"      : "group_volt",
-                  "referenceVoltage"   : "group_volt",
-                  "altitude"           : "group_altitude",
-                  "heatdeg"            : "group_degree_day",
-                  "cooldeg"            : "group_degree_day",
+                  "inTemp"             : "group_temperature",
+                  "leafTemp1"          : "group_temperature",
+                  "leafTemp2"          : "group_temperature",
+                  "outTemp"            : "group_temperature",
+                  "soilTemp1"          : "group_temperature",
+                  "soilTemp2"          : "group_temperature",
+                  "soilTemp3"          : "group_temperature",
+                  "soilTemp4"          : "group_temperature",
+                  "windchill"          : "group_temperature",
                   "dateTime"           : "group_time",
-                  "interval"           : "group_interval"}
+                  "UV"                 : "group_uv",
+                  "consBatteryVoltage" : "group_volt",
+                  "heatingVoltage"     : "group_volt",
+                  "referenceVoltage"   : "group_volt",
+                  "supplyVoltage"      : "group_volt"}
 
 # Some aggregations when applied to a type result in a different unit
 # group. This data structure maps aggregation type to the group:
@@ -128,7 +139,8 @@ MetricUnits = {"group_altitude"    : "meter",
 # Conversion functions to go from one unit type to another.
 conversionDict = {
       'inHg'             : {'mbar'             : lambda x : x * 33.86, 
-                            'hPa'              : lambda x : x * 33.86},
+                            'hPa'              : lambda x : x * 33.86,
+                            'mmHg'             : lambda x : x * 25.4},
       'degree_F'         : {'degree_C'         : lambda x : (x-32.0) * (5.0/9.0)},
       'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
       'mile_per_hour'    : {'km_per_hour'      : lambda x : x * 1.609344,
@@ -148,9 +160,14 @@ conversionDict = {
       'inch'             : {'cm'               : lambda x : x * 2.54,
                             'mm'               : lambda x : x * 25.4},
       'foot'             : {'meter'            : lambda x : x * 0.3048},
+      'mmHg'             : {'inHg'             : lambda x : x / 25.4,
+                            'mbar'             : lambda x : x / 0.75006168,
+                            'hPa'              : lambda x : x / 0.75006168},
       'mbar'             : {'inHg'             : lambda x : x / 33.86,
+                            'mmHg'             : lambda x : x * 0.75006168,
                             'hPa'              : lambda x : x * 1.0},
       'hPa'              : {'inHg'             : lambda x : x / 33.86,
+                            'mmHg'             : lambda x : x * 0.75006168,
                             'mbar'             : lambda x : x * 1.0},
       'degree_C'         : {'degree_F'         : lambda x : x * (9.0/5.0) + 32.0},
       'degree_C_day'     : {'degree_F_day'     : lambda x : x * (9.0/5.0)},
@@ -185,9 +202,9 @@ default_unit_format_dict = {"centibar"           : "%.0f",
                             "cm_per_hour"        : "%.2f",
                             "degree_C"           : "%.1f",
                             "degree_C_day"       : "%.1f",
-                            "degree_compass"     : "%.0f",
                             "degree_F"           : "%.1f",
                             "degree_F_day"       : "%.1f",
+                            "degree_compass"     : "%.0f",
                             "foot"               : "%.0f",
                             "hPa"                : "%.1f",
                             "inHg"               : "%.3f",
@@ -204,6 +221,7 @@ default_unit_format_dict = {"centibar"           : "%.0f",
                             "mile_per_hour"      : "%.0f",
                             "mile_per_hour2"     : "%.1f",
                             "mm"                 : "%.1f",
+                            "mmHg"               : "%.1f",
                             "mm_per_hour"        : "%.1f",
                             "percent"            : "%.0f",
                             "uv_index"           : "%.1f",
@@ -217,9 +235,9 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "cm_per_hour"       : " cm/hr",
                             "degree_C"          : "\xc2\xb0C",
                             "degree_C_day"      : "\xc2\xb0C-day",
-                            "degree_compass"    : "\xc2\xb0",
                             "degree_F"          : "\xc2\xb0F",
                             "degree_F_day"      : "\xc2\xb0F-day",
+                            "degree_compass"    : "\xc2\xb0",
                             "foot"              : " feet",
                             "hPa"               : " hPa",
                             "inHg"              : " inHg",
@@ -236,6 +254,7 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "mile_per_hour"     : " mph",
                             "mile_per_hour2"    : " mph",
                             "mm"                : " mm",
+                            "mmHg"              : " mmHg",
                             "mm_per_hour"       : " mm/hr",
                             "percent"           : "%",
                             "uv_index"          : "",
@@ -448,6 +467,44 @@ class Converter(object):
         new_val_t = convert(val_t, new_unit_type)
         return new_val_t
 
+    def convertDict(self, obs_dict):
+        """Convert an observation dictionary into the target unit system.
+        
+        The source dictionary must include the key 'usUnits' in order for the
+        converter to figure out what unit system it is in.
+        
+        The output dictionary will contain no information about the unit
+        system (that is, it will not contain a 'usUnits' entry).
+        
+        Example: convert a dictionary which is in the metric unit system into US units
+        
+        >>> # Construct a default converter, which will be to US units
+        >>> c = Converter()
+        >>> # Source dictionary is in metric units
+        >>> source_dict = {'dateTime': 194758100, 'outTemp': 20.0, 'usUnits': weewx.METRIC,\
+            'barometer':1015.8, 'interval':15}
+        >>> target_dict = c.convertDict(source_dict)
+        >>> print target_dict
+        {'outTemp': 68.0, 'interval': 15, 'barometer': 30.0, 'dateTime': 194758100}
+        """
+        # Get the unit system the source is in. This will be something like weewx.US or weewx.METRIC.
+        source_unit_system = obs_dict['usUnits']
+        
+        # Get a converter for the source unit system. We won't be actually using it to convert
+        # anything; instead, we'll be using it to get the source units and unit groups.
+        source_converter = StdUnitConverters[source_unit_system]
+
+        target_dict = {}
+        for obs_type in obs_dict:
+            if obs_type in ['usUnits']: continue
+            # Construct a value tuple for the source observation
+            val_t = (obs_dict[obs_type], ) + source_converter.getTargetUnit(obs_type)
+            # Now use it to convert into a value tuple in the target units. Strip
+            # off and save only the first element (the observation value):
+            target_dict[obs_type] = self.convert(val_t)[0]
+        return target_dict
+            
+            
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
         target unit type and group, or (None, None) if they cannot be determined.
@@ -767,57 +824,75 @@ def convertStd(val_t, target_std_unit_system):
     """Convert a value tuple to an appropriate unit in a target standardized
     unit system
     
-        Example: convertStd((30.02, 'inHg', 'barometer'), weewx.METRIC)
-        returns: (1016.5 'mbar', 'barometer')
+    val_t: A value tuple.
     
-    val_t: A value tuple. Example: (30.02, 'inHg', 'barometer')
-    
-    target_std_unit_system: A standardized unit system. 
-    Example: weewx.US or weewx.METRIC.
+    target_std_unit_system: A standardized unit system (weewx.US or weewx.METRIC)
     
     Returns: A value tuple in the given standardized unit system.
+    
+    Example:
+    >>> value_t = (30.02, 'inHg', 'group_pressure')
+    >>> print convertStd(value_t, weewx.METRIC)
+    (1016.4771999999999, 'mbar', 'group_pressure')
     """
     return StdUnitConverters[target_std_unit_system].convert(val_t)
 
 def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     """Given a standard unit system (weewx.US or weewx.METRIC), an observation type, and
-    an aggregation type, what is the unit system it uses?
-
-    target_std_unit_system: A standardized unit system. 
-    Example: weewx.US or weewx.METRIC.
+    an aggregation type, what units would it be in?
     
-    obs_type: An observation type. E.g., 'barometer'.
+    target_std_unit_system: A standardized unit system. If None, then
+    the the output units are indeterminate, so (None, None) is returned. 
+    
+    obs_type: An observation type.
         
     agg_type: An aggregation type E.g., 'mintime', or 'avg'.
     
     returns: A 2-way tuple containing the target units, and the target group.
+
+    Examples:
+    >>> print getStandardUnitType(weewx.US,     'barometer')
+    ('inHg', 'group_pressure')
+    >>> print getStandardUnitType(weewx.METRIC, 'barometer')
+    ('mbar', 'group_pressure')
+    >>> print getStandardUnitType(weewx.US, 'barometer', 'mintime')
+    ('unix_epoch', 'group_time')
+    >>> print getStandardUnitType(weewx.METRIC, 'barometer', 'avg')
+    ('mbar', 'group_pressure')
+    >>> print getStandardUnitType(weewx.METRIC, 'wind', 'rms')
+    ('km_per_hour', 'group_speed')
+    >>> print getStandardUnitType(None, 'barometer', 'avg')
+    (None, None)
     """
     
-    return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
+    if target_std_unit_system is not None:
+        return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
+    else:
+        return (None, None)
 
 def dictFromStd(d):
     """Map an observation dictionary to a dictionary with values of ValueTuples.
     
     d: A dictionary containing the key-value pairs for observation types
     and their values. It must include an entry 'usUnits', giving the
-    standard unit system the entries are in. An example would be:
-    
-        {'outTemp'   : 23.9,
-         'barometer' : 1002.3,
-         'usUnits'   : 2}
-
-    In this case, the standard unit system being used is "2", or Metric.
-    
+    standard unit system the entries are in.
+        
     returns: a dictionary with keys of observation type, value the
-    corresponding ValueTuple. Example:
-        {'outTemp' : (23.9, 'degree_C', 'group_temperature'),
-         'barometer' : (1002.3, 'mbar', 'group_pressure')}
+    corresponding ValueTuple.
+         
+    Example where the input dictionary is Metric:
+    >>> d = {'outTemp'   : 23.9,
+    ...      'barometer' : 1002.3,
+    ...      'usUnits'   : 16}
+    >>> print dictFromStd(d)
+    {'outTemp': (23.9, 'degree_C', 'group_temperature'), 'barometer': (1002.3, 'mbar', 'group_pressure')}
     """
         
     # Find out what standard unit system (US or Metric) the dictionary is in:
     std_unit_system = d['usUnits']
     resultDict = {}
     for obs_type in d:
+        if obs_type == 'usUnits': continue
         # Given this standard unit system, what is the unit type of this
         # particular observation type?
         (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
@@ -825,8 +900,47 @@ def dictFromStd(d):
         resultDict[obs_type] = ValueTuple(d[obs_type], unit_type, unit_group)
     return resultDict
 
+class GenWithConvert(object):
+    """Generator wrapper. Converts the output of the wrapped generator to a target
+    unit system.
     
+    Example:
+    >>> def genfunc():
+    ...    for i in range(3):
+    ...        _rec = {'dateTime' : 194758100 + i*300,
+    ...            'outTemp' : 68.0 + i * 9.0/5.0,
+    ...            'usUnits' : weewx.US}
+    ...        yield _rec
+    >>> for _out in GenWithConvert(genfunc(), weewx.METRIC):
+    ...    print "Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits'])
+    Timestamp: 194758100; Temperature: 20.00; Unit system: 16
+    Timestamp: 194758400; Temperature: 21.00; Unit system: 16
+    Timestamp: 194758700; Temperature: 22.00; Unit system: 16
+    """
+    
+    def __init__(self, input_generator, target_unit_system=weewx.METRIC):
+        """Initialize an instance of GenWithConvert
+        
+        input_generator: An iterator which will return dictionary records.
+        
+        target_unit_system: The unit system the output of the generator should use, or 
+        'None' if it should leave the output unchanged."""
+        self.input_generator = input_generator
+        self.target_unit_system = target_unit_system
+        
+    def __iter__(self):
+        return self
+    
+    def next(self): 
+        _record = self.input_generator.next()
+        if self.target_unit_system is None or _record['usUnits'] == self.target_unit_system:
+            return _record
+        _record_c = StdUnitConverters[self.target_unit_system].convertDict(_record)
+        _record_c['usUnits'] = self.target_unit_system
+        return _record_c
+
 if __name__ == "__main__":
+    
     import doctest
 
     if not doctest.testmod().failed:

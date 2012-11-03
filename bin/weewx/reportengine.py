@@ -23,6 +23,8 @@ import configobj
 
 import weeutil.ftpupload
 import weeutil.weeutil
+import weewx.archive
+import weewx.stats
 
 class StdReportEngine(threading.Thread):
     """Reporting engine for weewx.
@@ -39,10 +41,12 @@ class StdReportEngine(threading.Thread):
     See below for examples of generators.
     """
     
-    def __init__(self, config_path, gen_ts = None, first_run = True):
+    def __init__(self, config_dict, stn_info, gen_ts=None, first_run=True):
         """Initializer for the report engine. 
         
-        config_path: File path to the configuration dictionary.
+        config_dict: The configuration dictionary.
+        
+        stn_info: An instance of weewx.station.StationInfo, with static station information.
         
         gen_ts: The timestamp for which the output is to be current [Optional; default
         is the last time in the database]
@@ -51,12 +55,9 @@ class StdReportEngine(threading.Thread):
         If this is the case, then any 'one time' events should be done.
         """
         threading.Thread.__init__(self, name="ReportThread")
-        try :
-            self.config_dict = configobj.ConfigObj(config_path, file_error=True)
-        except IOError:
-            print "Unable to open configuration file ", config_path
-            raise
-            
+
+        self.config_dict = config_dict
+        self.stn_info    = stn_info
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         
@@ -76,14 +77,14 @@ class StdReportEngine(threading.Thread):
         self.setup()
 
         # Iterate over each requested report
-        for report in self.config_dict['Reports'].sections:
+        for report in self.config_dict['StdReport'].sections:
             
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
             
             # Figure out where the configuration file is for the skin used for this report:
-            skin_config_path = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                            self.config_dict['Reports']['SKIN_ROOT'],
-                                            self.config_dict['Reports'][report].get('skin', 'Standard'),
+            skin_config_path = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                            self.config_dict['StdReport']['SKIN_ROOT'],
+                                            self.config_dict['StdReport'][report].get('skin', 'Standard'),
                                             'skin.conf')
             # Retrieve the configuration dictionary for the skin. Wrap it in a try
             # block in case we fail
@@ -96,17 +97,17 @@ class StdReportEngine(threading.Thread):
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
                 continue
                 
-            # Add the default archive and stats files:
-            skin_dict['archive_file'] = self.config_dict['Archive']['archive_file']
-            skin_dict['stats_file']   = self.config_dict['Stats']['stats_file']
+            # Add the default archive and stats databases:
+            skin_dict['archive_database'] = self.config_dict['StdArchive']['archive_database']
+            skin_dict['stats_database']   = self.config_dict['StdArchive']['stats_database']
 
             # Inject any overrides the user may have specified in the weewx.conf
             # configuration file for all reports:
-            for scalar in self.config_dict['Reports'].scalars:
-                skin_dict[scalar] = self.config_dict['Reports'][scalar]
+            for scalar in self.config_dict['StdReport'].scalars:
+                skin_dict[scalar] = self.config_dict['StdReport'][scalar]
             
             # Now inject any overrides for this specific report:
-            skin_dict.merge(self.config_dict['Reports'][report])
+            skin_dict.merge(self.config_dict['StdReport'][report])
             
             # Finally, add the report name:
             skin_dict['REPORT_NAME'] = report
@@ -118,7 +119,8 @@ class StdReportEngine(threading.Thread):
                                                       self.config_dict, 
                                                       skin_dict, 
                                                       self.gen_ts, 
-                                                      self.first_run)
+                                                      self.first_run,
+                                                      self.stn_info)
                 except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
@@ -135,20 +137,27 @@ class StdReportEngine(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
+                    
+                finally:
+                    obj.finalize()
 
 
 class ReportGenerator(object):
     """Base class for all report generators."""
-    def __init__(self, config_dict, skin_dict, gen_ts, first_run):
+    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info):
         self.config_dict = config_dict
         self.skin_dict   = skin_dict
         self.gen_ts      = gen_ts
         self.first_run   = first_run
+        self.stn_info    = stn_info
         
     def start(self):
         self.run()
     
     def run(self):
+        pass
+    
+    def finalize(self):
         pass
 
 class FtpGenerator(ReportGenerator):
@@ -164,8 +173,8 @@ class FtpGenerator(ReportGenerator):
             ftpData = weeutil.ftpupload.FtpUpload(server      = self.skin_dict['server'],
                                                   user        = self.skin_dict['user'],
                                                   password    = self.skin_dict['password'],
-                                                  local_root  = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
-                                                                             self.config_dict['Reports']['HTML_ROOT']),
+                                                  local_root  = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                                                             self.config_dict['StdReport']['HTML_ROOT']),
                                                   remote_root = self.skin_dict['path'],
                                                   name        = self.skin_dict['REPORT_NAME'],
                                                   passive     = bool(self.skin_dict.get('passive', True)),
@@ -210,11 +219,11 @@ class CopyGenerator(ReportGenerator):
             pass
 
         # Change directory to the skin subdirectory:
-        os.chdir(os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+        os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
                               self.skin_dict['SKIN_ROOT'],
                               self.skin_dict['skin']))
         # Figure out the destination of the files
-        html_dest_dir = os.path.join(self.config_dict['Station']['WEEWX_ROOT'],
+        html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                      self.skin_dict['HTML_ROOT'])
         
         # The copy list can contain wildcard characters. Go through the
@@ -240,3 +249,57 @@ class CopyGenerator(ReportGenerator):
         
         syslog.syslog(syslog.LOG_DEBUG, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))
         
+
+class CachedReportGenerator(ReportGenerator):
+    """Report generator that can cache archive and stats database connections."""
+    
+    def start(self):
+        self._initArchiveCache()
+        self._initStatsCache()
+        self.run()
+    
+    def finalize(self):
+        self._closeStatsCache()
+        self._closeArchiveCache()
+
+    def _initArchiveCache(self):
+        self.archive_cache = {}
+        
+    def _closeArchiveCache(self):
+        try:
+            for archive in self.archive_cache.values():
+                try:
+                    archive.close()
+                    del archive
+                except:
+                    pass
+        except:
+            pass
+        self.archive_cache = {}
+            
+    def _getArchive(self, archive_name):
+        if archive_name not in self.archive_cache:
+            archive_dict = self.config_dict['Databases'][archive_name]
+            self.archive_cache[archive_name] = weewx.archive.Archive.open(archive_dict)
+        return self.archive_cache[archive_name]
+        
+    def _initStatsCache(self):
+        self.stats_cache = {}
+        
+    def _closeStatsCache(self):
+        try:
+            for stats in self.stats_cache.values():
+                try:
+                    stats.close()
+                    del stats
+                except:
+                    pass
+        except:
+            pass
+        self.stats_cache = {}
+            
+    def _getStats(self, stats_name):
+        if stats_name not in self.stats_cache:
+            stats_dict = self.config_dict['Databases'][stats_name]
+            self.stats_cache[stats_name] = weewx.stats.StatsDb.open(stats_dict)
+        return self.stats_cache[stats_name]

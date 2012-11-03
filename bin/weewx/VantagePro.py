@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,9 +7,8 @@
 #    $Author$
 #    $Date$
 #
-"""classes and functions for interfacing with a Davis VantagePro or VantagePro2"""
+"""Classes and functions for interfacing with a Davis VantagePro, VantagePro2, or VantageVue weather station"""
 
-import datetime
 import serial
 import socket
 import struct
@@ -18,12 +17,19 @@ import time
 
 from weewx.crc16 import crc16
 import weeutil.weeutil
-import weewx.accum
+import weewx.units
 import weewx.wxformulas
+import weewx.abstractstation
 
 # A few handy constants:
 _ack    = chr(0x06)
 _resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
+
+def loader(config_dict):
+
+    station = Vantage(**config_dict['Vantage'])
+    
+    return station
 
 class BaseWrapper(object):
     """Base class for (Serial|Ethernet)Wrapper"""
@@ -33,7 +39,7 @@ class BaseWrapper(object):
     #===============================================================================
 
     def wakeup_console(self, max_tries=3, wait_before_retry=1.2):
-        """Wake up a Davis VantagePro console.
+        """Wake up a Davis Vantage console.
         
         If unsuccessful, an exception of type weewx.WakeupError is thrown"""
     
@@ -61,7 +67,7 @@ class BaseWrapper(object):
                 pass
 
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to wake up console")
-        raise weewx.WakeupError("Unable to wake up VantagePro console")
+        raise weewx.WakeupError("Unable to wake up Vantage console")
 
     def send_data(self, data):
         """Send data to the Davis console, waiting for an acknowledging <ACK>
@@ -77,7 +83,7 @@ class BaseWrapper(object):
         _resp = self.read()
         if _resp != _ack: 
             syslog.syslog(syslog.LOG_ERR, "VantagePro: No <ACK> received from console")
-            raise weewx.WeeWxIOError("No <ACK> received from VantagePro console")
+            raise weewx.WeeWxIOError("No <ACK> received from Vantage console")
     
     def send_data_with_crc16(self, data, max_tries=3) :
         """Send data to the Davis console along with a CRC check, waiting for an acknowledging <ack>.
@@ -103,7 +109,7 @@ class BaseWrapper(object):
                 pass
 
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to pass CRC16 check while sending data")
-        raise weewx.CRCError("Unable to pass CRC16 check while sending data to VantagePro console")
+        raise weewx.CRCError("Unable to pass CRC16 check while sending data to Vantage console")
 
     def send_command(self, command, max_tries=3, wait_before_retry=1.2):
         """Send a command to the console, then look for the string 'OK' in the response.
@@ -202,6 +208,7 @@ class SerialWrapper(BaseWrapper):
     def openPort(self):
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up serial port %s, baudrate %d" % (self.port, self.baudrate))
 
     def closePort(self):
         try:
@@ -233,6 +240,7 @@ class EthernetWrapper(BaseWrapper):
         except:
             syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to connect to ethernet host %s on port %d." % (self.host, self.port))
             raise
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up ethernet host %s on port %d" % (self.host, self.port))
 
     def closePort(self):
         try:
@@ -282,7 +290,6 @@ class EthernetWrapper(BaseWrapper):
             try:
                 _recv = self.socket.recv(_N)
             except (socket.timeout, socket.error), ex:
-                syslog.syslog(syslog.LOG_ERR, "VantagePro: Socket error while reading %d bytes." % (chars,))
                 # Reraise as a weewx I/O error:
                 raise weewx.WeeWxIOError(ex)
             _nread = len(_recv)
@@ -302,28 +309,26 @@ class EthernetWrapper(BaseWrapper):
             # Reraise as a weewx I/O error:
             raise weewx.WeeWxIOError(ex)
 
-class VantagePro(object):
-    """Class that represents a connection to a VantagePro console.
-    
-    The connection will be opened after initialization"""
+#===============================================================================
+#                           Class VantagePro
+#===============================================================================
 
-    # List of types for which archive records will be explicitly calculated
-    # from LOOP data. Right now there is only one, but if we ever support weather
-    # stations that do not have onboard storage of archive data (and most don't),
-    # this could be expanded, probably to include virtually every type.
-    special = ['consBatteryVoltage']
+class Vantage(weewx.abstractstation.AbstractStation):
+    """Class that represents a connection to a Davis Vantage console.
+    
+    The connection to the console will be open after initialization"""
 
     # Various codes used internally by the VP2:
     barometer_unit_dict   = {0:'inHg', 1:'mmHg', 2:'hPa', 3:'mbar'}
     temperature_unit_dict = {0:'degree_F', 1:'degree_10F', 2:'degree_C', 3:'degree_10C'}
-    elevation_unit_dict   = {0:'foot', 1:'meter'}
+    altitude_unit_dict    = {0:'foot', 1:'meter'}
     rain_unit_dict        = {0:'inch', 1:'mm'}
     wind_unit_dict        = {0:'mile_per_hour', 1:'meter_per_second', 2:'km_per_hour', 3:'knot'}
     wind_cup_dict         = {0:'small', 1:'large'}
     rain_bucket_dict      = {0: "0.01 inches", 1: "0.2 MM", 2: "0.1 MM"}
     
     def __init__(self, **vp_dict) :
-        """Initialize an object of type VantagePro.
+        """Initialize an object of type Vantage.
         
         NAMED ARGUMENTS:
         
@@ -332,7 +337,7 @@ class VantagePro(object):
         port: The serial port of the VP. [Required if serial/USB
         communication]
 
-        host: The VantagePro network host [Required if Ethernet communication]
+        host: The Vantage network host [Required if Ethernet communication]
         
         baudrate: Baudrate of the port. [Optional. Default 19200]
 
@@ -350,14 +355,7 @@ class VantagePro(object):
         max_tries: How many times to try again before giving up. [Optional.
         Default is 4]
         
-        archive_delay: How long to wait after an archive record is due
-        before retrieving it. [Optional. Default is 15 seconds]
-        
         iss_id: The station number of the ISS [Optional. Default is 1]
-        
-        unit_system: What unit system to use on the VP. [Optional.
-        Default is 1 (US Customary), and the only system supported
-        in this version.]
         """
 
         # TODO: These values should really be retrieved dynamically from the VP:
@@ -367,13 +365,12 @@ class VantagePro(object):
         # These come from the configuration dictionary:
         self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
-        self.archive_delay    = int(vp_dict.get('archive_delay', 15))
-        self.unit_system      = int(vp_dict.get('unit_system'  , 1))
-        self.dst_delta        = 3600
+        
+        self.save_monthRain = None
 
         # Get an appropriate port, depending on the connection type:
-        self.port = VantagePro._port_factory(vp_dict)
-        
+        self.port = Vantage._port_factory(vp_dict)
+
         # Open it up:
         self.port.openPort()
 
@@ -389,30 +386,20 @@ class VantagePro(object):
         self.port.closePort()
         
     def genLoopPackets(self):
-        """Generator function that returns loop packets until the next archive record is due."""
-
-        # Next time to ask for archive records:
-        nextArchive_ts = (int(time.time() / self.archive_interval) + 1) *\
-                            self.archive_interval + self.archive_delay
+        """Generator function that returns loop packets"""
         
         while True:
-            # Get LOOP packets in big batches, then cancel as necessary when the expiration
-            # time is up. This is necessary because there is an undocumented limit to how
-            # many LOOP records you can request for on the VP (somewhere around 220).
+            # Get LOOP packets in big batches This is necessary because there is
+            # an undocumented limit to how many LOOP records you can request
+            # on the VP (somewhere around 220).
             for _loopPacket in self.genDavisLoopPackets(200):
                 # Translate the LOOP packet to one with physical units:
                 _physicalPacket = self.translateLoopPacket(_loopPacket)
-                self.accumulateLoop(_physicalPacket)
                 yield _physicalPacket
                 
-                # Check to see if it's time to get new archive data. If so, cancel the loop
-                # and return
-                if time.time() >= nextArchive_ts:
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: new archive record due. Canceling loop")
-                    return
 
     def genDavisLoopPackets(self, N=1):
-        """Generator function to return N LoopPacket objects from a VantagePro console
+        """Generator function to return N LoopPacket objects from a Vantage console
         
         N: The number of packets to generate [default is 1]
         
@@ -460,8 +447,8 @@ class VantagePro(object):
             yield pkt_dict
             ntries = 1
 
-    def genArchivePackets(self, since_ts):
-        """A generator function to return archive packets from a VantagePro station.
+    def genArchiveRecords(self, since_ts):
+        """A generator function to return archive packets from a Davis Vantage station.
         
         since_ts: A timestamp. All data since (but not including) this time will be returned.
         Pass in None for all data
@@ -524,18 +511,14 @@ class VantagePro(object):
                 # Convert from the internal, Davis encoding to physical units:
                 _record = self.translateArchivePacket(_packet)
                 # Check to see if the time stamps are declining, which would
-                # signal that we are done. However, the time stamps may be declining
-                # just because of the "fall back" from DST in the Fall, so allow times stamps to
-                # decline up to the DST delta.
-                if _record['dateTime'] is None or _record['dateTime'] + self.dst_delta <= _last_good_ts :
+                # signal that we are done. 
+                if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts :
                     # The time stamp is declining. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Catch up complete. Started at %s" \
-                                  % weeutil.weeutil.timestamp_to_string(_last_good_ts))
-                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Page timestamp %s" \
-                                  % weeutil.weeutil.timestamp_to_string(_record['dateTime']))
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: DMPAFT complete: page timestamp %s less than final timestamp %s"\
+                                  % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
+                                     weeutil.weeutil.timestamp_to_string(_last_good_ts)))
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Catch up complete.")
                     return
-                # Augment the record with the data from the accumulators:
-                self.archiveAccumulators(_record)
                 # Set the last time to the current time, and yield the packet
                 _last_good_ts = _record['dateTime']
                 yield _record
@@ -543,65 +526,10 @@ class VantagePro(object):
             # The starting index for pages other than the first is always zero
             _start_index = 0
 
-    def accumulateLoop(self, physicalLOOPPacket):
-        """Process LOOP data, calculating averages within an archive period."""
-        try:
-            # Gather the LOOP data for each special type. An exception
-            # will be thrown if either the accumulators have not been initialized 
-            # yet, or if the timestamp of the packet is outside the timespan held
-            # by the accumulator.
-            for obs_type in self.special:
-                self.current_accumulators[obs_type].addToSum(physicalLOOPPacket)
-            # For battery status, OR every status field together:
-            self.txBatteryStatus |= physicalLOOPPacket['txBatteryStatus']
-        except (AttributeError, weewx.accum.OutOfSpan):
-            # Initialize the accumulators:
-            self.clearAccumulators(physicalLOOPPacket['dateTime'])
-            # Try again:
-            try:
-                for obs_type in self.special:
-                    self.current_accumulators[obs_type].addToSum(physicalLOOPPacket)
-                # For battery status, OR every status field together:
-                self.txBatteryStatus |= physicalLOOPPacket['txBatteryStatus']
-            except weewx.accum.OutOfSpan:
-                # Failed again. There's something wrong. Log it.
-                syslog.syslog(syslog.LOG_ERR, "VantagePro: Unable to initialize accumulators.")
-            
-    def clearAccumulators(self, time_ts):
-        """Initialize or clear the accumulators"""
-        try:
-            # Shuffle accumulators. An exception will be thrown
-            # if they have never been initialized.
-            self.last_accumulators=self.current_accumulators
-        except:
-            pass
-        # Calculate the interval timespan that contains time_ts
-        start_of_interval = weeutil.weeutil.startOfInterval(time_ts, self.archive_interval)
-        timespan = weeutil.weeutil.TimeSpan(start_of_interval, start_of_interval+self.archive_interval)
-        # Initialize current_accumulators with instances of StdAccum
-        self.current_accumulators = {}
-        for obs_type in VantagePro.special:
-            self.current_accumulators[obs_type] = weewx.accum.StdAccum(obs_type, timespan)
-        self.txBatteryStatus = 0  
-
-    def archiveAccumulators(self, record):
-        """Add the results of the accumulators to the current archive record."""
-        try:
-            # For each special type, add its average to the archive record. An exception
-            # will be thrown if there is no accumulator (first time through).
-            for obs_type in VantagePro.special:
-                # Make sure the times match:
-                if self.last_accumulators[obs_type].timespan.stop == record['dateTime']:
-                    record[obs_type] = self.last_accumulators[obs_type].avg
-            # Save the battery status:
-            record['txBatteryStatus'] = self.txBatteryStatus
-        except AttributeError:
-            pass
-        
     def getTime(self) :
-        """Get the current time from the console and decode it, returning it as a time-tuple
+        """Get the current time from the console and decode it, returning it as timestamp
         
-        returns: the time as a time-tuple
+        returns: the time in unix epoch time
         """
         # Try up to max_tries times:
         for unused_count in xrange(self.max_tries) :
@@ -613,29 +541,24 @@ class VantagePro(object):
                 # ... get the binary data. No prompt, only one try:
                 _buffer = self.port.get_data_with_crc16(8, max_tries=1)
                 (sec, minute, hr, day, mon, yr, unused_crc) = struct.unpack("<bbbbbbH", _buffer)
-                time_tt = (yr+1900, mon, day, hr, minute, sec, 0, 0, -1)
-                return time_tt
+                # Unforunately, there is no way of determining whether the time returned from
+                # the console is DST or not. Assume it is the same as local time.
+                local_tt = time.localtime()
+                time_tt = (yr+1900, mon, day, hr, minute, sec, 0, 0, local_tt.tm_isdst)
+                return time.mktime(time_tt)
             except weewx.WeeWxIOError :
                 # Caught an error. Keep retrying...
                 continue
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while getting time")
         raise weewx.RetriesExceeded("While getting console time")
             
-    def setTime(self, newtime_ts, max_drift):
-        """Set the clock on the Davis VantagePro console
+    def setTime(self, newtime_ts):
+        """Set the clock on the Davis Vantage console
 
-        newtime_ts: The time the internal clock should be set to.
-        
-        max_drift: The request to set the time will be ignored
-        if the clock error is less than this value."""
+        newtime_ts: The time the internal clock should be set to in unix epoch time."""
         
         # Unfortunately, this algorithm takes a little while to execute, so the clock
         # usually ends up a few hundred milliseconds slow
-        _diff = time.mktime(self.getTime()) - newtime_ts
-        syslog.syslog(syslog.LOG_INFO, 
-                      "VantagePro: Clock error is %.2f seconds (positive is fast)" % _diff)
-        if abs(_diff) < max_drift:
-            return
         newtime_tt = time.localtime(int(newtime_ts + 0.5))
             
         # The Davis expects the time in reversed order, and the year is since 1900
@@ -648,8 +571,7 @@ class VantagePro(object):
                 self.port.send_data('SETTIME\n')
                 self.port.send_data_with_crc16(_buffer, max_tries=self.max_tries)
                 syslog.syslog(syslog.LOG_NOTICE,
-                              "VantagePro: Clock set to %s (%d)" % (time.asctime(newtime_tt), 
-                                                                   time.mktime(newtime_tt)) )
+                              "VantagePro: Clock set to %s" % weeutil.weeutil.timestamp_to_string(time.mktime(newtime_tt)))
                 return
             except weewx.WeeWxIOError :
                 # Caught an error. Keep retrying...
@@ -664,7 +586,7 @@ class VantagePro(object):
         """
         if new_bucket_code not in (0, 1, 2):
             raise weewx.ViolatedPrecondition("Invalid bucket code %d" % new_bucket_code)
-        old_setup_bits = self._getEEPROM_value(0x2B)
+        old_setup_bits = self._getEEPROM_value(0x2B)[0]
         new_setup_bits = (old_setup_bits & 0xCF) | (new_bucket_code << 4)
         
         # Tell the console to put one byte in hex location 0x2B
@@ -677,21 +599,21 @@ class VantagePro(object):
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain bucket type set to %d (%s)" %(self.rain_bucket_type, self.rain_bucket_size))
 
-    def setRainSeasonStart(self, new_rain_season_start):
+    def setRainYearStart(self, new_rain_year_start):
         """Set the start of the rain season.
         
-        new_rain_season_start: Must be in the closed range 1...12
+        new_rain_year_start: Must be in the closed range 1...12
         """
-        if new_rain_season_start not in range(1,13):
-            raise weewx.ViolatedPrecondition("Invalid rain season start %d" % (new_rain_season_start,))
+        if new_rain_year_start not in range(1,13):
+            raise weewx.ViolatedPrecondition("Invalid rain season start %d" % (new_rain_year_start,))
         
         # Tell the console to put one byte in hex location 0x2C
         self.port.send_data("EEBWR 2C 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(new_rain_season_start), max_tries=1)
+        self.port.send_data_with_crc16(chr(new_rain_year_start), max_tries=1)
 
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain season start set to %d" % (self.rain_season_start,))
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Rain year start set to %d" % (self.rain_year_start,))
 
     def setBarData(self, new_barometer_inHg, new_altitude_foot):
         """Set the internal barometer calibration and altitude settings in the console.
@@ -709,13 +631,13 @@ class VantagePro(object):
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Set barometer calibration.")
         
     def setArchiveInterval(self, archive_interval_seconds):
-        """Set the archive interval of the VantagePro.
+        """Set the archive interval of the Vantage.
         
         archive_interval_seconds: The new interval to use in minutes. Must be one of
         60, 300, 600, 900, 1800, 3600, or 7200 
         """
         if archive_interval_seconds not in (60, 300, 600, 900, 1800, 3600, 7200):
-            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%f)" % (self.archive_interval,)
+            raise weewx.ViolatedPrecondition, "VantagePro: Invalid archive interval (%d)" % (archive_interval_seconds,)
 
         # The console expects the interval in minutes. Divide by 60.
         command = 'SETPER %d\n' % (archive_interval_seconds / 60)
@@ -726,7 +648,7 @@ class VantagePro(object):
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (self.archive_interval_seconds,))
     
     def clearLog(self):
-        """Clear the internal archive memory in the VantagePro."""
+        """Clear the internal archive memory in the Vantage."""
         for unused_count in xrange(self.max_tries):
             try:
                 self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
@@ -776,40 +698,31 @@ class VantagePro(object):
         """Return the firmware date as a string. """
         return self.port.send_command('VER\n')[0]
         
-    def translateLoopPacket(self, loopPacket):
-        """Given a LOOP packet in vendor units, this function translates to physical units.
+    def getStnInfo(self):
+        """Return lat / lon, time zone, etc."""
         
-        loopPacket: A dictionary holding the LOOP data in the internal units used by Davis.
+        (stnlat, stnlon) = self._getEEPROM_value(0x0B, "<2h")
+        stnlat /= 10.0
+        stnlon /= 10.0
+        time_zone   = self._getEEPROM_value(0x11)[0]
+        if self._getEEPROM_value(0x12)[0]:
+            man_or_auto = "MANUAL"
+            dst     = "ON" if self._getEEPROM_value(0x13)[0] else "OFF"
+        else:
+            man_or_auto = "AUTO"
+            dst     = "N/A"
+        gmt_offset  = self._getEEPROM_value(0x14, "<h")[0] / 100.0
+        gmt_or_zone = "GMT_OFFSET" if self._getEEPROM_value(0x16)[0] else "TIME_ZONE"
         
-        returns: A dictionary with the values in physical units."""
-        # Right now, only US customary units are supported
-        if self.unit_system != weewx.US :
-            raise weewx.UnsupportedFeature("Only US Customary Units are supported on the Davis VP2.")
+        return(stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone)
 
-        _packet = self.translateLoopToUS(loopPacket)
-
-        return _packet
-    
-
-    def translateArchivePacket(self, archivePacket):
-        """Translates an archive packet from the internal units used by Davis, into physical units.
+    def startLogger(self):
+        self.port.send_command("START\n")
         
-        archivePacket: A dictionary holding an archive packet in the internal, Davis encoding
+    def stopLogger(self):
+        self.port.send_command('STOP\n')
         
-        returns: A dictionary with the values in physical units."""
-        
-        # Right now, only US units are supported
-        if self.unit_system != weewx.US :
-            raise weewx.UnsupportedFeature("Only US Units are supported on the Davis VP2.")
-
-        _packet = self.translateArchiveToUS(archivePacket)
-        return _packet
-    
-    #===========================================================================
-    #              VantagePro utility functions
-    #===========================================================================
-    
-    def translateLoopToUS(self, packet):
+    def translateLoopPacket(self, packet):
         """Translates a loop packet from the internal units used by Davis, into US Customary Units.
         
         packet: A dictionary holding the LOOP data in the internal units used by Davis.
@@ -822,7 +735,7 @@ class VantagePro(object):
         # packet.
     
         if packet['usUnits'] != weewx.US :
-            raise weewx.ViolatedPrecondition("Unit system on the VantagePro must be US Customary Units only")
+            raise weewx.ViolatedPrecondition("Unit system on the Vantage must be US Customary Units only")
     
         record = {}
         
@@ -831,6 +744,11 @@ class VantagePro(object):
             func = _loop_map[_type]
             # Call it, with the value as an argument, storing the result:
             record[_type] = func(packet[_type])
+            
+        # Adjust sunrise and sunset:
+        start_of_day = weeutil.weeutil.startOfDay(record['dateTime'])
+        record['sunrise'] += start_of_day
+        record['sunset']  += start_of_day
     
         # Add a few derived values that are not in the packet itself.
         T = record['outTemp']
@@ -841,10 +759,23 @@ class VantagePro(object):
         record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
         record['windchill'] = weewx.wxformulas.windchillF(T, W)
         
-        return record
-    
+        # Because the Davis stations do not offer bucket tips in LOOP data, we
+        # must calculate it by looking for changes in rain totals. This won't
+        # work for the very first rain packet.
+        if self.save_monthRain is None:
+            delta = None
+        else:
+            delta = record['monthRain']-self.save_monthRain
+            # If the difference is negative, we're at the beginning of a month.
+            if delta < 0: delta = None
+        record['rain'] = delta
+        self.save_monthRain = record['monthRain']
 
-    def translateArchiveToUS(self, packet):
+        record['usUnits'] = weewx.US
+        
+        return record
+
+    def translateArchivePacket(self, packet):
         """Translates an archive packet from the internal units used by Davis, into US units.
         
         packet: A dictionary holding an archive packet in the internal, Davis encoding
@@ -852,7 +783,7 @@ class VantagePro(object):
         returns: A dictionary with the values in US units."""
     
         if packet['usUnits'] != weewx.US :
-            raise weewx.ViolatedPrecondition("Unit system on the VantagePro must be U.S. units only")
+            raise weewx.ViolatedPrecondition("Unit system on the Vantage must be U.S. units only")
     
         record = {}
         
@@ -876,34 +807,52 @@ class VantagePro(object):
         record['usUnits']   = weewx.US
         
         return record
+    
+    #===========================================================================
+    #              Davis Vantage utility functions
+    #===========================================================================
+
+    @property
+    def hardware_name(self):    
+        if self.hardware_type == 16:
+            return "VantagePro2"
+        elif self.hardware_type == 17:
+            return "VantageVue"
+        else:
+            raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
 
     def _setup(self):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
         self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+        
+        # Determine the type of hardware:
+        self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
+        self.hardware_type = ord(self.port.read())
 
-        unit_bits              = self._getEEPROM_value(0x29)
-        setup_bits             = self._getEEPROM_value(0x2B)
-        self.rain_season_start = self._getEEPROM_value(0x2C)
-        self.archive_interval  = self._getEEPROM_value(0x2D) * 60
-        self.elevation         = self._getEEPROM_value(0x0F, "<H") 
+        unit_bits              = self._getEEPROM_value(0x29)[0]
+        setup_bits             = self._getEEPROM_value(0x2B)[0]
+        self.rain_year_start   = self._getEEPROM_value(0x2C)[0]
+        self.archive_interval  = self._getEEPROM_value(0x2D)[0] * 60
+        self.altitude          = self._getEEPROM_value(0x0F, "<H")[0]
+        self.altitude_vt       = weewx.units.ValueTuple(self.altitude, "foot", "group_altitude") 
 
         barometer_unit_code   =  unit_bits & 0x03
         temperature_unit_code = (unit_bits & 0x0C) >> 3
-        elevation_unit_code   = (unit_bits & 0x10) >> 4
+        altitude_unit_code    = (unit_bits & 0x10) >> 4
         rain_unit_code        = (unit_bits & 0x20) >> 5
         wind_unit_code        = (unit_bits & 0xC0) >> 6
 
         self.wind_cup_type    = (setup_bits & 0x08) >> 3
         self.rain_bucket_type = (setup_bits & 0x30) >> 4
 
-        self.barometer_unit   = VantagePro.barometer_unit_dict[barometer_unit_code]
-        self.temperature_unit = VantagePro.temperature_unit_dict[temperature_unit_code]
-        self.elevation_unit   = VantagePro.elevation_unit_dict[elevation_unit_code]
-        self.rain_unit        = VantagePro.rain_unit_dict[rain_unit_code]
-        self.wind_unit        = VantagePro.wind_unit_dict[wind_unit_code]
-        self.wind_cup_size    = VantagePro.wind_cup_dict[self.wind_cup_type]
-        self.rain_bucket_size = VantagePro.rain_bucket_dict[self.rain_bucket_type]
+        self.barometer_unit   = Vantage.barometer_unit_dict[barometer_unit_code]
+        self.temperature_unit = Vantage.temperature_unit_dict[temperature_unit_code]
+        self.altitude_unit    = Vantage.altitude_unit_dict[altitude_unit_code]
+        self.rain_unit        = Vantage.rain_unit_dict[rain_unit_code]
+        self.wind_unit        = Vantage.wind_unit_dict[wind_unit_code]
+        self.wind_cup_size    = Vantage.wind_cup_dict[self.wind_cup_type]
+        self.rain_bucket_size = Vantage.rain_bucket_dict[self.rain_bucket_type]
         
         # Adjust the translation maps to reflect the rain bucket size:
         if self.rain_bucket_type == 1:
@@ -920,12 +869,15 @@ class VantagePro(object):
             _loop_map['rainRate']    = _big_val100
 
     def _getEEPROM_value(self, offset, v_format="B"):
-        """Get the value located at a specified offset in the EEPROM."""
+        """Return a list of values from the EEPROM starting at a specified offset, using a specified format"""
         
         nbytes = struct.calcsize(v_format)
+        # Don't bother waking up the console for the first try. It's probably
+        # already awake from opening the port. However, if we fail, then do a
+        # wakeup.
         firsttime=True
         
-        command = "EEBRD %X %d\n" % (offset, nbytes)
+        command = "EEBRD %X %X\n" % (offset, nbytes)
         for unused_count in xrange(self.max_tries):
             try:
                 if not firsttime:
@@ -934,7 +886,7 @@ class VantagePro(object):
                 self.port.send_data(command)
                 _buffer = self.port.get_data_with_crc16(nbytes+2, max_tries=1)
                 _value = struct.unpack(v_format, _buffer[:-2])
-                return _value[0]
+                return _value
             except weewx.WeeWxIOError:
                 continue
         
@@ -965,7 +917,7 @@ class VantagePro(object):
 #                         LOOP packet helper functions
 #===============================================================================
 
-# A tuple of all the types held in a VantagePro2 LOOP packet in their native order.
+# A tuple of all the types held in a Vantage LOOP packet in their native order.
 vp2loop = ('loop',            'loop_type',     'packet_type', 'next_record', 'barometer', 
            'inTemp',          'inHumidity',    'outTemp', 
            'windSpeed',       'windSpeed10',   'windDir', 
@@ -1098,6 +1050,9 @@ def _archive_datetime(packet) :
     datestamp = packet['date_stamp']
     timestamp = packet['time_stamp']
     
+    # Unforunately, there is no way of determining whether the time in the
+    # archive packet is DST or not. Assume it is the same as local time.
+    local_tt = time.localtime()
     # Decode the Davis time, constructing a time-tuple from it:
     time_tuple = ((0xfe00 & datestamp) >> 9,    # year
                   (0x01e0 & datestamp) >> 5,    # month
@@ -1105,7 +1060,7 @@ def _archive_datetime(packet) :
                   timestamp // 100,             # hour
                   timestamp % 100,              # minute
                   0,                            # second
-                  0, 0, -1)
+                  0, 0, local_tt.tm_isdst)
     # Convert to epoch time:
     try:
         ts = int(time.mktime(time_tuple))
@@ -1134,7 +1089,10 @@ def _loop_date(v):
     return ts
     
 def _stime(v):
-    return datetime.time(v//100, v%100)
+    h = v/100
+    m = v%100
+    # Return seconds since midnight
+    return 3600*h + 60*m
 
 def _big_val(v) :
     return float(v) if v != 0x7fff else None
@@ -1310,287 +1268,3 @@ _archive_map={'interval'       : _null_int,
               'forecastRule'   : _null,
               'readClosed'     : _null,
               'readOpened'     : _null}
-
-#===============================================================================
-#     Routines for configuring and querying the VP2.
-#     These are called dynamically from the configure.py utility.
-#===============================================================================
-
-import optparse
-
-import weewx.units
-
-def getOptionGroup(parser):
-    
-    group = optparse.OptionGroup(parser,"Options for Davis weather stations", 
-                                 "These options are specific to the Davis Vantage series of weather stations.")
-    group.add_option("--info", action="store_true", dest="info",
-                     help="To print configuration, reception, and barometer calibration information about your weather station.")
-    group.add_option("--configure", action="store_true", dest="configure",
-                     help="To configure your weather station using settings in the specified configuration file.")
-    group.add_option("--clear", action="store_true", dest="clear",
-                     help="To clear the memory of your weather station.")
-    parser.add_option_group(group)
-
-def runOptions(config_dict, options, args):
-    
-    if options.info:
-        info(config_dict)
-    if options.configure:
-        configure(config_dict)
-    if options.clear:
-        clear(config_dict)
-        
-def info(config_dict):
-    """Query the configuration of the VantagePro, printing out status information"""
-    
-    print "Querying..."
-    
-    # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
-
-    try:
-        try:
-            _firmware_date = station.getFirmwareDate()
-        except:
-            _firmware_date = "<Unavailable>"
-        
-        console_time = time.strftime("%x %X", station.getTime())
-        
-        print  """VantagePro EEPROM settings:
-        
-        CONSOLE FIRMWARE DATE: %s
-        
-        CONSOLE SETTINGS:
-          Archive interval: %d (seconds)
-          Altitude:         %d (%s)
-          Wind cup type:    %s
-          Rain bucket type: %s
-          Rain year start:  %d
-          Onboard time:     %s
-          
-        CONSOLE DISPLAY UNITS:
-          Barometer:   %s
-          Temperature: %s
-          Rain:        %s
-          Wind:        %s
-          """ % (_firmware_date,
-                 station.archive_interval, station.elevation, station.elevation_unit,
-                 station.wind_cup_size, station.rain_bucket_size, station.rain_season_start, console_time,
-                 station.barometer_unit, station.temperature_unit, 
-                 station.rain_unit, station.wind_unit)
-        
-        # Add reception statistics if we can:
-        try:
-            _rx_list = station.getRX()
-            print """        RECEPTION STATS:
-          Total packets received:       %d
-          Total packets missed:         %d
-          Number of resynchronizations: %d
-          Longest good stretch:         %d
-          Number of CRC errors:         %d
-          """ % _rx_list
-        except:
-            pass
-
-        # Add barometer calibration data if we can.
-        try:
-            _bar_list = station.getBarData()
-            print """        BAROMETER CALIBRATION DATA:
-          Current barometer reading:    %.3f inHg
-          Altitude:                     %.0f feet
-          Dew point:                    %.0f F
-          Virtual temperature:          %.0f F
-          Humidity correction factor:   %.0f
-          Correction ratio:             %.3f
-          Correction constant:          %+.3f inHg
-          Gain:                         %.3f
-          Offset:                       %.3f
-          """   % tuple(_bar_list)
-        except:
-            pass
-    
-    finally:
-        try:
-            station.closePort()
-        except:
-            pass
-
-def configure(config_dict):
-    """Configure a VP using settings in a configuration dictionary"""
-    
-    print "Configuring weather station in the Davis Vantage family..."
-    
-    # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
-
-    try:
-        #=======================================================================
-        # Configure the archive interval        
-        #=======================================================================
-        new_interval = config_dict['VantagePro'].get('archive_interval')
-        if new_interval is None:
-            print "Archive interval not found in configuration file. Nothing done."
-        else:
-            new_interval_seconds = int(new_interval)
-            print "Old archive interval is %d seconds, new one is %d seconds." % (station.archive_interval, new_interval_seconds)
-            if station.archive_interval == new_interval_seconds:
-                print "Old and new archive intervals are the same. Nothing done."
-            else:
-                print "Proceeding will erase old archive records."
-                ans = raw_input("Are you sure you want to proceed? (Y/n) ")
-                if ans == 'Y' :
-                    station.setArchiveInterval(new_interval_seconds)
-                    print "Archive interval now set to %d seconds." % (station.archive_interval,)
-                    # The Davis documentation implies that the log is cleared after
-                    # changing the archive interval, but that doesn't seem to be the
-                    # case. Clear it explicitly:
-                    station.clearLog()
-                    print "Archive records cleared."
-                else:
-                    print "Nothing done."
-    
-        print "---"
-        #=======================================================================
-        # Configure the bucket type
-        #=======================================================================
-        new_bucket = config_dict['VantagePro'].get('rain_bucket_type')
-        if new_bucket is None:
-            print "No rain bucket type found in configuration file. Nothing done."
-        else:
-            new_bucket_type = int(new_bucket)
-            print "Old rain bucket type is %d (%s), new one is %d (%s)." % (station.rain_bucket_type, station.rain_bucket_size,
-                                                                                      new_bucket_type, VantagePro.rain_bucket_dict[new_bucket_type])
-            if station.rain_bucket_type == new_bucket_type:
-                print "Old and new bucket types are the same. Nothing done."
-            else:
-                print "Proceeding will change the rain bucket type."
-                ans = raw_input("Are you sure you want to proceed? (Y/n) ")
-                if ans == 'Y' :
-                    station.setBucketType(new_bucket_type)
-                    print "Bucket type now set to %d." % (station.rain_bucket_type,)
-                else:
-                    print "Nothing done."
-
-        print "---"
-        #=======================================================================
-        # Configure the rain season start
-        #=======================================================================
-        rain_year_start = config_dict['Station'].get('rain_year_start')
-        if rain_year_start is None:
-            print "No rain year start found in configuration file. Nothing done."
-        else:
-            rain_year_start = int(rain_year_start)
-            print "Old rain season start is %d, new one is %d." % (station.rain_season_start, rain_year_start)
-            if station.rain_season_start == rain_year_start:
-                print "Old and new rain season starts are the same. Nothing done."
-            else:
-                print "Proceeding will change the rain season start."
-                ans = raw_input("Are you sure you want to proceed? (Y/n) ")
-                if ans == 'Y' :
-                    station.setRainSeasonStart(rain_year_start)
-                    print "Rain season start now set to %d." % (station.rain_season_start,)
-                else:
-                    print "Nothing done."
-
-    
-        print "---"
-
-        #=======================================================================
-        # Configure the barometer calibrations
-        #=======================================================================
-        print "BAROMETER AND ALTITUDE CALIBRATION"
-        altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', None))
-        if altitude_t is None:
-            print "No altitude information found in configuration file. Nothing done."
-        else:
-            # This test is in here to catch any old-style altitudes:
-            if len(altitude_t) < 2:
-                altitude_t=(float(altitude_t[0]), 'foot')
-            
-            # Form a value-tuple:
-            altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-            # Convert to feet, if necessary:
-            new_altitude = int(weewx.units.convert(altitude_vt, 'foot')[0])
-
-            # Hit the console to get the current barometer calibration data:
-            _bardata = station.getBarData()
-            
-            old_altitude = _bardata[1]
-
-            current_barometer_inHg = _bardata[0]
-            current_barometer_mbar = weewx.units.convert((current_barometer_inHg, 'inHg', 'group_pressure'), 'mbar')[0]
-
-            print "For the following, you have three choices:\n"\
-            " 1. If you have a current barometer reading from a very reliable nearby\n"\
-            "    reference, you can use it to calibrate the barometer in your station.\n"\
-            "    In this case, give the value and the unit it is in.\n"\
-            "       Examples: \'30.15 inHg\'\n"\
-            "                 \'1024.5 mbar\'\n"\
-            "    (The console is currently reading %.3f inHg or %.1f mbar)\n"\
-            " 2. If you do not have such a reading, then you can use a value of zero,\n"\
-            "    which will result in a default, sensible calibration.\n"\
-            " 3. Finally, you can simply hit <enter>, which will leave the current calibration\n"\
-            "    value unchanged." % (current_barometer_inHg, current_barometer_mbar)
-            while True:
-                ans = raw_input("""Response: """)
-                if ans.strip()=='':
-                    new_barometer_inHg = current_barometer_inHg
-                    break
-                else:
-                    ans_t = ans.split()
-                    new_val = float(ans_t[0])
-                    if new_val == 0:
-                        new_barometer_inHg = 0
-                        break
-                    else:
-                        try:
-                            new_barometer_inHg = weewx.units.convert((new_val, ans_t[1], 'group_pressure'), 'inHg')[0]
-                            break
-                        except:
-                            print "Invalid or missing units. Try again."
-                    
-            if new_barometer_inHg == 0:
-                print "A sensible calibration will be picked."
-            else:
-                print "Calibrated pressure will be %.3f inHg" % (new_barometer_inHg,)
-
-            print "Altitude will be %d feet." % int(new_altitude)
-            if old_altitude == new_altitude and new_barometer_inHg == current_barometer_inHg:
-                print "Old and new altitudes and barometer settings are the same. Nothing done."
-            else:
-                print "Proceeding will change the altitude and/or barometer calibration."
-                ans = raw_input("Are you sure you want to proceed? (Y/n) ")
-                if ans == 'Y' :
-                    station.setBarData(new_barometer_inHg, new_altitude)
-                    # Hit the console again and print out the new results:
-                    _bardata = station.getBarData()
-                    print "New altitude is %.0f feet, new barometer reading is %.3f inHg" % (_bardata[1], _bardata[0])
-                else:
-                    print "Nothing done."
-    
-    finally:
-        try:
-            station.closePort()
-        except:
-            pass
-
-def clear(config_dict):
-    """Clear the archive memory of a VantagePro"""
-    
-    print "Clearing the archive memory ..."
-    # Open up the weather station:
-    station = weewx.VantagePro.VantagePro(**config_dict['VantagePro'])
-    try:
-        print "Proceeding will erase old archive records."
-        ans = raw_input("Are you sure you wish to proceed? (Y/n) ")
-        if ans == 'Y':
-            station.clearLog()
-            print "Archive records cleared."
-        else:
-            print "Nothing done."
-    finally:
-        try:
-            station.closePort()
-        except:
-            pass

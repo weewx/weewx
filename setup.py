@@ -2,7 +2,7 @@
 #
 #    weewx --- A simple, high-performance weather station server
 #
-#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -27,7 +27,8 @@
     following:
 
  1. When building a source distribution ('sdist') it checks for
-    password information in the configuration file weewx.conf
+    password information in the configuration file weewx.conf and
+    that US units are the standard units.
 
  2. It merges any existing weewx.conf configuration files into the new, thus
     preserving any user changes.
@@ -35,7 +36,7 @@
  3. It installs the skins subdirectory only if the user doesn't already 
     have one.
     
- 4. It sets the option ['Station']['WEEWX_ROOT'] in weewx.conf to reflect
+ 4. It sets the option ['WEEWX_ROOT'] in weewx.conf to reflect
     the actual installation directory (as set in setup.cfg or specified
     in the command line to setup.py install)
     
@@ -181,7 +182,7 @@ class My_install_data(install_data):
         """Merges any old config file into the new one, and sets WEEWX_ROOT
         
         If an old configuration file exists, it will merge the contents
-        into the new file. It also sets variable ['Station']['WEEWX_ROOT']
+        into the new file. It also sets variable ['WEEWX_ROOT']
         to reflect the installation directory"""
         
         # The path name of the weewx.conf configuration file:
@@ -197,10 +198,13 @@ class My_install_data(install_data):
         # Sometimes I forget to turn the debug flag off:
         new_config['debug'] = 0
         
-        # And forget that while mine starts in October, 
-        # most people's rain year starts in January!
+        # And forget that while my rain year starts in October, 
+        # for most people it starts in January!
         new_config['Station']['rain_year_start'] = 1
 
+        # The default target conversion units should be 'US':
+        new_config['StdConvert']['target_unit'] = 'US'
+        
         # Check to see if there is an existing config file.
         # If so, merge its contents with the new one
         if os.path.exists(config_path):
@@ -215,38 +219,30 @@ class My_install_data(install_data):
             if len(old_version_number[1]) < 2: 
                 old_version_number[1] = '0'+old_version_number[1]
 
-            # If the user has a version >= 1.7, then merge in the old
-            # config file.
-            if old_version_number[0:2] >= ['1','07']:
-                # Any user changes in old_config will overwrite values in new_config
-                # with this merge
+            # I don't know how to merge older, V1.X configuration files, only
+            # newer V2.X ones.
+            if old_version_number[0:2] >= ['2','00']:
+                # Merge the old configuration file into the new file, thus
+                # saving any user modifications.
+                # First, turn interpolation off:
+                old_config.interpolation = False
+                # Now do the merge:
                 new_config.merge(old_config)
                         
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
-        new_config['Station']['WEEWX_ROOT'] = self.install_dir
+        new_config['WEEWX_ROOT'] = self.install_dir
         # Add the version:
         new_config['version'] = VERSION
 
-        # Options heating_base and cooling_base have moved.
-        new_config['Station'].pop('heating_base', None)
-        new_config['Station'].pop('cooling_base', None)
-
-        # Wunderground has been put under section ['RESTful']:
-        new_config.pop('Wunderground', None)
-
-        # Option max_drift has been moved from section VantagePro
-        new_config['VantagePro'].pop('max_drift', None)
-
-        # Service StdCatchUp is no longer used. Filter it from the list:
-        new_config['Engines']['WxEngine']['service_list'] =\
-            filter(lambda svc_name : svc_name != 'weewx.wxengine.StdCatchUp', 
-                new_config['Engines']['WxEngine']['service_list'])
-
-        # Service StdWunderground has changed its name to StdRESTful:
-        new_config['Engines']['WxEngine']['service_list'] =\
-            [svc.replace('StdWunderground', 'StdRESTful') for svc in\
-             new_config['Engines']['WxEngine']['service_list']]
-
+        # The following section is to fix changes from the alpha and beta
+        # versions of V2.0:
+        new_config['Databases']['archive_sqlite']['driver'] = 'weedb.sqlite'
+        new_config['Databases']['stats_sqlite']['driver']   = 'weedb.sqlite'
+        new_config['Databases']['archive_mysql']['driver']  = 'weedb.mysql'
+        new_config['Databases']['stats_mysql']['driver']    = 'weedb.mysql'
+        new_config['Vantage'].pop('record_generation', None)
+        new_config['WMR-USB'].pop('record_generation', None)
+                
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         
@@ -309,15 +305,16 @@ class My_sdist(sdist):
         # If this is the configuration file, then massage it to eliminate
         # the password info
         if f == 'weewx.conf':
-            # If we're working with the configuration file, make sure it doesn't
-            # have any private data in it.
             config = configobj.ConfigObj(f)
 
-            if config.has_key('Reports') and config['Reports'].has_key('FTP') and config['Reports']['FTP'].has_key('password'):
+            # If we're working with the configuration file, make sure it doesn't
+            # have any private data in it.
+
+            if config.has_key('StdReport') and config['StdReport'].has_key('FTP') and config['StdReport']['FTP'].has_key('password'):
                 sys.stderr.write("\n*** FTP password found in configuration file. Aborting ***\n\n")
                 exit()
 
-            rest_dict = config['RESTful']
+            rest_dict = config['StdRESTful']
             if rest_dict.has_key('Wunderground') and rest_dict['Wunderground'].has_key('password'):
                 sys.stderr.write("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
                 exit()
@@ -344,16 +341,15 @@ def backup(filepath):
 setup(name='weewx',
       version=VERSION,
       description='The weewx weather system',
-      long_description="""The weewx weather system manages a Davis VantagePro
-      weather station. It generates plots, statistics, and HTML pages of the
-      current and historical weather""",
+      long_description="""The weewx weather system manages a weather station. """\
+        """It generates plots, statistics, and HTML pages of the current and historical weather""",
       author='Tom Keffer',
       author_email='tkeffer@gmail.com',
       url='http://www.weewx.com',
       package_dir = {'' : 'bin'},
-      packages    = ['weewx', 'weeplot', 'weeutil', 'examples', 'user'],
+      packages    = ['weedb', 'examples', 'user', 'weeplot', 'weeutil', 'weewx'],
       py_modules  = ['daemon'],
-      scripts     = ['bin/configure.py', 'bin/weewxd.py', 'bin/runreports.py'],
+      scripts     = ['bin/config_database.py', 'bin/config_vp.py', 'bin/weewxd.py', 'bin/runreports.py'],
       data_files  = [('',                           ['LICENSE.txt', 'README', 'weewx.conf']),
                      ('docs',                       ['docs/CHANGES.txt', 'docs/customizing.htm', 
                                                      'docs/daytemp_with_avg.png', 'docs/debian.htm', 
@@ -377,7 +373,7 @@ setup(name='weewx',
                                                      'skins/Standard/skin.conf', 'skins/Standard/week.html.tmpl',
                                                      'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 
                      ('start_scripts/Debian',       ['start_scripts/Debian/weewx']),
-                     ('start_scripts/SuSE',          ['start_scripts/SuSE/weewx'])],
+                     ('start_scripts/SuSE',         ['start_scripts/SuSE/weewx'])],
       requires    = ['configobj(>=4.5)', 'serial(>=2.3)', 'Cheetah(>=2.0)', 'sqlite3(>=2.5)', 'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : My_install_data,
                      "install_lib"  : My_install_lib,

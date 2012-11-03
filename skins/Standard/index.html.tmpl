@@ -2,6 +2,7 @@
 ##    $Revision$
 ##    $Author$
 ##    $Date$
+#encoding UTF-8
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head profile="http://www.w3.org/2005/10/profile">
@@ -273,10 +274,10 @@
 
         <p>&nbsp;</p>
 
-        #if $Extras.has_key('radar_url')
+        #if $Extras.has_key('radar_img')
         <div id="radar_img">
-          <a  href="$Extras.radar_url">
-          <img src="$Extras.radar_url" alt="Radar" /></a>
+              <a  href="$Extras.radar_url"><img src="$Extras.radar_img" alt="Radar" /></a>
+          <div align="bottom">Click image for expanded radar loop</div>
         </div>
         #end if
 
@@ -303,8 +304,19 @@
             </tr>
           </table>
           <p>
-            This station uses a <a href="http://www.davisnet.com/weather/products/vantagepro.asp">
-            Davis Vantage Pro2</a>, controlled by <a href="http://www.weewx.com">'weewx'</a>, an
+            #if $station.hardware[0:7] == 'Vantage'
+            	This station uses a <a href="http://davisnet.com/weather/products/professional-home-weather-stations.asp">
+                Davis $station.hardware</a> weather station,
+            #elif $station.hardware == 'VantageIP'
+            	with a <a href="http://davisnet.com/weather/products/weather_product.asp?pnum=06555">
+            	WeatherLinkIP connection</a>, 
+            #elif $station.hardware == 'WMR-USB'
+            	This station uses an <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">
+            	Oregon Scientific WMR100N</a> weather station,
+            #else
+                This station uses a $station.hardware weather station,
+            #end if
+            controlled by <a href="http://www.weewx.com">'weewx'</a>, an
             experimental weather software system written in Python. Weewx was designed to be simple,
             fast, and easy to understand by leveraging modern software concepts.
           </p>
@@ -327,6 +339,10 @@
               <table>
                 <caption class="caption">Sun</caption>
                 <tr>
+                  <td class="label">Start civil twilight:</td>
+                  <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
+                </tr>
+                <tr>
                   <td class="label">Sunrise:</td>
                   <td class="data">$almanac.sun.rise</td>
                 </tr>
@@ -337,6 +353,10 @@
                 <tr>
                   <td class="label">Sunset:</td>
                   <td class="data">$almanac.sun.set</td>
+                </tr>
+                <tr>
+                  <td class="label">End civil twilight:</td>
+                  <td class="data">$almanac(horizon=-6).sun(use_center=1).set</td>
                 </tr>
                 <tr>
                   <td class="label">Azimuth:</td>
@@ -465,7 +485,9 @@
           #if $day.radiation.has_data
           <img src="dayradiation.png" alt="Radiation" />
           #end if
+          #if $day.rxCheckPercent.has_data
           <img src="dayrx.png"        alt="day rx percent"/>
+          #end if
           #if $day.extraTemp1.has_data
           <img src="daypond.png"      alt="Pond Temperatures" />
           #end if

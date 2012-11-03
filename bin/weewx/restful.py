@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,6 +8,7 @@
 #    $Date$
 #
 """Publish weather data to RESTful sites such as the Weather Underground or PWSWeather."""
+from __future__ import with_statement
 import syslog
 import datetime
 import threading
@@ -17,6 +18,7 @@ import urllib2
 import socket
 import time
 
+import weewx.archive
 import weewx.units
 import weeutil.weeutil
 
@@ -37,11 +39,11 @@ class REST(object):
     """Abstract base class for RESTful protocols."""
     
     # The types to be retrieved from the arhive database:
-    archive_types = ('dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                    'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation', 'UV')
+    archive_types = ['dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
+                     'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation', 'UV']
     # A SQL statement to do the retrieval:
     sql_select = "SELECT " + ", ".join(archive_types) + " FROM archive WHERE dateTime=?"  
-    
+
     def extractRecordFrom(self, archive, time_ts):
         """Get a record from the archive database. 
         
@@ -59,34 +61,45 @@ class REST(object):
         
         sod_ts = weeutil.weeutil.startOfDay(time_ts)
         
-        # Get the values off the archive database:
-        sqlrec = archive.getSql(REST.sql_select, time_ts)
-        # Make a dictionary out of them:
+        # Get the data record off the archive database:
+        sqlrec = archive.getSql(REST.sql_select, (time_ts,))
+        # There is no reason why the record would not be in the database,
+        # but check just in case:
+        if sqlrec is None:
+            raise SkippedPost("Non existent record %s" % (weeutil.weeutil.timestamp_to_string(time_ts),))
+
+        # Make a dictionary out of the types:
         datadict = dict(zip(REST.archive_types, sqlrec))
-    
-        if datadict['usUnits'] != weewx.US:
-            raise weewx.UnsupportedFeature, "Only U.S. Units are supported for the Ambient protocol."
         
         # CWOP says rain should be "rain that fell in the past hour".  WU says
         # it should be "the accumulated rainfall in the past 60 min".
         # Presumably, this is exclusive of the archive record 60 minutes before,
         # so the SQL statement is exclusive on the left, inclusive on the right.
         datadict['rain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
-                                         time_ts - 3600.0, time_ts)[0]
+                                         (time_ts - 3600.0, time_ts))[0]
 
         # Similar issue, except for last 24 hours:
         datadict['rain24'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
-                                            time_ts - 24*3600.0, time_ts)[0]
+                                            (time_ts - 24*3600.0, time_ts))[0]
 
         # NB: The WU considers the archive with time stamp 00:00 (midnight) as
         # (wrongly) belonging to the current day (instead of the previous
         # day). But, it's their site, so we'll do it their way.  That means the
         # SELECT statement is inclusive on both time ends:
         datadict['dailyrain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>=? AND dateTime<=?", 
-                                              sod_ts, time_ts)[0]
-                                              
-        return datadict
-    
+                                              (sod_ts, time_ts))[0]
+
+        # All these online weather sites require US units. 
+        if datadict['usUnits'] == weewx.US:
+            # It's already in US units.
+            return datadict
+        else:
+            # It's in something else. Perform the conversion
+            datadict_us = weewx.units.StdUnitConverters[weewx.US].convertDict(datadict)
+            # Add the new unit system
+            datadict_us['usUnits'] = weewx.US
+            return datadict_us
+        
 #===============================================================================
 #                             class Ambient
 #===============================================================================
@@ -146,7 +159,7 @@ class Ambient(REST):
         time_ts: The record desired as a unix epoch time."""
         
         _url = self.getURL(archive, time_ts)
-        
+
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
             # Now use an HTTP GET to post the data. Wrap in a try block
@@ -216,6 +229,9 @@ class Ambient(REST):
 
 class CWOP(REST):
     """Upload using the CWOP protocol. """
+    
+    # Station IDs must start with one of these:
+    valid_prefixes = ['CW', 'DW', 'EW']
 
     def __init__(self, site, **kwargs):
         """Initialize for a post to CWOP.
@@ -250,7 +266,7 @@ class CWOP(REST):
         """
         self.site      = site
         self.station   = kwargs['station'].upper()
-        if self.station[0:2] in ('CW', 'DW', 'EW'):
+        if self.station[0:2] in CWOP.valid_prefixes:
             self.passcode = "-1"
         else:
             self.passcode = kwargs['passcode']
@@ -291,14 +307,22 @@ class CWOP(REST):
         # Get the data record for this time:
         _record = self.extractRecordFrom(archive, time_ts)
 
-        # 4. Units must be US Customary. We could add code to convert, but for
-        # now this will do:
-        if _record['usUnits'] != weewx.US:
-            raise SkippedPost, "CWOP: Units must be US Customary."
+        # Send it to its destination:
+        self.sendRecord(_record)
+
+        self._lastpost = time_ts
+
+    def sendRecord(self, record):
+        """This method sends the record to its destination.
+        If you have some exotic setup, such as a ham radio TNC, it
+        can be overridden and customized to send the record out whatever
+        port it needs to go.
+        
+        This version sends it out a socket."""
         
         # Get the login and packet strings:
         _login = self.getLoginString()
-        _tnc_packet = self.getTNCPacket(_record)
+        _tnc_packet = self.getTNCPacket(record)
 
         # Get a socket connection:
         _sock = self._get_connect()
@@ -313,18 +337,13 @@ class CWOP(REST):
             _sock.close()
         except:
             pass
-
-        self._lastpost = time_ts
-        
-
+    
     def getLoginString(self):
         login = "user %s pass %s vers weewx %s\r\n" % (self.station, self.passcode, weewx.__version__ )
         return login
     
     def getTNCPacket(self, record):
         """Form the TNC2 packet used by CWOP."""
-        
-        # TODO: Allow native metric units. Convert as necessary for CWOP.
         
         # Preamble to the TNC packet:
         prefix = "%s>APRS,TCPIP*:" % (self.station, )
@@ -385,7 +404,6 @@ class CWOP(REST):
                      baro_str + humid_str + radiation_str + equipment_str + "\r\n"
 
         return tnc_packet
-    
 
     def _get_connect(self):
         
@@ -448,66 +466,75 @@ class RESTThread(threading.Thread):
     Basically, it watches a queue, and if anything appears in it, it publishes it.
     The queue should be populated with the timestamps of the data records to be published.
     """
-    def __init__(self, archive, queue, station_list):
+    def __init__(self, archive_db_dict, queue, protocol_list):
         """Initialize an instance of RESTThread.
         
-        archive: The archive database. Usually an instance of weewx.archive.Archive 
+        archive_db_dict: The database dictionary for the archive database  
         
         queue: An instance of Queue.Queue where the timestamps will appear
 
-        station_list: An iterable list of RESTStations.
+        protocol_list: An iterable list of RESTful upload sites.
         """
         threading.Thread.__init__(self, name="RESTThread")
+
+        self.archive_db_dict = archive_db_dict
+        self.queue           = queue 
+        self.protocol_list   = protocol_list
         # In the strange vocabulary of Python, declaring yourself a "daemon thread"
         # allows the program to exit even if this thread is running:
         self.setDaemon(True)
-        self.archive = archive
-        self.queue   = queue # Fifo queue where new records will appear
-        self.station_list = station_list
 
     def run(self):
-        while True :
-            # This will block until something appears in the queue:
-            time_ts = self.queue.get()
-            
-            # A 'None' value appearing in the queue is our signal to exit
-            if time_ts is None:
-                return
-            
-            # This string is just used for logging:
-            time_str = weeutil.weeutil.timestamp_to_string(time_ts)
-            
-            # Cycle through all the RESTful stations in the list:
-            for station in self.station_list:
+
+        # Open up the archive. This cannot be done in the initializer because
+        # then the connection would have been created in a different thread.
+        # Also, use a 'with' statement. This will automatically close the
+        # archive in the case of an exception:
+        with weewx.archive.Archive.open(self.archive_db_dict) as self.archive:
+
+            while True :
+                # This will block until something appears in the queue:
+                time_ts = self.queue.get()
     
-                # Post the data to the upload site. Be prepared to catch any exceptions:
-                try :
-                    station.postData(self.archive, time_ts)
-                # The urllib2 library throws exceptions of type urllib2.URLError, a subclass
-                # of IOError. Hence all relevant exceptions are caught by catching IOError.
-                # Starting with Python v2.6, socket.error is a subclass of IOError as well,
-                # but we keep them separate to support V2.5:
-                except (IOError, socket.error), e:
-                    syslog.syslog(syslog.LOG_ERR, "restful: Unable to publish record %s to %s station %s" % (time_str, station.site, station.station))
-                    syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
-                    if hasattr(e, 'reason'):
-                        syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Reason: %s" % e.reason)
-                    if hasattr(e, 'code'):
-                        syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Error code: %s" % e.code)
-                except SkippedPost, e:
-                    syslog.syslog(syslog.LOG_DEBUG, "restful: Skipped record %s to %s station %s" % (time_str, station.site, station.station))
-                    syslog.syslog(syslog.LOG_DEBUG, "   ****  %s" % (e,))
-                except httplib.HTTPException, e:
-                    syslog.syslog(syslog.LOG_ERR, "restful: HTTP error from server. Skipped record %s to %s station %s" % (time_str, station.site, station.station))
-                    syslog.syslog(syslog.LOG_ERR, "   ****  %s" % (e,))
-                except Exception, e:
-                    syslog.syslog(syslog.LOG_CRIT, "restful: Unrecoverable error when posting record %s to %s station %s" % (time_str, station.site, station.station))
-                    syslog.syslog(syslog.LOG_CRIT, "   ****  %s" % (e,))
-                    weeutil.weeutil.log_traceback("   ****  ")
-                    syslog.syslog(syslog.LOG_CRIT, "   ****  Thread terminating.")
-                    raise
-                else:
-                    syslog.syslog(syslog.LOG_INFO, "restful: Published record %s to %s station %s" % (time_str, station.site, station.station))
+                # A 'None' value appearing in the queue is our signal to exit
+                if time_ts is None:
+                    break
+                
+                # This string is just used for logging:
+                time_str = weeutil.weeutil.timestamp_to_string(time_ts)
+                
+                # Cycle through all the RESTful stations in the list:
+                for protocol in self.protocol_list:
+        
+                    # Post the data to the upload site. Be prepared to catch any exceptions:
+                    try :
+                        protocol.postData(self.archive, time_ts)
+                    # The urllib2 library throws exceptions of type urllib2.URLError, a subclass
+                    # of IOError. Hence all relevant exceptions are caught by catching IOError.
+                    # Starting with Python v2.6, socket.error is a subclass of IOError as well,
+                    # but we keep them separate to support V2.5:
+                    except (IOError, socket.error), e:
+                        syslog.syslog(syslog.LOG_ERR, "restful: Unable to publish record %s to %s station %s" % (time_str, protocol.site, protocol.station))
+                        syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
+                        if hasattr(e, 'reason'):
+                            syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Reason: %s" % e.reason)
+                        if hasattr(e, 'code'):
+                            syslog.syslog(syslog.LOG_ERR, "   ****  Failed to reach server. Error code: %s" % e.code)
+                    except SkippedPost, e:
+                        syslog.syslog(syslog.LOG_DEBUG, "restful: Skipped record %s to %s station %s" % (time_str, protocol.site, protocol.station))
+                        syslog.syslog(syslog.LOG_DEBUG, "   ****  %s" % (e,))
+                    except httplib.HTTPException, e:
+                        syslog.syslog(syslog.LOG_ERR, "restful: HTTP error from server. Skipped record %s to %s station %s" % (time_str, protocol.site, protocol.station))
+                        syslog.syslog(syslog.LOG_ERR, "   ****  %s" % (e,))
+                    except Exception, e:
+                        syslog.syslog(syslog.LOG_CRIT, "restful: Unrecoverable error when posting record %s to %s station %s" % (time_str, protocol.site, protocol.station))
+                        syslog.syslog(syslog.LOG_CRIT, "   ****  %s" % (e,))
+                        weeutil.weeutil.log_traceback("   ****  ")
+                        syslog.syslog(syslog.LOG_CRIT, "   ****  Thread terminating.")
+                        self.archive.close()
+                        raise
+                    else:
+                        syslog.syslog(syslog.LOG_INFO, "restful: Published record %s to %s station %s" % (time_str, protocol.site, protocol.station))
 
 
 #===============================================================================
@@ -518,11 +545,8 @@ if __name__ == '__main__':
            
     import sys
     import configobj
-    import os.path
     from optparse import OptionParser
     import Queue
-    
-    import weewx.archive
     
     def main():
         usage_string ="""Usage: 
@@ -537,7 +561,7 @@ if __name__ == '__main__':
           
         Options:
         
-            --today: Publish all of today's day
+            --today: Publish all of today's data
             
             --last: Just do the last archive record. [default]
           """
@@ -570,21 +594,19 @@ if __name__ == '__main__':
             print "Unable to open configuration file ", config_path
             exit()
             
-        # Open up the main database archive
-        archiveFilename = os.path.join(config_dict['Station']['WEEWX_ROOT'], 
-                                       config_dict['Archive']['archive_file'])
-        archive = weewx.archive.Archive(archiveFilename)
-        
-        stop_ts  = archive.lastGoodStamp()
-        start_ts = weeutil.weeutil.startOfDay(stop_ts) if options.do_today else stop_ts
-        
-        publish(config_dict, site, archive, start_ts, stop_ts )
+        archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+        with weewx.archive.Archive.open(archive_db_dict) as archive:
+            stop_ts  = archive.lastGoodStamp()
+            start_ts = weeutil.weeutil.startOfDay(stop_ts) if options.do_today else stop_ts
+            publish(config_dict, site, archive, start_ts, stop_ts )
 
     def publish(config_dict, site, archive, start_ts, stop_ts):
         """Publishes records to site 'site' from start_ts to stop_ts. 
         Makes a useful test."""
         
-        site_dict = config_dict['RESTful'][site]
+        archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+
+        site_dict = config_dict['StdRESTful'][site]
         site_dict['latitude']  = config_dict['Station']['latitude']
         site_dict['longitude'] = config_dict['Station']['longitude']
         site_dict['hardware']  = config_dict['Station']['station_type']
@@ -593,17 +615,20 @@ if __name__ == '__main__':
         
         # Instantiate an instance of the class that implements the
         # protocol used by this site:
-        obj_class = 'weewx.restful.' + site_dict['protocol']
-        station = weeutil.weeutil._get_object(obj_class, site, **site_dict) 
+        try:
+            station = weeutil.weeutil._get_object(site_dict['driver'], site, **site_dict)
+        except Exception:
+            print "Unable to instantiate %s" % (site_dict['driver'],)
+            raise 
 
         # Create the queue into which we'll put the timestamps of new data
         queue = Queue.Queue()
         # Start up the thread:
-        thread = RESTThread(archive, queue, [station])
+        thread = RESTThread(archive_db_dict, queue, [station])
         thread.start()
 
-        for row in archive.genSql("SELECT dateTime FROM archive WHERE dateTime >=? and dateTime <= ?", start_ts, stop_ts):
-            ts = row['dateTime']
+        for row in archive.genSql("SELECT dateTime FROM archive WHERE dateTime >=? and dateTime <= ?", (start_ts, stop_ts)):
+            ts = row[0]
             print "Posting station %s for time %s" % (stationName, weeutil.weeutil.timestamp_to_string(ts))
             queue.put(ts)
             

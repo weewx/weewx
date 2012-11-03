@@ -49,7 +49,7 @@ configuration option service_list, located in sub-section [Engines][[WxEngine]]:
 
 [Engines]
   [[WxEngine]]
-    service_list = weewx.wxengine.StdWunderground, weewx.wxengine.StdCatchUp, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdReportService, examples.lowBattery.BatteryAlarm
+    service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.lowBattery.BatteryAlarm
 
 ********************************************************************************
 
@@ -66,6 +66,7 @@ from email.mime.text import MIMEText
 import threading
 import syslog
 
+import weewx
 from weewx.wxengine import StdService
 from weeutil.weeutil import timestamp_to_string, option_as_list
 
@@ -96,18 +97,19 @@ class BatteryAlarm(StdService):
             self.FROM            = config_dict['Alarm'].get('from', 'alarm@weewx.com')
             self.TO              = option_as_list(config_dict['Alarm']['mailto'])
             syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm turned on. Count threshold is %d" % self.count_threshold)
+
+            # If we got this far, it's ok to start intercepting events:
+            self.bind(weewx.NEW_LOOP_PACKET,    self.newLoopPacket)
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
+
         except Exception, e:
-            self.time_wait  = None
             syslog.syslog(syslog.LOG_INFO, "lowBattery: No alarm set. %s" % e)
 
-    def newLoopPacket(self, loopPacket):
+    def newLoopPacket(self, event):
         """This function is called with the arrival of every new LOOP packet."""
-        
-        # Let the superclass have a peek first:
-        StdService.newLoopPacket(self, loopPacket)
-                
+
         # If the Transmit Battery Status byte is non-zero, an alarm is on
-        if self.time_wait is not None and loopPacket['txBatteryStatus']:
+        if event.packet['txBatteryStatus']:
 
             self.alarm_count += 1
 
@@ -119,35 +121,33 @@ class BatteryAlarm(StdService):
                 # since we sent the last one:
                 if abs(time.time() - self.last_msg_ts) >= self.time_wait :
                     # Sound the alarm!
+                    timestamp = event.packet['dateTime']
+                    battery_status = event.packet['txBatteryStatus']
                     # Launch in a separate thread so it doesn't block the main LOOP thread:
                     t  = threading.Thread(target = BatteryAlarm.soundTheAlarm,
-                                          args=(self, loopPacket, self.alarm_count))
+                                          args=(self, timestamp, battery_status, self.alarm_count))
                     t.start()
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
         
-    def newArchivePacket(self, rec):
-        """This function is called with the arrival of every new archive packet."""
+    def newArchiveRecord(self, event):
+        """This function is called with the arrival of every new archive record."""
         
-        # Let the superclass do its thing first:
-        StdService.newArchivePacket(self, rec)
-
         # Reset the alarm counter
         self.alarm_count = 0
 
-    def soundTheAlarm(self, rec, alarm_count):
+    def soundTheAlarm(self, timestamp, battery_status, alarm_count):
         """This function is called when the low battery alarm has been sounded."""
         
         # Get the time and convert to a string:
-        t_str = timestamp_to_string(rec['dateTime'])
+        t_str = timestamp_to_string(timestamp)
 
         # Log it in the system log:
-        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery alarm (0x%04x) sounded at %s." % (rec['txBatteryStatus'], t_str))
+        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery alarm (0x%04x) sounded at %s." % (battery_status, t_str))
 
         # Form the message text:
         msg_text = """The low battery alarm (0x%04x) has been seen %d times since the last archive period.\n\n"""\
-                   """Alarm sounded at %s\n\n"""\
-                   """LOOP record:\n%s""" % (rec['txBatteryStatus'], alarm_count, t_str, str(rec))
+                   """Alarm sounded at %s\n\n""" % (battery_status, alarm_count, t_str)
         # Convert to MIME:
         msg = MIMEText(msg_text)
         

@@ -9,7 +9,6 @@
 #
 """Various handy utilities that don't belong anywhere else."""
 
-import ImageFont
 import StringIO
 import datetime
 import math
@@ -18,23 +17,6 @@ import time
 import traceback
 
 import configobj
-
-def get_font_handle(fontpath, *args):
-    
-    font = None
-    if fontpath is not None :
-        try :
-            if fontpath.endswith('.ttf'):
-                font = ImageFont.truetype(fontpath, *args)
-            else :
-                font = ImageFont.load_path(fontpath)
-        except IOError :
-            pass
-    
-    if font is None :
-        font = ImageFont.load_default()
-        
-    return font 
 
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""
@@ -240,7 +222,7 @@ def startOfInterval(time_ts, interval, grace=1):
                                      time_tt.tm_mday,
                                      h, m, 0,
                                      0, 0, time_tt.tm_isdst))
-    return start_interval_ts
+    return int(start_interval_ts)
 
 def _ord_to_ts(_ord):
     d = datetime.date.fromordinal(_ord)
@@ -268,10 +250,10 @@ class TimeSpan(object):
         stop_ts: The stopping time stamp of the interval
         '''
         
-        if start_ts >= stop_ts :
-            raise ValueError, "start time must be less than stop time"
         self.start = int(start_ts)
         self.stop = int(stop_ts)
+        if self.start > self.stop:
+            raise ValueError, "start time (%d) is greater than stop time (%d)" % (self.start, self.stop)
         
     def includesArchiveTime(self, timestamp):
         """
@@ -596,12 +578,28 @@ def timestamp_to_string(ts):
 
     >>> print timestamp_to_string(1196705700)
     2007-12-03 10:15:00 PST (1196705700)
+    >>> print timestamp_to_string(None)
+    ******* N/A *******     (    N/A   )
     """
     if ts:
         return "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime(ts)), ts)
     else:
-        return "****** N/A ******** (    N/A   )"
+        return "******* N/A *******     (    N/A   )"
 
+def timestamp_to_gmtime(ts):
+    """Return a string formatted for GMT
+    
+    >>> print timestamp_to_gmtime(1196705700)
+    2007-12-03 18:15:00 UTC (1196705700)
+    >>> print timestamp_to_gmtime(None)
+    ******* N/A *******     (    N/A   )
+    """
+    if ts:
+        return "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(ts)), ts)
+    else:
+        return "******* N/A *******     (    N/A   )"
+        
+    
 def utcdatetime_to_timestamp(dt):
     """Convert from a datetime object holding a UTC time, to a unix timestamp.
     
@@ -642,22 +640,74 @@ def log_traceback(prefix=''):
     
 def _get_object(module_class, *args, **kwargs):
     """Given a path to a class, instantiates an instance of the class with the given args and returns it."""
-    try:
-        # Split the path into its parts
-        parts = module_class.split('.')
-        # Strip off the classname:
-        module = '.'.join(parts[:-1])
-        # Import the top level module
-        mod = __import__(module)
-        # Then recursively work down from the top level module to the class name:
-        for part in parts[1:]:
-            mod = getattr(mod, part)
-        # Instance 'mod' will now be a class. Instantiate an instance and return it:
-        obj = mod(*args, **kwargs)
-        return obj
-    except Exception:
-        syslog.syslog(syslog.LOG_ERR, "weeutil: Not able to instantiate module \'%s\'" % (module_class,))
-        raise
+    # Split the path into its parts
+    parts = module_class.split('.')
+    # Strip off the classname:
+    module = '.'.join(parts[:-1])
+    # Import the top level module
+    mod = __import__(module)
+    # Then recursively work down from the top level module to the class name:
+    for part in parts[1:]:
+        mod = getattr(mod, part)
+    # Instance 'mod' will now be a class. Instantiate an instance and return it:
+    obj = mod(*args, **kwargs)
+    return obj
+
+class GenWithPeek(object):
+    """Generator object which allows a peek at the next object to be returned.
+    
+    Sometimes Python solves a complicated problem with such elegance! This is
+    one of them.
+    
+    Example of usage:
+    >>> # Define a generator function:
+    >>> def genfunc(N):
+    ...     for i in range(N):
+    ...        yield i
+    >>>
+    >>> # Now wrap it with the GenWithPeek object:
+    >>> g_with_peek = GenWithPeek(genfunc(5))
+    >>> # We can iterate through the object as normal:
+    >>> for i in g_with_peek:
+    ...    print i
+    ...    # Every second object, let's take a peek ahead
+    ...    if i%2:
+    ...        # We can get a peek at the next object without disturbing the wrapped generator:
+    ...        print "peeking ahead, the next object will be: ", g_with_peek.peek()
+    0
+    1
+    peeking ahead, the next object will be:  2
+    2
+    3
+    peeking ahead, the next object will be:  4
+    4
+    """
+    
+    def __init__(self, generator):
+        """Initialize the generator object.
+        
+        generator: A generator object to be wrapped
+        """
+        self.generator = generator
+        self.have_peek = False
+        
+    def __iter__(self):
+        return self
+    
+    def next(self):  #@ReservedAssignment
+        """Advance to the next object"""
+        if self.have_peek:
+            self.have_peek = False
+            return self.peek_obj
+        else:
+            return self.generator.next()
+        
+    def peek(self):
+        """Take a peek at the next object"""
+        if not self.have_peek:
+            self.peek_obj = self.generator.next()
+            self.have_peek = True
+        return self.peek_obj
 
 if __name__ == '__main__':
     import doctest

@@ -223,8 +223,8 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 2:
         try:
-            ftp_dir = os.path.join(config_dict['Station']['WEEWX_ROOT'],
-                                   config_dict['Reports']['HTML_ROOT'])
+            ftp_dir = os.path.join(config_dict['WEEWX_ROOT'],
+                                   config_dict['StdReport']['HTML_ROOT'])
         except KeyError:
             print "No HTML_ROOT in configuration dictionary."
             exit()
@@ -235,13 +235,13 @@ if __name__ == '__main__':
     socket.setdefaulttimeout(10)
 
 
-    ftp_upload = FtpUpload(config_dict['Reports']['FTP']['server'],
-                           config_dict['Reports']['FTP']['user'],
-                           config_dict['Reports']['FTP']['password'],
+    ftp_upload = FtpUpload(config_dict['StdReport']['FTP']['server'],
+                           config_dict['StdReport']['FTP']['user'],
+                           config_dict['StdReport']['FTP']['password'],
                            ftp_dir,
-                           config_dict['Reports']['FTP']['path'],
+                           config_dict['StdReport']['FTP']['path'],
                            'FTP',
-                           config_dict['Reports']['FTP'].as_bool('passive'),
-                           config_dict['Reports']['FTP'].as_int('max_tries'))
+                           config_dict['StdReport']['FTP'].as_bool('passive'),
+                           config_dict['StdReport']['FTP'].as_int('max_tries'))
     ftp_upload.run()
     

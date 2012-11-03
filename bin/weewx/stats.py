@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -12,16 +12,8 @@
     Keeps a running tally in a database of the min, max, avg of weather data
     for each day. Also, keeps some specialized data for wind.
 
-    General strategy is that archive data is used for min, max data and
-    for averages (including wind vector averages). Fast changing LOOP
-    data is also used for min, max data (where it can give higher resolution)
-    and for specialized, wind rms data. It is not used for averages. 
-    
-    The advantage of this approach is that LOOP data is easy to miss --- neither
-    the weather station nor weewx stores it. By contrast, archived data is stored, so
-    it's easy to perform catchups. It's generally preferred to use it, and
-    for many types it's good enough. On the other hand, LOOP has much better
-    resolution, and is essential for RMS calculations.
+    As new archive data becomes available, it can be added to the
+    database with method addRecord().
     
     Note that a date does not include midnight --- that belongs
     to the previous day. That is because a data record archives
@@ -40,19 +32,15 @@
 
 from __future__ import with_statement
 import math
-import os.path
-import sqlite3
-if not hasattr(sqlite3.Connection, "__exit__"):
-    del sqlite3
-    from pysqlite2 import dbapi2 as sqlite3 #@Reimport
+import sys
 import syslog
 import time
 
+import weedb
+import weeutil.weeutil
 import weewx.accum
 import weewx.units
 import weewx.wxformulas
-import weeutil.weeutil
-import weeutil.dbutil
 
 #===============================================================================
 # The SQL statements used in the stats database
@@ -65,7 +53,7 @@ wind_create_str = """CREATE TABLE wind ( dateTime INTEGER NOT NULL UNIQUE PRIMAR
                   """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, """\
                   """gustdir REAL, xsum REAL, ysum REAL, squaresum REAL, squarecount INTEGER);"""
 
-meta_create_str = """CREATE TABLE metadata (name TEXT NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
+meta_create_str = """CREATE TABLE metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
                  
 std_replace_str  = """REPLACE INTO %s   VALUES(?, ?, ?, ?, ?, ?, ?)"""
 wind_replace_str = """REPLACE INTO wind VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
@@ -88,8 +76,8 @@ sqlDict = {'min'        : "SELECT MIN(min) FROM %(stats_type)s WHERE dateTime >=
            'sum'        : "SELECT SUM(sum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'count'      : "SELECT SUM(count) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'avg'        : "SELECT SUM(sum),SUM(count) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'rms'        : "SELECT SUM(squaresum),SUM(squarecount) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(count)  FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'rms'        : "SELECT SUM(squaresum),SUM(count) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(squarecount)  FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'max_ge'     : "SELECT SUM(max >= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'max_le'     : "SELECT SUM(max <= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
@@ -97,59 +85,24 @@ sqlDict = {'min'        : "SELECT MIN(min) FROM %(stats_type)s WHERE dateTime >=
            'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
 
 #===============================================================================
-#                    Class DayStatsDict
+#                    Class StatsDb
 #===============================================================================
 
-class DayStatsDict(dict):
-    """Statistics for a day, keyed by type.
-    
-    This is like any other dictionary except that it has an attribute startOfDay_ts,
-    with the timestamp of the start of the day the dictionary represents.
-
-    The key of the dictionary is a type ('outTemp', 'barometer',
-    etc.), the value an instance of WindAccum for type 'wind',
-    otherwise an instance of StdAccum
-
-    ATTRIBUTES: 
-    self.startOfDay_ts: The start of the day this instance covers."""
-    
-    def __init__(self, stats_type_seq, startOfDay_ts):
-        """Create from a sequence of types, and from a time span.
-
-        stats_type_seq: An iterable sequence of types ('outTemp',
-        'barometer', etc.). These will be the keys of the dictionary
-
-        startOfDay_ts: The timestamp of the beginning of the day.
-
-        returns: An instance of DayStatsDict where the value for each
-        type has been initialized to 'default' values."""
-
-        self.startOfDay_ts = startOfDay_ts
-        
-        for _stats_type in stats_type_seq:
-            if _stats_type == 'wind':
-                self[_stats_type] = weewx.accum.WindAccum(_stats_type, startOfDay_ts)
-            else:
-                self[_stats_type] = weewx.accum.StdAccum(_stats_type, startOfDay_ts)
-
-#===============================================================================
-#                    Class StatsReadonlyDb
-#===============================================================================
-
-class StatsReadonlyDb(object):
+class StatsDb(object):
     """Manage reading from the sqlite3 statistical database. 
     
     This class acts as a wrapper around the stats database, with a set
     of methods for retrieving records from the statistical compilation. 
 
-    After initialization, the attribute self.statsTypes will contain a list
-    of the types for which statistics are being gathered, or None if
-    the database has not been initialized. This can be used to determine
-    whether this is a virgin database.
+    An attempt to open an uninitialized or nonexistent database will result
+    in an exception of type weedb.OperationalError being thrown.
     
-    As for the SQL database itself, it consists of a separate table for each
-    type. The columns of a table are things like min, max, the timestamps for
-    min and max, count and sum. A count and sum are kept to make it easy to
+    After initialization, the attribute self.statsTypes will contain a list
+    of the observation types in the statistical database.
+    
+    The SQL database consists of a separate table for each type. The columns 
+    of a table are things like min, max, the timestamps for min and max, 
+    count and sum. A count and sum are kept to make it easy to
     calculate averages for different time periods.  The wind data table also
     includes sum of squares (for calculating rms speeds) and wind gust
     direction.
@@ -166,111 +119,130 @@ class StatsReadonlyDb(object):
     
     'xsum' and 'ysum' are the sums of the x- and y-components of the wind vector.
     'squaresum' is the sum of squares of the windspeed (useful for calculating rms speed).
-    'squarecount' is the number of items added to 'squaresum'.
+    'squarecount' (perhaps not the best name, but it's there for historical reasons)
+    is the number of items added to 'xsum' and 'ysum'.
     
     In addition to all the tables for each type, there is also a separate table
-    called 'metadata'. Currently, it only holds the time of last update, but more could
-    be added later.
+    called 'metadata'. Currently, it holds the time of the last update, and the
+    unit system in use in the database.
     
     ATTRIBUTES
     
-    statsFilename: The path to the stats database
-    
     statsTypes: The types of the statistics supported by this instance of
-    StatsReadonlyDb. 
+    StatsDb. 
     
-    std_unit_system: The unit system in use (weewx.US or weewx.METRIC)."""
+    std_unit_system: The unit system in use (weewx.US or weewx.METRIC), or
+    None if no system has been specified."""
     
-    # In addition to the attributes listed above, if caching is used,
-    # each instance has a private attribute self._dayCache. This is a two-way 
-    # tuple where the first member is an instance of DayStatsDict, and
-    # the second member is lastUpdate. If caching is not being used, then
-    # self._dayCache equals None.
-        
-    def __init__(self, statsFilename, cacheDayData = True):
-        """Create an instance of StatsReadonlyDb to manage a database.
+    def __init__(self, connection):
+        """Create an instance of StatsDb to manage a database.
         
         If the database does not exist or it is uninitialized, an
-        exception will be thrown. 
+        exception of type weedb.OperationalError will be thrown. 
         
-        statsFilename: Path to the stats database file.
+        connection: A weedb connection to the stats database. """
         
-        cacheDayData: True if a days stats are to be cached after reading. 
-        Otherwise, it gets read with every query.
-        [Optional. Default is True]"""
-        
-        self._connection     = None
-        self.statsFilename   = statsFilename
-        self.statsTypes      = self.__getTypes()
+        self.connection = connection
+        try:
+            self.statsTypes = self.__getTypes()
+        except weedb.OperationalError:
+            self.close()
+            raise
         self.std_unit_system = self._getStdUnitSystem()
-
-        if cacheDayData:
-            self._dayCache  = (None, None)
-        else:
-            self._dayCache  = None
-
-    def getStatsForType(self, stats_type, sod_ts):
-        """Get the statistics for a specific observation type for a specific day.
-
-        stats_type: The type of data to retrieve ('outTemp', 'barometer', 'wind',
-        'rain', etc.)
-
-        sod_ts: The timestamp of the start-of-day for the desired day.
-
-        returns: an instance of WindAccum for type 'wind',
-        otherwise an instance of StdAccum, initialized with the
-        data from the database. If the record doesn't exist in the
-        database, the returned instance will be set to 'default'
-        values (generally, min==None, count=0, etc.)"""
         
-        if weewx.debug:
-            assert(stats_type not in ('heatdeg', 'cooldeg'))
+    @staticmethod
+    def open(stats_db_dict):
+        connection = weedb.connect(stats_db_dict)
+        return StatsDb(connection)
+
+    @staticmethod
+    def open_with_create(stats_db_dict, stats_types):
+        """Open a StatsDb database, initializing it if necessary.
+        
+        stats_types: an iterable collection with the names of the types for
+        which statistics will be gathered.
+        
+        Returns:
+        An instance of StatsDb"""
+
+        # If the database exists and has been initialized, then
+        # this will be successful. If not, an exception will be thrown.
+        try:
+            stats = StatsDb.open(stats_db_dict)
+            # The database exists and has been initialized. Return it.
+            return stats
+        except weedb.OperationalError:
+            pass
+
+        # First try to create the database. If it already exists, an exception
+        # will be thrown.
+        try:
+            weedb.create(stats_db_dict)
+        except weedb.DatabaseExists:
+            pass
+
+        # Heating and cooling degrees are not actually stored in the database:
+        final_stats_types = [s for s in stats_types if s not in ['heatdeg', 'cooldeg']]
             
-        _connection = self._getConnection()
-        _cursor = _connection.cursor()
+        _connect = weedb.connect(stats_db_dict)
+        try:
+            # Now create all the necessary tables as one transaction:
+            with weedb.Transaction(_connect) as _cursor:
+                for _stats_type in final_stats_types:
+                    # Slightly different SQL statement for wind
+                    if _stats_type == 'wind':
+                        _cursor.execute(wind_create_str)
+                    else:
+                        _cursor.execute(std_create_str % (_stats_type,))
+                _cursor.execute(meta_create_str)
+                _cursor.execute(meta_replace_str, ('unit_system', 'None'))
+        except Exception, e:
+            _connect.close()
+            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create stats database.")
+            syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
+            raise
+    
+        syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database")
 
-        # Form a SQL select statement for the appropriate type
-        _sql_str = "SELECT * FROM %s WHERE dateTime = ?" % stats_type
-        # Peform the select, against the desired timestamp
-        _cursor.execute(_sql_str, (sod_ts,))
-        # Get the result
-        _row = _cursor.fetchone()
-
-        if weewx.debug:
-            if _row:
-                if stats_type =='wind': assert(len(_row) == 12)
-                else: assert(len(_row) == 7)
-
-        # Get the TimeSpan for the day starting with sod_ts:
-        timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
-
-        # The date may not exist in the database, in which case _row will
-        # be 'None'
-        _stats_tuple = _row[1:] if _row else None
-            
-        _dayStats = weewx.accum.StdAccum(stats_type, timespan, _stats_tuple) if stats_type != 'wind'\
-              else weewx.accum.WindAccum(stats_type, timespan, _stats_tuple)
-
-        return _dayStats
-
-    def day(self, sod_ts):
-        """Return an instance of DayStatsDict initialized to a given day's statistics.
-
-        sod_ts: The timestamp of the start-of-day of the desired day."""
-                
-        if self._dayCache and self._dayCache[0] and self._dayCache[0].startOfDay_ts == sod_ts:
-            return self._dayCache[0]
-
-        _allStats = DayStatsDict(self.statsTypes, sod_ts)
+        return StatsDb(_connect)
+    
+    @property
+    def database(self):
+        return self.connection.database
+    
+    def close(self):
+        self.connection.close()
         
-        for stats_type in self.statsTypes:
-            _allStats[stats_type] = self.getStatsForType(stats_type, sod_ts)
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, etyp, einst, etb):
+        self.close()    
+    
+    def updateHiLo(self, accumulator):
+        """Use the contents of an accumulator to update the highs/lows of a stats database."""
         
-        if self._dayCache:
-            self._dayCache = (_allStats, None)
-
-        return _allStats
-
+        # Get the start-of-day for the timespan in the accumulator
+        _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.stop)
+        # Retrieve the stats seen so far:
+        _stats_dict = self._getDayStats(_sod_ts)
+        # Update them with the contents of the accumulator:
+        _stats_dict.updateHiLo(accumulator)
+        # Then save the results:
+        self._setDayStats(_stats_dict, accumulator.timespan.stop)
+        
+    def addRecord(self, record):
+        """Using an archive record, update the high/lows and count of a stats database."""
+        
+        # Get the start-of-day for the record:
+        _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
+        # Get the stats seen so far:
+        _stats_dict = self._getDayStats(_sod_ts)
+        # Update them with the contents of the record:
+        _stats_dict.addRecord(record)
+        # Then save the results:
+        self._setDayStats(_stats_dict, record['dateTime'])
+        
     def getAggregate(self, timespan, stats_type, aggregateType, val=None):
         """Returns an aggregation of a statistical type for a given time period.
         
@@ -352,10 +324,10 @@ class StatsReadonlyDb(object):
             _result = math.sqrt((_row[0]**2 + _row[1]**2) / _row[2]**2) if _row[2] else None
         
         elif aggregateType in ('vecdir',):
-            if _row[0:2] == (0.0, 0.0):
+            if _row == (0.0, 0.0):
                 _result = None
             deg = 90.0 - math.degrees(math.atan2(_row[1], _row[0]))
-            _result = deg if deg > 0 else deg + 360.0
+            _result = deg if deg >= 0 else deg + 360.0
         else:
             # Unknown aggregation. Return None
             _result = None
@@ -418,16 +390,152 @@ class StatsReadonlyDb(object):
         # Return as a value tuple
         return weewx.units.ValueTuple(_result, t, g)
     
-    def _getFirstUpdate(self):
-        """Returns the time of the first entry in the statistical database."""
-        #=======================================================================
-        # This is a bit of a hack because it actually returns the first entry
-        # for the barometer, which may or may not be the earliest entry in
-        # the stats database.
-        #=======================================================================
-        _row = self._xeqSql("SELECT min(dateTime) FROM barometer", {})
-        return int(_row[0]) if _row else None
+    def backfillFrom(self, archiveDb, start_ts = None, stop_ts = None):
+        """Fill the statistical database from an archive database.
+        
+        Normally, the stats database if filled by LOOP packets (to get maximum time
+        resolution), but if the database gets corrupted, or if a new user is
+        starting up with imported wview data, it's necessary to recreate it from
+        straight archive data. The Hi/Lows will all be there, but the times won't be
+        any more accurate than the archive period.
+        
+        archiveDb: An instance of weewx.archive.Archive
+        
+        start_ts: Archive data with a timestamp greater than this will be
+        used. [Optional. Default is to start with the first datum in the archive.]
+        
+        stop_ts: Archive data with a timestamp less than or equal to this will be
+        used. [Optional. Default is to end with the last datum in the archive.]
+        
+        returns: The number of records backfilled."""
+        
+        syslog.syslog(syslog.LOG_DEBUG, "stats: Backfilling stats database.")
+        t1 = time.time()
+        nrecs = 0
+        ndays = 0
+        
+        _statsDict = None
+        _lastTime  = None
+        
+        # If a start time for the backfill wasn't given, then start with the time of
+        # the last statistics recorded:
+        if start_ts is None:
+            start_ts = self._getLastUpdate()
+        
+        # Go through all the archiveDb records in the time span, adding them to the
+        # database
+        for _rec in archiveDb.genBatchRecords(start_ts, stop_ts):
+    
+            # Get the start-of-day for the record:
+            _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
+            # If this is the very first record, fetch a new accumulator
+            if not _statsDict:
+                _statsDict = self._getDayStats(_sod_ts)
+            # Try updating. If the time is out of the accumulator's time span, an
+            # exception will get thrown.
+            try:
+                _statsDict.addRecord(_rec)
+            except weewx.accum.OutOfSpan:
+                # The record is out of the time span.
+                # Save the old accumulator:
+                self._setDayStats(_statsDict, _rec['dateTime'])
+                ndays += 1
+                # Get a new accumulator:
+                _statsDict = self._getDayStats(_sod_ts)
+                # try again
+                _statsDict.addRecord(_rec)
+             
+            # Remember the timestamp for this record.
+            _lastTime = _rec['dateTime']
+            nrecs += 1
+            if nrecs%1000 == 0:
+                print >>sys.stdout, "Records processed: %d; Last date: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)),
+                sys.stdout.flush()
+    
+        # We're done. Record the stats for the last day.
+        if _statsDict:
+            self._setDayStats(_statsDict, _lastTime)
+            ndays += 1
+        
+        t2 = time.time()
+        tdiff = t2 - t1
+        if nrecs:
+            syslog.syslog(syslog.LOG_NOTICE, 
+                          "stats: backfilled %d days of statistics with %d records in %.2f seconds" % (ndays, nrecs, tdiff))
+        else:
+            syslog.syslog(syslog.LOG_INFO,
+                          "stats: stats database up to date.")
+    
+        return nrecs
 
+    def _getDayStats(self, sod_ts):
+        """Return an instance of accum.DictAccum initialized to a given day's statistics.
+
+        sod_ts: The timestamp of the start-of-day of the desired day."""
+                
+        # Get the TimeSpan for the day starting with sod_ts:
+        timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
+        # Initialize an empty DictAccum
+        _stats_dict = weewx.accum.DictAccum(timespan)
+        
+        for stats_type in self.statsTypes:
+            _row = self._xeqSql("SELECT * FROM %s WHERE dateTime = %d" % (stats_type, sod_ts), {})
+    
+            if weewx.debug:
+                if _row:
+                    if stats_type =='wind': assert(len(_row) == 12)
+                    else: assert(len(_row) == 7)
+    
+            # The date may not exist in the database, in which case _row will be 'None'
+            _stats_tuple = _row[1:] if _row else None
+        
+            # Now initialize the observation type in the DictAccum with the
+            # results seen so far, as retrieved from the database
+            _stats_dict.initStats(stats_type, _stats_tuple)
+        
+        return _stats_dict
+
+    def _setDayStats(self, dayStatsDict, lastUpdate):
+        """Write all statistics for a day to the database in a single transaction.
+        
+        dayStatsDict: an instance of accum.DictAccum.
+        
+        lastUpdate: the time of the last update will be set to this. Normally, this
+        is the timestamp of the last archive record added to the instance
+        dayStatsDict."""
+
+        _sod = dayStatsDict.timespan.start
+
+        # Using the _connection as a context manager means that
+        # in case of an error, all tables will get rolled back.
+        with weedb.Transaction(self.connection) as _cursor:
+            for _stats_type in self.statsTypes:
+                
+                # Slightly different SQL statement for wind
+                if _stats_type == 'wind':
+                    _replace_str = wind_replace_str
+                else:
+                    _replace_str = std_replace_str % _stats_type
+                
+                # Get the stats-tuple, then write the results
+                _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
+                _cursor.execute(_replace_str,_write_tuple)
+                
+            # Set the unit system if it has not been set before. 
+            # To do this, first see if this file has ever been used:
+            last_update = self._getLastUpdate()
+            if last_update is None:
+                # File has never been used. Set the unit system:
+                _cursor.execute(meta_replace_str, ('unit_system', str(int(dayStatsDict.unit_system))))
+            else:
+                # The file has been used. Make sure the new data uses
+                # the same unit system as the database.
+                unit_system = self._getStdUnitSystem()
+                if unit_system != dayStatsDict.unit_system:
+                    raise ValueError("stats: Data uses different unit system (0x%x) than stats file (0x%x)" % (dayStatsDict.unit_system, unit_system))
+            # Update the time of the last stats update:
+            _cursor.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
+            
     def _getLastUpdate(self):
         """Returns the time of the last update to the statistical database."""
 
@@ -448,152 +556,50 @@ class StatsReadonlyDb(object):
         
         # Do the string interpolation:
         sqlStmt = rawsqlStmt % interDict
-        # Get a _connection
-        _connection = self._getConnection()
-        # Execute the statement:
-        _cursor = _connection.execute(sqlStmt)
-        # Fetch the first row and return it.
-        _row = _cursor.fetchone()
-        return _row 
+        _cursor = self.connection.cursor()
+        try:
+            _cursor.execute(sqlStmt)
+            return _cursor.fetchone()
+        finally:
+            _cursor.close()
         
-    def _getConnection(self):
-        """Return a sqlite _connection"""
-        if not self._connection:
-            self._connection = sqlite3.connect(self.statsFilename)
-            
-        return self._connection
-    
     def _getStdUnitSystem(self):
         """Returns the unit system in use in the stats database."""
         
+        # If the metadata "unit_system" is missing, then it is an older style
+        # stats database, which are always in the US Customary standard unit
+        # system. If it exists, but is 'None', then the units have not been
+        # specified yet. Otherwise, it equals the unit system used by the
+        # database.
+
         _row = self._xeqSql("""SELECT value FROM metadata WHERE name = 'unit_system';""", {})
-        # If the unit system is missing, then it is an older style stats database,
-        # which are always in the US Customary standard unit system:
+        
+        # Check for an older database:
         if not _row:
             return weewx.US
         
-        # Otherwise, extract it from the row and, if debugging, test for validity
-        unit_system = int(_row[0])
-        if weewx.debug:
-            assert(unit_system in (weewx.US, weewx.METRIC))
+        # It's a newer style database. Check for 'None' and return.
+        unit_system = int(_row[0]) if str(_row[0])!='None' else None
         return unit_system
 
     def __getTypes(self):
         """Returns the types appearing in a stats database.
         
-        Throws an exception if the database has not been initialized.
+        Raises an exception of type weedb.OperationalError
+        if the database has not been initialized.
         
         returns: A list of types"""
         
-        # Get the schema dictionary:
-        schema_dict = weeutil.dbutil.schema(self.statsFilename)
-        # Convert from unicode. Also, some stats database have schemas for heatdeg
-        # and cooldeg (even though they are not used) due to an earlier bug. Filter them out.
-        # Finally, filter out the metadata table:
-        stats_types = [str(s) for s in schema_dict.keys() if s not in [U'heatdeg', U'cooldeg', U'metadata']]
+        raw_stats_types = self.connection.tables()
+        
+        # Some stats database have schemas for heatdeg and cooldeg (even though
+        # they are not used) due to an earlier bug. Filter them out. Also,
+        # filter out the metadata table:
+        stats_types = [s for s in raw_stats_types if s not in ['heatdeg','cooldeg','metadata']]
 
         return stats_types
         
-#===============================================================================
-#                    Class StatsDb
-#===============================================================================
-
-class StatsDb(StatsReadonlyDb):
-    """Inherits from class StatsReadonlyDb, adding methods for writing to 
-    the statistical database.
-    """
-    
-    def addArchiveRecord(self, rec):
-        """Add an archive record to the statistical database."""
-
-        if rec['dateTime'] is None:
-            syslog.syslog(syslog.LOG_ERR, "stats: archive record with null time encountered. Ignored.")
-            return
-        
-        # Get the start-of-day for this archive record.
-        _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
-
-        # Retrieve a dictionary containing the day's statistics:
-        _allStatsDict = self.day(_sod_ts)
-
-        for _stats_type in self.statsTypes:
-            # ... and add this archive record to the running tally.
-            # Archive records are used in both the high-lows, and
-            # averages:
-            _allStatsDict[_stats_type].addToHiLow(rec)
-            _allStatsDict[_stats_type].addToSum(rec)
-
-        # Now write the results for all types back to the database
-        # in a single transaction:
-        self._setDay(_allStatsDict, rec['dateTime'], writeThrough = True)
             
-    def addLoopRecord(self, rec):
-        """Add a LOOP record to the statistical database."""
-
-        # Get the start-of-day for this loop record.
-        _sod_ts = weeutil.weeutil.startOfArchiveDay(rec['dateTime'])
-
-        _allStatsDict = self.day(_sod_ts)
-
-        for _stats_type in self.statsTypes:
-            # ... and add this loop record to the running tally.
-            # Loop records are used in hi-lows only, except wind
-            # data which is also used for RMS speeds
-            _allStatsDict[_stats_type].addToHiLow(rec)
-            if _stats_type == 'wind':
-                _allStatsDict[_stats_type].addToRms(rec)
-                
-
-        # Now write the results for all types back to the database
-        # in a single transaction:
-        self._setDay(_allStatsDict, rec['dateTime'], writeThrough = False)
-
-    def _setDay(self, dayStatsDict, lastUpdate, writeThrough = True):
-        """Write all statistics for a day to the database in a single transaction.
-        
-        dayStatsDict: A dictionary. Key is the type to be written, value is a
-        StdAccum or WindAccum, as appropriate.  Class DayStatsDict
-        satisfies this.
-        
-        lastUpdate: the time of the last update will be set to this. Normally, this
-        is the timestamp of the last archive record added to the instance
-        dayStatsDict."""
-
-        if self._dayCache:
-            if self._dayCache[0] and self._dayCache[0].startOfDay_ts != dayStatsDict.startOfDay_ts:
-                # Write the old data
-                self.__writeData(self._dayCache[0], self._dayCache[1])
-        
-            self._dayCache = (dayStatsDict, lastUpdate)
-            if writeThrough:
-                self.__writeData(dayStatsDict, lastUpdate)
-        
-        else:
-            self.__writeData(dayStatsDict, lastUpdate)
-        
-        
-    def __writeData(self, dayStatsDict, lastUpdate):
-        
-        _sod = dayStatsDict.startOfDay_ts
-
-        # Using the _connection as a context manager means that
-        # in case of an error, all tables will get rolled back.
-        with sqlite3.connect(self.statsFilename) as _connection:
-            for _stats_type in self.statsTypes:
-                
-                # Slightly different SQL statement for wind
-                if _stats_type == 'wind':
-                    _replace_str = wind_replace_str
-                else:
-                    _replace_str = std_replace_str % _stats_type
-                
-                # Get the stats-tuple, then write the results
-                _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
-                _connection.execute(_replace_str,_write_tuple)
-            # Update the time of the last stats update:
-            _connection.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
-            
-
 #===============================================================================
 #                    Class TaggedStats
 #===============================================================================
@@ -844,124 +850,3 @@ class StatsTypeHelper(object):
             result = self.db.getAggregate(self.timespan, self.stats_type, aggregateType)
         # Wrap the result in a ValueHelper:
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
-    
-#===============================================================================
-#                          USEFUL FUNCTIONS
-#===============================================================================
-
-def config(statsFilename, stats_types = None, unit_system = weewx.US):
-    """Initialize the StatsDb database
-    
-    Does nothing if the database has already been initialized.
-
-    stats_types: an iterable collection with the names of the types for
-    which statistics will be gathered [optional. Default is to use all
-    possible types]
-    
-    unit_system: The unit system to be used inside the database."""
-    # Check whether the database exists:
-    if not os.path.exists(statsFilename):
-        # If it doesn't exist, create the parent directories
-        archiveDirectory = os.path.dirname(statsFilename)
-        if not os.path.exists(archiveDirectory):
-            syslog.syslog(syslog.LOG_NOTICE, "stats: making archive directory %s." % archiveDirectory)
-            os.makedirs(archiveDirectory)
-        
-    config_check = weeutil.dbutil.schema(statsFilename)
-    
-    # Check to see if it has already been configured. If it has, do
-    # nothing. We're done.
-    if config_check:
-        return
-    
-    # No schema, so we need to configure it.
-    # If nothing has been specified, use the default stats types:
-    if not stats_types:
-        import user.schemas
-        stats_types = user.schemas.defaultStatsTypes
-    
-    # Heating and cooling degrees are not actually stored in the database:
-    stats_types = filter(lambda x : x not in ('heatdeg', 'cooldeg'), stats_types)
-
-    # Now create all the necessary tables as one transaction:
-    with sqlite3.connect(statsFilename) as _connection:
-    
-        for _stats_type in stats_types:
-            # Slightly different SQL statement for wind
-            if _stats_type == 'wind':
-                _connection.execute(wind_create_str)
-            else:
-                _connection.execute(std_create_str % (_stats_type,))
-        _connection.execute(meta_create_str)
-        _connection.execute(meta_replace_str, ('unit_system', str(unit_system)))
-    
-    syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database %s." % statsFilename)
-
-def backfill(archiveDb, statsDb, start_ts = None, stop_ts = None):
-    """Fill the statistical database from an archive database.
-    
-    Normally, the stats database if filled by LOOP packets (to get maximum time
-    resolution), but if the database gets corrupted, or if a new user is
-    starting up with imported wview data, it's necessary to recreate it from
-    straight archive data. The Hi/Lows will all be there, but the times won't be
-    any more accurate than the archive period.
-    
-    archiveDb: An instance of weewx.archive.Archive
-    
-    statsDb: An instance of weewx.stats.StatsDb
-    
-    start_ts: Archive data with a timestamp greater than this will be
-    used. [Optional. Default is to start with the first datum in the archive.]
-    
-    stop_ts: Archive data with a timestamp less than or equal to this will be
-    used. [Optional. Default is to end with the last datum in the archive.]"""
-    
-    syslog.syslog(syslog.LOG_DEBUG, "stats: Backfilling stats database.")
-    t1 = time.time()
-    nrecs = 0
-    ndays = 0
-    
-    _allStats  = None
-    _lastTime  = None
-    
-    # If a start time for the backfill wasn't given, then start with the time of
-    # the last statistics recorded:
-    if start_ts is None:
-        start_ts = statsDb._getLastUpdate()
-    
-    # Go through all the archiveDb records in the time span, adding them to the
-    # database
-    for _rec in archiveDb.genBatchRecords(start_ts, stop_ts):
-        _rec_time_ts = _rec['dateTime']
-        _rec_sod_ts = weeutil.weeutil.startOfArchiveDay(_rec_time_ts)
-        # Check whether this is the first day, or we have entered a new day:
-        if _allStats is None or _allStats.startOfDay_ts != _rec_sod_ts:
-                # If this is not the first day, then write it out:
-                if _allStats:
-                    statsDb._setDay(_allStats, _lastTime)
-                    ndays += 1
-                # Get the stats for the new day:
-                _allStats = statsDb.day(_rec_sod_ts)
-        
-        # Add the stats for this record to the running total for this day:
-        for _stats_type in _allStats:
-            _allStats[_stats_type].addToHiLow(_rec)
-            _allStats[_stats_type].addToSum(_rec)
-            
-        nrecs += 1
-        # Remember the timestamp for this record.
-        _lastTime = _rec_time_ts
-
-    # We're done. Record the stats for the last day.
-    if _allStats:
-        statsDb._setDay(_allStats, _lastTime)
-        ndays += 1
-    
-    t2 = time.time()
-    tdiff = t2 - t1
-    if nrecs:
-        syslog.syslog(syslog.LOG_NOTICE, 
-                      "stats: backfilled %d days of statistics with %d records in %.2f seconds" % (ndays, nrecs, tdiff))
-    else:
-        syslog.syslog(syslog.LOG_INFO,
-                      "stats: stats database up to date.")
