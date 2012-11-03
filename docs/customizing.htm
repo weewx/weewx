@@ -25,17 +25,35 @@ Version 2.0</h1>
 <div id="technical_content">
 	<div id="toc">
 	</div>
-	<h1 id="Introduction">Introduction</h1>
+	<h1 id="Copyright">Copyright</h1>
+			<p>
+				(c) 2009, 2010, 2011, 2012 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;
+			</p>
+			<p>
+				This program is free software: you can redistribute it and/or modify it under
+				the terms of the GNU General Public License as published by the Free Software
+				Foundation, either version 3 of the License, or (at your option) any later version.
+			</p>
+			<p>
+				This program is distributed in the hope that it will be useful, but WITHOUT
+				ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+				FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+			</p>
+			<p>
+				You should have received a copy of the GNU General Public License along with
+				this program. If not, see
+				<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses</a>.
+			</p>
+<h1 id="Introduction">Introduction</h1>
 	<p>This document covers the customization of <span class="code">weewx</span>. 
 	It assumes that you have read and are reasonably familiar with the
 	<a href="usersguide.htm">Users Guide</a>. </p>
 	<p>It starts with an overview of the architecture of weewx. If you are only 
 	interested in customizing the generated reports you can probably skip the overview 
-	and proceed directly to the section <em>b
-	<a href="#The_Standard_skin_configuration_file">The Standard skin configuration 
+	and proceed directly to the section <em><a href="#The_Standard_skin_configuration_file">The Standard skin configuration 
 	file</a></em>. With this approach you can easily add new plot images, change 
 	the titles of images, change the units used in the reports, and so on. </p>
-	<p>However, if your goal is a specialized application such as adding alarms, 
+	<p>However, if your goal is a specialized application, such as adding alarms, 
 	RSS feeds, etc., then it would be worth your while to read about the internal 
 	architecture and how to customize it. </p>
 	<p>Most of the guide will cover any weather hardware, but the exact data types 
@@ -47,8 +65,8 @@ Version 2.0</h1>
 	or customization you do! </p>
 	<h2>Overview of the weewx architecture</h2>
 	<p>At a high-level, <span class="code">weewx</span> consists of an engine class 
-	called <span class="code">StdEngine</span>. It is responsible for loading any &quot;<em>services</em>&quot; 
-	that are to be run and arranging for them to be called when key events occur, 
+	called <span class="code">StdEngine</span>. It is responsible for loading &quot;<em>services</em>&quot;, 
+	then arranging for them to be called when key events occur, 
 	such as the arrival of LOOP data. The default install of <span class="code">
 	weewx</span> includes the following services: </p>
 	<table align="center" style="width: 60%" summary="Overview of the weewx architecture">
@@ -88,7 +106,7 @@ Version 2.0</h1>
 			<td>Start a thread to manage
 			<a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
 			RESTful</a> (simple stateless client-server protocols) connections; 
-			such as those used by the Weather Underground or PWSWeather.</td>
+			such as those used by the Weather Underground or CWOP.</td>
 		</tr>
 		<tr>
 			<td class="code">weewx.wxengine.StdReport</td>
@@ -177,14 +195,15 @@ Version 2.0</h1>
 			<td>Copies files locally.</td>
 		</tr>
 	</table>
-	<p>Note that the two generators <span class="code">FtpGenerator </span>and
-	<span class="code">CopyGenerator </span>don&#39;t actually generate anything 
+	<p>Note that the two generators <span class="code">FtpGenerator</span> and
+	<span class="code">CopyGenerator</span> don&#39;t actually generate anything 
 	having to do with the presentation layer. Instead, they just move files around.
 	</p>
 	<p>Which generators are to be run for a given skin is specified in the skin&#39;s 
-	configuration file <span class="code">skin.conf</span>. </p>
+	configuration file <span class="code">skin.conf</span>, in section <span class="code">
+	[Generators]</span>.</p>
 	<h2 id="Databases">Databases</h2>
-	<p>There are two databases used by weewx, which can be implemented either by 
+	<p>There are two databases used by <span class="code">weewx</span>, which can be implemented either by 
 	using <a href="http://www.sqlite.org/">SQLITE3</a>, an open-source, lightweight 
 	SQL database, or <a href="http://www.mysql.com/">MySQL</a>, an open-source, 
 	full-featured database server, or some combination of the two of them.</p>
@@ -901,7 +920,7 @@ Sunrise, sunset: 06:51 19:30
 	</table>
 	<h4>Heavenly bodies</h4>
 	<p>The second category does require a heavenly body. This covers queries 
-	such as, "When does Jupiter rise", or, "When does the sun transit?" Examples 
+	such as, "When does Jupiter rise?" or, "When does the sun transit?" Examples 
 	are</p>
 	<p class="tty">$almanac.jupiter.rise</p>
 	<p>or</p>
@@ -916,9 +935,12 @@ Sunrise, sunset: 06:51 19:30
 	<p class="tty">$almanac.sun.rise</p>
 	<p>use</p>
 	<p class="tty">$almanac(pressure=0, horizon=-34.0/60.0).sun.rise</p>
+	<p>By setting pressure to zero we are bypassing the refraction calculations 
+	and manually setting the horizon to be 34 arcminutes lower than the normal 
+	horizon. This is what the Navy uses.</p>
 	<p>If you wish to calculate the start of civil twilight, you can set the horizon 
-	to -6, and also tell weewx to use the center of the sun (instead of the upper 
-	limb) to do the calcuation:</p>
+	to -6, and also tell <span class="code">weewx</span> to use the center of the sun (instead of the upper 
+	limb, which it normally uses) to do the calcuation:</p>
 	<p class="tty">$almanac(pressure=0, horizon=-6.sun(use_center=1).rise</p>
 	<p>The general syntax is:</p>
 	<p class="tty">$almanac(pressure=<em>pressure</em>, horizon=<em>horizon</em>,<br />
@@ -1004,7 +1026,7 @@ Sunrise, sunset: 06:51 19:30
 	<ul>
 		<li>All-time statistics. This would allow us to display statistics such 
 		as the all-time high or low temperature seen at your station;</li>
-		<li>Seven days statistics. While weewx offers the tag <span class="code">
+		<li>Seven days statistics. While <span class="code">weewx</span> offers the tag <span class="code">
 		$week</span>, this is statistics <em>since Sunday at midnight</em>. We would 
 		like to have statistics for a full week, that is since midnight seven days 
 		ago.</li>

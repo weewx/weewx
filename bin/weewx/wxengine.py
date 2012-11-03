@@ -350,16 +350,18 @@ class StdQC(StdService):
         # done.
         try:
             min_max_dict = config_dict['StdQC']['MinMax']
-            self.min_max_dict = {}
-    
-            for obs_type in min_max_dict.scalars:
-                self.min_max_dict[obs_type] = (float(min_max_dict[obs_type][0]),
-                                               float(min_max_dict[obs_type][1]))
-            
-            self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         except KeyError:
             syslog.syslog(syslog.LOG_NOTICE, "wxengine: No QC information in config file. Ignored.")
+            return
+
+        self.min_max_dict = {}
+
+        for obs_type in min_max_dict.scalars:
+            self.min_max_dict[obs_type] = (float(min_max_dict[obs_type][0]),
+                                           float(min_max_dict[obs_type][1]))
+        
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
     def new_loop_packet(self, event):
         """Apply quality check to the data in a LOOP packet"""

@@ -23,7 +23,7 @@ import weewx.units
 # If the user has installed ephem, use it. Otherwise, fall back to the weeutil algorithms:
 try:
     import ephem
-except:
+except ImportError:
     import weeutil.Sun
 
 # NB: In order to avoid an 'autocall' bug in Cheetah versions before 2.1,
@@ -150,6 +150,7 @@ class Almanac():
         formatter: An instance of weewx.units.Formatter() with the formatting information
         to be used.
         """
+        self.time_ts      = time_ts
         self.time_djd     = timestamp_to_djd(time_ts)
         self.lat          = lat
         self.lon          = lon
@@ -196,60 +197,99 @@ class Almanac():
     # What follows is a bit of Python wizardry to allow syntax such as:
     #   almanac(horizon=-0.5).sun.rise
     def __call__(self, **kwargs):
-        """Call an almanac object as a functor. This allows overriding the observer values."""
+        """Call an almanac object as a functor. This allows overriding the values
+        used when the Almanac instance was initialized.
+        
+        Named arguments:
+
+        Any named arguments will be passed on to the initializer of the ObserverBinder,
+        overriding any default values. These are all optional:
+        
+            almanac_time: The observer's time in unix epoch time.
+            lat: The observer's latitude in degrees
+            lon: The observer's longitude in degrees
+            altitude: The observer's altitude in meters
+            horizon: The horizon angle in degrees
+            temperature: The observer's temperature (used to calculate refraction)
+            pressure: The observer's pressure (used to calculate refraction) 
+        """
+        
+        # Using an encapsulated class allows easy access to the default values
         class ObserverBinder(object):
             
-            # Default values are those provided to build the almanac:
-            def __init__(self, formatter=self.formatter, date=self.time_djd, lat=self.lat, lon=self.lon, 
+            # Use the default values provided by the outer class (Almanac):
+            def __init__(self, almanac_time=self.time_ts, lat=self.lat, lon=self.lon, 
                          altitude=self.altitude, horizon=self.horizon, temperature=self.temperature, 
-                         pressure=self.pressure):
-                self.formatter = formatter
+                         pressure=self.pressure, formatter=self.formatter):
                 # Build an ephem Observer object
-                self.observer = ephem.Observer()
-                self.observer.date = date
-                self.observer.lat = math.radians(lat)
-                self.observer.lon = math.radians(lon)
-                self.observer.elev = altitude
+                self.observer         = ephem.Observer()
+                self.observer.date    = timestamp_to_djd(almanac_time)
+                self.observer.lat     = math.radians(lat)
+                self.observer.lon     = math.radians(lon)
+                self.observer.elev    = altitude
                 self.observer.horizon = math.radians(horizon)
-                self.observer.temp = temperature
-                self.observer.pressure = pressure
+                self.observer.temp    = temperature
+                self.observer.pressure= pressure
                 
+                self.formatter = formatter
+
             def __getattr__(self, body):
+                """Return a BodyWrapper that binds the observer to a heavenly body.
+                
+                If there is no such body an exception of type AttributeError will
+                be raised.
+                
+                body: A heavenly body. Examples, 'sun', 'moon', 'jupiter'
+                
+                Returns:
+                An instance of a BodyWrapper. It will bind together the heavenly
+                body (an instance of something like ephem.Jupiter) and the observer
+                (an instance of ephem.Observer)
+                """
                 # Find the module used by pyephem. For example, the module used for
                 # 'mars' is 'ephem.Mars'. If there is no such module, an exception
                 # of type AttributeError will get thrown.
                 ephem_module = getattr(ephem, body.capitalize())
-                # Now, together with the observer's station, return an appropriate
-                # BodyWrapper
+                # Now, together with the observer object, return an
+                # appropriate BodyWrapper
                 return BodyWrapper(ephem_module, self.observer, self.formatter)
 
         # This will override the default values with any explicit parameters in kwargs:
         return ObserverBinder(**kwargs)
                 
     def __getattr__(self, attr):
-        if self.hasExtras and attr in ['previous_equinox', 'next_equinox', 
-                                       'previous_solstice', 'next_solstice',
-                                       'previous_autumnal_equinox', 'next_autumnal_equinox', 
-                                       'previous_vernal_equinox', 'next_vernal_equinox', 
-                                       'previous_winter_solstice', 'next_winter_solstice', 
-                                       'previous_summer_solstice', 'next_summer_solstice',
-                                       'previous_new_moon', 'next_new_moon',
-                                       'previous_first_quarter_moon', 'next_first_quarter_moon',
-                                       'previous_full_moon', 'next_full_moon',
-                                       'previous_last_quarter_moon', 'next_last_quarter_moon']:
+        
+        if not self.hasExtras:
+            # If the Almanac does not have extended capabilities, we can't
+            # do any of the following. Raise an exception.
+            raise AttributeError, "Unknown attribute %s" % attr
+
+        # We do have extended capability. Check to see if the attribute is a calendar event:
+        elif attr in ['previous_equinox', 'next_equinox', 
+                      'previous_solstice', 'next_solstice',
+                      'previous_autumnal_equinox', 'next_autumnal_equinox', 
+                      'previous_vernal_equinox', 'next_vernal_equinox', 
+                      'previous_winter_solstice', 'next_winter_solstice', 
+                      'previous_summer_solstice', 'next_summer_solstice',
+                      'previous_new_moon', 'next_new_moon',
+                      'previous_first_quarter_moon', 'next_first_quarter_moon',
+                      'previous_full_moon', 'next_full_moon',
+                      'previous_last_quarter_moon', 'next_last_quarter_moon']:
             # This is how you call a function on an instance when all you have
             # is the function's name as a string
             djd = ephem.__dict__[attr](self.time_djd)   #@UndefinedVariable
             return weewx.units.ValueHelper((djd, "dublin_jd", "group_time"), 
                                            context="ephem_year", formatter=self.formatter)
-        elif self.hasExtras:
-            # This will call the __call__ function in Almanac, but with no parameters 
-            binder = self()
-            # Take the results (which will be an ObserverBinder object, and find the attribute
-            # in it.
-            return getattr(binder, attr)
         else:
-            raise AttributeError, "Unknown attribute %s" % attr
+            # It's not a calendar event. The attribute must be a heavenly body
+            # (such as 'sun', or 'jupiter'). Create an instance of
+            # ObserverBinder by calling the __call__ function in Almanac, but
+            # with no parameters
+            binder = self()
+            # Now try getting the body as an attribute. If successful, an
+            # instance of BodyWrapper will be returned. If not, an exception of
+            # type AttributeError will be raised.
+            return getattr(binder, attr)
             
     @staticmethod
     def _adjustTime(y, m, d,  hrs_utc):

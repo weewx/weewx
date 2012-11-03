@@ -164,7 +164,7 @@
 				<span class="code">weewx.conf</span>.
 				</li>
 				<li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or
-					greater) The HTML templating engine.
+					greater) The templating engine.
 				</li>
 				<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version
 					2.3 or greater) Manages the serial connection to the weather station.</li>
@@ -505,7 +505,7 @@
 			</p>
 			<p>
 				In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to
-				the <span class="code">weewx</span> data root directory, generally <span class="code">/home/weewx</span>. The subdirectories <span class="code"> archive</span>, <span class="code">skins</span>, and <span class="code">public_html</span>
+				the <span class="code">weewx</span> root directory, generally <span class="code">/home/weewx</span>. The subdirectories <span class="code"> archive</span>, <span class="code">skins</span>, and <span class="code">public_html</span>
 				are expected to be found there.
 			</p>
 			<h2>Moving from wview</h2>
@@ -733,7 +733,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<p>
 				The station location should be a UTF-8 string that describes the geography
-				of where you weather station is located, such as &#39;<span class="code">Hood River,
+				of where your weather station is located, such as &#39;<span class="code">Hood River,
 					Oregon</span>&#39;. Required. No default.
 			</p>
 			<p class="config_important">
@@ -773,11 +773,11 @@ Mutating actions will request confirmation before proceeding.</pre>
 				station_type
 			</p>
 			<p>
-				Set to the type of hardware you are using. It must match a 
-				section name below. For this version, valid options 
+				Set to the type of hardware you are using. It must match the 
+				name of one of the sections below. For this version, valid options 
 				are:</p>
 			<p class="indent">
-				&nbsp;<span class="code">Vantage</span> For Davis Vantage (<em>VantagePro</em>,
+				<span class="code">Vantage</span> For Davis Vantage (<em>VantagePro</em>,
 				<em>VantagePro2</em>, and <em>VantageVue</em>) weather stations.</p>
 			<p class="indent">
 				<span class="code">WMR-USB</span> For Oregon Scientific WMR-USB 
@@ -869,7 +869,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<h3 class="config_section">[WMR-USB]</h3>
 			<p>This section is for options relating to the Oregon Scientific WMR 
 			series of weather stations with USB connectors. The WMR100N is known 
-			to work, others might also work.</p>
+			to work, others might work as well.</p>
 			<p class="config_option">stale_wind</p>
 			<p>How long a wind record can be used to calculate wind chill (in 
 			seconds). Default is 30.</p>
@@ -904,8 +904,9 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<h4 class="config_section">[[Wunderground]]</h4>
 			<p>
-				<span class="code">Weewx </span>can send your current data to the Weather
-				Underground. If you do not wish to do this, comment out the two options below.
+				<span class="code">Weewx </span>can send your current data to the 
+				<a href="http://www.wunderground.com/">Weather
+				Underground</a>. If you do not wish to do this, comment out the two options below.
 			</p>
 			<p class="config_important">
 				station
@@ -922,7 +923,8 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<h4 class="config_section">[[PWSweather]]</h4>
 			<p>
-				<span class="code">Weewx </span>can send your current data to the PWSweather.com
+				<span class="code">Weewx </span>can send your current data to the 
+				<a href="http://www.pwsweather.com/">PWSweather.com</a>
 				service. If you do not wish to do this, comment out the two options below.
 			</p>
 			<p class="config_important">
@@ -939,8 +941,9 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<h4 class="config_section">[[CWOP]]</h4>
 			<p>
-				<span class="code">Weewx</span> can send your data to the Citizen Weather
-				Observer Program. If you do not wish to do this, comment out option &quot;<span class="code">station</span>&quot;
+				<span class="code">Weewx</span> can send your data to the 
+				<a href="http://www.wxqa.com/">Citizen Weather
+				Observer Program</a>. If you do not wish to do this, comment out option &quot;<span class="code">station</span>&quot;
 				below.
 			</p>
 			<p class="config_important">
@@ -1193,7 +1196,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 			</p>
 			<p>
 				In this example, if a temperature should fall outside of the inclusive range
-				-40 °F through 120 °F, then it will be set to the null value, <span class="code">None</span> and ignored. In a similar manner, the acceptable
+				-40 °F through 120 °F, then it will be set to the null value, <span class="code">None</span>, and ignored. In a similar manner, the acceptable
 				values for barometric pressure would be 28 through 32.5 inHg, for humidity 0
 				through 100%.
 			</p>
@@ -1255,12 +1258,13 @@ Mutating actions will request confirmation before proceeding.</pre>
 				resulting in a possibly much bigger than necessary stats database (do you really
 				have four different soil moisture sensors?) The list that ships with the configuration
 				file will work for most stations and probably will not have to be modified.
-				This list is only accessed when the stats database is first 
-				created, thereafter it is downloaded off the database.</p>
+				This list is used only when the stats database is first 
+				created, thereafter it is downloaded from the database.</p>
 			<h3 class="config_section">[StdTimeSynch]</h3>
 			<p>This section is for configuring <span class="code">StdTymeSynch</span>, 
-			a service that can synchronize the onboard clock of your Vantage 
-			station with your computer. </p>
+			a service that can synchronize the onboard clock of 
+			station with your computer. Not all weather station hardware 
+			supports this.</p>
 			<p class="config_option">clock_check</p>
 			<p>How often to check the clock on the weather station in seconds. 
 			Default is 14,400 seconds (every 4 hours)</p>
@@ -1271,19 +1275,19 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<p>This section lists actual database bindings. The name of each database is given in double 
 			brackets below (for example, <span class="code">[[archive_sqlite]]</span>). The details of the 
 			binding follow. You are free to add new bindings.</p>
-			<p>Note that if you choose the MySQL database it is assumed that you 
+			<p>Note that if you choose the <a href="http://www.mysql.com/">MySQL</a> database it is assumed that you 
 			know how to administer it. In particular, you will have to set up a 
 			user with appropriate privileges to create and update the named 
 			databases.</p>
 			<h4 class="config_section">[[archive_sqlite]]</h4>
-			<p>This definition uses the sqlite database engine to store archive 
+			<p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database engine to store archive 
 			data. It is open-source, simple, lightweight, highly portable, and 
 			memory efficient. For most purposes it serves nicely.</p>
 			<p class="config_option">database</p>
 			<p>The path, relative to <span class="code">WEEWX_ROOT</span>, to the archive sqlite file. 
 			Required.</p>
 			<h4 class="config_section">[[stats_sqlite]]</h4>
-			<p>This definition uses the sqlite database engine to store the 
+			<p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database engine to store the 
 			statistical data. It is open-source, simple, lightweight, highly 
 			portable, and memory efficient. For most purposes it serves nicely.</p>
 			<p class="config_option">database</p>
@@ -1314,12 +1318,10 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<h3 class="config_section">[Engines]</h3>
 			<p>
 				This section is used to configure the internal
-				service engine in weewx. It is for advanced
-				customization. Details on how to do this is
-				found in the
+				service engine in <span class="code">weewx</span>. It is for advanced
+				customization. Details on how to do this can be found in the
 				section <em> <a href="customizing.htm#Customizing_the_weewx_service_engine">
-				Customizing the weewx service engine</a> </em>in
-				the
+				Customizing the weewx service engine</a></em> of the
 				document <a href="customizing.htm"><em>Customizing </em><span class="code"><em>weewx</em></span></a>.
 			</p>
 			<h4 class="config_section">[[WxEngine]]</h4>
@@ -1338,6 +1340,8 @@ Mutating actions will request confirmation before proceeding.</pre>
 				weewx.wxengine,StdQC, weewx.wxengine.StdArchive, 
 				weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, 
 				weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+			<p>
+				Note that this must all be on one line! </p>
 			<p>
 				You can leave some of these services out if you do not need them. 
 				For example, the bare minimum if you are using a Davis Vantage 
@@ -1377,8 +1381,9 @@ Mutating actions will request confirmation before proceeding.</pre>
 				<em>$WEEWX_ROOT</em>/bin/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf
 			</p>
 			<p>
-				It should start by downloading any archive data from your weather station
-				into the database <span class="code"><em>$WEEWX_ROOT</em>/archive/weewx.sdb</span>.
+				It should start by downloading any data 
+				stored in your weather station
+				into the archive database.
 				As the Davis VantagePro can store a couple thousand archive records internally,
 				this could take a minute or two. I&#39;ve found this process particularly slow on
 				SuSE for some reason.
@@ -1724,11 +1729,11 @@ And put in weewx.conf:
 				board your console has gotten garbled. The way the Davis Vantage 
 				series works is that the software (<span class="code">weewx</span> 
 				in this case) asks the console for all archive data &quot;since&quot; some 
-				time. The console then downloads the records one at a time. The 
-				software can detect when the console has sent the last one 
-				because the timestamps on the records, instead of monitonically 
-				increasing, suddenly jump backwards in time. You&#39;ve wrapped 
-				around the memory space of the console. </p>
+				time. The console then downloads the records one at a time. 
+				After it gets to the very last one, the memory wraps around, and 
+				the timestamp will suddenly jump backwards in time a couple 
+				weeks &mdash; the software knows it has downloaded the last 
+				record.</p>
 			<p>
 				However, if the internal memory gets garbled, the console will 
 				immediately return archives in the past, and so it looks like 
@@ -1748,7 +1753,24 @@ And put in weewx.conf:
 			</ol>
 			<p class="tty">cd /home/weewx<br />
 			./bin/config_vp.py weewx.conf --clear </p>
-			<h2>Templates</h2>
+			<h2>Software</h2>
+			<h3>No barometer data</h3>
+			<p>If everything appears normal except that you have no barometer 
+			data, the problem may be a mismatch between the unit system used for 
+			service <span class="code">StdConvert</span> and the unit system 
+			used by service <span class="code">StdQC</span>. For example:</p>
+			<p class="tty">[StdConvert]<br />
+&nbsp; target_unit = METRIC<br />
+			<br />
+			...<br />
+			<br />
+			[StdQC]<br />
+&nbsp; [[MinMax]]<br />
+&nbsp;&nbsp;&nbsp; barometer = 28, 32.5</p>
+			<p>The problem is that you are requiring the barometer data to be 
+			between 28 and 32.5, but with the unit system set to
+			<span class="code">METRIC</span>, the data will be in the range 990 
+			to 1050 or so!</p>
 			<h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
 			<p>
 				If you get errors of the sort:
@@ -1810,14 +1832,15 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 			</p>
 			<ul>
 				<li>
-					A &quot;micro-kernel&quot; design. The actual internal engine does very little.
-					It&#39;s main job is to load and run <em>services</em> at runtime, making it
+					A &quot;micro-kernel&quot; design. The 
+					<span class="code">weewx</span> engine actually does very little.
+					Its primary job is to load and run <em>services</em> at runtime, making it
 					easy for users to add or subtract features.
 				</li>
 				<li>
 					A largely stateless design style. For example, many of the processing
-					routines read the data they directly from the database, rather than caching it and
-					sharing with other processing routines. While this means the same data may
+					routines read the data they need directly from the database, rather than caching it and
+					sharing with other routines. While this means the same data may
 					be read multiple times, it also means the only point of possible cache incoherence
 					is through the database, where transactions are easily controlled. This
 					greatly reduces the chances of corrupting the data, making it much easier
@@ -1847,8 +1870,8 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 				</li>
 			</ul>
 			<p>
-				While <span class="code">weewx </span>is nowhere near as fast at generating
-				images and HTML as its predecessor, <span class="code">wview </span>(this is
+				While <span class="code">weewx</span> is nowhere near as fast at generating
+				images and HTML as its predecessor, <span class="code">wview</span> (this is
 				partially because it uses fancier fonts and a much more powerful templating
 				engine), it is &#39;fast enough&#39; for all platforms but the slowest. I run it regularly
 				on a 500 MHz machine where generating the 9 images used in the &quot;Current Conditions&quot;
@@ -1917,9 +1940,11 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 				</tr>
 				<tr>
 					<td>tuple-time</td>
-					<td>An instance of the Python object <span class="code">time.struct_time</span>.
+					<td>An instance of the Python object <span class="code">
+					<a href="http://docs.python.org/2/library/time.html#time.struct_time">time.struct_time</a></span>.
 					This is a 9-wise tuple that represent a time. It could be in either
-					local time or UTC, though usually the former. See module <span class="code">time</span> for more information. They are useful
+					local time or UTC, though usually the former. See module <span class="code">
+					<a href="http://docs.python.org/2/library/time.html">time</a></span> for more information. They are useful
 					because they are a little closer in format to what the Davis VantagePro
 					uses, although they still require a bit of processing. Variables carrying
 					tuple time usually have a suffix &#39;<span class="code">_tt</span>&#39;.</td>
@@ -1929,11 +1954,12 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 					<td>Sometimes referred to as &quot;unix time,&quot; or &quot;unix epoch time.&quot; The
 					number of seconds since the epoch, which is 1 Jan 1970 00:00:00 UTC.
 					Hence, it always represents UTC (well.... after adding a few leap seconds.
-					But, close enough). This is the time used on the sqlite archive and
+					But, close enough). This is the time used in the databases and
 					appears as type &#39;<span class="code">dateTime</span>&#39; in the SQL schema,
 					perhaps an unfortunate name because of the similarity to the
 					completely unrelated Python
-					type &#39;<span class="code">datetime</span>&#39;. Very easy to manipulate, but it&#39;s an opaque big number. </td>
+					type &#39;<span class="code">datetime</span>&#39;. Very easy to manipulate, but it&#39;s a 
+					big opaque number. </td>
 				</tr>
 				<tr>
 					<td>time stamp</td>
