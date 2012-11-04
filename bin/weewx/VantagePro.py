@@ -367,6 +367,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
         
         self.save_monthRain = None
+        self.max_dst_jump = 7200
 
         # Get an appropriate port, depending on the connection type:
         self.port = Vantage._port_factory(vp_dict)
@@ -512,7 +513,8 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 _record = self.translateArchivePacket(_packet)
                 # Check to see if the time stamps are declining, which would
                 # signal that we are done. 
-                if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts :
+                if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts - self.max_dst_jump:
+                    print "Stop.", weeutil.weeutil.timestamp_to_string(_record['dateTime']), weeutil.weeutil.timestamp_to_string(_last_good_ts)
                     # The time stamp is declining. We're done.
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: DMPAFT complete: page timestamp %s less than final timestamp %s"\
                                   % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
@@ -1050,9 +1052,6 @@ def _archive_datetime(packet) :
     datestamp = packet['date_stamp']
     timestamp = packet['time_stamp']
     
-    # Unforunately, there is no way of determining whether the time in the
-    # archive packet is DST or not. Assume it is the same as local time.
-    local_tt = time.localtime()
     # Decode the Davis time, constructing a time-tuple from it:
     time_tuple = ((0xfe00 & datestamp) >> 9,    # year
                   (0x01e0 & datestamp) >> 5,    # month
@@ -1060,7 +1059,7 @@ def _archive_datetime(packet) :
                   timestamp // 100,             # hour
                   timestamp % 100,              # minute
                   0,                            # second
-                  0, 0, local_tt.tm_isdst)
+                  0, 0, -1)
     # Convert to epoch time:
     try:
         ts = int(time.mktime(time_tuple))
