@@ -62,7 +62,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     if fmx < fmn :
         raise weeplot.ViolatedPrecondition, "scale() called with max value less than min value"
 
-    if fmx == fmn :
+    if _rel_approx_equal(fmn, fmx) :
         if fmn == 0.0 :
             fmx = 1.0
         else :
@@ -217,7 +217,8 @@ class ScaledDraw(object):
         lri = imagebox[1]
         lls = scaledbox[0]
         urs = scaledbox[1]
-        
+        if urs[1] == lls[1]:
+            pass
         self.xscale =  float(lri[0] - uli[0]) / float(urs[0] - lls[0])
         self.yscale = -float(lri[1] - uli[1]) / float(urs[1] - lls[1]) 
         self.xoffset = int(lri[0] - urs[0] * self.xscale + 0.5)
@@ -411,6 +412,27 @@ def get_font_handle(fontpath, *args):
         
     return font 
 
+def _rel_approx_equal(x, y, rel=1e-7):
+    """Relative test for equality.
+    
+    Example 
+    >>> _rel_approx_equal(1.23456, 1.23457)
+    False
+    >>> _rel_approx_equal(1.2345678, 1.2345679)
+    True
+    >>> _rel_approx_equal(0.0, 0.0)
+    True
+    >>> _rel_approx_equal(0.0, 0.1)
+    False
+    >>> _rel_approx_equal(0.0, 1e-9)
+    False
+    >>> _rel_approx_equal(1.0, 1.0+1e-9)
+    True
+    >>> _rel_approx_equal(1e8, 1e8+1e-3)
+    True
+    """
+    return abs(x-y) <= rel*max(abs(x), abs(y))
+    
 if __name__ == "__main__":
     import doctest
 
