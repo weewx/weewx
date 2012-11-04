@@ -234,15 +234,6 @@ class My_install_data(install_data):
         # Add the version:
         new_config['version'] = VERSION
 
-        # The following section is to fix changes from the alpha and beta
-        # versions of V2.0:
-        new_config['Databases']['archive_sqlite']['driver'] = 'weedb.sqlite'
-        new_config['Databases']['stats_sqlite']['driver']   = 'weedb.sqlite'
-        new_config['Databases']['archive_mysql']['driver']  = 'weedb.mysql'
-        new_config['Databases']['stats_mysql']['driver']    = 'weedb.mysql'
-        new_config['Vantage'].pop('record_generation', None)
-        new_config['WMR-USB'].pop('record_generation', None)
-                
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         

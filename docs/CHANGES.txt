@@ -4,7 +4,7 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-2.0.0 XX/YY/12
+2.0.0 11/04/12
 
 A big release with  lots of changes.  The two most important  are the support of
 additional weather hardware, and the support of the MySQL database.
@@ -37,7 +37,8 @@ along the way. See the Customizing Guide.
 
 You can now use "mmHg" as a unit of pressure.
 
-Added new almanac information such as first and last quarter moons.
+Added new  almanac information, such  as first and last quarter moons, and civil
+twilight.
 
 Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
 callbacks, making it easier to add new event types.

@@ -1602,7 +1602,28 @@ outTemp = Outside Temperature</pre>
 	<p class="center">
 	<img alt="Daytime temperature with running average" height="180" src="daytemp_with_avg.png" width="300" />
 	</p>
-	<h3>Progressive vector plots</h3>
+	<p>
+	One more example. This one shows daily high and low temperatures for a year:</p>
+	<p class="tty">
+	[[year_images]]<br />
+	<br />
+&nbsp; ...<br />
+&nbsp; [[[yearhilow]]]<br />
+&nbsp;&nbsp;&nbsp; [[[[hi]]]]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; data_type = outTemp<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_type = max<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label = High<br />
+&nbsp;&nbsp;&nbsp; [[[[low]]]]<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; date_type = outTemp<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_type = min<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label = Low Temperature</p>
+	<p>
+	This results in the plot <span class="code">yearhilow.png</span>:</p>
+	
+	<p class="center">
+	<img alt="Daily highs and lows" src="yearhilow.png" />
+	</p>
+<h3>Progressive vector plots</h3>
 	<p><span class="code">Weewx</span> can produce progressive vector plots as well 
 	as the more conventional x-y plots. To produce these, use plot type &#39;<span class="code">vector</span>&#39;. 
 	You need a vector type to produce this kind of plot. There are two: &#39;<span class="code">windvec</span>&#39;, 
