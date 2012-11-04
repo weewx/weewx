@@ -1052,14 +1052,17 @@ def _archive_datetime(packet) :
     datestamp = packet['date_stamp']
     timestamp = packet['time_stamp']
     
-    # Decode the Davis time, constructing a time-tuple from it:
+    # Construct a time tuple from Davis time. Unfortunately, as timestamps come
+    # off the Vantage logger, there is no way of telling whether or not DST is
+    # in effect. So, have the operating system guess by using a '-1' in the last
+    # position of the time tuple. It's the best we can do...
     time_tuple = ((0xfe00 & datestamp) >> 9,    # year
                   (0x01e0 & datestamp) >> 5,    # month
                   (0x001f & datestamp),         # day
                   timestamp // 100,             # hour
                   timestamp % 100,              # minute
                   0,                            # second
-                  0, 0, -1)
+                  0, 0, -1)                     # have OS guess DST
     # Convert to epoch time:
     try:
         ts = int(time.mktime(time_tuple))
