@@ -4,6 +4,11 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
+2.0.1 11/05/12
+
+Fixed problem with reconfiguring databases to a new unit system.
+
+
 2.0.0 11/04/12
 
 A big release with  lots of changes.  The two most important  are the support of
