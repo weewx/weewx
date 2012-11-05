@@ -4,7 +4,12 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-2.0.0 XX/YY/12
+2.0.1 11/05/12
+
+Fixed problem with reconfiguring databases to a new unit system.
+
+
+2.0.0 11/04/12
 
 A big release with  lots of changes.  The two most important  are the support of
 additional weather hardware, and the support of the MySQL database.
@@ -37,7 +42,8 @@ along the way. See the Customizing Guide.
 
 You can now use "mmHg" as a unit of pressure.
 
-Added new almanac information such as first and last quarter moons.
+Added new  almanac information, such  as first and last quarter moons, and civil
+twilight.
 
 Changed  the engine  architecture  so it  is  more event  driven.   It now  uses
 callbacks, making it easier to add new event types.
@@ -48,9 +54,6 @@ Added utility config_database.py, for configuring the databases.
 
 Made it easier  to write custom RESTful protocols. Thanks to  user Brad, for the
 idea and the use case!
-
-When decoding Davis packet times,  now looks to wall clock  to determine whether
-DST is in effect.
 
 The stats  type 'squarecount' now contains  the number of  valid wind directions
 that went into calculating 'xsum' and 'ysum'.  It used to be the number of valid

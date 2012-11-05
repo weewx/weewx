@@ -16,6 +16,7 @@ from weewx.units import ValueTuple
 import weewx.units
 import weeutil.weeutil
 import weedb
+import user.schemas
 
 #===============================================================================
 #                         class Archive
@@ -59,6 +60,9 @@ class Archive(object):
         An exception of type weedb.OperationalError will be raised if the
         database does not exist.
         
+        An exception of type StandardError will be raised if the database
+        exists, but has not been initialized.
+        
         Returns:
         An instance of Archive."""
         connection = weedb.connect(archive_db_dict)
@@ -80,7 +84,7 @@ class Archive(object):
             archive = Archive.open(archive_db_dict)
             # The database exists and has been initialized. Return it.
             return archive
-        except weedb.OperationalError:
+        except (weedb.OperationalError, StandardError):
             pass
         
         # First try to create the database. If it already exists, an exception will
@@ -537,14 +541,14 @@ class Archive(object):
         column_list = self.connection.columnsOf('archive')
         return column_list
 
-def reconfig(old_db_dict, new_db_dict, target_unit_system=None):
-    """Copy over an old archive to a new one, using the new schema."""
-
-    with Archive.open(old_db_dict) as oldArchive:
-        with Archive.open_with_create(new_db_dict) as newArchive:
+def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=user.schemas.defaultArchiveSchema):
+    """Copy over an old archive to a new one, using a provided schema."""
+    
+    with Archive.open(old_db_dict) as old_archive:
+        with Archive.open_with_create(new_db_dict, new_schema) as new_archive:
 
             # Wrap the input generator in a unit converter.
-            record_generator = weewx.units.GenWithConvert(oldArchive.genBatchRecords(), target_unit_system)
+            record_generator = weewx.units.GenWithConvert(old_archive.genBatchRecords(), new_unit_system)
         
             # This is very fast because it is done in a single transaction context:
-            newArchive.addRecord(record_generator)
+            new_archive.addRecord(record_generator)

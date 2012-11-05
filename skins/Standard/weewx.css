@@ -157,22 +157,34 @@ body {
 }
     
 #plots img {
-    margin: 3px;
     border: thin solid #3d6c87;
+    margin: 3px;
     padding: 3px;
 }
 
 #radar_img {
-    width: 90%;
+    width: 100%;
     display: block;
     margin-left: auto;
     margin-right: auto;
+    margin: 3px;
+    padding: 3px;
 }
 
 #radar_img img {
+    margin-left: auto;
+    margin-right: auto;
     width: 90%;
-    padding: 3px;
     margin: 3px;
+    padding: 3px;
+}
+
+#radar_img p {
+    width: 90%;
+    font-style: italic;
+    font-size: smaller;
+    text-align: center;
+    margin-top: 0;
 }
 
 /*
@@ -195,4 +207,3 @@ body {
 h2, h3, h4, h5, h6 {
     color: #3d6c87;
 }
-
