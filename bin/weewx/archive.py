@@ -36,16 +36,17 @@ class Archive(object):
     def __init__(self, connection):
         """Initialize an object of type weewx.Archive. 
         
-        If the database does not exist or it is uninitialized, an
-        exception will be thrown. 
+        If the database is uninitialized, an exception of type weewx.UninitializedDatabase
+        will be raised. 
         
         connection: A weedb connection to the archive database.
         """
         self.connection = connection
-        self.sqlkeys = self._getTypes()
-        if not self.sqlkeys:
+        try:
+            self.sqlkeys = self._getTypes()
+        except weedb.OperationalError, e:
             self.close()
-            raise StandardError("Database not initialized")
+            raise weewx.UninitializedDatabase(e)
         
         # Fetch the first row in the database to determine the unit system in
         # use. If the database has never been used, then the unit system is
@@ -84,7 +85,7 @@ class Archive(object):
             archive = Archive.open(archive_db_dict)
             # The database exists and has been initialized. Return it.
             return archive
-        except (weedb.OperationalError, StandardError):
+        except (weedb.OperationalError, weewx.UninitializedDatabase):
             pass
         
         # First try to create the database. If it already exists, an exception will
@@ -535,7 +536,8 @@ class Archive(object):
     def _getTypes(self):
         """Returns the types appearing in an archive database.
         
-        returns: A list of types or None if the database has not been initialized."""
+        Raises exception of type weedb.OperationalError if the 
+        database has not been initialized."""
         
         # Get the columns in the table
         column_list = self.connection.columnsOf('archive')

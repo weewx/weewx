@@ -108,15 +108,14 @@ class Connection(weedb.Connection):
                 if row is None: break
                 # Extract the table name. In case it's in unicode, convert to a regular string.
                 table_list.append(str(row[0]))
-        except _mysql_exceptions.OperationalError, e:
-            raise weedb.OperationalError(e)
         finally:
             cursor.close()
         return table_list
                 
     def columnsOf(self, table):
-        """Return a list of columns in the specified table. If the table does not exist,
-        None is returned."""
+        """Return a list of columns in the specified table. 
+        
+        If the table does not exist, an exception of type weedb.OperationalError is raised."""
         column_list = list()
         try:
             # Get a cursor directly from MySQL:
@@ -125,9 +124,9 @@ class Connection(weedb.Connection):
             # non-existing table
             try:
                 cursor.execute("""SHOW COLUMNS IN %s;""" % table)
-            except _mysql_exceptions.ProgrammingError:
-                # Table does not exist. Return None
-                return None
+            except _mysql_exceptions.ProgrammingError, e:
+                # Table does not exist. Change the exception type:
+                raise weedb.OperationalError(e)
             while True:
                 row = cursor.fetchone()
                 if row is None: break
@@ -135,8 +134,8 @@ class Connection(weedb.Connection):
                 column_list.append(str(row[0]))
         finally:
             cursor.close()
-        # If there are no columns (which means the table did not exist) return None
-        return column_list if column_list else None
+
+        return column_list
     
     def begin(self):
         """Begin a transaction."""

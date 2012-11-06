@@ -59,6 +59,9 @@ class ViolatedPrecondition(StandardError):
 class StopNow(StandardError):
     """Exception thrown to stop the engine."""
     
+class UninitializedDatabase(StandardError):
+    """Exception thrown when attempting to use an unitialized database."""
+    
 #===============================================================================
 #                       Possible event types.
 #===============================================================================

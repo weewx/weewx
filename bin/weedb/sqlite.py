@@ -82,9 +82,6 @@ class Connection(weedb.Connection):
     def tables(self):
         """Returns a list of tables in the database."""
         
-        if not os.path.exists(self.file_path):
-            raise weedb.OperationalError
-        
         table_list = list()
         for row in self.connection.execute("""SELECT tbl_name FROM sqlite_master WHERE type='table';"""):
             # Extract the table name. Sqlite returns unicode, so always

@@ -409,7 +409,7 @@ class StdArchive(StdService):
             raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % (self.archive_delay,))
         
         self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be done in %s" % (self.record_generation,))
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be attempted in '%s'" % (self.record_generation,))
 
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)

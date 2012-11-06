@@ -57,6 +57,7 @@ class Common(unittest.TestCase):
         weedb.create(self.db_dict)
         _connect = weedb.connect(self.db_dict)
         self.assertEqual(_connect.tables(), [])
+        self.assertRaises(weedb.OperationalError, _connect.columnsOf, 'test1')
         _connect.close()
         
     def test_create(self):
@@ -82,7 +83,7 @@ class TestSqlite(Common):
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.db_dict = sqlite_db_dict
+        self.db_dict = mysql_db_dict
         super(TestMySQL, self).__init__(*args, **kwargs)
         
     

@@ -78,6 +78,10 @@ class Common(unittest.TestCase):
         # Attempt to open a non-existent database results in an exception:
         self.assertRaises(weedb.OperationalError, weewx.archive.Archive.open, self.archive_db_dict)
 
+    def test_unitialized_archive(self):
+        _connect = weedb.create(self.archive_db_dict)
+        self.assertRaises(weewx.UninitializedDatabase, weewx.archive.Archive(_connect))
+        
     def test_create_archive(self):
         archive = weewx.archive.Archive.open_with_create(self.archive_db_dict, archive_schema)
         self.assertItemsEqual(archive.connection.tables(), ['archive'])

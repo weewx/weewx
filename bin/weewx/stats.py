@@ -137,17 +137,17 @@ class StatsDb(object):
     def __init__(self, connection):
         """Create an instance of StatsDb to manage a database.
         
-        If the database does not exist or it is uninitialized, an
-        exception of type weedb.OperationalError will be thrown. 
+        If the database is uninitialized, an exception of type weewx.UninitializedDatabase
+        will be raised. 
         
         connection: A weedb connection to the stats database. """
         
         self.connection = connection
         try:
             self.statsTypes = self.__getTypes()
-        except weedb.OperationalError:
+        except weedb.OperationalError, e:
             self.close()
-            raise
+            raise weewx.UninitializedDatabase(e)
         self.std_unit_system = self._getStdUnitSystem()
         
     @staticmethod
@@ -171,7 +171,7 @@ class StatsDb(object):
             stats = StatsDb.open(stats_db_dict)
             # The database exists and has been initialized. Return it.
             return stats
-        except weedb.OperationalError:
+        except weedb.OperationalError, weewx.UninitializedDatabase:
             pass
 
         # First try to create the database. If it already exists, an exception

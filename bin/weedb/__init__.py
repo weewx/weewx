@@ -61,6 +61,8 @@ def drop(db_dict):
 class Connection(object):
 
     def __init__(self, connection, database, dbtype):
+        """Superclass should raise exception of type weedb.OperationalError
+        if the database does not exist."""
         self.connection = connection
         self.database   = database
         self.dbtype     = dbtype
@@ -71,12 +73,12 @@ class Connection(object):
         
     def tables(self):
         """Returns a list of the tables in the database.
-        Returns an empty list if there is nothing in it."""
+        Returns an empty list if the database has no tables in it."""
         raise NotImplementedError
     
     def columnsOf(self, table):
         """Returns a list of the column names in the specified table.
-        Raises exception weedb.OperationalError if the table does not exist."""
+        Raises exception of type weedb.OperationalError if the table does not exist."""
         raise NotImplementedError
             
     def begin(self):
