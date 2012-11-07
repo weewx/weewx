@@ -668,6 +668,36 @@ Mutating actions will request confirmation before proceeding.</pre>
 			<p class="tty">
 				<em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf 
 				--set-bucket=2</p>
+			<h2>Configuring MySql</h2>
+			<p>This section can be ignored if you are not using MySQL.</p>
+			<p>Assuming that you use the default database configurations, your
+			<span class="code"><a href="#[Databases]">[Databases]</a></span> 
+			section will look like:</p>
+			<pre>	[[archive_mysql]]
+		host = localhost
+		user = weewx
+		password = weewx
+		database = weewx
+		driver = weedb.mysql
+		
+	[[stats_mysql]]
+		host = localhost
+		user = weewx
+		password = weewx
+		database = stats
+		driver = weedb.mysql</pre>
+			<p>You will need to give the necessary permissions for databases '<span class="code">weewx</span>' 
+			and '<span class="code">stats</span>' to whatever MySQL 
+			user you choose, by default, user '<span class="code">weewx</span>'. Here would be the 
+			necessary permissions:</p>
+			<pre>mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
+mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
+mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</pre>
+			<p>This assumes user '<span class="code">weewx</span>' would have 
+			password '<span class="code">weewx</span>'. If you wish, databases '<span class="code">weewx</span>' 
+			and '<span class="code">stats</span>' can be combined into one 
+			database, although this will make it harder to drop the latter 
+			should you need to rebuild it at a later time.</p>
 			<h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
 			<p>
 				Station specific information is set in the configuration file <em> <span class="code">$WEEWX_ROOT/weewx.conf</span></em>. (There is another

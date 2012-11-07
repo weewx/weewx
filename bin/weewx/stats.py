@@ -171,7 +171,7 @@ class StatsDb(object):
             stats = StatsDb.open(stats_db_dict)
             # The database exists and has been initialized. Return it.
             return stats
-        except weedb.OperationalError, weewx.UninitializedDatabase:
+        except (weedb.OperationalError, weewx.UninitializedDatabase):
             pass
 
         # First try to create the database. If it already exists, an exception
@@ -594,9 +594,12 @@ class StatsDb(object):
         
         # Some stats database have schemas for heatdeg and cooldeg (even though
         # they are not used) due to an earlier bug. Filter them out. Also,
-        # filter out the metadata table:
-        stats_types = [s for s in raw_stats_types if s not in ['heatdeg','cooldeg','metadata']]
+        # filter out the metadata table. In case the same database is being used
+        # for the archive data, filter out the 'archive' database.
+        stats_types = [s for s in raw_stats_types if s not in ['heatdeg','cooldeg','metadata', 'archive']]
 
+        if not stats_types:
+            raise weedb.OperationalError("Uninitialized stats database")
         return stats_types
         
             
