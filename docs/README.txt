@@ -4,6 +4,11 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
+2.0.2 11/07/12
+
+Now allows both the archive and stats data to be held in the same database.
+
+
 2.0.1 11/05/12
 
 Fixed problem with reconfiguring databases to a new unit system.
