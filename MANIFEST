@@ -45,7 +45,7 @@ bin/weewx/units.py
 bin/weewx/wmrx.py
 bin/weewx/wxengine.py
 bin/weewx/wxformulas.py
-docs/CHANGES.txt
+docs/README.txt
 docs/customizing.htm
 docs/daytemp_with_avg.png
 docs/debian.htm
