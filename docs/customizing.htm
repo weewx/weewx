@@ -2221,9 +2221,10 @@ class MyAlarm(StdService):
 	<span class="code">weewx</span> can do the record generation for you. It will 
 	automatically collect all the types it sees in your loop packets then emit a 
 	record with the averages (in some cases the sum or max value) of all those types. 
-	If it doesn't see a type, then it won't appear in the emitted record. If it 
-	does have a logger, then you should implement method <span class="code">genArchiveRecords</span> 
-	as well.</p>
+	If it doesn't see a type, then it won't appear in the emitted record. If 
+	your hardware does have a logger, then you should implement method <span class="code">genArchiveRecords</span> 
+	as well. It should be a generator function that returns all the records 
+	since a given time. </p>
 	<p>A couple of observation types are tricky. In particular, rain. Generally,
 	<span class="code">weewx</span> expects to see a packet with the amount of rain 
 	that fell in that packet period included as observation '<span class="code">rain</span>'. 

@@ -225,7 +225,7 @@ class Almanac():
                 self.observer         = ephem.Observer()
                 self.observer.date    = timestamp_to_djd(almanac_time)
                 self.observer.lat     = math.radians(lat)
-                self.observer.lon     = math.radians(lon)
+                self.observer.long    = math.radians(lon)
                 self.observer.elev    = altitude
                 self.observer.horizon = math.radians(horizon)
                 self.observer.temp    = temperature
