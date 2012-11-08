@@ -9,6 +9,7 @@
 #
 """Classes and functions for interfacing with a Davis VantagePro, VantagePro2, or VantageVue weather station"""
 
+import datetime
 import serial
 import socket
 import struct
@@ -529,10 +530,14 @@ class Vantage(weewx.abstractstation.AbstractStation):
             _start_index = 0
 
     def getTime(self) :
-        """Get the current time from the console and decode it, returning it as timestamp
+        """Get the current time from the console, returning it as timestamp"""
+
+        time_dt = self.getConsoleTime()
+        return time.mktime(time_dt.timetuple())
+
+    def getConsoleTime(self):
+        """Return the raw time on the console, uncorrected for DST or timezone."""
         
-        returns: the time in unix epoch time
-        """
         # Try up to max_tries times:
         for unused_count in xrange(self.max_tries) :
             try :
@@ -543,11 +548,9 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 # ... get the binary data. No prompt, only one try:
                 _buffer = self.port.get_data_with_crc16(8, max_tries=1)
                 (sec, minute, hr, day, mon, yr, unused_crc) = struct.unpack("<bbbbbbH", _buffer)
-                # Unforunately, there is no way of determining whether the time returned from
-                # the console is DST or not. Assume it is the same as local time.
-                local_tt = time.localtime()
-                time_tt = (yr+1900, mon, day, hr, minute, sec, 0, 0, local_tt.tm_isdst)
-                return time.mktime(time_tt)
+                
+                return datetime.datetime(yr+1900, mon, day, hr, minute, sec)
+                
             except weewx.WeeWxIOError :
                 # Caught an error. Keep retrying...
                 continue

@@ -116,7 +116,7 @@ def info(station):
     except:
         _firmware_date = "<Unavailable>"
     
-    console_time = weeutil.weeutil.timestamp_to_string(station.getTime())
+    console_time = station.getConsoleTime()
     
     print  """Davis Vantage EEPROM settings:
     

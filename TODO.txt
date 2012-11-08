@@ -1,4 +1,7 @@
 TODO before the next release:
 
+Make sure VantagePro.getConsoleTime() is working correctly. Check that config_vp returns
+something sensible for the console time.
+
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
