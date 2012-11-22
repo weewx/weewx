@@ -69,8 +69,9 @@ class Archive(object):
         
         Returns:
         An instance of Archive."""
-        connection = weedb.connect(archive_db_dict)
-        return Archive(connection, table)
+        
+        _connect = weedb.connect(archive_db_dict)
+        return Archive(_connect, table)
     
     @staticmethod
     def open_with_create(archive_db_dict, archiveSchema, table='archive'):
@@ -92,32 +93,8 @@ class Archive(object):
             return archive
         except (weedb.OperationalError, weewx.UninitializedDatabase):
             pass
-        
-        # First try to create the database. If it already exists, an exception will
-        # be thrown.
-        try:
-            weedb.create(archive_db_dict)
-        except weedb.DatabaseExists:
-            pass
-    
-        # List comprehension of the types, joined together with commas. Put
-        # the SQL type in backquotes, because at least one of them ('interval')
-        # is a MySQL reserved word
-        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
 
-        _connect = weedb.connect(archive_db_dict)
-        try:
-            with weedb.Transaction(_connect) as _cursor:
-                _cursor.execute("CREATE TABLE %s (%s);" % (table, _sqltypestr))
-                
-        except Exception, e:
-            _connect.close()
-            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create database archive.")
-            syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
-            raise
-    
-        syslog.syslog(syslog.LOG_NOTICE, "archive: created schema for database 'archive'")
-
+        _connect = Archive._create_table(archive_db_dict, archiveSchema, table)        
         return Archive(_connect, table)
     
     @property
@@ -538,6 +515,47 @@ class Archive(object):
         (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
         return (weewx.units.ValueTuple(time_vec, time_type, time_group), weewx.units.ValueTuple(data_vec, data_type, data_group))
 
+    @staticmethod
+    def _create_table(archive_db_dict, archiveSchema, table):
+        """Create a SQL table using a given archive schema.
+        
+        archive_db_dict: A database dictionary holding the information necessary
+        to open the database.
+        
+        archiveSchema: The schema to be used
+        
+        table: The name of the table to be used within the database.
+        
+        Returns: 
+        A connection""" 
+    
+        # First try to create the database. If it already exists, an exception will
+        # be thrown.
+        try:
+            weedb.create(archive_db_dict)
+        except weedb.DatabaseExists:
+            pass
+    
+        # List comprehension of the types, joined together with commas. Put
+        # the SQL type in backquotes, because at least one of them ('interval')
+        # is a MySQL reserved word
+        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
+
+        _connect = weedb.connect(archive_db_dict)
+        try:
+            with weedb.Transaction(_connect) as _cursor:
+                _cursor.execute("CREATE TABLE %s (%s);" % (table, _sqltypestr))
+                
+        except Exception, e:
+            _connect.close()
+            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create database table '%s'." % table)
+            syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
+            raise
+    
+        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized database table '%s'." % table)
+
+        return _connect
+    
     def _getTypes(self):
         """Returns the types appearing in an archive database.
         
