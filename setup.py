@@ -161,7 +161,7 @@ class My_install_data(install_data):
             pass
         
         # If the file $WEEWX_INSTALL/CHANGES.txt exists, delete it. It's
-        # been moved to the docs subdirectory
+        # been moved to the docs subdirectory and renamed
         try:
             print os.path.join(self.install_dir, 'CHANGES.txt')
             os.remove(os.path.join(self.install_dir, 'CHANGES.txt'))
@@ -342,7 +342,7 @@ setup(name='weewx',
       py_modules  = ['daemon'],
       scripts     = ['bin/config_database.py', 'bin/config_vp.py', 'bin/weewxd.py', 'bin/runreports.py'],
       data_files  = [('',                           ['LICENSE.txt', 'README', 'weewx.conf']),
-                     ('docs',                       ['docs/CHANGES.txt', 'docs/customizing.htm', 
+                     ('docs',                       ['docs/README.txt', 'docs/customizing.htm', 
                                                      'docs/daytemp_with_avg.png', 'docs/debian.htm', 
                                                      'docs/readme.htm', 'docs/samaxesjs.toc-1.5.min.js', 
                                                      'docs/sheeva.htm', 'docs/upgrading.htm',

@@ -1,5 +1,9 @@
                     Possible NEW FEATURES
 
+Allow the console to participate as yet another service. Then, the Davis console
+could intercept new archive record events and add rxcheckpercent and rain to software
+generated records.
+
 Add ordinate wind descriptions "N, NE, E,", etc. Same with barometer
 trends.
 
