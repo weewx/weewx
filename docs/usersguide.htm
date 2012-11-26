@@ -435,7 +435,9 @@ Mutating actions will request confirmation before proceeding.</pre>
     
     CONSOLE TYPE:                   VantagePro2
     
-    CONSOLE FIRMWARE DATE:          Nov 28 2005
+    CONSOLE FIRMWARE:
+      Date:                         Nov 28 2005
+      Version:                      &lt;Unavailable&gt;
     
     CONSOLE SETTINGS:
       <span class="highlight">Archive interval:             300 (seconds)</span>
@@ -477,6 +479,8 @@ Mutating actions will request confirmation before proceeding.</pre>
       Correction constant:          +0.027 inHg
       Gain:                         -1.000
       Offset:                       -1.000</pre>
+	<p>Note that console version number is only available on consoles with 
+	firmware dates after about 2006.</p>
 	<p><span class="highlight">Highlighted</span> values can be changed.</p>
 	<p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
 	<pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf --set-interval=600</pre>

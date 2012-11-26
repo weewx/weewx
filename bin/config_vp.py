@@ -113,8 +113,13 @@ def info(station):
     
     try:
         _firmware_date = station.getFirmwareDate()
-    except:
+    except Exception:
         _firmware_date = "<Unavailable>"
+        
+    try:
+        _firmware_version = station.getFirmwareVersion()
+    except Exception:
+        _firmware_version = '<Unavailable>'
     
     console_time = station.getConsoleTime()
     
@@ -122,7 +127,9 @@ def info(station):
     
     CONSOLE TYPE:                   %s
     
-    CONSOLE FIRMWARE DATE:          %s
+    CONSOLE FIRMWARE:
+      Date:                         %s
+      Version:                      %s
     
     CONSOLE SETTINGS:
       Archive interval:             %d (seconds)
@@ -137,7 +144,7 @@ def info(station):
       Temperature:                  %s
       Rain:                         %s
       Wind:                         %s
-      """ % (station.hardware_name, _firmware_date,
+      """ % (station.hardware_name, _firmware_date, _firmware_version,
              station.archive_interval, station.altitude, station.altitude_unit,
              station.wind_cup_size, station.rain_bucket_size, station.rain_year_start, console_time,
              station.barometer_unit, station.temperature_unit, 

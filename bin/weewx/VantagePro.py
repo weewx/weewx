@@ -703,6 +703,10 @@ class Vantage(weewx.abstractstation.AbstractStation):
         """Return the firmware date as a string. """
         return self.port.send_command('VER\n')[0]
         
+    def getFirmwareVersion(self):
+        """Return the firmware version as a string."""
+        return self.port.send_command('NVER\n')[0]
+    
     def getStnInfo(self):
         """Return lat / lon, time zone, etc."""
         
