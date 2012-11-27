@@ -268,7 +268,7 @@ pip install pil </pre>
 	If <span class="code"><em>$WEEWX_INSTALL</em></span> symbolizes the root location 
 	of where the <span class="code">weewx</span> directory will be installed, then 
 	the nominal directory layout is: </p>
-	<table style="width: 60%" summary="Summarizing the nominal weewx directory layout" class="center">
+	<table class="center" style="width: 60%" summary="Summarizing the nominal weewx directory layout">
 		<tr>
 			<td><strong>Subdirectory</strong></td>
 			<td><strong>Contents</strong></td>
@@ -479,8 +479,8 @@ Mutating actions will request confirmation before proceeding.</pre>
       Correction constant:          +0.027 inHg
       Gain:                         -1.000
       Offset:                       -1.000</pre>
-	<p>Note that console version number is only available on consoles with 
-	firmware dates after about 2006.</p>
+	<p>Note that console version number is only available on consoles with firmware 
+	dates after about 2006.</p>
 	<p><span class="highlight">Highlighted</span> values can be changed.</p>
 	<p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
 	<pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf --set-interval=600</pre>
@@ -888,7 +888,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	00:05:15, 00:10:15, etc. This delay is to give the station a few seconds to 
 	archive the data internally, and in case your server has any other tasks to 
 	do at the top of the minute. Default is 15 seconds. </p>
-	<p class="config_option">record_generation</p>
+	<p id="record_generation" class="config_option">record_generation</p>
 	<p>Set to whether records should be downloaded off the hardware (recommended), 
 	or generated in software. If set to '<span class="code">hardware</span>', then
 	<span class="code">weewx</span> tries to download archive records from your 
@@ -1036,7 +1036,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	weewx</span> installation (it should have been set to the correct value automatically 
 	by the install process, but it&#39;s worth checking). </p>
 	<p>Copy it to the proper location for your system: </p>
-	<table style="width: 70%" class="center">
+	<table class="center" style="width: 70%">
 		<tr>
 			<td style="width: 25%">SuSE:</td>
 			<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/SuSE/weewx /etc/init.d</td>
@@ -1047,7 +1047,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 		</tr>
 	</table>
 	<p>Make sure the script is executable: </p>
-	<table style="width: 70%" class="center">
+	<table class="center" style="width: 70%">
 		<tr>
 			<td style="width: 25%">SuSE:</td>
 			<td class="code">chmod +x /etc/init.d/weewx</td>
@@ -1058,7 +1058,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 		</tr>
 	</table>
 	<p>Create symbolic links in the run level directories: </p>
-	<table style="width: 70%" class="center">
+	<table class="center" style="width: 70%">
 		<tr>
 			<td style="width: 25%">SuSE:</td>
 			<td class="code">/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
@@ -1103,7 +1103,9 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	weewx.conf</span> to <span class="code">1</span> (one) will generate many more 
 	checks and output and can be useful for debugging. </p>
 	<h1 id="Troubleshooting">Troubleshooting</h1>
-	<p>If you get stuck, be sure to </p>
+	<p>This section lists some common problems installing and running
+	<span class="code">weewx</span>. Check it first. If you are still stuck, be 
+	sure to </p>
 	<ul>
 		<li>Set option <span class="code">debug </span>in <span class="code">weewx.conf</span> 
 		to <span class="code">1</span> (one)! It will put lots more information 
@@ -1117,38 +1119,6 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 		strange results, it is worth running from the command line and looking for 
 		any clues. </li>
 	</ul>
-	<h2>Execution</h2>
-	<h3><span class="code">configobj</span> errors</h3>
-	<p>These are errors in the configuration file. Two are very common. Incidentally, 
-	these errors are far easier to diagnose when <span class="code">weewx</span> 
-	is run from the command line. </p>
-	<h4><span class="code">configobj.DuplicateError</span> exception</h4>
-	<p>This error is caused by using an identifier more than once in the configuration 
-	file. For example, you may have inadvertently listed your FTP server twice:
-	</p>
-	<pre>[Reports]
-	[[FTP]]
-		... (details elided)
-		user = fred
-		server = ftp.myhost.com
-		password = mypassword
-		server = ftp.myhost.com  # OOPS! Listed it twice!
-		path = /weather
-		... </pre>
-	<p>Generally, if you encounter this error, the log file will give you the line 
-	number it happened in: </p>
-	<pre>Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
-Apr 24 12:09:15 raven weewx[11480]: wxengine: Unable to initialize main loop:
-Apr 24 12:09:15 raven weewx[11480]:     ****  Duplicate keyword name at line 254.
-Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </pre>
-	<h4><span class="code">configobj.NestingError</span> exception</h4>
-	<p>This is a very similar error, and is caused by a misformed section nesting. 
-	For example: </p>
-	<pre>[Reports]
-	[[FTP]]]
-		... (details elided)</pre>
-	<p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.
-	</p>
 	<h2>Hardware</h2>
 	<h3>Establishing connectivity</h3>
 	<p>If you unable to get anything out of <span class="code">weewx</span>, first 
@@ -1291,7 +1261,71 @@ And put in weewx.conf:
 	</ol>
 	<p class="tty">cd /home/weewx<br />
 	./bin/config_vp.py weewx.conf --clear </p>
+	<h3>3rd party Vantage connectors</h3>
+	<p>This section is for those who are using a homebrew or 3rd party connector 
+	to a Davis Vantage console that does not contain a logger, such as the
+	<a href="http://www.wxforum.net/index.php?topic=14063.0">DSI-01 serial interface</a>. 
+	That is, it is a pure serial connection to the console, with no onboard memory.
+	</p>
+	<p>For these interfaces, you must set record generation to <em>software</em>. 
+	Without this information, <span class="code">weewx</span> is unable to detect 
+	the absence of onboard memory. If you do not do this, you will get errors that 
+	look like the following in your syslog:</p>
+	<pre class="tty">Nov 27 20:30:21 raspberrypi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  'NoneType' object has no attribute '__getitem__'
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Traceback (most recent call last):
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 132, in run
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      obj.start()
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 259, in start
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      self.run()
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 41, in run
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      self.setup()
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 52, in setup
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      self.initAlmanac(self.gen_ts)
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 87, in initAlmanac
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      rec = self.getRecord(archivedb, celestial_ts)
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 115, in getRecord
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      record_dict_vt = weewx.units.dictFromStd(record_dict)
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/units.py", line 892, in dictFromStd
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      std_unit_system = d['usUnits']
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  TypeError: 'NoneType' object has no attribute '__getitem__'
+Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Generator terminated...
+Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds&nbsp;
+</pre>
+	<p>See the section on option <span class="code">
+	<a href="#record_generation">record_generation</a></span>.</p>
 	<h2>Software</h2>
+	<h3><span class="code">configobj</span> errors</h3>
+	<p>These are errors in the configuration file. Two are very common. Incidentally, 
+	these errors are far easier to diagnose when <span class="code">weewx</span> 
+	is run from the command line. </p>
+	<h4><span class="code">configobj.DuplicateError</span> exception</h4>
+	<p>This error is caused by using an identifier more than once in the configuration 
+	file. For example, you may have inadvertently listed your FTP server twice:
+	</p>
+	<pre>[Reports]
+	[[FTP]]
+		... (details elided)
+		user = fred
+		server = ftp.myhost.com
+		password = mypassword
+		server = ftp.myhost.com  # OOPS! Listed it twice!
+		path = /weather
+		... </pre>
+	<p>Generally, if you encounter this error, the log file will give you the line 
+	number it happened in: </p>
+	<pre>Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
+Apr 24 12:09:15 raven weewx[11480]: wxengine: Unable to initialize main loop:
+Apr 24 12:09:15 raven weewx[11480]:     ****  Duplicate keyword name at line 254.
+Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </pre>
+	<h4><span class="code">configobj.NestingError</span> exception</h4>
+	<p>This is a very similar error, and is caused by a misformed section nesting. 
+	For example: </p>
+	<pre>[Reports]
+	[[FTP]]]
+		... (details elided)</pre>
+	<p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.
+	</p>
 	<h3>No barometer data</h3>
 	<p>If everything appears normal except that you have no barometer data, the 
 	problem may be a mismatch between the unit system used for service
