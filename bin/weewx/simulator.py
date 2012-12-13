@@ -113,7 +113,9 @@ class Simulator(weewx.abstractstation.AbstractStation):
                 if self.real_time:
                     # We are in real time mode. Try to keep synched up with the
                     # wall clock
-                    time.sleep(self.the_time + self.loop_interval - time.time())
+                    sleep_time = self.the_time + self.loop_interval - time.time()
+                    if sleep_time > 0: 
+                        time.sleep(sleep_time)
                 else:
                     # A start time was specified, so we are not in real time. Just sleep
                     # the appropriate interval
