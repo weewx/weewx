@@ -1150,9 +1150,14 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 		Buy. </li>
 		<li>Use a VantagePro console with a serial connection, not a USB connection. 
 		See the next section for details. </li>
-		<li>If you do use a USB connection, put a ferrite coil on each end of the 
-		connection. </li>
+		<li>If you do use a USB connection, put a ferrite coil on each end of 
+		the cable to your console. If you have enough length and the ferrite 
+		coil is big enough, make a loop so it goes through the coil twice. 
+		Here's a picture of a Davis Envoy with a ferrite coil not only on the 
+		USB connection (top wire), but also the power supply. Both have loops.</li>
 	</ul>
+	<p>
+	<img alt="Ferrite coils" height="480" longdesc="Cable connection looped through a ferrite coil" src="ferrites.jpg" width="640" /></p>
 	<h3>cp2101 converter problems</h3>
 	<p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
 	problems. The symptom is that the Linux kernel will disconnect from your old 
