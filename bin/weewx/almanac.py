@@ -277,7 +277,7 @@ class Almanac():
                       'previous_last_quarter_moon', 'next_last_quarter_moon']:
             # This is how you call a function on an instance when all you have
             # is the function's name as a string
-            djd = ephem.__dict__[attr](self.time_djd)   #@UndefinedVariable
+            djd = getattr(ephem, attr)(self.time_djd)
             return weewx.units.ValueHelper((djd, "dublin_jd", "group_time"), 
                                            context="ephem_year", formatter=self.formatter)
         else:
