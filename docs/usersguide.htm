@@ -1016,6 +1016,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p class="tty">ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note 
 	the PID of the weewxd.py process </p>
 	<p class="tty">kill -HUP <em>pid</em> # Send it a HUP signal </p>
+	<p>Note that this <em>only</em> rereads the configuration file. It will not reflect any changes you 
+	might have made to the code.</p>
 	<h2 id="Running_as_a_daemon">Running as a daemon</h2>
 	<p>For unattended operations it is best to have <span class="code">weewx</span> 
 	run as a daemon, started automatically when the server is rebooted. Start by 
