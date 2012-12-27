@@ -18,6 +18,14 @@ def dewpointF(T, R) :
     R: Relative humidity in percent.
     
     Returns: Dewpoint in Fahrenheit
+    Examples:
+    
+    >>> print "%.1f" % dewpointF(68, 50)
+    48.7
+    >>> print "%.1f" % dewpointF(32, 50)
+    15.5
+    >>> print "%.1f" % dewpointF(-10, 50)
+    -23.5
     """
 
     if T is None or R is None :
