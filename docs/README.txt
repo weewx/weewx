@@ -9,6 +9,8 @@ For complete documentation, see http://www.weewx.com/docs
 config_vp.py now returns the console version number if available (older consoles
 do not offer this).
 
+Now includes a Redhat init.d script, contributed by Mark Jenks. Thanks, Mark!!
+
 
 2.0.2 11/23/12
 

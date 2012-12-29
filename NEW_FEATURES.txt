@@ -6,6 +6,9 @@ generated records.
 
 Put the stats types in a metafile, rather than using the list of tables.
 
+Specify "max time gap" for the graphs. For gaps bigger than this, there would be
+no connecting plot line.
+
 Add ordinate wind descriptions "N, NE, E,", etc. Same with barometer
 trends.
 

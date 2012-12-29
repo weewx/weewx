@@ -1032,6 +1032,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 			<td style="width: 25%">Debian/Ubuntu:</td>
 			<td class="code"><em>$WEEWX_ROOT</em>/start_script/Debian/weewx</td>
 		</tr>
+		<tr>
+			<td style="width: 25%">Redhat</td>
+			<td class="code"><em>$WEEWX_ROOT</em>/start_script/Redhat/weewx</td>
+		</tr>
 	</table>
 	<p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 
 	inside has been set to the proper root directory for your <span class="code">
@@ -1047,6 +1051,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 			<td>Debian/Ubuntu:</td>
 			<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/Debian/weewx /etc/init.d</td>
 		</tr>
+		<tr>
+			<td>Redhat:</td>
+			<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/Redhat/weewx /etc/init.d</td>
+		</tr>
 	</table>
 	<p>Make sure the script is executable: </p>
 	<table class="center" style="width: 70%">
@@ -1056,6 +1064,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 		</tr>
 		<tr>
 			<td style="width: 25%">Debian/Ubuntu:</td>
+			<td class="code">chmod +x /etc/init.d/weewx</td>
+		</tr>
+		<tr>
+			<td style="width: 25%">Redhat:</td>
 			<td class="code">chmod +x /etc/init.d/weewx</td>
 		</tr>
 	</table>
@@ -1068,6 +1080,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 		<tr>
 			<td style="width: 25%">Debian/Ubuntu:</td>
 			<td class="code">update-rc.d weewx defaults 98</td>
+		</tr>
+		<tr>
+			<td style="width: 25%">Redhat</td>
+			<td class="code">chkconfig weewx on</td>
 		</tr>
 	</table>
 	<p><span class="code">Weewx</span> will now start automatically whenever your 
