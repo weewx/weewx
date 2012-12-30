@@ -8,6 +8,20 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
+	
+PYTHON2=$(shell pyversions -vr)
 
 %:
-	dh $@ 
+   dh $@ --with python2
+
+build-python%:
+   python$* setup.py build
+
+install-python%:
+   python$* setup.py install --root$(CURDIR)/debian/tmp --install-layout=deb
+
+override_dh_auto_clean:
+   dh_auto_clean
+   rm -rf build
+   rm -rf *.egg-info
+	
