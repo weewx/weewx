@@ -12,7 +12,7 @@ no connecting plot line.
 Add ordinate wind descriptions "N, NE, E,", etc. Same with barometer
 trends.
 
-Port to WMR968? Or La Crosse WS2355?
+Port to La Crosse WS2355?
 
 Offer "cumulative" as an aggregation type.
 

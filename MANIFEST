@@ -28,6 +28,7 @@ bin/weeutil/__init__.py
 bin/weeutil/ftpupload.py
 bin/weeutil/weeutil.py
 bin/weewx/VantagePro.py
+bin/weewx/WMR918.py
 bin/weewx/__init__.py
 bin/weewx/abstractstation.py
 bin/weewx/accum.py

@@ -113,6 +113,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 		<a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">
 		WMR100N</a>). Not nearly as reliable as the Davis instruments, but a lot 
 		less expensive.</li>
+		<li>Oregon Scientific WMR-918/968 series (tested on the Oregon Scientific WMR-968).</li>
 		<li>In addition, <span class="code">weewx</span> comes with a software simulator, 
 		useful for testing and evaluation.</li>
 	</ul>
@@ -603,6 +604,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<em>VantagePro2</em>, and <em>VantageVue</em>) weather stations.</p>
 	<p class="indent"><span class="code">WMR-USB</span> For Oregon Scientific WMR-USB 
 	series station (only the WMR100N has been tested).</p>
+	<p class="indent"><span class="code">WMR-918/968</span> For Oregon Scientific WMR-918/968
+	series station (only the WMR-968 has been tested).</p>
 	<p class="indent"><span class="code">Simulator</span> For a software weather 
 	station simulator</p>
 	<h3 class="config_section">[Vantage]</h3>
@@ -648,6 +651,19 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p>This section is for options relating to the Oregon Scientific WMR series 
 	of weather stations with USB connectors. The WMR100N is known to work, others 
 	might work as well.</p>
+	<p class="config_option">stale_wind</p>
+	<p>How long a wind record can be used to calculate wind chill (in seconds). 
+	Default is 30.</p>
+	<h3 class="config_section">[WMR-918]</h3>
+	<p>This section is for options relating to the Oregon Scientific WMR-918 series 
+	of weather stations with serial connectors. The WMR-968 is known to work, others 
+	might work as well.</p>
+	<p>Set to &#39;<span class="code">serial</span>&#39;.</p>
+	<p class="config_important">port </p>
+	<p>Along with the &#39;<span class="code">serial</span>&#39; option above, you must set 
+	the serial port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
+	is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
+	for serial ports. No default. </p>
 	<p class="config_option">stale_wind</p>
 	<p>How long a wind record can be used to calculate wind chill (in seconds). 
 	Default is 30.</p>
