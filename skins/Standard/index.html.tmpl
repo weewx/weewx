@@ -509,8 +509,8 @@
         <br/>
         Yearly summary:&nbsp;
         <select NAME=noaaselect onchange="openNoaaFile(value)">
-        #for $year in $SummaryByYear
-            <option value="$year">$year</option>
+        #for $yr in $SummaryByYear
+            <option value="$yr">$yr</option>
         #end for
 	    <option selected>-Select year-</option>
         </select>
