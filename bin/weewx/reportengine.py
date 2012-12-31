@@ -22,6 +22,7 @@ import time
 import configobj
 
 import weeutil.ftpupload
+import weeutil.rsyncupload
 import weeutil.weeutil
 import weewx.archive
 import weewx.stats
@@ -192,6 +193,34 @@ class FtpGenerator(ReportGenerator):
         
         t2= time.time()
         syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
+            
+                
+class RsyncGenerator(ReportGenerator):
+    """Class for managing the "rsync generator".
+    
+    This will rsync everything in the public_html subdirectory to a webserver."""
+
+    def run(self):
+        # We don't try to collect performance statistics about rsync, because rsync
+        # will report them for us.  Check the debug log messages.
+        try:
+            rsyncData = weeutil.rsyncupload.RsyncUpload(
+                local_root  = os.path.join(
+                    self.config_dict['WEEWX_ROOT'],
+                    self.config_dict['StdReport']['HTML_ROOT']),
+                remote_root = self.skin_dict['path'],
+                server      = self.skin_dict['server'],
+                user        = self.skin_dict.get('user', None),
+                delete      = bool(self.skin_dict.get('delete', False)))
+        except Exception:
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")
+            return
+
+        try:
+            rsyncData.run()
+        except (IOError), e:
+            (cl, unused_ob, unused_tr) = sys.exc_info()
+            syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in RsyncGenerator; %s." % (cl, e))
             
                 
 class CopyGenerator(ReportGenerator):

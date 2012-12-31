@@ -67,7 +67,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	<ul>
 		<li>An easy to understand, simple, extensible micro-kernel architecture;</li>
 		<li>Uploads to popular weather sites, such as Weather Underground and CWOP;</li>
-		<li>Uploads to your website using FTP;</li>
+		<li>Uploads to your website using FTP or rsync;</li>
 		<li>Support for multiple <em>skins</em>;</li>
 		<li>Simple, but extensible templating system;</li>
 		<li>Support for multiple unit systems;</li>
@@ -803,6 +803,27 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p class="config_option">max_tries </p>
 	<p><span class="code">Weewx</span> will try up to this many times to FTP a file 
 	up to your server before giving up. Default is 3. </p>
+	<h4 class="config_section">[[RSYNC]]</h4>
+	<p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
+	uses the report machinery to upload files from directory <span class="code">
+	<em>$HTML_ROOT</em></span> to a remote webserver. It does an incremental update, 
+	that is, it only synchronizes those files that have changed, saving the outgoing 
+	bandwidth of your Internet connection. </p>
+	<p>If you do not use such a server, comment out the options below.
+	</p>
+	<p class="config_important">server </p>
+	<p>Set to the name of your web server (e.g.,
+	<a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
+	No default </p>
+	<p class="config_important">user </p>
+	<p>Set to the ssh username you use for your rsync connection to your web server. 
+	The local user that weewx runs as must have passwordless ssh configured for 
+	user@server. Required. No default. </p>
+	<p class="config_important">path </p>
+	<p>Set to the path where the weather data will be stored on your webserver (e.g., 
+	&#39;<span class="code">/weather</span>&#39;). Required. No default. </p>
+	<p class="config_important">delete </p>
+	<p>Files that don't exist in the local report are removed from the remote location. <em>USE WITH CAUTION:</em> If you make a mistake in setting the <span class="code">path</span>, this can cause unexpected files to be deleted on the remote server.  Valid values are 1 to enable and 0 to disable.  Required.  Default is 0.</p>
 	<h3 id="[StdConvert]" class="config_section">[StdConvert]</h3>
 	<p>This section is for configuring the <span class="code">StdConvert</span> 
 	service. This service acts as a filter, converting the unit system coming off 

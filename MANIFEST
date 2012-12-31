@@ -26,6 +26,7 @@ bin/weeutil/Moon.py
 bin/weeutil/Sun.py
 bin/weeutil/__init__.py
 bin/weeutil/ftpupload.py
+bin/weeutil/rsyncupload.py
 bin/weeutil/weeutil.py
 bin/weewx/VantagePro.py
 bin/weewx/WMR918.py
@@ -60,6 +61,7 @@ docs/weekgustoverlay.png
 docs/weewx_docs.css
 docs/yearhilow.png
 skins/Ftp/skin.conf
+skins/Rsync/skin.conf
 skins/Standard/favicon.ico
 skins/Standard/index.html.tmpl
 skins/Standard/mobile.css

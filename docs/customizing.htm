@@ -108,8 +108,8 @@ Version 2.0</h1>
 			<td class="code">weewx.wxengine.StdReport</td>
 			<td>Launch a new thread to do report processing after a new archive 
 			record arrives. Reports do things such as generate HTML files, generate 
-			images, or FTP files to a web server. New reports can be added easily 
-			by the user.</td>
+			images, or FTP/rsync files to a web server. New reports can be added 
+			easily by the user.</td>
 		</tr>
 	</table>
 	<p>It is easy to extend old services or to add new ones. The source distribution 
@@ -144,10 +144,14 @@ Version 2.0</h1>
 			<td>Arranges to upload everything in the <span class="code">public_html</span> 
 			subdirectory up to a remote webserver.</td>
 		</tr>
+		<tr>
+			<td class="code">RSYNC</td>
+			<td>Like FTP, but uses rsync for transferring files to a remote webserver.</td>
+		</tr>
 	</table>
-	<p>Note that the FTP &quot;report&quot; is a funny kind of report in that it 
-	doesn&#39;t actually generate anything. Instead, it uses the reporting service 
-	engine to arrange for things to be FTP&#39;d to a remote server. </p>
+	<p>Note that the FTP and RSYNC &quot;reports&quot; are a funny kind of report in that 
+	it they don&#39;t actually generate anything. Instead, they use the reporting service 
+	engine to arrange for things to be transferred to a remote server. </p>
 	<h4>Skins</h4>
 	<p>Each report has a <em>Skin</em> associated with it. For most reports, the 
 	relationship with the skin is an obvious one: it contains the templates, any 
@@ -160,14 +164,14 @@ Version 2.0</h1>
 	possible by either overriding configuration options in the weewx configuration 
 	file <span class="code">weewx.conf</span> or the skin configuration file
 	<span class="code">skin.conf</span>. </p>
-	<p>Like all reports, the FTP &quot;Report&quot; also uses a skin, and includes 
-	a skin configuration file, although it is quite minimal. </p>
+	<p>Like all reports, the FTP and RSYNC &quot;Reports&quot; also use a skin, and 
+	include a skin configuration file, although they are quite minimal. </p>
 	<p>Skins live in their own subdirectory located in <span class="code"><em>$HTML_ROOT</em>/skins</span>.
 	</p>
 	<h4>Generators</h4>
 	<p>To create their output, skins rely on one or more <em>Generators, </em>code 
 	that actually create useful things such as HTML files or plot images. Generators 
-	can also copy files around or FTP them to remote locations. The default install 
+	can also copy files around or FTP/rsync them to remote locations. The default install 
 	of <span class="code">weewx </span>includes the following generators: </p>
 	<table style="width: 60%" summary="Generators included in weewx" class="center">
 		<tr>
@@ -187,11 +191,16 @@ Version 2.0</h1>
 			<td>Uploads data to a remote server using FTP.</td>
 		</tr>
 		<tr>
+			<td><span class="code">weewx.reportengine.RsyncGenerator</span></td>
+			<td>Uploads data to a remote server using rsync.</td>
+		</tr>
+		<tr>
 			<td><span class="code">weewx.reportengine.CopyGenerator</span></td>
 			<td>Copies files locally.</td>
 		</tr>
 	</table>
-	<p>Note that the two generators <span class="code">FtpGenerator</span> and
+	<p>Note that the three generators <span class="code">FtpGenerator</span>,
+	<span class="code">RsyncGenerator</span>, and
 	<span class="code">CopyGenerator</span> don&#39;t actually generate anything 
 	having to do with the presentation layer. Instead, they just move files around.
 	</p>
@@ -1737,8 +1746,8 @@ outTemp = Outside Temperature</pre>
 			<td class="code">weewx.wxengine.StdReport</td>
 			<td>Launch a new thread to do report processing after a new archive 
 			record arrives. Reports do things such as generate HTML files, generate 
-			images, or FTP files to a web server. New reports can be added easily 
-			by the user.</td>
+			images, or FTP/rsync files to a web server. New reports can be added 
+			easily by the user.</td>
 		</tr>
 	</table>
 	<h2 id="Preserving_your_changes_across_an_upgrade">Preserving your changes across 

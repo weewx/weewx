@@ -11,6 +11,9 @@ Thanks, William!!
 
 Now includes a Redhat init.d script, contributed by Mark Jenks. Thanks, Mark!!
 
+Added rsync report type as an alternative to the existing FTP report. Another
+thanks to William Page!
+
 config_vp.py now returns the console version number if available (older consoles
 do not offer this).
 
