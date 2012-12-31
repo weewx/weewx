@@ -260,12 +260,12 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
     def _temperature_packet(self, packet):
         _record = {'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
-        # Per Ejeklint's notes don't mention what to do if temperature
-        # or dewpoint are negative. I think the following is correct
+        # Per Ejeklint's notes don't mention what to do if temperature is
+        # negative. I think the following is correct. Also, from experience, we
+        # know that the WMR has problems measuring dewpoint at temperatures
+        # below about 20F. So, use software calculations instead.
         T = (((packet[4] & 0x7f) << 8) + packet[3])/10.0
         if packet[4] & 0x80 : T = -T
-        D = (((packet[7] & 0x7f) << 8) + packet[6])/10.0
-        if packet[7] % 0x80 : D = -D
         R = float(packet[5])
         channel = packet[2] & 0x0f
         if channel == 0:
@@ -274,7 +274,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
             _record['inTempBatteryStatus'] = (packet[0] & 0x40) >> 6
         elif channel == 1:
             _record['outTemp']     = T
-            _record['dewpoint']    = D
+            _record['dewpoint']    = weewx.wxformulas.dewpointC(T, R) # Use software
             _record['outHumidity'] = R
             _record['heatindex']   = weewx.wxformulas.heatindexC(T, R)
             # The WMR does not provide wind information in a temperature packet,
