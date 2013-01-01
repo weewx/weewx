@@ -4,10 +4,13 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-2.X.X 
+2.1.0
 
 Now supports the Oregon Scientific WMR918/968 series, thanks to user William Page. 
 Thanks, William!!
+
+Now supports the Fine Offset series of weather stations, thanks to user Matthew
+Wall. Thanks, Matthew!!
 
 Now includes a Redhat init.d script, contributed by Mark Jenks. Thanks, Mark!!
 
