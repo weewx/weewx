@@ -15,19 +15,28 @@
 <link href="weewx_docs.css" rel="stylesheet" />
 <!-- JavaScript -->
 <script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
+<style type="text/css">
+.auto-style1 {
+	font-family: "Courier New", Courier, monospace;
+	background-color: #e8e8e8;
+}
+.auto-style2 {
+	background-color: #e8e8e8;
+}
+</style>
 </head>
 
 <body>
 
-<h1 class="title">User's guide to the <span class="code">weewx</span> weather system
+<h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System
 <br />
-Version 2.0</h1>
+Version 2.1</h1>
 <h1>Table of Contents</h1>
 <p>This is the complete guide to installing <span class="code">weewx</span> &mdash; 
 all details and options are documented here. As such, it can get a bit tedious to 
 follow. </p>
 <p>If you are running Ubuntu, you can save some time by following the <em>
-<a href="debian.htm">Quick Start Guide for Debian (Ubuntu) Systems</a>.</em> </p>
+<a href="debian.htm">Quick Start Guide for Debian (Ubuntu) Users</a>.</em> </p>
 <p>For information on customizing <span class="code">weewx</span>, see the separate 
 document <a href="customizing.htm"><em>Customizing <span class="code">weewx</span></em></a>.
 </p>
@@ -41,7 +50,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	<div id="toc">
 	</div>
 	<h1 id="Copyright">Copyright</h1>
-	<p>(c) 2009, 2010, 2011, 2012 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;
+	<p>(c) 2009, 2010, 2011, 2012, 2013 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;
 	</p>
 	<p>This program is free software: you can redistribute it and/or modify it under 
 	the terms of the GNU General Public License as published by the Free Software 
@@ -113,7 +122,13 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 		<a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">
 		WMR100N</a>). Not nearly as reliable as the Davis instruments, but a lot 
 		less expensive.</li>
-		<li>Oregon Scientific WMR-918/968 series (tested on the Oregon Scientific WMR-968).</li>
+		<li>Oregon Scientific WMR-918/968 series (tested on the
+		<a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">
+		Oregon Scientific WMR-968</a>).</li>
+		<li>The Fine Offset series of weather stations. These aer branded by many 
+		vendors, including Ambient Weather, Watson, Elecsa, Tycon, and others. Tested 
+		on the <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather 
+		WS2080</a>.</li>
 		<li>In addition, <span class="code">weewx</span> comes with a software simulator, 
 		useful for testing and evaluation.</li>
 	</ul>
@@ -121,80 +136,186 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	<p><span class="code">Weewx</span> can be downloaded from its SourceForge page:<a href="http://sourceforge.net/projects/weewx/">http://sourceforge.net/projects/weewx/</a>.
 	</p>
 	<h1 id="Prerequisites">Prerequisites</h1>
+	
 	<h2>Python</h2>
 	<p>Python V2.5, V2.6, or V2.7 is required. The newer V3.0 distribution will 
 	not work. </p>
 	<h2>External packages</h2>
-	<p>The following external packages are required to use <span class="code">weewx</span>.
-	</p>
+	<p>You will need external packages for the main weewx engine, as well as for 
+	your particular hardware configuration. Instructions on how to install these 
+	on your particular operating system follows in a later section.</p>
+	<p>For the main weewx engine you will need:</p>
 	<ul>
 		<li><a href="http://pypi.python.org/pypi/configobj/">configobj</a> (Version 
 		4.5 or greater) Manages the configuration file <span class="code">weewx.conf</span>.
 		</li>
 		<li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or 
 		greater) The templating engine. </li>
-		<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 
-		2.3 or greater) Manages the serial connection to the weather station.</li>
 		<li><a href="http://pypi.python.org/pypi/PIL">Python Imaging Library</a> 
 		(Version 1.1.6 or greater) Also known as PIL, this is included in many Python 
 		distributions. </li>
 	</ul>
-	<p>For the Oregon Scientific WMR-USB series you will also need:</p>
-	<ul>
-		<li><a href="https://sourceforge.net/projects/pyusb/">PyUSB</a> (Version 
-		0.4 or greater). Driver for the USB bus. </li>
-	</ul>
 	<p>If you wish to use MySQL as your database (instead of the default
-	<span class="code">sqlite</span>), then you will need (in addition to a MySQL 
-	server, of course):</p>
+	<span class="code">sqlite</span>), then you will also need (in addition to a 
+	MySQL server, of course):</p>
 	<ul>
 		<li><a href="https://sourceforge.net/projects/mysql-python/">MySQLdb for 
 		Python</a> (Version 1.2.3 or greater). This is the Python DBAPI2 adapter 
 		for MySQL.</li>
 	</ul>
-	<p>Finally, there is one optional package:</p>
+	<p>There is one optional package:</p>
 	<ul>
-		<li><span class="code"><a href="http://pypi.python.org/pypi/pyephem/">pyephem</a></span> 
-		(Version V3.7.3 or greater). For extended almanac information. If not installed, 
+		<li><a href="http://pypi.python.org/pypi/pyephem/">pyephem</a> (Version 
+		V3.7.3 or greater). For extended almanac information. If not installed, 
 		fallback information will be used. </li>
 	</ul>
-	<p>There are two general strategies for installing these prerequisites: </p>
-	<ol>
-		<li>Use operating system tools, such as <span class="code">apt-get</span> 
-		(or its graphical equivalent Synaptic Package Manager) for Debian/Ubuntu 
-		or <span class="code">yast</span> for SuSE; or </li>
-		<li>Use the Python tool <span class="code">
-		<a href="http://pypi.python.org/pypi/pip">pip</a></span>. </li>
-	</ol>
-	<p>Option #1 is easier, but if your Linux distribution does not come with such 
-	tools, you may have to use <span class="code">pip</span>. </p>
-	<p>Brief instructions for both approaches are given below. </p>
+	<h3>Package requirements for your station hardware</h3>
+	<p>See the table below for any additional packages required for your specific 
+	hardware:</p>
+	<table style="width: 90%" class="center">
+		<tr>
+			<td class="auto-style2"><strong>Vendor</strong></td>
+			<td><strong>Model</strong></td>
+			<td><strong>Link</strong></td>
+			<td><strong>Required<br />
+			package</strong></td>
+			<td><strong>Maturity</strong></td>
+			<td><strong>Notes</strong></td>
+		</tr>
+		<tr>
+			<td class="auto-style2"><strong>Ambient Weather</strong></td>
+			<td>WS1080</td>
+			<td>USB</td>
+			<td class="code">pyusb</td>
+			<td>Untested</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2">&nbsp;</td>
+			<td>WS2080</td>
+			<td>USB</td>
+			<td class="code">pyusb</td>
+			<td>Tested</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2">&nbsp;</td>
+			<td>WS3080</td>
+			<td>USB</td>
+			<td class="code">pyusb</td>
+			<td>Untested</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2" style="height: 33px"><strong>Davis</strong></td>
+			<td style="height: 33px">VantagePro2</td>
+			<td style="height: 33px">Serial or USB</td>
+			<td class="code" style="height: 33px">pyserial</td>
+			<td style="height: 33px">Tested</td>
+			<td style="height: 33px"></td>
+		</tr>
+		<tr>
+			<td class="auto-style2">&nbsp;</td>
+			<td>VantagePro2</td>
+			<td>WeatherLink IP</td>
+			<td class="code">&nbsp;</td>
+			<td>Tested</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2">&nbsp;</td>
+			<td>VantageVue</td>
+			<td>Serial or USB</td>
+			<td class="code">pyserial</td>
+			<td>Tested</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2"><strong>Fine Offset</strong></td>
+			<td>WH1080</td>
+			<td>USB</td>
+			<td class="code">pyusb</td>
+			<td>Untested</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2">&nbsp;</td>
+			<td>WH2080</td>
+			<td>USB</td>
+			<td class="code">pyusb</td>
+			<td>Tested as Ambient<br />
+			Weather WS2080</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2">&nbsp;</td>
+			<td>WH3080</td>
+			<td>USB</td>
+			<td class="code">pyusb</td>
+			<td>Untested</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2"><strong>Oregon Scientific</strong></td>
+			<td>WMR100N</td>
+			<td>USB</td>
+			<td class="code">pyusb</td>
+			<td>Tested</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2">&nbsp;</td>
+			<td>WM918</td>
+			<td>Serial</td>
+			<td class="code">pyserial</td>
+			<td>Untested</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td class="auto-style2">&nbsp;</td>
+			<td>WM968</td>
+			<td>Serial</td>
+			<td class="code">pyserial</td>
+			<td>Tested</td>
+			<td>&nbsp;</td>
+		</tr>
+	</table>
+	<p>The table above refers to:</p>
+	<ul>
+		<li><a href="https://sourceforge.net/projects/pyusb/">pyusb</a> (Version 
+		0.4 or greater). Driver for the USB bus.</li>
+		<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 
+		2.3 or greater) Driver for a serial connection.</li>
+	</ul>
 	<h3>Installation on Debian distributions (including Ubuntu and Mint) using
 	<span class="code">apt-get</span></h3>
 	<p>The instructions that follow are for using the Debian tool
 	<span class="code">apt-get</span>, but the same package names would be used 
 	should you chose to use a graphical interface such as the Synaptic Package Manager.
 	</p>
-	<p>To install all useful packages (you may be able to trim this list if you 
-	are not using all features):</p>
 	<pre class="tty">sudo apt-get install python-configobj
 sudo apt-get install python-cheetah 
-sudo apt-get install python-serial
 sudo apt-get install python-imaging    # Already present in most systems, but it doesn't
                                        # hurt to install again.
-sudo apt-get install python-usb        # Required only for the Oregon Scientific WMR-USB
-sudo apt-get install python-mysqldb    # Required only if you are using MySQL
-sudo apt-get install mysql-client      # Required only if you are using MySQL</pre>
+
+# If you are using MySQL, install the following:
+sudo apt-get install python-mysqldb
+sudo apt-get install mysql-client
+
+# Depending on your hardware, you may have to install one of the following.
+# See the table above.
+sudo apt-get install python-serial
+sudo apt-get install python-usb
+
+</pre>
 	<p>Note that the <span class="code">python-imaging</span> (PIL) package is often 
 	preinstalled on many Debian distributions so the install may not actually do 
 	anything. </p>
-	<p>As noted above, if you choose to install the optional package
-	<span class="code">pyephem</span>, then it will have to be installed using
-	<span class="code">pip</span>. See the
-	<a href="http://pypi.python.org/pypi/pip">pip</a> website for instructions on 
-	how to install <span class="code">pip</span>. Once installed, then installing
-	<span class="code">pyephem</span> is easy: </p>
-	<pre class="tty">sudo pip install pyephem</pre>
+	<p>The optional package <span class="code">pyephem</span> is installed using <span class="code">
+	pip</span>:</p>
+	<p class="tty">sudo apt-get install python-dev<br />
+	sudo apt-get install python-pip<br />
+	sudo pip install pyephem</p>
 	<h3>Installation on Fedora using <span class="code">yum</span></h3>
 	<p>Installing on Fedora v16 can be done entirely by using <span class="code">
 	yum</span>. </p>
@@ -228,7 +349,7 @@ sudo yast -i python-setuptools </pre>
 	<p>Finally, if you choose to install the optional package <span class="code">
 	pyephem</span>, then install it using <span class="code">pip</span>: </p>
 	<pre class="tty">pip install pyephem</pre>
-	<h3>Installation using <span class="code">pip</span></h3>
+	<h3>Installation on other systems using <span class="code">pip</span></h3>
 	<p>An alternative approach to installing the required packages is by using the 
 	Python setup tool &quot;<span class="code"><a href="http://pypi.python.org/pypi/pip">pip</a></span>&quot;. 
 	Refer to their instructions on how to install this tool. </p>
@@ -236,6 +357,7 @@ sudo yast -i python-setuptools </pre>
 	of the packages is very easy. </p>
 	<pre class="tty">pip install configobj
 pip install pyserial
+pip install pyusb
 pip install Cheetah
 pip install pil </pre>
 	<p>If you choose to install the optional package <span class="code">pyephem</span>:
@@ -283,8 +405,8 @@ pip install pil </pre>
 			<td>Configuration file</td>
 		</tr>
 		<tr>
-			<td><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
-			<td>Template skins and their configuration files</td>
+			<td style="height: 33px"><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
+			<td style="height: 33px">Template skins and their configuration files</td>
 		</tr>
 		<tr>
 			<td><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
@@ -351,21 +473,6 @@ pip install pil </pre>
 	<p>Once done, if you edit <span class="code">setup.cfg</span> to install into 
 	a directory where you have write permissions, you can install and run
 	<span class="code">weewx</span> without any root privileges at all. </p>
-	<h2>Final note on installation</h2>
-	<p>This is an advanced topic. Ignore it if you are just getting started. </p>
-	<p>Because <span class="code">weewx</span> is pure Python, it does not actually 
-	have to be &quot;built&quot; and &quot;installed&quot; at all! You can just 
-	simply run it out of whatever directory you unpack it into. This can be useful 
-	for testing and experimentation of new versions. If you try this,
-	<span class="code">weewx</span> must still be told where to find the skin templates 
-	and databases, as well as where to put the generated HTML files and plot images. 
-	This is done by setting <span class="code">WEEWX_ROOT</span> in
-	<span class="code">weewx.conf</span> to reflect where your data files can be 
-	found (normally, the install process does this for you): </p>
-	<pre class="tty">&gt; # Edit WEEWX_ROOT to reflect the location of your data hierarchy:
-&gt; vi ./weewx-X.Y.Z/weewx.conf
-&gt; # Now run weewxd.py out of the directory you unpacked weewx into:
-&gt; ./weewx-X.Y.Z/bin/weewxd.py ./weewx-X.Y.Z/weewx.conf</pre>
 	<h1 id="Configuring_weewx">Configuring <span class="code">weewx</span></h1>
 	<p>This section covers configuring <span class="code">weewx</span>, in particular 
 	the configuration files <span class="code">weewx.conf</span> and
@@ -600,14 +707,33 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p class="config_important">station_type </p>
 	<p>Set to the type of hardware you are using. It must match the name of one 
 	of the sections below. For this version, valid options are:</p>
-	<p class="indent"><span class="code">Vantage</span> For Davis Vantage (<em>VantagePro</em>,
-	<em>VantagePro2</em>, and <em>VantageVue</em>) weather stations.</p>
-	<p class="indent"><span class="code">WMR-USB</span> For Oregon Scientific WMR-USB 
-	series station (only the WMR100N has been tested).</p>
-	<p class="indent"><span class="code">WMR-918/968</span> For Oregon Scientific WMR-918/968
-	series station (only the WMR-968 has been tested).</p>
-	<p class="indent"><span class="code">Simulator</span> For a software weather 
-	station simulator</p>
+	<table style="width: 60%" class="center">
+		<tr>
+			<td class="auto-style2"><span class="code">station_type</span></td>
+			<td>Hardware</td>
+		</tr>
+		<tr>
+			<td class="auto-style1">Vantage</td>
+			<td>Davis Vantage (<em>VantagePro</em>,
+	<em>VantagePro2</em>, and <em>VantageVue</em>) weather stations.</td>
+		</tr>
+		<tr>
+			<td class="auto-style1">WMR-USB</td>
+			<td>Oregon Scientific WMR-USB series stations (only the WMR100N has 
+			been tested)</td>
+		</tr>
+		<tr>
+			<td class="auto-style1">WMR-918</td>
+			<td>Oregon Scientific WMR-918/968 series station (only the WMR-968 
+			has been tested)</td>
+		</tr>
+		<tr>
+			<td class="auto-style1">FineOffsetUSB</td>
+			<td>Fine Offset USB stations (only the Ambient WS2080 has been 
+			tested)</td>
+		</tr>
+	</table>
+	
 	<h3 class="config_section">[Vantage]</h3>
 	<p>This section is for options relating to the Davis Vantage series of hardware 
 	(<em>VantagePro, VantagePro2</em> or <em>VantageVue</em>).</p>
@@ -617,9 +743,9 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	if you have the WeatherLinkIP. No default. </p>
 	<p class="config_important">port </p>
 	<p>If you chose &#39;<span class="code">serial</span>&#39; above, then set to 
-	the serial port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
+	the serial port name used by your station (/<span class="code">dev/ttyUSB0</span> 
 	is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
-	for serial ports. Otherwise, not required. No default. </p>
+	for serial ports). Otherwise, not required. No default. </p>
 	<p class="config_important">host </p>
 	<p>If you chose &#39;<span class="code">ethernet</span>&#39; above, then give 
 	the either the IP address (<em>e.g.</em>, <span class="code">192.168.0.1</span>) 
@@ -658,15 +784,22 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p>This section is for options relating to the Oregon Scientific WMR-918 series 
 	of weather stations with serial connectors. The WMR-968 is known to work, others 
 	might work as well.</p>
-	<p>Set to &#39;<span class="code">serial</span>&#39;.</p>
+	<p class="config_important">type</p>
+	<p>For the moment, only &#39;<span class="code">serial</span>' is supported.</p>
 	<p class="config_important">port </p>
-	<p>Along with the &#39;<span class="code">serial</span>&#39; option above, you must set 
-	the serial port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
+	<p>Along with the &#39;<span class="code">serial</span>&#39; option above, you 
+	must set the serial port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
 	is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
 	for serial ports. No default. </p>
 	<p class="config_option">stale_wind</p>
 	<p>How long a wind record can be used to calculate wind chill (in seconds). 
 	Default is 30.</p>
+	<h3 class="config_section">[FineOffsetUSB]</h3>
+	<p>This section is for options relating to the Fine Offset series of weather 
+	stations with USB connectors. The Ambient WS2080 is known to work, others 
+	might work as well.</p>
+	<p class="config_important">model</p>
+	<p>Set to the station model. For example, WH1080, WS2080, WH3081, etc. </p>
 	<h3 class="config_section">[Simulator]</h3>
 	<p>This section is for options relating to the software weather station simulator 
 	that comes with <span class="code">weewx</span>.</p>
@@ -809,8 +942,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<em>$HTML_ROOT</em></span> to a remote webserver. It does an incremental update, 
 	that is, it only synchronizes those files that have changed, saving the outgoing 
 	bandwidth of your Internet connection. </p>
-	<p>If you do not use such a server, comment out the options below.
-	</p>
+	<p>If you do not use such a server, comment out the options below. </p>
 	<p class="config_important">server </p>
 	<p>Set to the name of your web server (e.g.,
 	<a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
@@ -820,10 +952,14 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	The local user that weewx runs as must have passwordless ssh configured for 
 	user@server. Required. No default. </p>
 	<p class="config_important">path </p>
-	<p>Set to the path where the weather data will be stored on your webserver (e.g., 
-	&#39;<span class="code">/weather</span>&#39;). Required. No default. </p>
+	<p>Set to the path where the weather data will be stored on your webserver (e.g., &#39;<span class="code">/weather</span>&#39;). 
+	Required. No default. </p>
 	<p class="config_important">delete </p>
-	<p>Files that don't exist in the local report are removed from the remote location. <em>USE WITH CAUTION:</em> If you make a mistake in setting the <span class="code">path</span>, this can cause unexpected files to be deleted on the remote server.  Valid values are 1 to enable and 0 to disable.  Required.  Default is 0.</p>
+	<p>Files that don't exist in the local report are removed from the remote location.
+	<em>USE WITH CAUTION:</em> If you make a mistake in setting the
+	<span class="code">path</span>, this can cause unexpected files to be deleted 
+	on the remote server. Valid values are 1 to enable and 0 to disable. Required. 
+	Default is 0.</p>
 	<h3 id="[StdConvert]" class="config_section">[StdConvert]</h3>
 	<p>This section is for configuring the <span class="code">StdConvert</span> 
 	service. This service acts as a filter, converting the unit system coming off 
@@ -1053,8 +1189,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p class="tty">ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note 
 	the PID of the weewxd.py process </p>
 	<p class="tty">kill -HUP <em>pid</em> # Send it a HUP signal </p>
-	<p>Note that this <em>only</em> rereads the configuration file. It will not reflect any changes you 
-	might have made to the code.</p>
+	<p>Note that this <em>only</em> rereads the configuration file. It will not 
+	reflect any changes you might have made to the code.</p>
 	<h2 id="Running_as_a_daemon">Running as a daemon</h2>
 	<p>For unattended operations it is best to have <span class="code">weewx</span> 
 	run as a daemon, started automatically when the server is rebooted. Start by 
@@ -1205,11 +1341,11 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 		Buy. </li>
 		<li>Use a VantagePro console with a serial connection, not a USB connection. 
 		See the next section for details. </li>
-		<li>If you do use a USB connection, put a ferrite coil on each end of 
-		the cable to your console. If you have enough length and the ferrite 
-		coil is big enough, make a loop so it goes through the coil twice. 
-		Here's a picture of a Davis Envoy with a ferrite coil not only on the 
-		USB connection (top wire), but also the power supply. Both have loops.</li>
+		<li>If you do use a USB connection, put a ferrite coil on each end of the 
+		cable to your console. If you have enough length and the ferrite coil is 
+		big enough, make a loop so it goes through the coil twice. Here's a picture 
+		of a Davis Envoy with a ferrite coil not only on the USB connection (top 
+		wire), but also the power supply. Both have loops.</li>
 	</ul>
 	<p>
 	<img alt="Ferrite coils" height="480" longdesc="Cable connection looped through a ferrite coil" src="ferrites.jpg" width="640" /></p>

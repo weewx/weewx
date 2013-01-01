@@ -14,18 +14,27 @@
 		</style>
 	</head>
 	<body>
-		<h1 class="title">Quick start guide for Debian (Ubuntu) systems</h1>
+		<h1 class="title">Quick Start Guide for Debian (Ubuntu) Users</h1>
 		<p>
 			This guide is to get you quickly started using <span class="code">weewx</span> on Debian systems,
 			particularly Ubuntu.
 		</p>
+		<h3>
+			Assumptions</h3>
+		<ul>
+			<li>You are on a Debian system, such as Ubuntu, or Mint.</li>
+			<li>You are using the default sqlite database.</li>
+			<li>You wish to install in the default location (<span class="code">/home/weewx</span>)</li>
+		</ul>
 		<h3>Prerequisites</h3>
 		<p>
 			Install the required libraries:
 		</p>
 		<p class="tty">
 			sudo apt-get install python-configobj <br />
-			sudo apt-get install python-serial    <br />
+			sudo apt-get install python-serial<br />
+			sudo apt-get install python-usb&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+			# Not required for Davis Vantage users<br />
 			sudo apt-get install python-cheetah   <br />
 			sudo apt-get install python-imaging   <br />
 		</p>
@@ -38,7 +47,7 @@
 			sudo apt-get install python-pip <br />
 			sudo pip install pyephem        <br />
 		</p>
-		<h3>Installing</h3>
+		<h3>Installing weewx</h3>
 		<p>
 			Download the tar ball from the <a href="http://sourceforge.net/projects/weewx"><span class="code">weewx</span> homepage on Sourceforge</a>, then unpack (substitute your version for X.Y.Z) into any
 			convenient directory where you have write permission
@@ -67,6 +76,7 @@
 			Edit the configuration file <span class="code">/home/weewx/weewx.conf</span>.
 			Pay particular attention to which serial port your weather station uses (option <span class="code">port</span>).</p>
 		<p>
+			Davis Vantage users:
 			If you have a weather station from the Davis Vantage series, all 
 			other data will be downloaded from your hardware, including 
 			altitude, archive interval, and the start of your rain year. If you 
@@ -77,6 +87,7 @@
 			which is included with <span class="code">weewx</span>. To see how 
 			to run <span class="code">config_vp.py</span>:</p>
 		<p class="tty">
+			# This works only for Davis Vantage weather stations!<br />
 			cd /home/weewx<br />
 			./bin/config_vp.py weewx.conf --help</p>
 		<h3>Running</h3>
