@@ -21,8 +21,6 @@ import time
 
 import configobj
 
-import weeutil.ftpupload
-import weeutil.rsyncupload
 import weeutil.weeutil
 import weewx.archive
 import weewx.stats
@@ -167,6 +165,7 @@ class FtpGenerator(ReportGenerator):
     This will ftp everything in the public_html subdirectory to a webserver."""
 
     def run(self):
+        import weeutil.ftpupload
 
         t1 = time.time()
 
@@ -201,6 +200,7 @@ class RsyncGenerator(ReportGenerator):
     This will rsync everything in the public_html subdirectory to a webserver."""
 
     def run(self):
+        import weeutil.rsyncupload
         # We don't try to collect performance statistics about rsync, because rsync
         # will report them for us.  Check the debug log messages.
         try:
