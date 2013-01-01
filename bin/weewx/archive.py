@@ -126,7 +126,7 @@ class Archive(object):
         _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table)
         return _row[0] if _row else None
 
-    def addRecord(self, record_obj):
+    def addRecord(self, record_obj, log_level=syslog.LOG_NOTICE):
         """Commit a single record or a collection of records to the archive.
         
         record_obj: Either a data record, or an iterable that can return data
@@ -178,7 +178,7 @@ class Archive(object):
                 sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table, k_str, q_str) 
                 try:
                     cursor.execute(sql_insert_stmt, value_list)
-                    syslog.syslog(syslog.LOG_NOTICE, "Archive: added archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
+                    syslog.syslog(log_level, "Archive: added %s record %s" % (self.table, weeutil.weeutil.timestamp_to_string(record['dateTime'])))
                 except Exception, e:
                     syslog.syslog(syslog.LOG_ERR, "Archive: unable to add archive record %s" % weeutil.weeutil.timestamp_to_string(record['dateTime']))
                     syslog.syslog(syslog.LOG_ERR, " ****    Reason: %s" % e)
