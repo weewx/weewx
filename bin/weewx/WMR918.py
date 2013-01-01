@@ -21,7 +21,6 @@ import operator
 import syslog
 
 import serial
-import struct
 
 import weeutil.weeutil
 import weewx.abstractstation
@@ -153,7 +152,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "WMR-918: Invalid data packet (%s)." % packet)
+                    syslog.syslog(syslog.LOG_DEBUG, "WMR-918: Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             elif buf[1:].count(0xFF) > 0:
@@ -252,12 +251,14 @@ class WMR918(weewx.abstractstation.AbstractStation):
         hum = hum1 + (hum10 * 10)
         if chan <= 1:
             _record['outTempBatteryStatus'] = battery
+            _record['outHumidity']   = hum
             if not tempoverunder:
-                _record['outTemp']     = temp
-            _record['outHumidity'] = hum
-            _record['heatindex']   = weewx.wxformulas.heatindexC(temp, hum)
+                _record['outTemp']   = temp
+                _record['heatindex'] = weewx.wxformulas.heatindexC(temp, hum)
             if not dewunder:
-                _record['dewpoint']= dew
+                _record['dewpoint']  = dew
+            if dewunder and not tempoverunder:
+                _record['dewpoint']  = weewx.wxformulas.dewpointC(temp, hum)
             # The WMR does not provide wind information in a temperature packet,
             # so we have to use old wind data to calculate wind chill, provided
             # it isn't too old and has gone stale. If no wind data has been seen
@@ -270,9 +271,9 @@ class WMR918(weewx.abstractstation.AbstractStation):
         else:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
+            _record['extraHumid%d' % chan] = hum
             if not tempoverunder:
                 _record['extraTemp%d' % chan] = temp
-            _record['extraHumid%d' % chan] = hum
         return _record
 
     @registerpackettype(typecode=0x04, size=7)
@@ -299,7 +300,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
 
     @registerpackettype(typecode=0x05, size=13)
     def _in_thermohygrobaro_packet(self, packet):
-        null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, wstatus, null2, sealeveloff10th, sealeveloff1, sealeveloff10, sealeveloff100 = WMR918._get_nibble_data(packet[1:])
+        null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100 = WMR918._get_nibble_data(packet[1:])
         battery = bool(status&0x04)
 
         temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
@@ -308,26 +309,31 @@ class WMR918(weewx.abstractstation.AbstractStation):
         hum = hum1 + (hum10 * 10)
         dew = dew1 + (dew10 * 10)
         dewunder = bool(status&0x01)
-        # TODO: I suspect I'm misunderstand the meaning of the sealevel offset value
-        sp = (baro1 + (baro10 * 10) + 795)
-        sealeveloff = (sealeveloff10th / 10.0) + sealeveloff1 + (sealeveloff10 * 10) + (sealeveloff100 * 100)
-        slp = (1000 + sealeveloff) if sealeveloff < 400.0 else sealeveloff
+        rawsp = ((baro10&0xF) << 4) | baro1
+        sp = rawsp + 795
+        pre_slpoff = (slpoff10th / 10.0) + slpoff1 + (slpoff10 * 10) + (slpoff100 * 100)
+        slpoff = (1000 + pre_slpoff) if pre_slpoff < 400.0 else pre_slpoff
         sa = weewx.wxformulas.altimeter_pressure_Metric(sp, self.altitude)
         _record = {
             'inTempBatteryStatus' : battery,
-            'inTemp'      : temp,
             'inHumidity'  : hum,
-            'barometer'   : slp,
+            'barometer'   : rawsp+slpoff,
             'pressure'    : sp,
             'altimeter'   : sa,
             'dateTime'    : int(time.time() + 0.5),
             'usUnits'     : weewx.METRIC
         }
+        if not tempoverunder:
+            _record['inTemp']     = temp
+        if not dewunder:
+            _record['inDewpoint'] = dew
+        if dewunder and not tempoverunder:
+            _record['inDewpoint'] = weewx.wxformulas.dewpointC(temp, hum)
         return _record
 
     @registerpackettype(typecode=0x06, size=14)
     def _in_ext_thermohygrobaro_packet(self, packet):
-        null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, baro100, wstatus, null2, sealeveloff10th, sealeveloff1, sealeveloff10, sealeveloff100, sealeveloff1000 = WMR918._get_nibble_data(packet[1:])
+        null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, baro100, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100, slpoff1000 = WMR918._get_nibble_data(packet[1:])
         battery = bool(status&0x04)
         temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
         temp *= -1 if (temp100etc&0x08) else 1
@@ -336,20 +342,25 @@ class WMR918(weewx.abstractstation.AbstractStation):
         dew = dew1 + (dew10 * 10)
         dewunder = bool(status&0x01)
 
-        # TODO: I suspect I'm misunderstand the meaning of the sealevel offset value
-        sp = baro1 + (baro10 * 10) + (baro100 * 100) + 600
-        slp = (sealeveloff10th / 10.0) + sealeveloff1 + (sealeveloff10 * 10) + (sealeveloff100 * 100) + (sealeveloff1000 * 1000)
+        rawsp = ((baro100&0x01) << 8) | ((baro10&0xF) << 4) | baro1
+        sp = rawsp + 600
+        slpoff = (slpoff10th / 10.0) + slpoff1 + (slpoff10 * 10) + (slpoff100 * 100) + (slpoff1000 * 1000)
         sa = weewx.wxformulas.altimeter_pressure_Metric(sp, self.altitude)
         _record = {
             'inTempBatteryStatus' : battery,
-            'inTemp'      : temp,
             'inHumidity'  : hum,
-            'barometer'   : slp,
+            'barometer'   : rawsp+slpoff,
             'pressure'    : sp,
             'altimeter'   : sa,
             'dateTime'    : int(time.time() + 0.5),
             'usUnits'     : weewx.METRIC
         }
+        if not tempoverunder:
+            _record['inTemp']     = temp
+        if not dewunder:
+            _record['inDewpoint'] = dew
+        if dewunder and not tempoverunder:
+            _record['inDewpoint'] = weewx.wxformulas.dewpointC(temp, hum)
         return _record
 
     @registerpackettype(typecode=0x0e, size=5)
@@ -370,7 +381,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
     def _clock_packet(self, packet):
         """The clock packet is not used by weewx.
         However, the last time is saved in case getTime() is called."""
-        min1, min10, hour1, hour10, day1, day10, month1, month10, year1, year10 = self.get_nibble_data()
+        min1, min10, hour1, hour10, day1, day10, month1, month10, year1, year10 = self._get_nibble_data(packet[1:])
         year = year1 + (year10 * 10)
         # TODO: This might not be the right splitting point between centuries
         # practically speaking, though, it probably won't matter
