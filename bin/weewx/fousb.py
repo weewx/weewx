@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 318 2013-01-01 01:07:57Z mwall $
+# $Id: fousb.py 329 2013-01-01 15:51:20Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -76,6 +76,14 @@ This implementation maps the values decoded by pywws to the names needed
 by weewx.  The pywws code is mostly untouched - it has been modified to
 conform to weewx error handling and reporting, and some additional error
 checks have been added.
+
+The rain counter frequently flip-flops.  The value decrements, so it looks
+like a counter wrap around, then it increments, looking like some rain.  A
+typical bogus increment shows up as 6.6 mm (22 raw), so we use a maximum
+sane value of 2 mm to avoid the spurious readings.  So if the real rainfall
+is more than 2 mm per sample period it will be ignored.  With a sample period
+of 30 seconds that is a rain rate of 9.4 in/hr.  The highest recorded rain
+rate is 43 inches in 24 hours, or 1.79 in/hr.
 
 From Jim Easterbrook:
 
@@ -288,44 +296,37 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
             # map the pywws dictionary to something weewx understands
             for k in keymap.keys():
-                if keymap[k][0] in p:
+                if keymap[k][0] in p and p[keymap[k][0]] is not None:
                     packet[k] = p[keymap[k][0]] * keymap[k][1]
                 else:
                     packet[k] = None
 
             # calculate the rain increment from the rain total
-            if 'rain' in p:
+            if 'rain' in p and p['rain'] is not None:
                 if self._last_rain is not None:
-                    rain = p['rain']
-                    if rain < self._last_rain:
-                        loginf('rain counter wraparound detected: curr: %f last: %f' % (rain, self._last_rain))
-                        rain = rain + float(rain_max) * 0.3
-                    rain = rain - self._last_rain
-                    if rain < rain_max_sane:
-                        packet['rain'] = rain
-                        if weewx.debug and rain != 0:
-                            logdbg('got rain value of %f' % rain)
+                    r = p['rain']
+                    if r < self._last_rain:
+                        loginf('rain counter wraparound detected: curr: %f last: %f' % (r, self._last_rain))
+                        r = r + float(rain_max) * 0.3 # r is in mm
+                    r = r - self._last_rain
+                    if r < rain_max_sane:
+                        packet['rain'] = r / 10 # weewx expects cm
                     else:
-                        logerr('ignoring bogus rain value: rain: %f curr: %f last: %f' % (rain, p['rain'], self._last_rain))
+                        logerr('ignoring bogus rain value: rain: %f curr: %f last: %f' % (r, p['rain'], self._last_rain))
                         packet['rain'] = None
                 else:
                     packet['rain'] = None
                 self._last_rain = p['rain']
-            else:
-                packet['rain'] = None
 
             # calculated elements not directly reported by station
-            if 'temp_out' in p and 'hum_out' in p:
+            if 'temp_out' in p and p['temp_out'] is not None and \
+                    'hum_out' in p and p['hum_out'] is not None:
                 packet['heatindex'] = weewx.wxformulas.heatindexC(p['temp_out'], p['hum_out'])
                 packet['dewpoint'] = weewx.wxformulas.dewpointC(p['temp_out'], p['hum_out'])
-            else:
-                packet['heatindex'] = None
-                packet['dewpoint'] = None
 
-            if 'temp_out' in p and 'wind_ave' in p:
+            if 'temp_out' in p and p['temp_out'] is not None and \
+                    'wind_ave' in p and p['wind_ave'] is not None:
                 packet['windchill'] = weewx.wxformulas.windchillC(p['temp_out'], p['wind_ave'])
-            else:
-                packet['windchill'] = None
 
             yield packet
                                
@@ -352,9 +353,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         while True:
             try:
                 new_ptr = self.current_pos()
-                if new_ptr == None:
+                if new_ptr is None:
                     raise CurrentPositionError('current_pos returned None')
-                if not old_ptr == None and not old_ptr == new_ptr:
+                if weewx.debug and old_ptr is not None and old_ptr != new_ptr:
                     logdbg('ptr changed: old=0x%06x new=0x%06x' % (old_ptr, new_ptr))
                 nptrerr = 0
                 old_ptr = new_ptr
@@ -452,7 +453,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         """Get circular buffer location where current data is being written."""
         new_ptr = _decode(self._read_fixed_block(0x0020),
                           lo_fix_format['current_pos'])
-        if new_ptr == None:
+        if new_ptr is None:
             return new_ptr
         if new_ptr == self._current_ptr:
             return self._current_ptr
@@ -477,11 +478,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         A subset of the entire block can be selected by keys."""
         if unbuffered or not self._fixed_block:
             self._fixed_block = self._read_fixed_block()
-        format_ = self.fixed_format
+        fmt = self.fixed_format
         # navigate down list of keys to get to wanted data
         for key in keys:
-            format_ = format_[key]
-        return _decode(self._fixed_block, format_)
+            fmt = fmt[key]
+        return _decode(self._fixed_block, fmt)
 
     def _read_block(self, ptr, retry=True):
         # Read block repeatedly until it's stable. This avoids getting corrupt
@@ -493,7 +494,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 if (new_block == old_block) or not retry:
                     break
                 if old_block != None:
-                    logdbg('unstable read: blocks differ for ptr 0x%06x' % ptr)
+                    loginf('unstable read: blocks differ for ptr 0x%06x' % ptr)
                 old_block = new_block
         return new_block
 
@@ -547,7 +548,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         return False
 
 # decode weather station raw data formats
-def _decode(raw, format_):
+def _decode(raw, fmt):
     def _signed_byte(raw, offset):
         res = raw[offset]
         if res == 0xFF:
@@ -600,49 +601,49 @@ def _decode(raw, format_):
         return result
     if not raw:
         return None
-    if isinstance(format_, dict):
+    if isinstance(fmt, dict):
         result = {}
-        for key, value in format_.items():
+        for key, value in fmt.items():
             result[key] = _decode(raw, value)
     else:
-        pos, type_, scale = format_
-        if type_ == 'ub':
+        pos, typ, scale = fmt
+        if typ == 'ub':
             result = raw[pos]
             if result == 0xFF:
                 result = None
-        elif type_ == 'sb':
+        elif typ == 'sb':
             result = _signed_byte(raw, pos)
-        elif type_ == 'us':
+        elif typ == 'us':
             result = _unsigned_short(raw, pos)
-        elif type_ == 'u3':
+        elif typ == 'u3':
             result = _unsigned_int3(raw, pos)
-        elif type_ == 'ss':
+        elif typ == 'ss':
             result = _signed_short(raw, pos)
-        elif type_ == 'dt':
+        elif typ == 'dt':
             result = _date_time(raw, pos)
-        elif type_ == 'tt':
+        elif typ == 'tt':
             result = '%02d:%02d' % (_bcd_decode(raw[pos]),
                                     _bcd_decode(raw[pos+1]))
-        elif type_ == 'pb':
+        elif typ == 'pb':
             result = raw[pos]
-        elif type_ == 'wa':
+        elif typ == 'wa':
             # wind average - 12 bits split across a byte and a nibble
             result = raw[pos] + ((raw[pos+2] & 0x0F) << 8)
             if result == 0xFFF:
                 result = None
-        elif type_ == 'wg':
+        elif typ == 'wg':
             # wind gust - 12 bits split across a byte and a nibble
             result = raw[pos] + ((raw[pos+1] & 0xF0) << 4)
             if result == 0xFFF:
                 result = None
-        elif type_ == 'bf':
+        elif typ == 'bf':
             # bit field - 'scale' is a list of bit names
             result = {}
             for k, v in zip(scale, _bit_field(raw, pos)):
                 result[k] = v
             return result
         else:
-            raise weewx.WeeWxIOError('decode failure: unknown type %s' % type_)
+            raise weewx.WeeWxIOError('decode failure: unknown type %s' % typ)
         if scale and result:
             result = float(result) * scale
     return result
@@ -685,9 +686,8 @@ status_lost_connection = 0x40
 # wrap value for rain counter
 rain_max = 0x10000
 
-# maximum sane value for rain in a single period, in mm
-# this is to prevent spurious large rain readings
-rain_max_sane = 10
+# maximum sane value for rain in a single sampling period, in mm
+rain_max_sane = 2
 
 # formats for each station type
 reading_format = {}
@@ -814,11 +814,14 @@ keymap = {
     'outHumidity' : ('hum_out',      1.0),
     'outTemp'     : ('temp_out',     1.0),
     'barometer'   : ('abs_pressure', 1.0),
-    'windSpeed'   : ('wind_ave',     3.6), # station is m/w, weewx wants km/h
-    'windGust'    : ('wind_gust',    3.6), # station is m/w, weewx wants km/h
+    'windSpeed'   : ('wind_ave',     3.6), # station is m/s, weewx wants km/h
+    'windGust'    : ('wind_gust',    3.6), # station is m/s, weewx wants km/h
     'windDir'     : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'windGustDir' : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
-#    'rain'        : ('rain', 1.0),
+    'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
     'radiation'   : ('illuminance',  1.0),
     'UV'          : ('uv',           1.0),
+    'dewpoint'    : ('dewpoint',     1.0),
+    'heatindex'   : ('heatindex',    1.0),
+    'windchill'   : ('windchill',    1.0),
 }
