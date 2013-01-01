@@ -11,7 +11,7 @@
 """For uploading files to a remove server via FTP"""
 
 import os
-import re
+import errno
 import sys
 import subprocess
 import syslog
@@ -77,7 +77,7 @@ class RsyncUpload(object):
             output = subprocess.check_output(cmd)
             stroutput = output.encode("utf-8")
             syslog.syslog(syslog.LOG_DEBUG, "rsyncupload: rsync reported:\n%s" % stroutput)
-        except OSError as e:
+        except OSError, e:
             if e.errno == errno.ENOENT:
                 syslog.syslog(syslog.LOG_ERR, "rsyncupload: rsync does not appear to be installed on this system. (errno %d, \"%s\")" % (e.errno, e.strerror))
             raise
