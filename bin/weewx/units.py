@@ -306,7 +306,15 @@ class ValueTuple(tuple):
     @property
     def group(self):
         return self[2]
-
+    # ValueTuples have some modest math abilities: subtraction and addition.
+    def __sub__(self, other):
+        if self[1] != other[1] or self[2] != other[2]:
+            raise TypeError("unsupported operand error for subtraction: %s and %s" % (self[1], other[1]))
+        return ValueTuple(self[0] - other[0], self[1], self[2])
+    def __add__(self, other):
+        if self[1] != other[1] or self[2] != other[2]:
+            raise TypeError("unsupported operand error for addition: %s and %s" % (self[1], other[1]))
+        return ValueTuple(self[0] + other[0], self[1], self[2])
 
 #===============================================================================
 #                        class Formatter

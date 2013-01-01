@@ -111,6 +111,7 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
 
         # Get the record...:
         record_dict = archivedb.getRecord(time_ts)
+        if record_dict is None: return None
         # ... convert to a dictionary with ValueTuples as values...
         record_dict_vt = weewx.units.dictFromStd(record_dict)
         # ... then wrap it in a ValueDict:
@@ -281,9 +282,20 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
         
         Can easily be overridden to add things to the search list."""
 
-        currentRec = self.getRecord(archivedb, timespan.stop)
+        current_rec  = self.getRecord(archivedb, timespan.stop)
+        lasthour_rec = self.getRecord(archivedb, timespan.stop - 3600)
+        
+        try:
+            current_baro  = current_rec['barometer'].getValueTuple()
+            lasthour_baro = lasthour_rec['barometer'].getValueTuple()
+            trend = lasthour_baro - current_baro
+        except TypeError:
+            trend = None
+            
+        current_rec['barometer_trend'] = trend
+        
         searchList = [self.outputted_dict,
-                      {'current' : currentRec}] 
+                      {'current' : current_rec}]
 
         return searchList
 
