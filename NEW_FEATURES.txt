@@ -1,32 +1,32 @@
                     Possible NEW FEATURES
 
 Allow the console to participate as yet another service. Then, the Davis console
-could intercept new archive record events and add rxcheckpercent and rain to software
-generated records.
+could intercept new archive record events and add rxcheckpercent and rain to
+software generated records.
 
 Put the stats types in a metafile, rather than using the list of tables.
 
 Specify "max time gap" for the graphs. For gaps bigger than this, there would be
 no connecting plot line.
 
-Add ordinate wind descriptions "N, NE, E,", etc. 
+Add ordinate wind descriptions "N, NE, E,", etc.
 
-Port to La Crosse WS2355?
+Use the tagged stats classes for the archive database as well, thus unifying the
+two databases.
 
 Offer "cumulative" as an aggregation type.
 
 Allow rain-to-date to be added to a partial rainyear.
 
-Support for APT package.
+Debian packaging.
 
-ET appears only at the top of the hour in an archive record. So,
-it's effective archive interval is 60 minutes. Does this carry through?
-
-Can we unify how the set of statstypes is set with how the set of archive types are set?
+ET appears only at the top of the hour in an archive record. So, it's effective
+archive interval is 60 minutes. Does this carry through?
 
 Fix scaling for aggregate interval of a week, so it starts on a Sunday.
 
-More dynamic access to the database. Check out Werkzeug. http://werkzeug.pocoo.org
+More dynamic access to the database. Check out
+Werkzeug. http://werkzeug.pocoo.org
 
 Dynamic web updates, using AJAX.
 
