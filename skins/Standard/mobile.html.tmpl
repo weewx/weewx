@@ -73,11 +73,13 @@
     </table>
 </div>
 
+#if $Extras.has_key('radar_url')
 <!-- yes I was too lazy to CSS the style below :-) -->
 <div class="radar">
     <a href="$Extras.radar_url"><img src="$Extras.radar_url"></img></a>
     <p style="font-size: 12px; color: black; text-align: center;"> $current.dateTime</p>
 </div>
+#end if
 
 </center>
 </body>
