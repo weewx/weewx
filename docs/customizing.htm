@@ -770,8 +770,40 @@ $month.outTemp.max</pre>
 	you must convert yourself to local time. It is guaranteed to never be
 	<span class="code">None</span>, so you don&#39;t worry have to worry about handling 
 	a <span class="code">None</span> value. </p>
-	<p>&nbsp; </p>
-	<h3>Unit tags</h3>
+	<h3>Tag <span class="code">$trend</span></h3>
+	<p>The tag <span class="code">$trend</span> is available for time trends, 
+	such as barometer trends. Here are some examples:</p>
+	<table style="width: 40%" summary="Examples of using unit formats" class="center">
+		<tr>
+			<td><strong>Tag</strong></td>
+			<td><strong>Results</strong></td>
+		</tr>
+		<tr>
+			<td class="code">$trend.barometer</td>
+			<td class="code">-.02 inHg</td>
+		</tr>
+		<tr>
+			<td class="code">$trend.outTemp</td>
+			<td class="code">1.1 °C</td>
+		</tr>
+		<tr>
+			<td class="code">$trend.time_delta</td>
+			<td class="code">10800 secs</td>
+		</tr>
+		<tr>
+			<td class="code">$trend.time_delta.hour</td>
+			<td class="code">3 hrs</td>
+		</tr>
+	</table>
+	<p>Note that the time delta over which the trend is calculated is also available. 
+	This time delta is set by an option in the skin configuration file,
+	<span class="code"><a href="#[[Trend]]">time_delta</a></span>.</p>
+	<p>As a summary, the template expression</p>
+	<p class="tty">&lt;p&gt;The barometer trend over $trend.time_delta.hour is 
+	$trend.barometer.format("%+.2f").&lt;/p&gt;</p>
+	<p>would result in</p>
+	<p class="Example_output">The barometer trend over 3 hrs is +.02 inHg.</p>
+	<h3>Tag <span class="code">$unit</span></h3>
 	<p>The unit type, label, and string formats are also available, allowing you 
 	to do highly customized labels: </p>
 	<table style="width: 40%" summary="Examples of using unit formats" class="center">
@@ -1339,6 +1371,10 @@ ephem_year = %d-%b-%Y %H:%M</pre>
 	along with the unit to be used. Examples:</p>
 	<pre>heating_base = 65.0, degree_F
 cooling_base = 20.0, degree_C</pre>
+	<h3 class="config_section" id="[[Trend]]">[[Trend]]</h3>
+	<p class="config_option">time_delta</p>
+	<p>Set to the time difference over which you want trends to be calculated. 
+	The default is 3 hours.</p>
 	<h2 class="config_section">[Labels]</h2>
 	<p>This section sets the various labels to use. </p>
 	<p class="config_option">hemispheres </p>

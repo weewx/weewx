@@ -385,7 +385,7 @@ class Trend(object):
         """
         self.last_rec = last_rec
         self.now_rec  = now_rec
-        self.delta    = weewx.units.ValueHelper((time_delta, 'second', 'group_elapsed'))
+        self.time_delta = weewx.units.ValueHelper((time_delta, 'second', 'group_elapsed'))
         
     def __getattr__(self, obs_type):
         """Return the trend for the given observation type."""
