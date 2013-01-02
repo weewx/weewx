@@ -389,6 +389,10 @@ class Trend(object):
         
     def __getattr__(self, obs_type):
         """Return the trend for the given observation type."""
+        # The following is so the Python version of Cheetah's NameMapper doesn't think
+        # I'm a dictionary:
+        if obs_type == 'has_key':
+            raise AttributeError
         # Wrap in a try block because all of the information might not be available.
         # Set to 'None' if this is the case. 
         try:
