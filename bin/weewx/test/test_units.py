@@ -11,8 +11,24 @@
 """Test module weewx.units"""
 
 import unittest
-import weewx.units
+import operator
 
+import weewx.units
+from weewx.units import ValueTuple
+
+class ValueTupleTest(unittest.TestCase):
+    
+    def testVT(self):
+        a=ValueTuple(68.0, "degree_F", "group_temperature")
+        b=ValueTuple(18.0, "degree_F", "group_temperature")
+        c=ValueTuple(None, "degree_F", "group_temperature")
+        d=ValueTuple(1020.0, "mbar", "group_pressure")
+
+        self.assertEqual(a + b, ValueTuple(86.0, "degree_F", "group_temperature"))
+        self.assertEqual(a - b, ValueTuple(50.0, "degree_F", "group_temperature"))
+        self.assertRaises(TypeError, operator.add, a, c)
+        self.assertRaises(TypeError, operator.add, a, d)
+        
 class ConverterTest(unittest.TestCase):
     
     def testConvert(self):
