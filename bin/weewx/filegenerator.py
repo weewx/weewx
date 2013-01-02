@@ -291,22 +291,14 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
             trend_time_delta = 10800    # 3 hours
             
         # Get the current record, and one from the beginning of the trend period.
-        current_rec  = self.getRecord(archivedb, timespan.stop)
-        lasthour_rec = self.getRecord(archivedb, timespan.stop - trend_time_delta)
+        current_rec = self.getRecord(archivedb, timespan.stop)
+        former_rec  = self.getRecord(archivedb, timespan.stop - trend_time_delta)
         
-        # If some information is missing, a TypeError will be raised. Be prepared
-        # to catch it
-        try:
-            current_baro  = current_rec['barometer'].getValueTuple()
-            lasthour_baro = lasthour_rec['barometer'].getValueTuple()
-            trend = current_baro - lasthour_baro
-        except TypeError:
-            trend = None
-            
-        current_rec['barometer_trend'] = trend
+        trend = Trend(former_rec, current_rec, trend_time_delta)
         
         searchList = [self.outputted_dict,
-                      {'current' : current_rec}]
+                      {'current' : current_rec,
+                       'trend'   : trend}]
 
         return searchList
 
@@ -373,6 +365,39 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
             pass
 
         return (template, statsdb, archivedb, destination_dir, encoding)
+
+class Trend(object):
+    """Helper class that binds together a current record and one a delta
+    time in the past. Useful for trends.
+    
+    This class allows tags such as:
+      $trend.barometer
+    """
+        
+    def __init__(self, last_rec, now_rec, time_delta):
+        """Initialize a Trend object
+        
+        last_rec: A ValueDict containing records from the past.
+        
+        now_rec: A ValueDict containing current records
+        
+        time_delta: The time difference in seconds between them.
+        """
+        self.last_rec = last_rec
+        self.now_rec  = now_rec
+        self.delta    = weewx.units.ValueHelper((time_delta, 'second', 'group_elapsed'))
+        
+    def __getattr__(self, obs_type):
+        """Return the trend for the given observation type."""
+        # Wrap in a try block because all of the information might not be available.
+        # Set to 'None' if this is the case. 
+        try:
+            trend = self.now_rec[obs_type].getValueTuple() - self.last_rec[obs_type].getValueTuple()
+        except TypeError:
+            trend = None
+        # Return the results as a ValueHelper. Use the formatting and labeling obtions from the
+        # current time record. The user can always override these.
+        return weewx.units.ValueHelper(trend, self.now_rec.context, self.now_rec.formatter, self.now_rec.converter)
 
 #===============================================================================
 #                 Filters used for encoding

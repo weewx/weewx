@@ -6,23 +6,26 @@ For complete documentation, see http://www.weewx.com/docs
 
 2.1.0
 
-Now supports the Oregon Scientific WMR918/968 series, thanks to user William Page. 
-Thanks, William!!
+Now supports the  Oregon Scientific WMR918/968 series, courtesy  of user William
+Page.  Thanks, William!!
 
-Now supports the Fine Offset series of weather stations, thanks to user Matthew
+Now supports the Fine Offset series  of weather stations, thanks to user Matthew
 Wall. Thanks, Matthew!!
 
 Now includes a Redhat init.d script, contributed by Mark Jenks. Thanks, Mark!!
 
-Added rsync report type as an alternative to the existing FTP report. Another
+Added rsync  report type as an  alternative to the existing  FTP report. Another
 thanks to William Page!
+
+Added  a  tag   for  trends.  The  barometer  trend  can   now  be  returned  as
+$trend.barometer. Similar syntax for other observation types.
 
 config_vp.py now returns the console version number if available (older consoles
 do not offer this).
 
-Hardware dewpoint calculations with the WMR100 seem to be unreliable below
-about 20F, so these are now done in software. Thanks to user Mark Jenks
-for sleuthing this. 
+Hardware dewpoint calculations with the WMR100 seem to be unreliable below about
+20F, so these are now done in  software. Thanks to user Mark Jenks for sleuthing
+this.
 
 
 2.0.2 11/23/12

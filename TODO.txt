@@ -2,7 +2,3 @@ TODO before the next release:
 
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
-
-The WS2080 port from Matthew Wall needs documentation / install instructions.
-
-Check for dewpoint underflow bit. See William Page's post.
