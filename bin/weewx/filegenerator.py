@@ -282,13 +282,24 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
         
         Can easily be overridden to add things to the search list."""
 
+        # Get the time over which a trend will be determine. In case the skin
+        # dictionary does not have the necessary information, catch the exception
+        # and substitute a default.
+        try:
+            trend_time_delta = int(self.skin_dict['Units']['Trend']['time_delta'])
+        except KeyError:
+            trend_time_delta = 10800    # 3 hours
+            
+        # Get the current record, and one from the beginning of the trend period.
         current_rec  = self.getRecord(archivedb, timespan.stop)
-        lasthour_rec = self.getRecord(archivedb, timespan.stop - 3600)
+        lasthour_rec = self.getRecord(archivedb, timespan.stop - trend_time_delta)
         
+        # If some information is missing, a TypeError will be raised. Be prepared
+        # to catch it
         try:
             current_baro  = current_rec['barometer'].getValueTuple()
             lasthour_baro = lasthour_rec['barometer'].getValueTuple()
-            trend = lasthour_baro - current_baro
+            trend = current_baro - lasthour_baro
         except TypeError:
             trend = None
             
