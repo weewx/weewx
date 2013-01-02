@@ -10,8 +10,6 @@
 """Classes and functions for interfacing with a Davis VantagePro, VantagePro2, or VantageVue weather station"""
 
 import datetime
-import serial
-import socket
 import struct
 import syslog
 import time
@@ -194,7 +192,15 @@ class SerialWrapper(BaseWrapper):
         return self.serial_port.inWaiting()
  
     def read(self, chars=1):
-        _buffer = self.serial_port.read(chars)
+        import serial
+        try:
+            _buffer = self.serial_port.read(chars)
+        except serial.serialutil.SerialException, e:
+            syslog.syslog(syslog.LOG_ERR, "VantagePro: SerialException.")
+            syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
+            syslog.syslog(syslog.LOG_ERR, "      ****  Is there a competing process running??")
+            # Reraise as a Weewx error I/O error:
+            raise weewx.WeeWxIOError(e)
         N = len(_buffer)
         if N != chars:
             raise weewx.WeeWxIOError("Expected to read %d chars; got %d instead" % (chars, N))
@@ -207,6 +213,7 @@ class SerialWrapper(BaseWrapper):
             raise weewx.WeeWxIOError("Expected to write %d chars; sent %d instead" % (len(data), N))
 
     def openPort(self):
+        import serial
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
         syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up serial port %s, baudrate %d" % (self.port, self.baudrate))
@@ -230,6 +237,7 @@ class EthernetWrapper(BaseWrapper):
         self.tcp_send_delay = tcp_send_delay
 
     def openPort(self):
+        import socket
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(self.timeout)
@@ -244,6 +252,7 @@ class EthernetWrapper(BaseWrapper):
         syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Opened up ethernet host %s on port %d" % (self.host, self.port))
 
     def closePort(self):
+        import socket
         try:
             # This will cancel any pending loop:
             self.wakeup_console(max_tries=1)
@@ -272,6 +281,7 @@ class EthernetWrapper(BaseWrapper):
 
     def queued_bytes(self):
         """Determine how many bytes are in the buffer"""
+        import socket
         length = 0
         try:
             self.socket.settimeout(0)
@@ -284,6 +294,7 @@ class EthernetWrapper(BaseWrapper):
 
     def read(self, chars=1):
         """Read bytes from WeatherLinkIP"""
+        import socket
         _buffer = ''
         _remaining = chars
         while _remaining:
@@ -302,6 +313,7 @@ class EthernetWrapper(BaseWrapper):
     
     def write(self, data):
         """Write to a WeatherLinkIP"""
+        import socket
         try:
             self.socket.sendall(data)
             time.sleep(self.tcp_send_delay)
@@ -432,12 +444,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
                 ntries += 1
                 continue
-            except serial.serialutil.SerialException, e:
-                syslog.syslog(syslog.LOG_ERR, "VantagePro: LOOP #%d; SerialException.  Try #%d" % (loop, ntries))
-                syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
-                syslog.syslog(syslog.LOG_ERR, "      ****  Is there a competing process running??")
-                ntries += 1
-                continue
+
             if crc16(_buffer) :
                 syslog.syslog(syslog.LOG_ERR,
                               "VantagePro: LOOP #%d; CRC error. Try #%d" % (loop, ntries))
