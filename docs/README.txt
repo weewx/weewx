@@ -17,6 +17,10 @@ Now includes a Redhat init.d script, contributed by Mark Jenks. Thanks, Mark!!
 Added rsync  report type as an  alternative to the existing  FTP report. Another
 thanks to William Page!
 
+Fill  color for  bar  charts can  now be  specified separately  from the outline 
+color, resulting  in much more  attractive  charts.  Another thanks  to  Matthew 
+Wall!!
+
 Added  a  tag   for  trends.  The  barometer  trend  can   now  be  returned  as
 $trend.barometer. Similar syntax for other observation types.
 

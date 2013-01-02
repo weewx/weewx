@@ -37,6 +37,7 @@ bin/weewx/almanac.py
 bin/weewx/archive.py
 bin/weewx/crc16.py
 bin/weewx/filegenerator.py
+bin/weewx/fousb.py
 bin/weewx/imagegenerator.py
 bin/weewx/reportengine.py
 bin/weewx/restful.py
@@ -51,6 +52,7 @@ docs/README.txt
 docs/customizing.htm
 docs/daytemp_with_avg.png
 docs/debian.htm
+docs/ferrites.jpg
 docs/readme.htm
 docs/samaxesjs.toc-1.5.js
 docs/samaxesjs.toc-1.5.min.js
@@ -94,4 +96,5 @@ skins/Standard/smartphone/icons/icon_iphone_x1.png
 skins/Standard/smartphone/icons/icon_iphone_x2.png
 start_scripts/BSD/weewx
 start_scripts/Debian/weewx
+start_scripts/Redhat/weewx
 start_scripts/SuSE/weewx

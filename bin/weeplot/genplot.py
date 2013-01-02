@@ -47,8 +47,10 @@ class GeneralPlot(object):
         self.chart_background_color = int(config_dict.get('chart_background_color', '0xd8d8d8'), 0)
         self.chart_gridline_color   = int(config_dict.get('chart_gridline_color',   '0xa0a0a0'), 0)
         color_list                  = config_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff'])
+        fill_color_list             = config_dict.get('chart_fill_colors', color_list)
         width_list                  = config_dict.get('chart_line_width',  [1, 1, 1])
         self.chart_line_colors      = [int(v,0) for v in color_list]
+        self.chart_fill_colors      = [int(v,0) for v in fill_color_list]
         self.chart_line_widths      = [int(v) for v in width_list]
 
         
@@ -223,6 +225,7 @@ class GeneralPlot(object):
             
             iline=nlines-j-1
             color = self.chart_line_colors[iline%nlines] if this_line.color is None else this_line.color
+            fill_color = self.chart_fill_colors[iline%nlines] if this_line.fill_color is None else this_line.fill_color
             width = self.chart_line_widths[iline%nlines] if this_line.width is None else this_line.width
 
             if this_line.plot_type == 'line' :
@@ -243,7 +246,7 @@ class GeneralPlot(object):
                         xleft = this_line.x[ibox-1]
                     else:
                         xleft = x - this_line.interval
-                    sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=color, outline=color)
+                    sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=fill_color, outline=color)
             elif this_line.plot_type == 'vector' :
                 for (x, vec) in zip(this_line.x, this_line.y):
                     sdraw.vector(x, vec,
@@ -466,6 +469,7 @@ class PlotLine(object):
         self.marker_type = marker_type
         self.marker_size = marker_size
         self.color       = color
+        self.fill_color  = color
         self.width       = width
         self.interval    = interval
         self.vector_rotate = vector_rotate
