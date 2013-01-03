@@ -393,13 +393,16 @@ class Trend(object):
         # I'm a dictionary:
         if obs_type == 'has_key':
             raise AttributeError
-        # Wrap in a try block because all of the information might not be available.
-        # Set to 'None' if this is the case. 
+        
+        # Wrap in a try block because the 'last' record might not exist, or the 'now'
+        # or 'last' value might be None. 
         try:
-            trend = self.now_rec[obs_type].getValueTuple() - self.last_rec[obs_type].getValueTuple()
+            vt_now = self.now_rec[obs_type].getValueTuple()
+            trend = vt_now - self.last_rec[obs_type].getValueTuple()
         except TypeError:
-            trend = None
-        # Return the results as a ValueHelper. Use the formatting and labeling obtions from the
+            trend = (None,) + vt_now[1:3]
+
+        # Return the results as a ValueHelper. Use the formatting and labeling options from the
         # current time record. The user can always override these.
         return weewx.units.ValueHelper(trend, self.now_rec.context, self.now_rec.formatter, self.now_rec.converter)
 
