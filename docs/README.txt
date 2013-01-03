@@ -4,6 +4,12 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
+2.1.1
+
+Fixed bug that shows itself when one of the variables is 'None' when calculating
+a trend.
+
+
 2.1.0
 
 Now supports the  Oregon Scientific WMR918/968 series, courtesy  of user William
