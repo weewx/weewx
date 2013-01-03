@@ -836,6 +836,10 @@ class Vantage(weewx.abstractstation.AbstractStation):
         else:
             raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
 
+    @property
+    def archive_interval(self):
+        return self.archive_interval_
+    
     def _setup(self):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
@@ -848,7 +852,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
         self.rain_year_start   = self._getEEPROM_value(0x2C)[0]
-        self.archive_interval  = self._getEEPROM_value(0x2D)[0] * 60
+        self.archive_interval_ = self._getEEPROM_value(0x2D)[0] * 60
         self.altitude          = self._getEEPROM_value(0x0F, "<H")[0]
         self.altitude_vt       = weewx.units.ValueTuple(self.altitude, "foot", "group_altitude") 
 
