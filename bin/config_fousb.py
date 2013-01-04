@@ -20,7 +20,25 @@ import configobj
 import weewx.fousb
 import weeutil.weeutil
 
-description = """Configures Fine Offset weather stations."""
+description = """Configures Fine Offset weather stations.
+
+For now this utility is read-only - it reports all of the station settings
+but does not provide a mechanism to modify them.
+
+The station model, version, and id are supposed to be reported by these
+instruments, but so far (04jan2013) my testing shows bogus values for these
+fields.
+
+If you have a Fine Offset station and use this utility, it would be helpful
+to know:
+
+1) the model, version, and id
+
+2) the stations model as indicated on the packaging, for example
+   'Ambient WS-2080', 'National Geographic 265NE, or 'Watson W8681'
+
+Output from a 3080-series station would be particularly helpful.
+"""
 
 usage="""%prog: config_file [--help] [--info] [--debug]"""
 
