@@ -1,0 +1,108 @@
+#!/usr/bin/perl
+# $Id$
+# logwatch script to process weewx log files
+# Copyright 2013 Matthew Wall
+#
+# Revision History
+#  0.2 03jan13
+#   * better labels for counts
+#  0.1 01jan13
+#   * initial release
+
+use strict;
+
+my $STARTUPS = 'wxengine: startups';
+my $ARCHIVES_GENERATED = 'Archive: archives generated';
+my $IMAGES_GENERATED = 'genimages: images generated';
+my $FILES_GENERATED = 'filegenerator: files generated';
+my $FILES_COPIED = 'reportengine: files copied';
+my $FOUSB_UNSTABLE_READS = 'fousb: unstable reads';
+my %counts = (
+    $STARTUPS, 0,
+    $ARCHIVES_GENERATED, 0,
+    $IMAGES_GENERATED, 0,
+    $FILES_GENERATED, 0,
+    $FILES_COPIED, 0,
+    $FOUSB_UNSTABLE_READS, 0,
+);
+my %reports;
+my %errors;
+my @unmatched = ();
+
+while(defined($_ = <STDIN>)) {
+    chomp;
+    if (/Archive: added archive record/) {
+        $counts{$ARCHIVES_GENERATED} += 1;
+    } elsif (/genimages: Generated (\d+) images/) {
+        $counts{$IMAGES_GENERATED} += $1;
+    } elsif (/filegenerator: generated (\d+)/) {
+        $counts{$FILES_GENERATED} += $1;
+    } elsif (/wxengine: Starting up weewx version/) {
+        $counts{$STARTUPS} += 1;
+    } elsif (/reportengine: copied (\d+) files/) {
+        $counts{$FILES_COPIED} += $1;
+    } elsif (/fousb: unstable read: blocks differ/) {
+        $counts{$FOUSB_UNSTABLE_READS} += 1;
+    } elsif (/reportengine: Running report (\S+)/) {
+        my $report = $1;
+        $reports{$report} = $reports{$report} ? $reports{$report} + 1 : 1;
+    } elsif (/genimages: aggregate interval required for aggregate type/ ||
+             /genimages: line type \S+ skipped/) {
+        $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
+    } elsif (/reportengine: Running reports for latest time/ ||
+             /reportengine: Found configuration file/ ||
+             /wxengine: Station does not support reading the time/ ||
+             /wxengine: Starting main packet loop/ ||
+             /wxengine: Keyboard interrupt/ ||
+             /wxengine: Shut down StdReport thread/ ||
+             /wxengine: Loading service/ ||
+             /wxengine: Finished loading service/ ||
+             /wxengine: Using archive interval of/ ||
+             /wxengine: Using archive database/ ||
+             /wxengine: Using configuration file/ ||
+             /wxengine: Using stats database/ ||
+             /wxengine: Record generation will be attempted in/ ||
+             /wxengine: StdConvert target unit is/ ||
+             /wxengine: Data will not be posted to/ ||
+             /wxengine: No RESTful upload sites/ ||
+             /stats: Backfilling stats database/ ||
+             /stats: stats database up to date/ ||
+             /stats: created schema for statistical database/ ||
+             /reportengine: FTP upload not requested/ ||
+             /\*\*\*\*  \'station\'/ ||
+             /fousb: ptr changed/) {
+        # ignore
+    } else {
+        push @unmatched, $_;
+    }
+}
+
+print "processing counts:\n";
+foreach my $k (keys %counts) {
+    next if $counts{$k} == 0;
+    printf("  %-40s %6d\n", $k, $counts{$k});
+}
+print "\nreport generation counts:\n";
+foreach my $k (keys %reports) {
+    printf("  %-40s %6d\n", $k, $reports{$k});
+}
+print "\nerror messages:\n";
+foreach my $k (keys %errors) {
+    printf("  %3d   %s\n", $errors{$k}, $k);
+}
+
+report("unmatched lines", \@unmatched) if $#unmatched >= 0;
+
+exit 0;
+
+sub report {
+    my($label, $aref, $href) = @_;
+    print "\n$label:\n";
+    foreach my $x (@$aref) {
+        my $str = $x;
+        if ($href && $href->{$x} > 1) {
+            $str .= " ($href->{$x} times)";
+        }
+        print "  $str\n";
+    }
+}

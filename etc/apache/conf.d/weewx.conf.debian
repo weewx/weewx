@@ -1,0 +1,7 @@
+Alias /weewx /var/www/weewx
+<Directory /var/www/weewx>
+  Options FollowSymlinks
+  AllowOverride None
+  Order allow,deny
+  Allow from all
+</Directory>
