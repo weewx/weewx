@@ -16,11 +16,16 @@ class OutOfSpan(ValueError):
     """Raised when attempting to add a record outside of the timespan held by an accumulator"""
 
 class ScalarStats(object):
-    """Accumulates statistics (min, max, average, etc.) for a scalar value."""    
+    """Accumulates statistics (min, max, average, etc.) for a scalar value.
+    
+    Property 'last' is the last non-None value seen. Property 'lasttime' is
+    the time it was seen. """    
     def __init__(self, stats_tuple=None):
-        (self.min, self.mintime, 
-         self.max, self.maxtime, 
+        (self.min, self.mintime,
+         self.max, self.maxtime,
          self.sum, self.count) = stats_tuple if stats_tuple else (None, None, None, None, 0.0, 0)
+        self.last     = None
+        self.lasttime = None
          
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics.
@@ -37,6 +42,10 @@ class ScalarStats(object):
             if self.max is None or x_stats.max > self.max:
                 self.max     = x_stats.max
                 self.maxtime = x_stats.maxtime
+        if x_stats.lasttime is not None:
+            if self.lasttime is None or x_stats.lasttime >= self.lasttime:
+                self.lasttime = x_stats.lasttime
+                self.last     = x_stats.last
 
     def mergeSum(self, x_stats):
         """Merge the sum and count of another accumulator into myself."""
@@ -55,6 +64,9 @@ class ScalarStats(object):
             if self.max is None or val > self.max:
                 self.max     = val
                 self.maxtime = ts
+            if self.lasttime is None or ts >= self.lasttime:
+                self.last    = val
+                self.lasttime= ts
 
     def addSum(self, val):
         """Add a scalar value to my running sum and count."""
@@ -67,7 +79,10 @@ class ScalarStats(object):
         return self.sum / self.count if self.count else None
 
 class VecStats(object):
-    """Accumulates statistics for a vector value."""
+    """Accumulates statistics for a vector value.
+    
+    Property 'last' is the last non-None value seen. It is a two-way tuple (mag, dir).
+    Property 'lasttime' is the time it was seen. """
     def __init__(self, stats_tuple=None):
         (self.min, self.mintime,
          self.max, self.maxtime,
@@ -75,6 +90,8 @@ class VecStats(object):
          self.max_dir, self.xsum, self.ysum, 
          self.squaresum, self.squarecount) = stats_tuple if stats_tuple else (None, None, None, None, 0.0, 0,
                                                                               None, 0.0, 0.0, 0.0, 0)
+        self.last     = (None, None)
+        self.lasttime = None
 
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics."""
@@ -91,6 +108,10 @@ class VecStats(object):
                 self.max     = x_stats.max
                 self.maxtime = x_stats.maxtime
                 self.max_dir = x_stats.max_dir
+        if x_stats.lasttime is not None:
+            if self.lasttime is None or x_stats.lasttime >= self.lasttime:
+                self.lasttime = x_stats.lasttime
+                self.last     = x_stats.last
 
     def mergeSum(self, x_stats):
         self.sum         += x_stats.sum
@@ -109,6 +130,9 @@ class VecStats(object):
                 self.max = speed
                 self.maxtime = ts
                 self.max_dir = dirN
+            if self.lasttime is None or ts >= self.lasttime:
+                self.last    = (speed, dirN)
+                self.lasttime= ts
         
     def addSum(self, speed, dirN):
         if speed is not None:
