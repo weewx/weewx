@@ -89,7 +89,7 @@ def configDatabases(archive_db_dict, stats_db_dict):
             t2 = time.time()
             print "Time to backfill stats database with %d records: %6.2fs" % (nrecs, t2-t1)
     
-def genFakeRecords():
+def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval):
     count = 0
     
     for ts in xrange(start_ts, stop_ts+interval, interval):
