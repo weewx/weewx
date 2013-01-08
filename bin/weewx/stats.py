@@ -292,7 +292,7 @@ class StatsDb(object):
                      'val'           : target_val}
         
         # Run the query against the database:
-        _row = self._xeqSql(sqlDict[aggregateType], interDict)
+        _row = self.xeqSql(sqlDict[aggregateType], interDict)
 
         #=======================================================================
         # Each aggregation type requires a slightly different calculation.
@@ -468,32 +468,53 @@ class StatsDb(object):
     
         return nrecs
 
-    def _getDayStats(self, sod_ts):
-        """Return an instance of accum.DictAccum initialized to a given day's statistics.
-
-        sod_ts: The timestamp of the start-of-day of the desired day."""
-                
-        # Get the TimeSpan for the day starting with sod_ts:
-        timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
-        # Initialize an empty DictAccum
-        _stats_dict = weewx.accum.DictAccum(timespan)
+    def xeqSql(self, rawsqlStmt, interDict):
+        """Execute an arbitrary SQL statement, using an interpolation dictionary.
         
-        for stats_type in self.statsTypes:
-            _row = self._xeqSql("SELECT * FROM %s WHERE dateTime = %d" % (stats_type, sod_ts), {})
-    
-            if weewx.debug:
-                if _row:
-                    if stats_type =='wind': assert(len(_row) == 12)
-                    else: assert(len(_row) == 7)
-    
-            # The date may not exist in the database, in which case _row will be 'None'
-            _stats_tuple = _row[1:] if _row else None
+        Returns only the first row of a result set.
         
-            # Now initialize the observation type in the DictAccum with the
-            # results seen so far, as retrieved from the database
-            _stats_dict.initStats(stats_type, _stats_tuple)
+        rawsqlStmt: A SQL statement with (possible) mapping keys.
         
-        return _stats_dict
+        interDict: The interpolation dictionary to be used on the mapping keys.
+        
+        returns: The first row from the result set.
+        """
+        
+        # Do the string interpolation:
+        sqlStmt = rawsqlStmt % interDict
+        _cursor = self.connection.cursor()
+        try:
+            _cursor.execute(sqlStmt)
+            return _cursor.fetchone()
+        finally:
+            _cursor.close()
+        
+#    def _getDayStats(self, sod_ts):
+#        """Return an instance of accum.DictAccum initialized to a given day's statistics.
+#
+#        sod_ts: The timestamp of the start-of-day of the desired day."""
+#                
+#        # Get the TimeSpan for the day starting with sod_ts:
+#        timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
+#        # Initialize an empty DictAccum
+#        _stats_dict = weewx.accum.DictAccum(timespan)
+#        
+#        for stats_type in self.statsTypes:
+#            _row = self.xeqSql("SELECT * FROM %s WHERE dateTime = %d" % (stats_type, sod_ts), {})
+#    
+#            if weewx.debug:
+#                if _row:
+#                    if stats_type =='wind': assert(len(_row) == 12)
+#                    else: assert(len(_row) == 7)
+#    
+#            # The date may not exist in the database, in which case _row will be 'None'
+#            _stats_tuple = _row[1:] if _row else None
+#        
+#            # Now initialize the observation type in the DictAccum with the
+#            # results seen so far, as retrieved from the database
+#            _stats_dict.initStats(stats_type, _stats_tuple)
+#        
+#        return _stats_dict
 
     def _setDayStats(self, dayStatsDict, lastUpdate):
         """Write all statistics for a day to the database in a single transaction.
@@ -539,30 +560,9 @@ class StatsDb(object):
     def _getLastUpdate(self):
         """Returns the time of the last update to the statistical database."""
 
-        _row = self._xeqSql("""SELECT value FROM metadata WHERE name = 'lastUpdate';""", {})
+        _row = self.xeqSql("""SELECT value FROM metadata WHERE name = 'lastUpdate';""", {})
         return int(_row[0]) if _row else None
 
-    def _xeqSql(self, rawsqlStmt, interDict):
-        """Execute an arbitrary SQL statement, using an interpolation dictionary.
-        
-        Returns only the first row of a result set.
-        
-        rawsqlStmt: A SQL statement with (possible) mapping keys.
-        
-        interDict: The interpolation dictionary to be used on the mapping keys.
-        
-        returns: The first row from the result set.
-        """
-        
-        # Do the string interpolation:
-        sqlStmt = rawsqlStmt % interDict
-        _cursor = self.connection.cursor()
-        try:
-            _cursor.execute(sqlStmt)
-            return _cursor.fetchone()
-        finally:
-            _cursor.close()
-        
     def _getStdUnitSystem(self):
         """Returns the unit system in use in the stats database."""
         
@@ -572,7 +572,7 @@ class StatsDb(object):
         # specified yet. Otherwise, it equals the unit system used by the
         # database.
 
-        _row = self._xeqSql("""SELECT value FROM metadata WHERE name = 'unit_system';""", {})
+        _row = self.xeqSql("""SELECT value FROM metadata WHERE name = 'unit_system';""", {})
         
         # Check for an older database:
         if not _row:

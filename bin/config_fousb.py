@@ -1,0 +1,116 @@
+#!/usr/bin/python
+# $Id: config_fousb.py 350 2013-01-04 13:39:52Z mwall $
+#
+# Copyright 2012 Matthew Wall
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+# See http://www.gnu.org/licenses/
+"""Command line utility for configuring Fine Offset weather stations"""
+
+import optparse
+import configobj
+
+import weewx.fousb
+
+description = """Configures Fine Offset weather stations.
+
+For now this utility is read-only - it reports all of the station settings but does
+not provide a mechanism to modify them.
+
+The station model, version, and id are supposed to be reported by these
+instrument, but so far my testing shows bogus values for these fields.  
+The other values appear to be ok.
+
+If you have a Fine Offset station and use this utility, it
+would be helpful to know:  1) The model, version, and id; 2) The station model as
+indicated on the packaging, for example 'Ambient WS-2080', 'National Geographic 265NE', 
+or 'Watson W-8681', etc. Output from a 3080-series station would be particularly helpful.
+"""
+
+usage="""%prog: config_file [--help] [--info] [--debug]"""
+
+epilog = """Mutating actions will request confirmation before proceeding."""
+
+def main():
+
+    # Create a command line parser:
+    parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
+    
+    # Add the various options:
+    parser.add_option("--info", action="store_true", dest="info",
+                        help="display weather station configuration")
+    parser.add_option("--debug", action="store_true", dest="debug",
+                        help="display all bits, not just known bits")
+    
+    # Now we are ready to parse the command line:
+    (options, args) = parser.parse_args()
+    if not args:
+        parser.error("No configuration file specified")
+
+    cfgfile = args[0]
+    debug = options.debug or weewx.debug
+
+    # Try to open up the configuration file. Declare an error if unable to.
+    try :
+        config_dict = configobj.ConfigObj(cfgfile, file_error=True)
+    except IOError:
+        print "Unable to open configuration file %s" % cfgfile
+        exit(1)
+    except configobj.ConfigObjError:
+        print "Error wile parsing configuration file %s" % cfgfile
+        exit(1)
+
+    if debug:
+        print "Using configuration file %s" % cfgfile
+
+    # Open up the weather station:
+    station = weewx.fousb.FineOffsetUSB(**config_dict['FineOffsetUSB'])
+
+    if options.info or len(args) == 1:
+        info(station)
+
+def info(station):
+    """Query the station and display the configuration and station"""
+    
+    print "Querying the station..."
+    
+    model = station.get_fixed_block(['model'])
+    version = station.get_fixed_block(['version'])
+    sid = station.get_fixed_block(['id'])
+    values = getvalues(station, '', weewx.fousb.fixed_format)
+    station.closePort()
+
+    print 'Fine Offset station settings:'
+    print '  Model:                          %s' % model
+    print '  Version:                        %s' % version
+    print '  ID:                             %s' % sid
+    print ''
+    for x in sorted(values.keys()):
+        if type(values[x]) is dict:
+            for y in values[x].keys():
+                label = x + '.' + y
+                print '  %s: %s' % (label.rjust(30), values[x][y])
+        else:
+            print '  %s: %s' % (x.rjust(30), values[x])
+
+def getvalues(station, name, value):
+    values = {}
+    if type(value) is tuple:
+        values[name] = station.get_fixed_block(name.split('.'))
+    elif type(value) is dict:
+        for x in value.keys():
+            n = x
+            if len(name) > 0:
+                n = name + '.' + x
+            values.update(getvalues(station, n, value[x]))
+    return values
+
+if __name__=="__main__" :
+    main()

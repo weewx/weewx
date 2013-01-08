@@ -393,17 +393,20 @@ class StdArchive(StdService):
 
         # Get the archive interval from the configuration file
         software_archive_interval = config_dict['StdArchive'].as_int('archive_interval')
-        # If the hardware supports an achive interval, compare it to that.
-        if hasattr(self.engine.console, 'archive_interval'):
+
+        # If the station supports a hardware archive interval use that instead, but
+        # warn if they mismatch:
+        try:
             if software_archive_interval != self.engine.console.archive_interval:
                 syslog.syslog(syslog.LOG_ERR, "wxengine: The archive interval in the configuration file (%d)"\
                               " does not match the station hardware interval (%d)." % \
                               (software_archive_interval, self.engine.console.archive_interval))
             self.archive_interval = self.engine.console.archive_interval
             syslog.syslog(syslog.LOG_INFO, "wxengine: Using station hardware archive interval of %d" % self.archive_interval)
-        else:
+        except NotImplementedError:
             self.archive_interval = software_archive_interval
             syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d from config file" % self.archive_interval)
+
         self.archive_delay    = config_dict['StdArchive'].as_int('archive_delay')
         if self.archive_delay <= 0:
             raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % (self.archive_delay,))

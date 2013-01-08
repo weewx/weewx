@@ -14,6 +14,8 @@ Add ordinate wind descriptions "N, NE, E,", etc.
 Use the tagged stats classes for the archive database as well, thus unifying the
 two databases.
 
+Break out the weather specific logic in weewx.stats as a separate, O-R class.
+
 Offer "cumulative" as an aggregation type.
 
 Allow rain-to-date to be added to a partial rainyear.

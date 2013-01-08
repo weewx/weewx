@@ -16,6 +16,10 @@ class AbstractStation(object):
     def hardware_name(self):
         raise NotImplementedError("Property 'hardware_name' not implemented")
     
+    @property
+    def archive_interval(self):
+        raise NotImplementedError("Property 'archive_interval' not implemented")
+    
     def genLoopPackets(self):
         raise NotImplementedError("Method 'genLoopPackets' not implemented")
     
