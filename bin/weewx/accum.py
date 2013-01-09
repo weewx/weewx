@@ -210,7 +210,7 @@ class BaseAccum(dict):
         self._check_units(accumulator.unit_system)
         
         for obs_type in accumulator:
-            self._initType(obs_type)
+            self.initType(obs_type)
             self[obs_type].mergeHiLo(accumulator[obs_type])
                     
     def getRecord(self):
@@ -226,6 +226,15 @@ class BaseAccum(dict):
             record[obs_type] = self[obs_type].avg
         return record
 
+    def initType(self, obs_type, stats_tuple=None):
+
+        # Do nothing if this type has already been initialized:
+        if obs_type in self:
+            return
+        else:
+            # Initialize using the default, a scalar accumulator:
+            self[obs_type] = ScalarStats(stats_tuple)
+            
     def _add_value(self, val, obs_type, ts):
         """Add a single observation to myself."""
 
@@ -235,20 +244,11 @@ class BaseAccum(dict):
             return
         else:
             # If the type has not been seen before, initialize it
-            self._initType(obs_type)
+            self.initType(obs_type)
             # Then add to highs/lows, and to the running sum:
             self[obs_type].addHiLo(val, ts)
             self[obs_type].addSum(val)
 
-    def _initType(self, obs_type, stats_tuple=None):
-
-        # Do nothing if this type has already been initialized:
-        if obs_type in self:
-            return
-        else:
-            # Initialize using the default, a scalar accumulator:
-            self[obs_type] = ScalarStats(stats_tuple)
-            
     def _check_units(self, other_system):
 
         # If no unit system has been specified for me yet, adopt the incoming
@@ -315,7 +315,7 @@ class WXAccum(BaseAccum):
                 record[obs_type]      = self[obs_type].avg
         return record
 
-    def _initType(self, obs_type, stats_tuple=None):
+    def initType(self, obs_type, stats_tuple=None):
 
         # Do nothing if this type has already been initialized:
         if obs_type in self:

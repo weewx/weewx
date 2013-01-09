@@ -256,6 +256,13 @@ class BaseStatsDb(object):
             raise AttributeError, "Unknown stats type %s" % (stats_type,)
 
         if val is not None:
+            # The following is for backwards compatibility when value tuples used
+            # to have just two members. It's necessary to avoid breaking old skins.
+            if len(val) == 2:
+                if val[1] in ('degree_F', 'degree_C'):
+                    val += ("group_temperature",)
+                elif val[1] in ('inch', 'mm', 'cm'):
+                    val += ("group_rain",)
             target_val = weewx.units.convertStd(val, self.std_unit_system)[0]
         else:
             target_val = None
@@ -470,7 +477,7 @@ class BaseStatsDb(object):
         
             # Now initialize the observation type in the accumulator with the
             # results from the database
-            _stats_dict.initStats(stats_type, _stats_tuple)
+            _stats_dict.initType(stats_type, _stats_tuple)
         
         return _stats_dict
 
@@ -609,7 +616,7 @@ class WXStatsDb(BaseStatsDb):
         return sql_str % (obs_type,)
     
     def _sql_replace_string_factory(self, obs_type):
-        sql_str = vec_replace_str if obs_type == 'wind' else vec_replace_str
+        sql_str = vec_replace_str if obs_type == 'wind' else std_replace_str
         return sql_str % (obs_type,)
     
     def _accum_factory(self, timespan):

@@ -514,10 +514,9 @@ class StdArchive(StdService):
         
         stats_types = config_dict['StdArchive'].get('stats_types', user.schemas.defaultStatsTypes)
         stats_db = config_dict['StdArchive']['stats_database']
-        # This will create the database if it doesn't exist, then return an 
-        # opened instance of StatsDb:
-        self.statsDb = weewx.stats.StatsDb.open_with_create(config_dict['Databases'][stats_db],
-                                                            stats_types)
+        # This will create the database if it doesn't exist, then return an
+        # opened stats database object:
+        self.statsDb = self._statsdb_factory(config_dict['Databases'][stats_db], stats_types)
 
         # Backfill it with data from the archive. This will do nothing if the
         # stats database is already up-to-date.
@@ -556,9 +555,11 @@ class StdArchive(StdService):
                                                            self.archive_interval)
         end_archive_ts = start_archive_ts + self.archive_interval
         
-        new_accumulator =  weewx.accum.DictAccum(weeutil.weeutil.TimeSpan(start_archive_ts,
-                                                                          end_archive_ts))
+        new_accumulator =  self.statsDb._accum_factory(weeutil.weeutil.TimeSpan(start_archive_ts, end_archive_ts))
         return new_accumulator
+    
+    def _statsdb_factory(self, stats_db_dict, stats_types):
+        return weewx.stats.WXStatsDb.open_with_create(stats_db_dict, stats_types)
                                                   
 #===============================================================================
 #                    Class StdTimeSynch
