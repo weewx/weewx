@@ -46,18 +46,21 @@ import weewx.wxformulas
 # The SQL statements used in the stats database
 #===============================================================================
 
-std_create_str  = """CREATE TABLE %s   ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
+std_create_str  = """CREATE TABLE %s ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
                   """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);"""
 
-wind_create_str = """CREATE TABLE wind ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
+vec_create_str  = """CREATE TABLE %s ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
                   """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, """\
                   """gustdir REAL, xsum REAL, ysum REAL, squaresum REAL, squarecount INTEGER);"""
 
 meta_create_str = """CREATE TABLE metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
                  
-std_replace_str  = """REPLACE INTO %s   VALUES(?, ?, ?, ?, ?, ?, ?)"""
-wind_replace_str = """REPLACE INTO wind VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+std_replace_str  = """REPLACE INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)"""
+vec_replace_str  = """REPLACE INTO %s VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 meta_replace_str = """REPLACE into metadata VALUES(?, ?)"""  
+
+select_update_str = """SELECT value FROM metadata WHERE name = 'lastUpdate';"""
+select_unit_str   = """SELECT value FROM metadata WHERE name = 'unit_system';"""
 
 # Set of SQL statements to be used for calculating aggregate statistics. Key is the aggregation type.
 sqlDict = {'min'        : "SELECT MIN(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
@@ -85,10 +88,10 @@ sqlDict = {'min'        : "SELECT MIN(min) FROM %(stats_type)s WHERE dateTime >=
            'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
 
 #===============================================================================
-#                    Class StatsDb
+#                    Class BaseStatsDb
 #===============================================================================
 
-class StatsDb(object):
+class BaseStatsDb(object):
     """Manage reading from the sqlite3 statistical database. 
     
     This class acts as a wrapper around the stats database, with a set
@@ -112,7 +115,7 @@ class StatsDb(object):
     
         dateTime, min, mintime, max, maxtime, sum, count
         
-    Wind data is similar (table name 'wind'), except it adds a few extra columns:
+    Vector data (example, 'wind') is similar, except it adds a few extra columns:
     
         dateTime, min, mintime, max, maxtime, sum, count, 
           gustdir, xsum, ysum, squaresum, squarecount
@@ -135,7 +138,7 @@ class StatsDb(object):
     None if no system has been specified."""
     
     def __init__(self, connection):
-        """Create an instance of StatsDb to manage a database.
+        """Create an instance of BaseStatsDb to manage a database.
         
         If the database is uninitialized, an exception of type weewx.UninitializedDatabase
         will be raised. 
@@ -144,7 +147,7 @@ class StatsDb(object):
         
         self.connection = connection
         try:
-            self.statsTypes = self.__getTypes()
+            self.statsTypes = self._getTypes()
         except weedb.OperationalError, e:
             self.close()
             raise weewx.UninitializedDatabase(e)
@@ -152,60 +155,40 @@ class StatsDb(object):
         
     @staticmethod
     def open(stats_db_dict):
+        """Helper function to return an opened BaseStatsDb object.
+        
+        stats_db_dict: A dictionary passed on to weedb. It should hold
+        the keywords necessary to open the database."""
         connection = weedb.connect(stats_db_dict)
-        return StatsDb(connection)
+        return BaseStatsDb(connection)
 
     @staticmethod
     def open_with_create(stats_db_dict, stats_types):
-        """Open a StatsDb database, initializing it if necessary.
+        """Open a BaseStatsDb database, creating and initializing it if necessary.
         
+        stats_db_dict: A dictionary passed on to weedb. It should hold
+        the keywords necessary to open the database.
+
         stats_types: an iterable collection with the names of the types for
         which statistics will be gathered.
         
         Returns:
-        An instance of StatsDb"""
+        An instance of BaseStatsDb"""
 
         # If the database exists and has been initialized, then
         # this will be successful. If not, an exception will be thrown.
         try:
-            stats = StatsDb.open(stats_db_dict)
+            stats = BaseStatsDb.open(stats_db_dict)
             # The database exists and has been initialized. Return it.
             return stats
         except (weedb.OperationalError, weewx.UninitializedDatabase):
             pass
+        
+        # The database does not exist. Initialize and return it.
+        _connect = BaseStatsDb._init_db(stats_db_dict, stats_types, lambda x : std_create_str)
+        
+        return BaseStatsDb(_connect)
 
-        # First try to create the database. If it already exists, an exception
-        # will be thrown.
-        try:
-            weedb.create(stats_db_dict)
-        except weedb.DatabaseExists:
-            pass
-
-        # Heating and cooling degrees are not actually stored in the database:
-        final_stats_types = [s for s in stats_types if s not in ['heatdeg', 'cooldeg']]
-            
-        _connect = weedb.connect(stats_db_dict)
-        try:
-            # Now create all the necessary tables as one transaction:
-            with weedb.Transaction(_connect) as _cursor:
-                for _stats_type in final_stats_types:
-                    # Slightly different SQL statement for wind
-                    if _stats_type == 'wind':
-                        _cursor.execute(wind_create_str)
-                    else:
-                        _cursor.execute(std_create_str % (_stats_type,))
-                _cursor.execute(meta_create_str)
-                _cursor.execute(meta_replace_str, ('unit_system', 'None'))
-        except Exception, e:
-            _connect.close()
-            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create stats database.")
-            syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
-            raise
-    
-        syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database")
-
-        return StatsDb(_connect)
-    
     @property
     def database(self):
         return self.connection.database
@@ -273,13 +256,6 @@ class StatsDb(object):
             raise AttributeError, "Unknown stats type %s" % (stats_type,)
 
         if val is not None:
-            # The following is for backwards compatibility when value tuples used
-            # to have just two members:
-            if len(val) == 2:
-                if val[1] in ('degree_F', 'degree_C'):
-                    val += ("group_temperature",)
-                elif val[1] in ('inch', 'mm', 'cm'):
-                    val += ("group_rain",)
             target_val = weewx.units.convertStd(val, self.std_unit_system)[0]
         else:
             target_val = None
@@ -337,59 +313,6 @@ class StatsDb(object):
         # Form the value tuple and return it:
         return weewx.units.ValueTuple(_result, t, g)
         
-    def getHeatCool(self, timespan, stats_type, aggregateType, heatbase_t, coolbase_t):
-        """Calculate heating or cooling degree days for a given timespan.
-        
-        timespan: An instance of weeutil.Timespan with the time period over which
-        aggregation is to be done.
-        
-        stats_type: One of 'heatdeg' or 'cooldeg'.
-        
-        aggregateType: The type of aggregation to be done. Must be 'sum' or 'avg'.
-        
-        heatbase_t, coolbase_t: Value tuples with the heating and cooling degree
-        day base, respectively.
-        
-        returns: A value tuple. First element is the aggregation value,
-        or None if not enough data was available to calculate it, or if the aggregation
-        type is unknown. The second element is the unit type (eg, 'degree_F').
-        Third element is the unit group (always "group_temperature")."""
-        
-        # The requested type must be heatdeg or cooldeg
-        if weewx.debug:
-            assert(stats_type in ('heatdeg', 'cooldeg'))
-
-        # Only summation (total) or average heating or cooling degree days is supported:
-        if aggregateType not in ('sum', 'avg'):
-            raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, stats_type)
-
-        _sum = 0.0
-        _count = 0
-        for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
-            # Get the average temperature for the day as a value tuple:
-            Tavg_t = self.getAggregate(daySpan, 'outTemp', 'avg')
-            # Make sure it's valid before including it in the aggregation:
-            if Tavg_t is not None and Tavg_t[0] is not None:
-                if stats_type == 'heatdeg':
-                    # Convert average temperature to the same units as heatbase:
-                    Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
-                    _sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
-                else:
-                    # Convert average temperature to the same units as coolbase:
-                    Tavg_target_t = weewx.units.convert(Tavg_t, coolbase_t[1])
-                    _sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
-                _count += 1
-
-        if aggregateType == 'sum':
-            _result = _sum
-        else:
-            _result = _sum / _count if _count else None 
-
-        # Look up the unit type and group of the result:
-        (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
-        # Return as a value tuple
-        return weewx.units.ValueTuple(_result, t, g)
-    
     def backfillFrom(self, archiveDb, start_ts = None, stop_ts = None):
         """Fill the statistical database from an archive database.
         
@@ -489,37 +412,72 @@ class StatsDb(object):
         finally:
             _cursor.close()
         
-#    def _getDayStats(self, sod_ts):
-#        """Return an instance of accum.DictAccum initialized to a given day's statistics.
-#
-#        sod_ts: The timestamp of the start-of-day of the desired day."""
-#                
-#        # Get the TimeSpan for the day starting with sod_ts:
-#        timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
-#        # Initialize an empty DictAccum
-#        _stats_dict = weewx.accum.DictAccum(timespan)
-#        
-#        for stats_type in self.statsTypes:
-#            _row = self.xeqSql("SELECT * FROM %s WHERE dateTime = %d" % (stats_type, sod_ts), {})
-#    
-#            if weewx.debug:
-#                if _row:
-#                    if stats_type =='wind': assert(len(_row) == 12)
-#                    else: assert(len(_row) == 7)
-#    
-#            # The date may not exist in the database, in which case _row will be 'None'
-#            _stats_tuple = _row[1:] if _row else None
-#        
-#            # Now initialize the observation type in the DictAccum with the
-#            # results seen so far, as retrieved from the database
-#            _stats_dict.initStats(stats_type, _stats_tuple)
-#        
-#        return _stats_dict
+    @staticmethod
+    def _init_db(stats_db_dict, stats_types, sql_string_factory):
+        """Create and initialize a database."""
+        
+        # First, create the database if necessary. If it already exists, an
+        # exception will be thrown.
+        try:
+            weedb.create(stats_db_dict)
+        except weedb.DatabaseExists:
+            pass
+
+        # Get a connection
+        _connect = weedb.connect(stats_db_dict)
+        
+        try:
+            # Now create all the necessary tables as one transaction:
+            with weedb.Transaction(_connect) as _cursor:
+                for _stats_type in stats_types:
+                    _sql_create_str = sql_string_factory(_stats_type)
+                    _cursor.execute(_sql_create_str)
+                _cursor.execute(meta_create_str)
+                _cursor.execute(meta_replace_str, ('unit_system', 'None'))
+        except Exception, e:
+            _connect.close()
+            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create stats database.")
+            syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
+            raise
+    
+        syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database")
+
+        return _connect
+    
+    def _accum_factory(self, timespan):
+        """Returns an appropriate Accumulator object for this type of database. Can be
+        overridden by specializing classes."""
+        return weewx.accum.WXAccum(timespan)
+
+    def _getDayStats(self, sod_ts):
+        """Return an instance an appropriate accumulator, initialized to a given day's statistics.
+
+        sod_ts: The timestamp of the start-of-day of the desired day."""
+                
+        # Get the TimeSpan for the day starting with sod_ts:
+        timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
+
+        # Get an empty accumulator
+        _stats_dict = self._accum_factory(timespan)
+
+        # For each kind of stats, execute the SQL query and hand the results on
+        # to the accumulator.
+        for stats_type in self.statsTypes:
+            _row = self.xeqSql("SELECT * FROM %s WHERE dateTime = %d" % (stats_type, sod_ts), {})
+    
+            # The date may not exist in the database, in which case _row will be 'None'
+            _stats_tuple = _row[1:] if _row else None
+        
+            # Now initialize the observation type in the accumulator with the
+            # results from the database
+            _stats_dict.initStats(stats_type, _stats_tuple)
+        
+        return _stats_dict
 
     def _setDayStats(self, dayStatsDict, lastUpdate):
         """Write all statistics for a day to the database in a single transaction.
         
-        dayStatsDict: an instance of accum.DictAccum.
+        dayStatsDict: an accumulator. See weewx.accum
         
         lastUpdate: the time of the last update will be set to this. Normally, this
         is the timestamp of the last archive record added to the instance
@@ -530,40 +488,42 @@ class StatsDb(object):
         # Using the _connection as a context manager means that
         # in case of an error, all tables will get rolled back.
         with weedb.Transaction(self.connection) as _cursor:
+
+            # For each stats type...
             for _stats_type in self.statsTypes:
-                
-                # Slightly different SQL statement for wind
-                if _stats_type == 'wind':
-                    _replace_str = wind_replace_str
-                else:
-                    _replace_str = std_replace_str % _stats_type
-                
-                # Get the stats-tuple, then write the results
+                # ... get an appropriate SQL command ...
+                _sql_replace_str = self._sql_replace_string_factory(_stats_type)
+                # ... and use it to query the database. Tack on the start-of-day to the beginning...
                 _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
-                _cursor.execute(_replace_str,_write_tuple)
+                # ... and write to the database.
+                _cursor.execute(_sql_replace_str,_write_tuple)
                 
             # Set the unit system if it has not been set before. 
             # To do this, first see if this file has ever been used:
-            last_update = self._getLastUpdate()
+            last_update = self._getLastUpdate(_cursor)
             if last_update is None:
                 # File has never been used. Set the unit system:
                 _cursor.execute(meta_replace_str, ('unit_system', str(int(dayStatsDict.unit_system))))
             else:
                 # The file has been used. Make sure the new data uses
                 # the same unit system as the database.
-                unit_system = self._getStdUnitSystem()
+                unit_system = self._getStdUnitSystem(_cursor)
                 if unit_system != dayStatsDict.unit_system:
                     raise ValueError("stats: Data uses different unit system (0x%x) than stats file (0x%x)" % (dayStatsDict.unit_system, unit_system))
             # Update the time of the last stats update:
             _cursor.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
             
-    def _getLastUpdate(self):
+    def _getLastUpdate(self, cursor=None):
         """Returns the time of the last update to the statistical database."""
 
-        _row = self.xeqSql("""SELECT value FROM metadata WHERE name = 'lastUpdate';""", {})
+        if cursor:
+            cursor.execute(select_update_str)
+            _row = cursor.fetchone()
+        else:
+            _row = self.xeqSql(select_update_str, {})
         return int(_row[0]) if _row else None
 
-    def _getStdUnitSystem(self):
+    def _getStdUnitSystem(self, cursor=None):
         """Returns the unit system in use in the stats database."""
         
         # If the metadata "unit_system" is missing, then it is an older style
@@ -572,7 +532,11 @@ class StatsDb(object):
         # specified yet. Otherwise, it equals the unit system used by the
         # database.
 
-        _row = self.xeqSql("""SELECT value FROM metadata WHERE name = 'unit_system';""", {})
+        if cursor:
+            cursor.execute(select_unit_str)
+            _row = cursor.fetchone()
+        else:
+            _row = self.xeqSql(select_unit_str, {})
         
         # Check for an older database:
         if not _row:
@@ -582,7 +546,7 @@ class StatsDb(object):
         unit_system = int(_row[0]) if str(_row[0])!='None' else None
         return unit_system
 
-    def __getTypes(self):
+    def _getTypes(self):
         """Returns the types appearing in a stats database.
         
         Raises an exception of type weedb.OperationalError
@@ -603,6 +567,110 @@ class StatsDb(object):
         return stats_types
         
             
+class WXStatsDb(BaseStatsDb):
+    """This is a specialized version for weather applications."""
+        
+    @staticmethod
+    def open(stats_db_dict):
+        connection = weedb.connect(stats_db_dict)
+        return WXStatsDb(connection)
+
+    @staticmethod
+    def open_with_create(stats_db_dict, stats_types):
+        """Open a WXStatsDb database, initializing it if necessary.
+        
+        stats_types: an iterable collection with the names of the types for
+        which statistics will be gathered.
+        
+        Returns:
+        An instance of WXStatsDb"""
+
+        # If the database exists and has been initialized, then
+        # this will be successful. If not, an exception will be thrown.
+        try:
+            stats = WXStatsDb.open(stats_db_dict)
+            # The database exists and has been initialized. Return it.
+            return stats
+        except (weedb.OperationalError, weewx.UninitializedDatabase):
+            pass
+
+        # Heating and cooling degrees are not actually stored in the database:
+        final_stats_types = [s for s in stats_types if s not in ['heatdeg', 'cooldeg']]
+            
+        # The database does not exist. Initialize and return it.
+        _connect = WXStatsDb._init_db(stats_db_dict, final_stats_types, WXStatsDb._sql_create_string_factory)
+        
+        return WXStatsDb(_connect)
+
+    
+    @staticmethod
+    def _sql_create_string_factory(obs_type):
+        sql_str = vec_create_str if obs_type == 'wind' else std_create_str
+        return sql_str % (obs_type,)
+    
+    def _sql_replace_string_factory(self, obs_type):
+        sql_str = vec_replace_str if obs_type == 'wind' else vec_replace_str
+        return sql_str % (obs_type,)
+    
+    def _accum_factory(self, timespan):
+        return weewx.accum.WXAccum(timespan)
+
+    def getHeatCool(self, timespan, stats_type, aggregateType, heatbase_t, coolbase_t):
+        """Calculate heating or cooling degree days for a given timespan.
+        
+        timespan: An instance of weeutil.Timespan with the time period over which
+        aggregation is to be done.
+        
+        stats_type: One of 'heatdeg' or 'cooldeg'.
+        
+        aggregateType: The type of aggregation to be done. Must be 'sum' or 'avg'.
+        
+        heatbase_t, coolbase_t: Value tuples with the heating and cooling degree
+        day base, respectively.
+        
+        returns: A value tuple. First element is the aggregation value,
+        or None if not enough data was available to calculate it, or if the aggregation
+        type is unknown. The second element is the unit type (eg, 'degree_F').
+        Third element is the unit group (always "group_temperature")."""
+        
+        # The requested type must be heatdeg or cooldeg
+        if weewx.debug:
+            assert(stats_type in ('heatdeg', 'cooldeg'))
+
+        # Only summation (total) or average heating or cooling degree days is supported:
+        if aggregateType not in ('sum', 'avg'):
+            raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, stats_type)
+
+        _sum = 0.0
+        _count = 0
+        for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
+            # Get the average temperature for the day as a value tuple:
+            Tavg_t = self.getAggregate(daySpan, 'outTemp', 'avg')
+            # Make sure it's valid before including it in the aggregation:
+            if Tavg_t is not None and Tavg_t[0] is not None:
+                if stats_type == 'heatdeg':
+                    # Convert average temperature to the same units as heatbase:
+                    Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
+                    _sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
+                else:
+                    # Convert average temperature to the same units as coolbase:
+                    Tavg_target_t = weewx.units.convert(Tavg_t, coolbase_t[1])
+                    _sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
+                _count += 1
+
+        if aggregateType == 'sum':
+            _result = _sum
+        else:
+            _result = _sum / _count if _count else None 
+
+        # Look up the unit type and group of the result:
+        (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
+        # Return as a value tuple
+        return weewx.units.ValueTuple(_result, t, g)
+    
+# This is for backwards compatiblity:
+StatsDb = WXStatsDb
+
 #===============================================================================
 #                    Class TaggedStats
 #===============================================================================

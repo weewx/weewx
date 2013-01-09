@@ -12,8 +12,6 @@ etc., of a sequence of records."""
 
 import math
 
-import weewx
-
 class OutOfSpan(ValueError):
     """Raised when attempting to add a record outside of the timespan held by an accumulator"""
 
@@ -174,40 +172,20 @@ class VecStats(object):
             return _result
 
 #===============================================================================
-#                             Accumulators
+#                             Class BaseAccum
 #===============================================================================
 
 class BaseAccum(dict):
     """Accumulates statistics for a set of observation types."""
     
     def __init__(self, timespan):
-        """Initialize a BaseAccu.
+        """Initialize a BaseAccum.
         
         timespan: The time period over which stats will be accumulated."""
         
         self.timespan = timespan
         # The unit system is left unspecified until the first observation comes in.
         self.unit_system = None
-        
-    def init_from_db(self, statsdb):
-        
-        if weewx.debug:
-            assert(len(self.keys()==0))
-        
-        for stats_type in statsdb.statsTypes:
-            row = statsdb.xeqSql("SELECT * FROM %s WHERE dateTime = %d" % (stats_type, self.timespan.start), {})
-    
-            # The date may not exist in the database, in which case row will be 'None'
-            stats_tuple = row[1:] if row else None
-        
-            # Now initialize the observation type in the DictAccum with the
-            # results seen so far, as retrieved from the database
-            self._initType(stats_type, stats_tuple)
-
-    def save_to_db(self, statsdb):
-        
-        for stats_type in statsdb.statsTypes:
-
         
     def addRecord(self, record):
         """Add a record to my running statistics. 
@@ -282,6 +260,10 @@ class BaseAccum(dict):
             if self.unit_system != other_system:
                 raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, other_system))
 
+#===============================================================================
+#                                class WXAccum
+#===============================================================================
+
 class WXAccum(BaseAccum):
     """Subclass of BaseAccum, which adds weather-specific logic."""
     
@@ -344,3 +326,4 @@ class WXAccum(BaseAccum):
         else:
             # Otherwise, use a scalar accumulator:
             self[obs_type] = ScalarStats(stats_tuple)
+
