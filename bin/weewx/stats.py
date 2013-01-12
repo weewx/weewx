@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -256,8 +256,8 @@ class BaseStatsDb(object):
             raise AttributeError, "Unknown stats type %s" % (stats_type,)
 
         if val is not None:
-            # The following is for backwards compatibility when value tuples used
-            # to have just two members. It's necessary to avoid breaking old skins.
+            # The following is for backwards compatibility when ValueTuples had
+            # just two members. This hack avoids breaking old skins.
             if len(val) == 2:
                 if val[1] in ('degree_F', 'degree_C'):
                     val += ("group_temperature",)
@@ -573,7 +573,10 @@ class BaseStatsDb(object):
             raise weedb.OperationalError("Uninitialized stats database")
         return stats_types
         
-            
+#===============================================================================
+#                        Class WXStatsDb
+#===============================================================================
+
 class WXStatsDb(BaseStatsDb):
     """This is a specialized version for weather applications."""
         
@@ -642,10 +645,10 @@ class WXStatsDb(BaseStatsDb):
         
         # The requested type must be heatdeg or cooldeg
         if weewx.debug:
-            assert(stats_type in ('heatdeg', 'cooldeg'))
+            assert(stats_type in ['heatdeg', 'cooldeg'])
 
         # Only summation (total) or average heating or cooling degree days is supported:
-        if aggregateType not in ('sum', 'avg'):
+        if aggregateType not in ['sum', 'avg']:
             raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, stats_type)
 
         _sum = 0.0
