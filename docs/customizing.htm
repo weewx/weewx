@@ -65,7 +65,7 @@ Version 2.1</h1>
 	then arranging for them to be called when key events occur, such as the arrival 
 	of LOOP data. The default install of <span class="code">weewx</span> includes 
 	the following services: </p>
-	<table style="width: 60%" summary="Overview of the weewx architecture" class="center">
+	<table class="center" style="width: 60%" summary="Overview of the weewx architecture">
 		<tr>
 			<td><strong>Service</strong></td>
 			<td><strong>Function</strong></td>
@@ -128,7 +128,7 @@ Version 2.1</h1>
 	get run is set in the configuration file <span class="code">weewx.conf</span>, 
 	in section <span class="code">[StdReport]</span>. </p>
 	<p>The default distribution of weewx includes two reports: </p>
-	<table style="width: 60%" summary="Standard reports included in weewx" class="center">
+	<table class="center" style="width: 60%" summary="Standard reports included in weewx">
 		<tr>
 			<td><strong>Report</strong></td>
 			<td><strong>Default functionality</strong></td>
@@ -149,9 +149,10 @@ Version 2.1</h1>
 			<td>Like FTP, but uses rsync for transferring files to a remote webserver.</td>
 		</tr>
 	</table>
-	<p>Note that the FTP and RSYNC &quot;reports&quot; are a funny kind of report in that 
-	it they don&#39;t actually generate anything. Instead, they use the reporting service 
-	engine to arrange for things to be transferred to a remote server. </p>
+	<p>Note that the FTP and RSYNC &quot;reports&quot; are a funny kind of report 
+	in that it they don&#39;t actually generate anything. Instead, they use the 
+	reporting service engine to arrange for things to be transferred to a remote 
+	server. </p>
 	<h4>Skins</h4>
 	<p>Each report has a <em>Skin</em> associated with it. For most reports, the 
 	relationship with the skin is an obvious one: it contains the templates, any 
@@ -164,16 +165,17 @@ Version 2.1</h1>
 	possible by either overriding configuration options in the weewx configuration 
 	file <span class="code">weewx.conf</span> or the skin configuration file
 	<span class="code">skin.conf</span>. </p>
-	<p>Like all reports, the FTP and RSYNC &quot;Reports&quot; also use a skin, and 
-	include a skin configuration file, although they are quite minimal. </p>
+	<p>Like all reports, the FTP and RSYNC &quot;Reports&quot; also use a skin, 
+	and include a skin configuration file, although they are quite minimal. </p>
 	<p>Skins live in their own subdirectory located in <span class="code"><em>$HTML_ROOT</em>/skins</span>.
 	</p>
 	<h4>Generators</h4>
 	<p>To create their output, skins rely on one or more <em>Generators, </em>code 
 	that actually create useful things such as HTML files or plot images. Generators 
-	can also copy files around or FTP/rsync them to remote locations. The default install 
-	of <span class="code">weewx </span>includes the following generators: </p>
-	<table style="width: 60%" summary="Generators included in weewx" class="center">
+	can also copy files around or FTP/rsync them to remote locations. The default 
+	install of <span class="code">weewx </span>includes the following generators:
+	</p>
+	<table class="center" style="width: 60%" summary="Generators included in weewx">
 		<tr>
 			<td><strong>Generator</strong></td>
 			<td><strong>Function</strong></td>
@@ -200,10 +202,9 @@ Version 2.1</h1>
 		</tr>
 	</table>
 	<p>Note that the three generators <span class="code">FtpGenerator</span>,
-	<span class="code">RsyncGenerator</span>, and
-	<span class="code">CopyGenerator</span> don&#39;t actually generate anything 
-	having to do with the presentation layer. Instead, they just move files around.
-	</p>
+	<span class="code">RsyncGenerator</span>, and <span class="code">CopyGenerator</span> 
+	don&#39;t actually generate anything having to do with the presentation layer. 
+	Instead, they just move files around. </p>
 	<p>Which generators are to be run for a given skin is specified in the skin&#39;s 
 	configuration file <span class="code">skin.conf</span>, in section
 	<span class="code">[Generators]</span>.</p>
@@ -507,7 +508,7 @@ $month.outTemp.max</pre>
 	<h4 id="Formatting_options">Formatting options</h4>
 	<p>The tag <span class="code"><em>optional_formatting</em></span> can be used 
 	with either current observations or aggregations. It can be one of: </p>
-	<table style="width: 80%" summary="Formatting options" class="center">
+	<table class="center" style="width: 80%" summary="Formatting options">
 		<tr>
 			<td>
 			<p><strong>Optional formatting tag</strong> </p>
@@ -574,7 +575,7 @@ $month.outTemp.max</pre>
 		</tr>
 	</table>
 	<p>Summary: </p>
-	<table style="width: 80%" summary="Summary of formatting options" class="center">
+	<table class="center" style="width: 80%" summary="Summary of formatting options">
 		<tr>
 			<td><strong>Formatting tag</strong></td>
 			<td><strong>Format used</strong></td>
@@ -626,7 +627,7 @@ $month.outTemp.max</pre>
 		</tr>
 	</table>
 	<p>Here are some examples with the expected results: </p>
-	<table summary="Formatting options with expected results" class="center">
+	<table class="center" summary="Formatting options with expected results">
 		<tr>
 			<td><strong>Tag</strong></td>
 			<td><strong>Result</strong></td>
@@ -771,9 +772,9 @@ $month.outTemp.max</pre>
 	<span class="code">None</span>, so you don&#39;t worry have to worry about handling 
 	a <span class="code">None</span> value. </p>
 	<h3>Tag <span class="code">$trend</span></h3>
-	<p>The tag <span class="code">$trend</span> is available for time trends, 
-	such as barometer trends. Here are some examples:</p>
-	<table style="width: 40%" summary="Examples of using unit formats" class="center">
+	<p>The tag <span class="code">$trend</span> is available for time trends, such 
+	as barometer trends. Here are some examples:</p>
+	<table class="center" style="width: 40%" summary="Examples of using unit formats">
 		<tr>
 			<td><strong>Tag</strong></td>
 			<td><strong>Results</strong></td>
@@ -799,14 +800,13 @@ $month.outTemp.max</pre>
 	This time delta is set by an option in the skin configuration file,
 	<span class="code"><a href="#[[Trend]]">time_delta</a></span>.</p>
 	<p>As a summary, the template expression</p>
-	<p class="tty">&lt;p&gt;The barometer trend over $trend.time_delta.hour is 
-	$trend.barometer.format("%+.2f").&lt;/p&gt;</p>
+	<p class="tty">&lt;p&gt;The barometer trend over $trend.time_delta.hour is $trend.barometer.format("%+.2f").&lt;/p&gt;</p>
 	<p>would result in</p>
 	<p class="Example_output">The barometer trend over 3 hrs is +.02 inHg.</p>
 	<h3>Tag <span class="code">$unit</span></h3>
 	<p>The unit type, label, and string formats are also available, allowing you 
 	to do highly customized labels: </p>
-	<table style="width: 40%" summary="Examples of using unit formats" class="center">
+	<table class="center" style="width: 40%" summary="Examples of using unit formats">
 		<tr>
 			<td><strong>Tag</strong></td>
 			<td><strong>Results</strong></td>
@@ -1371,10 +1371,10 @@ ephem_year = %d-%b-%Y %H:%M</pre>
 	along with the unit to be used. Examples:</p>
 	<pre>heating_base = 65.0, degree_F
 cooling_base = 20.0, degree_C</pre>
-	<h3 class="config_section" id="[[Trend]]">[[Trend]]</h3>
+	<h3 id="[[Trend]]" class="config_section">[[Trend]]</h3>
 	<p class="config_option">time_delta</p>
-	<p>Set to the time difference over which you want trends to be calculated. 
-	The default is 3 hours.</p>
+	<p>Set to the time difference over which you want trends to be calculated. The 
+	default is 3 hours.</p>
 	<h2 class="config_section">[Labels]</h2>
 	<p>This section sets the various labels to use. </p>
 	<p class="config_option">hemispheres </p>
@@ -1435,7 +1435,7 @@ outTemp = Outside Temperature</pre>
 	<p class="config_option">encoding </p>
 	<p>This option controls which encoding is to be used for the generated output. 
 	There are 3 possible choices: </p>
-	<table style="width: 60%" class="center">
+	<table class="center" style="width: 60%">
 		<tr>
 			<td><strong>Encoding</strong></td>
 			<td><strong>ComComments</strong></td>
@@ -1596,6 +1596,28 @@ outTemp = Outside Temperature</pre>
 	over an aggregation interval of 86,400 seconds (one day). The plot line will 
 	be titled with the indicated label (&#39;<span class="code">Rain (daily avg)</span>&#39;)
 	</p>
+	<p>If there is a time gap in the data, the options <span class="code">line_gap_fraction</span> and 
+	<span class="code">bar_gap_fraction</span> 
+	control how it will be drawn. The former, <span class="code">line_gap_fraction</span>, is used for line 
+	graphs, the latter, <span class="code">bar_gap_fraction</span>, for bar graphs. Here's what the resultant 
+	plots look like without and with this option being specified:</p>
+	<table class="center">
+		<tr>
+			<td>
+			<div class="image">
+				<img alt="Gap not shown" height="197" src="day-gap-not-shown.png" width="334" /></div>
+			<div class="caption">
+				With no <span class="code">line_gap_fraction</span> specified</div>
+			</td>
+			<td>
+			<div class="image">
+				<img alt="Gap showing" height="197" src="day-gap-showing.png" width="334" />
+			</div>
+			<div class="caption">
+				With <span class="code">line_gap_fraction=0.01</span></div>
+			</td>
+		</tr>
+	</table>
 	<h3>Including more than one SQL type in a plot</h3>
 	<p>More than one SQL type can be included in a plot. For example, here&#39;s 
 	how to generate a plot with the week&#39;s outside temperature as well as dewpoint:
@@ -1740,7 +1762,7 @@ outTemp = Outside Temperature</pre>
 	</ul>
 	<p>The default install of <span class="code">weewx</span> includes the following 
 	services, shown in the order they are normally run:</p>
-	<table style="width: 60%" class="center">
+	<table class="center" style="width: 60%">
 		<tr>
 			<td><strong>Service</strong></td>
 			<td><strong>Function</strong></td>
@@ -2266,10 +2288,10 @@ class MyAlarm(StdService):
 	<span class="code">weewx</span> can do the record generation for you. It will 
 	automatically collect all the types it sees in your loop packets then emit a 
 	record with the averages (in some cases the sum or max value) of all those types. 
-	If it doesn't see a type, then it won't appear in the emitted record. If 
-	your hardware does have a logger, then you should implement method <span class="code">genArchiveRecords</span> 
-	as well. It should be a generator function that returns all the records 
-	since a given time. </p>
+	If it doesn't see a type, then it won't appear in the emitted record. If your 
+	hardware does have a logger, then you should implement method
+	<span class="code">genArchiveRecords</span> as well. It should be a generator 
+	function that returns all the records since a given time. </p>
 	<p>A couple of observation types are tricky. In particular, rain. Generally,
 	<span class="code">weewx</span> expects to see a packet with the amount of rain 
 	that fell in that packet period included as observation '<span class="code">rain</span>'. 
@@ -2319,7 +2341,7 @@ class MyAlarm(StdService):
 	just because a type appears in the table does not necessarily mean that it is 
 	available for <em>your</em> station setup. That would depend on whether your 
 	instrument supports the type. </p>
-	<table style="width: 80%" class="center">
+	<table class="center" style="width: 80%">
 		<tr>
 			<td><strong>Archive Type</strong></td>
 			<td style="width: 200px"><strong>SQL Type</strong> <br />
@@ -2639,7 +2661,7 @@ class MyAlarm(StdService):
 	<h1 id="Units">Appendix B: Units</h1>
 	<p>The table below lists all the unit groups, their members, and which units 
 	are options for the group. </p>
-	<table style="width: 60%" class="center">
+	<table class="center" style="width: 60%">
 		<tr>
 			<td><strong>Group</strong></td>
 			<td><strong>Members</strong></td>
