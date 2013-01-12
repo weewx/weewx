@@ -202,13 +202,19 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
     def _genBytes_raw(self):
         """Generates a sequence of bytes from the WMR USB reports."""
         
-        # Only need to be sent after a reset or power failure of the station:
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,       # requestType
-                             0x0000009,                                  # request
-                             [0x20,0x00,0x08,0x01,0x00,0x00,0x00,0x00],  # buffer
-                             0x0000200,                                  # value
-                             0x0000000,                                  # index
-                             1000)                                       # timeout
+        try:
+            # Only need to be sent after a reset or power failure of the station:
+            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,       # requestType
+                                 0x0000009,                                  # request
+                                 [0x20,0x00,0x08,0x01,0x00,0x00,0x00,0x00],  # buffer
+                                 0x0000200,                                  # value
+                                 0x0000000,                                  # index
+                                 1000)                                       # timeout
+        except usb.USBError, e:
+            syslog.syslog(syslog.LOG_ERR, "wmrx: Unable to send USB control message")
+            syslog.syslog(syslog.LOG_ERR, "****  %s" % e)
+            # Convert to a Weewx error:
+            raise weewx.ConnectError(e)
             
         nerrors=0
         while True:
@@ -229,7 +235,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
                 nerrors += 1
                 if nerrors>self.max_tries:
                     syslog.syslog(syslog.LOG_ERR, "wmrx: Max retries exceeded while fetching USB reports")
-                    raise weewx.WeeWxIOError("Max retries exceeded while fetching USB reports")
+                    raise weewx.RetriesExceeded("Max retries exceeded while fetching USB reports")
                 time.sleep(self.wait_before_retry)
     
     #===============================================================================

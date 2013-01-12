@@ -47,6 +47,9 @@ class CRCError(WeeWxIOError):
 class RetriesExceeded(WeeWxIOError):
     """Exception thrown when max retries exceeded."""
 
+class ConnectError(WeeWxIOError):
+    """Exception thrown when unable to initially connect"""
+    
 class UnknownArchiveType(StandardError):
     """Exception thrown after reading an unrecognized archive type."""
 
