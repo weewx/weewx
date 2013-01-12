@@ -214,7 +214,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
             syslog.syslog(syslog.LOG_ERR, "wmrx: Unable to send USB control message")
             syslog.syslog(syslog.LOG_ERR, "****  %s" % e)
             # Convert to a Weewx error:
-            raise weewx.ConnectError(e)
+            raise weewx.WakeupError(e)
             
         nerrors=0
         while True:

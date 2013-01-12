@@ -39,7 +39,7 @@ class WeeWxIOError(IOError):
     """Base class of exceptions thrown when encountering an I/O error with the console."""
 
 class WakeupError(WeeWxIOError):
-    """Exception thrown when unable to wake up the console"""
+    """Exception thrown when unable to wake up or initially connect with the console"""
     
 class CRCError(WeeWxIOError):
     """Exception thrown when unable to pass a CRC check."""
@@ -47,9 +47,6 @@ class CRCError(WeeWxIOError):
 class RetriesExceeded(WeeWxIOError):
     """Exception thrown when max retries exceeded."""
 
-class ConnectError(WeeWxIOError):
-    """Exception thrown when unable to initially connect"""
-    
 class UnknownArchiveType(StandardError):
     """Exception thrown after reading an unrecognized archive type."""
 
