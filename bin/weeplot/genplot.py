@@ -228,6 +228,11 @@ class GeneralPlot(object):
             fill_color = self.chart_fill_colors[iline%nlines] if this_line.fill_color is None else this_line.fill_color
             width = self.chart_line_widths[iline%nlines] if this_line.width is None else this_line.width
 
+            # Calculate the size of a gap in data
+            maxdx = None
+            if this_line.gap_fraction is not None:
+                maxdx = this_line.gap_fraction * (self.xscale[1] - self.xscale[0])
+
             if this_line.plot_type == 'line' :
                 sdraw.line(this_line.x, 
                            this_line.y, 
@@ -235,7 +240,8 @@ class GeneralPlot(object):
                            marker_type=this_line.marker_type,
                            marker_size=this_line.marker_size,
                            fill  = color,
-                           width = width)
+                           width = width,
+                           maxdx = maxdx)
             elif this_line.plot_type == 'bar' :
                 for ibox in xrange(len(this_line.x)):
                     x = this_line.x[ibox]
@@ -246,6 +252,8 @@ class GeneralPlot(object):
                         xleft = this_line.x[ibox-1]
                     else:
                         xleft = x - this_line.interval
+                    if maxdx is not None and x - xleft > maxdx:
+                        continue
                     sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=fill_color, outline=color)
             elif this_line.plot_type == 'vector' :
                 for (x, vec) in zip(this_line.x, this_line.y):
@@ -460,7 +468,7 @@ class PlotLine(object):
     """
     def __init__(self, x, y, label='', color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
-                 interval=None, vector_rotate = None):
+                 interval=None, vector_rotate = None, gap_fraction=None):
         self.x           = x
         self.y           = y
         self.label       = label
@@ -473,4 +481,4 @@ class PlotLine(object):
         self.width       = width
         self.interval    = interval
         self.vector_rotate = vector_rotate
-
+        self.gap_fraction = gap_fraction

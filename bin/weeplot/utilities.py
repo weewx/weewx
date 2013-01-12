@@ -232,7 +232,7 @@ class ScaledDraw(object):
 
         self.draw    = draw
         
-    def line(self, x, y, line_type='solid', marker_type=None, marker_size=8, **options) :
+    def line(self, x, y, line_type='solid', marker_type=None, marker_size=8, maxdx=None, **options) :
         """Draw a scaled line on the instance's ImageDraw object.
         
         x: sequence of x coordinates
@@ -248,10 +248,13 @@ class ScaledDraw(object):
                      'box' for a box
                      'x' for an X
 
+        maxdx: defines what constitutes a gap in samples.  if two data points
+               are more than maxdx apart they are treated as separate segments.
+
         For a scatter plot, set line_type to None and marker_type to something other than None.
         """
-        # Break the line up around any nulls
-        for xy_seq in xy_seq_line(x, y):
+        # Break the line up around any nulls or gaps between samples
+        for xy_seq in xy_seq_line(x, y, maxdx):
         # Create a list with the scaled coordinates...
             xy_seq_scaled = [(self.xtranslate(xc), self.ytranslate(yc)) for (xc,yc) in xy_seq]
             if line_type == 'solid':
@@ -321,10 +324,11 @@ class ScaledDraw(object):
                    
     def ytranslate(self, y):
         return int(y * self.yscale + self.yoffset + 0.5)
-    
-                   
-def xy_seq_line(x, y):
-    """Generator function that breaks a line up into individual segments around any nulls held in y.
+
+
+def xy_seq_line(x, y, maxdx=None):
+    """Generator function that breaks a line up into individual segments around
+    any nulls held in y or any gaps in x greater than maxdx.
     
     x: iterable sequence of x coordinates. All values must be non-null
     
@@ -341,8 +345,8 @@ def xy_seq_line(x, y):
     [(1, 10), (2, 20), (3, 30)]
     
     Example 2
-    >>> x=[None, 0,  1,    2,  3,    4,    5,  6,  7,   8,    9]
-    >>> y=[None, 0, 10, None, 30, None, None, 60, 70,  80, None]
+    >>> x=[0,  1,    2,  3,    4,    5,  6,  7,   8,    9]
+    >>> y=[0, 10, None, 30, None, None, 60, 70,  80, None]
     >>> for xy_seq in xy_seq_line(x,y):
     ...     print xy_seq
     [(0, 0), (1, 10)]
@@ -361,16 +365,26 @@ def xy_seq_line(x, y):
     >>> for xy_seq in xy_seq_line(x,y):
     ...     print xy_seq
     
+    Example 5 (using gap)
+    >>> x=[0,  1,  2,  3, 5.1,  6,  7,   8,  9]
+    >>> y=[0, 10, 20, 30,  50, 60, 70,  80, 90]
+    >>> for xy_seq in xy_seq_line(x,y,2):
+    ...     print xy_seq
+    [(0, 0), (1, 10), (2, 20), (3, 30)]
+    [(5.1, 50), (6, 60), (7, 70), (8, 80), (9, 90)]
     """
     
     line = []
+    last_x = None
     for xy in zip(x, y):
-        # If the y coordinate is None, that marks a break
-        if xy[1] is None:
+        dx = xy[0] - last_x if last_x is not None else 0
+        last_x = xy[0]
+        # If the y coordinate is None or dx > maxdx, that marks a break
+        if xy[1] is None or (maxdx is not None and dx > maxdx):
             # If the length of the line is non-zero, yield it
             if len(line):
                 yield line
-                line = []
+                line = [] if xy[1] is None else [xy]
         else:
             line.append(xy)
     if len(line):
