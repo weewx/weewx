@@ -142,3 +142,13 @@ table.center {
     margin-right:auto;
 	text-align:left;
 }
+
+.image {
+	padding: 5px;
+}
+
+.caption {
+	font-size: 70%;
+	font-family: Verdana, Arial, sans-serif;
+	text-align: center;	
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 350 2013-01-04 13:39:52Z mwall $
+# $Id: config_fousb.py 352 2013-01-04 15:48:17Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -18,20 +18,26 @@ import optparse
 import configobj
 
 import weewx.fousb
+import weeutil.weeutil
 
 description = """Configures Fine Offset weather stations.
 
-For now this utility is read-only - it reports all of the station settings but does
-not provide a mechanism to modify them.
+For now this utility is read-only - it reports all of the station settings
+but does not provide a mechanism to modify them.
 
 The station model, version, and id are supposed to be reported by these
-instrument, but so far my testing shows bogus values for these fields.  
-The other values appear to be ok.
+instruments, but so far (04jan2013) my testing shows bogus values for these
+fields.
 
-If you have a Fine Offset station and use this utility, it
-would be helpful to know:  1) The model, version, and id; 2) The station model as
-indicated on the packaging, for example 'Ambient WS-2080', 'National Geographic 265NE', 
-or 'Watson W-8681', etc. Output from a 3080-series station would be particularly helpful.
+If you have a Fine Offset station and use this utility, it would be helpful
+to know:
+
+1) the model, version, and id
+
+2) the stations model as indicated on the packaging, for example
+   'Ambient WS-2080', 'National Geographic 265NE, or 'Watson W8681'
+
+Output from a 3080-series station would be particularly helpful.
 """
 
 usage="""%prog: config_file [--help] [--info] [--debug]"""
@@ -78,7 +84,7 @@ def main():
 
 def info(station):
     """Query the station and display the configuration and station"""
-    
+
     print "Querying the station..."
     
     model = station.get_fixed_block(['model'])
@@ -96,9 +102,16 @@ def info(station):
         if type(values[x]) is dict:
             for y in values[x].keys():
                 label = x + '.' + y
-                print '  %s: %s' % (label.rjust(30), values[x][y])
+                printparam(label, values[x][y])
         else:
-            print '  %s: %s' % (x.rjust(30), values[x])
+            printparam(x, values[x])
+
+def printparam(label, value):
+    fmt = '%s'
+    if label in weewx.fousb.datum_display_formats.keys():
+        fmt = weewx.fousb.datum_display_formats[label]
+    fmt = '%s: ' + fmt
+    print fmt % (label.rjust(30), value)
 
 def getvalues(station, name, value):
     values = {}

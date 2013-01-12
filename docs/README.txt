@@ -4,13 +4,19 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-2.1.1
+2.X
+
+Added options line_gap_fraction and bar_gap_fraction that control how gaps in
+the data are controlled. Contributed by Matthew Wall. Thanks, Matthew!
+
+
+2.1.1 01/02/13
 
 Fixed bug that shows itself when one of the variables is 'None' when calculating
 a trend.
 
 
-2.1.0
+2.1.0 01/02/13
 
 Now supports the  Oregon Scientific WMR918/968 series, courtesy  of user William
 Page.  Thanks, William!!

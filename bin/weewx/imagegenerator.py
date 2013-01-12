@@ -177,6 +177,19 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                             syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % var_type)
                             continue
 
+                    # Get the fraction that defines gap size
+                    if plot_type == 'bar':
+                        gap_fraction = line_options.get('bar_gap_fraction')
+                    elif plot_type == 'line':
+                        gap_fraction = line_options.get('line_gap_fraction')
+                    else:
+                        gap_fraction = None
+                    if gap_fraction is not None:
+                        gap_fraction = float(gap_fraction)
+                        if not 0 < gap_fraction < 1:
+                            syslog.syslog(syslog.LOG_ERR, "genimages: gap fraction must be greater than zero and less than one. Ignored.")
+                            gap_fraction = None
+
                     # Get the time and data vectors from the database:
                     (time_vec_t, data_vec_t) = archivedb.getSqlVectorsExtended(var_type, minstamp, maxstamp, 
                                                                                aggregate_interval, aggregate_type)
@@ -193,7 +206,8 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                                                           marker_type   = marker_type,
                                                           marker_size   = marker_size,
                                                           interval      = aggregate_interval,
-                                                          vector_rotate = vector_rotate))
+                                                          vector_rotate = vector_rotate,
+                                                          gap_fraction  = gap_fraction))
                     
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()

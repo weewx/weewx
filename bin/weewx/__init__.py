@@ -39,7 +39,7 @@ class WeeWxIOError(IOError):
     """Base class of exceptions thrown when encountering an I/O error with the console."""
 
 class WakeupError(WeeWxIOError):
-    """Exception thrown when unable to wake up the console"""
+    """Exception thrown when unable to wake up or initially connect with the console"""
     
 class CRCError(WeeWxIOError):
     """Exception thrown when unable to pass a CRC check."""

@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 329 2013-01-01 15:51:20Z mwall $
+# $Id: fousb.py 352 2013-01-04 15:48:17Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -36,6 +36,9 @@
 # hand it could just be bad firmware.  it seems to happen when the data
 # logging buffer on the console is full, but not always when the buffer
 # is full.  --mwall 30dec2012
+
+# FIXME: occasionally the inside temperature reading spikes
+# FIXME: maximum sane rain may need adjustment still
 
 """Classes and functions for interfacing with FineOffset weather stations.
 
@@ -194,6 +197,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         model: Which station model is this?
         [Optional. Default is 'WH1080 (USB)']
 
+        rain_max_sane: Maximum sane value for rain in a single sampling
+        period, measured in mm
+        [Optional. Default is 2]
+
         timeout: How long to wait, in seconds, before giving up on a response
         from the USB port.
         [Optional. Default is 15 seconds]
@@ -226,8 +233,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         [Optional. Default is 1080, automatically changes to 3080 as needed]
         """
 
-        self.model             = stn_dict.get('model', 'WH1080 (USB)')
         self.record_generation = stn_dict.get('record_generation', 'software')
+        self.model             = stn_dict.get('model', 'WH1080 (USB)')
+        self.rain_max_sane     = int(stn_dict.get('rain_max_sane', 2))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
@@ -309,7 +317,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                         loginf('rain counter wraparound detected: curr: %f last: %f' % (r, self._last_rain))
                         r = r + float(rain_max) * 0.3 # r is in mm
                     r = r - self._last_rain
-                    if r < rain_max_sane:
+                    if r < self.rain_max_sane:
                         packet['rain'] = r / 10 # weewx expects cm
                     else:
                         logerr('ignoring bogus rain value: rain: %f curr: %f last: %f' % (r, p['rain'], self._last_rain))
@@ -327,6 +335,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             if 'temp_out' in p and p['temp_out'] is not None and \
                     'wind_ave' in p and p['wind_ave'] is not None:
                 packet['windchill'] = weewx.wxformulas.windchillC(p['temp_out'], p['wind_ave'])
+
+            # report rainfall in log until we sort counter issues
+            if weewx.debug and packet['rain'] is not None and packet['rain'] > 0:
+                logdbg('got rainfall of %f' % packet['rain'])
 
             yield packet
                                
@@ -478,7 +490,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         A subset of the entire block can be selected by keys."""
         if unbuffered or not self._fixed_block:
             self._fixed_block = self._read_fixed_block()
-        fmt = self.fixed_format
+        fmt = fixed_format
         # navigate down list of keys to get to wanted data
         for key in keys:
             fmt = fmt[key]
@@ -657,18 +669,18 @@ reading_len = {
     '3080' : 20,
     }
 
-# param     values   invalid  description
+# param     values     invalid description
 #
-# delay     [1,240]           the number of minutes since last stored reading
-# hum_in    [1,99]   0xff     indoor relative humidity; %
-# temp_in   [-40,60] 0xffff   indoor temp; multiply by 0.1 to get C
-# hum_out   [1,99]   0xff     outdoor relative humidity; %
-# temp_out  [-40,60] 0xffff   outdoor temp; multiply by 0.1 to get C
-# abs_pres  [920,1000] 0xffff pressure; multiply by 0.1 to get hPa
-# wind_ave  [0,50]   0xff     average wind speed; multiply by 0.1 to get m/s
-# wind_gust [0,50]   0xff     average wind speed; multiply by 0.1 to get m/s
-# wind_dir  [0,15]   bit 7    wind direction; multiply by 22.5 to get degrees
-# rain                        rain; multiply by 0.33 to get mm
+# delay     [1,240]            the number of minutes since last stored reading
+# hum_in    [1,99]     0xff    indoor relative humidity; %
+# temp_in   [-40,60]   0xffff  indoor temp; multiply by 0.1 to get C
+# hum_out   [1,99]     0xff    outdoor relative humidity; %
+# temp_out  [-40,60]   0xffff  outdoor temp; multiply by 0.1 to get C
+# abs_pres  [920,1080] 0xffff  pressure; multiply by 0.1 to get hPa
+# wind_ave  [0,50]     0xff    average wind speed; multiply by 0.1 to get m/s
+# wind_gust [0,50]     0xff    average wind speed; multiply by 0.1 to get m/s
+# wind_dir  [0,15]     bit 7   wind direction; multiply by 22.5 to get degrees
+# rain                         rain; multiply by 0.33 to get mm
 # status
 # illuminance
 # uv
@@ -685,9 +697,6 @@ status_lost_connection = 0x40
 
 # wrap value for rain counter
 rain_max = 0x10000
-
-# maximum sane value for rain in a single sampling period, in mm
-rain_max_sane = 2
 
 # formats for each station type
 reading_format = {}
@@ -711,6 +720,13 @@ reading_format['3080'] = {
 reading_format['3080'].update(reading_format['1080'])
 
 lo_fix_format = {
+    'magic_1'      : (0, 'pb', None),
+    'magic_2'      : (1, 'pb', None),
+    'model'        : (2, 'us', None),
+    'version'      : (4, 'pb', None),
+    'id'           : (5, 'us', None),
+    'rain_coef'    : (7, 'us', None),
+    'wind_coef'    : (9, 'us', None),
     'read_period'  : (16, 'ub', None),
     'settings_1'   : (17, 'bf', ('temp_in_F', 'temp_out_F', 'rain_in',
                                  'bit3', 'bit4', 'pressure_hPa',
@@ -748,11 +764,16 @@ lo_fix_format = {
     }
 
 fixed_format = {
-    'rel_pressure'  : (32, 'us', 0.1),
-    'abs_pressure'  : (34, 'us', 0.1),
-    'lux_wm2_coeff' : (36, 'us', 0.1),
-    'date_time'     : (43, 'dt', None),
-    'unknown_18'    : (97, 'pb', None),
+    'rel_pressure'     : (32, 'us', 0.1),
+    'abs_pressure'     : (34, 'us', 0.1),
+    'lux_wm2_coeff'    : (36, 'us', 0.1),
+    'wind_mult'        : (38, 'us', None),
+    'temp_out_offset'  : (40, 'us', None),
+    'temp_in_offset'   : (42, 'us', None),
+    'hum_out_offset'   : (44, 'us', None),
+    'hum_in_offset'    : (46, 'us', None),
+#    'date_time'        : (43, 'dt', None),
+    'unknown_18'       : (97, 'pb', None),
     'alarm'            : {
         'hum_in'       : {'hi': (48, 'ub', None), 'lo': (49, 'ub', None)},
         'temp_in'      : {'hi': (50, 'ss', 0.1), 'lo': (52, 'ss', 0.1)},
@@ -803,6 +824,12 @@ fixed_format = {
         },
     }
 fixed_format.update(lo_fix_format)
+
+# formats for displaying fixed_format fields
+datum_display_formats = {
+    'magic_1' : '0x%2x',
+    'magic_2' : '0x%2x',
+    }
 
 # map between the pywws keys and the weewx (and wview) keys
 # 'weewx-key' : ( 'pywws-key', multiplier )
