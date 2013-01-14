@@ -454,7 +454,7 @@ class BaseStatsDb(object):
     def _accum_factory(self, timespan):
         """Returns an appropriate Accumulator object for this type of database. Can be
         overridden by specializing classes."""
-        return weewx.accum.WXAccum(timespan)
+        return weewx.accum.BaseAccum(timespan)
 
     def _getDayStats(self, sod_ts):
         """Return an instance an appropriate accumulator, initialized to a given day's statistics.
