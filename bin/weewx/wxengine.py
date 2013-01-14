@@ -118,7 +118,7 @@ class StdEngine(object):
                 # instance of the class, passing self and the configuration
                 # dictionary as the arguments:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
-                self.service_obj.append(weeutil.weeutil._get_object(svc, self, config_dict))
+                self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
         except:
             # An exception occurred. Shut down any running services, then
@@ -683,7 +683,7 @@ class StdRESTful(StdService):
                 # Instantiate an instance of the class that implements the
                 # protocol used by this site. It will throw an exception if not
                 # enough information is available to instantiate.
-                obj = weeutil.weeutil._get_object(site_dict['driver'], site, **site_dict)
+                obj = weeutil.weeutil._get_object(site_dict['driver'])(site, **site_dict)
             except KeyError, e:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
                 syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % e)

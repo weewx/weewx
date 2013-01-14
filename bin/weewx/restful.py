@@ -616,7 +616,7 @@ if __name__ == '__main__':
         # Instantiate an instance of the class that implements the
         # protocol used by this site:
         try:
-            station = weeutil.weeutil._get_object(site_dict['driver'], site, **site_dict)
+            station = weeutil.weeutil._get_object(site_dict['driver'])(site, **site_dict)
         except Exception:
             print "Unable to instantiate %s" % (site_dict['driver'],)
             raise 
