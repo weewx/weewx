@@ -9,6 +9,7 @@
 #
 """Test the weedb package"""
 
+from __future__ import with_statement
 import unittest
 
 import weedb
@@ -34,12 +35,13 @@ class Common(unittest.TestCase):
         weedb.create(self.db_dict)
         self.assertRaises(weedb.DatabaseExists, weedb.create, self.db_dict)
         _connect = weedb.connect(self.db_dict)
-        _cursor = _connect.cursor()
-        _cursor.execute("""CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
-                  """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);""")
-        _cursor.execute("""CREATE TABLE test2 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
-                  """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);""")
-        _cursor.close()
+        with weedb.Transaction(_connect) as _cursor:
+            _cursor.execute("""CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
+                      """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);""")
+            _cursor.execute("""CREATE TABLE test2 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
+                      """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);""")
+            for irec in range(20):
+                _cursor.execute("INSERT INTO test1 (dateTime, min, mintime) VALUES (?, ?, ?)", (irec, 10*irec, irec))
         _connect.close()
 
     def test_drop(self):
@@ -74,6 +76,25 @@ class Common(unittest.TestCase):
         self.assertRaises(weedb.OperationalError, _connect.columnsOf, 'foo')
         _connect.close()
         
+    def test_select(self):
+        self.populate_db()
+        _connect = weedb.connect(self.db_dict)
+        _cursor = _connect.cursor()
+        _cursor.execute("SELECT dateTime, min FROM test1")
+        for i, _row in enumerate(_cursor):
+            self.assertEqual(_row[0], i)
+        _cursor.close()
+        _connect.close()
+        
+    def test_bad_select(self):
+        self.populate_db()
+        _connect = weedb.connect(self.db_dict)
+        _cursor = _connect.cursor()
+        with self.assertRaises(weedb.OperationalError):
+            _cursor.execute("SELECT dateTime, min FROM foo")
+        _cursor.close()
+        _connect.close()
+        
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
@@ -88,7 +109,8 @@ class TestMySQL(Common):
         
     
 def suite():
-    tests = ['test_drop', 'test_double_create', 'test_no_db', 'test_no_tables', 'test_create', 'test_bad_table']
+    tests = ['test_drop', 'test_double_create', 'test_no_db', 'test_no_tables', 
+             'test_create', 'test_bad_table', 'test_select', 'test_bad_select']
     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
     
 if __name__ == '__main__':

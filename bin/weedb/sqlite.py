@@ -75,9 +75,7 @@ class Connection(weedb.Connection):
 
     def cursor(self):
         """Return a cursor object."""
-        # The sqlite3 cursor object is very full featured. We can simply return
-        # it (with no wrapper)
-        return self.connection.cursor()
+        return Cursor(self.connection)
     
     def tables(self):
         """Returns a list of tables in the database."""
@@ -106,3 +104,17 @@ class Connection(weedb.Connection):
     def begin(self):
         self.connection.execute("BEGIN TRANSACTION")
         
+class Cursor(sqlite3.Cursor):
+    """A wrapper around the sqlite cursor object"""
+    
+    # The sqlite3 cursor object is very full featured. We need only turn
+    # the sqlite exceptions into weedb exceptions.
+    def __init__(self, *args, **kwargs):
+        sqlite3.Cursor.__init__(self, *args, **kwargs)
+        
+    def execute(self, *args, **kwargs):
+        try:
+            sqlite3.Cursor.execute(self, *args, **kwargs)
+        except sqlite3.OperationalError, e:
+            # Convert to a weedb exception
+            raise weedb.OperationalError(e)
