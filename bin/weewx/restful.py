@@ -40,7 +40,7 @@ class REST(object):
     
     # The types to be retrieved from the arhive database:
     archive_types = ['dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                     'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation', 'UV']
+                     'windSpeed', 'windDir', 'windGust', 'windGustDir', 'dewpoint', 'radiation', 'UV']
     # A SQL statement to do the retrieval:
     sql_select = "SELECT " + ", ".join(archive_types) + " FROM archive WHERE dateTime=?"  
 
