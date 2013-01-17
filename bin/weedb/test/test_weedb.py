@@ -83,6 +83,18 @@ class Common(unittest.TestCase):
         _cursor.execute("SELECT dateTime, min FROM test1")
         for i, _row in enumerate(_cursor):
             self.assertEqual(_row[0], i)
+
+        # Find a matching result set
+        _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = 5")
+        _row = _cursor.fetchone()
+        self.assertEqual(_row[0], 5)
+        self.assertEqual(_row[1], 50)
+
+        # Now test where there is no matching result:
+        _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = -1")
+        _row = _cursor.fetchone()
+        self.assertEqual(_row, None)
+        
         _cursor.close()
         _connect.close()
         
@@ -90,8 +102,15 @@ class Common(unittest.TestCase):
         self.populate_db()
         _connect = weedb.connect(self.db_dict)
         _cursor = _connect.cursor()
+        
+        # Test SELECT on a bad table name
         with self.assertRaises(weedb.OperationalError):
             _cursor.execute("SELECT dateTime, min FROM foo")
+
+        # Test SELECT on a bad column name
+        with self.assertRaises(weedb.OperationalError): 
+            _cursor.execute("SELECT dateTime, foo FROM test1")
+        
         _cursor.close()
         _connect.close()
         
