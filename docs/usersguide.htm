@@ -21,6 +21,7 @@
 	background-color: #e8e8e8;
 }
 .auto-style2 {
+        font-weight: bold;
 	background-color: #e8e8e8;
 }
 </style>
@@ -118,15 +119,14 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 		WeatherLinkIP</a>&trade; connections. Both the &quot;Rev A&quot; (firmware 
 		dated before 22 April 2002) and &quot;Rev B&quot; versions are supported.
 		</li>
-		<li>Oregon Scientific WMR-USB series (tested on the
+		<li>Oregon Scientific WMR-USB series.  Tested on the
 		<a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">
-		WMR100N</a>). Not nearly as reliable as the Davis instruments, but a lot 
-		less expensive.</li>
-		<li>Oregon Scientific WMR-918/968 series (tested on the
+		WMR100N</a>.</li>
+		<li>Oregon Scientific WMR-918/968 series.  Tested on the
 		<a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">
-		Oregon Scientific WMR-968</a>).</li>
-		<li>The Fine Offset series of weather stations. These aer branded by many 
-		vendors, including Ambient Weather, Watson, Elecsa, Tycon, and others. Tested 
+		Oregon Scientific WMR-968</a>.</li>
+		<li>The Fine Offset series of weather stations. These are branded by many 
+		vendors, including Ambient Weather, National Geographic, Watson, Elecsa, Tycon, and others. Tested 
 		on the <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather 
 		WS2080</a>.</li>
 		<li>In addition, <span class="code">weewx</span> comes with a software simulator, 
@@ -170,115 +170,207 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 		fallback information will be used. </li>
 	</ul>
 	<h3>Package requirements for your station hardware</h3>
-	<p>See the table below for any additional packages required for your specific 
-	hardware:</p>
+	<p><span class="code">Weewx</span> should work with the stations listed in the table below.  See the table for any additional packages required specific weather station hardware:</p>
 	<table style="width: 90%" class="center">
-		<tr>
-			<td class="auto-style2"><strong>Vendor</strong></td>
-			<td><strong>Model</strong></td>
-			<td><strong>Link</strong></td>
-			<td><strong>Required<br />
-			package</strong></td>
-			<td><strong>Maturity</strong></td>
-			<td><strong>Notes</strong></td>
-		</tr>
-		<tr>
-			<td class="auto-style2"><strong>Ambient Weather</strong></td>
-			<td>WS1080</td>
-			<td>USB</td>
-			<td class="code">pyusb</td>
-			<td>Untested</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2">&nbsp;</td>
-			<td>WS2080</td>
-			<td>USB</td>
-			<td class="code">pyusb</td>
-			<td>Tested</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2">&nbsp;</td>
-			<td>WS3080</td>
-			<td>USB</td>
-			<td class="code">pyusb</td>
-			<td>Untested</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2" style="height: 33px"><strong>Davis</strong></td>
-			<td style="height: 33px">VantagePro2</td>
-			<td style="height: 33px">Serial or USB</td>
-			<td class="code" style="height: 33px">pyserial</td>
-			<td style="height: 33px">Tested</td>
-			<td style="height: 33px"></td>
-		</tr>
-		<tr>
-			<td class="auto-style2">&nbsp;</td>
-			<td>VantagePro2</td>
-			<td>WeatherLink IP</td>
-			<td class="code">&nbsp;</td>
-			<td>Tested</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2">&nbsp;</td>
-			<td>VantageVue</td>
-			<td>Serial or USB</td>
-			<td class="code">pyserial</td>
-			<td>Tested</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2"><strong>Fine Offset</strong></td>
-			<td>WH1080</td>
-			<td>USB</td>
-			<td class="code">pyusb</td>
-			<td>Untested</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2">&nbsp;</td>
-			<td>WH2080</td>
-			<td>USB</td>
-			<td class="code">pyusb</td>
-			<td>Tested as Ambient<br />
-			Weather WS2080</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2">&nbsp;</td>
-			<td>WH3080</td>
-			<td>USB</td>
-			<td class="code">pyusb</td>
-			<td>Untested</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2"><strong>Oregon Scientific</strong></td>
-			<td>WMR100N</td>
-			<td>USB</td>
-			<td class="code">pyusb</td>
-			<td>Tested</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2">&nbsp;</td>
-			<td>WM918</td>
-			<td>Serial</td>
-			<td class="code">pyserial</td>
-			<td>Untested</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td class="auto-style2">&nbsp;</td>
-			<td>WM968</td>
-			<td>Serial</td>
-			<td class="code">pyserial</td>
-			<td>Tested</td>
-			<td>&nbsp;</td>
-		</tr>
+	  <tr>
+	    <td class="auto-style2">Vendor</td>
+	    <td><strong>Model</strong></td>
+	    <td><strong>Link</strong></td>
+	    <td><strong>Required<br />
+		package</strong></td>
+	    <td><strong>Maturity</strong></td>
+	    <td><strong>Notes</strong></td>
+	  </tr>
+	  <tr>
+	    <td class="auto-style2" rowspan="3">Ambient Weather</td>
+	    <td>WS1090</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WS2080</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td>Tested</td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WS2090</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td class="auto-style2" rowspan="3">Davis</td>
+	    <td style="height: 33px">VantagePro2</td>
+	    <td style="height: 33px">Serial or USB</td>
+	    <td class="code" style="height: 33px">pyserial</td>
+	    <td style="height: 33px">Tested</td>
+	    <td style="height: 33px"></td>
+	  </tr>
+	  <tr>
+	    <td>VantagePro2</td>
+	    <td>WeatherLink IP</td>
+	    <td class="code">&nbsp;</td>
+	    <td>Tested</td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>VantageVue</td>
+	    <td>Serial or USB</td>
+	    <td class="code">pyserial</td>
+	    <td>Tested</td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td class="auto-style2" rowspan="2">Elecsa</td>
+	    <td>6975</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>6976</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td class="auto-style2" rowspan="11">Fine Offset</td>
+	    <td>WH1080</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WH1081</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WH1091</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WH1090</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WS1080</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WA2080</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WA2081</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WH2080</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WH2081</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WH3080</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WH3081</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td class="auto-style2">National Geographic</td>
+	    <td>265</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td class="auto-style2" rowspan="3">Oregon Scientific</td>
+	    <td>WMR100N</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td>Tested</td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WM918</td>
+	    <td>Serial</td>
+	    <td class="code">pyserial</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WM968</td>
+	    <td>Serial</td>
+	    <td class="code">pyserial</td>
+	    <td>Tested</td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td class="auto-style2">Tycon</td>
+	    <td>TP1080WC</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td class="auto-style2" rowspan="2">Watson</td>
+	    <td>W-8681</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
+	  <tr>
+	    <td>WX-2008</td>
+	    <td>USB</td>
+	    <td class="code">pyusb</td>
+	    <td></td>
+	    <td>&nbsp;</td>
+	  </tr>
 	</table>
 	<p>The table above refers to:</p>
 	<ul>
@@ -706,7 +798,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	</p>
 	<p class="config_important">station_type </p>
 	<p>Set to the type of hardware you are using. It must match the name of one 
-	of the sections below. For this version, valid options are:</p>
+	of the sections below. Valid options include:</p>
 	<table style="width: 60%" class="center">
 		<tr>
 			<td class="auto-style2"><span class="code">station_type</span></td>
@@ -714,23 +806,19 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 		</tr>
 		<tr>
 			<td class="auto-style1">Vantage</td>
-			<td>Davis Vantage (<em>VantagePro</em>,
-	<em>VantagePro2</em>, and <em>VantageVue</em>) weather stations.</td>
+			<td>Davis Vantage weather stations</td>
 		</tr>
 		<tr>
 			<td class="auto-style1">WMR-USB</td>
-			<td>Oregon Scientific WMR-USB series stations (only the WMR100N has 
-			been tested)</td>
+			<td>Oregon Scientific WMR-USB series stations</td>
 		</tr>
 		<tr>
 			<td class="auto-style1">WMR-918</td>
-			<td>Oregon Scientific WMR-918/968 series station (only the WMR-968 
-			has been tested)</td>
+			<td>Oregon Scientific WMR-918/968 series station</td>
 		</tr>
 		<tr>
 			<td class="auto-style1">FineOffsetUSB</td>
-			<td>Fine Offset USB stations (only the Ambient WS2080 has been 
-			tested)</td>
+			<td>Fine Offset USB stations</td>
 		</tr>
 	</table>
 	
