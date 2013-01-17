@@ -114,7 +114,7 @@ class Cursor(sqlite3.Cursor):
         
     def execute(self, *args, **kwargs):
         try:
-            sqlite3.Cursor.execute(self, *args, **kwargs)
+            return sqlite3.Cursor.execute(self, *args, **kwargs)
         except sqlite3.OperationalError, e:
             # Convert to a weedb exception
             raise weedb.OperationalError(e)

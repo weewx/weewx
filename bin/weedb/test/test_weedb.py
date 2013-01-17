@@ -84,6 +84,11 @@ class Common(unittest.TestCase):
         for i, _row in enumerate(_cursor):
             self.assertEqual(_row[0], i)
 
+        # SELECT with wild card, using a result set
+        _result = _cursor.execute("SELECT * from test1")
+        for i, _row in enumerate(_result):
+            self.assertEqual(_row[0], i)
+        
         # Find a matching result set
         _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = 5")
         _row = _cursor.fetchone()
