@@ -18,6 +18,8 @@ import traceback
 
 import configobj
 
+import Sun
+
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""
     
@@ -559,6 +561,37 @@ def startOfArchiveDay(time_ts, grace=1):
     returns: The timestamp for the start-of-day (00:00) in unix epoch time."""
     
     return startOfDay(time_ts - grace)
+
+def getDayNightTransitions(start_ts, end_ts, lon, lat):
+    """Return the day-night transitions between the start and end times.
+
+    start_ts: A timestamp indicating the beginning of the period
+
+    end_ts: A timestamp indicating the end of the period
+
+    returns: indication of whether the period from start to first transition
+    is day or night, plus array of transitions.
+    """
+    first = 'day'
+    values = []
+    for t in range(start_ts, end_ts, 3600*24):
+        x = startOfDay(t) + 7200 # avoid dst issues
+        ts = time.gmtime(x)
+        (year, month, day) = (ts[0], ts[1], ts[2])
+        (sunrise, sunset) = Sun.sunRiseSet(year, month, day, lon, lat)
+        hour = int(sunrise)
+        minute = int((sunrise - hour) * 60)
+        sunrise_ts = utcdatetime_to_timestamp(datetime.datetime(year, month, day, hour, minute, 0))
+        hour = int(sunset)
+        minute = int((sunset - hour) * 60)
+        sunset_ts = utcdatetime_to_timestamp(datetime.datetime(year, month, day, hour, minute, 0))
+        if start_ts < sunrise_ts < end_ts:
+            values.append(sunrise_ts)
+        if start_ts < sunset_ts < end_ts:
+            values.append(sunset_ts)
+        if t == start_ts and (start_ts < sunrise_ts or sunset_ts < start_ts):
+            first = 'night'
+    return first, values
     
 def secs_to_string(secs):
     """Convert seconds to a string with days, hours, and minutes"""

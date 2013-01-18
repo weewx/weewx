@@ -107,6 +107,15 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                 bottom_label = time.strftime(bottom_label_format, time.localtime(plotgen_ts))
                 plot.setBottomLabel(bottom_label)
 
+                # Set day/night display
+                if self.config_dict.has_key('Station') and self.config_dict['Station'].has_key('longitude') and self.config_dict['Station'].has_key('latitude'):
+                    plot.setLocation(float(self.config_dict['Station']['longitude']),
+                                     float(self.config_dict['Station']['latitude']))
+                    plot.setDayNight(weeplot.utilities.tobool(plot_options.get('show_daynight', False)),
+                                     weeplot.utilities.tobgr(plot_options.get('daynight_day_color', '0xffffff')),
+                                     weeplot.utilities.tobgr(plot_options.get('daynight_night_color', '0xf0f0f0')),
+                                     weeplot.utilities.tobgr(plot_options.get('daynight_edge_color', '0xefefef')))
+
                 # Loop over each line to be added to the plot.
                 for line_name in self.image_dict[timespan][plotname].sections:
 
