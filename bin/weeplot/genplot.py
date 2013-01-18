@@ -42,15 +42,15 @@ class GeneralPlot(object):
 
         self.image_width            = int(config_dict.get('image_width',  300))
         self.image_height           = int(config_dict.get('image_height', 180))
-        self.image_background_color = int(config_dict.get('image_background_color', '0xf5f5f5'), 0)
+        self.image_background_color = weeplot.utilities.tobgr(config_dict.get('image_background_color', '0xf5f5f5'))
 
-        self.chart_background_color = int(config_dict.get('chart_background_color', '0xd8d8d8'), 0)
-        self.chart_gridline_color   = int(config_dict.get('chart_gridline_color',   '0xa0a0a0'), 0)
+        self.chart_background_color = weeplot.utilities.tobgr(config_dict.get('chart_background_color', '0xd8d8d8'))
+        self.chart_gridline_color   = weeplot.utilities.tobgr(config_dict.get('chart_gridline_color',   '0xa0a0a0'))
         color_list                  = config_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff'])
         fill_color_list             = config_dict.get('chart_fill_colors', color_list)
         width_list                  = config_dict.get('chart_line_width',  [1, 1, 1])
-        self.chart_line_colors      = [int(v,0) for v in color_list]
-        self.chart_fill_colors      = [int(v,0) for v in fill_color_list]
+        self.chart_line_colors      = [weeplot.utilities.tobgr(v) for v in color_list]
+        self.chart_fill_colors      = [weeplot.utilities.tobgr(v) for v in fill_color_list]
         self.chart_line_widths      = [int(v) for v in width_list]
 
         
@@ -59,16 +59,16 @@ class GeneralPlot(object):
 
         self.unit_label_dict = None
         self.unit_label_font_path   = config_dict.get('unit_label_font_path')
-        self.unit_label_font_color  = int(config_dict.get('unit_label_font_color', '0x000000'), 0)
+        self.unit_label_font_color  = weeplot.utilities.tobgr(config_dict.get('unit_label_font_color', '0x000000'))
         self.unit_label_font_size   = int(config_dict.get('unit_label_font_size', 10))
         self.unit_label_position    = (10, 0)
         
         self.bottom_label_font_path = config_dict.get('bottom_label_font_path')
-        self.bottom_label_font_color= int(config_dict.get('bottom_label_font_color', '0x000000'), 0)
+        self.bottom_label_font_color= weeplot.utilities.tobgr(config_dict.get('bottom_label_font_color', '0x000000'))
         self.bottom_label_font_size = int(config_dict.get('bottom_label_font_size', 10))
 
         self.axis_label_font_path   = config_dict.get('axis_label_font_path')
-        self.axis_label_font_color  = int(config_dict.get('axis_label_font_color', '0x000000'), 0)
+        self.axis_label_font_color  = weeplot.utilities.tobgr(config_dict.get('axis_label_font_color', '0x000000'))
         self.axis_label_font_size   = int(config_dict.get('axis_label_font_size', 10))
 
         self.x_label_format         = config_dict.get('x_label_format', None)
@@ -83,10 +83,10 @@ class GeneralPlot(object):
         self.rose_label             = config_dict.get('rose_label', 'N')
         self.rose_label_font_path   = config_dict.get('rose_label_font_path', self.bottom_label_font_path)
         self.rose_label_font_size   = int(config_dict.get('rose_label_font_size', 10))  
-        self.rose_label_font_color  = int(config_dict.get('rose_label_font_color', '0x000000'), 0)
+        self.rose_label_font_color  = weeplot.utilities.tobgr(config_dict.get('rose_label_font_color', '0x000000'))
         self.rose_color             = config_dict.get('rose_color')
         if self.rose_color is not None:
-            self.rose_color = int(self.rose_color, 0)
+            self.rose_color = weeplot.utilities.tobgr(self.rose_color)
             
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot.
@@ -123,7 +123,7 @@ class GeneralPlot(object):
         if None in line.x:
             raise weeplot.ViolatedPrecondition, "X vector cannot have any values 'None' "
         self.line_list.append(line)
-        
+
 
     def render(self):
         """Traverses the universe of things that have to be plotted in this image, rendering
@@ -172,6 +172,20 @@ class GeneralPlot(object):
                                                     ((self.xscale[0], self.yscale[0]), (self.xscale[1], self.yscale[1])))
         return sdraw
         
+    def _renderDayNight(self, sdraw):
+        """Draw vertical bands for day/night."""
+        (first, transitions) = weeutil.weeutil.getDayNightTransitions(self.xscale[0], self.xscale[1], self.longitude, self.latitude)
+        color = self.daynight_day_color if first == 'day' else self.daynight_night_color
+        xleft = self.xscale[0]
+        for x in transitions:
+            sdraw.rectangle(((xleft,self.yscale[0]),(x,self.yscale[1])), fill=color)
+            xleft = x
+            color = self.daynight_night_color if color == self.daynight_day_color else self.daynight_day_color
+        sdraw.rectangle(((xleft,self.yscale[0]),(self.xscale[1],self.yscale[1])), fill=color)
+        for x in transitions:
+            sdraw.line((x,x),(self.yscale[0],self.yscale[1]), fill=self.daynight_edge_color)
+        
+
     def _renderXAxes(self, sdraw):
         """Draws the x axis and vertical constant-x lines, as well as the labels.
         
@@ -219,14 +233,17 @@ class GeneralPlot(object):
         
         """
         nlines = len(self.line_list)
-        
+        ncolors = len(self.chart_line_colors)
+        nfcolors = len(self.chart_fill_colors)
+        nwidths = len(self.chart_line_widths)
+
         # Draw them in reverse order, so the first line comes out on top of the image
         for j, this_line in enumerate(self.line_list[::-1]):
             
             iline=nlines-j-1
-            color = self.chart_line_colors[iline%nlines] if this_line.color is None else this_line.color
-            fill_color = self.chart_fill_colors[iline%nlines] if this_line.fill_color is None else this_line.fill_color
-            width = self.chart_line_widths[iline%nlines] if this_line.width is None else this_line.width
+            color = self.chart_line_colors[iline%ncolors] if this_line.color is None else this_line.color
+            fill_color = self.chart_fill_colors[iline%nfcolors] if this_line.fill_color is None else this_line.fill_color
+            width = self.chart_line_widths[iline%nwidths] if this_line.width is None else this_line.width
 
             # Calculate the size of a gap in data
             maxdx = None
@@ -305,9 +322,9 @@ class GeneralPlot(object):
         x = (self.image_width - top_label_size[0])/2
         y = 0
         
-        nlabels = len(self.line_list)
+        ncolors = len(self.chart_line_colors)
         for i, this_line in enumerate(self.line_list):
-            color = self.chart_line_colors[i%nlabels] if this_line.color is None else this_line.color
+            color = self.chart_line_colors[i%ncolors] if this_line.color is None else this_line.color
             # Draw a label
             draw.text( (x,y), this_line.label, fill = color, font = top_label_font)
             # Now advance the width of the label we just drew, plus a space:
@@ -442,7 +459,7 @@ class GeneralPlot(object):
             xmin = min(xlinemin, xmin) if xmin is not None else xlinemin
             xmax = max(xlinemax, xmax) if xmax is not None else xlinemax
         return (xmin, xmax)
-    
+
 class TimePlot(GeneralPlot) :
     """Class that specializes GeneralPlot for plots where the x-axis is time.
     

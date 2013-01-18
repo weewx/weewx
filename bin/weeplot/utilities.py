@@ -11,6 +11,7 @@
 
 """
 import ImageFont
+import ImageColor
 import datetime
 import time
 import math
@@ -452,6 +453,29 @@ def _rel_approx_equal(x, y, rel=1e-7):
     True
     """
     return abs(x-y) <= rel*max(abs(x), abs(y))
+
+def tobgr(x):
+    """Convert a color to little-endian integer.  The PIL wants either
+    a little-endian integer (0xBBGGRR) or a string (#RRGGBB).  weewx expects
+    little-endian integer.  Accept any standard color format that is known
+    by ImageColor for example #RGB, #RRGGBB, hslHSL as well as standard color
+    names from X11 and CSS3.  See ImageColor for complete set of colors.
+    """
+    if isinstance(x, basestring):
+        if x.startswith('0x'):
+            return int(x, 0)
+        try:
+            (r,g,b) = ImageColor.getrgb(x)
+            return r + g*256 + b*256*256
+        except :
+            pass
+        try:
+            return int(x)
+        except ValueError:
+            pass
+        raise ValueError("Unknown color specifier: '%s'.  Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
+    return x
+
     
 if __name__ == "__main__":
     import doctest

@@ -106,7 +106,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                 bottom_label_format = plot_options.get('bottom_label_format', '%m/%d/%y %H:%M')
                 bottom_label = time.strftime(bottom_label_format, time.localtime(plotgen_ts))
                 plot.setBottomLabel(bottom_label)
-        
+
                 # Loop over each line to be added to the plot.
                 for line_name in self.image_dict[timespan][plotname].sections:
 
@@ -138,7 +138,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
     
                     # See if a color has been explicitly requested.
                     color = line_options.get('color')
-                    if color is not None: color = int(color,0)
+                    if color is not None: color = weeplot.utilities.tobgr(color)
                     
                     # Get the line width, if explicitly requested.
                     width = line_options.get('width')

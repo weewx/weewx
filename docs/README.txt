@@ -6,8 +6,10 @@ For complete documentation, see http://www.weewx.com/docs
 
 2.X
 
-Added options line_gap_fraction and bar_gap_fraction that control how gaps in
-the data are controlled. Contributed by Matthew Wall. Thanks, Matthew!
+Added plot options line_gap_fraction and bar_gap_fraction, which control how gaps in
+the data are handled in plots. Also, added more flexible control of plot colors, using
+a notation such as 0xBBGGRR, #RRGGBB, or the English name, such as 'yellow'. 
+Contributed by Matthew Wall. Thanks, Matthew!
 
 
 2.1.1 01/02/13
