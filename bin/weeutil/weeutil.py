@@ -10,6 +10,7 @@
 """Various handy utilities that don't belong anywhere else."""
 
 import StringIO
+import calendar
 import datetime
 import math
 import syslog
@@ -576,15 +577,18 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     values = []
     for t in range(start_ts, end_ts, 3600*24):
         x = startOfDay(t) + 7200 # avoid dst issues
-        ts = time.gmtime(x)
-        (year, month, day) = (ts[0], ts[1], ts[2])
-        (sunrise, sunset) = Sun.sunRiseSet(year, month, day, lon, lat)
-        hour = int(sunrise)
-        minute = int((sunrise - hour) * 60)
-        sunrise_ts = utcdatetime_to_timestamp(datetime.datetime(year, month, day, hour, minute, 0))
-        hour = int(sunset)
-        minute = int((sunset - hour) * 60)
-        sunset_ts = utcdatetime_to_timestamp(datetime.datetime(year, month, day, hour, minute, 0))
+        
+        x_tt = time.gmtime(x)
+        y, m, d = x_tt[:3]
+        (sunrise_utc, sunset_utc) = Sun.sunRiseSet(y, m, d, lon, lat)
+
+        # The above function returns its results in UTC hours. Convert
+        # to a local time tuple, then to a timestamp.
+        sunrise_tt = utc_to_local_tt(y, m, d, sunrise_utc)
+        sunset_tt  = utc_to_local_tt(y, m, d, sunset_utc)
+        sunrise_ts = time.mktime(sunrise_tt)
+        sunset_ts  = time.mktime(sunset_tt)        
+
         if start_ts < sunrise_ts < end_ts:
             values.append(sunrise_ts)
         if start_ts < sunset_ts < end_ts:
@@ -650,6 +654,22 @@ def utcdatetime_to_timestamp(dt):
     # Amazingly, Python offers no easy way to do this. Here's the best
     # hack I can some up with:
     return time.mktime(dt.utctimetuple()) - time.timezone
+
+def utc_to_local_tt(y, m, d,  hrs_utc):
+    """Converts from a UTC time to a local time.
+    
+    y,m,d: The year, month, day for which the conversion is desired.
+    
+    hrs_tc: Floating point number with the number of hours since midnight in UTC.
+    
+    Returns: A timetuple with the local time."""
+    # Construct a time tuple with the time at midnight, UTC:
+    daystart_utc_tt = (y,m,d,0,0,0,0,0,-1)
+    # Convert the time tuple to a time stamp and add on the number of seconds since midnight:
+    time_ts = int(calendar.timegm(daystart_utc_tt) + hrs_utc * 3600.0 + 0.5)
+    # Convert to local time:
+    time_local_tt = time.localtime(time_ts)
+    return time_local_tt
 
 def latlon_string(ll, hemi, which):
     """Decimal degrees into a string for degrees, and one for minutes."""

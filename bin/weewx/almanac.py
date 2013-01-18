@@ -176,8 +176,8 @@ class Almanac():
             (sunrise_utc, sunset_utc) = weeutil.Sun.sunRiseSet(y, m, d, self.lon, self.lat)
             # The above function returns its results in UTC hours. Convert
             # to a local time tuple
-            sunrise_tt = Almanac._adjustTime(y, m, d, sunrise_utc)
-            sunset_tt  = Almanac._adjustTime(y, m, d, sunset_utc)
+            sunrise_tt = weeutil.weeutil.utc_to_local_tt(y, m, d, sunrise_utc)
+            sunset_tt  = weeutil.weeutil.utc_to_local_tt(y, m, d, sunset_utc)
             self._sunrise = time.strftime("%H:%M", sunrise_tt)
             self._sunset  = time.strftime("%H:%M", sunset_tt)
 
@@ -291,23 +291,6 @@ class Almanac():
             # type AttributeError will be raised.
             return getattr(binder, attr)
             
-    @staticmethod
-    def _adjustTime(y, m, d,  hrs_utc):
-        """Converts from a UTC time to a local time.
-        
-        y,m,d: The year, month, day for which the conversion is desired.
-        
-        hrs_tc: Floating point number with the number of hours since midnight in UTC.
-        
-        Returns: A timetuple with the local time."""
-        # Construct a time tuple with the time at midnight, UTC:
-        daystart_utc_tt = (y,m,d,0,0,0,0,0,-1)
-        # Convert the time tuple to a time stamp and add on the number of seconds since midnight:
-        time_ts = int(calendar.timegm(daystart_utc_tt) + hrs_utc * 3600.0 + 0.5)
-        # Convert to local time:
-        time_local_tt = time.localtime(time_ts)
-        return time_local_tt
-
 fn_map = {'rise'    : 'next_rising',
           'set'     : 'next_setting',
           'transit' : 'next_transit'}
