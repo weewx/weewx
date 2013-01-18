@@ -476,22 +476,6 @@ def tobgr(x):
         raise ValueError("Unknown color specifier: '%s'.  Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
     return x
 
-def tobool(x):
-    """Convert a string to boolean."""
-    if isinstance(x, bool):
-        return x
-    if isinstance(x, basestring):
-        if x.lower() in ['true']:
-            return True
-        elif x.lower() in ['false']:
-            return False
-    try:
-        return int(x)
-    except ValueError:
-        pass
-    raise ValueError("Unknown boolean specifier: '%s'." % x)
-
-    
 if __name__ == "__main__":
     import doctest
 

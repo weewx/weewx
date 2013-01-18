@@ -562,7 +562,7 @@ def startOfArchiveDay(time_ts, grace=1):
     
     return startOfDay(time_ts - grace)
 
-def getDayNightTransitions(start_ts, end_ts, lon, lat):
+def getDayNightTransitions(start_ts, end_ts, lat, lon):
     """Return the day-night transitions between the start and end times.
 
     start_ts: A timestamp indicating the beginning of the period
@@ -742,7 +742,45 @@ class GenWithPeek(object):
             self.have_peek = True
         return self.peek_obj
 
+def tobool(x):
+    """Convert an object to boolean.
+    
+    Examples:
+    >>> print tobool('TRUE')
+    True
+    >>> print tobool(True)
+    True
+    >>> print tobool(1)
+    True
+    >>> print tobool('FALSE')
+    False
+    >>> print tobool(False)
+    False
+    >>> print tobool(0)
+    False
+    >>> print tobool('Foo')
+    Traceback (most recent call last):
+    ValueError: Unknown boolean specifier: 'Foo'.
+    >>> print tobool(None)
+    Traceback (most recent call last):
+    ValueError: Unknown boolean specifier: 'None'.
+    """
+
+    try:
+        if x.lower() == 'true':
+            return True
+        elif x.lower() == 'false':
+            return False
+    except AttributeError:
+        pass
+    try:
+        return bool(int(x))
+    except (ValueError, TypeError):
+        pass
+    raise ValueError("Unknown boolean specifier: '%s'." % x)
+    
 if __name__ == '__main__':
     import doctest
 
-    doctest.testmod()
+    if not doctest.testmod().failed:
+        print "PASSED"

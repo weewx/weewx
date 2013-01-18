@@ -12,7 +12,6 @@
 import time
 import Image
 import ImageDraw
-import math
 
 import weeplot.utilities
 import weeutil.weeutil
@@ -89,10 +88,11 @@ class GeneralPlot(object):
         if self.rose_color is not None:
             self.rose_color = weeplot.utilities.tobgr(self.rose_color)
 
-        self.show_daynight = weeplot.utilities.tobool(config_dict.get('show_daynight', False))
-        self.daynight_day_color = weeplot.utilities.tobgr(config_dict.get('daynight_day_color', '0xffffff'))
-        self.daynight_night_color = weeplot.utilities.tobgr(config_dict.get('daynight_night_color', '0xf0f0f0'))
-        self.daynight_edge_color = weeplot.utilities.tobgr(config_dict.get('daynight_edge_color', '0xefefef'))
+        # Show day/night transitions
+        self.show_daynight          = weeutil.weeutil.tobool(config_dict.get('show_daynight', False))
+        self.daynight_day_color     = weeplot.utilities.tobgr(config_dict.get('daynight_day_color', '0xffffff'))
+        self.daynight_night_color   = weeplot.utilities.tobgr(config_dict.get('daynight_night_color', '0xf0f0f0'))
+        self.daynight_edge_color    = weeplot.utilities.tobgr(config_dict.get('daynight_edge_color', '0xefefef'))
             
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot.
@@ -130,9 +130,9 @@ class GeneralPlot(object):
             raise weeplot.ViolatedPrecondition, "X vector cannot have any values 'None' "
         self.line_list.append(line)
 
-    def setLocation(self, lon, lat):
+    def setLocation(self, lat, lon):
+        self.latitude  = lat
         self.longitude = lon
-        self.latitude = lat
         
     def setDayNight(self, showdaynight, daycolor, nightcolor, edgecolor):
         """Configure day/night bands.
@@ -149,7 +149,6 @@ class GeneralPlot(object):
         self.daynight_day_color = daycolor
         self.daynight_night_color = nightcolor
         self.daynight_edge_color = edgecolor
-
 
     def render(self):
         """Traverses the universe of things that have to be plotted in this image, rendering
@@ -202,7 +201,7 @@ class GeneralPlot(object):
         
     def _renderDayNight(self, sdraw):
         """Draw vertical bands for day/night."""
-        (first, transitions) = weeutil.weeutil.getDayNightTransitions(self.xscale[0], self.xscale[1], self.longitude, self.latitude)
+        (first, transitions) = weeutil.weeutil.getDayNightTransitions(self.xscale[0], self.xscale[1], self.latitude, self.longitude)
         color = self.daynight_day_color if first == 'day' else self.daynight_night_color
         xleft = self.xscale[0]
         for x in transitions:
