@@ -25,12 +25,12 @@ import daemon
 
 # weewx imports:
 import weedb
+import weewx.accum
 import weewx.archive
 import weewx.stats
 import weewx.station
 import weewx.restful
 import weewx.reportengine
-import user.schemas
 import weeutil.weeutil
 
 class BreakLoop(Exception):
@@ -556,7 +556,7 @@ class StdArchive(StdService):
                                                            self.archive_interval)
         end_archive_ts = start_archive_ts + self.archive_interval
         
-        new_accumulator =  self.statsDb._accum_factory(weeutil.weeutil.TimeSpan(start_archive_ts, end_archive_ts))
+        new_accumulator =  weewx.accum.WXAccum(weeutil.weeutil.TimeSpan(start_archive_ts, end_archive_ts))
         return new_accumulator
     
 #===============================================================================

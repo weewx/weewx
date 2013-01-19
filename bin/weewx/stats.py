@@ -136,9 +136,13 @@ class StatsDb(object):
     'squarecount' (perhaps not the best name, but it's there for historical reasons)
     is the number of items added to 'xsum' and 'ysum'.
     
-    In addition to all the tables for each type, there is also a separate table
-    called 'metadata'. Currently, it holds the time of the last update, and the
-    unit system in use in the database.
+    In addition to all the tables for each type, there are two other tables:
+    
+     o The first is called 'metadata'. It currently holds the time of the last update, and the
+       unit system in use in the database.
+    
+     o The second is called _stats_schema. It holds all the observation types in the database
+       and whether it is a scalar or vector.
     
     ATTRIBUTES
     
@@ -149,7 +153,11 @@ class StatsDb(object):
     StatsDb. 
     
     std_unit_system: The unit system in use (weewx.US or weewx.METRIC), or
-    None if no system has been specified."""
+    None if the system has been specified yet.
+    
+    accumClass: The class to be used as an accumulator. Default is weewx.accum.WXAccum.
+    This can be changed for specialized, non-weather, applications.
+    """
     
     def __init__(self, connection):
         """Create an instance of StatsDb to manage a database.
@@ -165,6 +173,9 @@ class StatsDb(object):
         except weedb.OperationalError, e:
             self.close()
             raise weewx.UninitializedDatabase(e)
+        # The class to be used as an accumulator. This can be changed by the
+        # calling program.
+        self.AccumClass = weewx.accum.WXAccum
         self.statsTypes = self.schema.keys()
         self.std_unit_system = self._getStdUnitSystem()
         
@@ -494,7 +505,7 @@ class StatsDb(object):
         timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
 
         # Get an empty accumulator
-        _stats_dict = weewx.accum.BaseAccum(timespan)
+        _stats_dict = self.AccumClass(timespan)
 
         # For each kind of stats, execute the SQL query and hand the results on
         # to the accumulator.
