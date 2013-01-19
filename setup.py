@@ -47,7 +47,6 @@
  7. It conserves the ./bin/user subdirectory.
 """
 
-import os
 import os.path
 import re
 import shutil

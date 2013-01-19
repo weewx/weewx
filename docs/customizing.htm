@@ -20,7 +20,7 @@
 <body>
 
 <h1 class="title">Customizing weewx<br />
-Version 2.1</h1>
+Version 2.2</h1>
 <h1>Table of contents</h1>
 <div id="technical_content">
 	<div id="toc">
@@ -2144,12 +2144,16 @@ class MyAlarm(StdService):
 	# Rename to the nominal name</strong></p>
 	<p>5. <strong>Modify the stats database.</strong> At this point, you can use 
 	the new observation type in the plots. However, if you wish to use it in the 
-	statistical summaries, you will also have to add it to the stats database. To 
-	do this, add the type to the option <span class="code">stats_types</span> in 
-	section <span class="code">[StdArchive]</span> so it reads something like this:</p>
-	<p class="tty">&nbsp;stats_types = wind, barometer, inTemp, outTemp, inHumidity, 
-	outHumidity, rainRate, rain, dewpoint, windchill, heatindex, ET, radiation, 
-	UV, extraTemp1, rxCheckPercent, <span class="highlight">electricity</span></p>
+	statistical summaries, you will also have to add it to the stats database. 
+	To do this, add the type to the Python list <span class="code">stats_types</span>, 
+	which can be found in <span class="code">bin/user/schemas.py</span>, so it reads something like this:</p>
+	<p class="tty">stats_types = ['barometer', 'inTemp', 'outTemp', 
+	'inHumidity', 'outHumidity', <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	'radiation', 'UV', 'extraTemp1', 'rxCheckPercent', 'wind',
+	<span class="highlight">'electricity'</span>]&nbsp;</p>
 	<p>Now delete the stats database (nominally <span class="code">stats.sdb</span> 
 	for sqlite, <span class="code">stats</span> for MySQL). Weewx will automatically 
 	rebuild it, including your new type.</p>
@@ -2250,7 +2254,7 @@ class MyAlarm(StdService):
 	unit system.</p>
 	<h1>Porting to new weather station hardware</h1>
 	<p>Naturally, this is an advanced topic but, nevertheless, I'd really like to 
-	encourage any Python whizzes out there to give it a try. Of course, I have selfish 
+	encourage any Python wizards out there to give it a try. Of course, I have selfish 
 	reasons for encouraging you: I don't want to have to go out and buy every type 
 	of hardware there is! It's expensive and my roof would look like a weather station 
 	farm.</p>
@@ -2318,7 +2322,7 @@ class MyAlarm(StdService):
 	for the WMR-USB series, located in <span class="code">bin/weewx/wmrx.py</span>. 
 	The driver for the Vantage series is by far the most complicated.</p>
 	<p>Naturally, there are a lot of subtleties that I've glossed over in this high-level 
-	description. If your game, give it a try &mdash; I'm happy to help you out!</p>
+	description. If you're game, give it a try &mdash; I'm happy to help you out!</p>
 	<h1 id="Archive_types">Appendix A: Archive types</h1>
 	<p><em>Archive types</em> are weather observations that have come from your 
 	instrument and been stored in the <em>archive database, </em>&nbsp;a SQL database. 
@@ -2674,12 +2678,24 @@ class MyAlarm(StdService):
 			meter</td>
 		</tr>
 		<tr class="code">
+			<td>group_degree_day</td>
+			<td>cooldeg<br />
+			heatdeg</td>
+			<td>degree_F_day<br />
+			degree_C_day</td>
+		</tr>
+		<tr class="code">
 			<td>group_direction</td>
 			<td>gustdir <br />
 			vecdir <br />
 			windDir <br />
 			windGustDir</td>
 			<td>degree_compass</td>
+		</tr>
+		<tr class="code">
+			<td>group_interval</td>
+			<td>interval</td>
+			<td>minute</td>
 		</tr>
 		<tr class="code">
 			<td>group_moisture</td>
@@ -2772,11 +2788,14 @@ class MyAlarm(StdService):
 			degree_C</td>
 		</tr>
 		<tr class="code">
-			<td>group_degree_day</td>
-			<td>heatdef <br />
-			cooldeg</td>
-			<td>degree_F_day <br />
-			degree_C_day</td>
+			<td>group_time</td>
+			<td>dateTime</td>
+			<td>unix_epoch</td>
+		</tr>
+		<tr class="code">
+			<td>group_uv</td>
+			<td>UV</td>
+			<td>uv_index</td>
 		</tr>
 		<tr class="code">
 			<td>group_volt</td>

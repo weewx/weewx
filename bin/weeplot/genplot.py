@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -57,7 +57,7 @@ class GeneralPlot(object):
         self.top_label_font_path    = config_dict.get('top_label_font_path')
         self.top_label_font_size    = int(config_dict.get('top_label_font_size', 10))
 
-        self.unit_label_dict = None
+        self.unit_label             = None
         self.unit_label_font_path   = config_dict.get('unit_label_font_path')
         self.unit_label_font_color  = weeplot.utilities.tobgr(config_dict.get('unit_label_font_color', '0x000000'))
         self.unit_label_font_size   = int(config_dict.get('unit_label_font_size', 10))
@@ -104,7 +104,7 @@ class GeneralPlot(object):
         """Set the label to be used to show the units of the plot.
         
         """
-        self.unit_label_dict = unit_label
+        self.unit_label = unit_label
         
     def setXScaling(self, xscale):
         """Set the X scaling.
@@ -333,9 +333,9 @@ class GeneralPlot(object):
 
         # Put the units in the upper left corner
         unit_label_font = weeplot.utilities.get_font_handle(self.unit_label_font_path, self.unit_label_font_size)
-        if self.unit_label_dict:
+        if self.unit_label:
             draw.text(self.unit_label_position,
-                      self.unit_label_dict,
+                      self.unit_label,
                       fill=self.unit_label_font_color, font=unit_label_font)
 
         top_label_font = weeplot.utilities.get_font_handle(self.top_label_font_path, self.top_label_font_size)

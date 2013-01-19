@@ -5,6 +5,7 @@ setup.cfg
 setup.py
 weewx.conf
 bin/config_database.py
+bin/config_fousb.py
 bin/config_vp.py
 bin/daemon.py
 bin/runreports.py
@@ -50,6 +51,8 @@ bin/weewx/wxengine.py
 bin/weewx/wxformulas.py
 docs/README.txt
 docs/customizing.htm
+docs/day-gap-not-shown.png
+docs/day-gap-showing.png
 docs/daytemp_with_avg.png
 docs/debian.htm
 docs/ferrites.jpg

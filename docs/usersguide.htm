@@ -31,7 +31,7 @@
 
 <h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System
 <br />
-Version 2.1</h1>
+Version 2.2</h1>
 <h1>Table of Contents</h1>
 <p>This is the complete guide to installing <span class="code">weewx</span> &mdash; 
 all details and options are documented here. As such, it can get a bit tedious to 
@@ -465,11 +465,11 @@ pip install pil </pre>
 	<h2>System requirements</h2>
 	<p>I run <span class="code">weewx</span> on a 500MHz system with an AMD Geode 
 	processor and 512 MB of memory.&nbsp; Configured this way, it consumes about 
-	5% of the CPU and about 40MB of total memory. </p>
+	5% of the CPU and about 50MB of total memory. </p>
 	<h1 id="Installing_weewx">Installing <span class="code">weewx</span></h1>
 	<p>Because <span class="code">weewx</span> is &quot;Pure Python&quot;, that 
-	is it is 100% Python with no &quot;C&quot; modules to compile, installing it 
-	is very easy. Furthermore, it uses the standard Python
+	is it is 100% Python with no &quot;C&quot; modules to compile, it 
+	is very easy to install. Furthermore, it uses the standard Python
 	<a href="http://docs.python.org/install/index.html">distutils</a> install method, 
 	which is very easy and flexible. Detailed instructions follow. </p>
 	<h2>Unpacking</h2>
@@ -479,10 +479,15 @@ pip install pil </pre>
 	<p>Then change directory into it: </p>
 	<p class="tty">cd weewx-X.Y.Z </p>
 	<h2>Choosing where to install <span class="code">weewx</span></h2>
-	<p>Next step is figuring out where you want to install <span class="code">weewx</span>. 
-	If <span class="code"><em>$WEEWX_INSTALL</em></span> symbolizes the root location 
-	of where the <span class="code">weewx</span> directory will be installed, then 
-	the nominal directory layout is: </p>
+	<p>The next step is to figure out where you want to install <span class="code">weewx</span>. 
+	Let <span class="code"><em>$WEEWX_INSTALL</em></span> symbolizes the location 
+	where the root <span class="code">weewx</span> directory will be installed. By default, this location  
+	is <span class="code">/home/weewx</span>. However, it can be changed by editing 
+	the file <span class="code">setup.cfg</span> and changing the following line
+	</p>
+	<pre class="tty">home = /home/weewx</pre>
+	<p>to reflect your decision.</p>
+	<p>The rest of the nominal directory layout will be: </p>
 	<table class="center" style="width: 60%" summary="Summarizing the nominal weewx directory layout">
 		<tr>
 			<td><strong>Subdirectory</strong></td>
@@ -509,12 +514,7 @@ pip install pil </pre>
 			<td>Generated HTML and .PNG images</td>
 		</tr>
 	</table>
-	<p>By default, the location for <span class="code"><em>WEEWX_INSTALL</em></span> 
-	is <span class="code">/home/weewx</span>. However, it can be changed by editing 
-	the file <span class="code">setup.cfg</span> and changing the following line
-	</p>
-	<pre class="tty">home = /home/weewx</pre>
-	<p>to reflect your decision. </p>
+	
 	<h2>Build and install</h2>
 	<p>Build the distribution </p>
 	<pre class="tty">./setup.py build </pre>
@@ -525,7 +525,8 @@ pip install pil </pre>
 	<span class="code">weewx</span> will go (<em>i.e.</em>, <span class="code">
 	<em>$WEEWX_INSTALL</em></span>), then type </p>
 	<p class="tty">./setup.py install </p>
-	<p>Otherwise, if you do not have write permission, you will have to use sudo:
+	<p>Otherwise, if you do not have write permission, you will have to use 
+	<span class="code">sudo</span>:
 	</p>
 	<p class="tty">sudo ./setup.py install </p>
 	<h3>Upgrading</h3>
@@ -585,7 +586,7 @@ pip install pil </pre>
 	<pre class="tty">mkdir <em>$WEEWX_ROOT</em>/archive
 cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb</pre>
 	<p>The second database, the statistics, will then be automatically created and 
-	backfilled on startup of weewx. If your existing database is large, backfilling 
+	backfilled on startup of <span class="code">weewx</span>. If your existing database is large, backfilling 
 	could take some time. On my modest 500 MHz
 	<a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC Slim</a> 
 	with 512 MB of memory it took a little over 4 minutes for a year and a half 
@@ -705,8 +706,9 @@ Mutating actions will request confirmation before proceeding.</pre>
 	--set-bucket=2</p>
 	<h2>Configuring MySql</h2>
 	<p>This section can be ignored if you are not using MySQL.</p>
-	<p>Assuming that you use the default database configurations, your
-	<span class="code"><a href="#[Databases]">[Databases]</a></span> section will 
+	<p>Assuming that you want to use the default database configuration, your
+	<span class="code"><a href="#[Databases]">[Databases]</a></span> section 
+	should 
 	look something like this:</p>
 	<pre class="tty">	[[archive_mysql]]
 		host = localhost
@@ -721,6 +723,11 @@ Mutating actions will request confirmation before proceeding.</pre>
 		password = weewx
 		database = stats
 		driver = weedb.mysql</pre>
+	<p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
+	Adjust as necessary.</p>
+	<p>If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
+	can be combined into one database, although this will make it harder to drop 
+	the latter should you need to rebuild the stats database at a later time.</p>
 	<p>You will need to give the necessary permissions for databases '<span class="code">weewx</span>' 
 	and '<span class="code">stats</span>' to whatever MySQL user you choose, by 
 	default, user '<span class="code">weewx</span>'. Here are the necessary minimum 
@@ -728,10 +735,6 @@ Mutating actions will request confirmation before proceeding.</pre>
 	<pre class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
 mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</pre>
-	<p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
-	If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
-	can be combined into one database, although this will make it harder to drop 
-	the latter should you need to rebuild the stats database at a later time.</p>
 	<h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
 	<p>Station specific information is set in the configuration file <em>
 	<span class="code">$WEEWX_ROOT/weewx.conf</span></em>. (There is another configuration 
@@ -767,7 +770,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<span class="code">archive</span>, and <span class="code">public_html</span> 
 	are expected to be found here. This value will be set automatically by the setup 
 	script <span class="code">setup.py</span> to reflect the choice you made in 
-	the configuration file <span class="code">setup.cfg</span>. Required. No default.
+	the configuration file <span class="code">setup.cfg</span> during 
+	installation. Required. No default.
 	</p>
 	<p class="config_option">socket_timeout </p>
 	<p>Set to how long to wait before declaring a socket time out. This is used 
@@ -1052,8 +1056,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p>This section is for configuring the <span class="code">StdConvert</span> 
 	service. This service acts as a filter, converting the unit system coming off 
 	your hardware to a target output unit system. Everything that follows, including 
-	the archiving service, will use the target system. Hence, your data will be 
-	stored in the database in the target system. </p>
+	the archiving service, will use the target unit system. Hence, your data 
+	will be stored using your chosen unit system. </p>
 	<p><em>Once chosen, it cannot be changed!</em> Weewx does not allow you to mix 
 	unit systems within the databases. You must chose one or the other and then 
 	stick with it. This means that users coming from wview (which uses US Customary) 
@@ -1062,7 +1066,12 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<a href="customizing.htm#Changing_the_unit_system">Changing the Unit System 
 	in the Customizing Guide</a>.</p>
 	<p>Note that whatever you choose here, it does not affect your options for the 
-	unit system to be used for <i>reporting</i>.</p>
+	unit system to be used for <i>reporting</i>. Because of this, unless you 
+	have a special purpose application, there is really no good reason to change 
+	from the default, which is <span class="code">US</span>. However, if you do 
+	decide to change to Metric, be sure to read the sections <span class="code">
+	<a href="#Calibrate">[StdCalibrate]</a></span> and <span class="code">
+	<a href="#QC">[StdQC]</a></span> below, and change the units there as well.</p>
 	<p class="config_option">target_unit</p>
 	<p>Set to either &#39;<span class="code">US</span>&#39; or &#39;<span class="code">METRIC</span>&#39;. 
 	Default is &#39;<span class="code">US</span>&#39;.</p>
@@ -1132,16 +1141,20 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	the VP2, there is no real point in checking wind speed. </p>
 	<h3 id="[StdArchive]" class="config_section">[StdArchive]</h3>
 	<p>This section is for configuring <span class="code">StdArchive</span>, the 
-	service that stores data in the databases. Options allow chosing which database 
+	service that stores data in the databases. Options allow choosing which database 
 	to use for archiving and statistics.</p>
 	<p class="config_option">archive_database</p>
 	<p>The database to be used to store the archive data. This should match a section 
 	given in the section <span class="code"><a href="#[Databases]">[Databases]</a></span> 
-	below. Normally, this is set to <span class="code">archive_sqlite</span>.</p>
+	below. Normally, this is set to <span class="code">archive_sqlite</span>. If 
+	you are using MySQL, you will want to change this to <span class="code">
+	archive_mysql</span>.</p>
 	<p class="config_option">stats_database</p>
 	<p>The database to be used to store the statistical data. This should match 
 	a section given in the section <span class="code"><a href="#[Databases]">[Databases]</a></span> 
-	below. Normally, this is set to <span class="code">stats_sqlite</span>.</p>
+	below. Normally, this is set to <span class="code">stats_sqlite</span>. If 
+	you are using MySQL, you will want to change this to <span class="code">
+	stats_mysql</span>.</p>
 	<p class="config_option">archive_delay </p>
 	<p>How long to wait in seconds after the top of an archiving interval before 
 	fetching new data off the station. For example, if your archive interval is 
@@ -1157,18 +1170,21 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<span class="code">weewx</span> falls back to software generation. A setting 
 	of '<span class="code">hardware</span>' will work for most users. A notable 
 	exception is <a href="http://www.wxforum.net/index.php?topic=10315.0">users 
-	who have cobbled together homebrew serial interfaces</a> to the Vantage stations 
+	who have cobbled together homebrew serial interfaces</a> for the Vantage stations 
 	that do not include memory for a logger. These users should set this option 
 	to '<span class="code">software</span>', forcing software record generation. 
 	Default is &#39;<span class="code">hardware</span>&#39;.</p>
-	<p id="stats_types" class="config_option">stats_types </p>
-	<p>The list of types for which statistics will be kept. Types not listed will 
-	not be available for generating HTML pages. Optional. The default is all types, 
-	resulting in a possibly much bigger than necessary stats database (do you really 
-	have four different soil moisture sensors?) The list that ships with the configuration 
-	file will work for most stations and probably will not have to be modified. 
-	This list is used only when the stats database is first created, thereafter 
-	it is downloaded from the database.</p>
+	<p class="config_option">archive_schema</p>
+	<p>This is used only when the archive database is first created. Thereafter, 
+	it is downloaded from the database. It should point to a Python list 
+	containing the archive database schema. The default is <span class="code">
+	user.schemas.defaultArchiveSchema</span>.</p>
+	<p class="config_option">stats_schema</p>
+	<p>This is used only when the stats database is first created. Thereafter, 
+	it is downloaded from the database. It should point to a Python list 
+	containing the stats database schema. The default is <span class="code">
+	user.schemas.defaultStatsSchema</span>.</p>
+	
 	<h3 class="config_section">[StdTimeSynch]</h3>
 	<p>This section is for configuring <span class="code">StdTymeSynch</span>, a 
 	service that can synchronize the onboard clock of station with your computer. 
@@ -1384,14 +1400,14 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<h1 id="Troubleshooting">Troubleshooting</h1>
 	<p>This section lists some common problems installing and running
 	<span class="code">weewx</span>. Check it first. If you are still stuck, be 
-	sure to </p>
+	sure to: </p>
 	<ul>
 		<li>Set option <span class="code">debug </span>in <span class="code">weewx.conf</span> 
 		to <span class="code">1</span> (one)! It will put lots more information 
 		in the log file, which can be very useful for troubleshooting and debugging!
 		</li>
 		<li><a href="#Monitoring_weewx">Look at the log file</a>. I am always happy 
-		to take questions, but the first thing I will ask you is: &quot;Did you 
+		to take questions, but the first thing I will ask you is, &quot;Did you 
 		look at the log file?&quot; </li>
 		<li>Run from the command line. Generally, <span class="code">weewx</span> 
 		will catch and log any unrecoverable exceptions. But if you are getting 
@@ -1456,16 +1472,16 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
 	<p>In this example, the VantagePro was connected to <span class="code">/dev/ttyUSB0</span>, 
 	but then reconnected to <span class="code">/dev/ttyUSB1</span>. </p>
 	<p>If you put ferrite coils on the USB connection, you will eliminate 90% of 
-	this problem. I did this about 18 months ago, and have not had a problem since.
+	this problem. I did this about 3 years ago, and have not had a problem since.
 	</p>
-	<p>However, there is one final step you can take that will really harden up 
+	<p>However, there is one final step that you can take to really harden up 
 	your system: install a <span class="code">udev</span> script that will create 
 	a symbolic link to the VantagePro USB port, whatever it might be. With this 
 	approach, if the port jumps from <span class="code">ttyUSB0</span> to
 	<span class="code">ttyUSB1</span>, the symbolic link will follow it. You just 
 	specify port <span class="code">/dev/vpro</span> in the configuration file
 	<span class="code">weewx.conf</span> and be done with it. </p>
-	<p>Here&#39;s how to do this: </p>
+	<p>Here's how: </p>
 	<h4>Installing a udev script</h4>
 	<p>I have installed a file <span class="code">/etc/udev/rules.d/vpro.rules</span> 
 	on my fit-PC that looks like this: </p>
@@ -1528,7 +1544,7 @@ And put in weewx.conf:
 	The console then downloads the records one at a time. After it gets to the very 
 	last one, the memory wraps around, and the timestamp will suddenly jump backwards 
 	in time a couple weeks &mdash; the software knows it has downloaded the last 
-	record.</p>
+	record and stops.</p>
 	<p>However, if the internal memory gets garbled, the console will immediately 
 	return archives in the past, and so it looks like the timestamps have decreased 
 	in value and so <span class="code">weewx</span> figures that&#39;s it: there&#39;s 
@@ -1694,7 +1710,7 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 	</ul>
 	<p>While <span class="code">weewx</span> is nowhere near as fast at generating 
 	images and HTML as its predecessor, <span class="code">wview</span> (this is 
-	partially because it uses fancier fonts and a much more powerful templating 
+	partially because <span class="code">weewx</span> uses fancier fonts and a much more powerful templating 
 	engine), it is &#39;fast enough&#39; for all platforms but the slowest. I run 
 	it regularly on a 500 MHz machine where generating the 9 images used in the &quot;Current 
 	Conditions&quot; page takes just under 2 seconds (compared with
