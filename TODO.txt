@@ -2,3 +2,12 @@ TODO before the next release:
 
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
+In particular, see Paul G's note about softWx.
+
+Remove version in weewx.conf
+
+Make sure setup.py removes option stats_types.
+
+Remove reference to stats_types in the docs.
+
+Reconsider the name unit_label_dict in genplot.py

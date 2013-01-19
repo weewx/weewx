@@ -23,11 +23,14 @@ class ScalarStats(object):
     """Accumulates statistics (min, max, average, etc.) for a scalar value.
     
     Property 'last' is the last non-None value seen. Property 'lasttime' is
-    the time it was seen. """    
+    the time it was seen. """
+    
+    default_init = (None, None, None, None, 0.0, 0)
+    
     def __init__(self, stats_tuple=None):
         (self.min, self.mintime,
          self.max, self.maxtime,
-         self.sum, self.count) = stats_tuple if stats_tuple else (None, None, None, None, 0.0, 0)
+         self.sum, self.count) = stats_tuple if stats_tuple else ScalarStats.default_init
         self.last     = None
         self.lasttime = None
          
@@ -87,13 +90,15 @@ class VecStats(object):
     
     Property 'last' is the last non-None value seen. It is a two-way tuple (mag, dir).
     Property 'lasttime' is the time it was seen. """
+
+    default_init = (None, None, None, None, 0.0, 0, None, 0.0, 0.0, 0.0, 0)
+    
     def __init__(self, stats_tuple=None):
         (self.min, self.mintime,
          self.max, self.maxtime,
          self.sum, self.count,
          self.max_dir, self.xsum, self.ysum, 
-         self.squaresum, self.squarecount) = stats_tuple if stats_tuple else (None, None, None, None, 0.0, 0,
-                                                                              None, 0.0, 0.0, 0.0, 0)
+         self.squaresum, self.squarecount) = stats_tuple if stats_tuple else VecStats.default_init
         self.last     = (None, None)
         self.lasttime = None
 
@@ -200,7 +205,6 @@ class BaseAccum(dict):
         for obs_type in record:
             # ... add to myself
             self._add_value(record[obs_type], obs_type, record['dateTime'])
-            
                 
     def updateHiLo(self, accumulator):
         """Merge the stats of another accumulator into me."""
@@ -210,7 +214,7 @@ class BaseAccum(dict):
         self._check_units(accumulator.unit_system)
         
         for obs_type in accumulator:
-            self.initType(obs_type)
+            self._init_type(obs_type)
             self[obs_type].mergeHiLo(accumulator[obs_type])
                     
     def getRecord(self):
@@ -226,14 +230,12 @@ class BaseAccum(dict):
             record[obs_type] = self[obs_type].avg
         return record
 
-    def initType(self, obs_type, stats_tuple=None):
+    def _init_type(self, obs_type):
 
         # Do nothing if this type has already been initialized:
         if obs_type in self:
             return
-        else:
-            # Initialize using the default, a scalar accumulator:
-            self[obs_type] = ScalarStats(stats_tuple)
+        self[obs_type] = ScalarStats()
             
     def _add_value(self, val, obs_type, ts):
         """Add a single observation to myself."""
@@ -244,7 +246,7 @@ class BaseAccum(dict):
             return
         else:
             # If the type has not been seen before, initialize it
-            self.initType(obs_type)
+            self._init_type(obs_type)
             # Then add to highs/lows, and to the running sum:
             self[obs_type].addHiLo(val, ts)
             self[obs_type].addSum(val)
@@ -315,15 +317,14 @@ class WXAccum(BaseAccum):
                 record[obs_type]      = self[obs_type].avg
         return record
 
-    def initType(self, obs_type, stats_tuple=None):
+    def _init_type(self, obs_type):
 
         # Do nothing if this type has already been initialized:
         if obs_type in self:
             return
         elif obs_type == 'wind':
             # Observation 'wind' requires a special vector accumulator
-            self['wind'] = VecStats(stats_tuple)
+            self['wind'] = VecStats()
         else:
-            # Otherwise, use a scalar accumulator:
-            self[obs_type] = ScalarStats(stats_tuple)
-
+            # Otherwise, pass on to my base class
+            return BaseAccum._init_type(self, obs_type)

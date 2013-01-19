@@ -9,6 +9,11 @@ For complete documentation, see http://www.weewx.com/docs
 Added options line_gap_fraction and bar_gap_fraction that control how gaps in
 the data are controlled. Contributed by Matthew Wall. Thanks, Matthew!
 
+Generalized the weewx machinery so it can be used for applications other than
+weather applications.
+
+Got rid of option stats_types in weewx.conf and replaced it with stats_schema.
+
 
 2.1.1 01/02/13
 

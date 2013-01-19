@@ -502,22 +502,23 @@ class StdArchive(StdService):
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
 
+        archive_schema_str = config_dict['StdArchive'].get('archive_schema', 'user.schemas.defaultArchiveSchema')
+        archive_schema = weeutil.weeutil._get_object(archive_schema_str)
         archive_db = config_dict['StdArchive']['archive_database']
         # This will create the database if it doesn't exist, the return an
         # opened instance of Archive:
-        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], 
-                                                              user.schemas.defaultArchiveSchema)
+        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], archive_schema)
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (archive_db,))
 
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
         
-        stats_types = config_dict['StdArchive'].get('stats_types', user.schemas.defaultStatsTypes)
+        stats_schema_str = config_dict['StdArchive'].get('stats_schema', 'user.schemas.defaultStatsSchema')
+        stats_schema = weeutil.weeutil._get_object(stats_schema_str)
         stats_db = config_dict['StdArchive']['stats_database']
         # This will create the database if it doesn't exist, then return an
         # opened stats database object:
-        self.statsDb = self._statsdb_factory(config_dict['Databases'][stats_db], stats_types)
-
+        self.statsDb = weewx.stats.StatsDb.open_with_create(config_dict['Databases'][stats_db], stats_schema)
         # Backfill it with data from the archive. This will do nothing if the
         # stats database is already up-to-date.
         self.statsDb.backfillFrom(self.archive)
@@ -558,9 +559,6 @@ class StdArchive(StdService):
         new_accumulator =  self.statsDb._accum_factory(weeutil.weeutil.TimeSpan(start_archive_ts, end_archive_ts))
         return new_accumulator
     
-    def _statsdb_factory(self, stats_db_dict, stats_types):
-        return weewx.stats.WXStatsDb.open_with_create(stats_db_dict, stats_types)
-                                                  
 #===============================================================================
 #                    Class StdTimeSynch
 #===============================================================================
