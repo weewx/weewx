@@ -3,9 +3,9 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision: 786 $
-#    $Author: tkeffer $
-#    $Date: 2013-01-02 07:16:53 -0800 (Wed, 02 Jan 2013) $
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """Test module weewx.accum"""
 import time

@@ -18,9 +18,16 @@
 
 <body>
 
-<h1 class="title">Upgrading to <span class="code">weewx</span> v2.1</h1>
+<h1 class="title">Upgrading to <span class="code">weewx</span> v2.2</h1>
 <h1>Version specific directions</h1>
 <p>What follows are directions for upgrading from specific versions.</p>
+<h2>V2.1 or earlier</h2>
+<p>Version 2.2 introduces a schema, found in <span class="code">
+bin/user/schemas.py</span>, for the stats database. This schema is used only 
+when initially creating the database. If you have a specialized stats database, 
+that is, one that saves types other than the default that comes with
+<span class="code">weewx</span>, you should edit this file to reflect your 
+changes before attempting to rebuild the database.</p>
 <h2>V1.14 or earlier</h2>
 <p>Version 2.0 introduces many new features, including a revamped internal 
 engine. There are two changes that are not backwards compatible:</p>

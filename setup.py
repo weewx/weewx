@@ -228,6 +228,8 @@ class My_install_data(install_data):
                 old_config.interpolation = False
                 # Now do the merge:
                 new_config.merge(old_config)
+                # Option stats_types has been moved to bin/user/schemas.py
+                new_config['StdArchive'].pop('stats_types', None)
                         
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
         new_config['WEEWX_ROOT'] = self.install_dir

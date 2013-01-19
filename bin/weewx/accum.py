@@ -15,15 +15,22 @@ import math
 class OutOfSpan(ValueError):
     """Raised when attempting to add a record outside of the timespan held by an accumulator"""
 
+#===============================================================================
+#      Classes for in/max/count stats for a single observation type
+#===============================================================================
+
 class ScalarStats(object):
     """Accumulates statistics (min, max, average, etc.) for a scalar value.
     
     Property 'last' is the last non-None value seen. Property 'lasttime' is
-    the time it was seen. """    
+    the time it was seen. """
+    
+    default_init = (None, None, None, None, 0.0, 0)
+    
     def __init__(self, stats_tuple=None):
         (self.min, self.mintime,
          self.max, self.maxtime,
-         self.sum, self.count) = stats_tuple if stats_tuple else (None, None, None, None, 0.0, 0)
+         self.sum, self.count) = stats_tuple if stats_tuple else ScalarStats.default_init
         self.last     = None
         self.lasttime = None
          
@@ -83,13 +90,15 @@ class VecStats(object):
     
     Property 'last' is the last non-None value seen. It is a two-way tuple (mag, dir).
     Property 'lasttime' is the time it was seen. """
+
+    default_init = (None, None, None, None, 0.0, 0, None, 0.0, 0.0, 0.0, 0)
+    
     def __init__(self, stats_tuple=None):
         (self.min, self.mintime,
          self.max, self.maxtime,
          self.sum, self.count,
          self.max_dir, self.xsum, self.ysum, 
-         self.squaresum, self.squarecount) = stats_tuple if stats_tuple else (None, None, None, None, 0.0, 0,
-                                                                              None, 0.0, 0.0, 0.0, 0)
+         self.squaresum, self.squarecount) = stats_tuple if stats_tuple else VecStats.default_init
         self.last     = (None, None)
         self.lasttime = None
 
@@ -121,7 +130,8 @@ class VecStats(object):
         self.squaresum   += x_stats.squaresum
         self.squarecount += x_stats.squarecount
         
-    def addHiLo(self, speed, dirN, ts):
+    def addHiLo(self, val, ts):
+        speed, dirN = val
         if speed is not None:
             if self.min is None or speed < self.min:
                 self.min = speed
@@ -134,7 +144,8 @@ class VecStats(object):
                 self.last    = (speed, dirN)
                 self.lasttime= ts
         
-    def addSum(self, speed, dirN):
+    def addSum(self, val):
+        speed, dirN = val
         if speed is not None:
             self.sum         += speed
             self.count       += 1
@@ -164,10 +175,18 @@ class VecStats(object):
             if _result < 0.0:
                 _result += 360.0
             return _result
-        
-class DictAccum(dict):
+
+#===============================================================================
+#                             Class BaseAccum
+#===============================================================================
+
+class BaseAccum(dict):
     """Accumulates statistics for a set of observation types."""
+    
     def __init__(self, timespan):
+        """Initialize a BaseAccum.
+        
+        timespan: The time period over which stats will be accumulated."""
         
         self.timespan = timespan
         # The unit system is left unspecified until the first observation comes in.
@@ -176,9 +195,7 @@ class DictAccum(dict):
     def addRecord(self, record):
         """Add a record to my running statistics. 
         
-        record: A dictionary with key observation type (eg, 'outTemp'),
-        and value the observation value (eg, 75.2). Either LOOP packets
-        or archive records satisfy this requirement."""
+        The record must have keys 'dateTime' and 'usUnits'."""
         
         # Check to see if the record is within my observation timespan 
         if not self.timespan.includesArchiveTime(record['dateTime']):
@@ -186,21 +203,8 @@ class DictAccum(dict):
 
         # For each type...
         for obs_type in record:
-            if obs_type in ['dateTime', 'windDir', 'windGust', 'windGustDir']:
-                continue
-            elif obs_type=='windSpeed':
-                self.initStats('wind')
-                self['wind'].addHiLo(record['windSpeed'], record.get('windDir'), record['dateTime'])
-                self['wind'].addHiLo(record.get('windGust'), record.get('windGustDir'), record['dateTime'])
-                self['wind'].addSum(record['windSpeed'], record.get('windDir'))
-            elif obs_type=='usUnits':
-                self._check_units(record['usUnits'])
-            else:
-                # Most observation types end up here. If the type has
-                # not been seen before, initialize it
-                self.initStats(obs_type)
-                self[obs_type].addHiLo(record[obs_type], record['dateTime'])
-                self[obs_type].addSum(record[obs_type])
+            # ... add to myself
+            self._add_value(record[obs_type], obs_type, record['dateTime'])
                 
     def updateHiLo(self, accumulator):
         """Merge the stats of another accumulator into me."""
@@ -210,11 +214,87 @@ class DictAccum(dict):
         self._check_units(accumulator.unit_system)
         
         for obs_type in accumulator:
-            self.initStats(obs_type)
+            self._init_type(obs_type)
             self[obs_type].mergeHiLo(accumulator[obs_type])
                     
     def getRecord(self):
         """Extract a record out of the results in the accumulator."""
+        
+        # All records have a timestamp and unit type
+        record = {'dateTime': self.timespan.stop,
+                  'usUnits' : self.unit_system}
+        # Go through all observation types.
+        for obs_type in self:
+            # For most observations, we want the average seen during the
+            # timespan:
+            record[obs_type] = self[obs_type].avg
+        return record
+
+    def _init_type(self, obs_type):
+
+        # Do nothing if this type has already been initialized:
+        if obs_type in self:
+            return
+        self[obs_type] = ScalarStats()
+            
+    def _add_value(self, val, obs_type, ts):
+        """Add a single observation to myself."""
+
+        if obs_type == 'usUnits':
+            self._check_units(val)
+        elif obs_type == 'dateTime':
+            return
+        else:
+            # If the type has not been seen before, initialize it
+            self._init_type(obs_type)
+            # Then add to highs/lows, and to the running sum:
+            self[obs_type].addHiLo(val, ts)
+            self[obs_type].addSum(val)
+
+    def _check_units(self, other_system):
+
+        # If no unit system has been specified for me yet, adopt the incoming
+        # system
+        if self.unit_system is None:
+            self.unit_system = other_system
+        else:
+            # Otherwise, make sure they match
+            if self.unit_system != other_system:
+                raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, other_system))
+
+#===============================================================================
+#                                class WXAccum
+#===============================================================================
+
+class WXAccum(BaseAccum):
+    """Subclass of BaseAccum, which adds weather-specific logic."""
+    
+    def addRecord(self, record):
+        """Add a record to my running statistics. 
+        
+        The record must have keys 'dateTime' and 'usUnits'.
+        
+        This is a weather-specific version."""
+        
+        # Check to see if the record is within my observation timespan 
+        if not self.timespan.includesArchiveTime(record['dateTime']):
+            raise OutOfSpan, "Attempt to add out-of-interval record"
+
+        # This is pretty much like the loop in my superclass's version, except
+        # that wind is treated as a vector.
+        for obs_type in record:
+            if obs_type in ['windDir', 'windGust', 'windGustDir']:
+                continue
+            elif obs_type == 'windSpeed':
+                self._add_value((record['windSpeed'], record.get('windDir')), 'wind', record['dateTime'])
+                self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
+            else:
+                self._add_value(record[obs_type], obs_type, record['dateTime'])
+            
+    def getRecord(self):
+        """Extract a record out of the results in the accumulator.
+        
+        This is a weather-specific version. """
         # All records have a timestamp and unit type
         record = {'dateTime': self.timespan.stop,
                   'usUnits' : self.unit_system}
@@ -230,34 +310,21 @@ class DictAccum(dict):
                 # We need total rain during the timespan, not the average:
                 record['rain']        = self[obs_type].sum
             elif obs_type in ['hourRain', 'dayRain', 'monthRain', 'yearRain', 'totalRain']:
-                # This assumes no reset happened in the archive period:
-                record[obs_type]      = self[obs_type].max
+                # For these types, we want the last observation:
+                record[obs_type]      = self[obs_type].last
             else:
-                # For most observations, we want the average seen
-                # during the timespan:
+                # For everything else, we want the average:
                 record[obs_type]      = self[obs_type].avg
         return record
-            
-    def initStats(self, obs_type, stats_tuple=None):
-        # Do nothing for these types.
-        if obs_type in ['dateTime', 'windDir', 'windGust', 'windGustDir'] or obs_type in self:
+
+    def _init_type(self, obs_type):
+
+        # Do nothing if this type has already been initialized:
+        if obs_type in self:
             return
-        if obs_type == 'wind':
+        elif obs_type == 'wind':
             # Observation 'wind' requires a special vector accumulator
-            self['wind'] = VecStats(stats_tuple)
+            self['wind'] = VecStats()
         else:
-            # All others use a scalar accumulator:
-            self[obs_type] = ScalarStats(stats_tuple)
-    
-    def _check_units(self, other_system):
-
-        # If no unit system has been specified for me yet,
-        # adopt the other system        
-        if self.unit_system is None:
-            self.unit_system = other_system
-        else:
-            # Otherwise, make sure they match
-            if self.unit_system != other_system:
-                raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, other_system))
-
-
+            # Otherwise, pass on to my base class
+            return BaseAccum._init_type(self, obs_type)

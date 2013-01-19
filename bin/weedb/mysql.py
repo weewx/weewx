@@ -165,7 +165,7 @@ class Cursor(object):
             
         try:
             self.cursor.execute(mysql_string, sql_tuple)
-        except _mysql_exceptions.OperationalError, e:
+        except (_mysql_exceptions.OperationalError, _mysql_exceptions.ProgrammingError), e:
             raise weedb.OperationalError(e)
         return self
         

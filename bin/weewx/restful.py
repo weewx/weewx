@@ -40,7 +40,7 @@ class REST(object):
     
     # The types to be retrieved from the arhive database:
     archive_types = ['dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
-                     'windSpeed', 'windDir', 'windGust', 'dewpoint', 'radiation', 'UV']
+                     'windSpeed', 'windDir', 'windGust', 'windGustDir', 'dewpoint', 'radiation', 'UV']
     # A SQL statement to do the retrieval:
     sql_select = "SELECT " + ", ".join(archive_types) + " FROM archive WHERE dateTime=?"  
 
@@ -616,7 +616,7 @@ if __name__ == '__main__':
         # Instantiate an instance of the class that implements the
         # protocol used by this site:
         try:
-            station = weeutil.weeutil._get_object(site_dict['driver'], site, **site_dict)
+            station = weeutil.weeutil._get_object(site_dict['driver'])(site, **site_dict)
         except Exception:
             print "Unable to instantiate %s" % (site_dict['driver'],)
             raise 

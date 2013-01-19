@@ -25,12 +25,12 @@ import daemon
 
 # weewx imports:
 import weedb
+import weewx.accum
 import weewx.archive
 import weewx.stats
 import weewx.station
 import weewx.restful
 import weewx.reportengine
-import user.schemas
 import weeutil.weeutil
 
 class BreakLoop(Exception):
@@ -118,7 +118,7 @@ class StdEngine(object):
                 # instance of the class, passing self and the configuration
                 # dictionary as the arguments:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
-                self.service_obj.append(weeutil.weeutil._get_object(svc, self, config_dict))
+                self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
         except:
             # An exception occurred. Shut down any running services, then
@@ -502,23 +502,23 @@ class StdArchive(StdService):
     def setupArchiveDatabase(self, config_dict):
         """Setup the main database archive"""
 
+        archive_schema_str = config_dict['StdArchive'].get('archive_schema', 'user.schemas.defaultArchiveSchema')
+        archive_schema = weeutil.weeutil._get_object(archive_schema_str)
         archive_db = config_dict['StdArchive']['archive_database']
         # This will create the database if it doesn't exist, the return an
         # opened instance of Archive:
-        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], 
-                                                              user.schemas.defaultArchiveSchema)
+        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], archive_schema)
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (archive_db,))
 
     def setupStatsDatabase(self, config_dict):
         """Setup the stats database"""
         
-        stats_types = config_dict['StdArchive'].get('stats_types', user.schemas.defaultStatsTypes)
+        stats_schema_str = config_dict['StdArchive'].get('stats_schema', 'user.schemas.defaultStatsSchema')
+        stats_schema = weeutil.weeutil._get_object(stats_schema_str)
         stats_db = config_dict['StdArchive']['stats_database']
-        # This will create the database if it doesn't exist, then return an 
-        # opened instance of StatsDb:
-        self.statsDb = weewx.stats.StatsDb.open_with_create(config_dict['Databases'][stats_db],
-                                                            stats_types)
-
+        # This will create the database if it doesn't exist, then return an
+        # opened stats database object:
+        self.statsDb = weewx.stats.StatsDb.open_with_create(config_dict['Databases'][stats_db], stats_schema)
         # Backfill it with data from the archive. This will do nothing if the
         # stats database is already up-to-date.
         self.statsDb.backfillFrom(self.archive)
@@ -556,10 +556,9 @@ class StdArchive(StdService):
                                                            self.archive_interval)
         end_archive_ts = start_archive_ts + self.archive_interval
         
-        new_accumulator =  weewx.accum.DictAccum(weeutil.weeutil.TimeSpan(start_archive_ts,
-                                                                          end_archive_ts))
+        new_accumulator =  weewx.accum.WXAccum(weeutil.weeutil.TimeSpan(start_archive_ts, end_archive_ts))
         return new_accumulator
-                                                  
+    
 #===============================================================================
 #                    Class StdTimeSynch
 #===============================================================================
@@ -682,7 +681,7 @@ class StdRESTful(StdService):
                 # Instantiate an instance of the class that implements the
                 # protocol used by this site. It will throw an exception if not
                 # enough information is available to instantiate.
-                obj = weeutil.weeutil._get_object(site_dict['driver'], site, **site_dict)
+                obj = weeutil.weeutil._get_object(site_dict['driver'])(site, **site_dict)
             except KeyError, e:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
                 syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % e)

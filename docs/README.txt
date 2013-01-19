@@ -12,6 +12,12 @@ a notation such as 0xBBGGRR, #RRGGBB, or the English name, such as 'yellow'.
 Finally, added day/night bands to the plots. All contributed by Matthew Wall. Thanks,
 Matthew!
 
+Generalized the weewx machinery so it can be used for applications other than
+weather applications.
+
+Got rid of option stats_types in weewx.conf and put it in bin/user/schemas.py.
+See upgrading.html if you have a specialized stats database.
+
 
 2.1.1 01/02/13
 

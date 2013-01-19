@@ -82,7 +82,7 @@ def configDatabases(archive_db_dict, stats_db_dict):
         except weedb.NoDatabase:
             pass
         # Now create and configure a new one:
-        with weewx.stats.StatsDb.open_with_create(stats_db_dict, user.schemas.defaultStatsTypes) as stats:
+        with weewx.stats.StatsDb.open_with_create(stats_db_dict, user.schemas.defaultStatsSchema) as stats:
             t1 = time.time()
             # Now backfill the stats database from the main archive database.
             nrecs = stats.backfillFrom(archive)

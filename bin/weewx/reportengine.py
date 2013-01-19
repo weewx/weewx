@@ -114,12 +114,11 @@ class StdReportEngine(threading.Thread):
             for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
                 try:
                     # Instantiate an instance of the class.
-                    obj = weeutil.weeutil._get_object(generator, 
-                                                      self.config_dict, 
-                                                      skin_dict, 
-                                                      self.gen_ts, 
-                                                      self.first_run,
-                                                      self.stn_info)
+                    obj = weeutil.weeutil._get_object(generator)(self.config_dict, 
+                                                                 skin_dict, 
+                                                                 self.gen_ts, 
+                                                                 self.first_run,
+                                                                 self.stn_info)
                 except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)

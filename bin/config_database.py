@@ -22,6 +22,7 @@ import weedb
 import weewx.archive
 import weewx.stats
 import weewx.units
+import weeutil.weeutil
 import user.schemas
 
 description="""Configures the weewx databases. Most of these functions are handled automatically
@@ -116,8 +117,9 @@ def createStatsDatabase(config_dict):
         stats = weewx.stats.StatsDb.open(stats_db_dict)
         stats.close()
     except weedb.OperationalError:
-        stats_types = config_dict['StdArchive'].get('stats_types', user.schemas.defaultStatsTypes)
-        stats = weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_types)
+        stats_schema_str = config_dict['StdArchive'].get('stats_schema', 'user.schemas.defaultStatsSchema')
+        stats_schema = weeutil.weeutil._get_object(stats_schema_str)
+        stats = weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_schema)
         stats.close()
         print "Created database '%s'" % (stats_db,)
     else:
@@ -182,13 +184,14 @@ def backfillStatsDatabase(config_dict):
     archive_db_dict = config_dict['Databases'][archive_db]
     stats_db = config_dict['StdArchive']['stats_database']
     stats_db_dict = config_dict['Databases'][stats_db]
-    stats_types = config_dict['StdArchive'].get('stats_types', user.schemas.defaultStatsTypes)
+    stats_schema_str = config_dict['StdArchive'].get('stats_schema', 'user.schemas.defaultStatsSchema')
+    stats_schema = weeutil.weeutil._get_object(stats_schema_str)
 
     # Open up the main database archive
     with weewx.archive.Archive.open(archive_db_dict) as archive:
 
         # Open up the Stats database. This will create it if it doesn't already exist.
-        with weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_types) as statsDb:
+        with weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_schema) as statsDb:
             # Now backfill
             nrecs = statsDb.backfillFrom(archive)
 

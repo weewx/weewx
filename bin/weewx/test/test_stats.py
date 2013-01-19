@@ -54,7 +54,7 @@ class Common(unittest.TestCase):
     
     def test_create_stats(self):
         with weewx.stats.StatsDb.open(self.stats_db_dict) as stats:
-            self.assertItemsEqual(stats.connection.tables(), user.schemas.defaultStatsTypes + ['metadata'])
+            self.assertItemsEqual(stats.statsTypes, [stat_tuple[0] for stat_tuple in user.schemas.defaultStatsSchema])
             self.assertEqual(stats.connection.columnsOf('barometer'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count'])
             self.assertEqual(stats.connection.columnsOf('wind'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'gustdir', 'xsum', 'ysum', 'squaresum', 'squarecount'])
         
