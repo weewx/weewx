@@ -216,12 +216,13 @@ class WMR918(weewx.abstractstation.AbstractStation):
         null, status, cur1, cur10, cur100, tot10th, tot1, tot10, tot100, tot1000, yest1, yest10, yest100, yest1000, totstartmin1, totstartmin10, totstarthr1, totstarthr10, totstartday1, totstartday10, totstartmonth1, totstartmonth10, totstartyear1, totstartyear10 = WMR918._get_nibble_data(packet[1:])
         battery = bool(status&0x04)
 
+        # station units are mm and mm/hr while the internal metric units are cm and cm/hr
         # It is reported that total rainfall is biased by +0.5 mm
         _record = {
             'rainBatteryStatus' : battery,
-            'rainRate'          : cur1 + (cur10 * 10) + (cur100 * 100),
-            'dayRain'           : yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000),
-            'totalRain'         : (tot10th/10.0) + tot1 + (tot10*10) + (tot100*100) + (tot1000*1000) - 0.5,
+            'rainRate'          : (cur1 + (cur10 * 10) + (cur100 * 100))/10.0,
+            'dayRain'           : (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000))/10.0,
+            'totalRain'         : ((tot10th / 10.0) + tot1 + (tot10 * 10) + (tot100 * 100) + (tot1000 * 1000) - 0.5)/10.0,
             'dateTime'          : int(time.time() + 0.5),
             'usUnits'           : weewx.METRIC
         }
@@ -383,9 +384,9 @@ class WMR918(weewx.abstractstation.AbstractStation):
         However, the last time is saved in case getTime() is called."""
         min1, min10, hour1, hour10, day1, day10, month1, month10, year1, year10 = self._get_nibble_data(packet[1:])
         year = year1 + (year10 * 10)
-        # TODO: This might not be the right splitting point between centuries
-        # practically speaking, though, it probably won't matter
-        year += 1900 if year > 70 else 2000
+        # The station initializes itself to "1999" as the first year
+        # Thus 99 = 1999, 00 = 2000, 01 = 2001, etc.
+        year += 1900 if year == 99 else 2000
         month = month1 + (month10 * 10)
         day = day1 + (day10 * 10)
         hour = hour1 + (hour10 * 10)
