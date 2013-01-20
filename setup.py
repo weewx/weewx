@@ -61,12 +61,17 @@ from distutils.command.install_lib  import install_lib
 from distutils.command.sdist import sdist
 import distutils.dir_util
 
-# Make sure we can find the bin subdirectory:
+# Find the install bin subdirectory:
 this_file = os.path.join(os.getcwd(), __file__)
 bin_dir = os.path.abspath(os.path.join(os.path.dirname(this_file), 'bin'))
-sys.path.insert(0, bin_dir)
 
-from weewx import __version__ as VERSION
+# Get the version:
+save_path = list(sys.path)
+sys.path.insert(0, bin_dir)
+import weewx
+VERSION = weewx.__version__
+del weewx
+sys.path = save_path
 
 #===============================================================================
 #                            My_install_lib
@@ -89,7 +94,10 @@ class My_install_lib(install_lib):
         else:
             bin_backupdir = None
 
-        # Run the superclass's version:
+        # Determine whether the user is still using an old-style schema
+        schema_type = self._check_schema_type()
+
+        # Run the superclass's version. This will install all incoming files.
         install_lib.run(self)
         
         # If the bin subdirectory previously existed, and if it included
@@ -100,14 +108,50 @@ class My_install_lib(install_lib):
                 user_dir = os.path.join(self.install_dir, 'user')
                 distutils.dir_util.copy_tree(user_backupdir, user_dir)
 
+        # But, there is one exception: if the old user subdirectory included an
+        # old-style schema, then it should be overwritten with the new version.
+        if schema_type == 'old':
+            incoming_schema_path = os.path.join(bin_dir, 'user/schemas.py')
+            target_path = os.path.join(self.install_dir, 'user/schemas.py')
+            distutils.file_util.copy_file(incoming_schema_path, target_path)
+
         # Remove weeutil/Almanac, which is no longer in the distribution:
         try:
             os.remove(os.path.join(self.install_dir, 'weeutil/Almanac.py'))
             os.remove(os.path.join(self.install_dir, 'weeutil/Almanac.pyc'))
-        except:
+        except OSError:
             pass
        
-            
+    def _check_schema_type(self):
+        """If a schema type exists in the install directory, check whether it is
+        an old-style schema, or a new one."""
+        save_path = list(sys.path)
+        sys.path.insert(0, self.install_dir)
+        
+        try:
+            import user.schemas
+        except ImportError:
+            # There is no existing schema at all.
+            result = 'none'
+        else:
+            # There is a schema. Determine if it is old-style or new-style
+            try:
+                # Try the old style 'drop_list'. If it fails, it must be a new-style schema
+                drop_list = user.schemas.drop_list # @UnusedVariable @UndefinedVariable
+            except AttributeError:
+                # New style schema 
+                result = 'new'
+            else:
+                # It did not fail. Must be an old-style schema
+                result = 'old'
+            finally:
+                del user.schemas
+
+        # Restore the path        
+        sys.path = save_path
+        
+        return result
+    
 #===============================================================================
 #                         install_data
 #===============================================================================

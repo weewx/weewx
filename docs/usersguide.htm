@@ -15,16 +15,6 @@
 <link href="weewx_docs.css" rel="stylesheet" />
 <!-- JavaScript -->
 <script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
-<style type="text/css">
-.auto-style1 {
-	font-family: "Courier New", Courier, monospace;
-	background-color: #e8e8e8;
-}
-.auto-style2 {
-        font-weight: bold;
-	background-color: #e8e8e8;
-}
-</style>
 </head>
 
 <body>
@@ -173,7 +163,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	<p><span class="code">Weewx</span> should work with the stations listed in the table below.  See the table for any additional packages required specific weather station hardware:</p>
 	<table style="width: 90%" class="center">
 	  <tr>
-	    <td class="auto-style2">Vendor</td>
+	    <td class="text_highlight">Vendor</td>
 	    <td><strong>Model</strong></td>
 	    <td><strong>Link</strong></td>
 	    <td><strong>Required<br />
@@ -182,7 +172,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	    <td><strong>Notes</strong></td>
 	  </tr>
 	  <tr>
-	    <td class="auto-style2" rowspan="3">Ambient Weather</td>
+	    <td class="text_highlight" rowspan="3">Ambient Weather</td>
 	    <td>WS1090</td>
 	    <td>USB</td>
 	    <td class="code">pyusb</td>
@@ -204,7 +194,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	    <td>&nbsp;</td>
 	  </tr>
 	  <tr>
-	    <td class="auto-style2" rowspan="3">Davis</td>
+	    <td class="text_highlight" rowspan="3">Davis</td>
 	    <td style="height: 33px">VantagePro2</td>
 	    <td style="height: 33px">Serial or USB</td>
 	    <td class="code" style="height: 33px">pyserial</td>
@@ -226,7 +216,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	    <td>&nbsp;</td>
 	  </tr>
 	  <tr>
-	    <td class="auto-style2" rowspan="2">Elecsa</td>
+	    <td class="text_highlight" rowspan="2">Elecsa</td>
 	    <td>6975</td>
 	    <td>USB</td>
 	    <td class="code">pyusb</td>
@@ -241,7 +231,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	    <td>&nbsp;</td>
 	  </tr>
 	  <tr>
-	    <td class="auto-style2" rowspan="11">Fine Offset</td>
+	    <td class="text_highlight" rowspan="11">Fine Offset</td>
 	    <td>WH1080</td>
 	    <td>USB</td>
 	    <td class="code">pyusb</td>
@@ -319,7 +309,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	    <td>&nbsp;</td>
 	  </tr>
 	  <tr>
-	    <td class="auto-style2">National Geographic</td>
+	    <td class="text_highlight">National Geographic</td>
 	    <td>265</td>
 	    <td>USB</td>
 	    <td class="code">pyusb</td>
@@ -327,7 +317,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	    <td>&nbsp;</td>
 	  </tr>
 	  <tr>
-	    <td class="auto-style2" rowspan="3">Oregon Scientific</td>
+	    <td class="text_highlight" rowspan="3">Oregon Scientific</td>
 	    <td>WMR100N</td>
 	    <td>USB</td>
 	    <td class="code">pyusb</td>
@@ -349,7 +339,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	    <td>&nbsp;</td>
 	  </tr>
 	  <tr>
-	    <td class="auto-style2">Tycon</td>
+	    <td class="text_highlight">Tycon</td>
 	    <td>TP1080WC</td>
 	    <td>USB</td>
 	    <td class="code">pyusb</td>
@@ -357,7 +347,7 @@ document <a href="customizing.htm"><em>Customizing <span class="code">weewx</spa
 	    <td>&nbsp;</td>
 	  </tr>
 	  <tr>
-	    <td class="auto-style2" rowspan="2">Watson</td>
+	    <td class="text_highlight" rowspan="2">Watson</td>
 	    <td>W-8681</td>
 	    <td>USB</td>
 	    <td class="code">pyusb</td>
@@ -490,27 +480,27 @@ pip install pil </pre>
 	<p>The rest of the nominal directory layout will be: </p>
 	<table class="center" style="width: 60%" summary="Summarizing the nominal weewx directory layout">
 		<tr>
-			<td><strong>Subdirectory</strong></td>
+			<td class="text_highlight"><strong>Subdirectory</strong></td>
 			<td><strong>Contents</strong></td>
 		</tr>
 		<tr>
-			<td><span class="code"><em>$WEEWX_INSTALL</em>/bin</span></td>
+			<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/bin</span></td>
 			<td>Python packages and scripts</td>
 		</tr>
 		<tr>
-			<td><span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf</span></td>
+			<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf</span></td>
 			<td>Configuration file</td>
 		</tr>
 		<tr>
-			<td style="height: 33px"><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
+			<td style="height: 33px" class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
 			<td style="height: 33px">Template skins and their configuration files</td>
 		</tr>
 		<tr>
-			<td><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
+			<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
 			<td>sqlite3 archive and statistical databases</td>
 		</tr>
 		<tr>
-			<td><span class="code"><em>$WEEWX_INSTALL</em>/public_html</span></td>
+			<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/public_html</span></td>
 			<td>Generated HTML and .PNG images</td>
 		</tr>
 	</table>
@@ -805,23 +795,23 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	of the sections below. Valid options include:</p>
 	<table style="width: 60%" class="center">
 		<tr>
-			<td class="auto-style2"><span class="code">station_type</span></td>
+			<td class="text_highlight"><span class="code">station_type</span></td>
 			<td>Hardware</td>
 		</tr>
 		<tr>
-			<td class="auto-style1">Vantage</td>
-			<td>Davis Vantage weather stations</td>
+			<td class="text_highlight" style="height: 33px">Vantage</td>
+			<td style="height: 33px">Davis Vantage weather stations</td>
 		</tr>
 		<tr>
-			<td class="auto-style1">WMR-USB</td>
+			<td class="text_highlight">WMR-USB</td>
 			<td>Oregon Scientific WMR-USB series stations</td>
 		</tr>
 		<tr>
-			<td class="auto-style1">WMR-918</td>
+			<td class="text_highlight">WMR-918</td>
 			<td>Oregon Scientific WMR-918/968 series station</td>
 		</tr>
 		<tr>
-			<td class="auto-style1">FineOffsetUSB</td>
+			<td class="text_highlight">FineOffsetUSB</td>
 			<td>Fine Offset USB stations</td>
 		</tr>
 	</table>
@@ -1742,32 +1732,36 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 	<p>This is a glossary of terminology used throughout the code. </p>
 	<table style="width: 100%">
 		<tr>
-			<td>packet</td>
+			<td class="text_highlight"><strong>Name</strong></td>
+			<td><strong>Description</strong></td>
+		</tr>
+		<tr>
+			<td class="text_highlight">packet</td>
 			<td>Something obtained off the weather station. Frequently uses a complex 
 			internal encoding, so it requires some processing to be useful.</td>
 		</tr>
 		<tr>
-			<td>record</td>
+			<td class="text_highlight">record</td>
 			<td>Something obtained off the SQL database. </td>
 		</tr>
 		<tr>
-			<td>archive packet</td>
+			<td class="text_highlight">archive packet</td>
 			<td>A packet obtained off the store on the weather station. For example, 
 			with a Davis VantagePro, it&#39;s obtained using their
 			<span class="code">DMPAFT</span> command. </td>
 		</tr>
 		<tr>
-			<td>loop packet</td>
+			<td class="text_highlight">loop packet</td>
 			<td>A packet with the current observations. For example, with a Davis 
 			VantagePro, it&#39;s obtained using their <span class="code">LOOP</span> 
 			command. </td>
 		</tr>
 		<tr>
-			<td>archive record</td>
+			<td class="text_highlight">archive record</td>
 			<td>A record obtained off the SQL database</td>
 		</tr>
 		<tr>
-			<td>tuple-time</td>
+			<td class="text_highlight">tuple-time</td>
 			<td>An instance of the Python object <span class="code">
 			<a href="http://docs.python.org/2/library/time.html#time.struct_time">
 			time.struct_time</a></span>. This is a 9-wise tuple that represent a 
@@ -1779,7 +1773,7 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 			a bit of processing. Variables carrying tuple time usually have a suffix &#39;<span class="code">_tt</span>&#39;.</td>
 		</tr>
 		<tr>
-			<td>epoch time</td>
+			<td class="text_highlight">epoch time</td>
 			<td>Sometimes referred to as &quot;unix time,&quot; or &quot;unix epoch 
 			time.&quot; The number of seconds since the epoch, which is 1 Jan 1970 
 			00:00:00 UTC. Hence, it always represents UTC (well.... after adding 
@@ -1790,35 +1784,35 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 			Very easy to manipulate, but it&#39;s a big opaque number. </td>
 		</tr>
 		<tr>
-			<td>time stamp</td>
+			<td class="text_highlight">time stamp</td>
 			<td>A variable in unix epoch time. Always in UTC. Variables carrying 
 			a time stamp usually have a suffix &#39;<span class="code">_ts</span>&#39;.</td>
 		</tr>
 		<tr>
-			<td>datetime</td>
+			<td class="text_highlight">datetime</td>
 			<td>An instance of the Python object <span class="code">datetime.datetime</span>. 
 			Variables of type datetime usually have a suffix &#39;<span class="code">_dt</span>&#39;.</td>
 		</tr>
 		<tr>
-			<td>SQL type</td>
+			<td class="text_highlight">SQL type</td>
 			<td>A type that appears in the SQL database. This usually looks something 
 			like &#39;<span class="code">outTemp</span>&#39;, &#39;<span class="code">barometer</span>&#39;, &#39;<span class="code">extraTemp1</span>&#39;, 
 			and so on.</td>
 		</tr>
 		<tr>
-			<td>observation type</td>
+			<td class="text_highlight">observation type</td>
 			<td>A type that can be used in the presentations. This is generally 
 			all of the SQL types, plus calculated data (such as
 			<span class="code">rms</span> or <span class="code">vecavg</span>).</td>
 		</tr>
 		<tr>
-			<td>value tuple</td>
+			<td class="text_highlight">value tuple</td>
 			<td>A 3-way tuple. First element is a value, second element the unit 
 			type the value is in, the third the unit group. An example would be
 			<span class="code">(21.2, &#39;degree_C&#39;, &#39;group_temperature&#39;)</span>.</td>
 		</tr>
 		<tr>
-			<td>db_dict</td>
+			<td class="text_highlight">db_dict</td>
 			<td>A dictionary with all the data necessary to bind to a database. 
 			An example for sqlite would be <span class="code">{&#39;driver&#39; 
 			: &#39;db.sqlite&#39;, &#39;root&#39;:&#39;/home/weewx&#39;, &#39;database&#39;:&#39;archive/weewx.sdb&#39;}</span>, 

@@ -67,45 +67,45 @@ Version 2.2</h1>
 	the following services: </p>
 	<table class="center" style="width: 60%" summary="Overview of the weewx architecture">
 		<tr>
-			<td><strong>Service</strong></td>
+			<td class="text_highlight">Service</td>
 			<td><strong>Function</strong></td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdConvert</td>
+			<td class="fixed_highlight">weewx.wxengine.StdConvert</td>
 			<td>Converts the units of the input to a target unit system (such as 
 			US or Metric).</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdCalibrate</td>
+			<td class="fixed_highlight">weewx.wxengine.StdCalibrate</td>
 			<td>Adjust new LOOP and archive packets using calibration expressions.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdQC</td>
+			<td class="fixed_highlight">weewx.wxengine.StdQC</td>
 			<td>Check quality of incoming data, making sure values fall within a 
 			specified range.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdArchive</td>
+			<td class="fixed_highlight">weewx.wxengine.StdArchive</td>
 			<td>Archive any new data to the SQL databases.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdTimeSynch</td>
+			<td class="fixed_highlight">weewx.wxengine.StdTimeSynch</td>
 			<td>Arrange to have the clock on the station synchronized at regular 
 			intervals.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdPrint</td>
+			<td class="fixed_highlight">weewx.wxengine.StdPrint</td>
 			<td>Print out new LOOP and archive packets on the console.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdRESTful</td>
+			<td class="fixed_highlight">weewx.wxengine.StdRESTful</td>
 			<td>Start a thread to manage
 			<a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
 			RESTful</a> (simple stateless client-server protocols) connections; 
 			such as those used by the Weather Underground or CWOP.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdReport</td>
+			<td class="fixed_highlight">weewx.wxengine.StdReport</td>
 			<td>Launch a new thread to do report processing after a new archive 
 			record arrives. Reports do things such as generate HTML files, generate 
 			images, or FTP/rsync files to a web server. New reports can be added 
@@ -130,22 +130,22 @@ Version 2.2</h1>
 	<p>The default distribution of weewx includes two reports: </p>
 	<table class="center" style="width: 60%" summary="Standard reports included in weewx">
 		<tr>
-			<td><strong>Report</strong></td>
+			<td class="text_highlight"><strong>Report</strong></td>
 			<td><strong>Default functionality</strong></td>
 		</tr>
 		<tr>
-			<td class="code">StandardReport</td>
+			<td class="fixed_highlight">StandardReport</td>
 			<td>Generates day, week, month and year &quot;to-date&quot; summaries 
 			in HTML, as well as the plot images to go along with them. Also generates 
 			NOAA monthly and yearly summaries. </td>
 		</tr>
 		<tr>
-			<td class="code">FTP</td>
+			<td class="fixed_highlight">FTP</td>
 			<td>Arranges to upload everything in the <span class="code">public_html</span> 
 			subdirectory up to a remote webserver.</td>
 		</tr>
 		<tr>
-			<td class="code">RSYNC</td>
+			<td class="fixed_highlight">RSYNC</td>
 			<td>Like FTP, but uses rsync for transferring files to a remote webserver.</td>
 		</tr>
 	</table>
@@ -177,27 +177,27 @@ Version 2.2</h1>
 	</p>
 	<table class="center" style="width: 60%" summary="Generators included in weewx">
 		<tr>
-			<td><strong>Generator</strong></td>
+			<td class="text_highlight">Generator</td>
 			<td><strong>Function</strong></td>
 		</tr>
 		<tr>
-			<td class="code">weewx.filegenerator.FileGenerator</td>
+			<td class="fixed_highlight">weewx.filegenerator.FileGenerator</td>
 			<td>Generates files from templates. Used to generate HTML and text files.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.imagegenerator.ImageGenerator</td>
+			<td class="fixed_highlight">weewx.imagegenerator.ImageGenerator</td>
 			<td>Generates graph plots.</td>
 		</tr>
 		<tr>
-			<td><span class="code">weewx.reportengine.FtpGenerator</span></td>
+			<td class="fixed_highlight">weewx.reportengine.FtpGenerator</td>
 			<td>Uploads data to a remote server using FTP.</td>
 		</tr>
 		<tr>
-			<td><span class="code">weewx.reportengine.RsyncGenerator</span></td>
+			<td class="fixed_highlight">weewx.reportengine.RsyncGenerator</td>
 			<td>Uploads data to a remote server using rsync.</td>
 		</tr>
 		<tr>
-			<td><span class="code">weewx.reportengine.CopyGenerator</span></td>
+			<td class="fixed_highlight">weewx.reportengine.CopyGenerator</td>
 			<td>Copies files locally.</td>
 		</tr>
 	</table>
@@ -510,7 +510,7 @@ $month.outTemp.max</pre>
 	with either current observations or aggregations. It can be one of: </p>
 	<table class="center" style="width: 80%" summary="Formatting options">
 		<tr>
-			<td>
+			<td class="text_highlight">
 			<p><strong>Optional formatting tag</strong> </p>
 			</td>
 			<td>
@@ -518,7 +518,7 @@ $month.outTemp.max</pre>
 			</td>
 		</tr>
 		<tr>
-			<td>
+			<td class="text_highlight">
 			<p><em>(no tag)</em> </p>
 			</td>
 			<td>
@@ -528,7 +528,7 @@ $month.outTemp.max</pre>
 			</td>
 		</tr>
 		<tr>
-			<td><span class="code">.string(<em>NONE_string</em></span>)</td>
+			<td class="fixed_highlight"><span class="code">.string(<em>NONE_string</em></span>)</td>
 			<td>Value is returned as a string, formatted using an appropriate string 
 			format from <span class="code">skin.conf</span>. If the value is
 			<span class="code">None</span>, the string <span class="code">NONE_string</span> 
@@ -539,13 +539,13 @@ $month.outTemp.max</pre>
 			be attached at the end.</td>
 		</tr>
 		<tr>
-			<td><span class="code">.formatted</span></td>
+			<td class="fixed_highlight"><span class="code">.formatted</span></td>
 			<td>Value is returned as a string, formatted using an appropriate string 
 			format and <span class="code">None</span> value from
 			<span class="code">skin.conf</span>. No label.</td>
 		</tr>
 		<tr>
-			<td><span class="code">.format(<em>string_format</em>, <em>NONE_string</em>)</span></td>
+			<td class="fixed_highlight"><span class="code">.format(<em>string_format</em>, <em>NONE_string</em>)</span></td>
 			<td>Value is returned as a string, using the string format specified 
 			with <em>string_format</em>. If the value is <span class="code">None</span>, 
 			the string <span class="code">NONE_string</span> will be substituted 
@@ -555,7 +555,7 @@ $month.outTemp.max</pre>
 			will be attached at the end.</td>
 		</tr>
 		<tr>
-			<td class="code">.nolabel(string_format, NONE_string)</td>
+			<td class="fixed_highlight">.nolabel(string_format, NONE_string)</td>
 			<td>Value is returned as a string, using the string format specified 
 			with <em>string_format</em>. If the value is <span class="code">None</span>, 
 			the string <span class="code">NONE_string</span> will be substituted 
@@ -564,7 +564,7 @@ $month.outTemp.max</pre>
 			will be used. No label will be attached at the end.</td>
 		</tr>
 		<tr>
-			<td>
+			<td class="fixed_highlight">
 			<p><span class="code">.raw</span> </p>
 			</td>
 			<td>Value is returned &quot;as is&quot; without being converted to a 
@@ -577,49 +577,49 @@ $month.outTemp.max</pre>
 	<p>Summary: </p>
 	<table class="center" style="width: 80%" summary="Summary of formatting options">
 		<tr>
-			<td><strong>Formatting tag</strong></td>
+			<td class="text_highlight"><strong>Formatting tag</strong></td>
 			<td><strong>Format used</strong></td>
 			<td><strong>Label Used</strong></td>
 			<td><strong>NONE string</strong></td>
 			<td><strong>Returned value</strong></td>
 		</tr>
 		<tr>
-			<td><em>(no tag)</em></td>
+			<td class="text_highlight"><em>(no tag)</em></td>
 			<td>From <span class="code">skin.conf</span></td>
 			<td>From <span class="code">skin.conf</span></td>
 			<td>From <span class="code">skin.conf</span></td>
 			<td>string</td>
 		</tr>
 		<tr>
-			<td class="code">.string</td>
+			<td class="fixed_highlight">.string</td>
 			<td>From <span class="code">skin.conf</span></td>
 			<td>From <span class="code">skin.conf</span></td>
 			<td>Optional user-supplied</td>
 			<td>string</td>
 		</tr>
 		<tr>
-			<td class="code">.formatted</td>
+			<td class="fixed_highlight">.formatted</td>
 			<td>From <span class="code">skin.conf</span></td>
 			<td>No label</td>
 			<td>From <span class="code">skin.conf</span></td>
 			<td>string</td>
 		</tr>
 		<tr>
-			<td class="code">.format</td>
+			<td class="fixed_highlight">.format</td>
 			<td>User-supplied</td>
 			<td>From <span class="code">skin.conf</span></td>
 			<td>Optional user-supplied</td>
 			<td>string</td>
 		</tr>
 		<tr>
-			<td class="code">.nolabel</td>
+			<td class="fixed_highlight">.nolabel</td>
 			<td>User-supplied</td>
 			<td>No label</td>
 			<td>Optional user-supplied</td>
 			<td>string</td>
 		</tr>
 		<tr>
-			<td class="code">.raw</td>
+			<td class="fixed_highlight">.raw</td>
 			<td>None</td>
 			<td>No label</td>
 			<td>None</td>
@@ -629,22 +629,22 @@ $month.outTemp.max</pre>
 	<p>Here are some examples with the expected results: </p>
 	<table class="center" summary="Formatting options with expected results">
 		<tr>
-			<td><strong>Tag</strong></td>
+			<td class="text_highlight"><strong>Tag</strong></td>
 			<td><strong>Result</strong></td>
 			<td><strong>Comment</strong></td>
 		</tr>
 		<tr>
-			<td class="code">$current.outTemp </td>
+			<td class="fixed_highlight">$current.outTemp </td>
 			<td class="code">45.2°F </td>
 			<td>String formatting and label from <span class="code">skin.conf</span></td>
 		</tr>
 		<tr>
-			<td class="code">$current.outTemp.string</td>
+			<td class="fixed_highlight">$current.outTemp.string</td>
 			<td class="code">45.2°F</td>
 			<td>String formatting and label from <span class="code">skin.conf</span></td>
 		</tr>
 		<tr>
-			<td class="code">$current.UV.string</td>
+			<td class="fixed_highlight">$current.UV.string</td>
 			<td class="code">N/A</td>
 			<td>This example assumes that the instrument has no UV sensor, resulting 
 			in a <span class="code">None</span> value. The string specified by
@@ -653,59 +653,59 @@ $month.outTemp.max</pre>
 			substituted.</td>
 		</tr>
 		<tr>
-			<td class="code">$current.UV.string(&quot;No UV&quot;)</td>
+			<td class="fixed_highlight">$current.UV.string(&quot;No UV&quot;)</td>
 			<td class="code">No UV</td>
 			<td>This example assumes that the instrument has no UV sensor, resulting 
 			in a <span class="code">None</span> value. The string supplied by the 
 			user is substituted.</td>
 		</tr>
 		<tr>
-			<td class="code">$current.outTemp.formatted </td>
+			<td class="fixed_highlight">$current.outTemp.formatted </td>
 			<td class="code">45.2</td>
 			<td>String formatting from <span class="code">skin.conf</span>; no label</td>
 		</tr>
 		<tr>
-			<td class="code">$current.outTemp.format(&quot;%.3f&quot;) </td>
+			<td class="fixed_highlight">$current.outTemp.format(&quot;%.3f&quot;) </td>
 			<td class="code">45.200°F</td>
 			<td>Specified string format used; label from <span class="code">skin.conf</span>.</td>
 		</tr>
 		<tr>
-			<td class="code">$current.dateTime</td>
+			<td class="fixed_highlight">$current.dateTime</td>
 			<td class="code">02-Apr-2010 16:25</td>
 			<td>Time formatting and label from <span class="code">skin.conf</span></td>
 		</tr>
 		<tr>
-			<td class="code">$current.dateTime.format(&quot;%H:%M&quot;)</td>
+			<td class="fixed_highlight">$current.dateTime.format(&quot;%H:%M&quot;)</td>
 			<td class="code">16:25</td>
 			<td>Specified time format used; label from <span class="code">skin.conf</span>.</td>
 		</tr>
 		<tr>
-			<td class="code">$current.dateTime.raw</td>
+			<td class="fixed_highlight">$current.dateTime.raw</td>
 			<td class="code">1270250700</td>
 			<td>Unix epoch time, converted to string by template engine.</td>
 		</tr>
 		<tr>
-			<td class="code">$current.outTemp.raw</td>
+			<td class="fixed_highlight">$current.outTemp.raw</td>
 			<td class="code">45.2</td>
 			<td>Float returned, converted to string by template engine.</td>
 		</tr>
 		<tr>
-			<td class="code">$month.dateTime</td>
+			<td class="fixed_highlight">$month.dateTime</td>
 			<td class="code">01-Apr-2010 00:00</td>
 			<td>Time formatting and label from <span class="code">skin.conf</span></td>
 		</tr>
 		<tr>
-			<td class="code">$month.outTemp.avg </td>
+			<td class="fixed_highlight">$month.outTemp.avg </td>
 			<td class="code">40.8°F</td>
 			<td>String formatting and label from <span class="code">skin.conf</span></td>
 		</tr>
 		<tr>
-			<td class="code">$month.outTemp.avg.string</td>
+			<td class="fixed_highlight">$month.outTemp.avg.string</td>
 			<td class="code">40.8°F</td>
 			<td>Time formatting and label from <span class="code">skin.conf</span></td>
 		</tr>
 		<tr>
-			<td class="code">$month.UV.avg.string</td>
+			<td class="fixed_highlight">$month.UV.avg.string</td>
 			<td class="code">N/A</td>
 			<td>This example assumes that the instrument has no UV sensor, resulting 
 			in a <span class="code">None</span> value. The string specified by
@@ -714,29 +714,29 @@ $month.outTemp.max</pre>
 			substituted.</td>
 		</tr>
 		<tr>
-			<td class="code">$month.UV.avg.string(&quot;No UV&quot;)</td>
+			<td class="fixed_highlight">$month.UV.avg.string(&quot;No UV&quot;)</td>
 			<td class="code">No UV</td>
 			<td>This example assumes that the instrument has no UV sensor, resulting 
 			in a <span class="code">None</span> value. The string supplied by the 
 			user is substituted.</td>
 		</tr>
 		<tr>
-			<td class="code">$month.outTemp.avg.formatted </td>
+			<td class="fixed_highlight">$month.outTemp.avg.formatted </td>
 			<td class="code">40.8</td>
 			<td>String formatting from <span class="code">skin.conf</span>; no label</td>
 		</tr>
 		<tr>
-			<td class="code">$month.outTemp.avg.format(&quot;%.3f&quot;)</td>
+			<td class="fixed_highlight">$month.outTemp.avg.format(&quot;%.3f&quot;)</td>
 			<td class="code">40.759°F</td>
 			<td>Specified string format used; no label</td>
 		</tr>
 		<tr>
-			<td class="code">$month.outTemp.avg.raw </td>
+			<td class="fixed_highlight">$month.outTemp.avg.raw </td>
 			<td class="code">40.7589690722</td>
 			<td>Float returned, converted to string by template engine</td>
 		</tr>
 		<tr>
-			<td class="code">$month.UV.avg.raw</td>
+			<td class="fixed_highlight">$month.UV.avg.raw</td>
 			<td class="code"><em>(empty)</em></td>
 			<td><span class="code">None</span> value converted to empty string by 
 			template engine.</td>
@@ -776,23 +776,23 @@ $month.outTemp.max</pre>
 	as barometer trends. Here are some examples:</p>
 	<table class="center" style="width: 40%" summary="Examples of using unit formats">
 		<tr>
-			<td><strong>Tag</strong></td>
+			<td class="text_highlight"><strong>Tag</strong></td>
 			<td><strong>Results</strong></td>
 		</tr>
 		<tr>
-			<td class="code">$trend.barometer</td>
+			<td class="fixed_highlight">$trend.barometer</td>
 			<td class="code">-.02 inHg</td>
 		</tr>
 		<tr>
-			<td class="code">$trend.outTemp</td>
+			<td class="fixed_highlight">$trend.outTemp</td>
 			<td class="code">1.1 °C</td>
 		</tr>
 		<tr>
-			<td class="code">$trend.time_delta</td>
+			<td class="fixed_highlight">$trend.time_delta</td>
 			<td class="code">10800 secs</td>
 		</tr>
 		<tr>
-			<td class="code">$trend.time_delta.hour</td>
+			<td class="fixed_highlight">$trend.time_delta.hour</td>
 			<td class="code">3 hrs</td>
 		</tr>
 	</table>
@@ -808,19 +808,19 @@ $month.outTemp.max</pre>
 	to do highly customized labels: </p>
 	<table class="center" style="width: 40%" summary="Examples of using unit formats">
 		<tr>
-			<td><strong>Tag</strong></td>
+			<td class="text_highlight"><strong>Tag</strong></td>
 			<td><strong>Results</strong></td>
 		</tr>
 		<tr>
-			<td class="code">$unit.unit_type.outTemp</td>
+			<td class="fixed_highlight">$unit.unit_type.outTemp</td>
 			<td class="code">degree_C</td>
 		</tr>
 		<tr>
-			<td class="code">$unit.label.outTemp</td>
+			<td class="fixed_highlight">$unit.label.outTemp</td>
 			<td class="code">°C</td>
 		</tr>
 		<tr>
-			<td class="code">$unit.format.outTemp</td>
+			<td class="fixed_highlight">$unit.format.outTemp</td>
 			<td class="code">%.1f</td>
 		</tr>
 	</table>
@@ -1437,20 +1437,20 @@ outTemp = Outside Temperature</pre>
 	There are 3 possible choices: </p>
 	<table class="center" style="width: 60%">
 		<tr>
-			<td><strong>Encoding</strong></td>
+			<td class="text_highlight">Encoding</td>
 			<td><strong>ComComments</strong></td>
 		</tr>
 		<tr>
-			<td class="code">html_entities</td>
+			<td class="fixed_highlight">html_entities</td>
 			<td>Non 7-bit characters will be represented as HTML entities (<em>e.g.</em> 
 			the degree sign will be represented as <span class="code">&amp;#176;</span>)</td>
 		</tr>
 		<tr>
-			<td class="code">utf8</td>
+			<td class="fixed_highlight">utf8</td>
 			<td>Non 7-bit characters will be represented in UTF-8.</td>
 		</tr>
 		<tr>
-			<td class="code">strict_ascii</td>
+			<td class="fixed_highlight">strict_ascii</td>
 			<td>Non 7-bit characters will be ignored.</td>
 		</tr>
 	</table>
@@ -1764,44 +1764,44 @@ outTemp = Outside Temperature</pre>
 	services, shown in the order they are normally run:</p>
 	<table class="center" style="width: 60%">
 		<tr>
-			<td><strong>Service</strong></td>
+			<td class="text_highlight"><strong>Service</strong></td>
 			<td><strong>Function</strong></td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdConvert</td>
+			<td class="fixed_highlight">weewx.wxengine.StdConvert</td>
 			<td>Converts the units of the input to a target unit system (such as 
 			US or Metric).</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdCalibrate</td>
+			<td class="fixed_highlight">weewx.wxengine.StdCalibrate</td>
 			<td>Adjust new LOOP and archive packets using calibration expressions.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdQC</td>
+			<td class="fixed_highlight">weewx.wxengine.StdQC</td>
 			<td>Check that observation values fall within a specified range.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdArchive</td>
+			<td class="fixed_highlight">weewx.wxengine.StdArchive</td>
 			<td>Archive any new data to the SQL databases.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdTimeSynch</td>
+			<td class="fixed_highlight">weewx.wxengine.StdTimeSynch</td>
 			<td>Arrange to have the clock on the console synchronized at regular 
 			intervals.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdPrint</td>
+			<td class="fixed_highlight">weewx.wxengine.StdPrint</td>
 			<td>Print out new LOOP and archive packets on the console.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdRESTful</td>
+			<td class="fixed_highlight">weewx.wxengine.StdRESTful</td>
 			<td>Start a thread to manage
 			<a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
 			RESTful</a> (simple stateless client-server protocols) connections; 
 			such as those used by the Weather Underground or PWSweather.</td>
 		</tr>
 		<tr>
-			<td class="code">weewx.wxengine.StdReport</td>
+			<td class="fixed_highlight">weewx.wxengine.StdReport</td>
 			<td>Launch a new thread to do report processing after a new archive 
 			record arrives. Reports do things such as generate HTML files, generate 
 			images, or FTP/rsync files to a web server. New reports can be added 
@@ -2173,31 +2173,31 @@ class MyAlarm(StdService):
 	the same syntax as any other type. Here are some other tags that might be useful:</p>
 	<table style="width: 70%">
 		<tr>
-			<td><strong>Tag</strong></td>
+			<td class="text_highlight"><strong>Tag</strong></td>
 			<td><strong>Meaning</strong></td>
 		</tr>
 		<tr>
-			<td class="code">$day.electricity.sum</td>
+			<td class="fixed_highlight">$day.electricity.sum</td>
 			<td>Total consumption since midnight</td>
 		</tr>
 		<tr>
-			<td class="code">$year.electricity.sum</td>
+			<td class="fixed_highlight">$year.electricity.sum</td>
 			<td>Total consumption since the first of the year</td>
 		</tr>
 		<tr>
-			<td class="code">$year.electricity.max</td>
+			<td class="fixed_highlight">$year.electricity.max</td>
 			<td>The most consumed during any archive period</td>
 		</tr>
 		<tr>
-			<td class="code">$year.electricity.maxsum</td>
+			<td class="fixed_highlight">$year.electricity.maxsum</td>
 			<td>The most consumed during a day</td>
 		</tr>
 		<tr>
-			<td class="code">$year.electricity.maxsumtime</td>
+			<td class="fixed_highlight">$year.electricity.maxsumtime</td>
 			<td>The day it happened.</td>
 		</tr>
 		<tr>
-			<td class="code">$year.electricity.sum_ge(5.0)</td>
+			<td class="fixed_highlight">$year.electricity.sum_ge(5.0)</td>
 			<td>The number of days where more than 5.0 kWH of energy was consumed.</td>
 		</tr>
 	</table>

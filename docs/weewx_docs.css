@@ -123,6 +123,15 @@ td {
 .highlight {
 	background-color: #FFCC99;
 }
+.text_highlight {
+    font-weight: bold;
+	background-color: #e8e8e8;
+}
+.fixed_highlight {
+	font-weight: bold;
+	background-color: #e8e8e8;
+	font-family: "Courier New", Courier, monospace;
+}
 .center {
 	text-align: center;
 }
