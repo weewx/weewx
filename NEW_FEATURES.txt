@@ -4,17 +4,10 @@ Allow the console to participate as yet another service. Then, the Davis console
 could intercept new archive record events and add rxcheckpercent and rain to
 software generated records.
 
-Put the stats types in a metafile, rather than using the list of tables.
-
-Specify "max time gap" for the graphs. For gaps bigger than this, there would be
-no connecting plot line.
-
 Add ordinate wind descriptions "N, NE, E,", etc.
 
 Use the tagged stats classes for the archive database as well, thus unifying the
 two databases.
-
-Break out the weather specific logic in weewx.stats as a separate, O-R class.
 
 Offer "cumulative" as an aggregation type.
 

@@ -4,19 +4,24 @@ CHANGE HISTORY
 For complete documentation, see http://www.weewx.com/docs
 
 
-2.X
+2.2.0
  
-Added plot options line_gap_fraction and bar_gap_fraction, which control how gaps in
-the data are handled by the plots. Also, added more flexible control of plot colors, using
-a notation such as 0xBBGGRR, #RRGGBB, or the English name, such as 'yellow'. 
-Finally, added day/night bands to the plots. All contributed by Matthew Wall. Thanks,
-Matthew!
+Added  plot options  line_gap_fraction and  bar_gap_fraction, which  control how
+gaps in the data are handled by  the plots. Also, added more flexible control of
+plot colors,  using a notation such  as 0xBBGGRR, #RRGGBB, or  the English name,
+such as 'yellow'.  Finally, added  day/night bands to the plots. All contributed
+by Matthew Wall. Thanks, Matthew!
 
-Generalized the weewx machinery so it can be used for applications other than
+Generalized the  weewx machinery so it  can be used for  applications other than
 weather applications.
 
-Got rid of option stats_types in weewx.conf and put it in bin/user/schemas.py.
+Got rid of  option stats_types in weewx.conf and  put it in bin/user/schemas.py.
 See upgrading.html if you have a specialized stats database.
+
+The stats database now includes  an internal table of  participating observation
+types. This  allows it to be  easily combined with the  archive database, should
+you  choose  to  do so.  The  table is  automatically  created for  older  stats
+databases.
 
 
 2.1.1 01/02/13
