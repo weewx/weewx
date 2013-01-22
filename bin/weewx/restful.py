@@ -86,7 +86,7 @@ class REST(object):
         # (wrongly) belonging to the current day (instead of the previous
         # day). But, it's their site, so we'll do it their way.  That means the
         # SELECT statement is inclusive on both time ends:
-        datadict['dailyrain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>=? AND dateTime<=?", 
+        datadict['dayRain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>=? AND dateTime<=?", 
                                               (sod_ts, time_ts))[0]
 
         # All these online weather sites require US units. 
@@ -124,7 +124,7 @@ class Ambient(REST):
                 'windGust'    : 'windgustmph=%03.0f',
                 'dewpoint'    : 'dewptf=%.1f',
                 'rain'        : 'rainin=%.2f',
-                'dailyrain'   : 'dailyrainin=%.2f',
+                'dayRain'     : 'dailyrainin=%.2f',
                 'radiation'   : 'solarradiation=%.2f',
                 'UV'          : 'UV=%.2f'}
 
@@ -365,7 +365,7 @@ class CWOP(REST):
 
         # Rain
         rain_list = []
-        for obs_type in ('rain', 'rain24', 'dailyrain'):
+        for obs_type in ('rain', 'rain24', 'dayRain'):
             rain_list.append("%03d" % (record[obs_type]*100.0) if record[obs_type] is not None else '...')
         rain_str = "r%sp%sP%s" % tuple(rain_list)
         

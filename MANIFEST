@@ -50,6 +50,7 @@ bin/weewx/wmrx.py
 bin/weewx/wxengine.py
 bin/weewx/wxformulas.py
 docs/README.txt
+docs/README.txt~
 docs/customizing.htm
 docs/day-gap-not-shown.png
 docs/day-gap-showing.png

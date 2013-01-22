@@ -12,6 +12,9 @@ plot colors,  using a notation such  as 0xBBGGRR, #RRGGBB, or  the English name,
 such as 'yellow'.  Finally, added  day/night bands to the plots. All contributed
 by Matthew Wall. Thanks, Matthew!
 
+Fixed  bug that caused rain totals to be misreported to Weather Underground when
+using a metric database.
+
 Generalized the  weewx machinery so it  can be used for  applications other than
 weather applications.
 
