@@ -44,6 +44,11 @@ import weewx.wxformulas
 
 #===============================================================================
 # The SQL statements used in the stats database
+#
+# In what follows, a "schema-tuple" is a 2-way tuple (obs_name, obs_type), where
+# obs_name is something like 'barometer', or 'wind'. The obs_type is either
+# 'REAL' or 'VECTOR'.
+#
 #===============================================================================
 
 sql_create_strs = {'REAL'  : """CREATE TABLE %s ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
@@ -139,18 +144,17 @@ class StatsDb(object):
     In addition to all the tables for each type, there are two other tables:
     
      o The first is called 'metadata'. It currently holds the time of the last update, and the
-       unit system in use in the database.
+       unit system in use in the database. If the unit system is missing, then it is assumed
+       to be 'US'.
     
-     o The second is called _stats_schema. It holds all the observation types in the database
-       and whether it is a scalar or vector.
+     o The second is called _stats_schema. Each row in the table is a 2-way 
+       schema-tuple (obs_type, obs_type). See comments above about schema-tuples.
     
     ATTRIBUTES
     
-    schema: A dictionary containing the observation name (eg, 'wind') and its
-    type (eg, 'VECTOR')
+    schema: A dictionary with key obs_name, and value of 'REAL' or 'VECTOR'.
     
-    statsTypes: The types of the statistics supported by this instance of
-    StatsDb. 
+    statsTypes: A list of all the obs_name supported by this database.
     
     std_unit_system: The unit system in use (weewx.US or weewx.METRIC), or
     None if the system has been specified yet.
@@ -197,8 +201,8 @@ class StatsDb(object):
         stats_db_dict: A dictionary passed on to weedb. It should hold
         the keywords necessary to open the database.
 
-        stats_schema: an iterable collection of tuples. The first member of the tuple is
-        the observation type, the second is either the string 'REAL' (scalar value), 
+        stats_schema: an iterable collection of schema-tuples. The first member of the
+        tuple is the observation type, the second is either the string 'REAL' (scalar value), 
         or 'VECTOR' (vector value). The database will be initialized to collect stats
         for only the given types.
         
@@ -615,7 +619,8 @@ class StatsDb(object):
         return _stats_schema_dict
         
     def _backcompute_schema(self, cursor):
-
+        """Used to extract the schema out of older databases that do
+        not have the schema metadata table _stats_schema."""
         raw_stats_types = self.connection.tables()
         if not raw_stats_types:
             raise weedb.OperationalError("Unitialized stats database")
@@ -624,11 +629,11 @@ class StatsDb(object):
         # filter out the metadata table. In case the same database is being used
         # for the archive data, filter out the 'archive' database.
         stats_types = [s for s in raw_stats_types if s not in ['heatdeg','cooldeg','metadata', 'archive']]
-        result = []
+        stats_schema = []
         for stat_type in stats_types:
             ncol = len(self.connection.columnsOf(stat_type))
-            result.append((stat_type, 'REAL' if ncol==7 else 'VECTOR'))
-        return result
+            stats_schema.append((stat_type, 'REAL' if ncol==7 else 'VECTOR'))
+        return stats_schema
 
 #===============================================================================
 #                        function get_heat_cool

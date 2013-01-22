@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -108,6 +108,7 @@ class VecStats(object):
                 self.max_dir, self.xsum, self.ysum, self.squaresum, self.squarecount)
 
     def mergeHiLo(self, x_stats):
+        """Merge the highs and lows of another accumulator into myself."""
         if x_stats.min is not None:
             if self.min is None or x_stats.min < self.min:
                 self.min     = x_stats.min
@@ -123,6 +124,7 @@ class VecStats(object):
                 self.last     = x_stats.last
 
     def mergeSum(self, x_stats):
+        """Merge the sum and count of another accumulator into myself."""
         self.sum         += x_stats.sum
         self.count       += x_stats.count
         self.xsum        += x_stats.xsum
@@ -131,6 +133,10 @@ class VecStats(object):
         self.squarecount += x_stats.squarecount
         
     def addHiLo(self, val, ts):
+        """Include a vector value in my highs and lows.
+        val: A vector value. It is a 2-way tuple (mag, dir).
+        ts:  The timestamp.
+        """
         speed, dirN = val
         if speed is not None:
             if self.min is None or speed < self.min:
@@ -145,6 +151,9 @@ class VecStats(object):
                 self.lasttime= ts
         
     def addSum(self, val):
+        """Add a vector value to my sum and squaresum.
+        val: A vector value. It is a 2-way tuple (mag, dir)
+        """
         speed, dirN = val
         if speed is not None:
             self.sum         += speed
@@ -207,7 +216,7 @@ class BaseAccum(dict):
             self._add_value(record[obs_type], obs_type, record['dateTime'])
                 
     def updateHiLo(self, accumulator):
-        """Merge the stats of another accumulator into me."""
+        """Merge the high/low stats of another accumulator into me."""
         if accumulator.timespan.start < self.timespan.start or accumulator.timespan.stop > self.timespan.stop:
             raise OutOfSpan("Attempt to merge an accumulator whose timespan is not a subset")
 
@@ -231,10 +240,12 @@ class BaseAccum(dict):
         return record
 
     def _init_type(self, obs_type):
-
+        """Add a given observation type to my dictionary."""
         # Do nothing if this type has already been initialized:
         if obs_type in self:
             return
+        # Assume this is a scalar type. The function can be overridden if it is
+        # something else.
         self[obs_type] = ScalarStats()
             
     def _add_value(self, val, obs_type, ts):
