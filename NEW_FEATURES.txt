@@ -1,8 +1,15 @@
                     Possible NEW FEATURES
 
+Make record generation from the accumulators into a separate service, allowing 
+easier customization. This would also make calculation of extensive quantities easier.
+
 Allow the console to participate as yet another service. Then, the Davis console
 could intercept new archive record events and add rxcheckpercent and rain to
 software generated records.
+
+New observation types would have their unit group attached as a suffix. E.g., _energy.
+
+Move to a "plugin" architecture.
 
 Add ordinate wind descriptions "N, NE, E,", etc.
 
