@@ -78,12 +78,17 @@ help:
 	@echo "options include:"
 	@echo "          info  display values of variables we care about"
 	@echo "       install  run the generic python install"
+	@echo ""
 	@echo "     changelog  create changelog suitable for distribution"
 	@echo " deb-changelog  prepend stub changelog entry for deb"
 	@echo " rpm-changelog  prepend stub changelog entry for rpm"
+	@echo ""
 	@echo "   src-package  create source tarball suitable for distribution"
 	@echo "   deb-package  create .deb package"
 	@echo "   rpm-package  create .rpm package"
+	@echo ""
+	@echo "     deb-check  check the deb package"
+	@echo "     rpm-check  check the rpm package"
 
 info:
 	@echo "     VERSION: $(VERSION)"
@@ -142,8 +147,10 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
 	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
-	@echo "to verify the package run this:"
-	@echo "lintian -Ivi $(DSTDIR)/$(DEBPKG)"
+
+# run lintian on the deb package
+deb-check:
+	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
@@ -176,5 +183,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER).src.rpm $(DSTDIR)
 #	rpm --addsign $(DSTDIR)/$(RPMPKG)
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER).src.rpm
-	@echo "to verify the package run this:"
-	@echo "rpmlint $(DSTDIR)/$(RPMPKG)"
+
+# run rpmlint on the redhat package
+rpm-check:
+	rpmlint $(DSTDIR)/$(RPMPKG)
