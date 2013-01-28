@@ -1,0 +1,5 @@
+* Mon Jan 28 2013 Matthew Wall <mwall at users.sourceforge.net> - 2.2.0a2-1
+- merged packaging branch to trunk
+- put chkconfig in preun rather than postun as per rpmlint suggestion
+* Sat Jan 26 2013 Matthew Wall <mwall at users.sourceforge.net> - 2.1.1-1
+- initial redhat package

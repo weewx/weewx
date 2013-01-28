@@ -76,12 +76,14 @@ all: help
 
 help:
 	@echo "options include:"
-	@echo "         info   display values of variables we care about"
-	@echo "      install   run the generic python install"
-	@echo "    changelog   create changelog suitable for distribution"
-	@echo "  src-package   create source tarball suitable for distribution"
-	@echo "  deb-package   create .deb package"
-	@echo "  rpm-package   create .rpm package"
+	@echo "          info  display values of variables we care about"
+	@echo "       install  run the generic python install"
+	@echo "     changelog  create changelog suitable for distribution"
+	@echo " deb-changelog  prepend stub changelog entry for deb"
+	@echo " rpm-changelog  prepend stub changelog entry for rpm"
+	@echo "   src-package  create source tarball suitable for distribution"
+	@echo "   deb-package  create .deb package"
+	@echo "   rpm-package  create .rpm package"
 
 info:
 	@echo "     VERSION: $(VERSION)"
@@ -103,11 +105,18 @@ changelog:
 	mkdir -p $(DSTDIR)
 	pkg/mkchangelog.pl --ifile docs/changes.txt > $(DSTDIR)/README.txt
 
+DEBREVISION=1
+DEBVER=$(VERSION)-$(DEBREVISION)
+# add a skeleton entry to deb changelog
+deb-changelog:
+	pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new
+	cat pkg/debian/changelog >> pkg/debian/changelog.new
+	mv pkg/debian/changelog.new pkg/debian/changelog
+
 # use dpkg-buildpackage to create the debian package
 # -us -uc - skip gpg signature on .dsc and .changes
 # the latest version in the debian changelog must match the packaging version
 DEBARCH=all
-DEBREVISION=1
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
 DEBPKG=weewx_$(VERSION)-$(DEBREVISION)_$(DEBARCH).deb
 DPKG_OPT=-us -uc
@@ -136,10 +145,16 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 	@echo "to verify the package run this:"
 	@echo "lintian -Ivi $(DSTDIR)/$(DEBPKG)"
 
-# use rpmbuild to create the redhat package
-RPMARCH=noarch
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
+# add a skeleton entry to rpm changelog
+rpm-changelog:
+	pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new
+	cat pkg/changelog.rpm >> pkg/changelog.rpm.new
+	mv pkg/changelog.rpm.new pkg/changelog.rpm
+
+# use rpmbuild to create the redhat package
+RPMARCH=noarch
 RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)_$(RPMARCH)
 RPMPKG=weewx-$(RPMVER).$(RPMARCH).rpm
 rpm-package: $(DSTDIR)/$(SRCPKG)
@@ -153,6 +168,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p -m 0755 $(RPMBLDDIR)/SRPMS
 	sed -e 's%Version:.*%Version: $(VERSION)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
+	cat pkg/changelog.rpm >> $(RPMBLDDIR)/SPECS/weewx.spec
 	cp dist/weewx-$(VERSION).tar.gz $(RPMBLDDIR)/SOURCES
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)

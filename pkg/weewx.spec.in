@@ -114,9 +114,9 @@ chkconfig weewx on
 
 %preun
 %{_initrddir}/weewx stop
+chkconfig weewx off
 
 %postun
-chkconfig weewx off
 %{_initrddir}/%{apachecmd} restart
 
 %clean
@@ -136,5 +136,3 @@ rm -rf %{buildroot}
 %config(noreplace) %{apacheconfdir}/weewx.conf
 
 %changelog
-* Sat Jan 26 2013 Matthew Wall <mwall at users.sourceforge.net> - 2.1.1-1
-- initial redhat package
