@@ -1,0 +1,13 @@
+/var/log/weewx.log {
+  weekly
+  missingok
+  rotate 52
+  compress
+  delaycompress
+  notifempty
+  create 644 root adm
+  sharedscripts
+  postrotate
+    /etc/init.d/weewx reload > /dev/null
+  endscript
+}

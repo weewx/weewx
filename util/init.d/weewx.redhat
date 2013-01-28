@@ -4,46 +4,32 @@
 #
 # Startup script for Redhat derivatives
 #
-# weewx        This shell script takes care of starting and stopping
-#              the weewx weather systen.
-#
-### BEGIN INIT INFO
-# Provides:          weewx
-# Required-Start:    $local_fs $syslog $time
-# Required-Stop:     $local_fs $syslog $time
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: weewx weather system
-# Description:       Manages the weewx weather system
-#
-### END INIT INFO
+# chkconfig: 2345 99 01
+# description: start and stop the weewx weather system
 #
 # Do NOT "set -e"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-WEEWX_ROOT=/home/weewx
-DESC="Weewx weather system"
+WEEWX_BIN=/home/weewx/bin/weewxd.py
+WEEWX_CFG=/home/weewx/weewx.conf
 NAME=weewx
-WEEWX_USER=root:root
-DAEMON=$WEEWX_ROOT/bin/weewxd.py
 PIDFILE=/var/run/$NAME.pid
 LOCKFILE=/var/lock/subsys/weewx
-DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_ROOT/weewx.conf"
-SCRIPTNAME=/etc/init.d/$NAME
+DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG"
 
 # Source function library.
 . /etc/init.d/functions
 
 # Exit if the package is not installed
-[ -x "$DAEMON" ] || exit 0
+[ -x "$WEEWX_BIN" ] || exit 0
 
 # See how we were called.
 case "$1" in
   start)
         # Start daemon.
         echo -n $"Starting weewx: "
-        daemon $DAEMON $DAEMON_ARGS
+        daemon $WEEWX_BIN $DAEMON_ARGS
         RETVAL=$?
         echo
         [ $RETVAL -eq 0 ] && touch $LOCKFILE

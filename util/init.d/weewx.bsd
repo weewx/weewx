@@ -1,16 +1,17 @@
 #!/bin/sh
 #
 # Start script for FreeBSD, contributed by user Fabian Abplanalp
-# Adjust WEEWX_ROOT as appropriate.
-# Then put this script in /usr/local/etc/rc.d
+# Adjust app and cfg locations as appropriate, then put this script
+# in /usr/local/etc/rc.d
 #
-WEEWX_ROOT="/opt/weewx"
+WEEWX_BIN="/opt/weewx/bin/weewxd.py"
+WEEWX_CFG="/opt/weewx/weewx.conf"
 PIDFILE="/var/run/weewx.pid"
 
 case "$1" in
   "start")
     echo "Starting weewx..."
-    /usr/local/bin/python ${WEEWX_ROOT}/bin/weewxd.py ${WEEWX_ROOT}/weewx.conf --daemon &
+    /usr/local/bin/python ${WEEWX_BIN} ${WEEWX_CFG} --daemon &
     echo $! > ${PIDFILE}
     echo "done"
   ;;

@@ -1,1 +1,7 @@
-The user manual can be found in docs/readme.htm.
+weewx communicates with a weather station to produce graphs, reports, and HTML
+pages. weewx can publish data to weather services such as WeatherUnderground,
+PWSweather.com, or CWOP.
+
+weewx is licensed under the GNU Public License v3.
+
+weewx documentation is in docs/readme.htm

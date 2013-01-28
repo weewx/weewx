@@ -74,10 +74,10 @@ del weewx
 sys.path = save_path
 
 #===============================================================================
-#                            My_install_lib
+#                            weewx_install_lib
 #===============================================================================
 
-class My_install_lib(install_lib):
+class weewx_install_lib(install_lib):
     """Specialized version of install_lib
     
     This version:
@@ -156,7 +156,7 @@ class My_install_lib(install_lib):
 #                         install_data
 #===============================================================================
 
-class My_install_data(install_data):
+class weewx_install_data(install_data):
     """Specialized version of install_data 
     
     This version: 
@@ -206,7 +206,6 @@ class My_install_data(install_data):
         # If the file $WEEWX_INSTALL/CHANGES.txt exists, delete it. It's
         # been moved to the docs subdirectory and renamed
         try:
-            print os.path.join(self.install_dir, 'CHANGES.txt')
             os.remove(os.path.join(self.install_dir, 'CHANGES.txt'))
         except:
             pass
@@ -326,7 +325,7 @@ class My_install_data(install_data):
 #                                  sdist
 #===============================================================================
 
-class My_sdist(sdist):
+class weewx_sdist(sdist):
     """Specialized version of sdist which checks for password information in distribution
 
     See http://epydoc.sourceforge.net/stdlib/distutils.command.sdist.sdist-class.html
@@ -376,43 +375,94 @@ def backup(filepath):
 
 setup(name='weewx',
       version=VERSION,
-      description='The weewx weather system',
-      long_description="""The weewx weather system manages a weather station. """\
-        """It generates plots, statistics, and HTML pages of the current and historical weather""",
+      description='weather software',
+      long_description="""weewx interacts with a weather station to produce graphs, reports, and HTML pages.  weewx can upload data to the WeatherUnderground, PWSweather.com, or CWOP.""",
       author='Tom Keffer',
       author_email='tkeffer@gmail.com',
       url='http://www.weewx.com',
+      license = 'GPLv3',
+      classifiers = ['Development Status :: 5 - Production/Stable',
+                     'Intended Audience :: End Users/Desktop',
+                     'License :: GPLv3',
+                     'Operating System :: OS Independent',
+                     'Programming Language :: Python',
+                     'Programming Language :: Python :: 2',
+                     ],
+      platforms = ['any'],
       package_dir = {'' : 'bin'},
-      packages    = ['weedb', 'examples', 'user', 'weeplot', 'weeutil', 'weewx'],
+      packages    = ['weedb',
+                     'examples',
+                     'user',
+                     'weeplot',
+                     'weeutil',
+                     'weewx'],
       py_modules  = ['daemon'],
-      scripts     = ['bin/config_database.py', 'bin/config_fousb.py', 'bin/config_vp.py', 'bin/weewxd.py', 'bin/runreports.py'],
-      data_files  = [('',                           ['LICENSE.txt', 'README', 'weewx.conf']),
-                     ('docs',                       ['docs/README.txt', 'docs/customizing.htm', 
-                                                     'docs/daytemp_with_avg.png', 'docs/debian.htm', 
-                                                     'docs/readme.htm', 'docs/samaxesjs.toc-1.5.min.js', 
-                                                     'docs/sheeva.htm', 'docs/upgrading.htm',
-                                                     'docs/usersguide.htm', 'docs/weekgustoverlay.png', 
-                                                     'docs/weewx_docs.css']),
-                     ('skins/Ftp',                  ['skins/Ftp/skin.conf']),
-                     ('skins/Rsync',                ['skins/Rsync/skin.conf']),
-                     ('skins/Standard/backgrounds', ['skins/Standard/backgrounds/band.gif']),
-                     ('skins/Standard/NOAA',        ['skins/Standard/NOAA/NOAA-YYYY.txt.tmpl', 'skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl']),
-                     ('skins/Standard/RSS',         ['skins/Standard/RSS/weewx_rss.xml.tmpl']),
-                     ('skins/Standard/smartphone',  ['skins/Standard/smartphone/barometer.html.tmpl',    'skins/Standard/smartphone/custom.js',
-                                                     'skins/Standard/smartphone/humidity.html.tmpl',     'skins/Standard/smartphone/index.html.tmpl',
-                                                     'skins/Standard/smartphone/radar.html.tmpl',        'skins/Standard/smartphone/rain.html.tmpl',
-                                                     'skins/Standard/smartphone/temp_outside.html.tmpl', 'skins/Standard/smartphone/wind.html.tmpl']),
-                     ('skins/Standard/smartphone/icons',['skins/Standard/smartphone/icons/icon_ipad_x1.png', 'skins/Standard/smartphone/icons/icon_ipad_x2.png',
-                                                     'skins/Standard/smartphone/icons/icon_iphone_x1.png','skins/Standard/smartphone/icons/icon_iphone_x2.png']),
-                     ('skins/Standard',             ['skins/Standard/favicon.ico',
-                                                     'skins/Standard/mobile.css', 'skins/Standard/mobile.html.tmpl',
-                                                     'skins/Standard/index.html.tmpl', 'skins/Standard/month.html.tmpl',
-                                                     'skins/Standard/skin.conf', 'skins/Standard/week.html.tmpl',
-                                                     'skins/Standard/weewx.css', 'skins/Standard/year.html.tmpl']), 
-                     ('start_scripts/Debian',       ['start_scripts/Debian/weewx']),
-                     ('start_scripts/SuSE',         ['start_scripts/SuSE/weewx'])],
-      requires    = ['configobj(>=4.5)', 'serial(>=2.3)', 'Cheetah(>=2.0)', 'sqlite3(>=2.5)', 'PIL(>=1.1.6)'],
-      cmdclass    = {"install_data" : My_install_data,
-                     "install_lib"  : My_install_lib,
-                     "sdist" :        My_sdist}
+      scripts     = ['bin/config_database.py',
+                     'bin/config_fousb.py',
+                     'bin/config_vp.py',
+                     'bin/weewxd.py',
+                     'bin/runreports.py'],
+      data_files  = [('',
+                      ['LICENSE',
+                       'README',
+                       'weewx.conf']),
+                     ('docs',
+                      ['docs/changes.txt',
+                       'docs/customizing.htm',
+                       'docs/daytemp_with_avg.png',
+                       'docs/debian.htm',
+                       'docs/readme.htm',
+                       'docs/samaxesjs.toc-1.5.min.js',
+                       'docs/sheeva.htm',
+                       'docs/upgrading.htm',
+                       'docs/usersguide.htm',
+                       'docs/weekgustoverlay.png',
+                       'docs/weewx_docs.css']),
+                     ('skins/Ftp',
+                      ['skins/Ftp/skin.conf']),
+                     ('skins/Rsync',
+                      ['skins/Rsync/skin.conf']),
+                     ('skins/Standard/backgrounds',
+                      ['skins/Standard/backgrounds/band.gif']),
+                     ('skins/Standard/NOAA',
+                      ['skins/Standard/NOAA/NOAA-YYYY.txt.tmpl',
+                       'skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl']),
+                     ('skins/Standard/RSS',
+                      ['skins/Standard/RSS/weewx_rss.xml.tmpl']),
+                     ('skins/Standard/smartphone',
+                      ['skins/Standard/smartphone/barometer.html.tmpl',
+                       'skins/Standard/smartphone/custom.js',
+                       'skins/Standard/smartphone/humidity.html.tmpl',
+                       'skins/Standard/smartphone/index.html.tmpl',
+                       'skins/Standard/smartphone/radar.html.tmpl',
+                       'skins/Standard/smartphone/rain.html.tmpl',
+                       'skins/Standard/smartphone/temp_outside.html.tmpl',
+                       'skins/Standard/smartphone/wind.html.tmpl']),
+                     ('skins/Standard/smartphone/icons',
+                      ['skins/Standard/smartphone/icons/icon_ipad_x1.png',
+                       'skins/Standard/smartphone/icons/icon_ipad_x2.png',
+                       'skins/Standard/smartphone/icons/icon_iphone_x1.png',
+                       'skins/Standard/smartphone/icons/icon_iphone_x2.png']),
+                     ('skins/Standard',
+                      ['skins/Standard/favicon.ico',
+                       'skins/Standard/mobile.css',
+                       'skins/Standard/mobile.html.tmpl',
+                       'skins/Standard/index.html.tmpl',
+                       'skins/Standard/month.html.tmpl',
+                       'skins/Standard/skin.conf',
+                       'skins/Standard/week.html.tmpl',
+                       'skins/Standard/weewx.css',
+                       'skins/Standard/year.html.tmpl']),
+                     ('start_scripts/Debian',
+                      ['start_scripts/Debian/weewx']),
+                     ('start_scripts/SuSE',
+                      ['start_scripts/SuSE/weewx'])],
+      requires    = ['configobj(>=4.5)',
+                     'serial(>=2.3)',
+                     'Cheetah(>=2.0)',
+                     'sqlite3(>=2.5)',
+                     'PIL(>=1.1.6)'],
+      cmdclass    = {"install_data" : weewx_install_data,
+                     "install_lib"  : weewx_install_lib,
+                     "sdist"        : weewx_sdist}
       )

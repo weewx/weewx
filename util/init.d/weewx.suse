@@ -58,9 +58,9 @@
 
 # Check for missing binaries (stale symlinks should not happen)
 # Note: Special treatment of stop for LSB conformance
-WEEWX_ROOT=/home/weewx
-WEEWX_BIN=$WEEWX_ROOT/bin/weewxd.py
-WEEWX_ARGS="--daemon $WEEWX_ROOT/weewx.conf"
+WEEWX_BIN=/home/weewx/bin/weewxd.py
+WEEWX_CFG=/home/weewx/weewx.conf
+WEEWX_ARGS="--daemon $WEEWX_CFG"
 test -x $WEEWX_BIN || { echo "$WEEWX_BIN not installed"; 
 	if [ "$1" = "stop" ]; then exit 0;
 	else exit 5; fi; }

@@ -13,24 +13,23 @@
 # Default-Stop:      0 1 6
 # Short-Description: weewx weather system
 # Description:       Manages the weewx weather system
-#
 ### END INIT INFO
 
 # Do NOT "set -e"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-WEEWX_ROOT=/home/weewx
-DESC="Weewx weather system"
+WEEWX_BIN=/home/weewx/bin/weewxd.py
+WEEWX_CFG=/home/weewx/weewx.conf
+DESC="weewx weather system"
 NAME=weewx
 WEEWX_USER=root:root 
-DAEMON=$WEEWX_ROOT/bin/weewxd.py
 PIDFILE=/var/run/$NAME.pid
-DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_ROOT/weewx.conf" 
+DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG" 
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
-[ -x "$DAEMON" ] || exit 0
+[ -x "$WEEWX_BIN" ] || exit 0
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
@@ -51,14 +50,11 @@ do_start()
 	#   0 if daemon has been started
 	#   1 if daemon was already running
 	#   2 if daemon could not be started
-    start-stop-daemon --start --chuid $WEEWX_USER --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
+    start-stop-daemon --start --chuid $WEEWX_USER --pidfile $PIDFILE --exec $WEEWX_BIN --test > /dev/null \
 		|| return 1
-	start-stop-daemon --start --chuid $WEEWX_USER --pidfile $PIDFILE --exec $DAEMON -- \
+	start-stop-daemon --start --chuid $WEEWX_USER --pidfile $PIDFILE --exec $WEEWX_BIN -- \
 		$DAEMON_ARGS \
 		|| return 2
-	# Add code here, if necessary, that waits for the process to be ready
-	# to handle requests from services started subsequently which depend
-	# on this one.  As a last resort, sleep for some time.
 }
 
 #
@@ -80,7 +76,7 @@ do_stop()
 	# that waits for the process to drop all resources that could be
 	# needed by services started subsequently.  A last resort is to
 	# sleep for some time.
-	start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
+	start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $WEEWX_BIN
 	[ "$?" = 2 ] && return 2
 	# Many daemons don't delete their pidfiles when they exit.
 	rm -f $PIDFILE
@@ -91,11 +87,6 @@ do_stop()
 # Function that sends a SIGHUP to the daemon/service
 #
 do_reload() {
-	#
-	# If the daemon can reload its configuration without
-	# restarting (for example, when it is sent a SIGHUP),
-	# then implement that here.
-	#
 	start-stop-daemon --stop --signal 1 --quiet --pidfile $PIDFILE
 	return 0
 }
@@ -118,22 +109,14 @@ case "$1" in
 	esac
 	;;
   status)
-       status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+       status_of_proc "$WEEWX_BIN" "$NAME" && exit 0 || exit $?
        ;;
   reload|force-reload)
-	#
-	# If do_reload() is not implemented then leave this commented out
-	# and leave 'force-reload' as an alias for 'restart'.
-	#
 	log_daemon_msg "Reloading $DESC" "$NAME"
 	do_reload
 	log_end_msg $?
 	;;
   restart)
-	#
-	# If the "reload" option is implemented then remove the
-	# 'force-reload' alias
-	#
 	log_daemon_msg "Restarting $DESC" "$NAME"
 	do_stop
 	case "$?" in
@@ -152,8 +135,7 @@ case "$1" in
 	esac
 	;;
   *)
-	#echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
-	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart|reload}" >&2
 	exit 3
 	;;
 esac

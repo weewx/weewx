@@ -1,0 +1,103 @@
+Template: weewx/location
+Type: string
+Default: Hood River, Oregon
+Description: location of the weather station:
+ This is a string that describes the location of the weather station, for example 'Hood River, Oregon' or 'Boston, MA'.
+
+Template: weewx/latlon
+Type: string
+Default: 45.686,-121.566
+Description: latitude, longitude of the weather station:
+ The latitude and longitude should be specified in decimal degrees, with negative values for southern and western hemispheres.  For example, '42.385, -71.060'
+
+Template: weewx/altitude
+Type: string
+Default: 700, foot
+Description: altitude of the weather station:
+ Normally the altitude is downloaded from the station hardware, but not all stations support this.  Specify the altitude of the station and the singular form of the unit used for the altitude, for example '700, foot' or '120, meter'
+
+Template: weewx/station_type
+Type: select
+Choices: Vantage, WMR-USB, WMR-918, FineOffsetUSB, Simulator
+Default: Simulator
+Description: weather station type:
+ The weather station hardware type.  Specify simulator to run weewx without a weather station.
+
+Template: weewx/vantage_type
+Type: select
+Choices: serial, ethernet
+Default: serial
+Description: hardware interface:
+ If the station is connected by serial, USB, or serial-to-USB adapter, specify serial.  Specify ethernet for stations with the WeatherLinkIP interface.
+
+Template: weewx/vantage_port
+Type: string
+Default: /dev/ttyS0
+Description: serial port:
+ Specify a port for stations with a serial interface, for example /dev/ttyUSB0 or COM1.  For ethernet stations leave this blank.
+
+Template: weewx/vantage_host
+Type: string
+Default: 192.168.0.10
+Description: weather station hostname or IP address:
+ Specify the IP address (e.g. 192.168.0.10) or hostname (e.g. console or console.example.com) for stations with an ethernet interface.  For serial stations leave this blank.
+
+Template: weewx/wmr918_port
+Type: string
+Default: /dev/ttyS0
+Description: serial port:
+ Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or COM1.
+
+Template: weewx/fousb_model
+Type: string
+Default: WS2080
+Description: weather station model:
+ Specify the station mode, for example WH1080, WS2080, WH3080.
+
+Template: weewx/upload_to_wu
+Type: boolean
+Default: false
+Description: upload to weather underground?
+ Indicate whether station observations should be uploaded to the Weather Underground.  A station name and password will be required.
+
+Template: weewx/wu_station
+Type: string
+Description: weather underground station name:
+ The weather underground station name, used to identify observations.
+
+Template: weewx/wu_password
+Type: string
+Description: weather underground password:
+ The weather underground password.
+
+Template: weewx/upload_to_pws
+Type: boolean
+Default: false
+Description: upload to PWS?
+ Indicate whether station observations should be uploaded to the Personal Weather Stations service.  A station name and password will be required.
+
+Template: weewx/pws_station
+Type: string
+Description: PWS station name:
+ The PWS station name, used to identify observations.
+
+Template: weewx/pws_password
+Type: string
+Description: PWS password:
+ The PWS password.
+
+Template: weewx/upload_to_cwop
+Type: boolean
+Default: false
+Description: upload to CWOP?
+ Indicate whether station observations should be uploaded to the Citizens Weather Observer Program.  A station name and password will be required.
+
+Template: weewx/cwop_station
+Type: string
+Description: CWOP station name:
+ The CWOP station name, used to identify observations.
+
+Template: weewx/cwop_password
+Type: string
+Description: CWOP password:
+ The CWOP password.

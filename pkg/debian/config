@@ -1,0 +1,92 @@
+#!/bin/sh -e
+# prompt for configuration settings that are required and have no default
+
+# load the debconf functions
+. /usr/share/debconf/confmodule
+db_version 2.0
+
+# this conf script is capable of backing up
+db_capb backup
+
+PROMPT_FOR_UPLOADS=0
+
+STATE=1 
+while [ "$STATE" != 0 -a "$STATE" != 9 ]; do
+    case "$STATE" in
+        1)
+            db_input high weewx/location || true
+            ;;
+
+        2)
+            db_input high weewx/latlon || true
+            ;;
+
+        3)
+            db_input high weewx/altitude || true
+            ;;
+
+        4)
+            db_input high weewx/station_type || true
+            ;;
+
+        5) # prompt for station-specific parameters
+            db_get weewx/station_type
+            if [ "$RET" = "Vantage" ]; then
+                db_input high weewx/vantage_type || true
+                db_get weewx/vantage_type
+                if [ "$RET" = "serial" ]; then
+                    db_input high weewx/vantage_port || true
+                else
+                    db_input high weewx/vantage_host || true
+                fi
+            fi
+
+            if [ "$RET" = "WMR-918" ]; then
+                db_input high weewx/wmr918_port || true
+            fi
+
+            if [ "$RET" = "FineOffsetUSB" ]; then
+                db_input high weewx/fousb_model || true
+            fi
+            ;;
+
+        6)
+            if [ $PROMPT_FOR_UPLOADS != 0 ]; then
+                db_input high weewx/upload_to_wu || true
+                db_get weewx/upload_to_wu
+                if [ "$RET" = "true" ]; then
+                    db_input medium weewx/wu_station || true
+                    db_input medium weewx/wu_password || true
+                fi
+            fi
+            ;;
+
+        7)
+            if [ $PROMPT_FOR_UPLOADS != 0 ]; then
+                db_input medium weewx/upload_to_pws || true
+                db_get weewx/upload_to_pws
+                if [ "$RET" = "true" ]; then
+                    db_input medium weewx/pws_station || true
+                    db_input medium weewx/pws_password || true
+                fi
+            fi
+            ;;
+
+        8)
+            if [ $PROMPT_FOR_UPLOADS != 0 ]; then
+                db_input medium weewx/upload_to_cwop || true
+                db_get weewx/upload_to_cwop
+                if [ "$RET" = "true" ]; then
+                    db_input medium weewx/cwop_station || true
+                    db_input medium weewx/cwop_password || true
+                fi
+            fi
+            ;;
+    esac
+
+    if db_go; then
+        STATE=$(($STATE + 1))
+    else
+        STATE=$(($STATE - 1))
+    fi
+done

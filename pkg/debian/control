@@ -1,0 +1,14 @@
+Source: weewx
+Section: science
+Priority: extra
+Maintainer: Tom Keffer <tkeffer@gmail.com>
+Standards-Version: 3.9.2
+Homepage: http://www.weewx.com
+
+Package: weewx
+Architecture: all
+Depends: debconf, python (>=2.6), python-configobj(>=4.5), python-cheetah(>=2.0), python-imaging(>=1.1.6), python-serial(>=2.3), python-usb (>=0.4)
+Recommends: python-dev(>=2.6), python-pip(>=0.7), apache2
+Description: weather software
+ weewx interacts with a weather station to produce graphs, reports, and HTML
+ pages. weewx can upload data to WeatherUnderground, PWSweather.com, or CWOP.

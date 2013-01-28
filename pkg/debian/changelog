@@ -1,0 +1,5 @@
+weewx (2.1.1-1) unstable; urgency=low
+
+  * initial debian package
+
+ -- Matthew Wall <mwall@users.sourceforge.net>  Thu, 24 Jan 2013 00:00:00 -0700

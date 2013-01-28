@@ -1,0 +1,98 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# debian makefile for weewx
+# Copyright 2013 Matthew Wall
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+SRC=$(CURDIR)
+DST=$(CURDIR)/debian/tmp
+DST_EXECDIR=$(DST)/usr/bin
+DST_BINDIR =$(DST)/usr/share/weewx
+DST_DOCDIR =$(DST)/usr/share/doc/weewx
+DST_INITDIR=$(DST)/etc/init.d
+DST_CFGDIR =$(DST)/etc/weewx
+
+%:
+	dh $@ --with python2
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf build dist
+	rm -f *.egg-info
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_prep
+	dh_installdirs
+
+# create the directory structure
+	mkdir -p $(DST_EXECDIR)
+	mkdir -p $(DST_INITDIR)
+	mkdir -p $(DST_BINDIR)
+	mkdir -p $(DST_DOCDIR)
+	mkdir -p $(DST_CFGDIR)
+
+# copy files from the source tree
+	cp -r $(SRC)/bin/* $(DST_BINDIR)
+	cp -r $(SRC)/docs/* $(DST_DOCDIR)
+	cp -r $(SRC)/skins $(DST_CFGDIR)
+
+# remove stuff that should not go out
+	rm $(DST_CFGDIR)/skins/Standard/backgrounds/butterfly.jpg
+	rm $(DST_CFGDIR)/skins/Standard/backgrounds/drops.gif
+	rm $(DST_CFGDIR)/skins/Standard/backgrounds/flower.jpg
+	rm $(DST_CFGDIR)/skins/Standard/backgrounds/leaf.jpg
+	rm $(DST_CFGDIR)/skins/Standard/backgrounds/night.gif
+
+# patch paths in files we care about
+	cat $(SRC)/weewx.conf | sed \
+ -e 's%station_type =.*%station_type = Simulator%' \
+ -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
+ -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
+ -e 's%HTML_ROOT =.*%HTML_ROOT = /var/lib/weewx/html%' \
+ -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
+ -e 's%archive/stats.sdb%/var/lib/weewx/stats.sdb%' \
+ > $(DST_CFGDIR)/weewx.conf
+	cat $(SRC)/util/init.d/weewx.debian | sed \
+ -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
+ -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
+ > $(DST_INITDIR)/weewx
+	chmod 755 $(DST_INITDIR)/weewx
+	mkdir -p $(DST)/etc/apache2/conf.d
+	cat $(SRC)/util/apache/conf.d/weewx.conf | sed \
+ -e 's%/home/weewx/public_html%/var/lib/weewx/html%' \
+ > $(DST)/etc/apache2/conf.d/weewx.conf
+
+# create symlinks to the code entry points
+	ln -s ../share/weewx/weewxd.py $(DST)/usr/bin/weewxd
+	ln -s ../share/weewx/runreports.py $(DST)/usr/bin/wee-reports
+	ln -s ../share/weewx/config-database.py $(DST)/usr/bin/wee-config-database
+	ln -s ../share/weewx/config-fousb.py $(DST)/usr/bin/wee-config-fousb
+	ln -s ../share/weewx/config-vp.py $(DST)/usr/bin/wee-config-vp
+
+# keep lintian happy
+	cp $(SRC)/debian/copyright $(DST_DOCDIR)
+
+# additional debian control files that dpkg-buildpackage seems to ignore
+	mkdir -p $(DST)/DEBIAN
+	cp $(SRC)/debian/config $(DST)/DEBIAN
+	cp $(SRC)/debian/templates $(DST)/DEBIAN
+
+binary-indep: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary-arch: build install
+
+binary: binary-indep binary-arch
+
+.PHONY: build clean binary-indep binary-arch binary install configure
