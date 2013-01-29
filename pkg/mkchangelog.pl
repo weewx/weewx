@@ -178,12 +178,13 @@ sub doapp {
     return $rc;
 }
 
+# print out a block of paragraphs in the appropriate format
 sub dumpsection {
     my ($fmt, $pkgname, $version, $user, $email, $ts, $pref) = @_;
     my @paragraphs = @$pref;
     return if ($#paragraphs < 0);
 
-    my $maxw = 50;
+    my $maxw = 50; # maximum width, in characters
     my $prefix = q();
     my $firstlinepfx = q();
     my $laterlinepfx = q();
@@ -211,7 +212,7 @@ sub dumpsection {
 
     print $prefix;
     foreach my $p (@paragraphs) {
-        $p = Text::Wrap::fill('','',join '', split('\n',$p));
+        $p = Text::Wrap::fill('','',join ' ', split('\n',$p));
         my $pfx = $firstlinepfx;
         foreach my $ln (split('\n', $p)) {
             print STDOUT "$pfx$ln\n";
