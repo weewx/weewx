@@ -1,12 +1,12 @@
 ﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
-  <!-- $Revision$ -->
-  <!-- $Author$ -->
-  <!-- $Date$ -->
+  <!-- $Revision: 778 $ -->
+  <!-- $Author: tkeffer $ -->
+  <!-- $Date: 2013-01-01 11:35:35 -0500 (Tue, 01 Jan 2013) $ -->
   <head>
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <title>weewx quick-start for debian</title>
+    <title>weewx quick-start for redhat</title>
     <!-- CSS -->
     <link href="weewx_docs.css" rel="stylesheet" />
     <!-- JavaScript -->
@@ -14,9 +14,9 @@
     </style>
   </head>
   <body>
-    <h1 class="title">Quick Start Guide for Debian Linux</h1>
+    <h1 class="title">Quick Start Guide for Redhat Linux</h1>
     <p>
-      This is a guide to install weewx from DEB package on systems such as Debian, Ubuntu or Mint.
+      This is a guide to install weewx from RPM package systems such as Redhat, CentOS or Fedora.
     </p>
     <p>
       Installing from package will result in the following:
@@ -41,23 +41,20 @@
 
     <h3>Download</h3>
     <p>
-      Download the package weewx-X.Y.Z-R.deb from <a href="http://sourceforge.net/projects/weewx"> Sourceforge</a>.
+      Download the package weewx-X.Y.Z-R.rpm from <a href="http://sourceforge.net/projects/weewx"> Sourceforge</a>.
     </p>
 
     <h3>Install</h3>
     <p>
-      Install weewx by double-clicking the .deb file, or via command line:
+      Install weewx by double-clicking the .rpm file, or via command line:
     </p>
     <p class='tty'>
-      sudo dpkg -i weewx-X.Y.Z-R.deb
-    </p>
-    <p>
-      The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to the station.
+      sudo rpm -i weewx-X.Y.Z-R.deb
     </p>
 
     <h3>Verify</h3>
     <p>
-      After 5 minutes, open <span class='code'>file:///usr/lib/weewx/html/index.html</span> in a web browser.  You should see the default weewx page with your station information and data.
+      After 5 minutes, open <span class='code'>file:///usr/lib/weewx/html/index.html</span> in a web browser.  You should see the default weewx page with generic station information and data.
     </p>
 
     <h3>Status</h3>
@@ -68,9 +65,19 @@
       sudo tail /var/log/messages
     </p>
 
-    <h3>Customize</h3>
+    <h3>Configure</h3>
     <p>
-      To enable uploads such as Weather Underground or to customize reports, modify the configuration file /etc/weewx.conf.  See the User Guide and Customization Guide for details.
+      The default installion uses a Simulator as the station type.  This should be changed to the actual weather station.
+    </p>
+    <p>
+      Edit the configuration file <span class='code'>/home/weewx/weewx.conf</span>.  Set at least the following:
+      <ul>
+        <li>location</li>
+        <li>latitude</li>
+        <li>longitude</li>
+        <li>station_type</li>
+      </ul>
+      Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
     </p>
     <p>
       weewx must be restarted for configuration file changes to take effect.
@@ -87,16 +94,10 @@
 
     <h3>Uninstall</h3>
     <p>
-      To uninstall weewx but retain configuration files and data:
-    </p>
-    <p class='tty'>
-      sudo dpkg -r weewx
-    </p>
-    <p>
       To uninstall weewx, removing configuration files but retaining data:
     </p>
     <p class='tty'>
-      sudo dpkg --purge weewx
+      sudo rpm -r weewx
     </p>
   </body>
 </html>

@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
+  <!-- $Revision: 778 $ -->
+  <!-- $Author: tkeffer $ -->
+  <!-- $Date: 2013-01-01 11:35:35 -0500 (Tue, 01 Jan 2013) $ -->
+  <head>
+    <meta content="en-us" http-equiv="Content-Language" />
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+    <title>weewx quick-start for linux</title>
+    <!-- CSS -->
+    <link href="weewx_docs.css" rel="stylesheet" />
+    <!-- JavaScript -->
+    <style type="text/css">
+.cmdtbl {
+  border: none;
+}
+.cmdcell {
+  width: 500px;
+  border: none;
+}
+.cmdhdr {
+  font-weight: bold;
+  font-size: 80%;
+  border: none;
+}
+    </style>
+  </head>
+  <body>
+    <h1 class="title">Quick Start Guide for Linux</h1>
+    <p>
+      This is a guide to install weewx on Linux systems from source.
+    </p>
+    <p>
+      Installing from source will result in the following:
+      <table>
+        <tr>
+          <td align='right'>configuration files, skins, and templates: </td>
+          <td class='tty'>/home/weewx</td>
+        </tr>
+        <tr>
+          <td align='right'>data will be saved to sqlite database: </td>
+          <td class='tty'>/home/weewx/archive</td>
+        </tr>
+        <tr>
+          <td align='right'>web pages and images: </td>
+          <td class='tty'>/home/weewx/public_html</td>
+        </tr>
+      </table>
+    </p>
+
+    <h3>Install Prerequisites</h3>
+    <p>
+      Install the required python packages:
+    </p>
+    <table class='cmdtbl'>
+      <tr valign='top'>
+        <td class='cmdhdr'>Debian, Ubuntu, Mint</td>
+        <td class='cmdhdr'>Redhat, CentOS, Fedora</td>
+      </tr>
+      <tr valign='top'>
+        <td class='cmdcell'>
+          <p class='tty' style='margin-left: 0'>
+            sudo apt-get install python-configobj<br/>
+            sudo apt-get install python-cheetah<br/>
+            sudo apt-get install python-imaging<br/>
+          </p>
+        </td>
+        <td class='cmdcell'>
+          <p class='tty' style='margin-left: 0'>
+            sudo yum install python-configobj<br/>
+            sudo yum install python-cheetah<br/>
+            sudo yum install python-imaging<br/>
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <p>
+      If the station is connected by serial or USB, install one of these packages:
+    </p>
+    <table class='cmdtbl'>
+      <tr valign='top'>
+        <td class='cmdcell'>
+          <p class='tty' style='margin-left: 0'>
+            sudo apt-get install python-serial<br/>
+            sudo apt-get install python-usb<br/>
+          </p>
+        </td>
+        <td class='cmdcell'>
+          <p class='tty' style='margin-left: 0'>
+            sudo yum install pyserial<br/>
+            sudo yum install pyusb<br/>
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <p>
+      For extended almanac information, install these packages:
+    </p>
+    <table class='cmdtbl'>
+      <tr valign='top'>
+        <td class='cmdcell'>
+          <p class="tty" style='margin-left: 0'>
+            sudo apt-get install python-dev<br/>
+            sudo apt-get install python-pip<br/>
+            sudo pip install pyephem<br/>
+          </p>
+        </td>
+        <td class='cmdcell'>
+          <p class="tty" style='margin-left: 0'>
+            sudo yum install python-dev<br/>
+            sudo yum install python-pip<br/>
+            sudo pip install pyephem<br/>
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Download</h3>
+    <p>
+      Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</code> from <a href="http://sourceforge.net/projects/weewx">Sourceforge</a>
+    </p>
+
+    <h3>Install</h3>
+    <p>
+      Expand the source archive:
+    </p>
+    <p class="tty">
+      tar xvf weewx-X.Y.Z.tar.gz
+    </p>
+    <p>
+      Change directory:
+    </p>
+    <p class="tty">
+      cd weewx-X.Y.Z
+    </p>
+    <p>
+      Then build and install:
+    </p>
+    <p class="tty">
+      ./setup.py build<br/>
+      sudo ./setup.py install
+    </p>
+    <p>
+      This will place weewx in <span class='code'>/home/weewx</span>, so sudo is required unless the user doing the install has permission to create a new directory in <span class='code'>/home</span>.
+    </p>
+
+    <h3>Configure</h3>
+    <p>
+      Edit the configuration file <span class='code'>/home/weewx/weewx.conf</span>.  Set at least the following:
+      <ul>
+        <li>location</li>
+        <li>latitude</li>
+        <li>longitude</li>
+        <li>station_type</li>
+      </ul>
+      Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
+    </p>
+    <p>
+      weewx must be restarted for changes to the configuration file to take effect.
+    </p>
+    <p>
+      If you have a weather station from the Davis Vantage series, many of the configuration data will be downloaded from your hardware, including altitude, archive interval, and the start of your rain year. If you have not set these, you can either do so by following the instructions in the manual that came with your weather station, or by using the configuration utility config_vp.py, which is included with weewx. To see how to run config_vp.py:
+    </p>
+    <p class='tty'>
+# This works only for Davis Vantage weather stations!<br/>
+cd /home/weewx<br/>
+./bin/config_vp.py weewx.conf --help<br/>
+    </p>
+
+    <h3>Run</h3>
+    <p>
+      Run the main program from the command line:
+    </p>
+    <p class="tty">
+      cd /home/weewx<br/>
+      ./bin/weewxd.py weewx.conf<br/>
+    </p>
+    <p>
+      Or as a daemon automatically when the computer starts:
+    </p>
+    <table class='cmdtbl'>
+      <tr valign='top'>
+        <td class='cmdhdr'>Debian, Ubuntu, Mint</td>
+        <td class='cmdhdr'>Redhat, CentOS, Fedora</td>
+      </tr>
+      <tr valign='top'>
+        <td class='cmdcell'>
+          <p class="tty" style='margin-left: 0'>
+            sudo cp util/init.d/weewx.debian /etc/init.d/weewx<br/>
+            sudo chmod +x /etc/init.d/weewx<br/>
+            sudo update-rc.d weewx defaults 98<br/>
+            sudo /etc/init.d/weewx start<br/>
+          </p>
+        </td>
+        <td class='cmdcell'>
+          <p class="tty" style='margin-left: 0'>
+            sudo cp util/init.d/weewx.redhat /etc/init.d/weewx<br/>
+            sudo chmod +x /etc/init.d/weewx<br/>
+            sudo chkconfig weewx on<br/>
+            sudo /etc/init.d/weewx start<br/>
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Verify</h3>
+    <p>
+      After 5 minutes, open <span class='code'>file:///home/weewx/public_html/index.html</span> in a web browser.  You should see the default weewx page with your station information and data.
+    </p>
+
+    <h3>Status</h3>
+    <p>
+      Look in the system log <span class='code'>/var/log/messages</span> for messages from weewx.
+    </p>
+    <p class='tty'>
+      sudo tail /var/log/messages
+    </p>
+
+    <h3>Uninstall</h3>
+    <p>
+      To uninstall, simply delete the directory <span class='code'>/home/weewx</span>.  This will delete weewx, configuration files, and data.
+    </p>
+    <p class='tty'>
+      sudo rm -r /home/weewx
+      sudo rm /etc/init.d/weewx
+    </p>
+  </body>
+</html>

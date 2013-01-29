@@ -22,21 +22,29 @@
 <h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System
 <br />
 Version 2.2</h1>
+
+<p>
+This is the complete guide to <span class="code">weewx</span> &mdash; all details and options for installing weewx are documented here. As such, it can get a bit tedious to follow.
+</p>
+<p>
+Quick-start guides are available for
+<ul>
+  <li><a href='linux.htm'>installing from source on Linux</a> &mdash; Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</li>
+  <li><a href='debian.htm'>installing from DEB package</a> &mdash; Debian, Ubuntu, Mint</li>
+  <li><a href='redhat.htm'>installing from RPM package</a> &mdash; Redhat, CentOS, Fedora</li>
+</ul>
+</p>
+<p>
+For information on customizing <span class="code">weewx</span>, see <a href="customizing.htm">Customizing <span class="code">weewx</span></a>.
+</p>
+<p>
+For instructions on upgrading from various versions, see <a href="upgrading.htm">Upgrading <span class="code">weewx</span></a>.
+</p>
+<p>
+For instructions on porting to the SheevaPlug, see <a href="sheeva.htm">Notes on porting <span class="code">weewx</span> to the SheevaPlug</a>.
+</p>
+
 <h1>Table of Contents</h1>
-<p>This is the complete guide to installing <span class="code">weewx</span> &mdash; 
-all details and options are documented here. As such, it can get a bit tedious to 
-follow. </p>
-<p>If you are running Ubuntu, you can save some time by following the <em>
-<a href="debian.htm">Quick Start Guide for Debian (Ubuntu) Users</a>.</em> </p>
-<p>For information on customizing <span class="code">weewx</span>, see the separate 
-document <a href="customizing.htm"><em>Customizing <span class="code">weewx</span></em></a>.
-</p>
-<p>For instructions on upgrading from various versions, see the separate document
-<em><a href="upgrading.htm">Upgrading <span class="code">weewx</span></a></em>.
-</p>
-<p>For instructions on porting to the SheevaPlug, see the separate document <em>
-<a href="sheeva.htm">Notes on porting <span class="code">weewx</span> to the SheevaPlug</a></em>.
-</p>
 <div id="technical_content">
 	<div id="toc">
 	</div>
@@ -1280,9 +1288,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	its configuration file by sending it the <span class="code">HUP</span> signal. 
 	First run <span class="code">ps</span> to find out the Process ID (PID) number 
 	of the instance, then send it the <span class="code">HUP</span> signal: </p>
-	<p class="tty">ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note 
-	the PID of the weewxd.py process </p>
-	<p class="tty">kill -HUP <em>pid</em> # Send it a HUP signal </p>
+	<p class="tty">
+ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note the PID of the weewxd.py process<br/>
+kill -HUP <em>pid</em> # Send it a HUP signal<br/>
+</p>
 	<p>Note that this <em>only</em> rereads the configuration file. It will not 
 	reflect any changes you might have made to the code.</p>
 	<h2 id="Running_as_a_daemon">Running as a daemon</h2>
@@ -1356,9 +1365,11 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p><span class="code">Weewx</span> will now start automatically whenever your 
 	system is booted. You can also manually start, stop, and restart the
 	<span class="code">weewx</span> daemon: </p>
-	<p class="tty">/etc/init.d/weewx start </p>
-	<p class="tty">/etc/init.d/weewx stop </p>
-	<p class="tty">/etc/init.d/weewx restart </p>
+	<p class="tty">
+/etc/init.d/weewx start<br/>
+/etc/init.d/weewx stop<br/>
+/etc/init.d/weewx restart<br/>
+        </p>
 	<p>By default, the scripts are designed to have <span class="code">weewx</span> 
 	run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels 
 	with Debian (Ubuntu) systems is
@@ -1449,14 +1460,13 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	USB port claiming &quot;EMI noise&quot;, and reconnect to a new and different 
 	port, where <span class="code">weewx</span> can&#39;t find it. Here&#39;s a 
 	typical log output: </p>
-	<pre>Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?), re-enabling... 
+	<pre>
+Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?), re-enabling... 
 Nov 29 10:40:21 hummingbird kernel: [6661624.786871] usb 2-3: USB disconnect, address 2 
 Nov 29 10:40:21 hummingbird kernel: [6661624.795778] cp2101 2-3:1.0: device disconnected 
-Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while getting LOOP packets</pre>
-	<pre> </pre>
-	<pre>... (messages elided)</pre>
-	<pre> </pre>
-	<pre>Nov 29 10:40:22 hummingbird kernel: [6661625.352340] cp2101 2-3:1.0: cp2101 converter detected 
+Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while getting LOOP packets
+... (messages elided)
+Nov 29 10:40:22 hummingbird kernel: [6661625.352340] cp2101 2-3:1.0: cp2101 converter detected 
 Nov 29 10:40:22 hummingbird kernel: [6661625.528107] usb 2-3: reset full speed USB device using ohci_hcd and address 3 
 Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</pre>
 	<p>In this example, the VantagePro was connected to <span class="code">/dev/ttyUSB0</span>, 
@@ -1865,10 +1875,12 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 	</span>takes a different approach and converts from UTC to local, does the arithmetic, 
 	then converts back. This is inefficient, but bulletproof against changes in 
 	DST algorithms, etc: </p>
-	<p class="tty">time_dt = datetime.datetime.fromtimestamp(last_ts) </p>
-	<p class="tty">delta = datetime.timedelta(seconds=10800) </p>
-	<p class="tty">next_dt = time_dt + delta </p>
-	<p class="tty">next_ts = int(time.mktime(next_dt.timetuple())) </p>
+	<p class="tty">
+          time_dt = datetime.datetime.fromtimestamp(last_ts)<br/>
+	  delta = datetime.timedelta(seconds=10800)<br/>
+	  next_dt = time_dt + delta<br/>
+	  next_ts = int(time.mktime(next_dt.timetuple()))<br/>
+        </p>
 	<p>Other time conversion problems are handled in a similar manner. </p>
 </div>
 <script type="text/javascript">
@@ -1878,7 +1890,7 @@ Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and c
 				context : 'technical_content'
 			});
 
-		</script>
+</script>
 
 </body>
 
