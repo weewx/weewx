@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 352 2013-01-04 15:48:17Z mwall $
+# $Id: fousb.py 374 2013-01-11 18:11:23Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -157,6 +157,164 @@ import weewx.wxformulas
 def loader(config_dict):
     station = FineOffsetUSB(**config_dict['FineOffsetUSB'])
     return station
+
+# param     values     invalid description
+#
+# delay     [1,240]            the number of minutes since last stored reading
+# hum_in    [1,99]     0xff    indoor relative humidity; %
+# temp_in   [-40,60]   0xffff  indoor temp; multiply by 0.1 to get C
+# hum_out   [1,99]     0xff    outdoor relative humidity; %
+# temp_out  [-40,60]   0xffff  outdoor temp; multiply by 0.1 to get C
+# abs_pres  [920,1080] 0xffff  pressure; multiply by 0.1 to get hPa
+# wind_ave  [0,50]     0xff    average wind speed; multiply by 0.1 to get m/s
+# wind_gust [0,50]     0xff    average wind speed; multiply by 0.1 to get m/s
+# wind_dir  [0,15]     bit 7   wind direction; multiply by 22.5 to get degrees
+# rain                         rain; multiply by 0.33 to get mm
+# status
+# illuminance
+# uv
+
+# map between the pywws keys and the weewx (and wview) keys
+# 'weewx-key' : ( 'pywws-key', multiplier )
+# rain needs special treatment
+# station has no separate windgustdir so use wind_dir
+keymap = {
+    'inHumidity'  : ('hum_in',       1.0),
+    'inTemp'      : ('temp_in',      1.0),
+    'outHumidity' : ('hum_out',      1.0),
+    'outTemp'     : ('temp_out',     1.0),
+    'barometer'   : ('abs_pressure', 1.0),
+    'windSpeed'   : ('wind_ave',     3.6), # station is m/s, weewx wants km/h
+    'windGust'    : ('wind_gust',    3.6), # station is m/s, weewx wants km/h
+    'windDir'     : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
+    'windGustDir' : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
+    'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
+    'radiation'   : ('illuminance',  1.0),
+    'UV'          : ('uv',           1.0),
+    'dewpoint'    : ('dewpoint',     1.0),
+    'heatindex'   : ('heatindex',    1.0),
+    'windchill'   : ('windchill',    1.0),
+}
+
+# formats for displaying fixed_format fields
+datum_display_formats = {
+    'magic_1' : '0x%2x',
+    'magic_2' : '0x%2x',
+    }
+
+# wrap value for rain counter
+rain_max = 0x10000
+
+# values for status:
+status_rain_overflow   = 0x80
+status_lost_connection = 0x40
+#  unknown         = 0x20
+#  unknown         = 0x10
+#  unknown         = 0x08
+#  unknown         = 0x04
+#  unknown         = 0x02
+#  unknown         = 0x01
+
+# decode weather station raw data formats
+def _decode(raw, fmt):
+    def _signed_byte(raw, offset):
+        res = raw[offset]
+        if res == 0xFF:
+            return None
+        sign = 1
+        if res >= 128:
+            sign = -1
+            res = res - 128
+        return sign * res
+    def _signed_short(raw, offset):
+        lo = raw[offset]
+        hi = raw[offset+1]
+        if lo == 0xFF and hi == 0xFF:
+            return None
+        sign = 1
+        if hi >= 128:
+            sign = -1
+            hi = hi - 128
+        return sign * ((hi * 256) + lo)
+    def _unsigned_short(raw, offset):
+        lo = raw[offset]
+        hi = raw[offset+1]
+        if lo == 0xFF and hi == 0xFF:
+            return None
+        return (hi * 256) + lo
+    def _unsigned_int3(raw, offset):
+        lo = raw[offset]
+        md = raw[offset+1]
+        hi = raw[offset+2]
+        if lo == 0xFF and md == 0xFF and hi == 0xFF:
+            return None
+        return (hi * 256 * 256) + (md * 256) + lo
+    def _bcd_decode(byte):
+        hi = (byte / 16) & 0x0F
+        lo = byte & 0x0F
+        return (hi * 10) + lo
+    def _date_time(raw, offset):
+        year = _bcd_decode(raw[offset])
+        month = _bcd_decode(raw[offset+1])
+        day = _bcd_decode(raw[offset+2])
+        hour = _bcd_decode(raw[offset+3])
+        minute = _bcd_decode(raw[offset+4])
+        return '%4d-%02d-%02d %02d:%02d' % (year + 2000, month, day, hour, minute)
+    def _bit_field(raw, offset):
+        mask = 1
+        result = []
+        for i in range(8):  # @UnusedVariable
+            result.append(raw[offset] & mask != 0)
+            mask = mask << 1
+        return result
+    if not raw:
+        return None
+    if isinstance(fmt, dict):
+        result = {}
+        for key, value in fmt.items():
+            result[key] = _decode(raw, value)
+    else:
+        pos, typ, scale = fmt
+        if typ == 'ub':
+            result = raw[pos]
+            if result == 0xFF:
+                result = None
+        elif typ == 'sb':
+            result = _signed_byte(raw, pos)
+        elif typ == 'us':
+            result = _unsigned_short(raw, pos)
+        elif typ == 'u3':
+            result = _unsigned_int3(raw, pos)
+        elif typ == 'ss':
+            result = _signed_short(raw, pos)
+        elif typ == 'dt':
+            result = _date_time(raw, pos)
+        elif typ == 'tt':
+            result = '%02d:%02d' % (_bcd_decode(raw[pos]),
+                                    _bcd_decode(raw[pos+1]))
+        elif typ == 'pb':
+            result = raw[pos]
+        elif typ == 'wa':
+            # wind average - 12 bits split across a byte and a nibble
+            result = raw[pos] + ((raw[pos+2] & 0x0F) << 8)
+            if result == 0xFFF:
+                result = None
+        elif typ == 'wg':
+            # wind gust - 12 bits split across a byte and a nibble
+            result = raw[pos] + ((raw[pos+1] & 0xF0) << 4)
+            if result == 0xFFF:
+                result = None
+        elif typ == 'bf':
+            # bit field - 'scale' is a list of bit names
+            result = {}
+            for k, v in zip(scale, _bit_field(raw, pos)):
+                result[k] = v
+            return result
+        else:
+            raise weewx.WeeWxIOError('decode failure: unknown type %s' % typ)
+        if scale and result:
+            result = float(result) * scale
+    return result
 
 def logdbg(msg):
     syslog.syslog(syslog.LOG_DEBUG, 'fousb: %s' % msg)
@@ -403,6 +561,29 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 time.sleep(self.wait_before_retry)
 
 #==============================================================================
+# methods for reading from and writing to usb
+# FIXME: these should be abstracted to a class to support multiple usb drivers
+#==============================================================================
+
+    def _read_usb(self, address):
+        buf1 = (address / 256) & 0xff
+        buf2 = address & 0xff
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             0x0000009,
+                             [0xA1,buf1,buf2,0x20,0xA1,buf1,buf2,0x20],
+                             0x0000200,
+                             0x0000000,
+                             1000)
+        data = self.devh.interruptRead(self.usb_endpoint,
+                                       self.usb_read_size, # bytes to read
+                                       int(self.timeout*1000))
+        return list(data)
+
+    def _write_usb(self, address, value):
+        # FIXME: write to usb is not implemented
+        return False
+
+#==============================================================================
 # methods for reading data from the weather station
 # the following were adapted from pywws 12.10_r547
 #==============================================================================
@@ -541,164 +722,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             logdbg('waiting for ack')
             time.sleep(6)
 
-    def _read_usb(self, address):
-        buf1 = (address / 256) & 0xff
-        buf2 = address & 0xff
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                             0x0000009,
-                             [0xA1,buf1,buf2,0x20,0xA1,buf1,buf2,0x20],
-                             0x0000200,
-                             0x0000000,
-                             1000)
-        data = self.devh.interruptRead(self.usb_endpoint,
-                                       self.usb_read_size, # bytes to read
-                                       int(self.timeout*1000))
-        return list(data)
-
-    def _write_usb(self, address, value):
-        # FIXME: write to usb is not implemented
-        return False
-
-# decode weather station raw data formats
-def _decode(raw, fmt):
-    def _signed_byte(raw, offset):
-        res = raw[offset]
-        if res == 0xFF:
-            return None
-        sign = 1
-        if res >= 128:
-            sign = -1
-            res = res - 128
-        return sign * res
-    def _signed_short(raw, offset):
-        lo = raw[offset]
-        hi = raw[offset+1]
-        if lo == 0xFF and hi == 0xFF:
-            return None
-        sign = 1
-        if hi >= 128:
-            sign = -1
-            hi = hi - 128
-        return sign * ((hi * 256) + lo)
-    def _unsigned_short(raw, offset):
-        lo = raw[offset]
-        hi = raw[offset+1]
-        if lo == 0xFF and hi == 0xFF:
-            return None
-        return (hi * 256) + lo
-    def _unsigned_int3(raw, offset):
-        lo = raw[offset]
-        md = raw[offset+1]
-        hi = raw[offset+2]
-        if lo == 0xFF and md == 0xFF and hi == 0xFF:
-            return None
-        return (hi * 256 * 256) + (md * 256) + lo
-    def _bcd_decode(byte):
-        hi = (byte / 16) & 0x0F
-        lo = byte & 0x0F
-        return (hi * 10) + lo
-    def _date_time(raw, offset):
-        year = _bcd_decode(raw[offset])
-        month = _bcd_decode(raw[offset+1])
-        day = _bcd_decode(raw[offset+2])
-        hour = _bcd_decode(raw[offset+3])
-        minute = _bcd_decode(raw[offset+4])
-        return '%4d-%02d-%02d %02d:%02d' % (year + 2000, month, day, hour, minute)
-    def _bit_field(raw, offset):
-        mask = 1
-        result = []
-        for i in range(8):  # @UnusedVariable
-            result.append(raw[offset] & mask != 0)
-            mask = mask << 1
-        return result
-    if not raw:
-        return None
-    if isinstance(fmt, dict):
-        result = {}
-        for key, value in fmt.items():
-            result[key] = _decode(raw, value)
-    else:
-        pos, typ, scale = fmt
-        if typ == 'ub':
-            result = raw[pos]
-            if result == 0xFF:
-                result = None
-        elif typ == 'sb':
-            result = _signed_byte(raw, pos)
-        elif typ == 'us':
-            result = _unsigned_short(raw, pos)
-        elif typ == 'u3':
-            result = _unsigned_int3(raw, pos)
-        elif typ == 'ss':
-            result = _signed_short(raw, pos)
-        elif typ == 'dt':
-            result = _date_time(raw, pos)
-        elif typ == 'tt':
-            result = '%02d:%02d' % (_bcd_decode(raw[pos]),
-                                    _bcd_decode(raw[pos+1]))
-        elif typ == 'pb':
-            result = raw[pos]
-        elif typ == 'wa':
-            # wind average - 12 bits split across a byte and a nibble
-            result = raw[pos] + ((raw[pos+2] & 0x0F) << 8)
-            if result == 0xFFF:
-                result = None
-        elif typ == 'wg':
-            # wind gust - 12 bits split across a byte and a nibble
-            result = raw[pos] + ((raw[pos+1] & 0xF0) << 4)
-            if result == 0xFFF:
-                result = None
-        elif typ == 'bf':
-            # bit field - 'scale' is a list of bit names
-            result = {}
-            for k, v in zip(scale, _bit_field(raw, pos)):
-                result[k] = v
-            return result
-        else:
-            raise weewx.WeeWxIOError('decode failure: unknown type %s' % typ)
-        if scale and result:
-            result = float(result) * scale
-    return result
-
-# start of readings / end of fixed block
-data_start = 0x100
-
-# bytes per reading, depends on weather station type
-reading_len = {
-    '1080' : 16,
-    '3080' : 20,
-    }
-
-# param     values     invalid description
-#
-# delay     [1,240]            the number of minutes since last stored reading
-# hum_in    [1,99]     0xff    indoor relative humidity; %
-# temp_in   [-40,60]   0xffff  indoor temp; multiply by 0.1 to get C
-# hum_out   [1,99]     0xff    outdoor relative humidity; %
-# temp_out  [-40,60]   0xffff  outdoor temp; multiply by 0.1 to get C
-# abs_pres  [920,1080] 0xffff  pressure; multiply by 0.1 to get hPa
-# wind_ave  [0,50]     0xff    average wind speed; multiply by 0.1 to get m/s
-# wind_gust [0,50]     0xff    average wind speed; multiply by 0.1 to get m/s
-# wind_dir  [0,15]     bit 7   wind direction; multiply by 22.5 to get degrees
-# rain                         rain; multiply by 0.33 to get mm
-# status
-# illuminance
-# uv
-
-# values for status:
-status_rain_overflow   = 0x80
-status_lost_connection = 0x40
-#  unknown         = 0x20
-#  unknown         = 0x10
-#  unknown         = 0x08
-#  unknown         = 0x04
-#  unknown         = 0x02
-#  unknown         = 0x01
-
-# wrap value for rain counter
-rain_max = 0x10000
-
-# formats for each station type
+# Tables of "meanings" for raw weather station data. Each key
+# specifies an (offset, type, multiplier) tuple that is understood
+# by _decode.
+# depends on weather station type
 reading_format = {}
 reading_format['1080'] = {
     'delay'        : (0, 'ub', None),
@@ -734,14 +761,12 @@ lo_fix_format = {
     'settings_2'   : (18, 'bf', ('wind_mps', 'wind_kmph', 'wind_knot',
                                  'wind_mph', 'wind_bft', 'bit5',
                                  'bit6', 'bit7')),
-    'display_1'    : (19, 'bf', ('pressure_rel', 'wind_gust',
-                                 'clock_12hr', 'date_mdy',
-                                 'time_scale_24', 'show_year',
+    'display_1'    : (19, 'bf', ('pressure_rel', 'wind_gust', 'clock_12hr',
+                                 'date_mdy', 'time_scale_24', 'show_year',
                                  'show_day_name', 'alarm_time')),
     'display_2'    : (20, 'bf', ('temp_out_temp', 'temp_out_chill',
-                                 'temp_out_dew', 'rain_hour',
-                                 'rain_day', 'rain_week',
-                                 'rain_month', 'rain_total')),
+                                 'temp_out_dew', 'rain_hour', 'rain_day',
+                                 'rain_week', 'rain_month', 'rain_total')),
     'alarm_1'      : (21, 'bf', ('bit0', 'time', 'wind_dir', 'bit3',
                                  'hum_in_lo', 'hum_in_hi',
                                  'hum_out_lo', 'hum_out_hi')),
@@ -757,9 +782,8 @@ lo_fix_format = {
     'unknown_01'   : (25, 'pb', None),
     'data_changed' : (26, 'ub', None),
     'data_count'   : (27, 'us', None),
-    'display_3'    : (29, 'bf', ('illuminance_fc', 'bit1', 'bit2',
-                                 'bit3', 'bit4', 'bit5', 'bit6',
-                                 'bit7')),
+    'display_3'    : (29, 'bf', ('illuminance_fc', 'bit1', 'bit2', 'bit3',
+                                 'bit4', 'bit5', 'bit6', 'bit7')),
     'current_pos'  : (30, 'us', None),
     }
 
@@ -772,7 +796,7 @@ fixed_format = {
     'temp_in_offset'   : (42, 'us', None),
     'hum_out_offset'   : (44, 'us', None),
     'hum_in_offset'    : (46, 'us', None),
-#    'date_time'        : (43, 'dt', None),
+    'date_time'        : (43, 'dt', None), # conflict with temp_in_offset
     'unknown_18'       : (97, 'pb', None),
     'alarm'            : {
         'hum_in'       : {'hi': (48, 'ub', None), 'lo': (49, 'ub', None)},
@@ -825,30 +849,11 @@ fixed_format = {
     }
 fixed_format.update(lo_fix_format)
 
-# formats for displaying fixed_format fields
-datum_display_formats = {
-    'magic_1' : '0x%2x',
-    'magic_2' : '0x%2x',
-    }
+# start of readings / end of fixed block
+data_start = 0x0100     # 256
 
-# map between the pywws keys and the weewx (and wview) keys
-# 'weewx-key' : ( 'pywws-key', multiplier )
-# rain needs special treatment
-# station has no separate windgustdir so use wind_dir
-keymap = {
-    'inHumidity'  : ('hum_in',       1.0),
-    'inTemp'      : ('temp_in',      1.0),
-    'outHumidity' : ('hum_out',      1.0),
-    'outTemp'     : ('temp_out',     1.0),
-    'barometer'   : ('abs_pressure', 1.0),
-    'windSpeed'   : ('wind_ave',     3.6), # station is m/s, weewx wants km/h
-    'windGust'    : ('wind_gust',    3.6), # station is m/s, weewx wants km/h
-    'windDir'     : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
-    'windGustDir' : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
-    'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
-    'radiation'   : ('illuminance',  1.0),
-    'UV'          : ('uv',           1.0),
-    'dewpoint'    : ('dewpoint',     1.0),
-    'heatindex'   : ('heatindex',    1.0),
-    'windchill'   : ('windchill',    1.0),
-}
+# bytes per reading, depends on weather station type
+reading_len = {
+    '1080' : 16,
+    '3080' : 20,
+    }
