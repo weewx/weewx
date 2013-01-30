@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 374 2013-01-11 18:11:23Z mwall $
+# $Id: fousb.py 428 2013-01-30 03:00:46Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -158,6 +158,7 @@ def loader(config_dict):
     station = FineOffsetUSB(**config_dict['FineOffsetUSB'])
     return station
 
+# these are the raw data we get from the station:
 # param     values     invalid description
 #
 # delay     [1,240]            the number of minutes since last stored reading
@@ -405,6 +406,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.usb_read_size     = int(stn_dict.get('usb_read_size', '0x20'), 0)
         self.data_format       = stn_dict.get('data_format', '1080')
 
+        self._rain_period_ts = int(time.time() + 0.5)
         self._last_rain = None
         self._fixed_block = None
         self._data_block = None
@@ -472,17 +474,32 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 if self._last_rain is not None:
                     r = p['rain']
                     if r < self._last_rain:
-                        loginf('rain counter wraparound detected: curr: %f last: %f' % (r, self._last_rain))
+                        loginf('rain counter wraparound detected: curr: %f last: %f (mm)' % (r, self._last_rain))
                         r = r + float(rain_max) * 0.3 # r is in mm
                     r = r - self._last_rain
                     if r < self.rain_max_sane:
                         packet['rain'] = r / 10 # weewx expects cm
                     else:
-                        logerr('ignoring bogus rain value: rain: %f curr: %f last: %f' % (r, p['rain'], self._last_rain))
+                        logerr('ignoring bogus rain value: rain: %f curr: %f last: %f (mm)' % (r, p['rain'], self._last_rain))
                         packet['rain'] = None
                 else:
                     packet['rain'] = None
                 self._last_rain = p['rain']
+
+            # calculate the rain rate (weewx wants cm/hr)
+            # if the period is zero we must ignore the rainfall, so overall
+            # rain rate may be under-reported.
+            period = packet['dateTime'] - self._rain_period_ts
+            if packet['rain'] is not None:
+                if period != 0:
+                    packet['rainRate'] = 3600 * packet['rain'] / period
+                else:
+                    if packet['rain'] != 0:
+                        loginf('rain rate period is zero, ignoring rainfall of %f cm' % packet['rain'])
+                    packet['rainRate'] = 0
+            else:
+                packet['rainRate'] = 0
+            self._rain_period_ts = packet['dateTime']
 
             # calculated elements not directly reported by station
             if 'temp_out' in p and p['temp_out'] is not None and \
@@ -496,7 +513,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
             # report rainfall in log until we sort counter issues
             if weewx.debug and packet['rain'] is not None and packet['rain'] > 0:
-                logdbg('got rainfall of %f' % packet['rain'])
+                logdbg('got rainfall of %f cm' % packet['rain'])
 
             yield packet
                                
