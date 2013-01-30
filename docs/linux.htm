@@ -12,10 +12,10 @@
     <!-- JavaScript -->
     <style type="text/css">
 .cmdtbl {
-  border: none;
+  width: 100%;
 }
 .cmdcell {
-  width: 500px;
+  width: 50%;
   border: none;
 }
 .cmdhdr {
@@ -23,30 +23,59 @@
   font-size: 80%;
   border: none;
 }
+.os-icons {
+  float: right;
+}
+img {
+  width: 60px;
+}
+h3 {
+  background-color: #ffffff;
+  border: none;
+  padding-left: 0px;
+}
+.locations {
+  margin-left: 20px;
+}
     </style>
   </head>
   <body>
-    <h1 class="title">Quick Start Guide for Linux</h1>
+    <h1 class="title">weewx: Quick Start Guide for Linux</h1>
+    <p class='os-icons'>      
+      <img src='logo-linux.png'/>
+      <img src='logo-debian.png'/>
+      <img src='logo-ubuntu.png'/>
+      <img src='logo-mint.png'/><br/>
+      <img src='logo-redhat.png'/>
+      <img src='logo-centos.png'/>
+      <img src='logo-fedora.png'/>
+    </p>
     <p>
       This is a guide to install weewx on Linux systems from source.
     </p>
     <p>
       Installing from source will result in the following:
-      <table>
+      <table class='locations'>
         <tr>
-          <td align='right'>configuration files, skins, and templates: </td>
-          <td class='tty'>/home/weewx</td>
+          <td align='right'>configuration file: </td>
+          <td class='tty'>/home/weewx/weewx.conf</td>
         </tr>
         <tr>
-          <td align='right'>data will be saved to sqlite database: </td>
-          <td class='tty'>/home/weewx/archive</td>
+          <td align='right'>skins and templates: </td>
+          <td class='tty'>/home/weewx/skins/</td>
+        </tr>
+        <tr>
+          <td align='right'>sqlite databases: </td>
+          <td class='tty'>/home/weewx/archive/</td>
         </tr>
         <tr>
           <td align='right'>web pages and images: </td>
-          <td class='tty'>/home/weewx/public_html</td>
+          <td class='tty'>/home/weewx/public_html/</td>
         </tr>
       </table>
     </p>
+
+    <p style='clear: both'></p>
 
     <h3>Install Prerequisites</h3>
     <p>
@@ -109,9 +138,7 @@
         </td>
         <td class='cmdcell'>
           <p class="tty" style='margin-left: 0'>
-            sudo yum install python-dev<br/>
-            sudo yum install python-pip<br/>
-            sudo pip install pyephem<br/>
+            sudo yum install pyephem<br/>
           </p>
         </td>
       </tr>
@@ -119,7 +146,7 @@
 
     <h3>Download</h3>
     <p>
-      Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</code> from <a href="http://sourceforge.net/projects/weewx">Sourceforge</a>
+      Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a href="http://sourceforge.net/projects/weewx/files">Sourceforge</a>
     </p>
 
     <h3>Install</h3>
@@ -143,7 +170,7 @@
       sudo ./setup.py install
     </p>
     <p>
-      This will place weewx in <span class='code'>/home/weewx</span>, so sudo is required unless the user doing the install has permission to create a new directory in <span class='code'>/home</span>.
+      The install will place weewx in <span class='code'>/home/weewx</span>, so sudo is probably required.
     </p>
 
     <h3>Configure</h3>
@@ -153,6 +180,7 @@
         <li>location</li>
         <li>latitude</li>
         <li>longitude</li>
+        <li>altitude</li>
         <li>station_type</li>
       </ul>
       Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
@@ -207,15 +235,26 @@ cd /home/weewx<br/>
 
     <h3>Verify</h3>
     <p>
-      After 5 minutes, open <span class='code'>file:///home/weewx/public_html/index.html</span> in a web browser.  You should see the default weewx page with your station information and data.
+      After 5 minutes, open the station web page in a web browser.  You should see the default weewx page with generic station information and data.
+    </p>
+    <p class='tty'>
+      file:///usr/lib/weewx/html/index.html
     </p>
 
     <h3>Status</h3>
     <p>
-      Look in the system log <span class='code'>/var/log/messages</span> for messages from weewx.
+      Look in the system log for messages from weewx.
     </p>
     <p class='tty'>
-      sudo tail /var/log/messages
+      sudo tail -f /var/log/messages
+    </p>
+
+    <h3>Customize</h3>
+    <p>
+      To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/etc/weewx.conf</span>.  See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
+    </p>
+    <p>
+      weewx must be restarted for configuration file changes to take effect.
     </p>
 
     <h3>Uninstall</h3>

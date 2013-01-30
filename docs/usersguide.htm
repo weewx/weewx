@@ -10,7 +10,7 @@
 <head>
 <meta content="en-us" http-equiv="Content-Language" />
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-<title>User's guide to the Weewx weather system</title>
+<title>weewx: User's Guide</title>
 <!-- CSS -->
 <link href="weewx_docs.css" rel="stylesheet" />
 <!-- JavaScript -->
@@ -24,21 +24,21 @@
 Version 2.2</h1>
 
 <p>
-This is the complete guide to <span class="code">weewx</span> &mdash; all details and options for installing weewx are documented here. As such, it can get a bit tedious to follow.
+This is the complete guide to <span class="code">weewx</span> &mdash; all details and options for installing weewx are documented here.
 </p>
 <p>
 Quick-start guides are available for
 <ul>
-  <li><a href='linux.htm'>installing from source on Linux</a> &mdash; Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</li>
-  <li><a href='debian.htm'>installing from DEB package</a> &mdash; Debian, Ubuntu, Mint</li>
-  <li><a href='redhat.htm'>installing from RPM package</a> &mdash; Redhat, CentOS, Fedora</li>
+  <li><a href='linux.htm'>Installing from source on Linux</a> &mdash; Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</li>
+  <li><a href='debian.htm'>Installing from DEB package</a> &mdash; Debian, Ubuntu, Mint</li>
+  <li><a href='redhat.htm'>Installing from RPM package</a> &mdash; Redhat, CentOS, Fedora</li>
 </ul>
 </p>
 <p>
-For information on customizing <span class="code">weewx</span>, see <a href="customizing.htm">Customizing <span class="code">weewx</span></a>.
+For information on customizing <span class="code">weewx</span>, see the <a href="customizing.htm">Customization Guide</a>.
 </p>
 <p>
-For instructions on upgrading from various versions, see <a href="upgrading.htm">Upgrading <span class="code">weewx</span></a>.
+For instructions on upgrading from various versions, see the <a href="upgrading.htm">Upgrade Guide</a>.
 </p>
 <p>
 For instructions on porting to the SheevaPlug, see <a href="sheeva.htm">Notes on porting <span class="code">weewx</span> to the SheevaPlug</a>.
@@ -377,7 +377,7 @@ For instructions on porting to the SheevaPlug, see <a href="sheeva.htm">Notes on
 		<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 
 		2.3 or greater) Driver for a serial connection.</li>
 	</ul>
-	<h3>Installation on Debian distributions (including Ubuntu and Mint) using
+	<h3>Installation on Debian/Ubuntu/Mint distributions using
 	<span class="code">apt-get</span></h3>
 	<p>The instructions that follow are for using the Debian tool
 	<span class="code">apt-get</span>, but the same package names would be used 
@@ -406,7 +406,7 @@ sudo apt-get install python-usb
 	<p class="tty">sudo apt-get install python-dev<br />
 	sudo apt-get install python-pip<br />
 	sudo pip install pyephem</p>
-	<h3>Installation on Fedora using <span class="code">yum</span></h3>
+	<h3>Installation on Redhat/CentOS/Fedora distributions using <span class="code">yum</span></h3>
 	<p>Installing on Fedora v16 can be done entirely by using <span class="code">
 	yum</span>. </p>
 	<p class="tty">sudo yum install python-configobj<br />
@@ -737,8 +737,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p>Station specific information is set in the configuration file <em>
 	<span class="code">$WEEWX_ROOT/weewx.conf</span></em>. (There is another configuration 
 	file <span class="code">skin.conf</span> for presentation-specific options, 
-	which is described in a separate document <em><a href="customizing.htm">Customizing
-	<span class="code">weewx</span></a> </em>under section <em>
+	which is described in the <a href="customizing.htm">Customizing Guide</a> under section <em>
 	<a href="customizing.htm#The_Standard_skin_configuration_file">Reference: The 
 	standard skin configuration file</a></em>.) </p>
 	<p>Most of the important options are up near the top of the file. They are all 
@@ -976,8 +975,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<span class="code">[[FTP]]</span> (which actually optionally uploads the results 
 	to a remote web server). Details for how to customize reports are in the section
 	<em><a href="customizing.htm#Opportunities_for_customizing_reports">Opportunities 
-	for customizing reports</a></em>, in the document <em>
-	<a href="customizing.htm">Customizing <span class="code">weewx</span></a></em>.
+	for customizing reports</a></em>, in the 
+	<a href="customizing.htm">Customizing Guide</a>.
 	</p>
 	<p class="config_option">SKIN_ROOT </p>
 	<p>The directory relative to <span class="code"><em>$WEEWX_ROOT</em></span> 
@@ -1061,8 +1060,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	stick with it. This means that users coming from wview (which uses US Customary) 
 	should not change the default setting. Having said this, there is a way of reconfiguring 
 	the database to use another unit system. See the section
-	<a href="customizing.htm#Changing_the_unit_system">Changing the Unit System 
-	in the Customizing Guide</a>.</p>
+	<a href="customizing.htm#Changing_the_unit_system">Changing the Unit System</a> 
+	in the Customizing Guide.</p>
 	<p>Note that whatever you choose here, it does not affect your options for the 
 	unit system to be used for <i>reporting</i>. Because of this, unless you 
 	have a special purpose application, there is really no good reason to change 
@@ -1241,8 +1240,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<span class="code">weewx</span>. It is for advanced customization. Details on 
 	how to do this can be found in the section <em>
 	<a href="customizing.htm#Customizing_the_weewx_service_engine">Customizing the 
-	weewx service engine</a></em> of the document <a href="customizing.htm"><em>
-	Customizing </em><span class="code"><em>weewx</em></span></a>. </p>
+	weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
 	<h4 class="config_section">[[WxEngine]]</h4>
 	<p>This section is for options used by the service engine. </p>
 	<p id="service_list" class="config_option">service_list </p>
@@ -1298,19 +1296,19 @@ kill -HUP <em>pid</em> # Send it a HUP signal<br/>
 	<p>For unattended operations it is best to have <span class="code">weewx</span> 
 	run as a daemon, started automatically when the server is rebooted. Start by 
 	selecting the appropriate run script. They can be found under
-	<span class="code"><em>$WEEWX_ROOT</em>/start_script</span>. </p>
-	<table class="center" style="width: 70%">
+	<span class="code"><em>$WEEWX_ROOT</em>/util/init.d</span>. </p>
+	<table class="center" style="width: 90%">
 		<tr>
 			<td style="width: 25%">SuSE:</td>
-			<td class="code"><em>$WEEWX_ROOT</em>/start_script/SuSE/weewx</td>
+			<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.suse</td>
 		</tr>
 		<tr>
-			<td style="width: 25%">Debian/Ubuntu:</td>
-			<td class="code"><em>$WEEWX_ROOT</em>/start_script/Debian/weewx</td>
+			<td >Debian/Ubuntu/Mint:</td>
+			<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.debian</td>
 		</tr>
 		<tr>
-			<td style="width: 25%">Redhat</td>
-			<td class="code"><em>$WEEWX_ROOT</em>/start_script/Redhat/weewx</td>
+			<td >Redhat/CentOS/Mint</td>
+			<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat</td>
 		</tr>
 	</table>
 	<p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 
@@ -1318,48 +1316,48 @@ kill -HUP <em>pid</em> # Send it a HUP signal<br/>
 	weewx</span> installation (it should have been set to the correct value automatically 
 	by the install process, but it&#39;s worth checking). </p>
 	<p>Copy it to the proper location for your system: </p>
-	<table class="center" style="width: 70%">
+	<table class="center" style="width: 90%">
 		<tr>
 			<td style="width: 25%">SuSE:</td>
-			<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/SuSE/weewx /etc/init.d</td>
+			<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.suse /etc/init.d/weewx</td>
 		</tr>
 		<tr>
-			<td>Debian/Ubuntu:</td>
-			<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/Debian/weewx /etc/init.d</td>
+			<td>Debian/Ubuntu/Mint:</td>
+			<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.debian /etc/init.d/weewx</td>
 		</tr>
 		<tr>
-			<td>Redhat:</td>
-			<td class="code">cp <em>$WEEWX_ROOT</em>/start_script/Redhat/weewx /etc/init.d</td>
+			<td>Redhat/CentOS/Fedora:</td>
+			<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat /etc/init.d/weewx</td>
 		</tr>
 	</table>
 	<p>Make sure the script is executable: </p>
-	<table class="center" style="width: 70%">
+	<table class="center" style="width: 90%">
 		<tr>
 			<td style="width: 25%">SuSE:</td>
-			<td class="code">chmod +x /etc/init.d/weewx</td>
+			<td class='tty'>chmod +x /etc/init.d/weewx</td>
 		</tr>
 		<tr>
-			<td style="width: 25%">Debian/Ubuntu:</td>
-			<td class="code">chmod +x /etc/init.d/weewx</td>
+			<td >Debian/Ubuntu/Mint:</td>
+			<td class='tty'>chmod +x /etc/init.d/weewx</td>
 		</tr>
 		<tr>
-			<td style="width: 25%">Redhat:</td>
-			<td class="code">chmod +x /etc/init.d/weewx</td>
+			<td >Redhat/CentOS/Fedora:</td>
+			<td class='tty'>chmod +x /etc/init.d/weewx</td>
 		</tr>
 	</table>
 	<p>Create symbolic links in the run level directories: </p>
-	<table class="center" style="width: 70%">
+	<table class="center" style="width: 90%">
 		<tr>
 			<td style="width: 25%">SuSE:</td>
-			<td class="code">/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
+			<td class='tty'>/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
 		</tr>
 		<tr>
-			<td style="width: 25%">Debian/Ubuntu:</td>
-			<td class="code">update-rc.d weewx defaults 98</td>
+			<td >Debian/Ubuntu/Mint:</td>
+			<td class='tty'>update-rc.d weewx defaults 98</td>
 		</tr>
 		<tr>
-			<td style="width: 25%">Redhat</td>
-			<td class="code">chkconfig weewx on</td>
+			<td >Redhat/CentOS/Fedora</td>
+			<td class='tty'>chkconfig weewx on</td>
 		</tr>
 	</table>
 	<p><span class="code">Weewx</span> will now start automatically whenever your 
@@ -1372,7 +1370,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal<br/>
         </p>
 	<p>By default, the scripts are designed to have <span class="code">weewx</span> 
 	run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels 
-	with Debian (Ubuntu) systems is
+	with Debian (Ubuntu, Mint) systems is
 	<a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. It uses a curses 
 	interface to allow you to change easily which run level any of your daemons 
 	runs at. There is a similar tool on SuSE. From the start menu run the YAST Control 

@@ -6,47 +6,60 @@
   <head>
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <title>The Weewx weather system</title>
+    <title>weewx documentation</title>
     <!-- CSS -->
     <link href="weewx_docs.css" rel="stylesheet" />
     <!-- JavaScript -->
     <style type="text/css">
+.copyright {
+  padding-top: 30px;
+  font-size: 80%;
+  font-style: italic;
+}
     </style>
   </head>
   <body>
-    <h1 class="title">Weewx documentation</h1>
+    <h1 class="title">weewx: documentation</h1>
     <p>
       Quick Start Guides
       <ul>
+        <li><a href='linux.htm'>Linux using source</a>, including Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</li>
         <li><a href='debian.htm'>Debian using DEB package</a>, including Debian, Ubuntu, Mint</li>
         <li><a href='redhat.htm'>Redhat using RPM package</a>, including Redhat, CentOS, Fedora</li>
-        <li><a href='linux.htm'>Linux using source</a>, including Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</li>
       </ul>
     </p>
-    <p>
-      <a href="usersguide.htm">User&#39;s Guide</a>
-      General information about how to install, configure, and run
-      <span class="code">weewx</span>. This is the definitive guide
-      to using <span class="code">weewx</span>.
+    <dl>
+      <dt><a href="usersguide.htm">User&#39;s Guide</a></dt>
+      <dd>
+        Contains complete details about how to install, configure, and run
+        <span class="code">weewx</span>. Includes instructions for upgrading
+        from wview.  This is the definitive guide to using
+        <span class="code">weewx</span>.
+      </dd>
+      <dt><a href="customizing.htm">Customization Guide</a></dt>
+      <dd>
+        Describes how to modify reports through configuration options as well
+        and templates. Explains how to create and customize skins. Also
+        includes more advanced topics such as creating custom generators and
+        services, customizing the internal engine, and creating drivers for
+        new weather station types.
+      </dd>
+      <dt><a href="upgrading.htm">Upgrade Guide</a></dt>
+      <dd>
+        Instructions for upgrading from specific versions.
+      </dd>
+      <dt><a href="changes.txt">Change Log</a></dt>
+      <dd>
+        List of what has changed in each version.
+      </dd>
+      <dt><a href="sheeva.htm">SheevaPlug</a></dt>
+      <dd>
+        Notes about installing on a SheevaPlug.
+      </dd>
+    </dl>
+    <p class='copyright'>
+      <a href='copyright.htm'>Copyright Tom Keffer and others</a>
     </p>
-    <p>
-      <a href="customizing.htm">Customization Guide</a>
-      How to modify reports through configuration options as well as modifying
-      the templates. Also includes documentation for more advanced topics such
-      as creating custom generators and services. How to customize the internal
-      engine.
-    </p>
-    <p>
-      <a href="upgrading.htm">Upgrade Guide</a>
-      Instructions for upgrading from specific versions.
-    </p>
-    <p>
-      <a href="changes.txt">Change Log</a>
-      List of what has changed in each version.
-    </p>
-    <p>
-      <a href="sheeva.htm">SheevaPlug</a>
-      Notes about installing on a SheevaPlug.
-    </p>
+
   </body>
 </html>
