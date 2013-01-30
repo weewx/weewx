@@ -4,8 +4,8 @@
 <!-- $Revision$ -->
 <!-- $Author$ -->
 <!-- $Date$ -->
-<!-- For some reason, the table of contents generator used in this document demands that all
-		heading elements be on one line. -->
+<!-- For some reason, the table of contents generator used in this -->
+<!-- document demands that all heading elements be on one line. -->
 
 <head>
 <meta content="en-us" http-equiv="Content-Language" />
@@ -167,8 +167,14 @@ For instructions on porting to the SheevaPlug, see <a href="sheeva.htm">Notes on
 		V3.7.3 or greater). For extended almanac information. If not installed, 
 		fallback information will be used. </li>
 	</ul>
-	<h3>Package requirements for your station hardware</h3>
-	<p><span class="code">Weewx</span> should work with the stations listed in the table below.  See the table for any additional packages required specific weather station hardware:</p>
+	<p>Some stations require a serial and/or USB package:</p>
+	<ul>
+	  <li><a href="https://sourceforge.net/projects/pyusb/">pyusb</a> (Version 0.4 or greater). Driver for USB.</li>
+	  <li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 2.3 or greater) Driver for a serial connection.</li>
+	</ul>
+        <p>
+          The following table lists stations that should work with <span class="code">Weewx</span>.  The table indicates which python module(s) are required by each station.
+        </p>
 	<table style="width: 90%" class="center">
 	  <tr>
 	    <td class="text_highlight">Vendor</td>
@@ -370,13 +376,7 @@ For instructions on porting to the SheevaPlug, see <a href="sheeva.htm">Notes on
 	    <td>&nbsp;</td>
 	  </tr>
 	</table>
-	<p>The table above refers to:</p>
-	<ul>
-		<li><a href="https://sourceforge.net/projects/pyusb/">pyusb</a> (Version 
-		0.4 or greater). Driver for the USB bus.</li>
-		<li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 
-		2.3 or greater) Driver for a serial connection.</li>
-	</ul>
+
 	<h3>Installation on Debian/Ubuntu/Mint distributions using
 	<span class="code">apt-get</span></h3>
 	<p>The instructions that follow are for using the Debian tool
@@ -385,8 +385,7 @@ For instructions on porting to the SheevaPlug, see <a href="sheeva.htm">Notes on
 	</p>
 	<pre class="tty">sudo apt-get install python-configobj
 sudo apt-get install python-cheetah 
-sudo apt-get install python-imaging    # Already present in most systems, but it doesn't
-                                       # hurt to install again.
+sudo apt-get install python-imaging
 
 # If you are using MySQL, install the following:
 sudo apt-get install python-mysqldb
@@ -708,19 +707,21 @@ Mutating actions will request confirmation before proceeding.</pre>
 	<span class="code"><a href="#[Databases]">[Databases]</a></span> section 
 	should 
 	look something like this:</p>
-	<pre class="tty">	[[archive_mysql]]
-		host = localhost
-		user = weewx
-		password = weewx
-		database = weewx
-		driver = weedb.mysql
-		
-	[[stats_mysql]]
-		host = localhost
-		user = weewx
-		password = weewx
-		database = stats
-		driver = weedb.mysql</pre>
+	<pre class="tty">
+[Databases]
+    [[archive_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        database = weewx
+        driver = weedb.mysql
+	
+    [[stats_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        database = stats
+        driver = weedb.mysql</pre>
 	<p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
 	Adjust as necessary.</p>
 	<p>If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
@@ -801,26 +802,26 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<p>Set to the type of hardware you are using. It must match the name of one 
 	of the sections below. Valid options include:</p>
 	<table style="width: 60%" class="center">
-		<tr>
-			<td class="text_highlight"><span class="code">station_type</span></td>
-			<td>Hardware</td>
-		</tr>
-		<tr>
-			<td class="text_highlight" style="height: 33px">Vantage</td>
-			<td style="height: 33px">Davis Vantage weather stations</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">WMR-USB</td>
-			<td>Oregon Scientific WMR-USB series stations</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">WMR-918</td>
-			<td>Oregon Scientific WMR-918/968 series station</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">FineOffsetUSB</td>
-			<td>Fine Offset USB stations</td>
-		</tr>
+	  <tr>
+	    <td class="text_highlight"><span class="code">station_type</span></td>
+	    <td>Hardware</td>
+	  </tr>
+	  <tr>
+	    <td class="text_highlight" style="height: 33px">Vantage</td>
+	    <td style="height: 33px">Davis Vantage weather stations</td>
+	  </tr>
+	  <tr>
+	    <td class="text_highlight">WMR-USB</td>
+	    <td>Oregon Scientific WMR-USB series stations</td>
+	  </tr>
+	  <tr>
+	    <td class="text_highlight">WMR-918</td>
+	    <td>Oregon Scientific WMR-918/968 series station</td>
+	  </tr>
+	  <tr>
+	    <td class="text_highlight">FineOffsetUSB</td>
+	    <td>Fine Offset USB stations</td>
+	  </tr>
 	</table>
 	
 	<h3 class="config_section">[Vantage]</h3>
