@@ -110,6 +110,12 @@ changelog:
 	mkdir -p $(DSTDIR)
 	pkg/mkchangelog.pl --ifile docs/changes.txt > $(DSTDIR)/README.txt
 
+# update the version in all relevant places
+version:
+	for f in docs/customizing.htm docs/usersguide.htm; do \
+          sed -i 's/Version: [0-9.]+/Version: $(VERSION)/' $$f; \
+        done
+
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
