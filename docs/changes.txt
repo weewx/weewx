@@ -24,6 +24,8 @@ observation types. This allows it to be easily combined with the archive
 database, should you choose to do so. The table is automatically created
 for older stats databases.
 
+Added rain rate calculation to FineOffsetUSB driver.
+
 2.1.1 01/02/13
 
 Fixed bug that shows itself when one of the variables is 'None' when
