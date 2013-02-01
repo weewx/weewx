@@ -111,6 +111,8 @@ td {
 .text_highlight {
     font-weight: bold;
     background-color: #f0f0f0;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 .center {
     text-align: center;

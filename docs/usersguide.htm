@@ -1555,82 +1555,104 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       generation of reports will be affected — the main thread will continue downloading 
       data off the instrument and putting them in the database. You can fix the problem 
       at your leisure, without worrying about losing any data. </p>
+
     <h2>Terminology</h2>
     <p>This is a glossary of terminology used throughout the code. </p>
-    <table style="width: 100%">
+    <table style="width: 95%" class='center'>
       <tr>
 	<td class="text_highlight"><strong>Name</strong></td>
 	<td><strong>Description</strong></td>
       </tr>
       <tr>
-	<td class="text_highlight">packet</td>
-	<td>Something obtained off the weather station. Frequently uses a complex 
-	  internal encoding, so it requires some processing to be useful.</td>
-      </tr>
-      <tr>
-	<td class="text_highlight">record</td>
-	<td>Something obtained off the SQL database. </td>
+	<td class="text_highlight">archive record</td>
+	<td>A record obtained from the SQL database</td>
       </tr>
       <tr>
 	<td class="text_highlight">archive packet</td>
-	<td>A packet obtained off the store on the weather station. For example, 
-	  with a Davis VantagePro, it&#39;s obtained using the
+	<td>A packet obtained from the store on the weather station. For
+          example, with a Davis VantagePro, it&#39;s obtained using the
 	  <span class="code">DMPAFT</span> command. </td>
+      </tr>
+      <tr>
+	<td class="text_highlight">datetime</td>
+	<td>An instance of the Python object
+          <span class="code">datetime.datetime</span>. Variables of type
+          datetime usually have a suffix <span class="code">_dt</span>.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">db_dict</td>
+	<td>A dictionary with all the data necessary to bind to a database. 
+	  An example for sqlite would be <span class="code">
+            {'driver':'db.sqlite',
+            'root':'/home/weewx',
+            'database':'archive/weewx.sdb'}</span>, 
+	  an example for MySQL would be <span class="code">{
+            'driver':'db.mysql',
+            'host':'localhost',
+            'user':'weewx',
+            'password':'mypassword',
+            'database':'weewx'}</span>.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">epoch time</td>
+	<td>Sometimes referred to as &quot;unix time,&quot; or &quot;unix
+          epoch time.&quot; The number of seconds since the epoch, which is
+          1 Jan 1970 00:00:00 UTC. Hence, it always represents UTC (well...
+          after adding a few leap seconds. But, close enough). This is the
+          time used in the databases and appears as type <span class="code">
+            dateTime</span> in the SQL schema, perhaps an unfortunate name
+          because of the similarity to the completely unrelated Python type
+          <span class="code">datetime</span>. Very easy to manipulate, but
+          it is a big opaque number. </td>
       </tr>
       <tr>
 	<td class="text_highlight">loop packet</td>
 	<td>A packet with the current observations. For example, with a Davis 
-	  VantagePro, it&#39;s obtained using the <span class="code">LOOP</span> 
+	  VantagePro, it is obtained using the <span class="code">LOOP</span> 
 	  command. </td>
       </tr>
       <tr>
-	<td class="text_highlight">archive record</td>
-	<td>A record obtained off the SQL database</td>
+	<td class="text_highlight">observation&nbsp;type</td>
+	<td>A type that can be used in the presentations. This is generally 
+	  all of the SQL types, plus calculated data (such as
+	  <span class="code">rms</span> or <span class="code">vecavg</span>).</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">packet</td>
+	<td>Something obtained from the weather station. Frequently uses a
+          complex internal encoding, so it requires some processing to be
+          useful.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">record</td>
+	<td>Something obtained from the SQL database. </td>
+      </tr>
+      <tr>
+	<td class="text_highlight">SQL type</td>
+	<td>A type that appears in the SQL database. This usually looks
+          something like <span class="code">outTemp</span>,
+          <span class="code">barometer</span>,
+          <span class="code">extraTemp1</span>, 
+	  and so on.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">time stamp</td>
+	<td>A variable in unix epoch time. Always in UTC. Variables carrying 
+	  a time stamp usually have a suffix
+          <span class="code">_ts</span>.</td>
       </tr>
       <tr>
 	<td class="text_highlight">tuple-time</td>
 	<td>An instance of the Python object <span class="code">
 	    <a href="http://docs.python.org/2/library/time.html#time.struct_time">
-	      time.struct_time</a></span>. This is a 9-wise tuple that represent a 
-	  time. It could be in either local time or UTC, though usually the former. 
-	  See module <span class="code">
-	    <a href="http://docs.python.org/2/library/time.html">time</a></span> 
-	  for more information. They are useful because they are a little closer 
-	  in format to what the Davis VantagePro uses, although they still require 
-	  a bit of processing. Variables carrying tuple time usually have a suffix <span class="code">_tt</span>.</td>
-      </tr>
-      <tr>
-	<td class="text_highlight">epoch time</td>
-	<td>Sometimes referred to as &quot;unix time,&quot; or &quot;unix epoch 
-	  time.&quot; The number of seconds since the epoch, which is 1 Jan 1970 
-	  00:00:00 UTC. Hence, it always represents UTC (well.... after adding 
-	  a few leap seconds. But, close enough). This is the time used in the 
-	  databases and appears as type <span class="code">dateTime</span>
-	  in the SQL schema, perhaps an unfortunate name because of the similarity 
-	  to the completely unrelated Python type <span class="code">datetime</span>. 
-	  Very easy to manipulate, but it&#39;s a big opaque number. </td>
-      </tr>
-      <tr>
-	<td class="text_highlight">time stamp</td>
-	<td>A variable in unix epoch time. Always in UTC. Variables carrying 
-	  a time stamp usually have a suffix <span class="code">_ts</span>.</td>
-      </tr>
-      <tr>
-	<td class="text_highlight">datetime</td>
-	<td>An instance of the Python object <span class="code">datetime.datetime</span>. 
-	  Variables of type datetime usually have a suffix <span class="code">_dt</span>.</td>
-      </tr>
-      <tr>
-	<td class="text_highlight">SQL type</td>
-	<td>A type that appears in the SQL database. This usually looks something 
-	  like <span class="code">outTemp</span>, <span class="code">barometer</span>, <span class="code">extraTemp1</span>, 
-	  and so on.</td>
-      </tr>
-      <tr>
-	<td class="text_highlight">observation type</td>
-	<td>A type that can be used in the presentations. This is generally 
-	  all of the SQL types, plus calculated data (such as
-	  <span class="code">rms</span> or <span class="code">vecavg</span>).</td>
+	      time.struct_time</a></span>. This is a 9-wise tuple that
+          represent a time. It could be in either local time or UTC, though
+          usually the former. See module <span class="code">
+	    <a href="http://docs.python.org/2/library/time.html">time</a>
+          </span> for more information. They are useful because they are a
+          little closer in format to what the Davis VantagePro uses, although
+          they still require a bit of processing. Variables carrying tuple
+          time usually have a suffix <span class="code">_tt</span>.</td>
       </tr>
       <tr>
 	<td class="text_highlight">value tuple</td>
@@ -1638,16 +1660,8 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
 	  type the value is in, the third the unit group. An example would be
 	  <span class="code">(21.2, &#39;degree_C&#39;, &#39;group_temperature&#39;)</span>.</td>
       </tr>
-      <tr>
-	<td class="text_highlight">db_dict</td>
-	<td>A dictionary with all the data necessary to bind to a database. 
-	  An example for sqlite would be <span class="code">{&#39;driver&#39; 
-	    : &#39;db.sqlite&#39;, &#39;root&#39;:&#39;/home/weewx&#39;, &#39;database&#39;:&#39;archive/weewx.sdb&#39;}</span>, 
-	  an example for MySQL would be <span class="code">{'driver' : 'db.mysql', 
-	    'host': 'localhost', 'user' : 'weewx', 'password' : 'mypassword', 'database' 
-	    : 'weewx'}</span>.</td>
-      </tr>
     </table>
+
     <h2>Units</h2>
     <p>In general, there are three different areas where the unit system makes a 
       difference.: </p>
