@@ -37,35 +37,26 @@ dd {
     color: black;
 }
 h1 {
-    font: bold xx-large Verdana, arial, sans-serif;
+    font: bold 160% Verdana, arial, sans-serif;
     color: #FFFFFF;
     border: 1px solid black;
     background-color: #008080;
     padding-left: .5em;
     padding-right: .5em;
-    margin-top: 60pt;
-}
-h2 {
-    font: bold x-large Verdana, arial, sans-serif;
-    color: teal;
-    border: 1px solid #c6d6d6;
-    background-color: #e8e8e8;
-    padding-left: .5em;
-    padding-right: .5em;
     margin-top: 30pt;
 }
-h3 {
-    font: bold medium Verdana, arial, sans-serif;
+h2 {
+    font: bold 140% Verdana, arial, sans-serif;
     color: teal;
-    border: 1px solid #c6d6d6;
-    background-color: #e8e8e8;
-    padding-left: .5em;
-    padding-right: .5em;
+    margin-top: 20pt;
+}
+h3 {
+    font: bold 120% Verdana, arial, sans-serif;
+    color: teal;
 }
 h4 {
-    font: bold medium Verdana, arial, sans-serif;
-    color: black;
-    text-decoration: underline;
+    font: bold 120% Verdana, arial, sans-serif;
+    color: teal;
 }
 .code {
     font-family: "Courier New", Courier, monospace;
@@ -87,11 +78,8 @@ td {
 }
 .tty, pre {
     font-family: "Courier New", Courier, monospace;
-    margin-left: 20px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    margin-right: 20px;
-    background-color: #FFFFCC;
+    margin: 0px 20px 0px 20px;
+    background-color: #FFFFee;
     border: 1px solid #ddddaa;
     padding: 3px;
     font-size: 90%;
@@ -100,19 +88,18 @@ td {
     text-align: center;
     margin-top: 0px;
 }
+.config_section {
+}
 .config_option {
     font-family: "Courier New", Courier, monospace;
     font-weight: bold;
+    color: black;
     margin-bottom: -12px;
-}
-.config_section {
-    font-family: "Courier New", Courier, monospace;
-    font-weight: bold;
 }
 .config_important {
     font-family: "Courier New", Courier, monospace;
     font-weight: bold;
-    color: #0000FF;
+    color: #bb9900;
     margin-bottom: -12px;
 }
 .bold_n_blue {
@@ -127,21 +114,21 @@ td {
 }
 .text_highlight {
     font-weight: bold;
-    background-color: #e8e8e8;
+    background-color: #f0f0f0;
 }
 .fixed_highlight {
-    font-weight: bold;
-    background-color: #e8e8e8;
     font-family: "Courier New", Courier, monospace;
+    font-weight: bold;
+    background-color: #f0f0f0;
 }
 .center {
     text-align: center;
 }
-.Example_output {
-    padding: 10px;
-    border: thin #000000 dotted;
+.example_output {
     font-family: "Times New Roman", Times, serif;
-    margin-left: 40px;
+    padding: 5px;
+    border: thin #000000 dotted;
+    margin: 0px 20px 0px 20px;
 }
 div#toc ul {
     list-style: none;
@@ -158,4 +145,15 @@ table.center {
     font-size: 70%;
     font-family: Verdana, Arial, sans-serif;
     text-align: center;	
+}
+.warning {
+    background-color: #ffeeee;
+    border: 1px solid #ffdddd;
+    margin: 10px;
+    padding: 5px;
+}
+.copyright {
+  padding-top: 30px;
+  font-size: 80%;
+  font-style: italic;
 }

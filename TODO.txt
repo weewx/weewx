@@ -3,3 +3,14 @@ TODO before the next release:
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
 In particular, see Paul G's note about softWx.
+
+
+consider changing these:
+
+config-vp.py -> wee-config-vantage.py
+
+config-database.py -> wee-config-database.py
+
+runreports.py -> wee-reports.py
+
+config-fousb.py -> wee-config-fousb.py

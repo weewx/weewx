@@ -3,67 +3,6 @@
 # Copyright 2013 Matthew Wall
 #
 # this makefile controls the build and packaging of weewx
-#
-# supported installation methods:
-#
-#   setup.py install
-#
-#   setup.py install prefix=/opt/weewx-x.y.z
-#
-#   sudo apt-get install weewx
-#
-#   sudo yum install weewx
-#
-# design notes:
-#
-# - setup.py keeps track of weewx bits
-#
-# - setup.py knows about locations for various layouts
-#
-# - makefile keeps track of per-package bits and how to put them together
-#
-# - platform-specific packages (deb, rpm) keep track of additional dependencies
-#   such as apache and rc snippets
-#
-# configuration prompts:
-# - location (city, state - get default from environment?)
-# - lat/lon
-# - altitude
-# - station_type
-#
-# there are a zillion ways to build a debian package.  first tried dpkg (uses
-# DEBIAN dir and is fairly low-level) but that did not create the changes and
-# is not the tool for maintainers.  then dried dpkg-buildpackage which is a
-# higher level tool (uses debian dir) but misses the config and templates.l
-#
-# gpg --gen-key
-# gpg --list-keys
-#
-# ~/.rpmmacros
-# %_signature gpg
-# %_gpg_name  Matthew Wall
-#
-# what to test on debian:
-#  install, upgrade, remove, purge
-#
-# deb install:
-# apt-get install python-serial
-# apt-get install python-usb
-# apt-get install weewx
-#
-# redhat install:
-# yum install weewx
-# yum install weewx --nogpgcheck
-#
-# manual install:
-# yum install pyserial
-# yum install pyusb
-# setup.py
-#
-# TODO:
-# config-vp -> config-vantage
-# weewxd.py -> wee.py
-# config-database.py -> wee-config-database.py
 
 # extract strings from setup.py to be inserted into package control files
 VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
@@ -78,6 +17,7 @@ help:
 	@echo "options include:"
 	@echo "          info  display values of variables we care about"
 	@echo "       install  run the generic python install"
+	@echo "       version  get version from __init__ and insert elsewhere"
 	@echo ""
 	@echo "     changelog  create changelog suitable for distribution"
 	@echo " deb-changelog  prepend stub changelog entry for deb"
@@ -112,10 +52,11 @@ changelog:
 
 # update the version in all relevant places
 version:
-	for f in docs/customizing.htm docs/usersguide.htm; do \
+	for f in docs/customizing.htm docs/usersguide.htm docs/upgrading.htm; do \
           sed -e 's/Version: [0-9].*/Version: $(VERSION)/' $$f > $$f.tmp; \
           mv $$f.tmp $$f; \
         done
+	sed -e 's/version =.*/version = $(VERSION)/' weewx.conf > weewx.conf.tmp; mv weewx.conf.tmp weewx.conf
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)

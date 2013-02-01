@@ -7,11 +7,10 @@
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <title>weewx quick-start for linux</title>
-    <!-- CSS -->
     <link href="weewx_docs.css" rel="stylesheet" />
-    <!-- JavaScript -->
     <style type="text/css">
 .cmdtbl {
+  border: none;
   width: 100%;
 }
 .cmdcell {
@@ -28,11 +27,6 @@
 }
 img {
   width: 60px;
-}
-h3 {
-  background-color: #ffffff;
-  border: none;
-  padding-left: 0px;
 }
 .locations {
   margin-left: 20px;
@@ -78,9 +72,6 @@ h3 {
     <p style='clear: both'></p>
 
     <h3>Install Prerequisites</h3>
-    <p>
-      Install the required python packages:
-    </p>
     <table class='cmdtbl'>
       <tr valign='top'>
         <td class='cmdhdr'>Debian, Ubuntu, Mint</td>
@@ -88,57 +79,83 @@ h3 {
       </tr>
       <tr valign='top'>
         <td class='cmdcell'>
-          <p class='tty' style='margin-left: 0'>
+          <p class='tty' style='margin:0'>
+            # required packages:<br/>
             sudo apt-get install python-configobj<br/>
             sudo apt-get install python-cheetah<br/>
             sudo apt-get install python-imaging<br/>
-          </p>
-        </td>
-        <td class='cmdcell'>
-          <p class='tty' style='margin-left: 0'>
-            sudo yum install python-configobj<br/>
-            sudo yum install python-cheetah<br/>
-            sudo yum install python-imaging<br/>
-          </p>
-        </td>
-      </tr>
-    </table>
-
-    <p>
-      If the station is connected by serial or USB, install one of these packages:
-    </p>
-    <table class='cmdtbl'>
-      <tr valign='top'>
-        <td class='cmdcell'>
-          <p class='tty' style='margin-left: 0'>
+            <br/>
+            # if using MySQL:<br/>
+            sudo apt-get install python-mysqldb<br/>
+            sudo apt-get install python-mysql-client<br/>
+            <br/>
+            # serial or USB, depending on hardware:<br/>
             sudo apt-get install python-serial<br/>
             sudo apt-get install python-usb<br/>
-          </p>
-        </td>
-        <td class='cmdcell'>
-          <p class='tty' style='margin-left: 0'>
-            sudo yum install pyserial<br/>
-            sudo yum install pyusb<br/>
-          </p>
-        </td>
-      </tr>
-    </table>
-
-    <p>
-      For extended almanac information, install these packages:
-    </p>
-    <table class='cmdtbl'>
-      <tr valign='top'>
-        <td class='cmdcell'>
-          <p class="tty" style='margin-left: 0'>
+            <br/>
+            # for extended almanac information:<br/>
             sudo apt-get install python-dev<br/>
             sudo apt-get install python-pip<br/>
             sudo pip install pyephem<br/>
           </p>
         </td>
         <td class='cmdcell'>
-          <p class="tty" style='margin-left: 0'>
+          <p class='tty' style='margin:0'>
+            # required packages:<br/>
+            sudo yum install python-configobj<br/>
+            sudo yum install python-cheetah<br/>
+            sudo yum install python-imaging<br/>
+            <br/>
+            # if using MySQL:<br/>
+            sudo yum install python-mysqldb<br/>
+            sudo yum install python-mysql-client<br/>
+            <br/>
+            # serial or USB, depending on hardware:<br/>
+            sudo yum install pyserial<br/>
+            sudo yum install pyusb<br/>
+            <br/>
+            # for extended almanac information:<br/>
             sudo yum install pyephem<br/>
+          </p>
+        </td>
+      </tr>
+      <tr valign='top'>
+        <td class='cmdhdr'>SuSE</td>
+        <td class='cmdhdr'>Python Setup Tool (<a href="http://pypi.python.org/pypi/pip">pip</a>)</td>
+      </tr>
+      <tr valign='top'>
+        <td class='cmdcell'>
+          <p class='tty' style='margin:0'>
+            sudo yast -i gcc<br/>
+            sudo yast -i python-configobj<br/>
+            sudo yast -i python-imaging<br/>
+            sudo yast -i python-devel<br/>
+            sudo yast -i setuptools<br/>
+            <br/>
+            # install pip<br/>
+            sudo pip install Cheetah<br/>
+            <br/>
+            # serial or USB, depending on hardware:<br/>
+            sudo yast -i pyserial<br/>
+            sudo yast -i pyusb<br/>
+            <br/>
+            # for extended almanac information:<br/>
+            sudo pip install pyephem<br/>
+          </p>
+        </td>
+        <td class='cmdcell'>
+          <p class='tty' style='margin:0'>
+            # required packages:<br/>
+            sudo pip install configobj<br/>
+            sudo pip install Cheetah<br/>
+            sudo pip install pil<br/>
+            <br/>
+            # serial or USB, depending on hardware:<br/>
+            sudo pip install pyserial<br/>
+            sudo pip install pyusb<br/>
+            <br/>
+            # for extended almanac information:<br/>
+            sudo pip install pyephem<br/>
           </p>
         </td>
       </tr>
@@ -215,7 +232,7 @@ cd /home/weewx<br/>
       </tr>
       <tr valign='top'>
         <td class='cmdcell'>
-          <p class="tty" style='margin-left: 0'>
+          <p class="tty" style='margin:0'>
             sudo cp util/init.d/weewx.debian /etc/init.d/weewx<br/>
             sudo chmod +x /etc/init.d/weewx<br/>
             sudo update-rc.d weewx defaults 98<br/>
@@ -223,8 +240,21 @@ cd /home/weewx<br/>
           </p>
         </td>
         <td class='cmdcell'>
-          <p class="tty" style='margin-left: 0'>
+          <p class="tty" style='margin:0'>
             sudo cp util/init.d/weewx.redhat /etc/init.d/weewx<br/>
+            sudo chmod +x /etc/init.d/weewx<br/>
+            sudo chkconfig weewx on<br/>
+            sudo /etc/init.d/weewx start<br/>
+          </p>
+        </td>
+      </tr>
+      <tr valign='top'>
+        <td class='cmdhdr'>SuSE</td>
+      </tr>
+      <tr valign='top'>
+        <td class='cmdcell'>
+          <p class="tty" style='margin:0'>
+            sudo cp util/init.d/weewx.suse /etc/init.d/weewx<br/>
             sudo chmod +x /etc/init.d/weewx<br/>
             sudo chkconfig weewx on<br/>
             sudo /etc/init.d/weewx start<br/>
@@ -265,5 +295,6 @@ cd /home/weewx<br/>
       sudo rm -r /home/weewx
       sudo rm /etc/init.d/weewx
     </p>
+    <p>&nbsp;</p>
   </body>
 </html>

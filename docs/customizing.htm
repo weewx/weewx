@@ -4,16 +4,14 @@
   <!-- $Revision$ -->
   <!-- $Author$ -->
   <!-- $Date$ -->
-  <!-- For some reason, the table of contents generator used in this document demands that all
-       heading elements be on one line. -->
+  <!-- For some reason, the table of contents generator used in this -->
+  <!-- document demands that all heading elements be on one line. -->
 
   <head>
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <title>weewx: Customization Guide</title>
-    <!-- CSS -->
     <link href="weewx_docs.css" rel="stylesheet" />
-    <!-- JavaScript -->
     <script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
   </head>
 
@@ -24,22 +22,8 @@
     </h1>
     <h1>Table of contents</h1>
     <div id="technical_content">
-      <div id="toc">
-      </div>
-      <h1 id="Copyright">Copyright</h1>
-      <p>(c) 2009, 2010, 2011, 2012, 2013 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;
-      </p>
-      <p>This program is free software: you can redistribute it and/or modify it under 
-	the terms of the GNU General Public License as published by the Free Software 
-	Foundation, either version 3 of the License, or (at your option) any later version.
-      </p>
-      <p>This program is distributed in the hope that it will be useful, but WITHOUT 
-	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-	FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-      </p>
-      <p>You should have received a copy of the GNU General Public License along with 
-	this program. If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses</a>.
-      </p>
+      <div id="toc"></div>
+
       <h1 id="Introduction">Introduction</h1>
       <p>This document covers the customization of <span class="code">weewx</span>. 
 	It assumes that you have read and are reasonably familiar with the
@@ -56,7 +40,8 @@
       <p>Most of the guide will cover any weather hardware, but the exact data types 
 	are specific to the Davis Vantage series. Unless you are using an unusual type 
 	you are unlikely to run into trouble. </p>
-      <h2>Warning</h2>
+
+      <h2>Warning: Experimental</h2>
       <p><span class="code">weewx</span> is still an experimental system and, as such, 
 	its internal design is subject to change. Be prepared to do updates to any code 
 	or customization you do! </p>
@@ -320,6 +305,7 @@
 <span class="highlight">        inTemp  = Barn Temperature</span>
         outTemp = Outside Temperature
         ...</pre>
+
       <h3>Overriding options in <span class="code">skin.conf</span> from
 	<span class="code">weewx.conf</span></h3>
       <p>This approach is very similar, except that instead of changing the skin configuration 
@@ -339,49 +325,51 @@
       <p>But, there's a better approach: reuse the same skin, but override some of 
 	its options. Here&#39;s what your <span class="code">[StdReport]</span> section 
 	in <span class="code">weewx.conf</span> would look like: </p>
-      <pre class="tty">[StdReport]
-        #
-        # This section specifies what reports, using which skins, are to be generated.
-        #
+      <pre class="tty">
+[StdReport]
+    #
+    # This section specifies what reports, using which skins, are to be generated.
+    #
 
-        # Where the skins reside, relative to WEEWX_ROOT:
-        SKIN_ROOT = skins
+    # Where the skins reside, relative to WEEWX_ROOT:
+    SKIN_ROOT = skins
 
-        # Where the generated reports should go, relative to WEEWX_ROOT:
-        HTML_ROOT = public_html
+    # Where the generated reports should go, relative to WEEWX_ROOT:
+    HTML_ROOT = public_html
 
-        # This report will use US Customary Units
-        [[USReport]]
-        # It&#39;s based on the Standard skin
-        skin = Standard
+    # This report will use US Customary Units
+    [[USReport]]
+    # It&#39;s based on the Standard skin
+    skin = Standard
 
-        # This report will use metric units:
-        [[MetricReport]]
-        # It&#39;s also based on the Standard skin:
-        skin = Standard 
-        # However, override where the results will go and put them in a subdirectory:
-        HTML_ROOT = public_html/metric
-        
-        # And override the options that were not in metric units
-        [[[Units]]]
-        [[[[Groups]]]]
-        group_altitude    = meter
-        group_pressure    = mbar
-        group_rain        = mm
-        group_rainrate    = mm_per_hour
-        group_speed       = meter_per_second
-        group_speed2      = meter_per_second2
-        group_temperature = degree_C
+    # This report will use metric units:
+    [[MetricReport]]
+    # It&#39;s also based on the Standard skin:
+    skin = Standard 
+    # However, override where the results will go and put them in a subdirectory:
+    HTML_ROOT = public_html/metric
+    
+    # And override the options that were not in metric units
+    [[[Units]]]
+    [[[[Groups]]]]
+    group_altitude    = meter
+    group_pressure    = mbar
+    group_rain        = mm
+    group_rainrate    = mm_per_hour
+    group_speed       = meter_per_second
+    group_speed2      = meter_per_second2
+    group_temperature = degree_C
 
-        [[FTP]]
-        ...
-        ... (as before) </pre>
+    [[FTP]]
+    ...
+    ... (as before) </pre>
       <p>We have done two things different from the stock reports. First (1), we&#39;ve 
 	renamed the first report from <span class="code">StandardReport </span>to
 	<span class="code">USReport </span>for clarity; and (2) we&#39;ve introduced 
 	a new report <span class="code">MetricReport</span>, just like the first, except 
 	it puts its results in a different spot and uses different units. Both use the 
 	same skin, the <span class="code">Standard </span>skin. </p>
+
       <h2 id="Customizing_templates">Customizing templates</h2>
       <p>If you cannot achieve the results you need by changing a configuration option, 
 	you may have to modify the templates that come with <span class="code">weewx</span>, 
@@ -397,9 +385,10 @@
 	very small subset of its power. </p>
       <p>The key construct is a &#39;dot&#39; code, specifying what value you want. 
 	For example: </p>
-      <pre class="tty">$month.outTemp.max
-        $month.outTemp.maxtime
-        $current.outTemp</pre>
+      <pre class="tty">
+$month.outTemp.max
+$month.outTemp.maxtime
+$current.outTemp</pre>
       <p>would code the max outside temperature for the month, the time it occurred, 
 	and the current outside temperature, respectively. So, an HTML file that looks 
 	like </p>
@@ -416,7 +405,7 @@
       <p>would be all you need for a very simple HTML page that would display the 
 	text (assuming that the unit group for temperature is <span class="code">degree_F</span>):
       </p>
-      <p class="Example_output">Current temperature = 51.0°F <br />
+      <p class="example_output">Current temperature = 51.0°F <br />
 	Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15 </p>
       <p>The format that was used to format the temperature (<span class="code">51.0</span>) 
 	is specified in section <span class="code"><a href="#Units_StringFormats">[Units][[StringFormat]]</a></span>. 
@@ -424,10 +413,12 @@
 	<span class="code"><a href="#[[Labels]]">[Units][[Labels]]</a></span>, while 
 	the time format is from <span class="code"><a href="#TimeFormats">[Labels][[Time]]</a></span>.
       </p>
+
       <h3>The dot code</h3>
       <p>As we saw above, the dot codes can be very simple: </p>
-      <pre class="tty">## Output max outside temperature using an appropriate format and label:
-        $month.outTemp.max</pre>
+      <pre class="tty">
+## Output max outside temperature using an appropriate format and label:
+$month.outTemp.max</pre>
       <p>Most of the time, the dot code will &quot;do the right thing&quot; and is 
 	all you will need. However, <span class="code">weewx</span> offers extensive 
 	customization of the generate output for specialized applications such as XML 
@@ -457,13 +448,16 @@
 	an optional formatting tag that controls how the value will appear. See the 
 	section <em><a href="#Formatting_options">Formatting Options</a></em> below.
       </p>
-      <h4>Aggregation periods <span class="code">$day</span>, <span class="code">$week</span>,
-	<span class="code">$month</span>, <span class="code">$year</span>,
-	<span class="code">$rainyear</span></h4>
-      <p>The other time periods represent an <em>aggregation over time</em>. In addition 
-	to the time period over which the aggregation will occur, they also require 
-	an <em>aggregation type</em>. An example would be the week&#39;s total precipitation 
-	(where the aggregation type is <span class="code"><em>sum</em></span>): </p>
+
+      <h4>Aggregation periods <span class="code">$day</span>,
+        <span class="code">$week</span>, <span class="code">$month</span>,
+        <span class="code">$year</span>, <span class="code">$rainyear</span>
+      </h4>
+      <p>The other time periods represent an <em>aggregation over time</em>.
+        In addition to the time period over which the aggregation will occur,
+        they also require an <em>aggregation type</em>. An example would be
+        the week&#39;s total precipitation (where the aggregation type is
+        <span class="code"><em>sum</em></span>): </p>
       <pre>$week.rain.sum</pre>
       <p>The dot code for an aggregation over time looks like: </p>
       <pre><em>$period.statstype.aggregation[.optional_unit_conversion][.optional_formatting]</em></pre>
@@ -500,24 +494,24 @@
 	then the tag </p>
       <p class="tty">Today&#39;s average pressure=$day.barometer.avg </p>
       <p>would normally give a result such as </p>
-      <p class="Example_output">Today&#39;s average pressure=30.05 inHg </p>
+      <p class="example_output">Today&#39;s average pressure=30.05 inHg </p>
       <p>However, if you add &quot;mbar&quot; to the end, </p>
       <p class="tty">$day.barometer.avg.mbar </p>
       <p>then the results will be in millibars: </p>
-      <p class="Example_output">Today&#39;s average pressure=1017.5 mbar </p>
+      <p class="example_output">Today&#39;s average pressure=1017.5 mbar </p>
       <p>If an inappropriate conversion is asked for, <em>e.g.</em>, </p>
       <p class="tty">Today&#39;s average pressure=$day.barometer.degree_C </p>
       <p>then the offending tag will be put in the output: </p>
-      <p class="Example_output">Today&#39;s average pressure=$day.barometer.degree_C
+      <p class="example_output">Today&#39;s average pressure=$day.barometer.degree_C
       </p>
-      <p>&nbsp; </p>
+
       <h4 id="Formatting_options">Formatting options</h4>
       <p>The tag <span class="code"><em>optional_formatting</em></span> can be used 
 	with either current observations or aggregations. It can be one of: </p>
-      <table class="center" style="width: 80%" summary="Formatting options">
+      <table class="center" style="width: 90%" summary="Formatting Options">
 	<tr>
 	  <td class="text_highlight">
-	    <p><strong>Optional formatting tag</strong> </p>
+	    <p><strong>Optional Formatting Tag</strong> </p>
 	  </td>
 	  <td>
 	    <p><strong>Comment</strong> </p>
@@ -583,11 +577,11 @@
       <p>Summary: </p>
       <table class="center" style="width: 80%" summary="Summary of formatting options">
 	<tr>
-	  <td class="text_highlight"><strong>Formatting tag</strong></td>
-	  <td><strong>Format used</strong></td>
+	  <td class="text_highlight"><strong>Formatting Tag</strong></td>
+	  <td><strong>Format Used</strong></td>
 	  <td><strong>Label Used</strong></td>
-	  <td><strong>NONE string</strong></td>
-	  <td><strong>Returned value</strong></td>
+	  <td><strong>NONE String</strong></td>
+	  <td><strong>Returned Value</strong></td>
 	</tr>
 	<tr>
 	  <td class="text_highlight"><em>(no tag)</em></td>
@@ -808,7 +802,7 @@
       <p>As a summary, the template expression</p>
       <p class="tty">&lt;p&gt;The barometer trend over $trend.time_delta.hour is $trend.barometer.format("%+.2f").&lt;/p&gt;</p>
       <p>would result in</p>
-      <p class="Example_output">The barometer trend over 3 hrs is +.02 inHg.</p>
+      <p class="example_output">The barometer trend over 3 hrs is +.02 inHg.</p>
       <h3>Tag <span class="code">$unit</span></h3>
       <p>The unit type, label, and string formats are also available, allowing you 
 	to do highly customized labels: </p>
@@ -932,7 +926,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>or </p>
       <pre class="tty">$almanac.next_first_quarter_moon</pre>
       <p>&nbsp;Here's a table of the information that falls into this category:</p>
-      <table class="code" style="width: 60%">
+      <table class="code" style="width: 60%" align='center'>
 	<tr>
 	  <td>previous_equinox</td>
 	  <td>next_equinox</td>
@@ -996,7 +990,7 @@ Sunrise, sunset: 06:51 19:30</pre>
 	<span class="code"><em>heavenly_body</em></span> tag. All the planets and many 
 	stars are in the list.&nbsp;</p>
       <p>The <span class="code">attribute</span> tag can be one of </p>
-      <table class="code" style="width: 60%">
+      <table class="code" style="width: 60%" align='center'>
 	<tr>
 	  <td>az</td>
 	  <td>alt</td>
@@ -1789,7 +1783,7 @@ outTemp = Outside Temperature</pre>
       </ul>
       <p>The default install of <span class="code">weewx</span> includes the following 
 	services, shown in the order they are normally run:</p>
-      <table class="center" style="width: 60%">
+      <table class="center" style="width: 80%">
 	<tr>
 	  <td class="text_highlight"><strong>Service</strong></td>
 	  <td><strong>Function</strong></td>
@@ -2204,7 +2198,7 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	showing a plot of each day's consumption for the past month.</p>
       <p>If you wish to use the new type in the templates, it will be available using 
 	the same syntax as any other type. Here are some other tags that might be useful:</p>
-      <table style="width: 70%">
+      <table class='center' style="width: 70%">
 	<tr>
 	  <td class="text_highlight"><strong>Tag</strong></td>
 	  <td><strong>Meaning</strong></td>
@@ -3600,6 +3594,11 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	  <td>&nbsp;</td>
 	</tr>
       </table>
+
+      <p class='copyright'>
+        <a href='copyright.htm'>Copyright Tom Keffer and others</a>
+      </p>
+
     </div>
     <script type="text/javascript">
       samaxesJS.toc({

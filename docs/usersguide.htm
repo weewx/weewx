@@ -8,1458 +8,1391 @@
 <!-- document demands that all heading elements be on one line. -->
 
 <head>
-<meta content="en-us" http-equiv="Content-Language" />
-<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-<title>weewx: User's Guide</title>
-<!-- CSS -->
-<link href="weewx_docs.css" rel="stylesheet" />
-<!-- JavaScript -->
-<script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
+  <meta content="en-us" http-equiv="Content-Language" />
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+  <title>weewx: User's Guide</title>
+  <!-- CSS -->
+  <link href="weewx_docs.css" rel="stylesheet" />
+  <!-- JavaScript -->
+  <script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
 </head>
 
 <body>
 
-<h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System<br />
+  <h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System<br />
 Version: 2.2
-</h1>
+  </h1>
 
-<p>
-This is the complete guide to installing and configuring <span class="code">weewx</span>.
-</p>
-<p>
-Quick-start guides are available for
-<ul>
-  <li><a href='linux.htm'>Installing from source on Linux</a> &mdash; Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</li>
-  <li><a href='debian.htm'>Installing from DEB package</a> &mdash; Debian, Ubuntu, Mint</li>
-  <li><a href='redhat.htm'>Installing from RPM package</a> &mdash; Redhat, CentOS, Fedora</li>
-</ul>
-</p>
-<p>
-For information on customizing <span class="code">weewx</span>, see the <a href="customizing.htm">Customization Guide</a>.
-</p>
-<p>
-For instructions on upgrading from various versions, see the <a href="upgrading.htm">Upgrade Guide</a>.
-</p>
-<p>
-For instructions on porting to the SheevaPlug, see <a href="sheeva.htm">Notes on porting <span class="code">weewx</span> to the SheevaPlug</a>.
-</p>
+  <p>
+    This is the complete guide to installing and configuring <span class="code">weewx</span>.
+  </p>
+  <p>
+    Quick-start guides are available for
+    <ul>
+      <li><a href='linux.htm'>Installing on Linux</a> &mdash; Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</li>
+      <li><a href='debian.htm'>Installing from DEB package</a> &mdash; Debian, Ubuntu, Mint</li>
+      <li><a href='redhat.htm'>Installing from RPM package</a> &mdash; Redhat, CentOS, Fedora</li>
+    </ul>
+  </p>
+  <p>
+    For information on customizing <span class="code">weewx</span>, see the <a href="customizing.htm">Customization Guide</a>.
+  </p>
+  <p>
+    For instructions on upgrading from previous versions, see the <a href="upgrading.htm">Upgrade Guide</a>.
+  </p>
+  <p>
+    For installation on the SheevaPlug, see <a href="sheeva.htm">Notes on porting to the SheevaPlug</a>.
+  </p>
+  
+  <h1>Table of Contents</h1>
+  <div id="technical_content">
+    <div id="toc"></div>
 
-<h1>Table of Contents</h1>
-<div id="technical_content">
-	<div id="toc">
-	</div>
-	<h1 id="Copyright">Copyright</h1>
-	<p>(c) 2009, 2010, 2011, 2012, 2013 by Tom Keffer &lt;<a href="mailto:tkeffer@gmail.com">tkeffer@gmail.com</a>&gt;
-	</p>
-	<p>This program is free software: you can redistribute it and/or modify it under 
-	the terms of the GNU General Public License as published by the Free Software 
-	Foundation, either version 3 of the License, or (at your option) any later version.
-	</p>
-	<p>This program is distributed in the hope that it will be useful, but WITHOUT 
-	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-	FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-	</p>
-	<p>You should have received a copy of the GNU General Public License along with 
-	this program. If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses</a>.
-	</p>
-	<h1 id="About_weewx">About <span class="code">weewx</span></h1>
-	<p><span class="code">weewx</span> is a piece of software, written in
-	<a href="http://www.python.org">Python</a>, that interacts with your weather 
-	station to produce plots, reports, and HTML pages. It can optionally upload 
-	the reports to a remote Web server as well as publish to the
-	<a href="http://www.wunderground.com">WeatherUnderground</a> or
-	<a href="http://www.pwsweather.com/">PWSweather.com</a>. It uses modern software 
-	concepts, making it simple, robust, and easy to extend. For an example station 
-	see <a href="http://www.threefools.org/weewx">Hood River West</a>. </p>
-	<p>Key features: </p>
-	<ul>
-		<li>An easy to understand, simple, extensible micro-kernel architecture;</li>
-		<li>Uploads to popular weather sites, such as Weather Underground and CWOP;</li>
-		<li>Uploads to your website using FTP or rsync;</li>
-		<li>Support for multiple <em>skins</em>;</li>
-		<li>Simple, but extensible templating system;</li>
-		<li>Support for multiple unit systems;</li>
-		<li>Support for sqlite or MySQL databases;</li>
-		<li>Calibration corrections;</li>
-		<li>Ability to extend <span class="code">weewx</span> with new services 
-		and reports. </li>
-	</ul>
-	<p>I wrote <span class="code">weewx</span> over the winter of 2008-2009 for 
-	two reasons: it was a wet and miserable winter here in Oregon with not much 
-	else to do, so there was no good reason not to, and because I wanted a simple, 
-	easy-to-understand server to run my Davis VantagePro2 weather station on a Linux 
-	box. I had been using <a href="http://www.wviewweather.com/">wview</a>, which 
-	is a high-performance and feature rich system authored by Mark Teel with lots 
-	of users. Written in C, it&#39;s an efficient system that can run on underpowered 
-	boxes. In exchange, it&#39;s huge (45,000+ lines of code), tightly integrated 
-	in with its companion library, radlib (another 14,000+ lines), and very complex, 
-	making it difficult to understand and reliably customize. I wanted something 
-	more modern and much, much simpler. </p>
-	<p>Having made a career in C++ and Java, I was also interested in some more 
-	modern languages, so I thought I&#39;d try either Python or Ruby (although, 
-	truth be told, the roots of Python are nearly as old as C++!). I ended up picking 
-	Python because its libraries are more mature and there are many mores choices 
-	for third party libraries. </p>
-	<p><span class="code">Weewx</span> weighs in at well under 6,000 lines of code, 
-	with another 3,800 comment lines. Because it is pure Python, it requires no 
-	makefiles, no builds, no special installs. It offers very powerful configuration 
-	and templating options, as well as an internally extensible engine, making it 
-	easy to customize. Its internal modular design and use of modern exception handling 
-	make it very robust and difficult to crash. It is also architecturally very 
-	simple and easy to understand.</p>
-	<h2>Supported hardware</h2>
-	<ul>
-		<li>Davis &quot;Vantage&quot; series of weather stations, including the
-		<a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">
-		VantagePro2</a>&trade; and <a href="http://www.vantagevue.com/">VantageVue</a>&trade;, 
-		using serial, USB, or
-		<a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">
-		WeatherLinkIP</a>&trade; connections. Both the &quot;Rev A&quot; (firmware 
-		dated before 22 April 2002) and &quot;Rev B&quot; versions are supported.
-		</li>
-		<li>Oregon Scientific WMR-USB series.  Tested on the
-		<a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">
-		WMR100N</a>.</li>
-		<li>Oregon Scientific WMR-918/968 series.  Tested on the
-		<a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">
-		Oregon Scientific WMR-968</a>.</li>
-		<li>The Fine Offset series of weather stations. These are branded by many 
-		vendors, including Ambient Weather, National Geographic, Watson, Elecsa, Tycon, and others. Tested 
-		on the <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather 
-		WS2080</a>.</li>
-		<li>In addition, <span class="code">weewx</span> comes with a software simulator, 
-		useful for testing and evaluation.</li>
-	</ul>
-	<h1 id="Downloading_weewx">Downloading <span class="code">weewx</span></h1>
-	<p><span class="code">Weewx</span> can be downloaded from its SourceForge page:<a href="http://sourceforge.net/projects/weewx/">http://sourceforge.net/projects/weewx/</a>.
-	</p>
-	<h1 id="Prerequisites">Prerequisites</h1>
-	
-	<h2>Python</h2>
-	<p>Python V2.5, V2.6, or V2.7 is required. The newer V3.0 distribution will 
-	not work. </p>
-	<h2>External packages</h2>
-	<p>You will need external packages for the main weewx engine, as well as for 
-	your particular hardware configuration. Instructions on how to install these 
-	on your particular operating system follows in a later section.</p>
-	<p>For the main weewx engine you will need:</p>
-	<ul>
-		<li><a href="http://pypi.python.org/pypi/configobj/">configobj</a> (Version 
-		4.5 or greater) Manages the configuration file <span class="code">weewx.conf</span>.
-		</li>
-		<li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or 
-		greater) The templating engine. </li>
-		<li><a href="http://pypi.python.org/pypi/PIL">Python Imaging Library</a> 
-		(Version 1.1.6 or greater) Also known as PIL, this is included in many Python 
-		distributions. </li>
-	</ul>
-	<p>If you wish to use MySQL as your database (instead of the default
-	<span class="code">sqlite</span>), then you will also need (in addition to a 
-	MySQL server, of course):</p>
-	<ul>
-		<li><a href="https://sourceforge.net/projects/mysql-python/">MySQLdb for 
-		Python</a> (Version 1.2.3 or greater). This is the Python DBAPI2 adapter 
-		for MySQL.</li>
-	</ul>
-	<p>There is one optional package:</p>
-	<ul>
-		<li><a href="http://pypi.python.org/pypi/pyephem/">pyephem</a> (Version 
-		V3.7.3 or greater). For extended almanac information. If not installed, 
-		fallback information will be used. </li>
-	</ul>
-	<p>Some stations require a serial and/or USB package:</p>
-	<ul>
-	  <li><a href="https://sourceforge.net/projects/pyusb/">pyusb</a> (Version 0.4 or greater). Driver for USB.</li>
-	  <li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 2.3 or greater) Driver for a serial connection.</li>
-	</ul>
-        <p>
-          The following table lists stations that should work with <span class="code">Weewx</span>.  The table indicates which python module(s) are required by each station.
-        </p>
-	<table style="width: 90%" class="center">
-	  <tr>
-	    <td class="text_highlight">Vendor</td>
-	    <td><strong>Model</strong></td>
-	    <td><strong>Link</strong></td>
-	    <td><strong>Required<br />
-		package</strong></td>
-	    <td><strong>Maturity</strong></td>
-	    <td><strong>Notes</strong></td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight" rowspan="3">Ambient Weather</td>
-	    <td>WS1090</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WS2080</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td>Tested</td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WS2090</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight" rowspan="3">Davis</td>
-	    <td style="height: 33px">VantagePro2</td>
-	    <td style="height: 33px">Serial or USB</td>
-	    <td class="code" style="height: 33px">pyserial</td>
-	    <td style="height: 33px">Tested</td>
-	    <td style="height: 33px"></td>
-	  </tr>
-	  <tr>
-	    <td>VantagePro2</td>
-	    <td>WeatherLink IP</td>
-	    <td class="code">&nbsp;</td>
-	    <td>Tested</td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>VantageVue</td>
-	    <td>Serial or USB</td>
-	    <td class="code">pyserial</td>
-	    <td>Tested</td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight" rowspan="2">Elecsa</td>
-	    <td>6975</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>6976</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight" rowspan="11">Fine Offset</td>
-	    <td>WH1080</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WH1081</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WH1091</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WH1090</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WS1080</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WA2080</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WA2081</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WH2080</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WH2081</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WH3080</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WH3081</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight">National Geographic</td>
-	    <td>265</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight" rowspan="3">Oregon Scientific</td>
-	    <td>WMR100N</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td>Tested</td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WM918</td>
-	    <td>Serial</td>
-	    <td class="code">pyserial</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WM968</td>
-	    <td>Serial</td>
-	    <td class="code">pyserial</td>
-	    <td>Tested</td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight">Tycon</td>
-	    <td>TP1080WC</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight" rowspan="2">Watson</td>
-	    <td>W-8681</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	  <tr>
-	    <td>WX-2008</td>
-	    <td>USB</td>
-	    <td class="code">pyusb</td>
-	    <td></td>
-	    <td>&nbsp;</td>
-	  </tr>
-	</table>
+    <h1 id="About_weewx">About <span class="code">weewx</span></h1>
+    <p><span class="code">weewx</span> is a piece of software, written in
+      <a href="http://www.python.org">Python</a>, that interacts with your weather 
+      station to produce plots, reports, and HTML pages. It can optionally upload 
+      the reports to a remote Web server as well as publish to the
+      <a href="http://www.wunderground.com">WeatherUnderground</a> or
+      <a href="http://www.pwsweather.com/">PWSweather.com</a>. It uses modern software 
+      concepts, making it simple, robust, and easy to extend. For an example station 
+      see <a href="http://www.threefools.org/weewx">Hood River West</a>. </p>
+    <p>Key features: </p>
+    <ul>
+      <li>An easy to understand, simple, extensible micro-kernel architecture;</li>
+      <li>Uploads to popular weather sites, such as Weather Underground and CWOP;</li>
+      <li>Uploads to your website using FTP or rsync;</li>
+      <li>Support for multiple <em>skins</em>;</li>
+      <li>Simple, but extensible templating system;</li>
+      <li>Support for multiple unit systems;</li>
+      <li>Support for sqlite or MySQL databases;</li>
+      <li>Calibration corrections;</li>
+      <li>Ability to extend <span class="code">weewx</span> with new services 
+	and reports. </li>
+    </ul>
+    <p>I wrote <span class="code">weewx</span> over the winter of 2008-2009 for 
+      two reasons: it was a wet and miserable winter here in Oregon with not much 
+      else to do, so there was no good reason not to, and because I wanted a simple, 
+      easy-to-understand server to run my Davis VantagePro2 weather station on a Linux 
+      box. I had been using <a href="http://www.wviewweather.com/">wview</a>, which 
+      is a high-performance and feature rich system authored by Mark Teel with lots 
+      of users. Written in C, it&#39;s an efficient system that can run on underpowered 
+      boxes. In exchange, it&#39;s huge (45,000+ lines of code), tightly integrated 
+      in with its companion library, radlib (another 14,000+ lines), and very complex, 
+      making it difficult to understand and reliably customize. I wanted something 
+      more modern and much, much simpler. </p>
+    <p>Having made a career in C++ and Java, I was also interested in some more 
+      modern languages, so I thought I&#39;d try either Python or Ruby (although, 
+      truth be told, the roots of Python are nearly as old as C++!). I ended up picking 
+      Python because its libraries are more mature and there are many mores choices 
+      for third party libraries. </p>
+    <p><span class="code">Weewx</span> weighs in at well under 6,000 lines of code, 
+      with another 3,800 comment lines. Because it is pure Python, it requires no 
+      makefiles, no builds, no special installs. It offers very powerful configuration 
+      and templating options, as well as an internally extensible engine, making it 
+      easy to customize. Its internal modular design and use of modern exception handling 
+      make it very robust and difficult to crash. It is also architecturally very 
+      simple and easy to understand.</p>
 
-	<h3>Installation on Debian/Ubuntu/Mint distributions using
-	<span class="code">apt-get</span></h3>
-	<p>The instructions that follow are for using the Debian tool
-	<span class="code">apt-get</span>, but the same package names would be used 
-	should you chose to use a graphical interface such as the Synaptic Package Manager.
-	</p>
-	<pre class="tty">sudo apt-get install python-configobj
-sudo apt-get install python-cheetah 
-sudo apt-get install python-imaging
+    <h1>Supported hardware</h1>
+    <ul>
+      <li>Davis &quot;Vantage&quot; series of weather stations, including the
+	<a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">
+	  VantagePro2</a>&trade; and <a href="http://www.vantagevue.com/">VantageVue</a>&trade;, 
+	using serial, USB, or
+	<a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">
+	  WeatherLinkIP</a>&trade; connections. Both the &quot;Rev A&quot; (firmware 
+	dated before 22 April 2002) and &quot;Rev B&quot; versions are supported.
+      </li>
+      <li>Oregon Scientific WMR-USB series.  Tested on the
+	<a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">
+	  WMR100N</a>.</li>
+      <li>Oregon Scientific WMR-918/968 series.  Tested on the
+	<a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">
+	  Oregon Scientific WMR-968</a>.</li>
+      <li>The Fine Offset series of weather stations. These are branded by
+        many vendors, including Ambient Weather, National Geographic, Watson,
+        Elecsa, Tycon, Maplin, Froggit, and others. Tested on the
+        <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather 
+        WS2080</a>.</li>
+      <li>In addition, <span class="code">weewx</span> comes with a software
+        simulator, useful for testing and evaluation.</li>
+    </ul>
+    <table style="width: 90%" class="center">
+      <tr>
+	<td class="text_highlight">Vendor</td>
+	<td><strong>Model</strong></td>
+	<td><strong>Link</strong></td>
+	<td><strong>Required<br/>Package</strong></td>
+	<td><strong>Maturity</strong></td>
+	<td><strong>Notes</strong></td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="3">Ambient Weather</td>
+	<td>WS1090</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WS2080</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td>Tested</td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WS2090</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="3">Davis</td>
+	<td style="height: 33px">VantagePro2</td>
+	<td style="height: 33px">Serial or USB</td>
+	<td class="code" style="height: 33px">pyserial</td>
+	<td style="height: 33px">Tested</td>
+	<td style="height: 33px"></td>
+      </tr>
+      <tr>
+	<td>VantagePro2</td>
+	<td>WeatherLink IP</td>
+	<td class="code">&nbsp;</td>
+	<td>Tested</td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>VantageVue</td>
+	<td>Serial or USB</td>
+	<td class="code">pyserial</td>
+	<td>Tested</td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="2">Elecsa</td>
+	<td>6975</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>6976</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="11">Fine Offset</td>
+	<td>WH1080</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WH1081</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WH1091</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WH1090</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WS1080</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WA2080</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WA2081</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WH2080</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WH2081</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WH3080</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WH3081</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">National Geographic</td>
+	<td>265</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="3">Oregon Scientific</td>
+	<td>WMR100N</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td>Tested</td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WM918</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WM968</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+	<td>Tested</td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">Tycon</td>
+	<td>TP1080WC</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="2">Watson</td>
+	<td>W-8681</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+      <tr>
+	<td>WX-2008</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+	<td></td>
+	<td>&nbsp;</td>
+      </tr>
+    </table>
 
-# If you are using MySQL, install the following:
-sudo apt-get install python-mysqldb
-sudo apt-get install mysql-client
+    <h1 id="Prerequisites">Prerequisites</h1>
+    
+    <h2>Python</h2>
+    <p>Python V2.5, V2.6, or V2.7 is required. Python V3.0 will not work. </p>
 
-# Depending on your hardware, you may have to install one of the following.
-# See the table above.
-sudo apt-get install python-serial
-sudo apt-get install python-usb
+    <h2>Python Packages</h2>
+    <p>
+      Some python packages are required for the main weewx engine, and may be
+      required for specific hardware configuration.
+    </p>
+    <p>The weewx engine requires:</p>
+    <ul>
+      <li><a href="http://pypi.python.org/pypi/configobj/">configobj</a>
+        (Version 4.5 or greater) Manages the configuration file
+        <span class="code">weewx.conf</span>.</li>
+      <li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or 
+	greater) The templating engine. </li>
+      <li><a href="http://pypi.python.org/pypi/PIL">Python Imaging Library</a> 
+	(Version 1.1.6 or greater) Also known as PIL, this is included in many
+        Python distributions.</li>
+    </ul>
+    <p>
+      To use MySQL as the database (instead of the default <span class="code">sqlite</span>), you will also need (in addition to a MySQL server, of course):
+    </p>
+    <ul>
+      <li><a href="https://sourceforge.net/projects/mysql-python/">MySQLdb for 
+	  Python</a> (Version 1.2.3 or greater). This is the Python DBAPI2 adapter 
+	for MySQL.</li>
+    </ul>
+    <p>There is one optional package:</p>
+    <ul>
+      <li><a href="http://pypi.python.org/pypi/pyephem/">pyephem</a> (Version 
+	V3.7.3 or greater). For extended almanac information. If not installed, 
+	fallback information will be used. </li>
+    </ul>
+    <p>Some stations require a serial and/or USB package:</p>
+    <ul>
+      <li><a href="https://sourceforge.net/projects/pyusb/">pyusb</a> (Version 0.4 or greater). Driver for USB.</li>
+      <li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 2.3 or greater) Driver for a serial connection.</li>
+    </ul>
 
-</pre>
-	<p>Note that the <span class="code">python-imaging</span> (PIL) package is often 
-	preinstalled on many Debian distributions so the install may not actually do 
-	anything. </p>
-	<p>The optional package <span class="code">pyephem</span> is installed using <span class="code">
-	pip</span>:</p>
-	<p class="tty">sudo apt-get install python-dev<br />
-	sudo apt-get install python-pip<br />
-	sudo pip install pyephem</p>
-	<h3>Installation on Redhat/CentOS/Fedora distributions using <span class="code">yum</span></h3>
-	<p>Installing on Fedora v16 can be done entirely by using <span class="code">
-	yum</span>. </p>
-	<p class="tty">sudo yum install python-configobj<br />
-	sudo yum install python-imaging<br />
-	sudo yum install python-cheetah<br />
-	sudo yum install pyserial<br />
-	</p>
-	<p>The optional package <span class="code">pyephem</span> can also be installed 
-	by using <span class="code">yum</span>:</p>
-	<p class="tty">sudo yum install pyephem </p>
-	<h3>Installation on SuSE using <span class="code">yast</span></h3>
-	<p>My SuSE 11.3 system came with some of the prerequisites installed, some available 
-	through <span class="code">yast</span>, and some that required
-	<span class="code"><a href="http://pypi.python.org/pypi/pip">pip</a></span>.
-	</p>
-	<p>Using <span class="code">yast</span>, install the following: </p>
-	<pre class="tty">sudo yast -i gcc
-sudo yast -i python-devel
-sudo yast -i python-configobj
-sudo yast -i python-serial
-sudo yast -i python-imaging
-sudo yast -i python-setuptools </pre>
-	<p>Now install <span class="code">pip</span>. There are many ways to do this 
-	(see the <span class="code"><a href="http://pypi.python.org/pypi/pip">pip</a></span> 
-	website), but perhaps the simplest is by using <span class="code">get-pip.py</span>:
-	</p>
-	<pre class="tty">sudo curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python</pre>
-	<p>Now using <span class="code">pip</span>, install Cheetah: </p>
-	<pre class="tty">pip install Cheetah</pre>
-	<p>Finally, if you choose to install the optional package <span class="code">
-	pyephem</span>, then install it using <span class="code">pip</span>: </p>
-	<pre class="tty">pip install pyephem</pre>
-	<h3>Installation on other systems using <span class="code">pip</span></h3>
-	<p>An alternative approach to installing the required packages is by using the 
-	Python setup tool &quot;<span class="code"><a href="http://pypi.python.org/pypi/pip">pip</a></span>&quot;. 
-	Refer to their instructions on how to install this tool. </p>
-	<p>Once <span class="code">pip</span> has been installed, installing the rest 
-	of the packages is very easy. </p>
-	<pre class="tty">pip install configobj
-pip install pyserial
-pip install pyusb
-pip install Cheetah
-pip install pil </pre>
-	<p>If you choose to install the optional package <span class="code">pyephem</span>:
-	</p>
-	<pre class="tty">pip install pyephem</pre>
-	<h2>Time</h2>
-	<p>The time on the VantagePro is automatically synchronized with the
-	<span class="code">weewx</span> server nominally every four hours (changeable 
-	by the user). You should run a <a href="http://www.ntp.org/">NTP</a> daemon 
-	on your server to insure that it is synchronized with the correct time. Doing 
-	so will greatly reduce errors, especially if you send data to services such 
-	as the Weather Underground. </p>
-	<h2>System requirements</h2>
-	<p>I run <span class="code">weewx</span> on a 500MHz system with an AMD Geode 
-	processor and 512 MB of memory.&nbsp; Configured this way, it consumes about 
-	5% of the CPU and about 50MB of total memory. </p>
-	<h1 id="Installing_weewx">Installing <span class="code">weewx</span></h1>
-	<p>Because <span class="code">weewx</span> is &quot;Pure Python&quot;, that 
-	is it is 100% Python with no &quot;C&quot; modules to compile, it 
-	is very easy to install. Furthermore, it uses the standard Python
-	<a href="http://docs.python.org/install/index.html">distutils</a> install method, 
-	which is very easy and flexible. Detailed instructions follow. </p>
-	<h2>Unpacking</h2>
-	<p>Start by unpack the tar ball (substitute your version for X.Y.Z) into any 
-	convenient directory where you have write permission </p>
-	<p class="tty">tar xvf weewx-X.Y.Z </p>
-	<p>Then change directory into it: </p>
-	<p class="tty">cd weewx-X.Y.Z </p>
-	<h2>Choosing where to install <span class="code">weewx</span></h2>
-	<p>The next step is to figure out where you want to install <span class="code">weewx</span>. 
-	Let <span class="code"><em>$WEEWX_INSTALL</em></span> symbolizes the location 
-	where the root <span class="code">weewx</span> directory will be installed. By default, this location  
-	is <span class="code">/home/weewx</span>. However, it can be changed by editing 
-	the file <span class="code">setup.cfg</span> and changing the following line
-	</p>
-	<pre class="tty">home = /home/weewx</pre>
-	<p>to reflect your decision.</p>
-	<p>The rest of the nominal directory layout will be: </p>
-	<table class="center" style="width: 60%" summary="Summarizing the nominal weewx directory layout">
-		<tr>
-			<td class="text_highlight"><strong>Subdirectory</strong></td>
-			<td><strong>Contents</strong></td>
-		</tr>
-		<tr>
-			<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/bin</span></td>
-			<td>Python packages and scripts</td>
-		</tr>
-		<tr>
-			<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf</span></td>
-			<td>Configuration file</td>
-		</tr>
-		<tr>
-			<td style="height: 33px" class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
-			<td style="height: 33px">Template skins and their configuration files</td>
-		</tr>
-		<tr>
-			<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
-			<td>sqlite3 archive and statistical databases</td>
-		</tr>
-		<tr>
-			<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/public_html</span></td>
-			<td>Generated HTML and .PNG images</td>
-		</tr>
-	</table>
-	
-	<h2>Build and install</h2>
-	<p>Build the distribution </p>
-	<pre class="tty">./setup.py build </pre>
-	<p>(Because <span class="code">weewx</span> is pure Python this doesn&#39;t 
-	actually build anything, but it does arrange files for the final installation)
-	</p>
-	<p>Then install it. If you have write permission in the directory where
-	<span class="code">weewx</span> will go (<em>i.e.</em>, <span class="code">
-	<em>$WEEWX_INSTALL</em></span>), then type </p>
-	<p class="tty">./setup.py install </p>
-	<p>Otherwise, if you do not have write permission, you will have to use 
-	<span class="code">sudo</span>:
-	</p>
-	<p class="tty">sudo ./setup.py install </p>
-	<h3>Upgrading</h3>
-	<p>Before upgrading from a previous version of <span class="code">weewx</span>, 
-	check the upgrade notes, found in file <a href="upgrading.htm">upgrading.htm</a>, 
-	to see if there any specific actions you need to do. </p>
-	<p>You then generally follow the procedure above. </p>
-	<p><strong><em>In particular, before starting, be sure to set </em></strong>
-	<span class="code"><strong><em>home</em></strong></span><strong><em> in the 
-	file </em></strong><span class="code"><strong><em>setup.cfg</em></strong></span><strong><em>.
-	</em></strong></p>
-	<p>The build and install process will do the following for you. </p>
-	<ul>
-		<li>Save your old &#39;<span class="code">bin</span>&#39; subdirectory as
-		<span class="code"><em>$WEEWX_INSTALL</em>/bin.YYYYMMDDHHMMSS</span> where 
-		YYYYMMDDHHMMSS is a timestamp; </li>
-		<li>Install the new version in the &#39;<span class="code">bin</span>&#39; 
-		subdirectory, while preserving any user extensions in the &#39;<span class="code">bin/user</span>&#39; 
-		subdirectory; </li>
-		<li>Save a copy of your old <span class="code">weewx.conf</span> as
-		<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS;</span>
-		</li>
-		<li>Merge any changes you&#39;ve made to your old configuration file
-		<span class="code">weewx.conf</span> into the new configuration file, then 
-		install the merged copy (this effectively causes changes you&#39;ve made 
-		to override the values in the shipped version of <span class="code">weewx.conf</span>);
-		</li>
-		<li>Install a <span class="code">&#39;skins&#39;</span> subdirectory if 
-		one does not already exist. </li>
-	</ul>
-	<h2>Permissions</h2>
-	<p>Strictly speaking it is not necessary to install or run
-	<span class="code">weewx</span> with root privileges. You only need read/write 
-	access to the serial port for your hardware. For example, if your hardware has 
-	a USB interface, on Ubuntu and SuSE: </p>
-	<p class="tty">sudo chmod a+rw /dev/ttyUSB0 </p>
-	<p>Once done, if you edit <span class="code">setup.cfg</span> to install into 
-	a directory where you have write permissions, you can install and run
-	<span class="code">weewx</span> without any root privileges at all. </p>
-	<h1 id="Configuring_weewx">Configuring <span class="code">weewx</span></h1>
-	<p>This section covers configuring <span class="code">weewx</span>, in particular 
-	the configuration files <span class="code">weewx.conf</span> and
-	<span class="code">skin.conf</span>. </p>
-	<p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to 
-	the <span class="code">weewx</span> root directory, generally
-	<span class="code">/home/weewx</span>. The subdirectories <span class="code">
-	archive</span>, <span class="code">skins</span>, and <span class="code">public_html</span> 
-	are expected to be found there. </p>
-	<h2>Moving from wview</h2>
-	<p>NOTE: This section is necessary only if you are moving from
-	<a href="http://www.wviewweather.com/">wview</a> to <span class="code">weewx</span> 
-	and wish to transfer your old data over. If you are starting afresh, you do 
-	not need to follow this section — the two main databases are created and populated 
-	automatically by <span class="code">weewx</span>. </p>
-	<p>The main archive database can be just copied over because wview and
-	<span class="code">weewx</span> use identical schemas: </p>
-	<pre class="tty">mkdir <em>$WEEWX_ROOT</em>/archive
+    <h2>Time</h2>
+    <p>The time on the VantagePro is automatically synchronized with the
+      <span class="code">weewx</span> server nominally every four hours (changeable 
+      by the user). You should run a <a href="http://www.ntp.org/">NTP</a> daemon 
+      on your server to insure that it is synchronized with the correct time. Doing 
+      so will greatly reduce errors, especially if you send data to services such 
+      as the Weather Underground. </p>
+
+    <h2>System requirements</h2>
+    <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
+      Geode processor and 512 MB of memory.&nbsp; Configured this way, it
+      consumes about 5% of the CPU and about 50MB of total memory. </p>
+
+    <h1 id="Downloading_weewx">Downloading <span class="code">weewx</span></h1>
+    <p>The <span class='code'>weewx</span> software can be downloaded from
+      SourceForge at <a href="http://sourceforge.net/projects/weewx/files">http://sourceforge.net/projects/weewx/files</a>
+    </p>
+
+    <h1 id="Installing_weewx">Installing <span class="code">weewx</span></h1>
+    <p>Because <span class="code">weewx</span> is &quot;Pure Python&quot;,
+      that is it is 100% Python with no &quot;C&quot; modules to compile, it 
+      is very easy to install. Furthermore, it uses the standard Python
+      <a href="http://docs.python.org/install/index.html">distutils</a>
+      install method, which is very easy and flexible.</p>
+
+    <h2>Unpacking</h2>
+    <p>Start by unpack the tar ball (substitute your version for X.Y.Z) into
+      any convenient directory where you have write permission </p>
+    <p class="tty">tar xvf weewx-X.Y.Z.tar.gz</p>
+    <p>Then change directory into it: </p>
+    <p class="tty">cd weewx-X.Y.Z </p>
+
+    <h2>Choosing where to install</h2>
+    <p>The next step is to figure out where you want to install <span class="code">weewx</span>. 
+      <span class="code"><em>$WEEWX_INSTALL</em></span> represents the location
+      where the root <span class="code">weewx</span> directory will be
+      installed. By default, this location is
+      <span class="code">/home/weewx</span>. However, it can be changed by
+      editing the file <span class="code">setup.cfg</span> and changing the
+      following line
+    </p>
+    <pre class="tty">home = /home/weewx</pre>
+    <p>The nominal directory layout will be: </p>
+    <table class="center" style="width: 60%" summary="Summarizing the nominal weewx directory layout">
+      <tr>
+	<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/bin</span></td>
+	<td>Python packages and scripts</td>
+      </tr>
+      <tr>
+	<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf</span></td>
+	<td>Configuration file</td>
+      </tr>
+      <tr>
+	<td style="height: 33px" class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
+	<td style="height: 33px">Template skins and their configuration files</td>
+      </tr>
+      <tr>
+	<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
+	<td>sqlite3 archive and statistical databases</td>
+      </tr>
+      <tr>
+	<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/public_html</span></td>
+	<td>Generated HTML and .PNG images</td>
+      </tr>
+    </table>
+    
+    <h2>Build and Install</h2>
+    <p>Build the distribution </p>
+    <pre class="tty">./setup.py build </pre>
+    <p>Because <span class="code">weewx</span> is pure Python this doesn&#39;t 
+      compile anything, but it does arrange files for the final installation
+    </p>
+    <p>Then install it. If you have write permission in the directory where
+      <span class="code">weewx</span> will go, then type </p>
+    <p class="tty">./setup.py install </p>
+    <p>Otherwise, if you do not have write permission, you will have to use 
+      <span class="code">sudo</span>:
+    </p>
+    <p class="tty">sudo ./setup.py install </p>
+
+    <h2>Upgrading</h2>
+    <p>Before upgrading from a previous version of <span class="code">weewx</span>, 
+      check the <a href="upgrading.htm">Upgrade Guide</a> 
+      to see if there any specific actions required. </p>
+    <p>Then follow the 'Build and Install' procedure above. </p>
+    <p class='warning'>
+      Before starting an upgrade, be sure to set <span class="code">home</span> in the file <span class="code">setup.cfg</span>.
+    </p>
+    <p>The build and install process will do the following for you: </p>
+    <ul>
+      <li>Save the old <span class="code">bin</span> directory as
+	<span class="code"><em>$WEEWX_INSTALL</em>/bin.YYYYMMDDHHMMSS</span>
+        where YYYYMMDDHHMMSS is a timestamp</li>
+      <li>Install the new version in the <span class="code">bin</span>
+	directory, while preserving any user extensions in the
+        <span class="code">bin/user</span> directory</li>
+      <li>Save a copy of the old <span class="code">weewx.conf</span> as
+	<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS</span>
+      </li>
+      <li>Merge any changes made to the old configuration file
+	<span class="code">weewx.conf</span> into the new configuration file,
+        then install the merged copy.  This effectively causes any changes
+        to override the values in the new version of <span class="code">weewx.conf</span>
+      </li>
+      <li>Install a <span class="code">skins</span> directory if 
+	one does not already exist. </li>
+    </ul>
+
+    <h2>Permissions</h2>
+    <p>Strictly speaking it is not necessary to install or run
+      <span class="code">weewx</span> with root privileges. You only need read/write 
+      access to the serial port for your hardware. For example, if your hardware has 
+      a USB interface, on Ubuntu and SuSE: </p>
+    <p class="tty">sudo chmod a+rw /dev/ttyUSB0 </p>
+    <p>Once done, if you edit <span class="code">setup.cfg</span> to install into 
+      a directory where you have write permissions, you can install and run
+      <span class="code">weewx</span> without any root privileges at all. </p>
+
+    <h2>Moving from <span class="code">wview</span></h2>
+    <p>This section is necessary only if you are moving from
+      <a href="http://www.wviewweather.com/"><span class='code'>wview</span></a> to
+      <span class="code">weewx</span> and wish to transfer your old data over.
+      If you are starting afresh, you do not need to follow this section — the
+      two main databases are created and populated automatically by
+      <span class="code">weewx</span>. </p>
+    <p>The main archive database can be just copied over because wview and
+      <span class="code">weewx</span> use identical schemas: </p>
+    <pre class="tty">
+mkdir <em>$WEEWX_ROOT</em>/archive
 cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb</pre>
-	<p>The second database, the statistics, will then be automatically created and 
-	backfilled on startup of <span class="code">weewx</span>. If your existing database is large, backfilling 
-	could take some time. On my modest 500 MHz
-	<a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC Slim</a> 
-	with 512 MB of memory it took a little over 4 minutes for a year and a half 
-	(25 MB) of data. </p>
-	<h2 id="Configuring_your_Davis_console">Configuring your Davis Vantage console</h2>
-	<p>Weewx comes with a configuration utlity, <span class="code">config_vp.py</span>, 
-	that can set many of the on-board EEPROM constants in the Davis Vantage stations, 
-	such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
-	<p>Run it with the configuration file as an argument and <span class="code">
+    <p>The second database, the statistics, will then be automatically created
+      and backfilled on startup of <span class="code">weewx</span>. If your
+      existing database is large, backfilling could take some time. On my
+      modest 500 MHz <a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC Slim</a> with 512 MB of memory it took a little over 4 minutes for a year and a half (25 MB) of data. </p>
+
+    <h1 id="Configuring_weewx">Configuring <span class="code">weewx</span></h1>
+    <p>This section covers configuring <span class="code">weewx</span>, in particular 
+      the configuration files <span class="code">weewx.conf</span> and
+      <span class="code">skin.conf</span>. </p>
+    <p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to 
+      the <span class="code">weewx</span> root directory, generally
+      <span class="code">/home/weewx</span>. The subdirectories <span class="code">
+	archive</span>, <span class="code">skins</span>, and <span class="code">public_html</span> 
+      are expected to be found there. </p>
+
+    <h2 id="Configuring_your_Davis_console">Configuring the Davis Vantage console</h2>
+    <p>Weewx comes with a configuration utlity, <span class="code">config_vp.py</span>, 
+      that can set many of the on-board EEPROM constants in the Davis Vantage stations, 
+      such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
+    <p>Run it with the configuration file as an argument and <span class="code">
 	--help</span> as an option to see its usage: </p>
-	<pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --help </pre>
-	<p>This will print out something like:</p>
-	<pre class="tty">Usage: config_vp.py: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
-                            [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
-                            [--start | -- stop]
+    <pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --help </pre>
+    <p>This will print out something like:</p>
+    <pre class="tty"
+>Usage: config_vp.py: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
+      [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
+      [--start | -- stop]
 
 Configures the VantagePro weather station.
 
 Options:
-  -h, --help            show this help message and exit
-  --info                To print configuration, reception, and barometer
-                        calibration information about your weather station.
-  --clear               To clear the memory of your weather station.
-  --set-interval=SECONDS
-                        Sets the archive interval to the specified number of
-                        seconds. Valid values are 60, 300, 600, 900, 1800,
-                        3600, or 7200.
-  --set-altitude=FEET   Sets the altitude of the station to the specified
-                        number of feet.
-  --set-barometer=inHg  Sets the barometer reading of the station to a known
-                        correct value in inches of mercury. Specify 0 (zero)
-                        to have the console pick a sensible value.
-  --set-bucket=CODE     Set the type of rain bucket. Specify '0' for 0.01
-                        inches; '1' for 0.2 MM; '2' for 0.1 MM
-  --set-rain-year-start=MM
-                        Set the rain year start (1=Jan, 2=Feb, etc.).
-  --set-time            Set the onboard clock to the current time.
-  --start               Start the logger.
-  --stop                Stop the logger.
+  -h, --help               show this help message and exit
+  --info                   To print configuration, reception, and barometer
+                           calibration information about your weather station.
+  --clear                  To clear the memory of your weather station.
+  --set-interval=SECONDS   Sets the archive interval to the specified number of
+                           seconds. Valid values are 60, 300, 600, 900, 1800,
+                           3600, or 7200.
+  --set-altitude=FEET      Sets the altitude of the station to the specified
+                           number of feet.
+  --set-barometer=inHg     Sets the barometer reading of the station to a known
+                           correct value in inches of mercury. Specify 0 (zero)
+                           to have the console pick a sensible value.
+  --set-bucket=CODE        Set the type of rain bucket. Specify '0' for 0.01
+                           inches; '1' for 0.2 MM; '2' for 0.1 MM
+  --set-rain-year-start=MM Set the rain year start (1=Jan, 2=Feb, etc.).
+  --set-time               Set the onboard clock to the current time.
+  --start                  Start the logger.
+  --stop                   Stop the logger.
 
 Mutating actions will request confirmation before proceeding.</pre>
-	<p>It is useful to run it with the <span class="code">--info</span> option to 
-	see what the current EEPROM settings are on your station: </p>
-	<pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --info </pre>
-	<p>This will print out something like: </p>
-	<pre class="tty">VantagePro EEPROM settings:
-    
-    CONSOLE TYPE:                   VantagePro2
-    
-    CONSOLE FIRMWARE:
-      Date:                         Nov 28 2005
-      Version:                      &lt;Unavailable&gt;
-    
-    CONSOLE SETTINGS:
-      <span class="highlight">Archive interval:             300 (seconds)</span>
-      <span class="highlight">Altitude:                     700 (foot)</span>
-      Wind cup type:                large
-      <span class="highlight">Rain bucket type:             0.01 inches</span>
-      <span class="highlight">Rain year start:              10</span>
-      <span class="highlight">Onboard time:                 2012-09-30 16:48:27 PDT (1349048907)</span>
+    <p>It is useful to run it with the <span class="code">--info</span> option to 
+      see what the current EEPROM settings are on your station: </p>
+    <pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --info </pre>
+    <p>This will print out something like: </p>
+    <pre class="tty">
+VantagePro EEPROM settings:
       
-    CONSOLE DISPLAY UNITS:
-      Barometer:                    mbar
-      Temperature:                  degree_F
-      Rain:                         inch
-      Wind:                         knot
+CONSOLE TYPE:                   VantagePro2
       
-    CONSOLE STATION INFO:
-      Latitude (onboard):           45.7
-      Longitude (onboard):          -121.6
-      Time zone code:               4
-      Use manual or auto DST?       AUTO
-      DST setting:                  N/A
-      GMT offset:                   -8.0 hours
-      Use GMT offset or time zone?  TIME_ZONE
-        
-    RECEPTION STATS:
-      Total packets received:       22843
-      Total packets missed:         748
-      Number of resynchronizations: 0
-      Longest good stretch:         534
-      Number of CRC errors:         647
+CONSOLE FIRMWARE:
+Date:                         Nov 28 2005
+Version:                      &lt;Unavailable&gt;
       
-    BAROMETER CALIBRATION DATA:
-      <span class="highlight">Current barometer reading:    30.209 inHg</span>
-      Altitude:                     700 feet
-      Dew point:                    48 F
-      Virtual temperature:          66 F
-      Humidity correction factor:   23
-      Correction ratio:             1.025
-      Correction constant:          +0.027 inHg
-      Gain:                         -1.000
-      Offset:                       -1.000</pre>
-	<p>Note that console version number is only available on consoles with firmware 
-	dates after about 2006.</p>
-	<p><span class="highlight">Highlighted</span> values can be changed.</p>
-	<p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
-	<pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf --set-interval=600</pre>
-	<p>Other parameters can be set in a similar manner.</p>
-	<h3 id="Archive_interval">Archive interval</h3>
-	<p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
-	if you are ftp&#39;ing lots of files to a server, setting it to 60 seconds may 
-	not give enough time to have them all uploaded before the next archive record 
-	is due. If this is the case, you should pick an archive interval of at least 
-	300 seconds, or trim the number of files you are using. </p>
-	<p>I have found that a five minute (300 seconds) archive interval works well 
-	for the VantagePro2. Because of the large amount of onboard memory it carries, 
-	going to a larger interval really does not have any advantages. </p>
-	<p><em>Choose your archiving interval carefully! </em>Once chosen, it cannot 
-	be changed without messing up your statistics (highs and lows will be OK, but 
-	averages and rms wind speed will be wrong). </p>
-	<h3>Rain bucket type</h3>
-	<p>Normally, this is set by Davis, but if you have replaced your bucket with 
-	a different kind, you might want to reconfigure. For example, to change to a 
-	0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
-	<p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf 
-	--set-bucket=2</p>
-	<h2>Configuring MySql</h2>
-	<p>This section can be ignored if you are not using MySQL.</p>
-	<p>Assuming that you want to use the default database configuration, your
-	<span class="code"><a href="#[Databases]">[Databases]</a></span> section 
-	should 
-	look something like this:</p>
-	<pre class="tty">
+CONSOLE SETTINGS:
+<span class="highlight">Archive interval:             300 (seconds)</span>
+<span class="highlight">Altitude:                     700 (foot)</span>
+Wind cup type:                large
+<span class="highlight">Rain bucket type:             0.01 inches</span>
+<span class="highlight">Rain year start:              10</span>
+<span class="highlight">Onboard time:                 2012-09-30 16:48:27 PDT (1349048907)</span>
+      
+CONSOLE DISPLAY UNITS:
+Barometer:                    mbar
+Temperature:                  degree_F
+Rain:                         inch
+Wind:                         knot
+
+CONSOLE STATION INFO:
+Latitude (onboard):           45.7
+Longitude (onboard):          -121.6
+Time zone code:               4
+Use manual or auto DST?       AUTO
+DST setting:                  N/A
+GMT offset:                   -8.0 hours
+Use GMT offset or time zone?  TIME_ZONE
+
+RECEPTION STATS:
+Total packets received:       22843
+Total packets missed:         748
+Number of resynchronizations: 0
+Longest good stretch:         534
+Number of CRC errors:         647
+
+BAROMETER CALIBRATION DATA:
+<span class="highlight">Current barometer reading:    30.209 inHg</span>
+Altitude:                     700 feet
+Dew point:                    48 F
+Virtual temperature:          66 F
+Humidity correction factor:   23
+Correction ratio:             1.025
+Correction constant:          +0.027 inHg
+Gain:                         -1.000
+Offset:                       -1.000</pre>
+    <p>Note that console version number is only available on consoles with firmware 
+      dates after about 2006.</p>
+    <p><span class="highlight">Highlighted</span> values can be changed.</p>
+    <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
+    <pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf --set-interval=600</pre>
+    <p>Other parameters can be set in a similar manner.</p>
+    <h3 id="Archive_interval">Archive interval</h3>
+    <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
+      if you are ftp&#39;ing lots of files to a server, setting it to 60 seconds may 
+      not give enough time to have them all uploaded before the next archive record 
+      is due. If this is the case, you should pick an archive interval of at least 
+      300 seconds, or trim the number of files you are using. </p>
+    <p>I have found that a five minute (300 seconds) archive interval works well 
+      for the VantagePro2. Because of the large amount of onboard memory it carries, 
+      going to a larger interval really does not have any advantages. </p>
+    <p><em>Choose your archiving interval carefully! </em>Once chosen, it cannot 
+      be changed without messing up your statistics (highs and lows will be OK, but 
+      averages and rms wind speed will be wrong). </p>
+    <h3>Rain bucket type</h3>
+    <p>Normally, this is set by Davis, but if you have replaced your bucket with 
+      a different kind, you might want to reconfigure. For example, to change to a 
+      0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf 
+      --set-bucket=2</p>
+    <h2>Configuring MySQL</h2>
+    <p>This section applies only for those using MySQL.</p>
+    <p>Assuming that you want to use the default database configuration, your
+      <span class="code"><a href="#[Databases]">[Databases]</a></span> section 
+      should 
+      look something like this:</p>
+    <pre class="tty">
 [Databases]
-    [[archive_mysql]]
-        host = localhost
-        user = weewx
-        password = weewx
-        database = weewx
-        driver = weedb.mysql
-	
-    [[stats_mysql]]
-        host = localhost
-        user = weewx
-        password = weewx
-        database = stats
-        driver = weedb.mysql</pre>
-	<p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
-	Adjust as necessary.</p>
-	<p>If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
-	can be combined into one database, although this will make it harder to drop 
-	the latter should you need to rebuild the stats database at a later time.</p>
-	<p>You will need to give the necessary permissions for databases '<span class="code">weewx</span>' 
-	and '<span class="code">stats</span>' to whatever MySQL user you choose, by 
-	default, user '<span class="code">weewx</span>'. Here are the necessary minimum 
-	permissions:</p>
-	<pre class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
+  [[archive_mysql]]
+      host = localhost
+      user = weewx
+      password = weewx
+      database = weewx
+      driver = weedb.mysql
+      
+  [[stats_mysql]]
+      host = localhost
+      user = weewx
+      password = weewx
+      database = stats
+      driver = weedb.mysql</pre>
+    <p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
+      Adjust as necessary.</p>
+    <p>If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
+      can be combined into one database, although this will make it harder to drop 
+      the latter should you need to rebuild the stats database at a later time.</p>
+    <p>You will need to give the necessary permissions for databases '<span class="code">weewx</span>' 
+      and '<span class="code">stats</span>' to whatever MySQL user you choose, by 
+      default, user '<span class="code">weewx</span>'. Here are the necessary minimum 
+      permissions:</p>
+    <pre class="tty">
+mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
 mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</pre>
-	<h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
-	<p>Station specific information is set in the configuration file <em>
+    <h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
+    <p>Station specific information is set in the configuration file <em>
 	<span class="code">$WEEWX_ROOT/weewx.conf</span></em>. (There is another configuration 
-	file <span class="code">skin.conf</span> for presentation-specific options, 
-	which is described in the <a href="customizing.htm">Customizing Guide</a> under section <em>
+      file <span class="code">skin.conf</span> for presentation-specific options, 
+      which is described in the <a href="customizing.htm">Customizing Guide</a> under section <em>
 	<a href="customizing.htm#The_Standard_skin_configuration_file">Reference: The 
-	standard skin configuration file</a></em>.) </p>
-	<p>Most of the important options are up near the top of the file. They are all 
-	documented in this section, although you can safely ignore most of them. The 
-	truly important ones, the ones you are likely to have to customize for your 
-	station, are shown in <span class="bold_n_blue"><strong>bold face and in blue</strong></span>.
-	</p>
-	<p>Default values are provided for many of them, meaning that if they are not 
-	listed in the configuration file <em>at all</em>, <span class="code">weewx</span> 
-	will pick sensible values. When the documentation below gives a &quot;default 
-	value&quot; this is what it means. However, all options have been given values 
-	in the configuration file that ships with <span class="code">weewx</span>, so 
-	you can see what they look like. The value given in this shipped configuration 
-	file is not necessarily the same as the &quot;default value&quot;. </p>
-	<p>What follows is organized by the different sections of the configuration 
-	file. </p>
-	<h3>General</h3>
-	<p>The options declared at the top are not actually part of any section.</p>
-	<p class="config_option">debug </p>
-	<p>Set to 1 to have the program perform extra debug checks, as well as emit 
-	extra information in the log file. Otherwise, set to 0. Default is 0 (no debug).
-	</p>
-	<p class="config_important">WEEWX_ROOT </p>
-	<p>Set to the root directory of the <span class="code">weewx</span> file hierarchy 
-	for this station, nominally &#39;<span class="code">/home/weewx</span>&#39;. 
-	The <span class="code">weewx</span> data subdirectories <span class="code">skins</span>,
-	<span class="code">archive</span>, and <span class="code">public_html</span> 
-	are expected to be found here. This value will be set automatically by the setup 
-	script <span class="code">setup.py</span> to reflect the choice you made in 
-	the configuration file <span class="code">setup.cfg</span> during 
-	installation. Required. No default.
-	</p>
-	<p class="config_option">socket_timeout </p>
-	<p>Set to how long to wait before declaring a socket time out. This is used 
-	when FTP&#39;ing data to a web server or sending data to the Weather Underground. 
-	Twenty (20) seconds is reasonable. Default is 20. </p>
-	<h3 class="config_section">[Station]</h3>
-	<p>This section covers options relating to your weather station setup. </p>
-	<p class="config_important">location </p>
-	<p>The station location should be a UTF-8 string that describes the geography 
-	of where your weather station is located, such as &#39;<span class="code">Hood 
-	River, Oregon</span>&#39;. Required. No default. </p>
-	<p class="config_important">latitude <br />
-	longitude </p>
-	<p>The lat/lon should be set in decimal degrees, negative for southern and western 
-	hemispheres, respectively. Required. No default. </p>
-	<p class="config_option"><span class="config_important">altitude</span></p>
-	<p>Normally the station altitude is downloaded from your hardware, but not all 
-	stations support this. Set to the altitude of the station and the unit used 
-	for the altitude. Example: </p>
-	<pre class="tty">altitude = 700, foot</pre>
-	<p class="config_option"><span class="config_important">rain_year_start
-	</span></p>
-	<p>Normally the start of the rain year is downloaded from your hardware, but 
-	not all stations support this. Set to the start of your rain year, for example, 
-	10, if your rain year starts in October (as mine does). Default is 1. </p>
-	<p class="config_option">week_start </p>
-	<p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 (Sunday)
-	</p>
-	<p class="config_important">station_type </p>
-	<p>Set to the type of hardware you are using. It must match the name of one 
-	of the sections below. Valid options include:</p>
-	<table style="width: 60%" class="center">
-	  <tr>
-	    <td class="text_highlight"><span class="code">station_type</span></td>
-	    <td>Hardware</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight" style="height: 33px">Vantage</td>
-	    <td style="height: 33px">Davis Vantage weather stations</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight">WMR-USB</td>
-	    <td>Oregon Scientific WMR-USB series stations</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight">WMR-918</td>
-	    <td>Oregon Scientific WMR-918/968 series station</td>
-	  </tr>
-	  <tr>
-	    <td class="text_highlight">FineOffsetUSB</td>
-	    <td>Fine Offset USB stations</td>
-	  </tr>
-	</table>
-	
-	<h3 class="config_section">[Vantage]</h3>
-	<p>This section is for options relating to the Davis Vantage series of hardware 
-	(<em>VantagePro, VantagePro2</em> or <em>VantageVue</em>).</p>
-	<p class="config_important">type </p>
-	<p>Set to either &#39;<span class="code">serial</span>&#39;, if you have a serial 
-	or USB connection to your VantagePro (by far the most common), or to &#39;<span class="code">ethernet</span>&#39; 
-	if you have the WeatherLinkIP. No default. </p>
-	<p class="config_important">port </p>
-	<p>If you chose &#39;<span class="code">serial</span>&#39; above, then set to 
-	the serial port name used by your station (/<span class="code">dev/ttyUSB0</span> 
-	is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
-	for serial ports). Otherwise, not required. No default. </p>
-	<p class="config_important">host </p>
-	<p>If you chose &#39;<span class="code">ethernet</span>&#39; above, then give 
-	the either the IP address (<em>e.g.</em>, <span class="code">192.168.0.1</span>) 
-	or hostname (<em>e.g.</em>, <span class="code">console.mydomain.com</span>) 
-	to your console. Otherwise, not required. No default. </p>
-	<p class="config_option">baudrate </p>
-	<p>Set to the baudrate of your station. The default is 19200. </p>
-	<p class="config_option">tcp_port </p>
-	<p>The port where your WeatherLinkIP will be listening. Default is 22222.
-	</p>
-	<p class="config_option">tcp_send_delay </p>
-	<p>How long to block after sending a socket packet to your WeatherLinkIP. Default 
-	is 1 second. </p>
-	<p class="config_option">iss_id </p>
-	<p>Set to the ID number of your Integrated Sensor Suite (ISS). This is used 
-	in the formula to calculate reception quality for wireless stations. Default 
-	is 1. </p>
-	<p class="config_option">timeout </p>
-	<p>How many seconds&nbsp; to wait for a response from the station before giving 
-	up. Default is 5 seconds. </p>
-	<p class="config_option">wait_before_retry </p>
-	<p>How many seconds to wait before retrying again. Unless you have a good reason 
-	to change it, this value should be left at the default, as it is long enough 
-	for the station to offer new data, but not so long as to go into a new loop 
-	packet (which arrive every 2 seconds). Default is 1.2 seconds. </p>
-	<p class="config_option">max_tries </p>
-	<p>How many times to try again before giving up. Default is 4. </p>
-	<h3 class="config_section">[WMR-USB]</h3>
-	<p>This section is for options relating to the Oregon Scientific WMR series 
-	of weather stations with USB connectors. The WMR100N is known to work, others 
-	might work as well.</p>
-	<p class="config_option">stale_wind</p>
-	<p>How long a wind record can be used to calculate wind chill (in seconds). 
-	Default is 30.</p>
-	<h3 class="config_section">[WMR-918]</h3>
-	<p>This section is for options relating to the Oregon Scientific WMR-918 series 
-	of weather stations with serial connectors. The WMR-968 is known to work, others 
-	might work as well.</p>
-	<p class="config_important">type</p>
-	<p>For the moment, only &#39;<span class="code">serial</span>' is supported.</p>
-	<p class="config_important">port </p>
-	<p>Along with the &#39;<span class="code">serial</span>&#39; option above, you 
-	must set the serial port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
-	is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
-	for serial ports. No default. </p>
-	<p class="config_option">stale_wind</p>
-	<p>How long a wind record can be used to calculate wind chill (in seconds). 
-	Default is 30.</p>
-	<h3 class="config_section">[FineOffsetUSB]</h3>
-	<p>This section is for options relating to the Fine Offset series of weather 
-	stations with USB connectors. The Ambient WS2080 is known to work, others 
-	might work as well.</p>
-	<p class="config_important">model</p>
-	<p>Set to the station model. For example, WH1080, WS2080, WH3081, etc. </p>
-	<h3 class="config_section">[Simulator]</h3>
-	<p>This section is for options relating to the software weather station simulator 
-	that comes with <span class="code">weewx</span>.</p>
-	<p class="config_option">loop_interval</p>
-	<p>The time (in seconds) between emitting loop packets. Default is 2.5</p>
-	<p class="config_option">mode</p>
-	<p>One of either</p>
-	<table class="indent" style="width: 50%">
-		<tr>
-			<td class="code">simulator</td>
-			<td>Real-time simulator. It will sleep between emitting packets [Default]</td>
-		</tr>
-		<tr>
-			<td class="code">generator</td>
-			<td>Emit packets as fast as it can. Useful for testing.</td>
-		</tr>
-	</table>
-	<p class="config_option">start</p>
-	<p>The start time for the generator in the format <span class="code">YYYY-MM-DD 
+	  standard skin configuration file</a></em>.) </p>
+    <p>Most of the important options are up near the top of the file. They are all 
+      documented in this section, although you can safely ignore most of them. The 
+      truly important ones, the ones you are likely to have to customize for your 
+      station, are shown in <span class="bold_n_blue"><strong>bold face and in blue</strong></span>.
+    </p>
+    <p>Default values are provided for many of them, meaning that if they are not 
+      listed in the configuration file <em>at all</em>, <span class="code">weewx</span> 
+      will pick sensible values. When the documentation below gives a &quot;default 
+      value&quot; this is what it means. However, all options have been given values 
+      in the configuration file that ships with <span class="code">weewx</span>, so 
+      you can see what they look like. The value given in this shipped configuration 
+      file is not necessarily the same as the &quot;default value&quot;. </p>
+    <p>What follows is organized by the different sections of the configuration 
+      file. </p>
+
+    <h3>General</h3>
+    <p>The options declared at the top are not actually part of any section.</p>
+    <p class="config_option">debug </p>
+    <p>Set to 1 to have the program perform extra debug checks, as well as emit 
+      extra information in the log file. Otherwise, set to 0. Default is 0 (no debug).
+    </p>
+    <p class="config_important">WEEWX_ROOT </p>
+    <p>Set to the root directory of the <span class="code">weewx</span> file hierarchy 
+      for this station, nominally &#39;<span class="code">/home/weewx</span>&#39;. 
+      The <span class="code">weewx</span> data subdirectories <span class="code">skins</span>,
+      <span class="code">archive</span>, and <span class="code">public_html</span> 
+      are expected to be found here. This value will be set automatically by the setup 
+      script <span class="code">setup.py</span> to reflect the choice you made in 
+      the configuration file <span class="code">setup.cfg</span> during 
+      installation. Required. No default.
+    </p>
+    <p class="config_option">socket_timeout </p>
+    <p>Set to how long to wait before declaring a socket time out. This is used 
+      when FTP&#39;ing data to a web server or sending data to the Weather Underground. 
+      Twenty (20) seconds is reasonable. Default is 20. </p>
+
+    <h3 class="config_section">[Station]</h3>
+    <p>This section covers options relating to your weather station setup. </p>
+    <p class="config_important">location </p>
+    <p>The station location should be a UTF-8 string that describes the
+      geography of where your weather station is located, such as
+      &#39;<span class="code">Hood River, Oregon</span>&#39;. Required.
+      No default. </p>
+    <p class="config_important">latitude <br />
+      longitude </p>
+    <p>The lat/lon should be set in decimal degrees, negative for southern and western 
+      hemispheres, respectively. Required. No default. </p>
+    <p class="config_option"><span class="config_important">altitude</span></p>
+    <p>Normally the station altitude is downloaded from your hardware, but not all 
+      stations support this. Set to the altitude of the station and the unit used 
+      for the altitude. Example: </p>
+    <pre class="tty">altitude = 700, foot</pre>
+    <p class="config_option"><span class="config_important">rain_year_start
+    </span></p>
+    <p>Normally the start of the rain year is downloaded from your hardware, but 
+      not all stations support this. Set to the start of your rain year, for example, 
+      10, if your rain year starts in October (as mine does). Default is 1. </p>
+    <p class="config_option">week_start </p>
+    <p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 (Sunday)
+    </p>
+    <p class="config_important">station_type </p>
+    <p>Set to the type of hardware you are using. It must match the name of one 
+      of the sections below. Valid options include:</p>
+    <table style="width: 60%" class="center">
+      <tr>
+	<td class="text_highlight"><span class="code">station_type</span></td>
+	<td>Hardware</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" style="height: 33px">Vantage</td>
+	<td style="height: 33px">Davis Vantage weather stations</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">WMR-USB</td>
+	<td>Oregon Scientific WMR-USB series stations</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">WMR-918</td>
+	<td>Oregon Scientific WMR-918/968 series station</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">FineOffsetUSB</td>
+	<td>Fine Offset USB stations</td>
+      </tr>
+    </table>
+    
+    <h3 class="config_section">[Vantage]</h3>
+    <p>This section is for options relating to the Davis Vantage series of hardware 
+      (<em>VantagePro, VantagePro2</em> or <em>VantageVue</em>).</p>
+    <p class="config_important">type </p>
+    <p>Set to either &#39;<span class="code">serial</span>&#39;, if you have a serial 
+      or USB connection to your VantagePro (by far the most common), or to &#39;<span class="code">ethernet</span>&#39; 
+      if you have the WeatherLinkIP. No default. </p>
+    <p class="config_important">port </p>
+    <p>If you chose &#39;<span class="code">serial</span>&#39; above, then set to 
+      the serial port name used by your station (/<span class="code">dev/ttyUSB0</span> 
+      is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
+      for serial ports). Otherwise, not required. No default. </p>
+    <p class="config_important">host </p>
+    <p>If you chose &#39;<span class="code">ethernet</span>&#39; above, then give 
+      the either the IP address (<em>e.g.</em>, <span class="code">192.168.0.1</span>) 
+      or hostname (<em>e.g.</em>, <span class="code">console.mydomain.com</span>) 
+      to your console. Otherwise, not required. No default. </p>
+    <p class="config_option">baudrate </p>
+    <p>Set to the baudrate of your station. The default is 19200. </p>
+    <p class="config_option">tcp_port </p>
+    <p>The port where your WeatherLinkIP will be listening. Default is 22222.
+    </p>
+    <p class="config_option">tcp_send_delay </p>
+    <p>How long to block after sending a socket packet to your WeatherLinkIP. Default 
+      is 1 second. </p>
+    <p class="config_option">iss_id </p>
+    <p>Set to the ID number of your Integrated Sensor Suite (ISS). This is used 
+      in the formula to calculate reception quality for wireless stations. Default 
+      is 1. </p>
+    <p class="config_option">timeout </p>
+    <p>How many seconds&nbsp; to wait for a response from the station before giving 
+      up. Default is 5 seconds. </p>
+    <p class="config_option">wait_before_retry </p>
+    <p>How many seconds to wait before retrying again. Unless you have a good reason 
+      to change it, this value should be left at the default, as it is long enough 
+      for the station to offer new data, but not so long as to go into a new loop 
+      packet (which arrive every 2 seconds). Default is 1.2 seconds. </p>
+    <p class="config_option">max_tries </p>
+    <p>How many times to try again before giving up. Default is 4. </p>
+    <h3 class="config_section">[WMR-USB]</h3>
+    <p>This section is for options relating to the Oregon Scientific WMR series 
+      of weather stations with USB connectors. The WMR100N is known to work, others 
+      might work as well.</p>
+    <p class="config_option">stale_wind</p>
+    <p>How long a wind record can be used to calculate wind chill (in seconds). 
+      Default is 30.</p>
+    <h3 class="config_section">[WMR-918]</h3>
+    <p>This section is for options relating to the Oregon Scientific WMR-918 series 
+      of weather stations with serial connectors. The WMR-968 is known to work, others 
+      might work as well.</p>
+    <p class="config_important">type</p>
+    <p>For the moment, only &#39;<span class="code">serial</span>' is supported.</p>
+    <p class="config_important">port </p>
+    <p>Along with the &#39;<span class="code">serial</span>&#39; option above, you 
+      must set the serial port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
+      is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
+      for serial ports. No default. </p>
+    <p class="config_option">stale_wind</p>
+    <p>How long a wind record can be used to calculate wind chill (in seconds). 
+      Default is 30.</p>
+    <h3 class="config_section">[FineOffsetUSB]</h3>
+    <p>This section is for options relating to the Fine Offset series of weather 
+      stations with USB connectors. The Ambient WS2080 is known to work, others 
+      might work as well.</p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, WH1080, WS2080, WH3081, etc. </p>
+    <h3 class="config_section">[Simulator]</h3>
+    <p>This section is for options relating to the software weather station simulator 
+      that comes with <span class="code">weewx</span>.</p>
+    <p class="config_option">loop_interval</p>
+    <p>The time (in seconds) between emitting loop packets. Default is 2.5</p>
+    <p class="config_option">mode</p>
+    <p>One of either <span class='code'>simulator</span> or <span class='code'>generator</span></p>
+    <table class="indent" style="width: 80%">
+      <tr>
+	<td class="code">simulator</td>
+	<td>Real-time simulator. It will sleep between emitting packets [Default]</td>
+      </tr>
+      <tr>
+	<td class="code">generator</td>
+	<td>Emit packets as fast as it can. Useful for testing.</td>
+      </tr>
+    </table>
+    <p class="config_option">start</p>
+    <p>The start time for the generator in the format <span class="code">YYYY-MM-DD 
 	hh:mm</span>. Optional. Default is the present time.</p>
-	<p>&nbsp;</p>
-	<h3 class="config_section">[StdRESTful]</h3>
-	<p>This section is for configuring the <span class="code">StdRESTful</span> 
-	service, which uploads to simple
-	<a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
-	servers such as the <a href="http://www.wunderground.com/">Weather Underground</a>,
-	<a href="http://www.pwsweather.com/">PWSweather.com</a>, or
-	<a href="http://www.wxqa.com/">CWOP</a>. </p>
-	<h4 class="config_section">[[Wunderground]]</h4>
-	<p><span class="code">Weewx </span>can send your current data to the
-	<a href="http://www.wunderground.com/">Weather Underground</a>. If you do not 
-	wish to do this, comment out the two options below. </p>
-	<p class="config_important">station </p>
-	<p>Set to your Weather Underground station ID (e.g., <span class="code">KORHOODR3</span>). 
-	Required. </p>
-	<p class="config_important">password </p>
-	<p>Set to your Weather Underground password. Required. </p>
-	<h4 class="config_section">[[PWSweather]]</h4>
-	<p><span class="code">Weewx </span>can send your current data to the
-	<a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you do not 
-	wish to do this, comment out the two options below. </p>
-	<p class="config_important">station </p>
-	<p>Set to your PWSweather station ID. Required. </p>
-	<p class="config_important">password </p>
-	<p>Set to your PWSweather password. Required. </p>
-	<h4 class="config_section">[[CWOP]]</h4>
-	<p><span class="code">Weewx</span> can send your data to the
-	<a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If you 
-	do not wish to do this, comment out option &quot;<span class="code">station</span>&quot; 
-	below. </p>
-	<p class="config_important">station </p>
-	<p>Set to your CWOP station ID (e.g., <span class="code">CW1234</span>). Required.
-	</p>
-	<p class="config_important">passcode </p>
-	<p>This is used for APRS (amateur radio) stations only. Set to the passcode 
-	given to you by the CWOP operators. Otherwise, leave this option commented out 
-	[Required for APRS stations; ignored for others] </p>
-	<p class="config_option">server </p>
-	<p>A comma separated list of servers:ports to try. Unless you have a good reason 
-	to change this, use the servers listed. [Required.] </p>
-	<p class="config_option">interval </p>
-	<p>The interval in seconds between posts. Because CWOP is heavily used, the 
-	operators discourage very frequent posts. Every 5 minutes (300 seconds) is fine, 
-	but they prefer every 10 minutes (600 s) or even longer. Setting this value 
-	to zero will cause every archive record to be posted. [Optional. Default is 
-	zero.] </p>
-	<p class="config_option">stale </p>
-	<p>How old a record can be before it will not be used for a catch up. CWOP does 
-	not use the timestamp on a posted record. Instead, they use the wall clock time 
-	that it came in. This means that if your station is off the air for a long period 
-	of time, then <span class="code">weewx</span> attempts a catch up, old data 
-	could be interpreted as the current conditions. [Optional. Default is 1800 seconds.]
-	</p>
-	<h3 id="[Reports]" class="config_section">[StdReport]</h3>
-	<p>This section is for configuring the <span class="code">StdReport</span> service, 
-	which controls which reports are to be generated. While it can be highly customized 
-	for your individual situation, this documentation describes the section as shipped 
-	in the standard distribution. </p>
-	<p>Each report is represented by a sub-section, marked with double brackets 
-	(<em>e.g.</em>, <span class="code">[[MyReport]]</span>). Any options for the 
-	report should be placed under it. The standard report service will go through 
-	the sections, running each report in order. Hence, normally the report
-	<span class="code">[[StandardReport]]</span> will be run first, then report
-	<span class="code">[[FTP]]</span> (which actually optionally uploads the results 
-	to a remote web server). Details for how to customize reports are in the section
-	<em><a href="customizing.htm#Opportunities_for_customizing_reports">Opportunities 
-	for customizing reports</a></em>, in the 
-	<a href="customizing.htm">Customizing Guide</a>.
-	</p>
-	<p class="config_option">SKIN_ROOT </p>
-	<p>The directory relative to <span class="code"><em>$WEEWX_ROOT</em></span> 
-	where the skins live. Default is <span class="code">skins</span>. </p>
-	<p class="config_option">HTML_ROOT </p>
-	<p>The target directory for the generated files, relative to
-	<span class="code"><em>$WEEWX_ROOT</em></span>. Generated files and images will 
-	be put here. Default is <span class="code">public_html</span>. </p>
-	<h4 class="config_section">[[StandardReport]]</h4>
-	<p>This is the standard report that will be run on every archiving interval. 
-	It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates 
-	four HTML pages (&quot;day&quot;, &quot;week&quot;, &quot;month&quot;, and &quot;year&quot; 
-	observations), plot graphs for same, an RSS feed, and NOAA monthly and yearly 
-	reports. Unless changed otherwise, it uses US Customary Units and puts the results 
-	in <span class="code">public_html</span> and subdirectory <span class="code">
+    <p>&nbsp;</p>
+    <h3 class="config_section">[StdRESTful]</h3>
+    <p>This section is for configuring the <span class="code">StdRESTful</span> 
+      service, which uploads to simple
+      <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
+      servers such as the <a href="http://www.wunderground.com/">Weather Underground</a>,
+      <a href="http://www.pwsweather.com/">PWSweather.com</a>, or
+      <a href="http://www.wxqa.com/">CWOP</a>. </p>
+    <h4 class="config_section">[[Wunderground]]</h4>
+    <p><span class="code">Weewx </span>can send your current data to the
+      <a href="http://www.wunderground.com/">Weather Underground</a>. If you do not 
+      wish to do this, comment out the two options below. </p>
+    <p class="config_important">station </p>
+    <p>Set to your Weather Underground station ID (e.g., <span class="code">KORHOODR3</span>). 
+      Required. </p>
+    <p class="config_important">password </p>
+    <p>Set to your Weather Underground password. Required. </p>
+    <h4 class="config_section">[[PWSweather]]</h4>
+    <p><span class="code">Weewx </span>can send your current data to the
+      <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you do not 
+      wish to do this, comment out the two options below. </p>
+    <p class="config_important">station </p>
+    <p>Set to your PWSweather station ID. Required. </p>
+    <p class="config_important">password </p>
+    <p>Set to your PWSweather password. Required. </p>
+    <h4 class="config_section">[[CWOP]]</h4>
+    <p><span class="code">Weewx</span> can send your data to the
+      <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If you 
+      do not wish to do this, comment out option <span class="code">station</span>
+      below. </p>
+    <p class="config_important">station </p>
+    <p>Set to your CWOP station ID (e.g., <span class="code">CW1234</span>). Required.
+    </p>
+    <p class="config_important">passcode </p>
+    <p>This is used for APRS (amateur radio) stations only. Set to the passcode 
+      given to you by the CWOP operators. Otherwise, leave this option commented out 
+      [Required for APRS stations; ignored for others] </p>
+    <p class="config_option">server </p>
+    <p>A comma separated list of servers:ports to try. Unless you have a good reason 
+      to change this, use the servers listed. [Required.] </p>
+    <p class="config_option">interval </p>
+    <p>The interval in seconds between posts. Because CWOP is heavily used, the 
+      operators discourage very frequent posts. Every 5 minutes (300 seconds) is fine, 
+      but they prefer every 10 minutes (600 s) or even longer. Setting this value 
+      to zero will cause every archive record to be posted. [Optional. Default is 
+      zero.] </p>
+    <p class="config_option">stale </p>
+    <p>How old a record can be before it will not be used for a catch up. CWOP does 
+      not use the timestamp on a posted record. Instead, they use the wall clock time 
+      that it came in. This means that if your station is off the air for a long period 
+      of time, then <span class="code">weewx</span> attempts a catch up, old data 
+      could be interpreted as the current conditions. [Optional. Default is 1800 seconds.]
+    </p>
+    <h3 id="[Reports]" class="config_section">[StdReport]</h3>
+    <p>This section is for configuring the <span class="code">StdReport</span> service, 
+      which controls which reports are to be generated. While it can be highly customized 
+      for your individual situation, this documentation describes the section as shipped 
+      in the standard distribution. </p>
+    <p>Each report is represented by a sub-section, marked with double brackets 
+      (<em>e.g.</em>, <span class="code">[[MyReport]]</span>). Any options for the 
+      report should be placed under it. The standard report service will go through 
+      the sections, running each report in order. Hence, normally the report
+      <span class="code">[[StandardReport]]</span> will be run first, then report
+      <span class="code">[[FTP]]</span> (which actually optionally uploads the results 
+      to a remote web server). Details for how to customize reports are in the section
+      <em><a href="customizing.htm#Opportunities_for_customizing_reports">Opportunities 
+	  for customizing reports</a></em>, in the 
+      <a href="customizing.htm">Customizing Guide</a>.
+    </p>
+    <p class="config_option">SKIN_ROOT </p>
+    <p>The directory relative to <span class="code"><em>$WEEWX_ROOT</em></span> 
+      where the skins live. Default is <span class="code">skins</span>. </p>
+    <p class="config_option">HTML_ROOT </p>
+    <p>The target directory for the generated files, relative to
+      <span class="code"><em>$WEEWX_ROOT</em></span>. Generated files and images will 
+      be put here. Default is <span class="code">public_html</span>. </p>
+    <h4 class="config_section">[[StandardReport]]</h4>
+    <p>This is the standard report that will be run on every archiving interval. 
+      It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates 
+      four HTML pages (&quot;day&quot;, &quot;week&quot;, &quot;month&quot;, and &quot;year&quot; 
+      observations), plot graphs for same, an RSS feed, and NOAA monthly and yearly 
+      reports. Unless changed otherwise, it uses US Customary Units and puts the results 
+      in <span class="code">public_html</span> and subdirectory <span class="code">
 	public_html/NOAA</span>. </p>
-	<h4 class="config_section">[[FTP]]</h4>
-	<p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
-	uses the report machinery to upload files from directory <span class="code">
+    <h4 class="config_section">[[FTP]]</h4>
+    <p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
+      uses the report machinery to upload files from directory <span class="code">
 	<em>$HTML_ROOT</em></span> to a remote webserver. It does an incremental update, 
-	that is, it only FTPs any files that have changed, saving the outgoing bandwidth 
-	of your Internet connection. </p>
-	<p>If you do not use such a server, comment out the first four options below.
-	</p>
-	<p class="config_important">user </p>
-	<p>Set to the username you use for your FTP connection to your web server. Required. 
-	No default. </p>
-	<p class="config_important">password </p>
-	<p>Set to the password you use for your FTP connection to your web server. Required. 
-	No default. </p>
-	<p class="config_important">server </p>
-	<p>Set to the name of your web server (e.g.,
-	<a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
-	No default </p>
-	<p class="config_important">path </p>
-	<p>Set to the path where the weather data will be stored on your webserver (e.g., &#39;<span class="code">/weather</span>&#39;). 
-	NB: some FTP servers require a leading slash (&#39;<span class="code">/</span>&#39;), 
-	some don&#39;t. Required. No default. </p>
-	<p class="config_important">passive </p>
-	<p>Set to 1 if you wish to use the more modern, FTP passive mode, 0 if you wish 
-	to use active mode. Passive mode generally works better through firewalls, but 
-	not all FTP servers do a good job of supporting it. See
-	<a href="http://slacksite.com/other/ftp.html">Active FTP vs. Passive FTP, a 
+      that is, it only FTPs any files that have changed, saving the outgoing bandwidth 
+      of your Internet connection. </p>
+    <p>If you do not use such a server, comment out the first four options below.
+    </p>
+    <p class="config_important">user </p>
+    <p>Set to the username you use for your FTP connection to your web server. Required. 
+      No default. </p>
+    <p class="config_important">password </p>
+    <p>Set to the password you use for your FTP connection to your web server. Required. 
+      No default. </p>
+    <p class="config_important">server </p>
+    <p>Set to the name of your web server (e.g.,
+      <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
+      No default </p>
+    <p class="config_important">path </p>
+    <p>Set to the path where the weather data will be stored on your webserver (e.g., &#39;<span class="code">/weather</span>&#39;). 
+      NB: some FTP servers require a leading slash (&#39;<span class="code">/</span>&#39;), 
+      some don&#39;t. Required. No default. </p>
+    <p class="config_important">passive </p>
+    <p>Set to 1 if you wish to use the more modern, FTP passive mode, 0 if you wish 
+      to use active mode. Passive mode generally works better through firewalls, but 
+      not all FTP servers do a good job of supporting it. See
+      <a href="http://slacksite.com/other/ftp.html">Active FTP vs. Passive FTP, a 
 	Definitive Explanation</a> for a good explanation of the difference. Default 
-	is 1 (passive mode). </p>
-	<p class="config_option">max_tries </p>
-	<p><span class="code">Weewx</span> will try up to this many times to FTP a file 
-	up to your server before giving up. Default is 3. </p>
-	<h4 class="config_section">[[RSYNC]]</h4>
-	<p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
-	uses the report machinery to upload files from directory <span class="code">
+      is 1 (passive mode). </p>
+    <p class="config_option">max_tries </p>
+    <p><span class="code">Weewx</span> will try up to this many times to FTP a file 
+      up to your server before giving up. Default is 3. </p>
+    <h4 class="config_section">[[RSYNC]]</h4>
+    <p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
+      uses the report machinery to upload files from directory <span class="code">
 	<em>$HTML_ROOT</em></span> to a remote webserver. It does an incremental update, 
-	that is, it only synchronizes those files that have changed, saving the outgoing 
-	bandwidth of your Internet connection. </p>
-	<p>If you do not use such a server, comment out the options below. </p>
-	<p class="config_important">server </p>
-	<p>Set to the name of your web server (e.g.,
-	<a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
-	No default </p>
-	<p class="config_important">user </p>
-	<p>Set to the ssh username you use for your rsync connection to your web server. 
-	The local user that weewx runs as must have passwordless ssh configured for 
-	user@server. Required. No default. </p>
-	<p class="config_important">path </p>
-	<p>Set to the path where the weather data will be stored on your webserver (e.g., &#39;<span class="code">/weather</span>&#39;). 
-	Required. No default. </p>
-	<p class="config_important">delete </p>
-	<p>Files that don't exist in the local report are removed from the remote location.
-	<em>USE WITH CAUTION:</em> If you make a mistake in setting the
-	<span class="code">path</span>, this can cause unexpected files to be deleted 
-	on the remote server. Valid values are 1 to enable and 0 to disable. Required. 
-	Default is 0.</p>
-	<h3 id="[StdConvert]" class="config_section">[StdConvert]</h3>
-	<p>This section is for configuring the <span class="code">StdConvert</span> 
-	service. This service acts as a filter, converting the unit system coming off 
-	your hardware to a target output unit system. Everything that follows, including 
-	the archiving service, will use the target unit system. Hence, your data 
-	will be stored using your chosen unit system. </p>
-	<p><em>Once chosen, it cannot be changed!</em> Weewx does not allow you to mix 
-	unit systems within the databases. You must chose one or the other and then 
-	stick with it. This means that users coming from wview (which uses US Customary) 
-	should not change the default setting. Having said this, there is a way of reconfiguring 
-	the database to use another unit system. See the section
-	<a href="customizing.htm#Changing_the_unit_system">Changing the Unit System</a> 
-	in the Customizing Guide.</p>
-	<p>Note that whatever you choose here, it does not affect your options for the 
-	unit system to be used for <i>reporting</i>. Because of this, unless you 
-	have a special purpose application, there is really no good reason to change 
-	from the default, which is <span class="code">US</span>. However, if you do 
-	decide to change to Metric, be sure to read the sections <span class="code">
+      that is, it only synchronizes those files that have changed, saving the outgoing 
+      bandwidth of your Internet connection. </p>
+    <p>If you do not use such a server, comment out the options below. </p>
+    <p class="config_important">server </p>
+    <p>Set to the name of your web server (e.g.,
+      <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
+      No default </p>
+    <p class="config_important">user </p>
+    <p>Set to the ssh username you use for your rsync connection to your web server. 
+      The local user that weewx runs as must have passwordless ssh configured for 
+      user@server. Required. No default. </p>
+    <p class="config_important">path </p>
+    <p>Set to the path where the weather data will be stored on your webserver (e.g., &#39;<span class="code">/weather</span>&#39;). 
+      Required. No default. </p>
+    <p class="config_important">delete </p>
+    <p>Files that don't exist in the local report are removed from the remote location.
+      <em>USE WITH CAUTION:</em> If you make a mistake in setting the
+      <span class="code">path</span>, this can cause unexpected files to be deleted 
+      on the remote server. Valid values are 1 to enable and 0 to disable. Required. 
+      Default is 0.</p>
+    <h3 id="[StdConvert]" class="config_section">[StdConvert]</h3>
+    <p>This section is for configuring the <span class="code">StdConvert</span> 
+      service. This service acts as a filter, converting the unit system coming off 
+      your hardware to a target output unit system. Everything that follows, including 
+      the archiving service, will use the target unit system. Hence, your data 
+      will be stored using your chosen unit system. </p>
+    <p><em>Once chosen, it cannot be changed!</em> Weewx does not allow you to mix 
+      unit systems within the databases. You must chose one or the other and then 
+      stick with it. This means that users coming from wview (which uses US Customary) 
+      should not change the default setting. Having said this, there is a way of reconfiguring 
+      the database to use another unit system. See the section
+      <a href="customizing.htm#Changing_the_unit_system">Changing the Unit System</a> 
+      in the Customizing Guide.</p>
+    <p>Note that whatever you choose here, it does not affect your options for the 
+      unit system to be used for <i>reporting</i>. Because of this, unless you 
+      have a special purpose application, there is really no good reason to change 
+      from the default, which is <span class="code">US</span>. However, if you do 
+      decide to change to Metric, be sure to read the sections <span class="code">
 	<a href="#Calibrate">[StdCalibrate]</a></span> and <span class="code">
 	<a href="#QC">[StdQC]</a></span> below, and change the units there as well.</p>
-	<p class="config_option">target_unit</p>
-	<p>Set to either &#39;<span class="code">US</span>&#39; or &#39;<span class="code">METRIC</span>&#39;. 
-	Default is &#39;<span class="code">US</span>&#39;.</p>
-	<h3 id="Calibrate" class="config_section">[StdCalibrate]</h3>
-	<p>This section is for configuring the <span class="code">StdCalibrate</span> 
-	service. This service offers an opportunity to correct for any calibration errors 
-	in your instruments. It is very general and flexible. </p>
-	<p>Because this service is normally run after <span class="code">StdConvert</span>, 
-	the units to be used should be the same as the target unit system chosen in
-	<a href="#[StdConvert]"><span class="code">StdConvert</span></a> above. It is 
-	also important that this service be run before the archiving service
-	<span class="code">StdArchive</span>, so that it is the corrected data that 
-	is stored. </p>
-	<p>If you do not wish to apply any calibrations, you can leave it out of
-	<span class="code"><a href="#service_list">service_list</a></span>, the list 
-	of services to be run, and it will not be loaded or run at all. </p>
-	<h4 class="config_section">[[Corrections]]</h4>
-	<p>In this section you list all <em>correction expressions</em>. For example, 
-	say that you know your outside thermometer reads high by 0.2°F. You could add 
-	the expression: </p>
-	<pre>outTemp = outTemp - 0.2</pre>
-	<p>Perhaps you need a linear correction around a reference temperature of 68°F:
-	</p>
-	<pre>outTemp = outTemp + (outTemp-68) * 0.02</pre>
-	<p>It is even possible to do corrections involving more than one variable. Suppose 
-	you have a temperature sensitive barometer: </p>
-	<pre>barometer = barometer + (outTemp-32) * 0.0091</pre>
-	<p>All correction expressions are run in the order given. </p>
-	<p>Both LOOP data and archive data will be corrected. </p>
-	<p>If you are using a Davis Vantage instrument and all you require is a simple 
-	correction offset, this can also be done in the hardware. See your manual for 
-	instructions. </p>
-	<h3 id="QC" class="config_section">[StdQC]</h3>
-	<p>This section is for configuring the <span class="code">StdQC</span> service. 
-	This service offers a very simple <em>Quality Control</em> that only checks 
-	that values are within a minimum and maximum range.</p>
-	<p>Because this service is normally run after <span class="code">StdConvert</span>, 
-	the units to be used should be the same as the target unit system chosen in
-	<a href="#[StdConvert]"><span class="code">StdConvert</span></a>. It is also 
-	important that it be run after the calibration service, <span class="code">StdCalibrate
-	</span>and before the archiving service <span class="code">StdArchive</span>, 
-	so that it is the calibrated and corrected data that is stored. </p>
-	<p>If you do not wish to use this service, you can leave it out of
-	<span class="code"><a href="#service_list">service_list</a></span>, the list 
-	of services to be run, and it will not be loaded or run. </p>
-	<h4 class="config_section">[[MinMax]]</h4>
-	<p>In this section you list the observation types you wish to have checked, 
-	along with their minimum and maximum values. The units should be in <em>the 
+    <p class="config_option">target_unit</p>
+    <p>Set to either &#39;<span class="code">US</span>&#39; or &#39;<span class="code">METRIC</span>&#39;. 
+      Default is &#39;<span class="code">US</span>&#39;.</p>
+    <h3 id="Calibrate" class="config_section">[StdCalibrate]</h3>
+    <p>This section is for configuring the <span class="code">StdCalibrate</span> 
+      service. This service offers an opportunity to correct for any calibration errors 
+      in your instruments. It is very general and flexible. </p>
+    <p>Because this service is normally run after <span class="code">StdConvert</span>, 
+      the units to be used should be the same as the target unit system chosen in
+      <a href="#[StdConvert]"><span class="code">StdConvert</span></a> above. It is 
+      also important that this service be run before the archiving service
+      <span class="code">StdArchive</span>, so that it is the corrected data that 
+      is stored. </p>
+    <p>If you do not wish to apply any calibrations, you can leave it out of
+      <span class="code"><a href="#service_list">service_list</a></span>, the list 
+      of services to be run, and it will not be loaded or run at all. </p>
+    <h4 class="config_section">[[Corrections]]</h4>
+    <p>In this section you list all <em>correction expressions</em>. For example, 
+      say that you know your outside thermometer reads high by 0.2°F. You could add 
+      the expression: </p>
+    <pre>outTemp = outTemp - 0.2</pre>
+    <p>Perhaps you need a linear correction around a reference temperature of 68°F:
+    </p>
+    <pre>outTemp = outTemp + (outTemp-68) * 0.02</pre>
+    <p>It is even possible to do corrections involving more than one variable. Suppose 
+      you have a temperature sensitive barometer: </p>
+    <pre>barometer = barometer + (outTemp-32) * 0.0091</pre>
+    <p>All correction expressions are run in the order given. </p>
+    <p>Both LOOP data and archive data will be corrected. </p>
+    <p>If you are using a Davis Vantage instrument and all you require is a simple 
+      correction offset, this can also be done in the hardware. See your manual for 
+      instructions. </p>
+    <h3 id="QC" class="config_section">[StdQC]</h3>
+    <p>This section is for configuring the <span class="code">StdQC</span> service. 
+      This service offers a very simple <em>Quality Control</em> that only checks 
+      that values are within a minimum and maximum range.</p>
+    <p>Because this service is normally run after <span class="code">StdConvert</span>, 
+      the units to be used should be the same as the target unit system chosen in
+      <a href="#[StdConvert]"><span class="code">StdConvert</span></a>. It is also 
+      important that it be run after the calibration service, <span class="code">StdCalibrate
+      </span>and before the archiving service <span class="code">StdArchive</span>, 
+      so that it is the calibrated and corrected data that is stored. </p>
+    <p>If you do not wish to use this service, you can leave it out of
+      <span class="code"><a href="#service_list">service_list</a></span>, the list 
+      of services to be run, and it will not be loaded or run. </p>
+    <h4 class="config_section">[[MinMax]]</h4>
+    <p>In this section you list the observation types you wish to have checked, 
+      along with their minimum and maximum values. The units should be in <em>the 
 	same unit system as specified in section <span class="code">
-	<a href="#[StdConvert]">StdConvert</a></span> above</em>. </p>
-	<p>Example, </p>
-	<p class="tty">[[MinMax]] <br />
-&nbsp; outTemp = -40, 120 <br />
-&nbsp; barometer = 28, 32.5 <br />
-&nbsp; outHumidity = 0, 100 </p>
-	<p>In this example, if a temperature should fall outside of the inclusive range 
-	-40 °F through 120 °F, then it will be set to the null value,
-	<span class="code">None</span>, and ignored. In a similar manner, the acceptable 
-	values for barometric pressure would be 28 through 32.5 inHg, for humidity 0 
-	through 100%. </p>
-	<p>Both LOOP and archive data will be checked. </p>
-	<p>Knowing the details of how your hardware encodes data helps to minimize the 
-	number of observations that need to be checked. For example, the VP2 devotes 
-	only one unsigned byte to storing wind speed, and even then
-	<span class="code">0xff</span> is devoted to a bad value, so the only possible 
-	values that could appear are 0 through 126 mph, a reasonable range. So, for 
-	the VP2, there is no real point in checking wind speed. </p>
-	<h3 id="[StdArchive]" class="config_section">[StdArchive]</h3>
-	<p>This section is for configuring <span class="code">StdArchive</span>, the 
-	service that stores data in the databases. Options allow choosing which database 
-	to use for archiving and statistics.</p>
-	<p class="config_option">archive_database</p>
-	<p>The database to be used to store the archive data. This should match a section 
-	given in the section <span class="code"><a href="#[Databases]">[Databases]</a></span> 
-	below. Normally, this is set to <span class="code">archive_sqlite</span>. If 
-	you are using MySQL, you will want to change this to <span class="code">
+	  <a href="#[StdConvert]">StdConvert</a></span> above</em>. </p>
+    <p>Example, </p>
+    <p class="tty">[[MinMax]] <br />
+      &nbsp; outTemp = -40, 120 <br />
+      &nbsp; barometer = 28, 32.5 <br />
+      &nbsp; outHumidity = 0, 100 </p>
+    <p>In this example, if a temperature should fall outside of the inclusive range 
+      -40 °F through 120 °F, then it will be set to the null value,
+      <span class="code">None</span>, and ignored. In a similar manner, the acceptable 
+      values for barometric pressure would be 28 through 32.5 inHg, for humidity 0 
+      through 100%. </p>
+    <p>Both LOOP and archive data will be checked. </p>
+    <p>Knowing the details of how your hardware encodes data helps to minimize the 
+      number of observations that need to be checked. For example, the VP2 devotes 
+      only one unsigned byte to storing wind speed, and even then
+      <span class="code">0xff</span> is devoted to a bad value, so the only possible 
+      values that could appear are 0 through 126 mph, a reasonable range. So, for 
+      the VP2, there is no real point in checking wind speed. </p>
+    <h3 id="[StdArchive]" class="config_section">[StdArchive]</h3>
+    <p>This section is for configuring <span class="code">StdArchive</span>, the 
+      service that stores data in the databases. Options allow choosing which database 
+      to use for archiving and statistics.</p>
+    <p class="config_option">archive_database</p>
+    <p>The database to be used to store the archive data. This should match a section 
+      given in the section <span class="code"><a href="#[Databases]">[Databases]</a></span> 
+      below. Normally, this is set to <span class="code">archive_sqlite</span>. If 
+      you are using MySQL, you will want to change this to <span class="code">
 	archive_mysql</span>.</p>
-	<p class="config_option">stats_database</p>
-	<p>The database to be used to store the statistical data. This should match 
-	a section given in the section <span class="code"><a href="#[Databases]">[Databases]</a></span> 
-	below. Normally, this is set to <span class="code">stats_sqlite</span>. If 
-	you are using MySQL, you will want to change this to <span class="code">
+    <p class="config_option">stats_database</p>
+    <p>The database to be used to store the statistical data. This should match 
+      a section given in the section <span class="code"><a href="#[Databases]">[Databases]</a></span> 
+      below. Normally, this is set to <span class="code">stats_sqlite</span>. If 
+      you are using MySQL, you will want to change this to <span class="code">
 	stats_mysql</span>.</p>
-	<p class="config_option">archive_delay </p>
-	<p>How long to wait in seconds after the top of an archiving interval before 
-	fetching new data off the station. For example, if your archive interval is 
-	5 minutes and archive_delay is set to 15, then the data will be fetched at 00:00:15, 
-	00:05:15, 00:10:15, etc. This delay is to give the station a few seconds to 
-	archive the data internally, and in case your server has any other tasks to 
-	do at the top of the minute. Default is 15 seconds. </p>
-	<p id="record_generation" class="config_option">record_generation</p>
-	<p>Set to whether records should be downloaded off the hardware (recommended), 
-	or generated in software. If set to '<span class="code">hardware</span>', then
-	<span class="code">weewx</span> tries to download archive records from your 
-	station. However, not all types of stations support this, in which case
-	<span class="code">weewx</span> falls back to software generation. A setting 
-	of '<span class="code">hardware</span>' will work for most users. A notable 
-	exception is <a href="http://www.wxforum.net/index.php?topic=10315.0">users 
+    <p class="config_option">archive_delay </p>
+    <p>How long to wait in seconds after the top of an archiving interval before 
+      fetching new data off the station. For example, if your archive interval is 
+      5 minutes and archive_delay is set to 15, then the data will be fetched at 00:00:15, 
+      00:05:15, 00:10:15, etc. This delay is to give the station a few seconds to 
+      archive the data internally, and in case your server has any other tasks to 
+      do at the top of the minute. Default is 15 seconds. </p>
+    <p id="record_generation" class="config_option">record_generation</p>
+    <p>Set to whether records should be downloaded off the hardware (recommended), 
+      or generated in software. If set to '<span class="code">hardware</span>', then
+      <span class="code">weewx</span> tries to download archive records from your 
+      station. However, not all types of stations support this, in which case
+      <span class="code">weewx</span> falls back to software generation. A setting 
+      of '<span class="code">hardware</span>' will work for most users. A notable 
+      exception is <a href="http://www.wxforum.net/index.php?topic=10315.0">users 
 	who have cobbled together homebrew serial interfaces</a> for the Vantage stations 
-	that do not include memory for a logger. These users should set this option 
-	to '<span class="code">software</span>', forcing software record generation. 
-	Default is &#39;<span class="code">hardware</span>&#39;.</p>
-	<p class="config_option">archive_schema</p>
-	<p>This is used only when the archive database is first created. Thereafter, 
-	it is downloaded from the database. It should point to a Python list 
-	containing the archive database schema. The default is <span class="code">
+      that do not include memory for a logger. These users should set this option 
+      to '<span class="code">software</span>', forcing software record generation. 
+      Default is &#39;<span class="code">hardware</span>&#39;.</p>
+    <p class="config_option">archive_schema</p>
+    <p>This is used only when the archive database is first created. Thereafter, 
+      it is downloaded from the database. It should point to a Python list 
+      containing the archive database schema. The default is <span class="code">
 	user.schemas.defaultArchiveSchema</span>.</p>
-	<p class="config_option">stats_schema</p>
-	<p>This is used only when the stats database is first created. Thereafter, 
-	it is downloaded from the database. It should point to a Python list 
-	containing the stats database schema. The default is <span class="code">
+    <p class="config_option">stats_schema</p>
+    <p>This is used only when the stats database is first created. Thereafter, 
+      it is downloaded from the database. It should point to a Python list 
+      containing the stats database schema. The default is <span class="code">
 	user.schemas.defaultStatsSchema</span>.</p>
-	
-	<h3 class="config_section">[StdTimeSynch]</h3>
-	<p>This section is for configuring <span class="code">StdTymeSynch</span>, a 
-	service that can synchronize the onboard clock of station with your computer. 
-	Not all weather station hardware supports this.</p>
-	<p class="config_option">clock_check</p>
-	<p>How often to check the clock on the weather station in seconds. Default is 
-	14,400 seconds (every 4 hours)</p>
-	<p class="config_option">max_drift</p>
-	<p>The maximum amount of clock drift to tolerate, in seconds, before resetting 
-	the clock. Default is 5.</p>
-	<h3 id="[Databases]" class="config_section">[Databases]</h3>
-	<p>This section lists actual database bindings. The name of each database is 
-	given in double brackets below (for example, <span class="code">[[archive_sqlite]]</span>). 
-	The details of the binding follow. You are free to add new bindings.</p>
-	<p>Note that if you choose the <a href="http://www.mysql.com/">MySQL</a> database 
-	it is assumed that you know how to administer it. In particular, you will have 
-	to set up a user with appropriate privileges to create and update the named 
-	databases.</p>
-	<h4 class="config_section">[[archive_sqlite]]</h4>
-	<p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
-	engine to store archive data. It is open-source, simple, lightweight, highly 
-	portable, and memory efficient. For most purposes it serves nicely.</p>
-	<p class="config_option">database</p>
-	<p>The path, relative to <span class="code">WEEWX_ROOT</span>, to the archive 
-	sqlite file. Required.</p>
-	<h4 class="config_section">[[stats_sqlite]]</h4>
-	<p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
-	engine to store the statistical data. It is open-source, simple, lightweight, 
-	highly portable, and memory efficient. For most purposes it serves nicely.</p>
-	<p class="config_option">database</p>
-	<p>The path, relative to <span class="code">WEEWX_ROOT</span>, to the stats 
-	sqlite file. Required.</p>
-	<h4 class="config_section">[[archive_mysql]]</h4>
-	<p>This definition uses the MySQL database engine to store archive data. It 
-	is free, highly-scalable, but more complicated to administer. </p>
-	<p class="config_option">host</p>
-	<p>The host the archive database is located on. Default is &#39;<span class="code">localhost</span>&#39;.</p>
-	<p class="config_option">user</p>
-	<p>The user name to be used to log into the server. Required.</p>
-	<p class="config_option">password</p>
-	<p>The password. Required.</p>
-	<p class="config_option">database</p>
-	<p>The name of the archive database inside the server. Required.</p>
-	<h4 class="config_section">[[stats_mysql]]</h4>
-	<p>This uses the MySQL database engine to store archive data. It is free, highly-scalable, 
-	but more complicated to administer. </p>
-	<p>The host the stats database is located on. Default is &#39;<span class="code">localhost</span>&#39;.</p>
-	<p class="config_option">user</p>
-	<p>The user name to be used to log into the server. Required.</p>
-	<p class="config_option">password</p>
-	<p>The password. Required.</p>
-	<p class="config_option">database</p>
-	<p>The name of the statistical database inside the server. Required.</p>
-	<h3 class="config_section">[Engines]</h3>
-	<p>This section is used to configure the internal service engine in
-	<span class="code">weewx</span>. It is for advanced customization. Details on 
-	how to do this can be found in the section <em>
+    
+    <h3 class="config_section">[StdTimeSynch]</h3>
+    <p>This section is for configuring <span class="code">StdTymeSynch</span>, a 
+      service that can synchronize the onboard clock of station with your computer. 
+      Not all weather station hardware supports this.</p>
+    <p class="config_option">clock_check</p>
+    <p>How often to check the clock on the weather station in seconds. Default is 
+      14,400 seconds (every 4 hours)</p>
+    <p class="config_option">max_drift</p>
+    <p>The maximum amount of clock drift to tolerate, in seconds, before resetting 
+      the clock. Default is 5.</p>
+    <h3 id="[Databases]" class="config_section">[Databases]</h3>
+    <p>This section lists actual database bindings. The name of each database is 
+      given in double brackets below (for example, <span class="code">[[archive_sqlite]]</span>). 
+      The details of the binding follow. You are free to add new bindings.</p>
+    <p>Note that if you choose the <a href="http://www.mysql.com/">MySQL</a> database 
+      it is assumed that you know how to administer it. In particular, you will have 
+      to set up a user with appropriate privileges to create and update the named 
+      databases.</p>
+    <h4 class="config_section">[[archive_sqlite]]</h4>
+    <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
+      engine to store archive data. It is open-source, simple, lightweight, highly 
+      portable, and memory efficient. For most purposes it serves nicely.</p>
+    <p class="config_option">database</p>
+    <p>The path, relative to <span class="code">WEEWX_ROOT</span>, to the archive 
+      sqlite file. Required.</p>
+    <h4 class="config_section">[[stats_sqlite]]</h4>
+    <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
+      engine to store the statistical data. It is open-source, simple, lightweight, 
+      highly portable, and memory efficient. For most purposes it serves nicely.</p>
+    <p class="config_option">database</p>
+    <p>The path, relative to <span class="code">WEEWX_ROOT</span>, to the stats 
+      sqlite file. Required.</p>
+    <h4 class="config_section">[[archive_mysql]]</h4>
+    <p>This definition uses the MySQL database engine to store archive data. It 
+      is free, highly-scalable, but more complicated to administer. </p>
+    <p class="config_option">host</p>
+    <p>The host the archive database is located on. Default is &#39;<span class="code">localhost</span>&#39;.</p>
+    <p class="config_option">user</p>
+    <p>The user name to be used to log into the server. Required.</p>
+    <p class="config_option">password</p>
+    <p>The password. Required.</p>
+    <p class="config_option">database</p>
+    <p>The name of the archive database inside the server. Required.</p>
+    <h4 class="config_section">[[stats_mysql]]</h4>
+    <p>This uses the MySQL database engine to store archive data. It is free, highly-scalable, 
+      but more complicated to administer. </p>
+    <p>The host the stats database is located on. Default is &#39;<span class="code">localhost</span>&#39;.</p>
+    <p class="config_option">user</p>
+    <p>The user name to be used to log into the server. Required.</p>
+    <p class="config_option">password</p>
+    <p>The password. Required.</p>
+    <p class="config_option">database</p>
+    <p>The name of the statistical database inside the server. Required.</p>
+    <h3 class="config_section">[Engines]</h3>
+    <p>This section is used to configure the internal service engine in
+      <span class="code">weewx</span>. It is for advanced customization. Details on 
+      how to do this can be found in the section <em>
 	<a href="customizing.htm#Customizing_the_weewx_service_engine">Customizing the 
-	weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
-	<h4 class="config_section">[[WxEngine]]</h4>
-	<p>This section is for options used by the service engine. </p>
-	<p id="service_list" class="config_option">service_list </p>
-	<p>This option is the list of <em>services</em> that are to be run by the service 
-	engine. After each event (such as the arrival of LOOP data, etc.), they will 
-	be run in the given order. The standard list of services run by weewx is:
-	</p>
-	<p class="tty">service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, 
-	weewx.wxengine,StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, 
-	weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
-	<p>Note that this must all be on one line! </p>
-	<p>You can leave some of these services out if you do not need them. For example, 
-	the bare minimum if you are using a Davis Vantage instrument, storing your data 
-	in US Customary units, doing no data corrections or quality control and running 
-	as a daemon (no printing to console) would be:</p>
-	<p class="tty">service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, 
-	weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
-	<p>However, this will only make a slight difference in execution speed. </p>
-	<h1 id="Running_weewx">Running <span class="code">weewx</span></h1>
-	<p><span class="code">Weewx</span> can be run either from the command line (useful 
-	for diagnostic purposes because it will print out a summary of every LOOP data), 
-	or as a daemon. When first trying <span class="code">weewx</span>, it&#39;s 
-	probably best to run it from the command line because you will be able to see 
-	command line diagnostics, as well as log messages. </p>
-	<h2>Running from the command line</h2>
-	<p><span class="code">Weewx</span> can easily be run from the command line. 
-	Start by making sure you have appropriate permissions to the serial port your 
-	weather station uses. For example, if you are using a plain old serial port:
-	</p>
-	<p class="tty">sudo chmod 666 /dev/ttyS0 </p>
-	<p>Then run the main loop program, <span class="code">weewxd.py</span>, giving 
-	the configuration file as its only parameter: </p>
-	<p class="tty"><em>$WEEWX_ROOT</em>/bin/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf
-	</p>
-	<p>It should start by downloading any data stored in your weather station into 
-	the archive database. As the Davis VantagePro can store a couple thousand archive 
-	records internally, this could take a minute or two. I&#39;ve found this process 
-	particularly slow on SuSE for some reason. </p>
-	<p><span class="code">Weewx</span> will then start monitoring LOOP data, printing 
-	a short version of the received data on standard output, about once every two 
-	seconds. </p>
-	<p>You can tell a running instance of <span class="code">weewx</span> to reread 
-	its configuration file by sending it the <span class="code">HUP</span> signal. 
-	First run <span class="code">ps</span> to find out the Process ID (PID) number 
-	of the instance, then send it the <span class="code">HUP</span> signal: </p>
-	<p class="tty">
-ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note the PID of the weewxd.py process<br/>
-kill -HUP <em>pid</em> # Send it a HUP signal<br/>
-</p>
-	<p>Note that this <em>only</em> rereads the configuration file. It will not 
-	reflect any changes you might have made to the code.</p>
-	<h2 id="Running_as_a_daemon">Running as a daemon</h2>
-	<p>For unattended operations it is best to have <span class="code">weewx</span> 
-	run as a daemon, started automatically when the server is rebooted. Start by 
-	selecting the appropriate run script. They can be found under
-	<span class="code"><em>$WEEWX_ROOT</em>/util/init.d</span>. </p>
-	<table class="center" style="width: 90%">
-		<tr>
-			<td style="width: 25%">SuSE:</td>
-			<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.suse</td>
-		</tr>
-		<tr>
-			<td >Debian/Ubuntu/Mint:</td>
-			<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.debian</td>
-		</tr>
-		<tr>
-			<td >Redhat/CentOS/Mint</td>
-			<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat</td>
-		</tr>
-	</table>
-	<p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 
-	inside has been set to the proper root directory for your <span class="code">
+	  weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
+    <h4 class="config_section">[[WxEngine]]</h4>
+    <p>This section is for options used by the service engine. </p>
+    <p id="service_list" class="config_option">service_list </p>
+    <p>This option is the list of <em>services</em> that are to be run by the service 
+      engine. After each event (such as the arrival of LOOP data, etc.), they will 
+      be run in the given order. The standard list of services run by weewx is:
+    </p>
+    <p class="tty">service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, 
+      weewx.wxengine,StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, 
+      weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+    <p>Note that this must all be on one line! </p>
+    <p>You can leave some of these services out if you do not need them. For example, 
+      the bare minimum if you are using a Davis Vantage instrument, storing your data 
+      in US Customary units, doing no data corrections or quality control and running 
+      as a daemon (no printing to console) would be:</p>
+    <p class="tty">service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, 
+      weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+    <p>However, this will only make a slight difference in execution speed. </p>
+    <h1 id="Running_weewx">Running <span class="code">weewx</span></h1>
+    <p><span class="code">Weewx</span> can be run either from the command line (useful 
+      for diagnostic purposes because it will print out a summary of every LOOP data), 
+      or as a daemon. When first trying <span class="code">weewx</span>, it&#39;s 
+      probably best to run it from the command line because you will be able to see 
+      command line diagnostics, as well as log messages. </p>
+    <h2>Running from the command line</h2>
+    <p><span class="code">Weewx</span> can easily be run from the command line. 
+      Start by making sure you have appropriate permissions to the serial port your 
+      weather station uses. For example, if you are using a plain old serial port:
+    </p>
+    <p class="tty">sudo chmod 666 /dev/ttyS0 </p>
+    <p>Then run the main loop program, <span class="code">weewxd.py</span>, giving 
+      the configuration file as its only parameter: </p>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf
+    </p>
+    <p>It should start by downloading any data stored in your weather station into 
+      the archive database. As the Davis VantagePro can store a couple thousand archive 
+      records internally, this could take a minute or two. I&#39;ve found this process 
+      particularly slow on SuSE for some reason. </p>
+    <p><span class="code">Weewx</span> will then start monitoring LOOP data, printing 
+      a short version of the received data on standard output, about once every two 
+      seconds. </p>
+    <p>You can tell a running instance of <span class="code">weewx</span> to reread 
+      its configuration file by sending it the <span class="code">HUP</span> signal. 
+      First run <span class="code">ps</span> to find out the Process ID (PID) number 
+      of the instance, then send it the <span class="code">HUP</span> signal: </p>
+    <p class="tty">
+      ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note the PID of the weewxd.py process<br/>
+      kill -HUP <em>pid</em> # Send it a HUP signal<br/>
+    </p>
+    <p>Note that this <em>only</em> rereads the configuration file. It will not 
+      reflect any changes you might have made to the code.</p>
+    <h2 id="Running_as_a_daemon">Running as a daemon</h2>
+    <p>For unattended operations it is best to have <span class="code">weewx</span> 
+      run as a daemon, started automatically when the server is rebooted. Start by 
+      selecting the appropriate run script. They can be found under
+      <span class="code"><em>$WEEWX_ROOT</em>/util/init.d</span>. </p>
+    <table class="center" style="width: 90%">
+      <tr>
+	<td style="width: 25%">SuSE:</td>
+	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.suse</td>
+      </tr>
+      <tr>
+	<td >Debian/Ubuntu/Mint:</td>
+	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.debian</td>
+      </tr>
+      <tr>
+	<td >Redhat/CentOS/Mint</td>
+	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat</td>
+      </tr>
+    </table>
+    <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 
+      has been set to the proper root directory for your <span class="code">
 	weewx</span> installation (it should have been set to the correct value automatically 
-	by the install process, but it&#39;s worth checking). </p>
-	<p>Copy it to the proper location for your system: </p>
-	<table class="center" style="width: 90%">
-		<tr>
-			<td style="width: 25%">SuSE:</td>
-			<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.suse /etc/init.d/weewx</td>
-		</tr>
-		<tr>
-			<td>Debian/Ubuntu/Mint:</td>
-			<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.debian /etc/init.d/weewx</td>
-		</tr>
-		<tr>
-			<td>Redhat/CentOS/Fedora:</td>
-			<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat /etc/init.d/weewx</td>
-		</tr>
-	</table>
-	<p>Make sure the script is executable: </p>
-	<table class="center" style="width: 90%">
-		<tr>
-			<td style="width: 25%">SuSE:</td>
-			<td class='tty'>chmod +x /etc/init.d/weewx</td>
-		</tr>
-		<tr>
-			<td >Debian/Ubuntu/Mint:</td>
-			<td class='tty'>chmod +x /etc/init.d/weewx</td>
-		</tr>
-		<tr>
-			<td >Redhat/CentOS/Fedora:</td>
-			<td class='tty'>chmod +x /etc/init.d/weewx</td>
-		</tr>
-	</table>
-	<p>Create symbolic links in the run level directories: </p>
-	<table class="center" style="width: 90%">
-		<tr>
-			<td style="width: 25%">SuSE:</td>
-			<td class='tty'>/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
-		</tr>
-		<tr>
-			<td >Debian/Ubuntu/Mint:</td>
-			<td class='tty'>update-rc.d weewx defaults 98</td>
-		</tr>
-		<tr>
-			<td >Redhat/CentOS/Fedora</td>
-			<td class='tty'>chkconfig weewx on</td>
-		</tr>
-	</table>
-	<p><span class="code">Weewx</span> will now start automatically whenever your 
-	system is booted. You can also manually start, stop, and restart the
-	<span class="code">weewx</span> daemon: </p>
-	<p class="tty">
-/etc/init.d/weewx start<br/>
-/etc/init.d/weewx stop<br/>
-/etc/init.d/weewx restart<br/>
-        </p>
-	<p>By default, the scripts are designed to have <span class="code">weewx</span> 
-	run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels 
-	with Debian (Ubuntu, Mint) systems is
-	<a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. It uses a curses 
-	interface to allow you to change easily which run level any of your daemons 
-	runs at. There is a similar tool on SuSE. From the start menu run the YAST Control 
-	Center, then look for Systems Services (Runlevel). Pick &quot;Expert&quot; mode 
-	to see the run levels. </p>
-	<p>You can also tell <span class="code">weewx</span> to reread its configuration 
-	file without stopping by using the &#39;reload&#39; option: </p>
-	<p class="tty">/etc/init.d/weewx reload </p>
-	<h1 id="Compatibility_with_wview">Compatibility with <span class="code">wview</span></h1>
-	<p>The sqlite3 archive database used by <span class="code">weewx</span> (nominally,
-	<span class="code">weewx.sdb</span>) is completely compatible with the database 
-	used by <a href="http://www.wviewweather.com">wview</a> (usually called
-	<span class="code">wview-archive.sdb</span>), at least as of wview Version 5.2.X. 
-	The schema and its semantics is identical. However, the statistical file
-	<span class="code">stats.sdb</span> is different, and must be rebuilt. This 
-	will be done automatically on startup by <span class="code">weewx</span>.
-	</p>
-	<h1 id="Monitoring_weewx">Monitoring <span class="code">weewx</span></h1>
-	<p><span class="code">Weewx</span> logs many events to the system log. On Debian 
-	systems, this is <span class="code">/var/log/syslog</span>, on SuSE,
-	<span class="code">/var/log/messages</span>. Your system may use yet another 
-	place. When troubleshooting the system, be sure to check it! </p>
-	<p>Setting the option <span class="code">debug </span>in <span class="code">
-	weewx.conf</span> to <span class="code">1</span> (one) will generate many more 
-	checks and output and can be useful for debugging. </p>
-	<h1 id="Troubleshooting">Troubleshooting</h1>
-	<p>This section lists some common problems installing and running
-	<span class="code">weewx</span>. Check it first. If you are still stuck, be 
-	sure to: </p>
-	<ul>
-		<li>Set option <span class="code">debug </span>in <span class="code">weewx.conf</span> 
-		to <span class="code">1</span> (one)! It will put lots more information 
-		in the log file, which can be very useful for troubleshooting and debugging!
-		</li>
-		<li><a href="#Monitoring_weewx">Look at the log file</a>. I am always happy 
-		to take questions, but the first thing I will ask you is, &quot;Did you 
-		look at the log file?&quot; </li>
-		<li>Run from the command line. Generally, <span class="code">weewx</span> 
-		will catch and log any unrecoverable exceptions. But if you are getting 
-		strange results, it is worth running from the command line and looking for 
-		any clues. </li>
-	</ul>
-	<h2>Hardware</h2>
-	<h3>Establishing connectivity</h3>
-	<p>If you unable to get anything out of <span class="code">weewx</span>, first 
-	check that you have connectivity to your weather station. For the Davis stations, 
-	you can use a terminal emulator (I like <span class="code">minicom</span> because 
-	it can be run from through a simple TTY connection) to run a simple test. Set 
-	it up to communicate using the appropriate port and baudrate. For example</p>
-	<p class="tty">minicom -b 19200 -D /dev/ttyUSB0</p>
-	<p>Then type in <span class="code">TEST</span>, all in capital letters. It will 
-	not echo the characters. Then hit the <span class="code">&lt;enter&gt;</span> 
-	key. It should echo back <span class="code">TEST</span>.</p>
-	<p>If this works, then you have established connectivity with the Davis and 
-	the problem must lie elsewhere.</p>
-	<h3>Tips on a reliable system</h3>
-	<p>If you are having problems keeping your weather station up for long periods 
-	of time, here are some tips, in decreasing order of importance: </p>
-	<ul>
-		<li>Run on dedicated hardware. If you are using the server for other tasks, 
-		particularly as your desktop machine, you will have reliability problems. 
-		If you are using it as a print or network server, you will probably be OK.
-		</li>
-		<li>Run headless. Modern graphical systems are extremely complex. As new 
-		features are added, test suites don&#39;t always catch up. Your system will 
-		be much more reliable if you run it without a windowing system (X Windows, 
-		in the case of Linux). </li>
-		<li>Use an Uninterruptible Power Supply (UPS). The vast majority of power 
-		glitches are very short lived — just a second or two — so you do not need 
-		a big one. The 425 VA unit I use to protect my fit-PC cost me $55 at Best 
-		Buy. </li>
-		<li>Use a VantagePro console with a serial connection, not a USB connection. 
-		See the next section for details. </li>
-		<li>If you do use a USB connection, put a ferrite coil on each end of the 
-		cable to your console. If you have enough length and the ferrite coil is 
-		big enough, make a loop so it goes through the coil twice. Here's a picture 
-		of a Davis Envoy with a ferrite coil not only on the USB connection (top 
-		wire), but also the power supply. Both have loops.</li>
-	</ul>
-	<p>
-	<img alt="Ferrite coils" height="480" longdesc="Cable connection looped through a ferrite coil" src="ferrites.jpg" width="640" /></p>
-	<h3>cp2101 converter problems</h3>
-	<p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
-	problems. The symptom is that the Linux kernel will disconnect from your old 
-	USB port claiming &quot;EMI noise&quot;, and reconnect to a new and different 
-	port, where <span class="code">weewx</span> can&#39;t find it. Here&#39;s a 
-	typical log output: </p>
-	<pre>
+      by the install process, but it&#39;s worth checking). </p>
+    <p>Copy it to the proper location for your system: </p>
+    <table class="center" style="width: 90%">
+      <tr>
+	<td style="width: 25%">SuSE:</td>
+	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.suse /etc/init.d/weewx</td>
+      </tr>
+      <tr>
+	<td>Debian/Ubuntu/Mint:</td>
+	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.debian /etc/init.d/weewx</td>
+      </tr>
+      <tr>
+	<td>Redhat/CentOS/Fedora:</td>
+	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat /etc/init.d/weewx</td>
+      </tr>
+    </table>
+    <p>Make sure the script is executable: </p>
+    <table class="center" style="width: 90%">
+      <tr>
+	<td style="width: 25%">SuSE:</td>
+	<td class='tty'>chmod +x /etc/init.d/weewx</td>
+      </tr>
+      <tr>
+	<td >Debian/Ubuntu/Mint:</td>
+	<td class='tty'>chmod +x /etc/init.d/weewx</td>
+      </tr>
+      <tr>
+	<td >Redhat/CentOS/Fedora:</td>
+	<td class='tty'>chmod +x /etc/init.d/weewx</td>
+      </tr>
+    </table>
+    <p>Create symbolic links in the run level directories: </p>
+    <table class="center" style="width: 90%">
+      <tr>
+	<td style="width: 25%">SuSE:</td>
+	<td class='tty'>/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
+      </tr>
+      <tr>
+	<td >Debian/Ubuntu/Mint:</td>
+	<td class='tty'>update-rc.d weewx defaults 98</td>
+      </tr>
+      <tr>
+	<td >Redhat/CentOS/Fedora</td>
+	<td class='tty'>chkconfig weewx on</td>
+      </tr>
+    </table>
+    <p><span class="code">Weewx</span> will now start automatically whenever your 
+      system is booted. You can also manually start, stop, and restart the
+      <span class="code">weewx</span> daemon: </p>
+    <p class="tty">
+      /etc/init.d/weewx start<br/>
+      /etc/init.d/weewx stop<br/>
+      /etc/init.d/weewx restart<br/>
+    </p>
+    <p>By default, the scripts are designed to have <span class="code">weewx</span> 
+      run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels 
+      with Debian (Ubuntu, Mint) systems is
+      <a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. It uses a curses 
+      interface to allow you to change easily which run level any of your daemons 
+      runs at. There is a similar tool on SuSE. From the start menu run the YAST Control 
+      Center, then look for Systems Services (Runlevel). Pick &quot;Expert&quot; mode 
+      to see the run levels. </p>
+    <p>You can also tell <span class="code">weewx</span> to reread its configuration 
+      file without stopping by using the &#39;reload&#39; option: </p>
+    <p class="tty">/etc/init.d/weewx reload </p>
+
+    <h1 id="Compatibility_with_wview">Compatibility with <span class="code">wview</span></h1>
+    <p>The sqlite3 archive database used by <span class="code">weewx</span> (nominally,
+      <span class="code">weewx.sdb</span>) is completely compatible with the database 
+      used by <a href="http://www.wviewweather.com">wview</a> (usually called
+      <span class="code">wview-archive.sdb</span>), at least as of wview Version 5.2.X. 
+      The schema and its semantics is identical. However, the statistical file
+      <span class="code">stats.sdb</span> is different, and must be rebuilt. This 
+      will be done automatically on startup by <span class="code">weewx</span>.
+    </p>
+
+    <h1 id="Monitoring_weewx">Monitoring <span class="code">weewx</span></h1>
+    <p><span class="code">Weewx</span> logs many events to the system log.
+      On Debian systems, this is <span class="code">/var/log/syslog</span>,
+      on SuSE, <span class="code">/var/log/messages</span>. Your system may
+      use yet another place. When troubleshooting the system, be sure to check
+      it! </p>
+    <pre class='tty'>tail -f /var/log/messages</pre>
+    <p>Set the debug option in <span class='code'>weewx.conf</span> to
+      generate many more checks and output and can be useful for debugging.</p>
+    <pre class='tty'>debug = 1</pre>
+
+    <h1 id="Troubleshooting">Troubleshooting</h1>
+    <p>This section lists some common problems installing and running
+      <span class="code">weewx</span>. Check it first. If you are still stuck,
+      be sure to: </p>
+    <ul>
+      <li>Set option <span class="code">debug</span> in
+        <span class="code">weewx.conf</span> to <span class="code">1</span>
+        (one)! It will put much more information in the log file, which can
+        be very useful for troubleshooting and debugging!
+      </li>
+      <li><a href="#Monitoring_weewx">Look at the log file</a>. I am always
+        happy to take questions, but the first thing I will ask you is,
+        &quot;Did you look at the log file?&quot; </li>
+      <li>Run from the command line. Generally, <span class="code">weewx</span>
+	will catch and log any unrecoverable exceptions. But if you are getting
+	strange results, it is worth running from the command line and looking
+        for any clues. </li>
+    </ul>
+
+    <h2>Hardware</h2>
+    <h3>Establishing connectivity</h3>
+    <p>If you unable to get anything out of <span class="code">weewx</span>, first 
+      check that you have connectivity to your weather station. For the Davis stations, 
+      you can use a terminal emulator (I like <span class="code">minicom</span> because 
+      it can be run from through a simple TTY connection) to run a simple test. Set 
+      it up to communicate using the appropriate port and baudrate. For example</p>
+    <p class="tty">minicom -b 19200 -D /dev/ttyUSB0</p>
+    <p>Then type in <span class="code">TEST</span>, all in capital letters. It will 
+      not echo the characters. Then hit the <span class="code">&lt;enter&gt;</span> 
+      key. It should echo back <span class="code">TEST</span>.</p>
+    <p>If this works, then you have established connectivity with the Davis and 
+      the problem must lie elsewhere.</p>
+
+    <h3>Tips on making a system reliable</h3>
+    <p>If you are having problems keeping your weather station up for long
+      periods of time, here are some tips, in decreasing order of importance:
+    </p>
+    <ul>
+      <li>Run on dedicated hardware. If you are using the server for other
+        tasks, particularly as your desktop machine, you will have reliability
+        problems. If you are using it as a print or network server, you will
+        probably be OK.
+      </li>
+      <li>Run headless. Modern graphical systems are extremely complex. As new 
+	features are added, test suites don&#39;t always catch up. Your system
+        will be much more reliable if you run it without a windowing system (X
+        Windows, in the case of Linux). </li>
+      <li>Use an Uninterruptible Power Supply (UPS). The vast majority of power
+	glitches are very short lived — just a second or two — so you do not
+        need a big one. The 425 VA unit I use to protect my fit-PC cost me $55
+        at Best Buy. </li>
+      <li>Use a VantagePro console with a serial connection, not a USB
+        connection. See the next section for details. </li>
+      <li>If you do use a USB connection, put a ferrite coil on each end of
+        the cable to your console. If you have enough length and the ferrite
+        coil is big enough, make a loop so it goes through the coil twice.
+        Here's a picture of a Davis Envoy with a ferrite coil not only on the
+        USB connection (top wire), but also the power supply. Both have loops.
+      </li>
+    </ul>
+    <p align='center'>
+      <a href="ferrites.jpg"><img src="ferrites.jpg" width='200' border='0' alt="Ferrite coils" longdesc="Cable connection looped through a ferrite coil" /></a>
+    </p>
+    <h3>cp2101 converter problems</h3>
+    <p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
+      problems. The symptom is that the Linux kernel will disconnect from your old 
+      USB port claiming &quot;EMI noise&quot;, and reconnect to a new and different 
+      port, where <span class="code">weewx</span> can&#39;t find it. Here&#39;s a 
+      typical log output: </p>
+    <pre>
 Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?), re-enabling... 
 Nov 29 10:40:21 hummingbird kernel: [6661624.786871] usb 2-3: USB disconnect, address 2 
 Nov 29 10:40:21 hummingbird kernel: [6661624.795778] cp2101 2-3:1.0: device disconnected 
@@ -1468,109 +1401,113 @@ Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while
 Nov 29 10:40:22 hummingbird kernel: [6661625.352340] cp2101 2-3:1.0: cp2101 converter detected 
 Nov 29 10:40:22 hummingbird kernel: [6661625.528107] usb 2-3: reset full speed USB device using ohci_hcd and address 3 
 Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</pre>
-	<p>In this example, the VantagePro was connected to <span class="code">/dev/ttyUSB0</span>, 
-	but then reconnected to <span class="code">/dev/ttyUSB1</span>. </p>
-	<p>If you put ferrite coils on the USB connection, you will eliminate 90% of 
-	this problem. I did this about 3 years ago, and have not had a problem since.
-	</p>
-	<p>However, there is one final step that you can take to really harden up 
-	your system: install a <span class="code">udev</span> script that will create 
-	a symbolic link to the VantagePro USB port, whatever it might be. With this 
-	approach, if the port jumps from <span class="code">ttyUSB0</span> to
-	<span class="code">ttyUSB1</span>, the symbolic link will follow it. You just 
-	specify port <span class="code">/dev/vpro</span> in the configuration file
-	<span class="code">weewx.conf</span> and be done with it. </p>
-	<p>Here's how: </p>
-	<h4>Installing a udev script</h4>
-	<p>I have installed a file <span class="code">/etc/udev/rules.d/vpro.rules</span> 
-	on my fit-PC that looks like this: </p>
-	<pre># Automount the VantagePro2 to port /dev/vpro.
+    <p>In this example, the VantagePro was connected to <span class="code">/dev/ttyUSB0</span>, 
+      but then reconnected to <span class="code">/dev/ttyUSB1</span>. </p>
+    <p>If you put ferrite coils on the USB connection, you will eliminate 90% of 
+      this problem. I did this about 3 years ago, and have not had a problem since.
+    </p>
+    <p>However, there is one final step that you can take to really harden up 
+      your system: install a <span class="code">udev</span> script that will create 
+      a symbolic link to the VantagePro USB port, whatever it might be. With this 
+      approach, if the port jumps from <span class="code">ttyUSB0</span> to
+      <span class="code">ttyUSB1</span>, the symbolic link will follow it. You just 
+      specify port <span class="code">/dev/vpro</span> in the configuration file
+      <span class="code">weewx.conf</span> and be done with it. </p>
+    <p>Here's how: </p>
+    <h4>Installing a udev script</h4>
+    <p>I have installed a file <span class="code">/etc/udev/rules.d/vpro.rules</span> 
+      on my fit-PC that looks like this: </p>
+    <pre>
+# Automount the VantagePro2 to port /dev/vpro.
 # Install in /etc/udev/rules.d/vpro.rules
 #
 ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
-	<p>What this rule says is that when the USB port is plugged in (action
-	<span class="code">add</span>), and it has an attribute with name
-	<span class="code">interface</span> that is equal to &quot;<span class="code">CP2102 
+    <p>What this rule says is that when the USB port is plugged in (action
+      <span class="code">add</span>), and it has an attribute with name
+      <span class="code">interface</span> that is equal to &quot;<span class="code">CP2102 
 	USB to UART Bridge Controller</span>&quot;, then add a symbolic link for its 
-	physical port to <span class="code">/dev/vpro</span>. </p>
-	<p>Here&#39;s a rule that works for my Serial-to-USB cable, made by Prolific 
-	Technology, Inc.:</p>
-	<pre># Automount Serial-to-USB cable to port /dev/vpro
+      physical port to <span class="code">/dev/vpro</span>. </p>
+    <p>Here&#39;s a rule that works for my Serial-to-USB cable, made by Prolific 
+      Technology, Inc.:</p>
+    <pre>
+# Automount Serial-to-USB cable to port /dev/vpro
 # Install in /etc/udev/rules.d/cable.rules
 #
 ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
-	<p>Your devices may, and probably will, have different identifiers!! I can recommend 
-	this article, &quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing 
-	udev rules</em></a>,&quot; for how to find and write an appropriate
-	<span class="code">udev</span> rule for your controller. (Note, however, that 
-	this article uses the old <span class="code">udevinfo</span> command, rather 
-	than the newer <span class="code">udevadm</span> command.) In particular, run 
-	the command </p>
-	<pre># udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </pre>
-	<p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute your 
-	real USB port) the VP2 is attached to. It will print out various identifiers 
-	that can be useful in identifying your VP2 to <span class="code">udev</span>. 
-	While the first example script above used a rule that matched attribute
-	<span class="code">interface</span>, others are possible. For example, the second 
-	example, for the serial-to-USB cable, chose to match the attribute
-	<span class="code">product</span>. </p>
-	<p>Once you&#39;ve installed your <span class="code">udev</span> rule, you can 
-	then set <span class="code">port=/dev/vpro</span> in <span class="code">weewx.conf</span>, 
-	confident that it will always point to your VantagePro2, no matter which USB 
-	port it is actually attached to! </p>
-	<p>I have tested this system many times. You can yank the USB port out of the 
-	machine and then plug it back in while also pulling out the network connection 
-	in the middle of an FTP upload: <span class="code">weewx</span> will recover.
-	</p>
-	<p>Or, at least, it should! </p>
-	<h3>FreeBSD</h3>
-	<p>User Fabian reports that the following had to be done to get the VantagePro2 
-	working under FreeBSD:</p>
-	<pre class="tty">I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
+    <p>Your devices may, and probably will, have different identifiers!! I can recommend 
+      this article, &quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing 
+	  udev rules</em></a>,&quot; for how to find and write an appropriate
+      <span class="code">udev</span> rule for your controller. (Note, however, that 
+      this article uses the old <span class="code">udevinfo</span> command, rather 
+      than the newer <span class="code">udevadm</span> command.) In particular, run 
+      the command </p>
+    <pre># udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </pre>
+    <p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute your 
+      real USB port) the VP2 is attached to. It will print out various identifiers 
+      that can be useful in identifying your VP2 to <span class="code">udev</span>. 
+      While the first example script above used a rule that matched attribute
+      <span class="code">interface</span>, others are possible. For example, the second 
+      example, for the serial-to-USB cable, chose to match the attribute
+      <span class="code">product</span>. </p>
+    <p>Once you&#39;ve installed your <span class="code">udev</span> rule, you can 
+      then set <span class="code">port=/dev/vpro</span> in <span class="code">weewx.conf</span>, 
+      confident that it will always point to your VantagePro2, no matter which USB 
+      port it is actually attached to! </p>
+    <p>I have tested this system many times. You can yank the USB port out of the 
+      machine and then plug it back in while also pulling out the network connection 
+      in the middle of an FTP upload: <span class="code">weewx</span> will recover.
+    </p>
+    <p>Or, at least, it should! </p>
+    <h3>FreeBSD</h3>
+    <p>User Fabian reports that the following had to be done to get the VantagePro2 
+      working under FreeBSD:</p>
+    <pre class="tty">
+I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
 Loading the Driver:
 Put uslcom_load=&quot;YES&quot; in /boot/loader.conf (to load it as module).
 Which gives here an output like:
 uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
 And put in weewx.conf:
-    port = /dev/cuaU0</pre>
-	<h3>Weewx generates HTML pages, but it does not update them</h3>
-	<p>If you are getting a symptom that everything appears normal, that is HTML 
-	is getting generated and getting FTP&#39;d to your webserver <em>(look in the 
+port = /dev/cuaU0</pre>
+    <h3>Weewx generates HTML pages, but it does not update them</h3>
+    <p>If you are getting a symptom that everything appears normal, that is HTML 
+      is getting generated and getting FTP&#39;d to your webserver <em>(look in the 
 	log to be sure</em>!), but your web pages are not being updated, it could be 
-	because the data on board your console has gotten garbled. The way the Davis 
-	Vantage series works is that the software (<span class="code">weewx</span> in 
-	this case) asks the console for all archive data &quot;since&quot; some time. 
-	The console then downloads the records one at a time. After it gets to the very 
-	last one, the memory wraps around, and the timestamp will suddenly jump backwards 
-	in time a couple weeks &mdash; the software knows it has downloaded the last 
-	record and stops.</p>
-	<p>However, if the internal memory gets garbled, the console will immediately 
-	return archives in the past, and so it looks like the timestamps have decreased 
-	in value and so <span class="code">weewx</span> figures that&#39;s it: there&#39;s 
-	no more data.</p>
-	<p>I have received reports from a couple of users who have had this problem. 
-	There seems to be two fixes:</p>
-	<ol>
-		<li>Unplug the console, take out the batteries, and wait a minute or two. 
-		This will cause the console software to internally reboot. In one case this 
-		has fixed the problem without data loss.</li>
-		<li>If all else fails, clear the memory of the console using the utility
-		<span class="code">config_vp.py</span>. This may cause loss of data, but 
-		usually works. Adjust paths as necessary:</li>
-	</ol>
-	<p class="tty">cd /home/weewx<br />
-	./bin/config_vp.py weewx.conf --clear </p>
-	<h3>3rd party Vantage connectors</h3>
-	<p>This section is for those who are using a homebrew or 3rd party connector 
-	to a Davis Vantage console that does not contain a logger, such as the
-	<a href="http://www.wxforum.net/index.php?topic=14063.0">DSI-01 serial interface</a>. 
-	That is, it is a pure serial connection to the console, with no onboard memory.
-	</p>
-	<p>For these interfaces, you must set record generation to <em>software</em>. 
-	Without this information, <span class="code">weewx</span> is unable to detect 
-	the absence of onboard memory. If you do not do this, you will get errors that 
-	look like the following in your syslog:</p>
-	<pre class="tty">Nov 27 20:30:21 raspberrypi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
+      because the data on board your console has gotten garbled. The way the Davis 
+      Vantage series works is that the software (<span class="code">weewx</span> in 
+      this case) asks the console for all archive data &quot;since&quot; some time. 
+      The console then downloads the records one at a time. After it gets to the very 
+      last one, the memory wraps around, and the timestamp will suddenly jump backwards 
+      in time a couple weeks &mdash; the software knows it has downloaded the last 
+      record and stops.</p>
+    <p>However, if the internal memory gets garbled, the console will immediately 
+      return archives in the past, and so it looks like the timestamps have decreased 
+      in value and so <span class="code">weewx</span> figures that&#39;s it: there&#39;s 
+      no more data.</p>
+    <p>I have received reports from a couple of users who have had this problem. 
+      There seems to be two fixes:</p>
+    <ol>
+      <li>Unplug the console, take out the batteries, and wait a minute or two. 
+	This will cause the console software to internally reboot. In one case this 
+	has fixed the problem without data loss.</li>
+      <li>If all else fails, clear the memory of the console using the utility
+	<span class="code">config_vp.py</span>. This may cause loss of data, but 
+	usually works. Adjust paths as necessary:</li>
+    </ol>
+    <p class="tty">cd /home/weewx<br />
+      ./bin/config_vp.py weewx.conf --clear </p>
+    <h3>3rd party Vantage connectors</h3>
+    <p>This section is for those who are using a homebrew or 3rd party connector 
+      to a Davis Vantage console that does not contain a logger, such as the
+      <a href="http://www.wxforum.net/index.php?topic=14063.0">DSI-01 serial interface</a>. 
+      That is, it is a pure serial connection to the console, with no onboard memory.
+    </p>
+    <p>For these interfaces, you must set record generation to <em>software</em>. 
+      Without this information, <span class="code">weewx</span> is unable to detect 
+      the absence of onboard memory. If you do not do this, you will get errors that 
+      look like the following in your syslog:</p>
+    <pre class="tty">
+Nov 27 20:30:21 raspberrypi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  'NoneType' object has no attribute '__getitem__'
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Traceback (most recent call last):
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 132, in run
@@ -1589,307 +1526,318 @@ Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/w
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      std_unit_system = d['usUnits']
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  TypeError: 'NoneType' object has no attribute '__getitem__'
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Generator terminated...
-Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds&nbsp;
-</pre>
-	<p>See the section on option <span class="code">
+Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</pre>
+    <p>See the section on option <span class="code">
 	<a href="#record_generation">record_generation</a></span>.</p>
-	<h2>Software</h2>
-	<h3><span class="code">configobj</span> errors</h3>
-	<p>These are errors in the configuration file. Two are very common. Incidentally, 
-	these errors are far easier to diagnose when <span class="code">weewx</span> 
-	is run from the command line. </p>
-	<h4><span class="code">configobj.DuplicateError</span> exception</h4>
-	<p>This error is caused by using an identifier more than once in the configuration 
-	file. For example, you may have inadvertently listed your FTP server twice:
-	</p>
-	<pre>[Reports]
-	[[FTP]]
-		... (details elided)
-		user = fred
-		server = ftp.myhost.com
-		password = mypassword
-		server = ftp.myhost.com  # OOPS! Listed it twice!
-		path = /weather
-		... </pre>
-	<p>Generally, if you encounter this error, the log file will give you the line 
-	number it happened in: </p>
-	<pre>Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
+    <h2>Software</h2>
+    <h3><span class="code">configobj</span> errors</h3>
+    <p>These are errors in the configuration file. Two are very common. Incidentally, 
+      these errors are far easier to diagnose when <span class="code">weewx</span> 
+      is run from the command line. </p>
+    <h4><span class="code">configobj.DuplicateError</span> exception</h4>
+    <p>This error is caused by using an identifier more than once in the configuration 
+      file. For example, you may have inadvertently listed your FTP server twice:
+    </p>
+    <pre>
+[Reports]
+  [[FTP]]
+      ... (details elided)
+      user = fred
+      server = ftp.myhost.com
+      password = mypassword
+      server = ftp.myhost.com  # OOPS! Listed it twice!
+      path = /weather
+      ... </pre>
+    <p>Generally, if you encounter this error, the log file will give you the line 
+      number it happened in: </p>
+    <pre>
+Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
 Apr 24 12:09:15 raven weewx[11480]: wxengine: Unable to initialize main loop:
 Apr 24 12:09:15 raven weewx[11480]:     ****  Duplicate keyword name at line 254.
 Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </pre>
-	<h4><span class="code">configobj.NestingError</span> exception</h4>
-	<p>This is a very similar error, and is caused by a misformed section nesting. 
-	For example: </p>
-	<pre>[Reports]
-	[[FTP]]]
-		... (details elided)</pre>
-	<p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.
-	</p>
-	<h3>No barometer data</h3>
-	<p>If everything appears normal except that you have no barometer data, the 
-	problem may be a mismatch between the unit system used for service
-	<span class="code">StdConvert</span> and the unit system used by service
-	<span class="code">StdQC</span>. For example:</p>
-	<p class="tty">[StdConvert]<br />
-&nbsp; target_unit = METRIC<br />
-	<br />
-	...<br />
-	<br />
-	[StdQC]<br />
-&nbsp; [[MinMax]]<br />
-&nbsp;&nbsp;&nbsp; barometer = 28, 32.5</p>
-	<p>The problem is that you are requiring the barometer data to be between 28 
-	and 32.5, but with the unit system set to <span class="code">METRIC</span>, 
-	the data will be in the range 990 to 1050 or so!</p>
-	<h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
-	<p>If you get errors of the sort: </p>
-	<pre>Apr 12 05:12:32 raven reportengine[3074]: filegenerator: Caught exception &quot;&lt;class &#39;NameMapper.NotFound&#39;&gt;&quot; 
-Apr 12 05:12:32 raven reportengine[3074]:          ****  Message: &quot;cannot find &#39;fubar&#39; in template /home/weewx/skins/Standard/index.html.tmpl&quot;
-Apr 12 05:12:32 raven reportengine[3074]:          ****  Ignoring template and continuing.</pre>
-	<p>you have a tag in your template that <span class="code">weewx</span> does 
-	not recognize (in this example, it&#39;s the tag <span class="code">$fubar</span> 
-	in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
-	</p>
-	<h1 id="Architectural_notes">Architectural notes</h1>
-	<p>This section is not needed to get started. </p>
-	<h2>Goals</h2>
-	<p>The primary design goals of <span class="code">weewx </span>are: </p>
-	<ul>
-		<li>Architectural simplicity. No semaphores, no named pipes, no inter-process 
-		communications, no complex multi-threading to manage. </li>
-		<li>Extensibility. Make it easy for the user to add new features or to modify 
-		existing features.</li>
-		<li>&quot;Fast enough.&quot; In any design decision, architectural simplicity 
-		and elegance trump speed. </li>
-		<li>One code base. The same code base should be used for all platforms, 
-		all weather stations, all reports, and any combination of features. Ample 
-		configuration and customization options should be provided so the user doesn&#39;t 
-		feel tempted to start hacking code. At worse, the user may have to subclass, 
-		which is much easier to port to newer versions of the code base, than customizing 
-		the base code. </li>
-		<li>Minimal reliance on external packages, so the user doesn&#39;t have 
-		to go chase them down all over the Web before getting started. </li>
-		<li>Support only the Davis VantagePro2 initially (that&#39;s what I have), 
-		but make no architectural decisions that lock out other stations. </li>
-		<li>As &quot;pythonic&quot; as I know how to make it. I&#39;m a beginner 
-		Python programmer with two decades of experience in C++. I tried hard to 
-		not make the code base look like it was written by a C++ programmer who 
-		stumbled across a Python manual! </li>
-	</ul>
-	<h2>Strategies</h2>
-	<p>To meet these goals, the following strategies were used: </p>
-	<ul>
-		<li>A &quot;micro-kernel&quot; design. The <span class="code">weewx</span> 
-		engine actually does very little. Its primary job is to load and run <em>
-		services</em> at runtime, making it easy for users to add or subtract features.
-		</li>
-		<li>A largely stateless design style. For example, many of the processing 
-		routines read the data they need directly from the database, rather than 
-		caching it and sharing with other routines. While this means the same data 
-		may be read multiple times, it also means the only point of possible cache 
-		incoherence is through the database, where transactions are easily controlled. 
-		This greatly reduces the chances of corrupting the data, making it much 
-		easier to understand and modify the code base. </li>
-		<li>Isolate the data collection and archiving code in a single thread that 
-		is simple enough that it is unlikely to crash. The report processing is 
-		where most mistakes are likely to happen, so isolate that in a separate 
-		thread. If it crashes, it will not affect the main data thread. </li>
-		<li>A powerful configuration parser,
-		<a href="http://www.voidspace.org.uk/python/configobj.html">ConfigObj</a>, 
-		by Michael Foord and Nicola Larosa, was chosen to read the configuration 
-		file. This allows many options that might otherwise have to go in the code 
-		to go instead in a configuration file. </li>
-		<li>A powerful templating engine,
-		<a href="http://www.cheetahtemplate.org/">Cheetah</a>, was used. This allows 
-		many variables that I may not have thought of to be accessed from within 
-		the HTML templates, without starting to modify the code. </li>
-		<li>Pure Python. The code base is 100% Python — no underlying C libraries 
-		need be built to install <span class="code">weewx</span>. This also means 
-		no Makefiles are needed. </li>
-	</ul>
-	<p>While <span class="code">weewx</span> is nowhere near as fast at generating 
-	images and HTML as its predecessor, <span class="code">wview</span> (this is 
-	partially because <span class="code">weewx</span> uses fancier fonts and a much more powerful templating 
-	engine), it is &#39;fast enough&#39; for all platforms but the slowest. I run 
-	it regularly on a 500 MHz machine where generating the 9 images used in the &quot;Current 
-	Conditions&quot; page takes just under 2 seconds (compared with
-	<span class="code">wview</span>&#39;s 0.4 seconds). </p>
-	<p>Unfortunately, the architectural goal of one code base is likely to be broken 
-	with the arrival of Python V3.X. It has so many changes that are not backwards 
-	compatible with V2.X, that a separate code base will most likely be needed. 
-	My intention is to stick with the V2.X versions until V3.X is so widespread 
-	it cannot be ignored, then make a permanent switch. Given the slow adoption 
-	rate of V3.X this is unlikely to happen anytime soon. In any case, I doubt the 
-	transition will affect the average <span class="code">weewx</span> user. </p>
-	<p>All writes to the databases are protected by transactions. You can kill the 
-	program at any time (either Control-C if run from the command line or &quot;<span class="code">/etc/init.d/weewx 
+    <h4><span class="code">configobj.NestingError</span> exception</h4>
+    <p>This is a very similar error, and is caused by a misformed section nesting. 
+      For example: </p>
+    <pre>
+[Reports]
+   [[FTP]]]
+      ... (details elided)</pre>
+    <p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.
+    </p>
+    <h3>No barometer data</h3>
+    <p>If everything appears normal except that you have no barometer data, the 
+      problem may be a mismatch between the unit system used for service
+      <span class="code">StdConvert</span> and the unit system used by service
+      <span class="code">StdQC</span>. For example:</p>
+    <p class="tty">
+      [StdConvert]<br />
+      &nbsp;&nbsp;target_unit = METRIC<br />
+      <br />
+      ...<br />
+      <br />
+      [StdQC]<br />
+      &nbsp;&nbsp;[[MinMax]]<br />
+      &nbsp;&nbsp;&nbsp;&nbsp;barometer = 28, 32.5</p>
+    <p>The problem is that you are requiring the barometer data to be between 28 
+      and 32.5, but with the unit system set to <span class="code">METRIC</span>, 
+      the data will be in the range 990 to 1050 or so!</p>
+    <h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
+    <p>If you get errors of the sort: </p>
+    <pre>
+Apr 12 05:12:32 raven reportengine[3074]: filegenerator: Caught exception &quot;&lt;class &#39;NameMapper.NotFound&#39;&gt;&quot; 
+Apr 12 05:12:32 raven reportengine[3074]:   ****  Message: &quot;cannot find &#39;fubar&#39; in template /home/weewx/skins/Standard/index.html.tmpl&quot;
+Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continuing.</pre>
+    <p>you have a tag in your template that <span class="code">weewx</span> does 
+      not recognize (in this example, it&#39;s the tag <span class="code">$fubar</span> 
+      in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
+    </p>
+    <h1 id="Architectural_notes">Architectural notes</h1>
+    <p>This section is not needed to get started. </p>
+    <h2>Goals</h2>
+    <p>The primary design goals of <span class="code">weewx </span>are: </p>
+    <ul>
+      <li>Architectural simplicity. No semaphores, no named pipes, no inter-process 
+	communications, no complex multi-threading to manage. </li>
+      <li>Extensibility. Make it easy for the user to add new features or to modify 
+	existing features.</li>
+      <li>&quot;Fast enough.&quot; In any design decision, architectural simplicity 
+	and elegance trump speed. </li>
+      <li>One code base. The same code base should be used for all platforms, 
+	all weather stations, all reports, and any combination of features. Ample 
+	configuration and customization options should be provided so the user doesn&#39;t 
+	feel tempted to start hacking code. At worse, the user may have to subclass, 
+	which is much easier to port to newer versions of the code base, than customizing 
+	the base code. </li>
+      <li>Minimal reliance on external packages, so the user doesn&#39;t have 
+	to go chase them down all over the Web before getting started. </li>
+      <li>Support only the Davis VantagePro2 initially (that&#39;s what I have), 
+	but make no architectural decisions that lock out other stations. </li>
+      <li>As &quot;pythonic&quot; as I know how to make it. I&#39;m a beginner 
+	Python programmer with two decades of experience in C++. I tried hard to 
+	not make the code base look like it was written by a C++ programmer who 
+	stumbled across a Python manual! </li>
+    </ul>
+    <h2>Strategies</h2>
+    <p>To meet these goals, the following strategies were used: </p>
+    <ul>
+      <li>A &quot;micro-kernel&quot; design. The <span class="code">weewx</span> 
+	engine actually does very little. Its primary job is to load and run <em>
+	  services</em> at runtime, making it easy for users to add or subtract features.
+      </li>
+      <li>A largely stateless design style. For example, many of the processing 
+	routines read the data they need directly from the database, rather than 
+	caching it and sharing with other routines. While this means the same data 
+	may be read multiple times, it also means the only point of possible cache 
+	incoherence is through the database, where transactions are easily controlled. 
+	This greatly reduces the chances of corrupting the data, making it much 
+	easier to understand and modify the code base. </li>
+      <li>Isolate the data collection and archiving code in a single thread that 
+	is simple enough that it is unlikely to crash. The report processing is 
+	where most mistakes are likely to happen, so isolate that in a separate 
+	thread. If it crashes, it will not affect the main data thread. </li>
+      <li>A powerful configuration parser,
+	<a href="http://www.voidspace.org.uk/python/configobj.html">ConfigObj</a>, 
+	by Michael Foord and Nicola Larosa, was chosen to read the configuration 
+	file. This allows many options that might otherwise have to go in the code 
+	to go instead in a configuration file. </li>
+      <li>A powerful templating engine,
+	<a href="http://www.cheetahtemplate.org/">Cheetah</a>, was used. This allows 
+	many variables that I may not have thought of to be accessed from within 
+	the HTML templates, without starting to modify the code. </li>
+      <li>Pure Python. The code base is 100% Python — no underlying C libraries 
+	need be built to install <span class="code">weewx</span>. This also means 
+	no Makefiles are needed. </li>
+    </ul>
+    <p>While <span class="code">weewx</span> is nowhere near as fast at generating 
+      images and HTML as its predecessor, <span class="code">wview</span> (this is 
+      partially because <span class="code">weewx</span> uses fancier fonts and a much more powerful templating 
+      engine), it is &#39;fast enough&#39; for all platforms but the slowest. I run 
+      it regularly on a 500 MHz machine where generating the 9 images used in the &quot;Current 
+      Conditions&quot; page takes just under 2 seconds (compared with
+      <span class="code">wview</span>&#39;s 0.4 seconds). </p>
+    <p>Unfortunately, the architectural goal of one code base is likely to be broken 
+      with the arrival of Python V3.X. It has so many changes that are not backwards 
+      compatible with V2.X, that a separate code base will most likely be needed. 
+      My intention is to stick with the V2.X versions until V3.X is so widespread 
+      it cannot be ignored, then make a permanent switch. Given the slow adoption 
+      rate of V3.X this is unlikely to happen anytime soon. In any case, I doubt the 
+      transition will affect the average <span class="code">weewx</span> user. </p>
+    <p>All writes to the databases are protected by transactions. You can kill the 
+      program at any time (either Control-C if run from the command line or &quot;<span class="code">/etc/init.d/weewx 
 	stop</span>&quot; if a daemon) without fear of corrupting the databases. </p>
-	<p>The code makes ample use of exceptions to insure graceful recovery from problems 
-	such as network outages. It also monitors socket and console timeouts, restarting 
-	whatever it was working on several times before giving up. In the case of an 
-	unrecoverable console error (such as the console not responding at all), the 
-	program waits 60 seconds then restarts the program from the top. </p>
-	<p>Any &quot;hard&quot; exceptions, that is those that do not involve network 
-	and console timeouts and are most likely due to a logic error, are logged, reraised, 
-	and ultimately cause thread termination. If this happens in the main thread 
-	(not likely due to its simplicity), then this causes program termination. If 
-	it happens in the report processing thread (much more likely), then only the 
-	generation of reports will be affected — the main thread will continue downloading 
-	data off the instrument and putting them in the database. You can fix the problem 
-	at your leisure, without worrying about losing any data. </p>
-	<h2>Terminology</h2>
-	<p>This is a glossary of terminology used throughout the code. </p>
-	<table style="width: 100%">
-		<tr>
-			<td class="text_highlight"><strong>Name</strong></td>
-			<td><strong>Description</strong></td>
-		</tr>
-		<tr>
-			<td class="text_highlight">packet</td>
-			<td>Something obtained off the weather station. Frequently uses a complex 
-			internal encoding, so it requires some processing to be useful.</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">record</td>
-			<td>Something obtained off the SQL database. </td>
-		</tr>
-		<tr>
-			<td class="text_highlight">archive packet</td>
-			<td>A packet obtained off the store on the weather station. For example, 
-			with a Davis VantagePro, it&#39;s obtained using their
-			<span class="code">DMPAFT</span> command. </td>
-		</tr>
-		<tr>
-			<td class="text_highlight">loop packet</td>
-			<td>A packet with the current observations. For example, with a Davis 
-			VantagePro, it&#39;s obtained using their <span class="code">LOOP</span> 
-			command. </td>
-		</tr>
-		<tr>
-			<td class="text_highlight">archive record</td>
-			<td>A record obtained off the SQL database</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">tuple-time</td>
-			<td>An instance of the Python object <span class="code">
-			<a href="http://docs.python.org/2/library/time.html#time.struct_time">
-			time.struct_time</a></span>. This is a 9-wise tuple that represent a 
-			time. It could be in either local time or UTC, though usually the former. 
-			See module <span class="code">
-			<a href="http://docs.python.org/2/library/time.html">time</a></span> 
-			for more information. They are useful because they are a little closer 
-			in format to what the Davis VantagePro uses, although they still require 
-			a bit of processing. Variables carrying tuple time usually have a suffix &#39;<span class="code">_tt</span>&#39;.</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">epoch time</td>
-			<td>Sometimes referred to as &quot;unix time,&quot; or &quot;unix epoch 
-			time.&quot; The number of seconds since the epoch, which is 1 Jan 1970 
-			00:00:00 UTC. Hence, it always represents UTC (well.... after adding 
-			a few leap seconds. But, close enough). This is the time used in the 
-			databases and appears as type &#39;<span class="code">dateTime</span>&#39; 
-			in the SQL schema, perhaps an unfortunate name because of the similarity 
-			to the completely unrelated Python type &#39;<span class="code">datetime</span>&#39;. 
-			Very easy to manipulate, but it&#39;s a big opaque number. </td>
-		</tr>
-		<tr>
-			<td class="text_highlight">time stamp</td>
-			<td>A variable in unix epoch time. Always in UTC. Variables carrying 
-			a time stamp usually have a suffix &#39;<span class="code">_ts</span>&#39;.</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">datetime</td>
-			<td>An instance of the Python object <span class="code">datetime.datetime</span>. 
-			Variables of type datetime usually have a suffix &#39;<span class="code">_dt</span>&#39;.</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">SQL type</td>
-			<td>A type that appears in the SQL database. This usually looks something 
-			like &#39;<span class="code">outTemp</span>&#39;, &#39;<span class="code">barometer</span>&#39;, &#39;<span class="code">extraTemp1</span>&#39;, 
-			and so on.</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">observation type</td>
-			<td>A type that can be used in the presentations. This is generally 
-			all of the SQL types, plus calculated data (such as
-			<span class="code">rms</span> or <span class="code">vecavg</span>).</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">value tuple</td>
-			<td>A 3-way tuple. First element is a value, second element the unit 
-			type the value is in, the third the unit group. An example would be
-			<span class="code">(21.2, &#39;degree_C&#39;, &#39;group_temperature&#39;)</span>.</td>
-		</tr>
-		<tr>
-			<td class="text_highlight">db_dict</td>
-			<td>A dictionary with all the data necessary to bind to a database. 
-			An example for sqlite would be <span class="code">{&#39;driver&#39; 
-			: &#39;db.sqlite&#39;, &#39;root&#39;:&#39;/home/weewx&#39;, &#39;database&#39;:&#39;archive/weewx.sdb&#39;}</span>, 
-			an example for MySQL would be <span class="code">{'driver' : 'db.mysql', 
-			'host': 'localhost', 'user' : 'weewx', 'password' : 'mypassword', 'database' 
-			: 'weewx'}</span>.</td>
-		</tr>
-	</table>
-	<h2>Units</h2>
-	<p>In general, there are three different areas where the unit system makes a 
-	difference.: </p>
-	<ol>
-		<li>On the weather station. As far as I know, the Davis Vantage series supports 
-		only U.S. Customary units internally. The Oregon Scientific WMR-USB series 
-		uses an odd mix of US and metric.</li>
-		<li>In the database. Either US or Metric can be used.</li>
-		<li>In the presentation (i.e., html and image files). </li>
-	</ol>
-	<p>The general strategy is that measurements are converted by service
-	<span class="code">StdConvert</span> as they come off the weather station into 
-	a target unit system, then stored internally in the database. Then, as they 
-	come off the database to be used for a report, they are converted into a target 
-	unit, specified by the skin. </p>
-	<h2>Value &quot;<span class="code">None</span>&quot;</h2>
-	<p>The Python special value &#39;<span class="code">None</span>&#39; is used 
-	throughout to signal a missing data point. All functions expect it. </p>
-	<p>However, the time value must never be &#39;<span class="code">None</span>&#39;. 
-	This is because it is used as the primary key in the SQL database. </p>
-	<h2>Time</h2>
-	<p><span class="code">Weewx </span>stores all data in UTC (roughly, &quot;Greenwich&quot; 
-	or &quot;Zulu&quot;) time. However, usually one is interested in weather events 
-	in local time and want image and HTML generation to reflect that. Furthermore, 
-	most weather stations are configured in local time. This requires that many 
-	data times be converted back and forth between UTC and local time. To avoid 
-	tripping up over time zones and daylight savings time, <span class="code">weewx</span> 
-	generally uses Python routines to do this conversion. Nowhere in the code base 
-	is there any explicit recognition of DST. Instead, its presence is implicit 
-	in the conversions. At times, this can cause the code to be relatively inefficient.
-	</p>
-	<p>For example, if one wanted to plot something every 3 hours in UTC time, it 
-	would be very simple: to get the next plot point, just add 10,800 to the epoch 
-	time: </p>
-	<p class="tty">next_ts = last_ts + 10800 </p>
-	<p>But, if one wanted to plot something for every 3 hours <em>in local time</em> 
-	(that is, at 0000, 0300, 0600, etc.), despite a possible DST change in the middle, 
-	then things get a bit more complicated. One could modify the above to recognize 
-	whether a DST transition occurs sometime between <span class="code">last_ts</span> 
-	and the next three hours and, if so, make the necessary adjustments. This is 
-	generally what <span class="code">wview</span> does. <span class="code">Weewx
-	</span>takes a different approach and converts from UTC to local, does the arithmetic, 
-	then converts back. This is inefficient, but bulletproof against changes in 
-	DST algorithms, etc: </p>
-	<p class="tty">
-          time_dt = datetime.datetime.fromtimestamp(last_ts)<br/>
-	  delta = datetime.timedelta(seconds=10800)<br/>
-	  next_dt = time_dt + delta<br/>
-	  next_ts = int(time.mktime(next_dt.timetuple()))<br/>
-        </p>
-	<p>Other time conversion problems are handled in a similar manner. </p>
-</div>
-<script type="text/javascript">
-			samaxesJS.toc({
-				exclude : 'h4, h5, h6',
-				autoId : true,
-				context : 'technical_content'
-			});
+    <p>The code makes ample use of exceptions to insure graceful recovery from problems 
+      such as network outages. It also monitors socket and console timeouts, restarting 
+      whatever it was working on several times before giving up. In the case of an 
+      unrecoverable console error (such as the console not responding at all), the 
+      program waits 60 seconds then restarts the program from the top. </p>
+    <p>Any &quot;hard&quot; exceptions, that is those that do not involve network 
+      and console timeouts and are most likely due to a logic error, are logged, reraised, 
+      and ultimately cause thread termination. If this happens in the main thread 
+      (not likely due to its simplicity), then this causes program termination. If 
+      it happens in the report processing thread (much more likely), then only the 
+      generation of reports will be affected — the main thread will continue downloading 
+      data off the instrument and putting them in the database. You can fix the problem 
+      at your leisure, without worrying about losing any data. </p>
+    <h2>Terminology</h2>
+    <p>This is a glossary of terminology used throughout the code. </p>
+    <table style="width: 100%">
+      <tr>
+	<td class="text_highlight"><strong>Name</strong></td>
+	<td><strong>Description</strong></td>
+      </tr>
+      <tr>
+	<td class="text_highlight">packet</td>
+	<td>Something obtained off the weather station. Frequently uses a complex 
+	  internal encoding, so it requires some processing to be useful.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">record</td>
+	<td>Something obtained off the SQL database. </td>
+      </tr>
+      <tr>
+	<td class="text_highlight">archive packet</td>
+	<td>A packet obtained off the store on the weather station. For example, 
+	  with a Davis VantagePro, it&#39;s obtained using their
+	  <span class="code">DMPAFT</span> command. </td>
+      </tr>
+      <tr>
+	<td class="text_highlight">loop packet</td>
+	<td>A packet with the current observations. For example, with a Davis 
+	  VantagePro, it&#39;s obtained using their <span class="code">LOOP</span> 
+	  command. </td>
+      </tr>
+      <tr>
+	<td class="text_highlight">archive record</td>
+	<td>A record obtained off the SQL database</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">tuple-time</td>
+	<td>An instance of the Python object <span class="code">
+	    <a href="http://docs.python.org/2/library/time.html#time.struct_time">
+	      time.struct_time</a></span>. This is a 9-wise tuple that represent a 
+	  time. It could be in either local time or UTC, though usually the former. 
+	  See module <span class="code">
+	    <a href="http://docs.python.org/2/library/time.html">time</a></span> 
+	  for more information. They are useful because they are a little closer 
+	  in format to what the Davis VantagePro uses, although they still require 
+	  a bit of processing. Variables carrying tuple time usually have a suffix &#39;<span class="code">_tt</span>&#39;.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">epoch time</td>
+	<td>Sometimes referred to as &quot;unix time,&quot; or &quot;unix epoch 
+	  time.&quot; The number of seconds since the epoch, which is 1 Jan 1970 
+	  00:00:00 UTC. Hence, it always represents UTC (well.... after adding 
+	  a few leap seconds. But, close enough). This is the time used in the 
+	  databases and appears as type &#39;<span class="code">dateTime</span>&#39; 
+	  in the SQL schema, perhaps an unfortunate name because of the similarity 
+	  to the completely unrelated Python type &#39;<span class="code">datetime</span>&#39;. 
+	  Very easy to manipulate, but it&#39;s a big opaque number. </td>
+      </tr>
+      <tr>
+	<td class="text_highlight">time stamp</td>
+	<td>A variable in unix epoch time. Always in UTC. Variables carrying 
+	  a time stamp usually have a suffix &#39;<span class="code">_ts</span>&#39;.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">datetime</td>
+	<td>An instance of the Python object <span class="code">datetime.datetime</span>. 
+	  Variables of type datetime usually have a suffix &#39;<span class="code">_dt</span>&#39;.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">SQL type</td>
+	<td>A type that appears in the SQL database. This usually looks something 
+	  like &#39;<span class="code">outTemp</span>&#39;, &#39;<span class="code">barometer</span>&#39;, &#39;<span class="code">extraTemp1</span>&#39;, 
+	  and so on.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">observation type</td>
+	<td>A type that can be used in the presentations. This is generally 
+	  all of the SQL types, plus calculated data (such as
+	  <span class="code">rms</span> or <span class="code">vecavg</span>).</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">value tuple</td>
+	<td>A 3-way tuple. First element is a value, second element the unit 
+	  type the value is in, the third the unit group. An example would be
+	  <span class="code">(21.2, &#39;degree_C&#39;, &#39;group_temperature&#39;)</span>.</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">db_dict</td>
+	<td>A dictionary with all the data necessary to bind to a database. 
+	  An example for sqlite would be <span class="code">{&#39;driver&#39; 
+	    : &#39;db.sqlite&#39;, &#39;root&#39;:&#39;/home/weewx&#39;, &#39;database&#39;:&#39;archive/weewx.sdb&#39;}</span>, 
+	  an example for MySQL would be <span class="code">{'driver' : 'db.mysql', 
+	    'host': 'localhost', 'user' : 'weewx', 'password' : 'mypassword', 'database' 
+	    : 'weewx'}</span>.</td>
+      </tr>
+    </table>
+    <h2>Units</h2>
+    <p>In general, there are three different areas where the unit system makes a 
+      difference.: </p>
+    <ol>
+      <li>On the weather station. As far as I know, the Davis Vantage series supports 
+	only U.S. Customary units internally. The Oregon Scientific WMR-USB series 
+	uses an odd mix of US and metric.</li>
+      <li>In the database. Either US or Metric can be used.</li>
+      <li>In the presentation (i.e., html and image files). </li>
+    </ol>
+    <p>The general strategy is that measurements are converted by service
+      <span class="code">StdConvert</span> as they come off the weather station into 
+      a target unit system, then stored internally in the database. Then, as they 
+      come off the database to be used for a report, they are converted into a target 
+      unit, specified by the skin. </p>
+    <h2>Value &quot;<span class="code">None</span>&quot;</h2>
+    <p>The Python special value &#39;<span class="code">None</span>&#39; is used 
+      throughout to signal a missing data point. All functions expect it. </p>
+    <p>However, the time value must never be &#39;<span class="code">None</span>&#39;. 
+      This is because it is used as the primary key in the SQL database. </p>
+    <h2>Time</h2>
+    <p><span class="code">Weewx </span>stores all data in UTC (roughly, &quot;Greenwich&quot; 
+      or &quot;Zulu&quot;) time. However, usually one is interested in weather events 
+      in local time and want image and HTML generation to reflect that. Furthermore, 
+      most weather stations are configured in local time. This requires that many 
+      data times be converted back and forth between UTC and local time. To avoid 
+      tripping up over time zones and daylight savings time, <span class="code">weewx</span> 
+      generally uses Python routines to do this conversion. Nowhere in the code base 
+      is there any explicit recognition of DST. Instead, its presence is implicit 
+      in the conversions. At times, this can cause the code to be relatively inefficient.
+    </p>
+    <p>For example, if one wanted to plot something every 3 hours in UTC time, it 
+      would be very simple: to get the next plot point, just add 10,800 to the epoch 
+      time: </p>
+    <p class="tty">next_ts = last_ts + 10800 </p>
+    <p>But, if one wanted to plot something for every 3 hours <em>in local time</em> 
+      (that is, at 0000, 0300, 0600, etc.), despite a possible DST change in the middle, 
+      then things get a bit more complicated. One could modify the above to recognize 
+      whether a DST transition occurs sometime between <span class="code">last_ts</span> 
+      and the next three hours and, if so, make the necessary adjustments. This is 
+      generally what <span class="code">wview</span> does. <span class="code">Weewx
+      </span>takes a different approach and converts from UTC to local, does the arithmetic, 
+      then converts back. This is inefficient, but bulletproof against changes in 
+      DST algorithms, etc: </p>
+    <p class="tty">
+      time_dt = datetime.datetime.fromtimestamp(last_ts)<br/>
+      delta = datetime.timedelta(seconds=10800)<br/>
+      next_dt = time_dt + delta<br/>
+      next_ts = int(time.mktime(next_dt.timetuple()))<br/>
+    </p>
+    <p>Other time conversion problems are handled in a similar manner. </p>
 
-</script>
+
+    <p class='copyright'>
+      <a href='copyright.htm'>Copyright Tom Keffer and others</a>
+    </p>
+
+
+  </div>
+  <script type="text/javascript">
+    samaxesJS.toc({
+    exclude : 'h4, h5, h6',
+    autoId : true,
+    context : 'technical_content'
+    });
+
+  </script>
 
 </body>
 

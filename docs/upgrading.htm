@@ -7,7 +7,6 @@
     <meta http-equiv="Content-Language" content="en-us" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>weewx: Upgrade Guide</title>
-    <!-- CSS -->
     <link href="weewx_docs.css" rel="stylesheet" />
     <style type="text/css">
     </style>
@@ -15,42 +14,46 @@
 
   <body>
 
-    <h1 class="title">Upgrading to <span class="code">weewx</span> v2.2</h1>
+    <h1 class="title">Upgrading to <span class="code">weewx</span><br/>
+Version: 2.2
+    </h1>
     <p>What follows are directions for upgrading from specific versions.</p>
+
     <h2>V2.1 or earlier</h2>
     <p>Version 2.2 introduces a schema, found in <span class="code">
-        bin/user/schemas.py</span>, for the stats database. This schema is used only 
-      when initially creating the database. If you have a specialized stats database, 
-      that is, one that saves types other than the default that comes with
-      <span class="code">weewx</span>, you should edit this file to reflect your 
-      changes before attempting to rebuild the database.</p>
+        bin/user/schemas.py</span>, for the stats database. This schema is
+      used only when initially creating the database. If you have a specialized
+      stats database, that is, one that saves types other than the default that
+      comes with <span class="code">weewx</span>, you should edit this file to
+      reflect your changes before attempting to rebuild the database.</p>
+
     <h2>V1.14 or earlier</h2>
     <p>Version 2.0 introduces many new features, including a revamped internal 
       engine. There are two changes that are not backwards compatible:</p>
     <ul>
       <li>The configuration file, <span class="code">weewx.conf</span>. When 
 	upgrading from V1.X, the setup utility will 
-        install a new, fresh copy of <span class="code">weewx.conf</span>, which you will 
-	then have to edit by hand. Thereafter, V2.X upgrades should be automatic.</li>
-      <li>Custom services. If you have written a custom service, it will have to be updated to use the 
-        new engine. The overall architecture is very similar, except that 
-        functions must be <em>bound</em> to events, rather than get called implicitly. 
-        See the sections <a href="customizing.htm#Customizing_a_Service">Customizing a 
-          Service</a> and <a href="customizing.htm#Adding_a_Service">Adding a Service</a> 
-        in the <a href="customizing.htm">Customizing Guide</a> for details on how to do 
-        this.</li>
+        install a new, fresh copy of <span class="code">weewx.conf</span>,
+        which you will then have to edit by hand. Thereafter, V2.X upgrades
+        should be automatic.</li>
+      <li>Custom services. If you have written a custom service, it will have
+        to be updated to use the new engine. The overall architecture is very
+        similar, except that functions must be <em>bound</em> to events, rather
+        than get called implicitly. See the sections <a href="customizing.htm#Customizing_a_Service">Customizing a Service</a> and <a href="customizing.htm#Adding_a_Service">Adding a Service</a> in the <a href="customizing.htm">Customizing Guide</a> for details on how to do this.</li>
     </ul>
-    <p>All skins should be completely backwards compatible, so you 
-      should not have to change your templates or skin configuration file,
+    <p>All skins should be completely backwards compatible, so you should not
+      have to change your templates or skin configuration file,
       <span class="code">skin.conf</span>. </p>
-    <p>If you have written a custom report generator it should also be backwards 
-      compatible.</p>
+    <p>If you have written a custom report generator it should also be
+      backwards compatible.</p>
+
     <h2>V1.13 or earlier</h2>
-    <p>Version 1.14 introduces some new webpages that have been expressly formatted for 
-      the smartphone by using <a href="http://jquery.com/">jQuery</a>.</p>
-    <p>The skins shipped with the distribution take advantage of these features. If 
-      you do nothing, your old skins will continue to work, but you will not be taking 
-      advantage of these new webpages.</p>
+    <p>Version 1.14 introduces some new webpages that have been expressly
+      formatted for the smartphone by using
+      <a href="http://jquery.com/">jQuery</a>.</p>
+    <p>The skins shipped with the distribution take advantage of these
+      features. If you do nothing, your old skins will continue to work, but
+      you will not be taking advantage of these new webpages.</p>
     <p>If you want them, then you have two choices:</p>
     <ol>
       <li>Rename your old skin directory (call it &quot;<span class="code">skins.old</span>&quot;) 
@@ -63,37 +66,40 @@
 	over the contents of the subdirectory <span class="code">
 	  skins/Standard/smartphone</span> from the distribution into your <span class="code">skins/Standard</span> 
 	directory. You will then need to modify your <span class="code">skin.conf</span>.
-      <p class="indent">After the section that looks like</p>
-      <pre>       [[[Mobile]]]
-        template = mobile.html.tmpl</pre>
-      <p class="indent">add the following directives:</p>
-      <pre>        [[[MobileSmartphone]]]
-        template = smartphone/index.html.tmpl
+      <p>After the section that looks like</p>
+      <pre>
+[[[Mobile]]]
+    template = mobile.html.tmpl</pre>
+      <p>add the following directives:</p>
+      <pre>
+[[[MobileSmartphone]]]
+    template = smartphone/index.html.tmpl
         
-        [[[MobileTempOutside]]]
-        template = smartphone/temp_outside.html.tmpl
+[[[MobileTempOutside]]]
+    template = smartphone/temp_outside.html.tmpl
 
-        [[[MobileRain]]]
-        template = smartphone/rain.html.tmpl
+[[[MobileRain]]]
+    template = smartphone/rain.html.tmpl
 
-        [[[MobileBarometer]]]
-        template = smartphone/barometer.html.tmpl
+[[[MobileBarometer]]]
+    template = smartphone/barometer.html.tmpl
 
-        [[[MobileWind]]]
-        template = smartphone/wind.html.tmpl
+[[[MobileWind]]]
+    template = smartphone/wind.html.tmpl
         
-        [[[MobileRadar]]]
-        template = smartphone/radar.html.tmpl</pre>
-      <p class="indent">Then modify section <span class="code">[CopyGenerator]</span> 
+[[[MobileRadar]]]
+    template = smartphone/radar.html.tmpl</pre>
+      <p>Then modify section <span class="code">[CopyGenerator]</span> 
         to add the <span class="highlight">highlighted</span> files:</p>
-      <pre>[CopyGenerator]
-        
-        #
-        # This section is used by the generator CopyGenerator
-        #
+      <pre>
+[CopyGenerator]
 
-        # List of files that are to be copied at the first invocation of the generator only
-        copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></pre>
+    #
+    # This section is used by the generator CopyGenerator
+    #
+
+    # List of files that are to be copied at the first invocation of the generator only
+    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></pre>
       </li>
     </ol>
     <p>Whichever approach you chose, the generated files will appear in
