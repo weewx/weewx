@@ -39,11 +39,11 @@ realclean:
 	rm -rf dist
 
 install:
-	setup.py --install
+	./setup.py --install
 
 SRCPKG=weewx-$(VERSION).tar.gz
 src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
-	setup.py sdist
+	./setup.py sdist
 
 # create the changelog (renamed to README.txt) for distribution
 changelog:
