@@ -113,7 +113,8 @@ changelog:
 # update the version in all relevant places
 version:
 	for f in docs/customizing.htm docs/usersguide.htm; do \
-          sed -i 's/Version: [0-9.]+/Version: $(VERSION)/' $$f; \
+          sed -e 's/Version: [0-9].*/Version: $(VERSION)/' $$f > $$f.tmp; \
+          mv $$f.tmp $$f; \
         done
 
 DEBREVISION=1
