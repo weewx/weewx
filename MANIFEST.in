@@ -1,6 +1,6 @@
 recursive-include docs *.css *.htm *.js *.png *.jpg *.txt
 recursive-include util *
 recursive-include skins *
-include LICENSE
+include LICENSE.txt
 include README
 include weewx.conf

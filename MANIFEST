@@ -1,4 +1,4 @@
-LICENSE
+LICENSE.txt
 README
 setup.cfg
 setup.py
@@ -56,6 +56,7 @@ docs/day-gap-showing.png
 docs/daytemp_with_avg.png
 docs/debian.htm
 docs/ferrites.jpg
+docs/installing.htm
 docs/linux.htm
 docs/logo-apple.png
 docs/logo-centos.png
