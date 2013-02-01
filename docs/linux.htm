@@ -29,8 +29,11 @@ tr {
   float: right;
   margin-left: 100px;
 }
-img {
+.logo {
   width: 60px;
+}
+.thumbnail {
+  width: 14px;
 }
 .locations {
   margin-left: 20px;
@@ -86,13 +89,14 @@ function showpanel(id) {
   <body>
     <h1 class="title">weewx: Quick Start Guide for Linux</h1>
     <p class='os-icons'>      
-      <img src='logo-linux.png'/>
-      <img src='logo-debian.png'/>
-      <img src='logo-ubuntu.png'/>
-      <img src='logo-mint.png'/><br/>
-      <img src='logo-redhat.png'/>
-      <img src='logo-centos.png'/>
-      <img src='logo-fedora.png'/>
+      <img class='logo' src='logo-linux.png'/>
+      <img class='logo' src='logo-debian.png'/>
+      <img class='logo' src='logo-ubuntu.png'/>
+      <img class='logo' src='logo-mint.png'/><br/>
+      <img class='logo' src='logo-redhat.png'/>
+      <img class='logo' src='logo-centos.png'/>
+      <img class='logo' src='logo-fedora.png'/>
+      <img class='logo' src='logo-suse.png'/>
     </p>
     <p>
       This is a guide to install <span class='code'>weewx</span> on Linux
@@ -122,11 +126,11 @@ function showpanel(id) {
     <p style='clear: both'></p>
 
     <h3>Install Prerequisites</h3>
-    <p>Ensure that Python2 is installed.  Python 2.5, 2.6, or 2.7 will work, but Python 3 will not.  Then install required python packages using the package management system for your system (e.g. apt-get, yum, yast) or the Python Package Management System (pip).</p>
+    <p>Ensure that Python2 is installed.  Python 2.5, 2.6, or 2.7 will work, but Python 3 will not.  Then install required python packages using the package management system for your system (<em>e.g.</em>, apt-get, yum, yast) or the Python Package Management System (pip).</p>
     <div class='tabs'>
-      <div id='prereq-tab-debian' class='tab selected' onclick="showpanel('debian')">Debian</div>
-      <div id='prereq-tab-redhat' class='tab' onclick="showpanel('redhat')">Redhat</div>
-      <div id='prereq-tab-suse' class='tab' onclick="showpanel('suse')">SuSE</div>
+      <div id='prereq-tab-debian' class='tab selected' onclick="showpanel('debian')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div></div>
+      <div id='prereq-tab-redhat' class='tab' onclick="showpanel('redhat')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div></div>
+      <div id='prereq-tab-suse' class='tab' onclick="showpanel('suse')">SuSE <img src='logo-suse.png' class='thumbnail' /></div>
       <div id='prereq-tab-pip' class='tab' onclick="showpanel('pip')":>pip</div>
     </div>
     <div id='prereq' style='clear:both'>
@@ -240,9 +244,6 @@ function showpanel(id) {
       ./setup.py build<br/>
       sudo ./setup.py install
     </p>
-    <p>
-      The install will place weewx in <span class='code'>/home/weewx</span>, so sudo is probably required.
-    </p>
 
     <h3>Configure</h3>
     <p>
@@ -257,7 +258,7 @@ function showpanel(id) {
       Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
     </p>
     <p>
-      If you have a weather station from the Davis Vantage series, many of the configuration data will be downloaded from your hardware, including altitude, archive interval, and the start of your rain year. If you have not set these, you can either do so by following the instructions in the manual that came with your weather station, or by using the configuration utility config_vp.py, which is included with weewx. To see how to run config_vp.py:
+      If you have a weather station from the Davis Vantage series, many of the configuration data will be downloaded from your hardware, including altitude, archive interval, and the start of your rain year. If you have not set these, you can either do so by following the instructions in the manual that came with your weather station, or by using the configuration utility <span class='code'>config_vp.py</span>, which is included with <span class='code'>weewx</span>. To see how to run <span class='code'>config_vp.py</span>:
     </p>
     <p class='tty'>
 # This works only for Davis Vantage weather stations!<br/>
@@ -277,13 +278,14 @@ cd /home/weewx<br/>
       Or as a daemon automatically when the computer starts:
     </p>
     <div class='tabs'>
-      <div id='startup-tab-debian' class='tab selected' onclick="showpanel('debian')">Debian</div>
-      <div id='startup-tab-redhat' class='tab' onclick="showpanel('redhat')">Redhat</div>
-      <div id='startup-tab-suse' class='tab' onclick="showpanel('suse')">SuSE</div>
+      <div id='startup-tab-debian' class='tab selected' onclick="showpanel('debian')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
+      <div id='startup-tab-redhat' class='tab' onclick="showpanel('redhat')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div>
+      <div id='startup-tab-suse' class='tab' onclick="showpanel('suse')">SuSE <img src='logo-suse.png' class='thumbnail' /></div>
     </div>
     <div id='startup' style='clear:both'>
       <div id='startup-debian'>
         <p class="tty">
+          cd /home/weewx<br/>
           sudo cp util/init.d/weewx.debian /etc/init.d/weewx<br/>
           sudo chmod +x /etc/init.d/weewx<br/>
           sudo update-rc.d weewx defaults 98<br/>
@@ -292,6 +294,7 @@ cd /home/weewx<br/>
       </div>
       <div id='startup-redhat' style='display:none'>
         <p class="tty">
+          cd /home/weewx<br/>
           sudo cp util/init.d/weewx.redhat /etc/init.d/weewx<br/>
           sudo chmod +x /etc/init.d/weewx<br/>
           sudo chkconfig weewx on<br/>
@@ -300,6 +303,7 @@ cd /home/weewx<br/>
       </div>
       <div id='startup-suse' style='display:none'>
         <p class="tty">
+          cd /home/weewx<br/>
           sudo cp util/init.d/weewx.suse /etc/init.d/weewx<br/>
           sudo chmod +x /etc/init.d/weewx<br/>
           sudo chkconfig weewx on<br/>

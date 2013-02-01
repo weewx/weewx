@@ -99,9 +99,9 @@ cat util/apache/conf.d/weewx.conf | sed \
 # create symlinks to the code entry points
 ln -s ../share/weewx/weewxd.py %{buildroot}%{_bindir}/weewxd
 ln -s ../share/weewx/runreports.py %{buildroot}%{_bindir}/wee-reports
-ln -s ../share/weewx/config-database.py %{buildroot}%{_bindir}/wee-config-database
-ln -s ../share/weewx/config-fousb.py %{buildroot}%{_bindir}/wee-config-fousb
-ln -s ../share/weewx/config-vp.py %{buildroot}%{_bindir}/wee-config-vp
+ln -s ../share/weewx/config_database.py %{buildroot}%{_bindir}/wee-config-database
+ln -s ../share/weewx/config_fousb.py %{buildroot}%{_bindir}/wee-config-fousb
+ln -s ../share/weewx/config_vp.py %{buildroot}%{_bindir}/wee-config-vp
 
 # pre-compile the python code
 python -m compileall %{buildroot}%{dst_bin_dir}
