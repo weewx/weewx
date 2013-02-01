@@ -95,35 +95,16 @@ Version: 2.2
       simple and easy to understand.</p>
 
     <h1>Supported hardware</h1>
-    <ul>
-      <li>Davis &quot;Vantage&quot; series of weather stations, including the
-	<a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">
-	  VantagePro2</a>&trade; and <a href="http://www.vantagevue.com/">VantageVue</a>&trade;, 
-	using serial, USB, or
-	<a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">
-	  WeatherLinkIP</a>&trade; connections. Both the &quot;Rev A&quot; (firmware 
-	dated before 22 April 2002) and &quot;Rev B&quot; versions are supported.
-      </li>
-      <li>Oregon Scientific WMR-USB series.  Tested on the
-	<a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">
-	  WMR100N</a>.</li>
-      <li>Oregon Scientific WMR-918/968 series.  Tested on the
-	<a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">
-	  Oregon Scientific WMR-968</a>.</li>
-      <li>The Fine Offset series of weather stations. These are branded by
-        many vendors, including Ambient Weather, National Geographic, Watson,
-        Elecsa, Tycon, Maplin, Froggit, and others. Tested on the
-        <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather 
-        WS2080</a>.</li>
-      <li>In addition, <span class="code">weewx</span> comes with a software
-        simulator, useful for testing and evaluation.</li>
-    </ul>
+    <p>
+      Many types of station hardware are supported.  In addition to hardware support, <span class="code">weewx</span> comes with a software simulator, useful for testing and evaluation.
+    </p>
     <table style="width: 90%" class="center">
       <tr>
 	<td class="text_highlight">Vendor</td>
 	<td><strong>Model</strong></td>
 	<td><strong>Link</strong></td>
 	<td><strong>Required<br/>Package</strong></td>
+        <td><strong>Station<br/>Driver</strong></td>
 	<td><strong>Maturity</strong></td>
 	<td><strong>Notes</strong></td>
       </tr>
@@ -132,6 +113,7 @@ Version: 2.2
 	<td>WS1090</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -139,6 +121,7 @@ Version: 2.2
 	<td>WS2080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td>Tested</td>
 	<td>&nbsp;</td>
       </tr>
@@ -146,21 +129,24 @@ Version: 2.2
 	<td>WS2090</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="3">Davis</td>
-	<td style="height: 33px">VantagePro2</td>
-	<td style="height: 33px">Serial or USB</td>
-	<td class="code" style="height: 33px">pyserial</td>
-	<td style="height: 33px">Tested</td>
-	<td style="height: 33px"></td>
+	<td class="text_highlight" rowspan="3">Davis<sup><a href='#vantage'>1</a></sup></td>
+	<td>VantagePro2</td>
+	<td>Serial or USB</td>
+	<td class="code">pyserial</td>
+        <td>Vantage</td>
+	<td>Tested</td>
+	<td></td>
       </tr>
       <tr>
 	<td>VantagePro2</td>
 	<td>WeatherLink IP</td>
 	<td class="code">&nbsp;</td>
+        <td>Vantage</td>
 	<td>Tested</td>
 	<td>&nbsp;</td>
       </tr>
@@ -168,6 +154,7 @@ Version: 2.2
 	<td>VantageVue</td>
 	<td>Serial or USB</td>
 	<td class="code">pyserial</td>
+        <td>Vantage</td>
 	<td>Tested</td>
 	<td>&nbsp;</td>
       </tr>
@@ -176,6 +163,7 @@ Version: 2.2
 	<td>6975</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -183,14 +171,16 @@ Version: 2.2
 	<td>6976</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="11">Fine Offset</td>
+	<td class="text_highlight" rowspan="11">Fine Offset<sup><a href='#fousb'>4</a></sup></td>
 	<td>WH1080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -198,6 +188,7 @@ Version: 2.2
 	<td>WH1081</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -205,6 +196,7 @@ Version: 2.2
 	<td>WH1091</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -212,6 +204,7 @@ Version: 2.2
 	<td>WH1090</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -219,6 +212,7 @@ Version: 2.2
 	<td>WS1080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -226,6 +220,7 @@ Version: 2.2
 	<td>WA2080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -233,6 +228,7 @@ Version: 2.2
 	<td>WA2081</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -240,6 +236,7 @@ Version: 2.2
 	<td>WH2080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -247,6 +244,7 @@ Version: 2.2
 	<td>WH2081</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -254,6 +252,7 @@ Version: 2.2
 	<td>WH3080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -261,6 +260,7 @@ Version: 2.2
 	<td>WH3081</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -269,28 +269,32 @@ Version: 2.2
 	<td>265</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="3">Oregon Scientific</td>
+	<td class="text_highlight" rowspan="3">Oregon Scientific<sup><a href='#wmrusb'>2</a>, <a href='#wmr9xx'>3</a></sup></td>
 	<td>WMR100N</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>WMR-USB</td>
 	<td>Tested</td>
 	<td>&nbsp;</td>
       </tr>
       <tr>
-	<td>WM918</td>
+	<td>WMR918</td>
 	<td>Serial</td>
 	<td class="code">pyserial</td>
+        <td>WMR-918</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
       <tr>
-	<td>WM968</td>
+	<td>WMR968</td>
 	<td>Serial</td>
 	<td class="code">pyserial</td>
+        <td>WMR-918</td>
 	<td>Tested</td>
 	<td>&nbsp;</td>
       </tr>
@@ -299,6 +303,7 @@ Version: 2.2
 	<td>TP1080WC</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -307,6 +312,7 @@ Version: 2.2
 	<td>W-8681</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
@@ -314,10 +320,30 @@ Version: 2.2
 	<td>WX-2008</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
+        <td>FineOffsetUSB</td>
 	<td></td>
 	<td>&nbsp;</td>
       </tr>
     </table>
+
+    <ol>
+      <li><a name='vantage'>Davis &quot;Vantage&quot;</a> series of weather stations, including the
+	<a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">
+	  VantagePro2</a>&trade; and <a href="http://www.vantagevue.com/">VantageVue</a>&trade;, 
+	using serial, USB, or
+	<a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">
+	  WeatherLinkIP</a>&trade; connections. Both the &quot;Rev A&quot; (firmware 
+	dated before 22 April 2002) and &quot;Rev B&quot; versions are supported.
+      </li>
+      <li><a name='wmrusb'>Oregon Scientific WMR-USB</a> series.  Tested on the
+	<a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">WMR100N</a>, other stations may work as well.</li>
+      <li><a name='wmr9xx'>Oregon Scientific WMR-918/968</a> series.  Tested on the
+	<a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR-968</a>, other stations may work as well.</li>
+      <li><a name='fousb'>Fine Offset</a> series of weather stations. These are branded by
+        many vendors, including Ambient Weather, National Geographic, Watson,
+        Elecsa, Tycon, Maplin, Froggit, and others. Tested on the
+        <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.</li>
+    </ol>
 
     <h1 id="Prerequisites">Prerequisites</h1>
     
@@ -682,7 +708,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     </p>
     <p class="config_important">WEEWX_ROOT </p>
     <p>Set to the root directory of the <span class="code">weewx</span> file hierarchy 
-      for this station, nominally &#39;<span class="code">/home/weewx</span>&#39;. 
+      for this station, nominally <span class="code">/home/weewx</span>. 
       The <span class="code">weewx</span> data subdirectories <span class="code">skins</span>,
       <span class="code">archive</span>, and <span class="code">public_html</span> 
       are expected to be found here. This value will be set automatically by the setup 
@@ -700,7 +726,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class="config_important">location </p>
     <p>The station location should be a UTF-8 string that describes the
       geography of where your weather station is located, such as
-      &#39;<span class="code">Hood River, Oregon</span>&#39;. Required.
+      <span class="code">Hood River, Oregon</span>. Required.
       No default. </p>
     <p class="config_important">latitude <br />
       longitude </p>
@@ -749,66 +775,69 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>This section is for options relating to the Davis Vantage series of hardware 
       (<em>VantagePro, VantagePro2</em> or <em>VantageVue</em>).</p>
     <p class="config_important">type </p>
-    <p>Set to either &#39;<span class="code">serial</span>&#39;, if you have a serial 
-      or USB connection to your VantagePro (by far the most common), or to &#39;<span class="code">ethernet</span>&#39; 
-      if you have the WeatherLinkIP. No default. </p>
+    <p>Set to either <span class="code">serial</span>, for a serial or USB
+      connection to the VantagePro (by far the most common), or to
+      <span class="code">ethernet</span> for the WeatherLinkIP. No default.</p>
     <p class="config_important">port </p>
-    <p>If you chose &#39;<span class="code">serial</span>&#39; above, then set to 
-      the serial port name used by your station (/<span class="code">dev/ttyUSB0</span> 
-      is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
-      for serial ports). Otherwise, not required. No default. </p>
+    <p>If you chose <span class="code">serial</span>, for <span class='code'>type</span>,
+      then set to the serial port name used by the station.  For example,
+      <span class="code">/dev/ttyUSB0</span> is a common location for USB
+      ports, <span class="code">/dev/ttyS0</span> for serial ports. Otherwise,
+      not required. No default. </p>
     <p class="config_important">host </p>
-    <p>If you chose &#39;<span class="code">ethernet</span>&#39; above, then give 
-      the either the IP address (<em>e.g.</em>, <span class="code">192.168.0.1</span>) 
+    <p>If you chose <span class="code">ethernet</span>, then specify either
+      the IP address (<em>e.g.</em>, <span class="code">192.168.0.1</span>) 
       or hostname (<em>e.g.</em>, <span class="code">console.mydomain.com</span>) 
-      to your console. Otherwise, not required. No default. </p>
+      to the console. Otherwise, not required. No default. </p>
     <p class="config_option">baudrate </p>
-    <p>Set to the baudrate of your station. The default is 19200. </p>
+    <p>Set to the baudrate of the station. The default is 19200. </p>
     <p class="config_option">tcp_port </p>
-    <p>The port where your WeatherLinkIP will be listening. Default is 22222.
+    <p>The port where WeatherLinkIP will be listening. Default is 22222.
     </p>
     <p class="config_option">tcp_send_delay </p>
-    <p>How long to block after sending a socket packet to your WeatherLinkIP. Default 
-      is 1 second. </p>
+    <p>How long to block after sending a socket packet to the WeatherLinkIP.
+      Default is 1 second. </p>
     <p class="config_option">iss_id </p>
-    <p>Set to the ID number of your Integrated Sensor Suite (ISS). This is used 
-      in the formula to calculate reception quality for wireless stations. Default 
-      is 1. </p>
+    <p>Set to the ID number of the Integrated Sensor Suite (ISS). This is used 
+      in the formula to calculate reception quality for wireless stations.
+      Default is 1. </p>
     <p class="config_option">timeout </p>
-    <p>How many seconds&nbsp; to wait for a response from the station before giving 
+    <p>How many seconds to wait for a response from the station before giving 
       up. Default is 5 seconds. </p>
     <p class="config_option">wait_before_retry </p>
-    <p>How many seconds to wait before retrying again. Unless you have a good reason 
-      to change it, this value should be left at the default, as it is long enough 
-      for the station to offer new data, but not so long as to go into a new loop 
-      packet (which arrive every 2 seconds). Default is 1.2 seconds. </p>
+    <p>How many seconds to wait before retrying. Unless you have a good reason 
+      to change it, this value should be left at the default, as it is long
+      enough for the station to offer new data, but not so long as to go into
+      a new loop packet (which arrive every 2 seconds). Default is 1.2
+      seconds. </p>
     <p class="config_option">max_tries </p>
     <p>How many times to try again before giving up. Default is 4. </p>
+
     <h3 class="config_section">[WMR-USB]</h3>
-    <p>This section is for options relating to the Oregon Scientific WMR series 
-      of weather stations with USB connectors. The WMR100N is known to work, others 
-      might work as well.</p>
+    <p>This section is for options relating to the Oregon Scientific WMR series
+      of weather stations with USB connectors.</p>
     <p class="config_option">stale_wind</p>
-    <p>How long a wind record can be used to calculate wind chill (in seconds). 
+    <p>How long a wind record can be used to calculate wind chill (in seconds).
       Default is 30.</p>
+
     <h3 class="config_section">[WMR-918]</h3>
-    <p>This section is for options relating to the Oregon Scientific WMR-918 series 
-      of weather stations with serial connectors. The WMR-968 is known to work, others 
-      might work as well.</p>
+    <p>This section is for options relating to the Oregon Scientific WMR-918
+      series of weather stations with serial connectors.</p>
     <p class="config_important">type</p>
-    <p>For the moment, only &#39;<span class="code">serial</span>' is supported.</p>
+    <p>For the moment, only <span class="code">serial</span> is supported.</p>
     <p class="config_important">port </p>
-    <p>Along with the &#39;<span class="code">serial</span>&#39; option above, you 
-      must set the serial port name used by your station. Example, /<span class="code">dev/ttyUSB0</span> 
-      is a common location for USB ports under Debian, <span class="code">/dev/ttyS0</span> 
-      for serial ports. No default. </p>
+    <p>Along with the <span class="code">serial</span> option above, you 
+      must set the serial port name used by the station. For example,
+      <span class="code">/dev/ttyUSB0</span> is a common location for USB
+      ports, <span class="code">/dev/ttyS0</span> for serial ports.
+      No default. </p>
     <p class="config_option">stale_wind</p>
-    <p>How long a wind record can be used to calculate wind chill (in seconds). 
+    <p>How long a wind record can be used to calculate wind chill (in seconds).
       Default is 30.</p>
+
     <h3 class="config_section">[FineOffsetUSB]</h3>
-    <p>This section is for options relating to the Fine Offset series of weather 
-      stations with USB connectors. The Ambient WS2080 is known to work, others 
-      might work as well.</p>
+    <p>This section is for options relating to the Fine Offset series of
+      weather stations with USB connectors.</p>
     <p class="config_important">model</p>
     <p>Set to the station model. For example, WH1080, WS2080, WH3081, etc. </p>
     <h3 class="config_section">[Simulator]</h3>
@@ -934,7 +963,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
       No default </p>
     <p class="config_important">path </p>
-    <p>Set to the path where the weather data will be stored on your webserver (e.g., &#39;<span class="code">/weather</span>&#39;). 
+    <p>Set to the path where the weather data will be stored on your webserver (e.g., <span class="code">/weather</span>). 
       NB: some FTP servers require a leading slash (&#39;<span class="code">/</span>&#39;), 
       some don&#39;t. Required. No default. </p>
     <p class="config_important">passive </p>
@@ -963,7 +992,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       The local user that weewx runs as must have passwordless ssh configured for 
       user@server. Required. No default. </p>
     <p class="config_important">path </p>
-    <p>Set to the path where the weather data will be stored on your webserver (e.g., &#39;<span class="code">/weather</span>&#39;). 
+    <p>Set to the path where the weather data will be stored on your webserver (e.g., <span class="code">/weather</span>). 
       Required. No default. </p>
     <p class="config_important">delete </p>
     <p>Files that don't exist in the local report are removed from the remote location.
@@ -992,8 +1021,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	<a href="#Calibrate">[StdCalibrate]</a></span> and <span class="code">
 	<a href="#QC">[StdQC]</a></span> below, and change the units there as well.</p>
     <p class="config_option">target_unit</p>
-    <p>Set to either &#39;<span class="code">US</span>&#39; or &#39;<span class="code">METRIC</span>&#39;. 
-      Default is &#39;<span class="code">US</span>&#39;.</p>
+    <p>Set to either <span class="code">US</span> or <span class="code">METRIC</span>. 
+      Default is <span class="code">US</span>.</p>
     <h3 id="Calibrate" class="config_section">[StdCalibrate]</h3>
     <p>This section is for configuring the <span class="code">StdCalibrate</span> 
       service. This service offers an opportunity to correct for any calibration errors 
@@ -1092,7 +1121,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	who have cobbled together homebrew serial interfaces</a> for the Vantage stations 
       that do not include memory for a logger. These users should set this option 
       to '<span class="code">software</span>', forcing software record generation. 
-      Default is &#39;<span class="code">hardware</span>&#39;.</p>
+      Default is <span class="code">hardware</span>.</p>
     <p class="config_option">archive_schema</p>
     <p>This is used only when the archive database is first created. Thereafter, 
       it is downloaded from the database. It should point to a Python list 
@@ -1140,7 +1169,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>This definition uses the MySQL database engine to store archive data. It 
       is free, highly-scalable, but more complicated to administer. </p>
     <p class="config_option">host</p>
-    <p>The host the archive database is located on. Default is &#39;<span class="code">localhost</span>&#39;.</p>
+    <p>The host the archive database is located on. Default is <span class="code">localhost</span>.</p>
     <p class="config_option">user</p>
     <p>The user name to be used to log into the server. Required.</p>
     <p class="config_option">password</p>
@@ -1150,7 +1179,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <h4 class="config_section">[[stats_mysql]]</h4>
     <p>This uses the MySQL database engine to store archive data. It is free, highly-scalable, 
       but more complicated to administer. </p>
-    <p>The host the stats database is located on. Default is &#39;<span class="code">localhost</span>&#39;.</p>
+    <p>The host the stats database is located on. Default is <span class="code">localhost</span>.</p>
     <p class="config_option">user</p>
     <p>The user name to be used to log into the server. Required.</p>
     <p class="config_option">password</p>
@@ -1651,10 +1680,10 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
     <p>While <span class="code">weewx</span> is nowhere near as fast at generating 
       images and HTML as its predecessor, <span class="code">wview</span> (this is 
       partially because <span class="code">weewx</span> uses fancier fonts and a much more powerful templating 
-      engine), it is &#39;fast enough&#39; for all platforms but the slowest. I run 
+      engine), it is fast enough for all platforms but the slowest. I run 
       it regularly on a 500 MHz machine where generating the 9 images used in the &quot;Current 
       Conditions&quot; page takes just under 2 seconds (compared with
-      <span class="code">wview</span>&#39;s 0.4 seconds). </p>
+      0.4 seconds for <span class="code">wview</span>). </p>
     <p>Unfortunately, the architectural goal of one code base is likely to be broken 
       with the arrival of Python V3.X. It has so many changes that are not backwards 
       compatible with V2.X, that a separate code base will most likely be needed. 
@@ -1697,13 +1726,13 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       <tr>
 	<td class="text_highlight">archive packet</td>
 	<td>A packet obtained off the store on the weather station. For example, 
-	  with a Davis VantagePro, it&#39;s obtained using their
+	  with a Davis VantagePro, it&#39;s obtained using the
 	  <span class="code">DMPAFT</span> command. </td>
       </tr>
       <tr>
 	<td class="text_highlight">loop packet</td>
 	<td>A packet with the current observations. For example, with a Davis 
-	  VantagePro, it&#39;s obtained using their <span class="code">LOOP</span> 
+	  VantagePro, it&#39;s obtained using the <span class="code">LOOP</span> 
 	  command. </td>
       </tr>
       <tr>
@@ -1720,7 +1749,7 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
 	    <a href="http://docs.python.org/2/library/time.html">time</a></span> 
 	  for more information. They are useful because they are a little closer 
 	  in format to what the Davis VantagePro uses, although they still require 
-	  a bit of processing. Variables carrying tuple time usually have a suffix &#39;<span class="code">_tt</span>&#39;.</td>
+	  a bit of processing. Variables carrying tuple time usually have a suffix <span class="code">_tt</span>.</td>
       </tr>
       <tr>
 	<td class="text_highlight">epoch time</td>
@@ -1728,25 +1757,25 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
 	  time.&quot; The number of seconds since the epoch, which is 1 Jan 1970 
 	  00:00:00 UTC. Hence, it always represents UTC (well.... after adding 
 	  a few leap seconds. But, close enough). This is the time used in the 
-	  databases and appears as type &#39;<span class="code">dateTime</span>&#39; 
+	  databases and appears as type <span class="code">dateTime</span>
 	  in the SQL schema, perhaps an unfortunate name because of the similarity 
-	  to the completely unrelated Python type &#39;<span class="code">datetime</span>&#39;. 
+	  to the completely unrelated Python type <span class="code">datetime</span>. 
 	  Very easy to manipulate, but it&#39;s a big opaque number. </td>
       </tr>
       <tr>
 	<td class="text_highlight">time stamp</td>
 	<td>A variable in unix epoch time. Always in UTC. Variables carrying 
-	  a time stamp usually have a suffix &#39;<span class="code">_ts</span>&#39;.</td>
+	  a time stamp usually have a suffix <span class="code">_ts</span>.</td>
       </tr>
       <tr>
 	<td class="text_highlight">datetime</td>
 	<td>An instance of the Python object <span class="code">datetime.datetime</span>. 
-	  Variables of type datetime usually have a suffix &#39;<span class="code">_dt</span>&#39;.</td>
+	  Variables of type datetime usually have a suffix <span class="code">_dt</span>.</td>
       </tr>
       <tr>
 	<td class="text_highlight">SQL type</td>
 	<td>A type that appears in the SQL database. This usually looks something 
-	  like &#39;<span class="code">outTemp</span>&#39;, &#39;<span class="code">barometer</span>&#39;, &#39;<span class="code">extraTemp1</span>&#39;, 
+	  like <span class="code">outTemp</span>, <span class="code">barometer</span>, <span class="code">extraTemp1</span>, 
 	  and so on.</td>
       </tr>
       <tr>
@@ -1787,9 +1816,9 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       come off the database to be used for a report, they are converted into a target 
       unit, specified by the skin. </p>
     <h2>Value &quot;<span class="code">None</span>&quot;</h2>
-    <p>The Python special value &#39;<span class="code">None</span>&#39; is used 
+    <p>The Python special value <span class="code">None</span> is used 
       throughout to signal a missing data point. All functions expect it. </p>
-    <p>However, the time value must never be &#39;<span class="code">None</span>&#39;. 
+    <p>However, the time value must never be <span class="code">None</span>. 
       This is because it is used as the primary key in the SQL database. </p>
     <h2>Time</h2>
     <p><span class="code">Weewx </span>stores all data in UTC (roughly, &quot;Greenwich&quot; 
