@@ -67,6 +67,9 @@ table {
     border-color: #aaaaaa;
     border-collapse: collapse;
 }
+tr {
+  vertical-align: top;
+}
 td {
     border-style: solid;
     border-width: 1px;
@@ -102,18 +105,10 @@ td {
     color: #bb9900;
     margin-bottom: -12px;
 }
-.xxsmall {
-    font-size: xx-small;
-}
 .highlight {
     background-color: #FFCC99;
 }
 .text_highlight {
-    font-weight: bold;
-    background-color: #f0f0f0;
-}
-.fixed_highlight {
-    font-family: "Courier New", Courier, monospace;
     font-weight: bold;
     background-color: #f0f0f0;
 }
@@ -158,4 +153,7 @@ table.center {
     padding-bottom: 10px;
     padding-right: 10px;
     margin-top: 30pt;
+}
+.prompt {
+    font-weight: bold;
 }

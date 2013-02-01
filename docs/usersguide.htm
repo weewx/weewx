@@ -100,7 +100,7 @@ Version: 2.2
     </p>
     <table style="width: 90%" class="center">
       <tr>
-	<td class="text_highlight">Vendor</td>
+	<td><strong>Vendor</strong></td>
 	<td><strong>Model</strong></td>
 	<td><strong>Link</strong></td>
 	<td><strong>Required<br/>Package</strong></td>
@@ -431,23 +431,23 @@ Version: 2.2
     <p>The nominal directory layout will be: </p>
     <table class="center" style="width: 60%" summary="Summarizing the nominal weewx directory layout">
       <tr>
-	<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/bin</span></td>
+	<td><span class="code"><em>$WEEWX_INSTALL</em>/bin</span></td>
 	<td>Python packages and scripts</td>
       </tr>
       <tr>
-	<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf</span></td>
+	<td><span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf</span></td>
 	<td>Configuration file</td>
       </tr>
       <tr>
-	<td style="height: 33px" class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
+	<td><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
 	<td style="height: 33px">Template skins and their configuration files</td>
       </tr>
       <tr>
-	<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
+	<td><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
 	<td>sqlite3 archive and statistical databases</td>
       </tr>
       <tr>
-	<td class="text_highlight"><span class="code"><em>$WEEWX_INSTALL</em>/public_html</span></td>
+	<td><span class="code"><em>$WEEWX_INSTALL</em>/public_html</span></td>
 	<td>Generated HTML and .PNG images</td>
       </tr>
     </table>
@@ -747,27 +747,22 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 (Sunday)
     </p>
     <p class="config_important">station_type </p>
-    <p>Set to the type of hardware you are using. It must match the name of one 
-      of the sections below. Valid options include:</p>
+    <p>Set to the type of hardware you are using. Valid options include:</p>
     <table style="width: 60%" class="center">
       <tr>
-	<td class="text_highlight"><span class="code">station_type</span></td>
-	<td>Hardware</td>
-      </tr>
-      <tr>
-	<td class="text_highlight" style="height: 33px">Vantage</td>
+	<td class="code">Vantage</td>
 	<td style="height: 33px">Davis Vantage weather stations</td>
       </tr>
       <tr>
-	<td class="text_highlight">WMR-USB</td>
+	<td class="code">WMR-USB</td>
 	<td>Oregon Scientific WMR-USB series stations</td>
       </tr>
       <tr>
-	<td class="text_highlight">WMR-918</td>
+	<td class="code">WMR-918</td>
 	<td>Oregon Scientific WMR-918/968 series station</td>
       </tr>
       <tr>
-	<td class="text_highlight">FineOffsetUSB</td>
+	<td class="code">FineOffsetUSB</td>
 	<td>Fine Offset USB stations</td>
       </tr>
     </table>
@@ -1200,9 +1195,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       engine. After each event (such as the arrival of LOOP data, etc.), they will 
       be run in the given order. The standard list of services run by weewx is:
     </p>
-    <p class="tty">service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, 
-      weewx.wxengine,StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, 
-      weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+    <pre>
+service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, \
+    weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, \
+    weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
     <p>Note that this must all be on one line! </p>
     <p>You can leave some of these services out if you do not need them. For example, 
       the bare minimum if you are using a Davis Vantage instrument, storing your data 
@@ -1332,16 +1328,6 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       file without stopping by using the &#39;reload&#39; option: </p>
     <p class="tty">/etc/init.d/weewx reload </p>
 
-    <h1 id="Compatibility_with_wview">Compatibility with <span class="code">wview</span></h1>
-    <p>The sqlite3 archive database used by <span class="code">weewx</span> (nominally,
-      <span class="code">weewx.sdb</span>) is completely compatible with the database 
-      used by <a href="http://www.wviewweather.com">wview</a> (usually called
-      <span class="code">wview-archive.sdb</span>), at least as of wview Version 5.2.X. 
-      The schema and its semantics is identical. However, the statistical file
-      <span class="code">stats.sdb</span> is different, and must be rebuilt. This 
-      will be done automatically on startup by <span class="code">weewx</span>.
-    </p>
-
     <h1 id="Monitoring_weewx">Monitoring <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> logs many events to the system log.
       On Debian systems, this is <span class="code">/var/log/syslog</span>,
@@ -1349,27 +1335,45 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       use yet another place. When troubleshooting the system, be sure to check
       it! </p>
     <pre class='tty'>tail -f /var/log/messages</pre>
+
     <p>Set the debug option in <span class='code'>weewx.conf</span> to
-      generate many more checks and output and can be useful for debugging.</p>
+      generate many more checks and output more information.  This can be
+      useful for diagnosing problems and debugging.</p>
     <pre class='tty'>debug = 1</pre>
+
+    <h1 id="Compatibility_with_wview">Compatibility with <span class="code">wview</span></h1>
+    <p>The sqlite3 archive database used by <span class="code">weewx</span>
+      (nominally, <span class="code">weewx.sdb</span>) is completely
+      compatible with the database used by
+      <a href="http://www.wviewweather.com">wview</a> (usually called
+      <span class="code">wview-archive.sdb</span>), at least as of wview
+      Version 5.2.X. The schema and its semantics is identical. However, the
+      statistical file <span class="code">stats.sdb</span> is different, and
+      must be rebuilt. This will be done automatically on startup by
+      <span class="code">weewx</span>.
+    </p>
 
     <h1 id="Troubleshooting">Troubleshooting</h1>
     <p>This section lists some common problems installing and running
-      <span class="code">weewx</span>. Check it first. If you are still stuck,
-      be sure to: </p>
+      <span class="code">weewx</span>. If you are still stuck, be sure to: </p>
     <ul>
-      <li>Set option <span class="code">debug</span> in
-        <span class="code">weewx.conf</span> to <span class="code">1</span>
-        (one)! It will put much more information in the log file, which can
+      <li>Set the option <span class="code">debug</span> to
+        <span class="code">1</span> in <span class='code'>weewx.conf</span>.
+        This will put much more information in the log file, which can
         be very useful for troubleshooting and debugging!
+        <p><pre class='tty'>debug = 1</pre><br/></p>
       </li>
       <li><a href="#Monitoring_weewx">Look at the log file</a>. I am always
         happy to take questions, but the first thing I will ask you is,
-        &quot;Did you look at the log file?&quot; </li>
+        &quot;Did you look at the log file?&quot;
+        <p><pre class='tty'>tail -f /var/log/messages</pre><br/></p>
+      </li>
       <li>Run from the command line. Generally, <span class="code">weewx</span>
 	will catch and log any unrecoverable exceptions. But if you are getting
 	strange results, it is worth running from the command line and looking
-        for any clues. </li>
+        for any clues.
+        <p><pre class='tty'><em>$WEEWX_ROOT</em>/bin/weewx/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</pre></p>
+      </li>
     </ul>
 
     <h2>Hardware</h2>
