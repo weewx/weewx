@@ -149,7 +149,13 @@ table.center {
     padding: 5px;
 }
 .copyright {
-  padding-top: 30px;
-  font-size: 80%;
-  font-style: italic;
+    font-style: italic;
+    text-align: right;
+    color: #FFFFFF;
+    border: 1px solid black;
+    background-color: #008080;
+    padding-top: 5px;
+    padding-bottom: 10px;
+    padding-right: 10px;
+    margin-top: 30pt;
 }

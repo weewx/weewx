@@ -264,7 +264,6 @@
         group_temperature = degree_F
         group_uv          = uv_index 
         group_volt        = volt</pre>
-      <p>&nbsp; </p>
       <p>To use metric units, you would edit this section to read: </p>
       <pre>
 [Units]
@@ -926,7 +925,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <pre class="tty">$almanac.next_solstice </pre>
       <p>or </p>
       <pre class="tty">$almanac.next_first_quarter_moon</pre>
-      <p>&nbsp;Here's a table of the information that falls into this category:</p>
+      <p>Here is a table of the information that falls into this category:</p>
       <table class="code" style="width: 60%" align='center'>
 	<tr>
 	  <td>previous_equinox</td>
@@ -989,7 +988,7 @@ Sunrise, sunset: 06:51 19:30</pre>
 	pressure and temperature (degrees Celsius).</p>
       <p>PyEphem offers an extensive list of objects that can be used for the
 	<span class="code"><em>heavenly_body</em></span> tag. All the planets and many 
-	stars are in the list.&nbsp;</p>
+	stars are in the list.</p>
       <p>The <span class="code">attribute</span> tag can be one of </p>
       <table class="code" style="width: 60%" align='center'>
 	<tr>
@@ -1221,7 +1220,7 @@ class MyFileGenerator(FileGenerator):                                  # 1
       </p>
       <p>It is worth noting that, like the main configuration file
 	<span class="code">weewx.conf</span>, UTF-8 is used throughout. The most important 
-	options are up near the top of the file.&nbsp; The truly important ones, the 
+	options are up near the top of the file. The truly important ones, the 
 	ones you are likely to have to customize for your station, are
 	<span class="config_important"><strong>highlighted</strong></span>. </p>
       <h2 id="[Extras]" class="config_section">[Extras]</h2>
@@ -1351,8 +1350,8 @@ inch     = %.2f</pre>
       <pre>
 degree_F = °F
 inch     = &#39; in&#39;</pre>
-      <p>would cause all temperatures to have unit labels &#39;<span class="code">°F</span>&#39; 
-	and all precipitation to have labels&nbsp; &#39;<span class="code"> in</span>&#39;. 
+      <p>would cause all temperatures to have unit labels <span class="code">°F</span> 
+	and all precipitation to have labels <span class="code">in</span>. 
 	If any special symbols are to be used (such as the degree sign above) they should 
 	be encoded in UTF-8. This is generally what most text editors use if you cut-and-paste 
 	from a character map. Labels used in plot images will be converted to Latin-1 
@@ -1433,7 +1432,7 @@ outTemp = Outside Temperature</pre>
 	  <span class="code">summary-2010-03.html</span> for the month of March, 2010. 
 	  The default distribution has been set up to produce NOAA monthly summaries, 
 	  one for each month, as a simple text file (no HTML). </li>
-	<li>Summary by year.&nbsp; In addition to the naming rules above, if the 
+	<li>Summary by year. In addition to the naming rules above, if the 
 	  template file has the letters <span class="code">YYYY</span> in its name, 
 	  the year will be substituted. The default distribution has been set up to 
 	  produce NOAA yearly summaries, one for each year, as a simple text file 
@@ -1502,7 +1501,7 @@ outTemp = Outside Temperature</pre>
       <p>This section controls which observations-to-date are generated. The default 
 	configuration generates four files: one for day, week, month, and year. Although 
 	the sub-subsections below have names such as &#39;week&#39; or &#39;month&#39;, 
-	this is not used in their generation.&nbsp; Output is set by the template
+	this is not used in their generation. Output is set by the template
 	<em>content</em>, not the name of the sub-subsection — the names below could 
 	as easily have been&#39;Fred&#39;, &#39;Mary&#39;, &#39;Peter&#39;, and &#39;George&#39; 
 	and had the same output. </p>
@@ -1575,7 +1574,7 @@ outTemp = Outside Temperature</pre>
       <p>Within each sub-section is another nesting, one for each image to be generated. 
 	The title of each sub-sub-section is the filename to be used for the image. 
 	Finally, at one additional nesting level (!) are the logical names of all the 
-	line types to be drawn in the image.&nbsp; Values specified in the level above 
+	line types to be drawn in the image. Values specified in the level above 
 	can be overridden. For example, here&#39;s a typical set of options for sub-sub-section
 	<span class="code">[[[monthrain]]]</span>: </p>
       <pre>
@@ -2181,7 +2180,7 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', <br />
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	'radiation', 'UV', 'extraTemp1', 'rxCheckPercent', 'wind',
-	<span class="highlight">'electricity'</span>]&nbsp;</p>
+	<span class="highlight">'electricity'</span>]</p>
       <p>Now delete the stats database (nominally <span class="code">stats.sdb</span> 
 	for sqlite, <span class="code">stats</span> for MySQL). Weewx will automatically 
 	rebuild it, including your new type.</p>
@@ -2292,7 +2291,7 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	must implement the following two: </p>
       <p><span class="code">hardware_name</span>: Return a string with a short nickname 
 	for the hardware, such as "<span class="code">ACME X90</span>"</p>
-      <p><span class="code">genLoopPackets</span>:&nbsp; This should be a generator 
+      <p><span class="code">genLoopPackets</span>: This should be a generator 
 	function that yields loop packets, one after another. Don't worry about stopping 
 	it: the engine will do this when an archive record is due. A loop packet is 
 	a dictionary. At the very minimum it must contain keys</p>
@@ -2353,7 +2352,7 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	description. If you're game, give it a try &mdash; I'm happy to help you out!</p>
       <h1 id="Archive_types">Appendix A: Archive types</h1>
       <p><em>Archive types</em> are weather observations that have come from your 
-	instrument and been stored in the <em>archive database, </em>&nbsp;a SQL database. 
+	instrument and been stored in the <em>archive database</em>, a SQL database. 
 	They represent the <em>current conditions</em> as of some time. They are available 
 	to be used in two places: </p>
       <ul>
@@ -3140,7 +3139,6 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	  <td>&nbsp;</td>
 	</tr>
       </table>
-      <p>&nbsp; </p>
       <h1 id="Packet_types">Appendix D: Packet types</h1>
       <p><em>Packets</em> are the raw data coming off the instrument (as opposed to
 	<em>records</em>, which are stored on the database). The observation types available 
@@ -3172,7 +3170,7 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<tr>
 	  <td><span class="code">consBatteryVoltage</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">dateTime</span></td>
@@ -3182,12 +3180,12 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<tr>
 	  <td><span class="code">dayET</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">dayRain</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">dewpoint</span></td>
@@ -3196,48 +3194,48 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	</tr>
 	<tr>
 	  <td><span class="code">ET</span> (hourly)</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraAlarm1</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraAlarm2</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraAlarm3</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraAlarm4</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraAlarm5</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraAlarm6</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraAlarm7</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraAlarm8</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraHumid1</span></td>
@@ -3252,27 +3250,27 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<tr>
 	  <td><span class="code">extraHumid3</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraHumid4</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraHumid5</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraHumid6</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraHumid7</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraTemp1</span></td>
@@ -3292,27 +3290,27 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<tr>
 	  <td><span class="code">extraTemp4</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraTemp5</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraTemp6</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">extraTemp7</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">forecastIcon</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">forecastRule</span></td>
@@ -3326,38 +3324,38 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	</tr>
 	<tr>
 	  <td><span class="code">highOutTemp</span></td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">highRadiation</span></td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">highUV</span></td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">inHumidity</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">inTemp</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">interval</span></td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">insideAlarm</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">leafTemp1</span></td>
@@ -3372,12 +3370,12 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<tr>
 	  <td><span class="code">leafTemp3</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">leafTemp4</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">leafWet1</span></td>
@@ -3392,27 +3390,27 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<tr>
 	  <td><span class="code">leafWet3</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">leafWet4</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">lowOutTemp</span></td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">monthET</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">monthRain</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">outHumidity</span></td>
@@ -3427,12 +3425,12 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<tr>
 	  <td><span class="code">outsideAlarm1</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">outsideAlarm2</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">radiation</span></td>
@@ -3441,43 +3439,43 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	</tr>
 	<tr>
 	  <td><span class="code">rain</span></td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">rainAlarm</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">rainRate</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">rxCheckPercent</span></td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">soilLeafAlarm1</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">soilLeafAlarm2</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">soilLeafAlarm3</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">soilLeafAlarm4</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">soilMoist1</span></td>
@@ -3522,27 +3520,27 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<tr>
 	  <td><span class="code">stormRain</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">stormStart</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">sunrise</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">sunset</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">txBatteryStatus</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">usUnits</span></td>
@@ -3566,18 +3564,18 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	</tr>
 	<tr>
 	  <td><span class="code">windGust</span></td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">windGustDir</span></td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	  <td>X</td>
 	</tr>
 	<tr>
 	  <td><span class="code">windSpeed10</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">windSpeed</span></td>
@@ -3587,17 +3585,17 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<tr>
 	  <td><span class="code">yearET</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
 	<tr>
 	  <td><span class="code">yearRain</span></td>
 	  <td>X</td>
-	  <td>&nbsp;</td>
+	  <td></td>
 	</tr>
       </table>
 
       <p class='copyright'>
-        <a href='copyright.htm'>Copyright Tom Keffer and others</a>
+        &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer and others
       </p>
 
     </div>
