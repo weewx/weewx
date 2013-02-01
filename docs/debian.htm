@@ -11,8 +11,12 @@
     <link href="weewx_docs.css" rel="stylesheet" />
     <!-- JavaScript -->
     <style type="text/css">
+tr {
+  vertical-align: middle;
+}
 .os-icons {
   float: right;
+  margin-left: 100px;
 }
 img {
   width: 60px;
@@ -30,29 +34,26 @@ img {
       <img src='logo-mint.png'/>
     </p>
     <p>
-      This is a guide to install weewx from DEB package on systems such as Debian, Ubuntu or Mint.
+      This is a guide to install weewx from DEB package on systems such as Debian, Ubuntu or Mint.  The installation will result in the following layout:
     </p>
-    <p>
-      Installing from package will result in the following:
-      <table class='locations'>
-        <tr>
-          <td align='right'>configuration file: </td>
-          <td class='tty'>/etc/weewx/weewx.conf</td>
-        </tr>
-        <tr>
-          <td align='right'>skins and templates: </td>
-          <td class='tty'>/etc/weewx/skins</td>
-        </tr>
-        <tr>
-          <td align='right'>sqlite databases: </td>
-          <td class='tty'>/var/lib/weewx/</td>
-        </tr>
-        <tr>
-          <td align='right'>web pages and images: </td>
-          <td class='tty'>/var/lib/weewx/html</td>
-        </tr>
-      </table>
-    </p>
+    <table class='locations'>
+      <tr>
+        <td align='right'>configuration file: </td>
+        <td class='tty'>/etc/weewx/weewx.conf</td>
+      </tr>
+      <tr>
+        <td align='right'>skins and templates: </td>
+        <td class='tty'>/etc/weewx/skins</td>
+      </tr>
+      <tr>
+        <td align='right'>sqlite databases: </td>
+        <td class='tty'>/var/lib/weewx/</td>
+      </tr>
+      <tr>
+        <td align='right'>web pages and images: </td>
+        <td class='tty'>/var/lib/weewx/html</td>
+      </tr>
+    </table>
     <p>
       Installation must be done with root privileges.
     </p>
@@ -129,7 +130,7 @@ img {
     </p>
 
     <p class='copyright'>
-      &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer and others
+      &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
     </p>
 
   </body>

@@ -9,6 +9,9 @@
     <title>weewx quick-start for linux</title>
     <link href="weewx_docs.css" rel="stylesheet" />
     <style type="text/css">
+tr {
+  vertical-align: middle;
+}
 .cmdtbl {
   border: none;
   width: 100%;
@@ -24,6 +27,7 @@
 }
 .os-icons {
   float: right;
+  margin-left: 100px;
 }
 img {
   width: 60px;
@@ -31,7 +35,53 @@ img {
 .locations {
   margin-left: 20px;
 }
+.tabs {
+  float: left;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+.tab {
+  font-size: 80%;
+  font-weight: bold;
+  color: #aaaaaa;
+  margin: 0px;
+  padding: 4px 16px 4px 16px;
+  float: left;
+}
+.selected {
+  color: black;
+  border-top: 1px solid #ddddaa;
+  border-left: 1px solid #ddddaa;
+  border-right: 1px solid #ddddaa;
+  background-color: #FFFFee;
+}
     </style>
+    <script>
+function showpanel(id) {
+  document.getElementById('prereq-debian').style.display = 'none';
+  document.getElementById('prereq-redhat').style.display = 'none';
+  document.getElementById('prereq-suse').style.display = 'none';
+  document.getElementById('prereq-pip').style.display = 'none';
+
+  document.getElementById('startup-debian').style.display = 'none';
+  document.getElementById('startup-redhat').style.display = 'none';
+  document.getElementById('startup-suse').style.display = 'none';
+
+  document.getElementById('prereq-tab-debian').className = 'tab';
+  document.getElementById('prereq-tab-redhat').className = 'tab';
+  document.getElementById('prereq-tab-suse').className = 'tab';
+  document.getElementById('prereq-tab-pip').className = 'tab';
+
+  document.getElementById('startup-tab-debian').className = 'tab';
+  document.getElementById('startup-tab-redhat').className = 'tab';
+  document.getElementById('startup-tab-suse').className = 'tab';
+
+  document.getElementById('prereq-'+id).style.display = 'block';
+  document.getElementById('prereq-tab-'+id).className = 'tab selected';
+  document.getElementById('startup-'+id).style.display = 'block';
+  document.getElementById('startup-tab-'+id).className = 'tab selected';
+}
+    </script>
   </head>
   <body>
     <h1 class="title">weewx: Quick Start Guide for Linux</h1>
@@ -45,8 +95,10 @@ img {
       <img src='logo-fedora.png'/>
     </p>
     <p>
-      This is a guide to install weewx on Linux systems.  The installation will
-      place weewx in the /home/weewx directory with the following:
+      This is a guide to install <span class='code'>weewx</span> on Linux
+      systems.  The installation will place weewx in the
+      <span class='code'>/home/weewx</span> directory with the following
+      layout:
       <table class='locations'>
         <tr>
           <td align='right'>configuration file: </td>
@@ -70,94 +122,98 @@ img {
     <p style='clear: both'></p>
 
     <h3>Install Prerequisites</h3>
-    <table class='cmdtbl'>
-      <tr valign='top'>
-        <td class='cmdhdr'>Debian, Ubuntu, Mint</td>
-        <td class='cmdhdr'>Redhat, CentOS, Fedora</td>
-      </tr>
-      <tr valign='top'>
-        <td class='cmdcell'>
-          <p class='tty' style='margin:0'>
-            # required packages:<br/>
-            sudo apt-get install python-configobj<br/>
-            sudo apt-get install python-cheetah<br/>
-            sudo apt-get install python-imaging<br/>
-            <br/>
-            # if using MySQL:<br/>
-            sudo apt-get install python-mysqldb<br/>
-            sudo apt-get install python-mysql-client<br/>
-            <br/>
-            # serial or USB, depending on hardware:<br/>
-            sudo apt-get install python-serial<br/>
-            sudo apt-get install python-usb<br/>
-            <br/>
-            # for extended almanac information:<br/>
-            sudo apt-get install python-dev<br/>
-            sudo apt-get install python-pip<br/>
-            sudo pip install pyephem<br/>
-          </p>
-        </td>
-        <td class='cmdcell'>
-          <p class='tty' style='margin:0'>
-            # required packages:<br/>
-            sudo yum install python-configobj<br/>
-            sudo yum install python-cheetah<br/>
-            sudo yum install python-imaging<br/>
-            <br/>
-            # if using MySQL:<br/>
-            sudo yum install python-mysqldb<br/>
-            sudo yum install python-mysql-client<br/>
-            <br/>
-            # serial or USB, depending on hardware:<br/>
-            sudo yum install pyserial<br/>
-            sudo yum install pyusb<br/>
-            <br/>
-            # for extended almanac information:<br/>
-            sudo yum install pyephem<br/>
-          </p>
-        </td>
-      </tr>
-      <tr valign='top'>
-        <td class='cmdhdr'>SuSE</td>
-        <td class='cmdhdr'>Python Setup Tool (<a href="http://pypi.python.org/pypi/pip">pip</a>)</td>
-      </tr>
-      <tr valign='top'>
-        <td class='cmdcell'>
-          <p class='tty' style='margin:0'>
-            sudo yast -i gcc<br/>
-            sudo yast -i python-configobj<br/>
-            sudo yast -i python-imaging<br/>
-            sudo yast -i python-devel<br/>
-            sudo yast -i setuptools<br/>
-            <br/>
-            # install pip<br/>
-            sudo pip install Cheetah<br/>
-            <br/>
-            # serial or USB, depending on hardware:<br/>
-            sudo yast -i pyserial<br/>
-            sudo yast -i pyusb<br/>
-            <br/>
-            # for extended almanac information:<br/>
-            sudo pip install pyephem<br/>
-          </p>
-        </td>
-        <td class='cmdcell'>
-          <p class='tty' style='margin:0'>
-            # required packages:<br/>
-            sudo pip install configobj<br/>
-            sudo pip install Cheetah<br/>
-            sudo pip install pil<br/>
-            <br/>
-            # serial or USB, depending on hardware:<br/>
-            sudo pip install pyserial<br/>
-            sudo pip install pyusb<br/>
-            <br/>
-            # for extended almanac information:<br/>
-            sudo pip install pyephem<br/>
-          </p>
-        </td>
-      </tr>
-    </table>
+    <p>Ensure that Python2 is installed.  Python 2.5, 2.6, or 2.7 will work, but Python 3 will not.  Then install required python packages using the package management system for your system (e.g. apt-get, yum, yast) or the Python Package Management System (pip).</p>
+    <div class='tabs'>
+      <div id='prereq-tab-debian' class='tab selected' onclick="showpanel('debian')">Debian</div>
+      <div id='prereq-tab-redhat' class='tab' onclick="showpanel('redhat')">Redhat</div>
+      <div id='prereq-tab-suse' class='tab' onclick="showpanel('suse')">SuSE</div>
+      <div id='prereq-tab-pip' class='tab' onclick="showpanel('pip')":>pip</div>
+    </div>
+    <div id='prereq' style='clear:both'>
+      <div id='prereq-debian'>
+        <p class='tty'>
+          # debian, ubuntu, mint<br/>
+          #<br/>
+          # required packages:<br/>
+          sudo apt-get install python-configobj<br/>
+          sudo apt-get install python-cheetah<br/>
+          sudo apt-get install python-imaging<br/>
+          <br/>
+          # if using MySQL:<br/>
+          sudo apt-get install python-mysqldb<br/>
+          sudo apt-get install python-mysql-client<br/>
+          <br/>
+          # serial or USB, depending on hardware:<br/>
+          sudo apt-get install python-serial<br/>
+          sudo apt-get install python-usb<br/>
+          <br/>
+          # for extended almanac information:<br/>
+          sudo apt-get install python-dev<br/>
+          sudo apt-get install python-pip<br/>
+          sudo pip install pyephem<br/>
+        </p>
+      </div>
+      <div id='prereq-redhat' style='display:none'>
+        <p class='tty'>
+          # redhat, centos, fedora<br/>
+          #<br/>
+          # required packages:<br/>
+          sudo yum install python-configobj<br/>
+          sudo yum install python-cheetah<br/>
+          sudo yum install python-imaging<br/>
+          <br/>
+          # if using MySQL:<br/>
+          sudo yum install python-mysqldb<br/>
+          sudo yum install python-mysql-client<br/>
+          <br/>
+          # serial or USB, depending on hardware:<br/>
+          sudo yum install pyserial<br/>
+          sudo yum install pyusb<br/>
+          <br/>
+          # for extended almanac information:<br/>
+          sudo yum install pyephem<br/>
+        </p>
+      </div>
+      <div id='prereq-suse' style='display:none'>
+        <p class='tty' style='margin-top:20px'>
+          # suse
+          #<br/>
+          # required packages:<br/>
+          sudo yast -i gcc<br/>
+          sudo yast -i python-configobj<br/>
+          sudo yast -i python-imaging<br/>
+          sudo yast -i python-devel<br/>
+          sudo yast -i setuptools<br/>
+          <br/>
+          # install pip<br/>
+          sudo pip install Cheetah<br/>
+          <br/>
+          # serial or USB, depending on hardware:<br/>
+          sudo yast -i pyserial<br/>
+          sudo yast -i pyusb<br/>
+          <br/>
+          # for extended almanac information:<br/>
+          sudo pip install pyephem<br/>
+        </p>
+      </div>
+      <div id='prereq-pip' style='display:none'>
+        <p class='tty'>
+          # python setup tool (pip)
+          #<br/>
+          # required packages:<br/>
+          sudo pip install configobj<br/>
+          sudo pip install Cheetah<br/>
+          sudo pip install pil<br/>
+          <br/>
+          # serial or USB, depending on hardware:<br/>
+          sudo pip install pyserial<br/>
+          sudo pip install pyusb<br/>
+          <br/>
+          # for extended almanac information:<br/>
+          sudo pip install pyephem<br/>
+        </p>
+      </div>
+    </div>
 
     <h3>Download</h3>
     <p>
@@ -220,43 +276,37 @@ cd /home/weewx<br/>
     <p>
       Or as a daemon automatically when the computer starts:
     </p>
-    <table class='cmdtbl'>
-      <tr valign='top'>
-        <td class='cmdhdr'>Debian, Ubuntu, Mint</td>
-        <td class='cmdhdr'>Redhat, CentOS, Fedora</td>
-      </tr>
-      <tr valign='top'>
-        <td class='cmdcell'>
-          <p class="tty" style='margin:0'>
-            sudo cp util/init.d/weewx.debian /etc/init.d/weewx<br/>
-            sudo chmod +x /etc/init.d/weewx<br/>
-            sudo update-rc.d weewx defaults 98<br/>
-            sudo /etc/init.d/weewx start<br/>
-          </p>
-        </td>
-        <td class='cmdcell'>
-          <p class="tty" style='margin:0'>
-            sudo cp util/init.d/weewx.redhat /etc/init.d/weewx<br/>
-            sudo chmod +x /etc/init.d/weewx<br/>
-            sudo chkconfig weewx on<br/>
-            sudo /etc/init.d/weewx start<br/>
-          </p>
-        </td>
-      </tr>
-      <tr valign='top'>
-        <td class='cmdhdr'>SuSE</td>
-      </tr>
-      <tr valign='top'>
-        <td class='cmdcell'>
-          <p class="tty" style='margin:0'>
-            sudo cp util/init.d/weewx.suse /etc/init.d/weewx<br/>
-            sudo chmod +x /etc/init.d/weewx<br/>
-            sudo chkconfig weewx on<br/>
-            sudo /etc/init.d/weewx start<br/>
-          </p>
-        </td>
-      </tr>
-    </table>
+    <div class='tabs'>
+      <div id='startup-tab-debian' class='tab selected' onclick="showpanel('debian')">Debian</div>
+      <div id='startup-tab-redhat' class='tab' onclick="showpanel('redhat')">Redhat</div>
+      <div id='startup-tab-suse' class='tab' onclick="showpanel('suse')">SuSE</div>
+    </div>
+    <div id='startup' style='clear:both'>
+      <div id='startup-debian'>
+        <p class="tty">
+          sudo cp util/init.d/weewx.debian /etc/init.d/weewx<br/>
+          sudo chmod +x /etc/init.d/weewx<br/>
+          sudo update-rc.d weewx defaults 98<br/>
+          sudo /etc/init.d/weewx start<br/>
+        </p>
+      </div>
+      <div id='startup-redhat' style='display:none'>
+        <p class="tty">
+          sudo cp util/init.d/weewx.redhat /etc/init.d/weewx<br/>
+          sudo chmod +x /etc/init.d/weewx<br/>
+          sudo chkconfig weewx on<br/>
+          sudo /etc/init.d/weewx start<br/>
+        </p>
+      </div>
+      <div id='startup-suse' style='display:none'>
+        <p class="tty">
+          sudo cp util/init.d/weewx.suse /etc/init.d/weewx<br/>
+          sudo chmod +x /etc/init.d/weewx<br/>
+          sudo chkconfig weewx on<br/>
+          sudo /etc/init.d/weewx start<br/>
+        </p>
+      </div>
+    </div>
 
     <h3>Verify</h3>
     <p>
@@ -287,12 +337,12 @@ cd /home/weewx<br/>
       To uninstall, simply delete the directory <span class='code'>/home/weewx</span>.  This will delete weewx, configuration files, and data.
     </p>
     <p class='tty'>
-      sudo rm -r /home/weewx
-      sudo rm /etc/init.d/weewx
+      sudo rm -r /home/weewx<br/>
+      sudo rm /etc/init.d/weewx<br/>
     </p>
 
     <p class='copyright'>
-      &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer and others
+      &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
     </p>
 
   </body>

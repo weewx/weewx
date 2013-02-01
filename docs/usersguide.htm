@@ -20,7 +20,9 @@
 <body>
 
   <h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System<br />
+    <span style="font-size:70%">
 Version: 2.2
+    </span>
   </h1>
 
   <p>
@@ -345,184 +347,25 @@ Version: 2.2
         <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.</li>
     </ol>
 
-    <h1 id="Prerequisites">Prerequisites</h1>
-    
-    <h2>Python</h2>
-    <p>Python V2.5, V2.6, or V2.7 is required. Python V3.0 will not work. </p>
-
-    <h2>Python Packages</h2>
+    <h1>Installing <span class="code">weewx</span></h1>
     <p>
-      Some python packages are required for the main weewx engine, and may be
-      required for specific hardware configuration.
+      <span class='code'>weewx</span> can be installed from source using
+      <span class='code'>setup.py</span> or from a DEB or RPM package.
+      Installation from source is the recommended method for those who
+      plan to make modifications and hack the <span class='code'>weewx</span>.
+      The package approach is somewhat simpler, but requires root privileges.
     </p>
-    <p>The weewx engine requires:</p>
-    <ul>
-      <li><a href="http://pypi.python.org/pypi/configobj/">configobj</a>
-        (Version 4.5 or greater) Manages the configuration file
-        <span class="code">weewx.conf</span>.</li>
-      <li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or 
-	greater) The templating engine. </li>
-      <li><a href="http://pypi.python.org/pypi/PIL">Python Imaging Library</a> 
-	(Version 1.1.6 or greater) Also known as PIL, this is included in many
-        Python distributions.</li>
-    </ul>
-    <p>
-      To use MySQL as the database (instead of the default <span class="code">sqlite</span>), you will also need (in addition to a MySQL server, of course):
-    </p>
-    <ul>
-      <li><a href="https://sourceforge.net/projects/mysql-python/">MySQLdb for 
-	  Python</a> (Version 1.2.3 or greater). This is the Python DBAPI2 adapter 
-	for MySQL.</li>
-    </ul>
-    <p>There is one optional package:</p>
-    <ul>
-      <li><a href="http://pypi.python.org/pypi/pyephem/">pyephem</a> (Version 
-	V3.7.3 or greater). For extended almanac information. If not installed, 
-	fallback information will be used. </li>
-    </ul>
-    <p>Some stations require a serial and/or USB package:</p>
-    <ul>
-      <li><a href="https://sourceforge.net/projects/pyusb/">pyusb</a> (Version 0.4 or greater). Driver for USB.</li>
-      <li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 2.3 or greater) Driver for a serial connection.</li>
-    </ul>
+    <h2><a href='linux.htm'>Installing on Linux</a></h2>
+    <p>Including Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</p>
+    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
+    <p>Including Debian, Ubuntu, Mint</p>
+    <h2><a href='redhat.htm'>Installing from RPM package</a></h2>
+    <p>Including Redhat, CentOS, Fedora</p>
+    <h2><a href='installing.htm'>Installing from Scratch</a></h2>
+    <p>Because it is Pure Python, <span class='code'>weewx</span> <i>should</i>
+      install and run on any platform with Python.</p>
 
-    <h2>Time</h2>
-    <p>The time on the VantagePro is automatically synchronized with the
-      <span class="code">weewx</span> server nominally every four hours (changeable 
-      by the user). You should run a <a href="http://www.ntp.org/">NTP</a> daemon 
-      on your server to insure that it is synchronized with the correct time. Doing 
-      so will greatly reduce errors, especially if you send data to services such 
-      as the Weather Underground. </p>
-
-    <h2>System requirements</h2>
-    <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
-      Geode processor and 512 MB of memory. Configured this way, it
-      consumes about 5% of the CPU and about 50MB of total memory. </p>
-
-    <h1 id="Downloading_weewx">Downloading <span class="code">weewx</span></h1>
-    <p>The <span class='code'>weewx</span> software can be downloaded from
-      SourceForge at <a href="http://sourceforge.net/projects/weewx/files">http://sourceforge.net/projects/weewx/files</a>
-    </p>
-
-    <h1 id="Installing_weewx">Installing <span class="code">weewx</span></h1>
-    <p>Because <span class="code">weewx</span> is &quot;Pure Python&quot;,
-      that is it is 100% Python with no &quot;C&quot; modules to compile, it 
-      is very easy to install. Furthermore, it uses the standard Python
-      <a href="http://docs.python.org/install/index.html">distutils</a>
-      install method, which is very easy and flexible.</p>
-
-    <h2>Unpacking</h2>
-    <p>Start by unpack the tar ball (substitute your version for X.Y.Z) into
-      any convenient directory where you have write permission </p>
-    <p class="tty">tar xvf weewx-X.Y.Z.tar.gz</p>
-    <p>Then change directory into it: </p>
-    <p class="tty">cd weewx-X.Y.Z </p>
-
-    <h2>Choosing where to install</h2>
-    <p>The next step is to figure out where you want to install <span class="code">weewx</span>. 
-      <span class="code"><em>$WEEWX_INSTALL</em></span> represents the location
-      where the root <span class="code">weewx</span> directory will be
-      installed. By default, this location is
-      <span class="code">/home/weewx</span>. However, it can be changed by
-      editing the file <span class="code">setup.cfg</span> and changing the
-      following line
-    </p>
-    <pre class="tty">home = /home/weewx</pre>
-    <p>The nominal directory layout will be: </p>
-    <table class="center" style="width: 60%" summary="Summarizing the nominal weewx directory layout">
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/bin</span></td>
-	<td>Python packages and scripts</td>
-      </tr>
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf</span></td>
-	<td>Configuration file</td>
-      </tr>
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
-	<td style="height: 33px">Template skins and their configuration files</td>
-      </tr>
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
-	<td>sqlite3 archive and statistical databases</td>
-      </tr>
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/public_html</span></td>
-	<td>Generated HTML and .PNG images</td>
-      </tr>
-    </table>
-    
-    <h2>Build and Install</h2>
-    <p>Build the distribution </p>
-    <pre class="tty">./setup.py build </pre>
-    <p>Because <span class="code">weewx</span> is pure Python this doesn&#39;t 
-      compile anything, but it does arrange files for the final installation
-    </p>
-    <p>Then install it. If you have write permission in the directory where
-      <span class="code">weewx</span> will go, then type </p>
-    <p class="tty">./setup.py install </p>
-    <p>Otherwise, if you do not have write permission, you will have to use 
-      <span class="code">sudo</span>:
-    </p>
-    <p class="tty">sudo ./setup.py install </p>
-
-    <h2>Upgrading</h2>
-    <p>Before upgrading from a previous version of <span class="code">weewx</span>, 
-      check the <a href="upgrading.htm">Upgrade Guide</a> 
-      to see if there any specific actions required. </p>
-    <p>Then follow the 'Build and Install' procedure above. </p>
-    <p class='warning'><strong>Warning!</strong><br/>
-      Before starting an upgrade, be sure to set <span class="code">home</span>
-      in the file <span class="code">setup.cfg</span>.
-    </p>
-    <p>The build and install process will do the following for you: </p>
-    <ul>
-      <li>Save the old <span class="code">bin</span> directory as
-	<span class="code"><em>$WEEWX_INSTALL</em>/bin.YYYYMMDDHHMMSS</span>
-        where YYYYMMDDHHMMSS is a timestamp</li>
-      <li>Install the new version in the <span class="code">bin</span>
-	directory, while preserving any user extensions in the
-        <span class="code">bin/user</span> directory</li>
-      <li>Save a copy of the old <span class="code">weewx.conf</span> as
-	<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS</span>
-      </li>
-      <li>Merge any changes made to the old configuration file
-	<span class="code">weewx.conf</span> into the new configuration file,
-        then install the merged copy.  This effectively causes any changes
-        to override the values in the new version of <span class="code">weewx.conf</span>
-      </li>
-      <li>Install a <span class="code">skins</span> directory if 
-	one does not already exist. </li>
-    </ul>
-
-    <h2>Permissions</h2>
-    <p>Strictly speaking it is not necessary to install or run
-      <span class="code">weewx</span> with root privileges. You only need read/write 
-      access to the serial port for your hardware. For example, if your hardware has 
-      a USB interface, on Ubuntu and SuSE: </p>
-    <p class="tty">sudo chmod a+rw /dev/ttyUSB0 </p>
-    <p>Once done, if you edit <span class="code">setup.cfg</span> to install into 
-      a directory where you have write permissions, you can install and run
-      <span class="code">weewx</span> without any root privileges at all. </p>
-
-    <h2>Moving from <span class="code">wview</span></h2>
-    <p>This section is necessary only if you are moving from
-      <a href="http://www.wviewweather.com/"><span class='code'>wview</span></a> to
-      <span class="code">weewx</span> and wish to transfer your old data over.
-      If you are starting afresh, you do not need to follow this section — the
-      two main databases are created and populated automatically by
-      <span class="code">weewx</span>. </p>
-    <p>The main archive database can be just copied over because wview and
-      <span class="code">weewx</span> use identical schemas: </p>
-    <pre class="tty">
-mkdir <em>$WEEWX_ROOT</em>/archive
-cp /usr/local/var/wview/archive/wview-archive.sdb <span class="code"><em>$WEEWX_ROOT</em></span>/archive/weewx.sdb</pre>
-    <p>The second database, the statistics, will then be automatically created
-      and backfilled on startup of <span class="code">weewx</span>. If your
-      existing database is large, backfilling could take some time. On my
-      modest 500 MHz <a href="http://www.fit-pc.com/new/fit-pc-slim-specifications.html">fit-PC Slim</a> with 512 MB of memory it took a little over 4 minutes for a year and a half (25 MB) of data. </p>
-
-    <h1 id="Configuring_weewx">Configuring <span class="code">weewx</span></h1>
+    <h1>Configuring <span class="code">weewx</span></h1>
     <p>This section covers configuring <span class="code">weewx</span>, in particular 
       the configuration files <span class="code">weewx.conf</span> and
       <span class="code">skin.conf</span>. </p>
@@ -869,7 +712,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       <a href="http://www.wunderground.com/">Weather Underground</a>. If you do not 
       wish to do this, comment out the two options below. </p>
     <p class="config_important">station </p>
-    <p>Set to your Weather Underground station ID (e.g., <span class="code">KORHOODR3</span>). 
+    <p>Set to your Weather Underground station ID (<em>e.g.</em>, <span class="code">KORHOODR3</span>). 
       Required. </p>
     <p class="config_important">password </p>
     <p>Set to your Weather Underground password. Required. </p>
@@ -887,7 +730,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       do not wish to do this, comment out option <span class="code">station</span>
       below. </p>
     <p class="config_important">station </p>
-    <p>Set to your CWOP station ID (e.g., <span class="code">CW1234</span>). Required.
+    <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>). Required.
     </p>
     <p class="config_important">passcode </p>
     <p>This is used for APRS (amateur radio) stations only. Set to the passcode 
@@ -955,11 +798,11 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>Set to the password you use for your FTP connection to your web server. Required. 
       No default. </p>
     <p class="config_important">server </p>
-    <p>Set to the name of your web server (e.g.,
+    <p>Set to the name of your web server (<em>e.g.</em>,
       <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
       No default </p>
     <p class="config_important">path </p>
-    <p>Set to the path where the weather data will be stored on your webserver (e.g., <span class="code">/weather</span>). 
+    <p>Set to the path where the weather data will be stored on your webserver (<em>e.g.</em>, <span class="code">/weather</span>). 
       NB: some FTP servers require a leading slash (&#39;<span class="code">/</span>&#39;), 
       some don&#39;t. Required. No default. </p>
     <p class="config_important">passive </p>
@@ -980,7 +823,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       bandwidth of your Internet connection. </p>
     <p>If you do not use such a server, comment out the options below. </p>
     <p class="config_important">server </p>
-    <p>Set to the name of your web server (e.g.,
+    <p>Set to the name of your web server (<em>e.g.</em>,
       <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
       No default </p>
     <p class="config_important">user </p>
@@ -988,7 +831,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       The local user that weewx runs as must have passwordless ssh configured for 
       user@server. Required. No default. </p>
     <p class="config_important">path </p>
-    <p>Set to the path where the weather data will be stored on your webserver (e.g., <span class="code">/weather</span>). 
+    <p>Set to the path where the weather data will be stored on your webserver (<em>e.g.</em>, <span class="code">/weather</span>). 
       Required. No default. </p>
     <p class="config_important">delete </p>
     <p>Files that don't exist in the local report are removed from the remote location.
@@ -1859,7 +1702,7 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
 
 
     <p class='copyright'>
-      &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer and others
+      &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
     </p>
 
 
