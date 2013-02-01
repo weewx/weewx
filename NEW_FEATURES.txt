@@ -7,6 +7,9 @@ Allow the console to participate as yet another service. Then, the Davis console
 could intercept new archive record events and add rxcheckpercent and rain to
 software generated records.
 
+Consider breaking the rule that reporting can only be done through the databases and,
+instead, offer up the last record when the reporting thread starts.
+
 New observation types would have their unit group attached as a suffix. E.g., _energy.
 
 Move to a "plugin" architecture.

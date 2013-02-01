@@ -57,6 +57,8 @@ def main():
     parser.add_option("--set-time", action="store_true", dest="set_time", help="Set the onboard clock to the current time.")
     parser.add_option("--start", action="store_true", help="Start the logger.")
     parser.add_option("--stop",  action="store_true", help="Stop the logger.")
+    parser.add_option("--dump",  action="store_true", help="Dump all data to the archive. "\
+                      "This may result in many duplicate primary key errors.")
     
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -105,6 +107,8 @@ def main():
         start_logger(station)
     if options.stop:
         stop_logger(station)
+    if options.dump:
+        dump_logger(station, config_dict)
            
 def info(station):
     """Query the configuration of the Vantage, printing out status information"""
@@ -325,6 +329,28 @@ def stop_logger(station):
     print "Stopping logger ..."
     station.stopLogger()
     print "Logger stopped"
+    
+def dump_logger(station, config_dict):
+    import user.schemas
+    import weedb
+    import weewx.archive
+
+    archive_db = config_dict['StdArchive']['archive_database']
+    archive_db_dict = config_dict['Databases'][archive_db]
+    try:
+        archive = weewx.archive.Archive.open(archive_db_dict)
+        print "Opened existing database '%s'" % (archive_db,)
+    except weedb.OperationalError:
+        # Database does not exist. Do an open_with_create:
+        archive = weewx.archive.Archive.open_with_create(archive_db_dict, user.schemas.defaultArchiveSchema)
+        print "Created database '%s'" % (archive_db,)
+
+    print "Starting dump ..."
+    i=0
+    for record in station.genArchiveDump():
+        archive.addRecord(record)
+        i += 1
+    print "Finished dump. %d records added" % (i,)
     
 if __name__=="__main__" :
     main()

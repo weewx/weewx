@@ -535,6 +535,45 @@ class Vantage(weewx.abstractstation.AbstractStation):
             # The starting index for pages other than the first is always zero
             _start_index = 0
 
+    def genArchiveDump(self):
+        """A generator function to return all archive packets in the memory of a Davis Vantage station.
+        
+        yields: a sequence of dictionaries containing the data
+        """
+        
+        # Wake up the console...
+        self.port.wakeup_console(self.max_tries, self.wait_before_retry)
+        # ... request a dump...
+        self.port.send_data('DMP\n')
+
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Dumping all records.")
+        
+        # Cycle through the pages...
+        for unused_ipage in xrange(512) :
+            # ... get a page of archive data
+            _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
+            # Now extract each record from the page
+            for _index in xrange(5) :
+                # If the console has been recently initialized, there will
+                # be unused records, which are filled with 0xff. Detect this
+                # by looking at the first 4 bytes (the date and time):
+                if _page[1+52*_index:5+52*_index] == 4*chr(0xff) :
+                    # This record has never been used. Skip it
+                    syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" \
+                                  % (unused_ipage, _index))
+                    continue
+                # Unpack the raw archive packet:
+                _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
+                # Divide archive interval by 60 to keep consistent with wview
+                _packet['interval']   = self.archive_interval / 60 
+                _packet['model_type'] = self.model_type
+                _packet['iss_id']     = self.iss_id
+                _packet['rxCheckPercent'] = _rxcheck(_packet)
+
+                # Convert from the internal, Davis encoding to physical units:
+                _record = self.translateArchivePacket(_packet)
+                yield _record
+
     def getTime(self) :
         """Get the current time from the console, returning it as timestamp"""
 
