@@ -178,7 +178,7 @@ class weewx_install_data(install_data):
         # of copying it
         if f == 'weewx.conf':
             rv = self.massageWeewxConfigFile(f, install_dir, **kwargs)
-        elif f in ('start_scripts/Debian/weewx', 'start_scripts/SuSE/weewx'):
+        elif f in start_scripts:
             rv = self.massageStartFile(f, install_dir, **kwargs)
         else:
             rv = install_data.copy_file(self, f, install_dir, **kwargs)
@@ -372,6 +372,13 @@ def backup(filepath):
     else:
         distutils.file_util.copy_file(filepath, newpath)
     return newpath
+
+start_scripts = (
+    'util/init.d/weewx.bsd',
+    'util/init.d/weewx.debian',
+    'util/init.d/weewx.redhat',
+    'util/init.d/weewx.suse',
+    );
 
 setup(name='weewx',
       version=VERSION,
