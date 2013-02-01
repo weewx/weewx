@@ -45,10 +45,8 @@ img {
       <img src='logo-fedora.png'/>
     </p>
     <p>
-      This is a guide to install weewx on Linux systems from source.
-    </p>
-    <p>
-      Installing from source will result in the following:
+      This is a guide to install weewx on Linux systems.  The installation will
+      place weewx in the /home/weewx directory with the following:
       <table class='locations'>
         <tr>
           <td align='right'>configuration file: </td>
@@ -203,9 +201,6 @@ img {
       Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
     </p>
     <p>
-      weewx must be restarted for changes to the configuration file to take effect.
-    </p>
-    <p>
       If you have a weather station from the Davis Vantage series, many of the configuration data will be downloaded from your hardware, including altitude, archive interval, and the start of your rain year. If you have not set these, you can either do so by following the instructions in the manual that came with your weather station, or by using the configuration utility config_vp.py, which is included with weewx. To see how to run config_vp.py:
     </p>
     <p class='tty'>
@@ -265,7 +260,7 @@ cd /home/weewx<br/>
 
     <h3>Verify</h3>
     <p>
-      After 5 minutes, open the station web page in a web browser.  You should see the default weewx page with generic station information and data.
+      After 5 minutes, open the station web page in a web browser.  You should see the default weewx page with your station information and data.
     </p>
     <p class='tty'>
       file:///usr/lib/weewx/html/index.html

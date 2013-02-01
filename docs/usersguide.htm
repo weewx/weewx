@@ -662,7 +662,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>Most of the important options are up near the top of the file. They are all 
       documented in this section, although you can safely ignore most of them. The 
       truly important ones, the ones you are likely to have to customize for your 
-      station, are shown in <span class="bold_n_blue"><strong>bold face and in blue</strong></span>.
+      station, are <span class="config_important"><strong>highlighted</strong></span>.
     </p>
     <p>Default values are provided for many of them, meaning that if they are not 
       listed in the configuration file <em>at all</em>, <span class="code">weewx</span> 
@@ -831,7 +831,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class="config_option">start</p>
     <p>The start time for the generator in the format <span class="code">YYYY-MM-DD 
 	hh:mm</span>. Optional. Default is the present time.</p>
-    <p>&nbsp;</p>
+
     <h3 class="config_section">[StdRESTful]</h3>
     <p>This section is for configuring the <span class="code">StdRESTful</span> 
       service, which uploads to simple
