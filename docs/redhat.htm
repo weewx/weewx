@@ -37,7 +37,7 @@ tr {
       <img class='logo' src='logo-fedora.png'/>
     </p>
     <p>
-      This is a guide to install weewx from RPM package on systems such as Redhat, CentOS or Fedora.  The installation will result in the following layout:
+      This is a guide to install <span class='code'>weewx</span> from RPM package on systems such as Redhat, CentOS or Fedora.  The installation will result in the following layout:
     </p>
     <table class='locations'>
       <tr>
@@ -67,28 +67,25 @@ tr {
 
     <h3>Install</h3>
     <p>
-      Install weewx by double-clicking the .rpm file, or via command line:
+      Install by double-clicking the .rpm file, or via command line:
     </p>
-    <p class='tty'>sudo rpm -i weewx-X.Y.Z-R.deb</p>
+    <p class='tty'>sudo rpm -i weewx-X.Y.Z-R.rpm</p>
 
     <h3>Verify</h3>
     <p>
-      After 5 minutes, open the station web page in a web browser.  You should see the default weewx page with generic station information and data.
+      After 5 minutes, open the station web page in a web browser.  You should see generic station information and data.
     </p>
     <p class='tty'>file:///usr/lib/weewx/html/index.html</p>
 
     <h3>Status</h3>
     <p>
-      Look in the system log for messages from weewx.
+      Look in the system log for messages from <span class='code'>weewx</span>.
     </p>
     <p class='tty'>sudo tail -f /var/log/messages</p>
 
     <h3>Configure</h3>
     <p>
-      The default installation uses Simulator as the <span class='code'>station_type</span>.  This should be changed to the actual weather station type.
-    </p>
-    <p>
-      Edit the configuration file <span class='code'>/home/weewx/weewx.conf</span>.  Set at least the following:
+      The default installation uses Simulator as the <span class='code'>station_type</span>.  This should be changed to the actual weather station type.  Edit the configuration file <span class='code'>/etc/weewx/weewx.conf</span>.  Set at least the following:
       <ul>
         <li>location</li>
         <li>latitude</li>
@@ -99,13 +96,12 @@ tr {
       Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
     </p>
     <p>
-      weewx must be restarted for configuration file changes to take effect.
+      <span class='code'>weewx</span> must be restarted for configuration file
+      changes to take effect.
     </p>
 
     <h3>Start/Stop</h3>
-    <p>
-      The installer configures weewx to run when the computer starts up and starts weewx the first time.  To start/stop weewx manually:
-    </p>
+    <p>To start/stop <span class='code'>weewx</span>:</p>
     <p class='tty'>sudo /etc/init.d/weewx start
       sudo /etc/init.d/weewx stop
     </p>
@@ -115,11 +111,12 @@ tr {
       To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/etc/weewx.conf</span>.  See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
     </p>
     <p>
-      weewx must be restarted for configuration file changes to take effect.
+      <span class='code'>weewx</span> must be restarted for configuration file
+      changes to take effect.
     </p>
 
     <h3>Uninstall</h3>
-    <p>To uninstall weewx, removing configuration files but retaining data:</p>
+    <p>To uninstall <span class='code'>weewx</span>, removing configuration files but retaining data:</p>
     <p class='tty'>sudo rpm -r weewx</p>
 
     <p class='copyright'>

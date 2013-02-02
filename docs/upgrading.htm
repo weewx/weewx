@@ -19,8 +19,50 @@
 Version: 2.2
       </span>
     </h1>
-    <p>What follows are directions for upgrading from specific versions.</p>
 
+    <p>These are instructions for upgrading using
+      <span class='code'>setup.py</span>.  These instructions will not work
+      if <span class='code'>weewx</span> was installed from DEB or RPM package.
+    </p>
+
+    <h1>Upgrading</h1>
+    <p>Before upgrading <span class="code">weewx</span>, check the section
+      'Instructions for Specific Versions' to see if any specific actions are
+      required. Then follow the standard installation procedure:</p>
+    <p>Unpack the archive:</p>
+    <p class="tty">tar xvf weewx-X.Y.Z.tar.gz</p>
+    <p>Change directory into it:</p>
+    <p class="tty">cd weewx-X.Y.Z </p>
+    <p>Build the distribution:</p>
+    <p class="tty">./setup.py build </p>
+    <p class='warning'><strong>Warning!</strong><br/>
+      Be sure that <span class="code">home</span> in the file
+      <span class="code">setup.cfg</span> is set to the location
+      of the previous <span class='code'>weewx</span> installation.
+    </p>
+    <p>Install <span class='code'>weewx</span>:</p>
+    <p class="tty">sudo ./setup.py install </p>
+    <p>The install process will do the following: </p>
+    <ul>
+      <li>Save the old <span class="code">bin</span> directory as
+	<span class="code"><em>$WEEWX_INSTALL</em>/bin.YYYYMMDDHHMMSS</span>
+        where YYYYMMDDHHMMSS is a timestamp</li>
+      <li>Install the new version in the <span class="code">bin</span>
+	directory, while preserving any user extensions in the
+        <span class="code">bin/user</span> directory</li>
+      <li>Save a copy of the old <span class="code">weewx.conf</span> as
+	<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS</span>
+      </li>
+      <li>Merge any changes made to the old configuration file
+	<span class="code">weewx.conf</span> into the new configuration file,
+        then install the merged copy.  This effectively causes any changes
+        to override the values in the new version of <span class="code">weewx.conf</span>
+      </li>
+      <li>Install a <span class="code">skins</span> directory if 
+	one does not already exist. </li>
+    </ul>
+
+    <h1>Instructions for Specific Versions</h1>
     <h2>V2.1 or earlier</h2>
     <p>Version 2.2 introduces a schema, found in <span class="code">
         bin/user/schemas.py</span>, for the stats database. This schema is
