@@ -1090,16 +1090,16 @@ service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxe
       <span class="code"><em>$WEEWX_ROOT</em>/util/init.d</span>. </p>
     <table class="center" style="width: 90%">
       <tr>
-	<td style="width: 25%">SuSE:</td>
-	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.suse</td>
-      </tr>
-      <tr>
 	<td >Debian/Ubuntu/Mint:</td>
 	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.debian</td>
       </tr>
       <tr>
-	<td >Redhat/CentOS/Mint</td>
+	<td >Redhat/CentOS/Mint:</td>
 	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat</td>
+      </tr>
+      <tr>
+	<td style="width: 25%">SuSE:</td>
+	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.suse</td>
       </tr>
     </table>
     <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 
@@ -1109,46 +1109,46 @@ service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxe
     <p>Copy it to the proper location for your system: </p>
     <table class="center" style="width: 90%">
       <tr>
-	<td style="width: 25%">SuSE:</td>
-	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.suse /etc/init.d/weewx</td>
-      </tr>
-      <tr>
 	<td>Debian/Ubuntu/Mint:</td>
 	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.debian /etc/init.d/weewx</td>
       </tr>
       <tr>
 	<td>Redhat/CentOS/Fedora:</td>
-	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat /etc/init.d/weewx</td>
+	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</td>
+      </tr>
+      <tr>
+	<td style="width: 25%">SuSE:</td>
+	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.suse /etc/init.d/weewx</td>
       </tr>
     </table>
     <p>Make sure the script is executable: </p>
     <table class="center" style="width: 90%">
-      <tr>
-	<td style="width: 25%">SuSE:</td>
-	<td class='tty'>chmod +x /etc/init.d/weewx</td>
-      </tr>
       <tr>
 	<td >Debian/Ubuntu/Mint:</td>
 	<td class='tty'>chmod +x /etc/init.d/weewx</td>
       </tr>
       <tr>
 	<td >Redhat/CentOS/Fedora:</td>
+	<td class='tty'>chmod +x /etc/init.d/rc.d/weewx</td>
+      </tr>
+      <tr>
+	<td style="width: 25%">SuSE:</td>
 	<td class='tty'>chmod +x /etc/init.d/weewx</td>
       </tr>
     </table>
     <p>Create symbolic links in the run level directories: </p>
     <table class="center" style="width: 90%">
       <tr>
-	<td style="width: 25%">SuSE:</td>
-	<td class='tty'>/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
-      </tr>
-      <tr>
 	<td >Debian/Ubuntu/Mint:</td>
 	<td class='tty'>update-rc.d weewx defaults 98</td>
       </tr>
       <tr>
-	<td >Redhat/CentOS/Fedora</td>
+	<td >Redhat/CentOS/Fedora:</td>
 	<td class='tty'>chkconfig weewx on</td>
+      </tr>
+      <tr>
+	<td style="width: 25%">SuSE:</td>
+	<td class='tty'>/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
       </tr>
     </table>
     <p><span class="code">Weewx</span> will now start automatically whenever your 

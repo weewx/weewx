@@ -18,7 +18,7 @@ tr {
   float: right;
   margin-left: 100px;
 }
-img {
+.logo {
   width: 60px;
 }
 .locations {
@@ -29,9 +29,9 @@ img {
   <body>
     <h1 class="title">weewx: Quick Start Guide for Redhat Linux</h1>
     <p class='os-icons'>      
-      <img src='logo-redhat.png'/>
-      <img src='logo-centos.png'/>
-      <img src='logo-fedora.png'/>
+      <img class='logo' src='logo-redhat.png'/>
+      <img class='logo' src='logo-centos.png'/>
+      <img class='logo' src='logo-fedora.png'/>
     </p>
     <p>
       This is a guide to install weewx from RPM package on systems such as Redhat, CentOS or Fedora.  The installation will result in the following layout:
@@ -54,9 +54,6 @@ img {
         <td class='tty'>/var/lib/weewx/html</td>
       </tr>
     </table>
-    <p>
-      Installation must be done with root privileges.
-    </p>
 
     <p style='clear: both'></p>
 

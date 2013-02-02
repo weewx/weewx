@@ -60,27 +60,30 @@ tr {
 }
     </style>
     <script>
-function showpanel(id) {
+function showprereq(id) {
   document.getElementById('prereq-debian').style.display = 'none';
   document.getElementById('prereq-redhat').style.display = 'none';
   document.getElementById('prereq-suse').style.display = 'none';
   document.getElementById('prereq-pip').style.display = 'none';
-
-  document.getElementById('startup-debian').style.display = 'none';
-  document.getElementById('startup-redhat').style.display = 'none';
-  document.getElementById('startup-suse').style.display = 'none';
 
   document.getElementById('prereq-tab-debian').className = 'tab';
   document.getElementById('prereq-tab-redhat').className = 'tab';
   document.getElementById('prereq-tab-suse').className = 'tab';
   document.getElementById('prereq-tab-pip').className = 'tab';
 
+  document.getElementById('prereq-'+id).style.display = 'block';
+  document.getElementById('prereq-tab-'+id).className = 'tab selected';
+}
+
+function showstartup(id) {
+  document.getElementById('startup-debian').style.display = 'none';
+  document.getElementById('startup-redhat').style.display = 'none';
+  document.getElementById('startup-suse').style.display = 'none';
+
   document.getElementById('startup-tab-debian').className = 'tab';
   document.getElementById('startup-tab-redhat').className = 'tab';
   document.getElementById('startup-tab-suse').className = 'tab';
 
-  document.getElementById('prereq-'+id).style.display = 'block';
-  document.getElementById('prereq-tab-'+id).className = 'tab selected';
   document.getElementById('startup-'+id).style.display = 'block';
   document.getElementById('startup-tab-'+id).className = 'tab selected';
 }
@@ -126,18 +129,23 @@ function showpanel(id) {
     <p style='clear: both'></p>
 
     <h3>Install Prerequisites</h3>
-    <p>Ensure that Python2 is installed.  Python 2.5, 2.6, or 2.7 will work, but Python 3 will not.  Then install required python packages using the package management system for your system (<em>e.g.</em>, apt-get, yum, yast) or the Python Package Management System (pip).</p>
+    <p>Ensure that Python2 is installed.  Python 2.5, 2.6, or 2.7 will work,
+      but Python 3 will not.</p>
+    <p class='tty'>python -V</p>
+    <p>Then install required python packages using the package management
+      software for your system (<em>e.g.</em>, apt-get, yum, yast) or the
+      Python Package Management System (pip).</p>
     <div class='tabs'>
-      <div id='prereq-tab-debian' class='tab selected' onclick="showpanel('debian')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div></div>
-      <div id='prereq-tab-redhat' class='tab' onclick="showpanel('redhat')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div></div>
-      <div id='prereq-tab-suse' class='tab' onclick="showpanel('suse')">SuSE <img src='logo-suse.png' class='thumbnail' /></div>
-      <div id='prereq-tab-pip' class='tab' onclick="showpanel('pip')":>pip</div>
+      <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div></div>
+      <div id='prereq-tab-redhat' class='tab' onclick="showprereq('redhat')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div></div>
+      <div id='prereq-tab-suse' class='tab' onclick="showprereq('suse')">SuSE <img src='logo-suse.png' class='thumbnail' /></div>
+      <div id='prereq-tab-pip' class='tab' onclick="showprereq('pip')":>pip</div>
     </div>
     <div id='prereq' style='clear:both'>
       <div id='prereq-debian'>
         <p class='tty'>
           # debian, ubuntu, mint<br/>
-          #<br/>
+          <br/>
           # required packages:<br/>
           sudo apt-get install python-configobj<br/>
           sudo apt-get install python-cheetah<br/>
@@ -160,7 +168,7 @@ function showpanel(id) {
       <div id='prereq-redhat' style='display:none'>
         <p class='tty'>
           # redhat, centos, fedora<br/>
-          #<br/>
+          <br/>
           # required packages:<br/>
           sudo yum install python-configobj<br/>
           sudo yum install python-cheetah<br/>
@@ -180,8 +188,8 @@ function showpanel(id) {
       </div>
       <div id='prereq-suse' style='display:none'>
         <p class='tty' style='margin-top:20px'>
-          # suse
-          #<br/>
+          # suse<br/>
+          <br/>
           # required packages:<br/>
           sudo yast -i gcc<br/>
           sudo yast -i python-configobj<br/>
@@ -202,8 +210,8 @@ function showpanel(id) {
       </div>
       <div id='prereq-pip' style='display:none'>
         <p class='tty'>
-          # python setup tool (pip)
-          #<br/>
+          # python setup tool (pip)<br/>
+          <br/>
           # required packages:<br/>
           sudo pip install configobj<br/>
           sudo pip install Cheetah<br/>
@@ -278,9 +286,9 @@ cd /home/weewx<br/>
       Or as a daemon automatically when the computer starts:
     </p>
     <div class='tabs'>
-      <div id='startup-tab-debian' class='tab selected' onclick="showpanel('debian')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
-      <div id='startup-tab-redhat' class='tab' onclick="showpanel('redhat')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div>
-      <div id='startup-tab-suse' class='tab' onclick="showpanel('suse')">SuSE <img src='logo-suse.png' class='thumbnail' /></div>
+      <div id='startup-tab-debian' class='tab selected' onclick="showstartup('debian')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
+      <div id='startup-tab-redhat' class='tab' onclick="showstartup('redhat')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div>
+      <div id='startup-tab-suse' class='tab' onclick="showstartup('suse')">SuSE <img src='logo-suse.png' class='thumbnail' /></div>
     </div>
     <div id='startup' style='clear:both'>
       <div id='startup-debian'>
@@ -295,10 +303,10 @@ cd /home/weewx<br/>
       <div id='startup-redhat' style='display:none'>
         <p class="tty">
           cd /home/weewx<br/>
-          sudo cp util/init.d/weewx.redhat /etc/init.d/weewx<br/>
-          sudo chmod +x /etc/init.d/weewx<br/>
+          sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx<br/>
+          sudo chmod +x /etc/rc.d/init.d/weewx<br/>
           sudo chkconfig weewx on<br/>
-          sudo /etc/init.d/weewx start<br/>
+          sudo /etc/rc.d/init.d/weewx start<br/>
         </p>
       </div>
       <div id='startup-suse' style='display:none'>
@@ -306,7 +314,7 @@ cd /home/weewx<br/>
           cd /home/weewx<br/>
           sudo cp util/init.d/weewx.suse /etc/init.d/weewx<br/>
           sudo chmod +x /etc/init.d/weewx<br/>
-          sudo chkconfig weewx on<br/>
+          sudo /usr/lib/lsb/install_initd /etc/init.d/weewx<br/>
           sudo /etc/init.d/weewx start<br/>
         </p>
       </div>
