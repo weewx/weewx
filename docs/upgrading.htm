@@ -69,12 +69,10 @@ Version: 2.2
 	  skins/Standard/smartphone</span> from the distribution into your <span class="code">skins/Standard</span> 
 	directory. You will then need to modify your <span class="code">skin.conf</span>.
       <p>After the section that looks like</p>
-      <pre>
-[[[Mobile]]]
-    template = mobile.html.tmpl</pre>
+      <p class='tty'>[[[Mobile]]]
+    template = mobile.html.tmpl</p>
       <p>add the following directives:</p>
-      <pre>
-[[[MobileSmartphone]]]
+      <p class='tty'>[[[MobileSmartphone]]]
     template = smartphone/index.html.tmpl
         
 [[[MobileTempOutside]]]
@@ -90,18 +88,17 @@ Version: 2.2
     template = smartphone/wind.html.tmpl
         
 [[[MobileRadar]]]
-    template = smartphone/radar.html.tmpl</pre>
+    template = smartphone/radar.html.tmpl</p>
       <p>Then modify section <span class="code">[CopyGenerator]</span> 
         to add the <span class="highlight">highlighted</span> files:</p>
-      <pre>
-[CopyGenerator]
+      <p class='tty'>[CopyGenerator]
 
     #
     # This section is used by the generator CopyGenerator
     #
 
     # List of files that are to be copied at the first invocation of the generator only
-    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></pre>
+    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></p>
       </li>
     </ol>
     <p>Whichever approach you chose, the generated files will appear in
@@ -142,20 +139,16 @@ Version: 2.2
 	to take advantage of the new almanac features, using the version shipped 
 	with the distribution for guidance. You will then need to modify your <span class="code">skin.conf</span>.
 	<p>Add a new <span class="code">[[[Mobile]]]</span> section:</p>
-	<p class="tty">[FileGenerator]<br />
-          &nbsp; .<br />
-          &nbsp; .<br />
-          &nbsp; .<br />
-          &nbsp; [[ToDate]]<br />
-          &nbsp;&nbsp;&nbsp; .<br />
-          &nbsp;&nbsp;&nbsp; .<br />
-          &nbsp;&nbsp;&nbsp; .<br />
-          &nbsp;&nbsp;&nbsp; [[[Mobile]]]<br />
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; template = mobile.html.tmpl</p>
+	<p class="tty">[FileGenerator]
+    ...
+    [[ToDate]]
+        ...
+        [[[Mobile]]]
+            template = mobile.html.tmpl</p>
 	<p>Then add <span class="code">mobile.css</span> and <span class="code">
 	    favicon.ico</span> to the list of files to be copied on report generation:</p>
-	<p class="tty">[CopyGenerator]<br />
-          &nbsp; copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico</p>
+	<p class="tty">[CopyGenerator]
+    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico</p>
       </li>
     </ol>
     <p>Which approach you should take will depend on how extensively you have 
@@ -199,13 +192,13 @@ Version: 2.2
     <ul>
       <li>Option &quot;<span class="code">altitude</span>&quot; in section
 	<span class="code">[Station]</span> now takes a unit. Hence, it should look 
-	something like:	<pre> altitude = 120, meter</pre><br/>
+	something like:	<p class='tty'> altitude = 120, meter</p><br/>
       </li>
       <li>In a similar manner, options <span class="code">heating_base</span> and
 	<span class="code">cooling_base</span> in <span class="code">skin.conf</span> 
 	also take units:
-	<pre>heating_base = 65, degree_F
-          cooling_base = 65, degree_F</pre>
+	<p class='tty'>heating_base = 65, degree_F
+cooling_base = 65, degree_F</p>
       </li>
     </ul>
     <p>The directory &#39;<span class="code">templates</span>&#39; is no longer used; 
@@ -230,8 +223,8 @@ Version: 2.2
       correct.</p>
     <p>Two Python files are no longer used, so they may be deleted from your 
       installation if you wish:</p>
-    <p class="tty">rm <em>$WEEWX_ROOT</em>/bin/weewx/processdata.py<br />
-      rm <em>$WEEWX_ROOT</em>/bin/weewx/mainloop.py</p>
+    <p class="tty">rm <em>$WEEWX_ROOT</em>/bin/weewx/processdata.py
+rm <em>$WEEWX_ROOT</em>/bin/weewx/mainloop.py</p>
     <p>In addition, file <span class="code">readme.htm</span> has been moved to 
       subdirectory <span class="code"><em>$WEEWX_ROOT</em>/docs</span>, so the old one 
       can be deleted:</p>

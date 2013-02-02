@@ -251,8 +251,7 @@
 	layer, instead of the default US Customary Units. The section that controls 
 	units is <span class="code">[Units][[Groups]]</span>. It looks like this:
       </p>
-      <pre>
-[Units]
+      <p class='tty'>[Units]
     [[Groups]]
         group_altitude    = foot
         group_degree_day  = degree_F_day 
@@ -267,10 +266,9 @@
         group_speed2      = mile_per_second2
         group_temperature = degree_F
         group_uv          = uv_index 
-        group_volt        = volt</pre>
+        group_volt        = volt</p>
       <p>To use metric units, you would edit this section to read: </p>
-      <pre>
-[Units]
+      <p class='tty'>[Units]
     [[Groups]]
 <span class="highlight">        group_altitude    = meter</span>
 <span class="highlight">        group_degree_day  = degree_C_day </span>
@@ -285,7 +283,7 @@
 <span class="highlight">        group_speed2      = meter_per_second2</span>
 <span class="highlight">        group_temperature = degree_C</span>
         group_uv          = uv_index 
-        group_volt        = volt</pre>
+        group_volt        = volt</p>
       <p>The options that were changed have been <span class="highlight">highlighted</span>. 
 	Details of the various unit options are given in <em><a href="#Units">Appendix 
 	    B: Units</a></em>. </p>
@@ -296,19 +294,18 @@
 	Temperature.&quot; This can be done by changing the &quot;<span class="code">inTemp</span>&quot; 
 	option located in section <span class="code">[Labels][[Generic]]</span> from 
 	the default </p>
-      <pre>
-[Units]
+      <p class='tty'>[Units]
     [[Generic]]
         inTemp  = Inside Temperature
         outTemp = Outside Temperature
-        ...</pre>
+        ...</p>
       <p>to: </p>
-      <pre>
+      <p class='tty'>
 [Units]
     [[Generic]]
 <span class="highlight">        inTemp  = Barn Temperature</span>
         outTemp = Outside Temperature
-        ...</pre>
+        ...</p>
 
       <h3>Overriding options in <span class="code">skin.conf</span> from
 	<span class="code">weewx.conf</span></h3>
@@ -329,8 +326,7 @@
       <p>But, there's a better approach: reuse the same skin, but override some of 
 	its options. Here&#39;s what your <span class="code">[StdReport]</span> section 
 	in <span class="code">weewx.conf</span> would look like: </p>
-      <pre class="tty">
-[StdReport]
+      <p class="tty">[StdReport]
     #
     # This section specifies what reports, using which skins, are to be generated.
     #
@@ -343,30 +339,30 @@
 
     # This report will use US Customary Units
     [[USReport]]
-    # It&#39;s based on the Standard skin
-    skin = Standard
+        # It&#39;s based on the Standard skin
+        skin = Standard
 
     # This report will use metric units:
     [[MetricReport]]
-    # It&#39;s also based on the Standard skin:
-    skin = Standard 
-    # However, override where the results will go and put them in a subdirectory:
-    HTML_ROOT = public_html/metric
+        # It&#39;s also based on the Standard skin:
+        skin = Standard 
+        # However, override where the results will go and put them in a subdirectory:
+        HTML_ROOT = public_html/metric
     
-    # And override the options that were not in metric units
-    [[[Units]]]
-    [[[[Groups]]]]
-    group_altitude    = meter
-    group_pressure    = mbar
-    group_rain        = mm
-    group_rainrate    = mm_per_hour
-    group_speed       = meter_per_second
-    group_speed2      = meter_per_second2
-    group_temperature = degree_C
+        # And override the options that were not in metric units
+        [[[Units]]]
+            [[[[Groups]]]]
+                group_altitude    = meter
+                group_pressure    = mbar
+                group_rain        = mm
+                group_rainrate    = mm_per_hour
+                group_speed       = meter_per_second
+                group_speed2      = meter_per_second2
+                group_temperature = degree_C
 
     [[FTP]]
     ...
-    ... (as before) </pre>
+    ... (as before) </p>
       <p>We have done two things different from the stock reports. First (1), we&#39;ve 
 	renamed the first report from <span class="code">StandardReport </span>to
 	<span class="code">USReport </span>for clarity; and (2) we&#39;ve introduced 
@@ -389,15 +385,13 @@
 	very small subset of its power. </p>
       <p>The key construct is a &#39;dot&#39; code, specifying what value you want. 
 	For example: </p>
-      <pre class="tty">
-$month.outTemp.max
+      <p class="tty">$month.outTemp.max
 $month.outTemp.maxtime
-$current.outTemp</pre>
+$current.outTemp</p>
       <p>would code the max outside temperature for the month, the time it occurred, 
 	and the current outside temperature, respectively. So, an HTML file that looks 
 	like </p>
-      <pre class="tty">
-&lt;html&gt;
+      <p class="tty">&lt;html&gt;
     &lt;head&gt;
         &lt;title&gt;Current conditions&lt;/title&gt;
     &lt;/head&gt;
@@ -405,7 +399,7 @@ $current.outTemp</pre>
         &lt;p&gt;Current temperature = $current.outTemp&lt;/p&gt;
         &lt;p&gt;Max for the month is $month.outTemp.max, which occurred at $month.outTemp.maxtime&lt;/p&gt;
     &lt;/body&gt;
-&lt;/html&gt;</pre>
+&lt;/html&gt;</p>
       <p>would be all you need for a very simple HTML page that would display the 
 	text (assuming that the unit group for temperature is <span class="code">degree_F</span>):
       </p>
@@ -420,9 +414,8 @@ $current.outTemp</pre>
 
       <h3>The dot code</h3>
       <p>As we saw above, the dot codes can be very simple: </p>
-      <pre class="tty">
-## Output max outside temperature using an appropriate format and label:
-$month.outTemp.max</pre>
+      <p class="tty">## Output max outside temperature using an appropriate format and label:
+$month.outTemp.max</p>
       <p>Most of the time, the dot code will &quot;do the right thing&quot; and is 
 	all you will need. However, <span class="code">weewx</span> offers extensive 
 	customization of the generate output for specialized applications such as XML 
@@ -434,9 +427,9 @@ $month.outTemp.max</pre>
       <h4>Time period <span class="code">$current</span></h4>
       <p>Time period <span class="code">$current</span> represents a <em>current observation</em>. 
 	An example would be the current barometric pressure: </p>
-      <pre>$current.barometer</pre>
+      <p class='tty'>$current.barometer</p>
       <p>The dot code for a current observation looks like: </p>
-      <pre><em>$current.obstype[.optional_unit_conversion][.optional_formatting]</em></pre>
+      <p class='tty'><em>$current.obstype[.optional_unit_conversion][.optional_formatting]</em></p>
       <p>Where: </p>
       <p class="indent"><span class="code"><em>obstype</em></span> is an observation 
 	type, such as <span class="code">barometer</span>. See <em>
@@ -462,9 +455,9 @@ $month.outTemp.max</pre>
         they also require an <em>aggregation type</em>. An example would be
         the week&#39;s total precipitation (where the aggregation type is
         <span class="code"><em>sum</em></span>): </p>
-      <pre>$week.rain.sum</pre>
+      <p class='tty'>$week.rain.sum</p>
       <p>The dot code for an aggregation over time looks like: </p>
-      <pre><em>$period.statstype.aggregation[.optional_unit_conversion][.optional_formatting]</em></pre>
+      <p class='tty'><em>$period.statstype.aggregation[.optional_unit_conversion][.optional_formatting]</em></p>
       <p>Where: </p>
       <p class="indent"><span class="code"><em>period</em></span> is the time period 
 	over which the aggregation is to be done. Possible choices are
@@ -771,9 +764,9 @@ $month.outTemp.max</pre>
 	<a href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">
 	  strftime() <em>time format</em></a>, rather than a <em>string format:</em>
       </p>
-      <pre>$month.dateTime.format(&quot;%B %Y)</pre>
+      <p class='tty'>$month.dateTime.format(&quot;%B %Y)</p>
       <p>produces </p>
-      <pre>January 2010</pre>
+      <p class='tty'>January 2010</p>
       <p>The returned string value will always be in <em>local time</em>. </p>
       <p>The raw value of <span class="code">dateTime</span> is Unix Epoch Time (number 
 	of seconds since 00:00:00 UTC 1 Jan 1970, <em>i.e.</em>, a large number), which 
@@ -834,9 +827,9 @@ $month.outTemp.max</pre>
 	</tr>
       </table>
       <p>As a summary, the tag </p>
-      <pre>$day.outTemp.max.formatted$unit.label.outTemp</pre>
+      <p class='tty'>$day.outTemp.max.formatted$unit.label.outTemp</p>
       <p>would result in </p>
-      <pre>21.2°C</pre>
+      <p class='tty'>21.2°C</p>
       <p>(assuming metric values have been specified for <span class="code">group_temperature</span>), 
 	essentially reproducing the results of the simpler tag <span class="code">$day.outTemp.max</span>.
       </p>
@@ -849,8 +842,7 @@ $month.outTemp.max</pre>
       <p>This example uses a Cheetah &#39;<span class="code">for</span>&#39; loop 
 	to iterate over all months in a year, printing out each month&#39;s min and 
 	max temperature (the iteration loop is highlighted): </p>
-      <pre>
-&lt;html&gt;
+      <p class='tty'>&lt;html&gt;
     &lt;head&gt;
         &lt;title&gt;Year stats by month&lt;/title&gt;
     &lt;/head&gt;
@@ -860,10 +852,9 @@ $month.outTemp.max</pre>
         &lt;p&gt;$month.dateTime.format(&quot;%B&quot;): Min, max temperatures: $month.outTemp.min $month.outTemp.max&lt;/p&gt;
 <span class="highlight">        #end for </span>
     &lt;/body&gt;
-&lt;/html&gt;</pre>
+&lt;/html&gt;</p>
       <p>Produces results: </p>
-      <pre class="tty">
-Min, max temperatures by month:
+      <p class="tty">Min, max temperatures by month:
 January: Min, max temperatures: 30.1°F 51.5°F
 February: Min, max temperatures: 24.4°F 58.6°F
 March: Min, max temperatures: 27.3°F 64.1°F
@@ -875,7 +866,7 @@ August: Min, max temperatures: N/A N/A
 September: Min, max temperatures: N/A N/A
 October: Min, max temperatures: N/A N/A
 November: Min, max temperatures: N/A N/A
-December: Min, max temperatures: N/A N/A</pre>
+December: Min, max temperatures: N/A N/A</p>
       <p>See the NOAA template files <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span> 
 	and <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> for examples using 
 	iteration, as well as explicit formatting. </p>
@@ -886,8 +877,7 @@ December: Min, max temperatures: N/A N/A</pre>
 	their rise, transit and set times, as well as their azimuth and altitude. Other 
 	information is also available. </p>
       <p>Here is a small sampling: </p>
-      <pre class="tty">
-&lt;html&gt;
+      <p class="tty">&lt;html&gt;
     &lt;head&gt;
         &lt;title&gt;Almanac data&lt;/title&gt;
     &lt;/head&gt;
@@ -904,20 +894,18 @@ December: Min, max temperatures: N/A N/A</pre>
         &lt;p&gt;Sunrise, sunset: $almanac.sunrise $almanac.sunset&lt;/p&gt;
         #end if
     &lt;/body&gt;
-&lt;/html&gt;</pre>
+&lt;/html&gt;</p>
       <p>If your installation has pyephem installed this would result in: </p>
-      <pre class="tty">
-Current time is 29-Mar-2011 09:20
+      <p class="tty">Current time is 29-Mar-2011 09:20
 Sunrise, transit, sunset: 06:51 13:11 19:30
 Moonrise, transit, moonset: 04:33 09:44 15:04
 Mars rise, transit, set: 06:35 12:30 18:26
 Azimuth, altitude of mars: 124.354959275 26.4808431952
 Next new, full moon: 03-Apr-2011 07:32 17-Apr-2011 19:43
-Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29</pre>
+Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29</p>
       <p>Otherwise, a fallback position is used, resulting in </p>
-      <pre class="tty">
-Current time is 29-Mar-2011 09:20
-Sunrise, sunset: 06:51 19:30</pre>
+      <p class="tty">Current time is 29-Mar-2011 09:20
+Sunrise, sunset: 06:51 19:30</p>
       <p>As shown in the example, you can test whether this extended almanac information 
 	is available with the value <span class="code">$almanac.hasExtras</span>.
       </p>
@@ -931,9 +919,9 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>"Calendar events" do not require a heavenly body. They cover things such 
 	as "<span class="code">next_solstice</span>", or "<span class="code">next_first_quarter_moon</span>". 
 	The syntax here is </p>
-      <pre class="tty">$almanac.next_solstice </pre>
+      <p class="tty">$almanac.next_solstice</p>
       <p>or </p>
-      <pre class="tty">$almanac.next_first_quarter_moon</pre>
+      <p class="tty">$almanac.next_first_quarter_moon</p>
       <p>Here is a table of the information that falls into this category:</p>
       <table class="code" style="width: 60%" align='center'>
 	<tr>
@@ -991,8 +979,8 @@ Sunrise, sunset: 06:51 19:30</pre>
 	sun (instead of the upper limb, which it normally uses) to do the calcuation:</p>
       <p class="tty">$almanac(pressure=0, horizon=-6.sun(use_center=1).rise</p>
       <p>The general syntax is:</p>
-      <p class="tty">$almanac(pressure=<em>pressure</em>, horizon=<em>horizon</em>,<br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; temperature=<em>temperature_C</em>).<em>heavenly_body</em>(use_center=[01]).<em>attribute</em></p>
+      <p class="tty">$almanac(pressure=<em>pressure</em>, horizon=<em>horizon</em>,
+         temperature=<em>temperature_C</em>).<em>heavenly_body</em>(use_center=[01]).<em>attribute</em></p>
       <p>As you can see, in addition to the horizon angle, you can also override atmospheric 
 	pressure and temperature (degrees Celsius).</p>
       <p>PyEphem offers an extensive list of objects that can be used for the
@@ -1081,8 +1069,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       </ul>
       <p>This example is included in the distribution as <span class="code">bin/examples/mygenerator.py</span>:
       </p>
-      <pre class="tty">
-import datetime
+      <p class="tty">import datetime
 import time
 
 from weewx.filegenerator import FileGenerator
@@ -1120,7 +1107,7 @@ class MyFileGenerator(FileGenerator):                                  # 1
         search_list += [ {'alltime'   : all_stats,
                           'seven_day' : seven_day_stats} ]             # 8
 
-        return search_list</pre>
+        return search_list</p>
       <p>Going through the example, line by line: </p>
       <ol>
 	<li>Subclass from class <span class="code">FileGenerator</span>. The new 
@@ -1187,8 +1174,7 @@ class MyFileGenerator(FileGenerator):                                  # 1
       </ol>
       <p>With this approach, you can now include &quot;all time&quot; or "seven day" 
 	statistics in your HTML templates: </p>
-      <pre class="tty">
-...
+      <p class="tty">...
 &lt;table&gt;
     &lt;tr&gt;
         &lt;td&gt;Maximum temperature to date: &lt;/td&gt;
@@ -1202,16 +1188,16 @@ class MyFileGenerator(FileGenerator):                                  # 1
         &lt;td&gt;Rain over the last seven days: &lt;/td&gt;
         &lt;td&gt;$seven_day.rain.sum
     &lt;/tr&gt;
-    ... (more table entries)</pre>
+    ... (more table entries)</p>
       <p>One additonal step is required: to tell the report service to run your generator 
 	instead of the default generator. Modify option <span class="code">[Generators]generator_list</span> 
 	in the skin configuration file <span class="code">skin.conf</span> to read:
       </p>
-      <pre>generator_list = examples.mygenerator.MyFileGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator</pre>
+      <p class='tty'>generator_list = examples.mygenerator.MyFileGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator</p>
       <p>NB: If you create a custom generator some place other than where
 	<span class="code">weewxd.py</span> resides, you may have to specify its location 
 	in the environment variable <span class="code">PYTHONPATH</span>: </p>
-      <pre>export PYTHONPATH=/home/me/secret_location</pre>
+      <p>export PYTHONPATH=/home/me/secret_location</p>
       <h2>Upgrades and user extensions</h2>
       <p>In the examples above, we subclassed <span class="code">weewx</span> classes 
 	to add functionality. Where should you put your new code? If you simply modify 
@@ -1256,16 +1242,14 @@ class MyFileGenerator(FileGenerator):                                  # 1
 	say you have added a video camera and you would like to add a still image with 
 	a hyperlink to a page with the video. You want all of these options to be neatly 
 	contained in a subsection. </p>
-      <pre>
-[Extras]
+      <p class='tty'>[Extras]
     [[video]]
         still = video_capture.jpg
-        hyperlink = <a href="http://www.eatatjoes.com/video.html">http://www.eatatjoes.com/video.html</a></pre>
+        hyperlink = <a href="http://www.eatatjoes.com/video.html">http://www.eatatjoes.com/video.html</a></p>
       <p>Then in your template you could refer to these as: </p>
-      <pre>
-&lt;a href=&quot;$Extras.video.hyperlink&quot;&gt;
+      <p class='tty'>&lt;a href=&quot;$Extras.video.hyperlink&quot;&gt;
     &lt;img src=&quot;$Extras.video.still&quot; alt=&quot;Video capture&quot;/&gt;
-&lt;/a&gt;</pre>
+&lt;/a&gt;</p>
       <h2 class="config_section">[Units]</h2>
       <p>This section deals with Units and their formatting. </p>
       <h3 class="config_section">[[Groups]]</h3>
@@ -1341,9 +1325,8 @@ class MyFileGenerator(FileGenerator):                                  # 1
 	each unit when a quantity needs to be converted to a string. Typically, this 
 	happens with y-axis labeling on plots and for statistics in HTML file generation. 
 	For example, the options </p>
-      <pre>
-degree_C = %.1f
-inch     = %.2f</pre>
+      <p class='tty'>degree_C = %.1f
+inch     = %.2f</p>
       <p>would specify that the given string formats are to be used when formatting 
 	any temperature measured in degrees Celsius or any precipitation amount measured 
 	in inches, respectively. The
@@ -1352,13 +1335,12 @@ inch     = %.2f</pre>
 	<span class="code">sprintf()</span> codes. </p>
       <p>You can also specify what string to use for an invalid or unavailable measurement 
 	(value &#39;<span class="code">None</span>&#39;). For example, </p>
-      <pre>NONE = &quot; N/A &quot;</pre>
+      <p class='tty'>NONE = &quot; N/A &quot;</p>
       <h3 id="[[Labels]]" class="config_section">[[Labels]]</h3>
       <p>This subsection specifies what label is to be used for each measurement unit 
 	type. For example, the options </p>
-      <pre>
-degree_F = °F
-inch     = &#39; in&#39;</pre>
+      <p class='tty'>degree_F = °F
+inch     = &#39; in&#39;</p>
       <p>would cause all temperatures to have unit labels <span class="code">°F</span> 
 	and all precipitation to have labels <span class="code">in</span>. 
 	If any special symbols are to be used (such as the degree sign above) they should 
@@ -1369,16 +1351,14 @@ inch     = &#39; in&#39;</pre>
       <p>This sub-section is used for time labels. It uses
 	<a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
 	formats. For example </p>
-      <pre>
-week  = %H:%M on %A
-month = %d-%b-%Y %H:%M</pre>
+      <p class='tty'>week  = %H:%M on %A
+month = %d-%b-%Y %H:%M</p>
       <p>would specify that week data should use a format such as &quot;<span class="code">15:20 
 	  on Sunday</span>&quot;, while month data should look like &quot;<span class="code">06-Oct-2009 
 	  15:20</span>&quot; </p>
       <p>It also allows the formatting to be set for almanac times: </p>
-      <pre>
-ephem_day  = %H:%M
-ephem_year = %d-%b-%Y %H:%M</pre>
+      <p class='tty'>ephem_day  = %H:%M
+ephem_year = %d-%b-%Y %H:%M</p>
       <p>The first of these, <span class="code">ephem_day</span>, is used for almanac 
 	times within the day, such as sunrise or sunset. The second,
 	<span class="code">ephem_year</span>, is used for almanac times within the year, 
@@ -1388,9 +1368,8 @@ ephem_year = %d-%b-%Y %H:%M</pre>
 	cooling_base </p>
       <p>Set to the base temperature for calculating heating and cooling degree-days, 
 	along with the unit to be used. Examples:</p>
-      <pre>
-heating_base = 65.0, degree_F
-cooling_base = 20.0, degree_C</pre>
+      <p class='tty'>heating_base = 65.0, degree_F
+cooling_base = 20.0, degree_C</p>
       <h3 id="[[Trend]]" class="config_section">[[Trend]]</h3>
       <p class="config_option">time_delta</p>
       <p>Set to the time difference over which you want trends to be calculated. The 
@@ -1403,9 +1382,8 @@ cooling_base = 20.0, degree_C</pre>
       <h3 class="config_section">[[Generic]]</h3>
       <p>This sub-sections specifies default labels to be used for each SQL type. 
 	For example, options </p>
-      <pre>
-inTemp = Temperature inside the house
-outTemp = Outside Temperature</pre>
+      <p class='tty'>inTemp = Temperature inside the house
+outTemp = Outside Temperature</p>
       <p>would cause the given labels to be used for plots involving SQL types
 	<span class="code">inTemp </span>and <span class="code">outTemp</span>. </p>
       <h2 class="config_section">[Almanac]</h2>
@@ -1564,13 +1542,12 @@ outTemp = Outside Temperature</pre>
 	and plot types for the time period. For example, here&#39;s a typical set of 
 	options for sub-section <span class="code">[[month_images]]</span>, controlling 
 	how images that cover a month period are generated: </p>
-      <pre>
-[[month_images]]
+      <p class='tty'>[[month_images]]
     x_label_format = %d
     bottom_label_format = %m/%d/%y %H:%M
     time_length = 2592000 # == 30 days
     aggregate_type = avg
-    aggregate_interval = 10800 # == 3 hours</pre>
+    aggregate_interval = 10800 # == 3 hours</p>
       <p>The option <span class="code">x_label_format</span> gives a
 	<a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
 	type format for the x-axis. In this example, it will only show days (format 
@@ -1586,14 +1563,13 @@ outTemp = Outside Temperature</pre>
 	line types to be drawn in the image. Values specified in the level above 
 	can be overridden. For example, here&#39;s a typical set of options for sub-sub-section
 	<span class="code">[[[monthrain]]]</span>: </p>
-      <pre>
-[[[monthrain]]]
+      <p class='tty'>[[[monthrain]]]
     plot_type = bar
     yscale = None, None, 0.02
     [[[[rain]]]]
         aggregate_type = sum
         aggregate_interval = 86400
-        label = Rain (daily avg)</pre>
+        label = Rain (daily avg)</p>
       <p>This will generate an image file with name <span class="code">monthrain.png</span>. 
 	It will be a bar plot. Option <span class="code">yscale</span> controls the 
 	y-axis scaling — if left out, the scale will automatically be chosen. However, 
@@ -1645,10 +1621,9 @@ outTemp = Outside Temperature</pre>
       <p>More than one SQL type can be included in a plot. For example, here&#39;s 
 	how to generate a plot with the week&#39;s outside temperature as well as dewpoint:
       </p>
-      <pre>
-[[[monthtempdew]]]
+      <p class='tty'>[[[monthtempdew]]]
     [[[[outTemp]]]]
-    [[[[dewpoint]]]]</pre>
+    [[[[dewpoint]]]]</p>
       <p>This would create an image in file <span class="code">monthtempdew.png</span> 
 	that includes a line plot of both outside temperature and dewpoint. </p>
       <h3>Including the same SQL type more than once in a plot</h3>
@@ -1656,13 +1631,12 @@ outTemp = Outside Temperature</pre>
 	with hourly averages. Here, you are using the same data type (&#39;<span class="code">outTemp</span>&#39;) 
 	for both plot lines, the first with averages, the second without. If you do 
 	the obvious it won&#39;t work: </p>
-      <pre>
-## WRONG ##
+      <p class='tty'>## WRONG ##
 [[[daytemp_with_avg]]]
     [[[[outTemp]]]]
         aggregate_type = avg
         aggregate_interval = 3600
-    [[[[outTemp]]]]  # OOPS! The same section name appears more than once!</pre>
+    [[[[outTemp]]]]  # OOPS! The same section name appears more than once!</p>
       <p>The option parser does not allow the same section name (&#39;<span class="code">outTemp</span>&#39; 
 	in this case) to appear more than once at a given level in the configuration 
 	file, so an error will be declared (technical reason: formally, the sections 
@@ -1671,14 +1645,13 @@ outTemp = Outside Temperature</pre>
 	<span class="code">data_type</span>. This will override the default action that 
 	the logical line name is used for the SQL type. So, our example would look like 
 	this: </p>
-      <pre>
-[[[daytemp_with_avg]]]
+      <p class='tty'>[[[daytemp_with_avg]]]
     [[[[a_logical_name]]]]
         data_type = outTemp
         aggregate_type = avg
         aggregate_interval = 3600
         label = Avg. Temp.
-    [[[[outTemp]]]]</pre>
+    [[[[outTemp]]]]</p>
       <p>Here, the first logical line has been given the name &quot;<span class="code">a_logical_name</span>&quot; 
 	to distinguish it from the second line &quot;<span class="code">outTemp</span>&quot;. 
 	We have specified that the first line will use data type <span class="code">
@@ -1690,18 +1663,17 @@ outTemp = Outside Temperature</pre>
 	<img alt="Daytime temperature with running average" height="180" src="daytemp_with_avg.png" width="300" />
       </p>
       <p>One more example. This one shows daily high and low temperatures for a year:</p>
-      <p class="tty">
-[[year_images]]<br />
-        &nbsp; ...<br />
-        &nbsp; [[[yearhilow]]]<br />
-        &nbsp;&nbsp;&nbsp; [[[[hi]]]]<br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; data_type = outTemp<br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_type = max<br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label = High<br />
-        &nbsp;&nbsp;&nbsp; [[[[low]]]]<br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; date_type = outTemp<br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aggregate_type = min<br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; label = Low Temperature</p>
+      <p class="tty">[[year_images]]
+    ...
+    [[[yearhilow]]]
+        [[[[hi]]]]
+            data_type = outTemp
+            aggregate_type = max
+            label = High
+        [[[[low]]]]
+            date_type = outTemp
+            aggregate_type = min
+           label = Low Temperature</p>
       <p>This results in the plot <span class="code">yearhilow.png</span>:</p>
       <p class="center"><img alt="Daily highs and lows" src="yearhilow.png" /> </p>
       <h3>Progressive vector plots</h3>
@@ -1715,8 +1687,7 @@ outTemp = Outside Temperature</pre>
 	the max wind in an archive period. Here&#39;s how to produce a progressive vector 
 	for one week that shows the hourly biggest wind gusts, along with hourly averages:
       </p>
-      <pre>
-[[[weekgustoverlay]]]
+      <p class='tty'>[[[weekgustoverlay]]]
     aggregate_interval = 3600
     [[[[windvec]]]]
         label = Hourly Wind 
@@ -1725,7 +1696,7 @@ outTemp = Outside Temperature</pre>
     [[[[windgustvec]]]]
         label = Gust Wind 
         plot_type = vector
-        aggregate_type = max</pre>
+        aggregate_type = max</p>
       <p>This will produce an image file with name <span class="code">weekgustoverlay.png</span>. 
 	It will consist of two progressive vector plots, both using hourly aggregation 
 	(3,600 seconds). For the first set of vectors, the hourly average will be used. 
@@ -1751,24 +1722,21 @@ outTemp = Outside Temperature</pre>
 	plots to give you extra detail, perhaps for an HTML popup. The standard
 	<span class="code">weewx.conf</span> file specifies plot size of 300x180 pixels, 
 	which will be used for all plots unless overridden: </p>
-      <pre>
-[Images]
+      <p class='tty'>[Images]
     ...
     image_width=300
-    image_height = 180</pre>
+    image_height = 180</p>
       <p>The standard plot of barometric pressure will appear in
 	<span class="code">daybarometer.png</span>: </p>
-      <pre>
-    [[[daybarometer]]]
-        [[[[barometer]]]] </pre>
+      <p class='tty'>[[[daybarometer]]]
+    [[[[barometer]]]] </p>
       <p>We now add our special plot of barometric pressure, but specify a larger 
 	image size. This image will be put in file an class=&quot;code&quot; daybarometer_big.png.
       </p>
-      <pre>
-    [[[daybarometer_big]]]
-        image_width  = 600
-        image_height = 360
-        [[[[barometer]]]]</pre>
+      <p class='tty'>[[[daybarometer_big]]]
+    image_width  = 600
+    image_height = 360
+    [[[[barometer]]]]</p>
       <h2 class="config_section">[Generators]</h2>
       <p class="config_option">generator_list </p>
       <p>This option controls which generators get run for this skin. It is a comma 
@@ -1855,8 +1823,7 @@ outTemp = Outside Temperature</pre>
 	print service <span class="code">StdPrint</span> and overriding member function
 	<span class="code">new_loop_packet()</span>. </p>
       <p>In file <span class="code">bin/user/myprint.py</span>: </p>
-      <pre>
-from weewx.wxengine import StdPrint
+      <p class='tty'>from weewx.wxengine import StdPrint
 from weeutil.weeutil import timestamp_to_string
 
 class MyPrint(StdPrint):
@@ -1864,9 +1831,9 @@ class MyPrint(StdPrint):
     # Override the default new_loop_packet member function:
     def new_loop_packet(self, event):
     packet = event.packet
-    print &quot;LOOP: &quot;, timestamp_to_string(packet[&#39;dateTime&#39;]),
-        "BAR=",  packet.get(&#39;barometer&#39;, 'N/A'),
-        "TEMP=", packet.get(&#39;outTemp&#39;, 'N/A')</pre>
+    print "LOOP: ", timestamp_to_string(packet['dateTime']),
+        "BAR=",  packet.get('barometer', 'N/A'),
+        "TEMP=", packet.get('outTemp', 'N/A')</p>
       <p>This service substitutes a new implementation for the member function
 	<span class="code">new_loop_packet</span>. This implementation prints out the 
 	time, then the barometer reading (or '<span class="code">N/A</span>' if it is 
@@ -1876,10 +1843,9 @@ class MyPrint(StdPrint):
 	your service name for <span class="code">StdPrint</span> in
 	<span class="code">service_list</span>, located in <span class="code">[Engines][[WxEngine]]</span>:
       </p>
-      <pre>
-[Engines]
+      <p class='tty'>[Engines]
     [[WxEngine]]
-        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, user.myprint.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
+        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, user.myprint.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
       <p>(Note that this list must be all on one line. Unfortunately, the parser
 	<span class="code">ConfigObj</span> does not allow options to be continued on 
 	to following lines.) </p>
@@ -1892,8 +1858,7 @@ class MyPrint(StdPrint):
 	example is included in the standard distribution in subdirectory &quot;<span class="code">bin/examples</span>&quot;.
       </p>
       <p>File <span class="code">examples/alarm.py</span>: </p>
-      <pre class="tty">
-import time
+      <p class="tty">import time
 import smtplib
 from email.mime.text import MIMEText
 import threading
@@ -1903,57 +1868,57 @@ import weewx
 from weewx.wxengine import StdService
 from weeutil.weeutil import timestamp_to_string, option_as_list
 
-    # Inherit from the base class StdService:
-    class MyAlarm(StdService):
-        """Custom service that sounds an alarm if an arbitrary expression evaluates true"""
+# Inherit from the base class StdService:
+class MyAlarm(StdService):
+    """Custom service that sounds an alarm if an arbitrary expression evaluates true"""
         
-        def __init__(self, engine, config_dict):
-        # Pass the initialization information on to my superclass:
-        super(MyAlarm, self).__init__(engine, config_dict)
+    def __init__(self, engine, config_dict):
+    # Pass the initialization information on to my superclass:
+    super(MyAlarm, self).__init__(engine, config_dict)
         
         # This will hold the time when the last alarm message went out:
         self.last_msg_ts = 0
-        
+
         try:
-        # Dig the needed options out of the configuration dictionary.
-        # If a critical option is missing, an exception will be thrown and
-        # the alarm will not be set.
-        self.expression    = config_dict['Alarm']['expression']
-        self.time_wait     = int(config_dict['Alarm'].get('time_wait', 3600))
-        self.smtp_host     = config_dict['Alarm']['smtp_host']
-        self.smtp_user     = config_dict['Alarm'].get('smtp_user')
-        self.smtp_password = config_dict['Alarm'].get('smtp_password')
-        self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
-        self.FROM          = config_dict['Alarm'].get('from', 'alarm@weewx.com')
-        self.TO            = option_as_list(config_dict['Alarm']['mailto'])
-        syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
-        
-        # If we got this far, it's ok to start intercepting events:
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)  # NOTE 1
-        
+            # Dig the needed options out of the configuration dictionary.
+            # If a critical option is missing, an exception will be thrown and
+            # the alarm will not be set.
+            self.expression    = config_dict['Alarm']['expression']
+            self.time_wait     = int(config_dict['Alarm'].get('time_wait', 3600))
+            self.smtp_host     = config_dict['Alarm']['smtp_host']
+            self.smtp_user     = config_dict['Alarm'].get('smtp_user')
+            self.smtp_password = config_dict['Alarm'].get('smtp_password')
+            self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
+            self.FROM          = config_dict['Alarm'].get('from', 'alarm@weewx.com')
+            self.TO            = option_as_list(config_dict['Alarm']['mailto'])
+            syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
+
+            # If we got this far, it's ok to start intercepting events:
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)  # NOTE 1
+
         except Exception, e:
-        syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set. %s" % e)
+            syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set. %s" % e)
         
-        def newArchiveRecord(self, event):
+    def newArchiveRecord(self, event):
         """Gets called on a new archive record event."""
         
         # To avoid a flood of nearly identical emails, this will do
         # the check only if we have never sent an email, or if we haven't
         # sent one in the last self.time_wait seconds:
         if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) &gt;= self.time_wait :
-        # Get the new archive record:
-        record = event.record
-        # Evaluate the expression in the context of the event archive record.
-        # Sound the alarm if it evaluates true:
-        if eval(self.expression, None, record):                      # NOTE 2
-        # Sound the alarm!
-        # Launch in a separate thread so it doesn't block the main LOOP thread:
-        t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, record))
-        t.start()
-        # Record when the message went out:
-        self.last_msg_ts = time.time()
+            # Get the new archive record:
+            record = event.record
+            # Evaluate the expression in the context of the event archive record.
+            # Sound the alarm if it evaluates true:
+            if eval(self.expression, None, record):                      # NOTE 2
+                # Sound the alarm!
+                # Launch in a separate thread so it doesn't block the main LOOP thread:
+                t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, record))
+                t.start()
+                # Record when the message went out:
+                self.last_msg_ts = time.time()
 
-        def soundTheAlarm(self, rec):
+    def soundTheAlarm(self, rec):
         """This function is called when the given expression evaluates True."""
         
         # Get the time and convert to a string:
@@ -1975,38 +1940,37 @@ from weeutil.weeutil import timestamp_to_string, option_as_list
         # Create an instance of class SMTP for the given SMTP host:
         s = smtplib.SMTP(self.smtp_host)
         try:
-        # Some servers (eg, gmail) require encrypted transport.
-        # Be prepared to catch an exception if the server
-        # doesn't support it.
-        s.ehlo()
-        s.starttls()
-        s.ehlo()
-        syslog.syslog(syslog.LOG_DEBUG, "  **** using encrypted transport")
+            # Some servers (eg, gmail) require encrypted transport.
+            # Be prepared to catch an exception if the server
+            # doesn't support it.
+            s.ehlo()
+            s.starttls()
+            s.ehlo()
+            syslog.syslog(syslog.LOG_DEBUG, "  **** using encrypted transport")
         except smtplib.SMTPException:
-        syslog.syslog(syslog.LOG_DEBUG, "  **** using unencrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG, "  **** using unencrypted transport")
 
         try:
-        # If a username has been given, assume that login is required for this host:
-        if self.smtp_user:
-        s.login(self.smtp_user, self.smtp_password)
-        syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
+            # If a username has been given, assume that login is required for this host:
+            if self.smtp_user:
+                s.login(self.smtp_user, self.smtp_password)
+                syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
         
-        # Send the email:
-        s.sendmail(msg['From'], self.TO,  msg.as_string())
-        # Log out of the server:
-        s.quit()
+            # Send the email:
+            s.sendmail(msg['From'], self.TO,  msg.as_string())
+            # Log out of the server:
+            s.quit()
         except Exception, e:
-        syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % (e,))
-        raise
+            syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % (e,))
+            raise
         
         # Log sending the email:
-        syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)    </pre>
+        syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)    </p>
       <p>This service expects all the information it needs to be in the configuration 
 	file <span class="code">weewx.conf</span> in a new section called
 	<span class="code">[Alarm]</span>. So, add the following lines to your configuration 
 	file: </p>
-      <pre class="tty">
-[Alarm]
+      <p class="tty">[Alarm]
     expression = &quot;outTemp &lt; 40.0&quot;
     time_wait = 3600
     smtp_host = smtp.mymailserver.com
@@ -2014,7 +1978,7 @@ from weeutil.weeutil import timestamp_to_string, option_as_list
     smtp_password = mypassword
     mailto = auser@adomain.com, anotheruser@someplace.com
     from   = me@mydomain.com
-    subject = &quot;Alarm message from weewx!&quot;</pre>
+    subject = &quot;Alarm message from weewx!&quot;</p>
       <p>There are two important points to be noted in this example, each marked with 
 	a "<span class="code">NOTE</span>" flag in the code.</p>
       <ol>
@@ -2029,8 +1993,7 @@ from weeutil.weeutil import timestamp_to_string, option_as_list
 	  the only variables available are those in the current archive record.</li>
       </ol>
       <p>Another example expression could be: </p>
-      <pre>
-expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
+      <p class='tty'>expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</p>
       <p>In this case, the alarm is sounded if the outside temperature drops below 
 	freezing and the wind speed is greater than 10.0. </p>
       <p>Option <span class="code">time_wait</span> is used to avoid a flood of nearly 
@@ -2050,10 +2013,9 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
       <p>To make this all work, you must tell the engine to load this new service. 
 	This is done by adding your service name to the list <span class="code">service_list</span>, 
 	located in <span class="code">[Engines][[WxEngine]]</span>: </p>
-      <pre>
-[Engines]
+      <p class='tty'>[Engines]
     [[WxEngine]]
-	service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.alarm.MyAlarm</pre>
+	service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.alarm.MyAlarm</p>
       <p>(Note that this list must be all on one line. Unfortunately, the parser
 	<span class="code">ConfigObj</span> does not allow options to be continued on 
 	to following lines.) </p>
@@ -2068,8 +2030,8 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<span class="code">./bin/config_database.py</span>.</p>
       <p>Before starting, it's worth running the utility with the
 	<span class="code">--help</span> flag to see how it is used:</p>
-      <p class="tty">cd /home/weewx<br />
-	./bin/config_database.py --help</p>
+      <p class="tty">cd /home/weewx
+./bin/config_database.py --help</p>
       <h2>Adding a new observation type</h2>
       <p>Suppose you have installed an electric meter at your house and you wish to 
 	correlate electrical usage with the weather. The meter has some sort of connection 
@@ -2082,16 +2044,15 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	<a href="#Customizing_the_weewx_service_engine">Customizing the weewx service 
 	  engine</a> for details on how to write a custom service. However, when you are 
 	done it will look something like this:</p>
-      <p class="tty">from weewx.wxengine import StdService<br />
-	<br />
-	class AddElectricity(StdService):<br />
-	<br />
-        &nbsp; def new_archive_packet(self, event):<br />
-        &nbsp;&nbsp;&nbsp; <br />
-        &nbsp;&nbsp;&nbsp; (code that downloads the consumption data from the connection 
-	to the meter)<br />
-	<br />
-        &nbsp;&nbsp;&nbsp; event.record['electricity'] = retrieved_value</p>
+      <p class="tty">from weewx.wxengine import StdService
+	
+    class AddElectricity(StdService):
+
+        def new_archive_packet(self, event):
+
+            (code that downloads the consumption data from the connection to the meter)
+
+            event.record['electricity'] = retrieved_value</p>
       <p>This adds a new key '<span class="code">electricity</span>' to the record 
 	dictionary and sets it equal to some value. As an aside, if you do something 
 	like this, you would want to make sure that the code to retrieve the current 
@@ -2122,7 +2083,7 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	Take a look at it now. You will see a list called <span class="code">defaultArchiveSchema</span> 
 	that holds all the observation names and their SQL types. It looks something 
 	like:</p>
-      <pre class="tty">defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+      <p class="tty">defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
         ('usUnits',              'INTEGER NOT NULL'),
         ('interval',             'INTEGER NOT NULL'),
         ('barometer',            'REAL'),
@@ -2131,10 +2092,10 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
         ('inTemp',               'REAL'),
         ('outTemp',              'REAL'),
         ...
-        ('inTempBatteryStatus',  'REAL')]</pre>
+        ('inTempBatteryStatus',  'REAL')]</p>
       <p>Let's modify it to add our new type, '<span class="code">electricity</span>'. 
 	Now it looks like this:</p>
-      <pre class="tty">defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+      <p class="tty">defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
         ('usUnits',              'INTEGER NOT NULL'),
         ('interval',             'INTEGER NOT NULL'),
         ('barometer',            'REAL'),
@@ -2144,7 +2105,7 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
         ('outTemp',              'REAL'),
         ...
 <span class="highlight">        ('electricity',          'REAL'),</span>
-        ('inTempBatteryStatus',  'REAL')]</pre>
+        ('inTempBatteryStatus',  'REAL')]</p>
       <p>The new line has been <span class="highlight">highlighted</span>.</p>
       <p>2. <strong>Check permissions.</strong> The reconfiguration utility will create 
 	a new database with the same name as the old, except with the suffix '<span class="code">_new</span>' 
@@ -2155,8 +2116,8 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	run the utility <span class="code">config_database.py</span> with the
 	<span class="code">--reconfigure</span> option and the path to the configuration 
 	file:</p>
-      <p class="tty">cd /home/weewx<br />
-        ./bin/config_database.py --reconfigure ./weewx.conf</p>
+      <p class="tty">cd /home/weewx
+./bin/config_database.py --reconfigure ./weewx.conf</p>
       <p>This will create a new database (nominally, <span class="code">weewx.sdb_new</span> 
 	if you are using sqlite, <span class="code">weewx_new</span> if you are using 
 	MySQL) using the new schema and populate it with data from the old database.
@@ -2170,25 +2131,23 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
         First do a backup!
       </p>
       <p>For sqlite:</p>
-      <p class="tty">cd /home/weewx/archive<br />
-	mv weewx.sdb_new weewx.sdb</p>
+      <p class="tty">cd /home/weewx/archive
+mv weewx.sdb_new weewx.sdb</p>
       <p>For MySQL:</p>
-      <p class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;<br />
-	<span class='prompt'>mysql&gt;</span> DROP DATABASE weewx;&nbsp;&nbsp; # Drops the old database<br />
-        <span class='prompt'>mysql&gt;</span> CREATE DATABASE weewx; # Create a new one with the same name<br />
-        <span class='prompt'>mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive;&nbsp;&nbsp;&nbsp;# Rename to the nominal name</p>
+      <p class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
+<span class='prompt'>mysql&gt;</span> DROP DATABASE weewx;&nbsp;&nbsp; # Drops the old database
+<span class='prompt'>mysql&gt;</span> CREATE DATABASE weewx; # Create a new one with the same name
+<span class='prompt'>mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive;&nbsp;&nbsp;&nbsp;# Rename to the nominal name</p>
       <p>5. <strong>Modify the stats database.</strong> At this point, you can use 
 	the new observation type in the plots. However, if you wish to use it in the 
 	statistical summaries, you will also have to add it to the stats database. 
 	To do this, add the type to the Python list <span class="code">stats_types</span>, 
 	which can be found in <span class="code">bin/user/schemas.py</span>, so it reads something like this:</p>
       <p class="tty">stats_types = ['barometer', 'inTemp', 'outTemp', 
-	'inHumidity', 'outHumidity', <br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', <br />
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	'radiation', 'UV', 'extraTemp1', 'rxCheckPercent', 'wind',
-	<span class="highlight">'electricity'</span>]</p>
+    'inHumidity', 'outHumidity', 
+    'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', 
+    'radiation', 'UV', 'extraTemp1', 'rxCheckPercent', 'wind',
+    <span class="highlight">'electricity'</span>]</p>
       <p>Now delete the stats database (nominally <span class="code">stats.sdb</span> 
 	for sqlite, <span class="code">stats</span> for MySQL). Weewx will automatically 
 	rebuild it, including your new type.</p>
@@ -2197,11 +2156,11 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
       <p>Pretty much like any other type. For example, to do a plot of the month's 
 	electric consumption, totaled by day, add this section to the
 	<span class="code">[[month_images]]</span> section of <span class="code">skin.conf</span>:</p>
-      <p class="tty">[[[monthelectric]]]<br />
-        &nbsp; [[[[electricity]]]]<br />
-        &nbsp;&nbsp;&nbsp; aggregate_type = sum<br />
-        &nbsp;&nbsp;&nbsp; aggregate_interval = 86400<br />
-        &nbsp;&nbsp;&nbsp; label = Electric consumption (daily total)</p>
+      <p class="tty">[[[monthelectric]]]
+    [[[[electricity]]]]
+        aggregate_type = sum
+        aggregate_interval = 86400
+        label = Electric consumption (daily total)</p>
       <p>This will cause the generation of an image <span class="code">monthelectric.png</span>, 
 	showing a plot of each day's consumption for the past month.</p>
       <p>If you wish to use the new type in the templates, it will be available using 
@@ -2266,8 +2225,8 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
 	section <span class="code"><a href="usersguide.htm#[StdConvert]">[StdConvert]</a></span> 
 	to reflect your choice. If you are switching to metric units, the option will 
 	look like</p>
-      <p class="tty">[StdConvert]<br />
-        &nbsp; target_unit = METRIC</p>
+      <p class="tty">[StdConvert]
+    target_unit = METRIC</p>
       <p>2. <strong>Check permissions.</strong> The reconfiguration utility will create 
 	a new database with the same name as the old, except with the suffix '<span class="code">_new</span>' 
 	attached to the end. Make sure you have the necessary permissions to do this. 
@@ -2276,8 +2235,8 @@ expression = &quot;outTemp &lt; 32.0 and windSpeed &gt; 10.0&quot;</pre>
       <p>3. <strong>Run <span class="code">config_database.py</span>.</strong> Now 
 	run the utility <span class="code">config_database.py</span> with the
 	<span class="code">--reconfigure</span> option:</p>
-      <p class="tty">cd /home/weewx<br />
-	./bin/config_database.py --reconfigure ./weewx.conf</p>
+      <p class="tty">cd /home/weewx
+./bin/config_database.py --reconfigure ./weewx.conf</p>
       <p>This will create a new database (nominally, <span class="code">weewx.sdb_new</span> 
 	if you are using sqlite, <span class="code">weewx_new</span> if you are using 
 	MySQL), using the schema found in <span class="code">./bin/user/schemas.py</span>, 

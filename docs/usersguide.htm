@@ -381,9 +381,9 @@ Version: 2.2
       such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
     <p>Run it with the configuration file as an argument and <span class="code">
 	--help</span> as an option to see its usage: </p>
-    <pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --help </pre>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --help </p>
     <p>This will print out something like:</p>
-    <pre class="tty"
+    <p class="tty"
 >Usage: config_vp.py: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
       [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
       [--start | -- stop]
@@ -410,13 +410,12 @@ Options:
   --start                  Start the logger.
   --stop                   Stop the logger.
 
-Mutating actions will request confirmation before proceeding.</pre>
+Mutating actions will request confirmation before proceeding.</p>
     <p>It is useful to run it with the <span class="code">--info</span> option to 
       see what the current EEPROM settings are on your station: </p>
-    <pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --info </pre>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --info </p>
     <p>This will print out something like: </p>
-    <pre class="tty">
-VantagePro EEPROM settings:
+    <p class="tty">VantagePro EEPROM settings:
       
 CONSOLE TYPE:                   VantagePro2
       
@@ -463,12 +462,12 @@ Humidity correction factor:   23
 Correction ratio:             1.025
 Correction constant:          +0.027 inHg
 Gain:                         -1.000
-Offset:                       -1.000</pre>
+Offset:                       -1.000</p>
     <p>Note that console version number is only available on consoles with firmware 
       dates after about 2006.</p>
     <p><span class="highlight">Highlighted</span> values can be changed.</p>
     <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
-    <pre class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf --set-interval=600</pre>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf --set-interval=600</p>
     <p>Other parameters can be set in a similar manner.</p>
     <h3 id="Archive_interval">Archive interval</h3>
     <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
@@ -486,16 +485,14 @@ Offset:                       -1.000</pre>
     <p>Normally, this is set by Davis, but if you have replaced your bucket with 
       a different kind, you might want to reconfigure. For example, to change to a 
       0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf 
-      --set-bucket=2</p>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf --set-bucket=2</p>
     <h2>Configuring MySQL</h2>
     <p>This section applies only for those using MySQL.</p>
     <p>Assuming that you want to use the default database configuration, your
       <span class="code"><a href="#[Databases]">[Databases]</a></span> section 
       should 
       look something like this:</p>
-    <pre class="tty">
-[Databases]
+    <p class="tty">[Databases]
   [[archive_mysql]]
       host = localhost
       user = weewx
@@ -508,7 +505,7 @@ Offset:                       -1.000</pre>
       user = weewx
       password = weewx
       database = stats
-      driver = weedb.mysql</pre>
+      driver = weedb.mysql</p>
     <p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
       Adjust as necessary.</p>
     <p>If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
@@ -518,10 +515,9 @@ Offset:                       -1.000</pre>
       and '<span class="code">stats</span>' to whatever MySQL user you choose, by 
       default, user '<span class="code">weewx</span>'. Here are the necessary minimum 
       permissions:</p>
-    <pre class="tty">
-mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
+    <p class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
-mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</pre>
+mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</p>
     <h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
     <p>Station specific information is set in the configuration file <em>
 	<span class="code">$WEEWX_ROOT/weewx.conf</span></em>. (There is another configuration 
@@ -580,7 +576,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>Normally the station altitude is downloaded from your hardware, but not all 
       stations support this. Set to the altitude of the station and the unit used 
       for the altitude. Example: </p>
-    <pre class="tty">altitude = 700, foot</pre>
+    <p class="tty">altitude = 700, foot</p>
     <p class="config_option"><span class="config_important">rain_year_start
     </span></p>
     <p>Normally the start of the rain year is downloaded from your hardware, but 
@@ -879,13 +875,13 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>In this section you list all <em>correction expressions</em>. For example, 
       say that you know your outside thermometer reads high by 0.2°F. You could add 
       the expression: </p>
-    <pre>outTemp = outTemp - 0.2</pre>
+    <p class='tty'>outTemp = outTemp - 0.2</p>
     <p>Perhaps you need a linear correction around a reference temperature of 68°F:
     </p>
-    <pre>outTemp = outTemp + (outTemp-68) * 0.02</pre>
+    <p class='tty'>outTemp = outTemp + (outTemp-68) * 0.02</p>
     <p>It is even possible to do corrections involving more than one variable. Suppose 
       you have a temperature sensitive barometer: </p>
-    <pre>barometer = barometer + (outTemp-32) * 0.0091</pre>
+    <p class='tty'>barometer = barometer + (outTemp-32) * 0.0091</p>
     <p>All correction expressions are run in the order given. </p>
     <p>Both LOOP data and archive data will be corrected. </p>
     <p>If you are using a Davis Vantage instrument and all you require is a simple 
@@ -910,10 +906,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	same unit system as specified in section <span class="code">
 	  <a href="#[StdConvert]">StdConvert</a></span> above</em>. </p>
     <p>Example, </p>
-    <p class="tty">[[MinMax]] <br />
-      &nbsp; outTemp = -40, 120 <br />
-      &nbsp; barometer = 28, 32.5 <br />
-      &nbsp; outHumidity = 0, 100 </p>
+    <p class="tty">[[MinMax]]
+    outTemp = -40, 120
+    barometer = 28, 32.5
+    outHumidity = 0, 100 </p>
     <p>In this example, if a temperature should fall outside of the inclusive range 
       -40 °F through 120 °F, then it will be set to the null value,
       <span class="code">None</span>, and ignored. In a similar manner, the acceptable 
@@ -1038,17 +1034,16 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       engine. After each event (such as the arrival of LOOP data, etc.), they will 
       be run in the given order. The standard list of services run by weewx is:
     </p>
-    <pre>
-service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, \
+    <p class='tty'>service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, \
     weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, \
-    weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
+    weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
     <p>Note that this must all be on one line! </p>
     <p>You can leave some of these services out if you do not need them. For example, 
       the bare minimum if you are using a Davis Vantage instrument, storing your data 
       in US Customary units, doing no data corrections or quality control and running 
       as a daemon (no printing to console) would be:</p>
-    <p class="tty">service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, 
-      weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+    <p class="tty">service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, \
+    weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
     <p>However, this will only make a slight difference in execution speed. </p>
     <h1 id="Running_weewx">Running <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> can be run either from the command line (useful 
@@ -1064,8 +1059,7 @@ service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxe
     <p class="tty">sudo chmod 666 /dev/ttyS0 </p>
     <p>Then run the main loop program, <span class="code">weewxd.py</span>, giving 
       the configuration file as its only parameter: </p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf
-    </p>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</p>
     <p>It should start by downloading any data stored in your weather station into 
       the archive database. As the Davis VantagePro can store a couple thousand archive 
       records internally, this could take a minute or two. I&#39;ve found this process 
@@ -1077,10 +1071,8 @@ service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxe
       its configuration file by sending it the <span class="code">HUP</span> signal. 
       First run <span class="code">ps</span> to find out the Process ID (PID) number 
       of the instance, then send it the <span class="code">HUP</span> signal: </p>
-    <p class="tty">
-      ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note the PID of the weewxd.py process<br/>
-      kill -HUP <em>pid</em> # Send it a HUP signal<br/>
-    </p>
+    <p class="tty">ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note the PID of the weewxd.py process
+kill -HUP <em>pid</em> # Send it a HUP signal</p>
     <p>Note that this <em>only</em> rereads the configuration file. It will not 
       reflect any changes you might have made to the code.</p>
     <h2 id="Running_as_a_daemon">Running as a daemon</h2>
@@ -1154,11 +1146,9 @@ service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxe
     <p><span class="code">Weewx</span> will now start automatically whenever your 
       system is booted. You can also manually start, stop, and restart the
       <span class="code">weewx</span> daemon: </p>
-    <p class="tty">
-      /etc/init.d/weewx start<br/>
-      /etc/init.d/weewx stop<br/>
-      /etc/init.d/weewx restart<br/>
-    </p>
+    <p class="tty">/etc/init.d/weewx start
+/etc/init.d/weewx stop
+/etc/init.d/weewx restart</p>
     <p>By default, the scripts are designed to have <span class="code">weewx</span> 
       run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels 
       with Debian (Ubuntu, Mint) systems is
@@ -1177,12 +1167,12 @@ service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxe
       on SuSE, <span class="code">/var/log/messages</span>. Your system may
       use yet another place. When troubleshooting the system, be sure to check
       it! </p>
-    <pre class='tty'>tail -f /var/log/messages</pre>
+    <p class='tty'>tail -f /var/log/messages</p>
 
     <p>Set the debug option in <span class='code'>weewx.conf</span> to
       generate many more checks and output more information.  This can be
       useful for diagnosing problems and debugging.</p>
-    <pre class='tty'>debug = 1</pre>
+    <p class='tty'>debug = 1</p>
 
     <h1 id="Compatibility_with_wview">Compatibility with <span class="code">wview</span></h1>
     <p>The sqlite3 archive database used by <span class="code">weewx</span>
@@ -1204,18 +1194,18 @@ service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxe
         <span class="code">1</span> in <span class='code'>weewx.conf</span>.
         This will put much more information in the log file, which can
         be very useful for troubleshooting and debugging!
-        <p><pre class='tty'>debug = 1</pre><br/></p>
+        <p><p class='tty'>debug = 1</p><br/></p>
       </li>
       <li><a href="#Monitoring_weewx">Look at the log file</a>. I am always
         happy to take questions, but the first thing I will ask you is,
         &quot;Did you look at the log file?&quot;
-        <p><pre class='tty'>tail -f /var/log/messages</pre><br/></p>
+        <p><p class='tty'>tail -f /var/log/messages</p><br/></p>
       </li>
       <li>Run from the command line. Generally, <span class="code">weewx</span>
 	will catch and log any unrecoverable exceptions. But if you are getting
 	strange results, it is worth running from the command line and looking
         for any clues.
-        <p><pre class='tty'><em>$WEEWX_ROOT</em>/bin/weewx/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</pre></p>
+        <p><p class='tty'><em>$WEEWX_ROOT</em>/bin/weewx/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</p></p>
       </li>
     </ul>
 
@@ -1269,15 +1259,14 @@ service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxe
       USB port claiming &quot;EMI noise&quot;, and reconnect to a new and different 
       port, where <span class="code">weewx</span> can&#39;t find it. Here&#39;s a 
       typical log output: </p>
-    <pre>
-Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?), re-enabling... 
+    <p class='tty'>Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?), re-enabling... 
 Nov 29 10:40:21 hummingbird kernel: [6661624.786871] usb 2-3: USB disconnect, address 2 
 Nov 29 10:40:21 hummingbird kernel: [6661624.795778] cp2101 2-3:1.0: device disconnected 
 Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while getting LOOP packets
 ... (messages elided)
 Nov 29 10:40:22 hummingbird kernel: [6661625.352340] cp2101 2-3:1.0: cp2101 converter detected 
 Nov 29 10:40:22 hummingbird kernel: [6661625.528107] usb 2-3: reset full speed USB device using ohci_hcd and address 3 
-Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</pre>
+Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</p>
     <p>In this example, the VantagePro was connected to <span class="code">/dev/ttyUSB0</span>, 
       but then reconnected to <span class="code">/dev/ttyUSB1</span>. </p>
     <p>If you put ferrite coils on the USB connection, you will eliminate 90% of 
@@ -1294,11 +1283,10 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
     <h4>Installing a udev script</h4>
     <p>I have installed a file <span class="code">/etc/udev/rules.d/vpro.rules</span> 
       on my fit-PC that looks like this: </p>
-    <pre>
-# Automount the VantagePro2 to port /dev/vpro.
+    <p class='tty'># Automount the VantagePro2 to port /dev/vpro.
 # Install in /etc/udev/rules.d/vpro.rules
 #
-ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
+ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</p>
     <p>What this rule says is that when the USB port is plugged in (action
       <span class="code">add</span>), and it has an attribute with name
       <span class="code">interface</span> that is equal to &quot;<span class="code">CP2102 
@@ -1306,11 +1294,10 @@ ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Contr
       physical port to <span class="code">/dev/vpro</span>. </p>
     <p>Here&#39;s a rule that works for my Serial-to-USB cable, made by Prolific 
       Technology, Inc.:</p>
-    <pre>
-# Automount Serial-to-USB cable to port /dev/vpro
+    <p class='tty'># Automount Serial-to-USB cable to port /dev/vpro
 # Install in /etc/udev/rules.d/cable.rules
 #
-ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
+ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYMLINK+=&quot;vpro&quot;</p>
     <p>Your devices may, and probably will, have different identifiers!! I can recommend 
       this article, &quot;<a href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing 
 	  udev rules</em></a>,&quot; for how to find and write an appropriate
@@ -1318,7 +1305,7 @@ ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYML
       this article uses the old <span class="code">udevinfo</span> command, rather 
       than the newer <span class="code">udevadm</span> command.) In particular, run 
       the command </p>
-    <pre># udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </pre>
+    <p class='tty'># udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </p>
     <p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute your 
       real USB port) the VP2 is attached to. It will print out various identifiers 
       that can be useful in identifying your VP2 to <span class="code">udev</span>. 
@@ -1338,14 +1325,13 @@ ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYML
     <h3>FreeBSD</h3>
     <p>User Fabian reports that the following had to be done to get the VantagePro2 
       working under FreeBSD:</p>
-    <pre class="tty">
-I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
+    <p class="tty">I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
 Loading the Driver:
 Put uslcom_load=&quot;YES&quot; in /boot/loader.conf (to load it as module).
 Which gives here an output like:
 uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
 And put in weewx.conf:
-port = /dev/cuaU0</pre>
+port = /dev/cuaU0</p>
     <h3>Weewx generates HTML pages, but it does not update them</h3>
     <p>If you are getting a symptom that everything appears normal, that is HTML 
       is getting generated and getting FTP&#39;d to your webserver <em>(look in the 
@@ -1371,8 +1357,8 @@ port = /dev/cuaU0</pre>
 	<span class="code">config_vp.py</span>. This may cause loss of data, but 
 	usually works. Adjust paths as necessary:</li>
     </ol>
-    <p class="tty">cd /home/weewx<br />
-      ./bin/config_vp.py weewx.conf --clear </p>
+    <p class="tty">cd /home/weewx
+./bin/config_vp.py weewx.conf --clear </p>
     <h3>3rd party Vantage connectors</h3>
     <p>This section is for those who are using a homebrew or 3rd party connector 
       to a Davis Vantage console that does not contain a logger, such as the
@@ -1383,8 +1369,7 @@ port = /dev/cuaU0</pre>
       Without this information, <span class="code">weewx</span> is unable to detect 
       the absence of onboard memory. If you do not do this, you will get errors that 
       look like the following in your syslog:</p>
-    <pre class="tty">
-Nov 27 20:30:21 raspberrypi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
+    <p class="tty">Nov 27 20:30:21 raspberrypi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  'NoneType' object has no attribute '__getitem__'
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Traceback (most recent call last):
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 132, in run
@@ -1403,7 +1388,7 @@ Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/w
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      std_unit_system = d['usUnits']
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  TypeError: 'NoneType' object has no attribute '__getitem__'
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Generator terminated...
-Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</pre>
+Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</p>
     <p>See the section on option <span class="code">
 	<a href="#record_generation">record_generation</a></span>.</p>
     <h2>Software</h2>
@@ -1415,30 +1400,27 @@ Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 
     <p>This error is caused by using an identifier more than once in the configuration 
       file. For example, you may have inadvertently listed your FTP server twice:
     </p>
-    <pre>
-[Reports]
-  [[FTP]]
-      ... (details elided)
-      user = fred
-      server = ftp.myhost.com
-      password = mypassword
-      server = ftp.myhost.com  # OOPS! Listed it twice!
-      path = /weather
-      ... </pre>
+    <p class='tty'>[Reports]
+    [[FTP]]
+        ... (details elided)
+        user = fred
+        server = ftp.myhost.com
+        password = mypassword
+        server = ftp.myhost.com  # OOPS! Listed it twice!
+        path = /weather
+        ... </p>
     <p>Generally, if you encounter this error, the log file will give you the line 
       number it happened in: </p>
-    <pre>
-Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
+    <p class='tty'>Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
 Apr 24 12:09:15 raven weewx[11480]: wxengine: Unable to initialize main loop:
 Apr 24 12:09:15 raven weewx[11480]:     ****  Duplicate keyword name at line 254.
-Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </pre>
+Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </p>
     <h4><span class="code">configobj.NestingError</span> exception</h4>
     <p>This is a very similar error, and is caused by a misformed section nesting. 
       For example: </p>
-    <pre>
-[Reports]
+    <p class='tty'>[Reports]
    [[FTP]]]
-      ... (details elided)</pre>
+      ... (details elided)</p>
     <p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.
     </p>
     <h3>No barometer data</h3>
@@ -1446,24 +1428,21 @@ Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </pre>
       problem may be a mismatch between the unit system used for service
       <span class="code">StdConvert</span> and the unit system used by service
       <span class="code">StdQC</span>. For example:</p>
-    <p class="tty">
-      [StdConvert]<br />
-      &nbsp;&nbsp;target_unit = METRIC<br />
-      <br />
-      ...<br />
-      <br />
-      [StdQC]<br />
-      &nbsp;&nbsp;[[MinMax]]<br />
-      &nbsp;&nbsp;&nbsp;&nbsp;barometer = 28, 32.5</p>
+    <p class="tty">[StdConvert]
+    target_unit = METRIC
+    ...
+
+[StdQC]
+    [[MinMax]]
+        barometer = 28, 32.5</p>
     <p>The problem is that you are requiring the barometer data to be between 28 
       and 32.5, but with the unit system set to <span class="code">METRIC</span>, 
       the data will be in the range 990 to 1050 or so!</p>
     <h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
     <p>If you get errors of the sort: </p>
-    <pre>
-Apr 12 05:12:32 raven reportengine[3074]: filegenerator: Caught exception &quot;&lt;class &#39;NameMapper.NotFound&#39;&gt;&quot; 
+    <p class='tty'>Apr 12 05:12:32 raven reportengine[3074]: filegenerator: Caught exception &quot;&lt;class &#39;NameMapper.NotFound&#39;&gt;&quot; 
 Apr 12 05:12:32 raven reportengine[3074]:   ****  Message: &quot;cannot find &#39;fubar&#39; in template /home/weewx/skins/Standard/index.html.tmpl&quot;
-Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continuing.</pre>
+Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continuing.</p>
     <p>you have a tag in your template that <span class="code">weewx</span> does 
       not recognize (in this example, it&#39;s the tag <span class="code">$fubar</span> 
       in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
@@ -1706,12 +1685,10 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       </span>takes a different approach and converts from UTC to local, does the arithmetic, 
       then converts back. This is inefficient, but bulletproof against changes in 
       DST algorithms, etc: </p>
-    <p class="tty">
-      time_dt = datetime.datetime.fromtimestamp(last_ts)<br/>
-      delta = datetime.timedelta(seconds=10800)<br/>
-      next_dt = time_dt + delta<br/>
-      next_ts = int(time.mktime(next_dt.timetuple()))<br/>
-    </p>
+    <p class="tty">time_dt = datetime.datetime.fromtimestamp(last_ts)
+delta = datetime.timedelta(seconds=10800)
+next_dt = time_dt + delta
+next_ts = int(time.mktime(next_dt.timetuple()))</p>
     <p>Other time conversion problems are handled in a similar manner. </p>
 
 
