@@ -28,23 +28,6 @@ Version: 2.2
   <p>
     This is the complete guide to installing and configuring <span class="code">weewx</span>.
   </p>
-  <p>
-    Quick-start guides are available for
-    <ul>
-      <li><a href='linux.htm'>Installing on Linux</a> &mdash; Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</li>
-      <li><a href='debian.htm'>Installing from DEB package</a> &mdash; Debian, Ubuntu, Mint</li>
-      <li><a href='redhat.htm'>Installing from RPM package</a> &mdash; Redhat, CentOS, Fedora</li>
-    </ul>
-  </p>
-  <p>
-    For information on customizing <span class="code">weewx</span>, see the <a href="customizing.htm">Customization Guide</a>.
-  </p>
-  <p>
-    For instructions on upgrading from previous versions, see the <a href="upgrading.htm">Upgrade Guide</a>.
-  </p>
-  <p>
-    For installation on the SheevaPlug, see <a href="sheeva.htm">Notes on porting to the SheevaPlug</a>.
-  </p>
   
   <h1>Table of Contents</h1>
   <div id="technical_content">
@@ -96,7 +79,7 @@ Version: 2.2
       make it very robust and difficult to crash. It is also architecturally very 
       simple and easy to understand.</p>
 
-    <h1>Supported hardware</h1>
+    <h1 id="Supported_hardware">Supported hardware</h1>
     <p>
       Many types of station hardware are supported.  In addition to hardware support, <span class="code">weewx</span> comes with a software simulator, useful for testing and evaluation.
     </p>
@@ -349,12 +332,19 @@ Version: 2.2
 
     <h1>Installing <span class="code">weewx</span></h1>
     <p>
-      <span class='code'>weewx</span> can be installed from source using
-      <span class='code'>setup.py</span> or from a DEB or RPM package.
-      Installation from source is the recommended method for those who
-      plan to make modifications and hack the <span class='code'>weewx</span>.
-      The package approach is somewhat simpler, but requires root privileges.
-    </p>
+      <span class='code'>weewx</span> can be installed using the standard Python 
+	  utility <span class='code'>setup.py</span> or it can be installed from a DEB or RPM package.
+      </p>
+	  <p>
+      Installation using setup.py is the recommended method for those who plan 
+	  to make modifications and hack <span class='code'>weewx</span>.
+      It will put everything in one, central directory. It does not require root 
+	  privileges.</p>
+	  <p>
+      By contrast, the package approach is somewhat simpler, but it requires 
+	  root privileges and will end up installing in standard locations. The net 
+	  effect is that configuration files, templates, and code will all be 
+	  installed in separate locations.</p>
     <h2><a href='linux.htm'>Installing on Linux</a></h2>
     <p>Including Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</p>
     <h2><a href='debian.htm'>Installing from DEB package</a></h2>
