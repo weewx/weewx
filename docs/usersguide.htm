@@ -330,9 +330,8 @@ Version: 2.2
         <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.</li>
     </ol>
 
-    <h1 id="Prerequisites">Prerequisites</h1>
+    <h1 id="Prerequisites">System requirements</h1>
 
-    <h2>System requirements</h2>
     <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
       Geode processor and 512 MB of memory. Configured this way, it
       consumes about 5% of the CPU and about 50MB of total memory. </p>
@@ -354,118 +353,30 @@ Version: 2.2
     <h2>Python</h2>
     <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work.</p>
 
-    <h2>Python Packages</h2>
-    <p>
-      Some python packages are required for the main weewx engine, and may be
-      required for a specific hardware configuration.</p>
-    <p>The 'Installing weewx' section includes recipes for installing
-      prerequisites on various operating systems.</p>
-    <p>The weewx engine requires:</p>
-    <ul>
-      <li><a href="http://pypi.python.org/pypi/configobj/">configobj</a>
-        (Version 4.5 or greater) Manages the configuration file
-        <span class="code">weewx.conf</span>.</li>
-      <li><a href="http://www.cheetahtemplate.org">Cheetah</a> (Version 2.0 or 
-	greater) The templating engine. </li>
-      <li><a href="http://pypi.python.org/pypi/PIL">Python Imaging Library</a> 
-	(Version 1.1.6 or greater) Also known as PIL, this is included in many
-        Python distributions.</li>
-    </ul>
-    <p>
-      To use MySQL as the database (instead of the default <span class="code">sqlite</span>), you will also need (in addition to a MySQL server, of course):
-    </p>
-    <ul>
-      <li><a href="https://sourceforge.net/projects/mysql-python/">MySQLdb for 
-	  Python</a> (Version 1.2.3 or greater). This is the Python DBAPI2 adapter 
-	for MySQL.</li>
-    </ul>
-    <p>There is one optional package:</p>
-    <ul>
-      <li><a href="http://pypi.python.org/pypi/pyephem/">pyephem</a> (Version 
-	V3.7.3 or greater). For extended almanac information. If not installed, 
-	fallback information will be used. </li>
-    </ul>
-    <p>Some stations require a serial and/or USB package:</p>
-    <ul>
-      <li><a href="https://sourceforge.net/projects/pyusb/">pyusb</a> (Version 0.4 or greater). Driver for USB.</li>
-      <li><a href="http://pypi.python.org/pypi/pyserial">pyserial</a> (Version 2.3 or greater) Driver for a serial connection.</li>
-    </ul>
-
-    <h2>Where to Install</h2>
-    <p>
-      <span class="code"><em>$WEEWX_INSTALL</em></span> represents the location
-      where the root <span class="code">weewx</span> directory will be
-      installed. By default, this location is
-      <span class="code">/home/weewx</span>. However, it can be changed by
-      modifying the value of <span class='code'>home</span> in the file
-      <span class="code">setup.cfg</span> before installing.
-    </p>
-    <p class="tty">home = /home/weewx</p>
-    <p>The nominal directory layout is:</p>
-    <table class="center" style="width: 60%" summary="Summarizing the nominal weewx directory layout">
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/bin</span></td>
-	<td>Python packages and scripts</td>
-      </tr>
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf</span></td>
-	<td>Configuration file</td>
-      </tr>
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/skins</span></td>
-	<td style="height: 33px">Template skins and their configuration files</td>
-      </tr>
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/archive</span></td>
-	<td>sqlite3 archive and statistical databases</td>
-      </tr>
-      <tr>
-	<td><span class="code"><em>$WEEWX_INSTALL</em>/public_html</span></td>
-	<td>Generated HTML and .PNG images</td>
-      </tr>
-    </table>
-    <p>
-      The DEB and RPM packages use a directory layout appropriate for
-      Debian and Redhat conventions, respectively.
-    </p>
-
-    <h2>Permissions</h2>
-    <p>Strictly speaking it is not necessary to install or run
-      <span class="code">weewx</span> with root privileges. You only need
-      read/write access to the serial port for your hardware. For example,
-      if the weather station hardware has a USB interface at
-      <span class='code'>/dev/ttyUSB0</span>, ensure that it
-      is accessible to non-root users like this:</p>
-    <p class="tty">sudo chmod a+rw /dev/ttyUSB0 </p>
-    <p>The default location for <span class='code'>weewx</span> is
-      <span class='code'>/home/weewx</span>, so root privileges will be
-      required to install there.</>
-    <p>If you intend to install <span class='code'>weewx</span> into a
-      directory where you have write permissions, you can install and run
-      <span class="code">weewx</span> without root privileges. </p>
-
     <h1>Installing <span class="code">weewx</span></h1>
     <p>
       <span class='code'>weewx</span> can be installed using the standard Python 
 	  utility <span class='code'>setup.py</span> or it can be installed from a DEB or RPM package.
       </p>
 	  <p>
-      Installation using setup.py is the recommended method for those who plan 
+      Installation using <span class="code">setup.py</span> is the recommended method for those who plan 
 	  to write custom services and reports for <span class='code'>weewx</span>.
       It will put everything in one, central directory, which does not require 
 	  root privileges, making it easy to modify.</p>
 	  <p>
       By contrast, the package approach is somewhat simpler, but it requires 
-	  root privileges and will end up installing the bits and pieces of weewx in standard 
+	  root privileges and will end up installing the bits and pieces of 
+	  <span class="code">weewx</span> in standard 
 	  operating system locations. The net effect is that configuration files, 
 	  templates, and code will all be installed in separate locations, most of 
-	  which require root privileges to modify.</p>
+	  which will require root privileges to modify.</p>
     <h3><a href='debian.htm'>Installing from DEB package</a></h3>
     <p>For Debian, Ubuntu, Mint operating systems.</p>
     <h3><a href='redhat.htm'>Installing from RPM package</a></h3>
     <p>For Redhat, CentOS, Fedora operating systems.</p>
     <h3><a href='setup.htm'>Installing using the Python tool setup.py</a></h3>
     <p>For all operating systems.</p>
+
 
     <h1>Configuring <span class="code">weewx</span></h1>
     <p>This section covers configuring <span class="code">weewx</span>, in particular 
