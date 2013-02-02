@@ -252,11 +252,11 @@ class StatsDb(object):
                 StatsDb._save_schema(_cursor, stats_schema)
         except Exception, e:
             _connect.close()
-            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create stats database.")
-            syslog.syslog(syslog.LOG_ERR, "****     %s" % (e,))
+            syslog.syslog(syslog.LOG_ERR, "stats: Unable to create stats database.")
+            syslog.syslog(syslog.LOG_ERR, "****   %s" % (e,))
             raise
     
-        syslog.syslog(syslog.LOG_NOTICE, "stats: created schema for statistical database")
+        syslog.syslog(syslog.LOG_NOTICE, "stats: Created schema for statistical database")
 
         return _connect
     
@@ -606,13 +606,16 @@ class StatsDb(object):
         # catch it, then back calculate the schema.
         _cursor = self.connection.cursor()
         try:
-            _cursor.execute("SELECT obs_name, obs_type from _stats_schema")
+            _cursor.execute("SELECT obs_name, obs_type FROM _stats_schema")
             _stats_schema_dict = dict((str(_row[0]), str(_row[1])) for _row in _cursor)
+            syslog.syslog(syslog.LOG_DEBUG, "stats: Schema exists with %d elements" % (len(_stats_schema_dict),))
         except weedb.OperationalError:
+            syslog.syslog(syslog.LOG_DEBUG, "stats: Schema does not exist. Converting")
             # The stats schema does not exist. Compute it, then save it.
             _stats_schema = self._backcompute_schema(_cursor)
             StatsDb._save_schema(_cursor, _stats_schema)
             _stats_schema_dict = dict(_stats_schema)
+            syslog.syslog(syslog.LOG_DEBUG, "stats: Successfully saved schema with %d elements." % (len(_stats_schema_dict),))
         finally:
             _cursor.close()
 
