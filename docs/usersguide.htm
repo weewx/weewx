@@ -331,29 +331,46 @@ Version: 2.2
     </ol>
 
     <h1>Installing <span class="code">weewx</span></h1>
+    <h2>Python</h2>
+    <p>Python V2.5, V2.6, or V2.7 is required. Python V3.0 will not work. This 
+	command will return the version of Python on your system.</p>
+    <p class='tty'>python -V</p>
+	  <h2>Installation strategies</h2>
     <p>
       <span class='code'>weewx</span> can be installed using the standard Python 
 	  utility <span class='code'>setup.py</span> or it can be installed from a DEB or RPM package.
       </p>
 	  <p>
       Installation using setup.py is the recommended method for those who plan 
-	  to make modifications and hack <span class='code'>weewx</span>.
-      It will put everything in one, central directory. It does not require root 
-	  privileges.</p>
+	  to write custom services and reports for <span class='code'>weewx</span>.
+      It will put everything in one, central directory, which does not require 
+	  root privileges, making it easy to modify.</p>
 	  <p>
       By contrast, the package approach is somewhat simpler, but it requires 
-	  root privileges and will end up installing in standard locations. The net 
-	  effect is that configuration files, templates, and code will all be 
-	  installed in separate locations.</p>
-    <h2><a href='setup.htm'>Installing on Linux</a></h2>
-    <p>Including Debian, Ubuntu, Mint, Redhat, CentOS, Fedora</p>
-    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
-    <p>Including Debian, Ubuntu, Mint</p>
-    <h2><a href='redhat.htm'>Installing from RPM package</a></h2>
-    <p>Including Redhat, CentOS, Fedora</p>
-    <h2><a href='installing.htm'>Installing from Scratch</a></h2>
-    <p>Because it is Pure Python, <span class='code'>weewx</span> <i>should</i>
-      install and run on any platform with Python.</p>
+	  root privileges and will end up installing the bits and pieces of weewx in standard 
+	  operating system locations. The net effect is that configuration files, 
+	  templates, and code will all be installed in separate locations, most of 
+	  which require root privileges to modify.</p>
+    <h3><a href='debian.htm'>Installing from DEB package</a></h3>
+    <p>For Debian, Ubuntu, Mint operating systems.</p>
+    <h3><a href='redhat.htm'>Installing from RPM package</a></h3>
+    <p>For Redhat, CentOS, Fedora operating systems.</p>
+    <h3><a href='setup.htm'>Installing using the Python tool setup.py</a></h3>
+    <p>For all operating systems.</p>
+
+    <h2>Time</h2>
+    <p>The time on the VantagePro is automatically synchronized with the
+      <span class="code">weewx</span> server nominally every four hours (changeable 
+      by the user). You should run a <a href="http://www.ntp.org/">NTP</a> daemon 
+      on your server to insure that it is synchronized with the correct time. Doing 
+      so will greatly reduce errors, especially if you send data to services such 
+      as the Weather Underground. </p>
+
+    <h2>System requirements</h2>
+    <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
+      Geode processor and 512 MB of memory. Configured this way, it
+      consumes about 5% of the CPU and about 50MB of total memory. </p>
+
 
     <h1>Configuring <span class="code">weewx</span></h1>
     <p>This section covers configuring <span class="code">weewx</span>, in particular 
@@ -373,8 +390,8 @@ Version: 2.2
 	--help</span> as an option to see its usage: </p>
     <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --help </p>
     <p>This will print out something like:</p>
-    <p class="tty"
->Usage: config_vp.py: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
+    <p class="tty">
+    Usage: config_vp.py: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
       [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
       [--start | -- stop]
 
