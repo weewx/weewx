@@ -58,7 +58,7 @@ def main():
     parser.add_option("--start", action="store_true", help="Start the logger.")
     parser.add_option("--stop",  action="store_true", help="Stop the logger.")
     parser.add_option("--dump",  action="store_true", help="Dump all data to the archive. "\
-                      "This may result in many duplicate primary key errors.")
+                      "NB: This may result in many duplicate primary key errors.")
     
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -346,11 +346,14 @@ def dump_logger(station, config_dict):
         print "Created database '%s'" % (archive_db,)
 
     print "Starting dump ..."
-    i=0
+    nrecs = 0
     for record in station.genArchiveDump():
         archive.addRecord(record)
-        i += 1
-    print "Finished dump. %d records added" % (i,)
+        nrecs += 1
+        if nrecs%10 == 0:
+            print >>sys.stdout, "Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(record['dateTime'])),
+            sys.stdout.flush()
+    print "\nFinished dump. %d records added" % (nrecs,)
     
 if __name__=="__main__" :
     main()
