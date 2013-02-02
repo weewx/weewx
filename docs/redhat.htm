@@ -24,6 +24,9 @@ tr {
 .locations {
   margin-left: 20px;
 }
+.tty {
+  white-space: pre-line;
+}
     </style>
   </head>
   <body>
@@ -66,25 +69,19 @@ tr {
     <p>
       Install weewx by double-clicking the .rpm file, or via command line:
     </p>
-    <p class='tty'>
-      sudo rpm -i weewx-X.Y.Z-R.deb
-    </p>
+    <p class='tty'>sudo rpm -i weewx-X.Y.Z-R.deb</p>
 
     <h3>Verify</h3>
     <p>
       After 5 minutes, open the station web page in a web browser.  You should see the default weewx page with generic station information and data.
     </p>
-    <p class='tty'>
-      file:///usr/lib/weewx/html/index.html
-    </p>
+    <p class='tty'>file:///usr/lib/weewx/html/index.html</p>
 
     <h3>Status</h3>
     <p>
       Look in the system log for messages from weewx.
     </p>
-    <p class='tty'>
-      sudo tail -f /var/log/messages
-    </p>
+    <p class='tty'>sudo tail -f /var/log/messages</p>
 
     <h3>Configure</h3>
     <p>
@@ -109,9 +106,8 @@ tr {
     <p>
       The installer configures weewx to run when the computer starts up and starts weewx the first time.  To start/stop weewx manually:
     </p>
-    <p class='tty'>
-      sudo /etc/init.d/weewx start<br/>
-      sudo /etc/init.d/weewx stop<br/>
+    <p class='tty'>sudo /etc/init.d/weewx start
+      sudo /etc/init.d/weewx stop
     </p>
 
     <h3>Customize</h3>
@@ -123,12 +119,8 @@ tr {
     </p>
 
     <h3>Uninstall</h3>
-    <p>
-      To uninstall weewx, removing configuration files but retaining data:
-    </p>
-    <p class='tty'>
-      sudo rpm -r weewx
-    </p>
+    <p>To uninstall weewx, removing configuration files but retaining data:</p>
+    <p class='tty'>sudo rpm -r weewx</p>
 
     <p class='copyright'>
       &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer

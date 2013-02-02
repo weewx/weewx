@@ -58,6 +58,9 @@ tr {
   border-right: 1px solid #ddddaa;
   background-color: #FFFFee;
 }
+.tty {
+  white-space: pre-line;
+}
     </style>
     <script>
 function showprereq(id) {
@@ -136,122 +139,106 @@ function showstartup(id) {
       software for your system (<em>e.g.</em>, apt-get, yum, yast) or the
       Python Package Management System (pip).</p>
     <div class='tabs'>
-      <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div></div>
-      <div id='prereq-tab-redhat' class='tab' onclick="showprereq('redhat')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div></div>
+      <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
+      <div id='prereq-tab-redhat' class='tab' onclick="showprereq('redhat')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div>
       <div id='prereq-tab-suse' class='tab' onclick="showprereq('suse')">SuSE <img src='logo-suse.png' class='thumbnail' /></div>
       <div id='prereq-tab-pip' class='tab' onclick="showprereq('pip')":>pip</div>
     </div>
     <div id='prereq' style='clear:both'>
       <div id='prereq-debian'>
-        <p class='tty'>
-          # debian, ubuntu, mint<br/>
-          <br/>
-          # required packages:<br/>
-          sudo apt-get install python-configobj<br/>
-          sudo apt-get install python-cheetah<br/>
-          sudo apt-get install python-imaging<br/>
-          <br/>
-          # if using MySQL:<br/>
-          sudo apt-get install python-mysqldb<br/>
-          sudo apt-get install python-mysql-client<br/>
-          <br/>
-          # serial or USB, depending on hardware:<br/>
-          sudo apt-get install python-serial<br/>
-          sudo apt-get install python-usb<br/>
-          <br/>
-          # for extended almanac information:<br/>
-          sudo apt-get install python-dev<br/>
-          sudo apt-get install python-pip<br/>
-          sudo pip install pyephem<br/>
+        <p class='tty'># debian, ubuntu, mint
+          
+          # required packages:
+          sudo apt-get install python-configobj
+          sudo apt-get install python-cheetah
+          sudo apt-get install python-imaging
+          
+          # if using MySQL:
+          sudo apt-get install python-mysqldb
+          sudo apt-get install python-mysql-client
+          
+          # serial or USB, depending on hardware:
+          sudo apt-get install python-serial
+          sudo apt-get install python-usb
+          
+          # for extended almanac information:
+          sudo apt-get install python-dev
+          sudo apt-get install python-pip
+          sudo pip install pyephem
         </p>
       </div>
       <div id='prereq-redhat' style='display:none'>
-        <p class='tty'>
-          # redhat, centos, fedora<br/>
-          <br/>
-          # required packages:<br/>
-          sudo yum install python-configobj<br/>
-          sudo yum install python-cheetah<br/>
-          sudo yum install python-imaging<br/>
-          <br/>
-          # if using MySQL:<br/>
-          sudo yum install python-mysqldb<br/>
-          sudo yum install python-mysql-client<br/>
-          <br/>
-          # serial or USB, depending on hardware:<br/>
-          sudo yum install pyserial<br/>
-          sudo yum install pyusb<br/>
-          <br/>
-          # for extended almanac information:<br/>
-          sudo yum install pyephem<br/>
+        <p class='tty'># redhat, centos, fedora
+          
+          # required packages:
+          sudo yum install python-configobj
+          sudo yum install python-cheetah
+          sudo yum install python-imaging
+          
+          # if using MySQL:
+          sudo yum install python-mysqldb
+          sudo yum install python-mysql-client
+          
+          # serial or USB, depending on hardware:
+          sudo yum install pyserial
+          sudo yum install pyusb
+          
+          # for extended almanac information:
+          sudo yum install pyephem
         </p>
       </div>
       <div id='prereq-suse' style='display:none'>
-        <p class='tty' style='margin-top:20px'>
-          # suse<br/>
-          <br/>
-          # required packages:<br/>
-          sudo yast -i gcc<br/>
-          sudo yast -i python-configobj<br/>
-          sudo yast -i python-imaging<br/>
-          sudo yast -i python-devel<br/>
-          sudo yast -i setuptools<br/>
-          <br/>
-          # install pip<br/>
-          sudo pip install Cheetah<br/>
-          <br/>
-          # serial or USB, depending on hardware:<br/>
-          sudo yast -i pyserial<br/>
-          sudo yast -i pyusb<br/>
-          <br/>
-          # for extended almanac information:<br/>
-          sudo pip install pyephem<br/>
+        <p class='tty'># suse
+          
+          # required packages:
+          sudo yast -i gcc
+          sudo yast -i python-configobj
+          sudo yast -i python-imaging
+          sudo yast -i python-devel
+          sudo yast -i setuptools
+          
+          # install pip
+          sudo pip install Cheetah
+          
+          # serial or USB, depending on hardware:
+          sudo yast -i pyserial
+          sudo yast -i pyusb
+          
+          # for extended almanac information:
+          sudo pip install pyephem
         </p>
       </div>
       <div id='prereq-pip' style='display:none'>
-        <p class='tty'>
-          # python setup tool (pip)<br/>
-          <br/>
-          # required packages:<br/>
-          sudo pip install configobj<br/>
-          sudo pip install Cheetah<br/>
-          sudo pip install pil<br/>
-          <br/>
-          # serial or USB, depending on hardware:<br/>
-          sudo pip install pyserial<br/>
-          sudo pip install pyusb<br/>
-          <br/>
-          # for extended almanac information:<br/>
-          sudo pip install pyephem<br/>
+        <p class='tty'># python setup tool (pip)
+          
+          # required packages:
+          sudo pip install configobj
+          sudo pip install Cheetah
+          sudo pip install pil
+          
+          # serial or USB, depending on hardware:
+          sudo pip install pyserial
+          sudo pip install pyusb
+          
+          # for extended almanac information:
+          sudo pip install pyephem
         </p>
       </div>
     </div>
-
+    
     <h3>Download</h3>
     <p>
       Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a href="http://sourceforge.net/projects/weewx/files">Sourceforge</a>
     </p>
 
     <h3>Install</h3>
-    <p>
-      Expand the source archive:
-    </p>
-    <p class="tty">
-      tar xvf weewx-X.Y.Z.tar.gz
-    </p>
-    <p>
-      Change directory:
-    </p>
-    <p class="tty">
-      cd weewx-X.Y.Z
-    </p>
-    <p>
-      Then build and install:
-    </p>
-    <p class="tty">
-      ./setup.py build<br/>
-      sudo ./setup.py install
-    </p>
+    <p>Expand the source archive:</p>
+    <p class="tty">tar xvf weewx-X.Y.Z.tar.gz</p>
+    <p>Change directory:</p>
+    <p class="tty">cd weewx-X.Y.Z</p>
+    <p>Then build and install:</p>
+    <p class="tty">./setup.py build
+      sudo ./setup.py install</p>
 
     <h3>Configure</h3>
     <p>
@@ -268,23 +255,15 @@ function showstartup(id) {
     <p>
       If you have a weather station from the Davis Vantage series, many of the configuration data will be downloaded from your hardware, including altitude, archive interval, and the start of your rain year. If you have not set these, you can either do so by following the instructions in the manual that came with your weather station, or by using the configuration utility <span class='code'>config_vp.py</span>, which is included with <span class='code'>weewx</span>. To see how to run <span class='code'>config_vp.py</span>:
     </p>
-    <p class='tty'>
-# This works only for Davis Vantage weather stations!<br/>
-cd /home/weewx<br/>
-./bin/config_vp.py weewx.conf --help<br/>
-    </p>
+    <p class='tty'># This works only for Davis Vantage weather stations!
+      cd /home/weewx
+      ./bin/config_vp.py weewx.conf --help</p>
 
     <h3>Run</h3>
-    <p>
-      Run the main program from the command line:
-    </p>
-    <p class="tty">
-      cd /home/weewx<br/>
-      ./bin/weewxd.py weewx.conf<br/>
-    </p>
-    <p>
-      Or as a daemon automatically when the computer starts:
-    </p>
+    <p>Run the main program from the command line:</p>
+    <p class="tty">cd /home/weewx
+      ./bin/weewxd.py weewx.conf</p>
+    <p>Or as a daemon automatically when the computer starts:</p>
     <div class='tabs'>
       <div id='startup-tab-debian' class='tab selected' onclick="showstartup('debian')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
       <div id='startup-tab-redhat' class='tab' onclick="showstartup('redhat')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div>
@@ -292,30 +271,27 @@ cd /home/weewx<br/>
     </div>
     <div id='startup' style='clear:both'>
       <div id='startup-debian'>
-        <p class="tty">
-          cd /home/weewx<br/>
-          sudo cp util/init.d/weewx.debian /etc/init.d/weewx<br/>
-          sudo chmod +x /etc/init.d/weewx<br/>
-          sudo update-rc.d weewx defaults 98<br/>
-          sudo /etc/init.d/weewx start<br/>
+        <p class="tty">cd /home/weewx
+          sudo cp util/init.d/weewx.debian /etc/init.d/weewx
+          sudo chmod +x /etc/init.d/weewx
+          sudo update-rc.d weewx defaults 98
+          sudo /etc/init.d/weewx start
         </p>
       </div>
       <div id='startup-redhat' style='display:none'>
-        <p class="tty">
-          cd /home/weewx<br/>
-          sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx<br/>
-          sudo chmod +x /etc/rc.d/init.d/weewx<br/>
-          sudo chkconfig weewx on<br/>
-          sudo /etc/rc.d/init.d/weewx start<br/>
+        <p class="tty">cd /home/weewx
+          sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx
+          sudo chmod +x /etc/rc.d/init.d/weewx
+          sudo chkconfig weewx on
+          sudo /etc/rc.d/init.d/weewx start
         </p>
       </div>
       <div id='startup-suse' style='display:none'>
-        <p class="tty">
-          cd /home/weewx<br/>
-          sudo cp util/init.d/weewx.suse /etc/init.d/weewx<br/>
-          sudo chmod +x /etc/init.d/weewx<br/>
-          sudo /usr/lib/lsb/install_initd /etc/init.d/weewx<br/>
-          sudo /etc/init.d/weewx start<br/>
+        <p class="tty">cd /home/weewx
+          sudo cp util/init.d/weewx.suse /etc/init.d/weewx
+          sudo chmod +x /etc/init.d/weewx
+          sudo /usr/lib/lsb/install_initd /etc/init.d/weewx
+          sudo /etc/init.d/weewx start
         </p>
       </div>
     </div>
@@ -324,17 +300,13 @@ cd /home/weewx<br/>
     <p>
       After 5 minutes, open the station web page in a web browser.  You should see the default weewx page with your station information and data.
     </p>
-    <p class='tty'>
-      file:///usr/lib/weewx/html/index.html
-    </p>
+    <p class='tty'>file:///usr/lib/weewx/html/index.html</p>
 
     <h3>Status</h3>
     <p>
       Look in the system log for messages from weewx.
     </p>
-    <p class='tty'>
-      sudo tail -f /var/log/messages
-    </p>
+    <p class='tty'>sudo tail -f /var/log/messages</p>
 
     <h3>Customize</h3>
     <p>
@@ -348,9 +320,8 @@ cd /home/weewx<br/>
     <p>
       To uninstall, simply delete the directory <span class='code'>/home/weewx</span>.  This will delete weewx, configuration files, and data.
     </p>
-    <p class='tty'>
-      sudo rm -r /home/weewx<br/>
-      sudo rm /etc/init.d/weewx<br/>
+    <p class='tty'>sudo rm -r /home/weewx
+      sudo rm /etc/init.d/weewx
     </p>
 
     <p class='copyright'>
