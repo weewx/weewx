@@ -1,4 +1,4 @@
-* Sun 03 Feb 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.0a3-1
+* Sun Feb 03 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.0a3-1
 - removed apache dependencies
 - put generated html in /var/www/html/weewx
 * Mon Jan 28 2013 Matthew Wall <mwall at users.sourceforge.net> - 2.2.0a2-1
