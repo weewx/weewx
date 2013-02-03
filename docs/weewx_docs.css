@@ -78,6 +78,7 @@ td {
 }
 .indent {
     margin-left: 40px;
+    margin-right: 80px;
 }
 .tty {
     font-family: "Courier New", Courier, monospace;
@@ -167,7 +168,7 @@ table.center {
     margin-left: 20px;
 }
 .locations tr {
-  vertical-align: middle;
+    vertical-align: middle;
 }
 .tabs {
     float: left;

@@ -9,6 +9,9 @@
     <title>weewx: Upgrade Guide</title>
     <link href="weewx_docs.css" rel="stylesheet" />
     <style type="text/css">
+.tty {
+  white-space: pre-line;
+}
     </style>
   </head>
 
@@ -112,35 +115,35 @@ Version: 2.2
 	directory. You will then need to modify your <span class="code">skin.conf</span>.
       <p>After the section that looks like</p>
       <p class='tty'>[[[Mobile]]]
-    template = mobile.html.tmpl</p>
+        &nbsp;&nbsp;&nbsp;&nbsp;template = mobile.html.tmpl</p>
       <p>add the following directives:</p>
       <p class='tty'>[[[MobileSmartphone]]]
-    template = smartphone/index.html.tmpl
+        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/index.html.tmpl
+
+        [[[MobileTempOutside]]]
+        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/temp_outside.html.tmpl
+
+        [[[MobileRain]]]
+        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/rain.html.tmpl
+
+        [[[MobileBarometer]]]
+        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/barometer.html.tmpl
+
+        [[[MobileWind]]]
+        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/wind.html.tmpl
         
-[[[MobileTempOutside]]]
-    template = smartphone/temp_outside.html.tmpl
-
-[[[MobileRain]]]
-    template = smartphone/rain.html.tmpl
-
-[[[MobileBarometer]]]
-    template = smartphone/barometer.html.tmpl
-
-[[[MobileWind]]]
-    template = smartphone/wind.html.tmpl
-        
-[[[MobileRadar]]]
-    template = smartphone/radar.html.tmpl</p>
+        [[[MobileRadar]]]
+        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/radar.html.tmpl</p>
       <p>Then modify section <span class="code">[CopyGenerator]</span> 
         to add the <span class="highlight">highlighted</span> files:</p>
       <p class='tty'>[CopyGenerator]
 
-    #
-    # This section is used by the generator CopyGenerator
-    #
+        &nbsp;&nbsp;&nbsp;&nbsp;#
+        &nbsp;&nbsp;&nbsp;&nbsp;# This section is used by the generator CopyGenerator
+        &nbsp;&nbsp;&nbsp;&nbsp;#
 
-    # List of files that are to be copied at the first invocation of the generator only
-    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></p>
+        &nbsp;&nbsp;&nbsp;&nbsp;# List of files that are to be copied at the first invocation of the generator only
+        &nbsp;&nbsp;&nbsp;&nbsp;copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></p>
       </li>
     </ol>
     <p>Whichever approach you chose, the generated files will appear in
@@ -182,15 +185,15 @@ Version: 2.2
 	with the distribution for guidance. You will then need to modify your <span class="code">skin.conf</span>.
 	<p>Add a new <span class="code">[[[Mobile]]]</span> section:</p>
 	<p class="tty">[FileGenerator]
-    ...
-    [[ToDate]]
-        ...
-        [[[Mobile]]]
-            template = mobile.html.tmpl</p>
+          &nbsp;&nbsp;&nbsp;&nbsp;...
+          &nbsp;&nbsp;&nbsp;&nbsp;[[ToDate]]
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[Mobile]]]
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;template = mobile.html.tmpl</p>
 	<p>Then add <span class="code">mobile.css</span> and <span class="code">
 	    favicon.ico</span> to the list of files to be copied on report generation:</p>
 	<p class="tty">[CopyGenerator]
-    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico</p>
+          &nbsp;&nbsp;&nbsp;&nbsp;copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico</p>
       </li>
     </ol>
     <p>Which approach you should take will depend on how extensively you have 
