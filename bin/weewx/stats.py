@@ -173,15 +173,15 @@ class StatsDb(object):
         
         self.connection = connection
         try:
-            self.schema = self._getSchema()
+            self.std_unit_system = self._getStdUnitSystem()
         except weedb.OperationalError, e:
             self.close()
             raise weewx.UninitializedDatabase(e)
+        self.schema = self._getSchema()
+        self.statsTypes = self.schema.keys()
         # The class to be used as an accumulator. This can be changed by the
         # calling program.
         self.AccumClass = weewx.accum.WXAccum
-        self.statsTypes = self.schema.keys()
-        self.std_unit_system = self._getStdUnitSystem()
         
     #--------------------------- STATIC METHODS -----------------------------------
     
