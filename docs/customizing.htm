@@ -109,12 +109,13 @@
 	<span class="code">True</span>. These advanced topics are covered later in the 
 	section <em><a href="#Customizing_the_weewx_service_engine">Customizing the 
 	    weewx service engine</a></em>. </p>
-      <h3 id="The_standard_reporting_service,_StdReportService">The standard reporting 
-	service, <span class="code">StdReport</span></h3>
+
+      <h2 id="The_standard_reporting_service,_StdReportService">The standard reporting 
+	service, <span class="code">StdReport</span></h2>
       <p>For the moment, let us focus on the last service, <span class="code">weewx.wxengine.StdReport</span>, 
 	the standard service for creating reports. This will be what most users will 
 	want to customize even if it means changing just a few options. </p>
-      <h4>Reports</h4>
+      <h3>Reports</h3>
       <p>The Standard Report Service runs zero or more <em>Reports.</em> Which reports 
 	get run is set in the configuration file <span class="code">weewx.conf</span>, 
 	in section <span class="code">[StdReport]</span>. </p>
@@ -144,7 +145,7 @@
 	in that it they don&#39;t actually generate anything. Instead, they use the 
 	reporting service engine to arrange for things to be transferred to a remote 
 	server. </p>
-      <h4>Skins</h4>
+      <h3>Skins</h3>
       <p>Each report has a <em>Skin</em> associated with it. For most reports, the 
 	relationship with the skin is an obvious one: it contains the templates, any 
 	auxiliary files such as background GIFs or CSS style sheets, and a <em>skin 
@@ -160,7 +161,7 @@
 	and include a skin configuration file, although they are quite minimal. </p>
       <p>Skins live in their own subdirectory located in <span class="code"><em>$HTML_ROOT</em>/skins</span>.
       </p>
-      <h4>Generators</h4>
+      <h3>Generators</h3>
       <p>To create their output, skins rely on one or more <em>Generators, </em>code 
 	that actually create useful things such as HTML files or plot images. Generators 
 	can also copy files around or FTP/rsync them to remote locations. The default 
