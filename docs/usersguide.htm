@@ -15,6 +15,19 @@
   <link href="weewx_docs.css" rel="stylesheet" />
   <!-- JavaScript -->
   <script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
+  <script>
+function showtab(tab,id) {
+  document.getElementById(tab+'-deb').style.display = 'none';
+  document.getElementById(tab+'-rpm').style.display = 'none';
+  document.getElementById(tab+'-setup').style.display = 'none';
+  document.getElementById(tab+'-'+id).style.display = 'block';
+
+  document.getElementById(tab+'-tab-deb').className = 'tab';
+  document.getElementById(tab+'-tab-rpm').className = 'tab';
+  document.getElementById(tab+'-tab-setup').className = 'tab';
+  document.getElementById(tab+'-tab-'+id).className = 'tab selected';
+}
+  </script>
 </head>
 
 <body>
@@ -370,13 +383,141 @@ Version: 2.2
 	  operating system locations. The net effect is that configuration files, 
 	  templates, and code will all be installed in separate locations, most of 
 	  which will require root privileges to modify.</p>
+
+    <div class='tabs'>
+      <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
+      <div id='layout-tab-rpm' class='tab' onclick="showtab('layout','rpm')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div>
+      <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
+    </div>
+
+    <div id='layout' style='clear:both'>
+      <div id='layout-deb'>
+        <table class='locations' width='50%'>
+          <tr class='selected'>
+            <td colspan='2'>application layout for install using DEB package</td>
+          </tr>
+          <tr>
+            <td align='right'>executables: </td>
+            <td class='tty'>/usr/bin/</td>
+          </tr>
+          <tr>
+            <td align='right'>configuration file: </td>
+            <td class='tty'>/etc/weewx/weewx.conf</td>
+          </tr>
+          <tr>
+            <td align='right'>skins and templates: </td>
+            <td class='tty'>/etc/weewx/skins/</td>
+          </tr>
+          <tr>
+            <td align='right'>sqlite databases: </td>
+            <td class='tty'>/var/lib/weewx/</td>
+          </tr>
+          <tr>
+            <td align='right'>web pages and images: </td>
+            <td class='tty'>/var/www/weewx/</td>
+          </tr>
+          <tr>
+            <td align='right'>documentation: </td>
+            <td class='tty'>/usr/share/doc/weewx/</td>
+          </tr>
+          <tr>
+            <td align='right'>PID file: </td>
+            <td class='tty'>/var/run/weewx.pid</td>
+          </tr>
+          <tr>
+            <td align='right'>log file: </td>
+            <td class='tty'>/var/log/syslog</td>
+          </tr>
+        </table>
+      </div>
+      <div id='layout-rpm' style='display:none'>
+        <table class='locations' width='50%'>
+          <tr class='selected'>
+            <td colspan='2'>application layout for install using RPM package</td>
+          </tr>
+          <tr>
+            <td align='right'>executables: </td>
+            <td class='tty'>/usr/bin/</td>
+          </tr>
+          <tr>
+            <td align='right'>configuration file: </td>
+            <td class='tty'>/etc/weewx/weewx.conf</td>
+          </tr>
+          <tr>
+            <td align='right'>skins and templates: </td>
+            <td class='tty'>/etc/weewx/skins/</td>
+          </tr>
+          <tr>
+            <td align='right'>sqlite databases: </td>
+            <td class='tty'>/var/lib/weewx/</td>
+          </tr>
+          <tr>
+            <td align='right'>web pages and images: </td>
+            <td class='tty'>/var/www/html/weewx/</td>
+          </tr>
+          <tr>
+            <td align='right'>documentation: </td>
+            <td class='tty'>/usr/share/doc/weewx-x.y.z/</td>
+          </tr>
+          <tr>
+            <td align='right'>PID file: </td>
+            <td class='tty'>/var/run/weewx.pid</td>
+          </tr>
+          <tr>
+            <td align='right'>log file: </td>
+            <td class='tty'>/var/log/messages</td>
+          </tr>
+        </table>
+      </div>
+      <div id='layout-setup' style='display:none'>
+        <table class='locations' width='50%'>
+          <tr class='selected'>
+            <td colspan='2'>application layout for install using <span class='code'>setup.py</span></td>
+          </tr>
+          <tr>
+            <td align='right'>executables: </td>
+            <td class='tty'>/home/weewx/bin/</td>
+          </tr>
+          <tr>
+            <td align='right'>configuration file: </td>
+            <td class='tty'>/home/weewx/weewx.conf</td>
+          </tr>
+          <tr>
+            <td align='right'>skins and templates: </td>
+            <td class='tty'>/home/weewx/skins/</td>
+          </tr>
+          <tr>
+            <td align='right'>sqlite databases: </td>
+            <td class='tty'>/home/weewx/archive/</td>
+          </tr>
+          <tr>
+            <td align='right'>web pages and images: </td>
+            <td class='tty'>/home/weewx/public_html/</td>
+          </tr>
+          <tr>
+            <td align='right'>documentation: </td>
+            <td class='tty'>/home/weewx/docs/</td>
+          </tr>
+          <tr>
+            <td align='right'>PID file: </td>
+            <td class='tty'>/var/run/weewx.pid</td>
+          </tr>
+          <tr>
+            <td align='right'>log file: </td>
+            <td class='tty'>/var/log/</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <br/>
+    
     <h3><a href='debian.htm'>Installing from DEB package</a></h3>
     <p>For Debian, Ubuntu, Mint operating systems.</p>
     <h3><a href='redhat.htm'>Installing from RPM package</a></h3>
     <p>For Redhat, CentOS, Fedora operating systems.</p>
     <h3><a href='setup.htm'>Installing using the Python tool setup.py</a></h3>
     <p>For all operating systems.</p>
-
 
     <h1>Configuring <span class="code">weewx</span></h1>
     <p>This section covers configuring <span class="code">weewx</span>, in particular 
@@ -1093,7 +1234,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       run as a daemon, started automatically when the server is rebooted. Start by 
       selecting the appropriate run script. They can be found under
       <span class="code"><em>$WEEWX_ROOT</em>/util/init.d</span>. </p>
-    <table class="center" style="width: 90%">
+    <table class="locations center" style="width: 90%">
       <tr>
 	<td >Debian/Ubuntu/Mint:</td>
 	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.debian</td>
@@ -1112,7 +1253,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
 	weewx</span> installation (it should have been set to the correct value automatically 
       by the install process, but it&#39;s worth checking). </p>
     <p>Copy it to the proper location for your system: </p>
-    <table class="center" style="width: 90%">
+    <table class="locations center" style="width: 90%">
       <tr>
 	<td>Debian/Ubuntu/Mint:</td>
 	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.debian /etc/init.d/weewx</td>
@@ -1127,7 +1268,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       </tr>
     </table>
     <p>Make sure the script is executable: </p>
-    <table class="center" style="width: 90%">
+    <table class="locations center" style="width: 90%">
       <tr>
 	<td >Debian/Ubuntu/Mint:</td>
 	<td class='tty'>chmod +x /etc/init.d/weewx</td>
@@ -1142,7 +1283,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       </tr>
     </table>
     <p>Create symbolic links in the run level directories: </p>
-    <table class="center" style="width: 90%">
+    <table class="locations center" style="width: 90%">
       <tr>
 	<td >Debian/Ubuntu/Mint:</td>
 	<td class='tty'>update-rc.d weewx defaults 98</td>
