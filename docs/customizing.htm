@@ -472,7 +472,7 @@ $month.outTemp.max</p>
 	type. This is something like &#39;<span class="code">min</span>&#39;, &#39;<span class="code">sum</span>&#39;, &#39;<span class="code">mintime</span>&#39;. 
 	If you ask for <span class="code">$month.outTemp.avg</span> you are asking for 
 	the <em>average</em> outside temperature for the month. The table <em>
-	  <a href="#Statistical_types">Appendix C: Statistical types</a></em> shows what 
+	  <a href="#Statistical_types">Appendix C: Statistical Types</a></em> shows what 
 	aggregation types are available for which types. </p>
       <p class="indent"><span class="code">optional_unit_conversion</span> is an optional 
 	unit conversion tag. If provided, the results will be converted into the specified 
@@ -2317,7 +2317,7 @@ mv weewx.sdb_new weewx.sdb</p>
 	The driver for the Vantage series is by far the most complicated.</p>
       <p>Naturally, there are a lot of subtleties that I've glossed over in this high-level 
 	description. If you're game, give it a try &mdash; I'm happy to help you out!</p>
-      <h1 id="Archive_types">Appendix A: Archive types</h1>
+      <h1 id="Archive_types">Appendix A: Archive Types</h1>
       <p><em>Archive types</em> are weather observations that have come from your 
 	instrument and been stored in the <em>archive database</em>, a SQL database. 
 	They represent the <em>current conditions</em> as of some time. They are available 
@@ -2805,7 +2805,7 @@ mv weewx.sdb_new weewx.sdb</p>
 	  <td>NONE</td>
 	</tr>
       </table>
-      <h1 id="Statistical_types">Appendix C: Statistical types</h1>
+      <h1 id="Statistical_types">Appendix C: Statistical Types</h1>
       <p>Most of the templates are devoted to reporting <em>statistical types</em>, 
 	such as temperature, wind, or rainfall, using various <em>aggregates</em>, such 
 	as min, max, or sum. These are called <em>aggregations</em>, because they are 
@@ -2820,7 +2820,7 @@ mv weewx.sdb_new weewx.sdb</p>
 	<span class="code">weewx.conf</span> configuration file). </p>
       <table style="width: 100%">
 	<tr>
-	  <td><em>Stats Type</em></td>
+	  <td><strong>Type</strong></td>
 	  <td class="code">min</td>
 	  <td class="code">mintime</td>
 	  <td class="code">max</td>
@@ -3106,7 +3106,7 @@ mv weewx.sdb_new weewx.sdb</p>
 	  <td>&nbsp;</td>
 	</tr>
       </table>
-      <h1 id="Packet_types">Appendix D: Packet types</h1>
+      <h1 id="Packet_types">Appendix D: Packet Types</h1>
       <p><em>Packets</em> are the raw data coming off the instrument (as opposed to
 	<em>records</em>, which are stored on the database). The observation types available 
 	in a packet are useful when setting <em><a href="usersguide.htm#QC">quality 
@@ -3125,7 +3125,7 @@ mv weewx.sdb_new weewx.sdb</p>
 	the Davis website) for more information about these types. </p>
       <table class="center" style="width: 60%">
 	<tr>
-	  <td><strong><em>Type</em></strong></td>
+	  <td><strong>Type</strong></td>
 	  <td><strong>Loop packet</strong></td>
 	  <td><strong>Archive Packet</strong></td>
           <td width='15%'><strong>US</strong></td>
