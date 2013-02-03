@@ -23,9 +23,6 @@ fi
 # remove the startup configuration
 update-rc.d weewx remove > /dev/null
 
-# restart apache only if it was running
-#invoke-rc.d apache2 status && invoke-rc.d apache2 restart
-
 if [ "$1" = purge ]; then
     # remove any debconf entries
     db_purge

@@ -71,7 +71,4 @@ fi
 # start the weewx daemon
 #invoke-rc.d weewx start
 
-# restart apache only if it was running
-#invoke-rc.d apache2 status && invoke-rc.d apache2 restart
-
 exit 0

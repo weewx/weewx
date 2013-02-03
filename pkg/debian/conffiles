@@ -1,5 +1,4 @@
 /etc/init.d/weewx
-/etc/apache2/conf.d/weewx.conf
 /etc/weewx/weewx.conf
 /etc/weewx/skins/Ftp/skin.conf
 /etc/weewx/skins/Rsync/skin.conf

@@ -52,7 +52,7 @@ install: build
  -e 's%station_type =.*%station_type = Simulator%' \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
- -e 's%HTML_ROOT =.*%HTML_ROOT = /var/lib/weewx/html%' \
+ -e 's%HTML_ROOT =.*%HTML_ROOT = /var/www/weewx%' \
  -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
  -e 's%archive/stats.sdb%/var/lib/weewx/stats.sdb%' \
  > $(DST_CFGDIR)/weewx.conf
@@ -61,10 +61,6 @@ install: build
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
  > $(DST_INITDIR)/weewx
 	chmod 755 $(DST_INITDIR)/weewx
-	mkdir -p $(DST)/etc/apache2/conf.d
-	cat $(SRC)/util/apache/conf.d/weewx.conf | sed \
- -e 's%/home/weewx/public_html%/var/lib/weewx/html%' \
- > $(DST)/etc/apache2/conf.d/weewx.conf
 
 # create symlinks to the code entry points
 	ln -s ../share/weewx/weewxd.py $(DST)/usr/bin/weewxd

@@ -8,10 +8,8 @@ db_version 2.0
 # this conf script is capable of backing up
 db_capb backup
 
-PROMPT_FOR_UPLOADS=0
-
 STATE=1 
-while [ "$STATE" != 0 -a "$STATE" != 9 ]; do
+while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
     case "$STATE" in
         1)
             db_input high weewx/location || true
@@ -47,39 +45,6 @@ while [ "$STATE" != 0 -a "$STATE" != 9 ]; do
 
             if [ "$RET" = "FineOffsetUSB" ]; then
                 db_input high weewx/fousb_model || true
-            fi
-            ;;
-
-        6)
-            if [ $PROMPT_FOR_UPLOADS != 0 ]; then
-                db_input high weewx/upload_to_wu || true
-                db_get weewx/upload_to_wu
-                if [ "$RET" = "true" ]; then
-                    db_input medium weewx/wu_station || true
-                    db_input medium weewx/wu_password || true
-                fi
-            fi
-            ;;
-
-        7)
-            if [ $PROMPT_FOR_UPLOADS != 0 ]; then
-                db_input medium weewx/upload_to_pws || true
-                db_get weewx/upload_to_pws
-                if [ "$RET" = "true" ]; then
-                    db_input medium weewx/pws_station || true
-                    db_input medium weewx/pws_password || true
-                fi
-            fi
-            ;;
-
-        8)
-            if [ $PROMPT_FOR_UPLOADS != 0 ]; then
-                db_input medium weewx/upload_to_cwop || true
-                db_get weewx/upload_to_cwop
-                if [ "$RET" = "true" ]; then
-                    db_input medium weewx/cwop_station || true
-                    db_input medium weewx/cwop_password || true
-                fi
             fi
             ;;
     esac

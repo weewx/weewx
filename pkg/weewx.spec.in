@@ -82,7 +82,7 @@ cat weewx.conf | sed \
  -e 's%station_type =.*%station_type = Simulator%' \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
- -e 's%HTML_ROOT =.*%HTML_ROOT = /var/lib/weewx/html%' \
+ -e 's%HTML_ROOT =.*%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
  -e 's%archive/stats.sdb%/var/lib/weewx/stats.sdb%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
@@ -91,10 +91,6 @@ cat util/init.d/weewx.redhat | sed \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
  > %{buildroot}%{_initrddir}/weewx
 chmod 755 %{buildroot}%{_initrddir}/weewx
-mkdir -p %{buildroot}%{apacheconfdir}
-cat util/apache/conf.d/weewx.conf | sed \
- -e 's%/home/weewx/public_html%/var/lib/weewx/html%' \
- > %{buildroot}%{apacheconfdir}/weewx.conf
 
 # create symlinks to the code entry points
 ln -s ../share/weewx/weewxd.py %{buildroot}%{_bindir}/weewxd
@@ -110,14 +106,10 @@ python -m compileall %{buildroot}%{dst_bin_dir}
 python -m compileall %{dst_bin_dir}
 chkconfig weewx on
 %{_initrddir}/weewx start
-%{_initrddir}/%{apachecmd} restart
 
 %preun
 %{_initrddir}/weewx stop
 chkconfig weewx off
-
-%postun
-%{_initrddir}/%{apachecmd} restart
 
 %clean
 rm -rf %{buildroot}
@@ -133,6 +125,5 @@ rm -rf %{buildroot}
 %{_bindir}/wee-config-vp
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
-%config(noreplace) %{apacheconfdir}/weewx.conf
 
 %changelog
