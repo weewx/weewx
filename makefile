@@ -43,6 +43,7 @@ install:
 
 SRCPKG=weewx-$(VERSION).tar.gz
 src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
+	rm -f MANIFEST
 	./setup.py sdist
 
 # create the changelog (renamed to README.txt) for distribution

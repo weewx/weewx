@@ -56,8 +56,6 @@ docs/day-gap-showing.png
 docs/daytemp_with_avg.png
 docs/debian.htm
 docs/ferrites.jpg
-docs/installing.htm
-docs/linux.htm
 docs/logo-apple.png
 docs/logo-centos.png
 docs/logo-debian.png
@@ -65,11 +63,13 @@ docs/logo-fedora.png
 docs/logo-linux.png
 docs/logo-mint.png
 docs/logo-redhat.png
+docs/logo-suse.png
 docs/logo-ubuntu.png
 docs/readme.htm
 docs/redhat.htm
 docs/samaxesjs.toc-1.5.js
 docs/samaxesjs.toc-1.5.min.js
+docs/setup.htm
 docs/sheeva.htm
 docs/upgrading.htm
 docs/usersguide.htm
