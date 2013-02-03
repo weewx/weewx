@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 # $Id$
 # prerm script for weewx debian package
 # Copyright 2013 Matthew Wall
@@ -12,12 +12,15 @@
 #   [removing conflicting-package version]
 # new-prerm failed-upgrade old-version
 
+# abort if any command returns error
+set -e
+
 if [ "$1" != remove ]; then
     exit 0
 fi
 
 # stop the weewx daemon
-#invoke-rc.d weewx stop
+invoke-rc.d weewx stop
 
 # remove any bytecompiled code
 find /usr/share/weewx -name '*.pyc' -delete

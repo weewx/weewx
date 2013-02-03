@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 # $Id$
 # postinst script for weewx debian package
 # Copyright 2013 Matthew Wall
@@ -11,6 +11,9 @@
 # postinst abort-remove
 # deconfigured's-postinst abort-deconfigure in-favour failed-install-package
 #   version [removing conflicting-package version]
+
+# abort if any command returns error
+set -e
 
 # get debconf stuff so we can set configuration defaults
 . /usr/share/debconf/confmodule
@@ -69,6 +72,6 @@ if [ "$RET" != "" ]; then
 fi
 
 # start the weewx daemon
-#invoke-rc.d weewx start
+invoke-rc.d weewx start
 
 exit 0
