@@ -171,6 +171,11 @@ table.center {
 .locations tr {
     vertical-align: middle;
 }
+.locations_banner {
+    font-weight: bold;
+    text-align: center;
+    font-size: 80%;
+}
 .tabs {
     float: left;
     margin-left: 20px;

@@ -7,9 +7,7 @@
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <title>weewx quick-start for redhat</title>
-    <!-- CSS -->
     <link href="weewx_docs.css" rel="stylesheet" />
-    <!-- JavaScript -->
     <style type="text/css">
 .os-icons {
   float: right;
@@ -34,6 +32,10 @@
       This is a guide to install <span class='code'>weewx</span> from RPM package on systems such as Redhat, CentOS or Fedora.  The installation will result in the following layout:
     </p>
     <table class='locations'>
+      <tr>
+        <td align='right'>executable: </td>
+        <td class='tty'>/usr/bin/weewxd</td>
+      </tr>
       <tr>
         <td align='right'>configuration file: </td>
         <td class='tty'>/etc/weewx/weewx.conf</td>
@@ -112,6 +114,8 @@
     <h3>Uninstall</h3>
     <p>To uninstall <span class='code'>weewx</span>, removing configuration files but retaining data:</p>
     <p class='tty'>sudo rpm -e weewx</p>
+    <p>To remove data:</p>
+    <p class='tty'>sudo rm -r /var/lib/weewx</p>
 
     <p class='copyright'>
       &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer

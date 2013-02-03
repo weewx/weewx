@@ -366,23 +366,29 @@ Version: 2.2
 
     <h1>Installing <span class="code">weewx</span></h1>
     <p>
-      <span class='code'>weewx</span> can be installed using the standard Python 
-	  utility <span class='code'>setup.py</span> or it can be installed from a DEB or RPM package.
-      </p>
-	  <p>
-      Installation using <span class="code">setup.py</span> is the recommended method for those who plan 
-	  to write custom services and reports for <span class='code'>weewx</span>.
-      It will put everything in one, central directory, which does not require 
-	  root privileges, making it easy to modify.</p>
-	  <p>
+      <span class='code'>weewx</span> can be installed using the standard
+      Python utility <span class='code'>setup.py</span> or it can be installed
+      from a DEB or RPM package.
+    </p>
+    <p>
+      Installation using <span class="code">setup.py</span> is the recommended
+      method for those who plan to write custom services and reports for
+      <span class='code'>weewx</span>.
+      It will put everything in a single directory, making it easy to modify.
+      If the user installing <span class='code'>weewx</span> has permission
+      to write to the directory, root privileges will not be required to
+      install, run, or modify <span class='code'>weewx</span>.
+    </p>
+    <p>
       By contrast, the package approach is somewhat simpler, but it requires 
-	  root privileges and will end up installing the bits and pieces of 
-	  <span class="code">weewx</span> in standard 
-	  operating system locations. The net effect is that configuration files, 
-	  templates, and code will all be installed in separate locations, most of 
-	  which will require root privileges to modify.</p>
+      root privileges and will install the bits and pieces of 
+      <span class="code">weewx</span> in standard operating system
+      locations instead of a single directory. The net effect is that
+      configuration files, templates, and code will all be installed in
+      separate locations, most of which will require root privileges to
+      modify.</p>
 
-    <div class='tabs'>
+    <div class='tabs' style='padding-top:1em'>
       <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
       <div id='layout-tab-rpm' class='tab' onclick="showtab('layout','rpm')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div>
       <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
@@ -392,7 +398,7 @@ Version: 2.2
       <div id='layout-deb'>
         <table class='locations' width='50%'>
           <tr class='selected'>
-            <td colspan='2'>application layout for install using DEB package</td>
+            <td colspan='2' class='locations_banner'>application layout for install using DEB package</td>
           </tr>
           <tr>
             <td align='right'>executables: </td>
@@ -431,7 +437,7 @@ Version: 2.2
       <div id='layout-rpm' style='display:none'>
         <table class='locations' width='50%'>
           <tr class='selected'>
-            <td colspan='2'>application layout for install using RPM package</td>
+            <td colspan='2' class='locations_banner'>application layout for install using RPM package</td>
           </tr>
           <tr>
             <td align='right'>executables: </td>
@@ -470,7 +476,7 @@ Version: 2.2
       <div id='layout-setup' style='display:none'>
         <table class='locations' width='50%'>
           <tr class='selected'>
-            <td colspan='2'>application layout for install using <span class='code'>setup.py</span></td>
+            <td colspan='2' class='locations_banner'>application layout for install using <span class='code'>setup.py</span></td>
           </tr>
           <tr>
             <td align='right'>executables: </td>
