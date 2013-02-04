@@ -23,12 +23,24 @@ Version: 2.2
       </span>
     </h1>
 
-    <p>These are instructions for upgrading using
-      <span class='code'>setup.py</span>.  These instructions will not work
-      if <span class='code'>weewx</span> was installed from DEB or RPM package.
+    <p>This document has three sections:
+      <ul>
+        <li>Upgrading Using <span class='code'>setup.py</span></li>
+        <li>Upgrading Using DEB/RPM Package</li>
+        <li>Instructions for Specific Versions</li>
+      </ul>
+      Use the <span class='code'>setup.py</span> instructions if
+      <span class='code'>weewx</span> was installed using
+      <span class='code'>setup.py</span>, or the DEB/RPM instructions if
+      <span class='code'>weewx</span> was installed from a package.
+      The <span class='code'>setup.py</span> instructions will not work
+      if <span class='code'>weewx</span> was installed from a package.
+    </p>
+    <p>The Instructions for Specific Versions may apply to either installation
+      method.
     </p>
 
-    <h1>Upgrading</h1>
+    <h1>Upgrading Using <span class='code'>setup.py</span></h1>
     <p>Before upgrading <span class="code">weewx</span>, check the section
       'Instructions for Specific Versions' to see if any specific actions are
       required. Then follow the standard installation procedure:</p>
@@ -64,6 +76,13 @@ Version: 2.2
       <li>Install a <span class="code">skins</span> directory if 
 	one does not already exist. </li>
     </ul>
+
+    <h1>Upgrading Using DEB/RPM Package</h1>
+    <h2>DEB Package</h2>
+    <p class='tty'>sudo dpkg -i weewx_X.Y.Z-R.deb</p>
+
+    <h2>RPM Package</h2>
+    <p class='tty'>sudo rpm -i weewx-X.Y.Z-R.rpm</p>
 
     <h1>Instructions for Specific Versions</h1>
     <h2>V2.1 or earlier</h2>

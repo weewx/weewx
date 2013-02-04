@@ -32,7 +32,7 @@ update-rc.d weewx defaults > /dev/null
 cfgfile=/etc/weewx/weewx.conf
 
 db_get weewx/location
-sed -i "s%location =.*%location = $RET%" $cfgfile
+sed -i "s%location =.*%location = \"$RET\"%" $cfgfile
 
 db_get weewx/latlon
 lat=$(echo $RET | cut -d, -f1)
