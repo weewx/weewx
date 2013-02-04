@@ -7,10 +7,10 @@ In particular, see Paul G's note about softWx.
 
 consider changing these:
 
-config-vp.py -> wee-config-vantage.py
-
-config-database.py -> wee-config-database.py
-
 runreports.py -> wee-reports.py
+config_database.py -> wee-config-database.py
+config_vp.py -> wee-config-vantage.py
+config_fousb.py -> wee-config-fousb.py
 
-config-fousb.py -> wee-config-fousb.py
+VantagePro.py -> vantage.py
+WMR918.py -> wmr9x8.py
