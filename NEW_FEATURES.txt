@@ -1,5 +1,9 @@
                     Possible NEW FEATURES
 
+Calculate altimeter pressure to send off to CWOP. 
+See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
+In particular, see Paul G's note about softWx.
+
 Make record generation from the accumulators into a separate service, allowing 
 easier customization. This would also make calculation of extensive quantities easier.
 

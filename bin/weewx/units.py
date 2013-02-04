@@ -139,44 +139,6 @@ MetricUnits = {"group_altitude"    : "meter",
                "group_uv"          : "uv_index",
                "group_volt"        : "volt"}
 
-# mapping from ordinals to compass degrees
-ord2deg = {'N'  :   0.0,
-           'NNE':  22.5,
-           'NE' :  45.0,
-           'ENE':  67.5,
-           'E'  :  90.0,
-           'ESE': 112.5,
-           'SE' : 135.0,
-           'SSE': 157.5,
-           'S'  : 180.0,
-           'SSW': 202.5,
-           'SW' : 225.0,
-           'WSW': 247.5,
-           'W'  : 270.0,
-           'WNW': 292.5,
-           'NW' : 315.0,
-           'NNW': 337.5,
-           'N'  : 360.0}
-
-# mapping from compass degrees to ordinals
-deg2ord = { 0  : 'N',
-            1  : 'NNE',
-            2  : 'NE',
-            3  : 'ENE',
-            4  : 'E',
-            5  : 'ESE',
-            6  : 'SE',
-            7  : 'SSE',
-            8  : 'S',
-            9  : 'SSW',
-            10 : 'SW',
-            11 : 'WSW',
-            12 : 'W',
-            13 : 'WNW',
-            14 : 'NW',
-            15 : 'NNW',
-            16 : 'N'}
-
 # Conversion functions to go from one unit type to another.
 conversionDict = {
       'inHg'             : {'mbar'             : lambda x : x * 33.86, 
@@ -237,9 +199,7 @@ conversionDict = {
       'hour'             : {'second'           : lambda x : x*3600.0,
                             'day'              : lambda x : x/24.0},
       'day'              : {'second'           : lambda x : x*86400.0,
-                            'hour'             : lambda x : x*24.0},
-      'ordinal_compass'  : {'degree_compass'   : lambda x : ord2deg[x]},
-      'degree_compass'   : {'ordinal_compass'  : lambda x : deg2ord[int(round(x/22.5,0))]}}
+                            'hour'             : lambda x : x*24.0}}
 
 # This will extract all the target unit types in the above dictionary:
 allPossibleUnitTypes = set(z for d in conversionDict.values() for z in d.keys())
@@ -327,6 +287,24 @@ default_time_format_dict = {"day"        : "%H:%M",
                             "ephem_day"  : "%H:%M",
                             "ephem_year" : "%d-%b-%Y %H:%M"}
 
+# Default mapping from compass degrees to ordinals
+default_ordinate_dict = {0  : 'N',
+                         1  : 'NNE',
+                         2  : 'NE',
+                         3  : 'ENE',
+                         4  : 'E',
+                         5  : 'ESE',
+                         6  : 'SE',
+                         7  : 'SSE',
+                         8  : 'S',
+                         9  : 'SSW',
+                         10 : 'SW',
+                         11 : 'WSW',
+                         12 : 'W',
+                         13 : 'WNW',
+                         14 : 'NW',
+                         15 : 'NNW',
+                         16 : 'N'}
 
 #===============================================================================
 #                        class ValueTuple
@@ -389,7 +367,8 @@ class Formatter(object):
 
     def __init__(self, unit_format_dict = default_unit_format_dict,
                        unit_label_dict  = default_unit_label_dict,
-                       time_format_dict = default_time_format_dict):
+                       time_format_dict = default_time_format_dict,
+                       ordinate_dict    = default_ordinate_dict):
         """
         unit_format_dict: Key is unit type (eg, 'inHg'), value is a string format ("%.1f")
         
@@ -400,6 +379,7 @@ class Formatter(object):
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
         self.time_format_dict = time_format_dict
+        self.ordinate_dict    = ordinate_dict
         # Add new keys for backwards compatibility on old skin dictionaries:
         self.time_format_dict.setdefault('ephem_day', "%H:%M")
         self.time_format_dict.setdefault('ephem_year', "%d-%b-%Y %H:%M")
@@ -407,9 +387,16 @@ class Formatter(object):
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
+        try:
+            ordinate_list = weeutil.weeutil.option_as_list(skin_dict['Units']['Ordinates']['directions'])
+            ordinate_dict = dict(enumerate(ordinate_list))
+        except KeyError:
+            ordinate_dict = default_ordinate_dict
+        
         return Formatter(skin_dict['Units']['StringFormats'],
                          skin_dict['Units']['Labels'],
-                         skin_dict['Units']['TimeFormats'])
+                         skin_dict['Units']['TimeFormats'],
+                         ordinate_dict)
 
     def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
         """Format the value as a string.
@@ -460,6 +447,9 @@ class Formatter(object):
 
         return val_str
 
+    def to_ordinal_compass(self, val_t):
+        return self.ordinate_dict[int(round(val_t[0]/22.5, 0))]
+    
 #===============================================================================
 #                        class Converter
 #===============================================================================
@@ -644,6 +634,15 @@ class ValueOutputter(object):
     def nolabel(self, format_string, NONE_string=None):
         """Returns a formatted version of the data, using a user-supplied format. No label."""
         return self.toString(addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
+    
+    def ordinal_compass(self):
+        """Returns an ordinal compass direction (eg, 'NNW')"""
+        # Get the value tuple from my superclass:
+        vt = self.getValueTuple()
+        # Do any unit conversion:
+        vtx = self.converter.convert(vt)
+        # Then ask the formatter to look up an appropriate ordinate:
+        return self.formatter.to_ordinal_compass(vtx)
         
     @property
     def formatted(self):
