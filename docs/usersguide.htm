@@ -625,7 +625,7 @@ Offset:                       -1.000</p>
       dates after about 2006.</p>
     <p><span class="highlight">Highlighted</span> values can be changed.</p>
     <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf --set-interval=600</p>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --set-interval=600</p>
     <p>Other parameters can be set in a similar manner.</p>
     <h3 id="Archive_interval">Archive interval</h3>
     <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
@@ -643,7 +643,7 @@ Offset:                       -1.000</p>
     <p>Normally, this is set by Davis, but if you have replaced your bucket with 
       a different kind, you might want to reconfigure. For example, to change to a 
       0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py $WEEWX_ROOT/weewx.conf --set-bucket=2</p>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --set-bucket=2</p>
     <h2>Configuring MySQL</h2>
     <p>This section applies only for those using MySQL.</p>
     <p>Assuming that you want to use the default database configuration, your
@@ -839,11 +839,11 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class="config_option">loop_interval</p>
     <p>The time (in seconds) between emitting loop packets. Default is 2.5</p>
     <p class="config_option">mode</p>
-    <p>One of either <span class='code'>simulator</span> or <span class='code'>generator</span></p>
+    <p>One of either <span class='code'>simulator</span> or <span class='code'>generator</span>.  Default is <span class='code'>simulator</span>.</p>
     <table class="indent" style="width: 80%">
       <tr>
 	<td class="code">simulator</td>
-	<td>Real-time simulator. It will sleep between emitting packets [Default]</td>
+	<td>Real-time simulator. It will sleep between emitting packets.</td>
       </tr>
       <tr>
 	<td class="code">generator</td>
@@ -863,8 +863,9 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       <a href="http://www.wxqa.com/">CWOP</a>. </p>
     <h4 class="config_section">[[Wunderground]]</h4>
     <p><span class="code">Weewx </span>can send your current data to the
-      <a href="http://www.wunderground.com/">Weather Underground</a>. If you do not 
-      wish to do this, comment out the two options below. </p>
+      <a href="http://www.wunderground.com/">Weather Underground</a>. If you
+      do not wish to do this, leave the <span class='code'>station</span>
+      commented.</p>
     <p class="config_important">station </p>
     <p>Set to your Weather Underground station ID (<em>e.g.</em>, <span class="code">KORHOODR3</span>). 
       Required. </p>
@@ -872,40 +873,41 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>Set to your Weather Underground password. Required. </p>
     <h4 class="config_section">[[PWSweather]]</h4>
     <p><span class="code">Weewx </span>can send your current data to the
-      <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you do not 
-      wish to do this, comment out the two options below. </p>
+      <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
+      do not wish to do this, leave the <span class='code'>station</span>
+      commented.</p>
     <p class="config_important">station </p>
     <p>Set to your PWSweather station ID. Required. </p>
     <p class="config_important">password </p>
     <p>Set to your PWSweather password. Required. </p>
     <h4 class="config_section">[[CWOP]]</h4>
     <p><span class="code">Weewx</span> can send your data to the
-      <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If you 
-      do not wish to do this, comment out option <span class="code">station</span>
-      below. </p>
+      <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If
+      you do not wish to do this, leave the <span class="code">station</span>
+      commented. </p>
     <p class="config_important">station </p>
     <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>). Required.
     </p>
     <p class="config_important">passcode </p>
-    <p>This is used for APRS (amateur radio) stations only. Set to the passcode 
-      given to you by the CWOP operators. Otherwise, leave this option commented out 
-      [Required for APRS stations; ignored for others] </p>
+    <p>This is used for APRS (amateur radio) stations only. Set to the
+      passcode given to you by the CWOP operators. Otherwise, leave this
+      option commented. Required for APRS stations, ignored for others.</p>
     <p class="config_option">server </p>
-    <p>A comma separated list of servers:ports to try. Unless you have a good reason 
-      to change this, use the servers listed. [Required.] </p>
+    <p>A comma separated list of servers:ports to try. Unless you have a good
+      reason to change this, use the servers listed. Required.</p>
     <p class="config_option">interval </p>
-    <p>The interval in seconds between posts. Because CWOP is heavily used, the 
-      operators discourage very frequent posts. Every 5 minutes (300 seconds) is fine, 
-      but they prefer every 10 minutes (600 s) or even longer. Setting this value 
-      to zero will cause every archive record to be posted. [Optional. Default is 
-      zero.] </p>
+    <p>The interval in seconds between posts. Because CWOP is heavily used, the
+      operators discourage very frequent posts. Every 5 minutes (300 seconds)
+      is fine, but they prefer every 10 minutes (600 s) or even longer. Setting
+      this value to zero will cause every archive record to be posted. 
+      Optional. Default is zero.</p>
     <p class="config_option">stale </p>
-    <p>How old a record can be before it will not be used for a catch up. CWOP does 
-      not use the timestamp on a posted record. Instead, they use the wall clock time 
-      that it came in. This means that if your station is off the air for a long period 
-      of time, then <span class="code">weewx</span> attempts a catch up, old data 
-      could be interpreted as the current conditions. [Optional. Default is 1800 seconds.]
-    </p>
+    <p>How old a record can be before it will not be used for a catch up. CWOP
+      does not use the timestamp on a posted record. Instead, they use the wall
+      clock time that it came in. This means that if your station is off the
+      air for a long period of time, then <span class="code">weewx</span>
+      attempts a catch up, old data could be interpreted as the current
+      conditions. Optional. Default is 1800 seconds.</p>
     <h3 id="[Reports]" class="config_section">[StdReport]</h3>
     <p>This section is for configuring the <span class="code">StdReport</span> service, 
       which controls which reports are to be generated. While it can be highly customized 
@@ -923,12 +925,14 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       <a href="customizing.htm">Customizing Guide</a>.
     </p>
     <p class="config_option">SKIN_ROOT </p>
-    <p>The directory relative to <span class="code"><em>$WEEWX_ROOT</em></span> 
-      where the skins live. Default is <span class="code">skins</span>. </p>
+    <p>The directory where the skins live. A relative path is relative to
+      <span class="code"><em>$WEEWX_ROOT</em></span>. Default is
+      <span class="code">skins</span>. </p>
     <p class="config_option">HTML_ROOT </p>
-    <p>The target directory for the generated files, relative to
-      <span class="code"><em>$WEEWX_ROOT</em></span>. Generated files and images will 
-      be put here. Default is <span class="code">public_html</span>. </p>
+    <p>The target directory for the generated files. A relative path is
+      relative to <span class="code"><em>$WEEWX_ROOT</em></span>. Generated
+      files and images will be put here. Default is
+      <span class="code">public_html</span>. </p>
     <h4 class="config_section">[[StandardReport]]</h4>
     <p>This is the standard report that will be run on every archiving interval. 
       It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates 
@@ -1149,15 +1153,15 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       engine to store archive data. It is open-source, simple, lightweight, highly 
       portable, and memory efficient. For most purposes it serves nicely.</p>
     <p class="config_option">database</p>
-    <p>The path, relative to <span class="code">WEEWX_ROOT</span>, to the archive 
-      sqlite file. Required.</p>
+    <p>The path to the archive sqlite file. A relative path is relative to
+      <span class="code"><em>$WEEWX_ROOT</em></span>. Required.</p>
     <h4 class="config_section">[[stats_sqlite]]</h4>
     <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
       engine to store the statistical data. It is open-source, simple, lightweight, 
       highly portable, and memory efficient. For most purposes it serves nicely.</p>
     <p class="config_option">database</p>
-    <p>The path, relative to <span class="code">WEEWX_ROOT</span>, to the stats 
-      sqlite file. Required.</p>
+    <p>The path to the stats sqlite file. A relative path is relative to
+      <span class="code"><em>$WEEWX_ROOT</em></span>. Required.</p>
     <h4 class="config_section">[[archive_mysql]]</h4>
     <p>This definition uses the MySQL database engine to store archive data. It 
       is free, highly-scalable, but more complicated to administer. </p>
