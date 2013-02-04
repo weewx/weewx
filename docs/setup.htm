@@ -119,15 +119,15 @@ function showstartup(id) {
           sudo apt-get install python-cheetah
           sudo apt-get install python-imaging
           
-          # if using MySQL:
-          sudo apt-get install python-mysqldb
-          sudo apt-get install python-mysql-client
-          
-          # serial or USB, depending on hardware:
+          # required if hardware is serial or USB:
           sudo apt-get install python-serial
           sudo apt-get install python-usb
           
-          # for extended almanac information:
+          # required if using MySQL:
+          sudo apt-get install python-mysqldb
+          sudo apt-get install python-mysql-client
+          
+          # optional for extended almanac information:
           sudo apt-get install python-dev
           sudo apt-get install python-pip
           sudo pip install pyephem
@@ -141,15 +141,15 @@ function showstartup(id) {
           sudo yum install python-cheetah
           sudo yum install python-imaging
           
-          # if using MySQL:
-          sudo yum install python-mysqldb
-          sudo yum install python-mysql-client
-          
-          # serial or USB, depending on hardware:
+          # required if hardware is serial or USB:
           sudo yum install pyserial
           sudo yum install pyusb
           
-          # for extended almanac information:
+          # required if using MySQL:
+          sudo yum install python-mysqldb
+          sudo yum install python-mysql-client
+          
+          # optional for extended almanac information:
           sudo yum install pyephem
         </p>
       </div>
@@ -162,15 +162,13 @@ function showstartup(id) {
           sudo yast -i python-imaging
           sudo yast -i python-devel
           sudo yast -i setuptools
-          
-          # install pip
           sudo pip install Cheetah
           
-          # serial or USB, depending on hardware:
+          # required if hardware is serial or USB:
           sudo yast -i pyserial
           sudo yast -i pyusb
           
-          # for extended almanac information:
+          # optional for extended almanac information:
           sudo pip install pyephem
         </p>
       </div>
@@ -182,11 +180,11 @@ function showstartup(id) {
           sudo pip install Cheetah
           sudo pip install pil
           
-          # serial or USB, depending on hardware:
+          # required if hardware is serial or USB:
           sudo pip install pyserial
           sudo pip install pyusb
           
-          # for extended almanac information:
+          # optional for extended almanac information:
           sudo pip install pyephem
         </p>
       </div>
