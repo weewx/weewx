@@ -493,11 +493,21 @@ $month.outTemp.max</p>
       <p class="tty">Today&#39;s average pressure=$day.barometer.avg </p>
       <p>would normally give a result such as </p>
       <p class="example_output">Today&#39;s average pressure=30.05 inHg </p>
-      <p>However, if you add &quot;mbar&quot; to the end, </p>
+      <p>However, if you add &quot;<span class="code">mbar</span>&quot; to the end, </p>
       <p class="tty">$day.barometer.avg.mbar </p>
       <p>then the results will be in millibars: </p>
       <p class="example_output">Today&#39;s average pressure=1017.5 mbar </p>
-      <p>If an inappropriate conversion is asked for, <em>e.g.</em>, </p>
+      <h5>Wind ordinals</h5>
+		<p>Using this method, you can output compass ordinals for wind 
+		direction. For example, the template</p>
+		<p class="tty">Current wind direction is $current.windDir 
+		($current.windDir.ordinal_compass)</p>
+		<p>would result in:</p>
+		<p class="example_output">Current wind direction is 138&deg; (SW)</p>
+		<p>Unfortunately, as of the time of this writing, only English wind 
+		ordinates are available.</p>
+		<h5>Illegal conversions</h5>
+		<p>If an inappropriate conversion is asked for, <em>e.g.</em>, </p>
       <p class="tty">Today&#39;s average pressure=$day.barometer.degree_C </p>
       <p>then the offending tag will be put in the output: </p>
       <p class="example_output">Today&#39;s average pressure=$day.barometer.degree_C

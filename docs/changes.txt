@@ -9,6 +9,11 @@ control of plot colors, using a notation such as 0xBBGGRR, #RRGGBB, or the
 English name, such as 'yellow'. Finally, added day/night bands to the
 plots. All contributed by Matthew Wall. Thanks, Matthew!
 
+Ordinal wind directions can now be shown, just by adding the tag suffix
+".ordinal_compass." For example, $current.windDir.ordinal_compass might
+show 'SSE' Only English ordinates are available. Thanks again to Matthew Wall
+for this contribution!
+
 Fixed bug that caused rain totals to be misreported to Weather Underground
 when using a metric database.
 

@@ -139,6 +139,44 @@ MetricUnits = {"group_altitude"    : "meter",
                "group_uv"          : "uv_index",
                "group_volt"        : "volt"}
 
+# mapping from ordinals to compass degrees
+ord2deg = {'N'  :   0.0,
+           'NNE':  22.5,
+           'NE' :  45.0,
+           'ENE':  67.5,
+           'E'  :  90.0,
+           'ESE': 112.5,
+           'SE' : 135.0,
+           'SSE': 157.5,
+           'S'  : 180.0,
+           'SSW': 202.5,
+           'SW' : 225.0,
+           'WSW': 247.5,
+           'W'  : 270.0,
+           'WNW': 292.5,
+           'NW' : 315.0,
+           'NNW': 337.5,
+           'N'  : 360.0}
+
+# mapping from compass degrees to ordinals
+deg2ord = { 0  : 'N',
+            1  : 'NNE',
+            2  : 'NE',
+            3  : 'ENE',
+            4  : 'E',
+            5  : 'ESE',
+            6  : 'SE',
+            7  : 'SSE',
+            8  : 'S',
+            9  : 'SSW',
+            10 : 'SW',
+            11 : 'WSW',
+            12 : 'W',
+            13 : 'WNW',
+            14 : 'NW',
+            15 : 'NNW',
+            16 : 'N'}
+
 # Conversion functions to go from one unit type to another.
 conversionDict = {
       'inHg'             : {'mbar'             : lambda x : x * 33.86, 
@@ -199,8 +237,9 @@ conversionDict = {
       'hour'             : {'second'           : lambda x : x*3600.0,
                             'day'              : lambda x : x/24.0},
       'day'              : {'second'           : lambda x : x*86400.0,
-                            'hour'             : lambda x : x*24.0}}
-
+                            'hour'             : lambda x : x*24.0},
+      'ordinal_compass'  : {'degree_compass'   : lambda x : ord2deg[x]},
+      'degree_compass'   : {'ordinal_compass'  : lambda x : deg2ord[int(round(x/22.5,0))]}}
 
 # This will extract all the target unit types in the above dictionary:
 allPossibleUnitTypes = set(z for d in conversionDict.values() for z in d.keys())

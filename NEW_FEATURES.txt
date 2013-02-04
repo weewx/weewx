@@ -14,8 +14,6 @@ New observation types would have their unit group attached as a suffix. E.g., _e
 
 Move to a "plugin" architecture.
 
-Add ordinate wind descriptions "N, NE, E,", etc.
-
 Use the tagged stats classes for the archive database as well, thus unifying the
 two databases.
 
