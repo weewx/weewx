@@ -79,9 +79,35 @@ Version: 2.2
 
     <h1>Upgrading Using DEB/RPM Package</h1>
     <h2>DEB Package</h2>
+    <p>Upgrade from X.Y.A to X.Y.B like this:</p>
     <p class='tty'>sudo dpkg -i weewx_X.Y.Z-R.deb</p>
+    <p>If modifications have been made to the weewx configuration, you will
+      be prompted as to whether you want to keep the existing configuration
+      or accept the new configuration.  Either way,
+      <span class='code'>dpkg</span> will save a copy of the option you
+      did not choose.</p>
+    <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
+      modified, <span class='code'>dpkg</span> will present a message something
+      like this:</p>
+    <p class='tty'>Configuration file `/etc/weewx/weewx.conf'
+ ==> Modified (by you or by a script) since installation.
+ ==> Package distributor has shipped an updated version.
+   What would you like to do about it ?  Your options are:
+    Y or I  : install the package maintainer's version
+    N or O  : keep your currently-installed version
+      D     : show the differences between the versions
+      Z     : start a shell to examine the situation
+ The default action is to keep your current version.
+*** weewx.conf (Y/I/N/O/D/Z) [default=N] ?</p>
+    <p>Choosing <span class='code'>I</span> (install the new version) will
+      place the previous configuration in
+      <span class='code'>/etc/weewx/weewx.conf.dpkg-old</span> where it can
+      be compared with the new version
+      <span class='code'>/etc/weewx/weewx.conf</span>
+    </p>
 
     <h2>RPM Package</h2>
+    <p>Upgrade from X.Y.A to X.Y.B like this:</p>
     <p class='tty'>sudo rpm -i weewx-X.Y.Z-R.rpm</p>
 
     <h1>Instructions for Specific Versions</h1>
