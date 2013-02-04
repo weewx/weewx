@@ -193,27 +193,30 @@ class weewx_install_data(install_data):
         # If the file #upstream.last exists, delete it, as it is no longer used.
         try:
             os.remove(os.path.join(self.install_dir, 'public_html/#upstream.last'))
-        except:
+        except OSError:
             pass
             
         # If the file $WEEWX_INSTALL/readme.htm exists, delete it. It's
-        # the old readme (since replaced with docs/readme.htm)
+        # the old readme (since replaced with README)
         try:
             os.remove(os.path.join(self.install_dir, 'readme.htm'))
-        except:
+        except OSError:
             pass
         
         # If the file $WEEWX_INSTALL/CHANGES.txt exists, delete it. It's
         # been moved to the docs subdirectory and renamed
         try:
             os.remove(os.path.join(self.install_dir, 'CHANGES.txt'))
-        except:
+        except OSError:
             pass
         
-        # Clean up after a bad install from earlier versions of setup.py:
+        # The directory start_scripts is no longer used
+        shutil.rmtree(os.path.join(self.install_dir, 'start_scripts'), True)
+        
+        # The file docs/README.txt is now gone
         try:
-            os.remove(os.path.join(self.install_dir, 'start_scripts/weewx'))
-        except:
+            os.remove(os.path.join(self.install_dir, 'docs/README.txt'))
+        except OSError:
             pass
 
         # Run the superclass's run():
@@ -415,16 +418,33 @@ setup(name='weewx',
                        'weewx.conf']),
                      ('docs',
                       ['docs/changes.txt',
+                       'docs/copyright.htm',
                        'docs/customizing.htm',
+                       'docs/day-gap-not-shown.png',
+                       'docs/day-gap-showing.png',
                        'docs/daytemp_with_avg.png',
                        'docs/debian.htm',
+                       'docs/ferrites.jpg',
+                       'docs/logo-apple.png',
+                       'docs/logo-centos.png',
+                       'docs/logo-debian.png',
+                       'docs/logo-fedora.png',
+                       'docs/logo-linux.png',
+                       'docs/logo-mint.png',
+                       'docs/logo-redhat.png',
+                       'docs/logo-suse.png',
+                       'docs/logo-ubuntu.png',
                        'docs/readme.htm',
+                       'docs/redhat.htm',
+                       'docs/samaxesjs.toc-1.5.js',
                        'docs/samaxesjs.toc-1.5.min.js',
+                       'docs/setup.htm',
                        'docs/sheeva.htm',
                        'docs/upgrading.htm',
                        'docs/usersguide.htm',
                        'docs/weekgustoverlay.png',
-                       'docs/weewx_docs.css']),
+                       'docs/weewx_docs.css',
+                       'docs/yearhilow.png']),
                      ('skins/Ftp',
                       ['skins/Ftp/skin.conf']),
                      ('skins/Rsync',
@@ -460,10 +480,23 @@ setup(name='weewx',
                        'skins/Standard/week.html.tmpl',
                        'skins/Standard/weewx.css',
                        'skins/Standard/year.html.tmpl']),
-                     ('start_scripts/Debian',
-                      ['start_scripts/Debian/weewx']),
-                     ('start_scripts/SuSE',
-                      ['start_scripts/SuSE/weewx'])],
+                     ('util/apache/conf.d',
+                      ['util/apache/conf.d/weewx.conf']),
+                     ('util/init.d',
+                      ['util/init.d/weewx.bsd',
+                       'util/init.d/weewx.debian',
+                       'util/init.d/weewx.redhat',
+                       'util/init.d/weewx.suse']),
+                     ('util/logrotate.d',
+                      ['util/logrotate.d/weewx']),
+                     ('util/logwatch/conf/logfiles',
+                      ['util/logwatch/conf/logfiles/weewx.conf']),
+                     ('util/logwatch/conf/services',
+                      ['util/logwatch/conf/services/weewx.conf']),
+                     ('util/logwatch/scripts/services',
+                      ['util/logwatch/scripts/services/weewx']),
+                     ('util/rsyslog.d',
+                      ['util/rsyslog.d/weewx.conf'])],
       requires    = ['configobj(>=4.5)',
                      'serial(>=2.3)',
                      'Cheetah(>=2.0)',
