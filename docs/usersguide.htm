@@ -387,6 +387,8 @@ Version: 2.2
       configuration files, templates, and code will all be installed in
       separate locations, most of which will require root privileges to
       modify.</p>
+	  <p>
+      Here is a summary of the layout for the different install methods:</p>
 
     <div class='tabs' style='padding-top:1em'>
       <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
@@ -398,7 +400,7 @@ Version: 2.2
       <div id='layout-deb'>
         <table class='locations' width='50%'>
           <tr class='selected'>
-            <td colspan='2' class='locations_banner'>application layout for install using DEB package</td>
+            <td colspan='2' class='locations_banner'>Application layout for install using DEB package</td>
           </tr>
           <tr>
             <td align='right'>executables: </td>
@@ -437,7 +439,7 @@ Version: 2.2
       <div id='layout-rpm' style='display:none'>
         <table class='locations' width='50%'>
           <tr class='selected'>
-            <td colspan='2' class='locations_banner'>application layout for install using RPM package</td>
+            <td colspan='2' class='locations_banner'>Application layout for install using RPM package</td>
           </tr>
           <tr>
             <td align='right'>executables: </td>
@@ -476,7 +478,7 @@ Version: 2.2
       <div id='layout-setup' style='display:none'>
         <table class='locations' width='50%'>
           <tr class='selected'>
-            <td colspan='2' class='locations_banner'>application layout for install using <span class='code'>setup.py</span></td>
+            <td colspan='2' class='locations_banner'>Application layout for install using <span class='code'>setup.py</span></td>
           </tr>
           <tr>
             <td align='right'>executables: </td>
@@ -508,7 +510,7 @@ Version: 2.2
           </tr>
           <tr>
             <td align='right'>log file: </td>
-            <td class='tty'>/var/log/</td>
+            <td class='tty'>/var/log/syslog</td>
           </tr>
         </table>
       </div>
@@ -567,6 +569,8 @@ Options:
   --set-time               Set the onboard clock to the current time.
   --start                  Start the logger.
   --stop                   Stop the logger.
+  --dump                   Dump all data to the archive. NB: This may result in
+                           many duplicate primary key errors.
 
 Mutating actions will request confirmation before proceeding.</p>
     <p>It is useful to run it with the <span class="code">--info</span> option to 
@@ -644,7 +648,23 @@ Offset:                       -1.000</p>
       a different kind, you might want to reconfigure. For example, to change to a 
       0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
     <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf --set-bucket=2</p>
-    <h2>Configuring MySQL</h2>
+    <h3>Dumping the logger memory</h3>
+	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
+	  records from the on board logger in the Vantage. However, occasionally the 
+	  memory in the Vantage will get corrupted, making this impossible. See the 
+	  troubleshooting section below <em>"<a href="#Weewx_generates_HTML_pages,_but_it_does_not_update_them">Weewx 
+	  generates HTML pages, but it does not update them</a></em>"<em>.</em> The 
+	  fix involves clearing the memory but, unfortunately, this means you may 
+	  lose any data which might have accumulated in the logger memory, but not 
+	  yet downloaded. By using the <span class="code">--dump</span> command 
+	  before clearing you might be able to save these data. </p>
+    <p class="tty"><em>$WEEWX_ROOT</em>/bin/config_vp.py <em>$WEEWX_ROOT</em>/weewx.conf 
+	--dump</p>
+	  <p>This will dump all data archived in the Vantage memory directly to the 
+	  database, without regard to whether or not they have been seen before. 
+	  Because the command dumps <em>all</em> data, it may result in many 
+	  duplicate primary key errors. These can be ignored.</p>
+      <h2>Configuring MySQL</h2>
     <p>This section applies only for those using MySQL.</p>
     <p>Assuming that you want to use the default database configuration, your
       <span class="code"><a href="#[Databases]">[Databases]</a></span> section 
@@ -1562,6 +1582,8 @@ port = /dev/cuaU0</p>
     </ol>
     <p class="tty">cd /home/weewx
 ./bin/config_vp.py weewx.conf --clear </p>
+	  <p>See also the section <em><a href="#Dumping_the_logger_memory">Dumping 
+	  the logger memory</a></em>.</p>
     <h3>3rd party Vantage connectors</h3>
     <p>This section is for those who are using a homebrew or 3rd party connector 
       to a Davis Vantage console that does not contain a logger, such as the
