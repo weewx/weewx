@@ -82,8 +82,8 @@ Version: 2.2
       truth be told, the roots of Python are nearly as old as C++!). I ended up picking 
       Python because its libraries are more mature and there are many mores choices 
       for third party libraries. </p>
-    <p><span class="code">Weewx</span> weighs in at well under 6,000 lines of code, 
-      with another 3,800 comment lines. Because it is pure Python, it requires no 
+    <p><span class="code">Weewx</span> is about 7,000 lines of code, 
+      with another 4,400 comment lines. Because it is pure Python, it requires no 
       makefiles, no builds, no special installs. It offers very powerful configuration 
       and templating options, as well as an internally extensible engine, making it 
       easy to customize. Its internal modular design and use of modern exception handling 
@@ -899,7 +899,23 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>Set to your PWSweather station ID. Required. </p>
     <p class="config_important">password </p>
     <p>Set to your PWSweather password. Required. </p>
-    <h4 class="config_section">[[CWOP]]</h4>
+    <h4 class="config_section">[[WOW]]</h4>
+	  <p class="config_section"><span class="code">Weewx</span> can send your 
+	  current data to the <a href="http://wow.metoffice.gov.uk/">British Weather 
+	  Observations Website (WOW)</a> service. This section is <em>not</em> 
+	  included in the version of <span class="code">weewx.conf</span> that comes 
+	  with the distribution, so you will have to add it by hand. When you're 
+	  done, it will look similar to the Wunderground or PWSweather sections 
+	  above, that is, something like this:</p>
+	  <p class="tty">[StdRestful]
+  .
+  .
+  .
+  [[WOW]]
+    station = 12345678  # Replace with your station number
+    password = xxxxx    # Replace with your password
+    driver = weewx.restful.WOW</p>
+	  <h4 class="config_section">[[CWOP]]</h4>
     <p><span class="code">Weewx</span> can send your data to the
       <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If
       you do not wish to do this, leave the <span class="code">station</span>

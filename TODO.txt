@@ -1,6 +1,7 @@
 TODO before the next release:
 
-Need upgrading instructions for DEB and RPM packaging.
+Because the location of the executables and the configuration files now depend
+on the installation strategy, they all need symbolic names in the documentation.
 
 consider changing these:
 
