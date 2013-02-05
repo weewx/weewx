@@ -17,32 +17,31 @@
 
   <body>
 
-    <h1 class="title">Upgrading to <span class="code">weewx</span><br/>
+    <h1 class="title">Upgrading <span class="code">weewx</span><br/>
       <span style="font-size:70%">
 Version: 2.2
       </span>
     </h1>
 
-    <p>This document has three sections:
+    <p>This document has three sections:</p>
       <ul>
-        <li>Upgrading Using <span class='code'>setup.py</span></li>
-        <li>Upgrading Using DEB/RPM Package</li>
-        <li>Instructions for Specific Versions</li>
+        <li><a href="#Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></li>
+        <li><a href="#Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM Package</a></li>
+        <li><a href="#Instructions_for_specific_versions">Instructions for specific versions</a></li>
       </ul>
-      Use the <span class='code'>setup.py</span> instructions if
-      <span class='code'>weewx</span> was installed using
-      <span class='code'>setup.py</span>, or the DEB/RPM instructions if
-      <span class='code'>weewx</span> was installed from a package.
-      The <span class='code'>setup.py</span> instructions will not work
-      if <span class='code'>weewx</span> was installed from a package.
-    </p>
-    <p>The Instructions for Specific Versions may apply to either installation
-      method.
-    </p>
+      <p class="warning"><strong>Warning!</strong><br/>
+You must use the same upgrade technique as your initial 
+	  install!</p>
+	<p>For example, if you used <span class="code">setup.py</span> to install weewx, then when it comes time 
+	to do an upgrade, you must also use <span class="code">setup.py</span>.</p>
+	<p>If you used a DEB or RPM package to install, then you should upgrade 
+	using the same package type.</p>
+    <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for 
+	specific versions</a></em> applies to both installation methods.</p>
 
-    <h1>Upgrading Using <span class='code'>setup.py</span></h1>
-    <p>Before upgrading <span class="code">weewx</span>, check the section
-      'Instructions for Specific Versions' to see if any specific actions are
+    <h1><a name="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
+    <p>Before upgrading <span class="code">weewx</span>, check the section <em>
+	<a href="#Instructions_for_specific_versions">Instructions for specific versions</a></em> to see if any specific actions are
       required. Then follow the standard installation procedure:</p>
     <p>Unpack the archive:</p>
     <p class="tty">tar xvf weewx-X.Y.Z.tar.gz</p>
@@ -77,7 +76,7 @@ Version: 2.2
 	one does not already exist. </li>
     </ul>
 
-    <h1>Upgrading Using DEB/RPM Package</h1>
+    <h1><a name="Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM package</a></h1>
     <h2>DEB Package</h2>
     <p>Upgrade from X.Y.A to X.Y.B like this:</p>
     <p class='tty'>sudo dpkg -i weewx_X.Y.B-R.deb</p>
@@ -110,7 +109,7 @@ Version: 2.2
     <p>Upgrade from X.Y.A to X.Y.B like this:</p>
     <p class='tty'>sudo rpm -i weewx-X.Y.B-R.rpm</p>
 
-    <h1>Instructions for Specific Versions</h1>
+    <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
     <h2>V2.1 or earlier</h2>
     <p>Version 2.2 introduces a schema, found in <span class="code">
         bin/user/schemas.py</span>, for the stats database. This schema is
