@@ -31,7 +31,7 @@ epilog = """Mutating actions will request confirmation before proceeding."""
 def main():
 
     # Set defaults for the system logger:
-    syslog.openlog('config_vp', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('wee-config-vantage', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
