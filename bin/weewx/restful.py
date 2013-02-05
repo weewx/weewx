@@ -23,7 +23,8 @@ import weewx.units
 import weeutil.weeutil
 
 site_url = {'Wunderground' : "http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?",
-            'PWSweather'   : "http://www.pwsweather.com/pwsupdate/pwsupdate.php?"} 
+            'PWSweather'   : "http://www.pwsweather.com/pwsupdate/pwsupdate.php?",
+            'WOW'          : "http://wow.metoffice.gov.uk/automaticreading?"} 
 
 class FailedPost(IOError):
     """Raised when a post fails, usually because of a login problem"""
@@ -202,7 +203,7 @@ class Ambient(REST):
         _liststr = ["action=updateraw", "ID=%s" % self.station, "PASSWORD=%s" % self.password ]
         
         # Go through each of the supported types, formatting it, then adding to _liststr:
-        for _key in Ambient._formats.keys() :
+        for _key in Ambient._formats:
             v = record[_key]
             # Check to make sure the type is not null
             if v is not None :
@@ -222,6 +223,104 @@ class Ambient(REST):
         _url=self.http_prefix + _urlquery
         return _url
 
+#===============================================================================
+#                             class WOW
+#===============================================================================
+
+class WOW(Ambient):
+
+    """Upload using the WOW protocol. 
+    
+    For details of the WOW upload protocol,
+    see http://wow.metoffice.gov.uk/support?category=dataformats#dataFileUpload
+    
+    For details on how urllib2 works, see "urllib2 - The Missing Manual"
+    at http://www.voidspace.org.uk/python/articles/urllib2.shtml
+    """
+
+    # Types and formats of the data to be published:
+    _formats = {'dateTime'    : 'dateutc=%s',
+                'barometer'   : 'baromin=%.1f',
+                'outTemp'     : 'tempf=%.1f',
+                'outHumidity' : 'humidity=%.0f',
+                'windSpeed'   : 'windspeedmph=%.0f',
+                'windDir'     : 'winddir=%.0f',
+                'windGust'    : 'windgustmph=%.0f',
+                'windGustDir' : 'windgustdir=%.0f',
+                'dewpoint'    : 'dewptf=%.1f',
+                'rain'        : 'rainin=%.2f',
+                'dayRain'     : 'dailyrainin=%.2f'}
+
+    def postData(self, archive, time_ts):
+        """Post using the WOW HTTP protocol
+
+        archive: An instance of weewx.archive.Archive
+        
+        time_ts: The record desired as a unix epoch time."""
+        
+        _url = self.getURL(archive, time_ts)
+
+        # Retry up to max_tries times:
+        for _count in range(self.max_tries):
+            # Now use an HTTP GET to post the data. Wrap in a try block
+            # in case there's a network problem.
+            try:
+                _response = urllib2.urlopen(_url)
+            except (urllib2.URLError, socket.error, httplib.BadStatusLine), e:
+                # Unsuccessful. Log it and go around again for another try
+                syslog.syslog(syslog.LOG_ERR,   "restful: Failed attempt #%d to upload to %s" % (_count+1, self.site))
+                syslog.syslog(syslog.LOG_ERR,   "   ****  Reason: %s" % (e,))
+                syslog.syslog(syslog.LOG_DEBUG, "url used: %s" % (_url))
+            else:
+                # No exception thrown, but we're still not done.
+                # We have to also check for a bad station ID or password.
+                # It will have the error encoded in the return message:
+                for line in _response:
+                    # WOW signals success with '200'
+                    if not line.startswith('200'):
+                        # Bad login. No reason to retry. Log it and raise an exception.
+                        syslog.syslog(syslog.LOG_ERR, "restful: %s returns %s. Aborting." % (self.site, line))
+                        raise FailedPost, line
+                # Does not seem to be an error. We're done.
+                return
+        else:
+            # This is executed only if the loop terminates normally, meaning
+            # the upload failed max_tries times. Log it.
+            syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
+            raise IOError, "Failed upload to site %s after %d tries" % (self.site, self.max_tries)
+
+    def getURL(self, archive, time_ts):
+
+        """Return an URL for posting using the WOW protocol.
+        
+        archive: An instance of weewx.archive.Archive
+        
+        time_ts: The record desired as a unix epoch time.
+        """
+    
+        record = self.extractRecordFrom(archive, time_ts)
+        
+        _liststr = ["siteid=%s" % self.station, "siteAuthenticationKey=%s" % self.password ]
+        
+        # Go through each of the supported types, formatting it, then adding to _liststr:
+        for _key in WOW._formats:
+            v = record[_key]
+            # Check to make sure the type is not null
+            if v is not None :
+                if _key == 'dateTime':
+                    # For dates, convert from time stamp to a string, using 
+                    # the following format: YYYY-mm-DD HH:mm:ss, where ':' 
+                    # is encoded as %3A, and the space is encoded as either '+' or %20
+                    v = urllib.quote(datetime.datetime.utcfromtimestamp(v).isoformat('+'), '-+')
+                # Format the value, and accumulate in _liststr:
+                _liststr.append(WOW._formats[_key] % v)
+        # Add the software type and version:
+        _liststr.append("softwaretype=weewx-%s" % weewx.__version__)
+        # Now stick all the little pieces together with an ampersand between them:
+        _urlquery='&'.join(_liststr)
+        # This will be the complete URL for the HTTP GET:
+        _url=self.http_prefix + _urlquery
+        return _url
 
 #===============================================================================
 #                             class CWOP
