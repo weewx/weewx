@@ -3,13 +3,6 @@ TODO before the next release:
 Because the location of the executables and the configuration files now depend
 on the installation strategy, they all need symbolic names in the documentation.
 
-The following changes need to be incorporated into the packaging machinery:
-
-    runreports.py -> wee-reports.py
-    config_database.py -> wee-config-database.py
-    config_vp.py -> wee-config-vantage.py
-    config_fousb.py -> wee-config-fousb.py
-
 Consider changing:
     VantagePro.py -> vantage.py
     WMR918.py -> wmr9x8.py

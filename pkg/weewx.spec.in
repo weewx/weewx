@@ -94,10 +94,10 @@ chmod 755 %{buildroot}%{_initrddir}/weewx
 
 # create symlinks to the code entry points
 ln -s ../share/weewx/weewxd.py %{buildroot}%{_bindir}/weewxd
-ln -s ../share/weewx/runreports.py %{buildroot}%{_bindir}/wee-reports
-ln -s ../share/weewx/config_database.py %{buildroot}%{_bindir}/wee-config-database
-ln -s ../share/weewx/config_fousb.py %{buildroot}%{_bindir}/wee-config-fousb
-ln -s ../share/weewx/config_vp.py %{buildroot}%{_bindir}/wee-config-vp
+ln -s ../share/weewx/wee-reports.py %{buildroot}%{_bindir}/wee-reports
+ln -s ../share/weewx/wee-config-database.py %{buildroot}%{_bindir}/wee-config-database
+ln -s ../share/weewx/wee-config-fousb.py %{buildroot}%{_bindir}/wee-config-fousb
+ln -s ../share/weewx/wee-config-vantage.py %{buildroot}%{_bindir}/wee-config-vantage
 
 # pre-compile the python code
 python -m compileall %{buildroot}%{dst_bin_dir}

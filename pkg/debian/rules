@@ -64,10 +64,10 @@ install: build
 
 # create symlinks to the code entry points
 	ln -s ../share/weewx/weewxd.py $(DST)/usr/bin/weewxd
-	ln -s ../share/weewx/runreports.py $(DST)/usr/bin/wee-reports
-	ln -s ../share/weewx/config_database.py $(DST)/usr/bin/wee-config-database
-	ln -s ../share/weewx/config_fousb.py $(DST)/usr/bin/wee-config-fousb
-	ln -s ../share/weewx/config_vp.py $(DST)/usr/bin/wee-config-vp
+	ln -s ../share/weewx/wee-reports.py $(DST)/usr/bin/wee-reports
+	ln -s ../share/weewx/wee-config-database.py $(DST)/usr/bin/wee-config-database
+	ln -s ../share/weewx/wee-config-fousb.py $(DST)/usr/bin/wee-config-fousb
+	ln -s ../share/weewx/wee-config-vantage.py $(DST)/usr/bin/wee-config-vantage
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)

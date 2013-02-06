@@ -3,10 +3,10 @@ README
 setup.cfg
 setup.py
 weewx.conf
+bin/daemon.py
 bin/wee-config-database.py
 bin/wee-config-fousb.py
 bin/wee-config-vantage.py
-bin/daemon.py
 bin/wee-reports.py
 bin/weewxd.py
 bin/examples/__init__.py
