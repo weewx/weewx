@@ -116,10 +116,12 @@
 	the standard service for creating reports. This will be what most users will 
 	want to customize even if it means changing just a few options. </p>
       <h3>Reports</h3>
-      <p>The Standard Report Service runs zero or more <em>Reports.</em> Which reports 
-	get run is set in the configuration file <span class="code">weewx.conf</span>, 
+      <p>The Standard Report Service runs zero or more <em>Reports.</em> The 
+	  specific reports 
+	  which get run are set in the configuration file <span class="code">weewx.conf</span>, 
 	in section <span class="code">[StdReport]</span>. </p>
-      <p>The default distribution of weewx includes two reports: </p>
+      <p>The default distribution of <span class="code">weewx</span> includes 
+	  three reports: </p>
       <table class="center" style="width: 80%" summary="Standard reports included in weewx">
 	<tr>
 	  <td><strong>Report</strong></td>
@@ -133,7 +135,7 @@
 	</tr>
 	<tr>
 	  <td class="code">FTP</td>
-	  <td>Arranges to upload everything in the <span class="code">public_html</span> 
+	  <td>Arranges to upload everything in the <span class="symcode">$HTML_ROOT</span> 
 	    subdirectory up to a remote webserver.</td>
 	</tr>
 	<tr>
@@ -154,12 +156,13 @@
 	one report can use the same skin. For example, you might want to run a report 
 	that uses US Customary units, then run another report against the same skin, 
 	but using metric units and put the results in a different place. All this is 
-	possible by either overriding configuration options in the weewx configuration 
+	possible by either overriding configuration options in the 
+	  <span class="code">weewx</span> configuration 
 	file <span class="code">weewx.conf</span> or the skin configuration file
 	<span class="code">skin.conf</span>. </p>
       <p>Like all reports, the FTP and RSYNC &quot;Reports&quot; also use a skin, 
 	and include a skin configuration file, although they are quite minimal. </p>
-      <p>Skins live in their own subdirectory located in <span class="code"><em>$HTML_ROOT</em>/skins</span>.
+      <p>Skins live in their own subdirectory located in <span class="symcode">$SKIN_ROOT</span>.
       </p>
       <h3>Generators</h3>
       <p>To create their output, skins rely on one or more <em>Generators, </em>code 
@@ -214,7 +217,7 @@
 	<li>The <em>statistical database</em>, given symbolic name '<span class="code">stats_database</span>'. 
 	  It consists of a separate table for each observation type (that is, one 
 	  for '<span class="code">outTemp</span>', one for '<span class="code">barometer</span>', 
-	  etc.), each containing one record per day, keyed by the start time of the 
+	  <em>etc.</em>), each containing one record per day, keyed by the start time of the 
 	  day. </li>
       </ul>
       <p>How these abstract databases are bound to the real database is covered in 
@@ -243,11 +246,11 @@
       <p>Changing an option means either modifying the main configuration file
 	<span class="code">weewx.conf</span>, or the skin configuration file for the 
 	standard skin that comes with the distribution (nominally, file
-	<span class="code">skins/Standard/skin.conf</span>). </p>
+	  <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>). </p>
       <h3>Changing options in <span class="code">skin.conf</span></h3>
       <p>With this approach, the user edits the skin configuration file for the standard 
 	skin that comes with <span class="code">weewx</span>, located in
-	<span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>, using 
+	  <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>, using 
 	a text editor. For example, suppose you wish to use metric units in the presentation 
 	layer, instead of the default US Customary Units. The section that controls 
 	units is <span class="code">[Units][[Groups]]</span>. It looks like this:
@@ -316,8 +319,10 @@
 	you can use the same skin to produce several different output, each with separate 
 	options. </p>
       <p>Revisiting our example, suppose you want two reports, one in US Customary, 
-	the other in Metric. The former will go in the directory <span class="code">
-	  public_html</span>, the latter in a subdirectory, <span class="code">public_html/metric</span>. 
+	the other in Metric. The former will go in the directory 
+	  <span class="symcode">
+	  $HTML_ROOT</span>, the latter in a subdirectory, <span class="symcode">
+	  $HTML_ROOT</span><span class="code">/metric</span>. 
 	If you just simply modify <span class="code">skin.conf</span>, you can get one, 
 	but not both at the same time. Alternatively, you could create a whole new skin 
 	by copying all the files to a new skin subdirectory then editing the new
@@ -985,9 +990,9 @@ Sunrise, sunset: 06:51 19:30</p>
 	and manually setting the horizon to be 34 arcminutes lower than the normal horizon. 
 	This is what the Navy uses.</p>
       <p>If you wish to calculate the start of civil twilight, you can set the horizon 
-	to -6, and also tell <span class="code">weewx</span> to use the center of the 
+	to -6 degrees, and also tell <span class="code">weewx</span> to use the center of the 
 	sun (instead of the upper limb, which it normally uses) to do the calcuation:</p>
-      <p class="tty">$almanac(pressure=0, horizon=-6.sun(use_center=1).rise</p>
+      <p class="tty">$almanac(pressure=0, horizon=-6).sun(use_center=1).rise</p>
       <p>The general syntax is:</p>
       <p class="tty">$almanac(pressure=<em>pressure</em>, horizon=<em>horizon</em>,
          temperature=<em>temperature_C</em>).<em>heavenly_body</em>(use_center=[01]).<em>attribute</em></p>
@@ -1215,13 +1220,13 @@ class MyFileGenerator(FileGenerator):                                  # 1
 	you do an upgrade, forcing you to cut and paste any changes you have made.
       </p>
       <p>A better idea is to copy over the examples to the subdirectory
-	<span class="code"><em>$WEEWX_ROOT</em>/bin/user</span>, then modify them there. 
+	  <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>, then modify them there. 
 	This subdirectory is preserved through upgrades, so you won&#39;t have to redo 
 	any changes you might have made. </p>
       <h1 id="The_Standard_skin_configuration_file">Reference: The Standard skin configuration 
 	file</h1>
       <p>This section is a reference to the options appearing in the Standard skin 
-	configuration file, found in <span class="code"><em>$WEEWX_ROOT</em>/skins/Standard/skin.conf</span>.
+	configuration file, found in <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>.
       </p>
       <p>It is worth noting that, like the main configuration file
 	<span class="code">weewx.conf</span>, UTF-8 is used throughout. The most important 
@@ -1373,6 +1378,11 @@ ephem_year = %d-%b-%Y %H:%M</p>
 	times within the day, such as sunrise or sunset. The second,
 	<span class="code">ephem_year</span>, is used for almanac times within the year, 
 	such as the next equinox or full moon. </p>
+		<h3 class="config_section">[[Ordinates]]</h3>
+		<p class="config_option">directions</p>
+		<p>Set to the abbreviations to be used for ordinal directions. By 
+		default, this is <span class="code">N, NNE, NE, ENE, E, ESE, SE, SSE, S 
+		, SSW, SW, WSW, W, WNW, NW, NNW, N</span>.</p>
       <h3 class="config_section">[[DegreeDays]]</h3>
       <p class="config_important">heating_base <br />
 	cooling_base </p>
@@ -1820,9 +1830,8 @@ outTemp = Outside Temperature</p>
 	an upgrade</h2>
       <p>Generally, if you change the code in <span class="code">weewx</span> you 
 	will have to cut-and-paste any changes you have made to the new code. However, 
-	if you put the changes in the special directory <span class="code"><em>$WEEWX_ROOT</em>/bin/user</span> 
-	(usually, <span class="code">/home/weewx/bin/user</span>) the setup routines 
-	arranges for the changes to be preserved across an upgrade. </p>
+	if you put the changes in the special directory <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>, the installation routines 
+	  will arrange for the changes to be preserved across an upgrade. </p>
       <h2 id="Customizing_a_service">Customizing a Service</h2>
       <p>The service <span class="code">weewx.wxengine.StdPrint</span> prints out 
 	new LOOP and archive packets to the console when they arrive. By default, it 
@@ -1832,7 +1841,7 @@ outTemp = Outside Temperature</p>
 	whenever a new LOOP packet arrives. This could be done by subclassing the default 
 	print service <span class="code">StdPrint</span> and overriding member function
 	<span class="code">new_loop_packet()</span>. </p>
-      <p>In file <span class="code">bin/user/myprint.py</span>: </p>
+      <p>In file <span class="symcode">$BIN_ROOT</span><span class="code">/user/myprint.py</span>: </p>
       <p class='tty'>from weewx.wxengine import StdPrint
 from weeutil.weeutil import timestamp_to_string
 
@@ -1865,8 +1874,8 @@ class MyPrint(StdPrint):
 	base class <span class="code">StdService</span>, and then adding the functionality 
 	you need. Here&#39;s an example that implements an alarm that sends off an email 
 	when an arbitrary expression evaluates <span class="code">True</span>. This 
-	example is included in the standard distribution in subdirectory &quot;<span class="code">bin/examples</span>&quot;.
-      </p>
+	  example is included in the standard distribution in subdirectory
+	  <span class="symcode">$BIN_ROOT</span><span class="code">/examples</span>.</p>
       <p>File <span class="code">examples/alarm.py</span>: </p>
       <p class="tty">import time
 import smtplib
@@ -1994,7 +2003,8 @@ class MyAlarm(StdService):
       <ol>
 	<li>Here is where the binding happens between an event, weewx.NEW_ARCHIVE_RECORD 
 	  in this example, and a member function, self.newArchiveRecord. There are 
-	  other events that can be interecepted. Look in the file ./bin/weewx/__init__.py.</li>
+	  other events that can be interecepted. Look in the file 
+	<span class="symcode">$BIN_ROOT</span><span class="code">/weewx/__init__.py</span>.</li>
 	<li>This is where the test is done of whether or not to sound the alarm. 
 	  The <span class="code">[Alarm]</span> configuration options specify that 
 	  the alarm be sounded when &quot;<span class="code">outTemp &lt; 40.0</span>&quot; 
@@ -2037,11 +2047,10 @@ class MyAlarm(StdService):
 	advantage of being compatible with the wview database. Nevertheless, there may 
 	be occasions where you may want to add a SQL type to your database, or change 
 	its unit system. This section shows you how to do this, using the utility
-	<span class="code">./bin/wee-config-database.py</span>.</p>
+	  <span class="symcode">$BIN_ROOT</span><span class="code">/wee-config-database.py</span>.</p>
       <p>Before starting, it's worth running the utility with the
 	<span class="code">--help</span> flag to see how it is used:</p>
-      <p class="tty">cd /home/weewx
-./bin/wee-config-database.py --help</p>
+      <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-database.py --help</p>
       <h2>Adding a new observation type</h2>
       <p>Suppose you have installed an electric meter at your house and you wish to 
 	correlate electrical usage with the weather. The meter has some sort of connection 
@@ -2126,8 +2135,7 @@ class MyAlarm(StdService):
 	run the utility <span class="code">we-config-database.py</span> with the
 	<span class="code">--reconfigure</span> option and the path to the configuration 
 	file:</p>
-      <p class="tty">cd /home/weewx
-./bin/wee-config-database.py --reconfigure ./weewx.conf</p>
+      <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-database.py --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       <p>This will create a new database (nominally, <span class="code">weewx.sdb_new</span> 
 	if you are using sqlite, <span class="code">weewx_new</span> if you are using 
 	MySQL) using the new schema and populate it with data from the old database.
@@ -2141,7 +2149,7 @@ class MyAlarm(StdService):
         First do a backup!
       </p>
       <p>For sqlite:</p>
-      <p class="tty">cd /home/weewx/archive
+      <p class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</p>
       <p>For MySQL:</p>
       <p class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
@@ -2245,8 +2253,7 @@ mv weewx.sdb_new weewx.sdb</p>
       <p>3. <strong>Run <span class="code">wee-config-database.py</span>.</strong> Now 
 	run the utility <span class="code">wee-config-database.py</span> with the
 	<span class="code">--reconfigure</span> option:</p>
-      <p class="tty">cd /home/weewx
-./bin/wee-config-database.py --reconfigure ./weewx.conf</p>
+      <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-database.py --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       <p>This will create a new database (nominally, <span class="code">weewx.sdb_new</span> 
 	if you are using sqlite, <span class="code">weewx_new</span> if you are using 
 	MySQL), using the schema found in <span class="code">./bin/user/schemas.py</span>, 
