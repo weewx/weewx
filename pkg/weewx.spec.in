@@ -104,19 +104,23 @@ python -m compileall %{buildroot}%{dst_bin_dir}
 
 %post
 python -m compileall %{dst_bin_dir}
-chkconfig weewx on
-%{_initrddir}/weewx start
+if [ "$1" = "1" ]; then
+  # this is a new installation
+  chkconfig weewx on
+  %{_initrddir}/weewx start
+elif [ "$1" = "2" ]; then
+  # this is an upgrade, so do a full restart not just a HUP
+  %{_initrddir}/weewx stop
+  %{_initrddir}/weewx start
+fi
 
 %preun
 if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
   %{_initrddir}/weewx stop
   chkconfig weewx off
-elif [ "$1" = "1" ]; then
-  # this is an upgrade, so do a full restart not just a HUP
-  %{_initrddir}/weewx stop
-  %{_initrddir}/weewx start
 fi
+# otherwise this is an upgrade (1), so do nothing
 
 %clean
 rm -rf %{buildroot}
