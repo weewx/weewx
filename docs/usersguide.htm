@@ -412,7 +412,7 @@ Version: 2.2
           <tr>
             <td>Executables</td>
           	<td class="symcode">$BIN_ROOT</td>
-            <td class='tty'>/usr/bin/</td>
+            <td class='tty'>/usr/share/weewx/</td>
           </tr>
           <tr>
             <td>Configuration directory</td>
@@ -464,7 +464,7 @@ Version: 2.2
           <tr>
             <td>Executables</td>
           	<td class="symcode">$BIN_ROOT</td>
-            <td class='tty'>/usr/bin/</td>
+            <td class='tty'>/usr/share/weewx/</td>
           </tr>
           <tr>
             <td>Configuration directory</td>
@@ -512,7 +512,12 @@ Version: 2.2
           	<td><strong>Role</strong></td>
           	<td><strong>Symbolic name</strong></td>
           	<td><strong>Nominal Location</strong></td>
-          	</tr>
+          </tr>
+          <tr>
+          	<td>Weewx root directory</td>
+          	<td class="symcode">$WEEWX_ROOT</td>
+          	<td class="tty">/home/weewx</td>
+          </tr>
           <tr>
             <td>Executables</td>
           	<td class="symcode">$BIN_ROOT</td>
@@ -759,15 +764,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>Set to 1 to have the program perform extra debug checks, as well as emit 
       extra information in the log file. Otherwise, set to 0. Default is 0 (no debug).
     </p>
-    <p class="config_important">WEEWX_ROOT </p>
-    <p>Set to the root directory of the <span class="code">weewx</span> file hierarchy 
-      for this station, nominally <span class="code">/home/weewx</span>. 
-      The <span class="code">weewx</span> data subdirectories <span class="code">skins</span>,
-      <span class="code">archive</span>, and <span class="code">public_html</span> 
-      are expected to be found here. This value will be set automatically by the setup 
-      script <span class="code">setup.py</span> to reflect the choice you made in 
-      the configuration file <span class="code">setup.cfg</span> during 
-      installation. Required. No default.
+    <p class="config_option">WEEWX_ROOT </p>
+    <p>Set to the root directory of the <span class="code">weewx</span> file 
+	hierarchy for this station. Normally, this is set automatically by the 
+	installation process. Required. No default.
     </p>
     <p class="config_option">socket_timeout </p>
     <p>Set to how long to wait before declaring a socket time out. This is used 
@@ -1001,9 +1001,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       <span class="code">skins</span>. </p>
     <p class="config_option">HTML_ROOT </p>
     <p>The target directory for the generated files. A relative path is
-      relative to <span class="code"><em>$WEEWX_ROOT</em></span>. Generated
-      files and images will be put here. Default is
-      <span class="code">public_html</span>. </p>
+      relative to <span class="code"><em>$WEEWX_ROOT</em></span>. Generated 
+	files and images will be put here. </p>
     <h4 class="config_section">[[StandardReport]]</h4>
     <p>This is the standard report that will be run on every archiving interval. 
       It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates 
@@ -1310,40 +1309,45 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       reload any code.</p>
     <h2 id="Running_as_a_daemon">Running as a daemon</h2>
     <p>For unattended operations it is best to have <span class="code">weewx</span> 
-      run as a daemon, started automatically when the server is rebooted. Start by 
-      selecting the appropriate run script. They can be found under
-      <span class="code"><em>$WEEWX_ROOT</em>/util/init.d</span>. </p>
+      run as a daemon, started automatically when the server is rebooted. </p>
+	  <p>If you use a packaged install from a DEB or RPM distribution, this is 
+	  done automatically. You can ignore this section.</p>
+	  <p>Start by 
+      selecting the appropriate run script. They can be found under 	  <span class="symcode">$$WEEWX_ROOT</span><span class="code">/util/init.d/span>. </p>
     <table class="locations center" style="width: 90%">
       <tr>
 	<td >Debian/Ubuntu/Mint:</td>
-	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.debian</td>
+		  </span>
+	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian</td>
       </tr>
       <tr>
 	<td >Redhat/CentOS/Mint:</td>
-	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat</td>
+		  </span>
+	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat</td>
       </tr>
       <tr>
 	<td style="width: 25%">SuSE:</td>
-	<td class='tty'><em>$WEEWX_ROOT</em>/util/init.d/weewx.suse</td>
+		  </span>
+	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse</td>
       </tr>
     </table>
-    <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 
-      has been set to the proper root directory for your <span class="code">
-	weewx</span> installation (it should have been set to the correct value automatically 
+    <p>Check the chosen script to make sure the variable WEEWX_ROOT 
+      has been set to the proper root directory for your 
+	weewx installation (it should have been set to the correct value automatically 
       by the install process, but it&#39;s worth checking). </p>
     <p>Copy it to the proper location for your system: </p>
     <table class="locations center" style="width: 90%">
       <tr>
 	<td>Debian/Ubuntu/Mint:</td>
-	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.debian /etc/init.d/weewx</td>
+	<td class='tty'>cp </span><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian /etc/init.d/weewx</td>
       </tr>
       <tr>
 	<td>Redhat/CentOS/Fedora:</td>
-	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</td>
+	<td class='tty'>cp <em>$</em></span><span class="symcode">WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</td>
       </tr>
       <tr>
 	<td style="width: 25%">SuSE:</td>
-	<td class='tty'>cp <em>$WEEWX_ROOT</em>/util/init.d/weewx.suse /etc/init.d/weewx</td>
+	<td class='tty'>cp <em>$</em></span><span class="symcode">WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse /etc/init.d/weewx</td>
       </tr>
     </table>
     <p>Make sure the script is executable: </p>
@@ -1423,7 +1427,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       file.  Assuming that the <span class='code'>wview</span> data are in a
       sqlite database <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
     <p class='tty'>sudo /etc/init.d/weewx stop
-cd /home/weewx/archive
+cd <span class="symcode">$SQLITE_ROOT</span>
 rm stats.sdb
 mv weewx.sdb weewx.sdb.bak
 cp /var/wview/archive/wview-archive.sdb weewx.sdb
@@ -1483,7 +1487,7 @@ sudo /etc/init.d/apache restart</p>
 	will catch and log any unrecoverable exceptions. But if you are getting
 	strange results, it is worth running from the command line and looking
         for any clues.
-        <p class='tty'><em>$WEEWX_ROOT</em>/bin/weewx/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</p>
+        <p class='tty'><span class="symcode">$BIN_ROOT</span>/weewxd.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       </li>
     </ul>
 
@@ -1635,8 +1639,7 @@ port = /dev/cuaU0</p>
 	<span class="code">wee-config-vantage.py</span>. This may cause loss of data, but 
 	usually works. Adjust paths as necessary:</li>
     </ol>
-    <p class="tty">cd /home/weewx
-./bin/wee-config-vantage.py weewx.conf --clear </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --clear </p>
 	  <p>See also the section <em><a href="#Dumping_the_logger_memory">Dumping 
 	  the logger memory</a></em>.</p>
     <h3>3rd party Vantage connectors</h3>
