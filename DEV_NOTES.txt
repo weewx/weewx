@@ -39,17 +39,20 @@ source install:
   setup.py install
   setup.py install home=/opt/weewx-x.y.z
 
-debian install:
-  dpkg -i weewx_x.y.z-r.deb
-  (apt-get install weewx)
+debian:
+  dpkg -i weewx_x.y.z-r.deb           # install
+  (apt-get install weewx)             # finish install if dependencies failed
 
-redhat install:
-  yum install weewx [--nogpgcheck]
+redhat:
+  yum install weewx-x.y.z-r.rpm [--nogpgcheck]    # install with yum
+  yum remove weewx                                # remove with yum
+  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
+  rpm -e weewx                                    # remove with rpm
 
 how to update the version number:
-  modify __version__ in bin/weewx/__init__.py
-  make version
-  svn commit -m "..."
+  modify __version__ in bin/weewx/__init__.py     # canonical version location
+  make version                # this propagates the version number everywhere
+  svn commit -m "..."         # commit the change to the repository
 
 how to build source package:
   make src-package
@@ -66,6 +69,17 @@ how to build redhat package:
   svn commit -m "..."
   make rpm-package
 
+there are multiple changelogs:
+  docs/changes.txt - definitive changelog for the application
+  pkg/debian/changelog - changes to the debian packaging
+  pkg/changelog.rpm - changes to the redhat packaging
+  README.txt - copy of changes.txt uploaded to sourceforge files directory
+
+the debian changelog *must* have a version number that matches the app version.
+the redhat package will build if the version numbers do not match.  use the
+rpm-changelog and deb-changelog targets to ensure that changelog versions match
+the application version for a release.
+
 to generate gpg key used for signing packages:
   gpg --gen-key
   gpg --list-keys
@@ -77,17 +91,13 @@ for signing rpm packages:
 
 gpg info must match the name and email in the changelog entries.
 
-there are multiple changelogs:
-  docs/changes.txt - definitive changelog for the app
-  pkg/debian/changelog - changes to the debian packaging
-  pkg/weewx.spec.in - changes to the redhat packaging
-  README.txt - copy of changes.txt uploaded to sourceforge
-
 there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
 dir and is fairly low-level) but that does not create changes and source diffs.
 then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
 the config and templates.  ended up using dpkg-buildpackage with some manual
 (scripted) file manipulation.
 
-what to test when creating debian packages:
+what to test when creating debian and redhat packages:
   install, upgrade, remove, purge
+  install, modify files, remove
+  install, modify files, upgrade
