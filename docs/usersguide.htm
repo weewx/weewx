@@ -398,16 +398,16 @@ Version: 2.2
       <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
     </div>
 
-    <div id='layout' style='clear:both'>
+    <div id='layout' style='clear:both; width: 60%;'>
       <div id='layout-deb'>
-        <table class='locations' width='50%'>
+        <table class='locations' width='100%'>
           <tr class='selected'>
             <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
           </tr>
           <tr>
           	<td><strong>Role</strong></td>
-          	<td><strong>Symbolic name</strong></td>
-          	<td><strong>Nominal location</strong></td>
+          	<td><strong>Symbolic Name</strong></td>
+          	<td><strong>Nominal Location</strong></td>
           	</tr>
           <tr>
             <td>Executables</td>
@@ -452,14 +452,14 @@ Version: 2.2
         </table>
       </div>
       <div id='layout-rpm' style='display:none'>
-        <table class='locations' width='50%'>
+        <table class='locations' width='100%'>
           <tr class='selected'>
             <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
           </tr>
           <tr>
           	<td><strong>Role</strong></td>
-          	<td><strong>Symbolic name</strong></td>
-          	<td><strong>Nominal location</strong></td>
+          	<td><strong>Symbolic Name</strong></td>
+          	<td><strong>Nominal Location</strong></td>
           	</tr>
           <tr>
             <td>Executables</td>
@@ -504,13 +504,13 @@ Version: 2.2
         </table>
       </div>
       <div id='layout-setup' style='display:none'>
-        <table class='locations' width='50%'>
+        <table class='locations' width='100%'>
           <tr class='selected'>
             <td colspan='3' class='locations_banner'>Application layout for install using <span class='code'>setup.py</span></td>
           </tr>
           <tr>
           	<td><strong>Role</strong></td>
-          	<td><strong>Symbolic name</strong></td>
+          	<td><strong>Symbolic Name</strong></td>
           	<td><strong>Nominal Location</strong></td>
           </tr>
           <tr>
@@ -694,12 +694,12 @@ Offset:                       -1.000</p>
 	  records from the on board logger in the Vantage. However, occasionally the 
 	  memory in the Vantage will get corrupted, making this impossible. See the 
 	  troubleshooting section below <em>"<a href="#Weewx_generates_HTML_pages,_but_it_does_not_update_them">Weewx 
-	  generates HTML pages, but it does not update them</a></em>"<em>.</em> The 
+	  generates HTML pages, but it does not update them</a></em>". The 
 	  fix involves clearing the memory but, unfortunately, this means you may 
 	  lose any data which might have accumulated in the logger memory, but not 
 	  yet downloaded. By using the <span class="code">--dump</span> command 
 	  before clearing you might be able to save these data. </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <em class="symcode">$CONFIG_ROOT</em>/weewx.conf --dump</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --dump</p>
 	  <p>This will dump all data archived in the Vantage memory directly to the 
 	  database, without regard to whether or not they have been seen before. 
 	  Because the command dumps <em>all</em> data, it may result in many 
@@ -997,7 +997,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     </p>
     <p class="config_option">SKIN_ROOT </p>
     <p>The directory where the skins live. A relative path is relative to
-      <span class="code"><em>$WEEWX_ROOT</em></span>. Default is
+      <span class="symcode">$WEEWX_ROOT</span>. Default is
       <span class="code">skins</span>. </p>
     <p class="config_option">HTML_ROOT </p>
     <p>The target directory for the generated files. A relative path is
@@ -1013,8 +1013,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	public_html/NOAA</span>. </p>
     <h4 class="config_section">[[FTP]]</h4>
     <p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
-      uses the report machinery to upload files from directory <span class="code">
-	<em>$HTML_ROOT</em></span> to a remote webserver. It does an incremental update, 
+      uses the report machinery to upload files from directory <span class="symcode">
+	$HTML_ROOT</span> to a remote webserver. It does an incremental update, 
       that is, it only FTPs any files that have changed, saving the outgoing bandwidth 
       of your Internet connection. </p>
     <p>If you do not use such a server, comment out the first four options below.
@@ -1045,8 +1045,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       up to your server before giving up. Default is 3. </p>
     <h4 class="config_section">[[RSYNC]]</h4>
     <p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
-      uses the report machinery to upload files from directory <span class="code">
-	<em>$HTML_ROOT</em></span> to a remote webserver. It does an incremental update, 
+      uses the report machinery to upload files from directory <span class="symcode">
+	$HTML_ROOT</span> to a remote webserver. It does an incremental update, 
       that is, it only synchronizes those files that have changed, saving the outgoing 
       bandwidth of your Internet connection. </p>
     <p>If you do not use such a server, comment out the options below. </p>
@@ -1476,12 +1476,12 @@ sudo /etc/init.d/apache restart</p>
         <span class="code">1</span> in <span class='code'>weewx.conf</span>.
         This will put much more information in the log file, which can
         be very useful for troubleshooting and debugging!
-        <p class='tty'>debug = 1</p>
+        <p class='tty' style="margin-top:1em">debug = 1</p>
       </li>
       <li style="margin-bottom:1em"><a href="#Monitoring_weewx">Look at the log file</a>. I am always
         happy to take questions, but the first thing I will ask you is,
         &quot;Did you look at the log file?&quot;
-        <p class='tty'>tail -f /var/log/messages</p>
+        <p class='tty' style="margin-top:1em">tail -f /var/log/messages</p>
       </li>
       <li style="margin-bottom:1em">Run from the command line. Generally, <span class="code">weewx</span>
 	will catch and log any unrecoverable exceptions. But if you are getting

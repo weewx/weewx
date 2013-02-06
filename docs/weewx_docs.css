@@ -67,18 +67,14 @@ h4 {
 	font-style: italic;
 }
 table {
-    border-style: solid;
-    border-width: 1px;
-    border-color: #aaaaaa;
+    border: 1px solid #dddddd;
     border-collapse: collapse;
 }
 tr {
   vertical-align: top;
 }
 td {
-    border-style: solid;
-    border-width: 1px;
-    border-color: #aaaaaa;
+    border: 1px solid #dddddd;
     padding: 5px;
 }
 .indent {
@@ -171,14 +167,15 @@ table.center {
 }
 .locations {
     margin-left: 20px;
+    border: none;
 }
 .locations tr {
+    border: none;
     vertical-align: middle;
 }
 .locations_banner {
     font-weight: bold;
-    text-align: center;
-    font-size: 80%;
+    border: 1px solid #447777;
 }
 .tabs {
     float: left;
@@ -195,8 +192,8 @@ table.center {
 }
 .selected {
     color: black;
-    border-top: 1px solid #ddddaa;
-    border-left: 1px solid #ddddaa;
-    border-right: 1px solid #ddddaa;
-    background-color: #FFFFe0;
+    border-top: 1px solid #447777;
+    border-left: 1px solid #447777;
+    border-right: 1px solid #447777;
+    background-color: #88bbbb;
 }

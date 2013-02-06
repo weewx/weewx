@@ -2142,12 +2142,14 @@ class MyAlarm(StdService):
       </p>
       <p>4. <strong><a name="Shuffle_the_databases">Shuffle the databases</a>.</strong> 
 	Now arrange things so <span class="code">weewx</span> can find the new database. 
+      </p>
+      <p class='warning'><strong>Warning!</strong><br/>
+        Make a backup of the data before doing any of the next steps!
+      </p>
+      <p>
 	You can either shuffle the databases around so the new database has the same 
 	name as the old database, or edit <span class="code">weewx.conf</span> to use 
 	the new database name. To do the former:</p>
-      <p class='warning'><strong>Warning!</strong><br/>
-        First do a backup!
-      </p>
       <p>For sqlite:</p>
       <p class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</p>
