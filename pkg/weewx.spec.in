@@ -108,8 +108,15 @@ chkconfig weewx on
 %{_initrddir}/weewx start
 
 %preun
-%{_initrddir}/weewx stop
-chkconfig weewx off
+if [ "$1" = "0" ]; then
+  # this is an uninstall, so stop and remove everything
+  %{_initrddir}/weewx stop
+  chkconfig weewx off
+elif [ "$1" = "1" ]; then
+  # this is an upgrade, so do a full restart not just a HUP
+  %{_initrddir}/weewx stop
+  %{_initrddir}/weewx start
+fi
 
 %clean
 rm -rf %{buildroot}
@@ -122,7 +129,7 @@ rm -rf %{buildroot}
 %{_bindir}/wee-reports
 %{_bindir}/wee-config-database
 %{_bindir}/wee-config-fousb
-%{_bindir}/wee-config-vp
+%{_bindir}/wee-config-vantage
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
 

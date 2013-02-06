@@ -27,10 +27,10 @@ Version: 2.2
       <ul>
         <li><a href="#Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></li>
         <li><a href="#Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM Package</a></li>
-        <li><a href="#Instructions_for_specific_versions">Instructions for specific versions</a></li>
+        <li><a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></li>
       </ul>
     <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for 
-	  specific versions</a></em> applies to both installation methods.</p>
+	  Specific Versions</a></em> applies to both installation methods.</p>
       <p class="warning"><strong>Warning!</strong><br/>
         You must use the same upgrade technique as your initial install!<br/>
         <br/>
@@ -44,7 +44,7 @@ Version: 2.2
 
     <h1><a name="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
     <p>Before upgrading <span class="code">weewx</span>, check the section <em>
-	<a href="#Instructions_for_specific_versions">Instructions for specific versions</a></em> to see if any specific actions are
+	<a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></em> to see if any specific actions are
       required. Then follow the standard installation procedure:</p>
     <p>Unpack the archive:</p>
     <p class="tty">tar xvf weewx-X.Y.Z.tar.gz</p>
@@ -79,13 +79,13 @@ Version: 2.2
 	one does not already exist. </li>
     </ul>
 
-    <h1><a name="Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM package</a></h1>
+    <h1><a name="Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM Package</a></h1>
     <h2>DEB Package</h2>
     <p>Upgrade to X.Y.Z like this:</p>
     <p class='tty'>sudo dpkg -i weewx_X.Y.Z-R.deb</p>
-    <p>If modifications have been made to the weewx configuration, you will
-      be prompted as to whether you want to keep the existing configuration
-      or accept the new configuration.  Either way,
+    <p>Unmodified files will be upgraded.  If modifications have been made to the
+      weewx configuration, you will be prompted as to whether you want to keep
+      the existing configuration or accept the new configuration.  Either way,
       <span class='code'>dpkg</span> will save a copy of the option you
       did not choose.</p>
     <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
@@ -117,10 +117,22 @@ Version: 2.2
       databases.</p>
 
     <h2>RPM Package</h2>
-    <p>Upgrade from X.Y.A to X.Y.B like this:</p>
-    <p class='tty'>sudo rpm -i weewx-X.Y.B-R.rpm</p>
+    <p>Upgrade from X.Y.Z like this:</p>
+    <p class='tty'>sudo rpm -U weewx-X.Y.Z-R.rpm</p>
+    <p>Unmodified files will be upgraded.  If modifications have been made to the
+     configuration, <span class='code'>rpm</span> will display a message about
+     any differences between the changes and the new configuration.  Any new
+     changes from the upgrade will be noted as files with a
+     <span class='code'>.rpmnew</span> extension and the modified files will be
+     left untouched.</p>
+    <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
+     modified, <span class='code'>rpm</span> will present a message something
+     like this:</p> 
+    <p class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</p>
+    <p>The upgrade process will not modify the <span class='code'>weewx</span>
+     databases.</p>
 
-    <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+    <h1><a name="Instructions_for_specific_versions">Instructions for Specific Versions</a></h1>
     <h2>V2.1 or earlier</h2>
     <p>Version 2.2 introduces a schema, found in <span class="code">
         bin/user/schemas.py</span>, for the stats database. This schema is
