@@ -514,7 +514,7 @@ Version: 2.2
           	<td><strong>Nominal Location</strong></td>
           </tr>
           <tr>
-          	<td>Weewx root directory</td>
+          	<td><span class='code'>weewx</span> root directory</td>
           	<td class="symcode">$WEEWX_ROOT</td>
           	<td class="tty">/home/weewx</td>
           </tr>
@@ -1001,7 +1001,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       <span class="code">skins</span>. </p>
     <p class="config_option">HTML_ROOT </p>
     <p>The target directory for the generated files. A relative path is
-      relative to <span class="code"><em>$WEEWX_ROOT</em></span>. Generated 
+      relative to <span class="symcode">$WEEWX_ROOT</span>. Generated 
 	files and images will be put here. </p>
     <h4 class="config_section">[[StandardReport]]</h4>
     <p>This is the standard report that will be run on every archiving interval. 
@@ -1310,25 +1310,22 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
     <h2 id="Running_as_a_daemon">Running as a daemon</h2>
     <p>For unattended operations it is best to have <span class="code">weewx</span> 
       run as a daemon, started automatically when the server is rebooted. </p>
-	  <p>If you use a packaged install from a DEB or RPM distribution, this is 
-	  done automatically. You can ignore this section.</p>
-	  <p>Start by 
-      selecting the appropriate run script. They can be found under 	  <span class="symcode">$$WEEWX_ROOT</span><span class="code">/util/init.d/span>. </p>
+    <p>If you use a packaged install from a DEB or RPM distribution, this is 
+      done automatically. You can ignore this section.</p>
+    <p>Start by selecting the appropriate run script. They can be found under
+      <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/</span>. </p>
     <table class="locations center" style="width: 90%">
       <tr>
 	<td >Debian/Ubuntu/Mint:</td>
-		  </span>
-	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian</td>
+	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian</span></td>
       </tr>
       <tr>
 	<td >Redhat/CentOS/Mint:</td>
-		  </span>
-	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat</td>
+	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat</span></td>
       </tr>
       <tr>
 	<td style="width: 25%">SuSE:</td>
-		  </span>
-	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse</td>
+	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse</span></td>
       </tr>
     </table>
     <p>Check the chosen script to make sure the variable WEEWX_ROOT 
@@ -1339,15 +1336,15 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
     <table class="locations center" style="width: 90%">
       <tr>
 	<td>Debian/Ubuntu/Mint:</td>
-	<td class='tty'>cp </span><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian /etc/init.d/weewx</td>
+	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian /etc/init.d/weewx</span></td>
       </tr>
       <tr>
 	<td>Redhat/CentOS/Fedora:</td>
-	<td class='tty'>cp <em>$</em></span><span class="symcode">WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</td>
+	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</span></td>
       </tr>
       <tr>
 	<td style="width: 25%">SuSE:</td>
-	<td class='tty'>cp <em>$</em></span><span class="symcode">WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse /etc/init.d/weewx</td>
+	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse /etc/init.d/weewx</span></td>
       </tr>
     </table>
     <p>Make sure the script is executable: </p>
@@ -1487,7 +1484,7 @@ sudo /etc/init.d/apache restart</p>
 	will catch and log any unrecoverable exceptions. But if you are getting
 	strange results, it is worth running from the command line and looking
         for any clues.
-        <p class='tty'><span class="symcode">$BIN_ROOT</span>/weewxd.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+        <p class='tty' style="margin-top:1em"><span class="symcode">$BIN_ROOT</span>/weewxd.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       </li>
     </ul>
 
