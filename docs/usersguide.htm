@@ -388,7 +388,9 @@ Version: 2.2
       separate locations, most of which will require root privileges to
       modify.</p>
 	  <p>
-      Here is a summary of the layout for the different install methods:</p>
+      Here is a summary of the layout for the different install methods, along 
+	  with the symbolic names used for each role. These names are used 
+	  throughout the documentation. </p>
 
     <div class='tabs' style='padding-top:1em'>
       <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
@@ -400,38 +402,51 @@ Version: 2.2
       <div id='layout-deb'>
         <table class='locations' width='50%'>
           <tr class='selected'>
-            <td colspan='2' class='locations_banner'>Application layout for install using DEB package</td>
+            <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
           </tr>
           <tr>
-            <td align='right'>executables: </td>
+          	<td><strong>Role</strong></td>
+          	<td><strong>Symbolic name</strong></td>
+          	<td><strong>Nominal location</strong></td>
+          	</tr>
+          <tr>
+            <td>Executables</td>
+          	<td class="symcode">$BIN_ROOT</td>
             <td class='tty'>/usr/bin/</td>
           </tr>
           <tr>
-            <td align='right'>configuration file: </td>
-            <td class='tty'>/etc/weewx/weewx.conf</td>
+            <td>Configuration directory</td>
+          	<td class="symcode">$CONFIG_ROOT</td>
+            <td class='tty'>/etc/weewx/</td>
           </tr>
           <tr>
-            <td align='right'>skins and templates: </td>
+            <td>Skins and templates</td>
+          	<td class="symcode">$SKIN_ROOT</td>
             <td class='tty'>/etc/weewx/skins/</td>
           </tr>
           <tr>
-            <td align='right'>sqlite databases: </td>
+            <td>Sqlite databases</td>
+          	<td class="symcode">$SQLITE_ROOT</td>
             <td class='tty'>/var/lib/weewx/</td>
           </tr>
           <tr>
-            <td align='right'>web pages and images: </td>
+            <td>Web pages and images</td>
+            <td class="symcode">$HTML_ROOT</td>
             <td class='tty'>/var/www/weewx/</td>
           </tr>
           <tr>
-            <td align='right'>documentation: </td>
+            <td>Documentation</td>
+            <td class="symcode">$DOC_ROOT</td>
             <td class='tty'>/usr/share/doc/weewx/</td>
           </tr>
           <tr>
-            <td align='right'>PID file: </td>
+            <td>PID file</td>
+            <td class="symcode"></td>
             <td class='tty'>/var/run/weewx.pid</td>
           </tr>
           <tr>
-            <td align='right'>log file: </td>
+            <td>Log file</td>
+            <td class="symcode"></td>
             <td class='tty'>/var/log/syslog</td>
           </tr>
         </table>
@@ -439,38 +454,51 @@ Version: 2.2
       <div id='layout-rpm' style='display:none'>
         <table class='locations' width='50%'>
           <tr class='selected'>
-            <td colspan='2' class='locations_banner'>Application layout for install using RPM package</td>
+            <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
           </tr>
           <tr>
-            <td align='right'>executables: </td>
+          	<td><strong>Role</strong></td>
+          	<td><strong>Symbolic name</strong></td>
+          	<td><strong>Nominal location</strong></td>
+          	</tr>
+          <tr>
+            <td>Executables</td>
+          	<td class="symcode">$BIN_ROOT</td>
             <td class='tty'>/usr/bin/</td>
           </tr>
           <tr>
-            <td align='right'>configuration file: </td>
-            <td class='tty'>/etc/weewx/weewx.conf</td>
+            <td>Configuration directory</td>
+          	<td class="symcode">$CONFIG_ROOT</td>
+            <td class='tty'>/etc/weewx</td>
           </tr>
           <tr>
-            <td align='right'>skins and templates: </td>
+            <td>Skins and templates</td>
+          	<td class="symcode">$SKIN_ROOT</td>
             <td class='tty'>/etc/weewx/skins/</td>
           </tr>
           <tr>
-            <td align='right'>sqlite databases: </td>
+            <td>Sqlite databases</td>
+          	<td class="symcode">$SQLITE_ROOT</td>
             <td class='tty'>/var/lib/weewx/</td>
           </tr>
           <tr>
-            <td align='right'>web pages and images: </td>
+            <td>Web pages and images</td>
+            <td class="symcode">$HTML_ROOT</td>
             <td class='tty'>/var/www/html/weewx/</td>
           </tr>
           <tr>
-            <td align='right'>documentation: </td>
+            <td>Documentation</td>
+            <td class="symcode">$DOC_ROOT</td>
             <td class='tty'>/usr/share/doc/weewx-x.y.z/</td>
           </tr>
           <tr>
-            <td align='right'>PID file: </td>
+            <td>PID file</td>
+            <td class="symcode"></td>
             <td class='tty'>/var/run/weewx.pid</td>
           </tr>
           <tr>
-            <td align='right'>log file: </td>
+            <td>Log file</td>
+            <td class="symcode"></td>
             <td class='tty'>/var/log/messages</td>
           </tr>
         </table>
@@ -478,38 +506,51 @@ Version: 2.2
       <div id='layout-setup' style='display:none'>
         <table class='locations' width='50%'>
           <tr class='selected'>
-            <td colspan='2' class='locations_banner'>Application layout for install using <span class='code'>setup.py</span></td>
+            <td colspan='3' class='locations_banner'>Application layout for install using <span class='code'>setup.py</span></td>
           </tr>
           <tr>
-            <td align='right'>executables: </td>
+          	<td><strong>Role</strong></td>
+          	<td><strong>Symbolic name</strong></td>
+          	<td><strong>Nominal Location</strong></td>
+          	</tr>
+          <tr>
+            <td>Executables</td>
+          	<td class="symcode">$BIN_ROOT</td>
             <td class='tty'>/home/weewx/bin/</td>
           </tr>
           <tr>
-            <td align='right'>configuration file: </td>
-            <td class='tty'>/home/weewx/weewx.conf</td>
+            <td>Configuration directory</td>
+          	<td class="symcode">$CONFIG_ROOT</td>
+            <td class='tty'>/home/weewx/</td>
           </tr>
           <tr>
-            <td align='right'>skins and templates: </td>
+            <td>Skins and templates</td>
+          	<td class="symcode">$SKIN_ROOT</td>
             <td class='tty'>/home/weewx/skins/</td>
           </tr>
           <tr>
-            <td align='right'>sqlite databases: </td>
-            <td class='tty'>/home/weewx/archive/</td>
+            <td>Sqlite databases</td>
+          	<td class="symcode">$SQLITE_ROOT</td>
+            <td class='tty'>/home/weewx/archive</td>
           </tr>
           <tr>
-            <td align='right'>web pages and images: </td>
+            <td>Web pages and images</td>
+            <td class="symcode">$HTML_ROOT</td>
             <td class='tty'>/home/weewx/public_html/</td>
           </tr>
           <tr>
-            <td align='right'>documentation: </td>
+            <td>Documentation</td>
+            <td class="symcode">$DOC_ROOT</td>
             <td class='tty'>/home/weewx/docs/</td>
           </tr>
           <tr>
-            <td align='right'>PID file: </td>
+            <td>PID file</td>
+            <td class="symcode"></td>
             <td class='tty'>/var/run/weewx.pid</td>
           </tr>
           <tr>
-            <td align='right'>log file: </td>
+            <td>Log file</td>
+            <td class="symcode"></td>
             <td class='tty'>/var/log/syslog</td>
           </tr>
         </table>
@@ -529,11 +570,6 @@ Version: 2.2
     <p>This section covers configuring <span class="code">weewx</span>, in particular 
       the configuration files <span class="code">weewx.conf</span> and
       <span class="code">skin.conf</span>. </p>
-    <p>In the following, <span class="code"><em>$WEEWX_ROOT</em></span> refers to 
-      the <span class="code">weewx</span> root directory, generally
-      <span class="code">/home/weewx</span>. The subdirectories <span class="code">
-	archive</span>, <span class="code">skins</span>, and <span class="code">public_html</span> 
-      are expected to be found there. </p>
 
     <h2 id="Configuring_your_Davis_console">Configuring the Davis Vantage console</h2>
     <p>Weewx comes with a configuration utlity, <span class="code">wee-config-vantage.py</span>, 
@@ -541,7 +577,7 @@ Version: 2.2
       such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
     <p>Run it with the configuration file as an argument and <span class="code">
 	--help</span> as an option to see its usage: </p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/wee-config-vantage.py <em>$WEEWX_ROOT</em>/weewx.conf --help </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
     <p>This will print out something like:</p>
     <p class="tty">Usage: wee-config-vantage.py: config_path [--help] [--info] [--clear]
      [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
@@ -575,11 +611,11 @@ Options:
 Mutating actions will request confirmation before proceeding.</p>
     <p>It is useful to run it with the <span class="code">--info</span> option to 
       see what the current EEPROM settings are on your station: </p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/wee-config-vantage.py <em>$WEEWX_ROOT</em>/weewx.conf --info </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --info </p>
     <p>This will print out something like: </p>
     <p class="tty">VantagePro EEPROM settings:
       
-CONSOLE TYPE:                   VantagePro2
+CONSOLE TYPE:                 VantagePro2
       
 CONSOLE FIRMWARE:
 Date:                         Nov 28 2005
@@ -629,7 +665,7 @@ Offset:                       -1.000</p>
       dates after about 2006.</p>
     <p><span class="highlight">Highlighted</span> values can be changed.</p>
     <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/wee-config-vantage.py <em>$WEEWX_ROOT</em>/weewx.conf --set-interval=600</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-interval=600</p>
     <p>Other parameters can be set in a similar manner.</p>
     <h3 id="Archive_interval">Archive interval</h3>
     <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
@@ -647,7 +683,7 @@ Offset:                       -1.000</p>
     <p>Normally, this is set by Davis, but if you have replaced your bucket with 
       a different kind, you might want to reconfigure. For example, to change to a 
       0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/wee-config-vantage.py <em>$WEEWX_ROOT</em>/weewx.conf --set-bucket=2</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-bucket=2</p>
     <h3>Dumping the logger memory</h3>
 	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
 	  records from the on board logger in the Vantage. However, occasionally the 
@@ -658,7 +694,7 @@ Offset:                       -1.000</p>
 	  lose any data which might have accumulated in the logger memory, but not 
 	  yet downloaded. By using the <span class="code">--dump</span> command 
 	  before clearing you might be able to save these data. </p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/wee-config-vantage.py <em>$WEEWX_ROOT</em>/weewx.conf --dump</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <em class="symcode">$CONFIG_ROOT</em>/weewx.conf --dump</p>
 	  <p>This will dump all data archived in the Vantage memory directly to the 
 	  database, without regard to whether or not they have been seen before. 
 	  Because the command dumps <em>all</em> data, it may result in many 
@@ -696,8 +732,8 @@ Offset:                       -1.000</p>
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
 mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</p>
     <h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
-    <p>Station specific information is set in the configuration file <em>
-	<span class="code">$WEEWX_ROOT/weewx.conf</span></em>. (There is another configuration 
+    <p>Station specific information is set in the configuration file 
+	<span class="symcode">$CONFIG_ROOT</span><span class="code"><em>/weewx.conf</em></span>. (There is another configuration 
       file <span class="code">skin.conf</span> for presentation-specific options, 
       which is described in the <a href="customizing.htm">Customizing Guide</a> under section <em>
 	<a href="customizing.htm#The_Standard_skin_configuration_file">Reference: The 
@@ -1189,14 +1225,14 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       portable, and memory efficient. For most purposes it serves nicely.</p>
     <p class="config_option">database</p>
     <p>The path to the archive sqlite file. A relative path is relative to
-      <span class="code"><em>$WEEWX_ROOT</em></span>. Required.</p>
+      <span class="symcode">$SQLITE_ROOT</span>. Required.</p>
     <h4 class="config_section">[[stats_sqlite]]</h4>
     <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
       engine to store the statistical data. It is open-source, simple, lightweight, 
       highly portable, and memory efficient. For most purposes it serves nicely.</p>
     <p class="config_option">database</p>
     <p>The path to the stats sqlite file. A relative path is relative to
-      <span class="code"><em>$WEEWX_ROOT</em></span>. Required.</p>
+      <span class="symcode">$SQLITE_ROOT</span>. Required.</p>
     <h4 class="config_section">[[archive_mysql]]</h4>
     <p>This definition uses the MySQL database engine to store archive data. It 
       is free, highly-scalable, but more complicated to administer. </p>
@@ -1234,7 +1270,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class='tty'>service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, \
     weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, \
     weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
-    <p>Note that this must all be on one line! </p>
+    <p>Note that despite how it reads above, this option must all be on one line! </p>
     <p>You can leave some of these services out if you do not need them. For example, 
       the bare minimum if you are using a Davis Vantage instrument, storing your data 
       in US Customary units, doing no data corrections or quality control and running 
@@ -1256,7 +1292,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class="tty">sudo chmod 666 /dev/ttyS0 </p>
     <p>Then run the main loop program, <span class="code">weewxd.py</span>, giving 
       the configuration file as its only parameter: </p>
-    <p class="tty"><em>$WEEWX_ROOT</em>/bin/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/weewxd.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
     <p>It should start by downloading any data stored in your weather station into 
       the archive database. As the Davis VantagePro can store a couple thousand archive 
       records internally, this could take a minute or two. I&#39;ve found this process 
@@ -1271,7 +1307,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class="tty">ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note the PID of the weewxd.py process
 kill -HUP <em>pid</em> # Send it a HUP signal</p>
     <p>Note that this <em>only</em> rereads the configuration file. It will not 
-      reflect any changes you might have made to the code.</p>
+      reload any code.</p>
     <h2 id="Running_as_a_daemon">Running as a daemon</h2>
     <p>For unattended operations it is best to have <span class="code">weewx</span> 
       run as a daemon, started automatically when the server is rebooted. Start by 
@@ -1364,7 +1400,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       on SuSE, <span class="code">/var/log/messages</span>. Your system may
       use yet another place. When troubleshooting the system, be sure to check
       it! </p>
-    <p class='tty'>tail -f /var/log/messages</p>
+    <p class='tty'>tail -f /var/log/syslog</p>
 
     <p>Set the debug option in <span class='code'>weewx.conf</span> to
       generate many more checks and output more information.  This can be
@@ -1397,32 +1433,32 @@ sudo /etc/init.d/weewx start</p>
       <span class='code'>wview</span> archive contains more than a month or
       two of data.</p>
 
-    <h1>Integrating <span class='code'>weewx</span> with a Web Server</h1>
-    <p>The reports generated by <span class='code'>weewx</span> can be
-      distributed by a web server running on the same computer as
-      <span class='code'>weewx</span> or by a remote web server.</p>
+    <h1>Integrating <span class='code'>weewx</span> with a web server</h1>
+    <h2>If the server is on the same machine</h2>
+	  <p>The reports generated by <span class='code'>weewx</span> can be
+      served by a web server running on the same computer as
+      <span class='code'>weewx</span>. Here's how.</p>
 
-    <h2>Web Server Co-Located with <span class='code'>weewx</span></h2>
     <p>Install a web server on the computer on which 
       <span class='code'>weewx</span> is running.  For example, on Debian
       systems:</p>
     <p class='tty'>sudo apt-get install apache2</p>
     <p>If <span class='code'>weewx</span> was installed from DEB or RPM
-      package, simply enter the <span class='code'>weewx</span> URL in a
-      web browser:</p>
+      package, simply enter the <span class='code'>weewx</span> URL in a web 
+	browser in order to see your webpages.</p>
     <p class='tty'>http://localhost/weewx</p>
     <p>If <span class='code'>weewx</span> was installed using
-      <span class='code'>setup.py</span>, copy the apache configuration
-      snippet to the apache configuration directory, then restart apache.
-      Be sure that the path in the apache configuration snippet matches
-      the <span class='code'>HTML_ROOT</span> defined in the
-      <span class='code'>weewx</span> configuration file.</p>
+      <span class='code'>setup.py</span>, copy the Apache configuration
+      snippet that comes with <span class="code">weewx</span> to the apache configuration directory, then restart 
+	Apache:</p>
     <p class='tty'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d
 sudo /etc/init.d/apache restart</p>
-    <p>Then open the <span class='code'>weewx</span> URL in a web browser:</p>
+    <p>Be sure that the path in the Apache configuration snippet matches the <span class='code'>HTML_ROOT</span> defined in the
+      <span class='code'>weewx</span> configuration file.</p>
+	  <p>Then open the <span class='code'>weewx</span> URL in a web browser:</p>
     <p class='tty'>http://localhost/weewx</p>
 
-    <h2>Upload Files to Server</h2>
+    <h2>If the server is on a different machine</h2>
     <p>Use the FTP or RSYNC 'reports' to upload to a web server.  Either of
       these will copy everything from the <span class='code'>HTML_ROOT</span>
       directory to a location on the remote server on which the web server
@@ -1432,22 +1468,22 @@ sudo /etc/init.d/apache restart</p>
     <p>This section lists some common problems installing and running
       <span class="code">weewx</span>. If you are still stuck, be sure to: </p>
     <ul>
-      <li>Set the option <span class="code">debug</span> to
+      <li style="margin-bottom:1em">Set the option <span class="code">debug</span> to
         <span class="code">1</span> in <span class='code'>weewx.conf</span>.
         This will put much more information in the log file, which can
         be very useful for troubleshooting and debugging!
-        <p><p class='tty'>debug = 1</p><br/></p>
+        <p class='tty'>debug = 1</p>
       </li>
-      <li><a href="#Monitoring_weewx">Look at the log file</a>. I am always
+      <li style="margin-bottom:1em"><a href="#Monitoring_weewx">Look at the log file</a>. I am always
         happy to take questions, but the first thing I will ask you is,
         &quot;Did you look at the log file?&quot;
-        <p><p class='tty'>tail -f /var/log/messages</p><br/></p>
+        <p class='tty'>tail -f /var/log/messages</p>
       </li>
-      <li>Run from the command line. Generally, <span class="code">weewx</span>
+      <li style="margin-bottom:1em">Run from the command line. Generally, <span class="code">weewx</span>
 	will catch and log any unrecoverable exceptions. But if you are getting
 	strange results, it is worth running from the command line and looking
         for any clues.
-        <p><p class='tty'><em>$WEEWX_ROOT</em>/bin/weewx/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</p></p>
+        <p class='tty'><em>$WEEWX_ROOT</em>/bin/weewx/weewxd.py <em>$WEEWX_ROOT</em>/weewx.conf</p>
       </li>
     </ul>
 
