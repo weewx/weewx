@@ -1,8 +1,4 @@
 TODO before the next release:
 
-Because the location of the executables and the configuration files now depend
-on the installation strategy, they all need symbolic names in the documentation.
-
-Consider changing:
-    VantagePro.py -> vantage.py
-    WMR918.py -> wmr9x8.py
+What does WEEWX_ROOT refer to with the DEB and RPM installs? Whatever it is, it should
+be reflected in the documentation.
