@@ -90,7 +90,7 @@ Version: 2.2
       make it very robust and difficult to crash. It is also architecturally very 
       simple and easy to understand.</p>
 
-    <h1 id="Supported_hardware">Supported hardware</h1>
+    <h1 id="Supported_hardware">Supported Hardware</h1>
     <p>
       Many types of station hardware are supported.  In addition to hardware support, <span class="code">weewx</span> comes with a software simulator, useful for testing and evaluation.
     </p>
@@ -102,223 +102,196 @@ Version: 2.2
 	<td><strong>Required<br/>Package</strong></td>
         <td><strong>Station<br/>Driver</strong></td>
 	<td><strong>Maturity</strong></td>
-	<td><strong>Notes</strong></td>
       </tr>
       <tr>
 	<td class="text_highlight" rowspan="3">Ambient Weather</td>
 	<td>WS1090</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WS2080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td>Tested</td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WS2090</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="3">Davis<sup><a href='#vantage'>1</a></sup></td>
+	<td class="text_highlight" rowspan="3">Davis</td>
 	<td>VantagePro2</td>
 	<td>Serial or USB</td>
 	<td class="code">pyserial</td>
-        <td>Vantage</td>
+        <td>Vantage<sup><a href='#vantage'>1</a></sup></td>
 	<td>Tested</td>
-	<td></td>
       </tr>
       <tr>
 	<td>VantagePro2</td>
 	<td>WeatherLink IP</td>
 	<td class="code">&nbsp;</td>
-        <td>Vantage</td>
+        <td>Vantage<sup><a href='#vantage'>1</a></sup></td>
 	<td>Tested</td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>VantageVue</td>
 	<td>Serial or USB</td>
 	<td class="code">pyserial</td>
-        <td>Vantage</td>
+        <td>Vantage<sup><a href='#vantage'>1</a></sup></td>
 	<td>Tested</td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td class="text_highlight" rowspan="2">Elecsa</td>
 	<td>6975</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>6976</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="11">Fine Offset<sup><a href='#fousb'>4</a></sup></td>
+	<td class="text_highlight" rowspan="11">Fine Offset</td>
 	<td>WH1080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WH1081</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WH1091</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WH1090</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WS1080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WA2080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WA2081</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WH2080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WH2081</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WH3080</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WH3081</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td class="text_highlight">National Geographic</td>
 	<td>265</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="3">Oregon Scientific<sup><a href='#wmrusb'>2</a>, <a href='#wmr9xx'>3</a></sup></td>
+	<td class="text_highlight" rowspan="3">Oregon Scientific</td>
 	<td>WMR100N</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>WMR-USB</td>
+        <td>WMR-USB<sup><a href='#wmrusb'>2</a></sup></td>
 	<td>Tested</td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WMR918</td>
 	<td>Serial</td>
 	<td class="code">pyserial</td>
-        <td>WMR-918</td>
+        <td>WMR-918<sup><a href='#wmr9xx'>3</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WMR968</td>
 	<td>Serial</td>
 	<td class="code">pyserial</td>
-        <td>WMR-918</td>
+        <td>WMR-918<sup><a href='#wmr9xx'>3</a></sup></td>
 	<td>Tested</td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td class="text_highlight">Tycon</td>
 	<td>TP1080WC</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td class="text_highlight" rowspan="2">Watson</td>
 	<td>W-8681</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
       <tr>
 	<td>WX-2008</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>FineOffsetUSB</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>4</a></sup></td>
 	<td></td>
-	<td>&nbsp;</td>
       </tr>
     </table>
 
@@ -341,7 +314,7 @@ Version: 2.2
         <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.</li>
     </ol>
 
-    <h1 id="Prerequisites">System requirements</h1>
+    <h1 id="Prerequisites">System Requirements</h1>
 
     <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
       Geode processor and 512 MB of memory. Configured this way, it
@@ -1727,7 +1700,7 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       not recognize (in this example, it&#39;s the tag <span class="code">$fubar</span> 
       in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
     </p>
-    <h1 id="Architectural_notes">Architectural notes</h1>
+    <h1 id="Architectural_notes">Architectural Notes</h1>
     <p>This section is not needed to get started. </p>
     <h2>Goals</h2>
     <p>The primary design goals of <span class="code">weewx </span>are: </p>
