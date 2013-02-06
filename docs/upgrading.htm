@@ -83,10 +83,12 @@ Version: 2.2
     <h2>DEB Package</h2>
     <p>Upgrade to X.Y.Z like this:</p>
     <p class='tty'>sudo dpkg -i weewx_X.Y.Z-R.deb</p>
-    <p>Unmodified files will be upgraded.  If modifications have been made to the
-      weewx configuration, you will be prompted as to whether you want to keep
-      the existing configuration or accept the new configuration.  Either way,
-      <span class='code'>dpkg</span> will save a copy of the option you
+    <p>The upgrade process will not modify the <span class='code'>weewx</span>
+      databases.</p>
+    <p>Unmodified files will be upgraded.  If modifications have been made to
+      the weewx configuration, you will be prompted as to whether you want to
+      keep the existing configuration or accept the new configuration.  Either
+      way, <span class='code'>dpkg</span> will save a copy of the option you
       did not choose.</p>
     <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
       modified, <span class='code'>dpkg</span> will present a message something
@@ -113,24 +115,22 @@ Version: 2.2
       be compared with the old version
       <span class='code'>/etc/weewx/weewx.conf</span>
     </p>
-    <p>The upgrade process will not modify the <span class='code'>weewx</span>
-      databases.</p>
 
     <h2>RPM Package</h2>
-    <p>Upgrade from X.Y.Z like this:</p>
+    <p>Upgrade to X.Y.Z like this:</p>
     <p class='tty'>sudo rpm -U weewx-X.Y.Z-R.rpm</p>
-    <p>Unmodified files will be upgraded.  If modifications have been made to the
-     configuration, <span class='code'>rpm</span> will display a message about
-     any differences between the changes and the new configuration.  Any new
-     changes from the upgrade will be noted as files with a
-     <span class='code'>.rpmnew</span> extension and the modified files will be
-     left untouched.</p>
-    <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
-     modified, <span class='code'>rpm</span> will present a message something
-     like this:</p> 
-    <p class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</p>
     <p>The upgrade process will not modify the <span class='code'>weewx</span>
-     databases.</p>
+      databases.</p>
+    <p>Unmodified files will be upgraded.  If modifications have been made to
+      the configuration, <span class='code'>rpm</span> will display a message
+      about any differences between the changes and the new configuration.  Any
+      new changes from the upgrade will be noted as files with a
+      <span class='code'>.rpmnew</span> extension and the modified files will
+      be left untouched.</p>
+    <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
+      modified, <span class='code'>rpm</span> will present a message something
+      like this:</p> 
+    <p class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</p>
 
     <h1><a name="Instructions_for_specific_versions">Instructions for Specific Versions</a></h1>
     <h2>V2.1 or earlier</h2>
