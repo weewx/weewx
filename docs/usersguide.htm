@@ -970,8 +970,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     </p>
     <p class="config_option">SKIN_ROOT </p>
     <p>The directory where the skins live. A relative path is relative to
-      <span class="symcode">$WEEWX_ROOT</span>. Default is
-      <span class="code">skins</span>. </p>
+      <span class="symcode">$WEEWX_ROOT</span>.</p>
     <p class="config_option">HTML_ROOT </p>
     <p>The target directory for the generated files. A relative path is
       relative to <span class="symcode">$WEEWX_ROOT</span>. Generated 
@@ -1298,9 +1297,9 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
 	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse</span></td>
       </tr>
     </table>
-    <p>Check the chosen script to make sure the variable WEEWX_ROOT 
+    <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 
       has been set to the proper root directory for your 
-	weewx installation (it should have been set to the correct value automatically 
+	<span class="code">weewx</span> installation (it should have been set to the correct value automatically 
       by the install process, but it&#39;s worth checking). </p>
     <p>Copy it to the proper location for your system: </p>
     <table class="locations center" style="width: 90%">

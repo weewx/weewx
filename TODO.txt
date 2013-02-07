@@ -1,5 +1,3 @@
 TODO before the next release:
 
-Fix references to WEEWX_ROOT in the docs.
-
-bin/user and bin/examples directories need to be updated in the documentation.
+Update new-new names for the weew_config utilities in the packaging scripts.

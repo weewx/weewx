@@ -1082,7 +1082,8 @@ Sunrise, sunset: 06:51 19:30</p>
 	    at midnight</em>. We would like to have statistics for a full week, that 
 	  is since midnight seven days ago.</li>
       </ul>
-      <p>This example is included in the distribution as <span class="code">bin/examples/mygenerator.py</span>:
+      <p>This example is included in the distribution as <span class="symcode">
+	  $BIN_ROOT</span><span class="code">/examples/mygenerator.py</span>:
       </p>
       <p class="tty">import datetime
 import time
@@ -2097,7 +2098,7 @@ class MyAlarm(StdService):
 	<li>Modify the stats database so it includes the new type as well (Optional).</li>
       </ol>
       <p>1. <strong>Adding a new type to the schema.</strong> When creating a database 
-	the schema is obtained from file <span class="code">./bin/user/schemas.py</span>. 
+	the schema is obtained from file <span class="symcode">$BIN_ROOT</span><span class="code">/user/schemas.py</span>. 
 	Take a look at it now. You will see a list called <span class="code">defaultArchiveSchema</span> 
 	that holds all the observation names and their SQL types. It looks something 
 	like:</p>
@@ -2161,7 +2162,7 @@ mv weewx.sdb_new weewx.sdb</p>
 	the new observation type in the plots. However, if you wish to use it in the 
 	statistical summaries, you will also have to add it to the stats database. 
 	To do this, add the type to the Python list <span class="code">stats_types</span>, 
-	which can be found in <span class="code">bin/user/schemas.py</span>, so it reads something like this:</p>
+	which can be found in <span class="symcode">$BIN_ROOT</span><span class="code">/user/schemas.py</span>, so it reads something like this:</p>
       <p class="tty">stats_types = ['barometer', 'inTemp', 'outTemp', 
     'inHumidity', 'outHumidity', 
     'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', 
@@ -2257,7 +2258,7 @@ mv weewx.sdb_new weewx.sdb</p>
       <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database.py --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       <p>This will create a new database (nominally, <span class="code">weewx.sdb_new</span> 
 	if you are using sqlite, <span class="code">weewx_new</span> if you are using 
-	MySQL), using the schema found in <span class="code">./bin/user/schemas.py</span>, 
+	MySQL), using the schema found in <span class="symcode">$BIN_ROOT</span><span class="code">/user/schemas.py</span>, 
 	and populate it with data from the old database, while performing the unit conversion.</p>
       <p>4. <strong>Shuffle the databases.</strong> This is identical to the description
 	<a href="#Shuffle_the_databases">above</a>.</p>
@@ -2289,7 +2290,7 @@ mv weewx.sdb_new weewx.sdb</p>
 	  <td class="code">usUnits</td>
 	  <td>The unit system used. <span class="code">weewx.US</span> for US 
 	    customary, <span class="code">weewx.METRIC</span> for metric. See the 
-	    file <span class="code">bin/weewx/units.py</span>, dictionaries
+	    file <span class="symcode">$BIN_ROOT</span><span class="code">/weewx/units.py</span>, dictionaries
 	    <span class="code">USUnits</span> and <span class="code">MetricUnits</span> 
 	    for the exact definition of each.</td>
 	</tr>
@@ -2349,9 +2350,9 @@ mv weewx.sdb_new weewx.sdb</p>
 	It should also include an entry '<span class="code">driver</span>' that points 
 	to where your driver can be found. Set option <span class="code">station_type</span> 
 	to your new section type and your driver will be loaded.</p>
-      <p>Take a look at the simulator code in <span class="code">bin/weewx/simulator.py</span> 
+      <p>Take a look at the simulator code in <span class="symcode">$BIN_ROOT</span><span class="code">/weewx/simulator.py</span> 
 	for a dirt simple example of a driver. The next most complicated is the driver 
-	for the WMR-USB series, located in <span class="code">bin/weewx/wmrx.py</span>. 
+	for the WMR-USB series, located in <span class="symcode">$BIN_ROOT</span><span class="code">/weewx/wmrx.py</span>. 
 	The driver for the Vantage series is by far the most complicated.</p>
       <p>Naturally, there are a lot of subtleties that I've glossed over in this high-level 
 	description. If you're game, give it a try &mdash; I'm happy to help you out!</p>
