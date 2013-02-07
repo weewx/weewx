@@ -52,18 +52,18 @@ if [ "$RET" != "" ]; then
     sed -i "s%station_type[ ]*=.*%station_type = $RET%" $cfgfile
     if [ "$RET" = "Vantage" ]; then
         db_get weewx/vantage_type
-        sed -i "s%type[ ]*=.*%type = $RET%" $cfgfile
+        sed -i "s%type[ ]*= serial%type = $RET%" $cfgfile
         if [ "$RET" = "serial" ]; then
             db_get weewx/vantage_port
-            sed -i "s%port[ ]*=.*%port = $RET%" $cfgfile
+            sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
         else
             db_get weewx/vantage_host
-            sed -i "s%host[ ]*=.*%host = $RET%" $cfgfile
+            sed -i "s%host[ ]*= 1.2.3.4%host = $RET%" $cfgfile
         fi
     fi
     if [ "$RET" = "WMR-918" ]; then
         db_get weewx/wmr918_port
-        sed -i "s%port[ ]*=.*%port = $RET%" $cfgfile
+        sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
     fi
     if [ "$RET" = "FineOffsetUSB" ]; then
         db_get weewx/fousb_model
