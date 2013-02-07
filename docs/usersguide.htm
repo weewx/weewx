@@ -1532,6 +1532,13 @@ weewx                    20480     11772      8708  58% /var/weewx</p>
     <p>If you are having problems keeping your weather station up for long
       periods of time, here are some tips, in decreasing order of importance:
     </p>
+    <p class='image-right' style='width:205px'>
+      <a href="ferrites.jpg"><img src="ferrites.jpg" width='200' border='1' alt="Ferrite coils" longdesc="Cable connection looped through a ferrite coil" /></a>
+      <br/>
+      <span class='caption'>Ferrite coils on a Davis Envoy.  There are two
+        coils, one on the USB connection (top wire) and one on the power
+        supply. Both have loops.</span>
+    </p>
     <ul>
       <li>Run on dedicated hardware. If you are using the server for other
         tasks, particularly as your desktop machine, you will have reliability
@@ -1551,13 +1558,9 @@ weewx                    20480     11772      8708  58% /var/weewx</p>
       <li>If you do use a USB connection, put a ferrite coil on each end of
         the cable to your console. If you have enough length and the ferrite
         coil is big enough, make a loop so it goes through the coil twice.
-        Here's a picture of a Davis Envoy with a ferrite coil not only on the
-        USB connection (top wire), but also the power supply. Both have loops.
       </li>
     </ul>
-    <p align='center'>
-      <a href="ferrites.jpg"><img src="ferrites.jpg" width='200' border='0' alt="Ferrite coils" longdesc="Cable connection looped through a ferrite coil" /></a>
-    </p>
+
     <h3>cp2101 converter problems</h3>
     <p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
       problems. The symptom is that the Linux kernel will disconnect from your old 

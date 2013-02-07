@@ -137,9 +137,13 @@ table.center {
 .image {
     padding: 5px;
 }
+.image-right {
+    padding-left: 50px;
+    padding-right: 20px;
+    float: right;
+}
 .caption {
-    font-size: 70%;
-    font-family: Verdana, Arial, sans-serif;
+    font-size: 80%;
     text-align: center;	
 }
 .warning {

@@ -1620,23 +1620,22 @@ outTemp = Outside Temperature</p>
 	control how it will be drawn. The former, <span class="code">line_gap_fraction</span>, is used for line 
 	graphs, the latter, <span class="code">bar_gap_fraction</span>, for bar graphs. Here's what the resultant 
 	plots look like without and with this option being specified:</p>
-      <table class="center">
-	<tr>
-	  <td>
-	    <div class="image">
-	      <img alt="Gap not shown" height="197" src="day-gap-not-shown.png" width="334" /></div>
-	    <div class="caption">
-	      With no <span class="code">line_gap_fraction</span> specified</div>
-	  </td>
-	  <td>
-	    <div class="image">
-	      <img alt="Gap showing" height="197" src="day-gap-showing.png" width="334" />
-	    </div>
-	    <div class="caption">
-	      With <span class="code">line_gap_fraction=0.01</span></div>
-	  </td>
-	</tr>
-      </table>
+
+      <div class='center' style='width:80%;margin:0 auto;'>
+        <div style='float:left'>
+	  <img src="day-gap-not-shown.png" alt="Gap not shown" width="334" height="197" />
+          <p class="caption">
+            No <span class="code">line_gap_fraction</span> specified</p>
+        </div>
+        <div>
+	  <img src="day-gap-showing.png" alt="Gap showing" width="334" height="197" />
+	  <p class="caption">
+	    With <span class="code">line_gap_fraction=0.01</span></p>
+        </div>
+      </div>
+
+      <div style='clear:both'></div>
+
       <h3>Including more than one SQL type in a plot</h3>
       <p>More than one SQL type can be included in a plot. For example, here&#39;s 
 	how to generate a plot with the week&#39;s outside temperature as well as dewpoint:
