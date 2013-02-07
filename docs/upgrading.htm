@@ -62,13 +62,13 @@ Version: 2.2
     <p>The install process will do the following: </p>
     <ul>
       <li>Save the old <span class="code">bin</span> directory as
-	<span class="code"><em>$WEEWX_INSTALL</em>/bin.YYYYMMDDHHMMSS</span>
+	<span class="symcode">$WEEWX_INSTALL</span><span class='code'>/bin.YYYYMMDDHHMMSS</span>
         where YYYYMMDDHHMMSS is a timestamp</li>
       <li>Install the new version in the <span class="code">bin</span>
 	directory, while preserving any user extensions in the
         <span class="code">bin/user</span> directory</li>
       <li>Save a copy of the old <span class="code">weewx.conf</span> as
-	<span class="code"><em>$WEEWX_INSTALL</em>/weewx.conf.YYYYMMDDHHMMSS</span>
+	<span class="symcode">$WEEWX_INSTALL</span><span class='code'>/weewx.conf.YYYYMMDDHHMMSS</span>
       </li>
       <li>Merge any changes made to the old configuration file
 	<span class="code">weewx.conf</span> into the new configuration file,
@@ -316,7 +316,7 @@ cooling_base = 65, degree_F</p>
     <p>The directory &#39;<span class="code">templates</span>&#39; is no longer used; 
       it has been replaced with directory &#39;<span class="code">skins</span>&#39;. You 
       may delete it if you wish:</p>
-    <p class="tty">rm -r <em>$WEEWX_ROOT</em>/templates</p>
+    <p class="tty">rm -r <span class='symcode'>$WEEWX_ROOT</span>/templates</p>
     <h2>V1.4.0 or earlier</h2>
     <p>Because the configuration file <span class="code">weewx.conf</span> changed 
       significantly going from V1.4 to V1.5, the installation script
@@ -335,12 +335,12 @@ cooling_base = 65, degree_F</p>
       correct.</p>
     <p>Two Python files are no longer used, so they may be deleted from your 
       installation if you wish:</p>
-    <p class="tty">rm <em>$WEEWX_ROOT</em>/bin/weewx/processdata.py
-rm <em>$WEEWX_ROOT</em>/bin/weewx/mainloop.py</p>
+    <p class="tty">rm <span class='symcode'>$WEEWX_ROOT</span>/bin/weewx/processdata.py
+rm <span class='symcode'>$WEEWX_ROOT</span>/bin/weewx/mainloop.py</p>
     <p>In addition, file <span class="code">readme.htm</span> has been moved to 
-      subdirectory <span class="code"><em>$WEEWX_ROOT</em>/docs</span>, so the old one 
+      subdirectory <span class="symcode">$WEEWX_ROOT</span><span class='code'>/docs</span>, so the old one 
       can be deleted:</p>
-    <p class="tty">rm <em>$WEEWX_ROOT</em>/readme.htm</p>
+    <p class="tty">rm <span class='symcode'>$WEEWX_ROOT</span>/readme.htm</p>
     <p>&nbsp;</p>
 
 
