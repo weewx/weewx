@@ -31,6 +31,7 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
             db_get weewx/station_type
             if [ "$RET" = "Vantage" ]; then
                 db_input high weewx/vantage_type || true
+                db_go
                 db_get weewx/vantage_type
                 if [ "$RET" = "serial" ]; then
                     db_input high weewx/vantage_port || true

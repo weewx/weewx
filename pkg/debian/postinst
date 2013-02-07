@@ -47,18 +47,20 @@ sed -i "s%altitude[ ]*=.*%altitude = $a, $u%" $cfgfile
 
 # FIXME: generalize this so it does not have to be modified every time a
 #        new station type is added or new station options are added.
+# FIXME: figure out a mechanism to prevent modification of variables with
+#        same name, e.g., [Vantage].host and [Databases][stats_mysql].host
 db_get weewx/station_type
 if [ "$RET" != "" ]; then
     sed -i "s%station_type[ ]*=.*%station_type = $RET%" $cfgfile
     if [ "$RET" = "Vantage" ]; then
         db_get weewx/vantage_type
-        sed -i "s%type[ ]*= serial%type = $RET%" $cfgfile
+        sed -i "s% type[ ]*=.*% type = $RET%" $cfgfile
         if [ "$RET" = "serial" ]; then
             db_get weewx/vantage_port
             sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
         else
             db_get weewx/vantage_host
-            sed -i "s%host[ ]*= 1.2.3.4%host = $RET%" $cfgfile
+            sed -i "s%host[ ]*=.*%host = $RET%" $cfgfile
         fi
     fi
     if [ "$RET" = "WMR-918" ]; then
