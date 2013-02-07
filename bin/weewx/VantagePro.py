@@ -695,7 +695,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
         self.port.send_command(command, max_tries=self.max_tries)
 
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (self.archive_interval_seconds,))
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (archive_interval_seconds,))
     
     def clearLog(self):
         """Clear the internal archive memory in the Vantage."""
