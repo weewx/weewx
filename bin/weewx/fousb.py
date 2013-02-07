@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 428 2013-01-30 03:00:46Z mwall $
+# $Id: fousb.py 448 2013-02-07 17:09:53Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -62,9 +62,10 @@ It should not be necessary to specify the station type.  The default behavior
 is to expect the 1080 data format, then change to 3080 format if additional
 data are available.
 
-The FineOffset station console updates every 48 seconds.  This implementation
-defaults to sampling the station console via USB for live data every 30
-seconds.  Use the parameter 'sampling_period' to adjust this.
+The FineOffset station console updates every 48 seconds.  UV data update every
+60 seconds.  This implementation defaults to sampling the station console via
+USB for live data every 30 seconds.  Use the parameter 'sampling_period' to
+adjust this.
 
 The following functions from pywws are used by the weewx module:
 
@@ -146,16 +147,27 @@ It is used as: A200 1A20 A2AA 0020 to indicate a data refresh.
 The WH1080 acknowledges the write with an 8 byte chunk: A5A5 A5A5.
 """
 
+import math
 import time
 import syslog
 
 import usb
 
+import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
 def loader(config_dict):
-    station = FineOffsetUSB(**config_dict['FineOffsetUSB'])
+
+    # The driver needs the altitude in meters in order to calculate relative
+    # pressure. Get it from the Station data and do any necessary conversions.
+    altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
+    # Form a value-tuple:
+    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+    # Now convert to meters, using only the first element of the value-tuple:
+    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
+    
+    station = FineOffsetUSB(altitude=altitude_m,**config_dict['FineOffsetUSB'])
     return station
 
 # these are the raw data we get from the station:
@@ -166,7 +178,7 @@ def loader(config_dict):
 # temp_in   [-40,60]   0xffff  indoor temp; multiply by 0.1 to get C
 # hum_out   [1,99]     0xff    outdoor relative humidity; %
 # temp_out  [-40,60]   0xffff  outdoor temp; multiply by 0.1 to get C
-# abs_pres  [920,1080] 0xffff  pressure; multiply by 0.1 to get hPa
+# abs_pres  [920,1080] 0xffff  pressure; multiply by 0.1 to get hPa (mbar)
 # wind_ave  [0,50]     0xff    average wind speed; multiply by 0.1 to get m/s
 # wind_gust [0,50]     0xff    average wind speed; multiply by 0.1 to get m/s
 # wind_dir  [0,15]     bit 7   wind direction; multiply by 22.5 to get degrees
@@ -181,10 +193,10 @@ def loader(config_dict):
 # station has no separate windgustdir so use wind_dir
 keymap = {
     'inHumidity'  : ('hum_in',       1.0),
-    'inTemp'      : ('temp_in',      1.0),
+    'inTemp'      : ('temp_in',      1.0), # station is C
     'outHumidity' : ('hum_out',      1.0),
-    'outTemp'     : ('temp_out',     1.0),
-    'barometer'   : ('abs_pressure', 1.0),
+    'outTemp'     : ('temp_out',     1.0), # station is C
+    'pressure'    : ('abs_pressure', 1.0), # station is mbar
     'windSpeed'   : ('wind_ave',     3.6), # station is m/s, weewx wants km/h
     'windGust'    : ('wind_gust',    3.6), # station is m/s, weewx wants km/h
     'windDir'     : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
@@ -329,6 +341,42 @@ def logcrt(msg):
 def logerr(msg):
     syslog.syslog(syslog.LOG_ERR, 'fousb: %s' % msg)
 
+# implementation copied from wview
+def sp2ap(sp_mbar, elev_meter):
+    """Convert station pressure to sea level pressure.
+
+    sp_mbar - station pressure in millibars
+
+    elev_meter - station elevation in meters
+
+    ap - sea level pressure (altimeter) in millibars
+    """
+
+    N = 0.190284
+    slp = 1013.25
+    ct = (slp ** N) * 0.0065 / 288
+    vt = elev_meter / ((sp_mbar - 0.3) ** N)
+    ap_mbar = (sp_mbar - 0.3) * ((ct * vt + 1) ** (1/N))
+    return ap_mbar
+
+# implementation copied from wview
+def sp2bp(sp_mbar, elev_meter, t_C):
+    """Convert station pressure to sea level pressure.
+
+    sp_mbar - station pressure in millibars
+
+    elev_meter - station elevation in meters
+
+    t_C - temperature in degrees Celsius
+
+    bp - sea level pressure (barometer) in millibars
+    """
+
+    t_K = t_C + 273.15
+    pt = math.exp( - elev_meter / (t_K * 29.263))
+    bp_mbar = sp_mbar / pt if pt != 0 else 0
+    return bp_mbar
+
 class CurrentPositionError(Exception):
     def __init__(self, msg):
         self.msg = msg
@@ -352,6 +400,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
     
     def __init__(self, **stn_dict) :
         """Initialize the station object.
+
+        altitude: Altitude of the station
+        [Required. Obtained from weewx configuration.]
 
         model: Which station model is this?
         [Optional. Default is 'WH1080 (USB)']
@@ -392,6 +443,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         [Optional. Default is 1080, automatically changes to 3080 as needed]
         """
 
+        self.altitude          = stn_dict['altitude']
         self.record_generation = stn_dict.get('record_generation', 'software')
         self.model             = stn_dict.get('model', 'WH1080 (USB)')
         self.rain_max_sane     = int(stn_dict.get('rain_max_sane', 2))
@@ -406,7 +458,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.usb_read_size     = int(stn_dict.get('usb_read_size', '0x20'), 0)
         self.data_format       = stn_dict.get('data_format', '1080')
 
-        self._rain_period_ts = int(time.time() + 0.5)
+        self._rain_period_ts = None
         self._last_rain = None
         self._fixed_block = None
         self._data_block = None
@@ -489,8 +541,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             # calculate the rain rate (weewx wants cm/hr)
             # if the period is zero we must ignore the rainfall, so overall
             # rain rate may be under-reported.
-            period = packet['dateTime'] - self._rain_period_ts
+            if self._rain_period_ts is None:
+                self._rain_period_ts = packet['dateTime']
             if packet['rain'] is not None:
+                period = packet['dateTime'] - self._rain_period_ts
                 if period != 0:
                     packet['rainRate'] = 3600 * packet['rain'] / period
                 else:
@@ -510,6 +564,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             if 'temp_out' in p and p['temp_out'] is not None and \
                     'wind_ave' in p and p['wind_ave'] is not None:
                 packet['windchill'] = weewx.wxformulas.windchillC(p['temp_out'], p['wind_ave'])
+
+            # station reports gauge pressure, must calculate other pressures
+            packet['barometer'] = sp2bp(packet['pressure'], self.altitude, packet['outTemp'])
+            packet['altimeter'] = sp2ap(packet['pressure'], self.altitude)
 
             # report rainfall in log until we sort counter issues
             if weewx.debug and packet['rain'] is not None and packet['rain'] > 0:
