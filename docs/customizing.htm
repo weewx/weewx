@@ -1862,12 +1862,12 @@ class MyPrint(StdPrint):
 	your service name for <span class="code">StdPrint</span> in
 	<span class="code">service_list</span>, located in <span class="code">[Engines][[WxEngine]]</span>:
       </p>
-      <p class='tty'>[Engines]
-    [[WxEngine]]
-        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, user.myprint.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
-      <p>(Note that this list must be all on one line. Unfortunately, the parser
+      <p class='tty' style='white-space:pre-line'>[Engines]
+        &nbsp;&nbsp;&nbsp;&nbsp;[[WxEngine]]
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, user.myprint.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+      <p>Note that the <span class='code'>service_list</span> must be all on one line. Unfortunately, the parser
 	<span class="code">ConfigObj</span> does not allow options to be continued on 
-	to following lines.) </p>
+	to following lines.</p>
       <h2 id="Adding_a_Service">Adding a Service</h2>
       <p>Suppose there is no service that can be easily customized for your needs. 
 	In this case, a new one can easily be created by subclassing off the abstract 
@@ -2033,12 +2033,12 @@ class MyAlarm(StdService):
       <p>To make this all work, you must tell the engine to load this new service. 
 	This is done by adding your service name to the list <span class="code">service_list</span>, 
 	located in <span class="code">[Engines][[WxEngine]]</span>: </p>
-      <p class='tty'>[Engines]
-    [[WxEngine]]
-	service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.alarm.MyAlarm</p>
-      <p>(Note that this list must be all on one line. Unfortunately, the parser
+      <p class='tty' style='white-space:pre-line'>[Engines]
+        &nbsp;&nbsp;&nbsp;&nbsp;[[WxEngine]]
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.alarm.MyAlarm</p>
+      <p>Note that the <span class='code'>service_list</span> must be all on one line. Unfortunately, the parser
 	<span class="code">ConfigObj</span> does not allow options to be continued on 
-	to following lines.) </p>
+	to following lines.</p>
       <p>In addition to the example above, the distribution also includes a low-battery 
 	alarm (<span class="code">lowBattery.py</span>), which is very similar, except 
 	that it intercepts LOOP events (instead of archiving events). </p>

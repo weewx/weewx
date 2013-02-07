@@ -1239,16 +1239,13 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       engine. After each event (such as the arrival of LOOP data, etc.), they will 
       be run in the given order. The standard list of services run by weewx is:
     </p>
-    <p class='tty'>service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, \
-    weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, \
-    weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+    <p class='tty' style='white-space:pre-line'>service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
     <p>Note that despite how it reads above, this option must all be on one line! </p>
     <p>You can leave some of these services out if you do not need them. For example, 
       the bare minimum if you are using a Davis Vantage instrument, storing your data 
       in US Customary units, doing no data corrections or quality control and running 
       as a daemon (no printing to console) would be:</p>
-    <p class="tty">service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, \
-    weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+    <p class="tty" style='white-space:pre-line'>service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
     <p>However, this will only make a slight difference in execution speed. </p>
     <h1 id="Running_weewx">Running <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> can be run either from the command line (useful 
@@ -1392,7 +1389,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       must be rebuilt. This will be done automatically on startup by
       <span class="code">weewx</span>.
     </p>
-    <p>If you have years of data from <span class='code'>wview</span>, you can
+    <p>If you have data from <span class='code'>wview</span>, you can
       'import' this into <span class='code'>weewx</span> by simply copying a
       file.  Assuming that the <span class='code'>wview</span> data are in a
       sqlite database <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
@@ -1406,6 +1403,9 @@ sudo /etc/init.d/weewx start</p>
       <span class='code'>stats.sdb</span> file.  This could take awhile if the
       <span class='code'>wview</span> archive contains more than a month or
       two of data.</p>
+    <p>On my modest 500 MHz <a href="http://www.fit-pc.com/">fit-PC Slim</a>
+      with 512 MB of memory it took a little over 4 minutes for a year and a
+      half (25 MB) of data.</p>
 
     <h1>Integrating <span class='code'>weewx</span> with a web server</h1>
     <h2>If the server is on the same machine</h2>
