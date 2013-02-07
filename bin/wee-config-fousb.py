@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 352 2013-01-04 15:48:17Z mwall $
+# $Id: config_fousb.py 451 2013-02-07 22:39:43Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -14,10 +14,12 @@
 # See http://www.gnu.org/licenses/
 """Command line utility for configuring Fine Offset weather stations"""
 
-import optparse
 import configobj
+import optparse
+import time
 
 import weewx.fousb
+import weewx.units
 import weeutil.weeutil
 
 description = """Configures Fine Offset weather stations.
@@ -37,8 +39,11 @@ to know:
 2) the stations model as indicated on the packaging, for example
    'Ambient WS-2080', 'National Geographic 265NE, or 'Watson W8681'
 
-Output from a 3080-series station would be particularly helpful.
+Output from a 308x-series station would be particularly helpful.
 """
+
+# TODO:
+# set station archive interval
 
 usage="""%prog: config_file [--help] [--info] [--debug]"""
 
@@ -76,42 +81,66 @@ def main():
     if debug:
         print "Using configuration file %s" % cfgfile
 
-    # Open up the weather station:
-    station = weewx.fousb.FineOffsetUSB(**config_dict['FineOffsetUSB'])
+    # The driver needs the altitude in meters in order to calculate relative
+    # pressure. Get it from the Station data and do any necessary conversions.
+    altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
+    # Form a value-tuple:
+    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+    # Now convert to meters, using only the first element of the value-tuple:
+    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
+    
+    station = weewx.fousb.FineOffsetUSB(altitude=altitude_m,
+                                        **config_dict['FineOffsetUSB'])
 
     if options.info or len(args) == 1:
         info(station)
 
 def info(station):
-    """Query the station and display the configuration and station"""
+    """Query the station then display the settings."""
 
     print "Querying the station..."
-    
-    model = station.get_fixed_block(['model'])
-    version = station.get_fixed_block(['version'])
-    sid = station.get_fixed_block(['id'])
-    values = getvalues(station, '', weewx.fousb.fixed_format)
+    val = getvalues(station, '', weewx.fousb.fixed_format)
     station.closePort()
 
     print 'Fine Offset station settings:'
-    print '  Model:                          %s' % model
-    print '  Version:                        %s' % version
-    print '  ID:                             %s' % sid
-    print ''
-    for x in sorted(values.keys()):
-        if type(values[x]) is dict:
-            for y in values[x].keys():
-                label = x + '.' + y
-                printparam(label, values[x][y])
-        else:
-            printparam(x, values[x])
+    print '%s: %s' % ('local time'.rjust(30),
+                      time.strftime('%Y.%m.%d %H:%M:%S %Z', time.localtime()))
 
-def printparam(label, value):
+    slist = {'values':[], 'minmax_values':[],
+             'settings':[], 'display_settings':[], 'alarm_settings':[]}
+    for x in sorted(val.keys()):
+        if type(val[x]) is dict:
+            for y in val[x].keys():
+                label = x + '.' + y
+                s = fmtparam(label, val[x][y])
+                slist = stash(slist, s)
+        else:
+            s = fmtparam(x, val[x])
+            slist = stash(slist, s)
+    for k in ('values','minmax_values','settings','display_settings','alarm_settings'):
+        print ''
+        for s in slist[k]:
+            print s
+
+def stash(slist, s):
+    if s.find('settings') != -1:
+        slist['settings'].append(s)
+    elif s.find('display') != -1:
+        slist['display_settings'].append(s)
+    elif s.find('alarm') != -1:
+        slist['alarm_settings'].append(s)
+    elif s.find('min.') != -1 or s.find('max.') != -1:
+        slist['minmax_values'].append(s)
+    else:
+        slist['values'].append(s)
+    return slist
+
+def fmtparam(label, value):
     fmt = '%s'
     if label in weewx.fousb.datum_display_formats.keys():
         fmt = weewx.fousb.datum_display_formats[label]
     fmt = '%s: ' + fmt
-    print fmt % (label.rjust(30), value)
+    return fmt % (label.rjust(30), value)
 
 def getvalues(station, name, value):
     values = {}
