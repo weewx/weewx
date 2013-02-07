@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <!-- $Revision$ -->
 <!-- $Author$ -->
@@ -31,7 +31,7 @@ function showtab(tab,id) {
 <body>
 
   <h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System<br />
-    <span style="font-size:70%">
+    <span class='version'>
 Version: 2.2
     </span>
   </h1>
@@ -776,7 +776,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <table style="width: 60%" class="center">
       <tr>
 	<td class="code">Vantage</td>
-	<td style="height: 33px">Davis Vantage weather stations</td>
+	<td>Davis Vantage weather stations</td>
       </tr>
       <tr>
 	<td class="code">WMR-USB</td>
@@ -1078,10 +1078,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       of services to be run, and it will not be loaded or run at all. </p>
     <h4 class="config_section">[[Corrections]]</h4>
     <p>In this section you list all <em>correction expressions</em>. For example, 
-      say that you know your outside thermometer reads high by 0.2°F. You could add 
+      say that you know your outside thermometer reads high by 0.2&deg;F. You could add 
       the expression: </p>
     <p class='tty'>outTemp = outTemp - 0.2</p>
-    <p>Perhaps you need a linear correction around a reference temperature of 68°F:
+    <p>Perhaps you need a linear correction around a reference temperature of 68&deg;F:
     </p>
     <p class='tty'>outTemp = outTemp + (outTemp-68) * 0.02</p>
     <p>It is even possible to do corrections involving more than one variable. Suppose 
@@ -1116,7 +1116,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     barometer = 28, 32.5
     outHumidity = 0, 100 </p>
     <p>In this example, if a temperature should fall outside of the inclusive range 
-      -40 °F through 120 °F, then it will be set to the null value,
+      -40 &deg;F through 120 &deg;F, then it will be set to the null value,
       <span class="code">None</span>, and ignored. In a similar manner, the acceptable 
       values for barometric pressure would be 28 through 32.5 inHg, for humidity 0 
       through 100%. </p>
@@ -1429,6 +1429,13 @@ sudo /etc/init.d/weewx start</p>
 sudo /etc/init.d/apache restart</p>
     <p>Be sure that the path in the Apache configuration snippet matches the <span class='code'>HTML_ROOT</span> defined in the
       <span class='code'>weewx</span> configuration file.</p>
+    <p class='tty'>Alias /weewx <strong>/home/weewx/public_html</strong>
+&lt;Directory <strong>/home/weewx/public_html</strong>&gt;
+    Options FollowSymlinks
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+&lt;/Directory&gt;</p>
 	  <p>Then open the <span class='code'>weewx</span> URL in a web browser:</p>
     <p class='tty'>http://localhost/weewx</p>
 
@@ -1438,6 +1445,20 @@ sudo /etc/init.d/apache restart</p>
       directory to a location on the remote server on which the web server
       is running.</p>
 
+    <h1><span class='code'>weewx</span> on a Plug Computer</h1>
+    <p>There are a few configuration changes that will make
+      <span class='code'>weewx</span> run better on low power machines such
+      as plug computers.</p>
+    <h2>Use a RAM Disk</h2>
+    <p>Many low power machines use flash memory instead of a spinning disk
+      for storage.  Since flash memory has a limited life, it is a good idea
+      to minimize the number of writes to 'disk'.  One way to do this is to
+      save data to memory, with a periodic copy to 'disk'.</p>
+    <h3>Create a RAM Disk</h3>
+    <p class='tty'></p>
+    <h3>Put Generated Files on RAM Disk</h3>
+    <p class='tty'>HTML_ROOT=/var/weewx</p>
+    
     <h1 id="Troubleshooting">Troubleshooting</h1>
     <p>This section lists some common problems installing and running
       <span class="code">weewx</span>. If you are still stuck, be sure to: </p>
@@ -1490,9 +1511,9 @@ sudo /etc/init.d/apache restart</p>
         will be much more reliable if you run it without a windowing system (X
         Windows, in the case of Linux). </li>
       <li>Use an Uninterruptible Power Supply (UPS). The vast majority of power
-	glitches are very short lived — just a second or two — so you do not
-        need a big one. The 425 VA unit I use to protect my fit-PC cost me $55
-        at Best Buy. </li>
+        glitches are very short lived &mdash; just a second or two &mdash; so
+        you do not need a big one. The 425VA unit I use to protect my fit-PC
+        cost $55 at Best Buy.</li>
       <li>Use a VantagePro console with a serial connection, not a USB
         connection. See the next section for details. </li>
       <li>If you do use a USB connection, put a ferrite coil on each end of
@@ -1753,7 +1774,7 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
 	<a href="http://www.cheetahtemplate.org/">Cheetah</a>, was used. This allows 
 	many variables that I may not have thought of to be accessed from within 
 	the HTML templates, without starting to modify the code. </li>
-      <li>Pure Python. The code base is 100% Python — no underlying C libraries 
+      <li>Pure Python. The code base is 100% Python &mdash; no underlying C libraries 
 	need be built to install <span class="code">weewx</span>. This also means 
 	no Makefiles are needed. </li>
     </ul>
@@ -1778,13 +1799,13 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       such as network outages. It also monitors socket and console timeouts, restarting 
       whatever it was working on several times before giving up. In the case of an 
       unrecoverable console error (such as the console not responding at all), the 
-      program waits 60 seconds then restarts the program from the top. </p>
+      program waits 60 seconds then restarts the program from the top.</p>
     <p>Any &quot;hard&quot; exceptions, that is those that do not involve network 
       and console timeouts and are most likely due to a logic error, are logged, reraised, 
       and ultimately cause thread termination. If this happens in the main thread 
       (not likely due to its simplicity), then this causes program termination. If 
       it happens in the report processing thread (much more likely), then only the 
-      generation of reports will be affected — the main thread will continue downloading 
+      generation of reports will be affected &mdash; the main thread will continue downloading 
       data off the instrument and putting them in the database. You can fix the problem 
       at your leisure, without worrying about losing any data. </p>
 

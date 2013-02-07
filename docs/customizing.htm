@@ -1,5 +1,5 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 
   <!-- $Revision$ -->
   <!-- $Author$ -->
@@ -20,11 +20,11 @@
   <body>
 
     <h1 class="title">Customizing weewx<br />
-      <span style="font-size:70%">
+      <span class='version'>
       Version: 2.2
       </span>
     </h1>
-    <h1>Table of contents</h1>
+    <h1>Table of Contents</h1>
     <div id="technical_content">
       <div id="toc"></div>
 
@@ -409,11 +409,11 @@ $current.outTemp</p>
       <p>would be all you need for a very simple HTML page that would display the 
 	text (assuming that the unit group for temperature is <span class="code">degree_F</span>):
       </p>
-      <p class="example_output">Current temperature = 51.0°F <br />
-	Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15 </p>
+      <p class="example_output">Current temperature = 51.0&deg;F <br />
+	Max for the month is 68.8&deg;F, which occurred at 07-Oct-2009 15:15 </p>
       <p>The format that was used to format the temperature (<span class="code">51.0</span>) 
 	is specified in section <span class="code"><a href="#Units_StringFormats">[Units][[StringFormat]]</a></span>. 
-	The unit label <span class="code">°F</span> is from section
+	The unit label <span class="code">&deg;F</span> is from section
 	<span class="code"><a href="#[[Labels]]">[Units][[Labels]]</a></span>, while 
 	the time format is from <span class="code"><a href="#TimeFormats">[Labels][[Time]]</a></span>.
       </p>
@@ -652,12 +652,12 @@ $month.outTemp.max</p>
 	</tr>
 	<tr>
 	  <td class="code">$current.outTemp </td>
-	  <td class="code">45.2°F </td>
+	  <td class="code">45.2&deg;F </td>
 	  <td>String formatting and label from <span class="code">skin.conf</span></td>
 	</tr>
 	<tr>
 	  <td class="code">$current.outTemp.string</td>
-	  <td class="code">45.2°F</td>
+	  <td class="code">45.2&deg;F</td>
 	  <td>String formatting and label from <span class="code">skin.conf</span></td>
 	</tr>
 	<tr>
@@ -683,7 +683,7 @@ $month.outTemp.max</p>
 	</tr>
 	<tr>
 	  <td class="code">$current.outTemp.format(&quot;%.3f&quot;) </td>
-	  <td class="code">45.200°F</td>
+	  <td class="code">45.200&deg;F</td>
 	  <td>Specified string format used; label from <span class="code">skin.conf</span>.</td>
 	</tr>
 	<tr>
@@ -713,12 +713,12 @@ $month.outTemp.max</p>
 	</tr>
 	<tr>
 	  <td class="code">$month.outTemp.avg </td>
-	  <td class="code">40.8°F</td>
+	  <td class="code">40.8&deg;F</td>
 	  <td>String formatting and label from <span class="code">skin.conf</span></td>
 	</tr>
 	<tr>
 	  <td class="code">$month.outTemp.avg.string</td>
-	  <td class="code">40.8°F</td>
+	  <td class="code">40.8&deg;F</td>
 	  <td>Time formatting and label from <span class="code">skin.conf</span></td>
 	</tr>
 	<tr>
@@ -744,7 +744,7 @@ $month.outTemp.max</p>
 	</tr>
 	<tr>
 	  <td class="code">$month.outTemp.avg.format(&quot;%.3f&quot;)</td>
-	  <td class="code">40.759°F</td>
+	  <td class="code">40.759&deg;F</td>
 	  <td>Specified string format used; no label</td>
 	</tr>
 	<tr>
@@ -802,7 +802,7 @@ $month.outTemp.max</p>
 	</tr>
 	<tr>
 	  <td class="code">$trend.outTemp</td>
-	  <td class="code">1.1 °C</td>
+	  <td class="code">1.1 &deg;C</td>
 	</tr>
 	<tr>
 	  <td class="code">$trend.time_delta</td>
@@ -834,7 +834,7 @@ $month.outTemp.max</p>
 	</tr>
 	<tr>
 	  <td class="code">$unit.label.outTemp</td>
-	  <td class="code">°C</td>
+	  <td class="code">&deg;C</td>
 	</tr>
 	<tr>
 	  <td class="code">$unit.format.outTemp</td>
@@ -844,7 +844,7 @@ $month.outTemp.max</p>
       <p>As a summary, the tag </p>
       <p class='tty'>$day.outTemp.max.formatted$unit.label.outTemp</p>
       <p>would result in </p>
-      <p class='tty'>21.2°C</p>
+      <p class='tty'>21.2&deg;C</p>
       <p>(assuming metric values have been specified for <span class="code">group_temperature</span>), 
 	essentially reproducing the results of the simpler tag <span class="code">$day.outTemp.max</span>.
       </p>
@@ -870,10 +870,10 @@ $month.outTemp.max</p>
 &lt;/html&gt;</p>
       <p>Produces results: </p>
       <p class="tty">Min, max temperatures by month:
-January: Min, max temperatures: 30.1°F 51.5°F
-February: Min, max temperatures: 24.4°F 58.6°F
-March: Min, max temperatures: 27.3°F 64.1°F
-April: Min, max temperatures: 33.2°F 52.5°F
+January: Min, max temperatures: 30.1&deg;F 51.5&deg;F
+February: Min, max temperatures: 24.4&deg;F 58.6&deg;F
+March: Min, max temperatures: 27.3&deg;F 64.1&deg;F
+April: Min, max temperatures: 33.2&deg;F 52.5&deg;F
 May: Min, max temperatures: N/A N/A
 June: Min, max temperatures: N/A N/A
 July: Min, max temperatures: N/A N/A
@@ -1354,9 +1354,9 @@ inch     = %.2f</p>
       <h3 id="[[Labels]]" class="config_section">[[Labels]]</h3>
       <p>This subsection specifies what label is to be used for each measurement unit 
 	type. For example, the options </p>
-      <p class='tty'>degree_F = °F
+      <p class='tty'>degree_F = &deg;F
 inch     = &#39; in&#39;</p>
-      <p>would cause all temperatures to have unit labels <span class="code">°F</span> 
+      <p>would cause all temperatures to have unit labels <span class="code">&deg;F</span> 
 	and all precipitation to have labels <span class="code">in</span>. 
 	If any special symbols are to be used (such as the degree sign above) they should 
 	be encoded in UTF-8. This is generally what most text editors use if you cut-and-paste 
@@ -1509,8 +1509,8 @@ outTemp = Outside Temperature</p>
 	configuration generates four files: one for day, week, month, and year. Although 
 	the sub-subsections below have names such as &#39;week&#39; or &#39;month&#39;, 
 	this is not used in their generation. Output is set by the template
-	<em>content</em>, not the name of the sub-subsection — the names below could 
-	as easily have been&#39;Fred&#39;, &#39;Mary&#39;, &#39;Peter&#39;, and &#39;George&#39; 
+	<em>content</em>, not the name of the sub-subsection &mdash; the names below could 
+	as easily have been &#39;Fred&#39;, &#39;Mary&#39;, &#39;Peter&#39;, and &#39;George&#39; 
 	and had the same output. </p>
       <p>Additional observations-to-date pages can be created easily by adding a new 
 	sub-subsection and giving it a unique name (&quot;Jill&quot;?), then giving 
@@ -1592,7 +1592,7 @@ outTemp = Outside Temperature</p>
         label = Rain (daily avg)</p>
       <p>This will generate an image file with name <span class="code">monthrain.png</span>. 
 	It will be a bar plot. Option <span class="code">yscale</span> controls the 
-	y-axis scaling — if left out, the scale will automatically be chosen. However, 
+	y-axis scaling &mdash; if left out, the scale will automatically be chosen. However, 
 	in this example we are choosing to exercise some degree of control by specifying 
 	values explicitly. The option takes a 3-way tuple (<span class="code">ylow</span>,
 	<span class="code">yhigh</span>, <span class="code">min_interval</span>), where
@@ -2322,6 +2322,26 @@ mv weewx.sdb_new weewx.sdb</p>
 	'<span class="code">windGust</span>', and '<span class="code">windGustDir</span>'. 
 	Supply as many as you can. The directions should be compass directions in degrees 
 	(0=North, 90=East, etc.).</p>
+      <p>Be careful when reporting pressure.  There are three observations related to pressure:
+        <table class='center' style="width: 60%">
+          <tr>
+            <td class='code'>pressure</td>
+            <td>The raw, absolute pressure measured by the station, often
+              referred to as <em>Station Pressure</em> or SP.</td>
+          </tr>
+          <tr>
+            <td class='code'>barometer</td>
+            <td>The <em>Sea Level Pressure</em> (SLP) obtained by correcting
+              the <em>Station Pressure</em> for altitude and local
+              temperature.</td>
+          </tr>
+          <tr>
+            <td class='code'>altimeter</td>
+            <td>The <em>Sea Level Pressure</em> (SLP) obtained by correcting
+              the <em>Station Pressure</em> for altitude.</td>
+          </tr>
+        </table>
+      </p>
       <p>To load your driver, you should also include a function called '<span class="code">loader</span>'. 
 	It is a factory function that will return an instance of your driver. Its only 
 	argument is the configuration dictionary. </p>

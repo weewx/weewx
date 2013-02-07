@@ -197,3 +197,6 @@ table.center {
     border-right: 1px solid #447777;
     background-color: #88bbbb;
 }
+.version {
+    font-size: 60%;
+}

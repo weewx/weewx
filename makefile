@@ -29,6 +29,7 @@ help:
 	@echo ""
 	@echo "     deb-check  check the deb package"
 	@echo "     rpm-check  check the rpm package"
+	@echo "     doc-check  run weblint on the docs"
 
 info:
 	@echo "     VERSION: $(VERSION)"
@@ -37,6 +38,9 @@ info:
 realclean:
 	rm -rf build
 	rm -rf dist
+
+doc-check:
+	weblint docs/*.htm
 
 install:
 	./setup.py --install
