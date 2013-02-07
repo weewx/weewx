@@ -22,16 +22,16 @@ import weewx.reportengine
 
 def gen_all(config_path, gen_ts = None):
     
-    syslog.openlog('wee-reports', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('wee_reports', syslog.LOG_PID|syslog.LOG_CONS)
     try :
         config_dict = configobj.ConfigObj(config_path, file_error=True)
     except IOError:
         sys.stderr.write("Unable to open configuration file %s" % config_path)
-        syslog.syslog(syslog.LOG_CRIT, "wee-reports: Unable to open configuration file %s" % config_path)
+        syslog.syslog(syslog.LOG_CRIT, "wee_reports: Unable to open configuration file %s" % config_path)
         # Reraise the exception (this will eventually cause the program to exit)
         raise
     except configobj.ConfigObjError:
-        syslog.syslog(syslog.LOG_CRIT, "wee-reports: Error while parsing configuration file %s" % config_path)
+        syslog.syslog(syslog.LOG_CRIT, "wee_reports: Error while parsing configuration file %s" % config_path)
         raise
     # Look for the debug flag. If set, ask for extra logging
     weewx.debug = int(config_dict.get('debug', 0))

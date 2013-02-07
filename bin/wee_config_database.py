@@ -39,7 +39,7 @@ permissions for the requested operation."""
 def main():
 
     # Set defaults for the system logger:
-    syslog.openlog('wee-config-database', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('wee_config_database', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)

@@ -550,14 +550,14 @@ Version: 2.2
       <span class="code">skin.conf</span>. </p>
 
     <h2 id="Configuring_your_Davis_console">Configuring the Davis Vantage console</h2>
-    <p>Weewx comes with a configuration utlity, <span class="code">wee-config-vantage.py</span>, 
+    <p>Weewx comes with a configuration utlity, <span class="code">wee_config_vantage.py</span>, 
       that can set many of the on-board EEPROM constants in the Davis Vantage stations, 
       such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
     <p>Run it with the configuration file as an argument and <span class="code">
 	--help</span> as an option to see its usage: </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
     <p>This will print out something like:</p>
-    <p class="tty">Usage: wee-config-vantage.py: config_path [--help] [--info] [--clear]
+    <p class="tty">Usage: wee_config_vantage.py: config_path [--help] [--info] [--clear]
      [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
      [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
      [--start | -- stop]
@@ -589,7 +589,7 @@ Options:
 Mutating actions will request confirmation before proceeding.</p>
     <p>It is useful to run it with the <span class="code">--info</span> option to 
       see what the current EEPROM settings are on your station: </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --info </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --info </p>
     <p>This will print out something like: </p>
     <p class="tty">VantagePro EEPROM settings:
       
@@ -643,7 +643,7 @@ Offset:                       -1.000</p>
       dates after about 2006.</p>
     <p><span class="highlight">Highlighted</span> values can be changed.</p>
     <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-interval=600</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-interval=600</p>
     <p>Other parameters can be set in a similar manner.</p>
     <h3 id="Archive_interval">Archive interval</h3>
     <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
@@ -661,7 +661,7 @@ Offset:                       -1.000</p>
     <p>Normally, this is set by Davis, but if you have replaced your bucket with 
       a different kind, you might want to reconfigure. For example, to change to a 
       0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-bucket=2</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-bucket=2</p>
     <h3>Dumping the logger memory</h3>
 	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
 	  records from the on board logger in the Vantage. However, occasionally the 
@@ -672,7 +672,7 @@ Offset:                       -1.000</p>
 	  lose any data which might have accumulated in the logger memory, but not 
 	  yet downloaded. By using the <span class="code">--dump</span> command 
 	  before clearing you might be able to save these data. </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --dump</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --dump</p>
 	  <p>This will dump all data archived in the Vantage memory directly to the 
 	  database, without regard to whether or not they have been seen before. 
 	  Because the command dumps <em>all</em> data, it may result in many 
@@ -1413,15 +1413,15 @@ sudo /etc/init.d/weewx start</p>
       served by a web server running on the same computer as
       <span class='code'>weewx</span>. Here's how.</p>
 
-    <p>Install a web server on the computer on which 
+    <p>First, install a web server on the computer on which 
       <span class='code'>weewx</span> is running.  For example, on Debian
       systems:</p>
     <p class='tty'>sudo apt-get install apache2</p>
-    <p>If <span class='code'>weewx</span> was installed from DEB or RPM
+    <p>Then, if <span class='code'>weewx</span> was installed from DEB or RPM
       package, simply enter the <span class='code'>weewx</span> URL in a web 
 	browser in order to see your webpages.</p>
     <p class='tty'>http://localhost/weewx</p>
-    <p>If <span class='code'>weewx</span> was installed using
+    <p>Alternatively, if <span class='code'>weewx</span> was installed using
       <span class='code'>setup.py</span>, copy the Apache configuration
       snippet that comes with <span class="code">weewx</span> to the apache configuration directory, then restart 
 	Apache:</p>
@@ -1445,29 +1445,29 @@ sudo /etc/init.d/apache restart</p>
       directory to a location on the remote server on which the web server
       is running.</p>
 
-    <h1><span class='code'>weewx</span> on a Low-Power Computer</h1>
+    <h1>Running <span class='code'>weewx</span> on a low-power computer</h1>
     <p>There are a few configuration changes that will make
-      <span class='code'>weewx</span> run better on low power machines such
+      <span class='code'>weewx</span> run better on low-power machines, such
       as plug computers or routers.</p>
 
-    <h2>Use a RAM Disk</h2>
-    <p>Many low power machines use flash memory instead of a spinning disk
-      for storage.  Since flash memory has a limited life, it is a good idea
+    <h2>Use a RAM disk</h2>
+    <p>Many low-power machines use flash memory for storage, instead of a spinning disk.  Since flash memory has a limited life, it is a good idea
       to minimize the number of writes to 'disk'.  One way to do this is to
       save data to memory instead of disk.</p>
     <p>Add the following line to <span class='code'>/etc/fstab</span></p>
     <p class='tty'>weewx /var/weewx tmpfs size=50M,noexec,nosuid,nodev 0 0</p>
-    <p>Since the entry is in fstab, the RAM disk will mount automatically at
+    <p>Since the entry is in <span class="code">fstab</span>, the RAM disk will mount automatically at
       startup.  However, to mount it manually do the following:</p>
-    <p class='tty'>sudo mount weewx</p>
+    <p class='tty'>sudo mkdir /var/weewx
+sudo mount weewx</p>
     <p>Verify the RAM disk with <span class='code'>df</span>.  You should see
       a line like this:</p>
     <p class='tty'>df -k
 Filesystem           1K-blocks      Used Available Use% Mounted on
 weewx                    20480     11772      8708  58% /var/weewx</p>
-    <p>How big should the RAM disk be?  One year of weewx data equates to a
-      <span class='code'>weewx.sdb</span> file of about 20MB.  Generated files
-      from the Standard report typically total less than 1MB.  So if saving 
+    <p>How big should the RAM disk be?  One year of <span class="code">weewx</span> data 
+	generates about 20MB.  Generated files
+      from the <span class="code">Standard</span> report typically total less than 1MB.  So if saving 
       only generated files to RAM disk, the size can be 2 or 3 MB.</p>
     <p>Put the generated files on the RAM disk by modifying
       <span class='code'>weewx.conf</span>.  Change
@@ -1476,13 +1476,13 @@ weewx                    20480     11772      8708  58% /var/weewx</p>
     <p>Restart weewx for the changes to take effect:</p>
     <p class='tty'>sudo /etc/init.d/weewx restart</p>
 
-    <h2>Turn off Debugging</h2>
+    <h2>Turn off debugging</h2>
     <p>Once everything is working properly, turn off debugging by modifying
       <span class='code'>weewx.conf</span></p>
     <p class='tty'>debug = 0</p>
     <p>This will reduce the writes to disk caused by logging.</p>
 
-    <h2>Upload Everything</h2>
+    <h2>Upload everything</h2>
     <p>Many low power machines do not have the capability to host a MySQL
       database effectively.  They may work initially, but slow down
       considerably after years of data are in the database.  This is 
@@ -1662,10 +1662,10 @@ port = /dev/cuaU0</p>
 	This will cause the console software to internally reboot. In one case this 
 	has fixed the problem without data loss.</li>
       <li>If all else fails, clear the memory of the console using the utility
-	<span class="code">wee-config-vantage.py</span>. This may cause loss of data, but 
+	<span class="code">wee_config_vantage.py</span>. This may cause loss of data, but 
 	usually works. Adjust paths as necessary:</li>
     </ol>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee-config-vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --clear </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage.py <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --clear </p>
 	  <p>See also the section <em><a href="#Dumping_the_logger_memory">Dumping 
 	  the logger memory</a></em>.</p>
     <h3>3rd party Vantage connectors</h3>

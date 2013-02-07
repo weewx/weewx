@@ -1,6 +1,5 @@
 TODO before the next release:
 
-What does WEEWX_ROOT refer to with the DEB and RPM installs? Whatever it is, it should
-be reflected in the documentation.
+Fix references to WEEWX_ROOT in the docs.
 
 bin/user and bin/examples directories need to be updated in the documentation.

@@ -32,10 +32,10 @@ Added rain rate calculation to FineOffsetUSB driver.
 
 Changed the name of the utilities, so they will be easier to find in
 /usr/bin:
-  runreports.py      -> wee-reports.py
-  config_database.py -> wee-config-database.py
-  config_vp.py       -> wee-config-vantage.py
-  config_fousb.py    -> wee-config-fousb.py
+  runreports.py      -> wee_reports.py
+  config_database.py -> wee_config_database.py
+  config_vp.py       -> wee_config_vantage.py
+  config_fousb.py    -> wee_config_fousb.py
   
 
 2.1.1 01/02/13
