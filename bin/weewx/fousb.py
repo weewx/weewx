@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 448 2013-02-07 17:09:53Z mwall $
+# $Id: fousb.py 449 2013-02-07 17:15:41Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -352,6 +352,8 @@ def sp2ap(sp_mbar, elev_meter):
     ap - sea level pressure (altimeter) in millibars
     """
 
+    if sp_mbar is None or elev_meter is None:
+        return None
     N = 0.190284
     slp = 1013.25
     ct = (slp ** N) * 0.0065 / 288
@@ -372,6 +374,8 @@ def sp2bp(sp_mbar, elev_meter, t_C):
     bp - sea level pressure (barometer) in millibars
     """
 
+    if sp_mbar is None or elev_meter is None or t_C is None:
+        return None
     t_K = t_C + 273.15
     pt = math.exp( - elev_meter / (t_K * 29.263))
     bp_mbar = sp_mbar / pt if pt != 0 else 0
