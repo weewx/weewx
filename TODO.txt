@@ -1,3 +1,6 @@
 TODO before the next release:
 
-Update new-new names for the weew_config utilities in the packaging scripts.
+resolve fousb pressure calculation issue
+
+possibly implement averaging rainRate calculation instead of the
+current near-instantaneous implementation in fousb
