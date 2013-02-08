@@ -69,6 +69,10 @@ mkdir -p %{buildroot}%{_initrddir}
 cp -r bin/* %{buildroot}%{dst_bin_dir}
 cp -r docs/* %{buildroot}%{dst_doc_dir}
 cp -r skins %{buildroot}%{dst_cfg_dir}
+cp -r util/apache %{buildroot}%{dst_cfg_dir}
+cp -r util/logrotate.d %{buildroot}%{dst_cfg_dir}
+cp -r util/logwatch %{buildroot}%{dst_cfg_dir}
+cp -r util/rsyslog.d %{buildroot}%{dst_cfg_dir}
 
 # remove stuff that should not go out
 rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/butterfly.jpg

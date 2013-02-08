@@ -8,6 +8,6 @@
   create 644 root adm
   sharedscripts
   postrotate
-    /etc/init.d/weewx reload > /dev/null
+    /etc/init.d/weewx restart > /dev/null
   endscript
 }

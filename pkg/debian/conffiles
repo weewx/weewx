@@ -1,5 +1,10 @@
 /etc/init.d/weewx
-/etc/weewx/weewx.conf
+/etc/weewx/apache/conf.d/weewx.conf
+/etc/weewx/logrotate.d/weewx
+/etc/weewx/logwatch/conf/logfiles/weewx.conf
+/etc/weewx/logwatch/conf/services/weewx.conf
+/etc/weewx/logwatch/scripts/services/weewx
+/etc/weewx/rsyslog.d/weewx.conf
 /etc/weewx/skins/Ftp/skin.conf
 /etc/weewx/skins/Rsync/skin.conf
 /etc/weewx/skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl
@@ -27,3 +32,4 @@
 /etc/weewx/skins/Standard/week.html.tmpl
 /etc/weewx/skins/Standard/weewx.css
 /etc/weewx/skins/Standard/year.html.tmpl
+/etc/weewx/weewx.conf
