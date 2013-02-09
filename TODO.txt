@@ -4,5 +4,3 @@ resolve fousb pressure calculation issue
 
 possibly implement averaging rainRate calculation instead of the
 current near-instantaneous implementation in fousb
-
-Add symbolic link from weewxd.py to weewxd
