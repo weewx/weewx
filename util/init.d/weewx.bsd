@@ -4,7 +4,7 @@
 # Adjust app and cfg locations as appropriate, then put this script
 # in /usr/local/etc/rc.d
 #
-WEEWX_BIN="/opt/weewx/bin/weewxd.py"
+WEEWX_BIN="/opt/weewx/bin/weewxd"
 WEEWX_CFG="/opt/weewx/weewx.conf"
 PIDFILE="/var/run/weewx.pid"
 

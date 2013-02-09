@@ -1211,7 +1211,7 @@ class MyFileGenerator(FileGenerator):                                  # 1
       </p>
       <p class='tty'>generator_list = examples.mygenerator.MyFileGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator</p>
       <p>NB: If you create a custom generator some place other than where
-	<span class="code">weewxd.py</span> resides, you may have to specify its location 
+	<span class="code">weewxd</span> resides, you may have to specify its location 
 	in the environment variable <span class="code">PYTHONPATH</span>: </p>
       <p>export PYTHONPATH=/home/me/secret_location</p>
       <h2>Upgrades and user extensions</h2>
@@ -2047,10 +2047,10 @@ class MyAlarm(StdService):
 	advantage of being compatible with the wview database. Nevertheless, there may 
 	be occasions where you may want to add a SQL type to your database, or change 
 	its unit system. This section shows you how to do this, using the utility
-	  <span class="symcode">$BIN_ROOT</span><span class="code">/wee_config_database.py</span>.</p>
+	  <span class="symcode">$BIN_ROOT</span><span class="code">/wee_config_database</span>.</p>
       <p>Before starting, it's worth running the utility with the
 	<span class="code">--help</span> flag to see how it is used:</p>
-      <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database.py --help</p>
+      <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --help</p>
       <h2>Adding a new observation type</h2>
       <p>Suppose you have installed an electric meter at your house and you wish to 
 	correlate electrical usage with the weather. The meter has some sort of connection 
@@ -2131,11 +2131,11 @@ class MyAlarm(StdService):
 	attached to the end. Make sure you have the necessary permissions to do this. 
 	In particular, if you are using MySQL, you will need '<span class="code">CREATE</span>' 
 	privileges.</p>
-      <p>3. <strong>Run <span class="code">wee_config_database.py</span>.</strong> Now 
+      <p>3. <strong>Run <span class="code">wee_config_database</span>.</strong> Now 
 	run the utility <span class="code">we-config-database.py</span> with the
 	<span class="code">--reconfigure</span> option and the path to the configuration 
 	file:</p>
-      <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database.py --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+      <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       <p>This will create a new database (nominally, <span class="code">weewx.sdb_new</span> 
 	if you are using sqlite, <span class="code">weewx_new</span> if you are using 
 	MySQL) using the new schema and populate it with data from the old database.
@@ -2252,10 +2252,10 @@ mv weewx.sdb_new weewx.sdb</p>
 	attached to the end. Make sure you have the necessary permissions to do this. 
 	In particular, if you are using MySQL, you will need '<span class="code">CREATE</span>' 
 	privileges.</p>
-      <p>3. <strong>Run <span class="code">wee_config_database.py</span>.</strong> Now 
-	run the utility <span class="code">wee_config_database.py</span> with the
+      <p>3. <strong>Run <span class="code">wee_config_database</span>.</strong> Now 
+	run the utility <span class="code">wee_config_database</span> with the
 	<span class="code">--reconfigure</span> option:</p>
-      <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database.py --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+      <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       <p>This will create a new database (nominally, <span class="code">weewx.sdb_new</span> 
 	if you are using sqlite, <span class="code">weewx_new</span> if you are using 
 	MySQL), using the schema found in <span class="symcode">$BIN_ROOT</span><span class="code">/user/schemas.py</span>, 

@@ -50,7 +50,7 @@ def gen_all(config_path, gen_ts = None):
     t.run()
     
 if len(sys.argv) < 2 :
-    print "Usage: reports.py path-to-configuration-file [timestamp-to-be-generated]"
+    print "Usage: wee_reports path-to-configuration-file [timestamp-to-be-generated]"
     exit()
 gen_ts = int(sys.argv[2]) if len(sys.argv)>=3 else None
     

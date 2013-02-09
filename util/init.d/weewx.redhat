@@ -11,7 +11,7 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-WEEWX_BIN=/home/weewx/bin/weewxd.py
+WEEWX_BIN=/home/weewx/bin/weewxd
 WEEWX_CFG=/home/weewx/weewx.conf
 NAME=weewx
 PIDFILE=/var/run/$NAME.pid

@@ -4,11 +4,11 @@ setup.cfg
 setup.py
 weewx.conf
 bin/daemon.py
-bin/wee_config_database.py
-bin/wee_config_fousb.py
-bin/wee_config_vantage.py
-bin/wee_reports.py
-bin/weewxd.py
+bin/wee_config_database
+bin/wee_config_fousb
+bin/wee_config_vantage
+bin/wee_reports
+bin/weewxd
 bin/examples/__init__.py
 bin/examples/alarm.py
 bin/examples/lowBattery.py

@@ -38,10 +38,11 @@ option to FineOffsetUSB driver.  Fixed barometric pressure calculation for
 FineOffsetUSB driver.
 
 Changed the name of the utilities, so they will be easier to find in /usr/bin:
-  runreports.py      -> wee_reports.py
-  config_database.py -> wee_config_database.py
-  config_vp.py       -> wee_config_vantage.py
-  config_fousb.py    -> wee_config_fousb.py
+  weewxd.py          -> weewxd
+  runreports.py      -> wee_reports
+  config_database.py -> wee_config_database
+  config_vp.py       -> wee_config_vantage
+  config_fousb.py    -> wee_config_fousb
 
 2.1.1 01/02/13
 
