@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 451 2013-02-07 22:39:43Z mwall $
+# $Id: config_fousb.py 352 2013-01-04 15:48:17Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -45,7 +45,7 @@ Output from a 308x-series station would be particularly helpful.
 # TODO:
 # set station archive interval
 
-usage="""%prog: config_file [--help] [--info] [--debug]"""
+usage="""%prog: config_file [--help | --info | --check-pressures] [--debug]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
@@ -57,8 +57,10 @@ def main():
     # Add the various options:
     parser.add_option("--info", action="store_true", dest="info",
                         help="display weather station configuration")
+    parser.add_option("--check-pressures", action="store_true", dest="chkpres",
+                        help="query station for pressure sensor data")
     parser.add_option("--debug", action="store_true", dest="debug",
-                        help="display all bits, not just known bits")
+                        help="display additional information while running")
     
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -92,7 +94,9 @@ def main():
     station = weewx.fousb.FineOffsetUSB(altitude=altitude_m,
                                         **config_dict['FineOffsetUSB'])
 
-    if options.info or len(args) == 1:
+    if options.chkpres:
+        checkpressures(station)
+    elif options.info or len(args) == 1:
         info(station)
 
 def info(station):
@@ -121,6 +125,26 @@ def info(station):
         print ''
         for s in slist[k]:
             print s
+
+def checkpressures(station):
+    """Query the station then display sensor readings."""
+    print "Querying the station..."
+    val = getvalues(station, '', weewx.fousb.fixed_format)
+    station.closePort()
+
+    for packet in station.genLoopPackets():
+        print packet
+        rp = station.get_fixed_block(['rel_pressure'])
+        sp = packet['pressure']
+        ap1 = weewx.wxformulas.altimeter_pressure_Metric(sp, station.altitude)
+        ap2 = weewx.fousb.sp2ap(sp, station.altitude)
+        bp2 = weewx.fousb.sp2bp(sp, station.altitude, packet['outTemp'])
+        print 'relative pressure: %s' % rp
+        print 'station pressure: %s' % sp
+        print 'altimeter pressure (davis): %s' % ap1
+        print 'altimeter pressure (noaa): %s' % ap2
+        print 'barometer pressure (weewx): ?'
+        print 'barometer pressure (wview): %s' % bp2
 
 def stash(slist, s):
     if s.find('settings') != -1:

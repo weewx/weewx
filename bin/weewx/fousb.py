@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 449 2013-02-07 17:15:41Z mwall $
+# $Id: fousb.py 456 2013-02-09 00:04:50Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -147,6 +147,7 @@ It is used as: A200 1A20 A2AA 0020 to indicate a data refresh.
 The WH1080 acknowledges the write with an 8 byte chunk: A5A5 A5A5.
 """
 
+from datetime import datetime
 import math
 import time
 import syslog
@@ -335,15 +336,19 @@ def logdbg(msg):
 def loginf(msg):
     syslog.syslog(syslog.LOG_INFO, 'fousb: %s' % msg)
 
+def logerr(msg):
+    syslog.syslog(syslog.LOG_ERR, 'fousb: %s' % msg)
+
 def logcrt(msg):
     syslog.syslog(syslog.LOG_CRIT, 'fousb: %s' % msg)
 
-def logerr(msg):
-    syslog.syslog(syslog.LOG_ERR, 'fousb: %s' % msg)
+# noaa definitions for station pressure, altimeter setting, and sea level
+# http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
 
 # implementation copied from wview
 def sp2ap(sp_mbar, elev_meter):
     """Convert station pressure to sea level pressure.
+    http://www.wrh.noaa.gov/slc/projects/wxcalc/formulas/altimeterSetting.pdf
 
     sp_mbar - station pressure in millibars
 
@@ -399,6 +404,10 @@ class BlockLengthError(Exception):
     def __str__(self):
         return self.msg
 
+# mechanisms for polling the station
+REGULAR_POLLING = 'REGULAR'
+ADAPTIVE_POLLING = 'ADAPTIVE'
+
 class FineOffsetUSB(weewx.abstractstation.AbstractStation):
     """Driver for FineOffset USB stations."""
     
@@ -406,10 +415,13 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         """Initialize the station object.
 
         altitude: Altitude of the station
-        [Required. Obtained from weewx configuration.]
+        [Required. No Default.]
 
         model: Which station model is this?
         [Optional. Default is 'WH1080 (USB)']
+
+        polling_mode: The mechanism to use when polling the station.
+        [Optional. Default is 'REGULAR']
 
         rain_max_sane: Maximum sane value for rain in a single sampling
         period, measured in mm
@@ -450,6 +462,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.altitude          = stn_dict['altitude']
         self.record_generation = stn_dict.get('record_generation', 'software')
         self.model             = stn_dict.get('model', 'WH1080 (USB)')
+        self.polling_mode      = stn_dict.get('polling_mode', REGULAR_POLLING)
         self.rain_max_sane     = int(stn_dict.get('rain_max_sane', 2))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
@@ -462,16 +475,26 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.usb_read_size     = int(stn_dict.get('usb_read_size', '0x20'), 0)
         self.data_format       = stn_dict.get('data_format', '1080')
 
+        # avoid USB activity this many seconds each side of the time when
+        # console is believed to be writing to memory.
+        self.avoid = 3.0
+        # minimum interval between polling for data change
+        self.min_pause = 0.5
+
         self._rain_period_ts = None
         self._last_rain = None
         self._fixed_block = None
         self._data_block = None
         self._data_pos = None
         self._current_ptr = None
+        self._station_clock = None
+        self._sensor_clock = None
 
         self.openPort()
+        loginf('using %s polling mode' % self.polling_mode)
 
-    # Unfortunately there is no provision to obtain the model number.
+    # Unfortunately there is no provision to obtain the model from the station
+    # itself, so use what we were given.
     @property
     def hardware_name(self):
         return self.model
@@ -479,7 +502,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
     def openPort(self):
         dev = self._findDevice()
         if not dev:
-            logerr("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x" % (self.vendor_id, self.product_id))
+            logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x" % (self.vendor_id, self.product_id))
             raise weewx.WeeWxIOError("Unable to find USB device")
         self.devh = dev.open()
         # Detach any old claimed interfaces
@@ -503,20 +526,22 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             self.devh.detachKernelDriver(self.interface)
         except:
             pass
+                               
+    def _findDevice(self):
+        """Find the vendor and product ID on the USB bus."""
+        for bus in usb.busses():
+            for dev in bus.devices:
+                if dev.idVendor == self.vendor_id and dev.idProduct == self.product_id:
+                    return dev
         
     def genLoopPackets(self):
         """Generator function that continuously returns decoded packets"""
-        
-        genBytes = self._genBytes_raw()
 
-        for ibyte in genBytes:
+        for p in self.get_observations():
             packet = {}
             # required elements
             packet['usUnits'] = weewx.METRIC
             packet['dateTime'] = int(time.time() + 0.5)
-
-            # decode the bytes into a pywws dictionary
-            p = _decode(ibyte, reading_format[self.data_format])
 
             # map the pywws dictionary to something weewx understands
             for k in keymap.keys():
@@ -578,14 +603,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 logdbg('got rainfall of %f cm' % packet['rain'])
 
             yield packet
-                               
-    def _findDevice(self):
-        """Find the vendor and product ID on the USB bus."""
-        for bus in usb.busses():
-            for dev in bus.devices:
-                if dev.idVendor == self.vendor_id and dev.idProduct == self.product_id:
-                    return dev
 
+    # get data from the station.
+    #
     # there are a few types of non-fatal failures we might encounter while
     # reading.  when we encounter one, report the failure to log then retry.
     #
@@ -593,29 +613,32 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
     # us, so keep querying until we get a valid pointer.
     #
     # if we get USB read failures, retry until we get something valid.
-    def _genBytes_raw(self):
-        """Get a sequence of bytes from the USB interface."""
+    def get_observations(self):
+        """Get data from the station at regular intervals."""
 
         nusberr = 0
         nptrerr = 0
-        old_ptr = None
         while True:
             try:
-                new_ptr = self.current_pos()
-                if new_ptr is None:
-                    raise CurrentPositionError('current_pos returned None')
-                if weewx.debug and old_ptr is not None and old_ptr != new_ptr:
-                    logdbg('ptr changed: old=0x%06x new=0x%06x' % (old_ptr, new_ptr))
-                nptrerr = 0
-                old_ptr = new_ptr
+                if self.polling_mode == ADAPTIVE_POLLING:
+                    for data in self.live_data():
+                        nusberr = 0
+                        yield data
+                elif self.polling_mode == REGULAR_POLLING:
+                    new_ptr = self.current_pos()
+                    if new_ptr is None:
+                        raise CurrentPositionError('current_pos returned None')
+                    nptrerr = 0
 
-                block = self.get_raw_data(new_ptr, unbuffered=True)
-                if not len(block) == reading_len[self.data_format]:
-                    raise BlockLengthError(len(block), reading_len[self.data_format])
-
-                nusberr = 0
-                yield block
-                time.sleep(self.sample_period)
+                    block = self.get_raw_data(new_ptr, unbuffered=True)
+                    if not len(block) == reading_len[self.data_format]:
+                        raise BlockLengthError(len(block), reading_len[self.data_format])
+                    nusberr = 0
+                    data = _decode(block, reading_format[self.data_format])
+                    yield data
+                    time.sleep(self.sample_period)
+                else:
+                    raise Exception("unknown polling mode '%s'" % self.polling_mode)
 
             except (IndexError, usb.USBError), e:
                 logdbg('read data from USB failed: %s' % e)
@@ -641,7 +664,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
 #==============================================================================
 # methods for reading from and writing to usb
-# FIXME: these should be abstracted to a class to support multiple usb drivers
+# FIXME: to support multiple usb drivers, these should be abstracted to a class
 #==============================================================================
 
     def _read_usb(self, address):
@@ -664,8 +687,139 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
 #==============================================================================
 # methods for reading data from the weather station
-# the following were adapted from pywws 12.10_r547
+# the following were adapted from pywws
+#
+# commit d422883ee05a8dddcedefd3f1366d54d46037668
+# Author: Jim Easterbrook <jim@jim-easterbrook.me.uk>
+# Date:   Fri Feb 8 11:54:48 2013 +0000
 #==============================================================================
+
+    def live_data(self, logged_only=False):
+        # There are two things we want to synchronise to - the data is
+        # updated every 48 seconds and the address is incremented
+        # every 5 minutes (or 10, 15, ..., 30). Rather than getting
+        # data every second or two, we sleep until one of the above is
+        # due. (During initialisation we get data every two seconds
+        # anyway.)
+        read_period = self.get_fixed_block(['read_period'])
+        log_interval = float(read_period * 60)
+        live_interval = 48.0
+        old_ptr = self.current_pos()
+        old_data = self.get_data(old_ptr, unbuffered=True)
+        now = time.time()
+        if self._sensor_clock:
+            next_live = now
+            next_live -= (next_live - self._sensor_clock) % live_interval
+            next_live += live_interval
+        else:
+            next_live = None
+        if self._station_clock and next_live:
+            # set next_log
+            next_log = next_live - live_interval
+            next_log -= (next_log - self._station_clock) % 60
+            next_log -= old_data['delay'] * 60
+            next_log += log_interval
+        else:
+            next_log = None
+            self._station_clock = None
+        while True:
+            last_time = now
+            if not self._station_clock:
+                next_log = None
+            if not self._sensor_clock:
+                next_live = None
+            # wake up just before next reading is due
+            now = time.time()
+            advance = now + max(self.avoid, self.min_pause) + self.min_pause
+            pause = 600.0
+            if next_live:
+                if not logged_only:
+                    pause = min(pause, next_live - advance)
+            else:
+                pause = self.min_pause
+            if next_log:
+                pause = min(pause, next_log - advance)
+            elif old_data['delay'] < read_period - 1:
+                pause = min(
+                    pause, ((read_period - old_data['delay']) * 60.0) - 110.0)
+            else:
+                pause = self.min_pause
+            pause = max(pause, self.min_pause)
+#            logdbg('delay %s, pause %g' % (str(old_data['delay']), pause))
+            time.sleep(pause)
+            # first look for data changes
+            new_data = self.get_data(old_ptr, unbuffered=True)
+            now = time.time()
+            # 'good' time stamp if we haven't just woken up from long
+            # pause and data read wasn't delayed
+            valid_now = now - last_time < (self.min_pause * 2.0) - 0.1
+            # make sure changes because of logging interval aren't
+            # mistaken for new live data
+            old_data['delay'] = new_data['delay']
+            if self.data_format == '3080':
+                # ignore solar data which changes every 60 seconds
+                old_data['illuminance'] = new_data['illuminance']
+                old_data['uv'] = new_data['uv']
+            if next_live and not logged_only:
+                while now > next_live + live_interval:
+                    loginf('live_data missed')
+                    next_live += live_interval
+            if new_data != old_data:
+                logdbg('live_data new data')
+                result = dict(new_data)
+                if valid_now:
+                    # data has just changed, so definitely at a 48s update time
+                    self._sensor_clock = now
+                    loginf('setting sensor clock %g' % (now % live_interval))
+                    if not next_live:
+                        loginf('live_data live synchronised')
+                    next_live = now
+                elif next_live and now < next_live - self.min_pause:
+                    loginf('live_data lost sync %g' % (now - next_live))
+                    next_live = None
+                    self._sensor_clock = None
+                if next_live and not logged_only:
+                    result['idx'] = datetime.utcfromtimestamp(int(next_live))
+                    next_live += live_interval
+                    yield result
+#                    yield result, old_ptr, False
+                old_data = new_data
+            # now look for pointer changes
+            if new_data['delay'] < read_period:
+                # pointer won't have changed
+                continue
+            new_ptr = self.current_pos()
+            now2 = time.time()
+            valid_now = now2 - last_time < (self.min_pause * 2.0) - 0.1
+            while valid_now and next_log and now2 > next_log + 12.0:
+                loginf('live_data log extended')
+                next_log += 60.0
+            if new_ptr != old_ptr:
+                logdbg('live_data new ptr: %06x' % new_ptr)
+                # re-read data, to be absolutely sure it's the last
+                # logged data before the pointer was updated
+                new_data = self.get_data(old_ptr, unbuffered=True)
+                result = dict(new_data)
+                if valid_now:
+                    # pointer has just changed, so definitely at a logging time
+                    self._station_clock = now2
+                    loginf('setting station clock %g' % (now2 % 60.0))
+                    if not next_log:
+                        loginf('live_data log synchronised')
+                    next_log = now2
+                elif next_log and now2 < next_log - self.min_pause:
+                    loginf('live_data lost log sync %g' % (now2 - next_log))
+                    next_log = None
+                    self._station_clock = None
+                if next_log:
+                    result['idx'] = datetime.utcfromtimestamp(int(next_log))
+                    next_log += log_interval
+                    yield result
+#                    yield result, old_ptr, True
+                if new_ptr != self.inc_ptr(old_ptr):
+                    logerr('live_data unexpected ptr change %06x -> %06x' % 
+                           (old_ptr, new_ptr))
+                    old_ptr = new_ptr
 
     def inc_ptr(self, ptr):
         """Get next circular buffer data pointer."""
@@ -756,11 +910,35 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             fmt = fmt[key]
         return _decode(self._fixed_block, fmt)
 
+    def _wait_for_station(self):
+        # avoid times when station is writing to memory
+        while True:
+            pause = 60.0
+            if self._station_clock:
+                phase = time.time() - self._station_clock
+                if phase > 24 * 3600:
+                    # station clock was last measured a day ago, so reset it
+                    self._station_clock = None
+                else:
+                    pause = min(pause, (self.avoid - phase) % 60)
+            if self._sensor_clock:
+                phase = time.time() - self._sensor_clock
+                if phase > 24 * 3600:
+                    # sensor clock was last measured 6 hrs ago, so reset it
+                    self._sensor_clock = None
+                else:
+                    pause = min(pause, (self.avoid - phase) % 48)
+            if pause > self.avoid * 2.0:
+                return
+            logdbg('avoid %s' % str(pause))
+            time.sleep(pause)
+
     def _read_block(self, ptr, retry=True):
         # Read block repeatedly until it's stable. This avoids getting corrupt
         # data when the block is read as the station is updating it.
         old_block = None
         while True:
+            self._wait_for_station()
             new_block = self._read_usb(ptr)
             if new_block:
                 if (new_block == old_block) or not retry:
@@ -777,10 +955,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         # check 'magic number'
         if result[:2] not in ([0x55, 0xAA], [0xFF, 0xFF],
                               [0x55, 0x55], [0xC4, 0x00]):
-            logerr('unrecognised magic number %02x %02x' % (result[0], result[1]))
+            logcrt('unrecognised magic number %02x %02x' % (result[0], result[1]))
         return result
 
     def _write_byte(self, ptr, value):
+        self._wait_for_station()
         if not self._write_usb(ptr, value):
             raise weewx.WeeWxIOError('Write to USB failed')
 
