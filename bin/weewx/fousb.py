@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 456 2013-02-09 00:04:50Z mwall $
+# $Id: fousb.py 457 2013-02-09 00:19:28Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -405,7 +405,7 @@ class BlockLengthError(Exception):
         return self.msg
 
 # mechanisms for polling the station
-REGULAR_POLLING = 'REGULAR'
+PERIODIC_POLLING = 'PERIODIC'
 ADAPTIVE_POLLING = 'ADAPTIVE'
 
 class FineOffsetUSB(weewx.abstractstation.AbstractStation):
@@ -421,7 +421,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         [Optional. Default is 'WH1080 (USB)']
 
         polling_mode: The mechanism to use when polling the station.
-        [Optional. Default is 'REGULAR']
+        [Optional. Default is 'PERIODIC']
 
         rain_max_sane: Maximum sane value for rain in a single sampling
         period, measured in mm
@@ -462,7 +462,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.altitude          = stn_dict['altitude']
         self.record_generation = stn_dict.get('record_generation', 'software')
         self.model             = stn_dict.get('model', 'WH1080 (USB)')
-        self.polling_mode      = stn_dict.get('polling_mode', REGULAR_POLLING)
+        self.polling_mode      = stn_dict.get('polling_mode', PERIODIC_POLLING)
         self.rain_max_sane     = int(stn_dict.get('rain_max_sane', 2))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
@@ -614,7 +614,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
     #
     # if we get USB read failures, retry until we get something valid.
     def get_observations(self):
-        """Get data from the station at regular intervals."""
+        """Get data from the station."""
 
         nusberr = 0
         nptrerr = 0
@@ -624,7 +624,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     for data in self.live_data():
                         nusberr = 0
                         yield data
-                elif self.polling_mode == REGULAR_POLLING:
+                elif self.polling_mode == PERIODIC_POLLING:
                     new_ptr = self.current_pos()
                     if new_ptr is None:
                         raise CurrentPositionError('current_pos returned None')
