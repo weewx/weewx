@@ -1,3 +1,7 @@
+weewx (2.2.0a4-1) unstable; urgency=low
+  * include logrotate and syslog snippets
+  * use wee_config_* naming
+ -- Matthew Wall <mwall@users.sourceforge.net>  Fri, 08 Feb 2013 20:41:25 -0500
 weewx (2.2.0a3-1) unstable; urgency=low
   * fixed debian start script
   * fixed debian-specific paths and commands in documentation
