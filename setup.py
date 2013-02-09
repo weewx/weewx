@@ -42,9 +42,9 @@
     
  5. In a similar manner, it sets WEEWX_ROOT in the daemon startup script.
 
- 6. It backs up any pre-existing bin subdirectory.
+ 6. It saves any pre-existing bin subdirectory.
  
- 7. It conserves the ./bin/user subdirectory.
+ 7. It saves the ./bin/user subdirectory.
 """
 
 import os.path
@@ -66,44 +66,43 @@ this_file = os.path.join(os.getcwd(), __file__)
 bin_dir = os.path.abspath(os.path.join(os.path.dirname(this_file), 'bin'))
 
 # Get the version:
-save_path = list(sys.path)
+save_syspath = list(sys.path)
 sys.path.insert(0, bin_dir)
 import weewx
 VERSION = weewx.__version__
 del weewx
-sys.path = save_path
+sys.path = save_syspath
+
+start_scripts = ['util/init.d/weewx.bsd',
+                 'util/init.d/weewx.debian',
+                 'util/init.d/weewx.redhat',
+                 'util/init.d/weewx.suse']
 
 #===============================================================================
 #                            weewx_install_lib
 #===============================================================================
 
 class weewx_install_lib(install_lib):
-    """Specialized version of install_lib
-    
-    This version:
-    
-    - Backs up the old ./bin subdirectory before installing.
-    - Conserves the ./bin/user subdirectory
-    """ 
+    """Specialized version of install_lib""" 
 
     def run(self):
-        # Back up any existing 'bin' subdirectory:
-        if os.path.exists(self.install_dir):
-            bin_backupdir = backup(self.install_dir)
-            print "Backed up bin subdirectory to %s" % bin_backupdir
-        else:
-            bin_backupdir = None
-
         # Determine whether the user is still using an old-style schema
         schema_type = self._check_schema_type()
+
+        # Save any existing 'bin' subdirectory:
+        if os.path.exists(self.install_dir):
+            bin_savedir = save_path(self.install_dir)
+            print "Saved bin subdirectory as %s" % bin_savedir
+        else:
+            bin_savedir = None
 
         # Run the superclass's version. This will install all incoming files.
         install_lib.run(self)
         
         # If the bin subdirectory previously existed, and if it included
         # a 'user' subsubdirectory, then restore it
-        if bin_backupdir:
-            user_backupdir = os.path.join(bin_backupdir, 'user')
+        if bin_savedir:
+            user_backupdir = os.path.join(bin_savedir, 'user')
             if os.path.exists(user_backupdir):
                 user_dir = os.path.join(self.install_dir, 'user')
                 distutils.dir_util.copy_tree(user_backupdir, user_dir)
@@ -157,19 +156,7 @@ class weewx_install_lib(install_lib):
 #===============================================================================
 
 class weewx_install_data(install_data):
-    """Specialized version of install_data 
-    
-    This version: 
-    
-      - Sets WEEWX_ROOT in the configuration file to reflect the
-        the location of the install directory;
-      - Merges an old week.conf configuration file into a new,
-        thus preserving any changes made by the user;
-      - Massages the daemon start up script to reflect the choice
-        of WEEWX_ROOT;
-      - Installs the skins subdirectory only if the user doesn't
-        already have one.
-    """
+    """Specialized version of install_data """
     
     def copy_file(self, f, install_dir, **kwargs):
         rv = None
@@ -287,10 +274,10 @@ class weewx_install_data(install_data):
         # Write the new configuration file to it:
         new_config.write(tmpfile)
         
-        # Back up the old config file if it exists:
+        # Save the old config file if it exists:
         if os.path.exists(config_path):
-            backup_path = backup(config_path)
-            print "Backed up old configuration file as %s" % backup_path
+            backup_path = save_path(config_path)
+            print "Saved old configuration file as %s" % backup_path
             
         # Now install the temporary file (holding the merged config data)
         # into the proper place:
@@ -366,23 +353,16 @@ class weewx_sdist(sdist):
 #===============================================================================
 #                         utility functions
 #===============================================================================
-def backup(filepath):
+def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:
     filepath = os.path.normpath(filepath)
     newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
-    if os.path.isdir(filepath):
-        distutils.dir_util.copy_tree(filepath, newpath)
-    else:
-        distutils.file_util.copy_file(filepath, newpath)
+    shutil.move(filepath, newpath)
     return newpath
 
-start_scripts = (
-    'util/init.d/weewx.bsd',
-    'util/init.d/weewx.debian',
-    'util/init.d/weewx.redhat',
-    'util/init.d/weewx.suse',
-    );
-
+#===============================================================================
+#                               setup
+#===============================================================================
 setup(name='weewx',
       version=VERSION,
       description='weather software',

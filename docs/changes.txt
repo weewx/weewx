@@ -3,30 +3,35 @@ weewx change history
 
 2.2.0
 
-Added plot options line_gap_fraction and bar_gap_fraction, which control
-how gaps in the data are handled by the plots. Also, added more flexible
-control of plot colors, using a notation such as 0xBBGGRR, #RRGGBB, or the
-English name, such as 'yellow'. Finally, added day/night bands to the
-plots. All contributed by Matthew Wall. Thanks, Matthew!
+Weewx can now be installed using Debian (DEB) or Redhat (RPM) packages, as well
+as with the old 'setup.py' method. Because they install things in different
+places, you should stick with one method or another. Don't mix and match. Thanks
+to Matthew Wall for the hard work this took!
+
+Added plot options line_gap_fraction and bar_gap_fraction, which control how
+gaps in the data are handled by the plots. Also, added more flexible control of
+plot colors, using a notation such as 0xBBGGRR, #RRGGBB, or the English name,
+such as 'yellow'. Finally, added day/night bands to the plots. All contributed
+by Matthew Wall. Thanks again, Matthew!
 
 Ordinal wind directions can now be shown, just by adding the tag suffix
-".ordinal_compass." For example, $current.windDir.ordinal_compass might
-show 'SSE' The abbreviations are set in the skin configuration file.
+".ordinal_compass." For example, $current.windDir.ordinal_compass might show
+'SSE' The abbreviations are set in the skin configuration file.
 
-Fixed bug that caused rain totals to be misreported to Weather Underground
-when using a metric database.
+Fixed bug that caused rain totals to be misreported to Weather Underground when
+using a metric database.
 
-Generalized the weewx machinery so it can be used for applications other
-than weather applications.
+Generalized the weewx machinery so it can be used for applications other than
+weather applications.
 
 Got rid of option stats_types in weewx.conf and put it in
 bin/user/schemas.py. See upgrading.html if you have a specialized stats
 database.
 
-The stats database now includes an internal table of participating
-observation types. This allows it to be easily combined with the archive
-database, should you choose to do so. The table is automatically created
-for older stats databases.
+The stats database now includes an internal table of participating observation
+types. This allows it to be easily combined with the archive database, should
+you choose to do so. The table is automatically created for older stats
+databases.
 
 Added rain rate calculation to FineOffsetUSB driver.
 
