@@ -1444,52 +1444,6 @@ sudo /etc/init.d/apache restart</p>
       directory to a location on the remote server on which the web server
       is running.</p>
 
-    <h1>Running <span class='code'>weewx</span> on a low-power computer</h1>
-    <p>There are a few configuration changes that will make
-      <span class='code'>weewx</span> run better on low-power machines, such
-      as plug computers or routers.</p>
-
-    <h2>Use a RAM disk</h2>
-    <p>Many low-power machines use flash memory for storage, instead of a spinning disk.  Since flash memory has a limited life, it is a good idea
-      to minimize the number of writes to 'disk'.  One way to do this is to
-      save data to memory instead of disk.</p>
-    <p>Add the following line to <span class='code'>/etc/fstab</span></p>
-    <p class='tty'>weewx /var/weewx tmpfs size=50M,noexec,nosuid,nodev 0 0</p>
-    <p>Since the entry is in <span class="code">fstab</span>, the RAM disk will mount automatically at
-      startup.  However, to mount it manually do the following:</p>
-    <p class='tty'>sudo mkdir /var/weewx
-sudo mount weewx</p>
-    <p>Verify the RAM disk with <span class='code'>df</span>.  You should see
-      a line like this:</p>
-    <p class='tty'>df -k
-Filesystem           1K-blocks      Used Available Use% Mounted on
-weewx                    20480     11772      8708  58% /var/weewx</p>
-    <p>How big should the RAM disk be?  One year of <span class="code">weewx</span> data 
-	generates about 20MB.  Generated files
-      from the <span class="code">Standard</span> report typically total less than 1MB.  So if saving 
-      only generated files to RAM disk, the size can be 2 or 3 MB.</p>
-    <p>Put the generated files on the RAM disk by modifying
-      <span class='code'>weewx.conf</span>.  Change
-      <span class='symcode'>HTML_ROOT</span> to the following:</p>
-    <p class='tty'>HTML_ROOT=/var/weewx/www</p>
-    <p>Restart weewx for the changes to take effect:</p>
-    <p class='tty'>sudo /etc/init.d/weewx restart</p>
-
-    <h2>Turn off debugging</h2>
-    <p>Once everything is working properly, turn off debugging by modifying
-      <span class='code'>weewx.conf</span></p>
-    <p class='tty'>debug = 0</p>
-    <p>This will reduce the writes to disk caused by logging.</p>
-
-    <h2>Upload everything</h2>
-    <p>Many low power machines do not have the capability to host a MySQL
-      database effectively.  They may work initially, but slow down
-      considerably after years of data are in the database.  This is 
-      particularly true when running <span class='code'>weewx</span> on a
-      router or device that is constantly processing for other purposes.</p>
-    <p>Save data to a sqlite database, or save to a MySQL database on a
-      different computer.</p>
-
     <h1 id="Troubleshooting">Troubleshooting</h1>
     <p>This section lists some common problems installing and running
       <span class="code">weewx</span>. If you are still stuck, be sure to: </p>
