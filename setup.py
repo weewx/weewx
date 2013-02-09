@@ -58,6 +58,7 @@ import configobj
 from distutils.core import setup
 from distutils.command.install_data import install_data
 from distutils.command.install_lib  import install_lib
+from distutils.command.install_scripts import install_scripts
 from distutils.command.sdist import sdist
 import distutils.dir_util
 
@@ -312,6 +313,22 @@ class weewx_install_data(install_data):
         return rv
 
 #===============================================================================
+#                         install_scripts
+#===============================================================================
+
+class weewx_install_scripts(install_scripts):
+    
+    def run(self):
+    
+        # run the superclass's version:
+        install_scripts.run(self)
+        
+        # Add a symbolic link for weewxd.py to weewxd:
+        source = './weewxd'
+        dest   = os.path.join(self.install_dir, 'weewxd.py')
+        os.symlink(source, dest)
+        
+#===============================================================================
 #                                  sdist
 #===============================================================================
 
@@ -484,5 +501,6 @@ setup(name='weewx',
                      'PIL(>=1.1.6)'],
       cmdclass    = {"install_data" : weewx_install_data,
                      "install_lib"  : weewx_install_lib,
-                     "sdist"        : weewx_sdist}
+                     "sdist"        : weewx_sdist,
+                     "install_scripts" : weewx_install_scripts}
       )
