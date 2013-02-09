@@ -16,6 +16,8 @@ my $ARCHIVES_GENERATED = 'Archive: archives generated';
 my $IMAGES_GENERATED = 'genimages: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
 my $FILES_COPIED = 'reportengine: files copied';
+my $RECORDS_PUBLISHED = 'restful: records published';
+my $RECORDS_SKIPPED = 'restful: records skipped';
 my $FOUSB_UNSTABLE_READS = 'fousb: unstable reads';
 my %counts = (
     $STARTUPS, 0,
@@ -23,6 +25,8 @@ my %counts = (
     $IMAGES_GENERATED, 0,
     $FILES_GENERATED, 0,
     $FILES_COPIED, 0,
+    $RECORDS_PUBLISHED, 0,
+    $RECORDS_SKIPPED, 0,
     $FOUSB_UNSTABLE_READS, 0,
 );
 my %reports;
@@ -43,6 +47,10 @@ while(defined($_ = <STDIN>)) {
         $counts{$FILES_COPIED} += $1;
     } elsif (/fousb: unstable read: blocks differ/) {
         $counts{$FOUSB_UNSTABLE_READS} += 1;
+    } elsif (/restful: Skipped record/) {
+        $counts{$RECORDS_SKIPPED} += 1;
+    } elsif (/restful: Published record/) {
+        $counts{$RECORDS_PUBLISHED} += 1;
     } elsif (/reportengine: Running report (\S+)/) {
         my $report = $1;
         $reports{$report} = $reports{$report} ? $reports{$report} + 1 : 1;
@@ -51,10 +59,19 @@ while(defined($_ = <STDIN>)) {
         $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
     } elsif (/reportengine: Running reports for latest time/ ||
              /reportengine: Found configuration file/ ||
+             /reportengine: FTP upload not requested/ ||
+             /register:/ ||
+             /\*\*\*\*  registration interval/ ||
+             /stats: Backfilling stats database/ ||
+             /stats: stats database up to date/ ||
+             /stats: created schema for statistical database/ ||
+             /\*\*\*\*  \'station\'/ ||
+             /\*\*\*\*  Waiting 60 seconds then retrying/ ||
              /wxengine: Station does not support reading the time/ ||
              /wxengine: Starting main packet loop/ ||
              /wxengine: Keyboard interrupt/ ||
              /wxengine: Shut down StdReport thread/ ||
+             /wxengine: Shut down StdRESTful thread/ ||
              /wxengine: Loading service/ ||
              /wxengine: Finished loading service/ ||
              /wxengine: Using archive interval of/ ||
@@ -64,13 +81,17 @@ while(defined($_ = <STDIN>)) {
              /wxengine: Record generation will be attempted in/ ||
              /wxengine: StdConvert target unit is/ ||
              /wxengine: Data will not be posted to/ ||
+             /wxengine: Data will be posted to / ||
+             /wxengine: Started thread for RESTful upload sites./ ||
              /wxengine: No RESTful upload sites/ ||
-             /stats: Backfilling stats database/ ||
-             /stats: stats database up to date/ ||
-             /stats: created schema for statistical database/ ||
-             /reportengine: FTP upload not requested/ ||
-             /\*\*\*\*  \'station\'/ ||
-             /fousb: ptr changed/) {
+             /wxengine: retrying/ ||
+             /fousb: ptr changed/ ||
+             /fousb: using \S+ polling mode/ ||
+             /fousb: live_data/ ||
+             /fousb: delay/ ||
+             /fousb: setting sensor clock/ ||
+             /fousb: setting station clock/ ||
+             /fousb: avoid/) {
         # ignore
     } else {
         push @unmatched, $_;
