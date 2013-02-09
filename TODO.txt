@@ -4,3 +4,5 @@ resolve fousb pressure calculation issue
 
 possibly implement averaging rainRate calculation instead of the
 current near-instantaneous implementation in fousb
+
+Rename the executables (yet again), this time to exclude the suffix .py

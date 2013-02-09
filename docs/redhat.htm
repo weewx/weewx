@@ -6,7 +6,7 @@
   <head>
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <title>weewx quick-start for redhat</title>
+    <title>Installation on Redhat Linux</title>
     <link href="weewx_docs.css" rel="stylesheet" />
     <style type="text/css">
 .os-icons {
@@ -22,7 +22,7 @@
     </style>
   </head>
   <body>
-    <h1 class="title">weewx: Quick Start Guide for Redhat Linux</h1>
+    <h1 class="title">weewx: Installation on Redhat Linux</h1>
     <p class='os-icons'>      
       <img class='logo' src='logo-redhat.png'/>
       <img class='logo' src='logo-centos.png'/>
@@ -58,8 +58,6 @@
       </tr>
     </table>
 
-    <p style='clear: both'></p>
-
     <h3>Download</h3>
     <p>
       Download the package <span class='code'>weewx-X.Y.Z-R.rpm</span> from <a href="http://sourceforge.net/projects/weewx/files">Sourceforge</a>.
@@ -94,7 +92,6 @@
         <li>station_type</li>
       </ul>
       Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
-    </p>
     <p>
       <span class='code'>weewx</span> must be restarted for configuration file
       changes to take effect.
@@ -119,7 +116,8 @@
     <p>To uninstall <span class='code'>weewx</span>, removing configuration files but retaining data:</p>
     <p class='tty'>sudo rpm -e weewx</p>
     <p>To remove data:</p>
-    <p class='tty'>sudo rm -r /var/lib/weewx</p>
+    <p class='tty'>sudo rm -r /var/lib/weewx
+sudo rm -r /var/www/html/weewx</p>
 
     <p class='copyright'>
       &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer

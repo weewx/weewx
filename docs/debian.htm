@@ -6,7 +6,7 @@
   <head>
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <title>weewx quick-start for debian</title>
+    <title>Installation on Debian systems</title>
     <link href="weewx_docs.css" rel="stylesheet" />
     <style type="text/css">
 .os-icons {
@@ -22,7 +22,7 @@
     </style>
   </head>
   <body>
-    <h1 class="title">weewx: Quick Start Guide for Debian Linux</h1>
+    <h1 class="title">weewx: Installation on Debian Linux systems</h1>
     <p class='os-icons'>      
       <img class='logo' src='logo-debian.png'/>
       <img class='logo' src='logo-ubuntu.png'/>
@@ -57,8 +57,6 @@
         <td class='tty'>/usr/share/doc/weewx/</td>
       </tr>
     </table>
-
-    <p style='clear: both'></p>
 
     <h3>Download</h3>
     <p>
@@ -112,7 +110,8 @@ sudo apt-get -f install</p>
     <p>To uninstall <span class='code'>weewx</span>, removing configuration files but retaining data:</p>
     <p class='tty'>sudo dpkg --purge weewx</p>
     <p>To remove data:</p>
-    <p class='tty'>sudo rm -r /var/lib/weewx</p>
+    <p class='tty'>sudo rm -r /var/lib/weewx
+sudo rm -r /var/www/weewx</p>
 
     <p class='copyright'>
       &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
