@@ -2326,19 +2326,30 @@ mv weewx.sdb_new weewx.sdb</p>
         <table class='center' style="width: 60%">
           <tr>
             <td class='code'>pressure</td>
-            <td>The raw, absolute pressure measured by the station, often
-              referred to as <em>Station Pressure</em> or SP.</td>
+            <td>The <em>Station Pressure</em> (SP), which is the raw, absolute
+              pressure measured by the station.  This is the true barometric
+              pressure for the station.</td>
           </tr>
           <tr>
             <td class='code'>barometer</td>
             <td>The <em>Sea Level Pressure</em> (SLP) obtained by correcting
-              the <em>Station Pressure</em> for altitude and local
-              temperature.</td>
+              the <em>Station Pressure</em> for altitude and local temperature.
+              This is the pressure reading most commonly used by
+              meteorologist to track weather systems at the surface, and this
+              is the pressure that is uploaded to weather services by
+              <span class='code'>weewx</span>.  It is the
+              station pressure reduced to mean sea level using local
+              altitude and local temperature.
+            </td>
           </tr>
           <tr>
             <td class='code'>altimeter</td>
-            <td>The <em>Sea Level Pressure</em> (SLP) obtained by correcting
-              the <em>Station Pressure</em> for altitude.</td>
+            <td>The <em>Altimeter Setting</em> (AS) obtained by correcting
+              the <em>Station Pressure</em> for altitude.  This is the
+              pressure reading most commonly heard in weather reports.  It
+              is not the true barometric pressure of a station, but rather
+              the station pressure reduced to mean sea level using altitude
+              and an assumed temperature average.</td>
           </tr>
         </table>
       </p>
