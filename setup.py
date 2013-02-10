@@ -206,6 +206,13 @@ class weewx_install_data(install_data):
             os.remove(os.path.join(self.install_dir, 'docs/README.txt'))
         except OSError:
             pass
+        
+        # If the file docs/CHANGES.txt exists, delete it. It's been renamed
+        # to docs/changes.txt
+        try:
+            os.remove(os.path.join(self.install_dir, 'docs/CHANGES.txt'))
+        except OSError:
+            pass
 
         # Run the superclass's run():
         install_data.run(self)

@@ -18,6 +18,8 @@ New observation types would have their unit group attached as a suffix. E.g., _e
 
 Move to a "plugin" architecture.
 
+Support the WU "RapidFire" protocol.
+
 Use the tagged stats classes for the archive database as well, thus unifying the
 two databases.
 
