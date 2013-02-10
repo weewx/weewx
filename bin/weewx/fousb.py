@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 459 2013-02-09 16:28:03Z mwall $
+# $Id: fousb.py 460 2013-02-10 02:53:03Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -627,11 +627,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 if self.polling_mode == ADAPTIVE_POLLING:
                     for data in self.live_data():
                         nusberr = 0
+                        nptrerr = 0
                         yield data
                 elif self.polling_mode == PERIODIC_POLLING:
                     new_ptr = self.current_pos()
-                    if new_ptr is None:
-                        raise CurrentPositionError('current_pos returned None')
                     nptrerr = 0
 
                     block = self.get_raw_data(new_ptr, unbuffered=True)
@@ -799,10 +798,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 loginf('live_data log extended')
                 next_log += 60.0
             if new_ptr != old_ptr:
-                if new_ptr is not None:
-                    logdbg('live_data new ptr: %06x' % new_ptr)
-                else:
-                    logdbg('live_data new ptr: None')
+                logdbg('live_data new ptr: %06x' % new_ptr)
                 # re-read data, to be absolutely sure it's the last
                 # logged data before the pointer was updated
                 new_data = self.get_data(old_ptr, unbuffered=True)
@@ -824,11 +820,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     yield result
 #                    yield result, old_ptr, True
                 if new_ptr != self.inc_ptr(old_ptr):
-                    if old_ptr is not None and new_ptr is not None:
-                        logerr('live_data unexpected ptr change %06x -> %06x' %
-                               (old_ptr, new_ptr))
-                    else:
-                        logerr('live data unexpected ptr change')
+                    logerr('live_data unexpected ptr change %06x -> %06x' %
+                           (old_ptr, new_ptr))
                     old_ptr = new_ptr
 
     def inc_ptr(self, ptr):
@@ -890,7 +883,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         new_ptr = _decode(self._read_fixed_block(0x0020),
                           lo_fix_format['current_pos'])
         if new_ptr is None:
-            return new_ptr
+            raise CurrentPositionError('current_pos returned None')
         if new_ptr == self._current_ptr:
             return self._current_ptr
         if self._current_ptr and new_ptr != self.inc_ptr(self._current_ptr):
