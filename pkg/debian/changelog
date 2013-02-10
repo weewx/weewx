@@ -1,3 +1,6 @@
+weewx (2.2.0b1-1) unstable; urgency=low
+  * first beta for 2.2.0
+ -- Matthew Wall <mwall@users.sourceforge.net>  Sun, 10 Feb 2013 11:01:43 -0500
 weewx (2.2.0a5-1) unstable; urgency=low
   * fix postrm to work with ubuntu systems
  -- Matthew Wall <mwall@users.sourceforge.net>  Sat, 09 Feb 2013 21:10:20 -0500

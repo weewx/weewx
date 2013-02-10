@@ -1,3 +1,5 @@
+* Sun Feb 10 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.0b1-1
+- first beta for 2.2.0
 * Sat Feb 09 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.0a5-1
 - fixed postrm to work with ubuntu systems
 * Fri Feb 08 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.0a4-1
