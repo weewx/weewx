@@ -639,7 +639,7 @@ Correction ratio:             1.025
 Correction constant:          +0.027 inHg
 Gain:                         -1.000
 Offset:                       -1.000</p>
-    <p>Note that console version number is only available on consoles with firmware 
+    <p>Note that the console version number is available only on consoles with firmware 
       dates after about 2006.</p>
     <p><span class="highlight">Highlighted</span> values can be changed.</p>
     <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
@@ -664,14 +664,14 @@ Offset:                       -1.000</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-bucket=2</p>
     <h3>Dumping the logger memory</h3>
 	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
-	  records from the on board logger in the Vantage. However, occasionally the 
+	  records from the on-board logger in the Vantage. However, occasionally the 
 	  memory in the Vantage will get corrupted, making this impossible. See the 
 	  troubleshooting section below <em>"<a href="#Weewx_generates_HTML_pages,_but_it_does_not_update_them">Weewx 
 	  generates HTML pages, but it does not update them</a></em>". The 
 	  fix involves clearing the memory but, unfortunately, this means you may 
 	  lose any data which might have accumulated in the logger memory, but not 
 	  yet downloaded. By using the <span class="code">--dump</span> command 
-	  before clearing you might be able to save these data. </p>
+	  before clearing the memory, you might be able to save these data. </p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --dump</p>
 	  <p>This will dump all data archived in the Vantage memory directly to the 
 	  database, without regard to whether or not they have been seen before. 
@@ -1239,7 +1239,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       be run in the given order. The standard list of services run by weewx is:
     </p>
     <p class='tty' style='white-space:pre-line'>service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
-    <p>Note that despite how it reads above, this option must all be on one line! </p>
+    <p>Note that despite how it reads above, this option must be all on one line! </p>
     <p>You can leave some of these services out if you do not need them. For example, 
       the bare minimum if you are using a Davis Vantage instrument, storing your data 
       in US Customary units, doing no data corrections or quality control and running 
@@ -1389,9 +1389,9 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       <span class="code">weewx</span>.
     </p>
     <p>If you have data from <span class='code'>wview</span>, you can
-      'import' this into <span class='code'>weewx</span> by simply copying a
-      file.  Assuming that the <span class='code'>wview</span> data are in a
-      sqlite database <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
+      'import' them into <span class='code'>weewx</span> by simply copying the 
+	sqlite database
+      file.  Assuming that the <span class='code'>wview</span> data are in file <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
     <p class='tty'>sudo /etc/init.d/weewx stop
 cd <span class="symcode">$SQLITE_ROOT</span>
 rm stats.sdb
