@@ -134,10 +134,10 @@ rm -rf %{buildroot}
 %attr(755,root,root) %{_initrddir}/weewx
 %{dst_bin_dir}/
 %{_bindir}/weewxd
-%{_bindir}/wee-reports
-%{_bindir}/wee-config-database
-%{_bindir}/wee-config-fousb
-%{_bindir}/wee-config-vantage
+%{_bindir}/wee_reports
+%{_bindir}/wee_config_database
+%{_bindir}/wee_config_fousb
+%{_bindir}/wee_config_vantage
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
 
