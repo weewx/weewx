@@ -97,11 +97,11 @@ cat util/init.d/weewx.redhat | sed \
 chmod 755 %{buildroot}%{_initrddir}/weewx
 
 # create symlinks to the code entry points
-ln -s ../share/weewx/weewxd.py %{buildroot}%{_bindir}/weewxd
-ln -s ../share/weewx/wee_reports.py %{buildroot}%{_bindir}/wee-reports
-ln -s ../share/weewx/wee_config_database.py %{buildroot}%{_bindir}/wee-config-database
-ln -s ../share/weewx/wee_config_fousb.py %{buildroot}%{_bindir}/wee-config-fousb
-ln -s ../share/weewx/wee_config_vantage.py %{buildroot}%{_bindir}/wee-config-vantage
+ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
+ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
+ln -s ../share/weewx/wee_config_database %{buildroot}%{_bindir}/wee_config_database
+ln -s ../share/weewx/wee_config_fousb %{buildroot}%{_bindir}/wee_config_fousb
+ln -s ../share/weewx/wee_config_vantage %{buildroot}%{_bindir}/wee_config_vantage
 
 # pre-compile the python code
 python -m compileall %{buildroot}%{dst_bin_dir}

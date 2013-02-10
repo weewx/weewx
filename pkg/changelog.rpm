@@ -1,3 +1,5 @@
+* Sat Feb 09 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.0a5-1
+- fixed postrm to work with ubuntu systems
 * Fri Feb 08 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.0a4-1
 - include logrotate and syslog snippets
 - use wee_config_* naming

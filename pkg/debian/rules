@@ -67,11 +67,11 @@ install: build
 	chmod 755 $(DST_INITDIR)/weewx
 
 # create symlinks to the code entry points
-	ln -s ../share/weewx/weewxd.py $(DST)/usr/bin/weewxd
-	ln -s ../share/weewx/wee_reports.py $(DST)/usr/bin/wee-reports
-	ln -s ../share/weewx/wee_config_database.py $(DST)/usr/bin/wee-config-database
-	ln -s ../share/weewx/wee_config_fousb.py $(DST)/usr/bin/wee-config-fousb
-	ln -s ../share/weewx/wee_config_vantage.py $(DST)/usr/bin/wee-config-vantage
+	ln -s ../share/weewx/weewxd $(DST)/usr/bin/weewxd
+	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
+	ln -s ../share/weewx/wee_config_database $(DST)/usr/bin/wee_config_database
+	ln -s ../share/weewx/wee_config_fousb $(DST)/usr/bin/wee_config_fousb
+	ln -s ../share/weewx/wee_config_vantage $(DST)/usr/bin/wee_config_vantage
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)
