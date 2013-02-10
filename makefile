@@ -10,10 +10,11 @@ VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=/
 CWD = $(shell pwd)
 BLDDIR=build
 DSTDIR=dist
+RELDIR=frs.sourceforge.net:/home/frs/project/weewx/development_versions
 
 all: help
 
-help:
+help: info
 	@echo "options include:"
 	@echo "          info  display values of variables we care about"
 	@echo "       install  run the generic python install"
@@ -27,19 +28,26 @@ help:
 	@echo "   deb-package  create .deb package"
 	@echo "   rpm-package  create .rpm package"
 	@echo ""
-	@echo "     deb-check  check the deb package"
-	@echo "     rpm-check  check the rpm package"
-	@echo "     doc-check  run weblint on the docs"
+	@echo "     check-deb  check the deb package"
+	@echo "     check-rpm  check the rpm package"
+	@echo "    check-docs  run weblint on the docs"
+	@echo ""
+	@echo "      upload-src  upload the src package"
+	@echo "      upload-deb  upload the deb package"
+	@echo "      upload-rpm  upload the rpm package"
+	@echo "upload-changelog  upload the changelog for sourceforge"
 
 info:
 	@echo "     VERSION: $(VERSION)"
 	@echo "         CWD: $(CWD)"
+	@echo "      RELDIR: $(RELDIR)"
+	@echo "        USER: $(USER)"
 
 realclean:
 	rm -rf build
 	rm -rf dist
 
-doc-check:
+check-docs:
 	weblint docs/*.htm
 
 install:
@@ -50,10 +58,16 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 	rm -f MANIFEST
 	./setup.py sdist
 
+upload-src:
+	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(RELDIR)
+
 # create the changelog (renamed to README.txt) for distribution
 changelog:
 	mkdir -p $(DSTDIR)
 	pkg/mkchangelog.pl --ifile docs/changes.txt > $(DSTDIR)/README.txt
+
+upload-changelog: changelog
+	scp $(DSTDIR)/README.txt $(USER)@$(RELDIR)
 
 # update the version in all relevant places
 version:
@@ -102,8 +116,11 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
 
 # run lintian on the deb package
-deb-check:
+check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
+
+upload-deb:
+	scp $(DSTDIR)/$(DEBPKG) $(USER)@$(RELDIR)
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
@@ -138,5 +155,8 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER).src.rpm
 
 # run rpmlint on the redhat package
-rpm-check:
+check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
+
+upload-rpm:
+	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(RELDIR)
