@@ -549,167 +549,6 @@ Version: 2.2
       the configuration files <span class="code">weewx.conf</span> and
       <span class="code">skin.conf</span>. </p>
 
-    <h2 id="Configuring_your_Davis_console">Configuring the Davis Vantage console</h2>
-    <p>Weewx comes with a configuration utlity, <span class="code">wee_config_vantage</span>, 
-      that can set many of the on-board EEPROM constants in the Davis Vantage stations, 
-      such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
-    <p>Run it with the configuration file as an argument and <span class="code">
-	--help</span> as an option to see its usage: </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
-    <p>This will print out something like:</p>
-    <p class="tty">Usage: wee_config_vantage: config_path [--help] [--info] [--clear]
-     [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
-     [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
-     [--start | -- stop]
-
-Configures the VantagePro weather station.
-
-Options:
-  -h, --help               show this help message and exit
-  --info                   To print configuration, reception, and barometer
-                            calibration information about your weather station.
-  --clear                  To clear the memory of your weather station.
-  --set-interval=SECONDS   Sets the archive interval to the specified number of
-                            seconds. Valid values are 60, 300, 600, 900, 1800,
-                            3600, or 7200.
-  --set-altitude=FEET      Sets the altitude of the station to the specified
-                            number of feet.
-  --set-barometer=inHg     Sets the barometer reading of the station to a known
-                            correct value in inches of mercury. Specify 0 (zero)
-                            to have the console pick a sensible value.
-  --set-bucket=CODE        Set the type of rain bucket. Specify '0' for 0.01
-                            inches; '1' for 0.2 MM; '2' for 0.1 MM
-  --set-rain-year-start=MM Set the rain year start (1=Jan, 2=Feb, etc.).
-  --set-time               Set the onboard clock to the current time.
-  --start                  Start the logger.
-  --stop                   Stop the logger.
-  --dump                   Dump all data to the archive. NB: This may result in
-                           many duplicate primary key errors.
-
-Mutating actions will request confirmation before proceeding.</p>
-    <p>It is useful to run it with the <span class="code">--info</span> option to 
-      see what the current EEPROM settings are on your station: </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --info </p>
-    <p>This will print out something like: </p>
-    <p class="tty">VantagePro EEPROM settings:
-      
-CONSOLE TYPE:                 VantagePro2
-      
-CONSOLE FIRMWARE:
-Date:                         Nov 28 2005
-Version:                      &lt;Unavailable&gt;
-      
-CONSOLE SETTINGS:
-<span class="highlight">Archive interval:             300 (seconds)</span>
-<span class="highlight">Altitude:                     700 (foot)</span>
-Wind cup type:                large
-<span class="highlight">Rain bucket type:             0.01 inches</span>
-<span class="highlight">Rain year start:              10</span>
-<span class="highlight">Onboard time:                 2012-09-30 16:48:27 PDT (1349048907)</span>
-      
-CONSOLE DISPLAY UNITS:
-Barometer:                    mbar
-Temperature:                  degree_F
-Rain:                         inch
-Wind:                         knot
-
-CONSOLE STATION INFO:
-Latitude (onboard):           45.7
-Longitude (onboard):          -121.6
-Time zone code:               4
-Use manual or auto DST?       AUTO
-DST setting:                  N/A
-GMT offset:                   -8.0 hours
-Use GMT offset or time zone?  TIME_ZONE
-
-RECEPTION STATS:
-Total packets received:       22843
-Total packets missed:         748
-Number of resynchronizations: 0
-Longest good stretch:         534
-Number of CRC errors:         647
-
-BAROMETER CALIBRATION DATA:
-<span class="highlight">Current barometer reading:    30.209 inHg</span>
-Altitude:                     700 feet
-Dew point:                    48 F
-Virtual temperature:          66 F
-Humidity correction factor:   23
-Correction ratio:             1.025
-Correction constant:          +0.027 inHg
-Gain:                         -1.000
-Offset:                       -1.000</p>
-    <p>Note that the console version number is available only on consoles with firmware 
-      dates after about 2006.</p>
-    <p><span class="highlight">Highlighted</span> values can be changed.</p>
-    <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-interval=600</p>
-    <p>Other parameters can be set in a similar manner.</p>
-    <h3 id="Archive_interval">Archive interval</h3>
-    <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
-      if you are ftp&#39;ing lots of files to a server, setting it to 60 seconds may 
-      not give enough time to have them all uploaded before the next archive record 
-      is due. If this is the case, you should pick an archive interval of at least 
-      300 seconds, or trim the number of files you are using. </p>
-    <p>I have found that a five minute (300 seconds) archive interval works well 
-      for the VantagePro2. Because of the large amount of onboard memory it carries, 
-      going to a larger interval really does not have any advantages. </p>
-    <p><em>Choose your archiving interval carefully! </em>Once chosen, it cannot 
-      be changed without messing up your statistics (highs and lows will be OK, but 
-      averages and rms wind speed will be wrong). </p>
-    <h3>Rain bucket type</h3>
-    <p>Normally, this is set by Davis, but if you have replaced your bucket with 
-      a different kind, you might want to reconfigure. For example, to change to a 
-      0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-bucket=2</p>
-    <h3>Dumping the logger memory</h3>
-	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
-	  records from the on-board logger in the Vantage. However, occasionally the 
-	  memory in the Vantage will get corrupted, making this impossible. See the 
-	  troubleshooting section below <em>"<a href="#Weewx_generates_HTML_pages,_but_it_does_not_update_them">Weewx 
-	  generates HTML pages, but it does not update them</a></em>". The 
-	  fix involves clearing the memory but, unfortunately, this means you may 
-	  lose any data which might have accumulated in the logger memory, but not 
-	  yet downloaded. By using the <span class="code">--dump</span> command 
-	  before clearing the memory, you might be able to save these data. </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --dump</p>
-	  <p>This will dump all data archived in the Vantage memory directly to the 
-	  database, without regard to whether or not they have been seen before. 
-	  Because the command dumps <em>all</em> data, it may result in many 
-	  duplicate primary key errors. These can be ignored.</p>
-      <h2>Configuring MySQL</h2>
-    <p>This section applies only for those using MySQL.</p>
-    <p>Assuming that you want to use the default database configuration, your
-      <span class="code"><a href="#[Databases]">[Databases]</a></span> section 
-      should 
-      look something like this:</p>
-    <p class="tty">[Databases]
-  [[archive_mysql]]
-      host = localhost
-      user = weewx
-      password = weewx
-      database = weewx
-      driver = weedb.mysql
-      
-  [[stats_mysql]]
-      host = localhost
-      user = weewx
-      password = weewx
-      database = stats
-      driver = weedb.mysql</p>
-    <p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
-      Adjust as necessary.</p>
-    <p>If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
-      can be combined into one database, although this will make it harder to drop 
-      the latter should you need to rebuild the stats database at a later time.</p>
-    <p>You will need to give the necessary permissions for databases '<span class="code">weewx</span>' 
-      and '<span class="code">stats</span>' to whatever MySQL user you choose, by 
-      default, user '<span class="code">weewx</span>'. Here are the necessary minimum 
-      permissions:</p>
-    <p class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
-mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
-mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</p>
-    <h2>Editing the configuration file <span class="code">weewx.conf</span></h2>
     <p>Station specific information is set in the configuration file 
 	<span class="symcode">$CONFIG_ROOT</span><span class="code"><em>/weewx.conf</em></span>. (There is another configuration 
       file <span class="code">skin.conf</span> for presentation-specific options, 
@@ -731,7 +570,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>What follows is organized by the different sections of the configuration 
       file. </p>
 
-    <h3>General</h3>
+    <h2>General</h2>
     <p>The options declared at the top are not actually part of any section.</p>
     <p class="config_option">debug </p>
     <p>Set to 1 to have the program perform extra debug checks, as well as emit 
@@ -747,7 +586,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       when FTP&#39;ing data to a web server or sending data to the Weather Underground. 
       Twenty (20) seconds is reasonable. Default is 20. </p>
 
-    <h3 class="config_section">[Station]</h3>
+    <h2 class="config_section">[Station]</h2>
     <p>This section covers options relating to your weather station setup. </p>
     <p class="config_important">location </p>
     <p>The station location should be a UTF-8 string that describes the
@@ -882,14 +721,14 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>The start time for the generator in the format <span class="code">YYYY-MM-DD 
 	hh:mm</span>. Optional. Default is the present time.</p>
 
-    <h3 class="config_section">[StdRESTful]</h3>
+    <h2 class="config_section">[StdRESTful]</h2>
     <p>This section is for configuring the <span class="code">StdRESTful</span> 
       service, which uploads to simple
       <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
       servers such as the <a href="http://www.wunderground.com/">Weather Underground</a>,
       <a href="http://www.pwsweather.com/">PWSweather.com</a>, or
       <a href="http://www.wxqa.com/">CWOP</a>. </p>
-    <h4 class="config_section">[[Wunderground]]</h4>
+    <h3 class="config_section">[[Wunderground]]</h3>
     <p><span class="code">Weewx </span>can send your current data to the
       <a href="http://www.wunderground.com/">Weather Underground</a>. If you
       do not wish to do this, leave the <span class='code'>station</span>
@@ -899,7 +738,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       Required. </p>
     <p class="config_important">password </p>
     <p>Set to your Weather Underground password. Required. </p>
-    <h4 class="config_section">[[PWSweather]]</h4>
+    <h3 class="config_section">[[PWSweather]]</h3>
     <p><span class="code">Weewx </span>can send your current data to the
       <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
       do not wish to do this, leave the <span class='code'>station</span>
@@ -908,7 +747,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>Set to your PWSweather station ID. Required. </p>
     <p class="config_important">password </p>
     <p>Set to your PWSweather password. Required. </p>
-    <h4 class="config_section">[[WOW]]</h4>
+    <h3 class="config_section">[[WOW]]</h3>
 	  <p class="config_section"><span class="code">Weewx</span> can send your 
 	  current data to the <a href="http://wow.metoffice.gov.uk/">British Weather 
 	  Observations Website (WOW)</a> service. This section is <em>not</em> 
@@ -924,7 +763,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     station = 12345678  # Replace with your station number
     password = xxxxx    # Replace with your password
     driver = weewx.restful.WOW</p>
-	  <h4 class="config_section">[[CWOP]]</h4>
+	  <h3 class="config_section">[[CWOP]]</h3>
     <p><span class="code">Weewx</span> can send your data to the
       <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If
       you do not wish to do this, leave the <span class="code">station</span>
@@ -952,7 +791,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       air for a long period of time, then <span class="code">weewx</span>
       attempts a catch up, old data could be interpreted as the current
       conditions. Optional. Default is 1800 seconds.</p>
-    <h3 id="[Reports]" class="config_section">[StdReport]</h3>
+    <h2 id="[Reports]" class="config_section">[StdReport]</h2>
     <p>This section is for configuring the <span class="code">StdReport</span> service, 
       which controls which reports are to be generated. While it can be highly customized 
       for your individual situation, this documentation describes the section as shipped 
@@ -975,7 +814,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>The target directory for the generated files. A relative path is
       relative to <span class="symcode">$WEEWX_ROOT</span>. Generated 
 	files and images will be put here. </p>
-    <h4 class="config_section">[[StandardReport]]</h4>
+    <h3 class="config_section">[[StandardReport]]</h3>
     <p>This is the standard report that will be run on every archiving interval. 
       It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates 
       four HTML pages (&quot;day&quot;, &quot;week&quot;, &quot;month&quot;, and &quot;year&quot; 
@@ -983,7 +822,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       reports. Unless changed otherwise, it uses US Customary Units and puts the results 
       in <span class="code">public_html</span> and subdirectory <span class="code">
 	public_html/NOAA</span>. </p>
-    <h4 class="config_section">[[FTP]]</h4>
+    <h3 class="config_section">[[FTP]]</h3>
     <p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
       uses the report machinery to upload files from directory <span class="symcode">
 	$HTML_ROOT</span> to a remote webserver. It does an incremental update, 
@@ -1015,7 +854,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class="config_option">max_tries </p>
     <p><span class="code">Weewx</span> will try up to this many times to FTP a file 
       up to your server before giving up. Default is 3. </p>
-    <h4 class="config_section">[[RSYNC]]</h4>
+    <h3 class="config_section">[[RSYNC]]</h3>
     <p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
       uses the report machinery to upload files from directory <span class="symcode">
 	$HTML_ROOT</span> to a remote webserver. It does an incremental update, 
@@ -1039,7 +878,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       <span class="code">path</span>, this can cause unexpected files to be deleted 
       on the remote server. Valid values are 1 to enable and 0 to disable. Required. 
       Default is 0.</p>
-    <h3 id="[StdConvert]" class="config_section">[StdConvert]</h3>
+    <h2 id="[StdConvert]" class="config_section">[StdConvert]</h2>
     <p>This section is for configuring the <span class="code">StdConvert</span> 
       service. This service acts as a filter, converting the unit system coming off 
       your hardware to a target output unit system. Everything that follows, including 
@@ -1064,7 +903,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class="config_option">target_unit</p>
     <p>Set to either <span class="code">US</span> or <span class="code">METRIC</span>. 
       Default is <span class="code">US</span>.</p>
-    <h3 id="Calibrate" class="config_section">[StdCalibrate]</h3>
+    <h2 id="Calibrate" class="config_section">[StdCalibrate]</h2>
     <p>This section is for configuring the <span class="code">StdCalibrate</span> 
       service. This service offers an opportunity to correct for any calibration errors 
       in your instruments. It is very general and flexible. </p>
@@ -1077,7 +916,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>If you do not wish to apply any calibrations, you can leave it out of
       <span class="code"><a href="#service_list">service_list</a></span>, the list 
       of services to be run, and it will not be loaded or run at all. </p>
-    <h4 class="config_section">[[Corrections]]</h4>
+    <h3 class="config_section">[[Corrections]]</h3>
     <p>In this section you list all <em>correction expressions</em>. For example, 
       say that you know your outside thermometer reads high by 0.2&deg;F. You could add 
       the expression: </p>
@@ -1093,7 +932,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>If you are using a Davis Vantage instrument and all you require is a simple 
       correction offset, this can also be done in the hardware. See your manual for 
       instructions. </p>
-    <h3 id="QC" class="config_section">[StdQC]</h3>
+    <h2 id="QC" class="config_section">[StdQC]</h2>
     <p>This section is for configuring the <span class="code">StdQC</span> service. 
       This service offers a very simple <em>Quality Control</em> that only checks 
       that values are within a minimum and maximum range.</p>
@@ -1106,7 +945,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>If you do not wish to use this service, you can leave it out of
       <span class="code"><a href="#service_list">service_list</a></span>, the list 
       of services to be run, and it will not be loaded or run. </p>
-    <h4 class="config_section">[[MinMax]]</h4>
+    <h3 class="config_section">[[MinMax]]</h3>
     <p>In this section you list the observation types you wish to have checked, 
       along with their minimum and maximum values. The units should be in <em>the 
 	same unit system as specified in section <span class="code">
@@ -1128,7 +967,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       <span class="code">0xff</span> is devoted to a bad value, so the only possible 
       values that could appear are 0 through 126 mph, a reasonable range. So, for 
       the VP2, there is no real point in checking wind speed. </p>
-    <h3 id="[StdArchive]" class="config_section">[StdArchive]</h3>
+    <h2 id="[StdArchive]" class="config_section">[StdArchive]</h2>
     <p>This section is for configuring <span class="code">StdArchive</span>, the 
       service that stores data in the databases. Options allow choosing which database 
       to use for archiving and statistics.</p>
@@ -1174,7 +1013,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       containing the stats database schema. The default is <span class="code">
 	user.schemas.defaultStatsSchema</span>.</p>
     
-    <h3 class="config_section">[StdTimeSynch]</h3>
+    <h2 class="config_section">[StdTimeSynch]</h2>
     <p>This section is for configuring <span class="code">StdTymeSynch</span>, a 
       service that can synchronize the onboard clock of station with your computer. 
       Not all weather station hardware supports this.</p>
@@ -1184,7 +1023,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class="config_option">max_drift</p>
     <p>The maximum amount of clock drift to tolerate, in seconds, before resetting 
       the clock. Default is 5.</p>
-    <h3 id="[Databases]" class="config_section">[Databases]</h3>
+    <h2 id="[Databases]" class="config_section">[Databases]</h2>
     <p>This section lists actual database bindings. The name of each database is 
       given in double brackets below (for example, <span class="code">[[archive_sqlite]]</span>). 
       The details of the binding follow. You are free to add new bindings.</p>
@@ -1192,21 +1031,21 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       it is assumed that you know how to administer it. In particular, you will have 
       to set up a user with appropriate privileges to create and update the named 
       databases.</p>
-    <h4 class="config_section">[[archive_sqlite]]</h4>
+    <h3 class="config_section">[[archive_sqlite]]</h3>
     <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
       engine to store archive data. It is open-source, simple, lightweight, highly 
       portable, and memory efficient. For most purposes it serves nicely.</p>
     <p class="config_option">database</p>
     <p>The path to the archive sqlite file. A relative path is relative to
       <span class="symcode">$SQLITE_ROOT</span>. Required.</p>
-    <h4 class="config_section">[[stats_sqlite]]</h4>
+    <h3 class="config_section">[[stats_sqlite]]</h3>
     <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
       engine to store the statistical data. It is open-source, simple, lightweight, 
       highly portable, and memory efficient. For most purposes it serves nicely.</p>
     <p class="config_option">database</p>
     <p>The path to the stats sqlite file. A relative path is relative to
       <span class="symcode">$SQLITE_ROOT</span>. Required.</p>
-    <h4 class="config_section">[[archive_mysql]]</h4>
+    <h3 class="config_section">[[archive_mysql]]</h3>
     <p>This definition uses the MySQL database engine to store archive data. It 
       is free, highly-scalable, but more complicated to administer. </p>
     <p class="config_option">host</p>
@@ -1217,7 +1056,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>The password. Required.</p>
     <p class="config_option">database</p>
     <p>The name of the archive database inside the server. Required.</p>
-    <h4 class="config_section">[[stats_mysql]]</h4>
+    <h3 class="config_section">[[stats_mysql]]</h3>
     <p>This uses the MySQL database engine to store archive data. It is free, highly-scalable, 
       but more complicated to administer. </p>
     <p>The host the stats database is located on. Default is <span class="code">localhost</span>.</p>
@@ -1227,13 +1066,13 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>The password. Required.</p>
     <p class="config_option">database</p>
     <p>The name of the statistical database inside the server. Required.</p>
-    <h3 class="config_section">[Engines]</h3>
+    <h2 class="config_section">[Engines]</h2>
     <p>This section is used to configure the internal service engine in
       <span class="code">weewx</span>. It is for advanced customization. Details on 
       how to do this can be found in the section <em>
 	<a href="customizing.htm#Customizing_the_weewx_service_engine">Customizing the 
 	  weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
-    <h4 class="config_section">[[WxEngine]]</h4>
+    <h3 class="config_section">[[WxEngine]]</h3>
     <p>This section is for options used by the service engine. </p>
     <p id="service_list" class="config_option">service_list </p>
     <p>This option is the list of <em>services</em> that are to be run by the service 
@@ -1248,6 +1087,219 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       as a daemon (no printing to console) would be:</p>
     <p class="tty" style='white-space:pre-line'>service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
     <p>However, this will only make a slight difference in execution speed. </p>
+
+    <h1>Configuring Station Hardware</h1>
+    <h2>Davis Vantage</h2>
+    <p>Weewx comes with a configuration utlity, <span class="code">wee_config_vantage</span>, 
+      that can set many of the on-board EEPROM constants in the Davis Vantage stations, 
+      such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
+    <p>Run it with the configuration file as an argument and <span class="code">
+	--help</span> as an option to see its usage: </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
+    <p>This will print out something like:</p>
+    <p class="tty">Usage: wee_config_vantage: config_path [--help] [--info] [--clear]
+     [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
+     [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
+     [--start | -- stop]
+
+Configures the VantagePro weather station.
+
+Options:
+  -h, --help               show this help message and exit
+  --info                   To print configuration, reception, and barometer
+                            calibration information about your weather station.
+  --clear                  To clear the memory of your weather station.
+  --set-interval=SECONDS   Sets the archive interval to the specified number of
+                            seconds. Valid values are 60, 300, 600, 900, 1800,
+                            3600, or 7200.
+  --set-altitude=FEET      Sets the altitude of the station to the specified
+                            number of feet.
+  --set-barometer=inHg     Sets the barometer reading of the station to a known
+                            correct value in inches of mercury. Specify 0 (zero)
+                            to have the console pick a sensible value.
+  --set-bucket=CODE        Set the type of rain bucket. Specify '0' for 0.01
+                            inches; '1' for 0.2 MM; '2' for 0.1 MM
+  --set-rain-year-start=MM Set the rain year start (1=Jan, 2=Feb, etc.).
+  --set-time               Set the onboard clock to the current time.
+  --start                  Start the logger.
+  --stop                   Stop the logger.
+  --dump                   Dump all data to the archive. NB: This may result in
+                           many duplicate primary key errors.
+
+Mutating actions will request confirmation before proceeding.</p>
+    <p>It is useful to run it with the <span class="code">--info</span> option to 
+      see what the current EEPROM settings are on your station: </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --info </p>
+    <p>This will print out something like: </p>
+    <p class="tty">VantagePro EEPROM settings:
+      
+CONSOLE TYPE:                 VantagePro2
+      
+CONSOLE FIRMWARE:
+Date:                         Nov 28 2005
+Version:                      &lt;Unavailable&gt;
+      
+CONSOLE SETTINGS:
+<span class="highlight">Archive interval:             300 (seconds)</span>
+<span class="highlight">Altitude:                     700 (foot)</span>
+Wind cup type:                large
+<span class="highlight">Rain bucket type:             0.01 inches</span>
+<span class="highlight">Rain year start:              10</span>
+<span class="highlight">Onboard time:                 2012-09-30 16:48:27 PDT (1349048907)</span>
+      
+CONSOLE DISPLAY UNITS:
+Barometer:                    mbar
+Temperature:                  degree_F
+Rain:                         inch
+Wind:                         knot
+
+CONSOLE STATION INFO:
+Latitude (onboard):           45.7
+Longitude (onboard):          -121.6
+Time zone code:               4
+Use manual or auto DST?       AUTO
+DST setting:                  N/A
+GMT offset:                   -8.0 hours
+Use GMT offset or time zone?  TIME_ZONE
+
+RECEPTION STATS:
+Total packets received:       22843
+Total packets missed:         748
+Number of resynchronizations: 0
+Longest good stretch:         534
+Number of CRC errors:         647
+
+BAROMETER CALIBRATION DATA:
+<span class="highlight">Current barometer reading:    30.209 inHg</span>
+Altitude:                     700 feet
+Dew point:                    48 F
+Virtual temperature:          66 F
+Humidity correction factor:   23
+Correction ratio:             1.025
+Correction constant:          +0.027 inHg
+Gain:                         -1.000
+Offset:                       -1.000</p>
+    <p>Note that the console version number is available only on consoles with firmware 
+      dates after about 2006.</p>
+    <p><span class="highlight">Highlighted</span> values can be changed.</p>
+    <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-interval=600</p>
+    <p>Other parameters can be set in a similar manner.</p>
+    <h3 id="Archive_interval">Archive interval</h3>
+    <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
+      if you are ftp&#39;ing lots of files to a server, setting it to 60 seconds may 
+      not give enough time to have them all uploaded before the next archive record 
+      is due. If this is the case, you should pick an archive interval of at least 
+      300 seconds, or trim the number of files you are using. </p>
+    <p>I have found that a five minute (300 seconds) archive interval works well 
+      for the VantagePro2. Because of the large amount of onboard memory it carries, 
+      going to a larger interval really does not have any advantages. </p>
+    <p><em>Choose your archiving interval carefully! </em>Once chosen, it cannot 
+      be changed without messing up your statistics (highs and lows will be OK, but 
+      averages and rms wind speed will be wrong). </p>
+    <h3>Rain bucket type</h3>
+    <p>Normally, this is set by Davis, but if you have replaced your bucket with 
+      a different kind, you might want to reconfigure. For example, to change to a 
+      0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-bucket=2</p>
+    <h3>Dumping the logger memory</h3>
+	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
+	  records from the on-board logger in the Vantage. However, occasionally the 
+	  memory in the Vantage will get corrupted, making this impossible. See the 
+	  troubleshooting section below <em>"<a href="#Weewx_generates_HTML_pages,_but_it_does_not_update_them">Weewx 
+	  generates HTML pages, but it does not update them</a></em>". The 
+	  fix involves clearing the memory but, unfortunately, this means you may 
+	  lose any data which might have accumulated in the logger memory, but not 
+	  yet downloaded. By using the <span class="code">--dump</span> command 
+	  before clearing the memory, you might be able to save these data. </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --dump</p>
+	  <p>This will dump all data archived in the Vantage memory directly to the 
+	  database, without regard to whether or not they have been seen before. 
+	  Because the command dumps <em>all</em> data, it may result in many 
+	  duplicate primary key errors. These can be ignored.</p>
+
+      <h2>Fine Offset</h2>
+    <p>The configuration utility <span class='code'>wee_config_fousb</span> is
+      designed to diagnose and configure Fine Offset stations.</p>
+    <p>Run it with the configuration file as an argument and
+    <span class='code'>--help</span> as an option to see its usage:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
+    <p>This will print out something like:</p>
+    <p class='tty'>Usage: wee_config_fousb config_file [--help | --info | --check-pressures] [--debug]
+
+Configuration utility for Fine Offset weather stations.
+
+Options:
+  -h, --help         show this help message and exit
+  --info             display weather station configuration
+  --check-pressures  query station for pressure sensor data
+  --debug            display additional information while running
+
+Mutating actions will request confirmation before proceeding.</p>
+    <p>Display the station settings with the <span class='code'>--info</span>
+      option.</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --info </p>
+    <p>This will result in something like this:</p>
+    <p class='tty'>Fine Offset station settings:
+                    local time: 2013.02.11 18:34:28 CET
+
+                  abs_pressure: 933.3
+                   current_pos: 592
+                  data_changed: 0
+                    data_count: 22
+                     date_time: 2007-01-01 22:49
+                 hum_in_offset: 18722
+                hum_out_offset: 257
+                            id: None
+                 lux_wm2_coeff: 0
+                       magic_1: 0x55
+                       magic_2: 0xaa
+                         model: None
+                     rain_coef: None
+                   read_period: 30
+                  rel_pressure: 1014.8
+                temp_in_offset: 1792
+               temp_out_offset: 0
+                      timezone: 0
+                    unknown_01: 0
+                    unknown_18: 0
+                       version: 255
+                     wind_coef: None
+                     wind_mult: 0</p>
+
+      <h1>Configuring MySQL</h1>
+    <p>This section applies only for those using MySQL.</p>
+    <p>Assuming that you want to use the default database configuration, your
+      <span class="code"><a href="#[Databases]">[Databases]</a></span> section 
+      should 
+      look something like this:</p>
+    <p class="tty">[Databases]
+  [[archive_mysql]]
+      host = localhost
+      user = weewx
+      password = weewx
+      database = weewx
+      driver = weedb.mysql
+      
+  [[stats_mysql]]
+      host = localhost
+      user = weewx
+      password = weewx
+      database = stats
+      driver = weedb.mysql</p>
+    <p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
+      Adjust as necessary.</p>
+    <p>If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
+      can be combined into one database, although this will make it harder to drop 
+      the latter should you need to rebuild the stats database at a later time.</p>
+    <p>You will need to give the necessary permissions for databases '<span class="code">weewx</span>' 
+      and '<span class="code">stats</span>' to whatever MySQL user you choose, by 
+      default, user '<span class="code">weewx</span>'. Here are the necessary minimum 
+      permissions:</p>
+    <p class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
+mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
+mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</p>
+
     <h1 id="Running_weewx">Running <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> can be run either from the command line (useful 
       for diagnostic purposes because it will print out a summary of every LOOP data), 
