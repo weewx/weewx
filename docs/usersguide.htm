@@ -1055,10 +1055,12 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p>Note that whatever you choose here, it does not affect your options for the 
       unit system to be used for <i>reporting</i>. Because of this, unless you 
       have a special purpose application, there is really no good reason to change 
-      from the default, which is <span class="code">US</span>. However, if you do 
+      from the default, which is <span class="code">US</span>. </p>
+	  <p class="warning"><strong>Warning!</strong><br />
+	  If, despite these precautions, you do 
       decide to change to Metric, be sure to read the sections <span class="code">
 	<a href="#Calibrate">[StdCalibrate]</a></span> and <span class="code">
-	<a href="#QC">[StdQC]</a></span> below, and change the units there as well.</p>
+	<a href="#QC">[StdQC]</a></span> below, and change the units there as well!</p>
     <p class="config_option">target_unit</p>
     <p>Set to either <span class="code">US</span> or <span class="code">METRIC</span>. 
       Default is <span class="code">US</span>.</p>
