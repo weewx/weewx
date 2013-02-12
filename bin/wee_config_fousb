@@ -12,17 +12,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 # See http://www.gnu.org/licenses/
-"""Command line utility for configuring Fine Offset weather stations"""
-
-import configobj
-import optparse
-import time
-
-import weewx.fousb
-import weewx.units
-import weeutil.weeutil
-
-description = """Configures Fine Offset weather stations.
+"""Command line utility for configuring Fine Offset weather stations
 
 For now this utility is read-only - it reports all of the station settings
 but does not provide a mechanism to modify them.
@@ -45,7 +35,17 @@ Output from a 308x-series station would be particularly helpful.
 # TODO:
 # set station archive interval
 
-usage="""%prog: config_file [--help | --info | --check-pressures] [--debug]"""
+import configobj
+import optparse
+import time
+
+import weewx.fousb
+import weewx.units
+import weeutil.weeutil
+
+description = """Configuration utility for Fine Offset weather stations."""
+
+usage="""%prog config_file [--help | --info | --check-pressures] [--debug]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
