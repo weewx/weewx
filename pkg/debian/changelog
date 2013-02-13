@@ -1,3 +1,6 @@
+weewx (2.2.0b2-1) unstable; urgency=low
+  * second beta for 2.2.0
+ -- Matthew Wall <mwall@users.sourceforge.net>  Wed, 13 Feb 2013 15:38:36 -0500
 weewx (2.2.0b1-1) unstable; urgency=low
   * first beta for 2.2.0
  -- Matthew Wall <mwall@users.sourceforge.net>  Sun, 10 Feb 2013 11:01:43 -0500
