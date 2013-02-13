@@ -610,12 +610,10 @@ class StatsDb(object):
             _stats_schema_dict = dict((str(_row[0]), str(_row[1])) for _row in _cursor)
             syslog.syslog(syslog.LOG_DEBUG, "stats: Schema exists with %d elements" % (len(_stats_schema_dict),))
         except weedb.OperationalError:
-            syslog.syslog(syslog.LOG_DEBUG, "stats: Schema does not exist. Converting")
-            # The stats schema does not exist. Compute it, then save it.
+            # The stats schema does not exist. Back calculate it.
             _stats_schema = self._backcompute_schema(_cursor)
-            StatsDb._save_schema(_cursor, _stats_schema)
             _stats_schema_dict = dict(_stats_schema)
-            syslog.syslog(syslog.LOG_DEBUG, "stats: Successfully saved schema with %d elements." % (len(_stats_schema_dict),))
+            syslog.syslog(syslog.LOG_DEBUG, "stats: Back calculated schema with %d elements." % (len(_stats_schema_dict),))
         finally:
             _cursor.close()
 
@@ -626,7 +624,7 @@ class StatsDb(object):
         not have the schema metadata table _stats_schema."""
         raw_stats_types = self.connection.tables()
         if not raw_stats_types:
-            raise weedb.OperationalError("Unitialized stats database")
+            raise weewx.UninitializedDatabase("Uninitialized stats database")
         # Some stats database have schemas for heatdeg and cooldeg (even though
         # they are not used) due to an earlier bug. Filter them out. Also,
         # filter out the metadata table. In case the same database is being used
