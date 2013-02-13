@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 352 2013-01-04 15:48:17Z mwall $
+# $Id: config_fousb.py 472 2013-02-13 14:37:44Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -95,7 +95,7 @@ def main():
                                         **config_dict['FineOffsetUSB'])
 
     if options.chkpres:
-        checkpressures(station)
+        checkpressures(station, altitude_t[0], altitude_t[1])
     elif options.info or len(args) == 1:
         info(station)
 
@@ -126,25 +126,27 @@ def info(station):
         for s in slist[k]:
             print s
 
-def checkpressures(station):
-    """Query the station then display sensor readings."""
-    print "Querying the station..."
-    val = getvalues(station, '', weewx.fousb.fixed_format)
-    station.closePort()
+def checkpressures(station, altitude_value, altitude_units):
+    """Query the station then display pressure-related sensor readings."""
 
+    print "Querying the station..."
     for packet in station.genLoopPackets():
-        print packet
-        rp = station.get_fixed_block(['rel_pressure'])
         sp = packet['pressure']
+        ap = station.get_fixed_block(['abs_pressure'])
+        rp = station.get_fixed_block(['rel_pressure'])
         ap1 = weewx.wxformulas.altimeter_pressure_Metric(sp, station.altitude)
         ap2 = weewx.fousb.sp2ap(sp, station.altitude)
         bp2 = weewx.fousb.sp2bp(sp, station.altitude, packet['outTemp'])
-        print 'relative pressure: %s' % rp
-        print 'station pressure: %s' % sp
-        print 'altimeter pressure (davis): %s' % ap1
-        print 'altimeter pressure (noaa): %s' % ap2
-        print 'barometer pressure (weewx): ?'
-        print 'barometer pressure (wview): %s' % bp2
+        print 'altitude: %s %s' % (altitude_value, altitude_units)
+        print 'station pressure (sensor): %s' % sp
+        print 'absolute pressure (fixed_block): %s' % ap
+        print 'relative pressure (fixed_block): %s' % rp
+        print 'altimeter pressure (davis algorithm): %s' % ap1
+        print 'altimeter pressure (noaa algorithm): %s' % ap2
+        print 'barometer pressure (wview algorithm): %s' % bp2
+        print packet
+        break
+    station.closePort()
 
 def stash(slist, s):
     if s.find('settings') != -1:
