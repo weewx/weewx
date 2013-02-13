@@ -115,13 +115,6 @@ class weewx_install_lib(install_lib):
             target_path = os.path.join(self.install_dir, 'user/schemas.py')
             distutils.file_util.copy_file(incoming_schema_path, target_path)
 
-        # Remove weeutil/Almanac, which is no longer in the distribution:
-        try:
-            os.remove(os.path.join(self.install_dir, 'weeutil/Almanac.py'))
-            os.remove(os.path.join(self.install_dir, 'weeutil/Almanac.pyc'))
-        except OSError:
-            pass
-       
     def _check_schema_type(self):
         """If a schema type exists in the install directory, check whether it is
         an old-style schema, or a new one."""
