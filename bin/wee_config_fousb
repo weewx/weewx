@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 475 2013-02-14 14:13:10Z mwall $
+# $Id: config_fousb.py 476 2013-02-14 14:20:11Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -45,7 +45,7 @@ import weeutil.weeutil
 
 description = """Configuration utility for Fine Offset weather stations."""
 
-usage="""%prog config_file [--help | --info | --check-pressures] [--debug]"""
+usage="""%prog config_file [options]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
@@ -62,7 +62,7 @@ def main():
     parser.add_option("--check-units", action="store_true", dest="chkunits",
                       help="compare raw and converted LOOP packets")
     parser.add_option("--debug", action="store_true", dest="debug",
-                      help="display additional information while running")
+                      help="display diagnostic information while running")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()

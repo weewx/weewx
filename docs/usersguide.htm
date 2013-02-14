@@ -1225,7 +1225,7 @@ Offset:                       -1.000</p>
     <span class='code'>--help</span> as an option to see its usage:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
     <p>This will print out something like:</p>
-    <p class='tty'>Usage: wee_config_fousb config_file [--help | --info | --check-pressures] [--debug]
+    <p class='tty'>Usage: config_fousb.py config_file [options]
 
 Configuration utility for Fine Offset weather stations.
 
@@ -1233,7 +1233,8 @@ Options:
   -h, --help         show this help message and exit
   --info             display weather station configuration
   --check-pressures  query station for pressure sensor data
-  --debug            display additional information while running
+  --check-units      compare raw and converted LOOP packets
+  --debug            display diagnostic information while running
 
 Mutating actions will request confirmation before proceeding.</p>
     <p>Display the station settings with the <span class='code'>--info</span>
