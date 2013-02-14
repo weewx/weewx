@@ -1241,7 +1241,7 @@ Options:
   --set-pressure=P   set relative pressure to P hPa (mbar)
   --set-interval=N   set logging interval to N minutes
   --clear-memory     clear station memory
-  -y                 answer yes to every prompt - do not prompt
+  -y                 answer yes to every prompt
   --debug            display diagnostic information while running
 
 Mutating actions will request confirmation before proceeding.</p>
@@ -1277,6 +1277,12 @@ Mutating actions will request confirmation before proceeding.</p>
                      wind_coef: None
                      wind_mult: 0</p>
     <p><span class="highlight">Highlighted</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
+    <p>For example, to display the most recent 30 records from the console memory:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --history=30</p>
+    <p>To test the quality of the USB connection to the console:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --check-usb</p>
+    <p>To clear the console memory:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --clear-memory</p>
 
       <h1>Configuring MySQL</h1>
     <p>This section applies only for those using MySQL.</p>

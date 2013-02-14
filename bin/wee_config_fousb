@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 479 2013-02-14 19:10:53Z mwall $
+# $Id: config_fousb.py 481 2013-02-14 19:22:56Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -12,6 +12,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 # See http://www.gnu.org/licenses/
+
 """Command line utility for configuring Fine Offset weather stations
 
 Many thanks to Jim Easterbrook, author of pywws upon which this is based.
@@ -78,7 +79,7 @@ def main():
     parser.add_option("--clear-memory", dest="clear", action="store_true",
                       help="clear station memory")
     parser.add_option("-y", dest="noprompt", action="store_true",
-                      help="answer yes to every prompt - do not prompt")
+                      help="answer yes to every prompt")
     parser.add_option("--debug", dest="debug", action="store_true",
                       help="display diagnostic information while running")
 
@@ -249,7 +250,7 @@ def showhistory(station, count, format):
     """Query the station for the latest count records."""
 
     if format is None:
-        format = 'dict'
+        format = 'table'
     elif format.lower() != 'raw' and format.lower() != 'table' and format.lower() != 'dict':
         print "Unknown format '%s'" % format
         exit(1)
