@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 476 2013-02-14 14:20:11Z mwall $
+# $Id: config_fousb.py 478 2013-02-14 18:38:34Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -14,12 +14,12 @@
 # See http://www.gnu.org/licenses/
 """Command line utility for configuring Fine Offset weather stations
 
-For now this utility is read-only - it reports all of the station settings
-but does not provide a mechanism to modify them.
+Many thanks to Jim Easterbrook, author of pywws upon which this is based.
 
 The station model, version, and id are supposed to be reported by these
 instruments, but so far (04jan2013) my testing shows bogus values for these
-fields.
+fields.  The documentation indicates that the clock should be settable, but
+so far (14feb2013) my testing shows this is not the case.
 
 If you have a Fine Offset station and use this utility, it would be helpful
 to know:
@@ -32,10 +32,8 @@ to know:
 Output from a 308x-series station would be particularly helpful.
 """
 
-# TODO:
-# set station archive interval
-
 import configobj
+import datetime
 import optparse
 import time
 
@@ -45,9 +43,10 @@ import weeutil.weeutil
 
 description = """Configuration utility for Fine Offset weather stations."""
 
-usage="""%prog config_file [options]"""
+usage = """%prog config_file [options]"""
 
-epilog = """Mutating actions will request confirmation before proceeding."""
+epilog = """Mutating actions will request confirmation before proceeding.
+Attempts to set the station clock will probably fail."""
 
 def main():
 
@@ -55,13 +54,27 @@ def main():
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
     
     # Add the various options:
-    parser.add_option("--info", action="store_true", dest="info",
+    parser.add_option("--info", dest="info", action="store_true",
                       help="display weather station configuration")
-    parser.add_option("--check-pressures", action="store_true", dest="chkpres",
+    parser.add_option("--check-pressures", dest="chkpres", action="store_true",
                       help="query station for pressure sensor data")
-    parser.add_option("--check-units", action="store_true", dest="chkunits",
+    parser.add_option("--check-units", dest="chkunits", action="store_true",
                       help="compare raw and converted LOOP packets")
-    parser.add_option("--debug", action="store_true", dest="debug",
+    parser.add_option("--history", dest="history", type=int, metavar="N",
+                      help="display the latest N records")
+    parser.add_option("--format", dest="format", type=str, metavar="FORMAT",
+                      help="format for output, one of raw, table, or dict")
+    parser.add_option("--set-clock", dest="clock", action="store_true",
+                      help="set station clock to computer time")
+    parser.add_option("--set-pressure", dest="pressure",type=float,metavar="P",
+                      help="set relative pressure to P hPa (mbar)")
+    parser.add_option("--set-interval", dest="interval", type=int, metavar="N",
+                      help="set logging interval to N minutes")
+    parser.add_option("--clear-memory", dest="clear", action="store_true",
+                      help="clear station memory")
+    parser.add_option("-y", dest="noprompt", action="store_true",
+                      help="answer yes to every prompt - do not prompt")
+    parser.add_option("--debug", dest="debug", action="store_true",
                       help="display diagnostic information while running")
 
     # Now we are ready to parse the command line:
@@ -94,17 +107,31 @@ def main():
     
     if debug:
         print 'altitude from config: %s' % altitude_t
-        print 'altitude tuple: %s' % altitude_vt
         print 'altitude in meters: %s' % altitude_m
 
     station = weewx.fousb.FineOffsetUSB(altitude=altitude_m,
                                         **config_dict['FineOffsetUSB'])
 
-    if options.chkunits:
+    if options.noprompt:
+        prompt = False
+    else:
+        prompt = True
+
+    if options.history is not None:
+        showhistory(station, options.history, options.format)
+    elif options.chkunits:
         checkunits(station, config_dict['StdConvert']['target_unit'])
     elif options.chkpres:
         checkpressures(station, config_dict['StdConvert']['target_unit'],
                        altitude_t[0], altitude_t[1])
+    elif options.clock:
+        setclock(station, prompt)
+    elif options.pressure is not None:
+        setpressure(station, options.pressure, prompt)
+    elif options.interval is not None:
+        setinterval(station, options.interval, prompt)
+    elif options.clear:
+        clearhistory(station)
     elif options.info or len(args) == 1:
         info(station)
 
@@ -118,6 +145,7 @@ def info(station):
     print 'Fine Offset station settings:'
     print '%s: %s' % ('local time'.rjust(30),
                       time.strftime('%Y.%m.%d %H:%M:%S %Z', time.localtime()))
+    print '%s: %s' % ('polling mode'.rjust(30), station.polling_mode)
 
     slist = {'values':[], 'minmax_values':[],
              'settings':[], 'display_settings':[], 'alarm_settings':[]}
@@ -180,6 +208,127 @@ def checkunits(station, target_unit_name):
         break
     station.closePort()
 
+def showhistory(station, count, format):
+    """Query the station for the latest count records."""
+
+    if format is None:
+        format = 'dict'
+    elif format.lower() != 'raw' and format.lower() != 'table' and format.lower() != 'dict':
+        print "Unknown format '%s'" % format
+        exit(1)
+
+    print "Querying the station..."
+    fixed_block = station.get_fixed_block()
+    ptr = fixed_block['current_pos']
+    date = datetime.datetime.now().replace(second=0, microsecond=0)
+    for i in range(count):
+        data = station.get_data(ptr)
+        if format.lower() == 'raw':
+            raw_dump(ptr, station.get_raw_data(ptr))
+        else:
+            if format.lower() == 'table':
+                table_dump(date, data, i==0)
+            else:
+                print date, data
+            date = date - datetime.timedelta(minutes=data['delay'])
+        ptr = station.dec_ptr(ptr)
+
+def clearhistory(station):
+    ans = None
+    while ans not in ['y', 'n']:
+        v = station.get_fixed_block(['data_count'], True)
+        print "Records in memory:", v
+        ans = raw_input("Clear console memory (y/n)? ")
+        if ans == 'y' :
+            ptr = weewx.fousb.fixed_format['data_count'][0]
+            data = []
+            data.append((ptr,   1))
+            data.append((ptr+1, 0))
+            station.write_data(data)
+            v = station.get_fixed_block(['data_count'], True)
+            print "Records in memory:", v
+        elif ans == 'n':
+            print "Clear memory cancelled."
+
+def setpressure(station, pressure, prompt):
+    v = station.get_fixed_block(['rel_pressure'], True)
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Relative pressure is", v
+        if prompt:
+            ans = raw_input("Set pressure to %f hPa (y/n)? " % pressure)
+        else:
+            print "Setting pressure to %f hPa" % pressure
+            ans = 'y'
+        if ans == 'y' :
+            p = pressure * 10.0
+            ptr = weewx.fousb.fixed_format['rel_pressure'][0]
+            data = []
+            data.append((ptr,   p % 256))
+            data.append((ptr+1, p // 256))
+            station.write_data(data)
+            v = station.get_fixed_block(['rel_pressure'], True)
+            print "Relative pressure is now", v
+        elif ans == 'n':
+            print "Set pressure cancelled."
+
+def setinterval(station, read_period, prompt):
+    v = station.get_fixed_block(['read_period'], True)
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Interval is", v
+        if prompt:
+            ans = raw_input("Set interval to %d minutes (y/n)? " % read_period)
+        else:
+            print "Setting interval to %d minutes" % read_period
+            ans = 'y'
+        if ans == 'y' :
+            data = []
+            data.append((weewx.fousb.fixed_format['read_period'][0],
+                         read_period))
+            station.write_data(data)
+            v = station.get_fixed_block(['read_period'], True)
+            print "Interval is now", v
+        elif ans == 'n':
+            print "Set interval cancelled."
+
+# fine offset documentation indicates that this should work, but so far it
+# has not worked on any ambient weather WS2080 or WS1090 station i have tried.
+# it looks like the station clock is set, but at some point the fixed block
+# reverts to the previous clock value.  also unclear is the behavior when the
+# station attempts to sync with radio clock signal from sensor.
+# -- mwall 14feb2013
+def setclock(station, prompt):
+    ans = None
+    while ans not in ['y', 'n']:
+        v = station.get_fixed_block(['date_time'], True)
+        print "Station clock is", v
+        ts = datetime.datetime.now()
+        if prompt:
+            ans = raw_input("Set station clock to %s (y/n)? " % ts)
+        else:
+            print "Setting station clock to %s" % ts
+            ans = 'y'
+        if ans == 'y' :
+            now = datetime.datetime.now()
+            if now.second >= 55:
+                time.sleep(10)
+                now = datetime.datetime.now()
+            now += datetime.timedelta(minutes=1)
+            ptr = weewx.fousb.fixed_format['date_time'][0]
+            data = []
+            data.append((ptr,   bcd_encode(now.year - 2000)))
+            data.append((ptr+1, bcd_encode(now.month)))
+            data.append((ptr+2, bcd_encode(now.day)))
+            data.append((ptr+3, bcd_encode(now.hour)))
+            data.append((ptr+4, bcd_encode(now.minute)))
+            time.sleep(59 - now.second)
+            station.write_data(data)
+            v = station.get_fixed_block(['date_time'], True)
+            print "Station clock is now", v
+        elif ans == 'n':
+            print "Set clock cancelled."
+
 def stash(slist, s):
     if s.find('settings') != -1:
         slist['settings'].append(s)
@@ -211,6 +360,28 @@ def getvalues(station, name, value):
                 n = name + '.' + x
             values.update(getvalues(station, n, value[x]))
     return values
+
+def raw_dump(pos, data):
+    print "%04x" % pos,
+    for item in data:
+        print "%02x" % item,
+    print
+
+def table_dump(date, data, showlabels=False):
+    if showlabels:
+        print '# date time',
+        for key in data.keys():
+            print key,
+        print
+    print date,
+    for key in data.keys():
+        print data[key],
+    print
+
+def bcd_encode(value):
+    hi = value // 10
+    lo = value % 10
+    return (hi * 16) + lo
 
 if __name__=="__main__" :
     main()

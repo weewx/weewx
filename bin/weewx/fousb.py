@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 460 2013-02-10 02:53:03Z mwall $
+# $Id$
 #
 # Copyright 2012 Matthew Wall
 #
@@ -203,7 +203,7 @@ keymap = {
     'windDir'     : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'windGustDir' : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
-    'radiation'   : ('illuminance',  1.0),
+    'radiation'   : ('illuminance',  1.0), # station is lux, weewx wants W/m^2
     'UV'          : ('uv',           1.0),
     'dewpoint'    : ('dewpoint',     1.0),
     'heatindex'   : ('heatindex',    1.0),
@@ -537,7 +537,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             for dev in bus.devices:
                 if dev.idVendor == self.vendor_id and dev.idProduct == self.product_id:
                     return dev
-        
+        return None
+
     def genLoopPackets(self):
         """Generator function that continuously returns decoded packets"""
 
@@ -667,15 +668,22 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
 #==============================================================================
 # methods for reading from and writing to usb
+#
+#            end mark: 0x20
+#        read command: 0xA1
+#       write command: 0xA0
+#  write command word: 0xA2
+#
 # FIXME: to support multiple usb drivers, these should be abstracted to a class
+# FIXME: refactor the _read_usb methods to pass read_size down the chain
 #==============================================================================
 
     def _read_usb(self, address):
-        buf1 = (address / 256) & 0xff
-        buf2 = address & 0xff
+        addr1 = (address / 256) & 0xff
+        addr2 = address & 0xff
         self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
                              0x0000009,
-                             [0xA1,buf1,buf2,0x20,0xA1,buf1,buf2,0x20],
+                             [0xA1,addr1,addr2,0x20,0xA1,addr1,addr2,0x20],
                              0x0000200,
                              0x0000000,
                              1000)
@@ -684,9 +692,34 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                        int(self.timeout*1000))
         return list(data)
 
-    def _write_usb(self, address, value):
-        # FIXME: write to usb is not implemented
-        return False
+    def _read_usb_bytes(self, size):
+        data = self.devh.interruptRead(self.usb_endpoint,
+                                       size,
+                                       int(self.timeout*1000))
+        if data is None or len(data) < size:
+            raise weewx.WeeWxIOError('Read from USB failed')
+        return list(data)
+
+    def _write_usb(self, address, data):
+        addr1 = (address / 256) & 0xff
+        addr2 = address & 0xff
+        buf = [0xA2,addr1,addr2,0x20,0xA2,data,0,0x20]
+        result = self.devh.controlMsg(
+            usb.ENDPOINT_OUT + usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+            usb.REQ_SET_CONFIGURATION,  # 0x09
+            buf,
+            value = 0x200,
+            index = 0,
+            timeout = int(self.timeout*1000))
+        if result != len(buf):
+            return False
+        buf = self._read_usb_bytes(8)
+        if buf is None:
+            return False
+        for byte in buf:
+            if byte != 0xA5:
+                return False
+        return True
 
 #==============================================================================
 # methods for reading data from the weather station
@@ -973,11 +1006,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         for ptr, value in data:
             self._write_byte(ptr, value)
         # set 'data changed'
-        self._write_byte(self.fixed_format['data_changed'][0], 0xAA)
+        self._write_byte(fixed_format['data_changed'][0], 0xAA)
         # wait for station to clear 'data changed'
         while True:
             ack = _decode(self._read_fixed_block(0x0020),
-                          self.fixed_format['data_changed'])
+                          fixed_format['data_changed'])
             if ack == 0:
                 break
             logdbg('waiting for ack')

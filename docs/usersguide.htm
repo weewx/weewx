@@ -1225,7 +1225,7 @@ Offset:                       -1.000</p>
     <span class='code'>--help</span> as an option to see its usage:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
     <p>This will print out something like:</p>
-    <p class='tty'>Usage: config_fousb.py config_file [options]
+    <p class='tty'>Usage: wee_config_fousb config_file [options]
 
 Configuration utility for Fine Offset weather stations.
 
@@ -1234,6 +1234,13 @@ Options:
   --info             display weather station configuration
   --check-pressures  query station for pressure sensor data
   --check-units      compare raw and converted LOOP packets
+  --history=N        display the latest N records
+  --format=FORMAT    format for output, one of raw, table, or dict
+  --set-clock        set station clock to computer time
+  --set-pressure=P   set relative pressure to P hPa (mbar)
+  --set-interval=N   set logging interval to N minutes
+  --clear-memory     clear station memory
+  -y                 answer yes to every prompt - do not prompt
   --debug            display diagnostic information while running
 
 Mutating actions will request confirmation before proceeding.</p>
@@ -1243,11 +1250,12 @@ Mutating actions will request confirmation before proceeding.</p>
     <p>This will result in something like this:</p>
     <p class='tty'>Fine Offset station settings:
                     local time: 2013.02.11 18:34:28 CET
+                  polling_mode: ADAPTIVE
 
                   abs_pressure: 933.3
                    current_pos: 592
                   data_changed: 0
-                    data_count: 22
+<span class="highlight">                    data_count: 22</span>
                      date_time: 2007-01-01 22:49
                  hum_in_offset: 18722
                 hum_out_offset: 257
@@ -1257,8 +1265,8 @@ Mutating actions will request confirmation before proceeding.</p>
                        magic_2: 0xaa
                          model: None
                      rain_coef: None
-                   read_period: 30
-                  rel_pressure: 1014.8
+<span class="highlight">                   read_period: 30</span>
+<span class="highlight">                  rel_pressure: 1014.8</span>
                 temp_in_offset: 1792
                temp_out_offset: 0
                       timezone: 0
@@ -1267,6 +1275,7 @@ Mutating actions will request confirmation before proceeding.</p>
                        version: 255
                      wind_coef: None
                      wind_mult: 0</p>
+    <p><span class="highlight">Highlighted</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
 
       <h1>Configuring MySQL</h1>
     <p>This section applies only for those using MySQL.</p>
