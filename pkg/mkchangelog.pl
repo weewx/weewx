@@ -38,14 +38,16 @@ use Time::Local;
 use Text::Wrap;
 use strict;
 
-my $user = 'Tom Keffer';
-my $email = 'tkeffer@gmail.com';
+my $user = 'Mister Package';
+my $email = 'user@example.com';
 my $pkgname = 'weewx';
 my $ifn = q();                    # input filename
 my $release = q();                # release version
 my $action = 'app';               # what to do, can be app or stub
 my $fmt = '80col';                # format can be 80col, debian, or redhat
 my $rc = 0;
+
+($user,$email) = guessuser($user,$email);
 
 while ($ARGV[0]) {
     my $arg = shift;
@@ -220,4 +222,32 @@ sub dumpsection {
         }
     }
     print $postfix;
+}
+
+# use gpg to guess the user,email pair of the person running this script.
+# if gpg gives us nothing, fallback to USER and USER@hostname.
+sub guessuser {
+    my($fb_user,$fb_email) = @_;
+    my($user,$email) = q();
+    my $env_user = $ENV{USER};
+    if ($env_user ne q()) {
+        my @lines = `gpg --list-keys $env_user`;
+        foreach my $line (@lines) {
+            if ($line =~ /$env_user/) {
+                if ($line =~ /uid\s+(.*) <([^>]+)/) {
+                    $user = $1;
+                    $email = $2;
+                }
+            }
+        }
+        if ($user eq q()) {
+            $user = $env_user;
+            my $hn = `hostname`;
+            chop($hn);
+            $email = $user . '@' . $hn;
+        }
+    }
+    $user = $fb_user if $user eq q();
+    $email = $fb_email if $email eq q();
+    return ($user,$email);
 }
