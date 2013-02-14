@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 474 2013-02-14 14:08:47Z mwall $
+# $Id: config_fousb.py 475 2013-02-14 14:13:10Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -172,7 +172,7 @@ def checkunits(station, target_unit_name):
 
     print "Querying the station..."
     for packet in station.genLoopPackets():
-        print 'target_unit: %s' % target_unit
+        print 'target_unit: %s' % target_unit_name
         print 'raw LOOP packet:'
         print packet
         print 'converted LOOP packet:'
