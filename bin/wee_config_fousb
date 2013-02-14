@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 472 2013-02-13 14:37:44Z mwall $
+# $Id: config_fousb.py 474 2013-02-14 14:08:47Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -56,12 +56,14 @@ def main():
     
     # Add the various options:
     parser.add_option("--info", action="store_true", dest="info",
-                        help="display weather station configuration")
+                      help="display weather station configuration")
     parser.add_option("--check-pressures", action="store_true", dest="chkpres",
-                        help="query station for pressure sensor data")
+                      help="query station for pressure sensor data")
+    parser.add_option("--check-units", action="store_true", dest="chkunits",
+                      help="compare raw and converted LOOP packets")
     parser.add_option("--debug", action="store_true", dest="debug",
-                        help="display additional information while running")
-    
+                      help="display additional information while running")
+
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
     if not args:
@@ -83,19 +85,26 @@ def main():
     if debug:
         print "Using configuration file %s" % cfgfile
 
-    # The driver needs the altitude in meters in order to calculate relative
-    # pressure. Get it from the Station data and do any necessary conversions.
+    # station needs altitude to do calculations
     altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
-    # Form a value-tuple:
+    # form a units value-tuple
     altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    # Now convert to meters, using only the first element of the value-tuple:
+    # convert to meters
     altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
     
+    if debug:
+        print 'altitude from config: %s' % altitude_t
+        print 'altitude tuple: %s' % altitude_vt
+        print 'altitude in meters: %s' % altitude_m
+
     station = weewx.fousb.FineOffsetUSB(altitude=altitude_m,
                                         **config_dict['FineOffsetUSB'])
 
-    if options.chkpres:
-        checkpressures(station, altitude_t[0], altitude_t[1])
+    if options.chkunits:
+        checkunits(station, config_dict['StdConvert']['target_unit'])
+    elif options.chkpres:
+        checkpressures(station, config_dict['StdConvert']['target_unit'],
+                       altitude_t[0], altitude_t[1])
     elif options.info or len(args) == 1:
         info(station)
 
@@ -126,8 +135,11 @@ def info(station):
         for s in slist[k]:
             print s
 
-def checkpressures(station, altitude_value, altitude_units):
+def checkpressures(station, target_unit_name, altitude_value, altitude_units):
     """Query the station then display pressure-related sensor readings."""
+
+    target_unit = weewx.units.unit_constants[target_unit_name.upper()]
+    converter = weewx.units.StdUnitConverters[target_unit]
 
     print "Querying the station..."
     for packet in station.genLoopPackets():
@@ -144,7 +156,27 @@ def checkpressures(station, altitude_value, altitude_units):
         print 'altimeter pressure (davis algorithm): %s' % ap1
         print 'altimeter pressure (noaa algorithm): %s' % ap2
         print 'barometer pressure (wview algorithm): %s' % bp2
+        print 'raw LOOP packet:'
         print packet
+        cpkt = converter.convertDict(packet)
+        print 'converted LOOP packet:'
+        print cpkt
+        break
+    station.closePort()
+
+def checkunits(station, target_unit_name):
+    """Query the station then display raw and converted sensor readings."""
+
+    target_unit = weewx.units.unit_constants[target_unit_name.upper()]
+    converter = weewx.units.StdUnitConverters[target_unit]
+
+    print "Querying the station..."
+    for packet in station.genLoopPackets():
+        print 'target_unit: %s' % target_unit
+        print 'raw LOOP packet:'
+        print packet
+        print 'converted LOOP packet:'
+        print converter.convertDict(packet)
         break
     station.closePort()
 
