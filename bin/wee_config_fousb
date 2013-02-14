@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 478 2013-02-14 18:38:34Z mwall $
+# $Id: config_fousb.py 479 2013-02-14 19:10:53Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -35,6 +35,8 @@ Output from a 308x-series station would be particularly helpful.
 import configobj
 import datetime
 import optparse
+import sys
+import syslog
 import time
 
 import weewx.fousb
@@ -49,6 +51,7 @@ epilog = """Mutating actions will request confirmation before proceeding.
 Attempts to set the station clock will probably fail."""
 
 def main():
+    syslog.openlog('wee_config_fousb', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
@@ -60,6 +63,8 @@ def main():
                       help="query station for pressure sensor data")
     parser.add_option("--check-units", dest="chkunits", action="store_true",
                       help="compare raw and converted LOOP packets")
+    parser.add_option("--check-usb", dest="chkusb", action="store_true",
+                      help="test the quality of the USB connection")
     parser.add_option("--history", dest="history", type=int, metavar="N",
                       help="display the latest N records")
     parser.add_option("--format", dest="format", type=str, metavar="FORMAT",
@@ -124,6 +129,8 @@ def main():
     elif options.chkpres:
         checkpressures(station, config_dict['StdConvert']['target_unit'],
                        altitude_t[0], altitude_t[1])
+    elif options.chkusb:
+        checkusb(station)
     elif options.clock:
         setclock(station, prompt)
     elif options.pressure is not None:
@@ -207,6 +214,36 @@ def checkunits(station, target_unit_name):
         print converter.convertDict(packet)
         break
     station.closePort()
+
+def checkusb(station):
+    """Run diagnostics on the USB connection."""
+    print "This will read from the station console repeatedly to see if there"
+    print "are errors in the USB communications.  Leave this running for an"
+    print "hour or two to see if any bad reads are encountered.  Bad reads"
+    print "will be reported in the system log.  A few bad reads per hour is"
+    print "usually acceptable."
+    ptr = weewx.fousb.data_start
+    total_count = 0
+    bad_count = 0
+    while True:
+        if total_count % 1000 == 0:
+            active = station.current_pos()
+        while True:
+            ptr += 0x20
+            if ptr >= 0x10000:
+                ptr = weewx.fousb.data_start
+            if active < ptr - 0x10 or active >= ptr + 0x20:
+                break
+        result_1 = station._read_block(ptr, retry=False)
+        result_2 = station._read_block(ptr, retry=False)
+        if result_1 != result_2:
+            syslog.syslog(syslog.LOG_INFO, 'read_block changing %06x' % ptr)
+            syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_1))
+            syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_2))
+            bad_count += 1
+        total_count += 1
+        print "\rbad/total: %d/%d " % (bad_count, total_count),
+        sys.stdout.flush()
 
 def showhistory(station, count, format):
     """Query the station for the latest count records."""
