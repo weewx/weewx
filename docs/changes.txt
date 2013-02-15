@@ -1,10 +1,13 @@
 weewx change history
 --------------------
 
-2.3.0
+2.2.1
 
 Added a function call to the Vantage driver that allows the lamp to be
 turned on and off. Added a corresponding option to wee_config_vantage.
+
+Fixed bug where an undefined wind direction caused an exception when using
+ordinal wind directions.
 
 2.2.0
 

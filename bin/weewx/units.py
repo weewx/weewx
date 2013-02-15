@@ -288,23 +288,8 @@ default_time_format_dict = {"day"        : "%H:%M",
                             "ephem_year" : "%d-%b-%Y %H:%M"}
 
 # Default mapping from compass degrees to ordinals
-default_ordinate_dict = {0  : 'N',
-                         1  : 'NNE',
-                         2  : 'NE',
-                         3  : 'ENE',
-                         4  : 'E',
-                         5  : 'ESE',
-                         6  : 'SE',
-                         7  : 'SSE',
-                         8  : 'S',
-                         9  : 'SSW',
-                         10 : 'SW',
-                         11 : 'WSW',
-                         12 : 'W',
-                         13 : 'WNW',
-                         14 : 'NW',
-                         15 : 'NNW',
-                         16 : 'N'}
+default_ordinate_names = ['N', 'NNE','NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+                          'S', 'SSW','SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N/A']
 
 #===============================================================================
 #                        class ValueTuple
@@ -363,12 +348,22 @@ class Formatter(object):
     83.2°F
     >>> print f.toString((123456789,  "unix_epoch", "group_time"))
     29-Nov-1973 13:33
+    >>> print f.to_ordinal_compass((5.0, "degree_compass", "group_direction"))
+    N
+    >>> print f.to_ordinal_compass((0.0, "degree_compass", "group_direction"))
+    N
+    >>> print f.to_ordinal_compass((12.5, "degree_compass", "group_direction"))
+    NNE
+    >>> print f.to_ordinal_compass((360.0, "degree_compass", "group_direction"))
+    N
+    >>> print f.to_ordinal_compass((None, "degree_compass", "group_direction"))
+    N/A
     """
 
     def __init__(self, unit_format_dict = default_unit_format_dict,
                        unit_label_dict  = default_unit_label_dict,
                        time_format_dict = default_time_format_dict,
-                       ordinate_dict    = default_ordinate_dict):
+                       ordinate_names   = default_ordinate_names):
         """
         unit_format_dict: Key is unit type (eg, 'inHg'), value is a string format ("%.1f")
         
@@ -379,7 +374,7 @@ class Formatter(object):
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
         self.time_format_dict = time_format_dict
-        self.ordinate_dict    = ordinate_dict
+        self.ordinate_names    = ordinate_names
         # Add new keys for backwards compatibility on old skin dictionaries:
         self.time_format_dict.setdefault('ephem_day', "%H:%M")
         self.time_format_dict.setdefault('ephem_year', "%d-%b-%Y %H:%M")
@@ -388,15 +383,14 @@ class Formatter(object):
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
         try:
-            ordinate_list = weeutil.weeutil.option_as_list(skin_dict['Units']['Ordinates']['directions'])
-            ordinate_dict = dict(enumerate(ordinate_list))
+            ordinate_names = weeutil.weeutil.option_as_list(skin_dict['Units']['Ordinates']['directions'])
         except KeyError:
-            ordinate_dict = default_ordinate_dict
+            ordinate_names = default_ordinate_names
         
         return Formatter(skin_dict['Units']['StringFormats'],
                          skin_dict['Units']['Labels'],
                          skin_dict['Units']['TimeFormats'],
-                         ordinate_dict)
+                         ordinate_names)
 
     def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
         """Format the value as a string.
@@ -448,7 +442,12 @@ class Formatter(object):
         return val_str
 
     def to_ordinal_compass(self, val_t):
-        return self.ordinate_dict[int(round(val_t[0]/22.5, 0))]
+        if val_t[0] is None:
+            return self.ordinate_names[-1]
+        _sector_size = 360.0 / (len(self.ordinate_names)-1)
+        _degree = (val_t[0] + _sector_size/2.0) % 360.0
+        _sector = int(_degree / _sector_size)
+        return self.ordinate_names[_sector]
     
 #===============================================================================
 #                        class Converter
