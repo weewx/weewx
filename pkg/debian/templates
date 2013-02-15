@@ -52,4 +52,4 @@ Template: weewx/fousb_model
 Type: string
 Default: WS2080
 Description: weather station model:
- Specify the station mode, for example WH1080, WS2080, WH3080.
+ Specify the station model, for example WH1080, WS2080, WH3080.
