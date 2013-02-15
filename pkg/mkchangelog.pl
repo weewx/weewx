@@ -2,8 +2,12 @@
 # $Id$
 # Copyright Matthew Wall
 #
-# Convert the changelog to various formats.  When no format is specified, the
-# input is adjusted to 80-column.
+# Convert the changelog to various formats, or create a changelog stub suitable
+# for inclusion in debian or redhat packaging.  Username and email are
+# required.  This script uses gpg to guess username and email, since packages
+# must be signed by gpg credentials with the username and email in the package
+# changelog.
+#
 #
 # input format:
 #
@@ -230,8 +234,10 @@ sub dumpsection {
         # unescape the fixed spacing lines
         @lines = ();
         foreach my $line (split('\n',$p)) {
-            $line =~ s/~/ /g;
-            $line =~ s/=//g;
+            if ($line =~ /~/) {
+                $line =~ s/~/ /g;
+                $line =~ s/=//g;
+            }
             push @lines, $line;
         }
         # print out the result
