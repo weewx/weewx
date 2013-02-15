@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+2.3.0
+
+Added a function call to the Vantage driver that allows the lamp to be
+turned on and off. Added a corresponding option to wee_config_vantage.
+
 2.2.0
 
 Weewx can now be installed using Debian (DEB) or Redhat (RPM) packages, as well

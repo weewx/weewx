@@ -697,6 +697,18 @@ class Vantage(weewx.abstractstation.AbstractStation):
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "VantagePro: archive interval set to %d seconds" % (archive_interval_seconds,))
     
+    def setLamp(self, onoff='OFF'):
+        """Set the lamp on or off"""
+        try:        
+            _setting = {'off' : '0', 'on' : '1'}[onoff.lower()]
+        except KeyError:
+            raise ValueError("Unknown lamp setting '%s'" % onoff)
+
+        _command = "LAMPS %s\n" % _setting
+        self.port.send_command(_command, max_tries=self.max_tries)
+
+        syslog.syslog(syslog.LOG_NOTICE, "VantagePro: Lamp set to '%s'" % onoff)
+        
     def clearLog(self):
         """Clear the internal archive memory in the Vantage."""
         for unused_count in xrange(self.max_tries):

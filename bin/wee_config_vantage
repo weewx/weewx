@@ -22,9 +22,10 @@ import weeutil.weeutil
 
 description = """Configures the Davis Vantage weather station."""
 
-usage="""%prog: config_path [--help] [--info] [--clear] [--set-interval=SECONDS] [--set-altitude=FEET]
-                            [--set-barometer=inHg] [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
-                            [--start | --stop]"""
+usage="""%prog: config_path [--help] [--info] [--clear]
+                            [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
+                            [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
+                            [--set-lamp=['on'|'off]] [--dump] [--start | --stop]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
@@ -55,6 +56,7 @@ def main():
     parser.add_option("--set-rain-year-start", type=int, dest="set_rain_year_start", metavar="MM", 
                         help="Set the rain year start (1=Jan, 2=Feb, etc.).")
     parser.add_option("--set-time", action="store_true", dest="set_time", help="Set the onboard clock to the current time.")
+    parser.add_option("--set-lamp", dest="set_lamp", help="Turn the console lamp 'ON' or 'OFF'", metavar="ON|OFF")
     parser.add_option("--start", action="store_true", help="Start the logger.")
     parser.add_option("--stop",  action="store_true", help="Stop the logger.")
     parser.add_option("--dump",  action="store_true", help="Dump all data to the archive. "\
@@ -103,6 +105,8 @@ def main():
         set_rain_year_start(station, options.set_rain_year_start)
     if options.set_time:
         set_time(station)
+    if options.set_lamp:
+        set_lamp(station, options.set_lamp)
     if options.start:
         start_logger(station)
     if options.stop:
@@ -320,6 +324,10 @@ def set_time(station):
     newtime_ts = station.getTime()
     print "Current console time is %s" % weeutil.weeutil.timestamp_to_string(newtime_ts)
 
+def set_lamp(station, onoff):
+    print "Setting lamp on console..."
+    station.setLamp(onoff)
+    
 def start_logger(station):
     print "Starting logger ..."
     station.startLogger()

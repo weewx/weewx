@@ -1100,7 +1100,7 @@ Version: 2.2
     <p class="tty">Usage: wee_config_vantage: config_path [--help] [--info] [--clear]
      [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
      [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
-     [--start | -- stop]
+     [--set-lamp=['on'|'off']] [--dump] [--start | -- stop]
 
 Configures the VantagePro weather station.
 
@@ -1121,6 +1121,7 @@ Options:
                             inches; '1' for 0.2 MM; '2' for 0.1 MM
   --set-rain-year-start=MM Set the rain year start (1=Jan, 2=Feb, etc.).
   --set-time               Set the onboard clock to the current time.
+  --set-lamp=ON|OFF        Turn the console lamp 'ON' or 'OFF'
   --start                  Start the logger.
   --stop                   Stop the logger.
   --dump                   Dump all data to the archive. NB: This may result in
