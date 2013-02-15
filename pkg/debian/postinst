@@ -60,7 +60,7 @@ if [ "$RET" != "" ]; then
             sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
         else
             db_get weewx/vantage_host
-            sed -i "s%host[ ]*=.*%host = $RET%" $cfgfile
+            sed -i "0,/ host[ ]*=.*/s// host = $RET/" $cfgfile
         fi
     fi
     if [ "$RET" = "WMR-918" ]; then
