@@ -163,7 +163,6 @@ sub doapp {
                     $ts = timelocal(0,0,0,$day,$month-1,$year);
                 }
             } elsif ($line =~ /\S/) {
-                $line =~ s/ +/ /g;
                 $cp .= $line;
             } else {
                 push @paragraphs, $cp;
@@ -186,7 +185,6 @@ sub dumpsection {
     my @paragraphs = @$pref;
     return if ($#paragraphs < 0);
 
-    my $maxw = 50; # maximum width, in characters
     my $prefix = q();
     my $firstlinepfx = q();
     my $laterlinepfx = q();
@@ -212,11 +210,33 @@ sub dumpsection {
         $postfix = "\n";
     }
 
+    # lines that beging with two or more spaces will be considered fixed space
+    # and will not be subjected to word wrap.  we do this by replacing spaces
+    # in those lines with the ~ character then padding them with the =
+    # character, then replacing both after word wrap has been applied.
     print $prefix;
     foreach my $p (@paragraphs) {
-        $p = Text::Wrap::fill('','',join ' ', split('\n',$p));
+        # escape lines that begin with spaces to prevent them from wrapping
+        my @lines;
+        foreach my $line (split('\n',$p)) {
+            if ($line =~ /^\s+/) {
+                $line =~ s/\s/~/g;
+                while(length($line) < 75) { $line .= '='; }
+            }
+            push @lines, $line;
+        }
+        # do the word wrap
+        $p = Text::Wrap::fill('','',join ' ', @lines);
+        # unescape the fixed spacing lines
+        @lines = ();
+        foreach my $line (split('\n',$p)) {
+            $line =~ s/~/ /g;
+            $line =~ s/=//g;
+            push @lines, $line;
+        }
+        # print out the result
         my $pfx = $firstlinepfx;
-        foreach my $ln (split('\n', $p)) {
+        foreach my $ln (@lines) {
             print STDOUT "$pfx$ln\n";
             $pfx = $laterlinepfx;
         }
