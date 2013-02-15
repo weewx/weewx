@@ -24,8 +24,9 @@ checklist for doing a release:
 14. Uploading to SourceForge:
      1. Upload tarball
      2. Select the new tarball as the Mac, Linux, and BSD distribution
-     3. Upload docs/changes.txt as README.txt in the files area
-15. Run a backup on Raven
+     3. Copy docs/changes.txt to a directory, change name to README.txt, 
+        then change to DOS CRLF convention. Upload to the files area.
+15. Run a backup on condor
 16. Run Microsoft Expression Web on the PC.
      1. Copy all the new docs to the weewx web folder, subdirectory docs.
      2. Add to the "What's New" section on the front page.
