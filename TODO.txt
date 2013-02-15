@@ -1,9 +1,12 @@
 TODO before the next release:
 
-resolve fousb pressure calculation issue
-
 possibly implement averaging rainRate calculation instead of the
 current near-instantaneous implementation in fousb
 
 Is the WH3081 downloading the right radiation units? See Elton Prytz's post
 https://groups.google.com/d/topic/weewx-user/Dmt555dnWns/discussion
+
+display the version number from bin/__init__.py rather than whatever is in
+weewx.conf.  the weewx.conf version number cannot be trusted and should be
+used for updates to indicate the version number of the configuration file,
+not for reporting the application version.
