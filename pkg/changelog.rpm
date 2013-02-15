@@ -1,3 +1,5 @@
+* Fri Feb 15 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.1-1
+- fixed ordinals
 * Thu Feb 14 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.0-1
 - no packaging changes for the 2.2.0 release
 * Wed Feb 13 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.2.0b2-1
