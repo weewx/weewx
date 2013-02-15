@@ -20,7 +20,7 @@ help: info
 	@echo "       install  run the generic python install"
 	@echo "       version  get version from __init__ and insert elsewhere"
 	@echo ""
-	@echo "     changelog  create changelog suitable for distribution"
+	@echo "        readme  create README.txt suitable for distribution"
 	@echo " deb-changelog  prepend stub changelog entry for deb"
 	@echo " rpm-changelog  prepend stub changelog entry for rpm"
 	@echo ""
@@ -32,10 +32,10 @@ help: info
 	@echo "     check-rpm  check the rpm package"
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
-	@echo "      upload-src  upload the src package"
-	@echo "      upload-deb  upload the deb package"
-	@echo "      upload-rpm  upload the rpm package"
-	@echo "upload-changelog  upload the changelog for sourceforge"
+	@echo "    upload-src  upload the src package"
+	@echo "    upload-deb  upload the deb package"
+	@echo "    upload-rpm  upload the rpm package"
+	@echo " upload-readme  upload the README.txt for sourceforge"
 
 info:
 	@echo "     VERSION: $(VERSION)"
@@ -61,12 +61,32 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 upload-src:
 	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(RELDIR)
 
-# create the changelog (renamed to README.txt) for distribution
-changelog:
+# create the README.txt for uploading to sourceforge
+README_HEADER="\
+--------------------\n\
+weewx packages      \n\
+--------------------\n\
+\n\
+$(DEBPKG)\n\
+   for Debian, Ubuntu, Mint\n\
+\n\
+$(RPMPKG)\n\
+   for Redhat, CentOS, Fedora\n\
+\n\
+$(SRCPKG)\n\
+   for all operating systems including Linux, BSD, MacOSX\n\
+   this is the best choice if you intend to customize weewx\n\
+\n\
+--------------------\n\
+weewx change history\n\
+--------------------\n"
+readme:
 	mkdir -p $(DSTDIR)
-	pkg/mkchangelog.pl --ifile docs/changes.txt > $(DSTDIR)/README.txt
+	rm -f $(DSTDIR)/README.txt
+	echo $(README_HEADER) > $(DSTDIR)/README.txt
+	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
 
-upload-changelog: changelog
+upload-readme: readme
 	scp $(DSTDIR)/README.txt $(USER)@$(RELDIR)
 
 # update the version in all relevant places

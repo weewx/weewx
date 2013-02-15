@@ -36,15 +36,20 @@ checklist for doing a release:
 
 
 
+create README.txt for sourceforge:
+  make readme
+
 source install:
   setup.py install
   setup.py install home=/opt/weewx-x.y.z
 
-debian:
+debian install/remove:
   dpkg -i weewx_x.y.z-r.deb           # install
   (apt-get install weewx)             # finish install if dependencies failed
+  dpkg -r weewx                       # remove
+  dpkg -P weewx                       # purge
 
-redhat:
+redhat install/remove:
   yum install weewx-x.y.z-r.rpm [--nogpgcheck]    # install with yum
   yum remove weewx                                # remove with yum
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
