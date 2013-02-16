@@ -180,3 +180,10 @@ check-rpm:
 
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(RELDIR)
+
+# run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
+# [-CodeLayout::RequireTidyCode]
+# [-Modules::ProhibitExcessMainComplexity]
+# [-Modules::RequireVersionVar]
+critic:
+	perlcritic -1 --verbose 8 pkg/mkchangelog.pl

@@ -39,6 +39,68 @@ checklist for doing a release:
 create README.txt for sourceforge:
   make readme
 
+how to update the version number:
+  modify __version__ in bin/weewx/__init__.py     # canonical version location
+  make version                  # this propagates the version number everywhere
+  svn commit -m "..."           # commit the change to the repository
+
+how to build source package:
+  make src-package
+
+how to build debian package:
+  make deb-changelog
+  emacs pkg/debian/changelog    # add any package-specific changes, if any
+  svn commit -m "update deb changelog"
+  make deb-package
+
+how to build redhat package:
+  make rpm-changelog
+  emacs pkg/changelog.rpm       # add any package-specific changes, if any
+  svn commit -m "update rpm changelog"
+  make rpm-package
+
+to generate gpg key used for signing packages:
+  gpg --gen-key
+  gpg --list-keys
+
+for signing rpm packages:
+~/.rpmmacros
+  %_signature gpg
+  %_gpg_name  Matthew Wall
+
+
+
+notes:
+
+there are multiple changelogs:
+  docs/changes.txt - definitive changelog for the application
+  pkg/debian/changelog - changes to the debian packaging
+  pkg/changelog.rpm - changes to the redhat packaging
+  README.txt - copy of changes.txt uploaded to sourceforge files directory
+
+when signing, gpg info must match the name and email in the latest package
+changelog entry.
+
+the debian changelog *must* have a version number that matches the app version.
+the redhat package will build if the version numbers do not match.  use the
+rpm-changelog and deb-changelog targets to ensure that changelog versions match
+the application version for a release.
+
+there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
+dir and is fairly low-level) but that does not create changes and source diffs.
+then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
+the config and templates.  ended up using dpkg-buildpackage with some manual
+(scripted) file manipulation.
+
+what to test when creating debian and redhat packages:
+  install, upgrade, remove, purge
+  install, modify files, remove
+  install, modify files, upgrade
+
+
+
+how to install/remove using various approaches:
+
 source install:
   setup.py install
   setup.py install home=/opt/weewx-x.y.z
@@ -54,56 +116,3 @@ redhat install/remove:
   yum remove weewx                                # remove with yum
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
   rpm -e weewx                                    # remove with rpm
-
-how to update the version number:
-  modify __version__ in bin/weewx/__init__.py     # canonical version location
-  make version                # this propagates the version number everywhere
-  svn commit -m "..."         # commit the change to the repository
-
-how to build source package:
-  make src-package
-
-how to build debian package:
-  make deb-changelog
-  emacs pkg/debian/changelog
-  svn commit -m "..."
-  make deb-package
-
-how to build redhat package:
-  make rpm-changelog
-  emacs pkg/weewx.spec.in
-  svn commit -m "..."
-  make rpm-package
-
-there are multiple changelogs:
-  docs/changes.txt - definitive changelog for the application
-  pkg/debian/changelog - changes to the debian packaging
-  pkg/changelog.rpm - changes to the redhat packaging
-  README.txt - copy of changes.txt uploaded to sourceforge files directory
-
-the debian changelog *must* have a version number that matches the app version.
-the redhat package will build if the version numbers do not match.  use the
-rpm-changelog and deb-changelog targets to ensure that changelog versions match
-the application version for a release.
-
-to generate gpg key used for signing packages:
-  gpg --gen-key
-  gpg --list-keys
-
-for signing rpm packages:
-~/.rpmmacros
-  %_signature gpg
-  %_gpg_name  Matthew Wall
-
-gpg info must match the name and email in the changelog entries.
-
-there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
-dir and is fairly low-level) but that does not create changes and source diffs.
-then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
-the config and templates.  ended up using dpkg-buildpackage with some manual
-(scripted) file manipulation.
-
-what to test when creating debian and redhat packages:
-  install, upgrade, remove, purge
-  install, modify files, remove
-  install, modify files, upgrade
