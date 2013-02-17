@@ -566,28 +566,23 @@ def startOfArchiveDay(time_ts, grace=1):
 def getDayNightTransitions(start_ts, end_ts, lat, lon):
     """Return the day-night transitions between the start and end times.
 
-    start_ts: A timestamp indicating the beginning of the period
+    start_ts: A timestamp (UTC) indicating the beginning of the period
 
-    end_ts: A timestamp indicating the end of the period
+    end_ts: A timestamp (UTC) indicating the end of the period
 
     returns: indication of whether the period from start to first transition
-    is day or night, plus array of transitions.
+    is day or night, plus array of transitions (UTC).
     """
     first = 'day'
     values = []
     for t in range(start_ts, end_ts, 3600*24):
-        x = startOfDay(t) + 7200 # avoid dst issues
-        
-        x_tt = time.gmtime(x)
+        x_tt = time.gmtime(t)
         y, m, d = x_tt[:3]
         (sunrise_utc, sunset_utc) = Sun.sunRiseSet(y, m, d, lon, lat)
 
-        # The above function returns its results in UTC hours. Convert
-        # to a local time tuple, then to a timestamp.
-        sunrise_tt = utc_to_local_tt(y, m, d, sunrise_utc)
-        sunset_tt  = utc_to_local_tt(y, m, d, sunset_utc)
-        sunrise_ts = time.mktime(sunrise_tt)
-        sunset_ts  = time.mktime(sunset_tt)        
+        y_tt = (y,m,d,0,0,0,0,0,-1)
+        sunrise_ts = int(calendar.timegm(y_tt) + sunrise_utc * 3600.0 + 0.5)
+        sunset_ts = int(calendar.timegm(y_tt) + sunset_utc * 3600.0 + 0.5)
 
         if start_ts < sunrise_ts < end_ts:
             values.append(sunrise_ts)
