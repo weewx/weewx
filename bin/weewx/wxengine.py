@@ -538,10 +538,14 @@ class StdArchive(StdService):
         # Find out when the archive was last updated.
         lastgood_ts = self.archive.lastGoodStamp()
 
-        # Now ask the console for any new records since then. (Not all consoles
-        # support this feature).
-        for record in self.engine.console.genArchiveRecords(lastgood_ts):
-            self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+        try:
+            # Now ask the console for any new records since then. (Not all consoles
+            # support this feature).
+            for record in self.engine.console.genArchiveRecords(lastgood_ts):
+                self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+        except weewx.HardwareError, e:
+            syslog.syslog(syslog.LOG_ERR, "wxengine: Internal error detected. Catchup abandoned")
+            syslog.syslog(syslog.LOG_ERR, "****      %s" % e)
         
     def _software_catchup(self):
         # Extract a record out of the old accumulator. 

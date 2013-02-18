@@ -47,7 +47,10 @@ class CRCError(WeeWxIOError):
 class RetriesExceeded(WeeWxIOError):
     """Exception thrown when max retries exceeded."""
 
-class UnknownArchiveType(StandardError):
+class HardwareError(StandardError):
+    """Exception thrown when an error is detected in the hardware."""
+    
+class UnknownArchiveType(HardwareError):
     """Exception thrown after reading an unrecognized archive type."""
 
 class UnsupportedFeature(StandardError):
