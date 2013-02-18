@@ -188,7 +188,7 @@ def loader(config_dict):
 # illuminance
 # uv
 
-# map between the pywws keys and the weewx (and wview) keys
+# map between the pywws keys and the weewx keys
 # 'weewx-key' : ( 'pywws-key', multiplier )
 # rain needs special treatment
 # station has no separate windgustdir so use wind_dir
@@ -203,7 +203,7 @@ keymap = {
     'windDir'     : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'windGustDir' : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
-    'radiation'   : ('illuminance',  1.0), # station is lux, weewx wants W/m^2
+    'radiation'   : ('illuminance',  0.001464), # station is lux, weewx wants W/m^2
     'UV'          : ('uv',           1.0),
     'dewpoint'    : ('dewpoint',     1.0),
     'heatindex'   : ('heatindex',    1.0),
