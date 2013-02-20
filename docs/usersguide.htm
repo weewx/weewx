@@ -1226,7 +1226,7 @@ Offset:                       -1.000</p>
     <span class='code'>--help</span> as an option to see its usage:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
     <p>This will print out something like:</p>
-    <p class='tty'>Usage: wee_config_fousb config_file [options]
+    <p class='tty'>Usage: wee_config_fousb config_file [options] [--help]
 
 Configuration utility for Fine Offset weather stations.
 
@@ -1242,6 +1242,7 @@ Options:
   --set-pressure=P   set relative pressure to P hPa (mbar)
   --set-interval=N   set logging interval to N minutes
   --clear-memory     clear station memory
+  --slp=SLP          calculate pressure offset from sea level pressure SLP
   -y                 answer yes to every prompt
   --debug            display diagnostic information while running
 
@@ -1278,12 +1279,28 @@ Mutating actions will request confirmation before proceeding.</p>
                      wind_coef: None
                      wind_mult: 0</p>
     <p><span class="highlight">Highlighted</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
-    <p>For example, to display the most recent 30 records from the console memory:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --history=30</p>
     <p>To test the quality of the USB connection to the console:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --check-usb</p>
-    <p>To display sensor and calculated pressures:</p>
+
+    <h3>Calibrating the pressure sensor</h3>
+    <p>The pressure sensor in Fine Offset stations measures absolute, or station pressure.  The sensor pressure may be off a bit when the station is at sea level, and almost certainly will be off when the station is above sea level.  Stations at sea level are typically off by 1 to 10 millibars, while stations above a few hundred meters may be off by hundreds of millibars.  When reporting weather data, <span class='code'>weewx</span> will calculate the equivalent sea level pressure, but the pressure sensor must be calibrated and an altitude must be specified.</p>
+    <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  The <span class='code'>wee_config_fousb</span> utility will calculate this offset given the station altitude and a valid sea-level pressure for the station location.</p>
+    <p>For example, if the sea level pressure from a verified source is 1003.048 hPa, this will calculate the offset then ask whether to insert it into <span class='code'>weewx.conf</span>.  It uses the altitude specified in <span class='code'>weewx.conf</span> and the station pressure and temperature.</p>
+    <p class='tty'><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --slp=1003.048</p>
+    <p>The output will look something like this:</p>
+    <p class='tty'>Querying the station...
+Pressure offset is None
+Set pressure offset to 1.247000 hPa (y/n)? y
+Pressure offset is now 1.247000</p>
+    <p>For those using Imperial units, to convert inHg to hPa (mbar), multiply by 33.86389</p>
+    <p><span class='code'>weewx</span> does not use the <i>relative pressure</i> in the Fine Offset console.</p>
+    <p>To display sensor, relative, and calculated pressures:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --check-pressures</p>
+
+    <h3>Dumping the console memory</h3>
+    <p>Fine Offset stations store records in a circular buffer - once the buffer fills, the oldest records are replaced by newer records.  The 1080 and 2080 consoles store up to 4080 records.  The 3080 consoles store up to 3264 records.  The <span class='code'>data_count</span> indicates how many records are in memory.  The <span class='code'>read_period</span> indicates the number of minutes between records.  <span class='code'>wee_config_fousb</span> can display these records in space-delimited, raw bytes, or dictionary format.</p>
+    <p>For example, to display the most recent 30 records from the console memory:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --history=30</p>
     <p>To clear the console memory:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --clear-memory</p>
 

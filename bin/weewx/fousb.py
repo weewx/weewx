@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id$
+# $Id: fousb.py 505 2013-02-20 05:23:47Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -65,16 +65,9 @@ data are available.
 The FineOffset station console updates every 48 seconds.  UV data update every
 60 seconds.  This implementation defaults to sampling the station console via
 USB for live data every 30 seconds.  Use the parameter 'sampling_period' to
-adjust this.
-
-The following functions from pywws are used by the weewx module:
-
-  current_pos  - determine the pointer to the current data block
-  get_raw_data - returns raw bytes from the station console
-
-This function has been useful during development:
-
-  get_data     - returns a dictionary with values decoded from raw bytes
+adjust this.  An adaptive polling mode is also available.  This mode attempts
+to read only when the console is not writing to memory or reading data from
+the sensors.
 
 This implementation maps the values decoded by pywws to the names needed
 by weewx.  The pywws code is mostly untouched - it has been modified to
@@ -88,6 +81,49 @@ sane value of 2 mm to avoid the spurious readings.  So if the real rainfall
 is more than 2 mm per sample period it will be ignored.  With a sample period
 of 30 seconds that is a rain rate of 9.4 in/hr.  The highest recorded rain
 rate is 43 inches in 24 hours, or 1.79 in/hr.
+
+Pressures are calculated and reported differently by pywws and wview.  These
+are the variables:
+
+ - abs_pressure - the raw sensor reading
+ - fixed_block_rel_pressure - value entered in console, then follows
+     abs_pressure as it changes
+ - fixed_block_abs_pressure - seems to follow abs_pressure, sometimes
+     with a lag of a minute or two
+ - pressure - station pressure (SP) - adjusted raw sensor reading
+ - barometer - sea level pressure derived from SP using temperaure and altitude
+ - altimeter - sea level pressure derived from SP using altitude
+
+wview reports the following:
+
+  pressure = abs_pressure * calMPressure + calCPressure
+  barometer = sp2slp(pressure, altitude, temperature)
+  altimeter = sp2slp(pressure, altitude)
+
+pywws reports the following:
+
+  pressure = abs_pressure + pressure_offset
+
+where pressure_offset is
+
+  pressure_offset = fixed_block_relative_pressure - fixed_block_abs_pressure
+
+so that
+
+  pressure = fixed_block_relative_pressure
+
+pywws does not do barometer or altimeter calculations.
+
+this implementation does the following:
+
+  pressure = abs_pressure + offset
+  barometer = sp2slp(adjp, altitude, temperature)
+  altimeter = sp2slp(adjp, altitude)
+
+where 'offset' is specified in weewx.conf (default is 0), 'altitude' is
+specified in weewx.conf, and 'temperature' is read from the sensors.
+
+The 'barometer' value is reported to wunderground, cwop, etc.
 
 From Jim Easterbrook:
 
@@ -147,7 +183,7 @@ It is used as: A200 1A20 A2AA 0020 to indicate a data refresh.
 The WH1080 acknowledges the write with an 8 byte chunk: A5A5 A5A5.
 """
 
-from datetime import datetime
+import datetime
 import math
 import time
 import syslog
@@ -162,7 +198,8 @@ def loader(config_dict):
 
     # The driver needs the altitude in meters in order to calculate relative
     # pressure. Get it from the Station data and do any necessary conversions.
-    altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
+    altitude_t = weeutil.weeutil.option_as_list(
+        config_dict['Station'].get('altitude', (None, None)))
     # Form a value-tuple:
     altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
     # Now convert to meters, using only the first element of the value-tuple:
@@ -230,57 +267,57 @@ status_lost_connection = 0x40
 #  unknown         = 0x01
 
 # decode weather station raw data formats
+def _signed_byte(raw, offset):
+    res = raw[offset]
+    if res == 0xFF:
+        return None
+    sign = 1
+    if res >= 128:
+        sign = -1
+        res = res - 128
+    return sign * res
+def _signed_short(raw, offset):
+    lo = raw[offset]
+    hi = raw[offset+1]
+    if lo == 0xFF and hi == 0xFF:
+        return None
+    sign = 1
+    if hi >= 128:
+        sign = -1
+        hi = hi - 128
+    return sign * ((hi * 256) + lo)
+def _unsigned_short(raw, offset):
+    lo = raw[offset]
+    hi = raw[offset+1]
+    if lo == 0xFF and hi == 0xFF:
+        return None
+    return (hi * 256) + lo
+def _unsigned_int3(raw, offset):
+    lo = raw[offset]
+    md = raw[offset+1]
+    hi = raw[offset+2]
+    if lo == 0xFF and md == 0xFF and hi == 0xFF:
+        return None
+    return (hi * 256 * 256) + (md * 256) + lo
+def _bcd_decode(byte):
+    hi = (byte / 16) & 0x0F
+    lo = byte & 0x0F
+    return (hi * 10) + lo
+def _date_time(raw, offset):
+    year = _bcd_decode(raw[offset])
+    month = _bcd_decode(raw[offset+1])
+    day = _bcd_decode(raw[offset+2])
+    hour = _bcd_decode(raw[offset+3])
+    minute = _bcd_decode(raw[offset+4])
+    return '%4d-%02d-%02d %02d:%02d' % (year + 2000, month, day, hour, minute)
+def _bit_field(raw, offset):
+    mask = 1
+    result = []
+    for i in range(8):  # @UnusedVariable
+        result.append(raw[offset] & mask != 0)
+        mask = mask << 1
+    return result
 def _decode(raw, fmt):
-    def _signed_byte(raw, offset):
-        res = raw[offset]
-        if res == 0xFF:
-            return None
-        sign = 1
-        if res >= 128:
-            sign = -1
-            res = res - 128
-        return sign * res
-    def _signed_short(raw, offset):
-        lo = raw[offset]
-        hi = raw[offset+1]
-        if lo == 0xFF and hi == 0xFF:
-            return None
-        sign = 1
-        if hi >= 128:
-            sign = -1
-            hi = hi - 128
-        return sign * ((hi * 256) + lo)
-    def _unsigned_short(raw, offset):
-        lo = raw[offset]
-        hi = raw[offset+1]
-        if lo == 0xFF and hi == 0xFF:
-            return None
-        return (hi * 256) + lo
-    def _unsigned_int3(raw, offset):
-        lo = raw[offset]
-        md = raw[offset+1]
-        hi = raw[offset+2]
-        if lo == 0xFF and md == 0xFF and hi == 0xFF:
-            return None
-        return (hi * 256 * 256) + (md * 256) + lo
-    def _bcd_decode(byte):
-        hi = (byte / 16) & 0x0F
-        lo = byte & 0x0F
-        return (hi * 10) + lo
-    def _date_time(raw, offset):
-        year = _bcd_decode(raw[offset])
-        month = _bcd_decode(raw[offset+1])
-        day = _bcd_decode(raw[offset+2])
-        hour = _bcd_decode(raw[offset+3])
-        minute = _bcd_decode(raw[offset+4])
-        return '%4d-%02d-%02d %02d:%02d' % (year + 2000, month, day, hour, minute)
-    def _bit_field(raw, offset):
-        mask = 1
-        result = []
-        for i in range(8):  # @UnusedVariable
-            result.append(raw[offset] & mask != 0)
-            mask = mask << 1
-        return result
     if not raw:
         return None
     if isinstance(fmt, dict):
@@ -329,6 +366,10 @@ def _decode(raw, fmt):
         if scale and result:
             result = float(result) * scale
     return result
+def _bcd_encode(value):
+    hi = value // 10
+    lo = value % 10
+    return (hi * 16) + lo
 
 def logdbg(msg):
     syslog.syslog(syslog.LOG_DEBUG, 'fousb: %s' % msg)
@@ -367,6 +408,13 @@ def sp2ap(sp_mbar, elev_meter):
     return ap_mbar
 
 # implementation copied from wview
+def etterm(elev_meter, t_C):
+    """Calculate elevation/temperature term for sea level calculation."""
+    if elev_meter is None or t_C is None:
+        return None
+    t_K = t_C + 273.15
+    return math.exp( - elev_meter / (t_K * 29.263))
+
 def sp2bp(sp_mbar, elev_meter, t_C):
     """Convert station pressure to sea level pressure.
 
@@ -379,10 +427,9 @@ def sp2bp(sp_mbar, elev_meter, t_C):
     bp - sea level pressure (barometer) in millibars
     """
 
-    if sp_mbar is None or elev_meter is None or t_C is None:
+    pt = etterm(elev_meter, t_C)
+    if sp_mbar is None or pt is None:
         return None
-    t_K = t_C + 273.15
-    pt = math.exp( - elev_meter / (t_K * 29.263))
     bp_mbar = sp_mbar / pt if pt != 0 else 0
     return bp_mbar
 
@@ -416,6 +463,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
         altitude: Altitude of the station
         [Required. No Default.]
+
+        pressure_offset: Calibration offset in millibars for the station
+        pressure sensor.  This offset is added to the station sensor output
+        before barometer and altimeter pressures are calculated.
+        [Optional. No Default]
 
         model: Which station model is this?
         [Optional. Default is 'WH1080 (USB)']
@@ -477,6 +529,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.usb_endpoint      = int(stn_dict.get('usb_endpoint', '0x81'), 0)
         self.usb_read_size     = int(stn_dict.get('usb_read_size', '0x20'), 0)
         self.data_format       = stn_dict.get('data_format', '1080')
+        self.pressure_offset   = stn_dict.get('pressure_offset', None)
+        if self.pressure_offset is not None:
+            self.pressure_offset = float(self.pressure_offset)
 
         # avoid USB activity this many seconds each side of the time when
         # console is believed to be writing to memory.
@@ -495,6 +550,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
         self.openPort()
         loginf('using %s polling mode' % self.polling_mode)
+        loginf('altitude is %s meters' % str(self.altitude))
+        loginf('pressure offset is %s' % str(self.pressure_offset))
 
     # Unfortunately there is no provision to obtain the model from the station
     # itself, so use what we were given.
@@ -503,7 +560,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         return self.model
 
     def openPort(self):
-        dev = self._findDevice()
+        dev = self._find_device()
         if not dev:
             logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x" %
                    (self.vendor_id, self.product_id))
@@ -531,7 +588,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         except:
             pass
                                
-    def _findDevice(self):
+    def _find_device(self):
         """Find the vendor and product ID on the USB bus."""
         for bus in usb.busses():
             for dev in bus.devices:
@@ -600,8 +657,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 packet['windchill'] = weewx.wxformulas.windchillC(p['temp_out'], p['wind_ave'])
 
             # station reports gauge pressure, must calculate other pressures
-            packet['barometer'] = sp2bp(packet['pressure'], self.altitude, packet['outTemp'])
-            packet['altimeter'] = sp2ap(packet['pressure'], self.altitude)
+            adjp = packet['pressure']
+            if self.pressure_offset is not None:
+                adjp += self.pressure_offset
+            packet['barometer'] = sp2bp(adjp, self.altitude, packet['outTemp'])
+            packet['altimeter'] = sp2ap(adjp, self.altitude)
 
             # report rainfall in log until we sort counter issues
             if weewx.debug and packet['rain'] is not None and packet['rain'] > 0:
@@ -633,7 +693,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 elif self.polling_mode == PERIODIC_POLLING:
                     new_ptr = self.current_pos()
                     nptrerr = 0
-
                     block = self.get_raw_data(new_ptr, unbuffered=True)
                     if not len(block) == reading_len[self.data_format]:
                         raise BlockLengthError(len(block), reading_len[self.data_format])
@@ -645,25 +704,21 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     raise Exception("unknown polling mode '%s'" % self.polling_mode)
 
             except (IndexError, usb.USBError), e:
-                logdbg('read data from USB failed: %s' % e)
+                logerr('read data from USB failed: %s' % e)
                 nusberr += 1
                 if nusberr > self.max_tries:
-                    msg = "Max retries exceeded while fetching data via USB"
-                    logerr(msg)
-                    raise weewx.WeeWxIOError(msg)
+                    raise weewx.WeeWxIOError("Max retries exceeded while fetching data via USB")
                 time.sleep(self.wait_before_retry)
 
             except CurrentPositionError, e:
-                logdbg('bogus block address: %s' % e)
+                logerr('bogus block address: %s' % e)
                 nptrerr += 1
                 if nptrerr > self.max_tries:
-                    msg = "Max tries exceeded while fetching current pointer"
-                    logerr(msg)
-                    raise weewx.WeeWxIOError(msg)
+                    raise weewx.WeeWxIOError("Max retries exceeded while fetching current pointer")
                 time.sleep(self.wait_before_retry)
 
             except BlockLengthError, e:
-                logdbg('wrong block length: %s' % e)
+                logerr('wrong block length: %s' % e)
                 time.sleep(self.wait_before_retry)
 
 #==============================================================================
@@ -678,7 +733,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 # FIXME: refactor the _read_usb methods to pass read_size down the chain
 #==============================================================================
 
-    def _read_usb(self, address):
+    def _read_usb_block(self, address):
         addr1 = (address / 256) & 0xff
         addr2 = address & 0xff
         self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
@@ -720,6 +775,49 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             if byte != 0xA5:
                 return False
         return True
+
+#==============================================================================
+# methods for configuring the weather station
+# the following were adapted from pywws
+#==============================================================================
+
+    def clear_history(self):
+        ptr = fixed_format['data_count'][0]
+        data = []
+        data.append((ptr,   1))
+        data.append((ptr+1, 0))
+        self.write_data(data)
+
+    def set_pressure(self, pressure):
+        pressure = int(float(pressure) * 10.0 + 0.5)
+        ptr = fixed_format['rel_pressure'][0]
+        data = []
+        data.append((ptr,   pressure % 256))
+        data.append((ptr+1, pressure // 256))
+        self.write_data(data)
+
+    def set_read_period(self, read_period):
+        read_period = int(read_period)
+        data = []
+        data.append((fixed_format['read_period'][0], read_period))
+        self.write_data(data)
+
+    def set_clock(self):
+        now = datetime.datetime.now()
+        if now.second >= 55:
+            time.sleep(10)
+            now = datetime.datetime.now()
+        now += datetime.timedelta(minutes=1)
+        ptr = weewx.fousb.fixed_format['date_time'][0]
+        data = []
+        data.append((ptr,   _bcd_encode(now.year - 2000)))
+        data.append((ptr+1, _bcd_encode(now.month)))
+        data.append((ptr+2, _bcd_encode(now.day)))
+        data.append((ptr+3, _bcd_encode(now.hour)))
+        data.append((ptr+4, _bcd_encode(now.minute)))
+        time.sleep(59 - now.second)
+        self.write_data(data)
+
 
 #==============================================================================
 # methods for reading data from the weather station
@@ -781,7 +879,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             else:
                 pause = self.min_pause
             pause = max(pause, self.min_pause)
-#            logdbg('delay %s, pause %g' % (str(old_data['delay']), pause))
+            logdbg('delay %s, pause %g' % (str(old_data['delay']), pause))
             time.sleep(pause)
             # first look for data changes
             new_data = self.get_data(old_ptr, unbuffered=True)
@@ -798,24 +896,24 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 old_data['uv'] = new_data['uv']
             if next_live and not logged_only:
                 while now > next_live + live_interval:
-                    loginf('live_data missed')
+                    loginf('missed data')
                     next_live += live_interval
             if new_data != old_data:
-                logdbg('live_data new data')
+                logdbg('new data')
                 result = dict(new_data)
                 if valid_now:
                     # data has just changed, so definitely at a 48s update time
                     self._sensor_clock = now
-                    loginf('setting sensor clock %g' % (now % live_interval))
+                    logdbg('setting sensor clock %g' % (now % live_interval))
                     if not next_live:
-                        loginf('live_data live synchronised')
+                        logdbg('live synchronised')
                     next_live = now
                 elif next_live and now < next_live - self.min_pause:
-                    loginf('live_data lost sync %g' % (now - next_live))
+                    loginf('lost sync %g' % (now - next_live))
                     next_live = None
                     self._sensor_clock = None
                 if next_live and not logged_only:
-                    result['idx'] = datetime.utcfromtimestamp(int(next_live))
+                    result['idx'] = datetime.datetime.utcfromtimestamp(int(next_live))
                     next_live += live_interval
                     yield result
 #                    yield result, old_ptr, False
@@ -828,10 +926,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             now2 = time.time()
             valid_now = now2 - last_time < (self.min_pause * 2.0) - 0.1
             while valid_now and next_log and now2 > next_log + 12.0:
-                loginf('live_data log extended')
+                loginf('log extended')
                 next_log += 60.0
             if new_ptr != old_ptr:
-                logdbg('live_data new ptr: %06x' % new_ptr)
+                logdbg('new ptr: %06x' % new_ptr)
                 # re-read data, to be absolutely sure it's the last
                 # logged data before the pointer was updated
                 new_data = self.get_data(old_ptr, unbuffered=True)
@@ -839,21 +937,21 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 if valid_now:
                     # pointer has just changed, so definitely at a logging time
                     self._station_clock = now2
-                    loginf('setting station clock %g' % (now2 % 60.0))
+                    logdbg('setting station clock %g' % (now2 % 60.0))
                     if not next_log:
-                        loginf('live_data log synchronised')
+                        logdbg('log synchronised')
                     next_log = now2
                 elif next_log and now2 < next_log - self.min_pause:
-                    loginf('live_data lost log sync %g' % (now2 - next_log))
+                    loginf('lost log sync %g' % (now2 - next_log))
                     next_log = None
                     self._station_clock = None
                 if next_log:
-                    result['idx'] = datetime.utcfromtimestamp(int(next_log))
+                    result['idx'] = datetime.datetime.utcfromtimestamp(int(next_log))
                     next_log += log_interval
                     yield result
 #                    yield result, old_ptr, True
                 if new_ptr != self.inc_ptr(old_ptr):
-                    logerr('live_data unexpected ptr change %06x -> %06x' %
+                    logerr('unexpected ptr change %06x -> %06x' %
                            (old_ptr, new_ptr))
                     old_ptr = new_ptr
 
@@ -975,7 +1073,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         old_block = None
         while True:
             self._wait_for_station()
-            new_block = self._read_usb(ptr)
+            new_block = self._read_usb_block(ptr)
             if new_block:
                 if (new_block == old_block) or not retry:
                     break

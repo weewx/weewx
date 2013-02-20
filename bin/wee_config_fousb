@@ -21,23 +21,15 @@ The station model, version, and id are supposed to be reported by these
 instruments, but so far (04jan2013) my testing shows bogus values for these
 fields.  The documentation indicates that the clock should be settable, but
 so far (14feb2013) my testing shows this is not the case.
-
-If you have a Fine Offset station and use this utility, it would be helpful
-to know:
-
-1) the model, version, and id
-
-2) the stations model as indicated on the packaging, for example
-   'Ambient WS-2080', 'National Geographic 265NE, or 'Watson W8681'
-
-Output from a 308x-series station would be particularly helpful.
 """
 
 import configobj
 import datetime
 import optparse
+import shutil
 import sys
 import syslog
+import tempfile
 import time
 
 import weewx.fousb
@@ -46,7 +38,7 @@ import weeutil.weeutil
 
 description = """Configuration utility for Fine Offset weather stations."""
 
-usage = """%prog config_file [options]"""
+usage = """%prog config_file [options] [--help]"""
 
 epilog = """Mutating actions will request confirmation before proceeding.
 Attempts to set the station clock will probably fail."""
@@ -78,6 +70,8 @@ def main():
                       help="set logging interval to N minutes")
     parser.add_option("--clear-memory", dest="clear", action="store_true",
                       help="clear station memory")
+    parser.add_option("--slp", dest="slp", type=float, metavar="SLP",
+                  help="calculate pressure offset from sea level pressure SLP")
     parser.add_option("-y", dest="noprompt", action="store_true",
                       help="answer yes to every prompt")
     parser.add_option("--debug", dest="debug", action="store_true",
@@ -88,27 +82,26 @@ def main():
     if not args:
         parser.error("No configuration file specified")
 
-    cfgfile = args[0]
+    config_fn = args[0]
     debug = options.debug or weewx.debug
 
     # Try to open up the configuration file. Declare an error if unable to.
     try :
-        config_dict = configobj.ConfigObj(cfgfile, file_error=True)
+        config_dict = configobj.ConfigObj(config_fn, file_error=True)
     except IOError:
-        print "Unable to open configuration file %s" % cfgfile
+        print "Unable to open configuration file %s" % config_fn
         exit(1)
     except configobj.ConfigObjError:
-        print "Error wile parsing configuration file %s" % cfgfile
+        print "Error wile parsing configuration file %s" % config_fn
         exit(1)
 
     if debug:
-        print "Using configuration file %s" % cfgfile
+        print "Using configuration file %s" % config_fn
 
-    # station needs altitude to do calculations
-    altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
-    # form a units value-tuple
+    # station needs altitude in meters to do calculations
+    altitude_t = weeutil.weeutil.option_as_list(
+        config_dict['Station'].get('altitude', (None, None)))
     altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    # convert to meters
     altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
     
     if debug:
@@ -139,16 +132,19 @@ def main():
     elif options.interval is not None:
         setinterval(station, options.interval, prompt)
     elif options.clear:
-        clearhistory(station)
+        clearhistory(station, prompt)
+    elif options.slp is not None:
+        calcoffset(station, options.slp, config_dict, config_fn, prompt)
     elif options.info or len(args) == 1:
         info(station)
+
+    station.closePort()
 
 def info(station):
     """Query the station then display the settings."""
 
     print "Querying the station..."
     val = getvalues(station, '', weewx.fousb.fixed_format)
-    station.closePort()
 
     print 'Fine Offset station settings:'
     print '%s: %s' % ('local time'.rjust(30),
@@ -171,6 +167,46 @@ def info(station):
         for s in slist[k]:
             print s
 
+def calcoffset(station, slp, config_dict, config_fn, prompt):
+    """Calculate the pressure offset given a confirmed sea-level pressure.
+    Provide option of saving the offset to the configuration file."""
+
+    print "Querying the station..."
+    for packet in station.get_observations():
+        sp = packet['abs_pressure']
+        st = packet['temp_out']
+        break
+
+    if weewx.debug:
+        print "altitude=", station.altitude
+        print "abs_pressure=", sp
+        print "temp_out=", st
+
+    slp = float(slp)
+    pt = weewx.fousb.etterm(station.altitude, st)
+    newoffset = slp * pt - sp
+    oldoffset = config_dict['FineOffsetUSB']['pressure_offset']
+
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Pressure offset is", oldoffset
+        if prompt:
+            ans = raw_input("Set pressure offset to %f hPa (y/n)? " % newoffset)
+        else:
+            print "Setting pressure offset to %f hPa" % newoffset
+            ans = 'y'
+        if ans == 'y' :
+            config_dict['FineOffsetUSB']['pressure_offset'] = newoffset
+            tmpfile = tempfile.NamedTemporaryFile("w", delete=False)
+            config_dict.write(tmpfile)
+            tmpfile.close()
+            config_bak = config_fn + time.strftime(".%Y%m%d%H%M%S")
+            shutil.move(config_fn, config_bak)
+            shutil.move(tmpfile.name, config_fn)
+            print "Pressure offset is now", newoffset
+        elif ans == 'n':
+            print "Pressure offset unchanged."
+
 def checkpressures(station, target_unit_name, altitude_value, altitude_units):
     """Query the station then display pressure-related sensor readings."""
 
@@ -186,6 +222,7 @@ def checkpressures(station, target_unit_name, altitude_value, altitude_units):
         ap2 = weewx.fousb.sp2ap(sp, station.altitude)
         bp2 = weewx.fousb.sp2bp(sp, station.altitude, packet['outTemp'])
         print 'altitude: %s %s' % (altitude_value, altitude_units)
+        print 'pressure_offset: %s' % str(station.pressure_offset)
         print 'station pressure (sensor): %s' % sp
         print 'absolute pressure (fixed_block): %s' % ap
         print 'relative pressure (fixed_block): %s' % rp
@@ -198,7 +235,6 @@ def checkpressures(station, target_unit_name, altitude_value, altitude_units):
         print 'converted LOOP packet:'
         print cpkt
         break
-    station.closePort()
 
 def checkunits(station, target_unit_name):
     """Query the station then display raw and converted sensor readings."""
@@ -214,7 +250,6 @@ def checkunits(station, target_unit_name):
         print 'converted LOOP packet:'
         print converter.convertDict(packet)
         break
-    station.closePort()
 
 def checkusb(station):
     """Run diagnostics on the USB connection."""
@@ -268,21 +303,21 @@ def showhistory(station, count, format):
                 table_dump(date, data, i==0)
             else:
                 print date, data
-            date = date - datetime.timedelta(minutes=data['delay'])
+            date = date - datetime.datetime.timedelta(minutes=data['delay'])
         ptr = station.dec_ptr(ptr)
 
-def clearhistory(station):
+def clearhistory(station, prompt):
     ans = None
     while ans not in ['y', 'n']:
         v = station.get_fixed_block(['data_count'], True)
         print "Records in memory:", v
-        ans = raw_input("Clear console memory (y/n)? ")
+        if prompt:
+            ans = raw_input("Clear console memory (y/n)? ")
+        else:
+            print 'Clearing console memory'
+            ans = 'y'
         if ans == 'y' :
-            ptr = weewx.fousb.fixed_format['data_count'][0]
-            data = []
-            data.append((ptr,   1))
-            data.append((ptr+1, 0))
-            station.write_data(data)
+            station.clear_history()
             v = station.get_fixed_block(['data_count'], True)
             print "Records in memory:", v
         elif ans == 'n':
@@ -299,12 +334,7 @@ def setpressure(station, pressure, prompt):
             print "Setting pressure to %f hPa" % pressure
             ans = 'y'
         if ans == 'y' :
-            p = pressure * 10.0
-            ptr = weewx.fousb.fixed_format['rel_pressure'][0]
-            data = []
-            data.append((ptr,   p % 256))
-            data.append((ptr+1, p // 256))
-            station.write_data(data)
+            station.set_pressure(pressure)
             v = station.get_fixed_block(['rel_pressure'], True)
             print "Relative pressure is now", v
         elif ans == 'n':
@@ -321,10 +351,7 @@ def setinterval(station, read_period, prompt):
             print "Setting interval to %d minutes" % read_period
             ans = 'y'
         if ans == 'y' :
-            data = []
-            data.append((weewx.fousb.fixed_format['read_period'][0],
-                         read_period))
-            station.write_data(data)
+            station.set_read_period(read_period)
             v = station.get_fixed_block(['read_period'], True)
             print "Interval is now", v
         elif ans == 'n':
@@ -348,20 +375,7 @@ def setclock(station, prompt):
             print "Setting station clock to %s" % ts
             ans = 'y'
         if ans == 'y' :
-            now = datetime.datetime.now()
-            if now.second >= 55:
-                time.sleep(10)
-                now = datetime.datetime.now()
-            now += datetime.timedelta(minutes=1)
-            ptr = weewx.fousb.fixed_format['date_time'][0]
-            data = []
-            data.append((ptr,   bcd_encode(now.year - 2000)))
-            data.append((ptr+1, bcd_encode(now.month)))
-            data.append((ptr+2, bcd_encode(now.day)))
-            data.append((ptr+3, bcd_encode(now.hour)))
-            data.append((ptr+4, bcd_encode(now.minute)))
-            time.sleep(59 - now.second)
-            station.write_data(data)
+            station.set_clock()
             v = station.get_fixed_block(['date_time'], True)
             print "Station clock is now", v
         elif ans == 'n':
@@ -415,11 +429,6 @@ def table_dump(date, data, showlabels=False):
     for key in data.keys():
         print data[key],
     print
-
-def bcd_encode(value):
-    hi = value // 10
-    lo = value % 10
-    return (hi * 16) + lo
 
 if __name__=="__main__" :
     main()
