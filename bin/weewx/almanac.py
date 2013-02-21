@@ -12,7 +12,6 @@
 This module can optionally use PyEphem, which offers high quality
 astronomical calculations. See http://rhodesmill.org/pyephem. """
 
-import calendar
 import time
 import sys
 import math
@@ -132,7 +131,8 @@ class Almanac():
                  formatter=weewx.units.Formatter()):
         """Initialize an instance of Almanac
 
-        time_ts: A unix epoch timestamp for which the almanac will be current.
+        time_ts: A unix epoch timestamp with the time of the almanac. If None, the
+        present time will be used.
         
         lat, lon: Observer's location
         
@@ -150,8 +150,8 @@ class Almanac():
         formatter: An instance of weewx.units.Formatter() with the formatting information
         to be used.
         """
-        self.time_ts      = time_ts
-        self.time_djd     = timestamp_to_djd(time_ts)
+        self.time_ts      = time_ts if time_ts else time.time()
+        self.time_djd     = timestamp_to_djd(self.time_ts)
         self.lat          = lat
         self.lon          = lon
         self.altitude     = altitude if altitude is not None else 0.0
@@ -161,7 +161,7 @@ class Almanac():
         self.moon_phases  = moon_phases
         self.formatter    = formatter
 
-        (y,m,d) = time.localtime(time_ts)[0:3]
+        (y,m,d) = time.localtime(self.time_ts)[0:3]
         (self.moon_index, self._moon_fullness) = weeutil.Moon.moon_phase(y, m, d)
         self.moon_phase = self.moon_phases[self.moon_index]
             
