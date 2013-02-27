@@ -296,8 +296,8 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
         elif channel >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
-            _record['extraTemp%d'  % channel] = T
-            _record['extraHumid%d' % channel] = R
+            _record['extraTemp%d'  % (channel-1)] = T
+            _record['extraHumid%d' % (channel-1)] = R
             
         return _record
         
