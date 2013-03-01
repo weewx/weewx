@@ -113,6 +113,8 @@ while(defined($_ = <STDIN>)) {
              /fousb: setting station clock/ ||
              /fousb: pressures:/) {
         # ignore
+    } elsif (! /weewx/) {
+        # ignore
     } else {
         push @unmatched, $_;
     }

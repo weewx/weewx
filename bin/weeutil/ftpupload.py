@@ -208,7 +208,7 @@ if __name__ == '__main__':
     import configobj
     
     weewx.debug = 1
-    syslog.openlog('ftpupload', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('wee_ftpupload', syslog.LOG_PID|syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     if len(sys.argv) < 2 :
