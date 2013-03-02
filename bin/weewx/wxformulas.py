@@ -130,9 +130,11 @@ def heatindexF(T, R) :
     return hiF
 
 def heatindexC(T_C, R):
+    if T_C is None or R is None :
+        return None
     T_F = T_C * (9.0/5.0) + 32.0
     hiF = heatindexF(T_F, R)
-    return (hiF - 32.0) * (5.0/9.0) if hiF is not None else None
+    return (hiF - 32.0) * (5.0/9.0)
 
 def heating_degrees(t, base):
     return max(base - t, 0) if t is not None else None

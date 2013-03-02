@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 505 2013-02-20 05:23:47Z mwall $
+# $Id: fousb.py 532 2013-03-02 02:53:59Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -647,14 +647,12 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             self._rain_period_ts = packet['dateTime']
 
             # calculated elements not directly reported by station
-            if 'temp_out' in p and p['temp_out'] is not None and \
-                    'hum_out' in p and p['hum_out'] is not None:
-                packet['heatindex'] = weewx.wxformulas.heatindexC(p['temp_out'], p['hum_out'])
-                packet['dewpoint'] = weewx.wxformulas.dewpointC(p['temp_out'], p['hum_out'])
-
-            if 'temp_out' in p and p['temp_out'] is not None and \
-                    'wind_ave' in p and p['wind_ave'] is not None:
-                packet['windchill'] = weewx.wxformulas.windchillC(p['temp_out'], p['wind_ave'])
+            packet['heatindex'] = weewx.wxformulas.heatindexC(
+                packet['outTemp'], packet['outHumidity'])
+            packet['dewpoint'] = weewx.wxformulas.dewpointC(
+                packet['outTemp'], packet['outHumidity'])
+            packet['windchill'] = weewx.wxformulas.windchillC(
+                packet['outTemp'], packet['windSpeed'])
 
             # station reports gauge pressure, must calculate other pressures
             adjp = packet['pressure']
@@ -817,7 +815,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         data.append((ptr+4, _bcd_encode(now.minute)))
         time.sleep(59 - now.second)
         self.write_data(data)
-
 
 #==============================================================================
 # methods for reading data from the weather station
