@@ -10,6 +10,8 @@ Added illuminance-to-radiation conversion for FineOffsetUSB driver.
 
 Added pressure calibration option to wee_config_fousb
 
+Fixed windchill calculation in FineOffsetUSB driver.
+
 2.2.1 02/15/13
 
 Added a function call to the Vantage driver that allows the lamp to be

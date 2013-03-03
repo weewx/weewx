@@ -2289,8 +2289,8 @@ mv weewx.sdb_new weewx.sdb</p>
 	<tr>
 	  <td class="code">usUnits</td>
 	  <td>The unit system used. <span class="code">weewx.US</span> for US 
-	    customary, <span class="code">weewx.METRIC</span> for metric. See the 
-	    file <span class="symcode">$BIN_ROOT</span><span class="code">/weewx/units.py</span>, dictionaries
+	    customary, <span class="code">weewx.METRIC</span> for metric. See
+            the file <span class="code">units.py</span>, dictionaries
 	    <span class="code">USUnits</span> and <span class="code">MetricUnits</span> 
 	    for the exact definition of each.</td>
 	</tr>
@@ -2301,14 +2301,6 @@ mv weewx.sdb_new weewx.sdb</p>
 	unit system. If your hardware has an error and you don't have a value, you can 
 	either leave it out of the dictionary or (preferred) set its value to
 	<span class="code">None</span>.</p>
-      <p>If your hardware does not have an archive record logger, then
-	<span class="code">weewx</span> can do the record generation for you. It will 
-	automatically collect all the types it sees in your loop packets then emit a 
-	record with the averages (in some cases the sum or max value) of all those types. 
-	If it doesn't see a type, then it won't appear in the emitted record. If your 
-	hardware does have a logger, then you should implement method
-	<span class="code">genArchiveRecords</span> as well. It should be a generator 
-	function that returns all the records since a given time. </p>
       <p>A couple of observation types are tricky. In particular, rain. Generally,
 	<span class="code">weewx</span> expects to see a packet with the amount of rain 
 	that fell in that packet period included as observation '<span class="code">rain</span>'. 
@@ -2322,7 +2314,7 @@ mv weewx.sdb_new weewx.sdb</p>
 	'<span class="code">windGust</span>', and '<span class="code">windGustDir</span>'. 
 	Supply as many as you can. The directions should be compass directions in degrees 
 	(0=North, 90=East, etc.).</p>
-      <p>Be careful when reporting pressure.  There are three observations related to pressure:
+      <p>Be careful when reporting pressure.  There are three observations related to pressure.  Some stations report only the station pressure, others calculate and report sea level pressures.
         <table class='center' style="width: 60%">
           <tr>
             <td class='code'>pressure</td>
@@ -2353,17 +2345,27 @@ mv weewx.sdb_new weewx.sdb</p>
           </tr>
         </table>
       </p>
-      <p>To load your driver, you should also include a function called '<span class="code">loader</span>'. 
-	It is a factory function that will return an instance of your driver. Its only 
-	argument is the configuration dictionary. </p>
+      <p><span class='code'>genArchiveRecords:</span>  If your hardware does
+        not have an archive record logger, then	<span class="code">weewx</span>
+        can do the record generation for you. It will automatically collect all
+        the types it sees in your loop packets then emit a record with the
+        averages (in some cases the sum or max value) of all those types. 
+	If it doesn't see a type, then it won't appear in the emitted record.
+        If your hardware does have a logger, then you should implement method
+	<span class="code">genArchiveRecords</span> as well. It should be a
+        generator function that returns all the records since a given time.
+      </p>
+      <p><span class='code'>loader:</span> This is a factory function returns
+        an instance of your driver. Its only argument is the configuration
+        dictionary. </p>
       <p>You then include a new section in the configuration file
 	<span class="code">weewx.conf</span> that includes any options your driver needs. 
 	It should also include an entry '<span class="code">driver</span>' that points 
 	to where your driver can be found. Set option <span class="code">station_type</span> 
 	to your new section type and your driver will be loaded.</p>
-      <p>Take a look at the simulator code in <span class="symcode">$BIN_ROOT</span><span class="code">/weewx/simulator.py</span> 
+      <p>Take a look at the simulator code in <span class="code">simulator.py</span> 
 	for a dirt simple example of a driver. The next most complicated is the driver 
-	for the WMR-USB series, located in <span class="symcode">$BIN_ROOT</span><span class="code">/weewx/wmrx.py</span>. 
+	for the WMR-USB series, located in <span class="code">wmrx.py</span>. 
 	The driver for the Vantage series is by far the most complicated.</p>
       <p>Naturally, there are a lot of subtleties that I've glossed over in this high-level 
 	description. If you're game, give it a try &mdash; I'm happy to help you out!</p>

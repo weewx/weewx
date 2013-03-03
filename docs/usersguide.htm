@@ -700,6 +700,24 @@ Version: 2.2.1
       weather stations with USB connectors.</p>
     <p class="config_important">model</p>
     <p>Set to the station model. For example, WH1080, WS2080, WH3081, etc. </p>
+    <p class='config_option'>pressure_offset</p>
+    <p>The offset, in millibars, that is applied to values from the station sensor.  This offset is applied to the station pressure <i>before</i> calculating barometer and altimeter sea level pressures.  Only the raw station pressure is recorded to database, not the station pressure with offset applied.</p>
+    <p class='config_option'>polling_mode</p>
+    <p>One of <span class='code'>PERIODIC</span> or
+      <span class='code'>ADAPTIVE</span>.  In
+      <span class='code'>PERIODIC</span> mode,
+      <span class='code'>weewx</span> queries the console at regular intervals
+      determined by the <span class='code'>sample_period</span>.
+      In <span class='code'>ADAPTIVE</span> mode,
+      <span class='code'>weewx</span> attempts to query the 
+      console at times when it is not reading data from the sensors or writing
+      data to memory.  The default is <span class='code'>PERIODIC</span>.</p>
+    <p class='config_option'>sample_period</p>
+    <p>The frequency, in seconds, at which <span class='code'>weewx</span> will
+      poll the console for data.  This setting applies only when the 
+      <span class='code'>polling_mode</span> is
+      <span class='code'>PERIODIC</span>.</p>
+
     <h3 class="config_section">[Simulator]</h3>
     <p>This section is for options relating to the software weather station simulator 
       that comes with <span class="code">weewx</span>.</p>
@@ -1279,13 +1297,11 @@ Mutating actions will request confirmation before proceeding.</p>
                      wind_coef: None
                      wind_mult: 0</p>
     <p><span class="highlight">Highlighted</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
-    <p>To test the quality of the USB connection to the console:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --check-usb</p>
 
     <h3>Calibrating the pressure sensor</h3>
     <p>The pressure sensor in Fine Offset stations measures absolute, or station pressure.  The sensor pressure may be off a bit when the station is at sea level, and almost certainly will be off when the station is above sea level.  Stations at sea level are typically off by 1 to 10 millibars, while stations above a few hundred meters may be off by hundreds of millibars.  When reporting weather data, <span class='code'>weewx</span> will calculate the equivalent sea level pressure, but the pressure sensor must be calibrated and an altitude must be specified.</p>
-    <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  The <span class='code'>wee_config_fousb</span> utility will calculate this offset given the station altitude and a valid sea-level pressure for the station location.</p>
-    <p>For example, if the sea level pressure from a verified source is 1003.048 hPa, this will calculate the offset then ask whether to insert it into <span class='code'>weewx.conf</span>.  It uses the altitude specified in <span class='code'>weewx.conf</span> and the station pressure and temperature.</p>
+    <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  If you do not know what the offset should be, use the <span class='code'>wee_config_fousb</span> utility to calculate this offset given the station altitude and a valid sea-level pressure for the station location.</p>
+    <p>For example, if the sea level pressure from a verified source is 1003.048 hPa, the following example will calculate the offset then ask whether to insert it into <span class='code'>weewx.conf</span>.  It uses the altitude specified in <span class='code'>weewx.conf</span> and the station pressure and temperature.</p>
     <p class='tty'><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --slp=1003.048</p>
     <p>The output will look something like this:</p>
     <p class='tty'>Querying the station...
@@ -1303,6 +1319,13 @@ Pressure offset is now 1.247000</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --history=30</p>
     <p>To clear the console memory:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --clear-memory</p>
+
+    <h3>Checking the USB quality</h3>
+    <p>Use the <span class='code'>wee_config_fousb</span> utility to test the quality of the USB connection between computer and consonle.  Poor quality USB cables, under-powered USB hubs, and other devices on the bus can interfere with communication.</p>
+    <p>To test the quality of the USB connection to the console:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --check-usb</p>
+    <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
+
 
       <h1>Configuring MySQL</h1>
     <p>This section applies only for those using MySQL.</p>
