@@ -6,6 +6,9 @@ weewx change history
 A bad record archive type now causes a catch up to be abandoned, rather
 than program termination.
 
+Fixed bug in CWOP upload that put spaces in the upload string if the pressure
+was under 1000 millibars.
+
 Added illuminance-to-radiation conversion for FineOffsetUSB driver.
 
 Added pressure calibration option to wee_config_fousb

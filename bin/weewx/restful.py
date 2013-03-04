@@ -476,7 +476,7 @@ class CWOP(REST):
             (u, g) = weewx.units.getStandardUnitType(record['usUnits'], 'barometer')
             # Convert to millibars:
             baro = weewx.units.convert((record['barometer'], u, g), 'mbar')
-            baro_str = "b%5d" % (baro[0]*10.0)
+            baro_str = "b%05d" % (baro[0]*10.0)
 
         # Humidity:
         humidity = record['outHumidity']
