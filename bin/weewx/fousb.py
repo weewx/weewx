@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 532 2013-03-02 02:53:59Z mwall $
+# $Id: fousb.py 535 2013-03-03 21:19:57Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -656,7 +656,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
             # station reports gauge pressure, must calculate other pressures
             adjp = packet['pressure']
-            if self.pressure_offset is not None:
+            if self.pressure_offset is not None and adjp is not None:
                 adjp += self.pressure_offset
             packet['barometer'] = sp2bp(adjp, self.altitude, packet['outTemp'])
             packet['altimeter'] = sp2ap(adjp, self.altitude)
