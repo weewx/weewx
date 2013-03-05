@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 535 2013-03-03 21:19:57Z mwall $
+# $Id: fousb.py 537 2013-03-05 18:32:36Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -38,7 +38,9 @@
 # is full.  --mwall 30dec2012
 
 # FIXME: occasionally the inside temperature reading spikes
-# FIXME: maximum sane rain may need adjustment still
+# FIXME: maximum sane rain may need adjustment
+# FIXME: docs say delay is minutes, but pywws code treats it as seconds
+# FIXME: is read_period minutes or seconds
 
 """Classes and functions for interfacing with FineOffset weather stations.
 
@@ -433,19 +435,9 @@ def sp2bp(sp_mbar, elev_meter, t_C):
     bp_mbar = sp_mbar / pt if pt != 0 else 0
     return bp_mbar
 
-class CurrentPositionError(Exception):
+class ObservationError(Exception):
     def __init__(self, msg):
         self.msg = msg
-    def __repr__(self):
-        return repr(self.msg)
-    def __str__(self):
-        return self.msg
-
-class BlockLengthError(Exception):
-    def __init__(self, actual_len, expected_len):
-        self.act_len = actual_len
-        self.exp_len = expected_len
-        self.msg = 'actual:%d expected:%d' % (self.act_len, self.exp_len)
     def __repr__(self):
         return repr(self.msg)
     def __str__(self):
@@ -667,56 +659,44 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
             yield packet
 
-    # get data from the station.
-    #
-    # there are a few types of non-fatal failures we might encounter while
-    # reading.  when we encounter one, report the failure to log then retry.
-    #
-    # sometimes current_pos returns None for the pointer.  this is useless to
-    # us, so keep querying until we get a valid pointer.
-    #
-    # if we get USB read failures, retry until we get something valid.
     def get_observations(self):
-        """Get data from the station."""
+        """Get data from the station.
 
-        nusberr = 0
-        nptrerr = 0
+        There are a few types of non-fatal failures we might encounter while
+        reading.  When we encounter one, log the failure then retry.
+        
+        Sometimes current_pos returns None for the pointer.  This is useless to
+        us, so keep querying until we get a valid pointer.
+
+        In live_data, sometimes the delay is None.  This prevents calculation
+        of the timing intervals, so bail out and retry.
+
+        If we get USB read failures, retry until we get something valid.
+        """
+        nerr = 0
         while True:
             try:
                 if self.polling_mode == ADAPTIVE_POLLING:
                     for data in self.live_data():
-                        nusberr = 0
-                        nptrerr = 0
+                        nerr = 0
                         yield data
                 elif self.polling_mode == PERIODIC_POLLING:
                     new_ptr = self.current_pos()
-                    nptrerr = 0
                     block = self.get_raw_data(new_ptr, unbuffered=True)
-                    if not len(block) == reading_len[self.data_format]:
-                        raise BlockLengthError(len(block), reading_len[self.data_format])
-                    nusberr = 0
+                    if len(block) != reading_len[self.data_format]:
+                        raise ObservationError('wrong block length: expected: %d actual: %d' % (reading_len[self.data_format], len(block)))
+                    nerr = 0
                     data = _decode(block, reading_format[self.data_format])
                     yield data
                     time.sleep(self.sample_period)
                 else:
                     raise Exception("unknown polling mode '%s'" % self.polling_mode)
 
-            except (IndexError, usb.USBError), e:
-                logerr('read data from USB failed: %s' % e)
-                nusberr += 1
-                if nusberr > self.max_tries:
-                    raise weewx.WeeWxIOError("Max retries exceeded while fetching data via USB")
-                time.sleep(self.wait_before_retry)
-
-            except CurrentPositionError, e:
-                logerr('bogus block address: %s' % e)
-                nptrerr += 1
-                if nptrerr > self.max_tries:
-                    raise weewx.WeeWxIOError("Max retries exceeded while fetching current pointer")
-                time.sleep(self.wait_before_retry)
-
-            except BlockLengthError, e:
-                logerr('wrong block length: %s' % e)
+            except (IndexError, usb.USBError, ObservationError), e:
+                logerr('read data failed: %s' % e)
+                nerr += 1
+                if nerr > self.max_tries:
+                    raise weewx.WeeWxIOError("Max retries exceeded while fetching data")
                 time.sleep(self.wait_before_retry)
 
 #==============================================================================
@@ -837,6 +817,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         live_interval = 48.0
         old_ptr = self.current_pos()
         old_data = self.get_data(old_ptr, unbuffered=True)
+        if old_data['delay'] is None:
+            raise ObservationError('delay is None')
         now = time.time()
         if self._sensor_clock:
             next_live = now
@@ -1011,7 +993,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         new_ptr = _decode(self._read_fixed_block(0x0020),
                           lo_fix_format['current_pos'])
         if new_ptr is None:
-            raise CurrentPositionError('current_pos returned None')
+            raise ObservationError('current_pos is None')
         if new_ptr == self._current_ptr:
             return self._current_ptr
         if self._current_ptr and new_ptr != self.inc_ptr(self._current_ptr):
