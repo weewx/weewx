@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: config_fousb.py 481 2013-02-14 19:22:56Z mwall $
+# $Id: wee_config_fousb 541 2013-03-06 14:36:08Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -26,6 +26,7 @@ so far (14feb2013) my testing shows this is not the case.
 import configobj
 import datetime
 import optparse
+import os
 import shutil
 import sys
 import syslog
@@ -38,7 +39,7 @@ import weeutil.weeutil
 
 description = """Configuration utility for Fine Offset weather stations."""
 
-usage = """%prog config_file [options] [--help]"""
+usage = """%prog [config_file] [options] [--help]"""
 
 epilog = """Mutating actions will request confirmation before proceeding.
 Attempts to set the station clock will probably fail."""
@@ -50,6 +51,8 @@ def main():
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
     
     # Add the various options:
+    parser.add_option("--config", dest="cfgfn", type=str, metavar="FILE",
+                      help="configuration file")
     parser.add_option("--info", dest="info", action="store_true",
                       help="display weather station configuration")
     parser.add_option("--check-pressures", dest="chkpres", action="store_true",
@@ -79,11 +82,22 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    if not args:
-        parser.error("No configuration file specified")
-
-    config_fn = args[0]
     debug = options.debug or weewx.debug
+
+    # Figure out the config file
+    config_fn = options.cfgfn
+    if config_fn is None:
+        if len(args) > 0 and not args[0].startswith('-'):
+            config_fn = args[0]
+    if config_fn is None:
+        for f in ['/etc/weewx', '/home/weewx']:
+            fn = f + '/weewx.conf'
+            if os.path.isfile(fn):
+                config_fn = fn
+                break
+    if config_fn is None:
+        print "Please specify a configuration file"
+        exit(1)
 
     # Try to open up the configuration file. Declare an error if unable to.
     try :
