@@ -15,6 +15,11 @@ Added pressure calibration option to wee_config_fousb
 
 Fixed windchill calculation in FineOffsetUSB driver.
 
+Fix bug in trends, when showing changes in temperature. NB: this fix will
+not work with explicit unit conversion. I.e., $trend.outTemp.degree_C will
+not work.
+
+
 2.2.1 02/15/13
 
 Added a function call to the Vantage driver that allows the lamp to be

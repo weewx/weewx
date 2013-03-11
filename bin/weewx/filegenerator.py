@@ -397,8 +397,13 @@ class Trend(object):
         # Wrap in a try block because the 'last' record might not exist, or the 'now'
         # or 'last' value might be None. 
         try:
-            vt_now = self.now_rec[obs_type].getValueTuple()
-            trend = vt_now - self.last_rec[obs_type].getValueTuple()
+            # Do the unit conversion now, rather than lazily. This is because,
+            # in the case of temperature, the difference between two converted
+            # values is not the same as the conversion of the difference between
+            # two values. E.g., 20C - 10C is not equal to F_to_C(68F - 50F). We
+            # want the former, not the latter.  
+            vt_now = self.now_rec[obs_type]._raw_value_tuple
+            trend = vt_now - self.last_rec[obs_type]._raw_value_tuple
         except TypeError:
             trend = (None,) + vt_now[1:3]
 
