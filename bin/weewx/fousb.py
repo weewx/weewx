@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 537 2013-03-05 18:32:36Z mwall $
+# $Id: fousb.py 548 2013-03-12 18:59:40Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -37,10 +37,8 @@
 # logging buffer on the console is full, but not always when the buffer
 # is full.  --mwall 30dec2012
 
-# FIXME: occasionally the inside temperature reading spikes
+# FIXME: determine why sensor spikes happen with PERIODIC but not ADAPTIVE
 # FIXME: maximum sane rain may need adjustment
-# FIXME: docs say delay is minutes, but pywws code treats it as seconds
-# FIXME: is read_period minutes or seconds
 
 """Classes and functions for interfacing with FineOffset weather stations.
 
@@ -99,8 +97,8 @@ are the variables:
 wview reports the following:
 
   pressure = abs_pressure * calMPressure + calCPressure
-  barometer = sp2slp(pressure, altitude, temperature)
-  altimeter = sp2slp(pressure, altitude)
+  barometer = sp2bp(pressure, altitude, temperature)
+  altimeter = sp2ap(pressure, altitude)
 
 pywws reports the following:
 
@@ -119,8 +117,8 @@ pywws does not do barometer or altimeter calculations.
 this implementation does the following:
 
   pressure = abs_pressure + offset
-  barometer = sp2slp(adjp, altitude, temperature)
-  altimeter = sp2slp(adjp, altitude)
+  barometer = sp2bp(adjp, altitude, temperature)
+  altimeter = sp2ap(adjp, altitude)
 
 where 'offset' is specified in weewx.conf (default is 0), 'altitude' is
 specified in weewx.conf, and 'temperature' is read from the sensors.
@@ -197,16 +195,7 @@ import weewx.abstractstation
 import weewx.wxformulas
 
 def loader(config_dict):
-
-    # The driver needs the altitude in meters in order to calculate relative
-    # pressure. Get it from the Station data and do any necessary conversions.
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    # Form a value-tuple:
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    # Now convert to meters, using only the first element of the value-tuple:
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    
+    altitude_m = getaltitudeM(config_dict)
     station = FineOffsetUSB(altitude=altitude_m,**config_dict['FineOffsetUSB'])
     return station
 
@@ -248,6 +237,21 @@ keymap = {
     'heatindex'   : ('heatindex',    1.0),
     'windchill'   : ('windchill',    1.0),
 }
+
+def pywws2weewx(p, ts):
+    """map the pywws dictionary to something weewx understands."""
+
+    packet = {}
+    # required elements
+    packet['usUnits'] = weewx.METRIC
+    packet['dateTime'] = int(time.time() + 0.5)
+    # everything else...
+    for k in keymap.keys():
+        if keymap[k][0] in p and p[keymap[k][0]] is not None:
+            packet[k] = p[keymap[k][0]] * keymap[k][1]
+        else:
+            packet[k] = None
+    return packet
 
 # formats for displaying fixed_format fields
 datum_display_formats = {
@@ -385,6 +389,8 @@ def logerr(msg):
 def logcrt(msg):
     syslog.syslog(syslog.LOG_CRIT, 'fousb: %s' % msg)
 
+# FIXME: the pressure calculations belong in wxformulas
+
 # noaa definitions for station pressure, altimeter setting, and sea level
 # http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
 
@@ -434,6 +440,58 @@ def sp2bp(sp_mbar, elev_meter, t_C):
         return None
     bp_mbar = sp_mbar / pt if pt != 0 else 0
     return bp_mbar
+
+# FIXME: this goes in weeutil.weeutil or weewx.units
+def getaltitudeM(config_dict):
+    altitude_t = weeutil.weeutil.option_as_list(
+        config_dict['Station'].get('altitude', (None, None)))
+    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
+    return altitude_m
+
+# FIXME: this goes in weeutil.weeutil
+def calculate_rain(newtotal, oldtotal, maxsane):
+    """Calculate the rain differential given two cumulative measurements.
+    Return the delta and the new total.  Units are arbitrary, but must be
+    consistent across all three arguments."""
+    if newtotal is not None and oldtotal is not None:
+        if newtotal >= oldtotal:
+            delta = newtotal - oldtotal
+            if delta > maxsane:
+                logerr('ignoring bogus rain value: rain: %s new: %s old: %s' % (delta, newtotal, oldtotal))
+                delta = None
+        else:  # wraparound
+            logerr('rain counter wraparound detected: old: %s new: %s' % (oldtotal, newtotal))
+            delta = None
+    else:
+        delta = None
+    if newtotal is None:
+        newtotal = oldtotal
+    return (delta, newtotal)
+
+# FIXME: this goes in weeutil.weeutil
+def calculate_rain_rate(delta_cm, curr_ts, last_ts):
+    """Calculate the rain rate based on the time between two rain readings.
+    Rainfall is in cm.  Timestamps are in seconds.  Resulting units are cm/hr.
+
+    If the period between readings is zero, ignore the rainfall since there
+    is no way to calculate a rate with no period."""
+
+    if curr_ts is None:
+        return (None, None)
+    if last_ts is None:
+        last_ts = curr_ts
+    if delta_cm is not None:
+        period = curr_ts - last_ts
+        if period != 0:
+            rate = 3600 * delta_cm / period
+        else:
+            rate = 0
+            if delta_cm != 0:
+                loginf('rain rate period is zero, ignoring rainfall of %f cm' % delta_cm)
+    else:
+        rate = 0
+    return (rate, curr_ts)
 
 class ObservationError(Exception):
     def __init__(self, msg):
@@ -531,8 +589,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         # minimum interval between polling for data change
         self.min_pause = 0.5
 
-        self._rain_period_ts = None
         self._last_rain = None
+        self._last_rain_ts = None
         self._fixed_block = None
         self._data_block = None
         self._data_pos = None
@@ -588,55 +646,38 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     return dev
         return None
 
+# FIXME: is station UTC or local?
+# FIXME: does weewx want UTC or local?
+# There is no point in using the station clock since it cannot be trusted and
+# since we cannot synchronize it with the computer clock.
+
+#    def getTime(self):
+#        return self.get_clock()
+
+#    def setTime(self, ts):
+#        self.set_clock(ts)
+
     def genLoopPackets(self):
         """Generator function that continuously returns decoded packets"""
 
         for p in self.get_observations():
-            packet = {}
-            # required elements
-            packet['usUnits'] = weewx.METRIC
-            packet['dateTime'] = int(time.time() + 0.5)
-
-            # map the pywws dictionary to something weewx understands
-            for k in keymap.keys():
-                if keymap[k][0] in p and p[keymap[k][0]] is not None:
-                    packet[k] = p[keymap[k][0]] * keymap[k][1]
-                else:
-                    packet[k] = None
+            packet = pywws2weewx(p, int(time.time() + 0.5))
 
             # calculate the rain increment from the rain total
-            if 'rain' in p and p['rain'] is not None:
-                if self._last_rain is not None:
-                    r = p['rain']
-                    if r < self._last_rain:
-                        loginf('rain counter wraparound detected: curr: %f last: %f (mm)' % (r, self._last_rain))
-                        r = r + float(rain_max) * 0.3 # r is in mm
-                    r = r - self._last_rain
-                    if r < self.rain_max_sane:
-                        packet['rain'] = r / 10 # weewx expects cm
-                    else:
-                        logerr('ignoring bogus rain value: rain: %f curr: %f last: %f (mm)' % (r, p['rain'], self._last_rain))
-                        packet['rain'] = None
-                else:
-                    packet['rain'] = None
-                self._last_rain = p['rain']
-
-            # calculate the rain rate (weewx wants cm/hr)
-            # if the period is zero we must ignore the rainfall, so overall
-            # rain rate may be under-reported.
-            if self._rain_period_ts is None:
-                self._rain_period_ts = packet['dateTime']
+            (delta, total) = calculate_rain(packet['rain'],
+                                            self._last_rain,
+                                            float(rain_max) * 0.3)
+            packet['rain'] = delta
             if packet['rain'] is not None:
-                period = packet['dateTime'] - self._rain_period_ts
-                if period != 0:
-                    packet['rainRate'] = 3600 * packet['rain'] / period
-                else:
-                    if packet['rain'] != 0:
-                        loginf('rain rate period is zero, ignoring rainfall of %f cm' % packet['rain'])
-                    packet['rainRate'] = 0
-            else:
-                packet['rainRate'] = 0
-            self._rain_period_ts = packet['dateTime']
+                packet['rain'] /= 10
+            self._last_rain = total
+
+            # calculate the rain rate
+            (rate, ts) = calculate_rain_rate(packet['rain'],
+                                             packet['dateTime'],
+                                             self._last_rain_ts)
+            packet['rainRate'] = rate
+            self._last_rain_ts = ts
 
             # calculated elements not directly reported by station
             packet['heatindex'] = weewx.wxformulas.heatindexC(
@@ -677,7 +718,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         while True:
             try:
                 if self.polling_mode == ADAPTIVE_POLLING:
-                    for data in self.live_data():
+                    for data,ptr,logged in self.live_data():
                         nerr = 0
                         yield data
                 elif self.polling_mode == PERIODIC_POLLING:
@@ -698,6 +739,23 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 if nerr > self.max_tries:
                     raise weewx.WeeWxIOError("Max retries exceeded while fetching data")
                 time.sleep(self.wait_before_retry)
+
+#    def genArchiveRecords(self, since_ts):
+#        """Generator function that returns records from the console.
+#
+#        since_ts: local timestamp in seconds.  All data since (but not
+#                  including) this time will be returned.  A value of None
+#                  results in all data.
+#
+#        yields: a sequence of dictionaries containing the data, each with
+#                local timestamp in seconds.
+#        """
+#        records = self.get_records(since_ts)
+#        for r in records:
+#            tt = time.strptime(r['datetime'], '%Y-%m-%d %H:%M')
+#            ts = int(time.mktime(tt))
+#            data = pywws2weewx(r['data'], ts)
+#            yield data
 
 #==============================================================================
 # methods for reading from and writing to usb
@@ -759,6 +817,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 # the following were adapted from pywws
 #==============================================================================
 
+    def decode(self, raw_data):
+        return _decode(raw_data, reading_format[self.data_format])
+
     def clear_history(self):
         ptr = fixed_format['data_count'][0]
         data = []
@@ -780,13 +841,16 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         data.append((fixed_format['read_period'][0], read_period))
         self.write_data(data)
 
-    def set_clock(self):
-        now = datetime.datetime.now()
-        if now.second >= 55:
-            time.sleep(10)
+    def set_clock(self, ts=0):
+        if ts == 0:
             now = datetime.datetime.now()
-        now += datetime.timedelta(minutes=1)
-        ptr = weewx.fousb.fixed_format['date_time'][0]
+            if now.second >= 55:
+                time.sleep(10)
+                now = datetime.datetime.now()
+            now += datetime.timedelta(minutes=1)
+        else:
+            now = datetime.datetime.fromtimestamp(ts)
+        ptr = fixed_format['date_time'][0]
         data = []
         data.append((ptr,   _bcd_encode(now.year - 2000)))
         data.append((ptr+1, _bcd_encode(now.month)))
@@ -796,13 +860,64 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         time.sleep(59 - now.second)
         self.write_data(data)
 
+    def get_clock(self):
+        tstr = self.get_fixed_block(['date_time'], True)
+        tt = time.strptime(tstr, '%Y-%m-%d %H:%M')
+        ts = time.mktime(tt)
+        return int(ts)
+
+    # FIXME: add synchronization so that times are more accurate
+    def get_records(self, since_ts=0, num_rec=0):
+        """Get data from station memory.
+
+        The weather station contains a circular buffer of data, but there is
+        no absolute date or time for each record, only relative offsets.  So
+        the best we can do is to use the 'delay' and 'read_period' to guess
+        when each record was made.
+
+        Use the computer clock since we cannot trust the station clock.
+
+        Return an array of dict, with each dict containing a datetimestamp,
+        the pointer, the decoded data, and the raw data.
+        """
+        dts = datetime.datetime.now()
+        ptr = self.current_pos()
+        fixed_block = self.get_fixed_block(unbuffered=True)
+        max_count = fixed_block['data_count'] - 1
+        if since_ts != 0:
+            dt = datetime.datetime.fromtimestamp(since_ts)
+            dt += datetime.timedelta(seconds=fixed_block['read_period'] * 30)
+        else:
+            dt = datetime.datetime.min
+        if num_rec == 0 or num_rec > max_count:
+            num_rec = max_count
+        count = 0
+        records = []
+        while dts > dt and count < num_rec:
+            raw_data = self.get_raw_data(ptr)
+            data = self.decode(raw_data)
+            if data['delay'] is None or data['delay'] > 30:
+                logerr('invalid data at %04x, %s' % (ptr, dts.isoformat()))
+                dts -= datetime.timedelta(minutes=fixed_block['read_period'])
+            else:
+                record = dict()
+                record['ptr'] = ptr
+                record['datetime'] = dts
+                record['data'] = data
+                record['raw_data'] = raw_data
+                records.append(record)
+                count += 1
+                dts -= datetime.timedelta(minutes=data['delay'])
+            ptr = self.dec_ptr(ptr)
+        return records
+
 #==============================================================================
 # methods for reading data from the weather station
 # the following were adapted from pywws
 #
-# commit d422883ee05a8dddcedefd3f1366d54d46037668
+# commit c07c5cfefc02d1518711545c0077a7fd7e852c1d
 # Author: Jim Easterbrook <jim@jim-easterbrook.me.uk>
-# Date:   Fri Feb 8 11:54:48 2013 +0000
+# Date:   Tue Mar 12 17:50:10 2013 +0000
 #==============================================================================
 
     def live_data(self, logged_only=False):
@@ -835,14 +950,20 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         else:
             next_log = None
             self._station_clock = None
+        ptr_time = 0
+        data_time = 0
+        last_log = now
         while True:
-            last_time = now
             if not self._station_clock:
                 next_log = None
             if not self._sensor_clock:
                 next_live = None
-            # wake up just before next reading is due
             now = time.time()
+            # if station stops logging data, don't keep reading USB
+            # until it locks up
+            if now - last_log > (read_period + 2) * 60:
+                raise ObservationError('station is not logging data')
+            # wake up just before next reading is due
             advance = now + max(self.avoid, self.min_pause) + self.min_pause
             pause = 600.0
             if next_live:
@@ -860,79 +981,81 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             pause = max(pause, self.min_pause)
             logdbg('delay %s, pause %g' % (str(old_data['delay']), pause))
             time.sleep(pause)
-            # first look for data changes
+            # get new data
+            last_data_time = data_time
             new_data = self.get_data(old_ptr, unbuffered=True)
-            now = time.time()
+            data_time = time.time()
             # 'good' time stamp if we haven't just woken up from long
             # pause and data read wasn't delayed
-            valid_now = now - last_time < (self.min_pause * 2.0) - 0.1
+            valid_time = data_time - last_data_time < (self.min_pause * 2.0) - 0.1
             # make sure changes because of logging interval aren't
             # mistaken for new live data
-            old_data['delay'] = new_data['delay']
+            if new_data['delay'] >= read_period:
+                for key in ('delay', 'hum_in', 'temp_in', 'abs_pressure'):
+                    old_data[key] = new_data[key]
+            # ignore solar data which changes every 60 seconds
             if self.data_format == '3080':
-                # ignore solar data which changes every 60 seconds
-                old_data['illuminance'] = new_data['illuminance']
-                old_data['uv'] = new_data['uv']
-            if next_live and not logged_only:
-                while now > next_live + live_interval:
-                    loginf('missed data')
-                    next_live += live_interval
+                for key in ('illuminance', 'uv'):
+                    old_data[key] = new_data[key]
             if new_data != old_data:
                 logdbg('new data')
                 result = dict(new_data)
-                if valid_now:
+                if valid_time:
                     # data has just changed, so definitely at a 48s update time
-                    self._sensor_clock = now
+                    self._sensor_clock = data_time
                     logdbg('setting sensor clock %g' % (now % live_interval))
                     if not next_live:
                         logdbg('live synchronised')
-                    next_live = now
-                elif next_live and now < next_live - self.min_pause:
-                    loginf('lost sync %g' % (now - next_live))
+                    next_live = data_time
+                elif next_live and data_time < next_live - self.min_pause:
+                    logdbg('lost sync %g' % (data_time - next_live))
                     next_live = None
                     self._sensor_clock = None
                 if next_live and not logged_only:
+                    while data_time > next_live + live_interval:
+                        logdbg('missed interval')
+                        next_live += live_interval
                     result['idx'] = datetime.datetime.utcfromtimestamp(int(next_live))
                     next_live += live_interval
-                    yield result
-#                    yield result, old_ptr, False
+                    yield result, old_ptr, False
                 old_data = new_data
-            # now look for pointer changes
-            if new_data['delay'] < read_period:
-                # pointer won't have changed
+            # get new pointer
+            if old_data['delay'] < read_period - 1:
                 continue
+            last_ptr_time = ptr_time
             new_ptr = self.current_pos()
-            now2 = time.time()
-            valid_now = now2 - last_time < (self.min_pause * 2.0) - 0.1
-            while valid_now and next_log and now2 > next_log + 12.0:
-                loginf('log extended')
-                next_log += 60.0
+            ptr_time = time.time()
+            valid_time = ptr_time - last_ptr_time < (self.min_pause * 2.0) - 0.1
             if new_ptr != old_ptr:
                 logdbg('new ptr: %06x' % new_ptr)
+                last_log = ptr_time
                 # re-read data, to be absolutely sure it's the last
                 # logged data before the pointer was updated
                 new_data = self.get_data(old_ptr, unbuffered=True)
                 result = dict(new_data)
-                if valid_now:
+                if valid_time:
                     # pointer has just changed, so definitely at a logging time
-                    self._station_clock = now2
-                    logdbg('setting station clock %g' % (now2 % 60.0))
+                    self._station_clock = ptr_time
+                    logdbg('setting station clock %g' % (ptr_time % 60.0))
                     if not next_log:
                         logdbg('log synchronised')
-                    next_log = now2
-                elif next_log and now2 < next_log - self.min_pause:
-                    loginf('lost log sync %g' % (now2 - next_log))
+                    next_log = ptr_time
+                elif next_log and ptr_time < next_log - self.min_pause:
+                    logdbg('lost log sync %g' % (ptr_time - next_log))
                     next_log = None
                     self._station_clock = None
                 if next_log:
                     result['idx'] = datetime.datetime.utcfromtimestamp(int(next_log))
                     next_log += log_interval
-                    yield result
-#                    yield result, old_ptr, True
+                    yield result, old_ptr, True
                 if new_ptr != self.inc_ptr(old_ptr):
                     logerr('unexpected ptr change %06x -> %06x' %
                            (old_ptr, new_ptr))
                     old_ptr = new_ptr
+                    old_data['delay'] = 0
+                elif valid_time and next_log and ptr_time > next_log + 12.0:
+                    logdbg('log extended')
+                    next_log += 60.0
 
     def inc_ptr(self, ptr):
         """Get next circular buffer data pointer."""
