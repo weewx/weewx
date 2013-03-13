@@ -13,6 +13,7 @@ import StringIO
 import calendar
 import datetime
 import math
+import sys
 import syslog
 import time
 import traceback
@@ -791,6 +792,51 @@ def tobool(x):
     except (ValueError, TypeError):
         pass
     raise ValueError("Unknown boolean specifier: '%s'." % x)
+
+def read_config(config_fn, args=None):
+    """Read the specified configuration file, return a dictionary of the
+    file contents. If no file is specified, look in the standard locations
+    for weewx.conf. If no file can be found or parsed, then exit.
+    Messages go to syslog and stderr.
+
+    config_fn: configuration filename
+
+    args: command-line arguments
+
+    return: filename, dictionary
+    """
+
+    # Figure out the config file
+    if config_fn is None:
+        if args is not None and len(args) > 0 and not args[0].startswith('-'):
+            config_fn = args[0]
+    if config_fn is None:
+        for f in ['/etc/weewx', '/home/weewx']:
+            fn = f + '/weewx.conf'
+            if os.path.isfile(fn):
+                config_fn = fn
+                break
+    if config_fn is None:
+        msg = "Please specify a configuration file"
+        print >>sys.stderr, msg
+        syslog.syslog(syslog.LOG_CRIT, msg)
+        exit(1)
+
+    # Try to open up the configuration file. Declare an error if unable to.
+    try :
+        config_dict = configobj.ConfigObj(config_fn, file_error=True)
+    except IOError:
+        msg = "Unable to open configuration file %s" % config_fn
+        print >>sys.stderr, msg
+        syslog.syslog(syslog.LOG_CRIT, msg)
+        exit(1)
+    except configobj.ConfigObjError:
+        msg = "Error wile parsing configuration file %s" % config_fn
+        print >>sys.stderr, msg
+        syslog.syslog(syslog.LOG_CRIT, msg)
+        exit(1)
+
+    return config_fn, config_dict
     
 if __name__ == '__main__':
     import doctest

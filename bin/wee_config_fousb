@@ -26,7 +26,6 @@ so far (14feb2013) my testing shows this is not the case.
 import configobj
 import datetime
 import optparse
-import os
 import shutil
 import sys
 import syslog
@@ -94,33 +93,8 @@ def main():
     (options, args) = parser.parse_args()
     debug = options.debug or weewx.debug
 
-    # Figure out the config file
-    config_fn = options.cfgfn
-    if config_fn is None:
-        if len(args) > 0 and not args[0].startswith('-'):
-            config_fn = args[0]
-    if config_fn is None:
-        for f in ['/etc/weewx', '/home/weewx']:
-            fn = f + '/weewx.conf'
-            if os.path.isfile(fn):
-                config_fn = fn
-                break
-    if config_fn is None:
-        print "Please specify a configuration file"
-        exit(1)
-
-    # Try to open up the configuration file. Declare an error if unable to.
-    try :
-        config_dict = configobj.ConfigObj(config_fn, file_error=True)
-    except IOError:
-        print "Unable to open configuration file %s" % config_fn
-        exit(1)
-    except configobj.ConfigObjError:
-        print "Error wile parsing configuration file %s" % config_fn
-        exit(1)
-
-    if debug:
-        print "Using configuration file %s" % config_fn
+    config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
+    print 'Using configuration file %s' % config_fn
 
     altitude_m = weewx.fousb.getaltitudeM(config_dict)
     station = weewx.fousb.FineOffsetUSB(altitude=altitude_m,

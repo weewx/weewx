@@ -12,10 +12,7 @@
 from __future__ import with_statement
 
 import optparse
-import sys
 import syslog
-
-import configobj
 
 import user.extensions      #@UnusedImport
 import weedb
@@ -25,16 +22,17 @@ import weewx.units
 import weeutil.weeutil
 import user.schemas
 
-description="""Configures the weewx databases. Most of these functions are handled automatically
-by weewx, but they may be useful as a utility in special cases. In particular, 
-the 'reconfigure' option can be useful if you decide to add or drop data types
-from the database schema or change unit systems."""
+description="""Configure the weewx databases. Most of these functions are
+handled automatically by weewx, but they may be useful as a utility in special
+cases. In particular, the 'reconfigure' option can be useful if you decide to
+add or drop data types from the database schema or change unit systems."""
  
-usage="""%prog: config_path [--help] [--create-database] 
-                            [--create-stats] [--reconfigure] [--backfill-stats] """
+usage="""%prog: [config_path] [--help]
+                              [--create-database] [--create-stats]
+                              [--reconfigure] [--backfill-stats] """
 
-epilog="""If you are using the MySQL database it is assumed that you have the appropriate
-permissions for the requested operation."""
+epilog="""If you are using the MySQL database it is assumed that you have the
+appropriate permissions for the requested operation."""
 
 def main():
 
@@ -45,39 +43,25 @@ def main():
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
     
     # Add the various options:
+    parser.add_option("--config", dest="cfgfn", type=str, metavar="FILE",
+                      help="use configuration file FILE")
     parser.add_option("--create-archive", dest="create_archive", action='store_true',
-                        help="Create the archive database.")
+                      help="Create the archive database.")
     parser.add_option("--create-stats", dest="create_stats", action='store_true',
-                        help="Create the statistical database.")
+                      help="Create the statistical database.")
     parser.add_option("--reconfigure", action='store_true',
-                        help="""Create a new archive database using configuration information found """\
-                        """in the configuration file. In particular, the new database will use the """\
-                        """unit system found in option [StdConvert][target_unit]. It will use """\
-                        """the schema found in './bin/user/schemas.py'. """\
-                        """The new database will have the same name as the old database, with a '_new' on the end.""")
+                      help="""Create a new archive database using configuration information found """\
+                          """in the configuration file. In particular, the new database will use the """\
+                          """unit system found in option [StdConvert][target_unit]. It will use """\
+                          """the schema found in './bin/user/schemas.py'. """\
+                          """The new database will have the same name as the old database, with a '_new' on the end.""")
     parser.add_option("--backfill-stats", dest="backfill_stats", action='store_true',
-                        help="Backfill the statistical database using the archive database")
+                      help="Backfill the statistical database using the archive database")
+
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-
-    if not args:
-        parser.error("Missing configuration file.")
-
-    config_path = args[0]
-    
-    # Try to open up the configuration file. Declare an error if unable to.
-    try :
-        config_dict = configobj.ConfigObj(config_path, file_error=True)
-    except IOError:
-        print >>sys.stderr, "Unable to open configuration file ", config_path
-        syslog.syslog(syslog.LOG_CRIT, "Unable to open configuration file %s" % config_path)
-        exit(1)
-    except configobj.ConfigObjError:
-        print >>sys.stderr, "Error wile parsing configuration file %s" % config_path
-        syslog.syslog(syslog.LOG_CRIT, "Error while parsing configuration file %s" % config_path)
-        exit(1)
-
-    syslog.syslog(syslog.LOG_INFO, "Using configuration file %s." % config_path)
+    config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
+    print "Using configuration file %s." % config_fn
 
     if options.create_archive:
         createMainDatabase(config_dict)

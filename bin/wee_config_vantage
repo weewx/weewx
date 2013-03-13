@@ -8,24 +8,22 @@
 #    $Author$
 #    $Date$
 #
-"""Command line utility for configuring the Davis Vantage series of weather stations"""
+"""Command line utility for configuring Davis Vantage weather stations"""
 
 import optparse
-import syslog
 import sys
+import syslog
 import time
-
-import configobj
 
 import weewx.VantagePro
 import weeutil.weeutil
 
 description = """Configures the Davis Vantage weather station."""
 
-usage="""%prog: config_path [--help] [--info] [--clear]
-                            [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
-                            [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
-                            [--set-lamp=['on'|'off]] [--dump] [--start | --stop]"""
+usage="""%prog: [config_file] [--help] [--info] [--clear]
+                              [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
+                              [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
+                              [--set-lamp=['on'|'off]] [--dump] [--start | --stop]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
@@ -38,53 +36,39 @@ def main():
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
     
     # Add the various options:
+    parser.add_option("--config", dest="cfgfn", type=str, metavar="FILE",
+                      help="use configuration file FILE")
     parser.add_option("--info", action="store_true", dest="info",
-                        help="To print configuration, reception, and barometer calibration information about your weather station.")
+                      help="To print configuration, reception, and barometer calibration information about your weather station.")
     parser.add_option("--clear", action="store_true", dest="clear",
-                        help="To clear the memory of your weather station.")
+                      help="To clear the memory of your weather station.")
     parser.add_option("--set-interval", type=int, dest="set_interval", metavar="SECONDS",
-                        help="Sets the archive interval to the specified number of seconds. "\
-                        "Valid values are 60, 300, 600, 900, 1800, 3600, or 7200.")
+                      help="Sets the archive interval to the specified number of seconds. "\
+                          "Valid values are 60, 300, 600, 900, 1800, 3600, or 7200.")
     parser.add_option("--set-altitude", type=float, dest="set_altitude", metavar="FEET",
-                        help="Sets the altitude of the station to the specified number of feet.") 
+                      help="Sets the altitude of the station to the specified number of feet.") 
     parser.add_option("--set-barometer", type=float, dest="set_barometer", metavar="inHg",
-                        help="Sets the barometer reading of the station to a known correct value in inches of mercury. "\
-                        "Specify 0 (zero) to have the console pick a sensible value.")
+                      help="Sets the barometer reading of the station to a known correct value in inches of mercury. "\
+                          "Specify 0 (zero) to have the console pick a sensible value.")
     parser.add_option("--set-bucket", type=int, dest="set_bucket", metavar="CODE",
-                        help="Set the type of rain bucket. "\
-                        "Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM")
+                      help="Set the type of rain bucket. "\
+                          "Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM")
     parser.add_option("--set-rain-year-start", type=int, dest="set_rain_year_start", metavar="MM", 
-                        help="Set the rain year start (1=Jan, 2=Feb, etc.).")
+                      help="Set the rain year start (1=Jan, 2=Feb, etc.).")
     parser.add_option("--set-time", action="store_true", dest="set_time", help="Set the onboard clock to the current time.")
     parser.add_option("--set-lamp", dest="set_lamp", help="Turn the console lamp 'ON' or 'OFF'", metavar="ON|OFF")
     parser.add_option("--start", action="store_true", help="Start the logger.")
     parser.add_option("--stop",  action="store_true", help="Stop the logger.")
     parser.add_option("--dump",  action="store_true", help="Dump all data to the archive. "\
-                      "NB: This may result in many duplicate primary key errors.")
+                          "NB: This may result in many duplicate primary key errors.")
     
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    if not args:
-        parser.error("Missing configuration file.")
+    config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
+    print "Using configuration file %s." % config_fn
         
     if options.start and options.stop:
         parser.error("Cannot specify both --start and --stop")
-
-    config_path = args[0]
-    
-    # Try to open up the configuration file. Declare an error if unable to.
-    try :
-        config_dict = configobj.ConfigObj(config_path, file_error=True)
-    except IOError:
-        print >>sys.stderr, "Unable to open configuration file ", config_path
-        syslog.syslog(syslog.LOG_CRIT, "Unable to open configuration file %s" % config_path)
-        exit(1)
-    except configobj.ConfigObjError:
-        print >>sys.stderr, "Error wile parsing configuration file %s" % config_path
-        syslog.syslog(syslog.LOG_CRIT, "Error while parsing configuration file %s" % config_path)
-        exit(1)
-
-    syslog.syslog(syslog.LOG_INFO, "Using configuration file %s." % config_path)
 
     # Open up the weather station:
     station = weewx.VantagePro.Vantage(**config_dict['Vantage'])

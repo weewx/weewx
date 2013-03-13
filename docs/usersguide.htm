@@ -1111,9 +1111,8 @@ Version: 2.2.1
     <p>Weewx comes with a configuration utlity, <span class="code">wee_config_vantage</span>, 
       that can set many of the on-board EEPROM constants in the Davis Vantage stations, 
       such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
-    <p>Run it with the configuration file as an argument and <span class="code">
-	--help</span> as an option to see its usage: </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
+    <p>Run it with <span class="code">--help</span> as an option to see its usage: </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --help </p>
     <p>This will print out something like:</p>
     <p class="tty">Usage: wee_config_vantage: config_path [--help] [--info] [--clear]
      [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
@@ -1148,7 +1147,7 @@ Options:
 Mutating actions will request confirmation before proceeding.</p>
     <p>It is useful to run it with the <span class="code">--info</span> option to 
       see what the current EEPROM settings are on your station: </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --info </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --info </p>
     <p>This will print out something like: </p>
     <p class="tty">VantagePro EEPROM settings:
       
@@ -1202,7 +1201,7 @@ Offset:                       -1.000</p>
       dates after about 2006.</p>
     <p><span class="highlight">Highlighted</span> values can be changed.</p>
     <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-interval=600</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-interval=600</p>
     <p>Other parameters can be set in a similar manner.</p>
     <h3 id="Archive_interval">Archive interval</h3>
     <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
@@ -1220,7 +1219,7 @@ Offset:                       -1.000</p>
     <p>Normally, this is set by Davis, but if you have replaced your bucket with 
       a different kind, you might want to reconfigure. For example, to change to a 
       0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --set-bucket=2</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-bucket=2</p>
     <h3>Dumping the logger memory</h3>
 	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
 	  records from the on-board logger in the Vantage. However, occasionally the 
@@ -1231,7 +1230,7 @@ Offset:                       -1.000</p>
 	  lose any data which might have accumulated in the logger memory, but not 
 	  yet downloaded. By using the <span class="code">--dump</span> command 
 	  before clearing the memory, you might be able to save these data. </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --dump</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --dump</p>
 	  <p>This will dump all data archived in the Vantage memory directly to the 
 	  database, without regard to whether or not they have been seen before. 
 	  Because the command dumps <em>all</em> data, it may result in many 
@@ -1240,34 +1239,39 @@ Offset:                       -1.000</p>
       <h2>Fine Offset</h2>
     <p>The configuration utility <span class='code'>wee_config_fousb</span> is
       designed to diagnose and configure Fine Offset stations.</p>
-    <p>Run it with the configuration file as an argument and
-    <span class='code'>--help</span> as an option to see its usage:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --help </p>
+    <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --help </p>
     <p>This will print out something like:</p>
-    <p class='tty'>Usage: wee_config_fousb config_file [options] [--help]
+    <p class='tty'>Usage: wee_config_fousb [config_file] [options] [--help]
 
 Configuration utility for Fine Offset weather stations.
 
 Options:
-  -h, --help         show this help message and exit
-  --info             display weather station configuration
-  --check-pressures  query station for pressure sensor data
-  --check-units      compare raw and converted LOOP packets
-  --check-usb        test the quality of the USB connection
-  --history=N        display the latest N records
-  --format=FORMAT    format for output, one of raw, table, or dict
-  --set-clock        set station clock to computer time
-  --set-pressure=P   set relative pressure to P hPa (mbar)
-  --set-interval=N   set logging interval to N minutes
-  --clear-memory     clear station memory
-  --slp=SLP          calculate pressure offset from sea level pressure SLP
-  -y                 answer yes to every prompt
-  --debug            display diagnostic information while running
+  -h, --help           show this help message and exit
+  --config=FILE        use configuration file FILE
+  --info               display weather station configuration
+  --check-pressures    query station for pressure sensor data
+  --check-units        compare raw and converted LOOP packets
+  --check-usb          test the quality of the USB connection
+  --check-fixed-block  monitor the contents of the fixed block
+  --fixed-block        display the contents of the fixed block
+  --live               display live readings from the station
+  --logged             display logged readings from the station
+  --history-since=N    display records since N minutes ago
+  --history=N          display N records
+  --format=FORMAT      format for output, one of raw, table, or dict
+  --set-clock          set station clock to computer time
+  --set-pressure=P     set relative pressure to P hPa (mbar)
+  --set-interval=N     set logging interval to N minutes
+  --clear-memory       clear station memory
+  --slp=SLP            calculate pressure offset from sea level pressure SLP
+  -y                   answer yes to every prompt
+  --debug              display diagnostic information while running
 
 Mutating actions will request confirmation before proceeding.</p>
     <p>Display the station settings with the <span class='code'>--info</span>
       option.</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --info </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --info </p>
     <p>This will result in something like this:</p>
     <p class='tty'>Fine Offset station settings:
                     local time: 2013.02.11 18:34:28 CET
@@ -1302,7 +1306,7 @@ Mutating actions will request confirmation before proceeding.</p>
     <p>The pressure sensor in Fine Offset stations measures absolute, or station pressure.  The sensor pressure may be off a bit when the station is at sea level, and almost certainly will be off when the station is above sea level.  Stations at sea level are typically off by 1 to 10 millibars, while stations above a few hundred meters may be off by hundreds of millibars.  When reporting weather data, <span class='code'>weewx</span> will calculate the equivalent sea level pressure, but the pressure sensor must be calibrated and an altitude must be specified.</p>
     <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  If you do not know what the offset should be, use the <span class='code'>wee_config_fousb</span> utility to calculate this offset given the station altitude and a valid sea-level pressure for the station location.</p>
     <p>For example, if the sea level pressure from a verified source is 1003.048 hPa, the following example will calculate the offset then ask whether to insert it into <span class='code'>weewx.conf</span>.  It uses the altitude specified in <span class='code'>weewx.conf</span> and the station pressure and temperature.</p>
-    <p class='tty'><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --slp=1003.048</p>
+    <p class='tty'><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --slp=1003.048</p>
     <p>The output will look something like this:</p>
     <p class='tty'>Querying the station...
 Pressure offset is None
@@ -1311,19 +1315,19 @@ Pressure offset is now 1.247000</p>
     <p>For those using Imperial units, to convert inHg to hPa (mbar), multiply by 33.86389</p>
     <p><span class='code'>weewx</span> does not use the <i>relative pressure</i> in the Fine Offset console.</p>
     <p>To display sensor, relative, and calculated pressures:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --check-pressures</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-pressures</p>
 
     <h3>Dumping the console memory</h3>
     <p>Fine Offset stations store records in a circular buffer - once the buffer fills, the oldest records are replaced by newer records.  The 1080 and 2080 consoles store up to 4080 records.  The 3080 consoles store up to 3264 records.  The <span class='code'>data_count</span> indicates how many records are in memory.  The <span class='code'>read_period</span> indicates the number of minutes between records.  <span class='code'>wee_config_fousb</span> can display these records in space-delimited, raw bytes, or dictionary format.</p>
     <p>For example, to display the most recent 30 records from the console memory:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --history=30</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --history=30</p>
     <p>To clear the console memory:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --clear-memory</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --clear-memory</p>
 
     <h3>Checking the USB quality</h3>
-    <p>Use the <span class='code'>wee_config_fousb</span> utility to test the quality of the USB connection between computer and consonle.  Poor quality USB cables, under-powered USB hubs, and other devices on the bus can interfere with communication.</p>
+    <p>Use the <span class='code'>wee_config_fousb</span> utility to test the quality of the USB connection between computer and console.  Poor quality USB cables, under-powered USB hubs, and other devices on the bus can interfere with communication.</p>
     <p>To test the quality of the USB connection to the console:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --check-usb</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-usb</p>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
 
@@ -1732,7 +1736,7 @@ port = /dev/cuaU0</p>
 	<span class="code">wee_config_vantage</span>. This may cause loss of data, but 
 	usually works. Adjust paths as necessary:</li>
     </ol>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --clear </p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --clear </p>
 	  <p>See also the section <em><a href="#Dumping_the_logger_memory">Dumping 
 	  the logger memory</a></em>.</p>
     <h3>3rd party Vantage connectors</h3>
