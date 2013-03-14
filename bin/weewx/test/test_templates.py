@@ -22,9 +22,8 @@ import weewx.reportengine
 import weewx.station
 import weeutil.weeutil
 
-import gen_fake_data
+import gen_fake_data    # @UnresolvedImport
 
-    
 class Common(unittest.TestCase):
 
     def setUp(self):
