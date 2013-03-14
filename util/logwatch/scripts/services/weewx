@@ -22,6 +22,7 @@ my $FOUSB_UNSTABLE_READS = 'fousb: unstable reads';
 my $FOUSB_LOST_LOG_SYNC = 'fousb: lost log sync';
 my $FOUSB_LOST_SYNC = 'fousb: lost sync';
 my $FOUSB_MISSED_DATA = 'fousb: missed data';
+my $FOUSB_STATION_SYNC = 'fousb: station sync';
 my %counts = (
     $STARTUPS, 0,
     $ARCHIVES_GENERATED, 0,
@@ -34,6 +35,7 @@ my %counts = (
     $FOUSB_LOST_LOG_SYNC, 0,
     $FOUSB_LOST_SYNC, 0,
     $FOUSB_MISSED_DATA, 0,
+    $FOUSB_STATION_SYNC, 0,
 );
 my %reports;
 my %errors;
@@ -59,6 +61,8 @@ while(defined($_ = <STDIN>)) {
         $counts{$FOUSB_LOST_SYNC} += 1;
     } elsif (/fousb: missed data/) {
         $counts{$FOUSB_MISSED_DATA} += 1;
+    } elsif(/fousb: synchronising to the weather station/) {
+        $counts{$FOUSB_STATION_SYNC} += 1;
     } elsif (/restful: Skipped record/) {
         $counts{$RECORDS_SKIPPED} += 1;
     } elsif (/restful: Published record/) {
@@ -76,6 +80,7 @@ while(defined($_ = <STDIN>)) {
              /\*\*\*\*  registration interval/ ||
              /stats: Back calculated schema/ ||
              /stats: Backfilling stats database/ ||
+             /stats: backfilled \d+ days of statistics/ ||
              /stats: stats database up to date/ ||
              /stats: created schema for statistical database/ ||
              /\*\*\*\*  \'station\'/ ||
@@ -91,6 +96,7 @@ while(defined($_ = <STDIN>)) {
              /wxengine: Using archive database/ ||
              /wxengine: Using configuration file/ ||
              /wxengine: Using stats database/ ||
+             /wxengine: Using station hardware archive interval/ ||
              /wxengine: Record generation will be attempted in/ ||
              /wxengine: StdConvert target unit is/ ||
              /wxengine: Data will not be posted to/ ||
@@ -99,18 +105,26 @@ while(defined($_ = <STDIN>)) {
              /wxengine: No RESTful upload sites/ ||
              /wxengine: retrying/ ||
              /fousb: altitude is/ ||
-             /fousb: using \S+ polling mode/ ||
+             /fousb: archive interval is/ ||
              /fousb: pressure offset is/ ||
+             /fousb: polling mode is/ ||
+             /fousb: using \S+ polling mode/ ||
              /fousb: ptr changed/ ||
              /fousb: new ptr/ ||
+             /fousb: new data/ ||
              /fousb: live synchronised/ ||
              /fousb: log synchronised/ ||
              /fousb: log extended/ ||
              /fousb: delay/ ||
              /fousb: avoid/ ||
-             /fousb: new data/ ||
              /fousb: setting sensor clock/ ||
              /fousb: setting station clock/ ||
+             /fousb: returning archive record/ ||
+             /fousb: packet timestamp/ ||
+             /fousb: log timestamp/ ||
+             /fousb: found \d+ archive records/ ||
+             /fousb: get \d+ records since/ ||
+             /fousb: synchronised to/ ||
              /fousb: pressures:/) {
         # ignore
     } elsif (! /weewx/) {
