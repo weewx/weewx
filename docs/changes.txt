@@ -15,10 +15,17 @@ Added pressure calibration option to wee_config_fousb
 
 Fixed windchill calculation in FineOffsetUSB driver.
 
-Fix bug in trends, when showing changes in temperature. NB: this fix will
+Fixed bug in trends, when showing changes in temperature. NB: this fix will
 not work with explicit unit conversion. I.e., $trend.outTemp.degree_C will
 not work.
 
+Fixed FineOffsetUSB driver to handle cases where the 'delay' is undefined,
+resulting in a TypeError that caused weewx to stop.
+
+Modified wee_config_vantage and wee_config_fousb so that the configuration
+file is optional.
+
+Fixed wxformulas.heatindexC to handle arguments of None type.
 
 2.2.1 02/15/13
 
