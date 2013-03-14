@@ -23,7 +23,6 @@ fields.  The documentation indicates that the clock should be settable, but
 so far (14feb2013) my testing shows this is not the case.
 """
 
-import configobj
 import datetime
 import optparse
 import shutil
@@ -91,7 +90,7 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    debug = options.debug or weewx.debug
+    debug = options.debug or weewx.debug # @UnusedVariable
 
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
     print 'Using configuration file %s' % config_fn
@@ -313,21 +312,21 @@ def showfixedblock(station):
         if (i+1) % 16 == 0:
             print
 
-def showrecords(station, ts=0, count=0, format='raw'):
+def showrecords(station, ts=0, count=0, format_output='raw'):
     """Display the indicated number of records or the records since the 
     specified timestamp (local time, in seconds)"""
     records = station.get_records(since_ts=ts, num_rec=count)
     for i,r in enumerate(records):
-        if format.lower() == 'raw':
+        if format_output.lower() == 'raw':
             raw_dump(r['datetime'], r['ptr'], r['raw_data'])
-        elif format.lower() == 'table':
+        elif format_output.lower() == 'table':
             table_dump(r['datetime'], r['data'], i==0)
         else:
             print r['datetime'], r['data']
 
 def showreadings(station, logged_only):
     """Display live readings from the station."""
-    for data,ptr,logged in station.live_data(logged_only):
+    for data,ptr,_ in station.live_data(logged_only):
         print '%04x' % ptr,
         print data['idx'].strftime('%H:%M:%S'),
         del data['idx']
