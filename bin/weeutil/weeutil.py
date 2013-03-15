@@ -793,48 +793,71 @@ def tobool(x):
         pass
     raise ValueError("Unknown boolean specifier: '%s'." % x)
 
-def read_config(config_fn, args=None):
+def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
     """Read the specified configuration file, return a dictionary of the
     file contents. If no file is specified, look in the standard locations
-    for weewx.conf. If no file can be found or parsed, then exit.
-    Messages go to syslog and stderr.
+    for weewx.conf. Returns the filename of the actual configuration file
+    as well as dictionary of the elements from the configuration file.
+    For backward compatibility, args may be specified, in which case the
+    first arg will be interpreted as the filename as long as it does not
+    start with a hyphen.
 
     config_fn: configuration filename
 
     args: command-line arguments
 
+    msg_to_stderr: If this is true, send error messages to stderr, otherwise
+    messages go to syslog.
+
+    exit_on_fail: If this is true, exit when file not found or parsing fails.
+    Otherwise re-throw the exception that caused the error.
+
     return: filename, dictionary
     """
+
+    locations = ['/etc/weewx', '/home/weewx']
 
     # Figure out the config file
     if config_fn is None:
         if args is not None and len(args) > 0 and not args[0].startswith('-'):
             config_fn = args[0]
     if config_fn is None:
-        for f in ['/etc/weewx', '/home/weewx']:
+        for f in locations:
             fn = f + '/weewx.conf'
             if os.path.isfile(fn):
                 config_fn = fn
                 break
     if config_fn is None:
-        msg = "Please specify a configuration file"
-        print >>sys.stderr, msg
-        syslog.syslog(syslog.LOG_CRIT, msg)
-        exit(1)
+        msg = 'No configuration file specified, and none found in any of:\n ' % ', '.join(locations)
+        if msg_to_stderr:
+            print >>sys.stderr, msg
+        else:
+            syslog.syslog(syslog.LOG_CRIT, msg)
+        if exit_on_fail:
+            exit(1)
+        return None, None
 
     # Try to open up the configuration file. Declare an error if unable to.
     try :
         config_dict = configobj.ConfigObj(config_fn, file_error=True)
     except IOError:
         msg = "Unable to open configuration file %s" % config_fn
-        print >>sys.stderr, msg
-        syslog.syslog(syslog.LOG_CRIT, msg)
-        exit(1)
+        if msg_to_stderr:
+            print >>sys.stderr, msg
+        else:
+            syslog.syslog(syslog.LOG_CRIT, msg)
+        if exit_on_fail:
+            exit(1)
+        raise
     except configobj.ConfigObjError:
         msg = "Error wile parsing configuration file %s" % config_fn
-        print >>sys.stderr, msg
-        syslog.syslog(syslog.LOG_CRIT, msg)
-        exit(1)
+        if msg_to_stderr:
+            print >>sys.stderr, msg
+        else:
+            syslog.syslog(syslog.LOG_CRIT, msg)
+        if exit_on_fail:
+            exit(1)
+        raise
 
     return config_fn, config_dict
     
