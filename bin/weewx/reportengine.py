@@ -210,6 +210,7 @@ class RsyncGenerator(ReportGenerator):
                 remote_root = self.skin_dict['path'],
                 server      = self.skin_dict['server'],
                 user        = self.skin_dict.get('user', None),
+                port        = self.skin_dict.get('port', None),
                 delete      = bool(self.skin_dict.get('delete', False)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")

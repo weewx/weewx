@@ -27,6 +27,9 @@ file is optional.
 
 Fixed wxformulas.heatindexC to handle arguments of None type.
 
+rsync now allows a port to be specified.
+
+
 2.2.1 02/15/13
 
 Added a function call to the Vantage driver that allows the lamp to be

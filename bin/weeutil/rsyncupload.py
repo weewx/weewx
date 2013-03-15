@@ -22,7 +22,7 @@ class RsyncUpload(object):
     Keeps track of what files have changed, and only updates changed files."""
 
     def __init__(self, local_root, remote_root,
-                 server, user=None, delete=False):
+                 server, user=None, delete=False, port=None):
         """Initialize an instance of RsyncUpload.
         
         After initializing, call method run() to perform the upload.
@@ -39,6 +39,7 @@ class RsyncUpload(object):
         self.server      = server
         self.user        = user
         self.delete      = delete
+        self.port        = port
 
     def run(self):
         """Perform the actual upload."""
@@ -57,6 +58,11 @@ class RsyncUpload(object):
         else:
             rsyncremotespec = "%s:%s" % (self.server, self.remote_root)
         
+        if self.port is not None and len(self.port.strip()) > 0:
+            rsyncsshstring = "ssh -p %s" % (self.port,)
+        else:
+            rsyncsshstring = "ssh"
+
         cmd = ['rsync']
         # archive means:
         #    recursive, copy symlinks as symlinks, preserve permissions,
@@ -65,10 +71,10 @@ class RsyncUpload(object):
         #    no hardlinks, and no extended attributes
         cmd.extend(["--archive"])
         # Remove files remotely when they're removed locally
-        cmd.extend(["--stats"])
+        # cmd.extend(["--stats"])
         if self.delete:
             cmd.extend(["--delete"])
-        cmd.extend(["-e", "ssh"])
+        cmd.extend(["-e %s" % rsyncsshstring])
         cmd.extend([rsynclocalspec])
         cmd.extend([rsyncremotespec])
         
@@ -89,7 +95,7 @@ if __name__ == '__main__':
     import configobj
     
     weewx.debug = 1
-    syslog.openlog('wee_rsyncupload', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('rsyncupload', syslog.LOG_PID|syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     if len(sys.argv) < 2 :
@@ -117,6 +123,7 @@ if __name__ == '__main__':
                            rsync_dir,
                            config_dict['StdReport']['RSYNC']['path'],
                            config_dict['StdReport']['RSYNC']['server'],
-                           config_dict['StdReport']['RSYNC']['user'])
+                           config_dict['StdReport']['RSYNC']['user'],
+                           config_dict['StdReport']['RSYNC']['port'])
     rsync_upload.run()
     
