@@ -828,7 +828,7 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
                 config_fn = fn
                 break
     if config_fn is None:
-        msg = 'No configuration file specified, and none found in any of:\n ' % ', '.join(locations)
+        msg = 'No configuration file specified, and none found in any of:\n  %s' % ', '.join(locations)
         if msg_to_stderr:
             print >>sys.stderr, msg
         else:
