@@ -1330,6 +1330,48 @@ Pressure offset is now 1.247000</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-usb</p>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
+    <h3>Operating modes</h3>
+    <p><span class='code'>weewx</span> can read data from the station memory, or it can read data from the station sensors.  Reading from station memory can be useful when <span class='code'>weewx</span> runs only periodically.  Either mode can be used when <span class='code'>weewx</span> runs continuously.
+    </p>
+    <table>
+      <tr>
+        <td>Mode</td>
+        <td><span class='code'>weewx.conf</span> Configuration</td>
+        <td>Notes</td>
+      </tr>
+      <tr>
+        <td><p>Read&nbsp;from&nbsp;archive</p></td>
+        <td>
+          <p class='tty' style='margin:0'>[StdArchive]
+    archive_interval = 300
+    record_generation = hardware</p>
+        </td>
+        <td>
+          <p>In this mode, weewx reads data from the console archive.  Each console archive record is an average of live samples over the logging interval, so each record in the weewx archive database will be an average of station sensor readings.
+          </p>
+          <p>When weewx starts up it will attempt to download all records from the console since the last record in the weewx archive database.
+          </p>
+          <p>The <span class='code'>archive_interval</span> should match the logging interval specified in the console. Use <span class='code'>wee_config_fousb</span> to set the console logging interval.
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td><p>Read&nbsp;from&nbsp;sensors</p></td>
+        <td>
+          <p class='tty' style='margin:0'>[StdArchive]
+    archive_interval = 300
+    record_generation = software</p>
+        </td>
+        <td>
+          <p>In this mode, weewx reads live data from the console.  Records in the weewx archive will be instantaneous values from the station sensors.
+          <p>When weewx starts up it will attempt to download all records from the console since the last record in the weewx archive database.
+          </p>
+          <p>Note that the records from the console memory are averages of station sensor readings.
+          </p>
+        </td>
+      </tr>
+    </table>
+
       <h1>Configuring MySQL</h1>
     <p>This section applies only for those using MySQL.</p>
     <p>Assuming that you want to use the default database configuration, your
