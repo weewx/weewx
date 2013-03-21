@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 550 2013-03-14 01:04:30Z mwall $
+# $Id: fousb.py 553 2013-03-21 23:22:52Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -64,7 +64,7 @@ data are available.
 
 The FineOffset station console updates every 48 seconds.  UV data update every
 60 seconds.  This implementation defaults to sampling the station console via
-USB for live data every 30 seconds.  Use the parameter 'sampling_period' to
+USB for live data every 60 seconds.  Use the parameter 'polling_interval' to
 adjust this.  An adaptive polling mode is also available.  This mode attempts
 to read only when the console is not writing to memory or reading data from
 the sensors.
@@ -231,7 +231,7 @@ keymap = {
     'windDir'     : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'windGustDir' : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
-    'radiation'   : ('illuminance',  0.001464), # station is lux, weewx wants W/m^2
+    'radiation'   : ('illuminance',  0.001464), # lux, weewx wants W/m^2
     'UV'          : ('uv',           1.0),
     'dewpoint'    : ('dewpoint',     1.0),
     'heatindex'   : ('heatindex',    1.0),
@@ -560,8 +560,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         'software', otherwise weewx reads archived records from the console.
         [Optional. Default is 'PERIODIC']
         
-        sample_period: How often to sample the USB interface for data.
-        [Optional. Default is 30 seconds]
+        polling_interval: How often to sample the USB interface for data.
+        [Optional. Default is 60 seconds]
 
         rain_max_sane: Maximum sane value for rain in a single sampling
         period, measured in mm.
@@ -599,11 +599,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.altitude          = stn_dict['altitude']
         self.model             = stn_dict.get('model', 'WH1080 (USB)')
         self.polling_mode      = stn_dict.get('polling_mode', PERIODIC_POLLING)
+        self.polling_interval  = int(stn_dict.get('polling_interval', 60))
         self.rain_max_sane     = int(stn_dict.get('rain_max_sane', 2))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
-        self.sample_period     = int(stn_dict.get('sample_period', 30))
         self.interface         = int(stn_dict.get('interface', 0))
         self.vendor_id         = int(stn_dict.get('vendor_id',  '0x1941'), 0)
         self.product_id        = int(stn_dict.get('product_id', '0x8021'), 0)
@@ -634,16 +634,21 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self._setup()
 
     # Unfortunately there is no provision to obtain the model from the station
-    # itself, so use what we were given.
+    # itself, so use what is specified from the configuration file.
     @property
     def hardware_name(self):
         return self.model
 
     # weewx wants the archive interval in seconds, but the database record
-    # follows the wview convention of minutes.
+    # follows the wview convention of minutes and the console uses minutes.
     @property
     def archive_interval(self):
-        return self._archive_interval * 60
+        return self._archive_interval_minutes() * 60
+
+    def _archive_interval_minutes(self):
+        if self._archive_interval is None:
+            self._archive_interval = self.get_fixed_block(['read_period'])
+        return self._archive_interval
 
     def openPort(self):
         dev = self._find_device()
@@ -682,10 +687,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     return dev
         return None
 
+    # FIXME: get last_rain and last_rain_ts from database on startup
     def _setup(self):
-        self._archive_interval = self.get_fixed_block(['read_period'])
-        loginf('archive interval is %d minutes' % self._archive_interval)
         loginf('polling mode is %s' % self.polling_mode)
+        if self.polling_mode.lower() == PERIODIC_POLLING.lower():
+            loginf('polling interval is %s' % self.polling_interval)
         loginf('altitude is %s meters' % str(self.altitude))
         loginf('pressure offset is %s' % str(self.pressure_offset))
 
@@ -727,7 +733,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         yields: a sequence of dictionaries containing the data, each with
                 local timestamp in seconds.
         """
-        # FIXME: get last_rain and last_rain_ts from database
         records = self.get_records(since_ts)
         logdbg('found %d archive records' % len(records))
         epoch = datetime.datetime.utcfromtimestamp(0)
@@ -739,7 +744,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                self.pressure_offset, self.altitude,
                                self._last_rain, self._last_rain_ts,
                                self.rain_max_sane / 10)
-            data['interval'] = self._archive_interval
+            data['interval'] = self._archive_interval_minutes()
             self._last_rain = data['rainTotal']
             self._last_rain_ts = data['rainTS']
             logdbg('returning archive record %s' % ts)
@@ -774,7 +779,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     nerr = 0
                     data = _decode(block, reading_format[self.data_format])
                     yield data
-                    time.sleep(self.sample_period)
+                    time.sleep(self.polling_interval)
                 else:
                     raise Exception("unknown polling mode '%s'" % self.polling_mode)
 
@@ -842,7 +847,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
 #==============================================================================
 # methods for configuring the weather station
-# the following were adapted from pywws
+# the following were adapted from various pywws utilities
 #==============================================================================
 
     def decode(self, raw_data):
@@ -955,7 +960,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 quality = 1
             else:
                 quality = 0
-        logdbg('synchronising to the weather station (interval=%d, quality=%d)' % (fixed_block['read_period'], quality))
+        loginf('synchronising to the weather station (quality=%d)' % quality)
         range_hi = datetime.datetime.max
         range_lo = datetime.datetime.min
         ptr = self.current_pos()
@@ -1011,7 +1016,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
 #==============================================================================
 # methods for reading data from the weather station
-# the following were adapted from pywws
+# the following were adapted from WeatherStation.py in pywws
 #
 # commit c07c5cfefc02d1518711545c0077a7fd7e852c1d
 # Author: Jim Easterbrook <jim@jim-easterbrook.me.uk>
@@ -1082,6 +1087,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             # get new data
             last_data_time = data_time
             new_data = self.get_data(old_ptr, unbuffered=True)
+            if new_data['delay'] is None:
+                raise ObservationError('invalid data at 0x%04x' % old_ptr)
             data_time = time.time()
             # 'good' time stamp if we haven't just woken up from long
             # pause and data read wasn't delayed
@@ -1125,7 +1132,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             ptr_time = time.time()
             valid_time = ptr_time - last_ptr_time < (self.min_pause * 2.0) - 0.1
             if new_ptr != old_ptr:
-                logdbg('new ptr: %06x' % new_ptr)
+                logdbg('new ptr: %06x (%06x)' % (new_ptr, old_ptr))
                 last_log = ptr_time
                 # re-read data, to be absolutely sure it's the last
                 # logged data before the pointer was updated

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: wee_config_fousb 550 2013-03-14 01:04:30Z mwall $
+# $Id: config_fousb.py 481 2013-02-14 19:22:56Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -90,7 +90,8 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    debug = options.debug or weewx.debug # @UnusedVariable
+    if options.debug is not None:
+        weewx.debug = options.debug
 
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
     print 'Using configuration file %s' % config_fn
@@ -312,14 +313,14 @@ def showfixedblock(station):
         if (i+1) % 16 == 0:
             print
 
-def showrecords(station, ts=0, count=0, format_output='raw'):
+def showrecords(station, ts=0, count=0, fmt='raw'):
     """Display the indicated number of records or the records since the 
     specified timestamp (local time, in seconds)"""
     records = station.get_records(since_ts=ts, num_rec=count)
     for i,r in enumerate(records):
-        if format_output.lower() == 'raw':
+        if fmt.lower() == 'raw':
             raw_dump(r['datetime'], r['ptr'], r['raw_data'])
-        elif format_output.lower() == 'table':
+        elif fmt.lower() == 'table':
             table_dump(r['datetime'], r['data'], i==0)
         else:
             print r['datetime'], r['data']

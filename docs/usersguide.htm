@@ -707,12 +707,12 @@ Version: 2.2.1
       <span class='code'>ADAPTIVE</span>.  In
       <span class='code'>PERIODIC</span> mode,
       <span class='code'>weewx</span> queries the console at regular intervals
-      determined by the <span class='code'>sample_period</span>.
+      determined by the <span class='code'>polling_interval</span>.
       In <span class='code'>ADAPTIVE</span> mode,
       <span class='code'>weewx</span> attempts to query the 
       console at times when it is not reading data from the sensors or writing
       data to memory.  The default is <span class='code'>PERIODIC</span>.</p>
-    <p class='config_option'>sample_period</p>
+    <p class='config_option'>polling_interval</p>
     <p>The frequency, in seconds, at which <span class='code'>weewx</span> will
       poll the console for data.  This setting applies only when the 
       <span class='code'>polling_mode</span> is
@@ -1331,49 +1331,10 @@ Pressure offset is now 1.247000</p>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
     <h3>Operating modes</h3>
-    <p>There are two modes for obtaining archive records, hardware or software, and two modes for collecting 'live' sensor readings, adaptive or periodic.
+    <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
     </p>
-    <p>To obtain archive records, <span class='code'>weewx</span> can read archive records from the station console, or calculate archive records independent of the station memory.  This is controlled by the <span class='code'>record_generation</span> parameter.
+    <p>There are two modes for collecting 'live' sensor readings, adaptive or periodic, and two modes for obtaining archive records, hardware or software.
     </p>
-    <table>
-      <tr>
-        <td width='15%'>Mode</td>
-        <td width='30%'><span class='code'>weewx.conf</span></td>
-        <td>Notes</td>
-      </tr>
-      <tr>
-        <td><p>Read from archive</p></td>
-        <td>
-          <p class='tty' style='margin:0'>[StdArchive]
-    archive_interval = 300
-    record_generation = hardware</p>
-        </td>
-        <td>
-          <p>In this mode, archive records are read from the console archive.  Each console archive record is an average of live samples over the logging interval, so each record in the weewx archive database will be an average of station sensor readings.
-          </p>
-          <p>When weewx starts up it will attempt to download all records from the console since the last record in the weewx archive database.
-          </p>
-          <p>The <span class='code'>archive_interval</span> should match the logging interval specified in the console. Use <span class='code'>wee_config_fousb</span> to set the console logging interval.
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td><p>Read from sensors</p></td>
-        <td>
-          <p class='tty' style='margin:0'>[StdArchive]
-    archive_interval = 300
-    record_generation = software</p>
-        </td>
-        <td>
-          <p>In this mode, <span class='code'>weewx</span> calculates archive records based on the live data from the console.
-          </p>
-          <p>When weewx starts up it will attempt to download all records from the console since the last record in the weewx archive database.
-          </p>
-          <p>Note that the records from the console memory are averages of station sensor readings.
-          </p>
-        </td>
-      </tr>
-    </table>
     <p>When reading 'live' data, <span class='code'>weewx</span> can read as fast as possible, or at a user-defined period.  This is controlled by the <span class='code'>polling_mode</span> parameter.
     </p>
     <table>
@@ -1397,13 +1358,52 @@ Pressure offset is now 1.247000</p>
         <td>
           <p class='tty' style='margin:0'>[FineOffsetUSB]
     polling_mode = PERIODIC
-    sample_period = 300</p>
+    polling_interval = 60</p>
         </td>
         <td>
-          <p>In this mode, <span class='code'>weewx</span> reads data from the station every <span class='code'>sample_period</span> seconds.</p>
+          <p>In this mode, <span class='code'>weewx</span> reads data from the station every <span class='code'>polling_interval</span> seconds.</p>
         </td>
       </tr>
     </table>
+    <p>To obtain archive records, <span class='code'>weewx</span> can read archive records from the station console, or calculate archive records independent of the station memory.  This is controlled by the <span class='code'>record_generation</span> parameter.
+    </p>
+    <table>
+      <tr>
+        <td width='15%'>Mode</td>
+        <td width='30%'><span class='code'>weewx.conf</span></td>
+        <td>Notes</td>
+      </tr>
+      <tr>
+        <td><p>Read from archive</p></td>
+        <td>
+          <p class='tty' style='margin:0'>[StdArchive]
+    archive_interval = 300
+    record_generation = hardware</p>
+        </td>
+        <td>
+          <p>In this mode, archive records are read from the console archive.  Each console archive record is an average of live samples over the logging interval, so each record in the weewx archive database will be an average of station sensor readings.
+          </p>
+          <p>The <span class='code'>archive_interval</span> should match the logging interval specified in the console. Use <span class='code'>wee_config_fousb</span> to set the console logging interval.
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td><p>Calculate from sensors</p></td>
+        <td>
+          <p class='tty' style='margin:0'>[StdArchive]
+    archive_interval = 300
+    record_generation = software</p>
+        </td>
+        <td>
+          <p>In this mode, <span class='code'>weewx</span> calculates archive records based on the live data from the console.  The <span class='code'>archive_interval</span> determines how often an archive record will be calculated.
+          </p>
+        </td>
+      </tr>
+    </table>
+    <p>The <span class='code'>archive_interval</span> should always be greater than the <span class='code'>polling_interval</span>.  300 (5 minutes) is a typical value for the archive interval.
+    </p>
+    <p>If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
+    </p>
 
       <h1>Configuring MySQL</h1>
     <p>This section applies only for those using MySQL.</p>
@@ -1661,7 +1661,7 @@ sudo /etc/init.d/apache restart</p>
 
     <h2>Hardware</h2>
     <h3>Establishing connectivity</h3>
-    <p>If you unable to get anything out of <span class="code">weewx</span>, first 
+    <p>If you are unable to get anything out of <span class="code">weewx</span>, first 
       check that you have connectivity to your weather station. For the Davis stations, 
       you can use a terminal emulator (I like <span class="code">minicom</span> because 
       it can be run from through a simple TTY connection) to run a simple test. Set 
