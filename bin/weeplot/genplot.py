@@ -12,6 +12,7 @@
 import time
 import Image
 import ImageDraw
+import colorsys
 
 import weeplot.utilities
 import weeutil.weeutil
@@ -555,3 +556,41 @@ class PlotLine(object):
         self.interval    = interval
         self.vector_rotate = vector_rotate
         self.gap_fraction = gap_fraction
+
+def blend_hls(c, bg, alpha):
+    """Fade from c to bg using alpha channel where 1 is solid and 0 is
+    transparent.  This fades across the hue, saturation, and lightness."""
+    return blend(c, bg, alpha, alpha, alpha)
+
+def blend_ls(c, bg, alpha):
+    """Fade from c to bg where 1 is solid and 0 is transparent.
+    Change only the lightness and saturation, not hue."""
+    return blend(c, bg, 1.0, alpha, alpha)
+
+def blend(c, bg, alpha_h, alpha_l, alpha_s):
+    """Fade from c to bg in the hue, lightness, saturation colorspace."""
+    r1,g1,b1 = int2rgb(c)
+    h1,l1,s1 = colorsys.rgb_to_hls(r1/256.0, g1/256.0, b1/256.0)
+    r2,g2,b2 = int2rgb(bg)
+    h2,l2,s2 = colorsys.rgb_to_hls(r2/256.0, g2/256.0, b2/256.0)
+    h = alpha_h * h1 + (1 - alpha_h) * h2
+    l = alpha_l * l1 + (1 - alpha_l) * l2
+    s = alpha_s * s1 + (1 - alpha_s) * s2
+    r,g,b = colorsys.hls_to_rgb(h, l, s)
+    r = round(r * 256.0)
+    g = round(g * 256.0)
+    b = round(b * 256.0)
+    t = rgb2int(int(r),int(g),int(b))
+    return int(t)
+
+def int2rgb(x):
+    b = (x >> 16) & 0xff
+    g = (x >> 8) & 0xff
+    r = x & 0xff
+    return r,g,b
+
+def int2rgbstr(x):
+    return '#%02x%02x%02x' % int2rgb(x)
+
+def rgb2int(r,g,b):
+    return r + g*256 + b*256*256

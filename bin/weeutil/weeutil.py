@@ -576,10 +576,9 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     """
     first = 'day'
     values = []
-    sts = start_ts
     if lon < 0:
-        sts -= 24*3600
-    for t in range(sts, end_ts+1, 3600*24):
+        start_ts -= 24*3600
+    for t in range(start_ts, end_ts+1, 3600*24):
         x_tt = time.gmtime(t)
         y, m, d = x_tt[:3]
         (sunrise_utc, sunset_utc) = Sun.sunRiseSet(y, m, d, lon, lat)
