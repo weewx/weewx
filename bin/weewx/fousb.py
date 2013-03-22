@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 554 2013-03-22 21:41:16Z mwall $
+# $Id: fousb.py 555 2013-03-22 22:13:03Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -1008,9 +1008,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 range_lo = max(range_lo, lo)
                 err = (range_hi - range_lo) / 2
                 last_date = range_lo + err
-                logdbg('estimated log time %s +/- %ds (%s..%s)',
-                       last_date.strftime('%H:%M:%S'), err.seconds,
-                       lo.strftime('%H:%M:%S'), hi.strftime('%H:%M:%S'))
+                logdbg('estimated log time %s +/- %ds (%s..%s)' %
+                       (last_date.strftime('%H:%M:%S'), err.seconds,
+                        lo.strftime('%H:%M:%S'), hi.strftime('%H:%M:%S')))
                 if err < datetime.timedelta(seconds=15):
                     last_ptr = self.dec_ptr(last_ptr)
                     break
