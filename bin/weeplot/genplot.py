@@ -12,7 +12,6 @@
 import time
 import Image
 import ImageDraw
-import colorsys
 
 import weeplot.utilities
 import weeutil.weeutil
@@ -94,7 +93,6 @@ class GeneralPlot(object):
         self.daynight_day_color     = weeplot.utilities.tobgr(config_dict.get('daynight_day_color', '0xffffff'))
         self.daynight_night_color   = weeplot.utilities.tobgr(config_dict.get('daynight_night_color', '0xf0f0f0'))
         self.daynight_edge_color    = weeplot.utilities.tobgr(config_dict.get('daynight_edge_color', '0xefefef'))
-        self.daynight_gradient      = int(config_dict.get('daynight_gradient', 10))
 
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot.
@@ -211,35 +209,6 @@ class GeneralPlot(object):
             xleft = x
             color = self.daynight_night_color if color == self.daynight_day_color else self.daynight_day_color
         sdraw.rectangle(((xleft,self.yscale[0]),(self.xscale[1],self.yscale[1])), fill=color)
-        # draw gradients
-        if self.daynight_gradient:
-            nfade = self.daynight_gradient
-            if first == 'day':
-                color1 = self.daynight_day_color
-                color2 = self.daynight_night_color
-            else:
-                color1 = self.daynight_night_color
-                color2 = self.daynight_day_color
-            # gradient is longer at the poles than the equator
-            d = 120 + 300 * (1 - (90.0 - abs(self.latitude)) / 90.0)
-            for i in range(len(transitions)):
-                last = self.xscale[0] if i == 0 else transitions[i-1]
-                next = transitions[i+1] if i < len(transitions)-1 else self.xscale[1]
-                for z in range(1,nfade):
-                    c = blend_hls(color2, color1, float(z)/float(nfade))
-                    rgbc = int2rgbstr(c)
-                    x1 = transitions[i]-d*(nfade+1)/2+d*z
-                    if last < x1 < next: # ensure gradients do not clash
-                        sdraw.rectangle(((x1, self.yscale[0]),
-                                         (x1+d, self.yscale[1])),
-                                        fill=rgbc)
-                if color1 == self.daynight_day_color:
-                    color1 = self.daynight_night_color
-                    color2 = self.daynight_day_color
-                else:
-                    color1 = self.daynight_day_color
-                    color2 = self.daynight_night_color
-        # draw the rise/set transitions
         for x in transitions:
             sdraw.line((x,x),(self.yscale[0],self.yscale[1]), fill=self.daynight_edge_color)
 
@@ -556,41 +525,3 @@ class PlotLine(object):
         self.interval    = interval
         self.vector_rotate = vector_rotate
         self.gap_fraction = gap_fraction
-
-def blend_hls(c, bg, alpha):
-    """Fade from c to bg using alpha channel where 1 is solid and 0 is
-    transparent.  This fades across the hue, saturation, and lightness."""
-    return blend(c, bg, alpha, alpha, alpha)
-
-def blend_ls(c, bg, alpha):
-    """Fade from c to bg where 1 is solid and 0 is transparent.
-    Change only the lightness and saturation, not hue."""
-    return blend(c, bg, 1.0, alpha, alpha)
-
-def blend(c, bg, alpha_h, alpha_l, alpha_s):
-    """Fade from c to bg in the hue, lightness, saturation colorspace."""
-    r1,g1,b1 = int2rgb(c)
-    h1,l1,s1 = colorsys.rgb_to_hls(r1/256.0, g1/256.0, b1/256.0)
-    r2,g2,b2 = int2rgb(bg)
-    h2,l2,s2 = colorsys.rgb_to_hls(r2/256.0, g2/256.0, b2/256.0)
-    h = alpha_h * h1 + (1 - alpha_h) * h2
-    l = alpha_l * l1 + (1 - alpha_l) * l2
-    s = alpha_s * s1 + (1 - alpha_s) * s2
-    r,g,b = colorsys.hls_to_rgb(h, l, s)
-    r = round(r * 256.0)
-    g = round(g * 256.0)
-    b = round(b * 256.0)
-    t = rgb2int(int(r),int(g),int(b))
-    return int(t)
-
-def int2rgb(x):
-    b = (x >> 16) & 0xff
-    g = (x >> 8) & 0xff
-    r = x & 0xff
-    return r,g,b
-
-def int2rgbstr(x):
-    return '#%02x%02x%02x' % int2rgb(x)
-
-def rgb2int(r,g,b):
-    return r + g*256 + b*256*256
