@@ -23,12 +23,15 @@ Fixed FineOffsetUSB driver to handle cases where the 'delay' is undefined,
 resulting in a TypeError that caused weewx to stop.
 
 Modified wee_config_vantage and wee_config_fousb so that the configuration
-file is optional.
+file will be guessed if none is specified.
 
 Fixed wxformulas.heatindexC to handle arguments of None type.
 
 rsync now allows a port to be specified.
 
+Fixed day/night transition bug.
+
+Added gradients to the day/night transitions.
 
 2.2.1 02/15/13
 
