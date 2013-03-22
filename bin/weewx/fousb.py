@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 553 2013-03-21 23:22:52Z mwall $
+# $Id: fousb.py 554 2013-03-22 21:41:16Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -912,17 +912,21 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         Return an array of dict, with each dict containing a datetimestamp
         in UTC, the pointer, the decoded data, and the raw data.
         """
-        dts, ptr = self.sync()
         fixed_block = self.get_fixed_block(unbuffered=True)
-        max_count = fixed_block['data_count'] - 1
+        if fixed_block['read_period'] is None:
+            raise weewx.WeeWxIOError('invalid read_period in get_records')
+        if fixed_block['data_count'] is None:
+            raise weewx.WeeWxIOError('invalid data_count in get_records')
         if since_ts != 0:
             dt = datetime.datetime.utcfromtimestamp(since_ts)
             dt += datetime.timedelta(seconds=fixed_block['read_period'] * 30)
         else:
             dt = datetime.datetime.min
+        max_count = fixed_block['data_count'] - 1
         if num_rec == 0 or num_rec > max_count:
             num_rec = max_count
         logdbg('get %d records since %s' % (num_rec, dt))
+        dts, ptr = self.sync(read_period=fixed_block['read_period'])
         count = 0
         records = []
         while dts > dt and count < num_rec:
@@ -943,7 +947,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             ptr = self.dec_ptr(ptr)
         return records
 
-    def sync(self, quality=None):
+    def sync(self, quality=None, read_period=None):
         """Synchronise with the station to determine the date and time of the
         latest record.  Return the datetime stamp in UTC and the record
         pointer. The quality determines the accuracy of the synchronisation.
@@ -955,8 +959,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         interval to complete.
         """
         if quality is None:
-            fixed_block = self.get_fixed_block(unbuffered=True)
-            if fixed_block['read_period'] <= 5:
+            if read_period is not None and read_period <= 5:
                 quality = 1
             else:
                 quality = 0
@@ -981,7 +984,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 logerr('invalid data at 0x%04x while synchronising' % last_ptr)
                 count += 1
                 if count > maxcount:
-                    raise Exception('repeated invalid data while synchronising')
+                    raise weewx.WeeWxIOError('repeated invalid delay while synchronising')
                 continue
             if quality < 2 and self._station_clock:
                 err = last_date - datetime.datetime.fromtimestamp(self._station_clock)
@@ -1031,12 +1034,14 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         # due. (During initialisation we get data every two seconds
         # anyway.)
         read_period = self.get_fixed_block(['read_period'])
+        if read_period is None:
+            raise ObservationError('invalid read_period at 0x%04x' % old_ptr)
         log_interval = float(read_period * 60)
         live_interval = 48.0
         old_ptr = self.current_pos()
         old_data = self.get_data(old_ptr, unbuffered=True)
         if old_data['delay'] is None:
-            raise ObservationError('invalid data at 0x%04x' % old_ptr)
+            raise ObservationError('invalid delay at 0x%04x' % old_ptr)
         now = time.time()
         if self._sensor_clock:
             next_live = now
@@ -1088,7 +1093,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             last_data_time = data_time
             new_data = self.get_data(old_ptr, unbuffered=True)
             if new_data['delay'] is None:
-                raise ObservationError('invalid data at 0x%04x' % old_ptr)
+                raise ObservationError('invalid delay at 0x%04x' % old_ptr)
             data_time = time.time()
             # 'good' time stamp if we haven't just woken up from long
             # pause and data read wasn't delayed
