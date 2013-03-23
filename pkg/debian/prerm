@@ -15,7 +15,7 @@
 # abort if any command returns error
 set -e
 
-if [ "$1" != remove ]; then
+if [ "$1" != remove -a "$1" != upgrade ]; then
     exit 0
 fi
 
