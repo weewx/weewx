@@ -53,50 +53,50 @@ Notes about Sensor Pressure vs. Station Pressure:
 
 import math
 
-def FToC(v): 
-    return (v - 32.0) * (5.0 / 9.0)
+def FToC(value): 
+    return (value - 32.0) * (5.0 / 9.0)
 
-def CToF(v): 
-    return (5.0/9.0)*v + 32.0
+def CToF(value): 
+    return (5.0/9.0)*value + 32.0
 
-def CToK(v): 
-    return v + 273.15
+def CToK(value): 
+    return value + 273.15
 
-def KToC(v): 
-    return v - 273.15
+def KToC(value): 
+    return value - 273.15
 
-def FToR(v): 
-    return v + 459.67
+def FToR(value): 
+    return value + 459.67
 
-def RToF(v):
-    return v - 459.67
+def RToF(value):
+    return value - 459.67
 
-def InToHPa(v):
-    return v / 0.02953
+def InToHPa(value):
+    return value / 0.02953
 
-def HPaToIn(v):
-    return v * 0.02953
+def HPaToIn(value):
+    return value * 0.02953
 
-def FtToM(v):
-    return v * 0.3048
+def FtToM(value):
+    return value * 0.3048
 
-def MToFt(v):
-    return v / 0.3048
+def MToFt(value):
+    return value / 0.3048
 
-def InToMm(v): 
-    return v * 25.4
+def InToMm(value): 
+    return value * 25.4
 
-def MmToIn(v): 
-    return v / 25.4
+def MmToIn(value): 
+    return value / 25.4
 
-def MToKm(v): # Miles !
-    return v * 1.609344
+def MToKm(value): # NB: This is *miles* to Km.
+    return value * 1.609344
 
-def KmToM(v): # Miles !
-    return v / 1.609344
+def KmToM(value): # NB: This is Km to *miles*
+    return value / 1.609344
 
-def msToKmh(v):
-    return v * 3.6
+def msToKmh(value):
+    return value * 3.6
 
 def Power10(y):
     return pow(10.0, y)
@@ -219,7 +219,7 @@ class TWxUtils(object):
         elif algorithm == 'paDavisVp':
             #see http://www.exploratorium.edu/weather/barometer.html
             if (humidity > 0):
-                hCorr = (9.0/5.0) * TWxUtils.HumidityCorrection(currentTempC, elevationM, humidity, 'vaDavisVP')
+                hCorr = (9.0/5.0) * TWxUtils.HumidityCorrection(currentTempC, elevationM, humidity, 'vaDavisVp')
             else:
                 hCorr = 0
             # In the case of DavisVp, take the constant values literally.
@@ -317,14 +317,14 @@ class TWxUtilsUS(object):
 
     @staticmethod
     def StationToSensorPressure(pressureIn, sensorElevationFt, stationElevationFt, currentTempF):
-        Result = pressureIn / TWxUtils.Power10(0.00813 * (sensorElevationFt - stationElevationFt)
-                                               / TWxUtils.FToR(currentTempF))
+        Result = pressureIn / Power10(0.00813 * (sensorElevationFt - stationElevationFt)
+                                               / FToR(currentTempF))
         return Result
 
     @staticmethod
     def StationToAltimeter(pressureIn, elevationFt, 
                         algorithm='aaMADIS'):
-        Result = TWxUtils.HPaToIn(TWxUtils.StationToAltimeter(TWxUtils.InToHPa(pressureIn),
+        Result = HPaToIn(TWxUtils.StationToAltimeter(InToHPa(pressureIn),
                         FtToM(elevationFt), algorithm))
         return Result
 
@@ -340,22 +340,22 @@ class TWxUtilsUS(object):
     def SensorToStationPressure(pressureIn,
                            sensorElevationFt, stationElevationFt,
                            currentTempF):
-        Result = pressureIn * TWxUtils.Power10(0.00813 * (sensorElevationFt - stationElevationFt)
-                                       / TWxUtils.FToR(currentTempF))
+        Result = pressureIn * Power10(0.00813 * (sensorElevationFt - stationElevationFt)
+                                       / FToR(currentTempF))
         return Result
 
     @staticmethod
     def AltimeterToStationPressure(pressureIn, elevationFt,
                         algorithm='aaMADIS'):
-        Result = TWxUtils.AltimeterToStationPressure(TWxUtils.InToHPa(pressureIn),
-                        TWxUtils.FtToM(elevationFt), algorithm)
+        Result = TWxUtils.AltimeterToStationPressure(InToHPa(pressureIn),
+                        FtToM(elevationFt), algorithm)
         return Result
 
     @staticmethod
     def SeaLevelToStationPressure(pressureIn, elevationFt,
                         currentTempF, meanTempF, humidity,
                         algorithm='paManBar'):
-        Result = pressureIn / TWxUtils.PressureReductionRatio(pressureIn, elevationFt,
+        Result = pressureIn / TWxUtilsUS.PressureReductionRatio(pressureIn, elevationFt,
                         currentTempF, meanTempF, humidity, algorithm)
         return Result
 
@@ -363,9 +363,9 @@ class TWxUtilsUS(object):
     def PressureReductionRatio(pressureIn, elevationFt,
                         currentTempF, meanTempF, humidity,
                         algorithm='paManBar'):
-        Result = TWxUtils.PressureReductionRatio(TWxUtils.InToHPa(pressureIn),
-                        TWxUtils.FtToM(elevationFt), TWxUtils.FToC(currentTempF),
-                        TWxUtils.FToC(meanTempF), humidity, algorithm)
+        Result = TWxUtils.PressureReductionRatio(InToHPa(pressureIn),
+                        FtToM(elevationFt), FToC(currentTempF),
+                        FToC(meanTempF), humidity, algorithm)
         return Result
 
     @staticmethod
@@ -377,25 +377,25 @@ class TWxUtilsUS(object):
     @staticmethod
     def SaturationVaporPressure(tempF,
                         algorithm='vaBolton'):
-        Result = TWxUtils.HPaToIn(TWxUtils.SaturationVaporPressure(TWxUtils.FToC(tempF), algorithm))
+        Result = HPaToIn(TWxUtils.SaturationVaporPressure(FToC(tempF), algorithm))
         return Result
 
     @staticmethod
     def MixingRatio(pressureIn, tempF, humidity):
-        Result = TWxUtils.HPaToIn(TWxUtils.MixingRatio(TWxUtils.InToHPa(pressureIn),
-                    TWxUtils.FToC(tempF), humidity))
+        Result = HPaToIn(TWxUtils.MixingRatio(InToHPa(pressureIn),
+                    FToC(tempF), humidity))
         return Result
 
     @staticmethod
     def HumidityCorrection(tempF, elevationFt, humidity,
                         algorithm='vaBolton'):
-        Result = TWxUtils.HumidityCorrection(TWxUtils.FToC(tempF), TWxUtils.FtToM(elevationFt),
+        Result = TWxUtils.HumidityCorrection(FToC(tempF), FtToM(elevationFt),
                     humidity, algorithm)
         return Result
 
     @staticmethod
     def GeopotentialAltitude(geometricAltitudeFt):
-        Result = TWxUtils.MToFt(TWxUtils.GeopotentialAltitude(TWxUtils.FtToM(geometricAltitudeFt)))
+        Result = MToFt(TWxUtils.GeopotentialAltitude(FtToM(geometricAltitudeFt)))
         return Result
 
 #===============================================================================
@@ -444,8 +444,13 @@ class uWxUtilsVP(object):
     # meanTempF is from BARDATA.VirtualTemp
     # humidityCorr is from BARDATA.C (remember to first divide C by 10)
     @staticmethod
-    def SeaLevelToSensorPressure_meanT(pressureIn, elevationFt,
-                               meanTempF, humidityCorr):
+    def SeaLevelToSensorPressure_meanT(pressureIn, elevationFt, meanTempF, humidityCorr):
+        """Example:
+        
+        >>> p = uWxUtilsVP.SeaLevelToSensorPressure_12(30.327, 700, 31.3, 41.5, 90)
+        >>> print "Sensor pressure using mean temperature = %.2f" % p
+        Sensor pressure using mean temperature = 29.53
+        """
         Result = TWxUtilsUS.SeaLevelToStationPressure(pressureIn, elevationFt, meanTempF,
                                   meanTempF + humidityCorr, 0, 'paDavisVp')
         return Result
@@ -457,10 +462,22 @@ class uWxUtilsVP(object):
     # temp12HrsAgoF is the temperature from 12 hours ago (see comments on
     #           temp12Hr from earlier in this document for more on this).
     @staticmethod
-    def SeaLevelToSensorPressure_12(pressureIn, elevationFt,
-                                    currentTempF, temp12HrsAgoF,
-                                    humidity):
-        Result = TWxUtilsUS.SeaLevelToStationPressure_metanT(pressureIn, elevationFt, currentTempF,
+    def SeaLevelToSensorPressure_12(pressureIn, elevationFt, currentTempF, temp12HrsAgoF, humidity):
+        """Example:
+        
+        >>> p = uWxUtilsVP.SeaLevelToSensorPressure_meanT(30.327, 700, 34, 1.1)
+        >>> print "Sensor pressure using temperature 12 hours ago = %.2f" % p
+        Sensor pressure using temperature 12 hours ago = 29.53
+        """
+        Result = TWxUtilsUS.SeaLevelToStationPressure(pressureIn, elevationFt, currentTempF,
                                     Round(((Round(currentTempF - 0.01) + Round(temp12HrsAgoF - 0.01)) / 2) - 0.01),
                                     humidity, 'paDavisVp')
         return Result
+
+
+if __name__ == "__main__":
+    
+    import doctest
+
+    if not doctest.testmod().failed:
+        print "PASSED"
