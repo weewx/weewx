@@ -15,7 +15,7 @@ import sys
 import syslog
 import time
 
-import weewx.VantagePro
+import weewx.vantage
 import weeutil.weeutil
 
 description = """Configures the Davis Vantage weather station."""
@@ -71,7 +71,7 @@ def main():
         parser.error("Cannot specify both --start and --stop")
 
     # Open up the weather station:
-    station = weewx.VantagePro.Vantage(**config_dict['Vantage'])
+    station = weewx.vantage.Vantage(**config_dict['Vantage'])
 
     if options.info:
         info(station)
@@ -263,7 +263,7 @@ def set_bucket(station, new_bucket_type):
     print "Old rain bucket type is %d (%s), new one is %d (%s)." % (station.rain_bucket_type, 
                                                                     station.rain_bucket_size,
                                                                     new_bucket_type, 
-                                                                    weewx.VantagePro.Vantage.rain_bucket_dict[new_bucket_type])
+                                                                    weewx.vantage.Vantage.rain_bucket_dict[new_bucket_type])
     if station.rain_bucket_type == new_bucket_type:
         print "Old and new bucket types are the same. Nothing done."
     else:
