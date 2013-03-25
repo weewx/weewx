@@ -29,8 +29,6 @@ bin/weeutil/__init__.py
 bin/weeutil/ftpupload.py
 bin/weeutil/rsyncupload.py
 bin/weeutil/weeutil.py
-bin/weewx/VantagePro.py
-bin/weewx/WMR918.py
 bin/weewx/__init__.py
 bin/weewx/abstractstation.py
 bin/weewx/accum.py
@@ -46,9 +44,13 @@ bin/weewx/simulator.py
 bin/weewx/station.py
 bin/weewx/stats.py
 bin/weewx/units.py
-bin/weewx/wmrx.py
+bin/weewx/vantage.py
+bin/weewx/wmr100.py
+bin/weewx/wmr200.py
+bin/weewx/wmr9x8.py
 bin/weewx/wxengine.py
 bin/weewx/wxformulas.py
+bin/weewx/wxpressure.py
 docs/changes.txt
 docs/copyright.htm
 docs/customizing.htm
