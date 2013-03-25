@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 555 2013-03-22 22:13:03Z mwall $
+# $Id: fousb.py 556 2013-03-25 03:10:02Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -784,10 +784,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     raise Exception("unknown polling mode '%s'" % self.polling_mode)
 
             except (IndexError, usb.USBError, ObservationError), e:
-                logerr('read data failed: %s' % e)
+                logerr('get_observations failed: %s' % e)
                 nerr += 1
                 if nerr > self.max_tries:
-                    raise weewx.WeeWxIOError("Max retries exceeded while fetching data")
+                    raise weewx.WeeWxIOError("Max retries exceeded while fetching observations")
                 time.sleep(self.wait_before_retry)
 
 #==============================================================================
@@ -912,40 +912,50 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         Return an array of dict, with each dict containing a datetimestamp
         in UTC, the pointer, the decoded data, and the raw data.
         """
-        fixed_block = self.get_fixed_block(unbuffered=True)
-        if fixed_block['read_period'] is None:
-            raise weewx.WeeWxIOError('invalid read_period in get_records')
-        if fixed_block['data_count'] is None:
-            raise weewx.WeeWxIOError('invalid data_count in get_records')
-        if since_ts != 0:
-            dt = datetime.datetime.utcfromtimestamp(since_ts)
-            dt += datetime.timedelta(seconds=fixed_block['read_period'] * 30)
-        else:
-            dt = datetime.datetime.min
-        max_count = fixed_block['data_count'] - 1
-        if num_rec == 0 or num_rec > max_count:
-            num_rec = max_count
-        logdbg('get %d records since %s' % (num_rec, dt))
-        dts, ptr = self.sync(read_period=fixed_block['read_period'])
-        count = 0
-        records = []
-        while dts > dt and count < num_rec:
-            raw_data = self.get_raw_data(ptr)
-            data = self.decode(raw_data)
-            if data['delay'] is None or data['delay'] > 30:
-                logerr('invalid data at 0x%04x, %s' % (ptr, dts.isoformat()))
-                dts -= datetime.timedelta(minutes=fixed_block['read_period'])
-            else:
-                record = dict()
-                record['ptr'] = ptr
-                record['datetime'] = dts
-                record['data'] = data
-                record['raw_data'] = raw_data
-                records.append(record)
-                count += 1
-                dts -= datetime.timedelta(minutes=data['delay'])
-            ptr = self.dec_ptr(ptr)
-        return records
+        nerr = 0
+        while True:
+            try:
+                fixed_block = self.get_fixed_block(unbuffered=True)
+                if fixed_block['read_period'] is None:
+                    raise weewx.WeeWxIOError('invalid read_period in get_records')
+                if fixed_block['data_count'] is None:
+                    raise weewx.WeeWxIOError('invalid data_count in get_records')
+                if since_ts != 0:
+                    dt = datetime.datetime.utcfromtimestamp(since_ts)
+                    dt += datetime.timedelta(seconds=fixed_block['read_period']*30)
+                else:
+                    dt = datetime.datetime.min
+                max_count = fixed_block['data_count'] - 1
+                if num_rec == 0 or num_rec > max_count:
+                    num_rec = max_count
+                logdbg('get %d records since %s' % (num_rec, dt))
+                dts, ptr = self.sync(read_period=fixed_block['read_period'])
+                count = 0
+                records = []
+                while dts > dt and count < num_rec:
+                    raw_data = self.get_raw_data(ptr)
+                    data = self.decode(raw_data)
+                    if data['delay'] is None or data['delay'] > 30:
+                        logerr('invalid data at 0x%04x, %s' %
+                               (ptr, dts.isoformat()))
+                        dts -= datetime.timedelta(minutes=fixed_block['read_period'])
+                    else:
+                        record = dict()
+                        record['ptr'] = ptr
+                        record['datetime'] = dts
+                        record['data'] = data
+                        record['raw_data'] = raw_data
+                        records.append(record)
+                        count += 1
+                        dts -= datetime.timedelta(minutes=data['delay'])
+                    ptr = self.dec_ptr(ptr)
+                return records
+            except (IndexError, usb.USBError, ObservationError), e:
+                logerr('get_records failed: %s' % e)
+                nerr += 1
+                if nerr > self.max_tries:
+                    raise weewx.WeeWxIOError("Max retries exceeded while fetching records")
+                time.sleep(self.wait_before_retry)
 
     def sync(self, quality=None, read_period=None):
         """Synchronise with the station to determine the date and time of the
