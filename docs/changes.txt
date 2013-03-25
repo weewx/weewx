@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-2.X
+2.3.X XX/XX/13
 
 A bad record archive type now causes a catch up to be abandoned, rather
 than program termination.
@@ -32,6 +32,16 @@ rsync now allows a port to be specified.
 Fixed day/night transition bug.
 
 Added gradients to the day/night transitions.
+
+The names of the drivers have changed to make them more consistent.
+	old                       new
+	VantagePro.py (Vantage)   vantage.py (Vantage)
+	WMR918.py (WMR-918)       wmr9x8.py (WMR9x8)
+	wmrx.py (WMR-USB)         wmr100.py (WMR100)
+	
+	new drivers:
+	wmr200.py (WMR200)
+	ws28xx.py (WS28xx)
 
 2.2.1 02/15/13
 

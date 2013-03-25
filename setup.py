@@ -255,20 +255,20 @@ class weewx_install_data(install_data):
             # I don't know how to merge older, V1.X configuration files, only
             # newer V2.X ones.
             if old_version_number[0:2] >= ['2','00']:
-                # Merge the old configuration file into the new file, thus
-                # saving any user modifications.
-                # First, turn interpolation off:
+                # Update the old version to reflect any changes made since it
+                # was created:
+                self.updateVersion(old_config)
+                # Now merge the old configuration file into the new file, thus
+                # saving any user modifications. First, turn interpolation off:
                 old_config.interpolation = False
-                # Now do the merge:
+                # Now merge the old version into the new:
                 new_config.merge(old_config)
-                # Option stats_types has been moved to bin/user/schemas.py
-                new_config['StdArchive'].pop('stats_types', None)
                         
         # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
         new_config['WEEWX_ROOT'] = self.install_dir
         # Add the version:
         new_config['version'] = VERSION
-
+        
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         
@@ -290,6 +290,62 @@ class weewx_install_data(install_data):
 
         return rv
 
+    def updateVersion(self, config_dict):
+        """Updates a configuration file to reflect any recent changes."""
+        
+        # Option stats_types is no longer used. Get rid of it.
+        config_dict['StdArchive'].pop('stats_types', None)
+        
+        # Name changes for the Davis Vantage series:
+        try:
+            if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
+                config_dict['Vantage']['driver'] = 'weewx.vantage'
+        except KeyError:
+            pass
+        
+        # --- Name changes for the WMR9x8 series ---
+        
+        # The section name has changed from WMR-918 to WMR9x8
+        if config_dict.has_key('WMR-918'):
+            if config_dict.has_key('WMR9x8'):
+                sys.stderr.write("\n*** Configuration file has both a 'WMR-918' section and a 'WMR9x8' section. Aborting ***\n\n")
+                exit()
+            config_dict.rename('WMR-918', 'WMR9x8')
+        # If necessary, reflect the section name in the station type:
+        try:
+            if config_dict['Station']['station_type'].strip() == 'WMR-918':
+                config_dict['Station']['station_type'] = 'WMR9x8'
+        except KeyError:
+            pass
+        # Finally, the name of the driver has been changed
+        try:
+            if config_dict['WMR9x8']['driver'].strip() == 'weewx.WMR918':
+                config_dict['WMR9x8']['driver'] = 'weewx.wmr9x8'
+        except KeyError:
+            pass
+
+        # --- Name changes for the WMR100 ---
+        
+        # The section name has changed from WMR-USB to WMR100
+        if config_dict.has_key('WMR-USB'):
+            if config_dict.has_key('WMR100'):
+                sys.stderr.write("\n*** Configuration file has both a 'WMR-USB' section and a 'WMR100' section. Aborting ***\n\n")
+                exit()
+            config_dict.rename('WMR-USB', 'WMR100')
+        # If necessary, reflect the section name in the station type:
+        try:
+            if config_dict['Station']['station_type'].strip() == 'WMR-USB':
+                config_dict['Station']['station_type'] = 'WMR100'
+        except KeyError:
+            pass
+        # Finally, the name of the driver has been changed
+        try:
+            if config_dict['WMR100']['driver'].strip() == 'weewx.wmrx':
+                config_dict['WMR100']['driver'] = 'weewx.wmr100'
+        except KeyError:
+            pass
+        
+        
     def massageStartFile(self, f, install_dir, **kwargs):
 
         outname = os.path.join(install_dir, os.path.basename(f))

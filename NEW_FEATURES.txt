@@ -1,5 +1,7 @@
                     Possible NEW FEATURES
 
+Offer tags to support JSON. In particular, vectors.
+
 Calculate altimeter pressure to send off to CWOP. 
 See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
 In particular, see Paul G's note about softWx.
