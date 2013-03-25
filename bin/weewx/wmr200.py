@@ -104,7 +104,7 @@ class UsbDevice(object):
         if not self.dev:
             return False
 
-	    # Open the device and get a handle.
+        # Open the device and get a handle.
         try:
             self.handle = self.dev.open()
         except usb.USBError, e:
@@ -288,11 +288,11 @@ class Packet(object):
         if self._SizeActual() < 2:
             print 'Packet too small to compute 16 bit checksum'
             return
-        sum = 0
+        checksum = 0
         # Checksum is last two bytes in packet.
         for byte in self.pkt_data[:-2]:
-            sum += byte
-        return sum
+            checksum += byte
+        return checksum
  
     def _checkSumField(self):
         """Returns the checksum field of the current packet
@@ -623,9 +623,9 @@ class PacketTemperature(Packet):
             #        _record['windchill'] 
             # = weewx.wxformulas.windchillC(T, 
             # self.last_wind_record['windSpeed'])
-           # except AttributeError:
-           #     pass
-           # _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
+            # except AttributeError:
+            #     pass
+            # _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
         elif sensor_id >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -823,7 +823,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # Buffer of bytes read from console device.
         self.buf = []
 
-        # Access the console via the usb accessor.
+        # Access the console via the usb accPacketHistoryReadessor.
         self.usb_device = UsbDevice(vendor_id, product_id)
 
         self.usb_device.timeout = float(stn_dict.get('timeout', 15.0))
@@ -964,7 +964,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                 while self.buf:
                     yield self.buf.pop(0)
 
-            except (IndexError, usb.USBError), e:
+            except (IndexError, usb.USBError), e:  # @UnusedVariable
                 yield None
          
     def _PollForData(self):
