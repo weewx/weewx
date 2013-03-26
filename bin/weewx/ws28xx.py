@@ -3063,7 +3063,7 @@ class CCommunicationService(object):
                     newLength[0] = self.buildACKFrame(newBuffer, 5, v55, HistoryIndex, 0xFFFFFFFF);
                     self.DataStore.setRequestState( ERequestState.rsRunning); #1
                 elif rt == ERequestType.rtGetHistory:
-                    lobdbg("handleConfig rt==1 rtGetHistory")
+                    logdbg("handleConfig rt==1 rtGetHistory")
                     self.DataStore.setLastConfigTime( datetime.now())
                     #v43 = (CDataStore::ERequestState)&RecConfig;
                     #v28 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
@@ -3247,7 +3247,8 @@ class CCommunicationService(object):
             logdbg("handleNextAction Buffer[2] == 2")
             #	v16 = CDataStore::getFrontEndConfig( &result);
             #	Data = v16;
-            newLength[0] = self.buildConfigFrame(newBuffer, v16);
+#            newLength[0] = self.buildConfigFrame(newBuffer, v16);
+            pass
             #	CWeatherStationConfig::_CWeatherStationConfig(&result);
         else:
             if (Buffer[0][2] & 0xF) == 3: #(CWeatherStationConfig *)
@@ -3554,6 +3555,7 @@ class CCommunicationService(object):
                 raise
 
     def doRFCommunication(self):
+        DeviceWaitEndTime = datetime.now()
         RequestType = self.DataStore.getRequestType()
         if RequestType == ERequestType.rtFirstConfig:
             logdbg("doRFCommunication: first config")
