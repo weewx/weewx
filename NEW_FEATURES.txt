@@ -1,5 +1,8 @@
                     Possible NEW FEATURES
 
+possibly implement averaging rainRate calculation instead of the
+current near-instantaneous implementation in fousb
+
 Offer tags to support JSON. In particular, vectors.
 
 Calculate altimeter pressure to send off to CWOP. 
@@ -7,23 +10,26 @@ See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weathe
 In particular, see Paul G's note about softWx.
 
 Make record generation from the accumulators into a separate service, allowing 
-easier customization. This would also make calculation of extensive quantities easier.
+easier customization. This would also make calculation of extensive quantities
+easier.
 
-Allow the console to participate as yet another service. Then, the Davis console
-could intercept new archive record events and add rxcheckpercent and rain to
-software generated records.
+Allow the console to participate as yet another service. Then, the Davis
+consolecould intercept new archive record events and add rxcheckpercent and
+rain to software generated records.
 
-Consider breaking the rule that reporting can only be done through the databases and,
-instead, offer up the last record when the reporting thread starts.
+Consider breaking the rule that reporting can only be done through the 
+databases and, instead, offer up the last record when the reporting thread
+starts.
 
-New observation types would have their unit group attached as a suffix. E.g., _energy.
+New observation types would have their unit group attached as a suffix.
+E.g., _energy.
 
 Move to a "plugin" architecture.
 
 Support the WU "RapidFire" protocol.
 
-Use the tagged stats classes for the archive database as well, thus unifying the
-two databases.
+Use the tagged stats classes for the archive database as well, thus unifying
+the two databases.
 
 Offer "cumulative" as an aggregation type.
 

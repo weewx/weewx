@@ -1,9 +1,1 @@
 TODO before the next release:
-
-the ws1090 will sometimes fail with 'station is not logging data' when doing
-catchup on startup, even though wee_config_fousb indicates that the console
-is, in fact, logging data.  need to either add retries for get_records or
-rework easterbrook's live_data code.
-
-possibly implement averaging rainRate calculation instead of the
-current near-instantaneous implementation in fousb
