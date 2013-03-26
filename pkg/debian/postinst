@@ -63,8 +63,8 @@ if [ "$RET" != "" ]; then
             sed -i "0,/ host[ ]*=.*/s// host = $RET/" $cfgfile
         fi
     fi
-    if [ "$RET" = "WMR-918" ]; then
-        db_get weewx/wmr918_port
+    if [ "$RET" = "WMR9x8" ]; then
+        db_get weewx/wmr9x8_port
         sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
     fi
     if [ "$RET" = "FineOffsetUSB" ]; then

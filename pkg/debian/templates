@@ -18,7 +18,7 @@ Description: altitude of the weather station:
 
 Template: weewx/station_type
 Type: select
-Choices: Vantage, WMR-USB, WMR-918, FineOffsetUSB, Simulator
+Choices: Vantage, WMR100, WMR200, WMR9x8, FineOffsetUSB, WS28xx, Simulator
 Default: Simulator
 Description: weather station type:
  The weather station hardware type.  Specify simulator to run weewx without a weather station.

@@ -40,8 +40,8 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
                 fi
             fi
 
-            if [ "$RET" = "WMR-918" ]; then
-                db_input high weewx/wmr918_port || true
+            if [ "$RET" = "WMR9x8" ]; then
+                db_input high weewx/wmr9x8_port || true
             fi
 
             if [ "$RET" = "FineOffsetUSB" ]; then
