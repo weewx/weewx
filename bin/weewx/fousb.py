@@ -1045,7 +1045,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         # anyway.)
         read_period = self.get_fixed_block(['read_period'])
         if read_period is None:
-            raise ObservationError('invalid read_period at 0x%04x' % old_ptr)
+            raise ObservationError('invalid read_period in live_data')
         log_interval = float(read_period * 60)
         live_interval = 48.0
         old_ptr = self.current_pos()
