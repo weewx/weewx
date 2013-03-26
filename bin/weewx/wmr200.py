@@ -13,9 +13,6 @@
 # Special recognition to Lars de Bruin <l...@larsdebruin.net> for contributing
 # packet decoding code.
 #
-#    $Revision$
-#    $Date$
-#
 """Classes and functions to interfacing with an Oregon Scientific WMR200 station
 
     Oregon Scientific
@@ -164,9 +161,8 @@ class UsbDevice(object):
 
     def writeDevice(self, buf):
         """Writes a command packet to the device."""
-        value = 0x00000220
-        if buf[0] == 0x01:
-            value = 0x00000201
+        # Unclear how to create this number, but is the wValue portion
+        # of the set_configuration() specified in the USB spec.
         value = 0x00000220
 
         if not self.handle:
@@ -332,8 +328,6 @@ class Packet(object):
         month = self.pkt_data[5]
         year = 2000 + self.pkt_data[6]
 
-        date = '%04d-%02d-%02d %d:%02d' % (year, month, day, hour, minute)
-            
         ts = time.mktime((year, month, day, hour, minute, 0, -1, -1, -1))
         return ts
 
@@ -370,7 +364,7 @@ class PacketHistoryReady(Packet):
 
     def packetProcess(self):
         """Returns a records field to be processed by the weewx engine."""
-        super(packetProcess, self).packetProcess()
+        super(PacketHistoryReady, self).packetProcess()
  
 class PacketHistoryData(Packet):
     """Packet parser for archived data."""
@@ -407,16 +401,16 @@ class PacketWind(Packet):
 
         # Wind direction in steps of 22.5 degrees.
         # 0 is N, 1 is NNE and so on. See WIND_DIR_MAP for complete list.
-        dirDeg = (self.pkt_data[8] & 0x0f) * 22.5
+        dirDeg = (self.pkt_data[7] & 0x0f) * 22.5
         # Low byte of gust speed in 0.1 m/s.
-        gustSpeed = ((((self.pkt_data[10] >> 4) & 0x0f) << 8) 
+        gustSpeed = ((((self.pkt_data[10]) & 0x0f) << 8) 
                      | self.pkt_data[9])/10.0
         
         # High nibble is low nibble of average speed.
         # Low nibble of high byte and high nibble of low byte
         # of average speed. Value is in 0.1 m/s
-        avgSpeed = ((self.pkt_data[10] << 4) 
-                    | ((self.pkt_data[11] >> 4) & 0x0f)) / 10.0
+        avgSpeed = ((self.pkt_data[10] >> 4) 
+                    | ((self.pkt_data[11] << 4))) / 10.0
        
         # Low and high byte of windchill temperature. The value is
         # in 0.1F. If no windchill is available byte 5 is 0 and byte 6 0x20.
@@ -428,7 +422,7 @@ class PacketWind(Packet):
             windchill = None
       
         if WMR200_DEBUG:
-            print 'Wind Dir: %s' % (WIND_DIR_MAP[self.pkt_data[8]])
+            print 'Wind Dir: %s' % (WIND_DIR_MAP[self.pkt_data[8] & 0x0f])
             print '  Gust: %.1f m/s' % (gustSpeed)
             print '  Wind: %.1f m/s' % (avgSpeed)
             if windchill != None:
@@ -823,7 +817,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # Buffer of bytes read from console device.
         self.buf = []
 
-        # Access the console via the usb accPacketHistoryReadessor.
+        # Access the console via the usb accessor.
         self.usb_device = UsbDevice(vendor_id, product_id)
 
         self.usb_device.timeout = float(stn_dict.get('timeout', 15.0))
@@ -898,7 +892,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
             raise weewx.WakeupError(e)
 
         syslog.syslog(syslog.LOG_INFO, 'wmrx: Reset device')
-        rc = self.usb_device.readDevice()
+        self.usb_device.readDevice()
 
     def _pokeConsole(self):
         self._writeD0()
@@ -934,7 +928,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         """
         buf = [0x01, 0xdb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         try:
-            rc = self.usb_device.writeDevice(buf) 
+            self.usb_device.writeDevice(buf) 
         except usb.USBError, e:
             syslog.syslog(syslog.LOG_ERR, 
                           'wmrx: Unable to send USB control message')
@@ -964,7 +958,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                 while self.buf:
                     yield self.buf.pop(0)
 
-            except (IndexError, usb.USBError), e:  # @UnusedVariable
+            except (IndexError, usb.USBError), e: # @UnusedVariable
                 yield None
          
     def _PollForData(self):
