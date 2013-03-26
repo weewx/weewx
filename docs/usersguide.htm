@@ -241,6 +241,21 @@ Version: 2.3.0a1
 	<td>Tested</td>
       </tr>
       <tr>
+	<td class="text_highlight" rowspan="2">La Crosse</td>
+	<td>C86234</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>WS-28XX</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
 	<td class="text_highlight">National Geographic</td>
 	<td>265</td>
 	<td>USB</td>
@@ -276,6 +291,14 @@ Version: 2.3.0a1
 	<td class="code">pyserial</td>
         <td>WMR9x8<sup><a href='#wmr9x8'>4</a></sup></td>
 	<td>Tested</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">TFA</td>
+	<td>Primus</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+	<td>Experimental</td>
       </tr>
       <tr>
 	<td class="text_highlight">Tycon</td>
@@ -321,6 +344,8 @@ Version: 2.3.0a1
         many vendors, including Ambient Weather, National Geographic, Watson,
         Elecsa, Tycon, Maplin, Froggit, and others. Tested on the
         <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.
+      </li>
+      <li id='ws28xx'>La Crosse WS-28xx series.  This is an experimental version.  Please report any problems!
       </li>
     </ol>
 
@@ -547,11 +572,11 @@ Version: 2.3.0a1
 
     <br/>
     
-    <h3><a href='debian.htm'>Installing from DEB package</a></h3>
+    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
     <p>For Debian, Ubuntu, Mint operating systems.</p>
-    <h3><a href='redhat.htm'>Installing from RPM package</a></h3>
+    <h2><a href='redhat.htm'>Installing from RPM package</a></h2>
     <p>For Redhat, CentOS, Fedora operating systems.</p>
-    <h3><a href='setup.htm'>Installing using the Python tool setup.py</a></h3>
+    <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
     <p>For all operating systems.</p>
 
     <h1>Configuring <span class="code">weewx</span></h1>
@@ -739,6 +764,11 @@ Version: 2.3.0a1
       poll the console for data.  This setting applies only when the 
       <span class='code'>polling_mode</span> is
       <span class='code'>PERIODIC</span>.</p>
+
+    <h3 class='config_section'>[WS28xx]</h3>
+    <p>This section is for options relating to the La Crosse WS-28xx series of weather stations.</p>
+    <p class='config_option'>pressure_offset</p>
+    <p>The offset, in millibars, that is applied to values from the station sensor.  This offset is applied to the station pressure <i>before</i> calculating barometer and altimeter sea level pressures.  Only the raw station pressure is recorded to database, not the station pressure with offset applied.</p>
 
     <h3 class="config_section">[Simulator]</h3>
     <p>This section is for options relating to the software weather station simulator 
