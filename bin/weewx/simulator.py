@@ -18,7 +18,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-def loader(config_dict):
+def loader(config_dict, engine):
 
     # This loader uses a bit of a hack to have the simulator resume at a later
     # time. It's not bad, but I'm not enthusiastic about having special

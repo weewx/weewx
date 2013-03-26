@@ -26,8 +26,9 @@ Version: 2.3.0a1
     <p>This document has three sections:</p>
       <ul>
         <li><a href="#Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></li>
-        <li><a href="#Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM Package</a></li>
-        <li><a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></li>
+        <li><a href="#Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM package</a></li>
+        <li><a href="#Instructions_for_specific_versions">Instructions for specific 
+		versions</a></li>
       </ul>
     <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for 
 	  Specific Versions</a></em> applies to both installation methods.</p>
@@ -79,7 +80,7 @@ Version: 2.3.0a1
 	one does not already exist. </li>
     </ul>
 
-    <h1><a name="Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM Package</a></h1>
+    <h1><a name="Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM package</a></h1>
     <h2>DEB Package</h2>
     <p>Upgrade to X.Y.Z like this:</p>
     <p class='tty'>sudo dpkg -i weewx_X.Y.Z-R.deb</p>
@@ -132,7 +133,18 @@ Version: 2.3.0a1
       like this:</p> 
     <p class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</p>
 
-    <h1><a name="Instructions_for_specific_versions">Instructions for Specific Versions</a></h1>
+    <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+	<h2>V2.2 or earlier</h2>
+	<p>The signature of the function "<span class="code">loader</span>", used to 
+	return an instance of the station device driver, has changed slightly. It 
+	has changed from</p>
+	<p class="tty">loader(config_dict)</p>
+	<p>to</p>
+	<p class="tty">loader(config_dict, engine)</p>
+	<p>That is, a second parameter, <span class="code">engine</span>, has been 
+	added. This is a reference to the <span class="code">weewx</span> engine.</p>
+	<p>This change will affect only those who have written their own device 
+	driver. </p>
     <h2>V2.1 or earlier</h2>
     <p>Version 2.2 introduces a schema, found in <span class="code">
         bin/user/schemas.py</span>, for the stats database. This schema is

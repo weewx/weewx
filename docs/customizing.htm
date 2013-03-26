@@ -2355,18 +2355,21 @@ mv weewx.sdb_new weewx.sdb</p>
 	<span class="code">genArchiveRecords</span> as well. It should be a
         generator function that returns all the records since a given time.
       </p>
-      <p><span class='code'>loader:</span> This is a factory function returns
-        an instance of your driver. Its only argument is the configuration
-        dictionary. </p>
+      <p><span class='code'>loader:</span> This is a factory function that returns
+        an instance of your driver. It has two arguments: the configuration 
+	  dictionary, and a reference to the weewx engine.</p>
       <p>You then include a new section in the configuration file
 	<span class="code">weewx.conf</span> that includes any options your driver needs. 
 	It should also include an entry '<span class="code">driver</span>' that points 
 	to where your driver can be found. Set option <span class="code">station_type</span> 
 	to your new section type and your driver will be loaded.</p>
       <p>Take a look at the simulator code in <span class="code">simulator.py</span> 
-	for a dirt simple example of a driver. The next most complicated is the driver 
-	for the WMR-USB series, located in <span class="code">wmrx.py</span>. 
-	The driver for the Vantage series is by far the most complicated.</p>
+	  for a dirt simple example of a driver. The next most complicated is the 
+	  driver for the WMR100 series, located in <span class="code">wmr100.py</span>. 
+	  The driver for the Vantage series is by far the most complicated. It 
+	  actually multi-inherits from not only <span class="code">AbstractStation</span>, 
+	  but also <span class="code">StdService</span>. That is, it also 
+	  participates in the engine as a service.</p>
       <p>Naturally, there are a lot of subtleties that I've glossed over in this high-level 
 	description. If you're game, give it a try &mdash; I'm happy to help you out!</p>
       <h1 id="Archive_types">Appendix A: Archive Types</h1>

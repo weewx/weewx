@@ -50,7 +50,7 @@ TRENDS =      { 0:'Stable', 1:'Rising', 2:'Falling', 3:'Undefined' }
 # Global debug logging switch for this module.
 WMR200_DEBUG = False
 
-def loader(config_dict):
+def loader(config_dict, engine):
     """Used to load the driver."""
     # The WMR driver needs the altitude in meters. Get it from the Station data
     # and do any necessary conversions.

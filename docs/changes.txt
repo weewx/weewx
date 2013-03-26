@@ -9,6 +9,10 @@ than program termination.
 Fixed bug in CWOP upload that put spaces in the upload string if the pressure
 was under 1000 millibars.
 
+Davis Vantage stations can now produce station pressures (aka, "absolute
+pressure"), altimeter pressures, as well as sea-level pressure. These will
+be put in the archive database.
+
 Added illuminance-to-radiation conversion for FineOffsetUSB driver.
 
 Added pressure calibration option to wee_config_fousb
@@ -42,6 +46,9 @@ The names of the drivers have changed to make them more consistent.
 	new drivers:
 	wmr200.py (WMR200)
 	ws28xx.py (WS28xx)
+
+The interface to the device driver "loader" function has changed slightly. It
+now takes a second parameter, "engine". Details are in the Upgrading doc.
 
 2.2.1 02/15/13
 

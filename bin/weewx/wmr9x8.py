@@ -42,7 +42,7 @@ def registerpackettype(typecode, size):
         packet_type_size_map[typecode] = size
     return wrap
 
-def loader(config_dict):
+def loader(config_dict, engine):
     # The WMR driver needs the altitude in meters. Get it from the Station data
     # and do any necessary conversions.
     altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))

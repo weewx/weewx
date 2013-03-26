@@ -194,7 +194,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-def loader(config_dict):
+def loader(config_dict, engine):
     altitude_m = getaltitudeM(config_dict)
     station = FineOffsetUSB(altitude=altitude_m,**config_dict['FineOffsetUSB'])
     return station

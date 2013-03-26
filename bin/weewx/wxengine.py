@@ -57,6 +57,9 @@ class StdEngine(object):
         timeout = int(config_dict.get('socket_timeout', 20))
         socket.setdefaulttimeout(timeout)
 
+        # Set up the callback dictionary:
+        self.callbacks = dict()
+
         # Set up the weather station hardware:
         self.setupStation(config_dict)
 
@@ -88,7 +91,7 @@ class StdEngine(object):
             # Now find the function 'loader' within the module:
             loader_function = getattr(driver_module, 'loader')
             # Now call it with the configuration dictionary as the only argument:
-            self.console = loader_function(config_dict)
+            self.console = loader_function(config_dict, self)
         except Exception, ex:
             # Caught unrecoverable error. Log it:
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
@@ -97,8 +100,6 @@ class StdEngine(object):
         
     def preLoadServices(self, config_dict):
         
-        # Set up the callback dictionary:
-        self.callbacks = dict()
         self.stn_info = weewx.station.StationInfo(self.console, **config_dict['Station'])
         
     def loadServices(self, config_dict):
@@ -213,6 +214,7 @@ class StdEngine(object):
         try:
             # Close the console:
             self.console.closePort()
+            del self.console
         except:
             pass
 

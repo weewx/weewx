@@ -37,7 +37,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-def loader(config_dict):
+def loader(config_dict, engine):
 
     # The WMR driver needs the altitude in meters. Get it from the Station data
     # and do any necessary conversions.

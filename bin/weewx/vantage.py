@@ -19,16 +19,17 @@ import weeutil.weeutil
 import weewx.units
 import weewx.wxformulas
 import weewx.abstractstation
+import weewx.wxengine
+import weewx.wxpressure
 
 # A few handy constants:
 _ack    = chr(0x06)
 _resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
 
-def loader(config_dict):
+def loader(config_dict, engine):
 
-    station = Vantage(**config_dict['Vantage'])
-    
-    return station
+    service = VantageService(engine, config_dict)
+    return service
 
 class BaseWrapper(object):
     """Base class for (Serial|Ethernet)Wrapper"""
@@ -1338,3 +1339,81 @@ _archive_map={'interval'       : _null_int,
               'forecastRule'   : _null,
               'readClosed'     : _null,
               'readOpened'     : _null}
+
+#===============================================================================
+#                      class VantageService
+#===============================================================================
+
+class VantageService(Vantage, weewx.wxengine.StdService):
+    """Weewx service for the Vantage weather stations."""
+    
+    def __init__(self, engine, config_dict):
+        Vantage.__init__(self, **config_dict['Vantage'])
+        weewx.wxengine.StdService.__init__(self, engine, config_dict)
+
+        # Get the information necessary to open up the database, but don't
+        # do it right now, because it may not exist yet.
+        archive_db = config_dict['StdArchive']['archive_database']
+        self.archive_dict = config_dict['Databases'][archive_db]
+        
+        self.bind(weewx.STARTUP, self.startup)        
+        self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+
+    def startup(self, event):
+        
+        # Now it's OK to open up the database
+        self.archive = weewx.archive.Archive.open(self.archive_dict)
+        self.old_time_12_ts = None
+        self.temperature_12 = None
+        
+    def new_loop_packet(self, event):
+        """Calculate the missing pressures in the LOOP packet"""
+        pressureIn, altimeterIn = self.get_pressures(event.packet['dateTime'],
+                                                     event.packet['barometer'], 
+                                                     event.packet['outTemp'], 
+                                                     event.packet['outHumidity'])
+        event.packet['pressure']  = pressureIn
+        event.packet['altimeter'] = altimeterIn
+        
+    def new_archive_record(self, event):
+        """Calculate the missing pressures in the archive record"""
+        pressureIn, altimeterIn = self.get_pressures(event.record['dateTime'],
+                                                     event.record['barometer'], 
+                                                     event.record['outTemp'], 
+                                                     event.record['outHumidity'])
+        event.record['pressure']  = pressureIn
+        event.record['altimeter'] = altimeterIn
+        
+    def get_temperature_12(self, time_ts):
+        """Get the temperature 12 hours ago from the database.
+        
+        Returns None if there is no such temperature.
+        """
+        time_12_ts = weeutil.weeutil.startOfInterval(time_ts - 12*3600, self.archive_interval)
+        if time_12_ts != self.old_time_12_ts:
+            record_12 = self.archive.getRecord(time_12_ts)
+            self.temperature_12 = record_12.get('outTemp') if record_12 is not None else None
+            self.old_time_12_ts = time_12_ts
+        return self.temperature_12
+    
+    def get_pressures(self, time_ts, barometer, currentTempF, humidity):
+        """Calculate the missing pressures.
+        
+        Returns a tuple (station_pressure_inHg, altimeter_pressure_inHg)
+        """
+        # Both the current SLP and temperature are needed.
+        if barometer is not None and currentTempF is not None:
+            # Get the temperature 12 hours ago, or if it is missing, use the
+            # current temperature
+            temp12HrsAgoF = self.get_temperature_12(time_ts)
+            if temp12HrsAgoF is None:
+                temp12HrsAgoF = currentTempF
+            # If humidity is missing, use 0. 
+            if humidity is None:
+                humidity = 0
+            pressureIn = weewx.wxpressure.uWxUtilsVP.SeaLevelToSensorPressure_12(barometer, self.altitude, currentTempF, temp12HrsAgoF, humidity) 
+            altimeterIn = weewx.wxpressure.TWxUtilsUS.StationToAltimeter(pressureIn, self.altitude)
+            return pressureIn, altimeterIn
+        else:
+            return (None, None)
