@@ -1,3 +1,5 @@
 TODO before the next release:
 
 StdCalibrate applies any corrections twice when doing software record generation.
+
+Unify pressure calculations between wxformulas.py and wxpressure.py
