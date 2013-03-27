@@ -39,8 +39,8 @@ class SkippedPost(Exception):
 class REST(object):
     """Abstract base class for RESTful protocols."""
     
-    # The types to be retrieved from the arhive database:
-    archive_types = ['dateTime', 'usUnits', 'barometer', 'outTemp', 'outHumidity', 
+    # The types to be retrieved from the archive database:
+    archive_types = ['dateTime', 'usUnits', 'altimeter', 'barometer', 'outTemp', 'outHumidity', 
                      'windSpeed', 'windDir', 'windGust', 'windGustDir', 'dewpoint', 'radiation', 'UV']
     # A SQL statement to do the retrieval:
     sql_select = "SELECT " + ", ".join(archive_types) + " FROM archive WHERE dateTime=?"  
@@ -394,7 +394,7 @@ class CWOP(REST):
 
         # 2. No reason to post an old out-of-date record.
         _how_old = time.time() - time_ts
-        if _how_old > self.stale:
+        if self.stale and _how_old > self.stale:
             raise SkippedPost, "CWOP: Record %s is stale (%d > %d)." %\
                     (weeutil.weeutil.timestamp_to_string(time_ts), _how_old, self.stale)
         
@@ -469,13 +469,13 @@ class CWOP(REST):
         rain_str = "r%sp%sP%s" % tuple(rain_list)
         
         # Barometer:
-        if record['barometer'] is None:
+        if record['altimeter'] is None:
             baro_str = "b....."
         else:
             # Figure out what unit type barometric pressure is in for this record:
-            (u, g) = weewx.units.getStandardUnitType(record['usUnits'], 'barometer')
+            (u, g) = weewx.units.getStandardUnitType(record['usUnits'], 'altimeter')
             # Convert to millibars:
-            baro = weewx.units.convert((record['barometer'], u, g), 'mbar')
+            baro = weewx.units.convert((record['altimeter'], u, g), 'mbar')
             baro_str = "b%05d" % (baro[0]*10.0)
 
         # Humidity:

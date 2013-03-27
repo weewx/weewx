@@ -1,1 +1,3 @@
 TODO before the next release:
+
+StdCalibrate applies any corrections twice when doing software record generation.

@@ -3,15 +3,19 @@ weewx change history
 
 2.3.X XX/XX/13
 
-A bad record archive type now causes a catch up to be abandoned, rather
-than program termination.
+Davis Vantage stations can now produce station pressures (aka, "absolute
+pressure"), altimeter pressures, as well as sea-level pressure. These will
+be put in the archive database.
+
+Along the same line, 'altimeter' pressure is now reported to CWOP, rather
+than the 'barometer' pressure. If altimeter pressure is not available,
+no pressure is reported.
 
 Fixed bug in CWOP upload that put spaces in the upload string if the pressure
 was under 1000 millibars.
 
-Davis Vantage stations can now produce station pressures (aka, "absolute
-pressure"), altimeter pressures, as well as sea-level pressure. These will
-be put in the archive database.
+A bad record archive type now causes a catch up to be abandoned, rather
+than program termination.
 
 Added illuminance-to-radiation conversion for FineOffsetUSB driver.
 
@@ -38,12 +42,12 @@ Fixed day/night transition bug.
 Added gradients to the day/night transitions.
 
 The names of the drivers have changed to make them more consistent.
-	old                       new
-	VantagePro.py (Vantage)   vantage.py (Vantage)
-	WMR918.py (WMR-918)       wmr9x8.py (WMR9x8)
-	wmrx.py (WMR-USB)         wmr100.py (WMR100)
+	OLD                        NEW
+	VantagePro.py (Vantage)    vantage.py (Vantage)
+	WMR918.py     (WMR-918)    wmr9x8.py  (WMR9x8)
+	wmrx.py       (WMR-USB)    wmr100.py  (WMR100)
 	
-	new drivers:
+	new (experimental) drivers:
 	wmr200.py (WMR200)
 	ws28xx.py (WS28xx)
 
