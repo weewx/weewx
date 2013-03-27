@@ -20,7 +20,7 @@ import weewx.units
 import weewx.wxformulas
 import weewx.abstractstation
 import weewx.wxengine
-import weewx.wxpressure
+import weewx.uwxutils
 
 # A few handy constants:
 _ack    = chr(0x06)
@@ -1412,8 +1412,8 @@ class VantageService(Vantage, weewx.wxengine.StdService):
             # If humidity is missing, use 0. 
             if humidity is None:
                 humidity = 0
-            pressureIn = weewx.wxpressure.uWxUtilsVP.SeaLevelToSensorPressure_12(barometer, self.altitude, currentTempF, temp12HrsAgoF, humidity) 
-            altimeterIn = weewx.wxpressure.TWxUtilsUS.StationToAltimeter(pressureIn, self.altitude)
+            pressureIn = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(barometer, self.altitude, currentTempF, temp12HrsAgoF, humidity) 
+            altimeterIn = weewx.uwxutils.TWxUtilsUS.StationToAltimeter(pressureIn, self.altitude)
             return pressureIn, altimeterIn
         else:
             return (None, None)
