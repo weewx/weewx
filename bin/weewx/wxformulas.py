@@ -9,6 +9,7 @@
 #
 """Various weather related formulas and utilities."""
 import math
+import weewx.uwxutils
 
 def dewpointF(T, R) :
     """Calculate dew point. 
@@ -157,23 +158,19 @@ def altimeter_pressure_US(SP_inHg, Z_feet):
     """
     if SP_inHg is None or Z_feet is None:
         return None
-    N = 0.1903
-    K = 1.313e-5
-    return (SP_inHg**N + K*Z_feet)**(1/N)
+    return weewx.uwxutils.TWxUtilsUS.StationToAltimeter(SP_inHg, Z_feet, algorithm='aaASOS')
 
 def altimeter_pressure_Metric(SP_mbars, Z_meters):
     """Convert from (uncorrected) station pressure, altitude-corrected pressure.
     Example:
     >>> print "%.1f" % altimeter_pressure_Metric(948.08, 0.0)
-    948.1
+    948.2
     >>> print "%.1f" % altimeter_pressure_Metric(948.08, 304.8)
-    983.3
+    983.4
     """
     if SP_mbars is None or Z_meters is None:
         return None
-    SP_inHg = 0.0295333727*SP_mbars
-    Z_feet  = 3.28084*Z_meters
-    return altimeter_pressure_US(SP_inHg, Z_feet) / 0.0295333727
+    return weewx.uwxutils.TWxUtils.StationToAltimeter(SP_mbars, Z_meters, algorithm='aaASOS')
 
 if __name__ == '__main__':
     import doctest

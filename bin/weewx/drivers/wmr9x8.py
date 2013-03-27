@@ -1,6 +1,6 @@
 #
 #    Copyright (c) 2012 Will Page <compenguy@gmail.com>
-#    Derivative of VantagePro.py and wmrx.py, credit to Tom Keffer <tkeffer@gmail.com>
+#    Derivative of vantage.py and wmr100.py, credit to Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,9 +8,9 @@
 #    $Author$
 #    $Date$
 #
-"""Classes and functions for interfacing with an Oregon Scientific WMR-918 and WMR-968 weather stations
+"""Classes and functions for interfacing with an Oregon Scientific WMR9x8 and WMR-968 weather stations
 
-    See http://www.netsky.org/WMR/Protocol.htm for documentation on the WMR-918 serial protocol,
+    See http://www.netsky.org/WMR/Protocol.htm for documentation on the WMR9x8 serial protocol,
     and http://code.google.com/p/wmr968/source/browse/trunk/src/edu/washington/apl/weather/packet/
     for sample (java) code.
 
@@ -51,14 +51,14 @@ def loader(config_dict, engine):
     # Now convert to meters, using only the first element of the returned value-tuple:
     altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
 
-    return WMR918(altitude=altitude_m, **config_dict['WMR-918'])
+    return WMR9x8(altitude=altitude_m, **config_dict['WMR9x8'])
 
 class SerialWrapper(object):
     """Wraps a serial connection returned from package serial"""
 
     def __init__(self, port):
         self.port     = port
-        # WMR-918 specific settings
+        # WMR9x8 specific settings
         self.serialconfig = {
             "bytesize":serial.EIGHTBITS,
             "parity":serial.PARITY_NONE,
@@ -83,22 +83,22 @@ class SerialWrapper(object):
     def openPort(self):
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, **self.serialconfig)
-        syslog.syslog(syslog.LOG_DEBUG, "WMR-918: Opened up serial port %s" % (self.port))
+        syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Opened up serial port %s" % (self.port))
 
     def closePort(self):
         self.serial_port.close()
 
 #===============================================================================
-#                           Class WMR-918
+#                           Class WMR9x8
 #===============================================================================
 
-class WMR918(weewx.abstractstation.AbstractStation):
-    """Class that represents a connection to a Oregon Scientific WMR-918 console.
+class WMR9x8(weewx.abstractstation.AbstractStation):
+    """Class that represents a connection to a Oregon Scientific WMR9x8 console.
 
     The connection to the console will be open after initialization"""
 
     def __init__(self, **stn_dict) :
-        """Initialize an object of type WMR-918.
+        """Initialize an object of type WMR9x8.
 
         NAMED ARGUMENTS:
 
@@ -114,7 +114,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
         self.last_totalRain = None
 
         # Create the specified port
-        self.port = WMR918._port_factory(stn_dict)
+        self.port = WMR9x8._port_factory(stn_dict)
 
         # Open it up:
         self.port.openPort()
@@ -144,7 +144,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    syslog.syslog(syslog.LOG_DEBUG, "WMR-918: Received data packet.")
+                    syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Received data packet.")
                     payload = pdata[2:-1]
                     _record = packet_type_decoder_map[ptype](self, payload)
                     if _record is not None:
@@ -152,19 +152,19 @@ class WMR918(weewx.abstractstation.AbstractStation):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "WMR-918: Invalid data packet (%s)." % pdata)
+                    syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             elif buf[1:].count(0xFF) > 0:
-                syslog.syslog(syslog.LOG_DEBUG, "WMR-918: Advancing to the next potential header location")
+                syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Advancing to the next potential header location")
                 buf.pop(0)
                 buf = buf[buf.index(0xFF):]
             else:
-                syslog.syslog(syslog.LOG_DEBUG, "WMR-918: No potential headers found in buf.  Discarding %d bytes..." % len(buf))
+                syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: No potential headers found in buf.  Discarding %d bytes..." % len(buf))
                 buf = []
 
     #===========================================================================
-    #              Oregon Scientific WMR-918 utility functions
+    #              Oregon Scientific WMR9x8 utility functions
     #===========================================================================
 
     @staticmethod
@@ -189,7 +189,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
     @registerpackettype(typecode=0x00, size=11)
     def _wind_packet(self, packet):
         """Decode a wind packet. Wind speed will be in kph"""
-        null, status, dir1, dir10, dir100, gust10th, gust1, gust10, avg10th, avg1, avg10, chillstatus, chill1, chill10 = WMR918._get_nibble_data(packet[1:])
+        null, status, dir1, dir10, dir100, gust10th, gust1, gust10, avg10th, avg1, avg10, chillstatus, chill1, chill10 = WMR9x8._get_nibble_data(packet[1:]) # @UnusedVariable
 
         battery = bool(status&0x04)
 
@@ -213,7 +213,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
 
     @registerpackettype(typecode=0x01, size=16)
     def _rain_packet(self, packet):
-        null, status, cur1, cur10, cur100, tot10th, tot1, tot10, tot100, tot1000, yest1, yest10, yest100, yest1000, totstartmin1, totstartmin10, totstarthr1, totstarthr10, totstartday1, totstartday10, totstartmonth1, totstartmonth10, totstartyear1, totstartyear10 = WMR918._get_nibble_data(packet[1:])
+        null, status, cur1, cur10, cur100, tot10th, tot1, tot10, tot100, tot1000, yest1, yest10, yest100, yest1000, totstartmin1, totstartmin10, totstarthr1, totstarthr10, totstartday1, totstartday10, totstartmonth1, totstartmonth10, totstartyear1, totstartyear10 = WMR9x8._get_nibble_data(packet[1:]) # @UnusedVariable
         battery = bool(status&0x04)
 
         # station units are mm and mm/hr while the internal metric units are cm and cm/hr
@@ -236,7 +236,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
     @registerpackettype(typecode=0x02, size=9)
     @registerpackettype(typecode=0x03, size=9)
     def _thermohygro_packet(self, packet):
-        chan, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10 = WMR918._get_nibble_data(packet[1:])
+        chan, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10 = WMR9x8._get_nibble_data(packet[1:])
 
         battery = bool(status&0x04)
         dewunder = bool(status&0x01)
@@ -279,7 +279,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
 
     @registerpackettype(typecode=0x04, size=7)
     def _therm_packet(self, packet):
-        chan, status, temp10th, temp1, temp10, temp100etc = WMR918._get_nibble_data(packet[1:])
+        chan, status, temp10th, temp1, temp10, temp100etc = WMR9x8._get_nibble_data(packet[1:])
 
         _record = {'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
@@ -301,7 +301,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
 
     @registerpackettype(typecode=0x05, size=13)
     def _in_thermohygrobaro_packet(self, packet):
-        null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100 = WMR918._get_nibble_data(packet[1:])
+        null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100 = WMR9x8._get_nibble_data(packet[1:]) # @UnusedVariable
         battery = bool(status&0x04)
 
         temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
@@ -334,7 +334,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
 
     @registerpackettype(typecode=0x06, size=14)
     def _in_ext_thermohygrobaro_packet(self, packet):
-        null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, baro100, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100, slpoff1000 = WMR918._get_nibble_data(packet[1:])
+        null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, baro100, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100, slpoff1000 = WMR9x8._get_nibble_data(packet[1:]) # @UnusedVariable
         battery = bool(status&0x04)
         temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
         temp *= -1 if (temp100etc&0x08) else 1
@@ -368,7 +368,7 @@ class WMR918(weewx.abstractstation.AbstractStation):
     def _time_packet(self, packet):
         """The (partial) time packet is not used by weewx.
         However, the last time is saved in case getTime() is called."""
-        min1, min10 = WMR918._get_nibble_data(packet[1:])
+        min1, min10 = WMR9x8._get_nibble_data(packet[1:])
         minutes = min1 + ((min10&0x07) * 10)
 
         cur = time.gmtime()

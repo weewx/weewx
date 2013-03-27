@@ -7,7 +7,7 @@
 #    $Author$
 #    $Date$
 #
-"""Classes and functions for interfacing with an Oregon Scientific WMR-USB (WMR100N) station
+"""Classes and functions for interfacing with an Oregon Scientific WMR100 station
 
     The following references were useful for figuring out the WMR protocol:
     
@@ -47,7 +47,7 @@ def loader(config_dict, engine):
     # Now convert to meters, using only the first element of the returned value-tuple:
     altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
     
-    station = WMR_USB(altitude=altitude_m, **config_dict['WMR-USB'])
+    station = WMR_USB(altitude=altitude_m, **config_dict['WMR100'])
     
     return station
         
@@ -185,7 +185,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
              
     @property
     def hardware_name(self):
-        return "WMR-USB"
+        return "WMR100"
         
     #===============================================================================
     #                         USB functions

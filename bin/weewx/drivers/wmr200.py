@@ -63,7 +63,7 @@ def loader(config_dict, engine):
     # value-tuple.
     altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
     
-    station = WMR200(altitude=altitude_m, **config_dict['WMR-USB'])
+    station = WMR200(altitude=altitude_m, **config_dict['WMR200'])
     
     return station
             

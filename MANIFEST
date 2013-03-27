@@ -42,9 +42,9 @@ bin/weewx/restful.py
 bin/weewx/station.py
 bin/weewx/stats.py
 bin/weewx/units.py
+bin/weewx/uwxutils.py
 bin/weewx/wxengine.py
 bin/weewx/wxformulas.py
-bin/weewx/wxpressure.py
 bin/weewx/drivers/__init__.py
 bin/weewx/drivers/fousb.py
 bin/weewx/drivers/simulator.py
