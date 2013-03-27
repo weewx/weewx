@@ -31,7 +31,7 @@ import syslog
 import tempfile
 import time
 
-import weewx.fousb
+import weewx.drivers.fousb
 import weewx.units
 import weeutil.weeutil
 
@@ -96,8 +96,8 @@ def main():
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
     print 'Using configuration file %s' % config_fn
 
-    altitude_m = weewx.fousb.getaltitudeM(config_dict)
-    station = weewx.fousb.FineOffsetUSB(altitude=altitude_m,
+    altitude_m = weewx.drivers.fousb.getaltitudeM(config_dict)
+    station = weewx.drivers.fousb.FineOffsetUSB(altitude=altitude_m,
                                         **config_dict['FineOffsetUSB'])
 
     if options.noprompt:
@@ -150,7 +150,7 @@ def info(station):
     """Query the station then display the settings."""
 
     print "Querying the station..."
-    val = getvalues(station, '', weewx.fousb.fixed_format)
+    val = getvalues(station, '', weewx.drivers.fousb.fixed_format)
 
     print 'Fine Offset station settings:'
     print '%s: %s' % ('local time'.rjust(30),
@@ -189,7 +189,7 @@ def calcoffset(station, slp, config_dict, config_fn, prompt):
         print "temp_out=", st
 
     slp = float(slp)
-    pt = weewx.fousb.etterm(station.altitude, st)
+    pt = weewx.drivers.fousb.etterm(station.altitude, st)
     newoffset = slp * pt - sp
     oldoffset = config_dict['FineOffsetUSB']['pressure_offset']
 
@@ -225,8 +225,8 @@ def checkpressures(station, target_unit_name):
         ap = station.get_fixed_block(['abs_pressure'])
         rp = station.get_fixed_block(['rel_pressure'])
         ap1 = weewx.wxformulas.altimeter_pressure_Metric(sp, station.altitude)
-        ap2 = weewx.fousb.sp2ap(sp, station.altitude)
-        bp2 = weewx.fousb.sp2bp(sp, station.altitude, packet['outTemp'])
+        ap2 = weewx.drivers.fousb.sp2ap(sp, station.altitude)
+        bp2 = weewx.drivers.fousb.sp2bp(sp, station.altitude, packet['outTemp'])
         print 'altitude: %s meters' % station.altitude
         print 'pressure_offset: %s' % str(station.pressure_offset)
         print 'station pressure (sensor): %s' % sp
@@ -264,7 +264,7 @@ def checkusb(station):
     print "hour or two to see if any bad reads are encountered.  Bad reads"
     print "will be reported in the system log.  A few bad reads per hour is"
     print "usually acceptable."
-    ptr = weewx.fousb.data_start
+    ptr = weewx.drivers.fousb.data_start
     total_count = 0
     bad_count = 0
     while True:
@@ -273,7 +273,7 @@ def checkusb(station):
         while True:
             ptr += 0x20
             if ptr >= 0x10000:
-                ptr = weewx.fousb.data_start
+                ptr = weewx.drivers.fousb.data_start
             if active < ptr - 0x10 or active >= ptr + 0x20:
                 break
         result_1 = station._read_block(ptr, retry=False)
@@ -423,8 +423,8 @@ def stash(slist, s):
 
 def fmtparam(label, value):
     fmt = '%s'
-    if label in weewx.fousb.datum_display_formats.keys():
-        fmt = weewx.fousb.datum_display_formats[label]
+    if label in weewx.drivers.fousb.datum_display_formats.keys():
+        fmt = weewx.drivers.fousb.datum_display_formats[label]
     fmt = '%s: ' + fmt
     return fmt % (label.rjust(30), value)
 

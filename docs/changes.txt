@@ -41,7 +41,9 @@ Fixed day/night transition bug.
 
 Added gradients to the day/night transitions.
 
-The names of the drivers have changed to make them more consistent.
+All of the device drivers have now been put in their own package
+'weewx.drivers' to keep them together. Many have also had name changes
+to make them more consistent:
 	OLD                        NEW
 	VantagePro.py (Vantage)    vantage.py (Vantage)
 	WMR918.py     (WMR-918)    wmr9x8.py  (WMR9x8)

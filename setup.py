@@ -406,35 +406,14 @@ def update_config_file(config_dict):
     # Option stats_types is no longer used. Get rid of it.
     config_dict['StdArchive'].pop('stats_types', None)
     
-    # Name changes for the Davis Vantage series:
+    # --- Davis Vantage series ---
     try:
         if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
-            config_dict['Vantage']['driver'] = 'weewx.vantage'
+            config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
     except KeyError:
         pass
     
-    # --- Name changes for the WMR9x8 series ---
-    
-    # The section name has changed from WMR-918 to WMR9x8
-    if config_dict.has_key('WMR-918'):
-        if config_dict.has_key('WMR9x8'):
-            sys.stderr.write("\n*** Configuration file has both a 'WMR-918' section and a 'WMR9x8' section. Aborting ***\n\n")
-            exit()
-        config_dict.rename('WMR-918', 'WMR9x8')
-    # If necessary, reflect the section name in the station type:
-    try:
-        if config_dict['Station']['station_type'].strip() == 'WMR-918':
-            config_dict['Station']['station_type'] = 'WMR9x8'
-    except KeyError:
-        pass
-    # Finally, the name of the driver has been changed
-    try:
-        if config_dict['WMR9x8']['driver'].strip() == 'weewx.WMR918':
-            config_dict['WMR9x8']['driver'] = 'weewx.wmr9x8'
-    except KeyError:
-        pass
-
-    # --- Name changes for the WMR100 ---
+    # --- Oregon Scientific WMR100 ---
     
     # The section name has changed from WMR-USB to WMR100
     if config_dict.has_key('WMR-USB'):
@@ -451,10 +430,47 @@ def update_config_file(config_dict):
     # Finally, the name of the driver has been changed
     try:
         if config_dict['WMR100']['driver'].strip() == 'weewx.wmrx':
-            config_dict['WMR100']['driver'] = 'weewx.wmr100'
+            config_dict['WMR100']['driver'] = 'weewx.drivers.wmr100'
     except KeyError:
         pass
         
+    # --- Oregon Scientific WMR9x8 series ---
+    
+    # The section name has changed from WMR-918 to WMR9x8
+    if config_dict.has_key('WMR-918'):
+        if config_dict.has_key('WMR9x8'):
+            sys.stderr.write("\n*** Configuration file has both a 'WMR-918' section and a 'WMR9x8' section. Aborting ***\n\n")
+            exit()
+        config_dict.rename('WMR-918', 'WMR9x8')
+    # If necessary, reflect the section name in the station type:
+    try:
+        if config_dict['Station']['station_type'].strip() == 'WMR-918':
+            config_dict['Station']['station_type'] = 'WMR9x8'
+    except KeyError:
+        pass
+    # Finally, the name of the driver has been changed
+    try:
+        if config_dict['WMR9x8']['driver'].strip() == 'weewx.WMR918':
+            config_dict['WMR9x8']['driver'] = 'weewx.drivers.wmr9x8'
+    except KeyError:
+        pass
+    
+    # --- Fine Offset instruments ---
+    try:
+        if config_dict['FineOffsetUSB']['driver'].strip() == 'weewx.fousb':
+            config_dict['FineOffsetUSB']['driver'] = 'weewx.drivers.fousb'
+    except KeyError:
+        pass
+
+    #--- The weewx Simulator ---
+    try:
+        if config_dict['Simulator']['driver'].strip() == 'weewx.simulator':
+            config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
+    except KeyError:
+        pass
+            
+        
+
 def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:
     filepath = os.path.normpath(filepath)
@@ -489,7 +505,8 @@ if __name__ == "__main__":
                          'user',
                          'weeplot',
                          'weeutil',
-                         'weewx'],
+                         'weewx',
+                         'weewx.drivers'],
           py_modules  = ['daemon'],
           scripts     = ['bin/wee_config_database',
                          'bin/wee_config_fousb',
