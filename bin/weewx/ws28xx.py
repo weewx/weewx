@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: ws28xx.py 557 2013-03-26 04:43:42Z mwall $
+# $Id: ws28xx.py 558 2013-03-27 00:51:47Z mwall $
 #
 # Copyright 2013 Matthew Wall
 #
@@ -86,9 +86,9 @@ from datetime import datetime
 from datetime import timedelta
 from configobj import ConfigObj
 
+import copy
 import math
 import platform
-import sys
 import syslog
 import threading
 import time
@@ -184,7 +184,7 @@ def calculate_rain(newtotal, oldtotal, maxsane=2):
         newtotal = oldtotal
     return (delta, newtotal)
 
-def loader(config_dict, engine):
+def loader(config_dict):
     altitude_m = getaltitudeM(config_dict)
     station = WS28xx(altitude=altitude_m, **config_dict['WS28xx'])
     return station
@@ -326,11 +326,13 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         ntries = 0
         while ntries < maxtries:
             ntries += 1
-            msg = 'transceiver check (attempt %d of %d)' % (ntries, maxtries)
+            t = self._service.DataStore.getFlag_FLAG_TRANSCEIVER_PRESENT()
+            msg = 'transceiver check: %s (attempt %d of %d)' % (
+                t, ntries, maxtries)
             if msg_to_console:
                 print msg
             loginf(msg)
-            if self._service.DataStore.getFlag_FLAG_TRANSCEIVER_PRESENT():
+            if t:
                 return
             time.sleep(5)
         else:
@@ -431,7 +433,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 def frame2str(n, buf):
     strbuf = ''
     for i in xrange(0,n):
-        strbuf += str('%.2x' % (buf[i]))
+        strbuf += str('%.2x' % buf[i])
     return strbuf
 
 class BitHandling:
@@ -452,7 +454,7 @@ class BitHandling:
     def setBitVal(int_type, offset, val):
         mask = val << offset
         return(int_type | mask)
-	
+
     # return an integer with the bit at 'offset' cleared.
     @staticmethod
     def clearBit(int_type, offset):
@@ -661,99 +663,99 @@ class CMinMaxMeasurement(object):
 
 class USBHardware(object):
     @staticmethod
-    def IsOFL2(buffer, start, startOnLowNibble):
+    def IsOFL2(buf, start, startOnLowNibble):
         if startOnLowNibble :
-            result =   (buffer[0][start+0] & 0xF) == 15 \
-                or (buffer[0][start+0] >>  4) == 15
+            result =   (buf[0][start+0] & 0xF) == 15 \
+                or (buf[0][start+0] >>  4) == 15
         else:
-            result =   (buffer[0][start+0] >>  4) == 15 \
-                or (buffer[0][start+1] & 0xF) == 15
+            result =   (buf[0][start+0] >>  4) == 15 \
+                or (buf[0][start+1] & 0xF) == 15
         return result
 
     @staticmethod
-    def IsOFL3(buffer, start, startOnLowNibble):
+    def IsOFL3(buf, start, startOnLowNibble):
         if startOnLowNibble :
-            result =   (buffer[0][start+0] & 0xF) == 15 \
-                or (buffer[0][start+0] >>  4) == 15 \
-                or (buffer[0][start+1] & 0xF) == 15
+            result =   (buf[0][start+0] & 0xF) == 15 \
+                or (buf[0][start+0] >>  4) == 15 \
+                or (buf[0][start+1] & 0xF) == 15
         else:
-            result =   (buffer[0][start+0] >>  4) == 15 \
-                or (buffer[0][start+1] & 0xF) == 15 \
-                or (buffer[0][start+1] >>  4) == 15
+            result =   (buf[0][start+0] >>  4) == 15 \
+                or (buf[0][start+1] & 0xF) == 15 \
+                or (buf[0][start+1] >>  4) == 15
         return result
 
     @staticmethod
-    def IsOFL5(buffer, start, startOnLowNibble):
+    def IsOFL5(buf, start, startOnLowNibble):
         if startOnLowNibble :
-            result =     (buffer[0][start+0] & 0xF) == 15 \
-                or (buffer[0][start+0] >>  4) == 15 \
-                or (buffer[0][start+1] & 0xF) == 15 \
-                or (buffer[0][start+1] >>  4) == 15 \
-                or (buffer[0][start+2] & 0xF) == 15
+            result =     (buf[0][start+0] & 0xF) == 15 \
+                or (buf[0][start+0] >>  4) == 15 \
+                or (buf[0][start+1] & 0xF) == 15 \
+                or (buf[0][start+1] >>  4) == 15 \
+                or (buf[0][start+2] & 0xF) == 15
         else:
-            result =     (buffer[0][start+0] >>  4) == 15 \
-                or (buffer[0][start+1] & 0xF) == 15 \
-                or (buffer[0][start+1] >>  4) == 15 \
-                or (buffer[0][start+2] & 0xF) == 15 \
-                or (buffer[0][start+2] >>  4) == 15
+            result =     (buf[0][start+0] >>  4) == 15 \
+                or (buf[0][start+1] & 0xF) == 15 \
+                or (buf[0][start+1] >>  4) == 15 \
+                or (buf[0][start+2] & 0xF) == 15 \
+                or (buf[0][start+2] >>  4) == 15
         return result
 
     @staticmethod
-    def IsErr2(buffer, start, startOnLowNibble):
+    def IsErr2(buf, start, startOnLowNibble):
         if startOnLowNibble :
-            result =    (buffer[0][start+0] & 0xF) >= 10 \
-                and (buffer[0][start+0] & 0xF) != 15 \
-                or (buffer[0][start+0] >>  4) >= 10 \
-                and (buffer[0][start+0] >>  4) != 15
+            result =    (buf[0][start+0] & 0xF) >= 10 \
+                and (buf[0][start+0] & 0xF) != 15 \
+                or (buf[0][start+0] >>  4) >= 10 \
+                and (buf[0][start+0] >>  4) != 15
         else:
-            result =    (buffer[0][start+0] >>  4) >= 10 \
-                and (buffer[0][start+0] >>  4) != 15 \
-                or (buffer[0][start+1] & 0xF) >= 10 \
-                and (buffer[0][start+1] & 0xF) != 15
+            result =    (buf[0][start+0] >>  4) >= 10 \
+                and (buf[0][start+0] >>  4) != 15 \
+                or (buf[0][start+1] & 0xF) >= 10 \
+                and (buf[0][start+1] & 0xF) != 15
         return result
         
     @staticmethod
-    def IsErr3(buffer, start, startOnLowNibble):
+    def IsErr3(buf, start, startOnLowNibble):
         if startOnLowNibble :
-            result =     (buffer[0][start+0] & 0xF) >= 10 \
-                and (buffer[0][start+0] & 0xF) != 15 \
-                or  (buffer[0][start+0] >>  4) >= 10 \
-                and (buffer[0][start+0] >>  4) != 15 \
-                or  (buffer[0][start+1] & 0xF) >= 10 \
-                and (buffer[0][start+1] & 0xF) != 15
+            result =     (buf[0][start+0] & 0xF) >= 10 \
+                and (buf[0][start+0] & 0xF) != 15 \
+                or  (buf[0][start+0] >>  4) >= 10 \
+                and (buf[0][start+0] >>  4) != 15 \
+                or  (buf[0][start+1] & 0xF) >= 10 \
+                and (buf[0][start+1] & 0xF) != 15
         else:
-            result =     (buffer[0][start+0] >>  4) >= 10 \
-                and (buffer[0][start+0] >>  4) != 15 \
-                or  (buffer[0][start+1] & 0xF) >= 10 \
-                and (buffer[0][start+1] & 0xF) != 15 \
-                or  (buffer[0][start+1] >>  4) >= 10 \
-                and (buffer[0][start+1] >>  4) != 10
+            result =     (buf[0][start+0] >>  4) >= 10 \
+                and (buf[0][start+0] >>  4) != 15 \
+                or  (buf[0][start+1] & 0xF) >= 10 \
+                and (buf[0][start+1] & 0xF) != 15 \
+                or  (buf[0][start+1] >>  4) >= 10 \
+                and (buf[0][start+1] >>  4) != 10
         return result
         
     @staticmethod
-    def IsErr5(buffer, start, startOnLowNibble):
+    def IsErr5(buf, start, startOnLowNibble):
         if startOnLowNibble :
-            result =     (buffer[0][start+0] & 0xF) >= 10 \
-                and (buffer[0][start+0] & 0xF) != 15 \
-                or (buffer[0][start+0] >>  4) >= 10 \
-                and (buffer[0][start+0] >>  4) != 15 \
-                or (buffer[0][start+1] & 0xF) >= 10 \
-                and (buffer[0][start+1] & 0xF) != 15 \
-                or (buffer[0][start+1] >>  4) >= 10 \
-                and (buffer[0][start+1] >>  4) != 15 \
-                or (buffer[0][start+2] & 0xF) >= 10 \
-                and (buffer[0][start+2] & 0xF) != 15
+            result =     (buf[0][start+0] & 0xF) >= 10 \
+                and (buf[0][start+0] & 0xF) != 15 \
+                or (buf[0][start+0] >>  4) >= 10 \
+                and (buf[0][start+0] >>  4) != 15 \
+                or (buf[0][start+1] & 0xF) >= 10 \
+                and (buf[0][start+1] & 0xF) != 15 \
+                or (buf[0][start+1] >>  4) >= 10 \
+                and (buf[0][start+1] >>  4) != 15 \
+                or (buf[0][start+2] & 0xF) >= 10 \
+                and (buf[0][start+2] & 0xF) != 15
         else:
-            result =     (buffer[0][start+0] >>  4) >= 10 \
-                and (buffer[0][start+0] >>  4) != 15 \
-                or (buffer[0][start+1] & 0xF) >= 10 \
-                and (buffer[0][start+1] & 0xF) != 15 \
-                or (buffer[0][start+1] >>  4) >= 10 \
-                and (buffer[0][start+1] >>  4) != 15 \
-                or (buffer[0][start+2] & 0xF) >= 10 \
-                and (buffer[0][start+2] & 0xF) != 15 \
-                or (buffer[0][start+2] >>  4) >= 10 \
-                and (buffer[0][start+2] >>  4) != 15
+            result =     (buf[0][start+0] >>  4) >= 10 \
+                and (buf[0][start+0] >>  4) != 15 \
+                or (buf[0][start+1] & 0xF) >= 10 \
+                and (buf[0][start+1] & 0xF) != 15 \
+                or (buf[0][start+1] >>  4) >= 10 \
+                and (buf[0][start+1] >>  4) != 15 \
+                or (buf[0][start+2] & 0xF) >= 10 \
+                and (buf[0][start+2] & 0xF) != 15 \
+                or (buf[0][start+2] >>  4) >= 10 \
+                and (buf[0][start+2] >>  4) != 15
         return result
 
     @staticmethod
@@ -761,122 +763,122 @@ class USBHardware(object):
         logdbg('ToCurrentTempBytes: NOT IMPLEMENTED')
 
     @staticmethod
-    def To2Pre(buffer, start, startOnLowNibble):
+    def To2Pre(buf, start, startOnLowNibble):
         if startOnLowNibble:
-            rawpre  = (buffer[0][start+0] & 0xf)*  1 \
-                + (buffer[0][start+0]  >> 4)* 10
+            rawpre  = (buf[0][start+0] & 0xf)*  1 \
+                + (buf[0][start+0]  >> 4)* 10
         else:
-            rawpre  = (buffer[0][start+0]  >> 4)*  1 \
-                + (buffer[0][start+1] & 0xf)* 10
+            rawpre  = (buf[0][start+0]  >> 4)*  1 \
+                + (buf[0][start+1] & 0xf)* 10
         return rawpre
 
     @staticmethod
-    def ToRainAlarmBytes(buffer,alarm):
+    def ToRainAlarmBytes(buf,alarm):
         logdbg('ToRainAlarmBytes: NOT IMPLEMENTED')
 
     @staticmethod
-    def ToDateTime(buffer, start, startOnLowNibble):
-        if ( USBHardware.IsErr2(buffer, start+0, startOnLowNibble)
-             or USBHardware.IsErr2(buffer, start+1, startOnLowNibble)
-             or USBHardware.IsErr2(buffer, start+2, startOnLowNibble)
-             or USBHardware.IsErr2(buffer, start+3, startOnLowNibble)
-             or USBHardware.IsErr2(buffer, start+4, startOnLowNibble)
-             or USBHardware.To2Pre(buffer, start+3, startOnLowNibble) > 12):
+    def ToDateTime(buf, start, startOnLowNibble):
+        if ( USBHardware.IsErr2(buf, start+0, startOnLowNibble)
+             or USBHardware.IsErr2(buf, start+1, startOnLowNibble)
+             or USBHardware.IsErr2(buf, start+2, startOnLowNibble)
+             or USBHardware.IsErr2(buf, start+3, startOnLowNibble)
+             or USBHardware.IsErr2(buf, start+4, startOnLowNibble)
+             or USBHardware.To2Pre(buf, start+3, startOnLowNibble) > 12):
             # FIXME: use None instead of a really old date to indicate invalid
             logdbg('ToDateTime: BOGUS DATE')
             result = datetime(1900, 01, 01, 00, 00)
         else:
-            minutes = USBHardware.To2Pre(buffer, start+0, startOnLowNibble)
-            hours   = USBHardware.To2Pre(buffer, start+1, startOnLowNibble)
-            days    = USBHardware.To2Pre(buffer, start+2, startOnLowNibble)
-            month   = USBHardware.To2Pre(buffer, start+3, startOnLowNibble)
-            year    = USBHardware.To2Pre(buffer, start+4, startOnLowNibble) + 2000
+            minutes = USBHardware.To2Pre(buf, start+0, startOnLowNibble)
+            hours   = USBHardware.To2Pre(buf, start+1, startOnLowNibble)
+            days    = USBHardware.To2Pre(buf, start+2, startOnLowNibble)
+            month   = USBHardware.To2Pre(buf, start+3, startOnLowNibble)
+            year    = USBHardware.To2Pre(buf, start+4, startOnLowNibble) + 2000
             result = datetime(year, month, days, hours, minutes)
         return result
         
     @staticmethod
-    def ToHumidity(buffer, start, startOnLowNibble):
-        if USBHardware.IsErr2(buffer, start+0, startOnLowNibble) :
+    def ToHumidity(buf, start, startOnLowNibble):
+        if USBHardware.IsErr2(buf, start+0, startOnLowNibble) :
             result = CWeatherTraits.HumidityNP()
         else:
-            if USBHardware.IsOFL2(buffer, start+0, startOnLowNibble) :
+            if USBHardware.IsOFL2(buf, start+0, startOnLowNibble) :
                 result = CWeatherTraits.HumidityOFL()
             else:
-                result = USBHardware.To2Pre(buffer, start, startOnLowNibble)
+                result = USBHardware.To2Pre(buf, start, startOnLowNibble)
         return result
 
     @staticmethod
-    def ToTemperature(buffer, start, startOnLowNibble):
-        if USBHardware.IsErr5(buffer, start+0, startOnLowNibble) :
+    def ToTemperature(buf, start, startOnLowNibble):
+        if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
             result = CWeatherTraits.TemperatureNP()
         else:
-            if USBHardware.IsOFL5(buffer, start+0, startOnLowNibble) :
+            if USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
                 result = CWeatherTraits.TemperatureOFL()
             else:
                 if startOnLowNibble:
-                    rawtemp = (buffer[0][start+0] & 0xf)*  0.001 \
-                        + (buffer[0][start+0] >>  4)*  0.01  \
-                        + (buffer[0][start+1] & 0xf)*  0.1   \
-                        + (buffer[0][start+1] >>  4)*  1     \
-                        + (buffer[0][start+2] & 0xf)* 10
+                    rawtemp = (buf[0][start+0] & 0xf)*  0.001 \
+                        + (buf[0][start+0] >>  4)*  0.01  \
+                        + (buf[0][start+1] & 0xf)*  0.1   \
+                        + (buf[0][start+1] >>  4)*  1     \
+                        + (buf[0][start+2] & 0xf)* 10
                 else:
-                    rawtemp = (buffer[0][start+0] >>  4)*  0.001 \
-                        + (buffer[0][start+1] & 0xf)*  0.01  \
-                        + (buffer[0][start+1] >>  4)*  0.1   \
-                        + (buffer[0][start+2] & 0xf)*  1     \
-                        + (buffer[0][start+2] >>  4)* 10
+                    rawtemp = (buf[0][start+0] >>  4)*  0.001 \
+                        + (buf[0][start+1] & 0xf)*  0.01  \
+                        + (buf[0][start+1] >>  4)*  0.1   \
+                        + (buf[0][start+2] & 0xf)*  1     \
+                        + (buf[0][start+2] >>  4)* 10
                 result = rawtemp - CWeatherTraits.TemperatureOffset()
         return result
 
     @staticmethod
-    def To4Pre3Post(buffer, start):
-        if ( USBHardware.IsErr5(buffer, start+0, 1) or
-             USBHardware.IsErr2(buffer, start+2, 0) ):
+    def To4Pre3Post(buf, start):
+        if ( USBHardware.IsErr5(buf, start+0, 1) or
+             USBHardware.IsErr2(buf, start+2, 0) ):
             result = CWeatherTraits.RainNP()
         else:
-            if ( USBHardware.IsOFL5(buffer, start+1, 1) or
-                 USBHardware.IsOFL2(buffer, start+2, 0) ):
+            if ( USBHardware.IsOFL5(buf, start+1, 1) or
+                 USBHardware.IsOFL2(buf, start+2, 0) ):
                 result = CWeatherTraits.RainOFL()
             else:
-                result  = (buffer[0][start+0] & 0xf)*  0.001 \
-                    + (buffer[0][start+0] >>  4)*  0.01  \
-                    + (buffer[0][start+1] & 0xf)*  0.1   \
-                    + (buffer[0][start+1] >>  4)*   1    \
-                    + (buffer[0][start+2] & 0xf)*  10    \
-                    + (buffer[0][start+2] >>  4)* 100    \
-                    + (buffer[0][start+3] & 0xf)*1000
+                result  = (buf[0][start+0] & 0xf)*  0.001 \
+                    + (buf[0][start+0] >>  4)*  0.01  \
+                    + (buf[0][start+1] & 0xf)*  0.1   \
+                    + (buf[0][start+1] >>  4)*   1    \
+                    + (buf[0][start+2] & 0xf)*  10    \
+                    + (buf[0][start+2] >>  4)* 100    \
+                    + (buf[0][start+3] & 0xf)*1000
         return result
 
     @staticmethod
-    def To4Pre2Post(buffer, start):
-        if ( USBHardware.IsErr2(buffer,start+0,1) or
-             USBHardware.IsErr2(buffer,start+1, 1) or
-             USBHardware.IsErr2(buffer, start+2, 1) ):
+    def To4Pre2Post(buf, start):
+        if ( USBHardware.IsErr2(buf,start+0,1) or
+             USBHardware.IsErr2(buf,start+1, 1) or
+             USBHardware.IsErr2(buf, start+2, 1) ):
             result = CWeatherTraits.RainNP()
         else:
-            if ( USBHardware.IsOFL2(buffer,start+0, 1) or
-                 USBHardware.IsOFL2(buffer, start+1, 1) or
-                 USBHardware.IsOFL2(buffer, start+2, 1) ):
+            if ( USBHardware.IsOFL2(buf,start+0, 1) or
+                 USBHardware.IsOFL2(buf, start+1, 1) or
+                 USBHardware.IsOFL2(buf, start+2, 1) ):
                 result = CWeatherTraits.RainOFL()
             else:
-                result  = (buffer[0][start+0] & 0xf)*  0.01 \
-                    + (buffer[0][start+0] >>  4)*  0.1  \
-                    + (buffer[0][start+1] & 0xf)*   1   \
-                    + (buffer[0][start+1] >>  4)*  10   \
-                    + (buffer[0][start+2] & 0xf)* 100   \
-                    + (buffer[0][start+2] >>  4)*1000
+                result  = (buf[0][start+0] & 0xf)*  0.01 \
+                    + (buf[0][start+0] >>  4)*  0.1  \
+                    + (buf[0][start+1] & 0xf)*   1   \
+                    + (buf[0][start+1] >>  4)*  10   \
+                    + (buf[0][start+2] & 0xf)* 100   \
+                    + (buf[0][start+2] >>  4)*1000
         return result
 
     @staticmethod
-    def ToWindspeed(buffer, start): #m/s
-        val = USBHardware.ByteToFloat(buffer, start, 1, 16, 6)
+    def ToWindspeed(buf, start): #m/s
+        val = USBHardware.ByteToFloat(buf, start, 1, 16, 6)
         val = val / 256.0
         val = val / 100.0              #km/h
         val = val / 3.599999904632568  #m/s
         return val
 
     @staticmethod
-    def ByteToFloat(buffer, start,startOnLowNibble, base, pre):
+    def ByteToFloat(buf, start,startOnLowNibble, base, pre):
         lowNibble = startOnLowNibble
         val = 0
         byteCounter = 0
@@ -885,9 +887,9 @@ class USBHardware(object):
             if pre > 0 :
                 digit = 0
                 if lowNibble :
-                    digit = buffer[0][start+byteCounter] & 0xF
+                    digit = buf[0][start+byteCounter] & 0xF
                 else:
-                    digit = buffer[0][start+byteCounter] >> 4
+                    digit = buf[0][start+byteCounter] >> 4
                 if not lowNibble :
                     byteCounter += 1
                 if lowNibble == 0:
@@ -909,90 +911,90 @@ class USBHardware(object):
         buf[0]=nbuf
 
     @staticmethod
-    def ReadWindDirectionShared(buffer, start):
-        return (buffer[0][0+start] & 0xf, buffer[0][start] >> 4)
+    def ReadWindDirectionShared(buf, start):
+        return (buf[0][0+start] & 0xf, buf[0][start] >> 4)
 
     @staticmethod
-    def ReadPressureShared(buffer, start):
-        return ( USBHardware.ToPressure(buffer,start,1) ,
-                 USBHardware.ToPressureInhg(buffer,start+2,0))
+    def ReadPressureShared(buf, start):
+        return ( USBHardware.ToPressure(buf,start,1) ,
+                 USBHardware.ToPressureInhg(buf,start+2,0))
 
     @staticmethod
-    def ToPressure(buffer, start, startOnLowNibble):
-        if USBHardware.IsErr5(buffer, start+0, startOnLowNibble) :
+    def ToPressure(buf, start, startOnLowNibble):
+        if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
             result = CWeatherTraits.PressureNP()
         else:
-            if USBHardware.IsOFL5(buffer, start+0, startOnLowNibble) :
+            if USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
                 result = CWeatherTraits.PressureOFL()
             else:
                 if startOnLowNibble :
-                    rawresult = (buffer[0][start+2] & 0xF)* 1000   \
-                        + (buffer[0][start+1] >>  4)*  100   \
-                        + (buffer[0][start+1] & 0xF)*   10   \
-                        + (buffer[0][start+0] >>  4)*    1   \
-                        + (buffer[0][start+0] & 0xF)*    0.1
+                    rawresult = (buf[0][start+2] & 0xF)* 1000   \
+                        + (buf[0][start+1] >>  4)*  100   \
+                        + (buf[0][start+1] & 0xF)*   10   \
+                        + (buf[0][start+0] >>  4)*    1   \
+                        + (buf[0][start+0] & 0xF)*    0.1
                 else:
-                    rawresult = (buffer[0][start+2] >>  4)* 1000   \
-                        + (buffer[0][start+2] & 0xF)*  100   \
-                        + (buffer[0][start+1] >>  4)*   10   \
-                        + (buffer[0][start+1] & 0xF)*    1   \
-                        + (buffer[0][start+0] >>  4)*    0.1
+                    rawresult = (buf[0][start+2] >>  4)* 1000   \
+                        + (buf[0][start+2] & 0xF)*  100   \
+                        + (buf[0][start+1] >>  4)*   10   \
+                        + (buf[0][start+1] & 0xF)*    1   \
+                        + (buf[0][start+0] >>  4)*    0.1
                 result = rawresult
         return result
 
     @staticmethod
-    def ToPressureInhg(buffer, start, startOnLowNibble):
-        if USBHardware.IsErr5(buffer, start+0, startOnLowNibble) :
+    def ToPressureInhg(buf, start, startOnLowNibble):
+        if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
             rawresult = CWeatherTraits.PressureNP()
         else:
-            if USBHardware.IsOFL5(buffer, start+0, startOnLowNibble) :
+            if USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
                 rawresult = CWeatherTraits.PressureOFL()
             else:
                 if startOnLowNibble :
-                    rawresult = (buffer[0][start+2] & 0xF)* 100    \
-                        + (buffer[0][start+1] >>  4)*  10    \
-                        + (buffer[0][start+1] & 0xF)*   1    \
-                        + (buffer[0][start+0] >>  4)*   0.1  \
-                        + (buffer[0][start+0] & 0xF)*   0.01
+                    rawresult = (buf[0][start+2] & 0xF)* 100    \
+                        + (buf[0][start+1] >>  4)*  10    \
+                        + (buf[0][start+1] & 0xF)*   1    \
+                        + (buf[0][start+0] >>  4)*   0.1  \
+                        + (buf[0][start+0] & 0xF)*   0.01
                 else:
-                    rawresult = (buffer[0][start+2] >>  4)* 100    \
-                        + (buffer[0][start+2] & 0xF)*  10    \
-                        + (buffer[0][start+1] >>  4)*   1    \
-                        + (buffer[0][start+0] & 0xF)*   0.1  \
-                        + (buffer[0][start+0] >>  4)*   0.01
+                    rawresult = (buf[0][start+2] >>  4)* 100    \
+                        + (buf[0][start+2] & 0xF)*  10    \
+                        + (buf[0][start+1] >>  4)*   1    \
+                        + (buf[0][start+0] & 0xF)*   0.1  \
+                        + (buf[0][start+0] >>  4)*   0.01
                 result = rawresult
         return result
 
     @staticmethod
-    def ToTemperatureRingBuffer(buffer, start, startOnLowNibble):
-        if USBHardware.IsErr3(buffer, start+0, startOnLowNibble) :
+    def ToTemperatureRingBuffer(buf, start, startOnLowNibble):
+        if USBHardware.IsErr3(buf, start+0, startOnLowNibble) :
             result = CWeatherTraits.TemperatureNP()
         else:
-            if USBHardware.IsOFL3(buffer, start+0, startOnLowNibble) :
+            if USBHardware.IsOFL3(buf, start+0, startOnLowNibble) :
                 result = CWeatherTraits.TemperatureOFL()
             else:
                 if startOnLowNibble :
-			#rawtemp   =  (buffer[0][start+0] & 0xF)* 10   \
-                            #	  +  (buffer[0][start+0] >>  4)*  1   \
-                            #	  +  (buffer[0][start+1] & 0xF)*  0.1
-                    rawtemp   =  (buffer[0][start+0] & 0xF)*  0.1 \
-                        +  (buffer[0][start+0] >>  4)*  1   \
-                        +  (buffer[0][start+1] & 0xF)* 10
+                    #rawtemp   =  (buf[0][start+0] & 0xF)* 10   \
+                    #	  +  (buf[0][start+0] >>  4)*  1   \
+                    #	  +  (buf[0][start+1] & 0xF)*  0.1
+                    rawtemp   =  (buf[0][start+0] & 0xF)*  0.1 \
+                        +  (buf[0][start+0] >>  4)*  1   \
+                        +  (buf[0][start+1] & 0xF)* 10
                 else:
-			#rawtemp   =  (buffer[0][start+0] >>  4)* 10   \
-                            #	  +  (buffer[0][start+1] & 0xF)*  1   \
-                            #	  +  (buffer[0][start+1] >>  4)*  0.1
-                    rawtemp   =  (buffer[0][start+0] >>  4)*  0.1 \
-                        +  (buffer[0][start+1] & 0xF)*  1   \
-                        +  (buffer[0][start+1] >>  4)* 10  
+                    #rawtemp   =  (buf[0][start+0] >>  4)* 10   \
+                    #	  +  (buf[0][start+1] & 0xF)*  1   \
+                    #	  +  (buf[0][start+1] >>  4)*  0.1
+                    rawtemp   =  (buf[0][start+0] >>  4)*  0.1 \
+                        +  (buf[0][start+1] & 0xF)*  1   \
+                        +  (buf[0][start+1] >>  4)* 10  
                 result = rawtemp - CWeatherTraits.TemperatureOffset()
         return result
 
     @staticmethod
-    def ToWindspeedRingBuffer(buffer, start):
-        if buffer[0][start+0] != 254 or (buffer[0][start+1] & 0xF) != 1 :
-            if buffer[0][start+0] != 255 or (buffer[0][start+1] & 0xF) != 1 :
-                val = USBHardware.ByteToFloat(buffer, start, 1, 16, 3)
+    def ToWindspeedRingBuffer(buf, start):
+        if buf[0][start+0] != 254 or (buf[0][start+1] & 0xF) != 1 :
+            if buf[0][start+0] != 255 or (buf[0][start+1] & 0xF) != 1 :
+                val = USBHardware.ByteToFloat(buf, start, 1, 16, 3)
                 val = val / 10.0
                 result = val
             else:
@@ -1397,7 +1399,7 @@ class CCurrentWeatherData(object):
         else:
             self._GustMinMax._Max._Time = USBHardware.ToDateTime(newbuf, pos + 175, 1)
 
-        GustErrFlags = newbuf[0][180];
+        #GustErrFlags = newbuf[0][180];
         (g ,g1) = USBHardware.ReadWindDirectionShared(newbuf, pos + 181)
         (g2,g3) = USBHardware.ReadWindDirectionShared(newbuf, pos + 182)
         (g4,g5) = USBHardware.ReadWindDirectionShared(newbuf, pos + 183)
@@ -1745,17 +1747,17 @@ class CHistoryDataSet(object):
         logdbg('read')
 
         USBHardware.ReverseByteOrder(buf, pos + 0, 0x12);
-        pBuffer = buf;
-	#j__memcpy(buffer5, buf, 5u);
-	#v3 = thisa;
-	#LODWORD(thisa->m_Time.m_dt) = LODWORD(v2->m_dt);
-	#HIDWORD(v3->m_Time.m_dt) = HIDWORD(v2->m_dt);
-	#v3->m_Time.m_status = v2->m_status;
+        #pBuffer = buf;
+        #j__memcpy(buffer5, buf, 5u);
+        #v3 = thisa;
+        #LODWORD(thisa->m_Time.m_dt) = LODWORD(v2->m_dt);
+        #HIDWORD(v3->m_Time.m_dt) = HIDWORD(v2->m_dt);
+        #v3->m_Time.m_status = v2->m_status;
         self.m_Time = USBHardware.ToDateTime(buf, pos, 1);
         self.m_IndoorTemp = USBHardware.ToTemperatureRingBuffer(buf, pos + 5, 1)
         self.m_OutdoorTemp = USBHardware.ToTemperatureRingBuffer(buf, pos + 6, 0)
         self.m_PressureRelative = USBHardware.ToPressure(buf, pos + 8 , 1);
-	#self.m_PressureAbsolute = CWeatherTraits.PressureNP(); #I think this should be sum to np..
+        #self.m_PressureAbsolute = CWeatherTraits.PressureNP(); #I think this should be sum to np..
         self.m_IndoorHumidity = USBHardware.ToHumidity(buf, pos + 10, 0);
         self.m_OutdoorHumidity = USBHardware.ToHumidity(buf, pos + 11, 0);
         self.m_RainCounterRaw = USBHardware.ByteToFloat(buf, pos + 12, 0, 16, 3);
@@ -1766,15 +1768,15 @@ class CHistoryDataSet(object):
         if ( self.m_WindDirection < 0 and self.m_WindDirection > 16 ):
             self.m_WindDirection = 16
         self.m_Gust = USBHardware.ToWindspeedRingBuffer(buf, pos + 16)
-	#if ( ATL::COleDateTime::GetYear(&self.m_Time) == 1999 )
-	#	v12 = CTracer::Instance();
-	#	CTracer::WriteTrace(
-	#			v12,
-	#			30,
-	#			"Dataset has year 1999, will be removed as invalid, will not be included in rain calculation");
-	#	ATL::COleDateTime::SetStatus(&self.m_Time, partial);
-	#self._Dewpoint = CHistoryDataSet::CalculateDewpoint(thisa, self.m_OutdoorTemp, self.m_OutdoorHumidity);
-	#self._Windchill = CHistoryDataSet::CalculateWindchill(thisa, self.m_OutdoorTemp, self.m_WindSpeed);
+        #if ( ATL::COleDateTime::GetYear(&self.m_Time) == 1999 )
+        #	v12 = CTracer::Instance();
+        #	CTracer::WriteTrace(
+        #			v12,
+        #			30,
+        #			"Dataset has year 1999, will be removed as invalid, will not be included in rain calculation");
+        #	ATL::COleDateTime::SetStatus(&self.m_Time, partial);
+        #self._Dewpoint = CHistoryDataSet::CalculateDewpoint(thisa, self.m_OutdoorTemp, self.m_OutdoorHumidity);
+        #self._Windchill = CHistoryDataSet::CalculateWindchill(thisa, self.m_OutdoorTemp, self.m_WindSpeed);
 
         loginf("m_Time              %s"    % self.m_Time)
         loginf("m_IndoorTemp=       %7.2f" % self.m_IndoorTemp)
@@ -1840,8 +1842,8 @@ class CDataStore(object):
             self.TransceiverID = -1
 
     def __init__(self, cfgfn):
-	#self.MemSegment = shelve???? o mmap??
-	#self.DataStoreAllocator = shelve???? mmap???
+        #self.MemSegment = shelve???? o mmap??
+        #self.DataStoreAllocator = shelve???? mmap???
         self.Guards = 0;
         self.Flags = 0;
         self.WeatherClubSettings = 0;
@@ -1864,11 +1866,11 @@ class CDataStore(object):
 
         self.filename = cfgfn
 
-	#ShelveDataStore=shelve.open("WV5DataStore",writeback=True)
-	#if ShelveDataStore.has_key("Settings"):
-	#	self.DataStore.Settings = ShelveDataStore["Settings"]
-	#else:
-	#	print ShelveDataStore.keys()
+    #ShelveDataStore=shelve.open("WV5DataStore",writeback=True)
+    #if ShelveDataStore.has_key("Settings"):
+    #	self.DataStore.Settings = ShelveDataStore["Settings"]
+    #else:
+    #	print ShelveDataStore.keys()
 
     def writeLastStat(self):
         filename = TMPCFG
@@ -1939,26 +1941,26 @@ class CDataStore(object):
     def getFlag_FLAG_TRANSCEIVER_SETTING_CHANGE(self):	# <4>
         flag = BitHandling.testBit(self.Flags, 4)
         logdbg('FLAG_TRANSCIEVER_SETTING_CHANGE=%s' % flag)
-	#std::bitset<5>::at(thisa->Flags, &result, 4u);
+        #std::bitset<5>::at(thisa->Flags, &result, 4u);
         return flag
 
     def getFlag_FLAG_FAST_CURRENT_WEATHER(self):		# <2>
         flag = BitHandling.testBit(self.Flags, 2)
         logdbg('FLAG_FAST_CURRENT_WEATHER=%s' % flag)
-	#return self.Flags_FLAG_SERVICE_RUNNING
-	#std::bitset<5>::at(thisa->Flags, &result, 2u);
+        #return self.Flags_FLAG_SERVICE_RUNNING
+        #std::bitset<5>::at(thisa->Flags, &result, 2u);
         return flag
 
     def getFlag_FLAG_TRANSCEIVER_PRESENT(self):		# <0>
         flag = BitHandling.testBit(self.Flags, 0)
         logdbg("FLAG_TRANSCEIVER_PRESENT=%s" % flag)
-	#return self.Flags_FLAG_TRANSCEIVER_PRESENT
+        #return self.Flags_FLAG_TRANSCEIVER_PRESENT
         return flag
 
     def getFlag_FLAG_SERVICE_RUNNING(self):			# <3>
         flag = BitHandling.testBit(self.Flags, 3)
         logdbg('FLAG_SERVICE_RUNNING=%s' % flag)
-	#return self.Flags_FLAG_SERVICE_RUNNING
+        #return self.Flags_FLAG_SERVICE_RUNNING
         return flag
 
     def setFlag_FLAG_TRANSCEIVER_SETTING_CHANGE(self,val):	# <4>
@@ -1973,7 +1975,7 @@ class CDataStore(object):
 
     def setFlag_FLAG_TRANSCEIVER_PRESENT(self,val):		# <0>
         logdbg('set FLAG_TRANSCEIVER_PRESENT to %s' % val)
-       	#std::bitset<5>::set(thisa->Flags, 0, val);
+        #std::bitset<5>::set(thisa->Flags, 0, val);
         self.Flags_FLAG_TRANSCEIVER_PRESENT = val
         self.Flags = BitHandling.setBitVal(self.Flags,0,val)
 
@@ -2012,9 +2014,6 @@ class CDataStore(object):
 
     def getHistoryData(self,clear):
         logdbg('getHistoryData')
-		
-        import copy
-		
         self.Request.Lock.acquire()
         History = copy.copy(self.HistoryData)
         self.Request.Lock.release()
@@ -2204,7 +2203,7 @@ class CDataStore(object):
 
     def GetCurrentWeather(self,Weather,TimeOut):
         logdbg("timeout=%d DeviceRegistered=%d" % (TimeOut, self.getDeviceRegistered() ) )
-	#if ( CSingleInstance::IsRunning(this) && CDataStore::getFlag<0>(thisa) && CDataStore::getDeviceRegistered(thisa) )
+        #if ( CSingleInstance::IsRunning(this) && CDataStore::getFlag<0>(thisa) && CDataStore::getDeviceRegistered(thisa) )
         if self.getFlag_FLAG_TRANSCEIVER_PRESENT() and self.getDeviceRegistered():
             self.Request.Type = ERequestType.rtGetCurrent;
             self.Request.State = 0;
@@ -2217,21 +2216,21 @@ class CDataStore(object):
             if self.Request.CondFinish.wait(timedelta(milliseconds=TimeOut).seconds):
                 self.Request.Type = ERequestType.rtINVALID #6;
                 self.Request.State = ERequestState.rsINVALID #8;
-		#CDataStore::getCurrentWeather(thisa, Weather);
-		#		v23 = 0;
-		#		v30 = -1;
+                #CDataStore::getCurrentWeather(thisa, Weather);
+                #		v23 = 0;
+                #		v30 = -1;
             else:
                 self.Request.Type = ERequestType.rtINVALID #6;
                 self.Request.State = ERequestState.rsINVALID #8;
-		#		v24 = 1;
-		#		v30 = -1;
+                #		v24 = 1;
+                #		v30 = -1;
             self.Request.CondFinish.release()
         else:
             logerr("GetCurrentWeather - warning: flag False or getDeviceRegistered false")
 
     def GetHistory(self,TimeOut):
         logdbg("CDataStore::GetHistory")
-	#if ( CSingleInstance::IsRunning(this) && CDataStore::getFlag<0>(thisa) && CDataStore::getDeviceRegistered(thisa) )
+        #if ( CSingleInstance::IsRunning(this) && CDataStore::getFlag<0>(thisa) && CDataStore::getDeviceRegistered(thisa) )
         if self.getFlag_FLAG_TRANSCEIVER_PRESENT() and self.getDeviceRegistered():
             self.Request.Type = ERequestType.rtGetHistory;
             self.Request.State = 0;
@@ -2245,18 +2244,18 @@ class CDataStore(object):
                 self.Request.Type = ERequestType.rtINVALID #6;
                 self.Request.State = ERequestState.rsINVALID #8;
                 #CDataStore::getHistoryData(thisa, History, 1);
-		#		v23 = 0;
-		#		v30 = -1;
+                #		v23 = 0;
+                #		v30 = -1;
             else:
                 self.Request.Type = ERequestType.rtINVALID #6;
                 self.Request.State = ERequestState.rsINVALID #8;
-		#		v24 = 1;
-		#		v30 = -1;
+                #		v24 = 1;
+                #		v30 = -1;
             self.Request.CondFinish.release()
 
     def GetConfig(self):
         logdbg("CDataStore::GetConfig")
-	#if ( CSingleInstance::IsRunning(this) && CDataStore::getFlag<0>(thisa) && CDataStore::getDeviceRegistered(thisa) )
+        #if ( CSingleInstance::IsRunning(this) && CDataStore::getFlag<0>(thisa) && CDataStore::getDeviceRegistered(thisa) )
         if self.getFlag_FLAG_TRANSCEIVER_PRESENT() and self.getDeviceRegistered():
             self.Request.Type = ERequestType.rtGetConfig;
             self.Request.State = 0;
@@ -2276,7 +2275,7 @@ class CDataStore(object):
 
     def SetTime(self):
         logdbg("CDataStore::SetTime")
-	#if ( CSingleInstance::IsRunning(this) && CDataStore::getFlag<0>(thisa) && CDataStore::getDeviceRegistered(thisa) )
+        #if ( CSingleInstance::IsRunning(this) && CDataStore::getFlag<0>(thisa) && CDataStore::getDeviceRegistered(thisa) )
         if self.getFlag_FLAG_TRANSCEIVER_PRESENT() and self.getDeviceRegistered():
             self.Request.Type = ERequestType.rtSetTime;
             self.Request.State = 0;
@@ -2314,6 +2313,7 @@ class sHID(object):
     def __init__(self):
         self.devh = None
         self.debug = 0
+        self.timeout = 1000
 
     def open(self, vid=0x6666, pid=0x5555):
         device = self._find_device(vid, pid)
@@ -2371,7 +2371,8 @@ class sHID(object):
             raise weewx.WeeWxIOError(e)
 
         # FIXME: this seems to be specific to ws28xx?
-        ret = self.devh.controlMsg(
+        # FIXME: check return value
+        self.devh.controlMsg(
             usb.TYPE_CLASS + usb.RECIP_INTERFACE,
             0x000000a, [], 0x0000000, 0x0000000, 1000);
         time.sleep(0.3)
@@ -2389,32 +2390,32 @@ class sHID(object):
             pass
 
     def SetTX(self):
-        buffer = [0]*0x15
-        buffer[0] = 0xd1;
-        self.dump('SetTX', buffer)
+        buf = [0]*0x15
+        buf[0] = 0xd1;
+        self.dump('SetTX', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 0x0000009,                         # request
-                                 buffer,                            # buffer
-                                 0x00003d1,                         # value
-                                 0x0000000,                         # index
-                                 1000)                              # timeout
+                                 request=0x0000009,
+                                 buffer=buf,
+                                 value=0x00003d1,
+                                 index=0x0000000,
+                                 timeout=self.timeout)
             result = 1
         except:
             result = 0
         return result
 
     def SetRX(self):
-        buffer = [0]*0x15
-        buffer[0] = 0xD0;
-        self.dump('SetRX', buffer)
+        buf = [0]*0x15
+        buf[0] = 0xD0;
+        self.dump('SetRX', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 0x0000009,                         # request
-                                 buffer,                            # buffer
-                                 0x00003d0,                         # value
-                                 0x0000000,                         # index
-                                 1000)                              # timeout
+                                 request=0x0000009,
+                                 buffer=buf,
+                                 value=0x00003d0,
+                                 index=0x0000000,
+                                 timeout=self.timeout)
             result = 1
         except:
             result = 0
@@ -2422,87 +2423,82 @@ class sHID(object):
 
     def GetState(self,StateBuffer):
         try:
-            buffer = self.devh.controlMsg(requestType=usb.TYPE_CLASS | usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
-                                          request=usb.REQ_CLEAR_FEATURE,
-                                          value=0x00003de,
-                                          index=0x0000000,
-                                          buffer=0x0a,
-                                          timeout=1000)
+            buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
+                                       usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
+                                       request=usb.REQ_CLEAR_FEATURE,
+                                       buffer=0x0a,
+                                       value=0x00003de,
+                                       index=0x0000000,
+                                       timeout=self.timeout)
             StateBuffer[0]=[0]*0x2
-            StateBuffer[0][0]=buffer[1]
-            StateBuffer[0][1]=buffer[2]
-			
+            StateBuffer[0][0]=buf[1]
+            StateBuffer[0][1]=buf[2]
             result = 1
         except:
             result = 0
             if self.debug == 1:
-                buffer[1]=0x14
+                buf[1]=0x14
                 StateBuffer[0]=[0]*0x2
-                StateBuffer[0][0]=buffer[1]
-                StateBuffer[0][1]=buffer[2]
+                StateBuffer[0][0]=buf[1]
+                StateBuffer[0][1]=buf[2]
                 result =1
-
-        i=0
-        strbuf = ""
-        for entry in buffer:
-            strbuf += str("%.2x" % (buffer[i]))
-            i+=1
-        if strbuf != 'de1500000000':
-            logdbg("GetState: %s" % strbuf)
-
+        self.dump('GetState', buf)
         return result
 
     def ReadConfigFlash(self,addr,numBytes,data):
         if numBytes <= 512:
             while ( numBytes ):
-                buffer=[0xcc]*0x0f #0x15
-                buffer[0] = 0xdd
-                buffer[1] = 0x0a
-                buffer[2] = (addr >>8)  & 0xFF;
-                buffer[3] = (addr >>0)  & 0xFF;
-                self.dump('ReadConfigFlash>', buffer)
+                buf=[0xcc]*0x0f #0x15
+                buf[0] = 0xdd
+                buf[1] = 0x0a
+                buf[2] = (addr >>8)  & 0xFF;
+                buf[3] = (addr >>0)  & 0xFF;
+                self.dump('ReadConfigFlash>', buf)
                 try:
-                    ret = self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                               0x0000009,           # request
-                                               buffer,              # buffer
-                                               0x00003dd,           # value
-                                               0x0000000,           # index
-                                               1000)                # timeout
+                    # FIXME: check return value
+                    self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                                         request=0x0000009,
+                                         buffer=buf,
+                                         value=0x00003dd,
+                                         index=0x0000000,
+                                         timeout=self.timeout)
                     result = 1
                 except:
                     result = 0
 
                 try:
-                    buffer = self.devh.controlMsg(requestType=usb.TYPE_CLASS | usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
-                                                  request=usb.REQ_CLEAR_FEATURE,
-                                                  value=0x00003dc,
-                                                  index=0x0000000,
-                                                  buffer=0x15,
-                                                  timeout=1000)
+                    buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
+                                               usb.RECIP_INTERFACE |
+                                               usb.ENDPOINT_IN,
+                                               request=usb.REQ_CLEAR_FEATURE,
+                                               buffer=0x15,
+                                               value=0x00003dc,
+                                               index=0x0000000,
+                                               timeout=self.timeout)
                     result = 1
                 except:
                     result = 0
                     if addr == 0x1F5 and self.debug == 1: #//fixme #debugging... without device
                         logdbg("sHID::ReadConfigFlash -emulated 0x1F5")
-                        buffer=[0xdc,0x0a,0x01,0xf5,0x00,0x01,0x78,0xa0,0x01,0x01,0x0c,0x0a,0x0a,0x00,0x41,0xff,0xff,0xff,0xff,0xff,0x00]
+                        buf=[0xdc,0x0a,0x01,0xf5,0x00,0x01,0x78,0xa0,0x01,0x01,0x0c,0x0a,0x0a,0x00,0x41,0xff,0xff,0xff,0xff,0xff,0x00]
 
                     if addr == 0x1F9 and self.debug == 1: #//fixme #debugging... without device
                         logdbg("sHID::ReadConfigFlash -emulated 0x1F9")
-                        buffer=[0xdc,0x0a,0x01,0xf9,0x01,0x01,0x0c,0x0a,0x0a,0x00,0x41,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x00]
+                        buf=[0xdc,0x0a,0x01,0xf9,0x01,0x01,0x0c,0x0a,0x0a,0x00,0x41,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x00]
                     if self.debug != 1:
                         return 0;
-						
+
                 new_data=[0]*0x15
                 if ( numBytes < 16 ):
                     for i in xrange(0, numBytes):
-                        new_data[i] = buffer[i+4];
+                        new_data[i] = buf[i+4];
                     numBytes = 0;
                 else:
                     for i in xrange(0, 16):
-                        new_data[i] = buffer[i+4];
+                        new_data[i] = buf[i+4];
                     numBytes -= 16;
                     addr += 16;
-                self.dump('ReadConfigFlash<', buffer)
+                self.dump('ReadConfigFlash<', buf)
 
             result = 1;
         else:
@@ -2512,17 +2508,17 @@ class sHID(object):
         return result
 
     def SetState(self,state):
-        buffer = [0]*0x15
-        buffer[0] = 0xd7;
-        buffer[1] = state;
-        self.dump('SetState', buffer)
+        buf = [0]*0x15
+        buf[0] = 0xd7;
+        buf[1] = state;
+        self.dump('SetState', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 0x0000009,                        # request
-                                 buffer,                           # buffer
-                                 0x00003d7,                        # value
-                                 0x0000000,                        # index
-                                 1000)                             # timeout
+                                 request=0x0000009,
+                                 buffer=buf,
+                                 value=0x00003d7,
+                                 index=0x0000000,
+                                 timeout=self.timeout)
             result = 1
         except:
             result = 0
@@ -2544,20 +2540,20 @@ class sHID(object):
 #    00000000: d5 00 30 00 32 40 64 32 53 04 00 00 00 00 00 00
 #    00000000: d5 00 09 00 32 00 04 cf 00 30 01 a0 00 00 00 00
 
-        buffer = [0]*0x111
-        buffer[0] = 0xd5;
-        buffer[1] = numBytes >> 8;
-        buffer[2] = numBytes;
+        buf = [0]*0x111
+        buf[0] = 0xd5;
+        buf[1] = numBytes >> 8;
+        buf[2] = numBytes;
         for i in xrange(0, numBytes):
-            buffer[i+3] = data[i]
-        self.dump('SetFrame', buffer)
+            buf[i+3] = data[i]
+        self.dump('SetFrame', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 0x0000009,                      # request
-                                 buffer,                         # buffer
-                                 0x00003d5,                      # value
-                                 0x0000000,                      # index
-                                 1000)                           # timeout
+                                 request=0x0000009,
+                                 buffer=buf,
+                                 value=0x00003d5,
+                                 index=0x0000000,
+                                 timeout=self.timeout)
             result = 1
         except:
             result = 0
@@ -2565,91 +2561,88 @@ class sHID(object):
 
     def GetFrame(self,data,numBytes):
         try:
-            buffer = self.devh.controlMsg(requestType=usb.TYPE_CLASS | usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
-                                          request=usb.REQ_CLEAR_FEATURE,
-                                          value=0x00003d6,
-                                          index=0x0000000,
-                                          buffer=0x111,
-                                          timeout=1000)
+            buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
+                                       usb.RECIP_INTERFACE |
+                                       usb.ENDPOINT_IN,
+                                       request=usb.REQ_CLEAR_FEATURE,
+                                       buffer=0x111,
+                                       value=0x00003d6,
+                                       index=0x0000000,
+                                       timeout=self.timeout)
             result = 1
         except:
             result = 0
 
         new_data=[0]*0x131
-        new_numBytes=(buffer[1] << 8 | buffer[2])& 0x1ff;
+        new_numBytes=(buf[1] << 8 | buf[2])& 0x1ff;
         for i in xrange(0, new_numBytes):
-            new_data[i] = buffer[i+3];
-        self.dump('GetFrame', buffer)
+            new_data[i] = buf[i+3];
+        self.dump('GetFrame', buf)
 
         data[0] = new_data
         numBytes[0] = new_numBytes
 
         return result
 
-
     def WriteReg(self,regAddr,data):
-        buffer = [0]*0x05
-        buffer[0] = 0xf0;
-        buffer[1] = regAddr & 0x7F;
-        buffer[2] = 0x01;
-        buffer[3] = data;
-        buffer[4] = 0x00;
-        self.dump('WriteReg', buffer)
+        buf = [0]*0x05
+        buf[0] = 0xf0;
+        buf[1] = regAddr & 0x7F;
+        buf[2] = 0x01;
+        buf[3] = data;
+        buf[4] = 0x00;
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 0x0000009,                        # request
-                                 buffer,                           # buffer
-                                 0x00003f0,                        # value
-                                 0x0000000,                        # index
-                                 1000)                             # timeout
+                                 request=0x0000009,
+                                 buffer=buf,
+                                 value=0x00003f0,
+                                 index=0x0000000,
+                                 timeout=self.timeout)
             result = 1
         except:
             result = 0
         return result
 
     def Execute(self,command):
-        buffer = [0]*0x0f #*0x15
-        buffer[0] = 0xd9;
-        buffer[1] = command;
-        self.dump('Execute', buffer)
+        buf = [0]*0x0f #*0x15
+        buf[0] = 0xd9;
+        buf[1] = command;
+        self.dump('Execute', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 0x0000009,                        # request
-                                 buffer,                           # buffer
-                                 0x00003d9,                        # value
-                                 0x0000000,                        # index
-                                 1000)                             # timeout
+                                 request=0x0000009,
+                                 buffer=buf,
+                                 value=0x00003d9,
+                                 index=0x0000000,
+                                 timeout=self.timeout)
             result = 1
         except:
             result = 0
         return result
 
     def SetPreamblePattern(self,pattern):
-        buffer = [0]*0x15
-        buffer[0] = 0xd8;
-        buffer[1] = pattern
-        self.dump('SetPreamblePattern', buffer)
+        buf = [0]*0x15
+        buf[0] = 0xd8;
+        buf[1] = pattern
+        self.dump('SetPreamblePattern', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 0x0000009,                       # request
-                                 buffer,                          # buffer
-                                 0x00003d8,                       # value
-                                 0x0000000,                       # index
-                                 1000)                            # timeout
+                                 request=0x0000009,
+                                 buffer=buf,
+                                 value=0x00003d8,
+                                 index=0x0000000,
+                                 timeout=self.timeout)
             result = 1
-
         except:
             result = 0
         return result
 
-    def dump(self, cmd, buffer):
-        i=0
+    def dump(self, cmd, buf):
         strbuf = ""
-        for entry in buffer:
-            strbuf += str("%.2x" % (buffer[i]))
-            i+=1
-        logdbg("%s: %s" % (cmd, strbuf))
-
+        for i in buf:
+            strbuf += str("%.2x" % i)
+        if strbuf != 'de1500000000':  # we do not care about de15
+            logdbg("%s: %s" % (cmd, strbuf))
 
 
 class CCommunicationService(object):
@@ -2728,7 +2721,7 @@ class CCommunicationService(object):
         self.RepeatSize = 0
         self.RepeatInterval = None
         self.RepeatTime = datetime.now() #ptime
-	
+
         self.Regenerate = 0
         self.GetConfig = 0
 
@@ -2746,7 +2739,7 @@ class CCommunicationService(object):
         DeviceCheckSum = self.DataStore.GetDeviceConfigCS()
         now = time.time()
         tm = time.localtime(now)
-        tu = time.gmtime(now)
+        #tu = time.gmtime(now)
 
         new_Buffer=[0]
         new_Buffer[0]=Buffer[0]
@@ -2859,8 +2852,8 @@ class CCommunicationService(object):
         self.DataStore.setLastBatteryStatus( BatteryStat);
         Quality = Buffer[0][3] & 0x7F;
         self.DataStore.setLastLinkQuality( Quality);
-        ReceivedCS = (Buffer[0][4] << 8) + Buffer[0][5];
-        rt = self.DataStore.getRequestType()
+        #ReceivedCS = (Buffer[0][4] << 8) + Buffer[0][5];
+        #rt = self.DataStore.getRequestType()
         #if ( rt == ERequestType.rtSetConfig ) #rtSetConfig
         #{
         #	v11 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
@@ -2933,20 +2926,20 @@ class CCommunicationService(object):
         newBuffer=[0]
         newBuffer[0] = Buffer[0]
         newLength = [0]
-        RecConfig = None
-        diff = 0;
+        #RecConfig = None
+        #diff = 0;
         t=[0]
         t[0]=[0]*300
         #j__memcpy(t, (char *)Buffer, *Length);
         for i in xrange(0,Length[0]):
             t[0][i]=newBuffer[0][i]
-        c=CWeatherStationConfig()
-	#CWeatherStationConfig.CWeatherStationConfig_buf(c, t,4);
+        #c=CWeatherStationConfig()
+        #CWeatherStationConfig.CWeatherStationConfig_buf(c, t,4);
         CWeatherStationConfig.CWeatherStationConfig_buf(self.DataStore.DeviceConfig, t,4); #for the moment I need the cs here
-	#v73 = 0;
-	#j__memset(t, -52, *Length);
-	#t[0]=[0xcc]*Length[0]
-	#CWeatherStationConfig::write(&c, &t[4]);
+        #v73 = 0;
+        #j__memset(t, -52, *Length);
+        #t[0]=[0xcc]*Length[0]
+        #CWeatherStationConfig::write(&c, &t[4]);
         USBHardware.ReverseByteOrder(t, 7, 4);
         USBHardware.ReverseByteOrder(t, 11, 5);
         USBHardware.ReverseByteOrder(t, 16, 5);
@@ -2956,53 +2949,53 @@ class CCommunicationService(object):
         USBHardware.ReverseByteOrder(t, 30, 3);
         USBHardware.ReverseByteOrder(t, 33, 5);
         USBHardware.ReverseByteOrder(t, 38, 5);
-	#for ( i = 4; i < 0x30; ++i )
-	#{
-	#	if ( t[i] != (*Buffer)[i] )
-	#	{
-	#		c1 = (char *)(unsigned __int8)t[i];
-	#		c2 = (*Buffer)[i];
-	#		v43 = c2;
-	#		v42 = c1;
-	#		v41.baseclass_0.m_pszData = (char *)i;
-	#		v3 = CTracer::Instance();
-	#		CTracer::WriteTrace(
-	#				#v3,
-	#				#30,
-	#				#"Generated config differs from received in byte#: %02i generated = %04x rececived = %04x");
-	#		diff = 1;
-	#	}
-	#}
-	#if ( diff ):
-		#v43 = *Length;
-		#v42 = t;
-		#v41.baseclass_0.m_pszData = (char *)v43;
-		#v47 = &v41;
-		#ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
-		#		#&v41,
-		#		#"Config_Gen");
-		#v46 = v4;
-		#rhs = v4;
-		#LOBYTE(v73) = 1;
-		#v5 = CTracer::Instance();
-		#LOBYTE(v73) = 0;
-		#CTracer::WriteDump(v5, 30, v41, v42, v43);
-		#v43 = *Length;
-		#v42 = (char *)Buffer;
-		#v41.baseclass_0.m_pszData = (char *)v43;
-		#v48 = &v41;
-		#ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
-		#		#&v41,
-		#		#"Config_Rec");
-		#v46 = v6;
-		#rhs = v6;
-		#LOBYTE(v73) = 2;
-		#v7 = CTracer::Instance();
-		#LOBYTE(v73) = 0;
-		#CTracer::WriteDump(v7, 30, v41, v42, v43);
-	#v73 = -1;
-	#CWeatherStationConfig::_CWeatherStationConfig(&c);
-	RecConfig = CWeatherStationConfig()
+        #for ( i = 4; i < 0x30; ++i )
+        #{
+        #	if ( t[i] != (*Buffer)[i] )
+        #	{
+        #		c1 = (char *)(unsigned __int8)t[i];
+        #		c2 = (*Buffer)[i];
+        #		v43 = c2;
+        #		v42 = c1;
+        #		v41.baseclass_0.m_pszData = (char *)i;
+        #		v3 = CTracer::Instance();
+        #		CTracer::WriteTrace(
+        #				#v3,
+        #				#30,
+        #				#"Generated config differs from received in byte#: %02i generated = %04x rececived = %04x");
+        #		diff = 1;
+        #	}
+        #}
+        #if ( diff ):
+        #v43 = *Length;
+        #v42 = t;
+        #v41.baseclass_0.m_pszData = (char *)v43;
+        #v47 = &v41;
+        #ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
+        #		#&v41,
+        #		#"Config_Gen");
+        #v46 = v4;
+        #rhs = v4;
+        #LOBYTE(v73) = 1;
+        #v5 = CTracer::Instance();
+        #LOBYTE(v73) = 0;
+        #CTracer::WriteDump(v5, 30, v41, v42, v43);
+        #v43 = *Length;
+        #v42 = (char *)Buffer;
+        #v41.baseclass_0.m_pszData = (char *)v43;
+        #v48 = &v41;
+        #ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
+        #		#&v41,
+        #		#"Config_Rec");
+        #v46 = v6;
+        #rhs = v6;
+        #LOBYTE(v73) = 2;
+        #v7 = CTracer::Instance();
+        #LOBYTE(v73) = 0;
+        #CTracer::WriteDump(v7, 30, v41, v42, v43);
+        #v73 = -1;
+        #CWeatherStationConfig::_CWeatherStationConfig(&c);
+        RecConfig = CWeatherStationConfig()
         confBuffer=[0]
         confBuffer[0]=[0]*0x111
         #CWeatherStationConfig.CWeatherStationConfig_buf(RecConfig, confBuffer, 4);
@@ -3111,7 +3104,7 @@ class CCommunicationService(object):
         newLength = [0]
         Data = CCurrentWeatherData()
         Data.CCurrentWeatherData_buf(newBuffer, 6);
-	#print "CurrentData", Buffer[0] #//fixme
+        #print "CurrentData", Buffer[0] #//fixme
         self.DataStore.setLastSeen( datetime.now());
         self.DataStore.setLastCurrentWeatherTime( datetime.now())
         BatteryStat = (Buffer[0][2] & 0xF);
@@ -3177,7 +3170,7 @@ class CCommunicationService(object):
         #    v9 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
         #v10 = CTracer::Instance();
         #CTracer::WriteTrace(v10, 40, "getLastHistoryIndex(): %X",self.DataStore.getLastHistoryIndex());
-	if ( ThisHistoryIndex == self.DataStore.getLastHistoryIndex()):
+        if ( ThisHistoryIndex == self.DataStore.getLastHistoryIndex()):
         #   CDataStore::getLastHistTimeStamp( &LastHistTs);
             if 1 == 1:
         #   if ( !ATL::COleDateTime::GetStatus(&LastHistTs) )
@@ -3195,8 +3188,8 @@ class CCommunicationService(object):
                         self.DataStore.setLastHistoryDataTime( datetime.now())
             self.DataStore.setBufferCheck( 0)
         else:
-	    #CDataStore::setLastHistTimeStamp( CHistoryDataSet::GetTime(&Data));
-	    #CDataStore::addHistoryData( &Data);
+            #CDataStore::setLastHistTimeStamp( CHistoryDataSet::GetTime(&Data));
+            #CDataStore::addHistoryData( &Data);
             self.DataStore.addHistoryData(Data);
             self.DataStore.setLastHistoryIndex( ThisHistoryIndex);
             if ( LatestHistoryIndex >= ThisHistoryIndex ): #unused
@@ -3345,9 +3338,9 @@ class CCommunicationService(object):
             logdbg("CorVal: %x" % CorVal) #0x184e8
             FreqVal += CorVal
 
-	#print "try to tune sensors"
-	#Frequency = 915450000
-	#FreqVal =  long(Frequency / 16000000.0 * 16777216.0)
+    #print "try to tune sensors"
+    #Frequency = 915450000
+    #FreqVal =  long(Frequency / 16000000.0 * 16777216.0)
 
         if ( not (FreqVal % 2) ):
             FreqVal += 1
@@ -3356,13 +3349,13 @@ class CCommunicationService(object):
             #FreqVal= 915450000 / 16000000 * 16777216 + 1
             #print "experiment:",FreqVal,CorVal
         self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3] = (FreqVal >>24) & 0xFF
-	#print "dd %x" % (self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3])
+        #print "dd %x" % (self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3])
         self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2] = (FreqVal >>16) & 0xFF
-	#print "dd %x" % (self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2])
+        #print "dd %x" % (self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2])
         self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1] = (FreqVal >>8)  & 0xFF
-	#print "dd %x" % (self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1])
+        #print "dd %x" % (self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1])
         self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ0] = (FreqVal >>0)  & 0xFF
-	#print "dd %x" % (self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ0])
+        #print "dd %x" % (self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ0])
         logdbg("FreqVal: %x" % FreqVal)
 
     def GenerateResponse(self,Buffer,Length):
@@ -3372,7 +3365,7 @@ class CCommunicationService(object):
         newLength[0] = Length[0]
         if Length[0] != 0:
             RequestType = self.DataStore.getRequestType()
-	    logdbg("GenerateResponse: Length=%x RequestType=%x" % 
+            logdbg("GenerateResponse: Length=%x RequestType=%x" % 
                    (Length[0], RequestType))
             if self.DataStore.getDeviceRegistered():
                 RegisterdID = self.DataStore.getDeviceId()
@@ -3423,11 +3416,11 @@ class CCommunicationService(object):
             else:
                 if RequestType == 5:
                     logdbg('GenerateResponse: device not registered, attempting to register')
-                    buffer = [None]
-                    self.shid.ReadConfigFlash(0x1fe, 2, buffer);
+                    buf = [None]
+                    self.shid.ReadConfigFlash(0x1fe, 2, buf);
                     #    00000000: dd 0a 01 fe 18 f6 aa 01 2a a2 4d 00 00 87 16
-                    TransceiverID = buffer[0][0] << 8;
-                    TransceiverID += buffer[0][1];
+                    TransceiverID = buf[0][0] << 8;
+                    TransceiverID += buf[0][1];
                     if ( Length[0]                !=    6
                          or  Buffer[0][0]         != 0xf0
                          or  Buffer[0][1]         != 0xf0
@@ -3472,7 +3465,7 @@ class CCommunicationService(object):
                     if self.Regenerate:
                         newLength[0] = self.buildTimeFrame(newBuffer,1);
                     #else:
-                    #	logdbg("implementami - copia data su buffer")
+                    #	logdbg("implementami - copia data su buf")
                     #	newBuffer[0] = self.RepeatData, self.RepeatSize
                     #newLength[0] = self.RepeatSize;
 
@@ -3489,22 +3482,22 @@ class CCommunicationService(object):
         self.calculateFrequency(self.DataStore.TransceiverSettings.Frequency)
 
         errmsg = ''
-        buffer = [None]
-        if self.shid.ReadConfigFlash(0x1F9, 7, buffer):
-            ID  = buffer[0][5] << 8
-            ID += buffer[0][6]
+        buf = [None]
+        if self.shid.ReadConfigFlash(0x1F9, 7, buf):
+            ID  = buf[0][5] << 8
+            ID += buf[0][6]
             logdbg("ID=0x%x" % ID)
 
-            SN  = str("%02d"%(buffer[0][0]))
-            SN += str("%02d"%(buffer[0][1]))
-            SN += str("%02d"%(buffer[0][2]))
-            SN += str("%02d"%(buffer[0][3]))
-            SN += str("%02d"%(buffer[0][4]))
-            SN += str("%02d"%(buffer[0][5]))
-            SN += str("%02d"%(buffer[0][6]))
+            SN  = str("%02d"%(buf[0][0]))
+            SN += str("%02d"%(buf[0][1]))
+            SN += str("%02d"%(buf[0][2]))
+            SN += str("%02d"%(buf[0][3]))
+            SN += str("%02d"%(buf[0][4]))
+            SN += str("%02d"%(buf[0][5]))
+            SN += str("%02d"%(buf[0][6]))
             self.DataStore.setTransceiverSerNo(SN)
             
-            for i, Register in enumerate(self.AX5051RegisterNames_map):
+            for Register in self.AX5051RegisterNames_map:
                 self.shid.WriteReg(Register,self.AX5051RegisterNames_map[Register])
 
             if self.shid.Execute(5):
@@ -3513,8 +3506,9 @@ class CCommunicationService(object):
                     time.sleep(1) #//fixme
                     #print "fixme: subsecond duration" //fixme
                     if self.shid.SetRX():
-                        v67 = 1  #//fixme:and so?
-                        v78 = -1 #//fixme:and so?
+                        #v67 = 1  #//fixme:and so?
+                        #v78 = -1 #//fixme:and so?
+                        pass
                     else:
                         loginf('shid.SetRX failed')
                 else:
@@ -3538,21 +3532,20 @@ class CCommunicationService(object):
         self.running = False
 
     def doRF(self):
-        logdbg('initializing rf communication')
-        self.DataStore.setFlag_FLAG_TRANSCEIVER_SETTING_CHANGE(1)
-        self.shid.open()
-        self.TransceiverInit()
-        self.DataStore.setFlag_FLAG_TRANSCEIVER_PRESENT( 1)
-        self.shid.SetRX()
-
-        while self.running:
-            try:
+        try:
+            logdbg('initializing rf communication')
+            self.DataStore.setFlag_FLAG_TRANSCEIVER_SETTING_CHANGE(1)
+            self.shid.open()
+            self.TransceiverInit()
+            self.DataStore.setFlag_FLAG_TRANSCEIVER_PRESENT( 1)
+            self.shid.SetRX()
+            while self.running:
                 self.doRFCommunication()
-            except Exception, e:
-                logerr('exception in doRFCommunication: %s' % e)
-                self.running = False
-                traceback.print_exc()
-                raise
+        except Exception, e:
+            logerr('exception in doRF: %s' % e)
+            self.running = False
+            traceback.print_exc()
+            raise
 
     def doRFCommunication(self):
         DeviceWaitEndTime = datetime.now()
@@ -3598,7 +3591,8 @@ class CCommunicationService(object):
                         RegisterWaitTime = self.DataStore.getRegisterWaitTime() 
                         DeviceWaitEndTime = datetime.now() + timedelta(milliseconds=RegisterWaitTime)
                         logdbg("DeviceWaitEndTime=%s" % DeviceWaitEndTime)
-                    ret = self.shid.SetRX() #make state from 14 to 15
+                    #ret = self.shid.SetRX() #make state from 14 to 15
+                    self.shid.SetRX() #make state from 14 to 15
         #endif RequestType == ERequestType.rtFirstConfig:
 
         DataLength = [0]
