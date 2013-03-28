@@ -9,6 +9,7 @@
 #
 """Routines for generating image plots.
 """
+import colorsys
 import time
 import Image
 import ImageDraw
