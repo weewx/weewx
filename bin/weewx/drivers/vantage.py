@@ -1367,6 +1367,16 @@ class VantageService(Vantage, weewx.wxengine.StdService):
         self.old_time_12_ts = None
         self.temperature_12 = None
         
+    def closePort(self):
+        # Close the archive database. In case it doesn't exist yet, enclose
+        # the attempt in a try block:
+        try:
+            self.archive.close()
+        except AttributeError:
+            pass
+        # Now close my superclass's port:
+        Vantage.closePort(self)
+
     def new_loop_packet(self, event):
         """Calculate the missing pressures in the LOOP packet"""
         pressureIn, altimeterIn = self.get_pressures(event.packet['dateTime'],
