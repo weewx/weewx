@@ -5,17 +5,12 @@ current near-instantaneous implementation in fousb
 
 Offer tags to support JSON. In particular, vectors.
 
-Calculate altimeter pressure to send off to CWOP. 
-See http://davisnet.com/product_documents/weather/app_notes/AN_28-derived-weather-variables.pdf
-In particular, see Paul G's note about softWx.
-
 Make record generation from the accumulators into a separate service, allowing 
 easier customization. This would also make calculation of extensive quantities
 easier.
 
-Allow the console to participate as yet another service. Then, the Davis
-consolecould intercept new archive record events and add rxcheckpercent and
-rain to software generated records.
+The Davis console could intercept new archive record events and add rxcheckpercent
+and rain to software generated records.
 
 Consider breaking the rule that reporting can only be done through the 
 databases and, instead, offer up the last record when the reporting thread

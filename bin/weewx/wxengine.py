@@ -240,6 +240,9 @@ class StdService(object):
         """Bind the specified event to a callback."""
         # Just forward the request to the main engine:
         self.engine.bind(event_type, callback)
+        
+    def shutDown(self):
+        pass
 
 #===============================================================================
 #                    Class StdConvert
@@ -333,9 +336,12 @@ class StdCalibrate(StdService):
 
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
-        for obs_type in self.corrections:
-            if event.record.has_key(obs_type) and event.record[obs_type] is not None:
-                event.record[obs_type] = eval(self.corrections[obs_type], None, event.record)
+        # If the record was software generated, then any corrections have already been applied
+        # in the LOOP packet.
+        if event.origin != 'software':
+            for obs_type in self.corrections:
+                if event.record.has_key(obs_type) and event.record[obs_type] is not None:
+                    event.record[obs_type] = eval(self.corrections[obs_type], None, event.record)
 
 #===============================================================================
 #                    Class StdQC
@@ -544,7 +550,7 @@ class StdArchive(StdService):
             # Now ask the console for any new records since then. (Not all consoles
             # support this feature).
             for record in self.engine.console.genArchiveRecords(lastgood_ts):
-                self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+                self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record, origin='hardware'))
         except weewx.HardwareError, e:
             syslog.syslog(syslog.LOG_ERR, "wxengine: Internal error detected. Catchup abandoned")
             syslog.syslog(syslog.LOG_ERR, "****      %s" % e)
@@ -555,7 +561,7 @@ class StdArchive(StdService):
         # Add the archive interval
         record['interval'] = self.archive_interval / 60
         # Send out an event with the new record:
-        self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record))
+        self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record, origin='software'))
     
     def _new_accumulator(self, timestamp):
         start_archive_ts = weeutil.weeutil.startOfInterval(timestamp,

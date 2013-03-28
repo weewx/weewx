@@ -35,6 +35,9 @@ file will be guessed if none is specified.
 
 Fixed wxformulas.heatindexC to handle arguments of None type.
 
+Fixed bug that causes Corrections to be applied twice to archive records if
+software record generation is used.
+
 rsync now allows a port to be specified.
 
 Fixed day/night transition bug.
