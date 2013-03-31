@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 564 2013-03-31 16:31:40Z mwall $
+# $Id: fousb.py 566 2013-03-31 21:08:39Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -73,13 +73,18 @@ by weewx.  The pywws code is mostly untouched - it has been modified to
 conform to weewx error handling and reporting, and some additional error
 checks have been added.
 
-The rain counter frequently flip-flops.  The value decrements, so it looks
-like a counter wrap around, then it increments, looking like some rain.  A
-typical bogus increment shows up as 6.6 mm (22 raw), so we use a maximum
-sane value of 2 mm to avoid the spurious readings.  So if the real rainfall
-is more than 2 mm per sample period it will be ignored.  With a sample period
-of 30 seconds that is a rain rate of 9.4 in/hr.  FWIW, the highest recorded
-rain rate is 43 inches in 24 hours, or 1.79 in/hr.
+The rain counter occasionally reports incorrect rainfall.  On some stations,
+the counter decrements then increments.  Or the counter may increase by more
+than the number of bucket tips that actually occurred.  The max_rain_rate
+helps filter these bogus readings.  This filter is applied to any sample
+period.  If the volume of the samples in the period divided by the sample
+period interval are greater than the maximum rain rate, the samples are
+ignored.
+
+A single bucket tip is equivalent to 0.3 mm of rain.  The default maximum
+rate is 24 cm/hr (9.44 in/hr).  For a sample period of 5 minutes this would
+be 2 cm (0.78 in) or about 66 bucket tips, or one tip every 4 seconds.  For
+a sample period of 30 minutes this would be 12 cm (4.72 in)
 
 Pressures are calculated and reported differently by pywws and wview.  These
 are the variables:
@@ -237,7 +242,8 @@ keymap = {
     'windchill'   : ('windchill',    1.0),
 }
 
-def pywws2weewx(p, ts, pressure_offset, altitude, last_rain, last_rain_ts):
+def pywws2weewx(p, ts, pressure_offset, altitude,
+                last_rain, last_rain_ts, max_rain_rate):
     """Map the pywws dictionary to something weewx understands.
 
     p: dictionary of pywws readings
@@ -250,7 +256,11 @@ def pywws2weewx(p, ts, pressure_offset, altitude, last_rain, last_rain_ts):
 
     last_rain: last rain total in cm
 
-    last_rain_ts: timestamp of last rain total"""
+    last_rain_ts: timestamp of last rain total
+
+    max_rain_rate: maximum value for rain rate in cm/hr.  rainfall readings
+    resulting in a rain rate greater than this value will be ignored.
+    """
 
     packet = {}
     # required elements
@@ -293,6 +303,12 @@ def pywws2weewx(p, ts, pressure_offset, altitude, last_rain, last_rain_ts):
             logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' % (packet['rain'], packet['rainTotal'], last_rain))
         if packet['rainRate'] is not None and packet['rainRate'] > 0:
             logdbg('calculated rainrate of %.2f cm/hr (%.2f cm in %d seconds)' % (packet['rainRate'], packet['rain'], int(ts - last_rain_ts)))
+
+    # if the rain rate is bogus, ignore the rain and rainRate values
+    if packet['rainRate'] is not None and packet['rainRate'] > max_rain_rate:
+        logerr('maximum rain rate exceeded: max: %.2f rate: %.2f cm/hr (%.2f cm in %d s)' % (max_rain_rate, packet['rainRate'], packet['rain'], int(ts - last_rain_ts)))
+        packet['rain'] = None
+        packet['rainRate'] = None
 
     return packet
 
@@ -576,9 +592,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         polling_interval: How often to sample the USB interface for data.
         [Optional. Default is 60 seconds]
 
-        rain_max_sane: Maximum sane value for rain in a single sampling
-        period, measured in mm.
-        [Optional. Default is 2]
+        max_rain_rate: Maximum sane value for rain rate for a single polling
+        interval or archive interval, measured in cm/hr.  If the rain sample
+        for a single period is greater than this rate, the sample will be
+        logged but not added to the loop or archive data.
+        [Optional. Default is 24]
 
         timeout: How long to wait, in seconds, before giving up on a response
         from the USB port.
@@ -613,7 +631,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.model             = stn_dict.get('model', 'WH1080 (USB)')
         self.polling_mode      = stn_dict.get('polling_mode', PERIODIC_POLLING)
         self.polling_interval  = int(stn_dict.get('polling_interval', 60))
-        self.rain_max_sane     = int(stn_dict.get('rain_max_sane', 2))
+        self.max_rain_rate     = int(stn_dict.get('max_rain_rate', 24))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
@@ -728,7 +746,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             ts = int(time.time() + 0.5)
             packet = pywws2weewx(p, ts,
                                  self.pressure_offset, self.altitude,
-                                 self._last_rain_loop, self._last_rain_ts_loop)
+                                 self._last_rain_loop, self._last_rain_ts_loop,
+                                 self.max_rain_rate)
             self._last_rain_loop = packet['rainTotal']
             self._last_rain_ts_loop = ts
             yield packet
@@ -752,7 +771,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             ts = delta.days * 86400 + delta.seconds
             data = pywws2weewx(r['data'], ts,
                                self.pressure_offset, self.altitude,
-                               self._last_rain_arc, self._last_rain_ts_arc)
+                               self._last_rain_arc, self._last_rain_ts_arc,
+                               self.max_rain_rate)
             data['interval'] = self._archive_interval_minutes()
             self._last_rain_arc = data['rainTotal']
             self._last_rain_ts_arc = ts
