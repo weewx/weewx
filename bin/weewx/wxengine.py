@@ -807,6 +807,13 @@ def sigHUPhandler(dummy_signum, dummy_frame):
     syslog.syslog(syslog.LOG_DEBUG, "wxengine: Received signal HUP. Throwing Restart exception.")
     raise Restart
 
+class Terminate(Exception):
+    """Exception thrown when terminating the engine."""
+
+def sigTERMhandler(dummy_signum, dummy_frame):
+    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Received signal TERM.")
+    raise Terminate
+
 #===============================================================================
 #                    Function main
 #===============================================================================
@@ -820,14 +827,18 @@ def main(options, args, EngineClass=StdEngine) :
     # Set the logging facility.
     syslog.openlog('weewx', syslog.LOG_PID | syslog.LOG_CONS)
 
-    # Set up the reload signal handler:
+    # Set up the signal handlers.
     signal.signal(signal.SIGHUP, sigHUPhandler)
+    signal.signal(signal.SIGTERM, sigTERMhandler)
+
+    syslog.syslog(syslog.LOG_INFO, "wxengine: Initializing weewx version %s" % weewx.__version__)
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
     cwd = os.getcwd()
 
     if options.daemon:
+        syslog.syslog(syslog.LOG_INFO, "wxengine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
     while True:
@@ -849,7 +860,7 @@ def main(options, args, EngineClass=StdEngine) :
             # Create and initialize the engine
             engine = EngineClass(config_dict)
             # Start the engine
-            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s." % weewx.__version__)
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s" % weewx.__version__)
             engine.run()
     
         # Catch any recoverable weewx I/O errors:
@@ -882,7 +893,11 @@ def main(options, args, EngineClass=StdEngine) :
     
         except Restart:
             syslog.syslog(syslog.LOG_NOTICE, "wxengine: Received signal HUP. Restarting.")
-            
+
+        except Terminate:
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Terminating weewx version %s" % weewx.__version__)
+            sys.exit()
+
         # If run from the command line, catch any keyboard interrupts and log them:
         except KeyboardInterrupt:
             syslog.syslog(syslog.LOG_CRIT,"wxengine: Keyboard interrupt.")
@@ -915,7 +930,7 @@ def getConfiguration(config_path):
         syslog.syslog(syslog.LOG_CRIT, "wxengine: Error while parsing configuration file %s" % config_path)
         raise
 
-    syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s." % config_path)
+    syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s" % config_path)
 
     return config_dict
     
