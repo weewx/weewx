@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 556 2013-03-25 03:10:02Z mwall $
+# $Id: fousb.py 564 2013-03-31 16:31:40Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -38,7 +38,6 @@
 # is full.  --mwall 30dec2012
 
 # FIXME: determine why sensor spikes happen with PERIODIC but not ADAPTIVE
-# FIXME: maximum sane rain may need adjustment
 
 """Classes and functions for interfacing with FineOffset weather stations.
 
@@ -79,8 +78,8 @@ like a counter wrap around, then it increments, looking like some rain.  A
 typical bogus increment shows up as 6.6 mm (22 raw), so we use a maximum
 sane value of 2 mm to avoid the spurious readings.  So if the real rainfall
 is more than 2 mm per sample period it will be ignored.  With a sample period
-of 30 seconds that is a rain rate of 9.4 in/hr.  The highest recorded rain
-rate is 43 inches in 24 hours, or 1.79 in/hr.
+of 30 seconds that is a rain rate of 9.4 in/hr.  FWIW, the highest recorded
+rain rate is 43 inches in 24 hours, or 1.79 in/hr.
 
 Pressures are calculated and reported differently by pywws and wview.  These
 are the variables:
@@ -218,7 +217,7 @@ def loader(config_dict, engine):
 
 # map between the pywws keys and the weewx keys
 # 'weewx-key' : ( 'pywws-key', multiplier )
-# rain needs special treatment
+# rain is total measure so must split into per-period and calculate rate
 # station has no separate windgustdir so use wind_dir
 keymap = {
     'inHumidity'  : ('hum_in',       1.0),
@@ -238,8 +237,20 @@ keymap = {
     'windchill'   : ('windchill',    1.0),
 }
 
-def pywws2weewx(p, ts, pressure_offset, altitude, last_rain, last_rain_ts, max_rain):
-    """map the pywws dictionary to something weewx understands."""
+def pywws2weewx(p, ts, pressure_offset, altitude, last_rain, last_rain_ts):
+    """Map the pywws dictionary to something weewx understands.
+
+    p: dictionary of pywws readings
+
+    ts: timestamp in UTC
+
+    pressure_offset: pressure calibration offset in mbar
+
+    altitude: station altitude in meters
+
+    last_rain: last rain total in cm
+
+    last_rain_ts: timestamp of last rain total"""
 
     packet = {}
     # required elements
@@ -269,17 +280,19 @@ def pywws2weewx(p, ts, pressure_offset, altitude, last_rain, last_rain_ts, max_r
     packet['altimeter'] = sp2ap(adjp, altitude)
 
     # calculate the rain increment from the rain total
-    (delta, total) = calculate_rain(packet['rain'],
-                                    last_rain, max_rain)
-    packet['rain'] = delta
-    packet['rainTotal'] = total
+    packet['rainTotal'] = packet['rain']
+    packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
 
     # calculate the rain rate
-    (rate, rain_ts) = calculate_rain_rate(packet['rain'],
-                                          packet['dateTime'],
-                                          last_rain_ts)
-    packet['rainRate'] = rate
-    packet['rainTS'] = rain_ts
+    packet['rainRate'] = calculate_rain_rate(packet['rain'],
+                                             packet['dateTime'], last_rain_ts)
+
+    # report rainfall in log to diagnose rain counter issues
+    if weewx.debug:
+        if packet['rain'] is not None and packet['rain'] > 0:
+            logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' % (packet['rain'], packet['rainTotal'], last_rain))
+        if packet['rainRate'] is not None and packet['rainRate'] > 0:
+            logdbg('calculated rainrate of %.2f cm/hr (%.2f cm in %d seconds)' % (packet['rainRate'], packet['rain'], int(ts - last_rain_ts)))
 
     return packet
 
@@ -336,7 +349,7 @@ def _unsigned_int3(raw, offset):
         return None
     return (hi * 256 * 256) + (md * 256) + lo
 def _bcd_decode(byte):
-    hi = (byte / 16) & 0x0F
+    hi = (byte // 16) & 0x0F
     lo = byte & 0x0F
     return (hi * 10) + lo
 def _date_time(raw, offset):
@@ -480,35 +493,35 @@ def getaltitudeM(config_dict):
     return altitude_m
 
 # FIXME: this goes in weeutil.weeutil
-def calculate_rain(newtotal, oldtotal, maxsane):
-    """Calculate the rain differential given two cumulative measurements.
-    Return the delta and the new total.  Units are arbitrary, but must be
-    consistent across all three arguments."""
+def calculate_rain(newtotal, oldtotal):
+    """Calculate the rain differential given two cumulative measurements."""
     if newtotal is not None and oldtotal is not None:
         if newtotal >= oldtotal:
             delta = newtotal - oldtotal
-            if delta > maxsane:
-                logerr('ignoring bogus rain value: rain: %s new: %s old: %s' % (delta, newtotal, oldtotal))
-                delta = None
         else:  # wraparound
-            logerr('rain counter wraparound detected: old: %s new: %s' % (oldtotal, newtotal))
+            logerr('rain counter wraparound detected: new: %s old: %s' % (newtotal, oldtotal))
             delta = None
     else:
         delta = None
-    if newtotal is None:
-        newtotal = oldtotal
-    return (delta, newtotal)
+    return delta
 
 # FIXME: this goes in weeutil.weeutil
 def calculate_rain_rate(delta_cm, curr_ts, last_ts):
     """Calculate the rain rate based on the time between two rain readings.
-    Rainfall is in cm.  Timestamps are in seconds.  Resulting units are cm/hr.
+
+    delta_cm: rainfall since last reading, in cm
+
+    curr_ts: timestamp of current reading, in seconds
+
+    last_ts: timestamp of last reading, in seconds
+
+    return: rain rate in cm per hour
 
     If the period between readings is zero, ignore the rainfall since there
     is no way to calculate a rate with no period."""
 
     if curr_ts is None:
-        return (None, None)
+        return None
     if last_ts is None:
         last_ts = curr_ts
     if delta_cm is not None:
@@ -516,12 +529,12 @@ def calculate_rain_rate(delta_cm, curr_ts, last_ts):
         if period != 0:
             rate = 3600 * delta_cm / period
         else:
-            rate = 0
+            rate = None
             if delta_cm != 0:
                 loginf('rain rate period is zero, ignoring rainfall of %f cm' % delta_cm)
     else:
-        rate = 0
-    return (rate, curr_ts)
+        rate = None
+    return rate
 
 class ObservationError(Exception):
     def __init__(self, msg):
@@ -621,8 +634,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.min_pause = 0.5
 
         self._archive_interval = None
-        self._last_rain = None
-        self._last_rain_ts = None
+        self._last_rain_loop = None
+        self._last_rain_ts_loop = None
+        self._last_rain_arc = None
+        self._last_rain_ts_arc = None
         self._fixed_block = None
         self._data_block = None
         self._data_pos = None
@@ -687,7 +702,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     return dev
         return None
 
-    # FIXME: get last_rain and last_rain_ts from database on startup
+    # FIXME: get last_rain_arc and last_rain_ts_arc from database on startup
     def _setup(self):
         loginf('polling mode is %s' % self.polling_mode)
         if self.polling_mode.lower() == PERIODIC_POLLING.lower():
@@ -710,17 +725,12 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         """Generator function that continuously returns decoded packets"""
 
         for p in self.get_observations():
-            packet = pywws2weewx(p, int(time.time() + 0.5),
+            ts = int(time.time() + 0.5)
+            packet = pywws2weewx(p, ts,
                                  self.pressure_offset, self.altitude,
-                                 self._last_rain, self._last_rain_ts,
-                                 self.rain_max_sane / 10)
-            self._last_rain = packet['rainTotal']
-            self._last_rain_ts = packet['rainTS']
-
-            # report rainfall in log until we sort counter issues
-            if weewx.debug and packet['rain'] is not None and packet['rain'] > 0:
-                logdbg('got rainfall of %f cm' % packet['rain'])
-
+                                 self._last_rain_loop, self._last_rain_ts_loop)
+            self._last_rain_loop = packet['rainTotal']
+            self._last_rain_ts_loop = ts
             yield packet
 
     def genArchiveRecords(self, since_ts):
@@ -742,11 +752,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             ts = delta.days * 86400 + delta.seconds
             data = pywws2weewx(r['data'], ts,
                                self.pressure_offset, self.altitude,
-                               self._last_rain, self._last_rain_ts,
-                               self.rain_max_sane / 10)
+                               self._last_rain_arc, self._last_rain_ts_arc)
             data['interval'] = self._archive_interval_minutes()
-            self._last_rain = data['rainTotal']
-            self._last_rain_ts = data['rainTS']
+            self._last_rain_arc = data['rainTotal']
+            self._last_rain_ts_arc = ts
             logdbg('returning archive record %s' % ts)
             yield data
 
@@ -1031,9 +1040,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 # methods for reading data from the weather station
 # the following were adapted from WeatherStation.py in pywws
 #
-# commit c07c5cfefc02d1518711545c0077a7fd7e852c1d
+# commit 1910ddbe51edc1f3df2afaae5d91ccf3d52f7373
 # Author: Jim Easterbrook <jim@jim-easterbrook.me.uk>
-# Date:   Tue Mar 12 17:50:10 2013 +0000
+# Date:   Sun Mar 31 09:57:29 2013 +0100
 #==============================================================================
 
     def live_data(self, logged_only=False):
@@ -1077,10 +1086,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             if not self._sensor_clock:
                 next_live = None
             now = time.time()
-            # if station stops logging data, don't keep reading USB
-            # until it locks up
-            if now - last_log > (read_period + 2) * 60:
-                raise ObservationError('station is not logging data')
             # wake up just before next reading is due
             advance = now + max(self.avoid, self.min_pause) + self.min_pause
             pause = 600.0
@@ -1123,7 +1128,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 if valid_time:
                     # data has just changed, so definitely at a 48s update time
                     self._sensor_clock = data_time
-                    logdbg('setting sensor clock %g' % (now % live_interval))
+                    logdbg('setting sensor clock %g' % (data_time % live_interval))
                     if not next_live:
                         logdbg('live synchronised')
                     next_live = data_time
@@ -1173,6 +1178,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                            (old_ptr, new_ptr))
                     old_ptr = new_ptr
                     old_data['delay'] = 0
+                elif valid_time and ptr_time > last_log + ((read_period + 2) * 60):
+                    # if station stops logging data, don't keep reading
+                    # USB until it locks up
+                    raise ObservationError('station is not logging data')
+                    
                 elif valid_time and next_log and ptr_time > next_log + 12.0:
                     logdbg('log extended')
                     next_log += 60.0
@@ -1299,7 +1309,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             if new_block:
                 if (new_block == old_block) or not retry:
                     break
-                if old_block != None:
+                if old_block is not None:
                     loginf('unstable read: blocks differ for ptr 0x%06x' % ptr)
                 old_block = new_block
         return new_block

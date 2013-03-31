@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: ws28xx.py 558 2013-03-27 00:51:47Z mwall $
+# $Id: ws28xx.py 563 2013-03-31 16:10:16Z mwall $
 #
 # Copyright 2013 Matthew Wall
 #
@@ -172,19 +172,18 @@ def getaltitudeM(config_dict):
 # FIXME: this goes in weeutil.weeutil
 # let QC handle rainfall that is too big
 def calculate_rain(newtotal, oldtotal, maxsane=2):
+    """Calculate the rain differential given two cumulative measurements."""
     if newtotal is not None and oldtotal is not None:
         if newtotal >= oldtotal:
             delta = newtotal - oldtotal
         else:  # wraparound
-            logerr('rain counter wraparound detected: old: %s new: %s' % (oldtotal, newtotal))
+            logerr('rain counter wraparound detected: new: %s old: %s' % (newtotal, oldtotal))
             delta = None
     else:
         delta = None
-    if newtotal is None:
-        newtotal = oldtotal
-    return (delta, newtotal)
+    return delta
 
-def loader(config_dict):
+def loader(config_dict, engine):
     altitude_m = getaltitudeM(config_dict)
     station = WS28xx(altitude=altitude_m, **config_dict['WS28xx'])
     return station
@@ -403,9 +402,9 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         rain_total = self.get_datum_match(
             self._service.DataStore.CurrentWeather._RainTotal,
             CWeatherTraits.RainNP())
-        (delta, total) = calculate_rain(rain_total, self._last_rain)
+        delta = calculate_rain(rain_total, self._last_rain)
         packet['rain'] = delta
-        self._last_rain = total
+        self._last_rain = rain_total
 
         packet['heatindex'] = weewx.wxformulas.heatindexC(
             packet['outTemp'], packet['outHumidity'])
