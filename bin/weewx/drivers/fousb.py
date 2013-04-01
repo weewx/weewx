@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 566 2013-03-31 21:08:39Z mwall $
+# $Id: fousb.py 567 2013-04-01 15:26:33Z mwall $
 #
 # Copyright 2012 Matthew Wall
 #
@@ -240,6 +240,7 @@ keymap = {
     'dewpoint'    : ('dewpoint',     1.0),
     'heatindex'   : ('heatindex',    1.0),
     'windchill'   : ('windchill',    1.0),
+    'status'      : ('status',       1.0),
 }
 
 def pywws2weewx(p, ts, pressure_offset, altitude,
@@ -273,6 +274,10 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
             packet[k] = p[keymap[k][0]] * keymap[k][1]
         else:
             packet[k] = None
+
+    # station status is an integer
+    if packet['status'] is not None:
+        packet['status'] = int(packet['status'])
 
     # calculated elements not directly reported by station
     packet['heatindex'] = weewx.wxformulas.heatindexC(
@@ -319,17 +324,28 @@ datum_display_formats = {
     }
 
 # wrap value for rain counter
-rain_max = 0x10000
+#  rain_max = 0x10000
 
 # values for status:
-status_rain_overflow   = 0x80
-status_lost_connection = 0x40
+#  rain_overflow   = 0x80
+#  lost_connection = 0x40
 #  unknown         = 0x20
 #  unknown         = 0x10
 #  unknown         = 0x08
 #  unknown         = 0x04
 #  unknown         = 0x02
 #  unknown         = 0x01
+
+def decode_status(status):
+    result = {}
+    if status is None:
+        return result
+    for key, mask in (('rain_overflow',   0x80),
+                      ('lost_connection', 0x40),
+                      ('unknown',         0x3f),
+                      ):
+        result[key] = status & mask
+    return result
 
 # decode weather station raw data formats
 def _signed_byte(raw, offset):
@@ -656,6 +672,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self._last_rain_ts_loop = None
         self._last_rain_arc = None
         self._last_rain_ts_arc = None
+        self._last_status = None
         self._fixed_block = None
         self._data_block = None
         self._data_pos = None
@@ -740,7 +757,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 #        self.set_clock(ts)
 
     def genLoopPackets(self):
-        """Generator function that continuously returns decoded packets"""
+        """Generator function that continuously returns decoded packets."""
 
         for p in self.get_observations():
             ts = int(time.time() + 0.5)
@@ -750,6 +767,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                  self.max_rain_rate)
             self._last_rain_loop = packet['rainTotal']
             self._last_rain_ts_loop = ts
+            if packet['status'] != self._last_status:
+                loginf('station status %s (%s)' % 
+                       (decode_status(packet['status']), packet['status']))
+                self._last_status = packet['status']
             yield packet
 
     def genArchiveRecords(self, since_ts):
@@ -965,7 +986,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     raw_data = self.get_raw_data(ptr)
                     data = self.decode(raw_data)
                     if data['delay'] is None or data['delay'] > 30:
-                        logerr('invalid data at 0x%04x, %s' %
+                        logerr('invalid data in get_records at 0x%04x, %s' %
                                (ptr, dts.isoformat()))
                         dts -= datetime.timedelta(minutes=fixed_block['read_period'])
                     else:
@@ -1020,7 +1041,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             if logged:
                 break
             if data['delay'] is None:
-                logerr('invalid data at 0x%04x while synchronising' % last_ptr)
+                logerr('invalid data while synchronising at 0x%04x' % last_ptr)
                 count += 1
                 if count > maxcount:
                     raise weewx.WeeWxIOError('repeated invalid delay while synchronising')
@@ -1060,9 +1081,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 # methods for reading data from the weather station
 # the following were adapted from WeatherStation.py in pywws
 #
-# commit 1910ddbe51edc1f3df2afaae5d91ccf3d52f7373
+# commit c853b29ee968117ca9e6cf497d9a8afe73367c76
 # Author: Jim Easterbrook <jim@jim-easterbrook.me.uk>
-# Date:   Sun Mar 31 09:57:29 2013 +0100
+# Date:   Mon Apr 1 11:59:54 2013 +0100
 #==============================================================================
 
     def live_data(self, logged_only=False):
@@ -1099,7 +1120,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             self._station_clock = None
         ptr_time = 0
         data_time = 0
-        last_log = now
+        last_log = now - (old_data['delay'] * 60)
+        last_status = None
         while True:
             if not self._station_clock:
                 next_log = None
@@ -1130,6 +1152,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             if new_data['delay'] is None:
                 raise ObservationError('invalid delay at 0x%04x' % old_ptr)
             data_time = time.time()
+            # log any change of status
+            if new_data['status'] != last_status:
+                logdbg('status %s (%s)' % (str(decode_status(new_data['status'])), new_data['status']))
+            last_status = new_data['status']
             # 'good' time stamp if we haven't just woken up from long
             # pause and data read wasn't delayed
             valid_time = data_time - last_data_time < (self.min_pause * 2.0) - 0.1
@@ -1177,6 +1203,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 # re-read data, to be absolutely sure it's the last
                 # logged data before the pointer was updated
                 new_data = self.get_data(old_ptr, unbuffered=True)
+                if new_data['delay'] is None:
+                    raise ObservationError('invalid delay at 0x%04x' % old_ptr)
                 result = dict(new_data)
                 if valid_time:
                     # pointer has just changed, so definitely at a logging time
@@ -1198,12 +1226,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                            (old_ptr, new_ptr))
                     old_ptr = new_ptr
                     old_data['delay'] = 0
-                elif valid_time and ptr_time > last_log + ((read_period + 2) * 60):
+                elif ptr_time > last_log + ((new_data['delay'] + 2) * 60):
                     # if station stops logging data, don't keep reading
                     # USB until it locks up
                     raise ObservationError('station is not logging data')
-                    
-                elif valid_time and next_log and ptr_time > next_log + 12.0:
+                elif valid_time and next_log and ptr_time > next_log + 6.0:
                     logdbg('log extended')
                     next_log += 60.0
 

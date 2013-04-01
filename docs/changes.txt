@@ -17,18 +17,9 @@ was under 1000 millibars.
 A bad record archive type now causes a catch up to be abandoned, rather
 than program termination.
 
-Added illuminance-to-radiation conversion for FineOffsetUSB driver.
-
-Added pressure calibration option to wee_config_fousb
-
-Fixed windchill calculation in FineOffsetUSB driver.
-
 Fixed bug in trends, when showing changes in temperature. NB: this fix will
 not work with explicit unit conversion. I.e., $trend.outTemp.degree_C will
 not work.
-
-Fixed FineOffsetUSB driver to handle cases where the 'delay' is undefined,
-resulting in a TypeError that caused weewx to stop.
 
 Modified wee_config_vantage and wee_config_fousb so that the configuration
 file will be guessed if none is specified.
@@ -60,6 +51,21 @@ to make them more consistent:
 
 The interface to the device driver "loader" function has changed slightly. It
 now takes a second parameter, "engine". Details are in the Upgrading doc.
+
+Added illuminance-to-radiation conversion in FineOffsetUSB driver.
+
+Added pressure calibration option to wee_config_fousb and explicit support for
+pressure calibration in FineOffsetUSB driver.
+
+Fixed windchill calculation in FineOffsetUSB driver.
+
+Fixed FineOffsetUSB driver to handle cases where the 'delay' is undefined,
+resulting in a TypeError that caused weewx to stop.
+
+The FineOffsetUSB driver now uses 'max_rain_rate' (measured in cm/hr) instead
+of 'max_sane_rain' (measured in mm) to filter spurious rain sensor readings.
+This is done in the driver instead of StdQC so that a single parameter can
+apply to both LOOP and ARCHIVE records.
 
 2.2.1 02/15/13
 
