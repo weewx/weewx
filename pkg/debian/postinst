@@ -72,10 +72,13 @@ configure_weewxconf() {
 # use weewx setup utilities to merge new features into existing weewx.conf
 merge_weewxconf() {
     OLDVER="$1"
+    NEWVER="$2"
     echo saving previous config file as $cfgfile-$OLDVER
     mv $cfgfile $cfgfile-$OLDVER
-    echo merging new features into config file
-    $mergeapp --install-dir / --old-cfg $cfgfile-$OLDVER --new-cfg $cfgfile
+    echo saving distribution config file as $cfgfile-$NEWVER
+    mv $cfgfile.dpkg-dist $cfgfile-$NEWVER
+    echo merging previous and distribution into $cfgfile
+    $mergeapp --install-dir / --a $cfgfile-$NEWVER -b $cfgfile-$OLDVER --c $cfgfile
 }
 
 case "$1" in
@@ -86,7 +89,7 @@ configure)
             CFGVERSION=`grep version $cfgfile | sed -e 's/\s*version\s*=\s*//'`
             if dpkg --compare-versions $CFGVERSION lt $NEWVERSION; then
                 # this is an old config, so merge new features into it
-                merge_weewxconf $2
+                merge_weewxconf $2 $NEWVERSION
             else
                 # this is a new config, so insert debconf values into it
                 configure_weewxconf

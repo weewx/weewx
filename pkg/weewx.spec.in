@@ -2,29 +2,17 @@
 # License: GPLv3
 # Author: (c) 2013 Matthew Wall
 
-# default configuration when OS is not known - this will fail.  when it does,
-# add a vendor section with an appropriate configuration.
-%define layout unknown
-
 # suse
-%if 0%{?suse_version} || 0%{?sles_version}
 %if 0%{?suse_version}
 %define relos .suse%{suse_version}
 %endif
 %if 0%{?sles_version}
 %define relos .sles%{sles_version}
 %endif
-%define layout suse
-%define apacheconfdir %{_sysconfdir}/apache2/conf.d
-%define apachecmd apache2
-%endif
 
 # redhat, fedora, centos
 %if "%{_vendor}" == "redhat"
 %define relos %{?dist:%{dist}}
-%define layout redhat
-%define apacheconfdir %{_sysconfdir}/httpd/conf.d
-%define apachecmd httpd
 %endif
 
 %global relnum 1
