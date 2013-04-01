@@ -15,68 +15,102 @@
 # abort if any command returns error
 set -e
 
-# get debconf stuff so we can set configuration defaults
-. /usr/share/debconf/confmodule
-
-if [ "$1" != configure ]; then
-    exit 0
-fi
-
-# precompile the bytecode
-#python -m compileall /usr/share/weewx
-
-# configure for system startup but do not enable
-update-rc.d weewx defaults > /dev/null
-
-# insert any configuration variables into the configuration files
 cfgfile=/etc/weewx/weewx.conf
+mergeapp=/usr/share/weewx/merge_config.py
 
-db_get weewx/location
-sed -i "s%location =.*%location = \"$RET\"%" $cfgfile
+# insert any configuration variables into the configuration file
+configure_weewxconf() {
+    # get debconf stuff so we can set configuration defaults
+    . /usr/share/debconf/confmodule
 
-db_get weewx/latlon
-lat=$(echo $RET | cut -d, -f1)
-lon=$(echo $RET | cut -d, -f2)
-sed -i "s%latitude[ ]*=.*%latitude = $lat%" $cfgfile
-sed -i "s%longitude[ ]*=.*%longitude = $lon%" $cfgfile
+    db_get weewx/location
+    sed -i "s%location =.*%location = \"$RET\"%" $cfgfile
 
-db_get weewx/altitude
-a=$(echo $RET | cut -d, -f1)
-u=$(echo $RET | cut -d, -f2)
-sed -i "s%altitude[ ]*=.*%altitude = $a, $u%" $cfgfile
+    db_get weewx/latlon
+    lat=$(echo $RET | cut -d, -f1)
+    lon=$(echo $RET | cut -d, -f2)
+    sed -i "s%latitude[ ]*=.*%latitude = $lat%" $cfgfile
+    sed -i "s%longitude[ ]*=.*%longitude = $lon%" $cfgfile
 
-# FIXME: generalize this so it does not have to be modified every time a
-#        new station type is added or new station options are added.
-# FIXME: figure out a mechanism to prevent modification of variables with
-#        same name, e.g., [Vantage].host and [Databases][stats_mysql].host
-db_get weewx/station_type
-if [ "$RET" != "" ]; then
-    sed -i "s%station_type[ ]*=.*%station_type = $RET%" $cfgfile
-    if [ "$RET" = "Vantage" ]; then
-        db_get weewx/vantage_type
-        sed -i "s% type[ ]*=.*% type = $RET%" $cfgfile
-        if [ "$RET" = "serial" ]; then
-            db_get weewx/vantage_port
+    db_get weewx/altitude
+    a=$(echo $RET | cut -d, -f1)
+    u=$(echo $RET | cut -d, -f2)
+    sed -i "s%altitude[ ]*=.*%altitude = $a, $u%" $cfgfile
+
+    # FIXME: generalize this so it does not have to be modified every time a
+    #        new station type is added or new station options are added.
+    # FIXME: figure out a mechanism to prevent modification of variables with
+    #        same name, e.g., [Vantage].host and [Databases][stats_mysql].host
+    db_get weewx/station_type
+    if [ "$RET" != "" ]; then
+        sed -i "s%station_type[ ]*=.*%station_type = $RET%" $cfgfile
+        if [ "$RET" = "Vantage" ]; then
+            db_get weewx/vantage_type
+            sed -i "s% type[ ]*=.*% type = $RET%" $cfgfile
+            if [ "$RET" = "serial" ]; then
+                db_get weewx/vantage_port
+                sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
+            else
+                db_get weewx/vantage_host
+                sed -i "0,/ host[ ]*=.*/s// host = $RET/" $cfgfile
+            fi
+        fi
+        if [ "$RET" = "WMR9x8" ]; then
+            db_get weewx/wmr9x8_port
             sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
-        else
-            db_get weewx/vantage_host
-            sed -i "0,/ host[ ]*=.*/s// host = $RET/" $cfgfile
+        fi
+        if [ "$RET" = "FineOffsetUSB" ]; then
+            db_get weewx/fousb_model
+            sed -i "s%model[ ]*=.*%model = $RET%" $cfgfile
         fi
     fi
-    if [ "$RET" = "WMR9x8" ]; then
-        db_get weewx/wmr9x8_port
-        sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
-    fi
-    if [ "$RET" = "FineOffsetUSB" ]; then
-        db_get weewx/fousb_model
-        sed -i "s%model[ ]*=.*%model = $RET%" $cfgfile
-    fi
-fi
 
-# start the weewx daemon
-invoke-rc.d weewx start
+    # let debconf know that we are finished
+    db_stop
+}
 
-# let debconf know that we are finished
-db_stop
+# use weewx setup utilities to merge new features into existing weewx.conf
+merge_weewxconf() {
+    OLDVER="$1"
+    echo saving previous config file as $cfgfile-$OLDVER
+    mv $cfgfile $cfgfile-$OLDVER
+    echo merging new features into config file
+    $mergeapp --install-dir / --old-cfg $cfgfile-$OLDVER --new-cfg $cfgfile
+}
+
+case "$1" in
+configure)
+        if [ "$2" != "" ]; then
+            # this is an upgrade
+            NEWVERSION=`$mergeapp --version`
+            CFGVERSION=`grep version $cfgfile | sed -e 's/\s*version\s*=\s*//'`
+            if dpkg --compare-versions $CFGVERSION lt $NEWVERSION; then
+                # this is an old config, so merge new features into it
+                merge_weewxconf $2
+            else
+                # this is a new config, so insert debconf values into it
+                configure_weewxconf
+            fi
+        else
+            # virgin install so insert debconf values into the config file
+            configure_weewxconf
+        fi
+
+        # precompile the bytecode
+        #python -m compileall /usr/share/weewx
+
+        # configure for system startup
+        update-rc.d weewx defaults > /dev/null
+
+        # start the weewx daemon
+        invoke-rc.d weewx start
+
+        ;;
+
+abort-remove)
+        # precompile the bytecode
+        #python -m compileall /usr/share/weewx
+        ;;
+esac
 
 exit 0

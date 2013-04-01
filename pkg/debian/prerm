@@ -15,14 +15,14 @@
 # abort if any command returns error
 set -e
 
-if [ "$1" != remove -a "$1" != upgrade ]; then
-    exit 0
-fi
+case "$1" in
+remove|upgrade)
+        # stop the weewx daemon
+        invoke-rc.d weewx stop
 
-# stop the weewx daemon
-invoke-rc.d weewx stop
-
-# remove any bytecompiled code
-find /usr/share/weewx -name '*.pyc' -delete
+        # remove any bytecompiled code
+        find /usr/share/weewx -name '*.pyc' -delete
+        ;;
+esac
 
 exit 0

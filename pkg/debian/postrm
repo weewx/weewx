@@ -14,17 +14,35 @@
 # new-postrm abort-install old-version
 # new-postrm abort-upgrade old-version
 
-if [ "$1" != remove -a "$1" != purge ]; then
-    exit 0
-fi
+case "$1" in
+remove)
+        # remove the startup configuration
+        update-rc.d -f weewx remove > /dev/null
+        ;;
 
-# remove the startup configuration
-update-rc.d -f weewx remove > /dev/null
+purge)
+        # remove any debconf entries
+        if [ -e /usr/share/debconf/confmodule ]; then
+            . /usr/share/debconf/confmodule
+            db_purge
+        fi
+        ;;
 
-if [ "$1" = purge ] && [ -e /usr/share/debconf/confmodule ]; then
-    . /usr/share/debconf/confmodule
-    # remove any debconf entries
-    db_purge
-fi
+upgrade)
+        ;;
+
+abort-install)
+        ;;
+
+failed-upgrade)
+        ;;
+
+abort-install)
+        ;;
+
+abort-upgrade)
+        ;;
+
+esac
 
 exit 0

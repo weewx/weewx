@@ -42,7 +42,7 @@ Default: 192.168.0.10
 Description: weather station hostname or IP address:
  Specify the IP address (e.g. 192.168.0.10) or hostname (e.g. console or console.example.com) for stations with an ethernet interface.  For serial stations leave this blank.
 
-Template: weewx/wmr918_port
+Template: weewx/wmr9x8_port
 Type: string
 Default: /dev/ttyS0
 Description: serial port:

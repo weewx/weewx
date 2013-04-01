@@ -1,4 +1,4 @@
-weewx (2.2.2-1) unstable; urgency=low
+weewx (2.3.0a4-1) unstable; urgency=low
   * ensure that prerm stops any running process on upgrade, not just remove
   * new upstream release
  -- Matthew Wall <mwall@users.sourceforge.net>  Fri, 22 Mar 2013 17:56:54 -0400
