@@ -44,6 +44,8 @@ Fixed day/night transition bug.
 
 Added gradients to the day/night transitions.
 
+Numerous fixes to the WMR200 driver. Now has a "watchdog" thread.
+
 All of the device drivers have now been put in their own package
 'weewx.drivers' to keep them together. Many have also had name changes
 to make them more consistent:
