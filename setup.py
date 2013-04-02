@@ -65,6 +65,8 @@ import distutils.dir_util
 # Find the install bin subdirectory:
 this_file = os.path.join(os.getcwd(), __file__)
 bin_dir = os.path.abspath(os.path.join(os.path.dirname(this_file), 'bin'))
+if not os.path.exists(bin_dir):
+    bin_dir = '/usr/share/weewx'
 
 # Get the version:
 save_syspath = list(sys.path)

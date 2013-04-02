@@ -71,29 +71,31 @@ configure_weewxconf() {
 
 # use weewx setup utilities to merge new features into existing weewx.conf
 merge_weewxconf() {
-    OLDVER="$1"
-    NEWVER="$2"
-    echo saving previous config file as $cfgfile-$OLDVER
-    mv $cfgfile $cfgfile-$OLDVER
-    echo saving distribution config file as $cfgfile-$NEWVER
-    mv $cfgfile.dpkg-dist $cfgfile-$NEWVER
-    echo merging previous and distribution into $cfgfile
-    $mergeapp --install-dir / --a $cfgfile-$NEWVER -b $cfgfile-$OLDVER --c $cfgfile
+    NEWVER=`$mergeapp --version`
+    CFGVER=`grep version $cfgfile | sed -e 's/\s*version\s*=\s*//'`
+    if dpkg --compare-versions $CFGVER lt $NEWVER; then
+        # this is an old config, so merge new features into it
+        if [ -f $cfgfile.dpkg-dist ]; then
+            echo saving previous config file as $cfgfile-$OLDVER
+            cp -p $cfgfile $cfgfile-$OLDVER
+            echo saving distribution config file as $cfgfile-$NEWVER
+            cp -p $cfgfile.dpkg-dist $cfgfile-$NEWVER
+            echo merging previous and distribution into $cfgfile
+            $mergeapp --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
+        else
+            echo no distribution config with which to merge
+        fi
+    else
+        # this is a new config, so just insert debconf values into it
+        configure_weewxconf
+    fi
 }
 
 case "$1" in
 configure)
         if [ "$2" != "" ]; then
-            # this is an upgrade
-            NEWVERSION=`$mergeapp --version`
-            CFGVERSION=`grep version $cfgfile | sed -e 's/\s*version\s*=\s*//'`
-            if dpkg --compare-versions $CFGVERSION lt $NEWVERSION; then
-                # this is an old config, so merge new features into it
-                merge_weewxconf $2 $NEWVERSION
-            else
-                # this is a new config, so insert debconf values into it
-                configure_weewxconf
-            fi
+            # this is an upgrade so attempt to merge
+            merge_weewxconf
         else
             # virgin install so insert debconf values into the config file
             configure_weewxconf

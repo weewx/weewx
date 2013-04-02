@@ -4,3 +4,4 @@ recursive-include skins *
 include LICENSE.txt
 include README
 include weewx.conf
+include merge_config.py
