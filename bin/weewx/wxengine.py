@@ -81,6 +81,8 @@ class StdEngine(object):
         # Find the driver name for this type of hardware
         driver = config_dict[stationType]['driver']
         
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Loading station type %s (%s)" % (stationType, driver))
+
         # Import the driver:
         __import__(driver)
     
@@ -413,7 +415,7 @@ class StdArchive(StdService):
             syslog.syslog(syslog.LOG_INFO, "wxengine: Using station hardware archive interval of %d" % self.archive_interval)
         except NotImplementedError:
             self.archive_interval = software_archive_interval
-            syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d from config file" % self.archive_interval)
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Using config file archive interval of %d" % self.archive_interval)
 
         self.archive_delay    = config_dict['StdArchive'].as_int('archive_delay')
         if self.archive_delay <= 0:

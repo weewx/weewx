@@ -15,14 +15,14 @@
 # abort if any command returns error
 set -e
 
+# get debconf stuff so we can set configuration defaults
+. /usr/share/debconf/confmodule
+
 cfgfile=/etc/weewx/weewx.conf
 mergeapp=/usr/share/weewx/merge_config.py
 
 # insert any configuration variables into the configuration file
 configure_weewxconf() {
-    # get debconf stuff so we can set configuration defaults
-    . /usr/share/debconf/confmodule
-
     db_get weewx/location
     sed -i "s%location =.*%location = \"$RET\"%" $cfgfile
 
@@ -92,6 +92,7 @@ merge_weewxconf() {
         fi
     else
         # this is a new config, so just insert debconf values into it
+        echo using debconf configuration values from previous install
         configure_weewxconf
     fi
 }

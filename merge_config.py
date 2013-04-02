@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # $Id$
-# Copyright Matthew Wall
+# Copyright (c) 2009-2013 Tom Keffer <tkeffer@gmail.com>
 """weewx configuration file upgrade script.  Use this script to merge new
-   features into an existing configuration file.  The script takes two
-   configuration files as input then outputs the merged contents of those
-   files."""
+   features into an existing configuration file.  The script takes an 
+   installation directory and two configuration files as input then outputs
+   the merged contents of the input files.
+
+   The weewx setup.py script must be in the same directory as this script."""
 
 import setup
 import configobj
@@ -35,7 +37,7 @@ def main():
 
     (options, args) = parser.parse_args()
     if options.version:
-        print setup.getversion()
+        print setup.get_version()
         exit(0)
 
     errmsg = []
