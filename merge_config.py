@@ -14,15 +14,6 @@ import shutil
 import sys
 import tempfile
 
-this_file = os.path.join(os.getcwd(), __file__)
-bin_dir = os.path.abspath(os.path.join(os.path.dirname(this_file), 'bin'))
-save_syspath = list(sys.path)
-sys.path.insert(0, bin_dir)
-import weewx
-VERSION = weewx.__version__
-del weewx
-sys.path = save_syspath
-
 description = """merge weewx configuration file"""
 usage = """%prog --install-dir dir --a file --b file --c file"""
 
@@ -44,7 +35,7 @@ def main():
 
     (options, args) = parser.parse_args()
     if options.version:
-        print VERSION
+        print setup.getversion()
         exit(0)
 
     errmsg = []
@@ -61,7 +52,7 @@ def main():
         exit(1)
 
     merged_cfg = setup.merge_config_files(options.filea, options.fileb,
-                                          options.idir, VERSION)
+                                          options.idir)
 
     if options.debug:
         printdict(merged_cfg)

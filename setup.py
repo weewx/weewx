@@ -65,8 +65,6 @@ import distutils.dir_util
 # Find the install bin subdirectory:
 this_file = os.path.join(os.getcwd(), __file__)
 bin_dir = os.path.abspath(os.path.join(os.path.dirname(this_file), 'bin'))
-if not os.path.exists(bin_dir):
-    bin_dir = '/usr/share/weewx'
 
 # Get the version:
 save_syspath = list(sys.path)
@@ -153,7 +151,7 @@ class weewx_install_data(install_data):
         # The path where the weewx.conf configuration file will be installed
         install_path = os.path.join(install_dir, os.path.basename(f))
     
-        new_config = merge_config_files(f, install_path, install_dir, VERSION)        
+        new_config = merge_config_files(f, install_path, install_dir)
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         
@@ -218,10 +216,12 @@ class weewx_install_scripts(install_scripts):
 #===============================================================================
 
 class weewx_sdist(sdist):
-    """Specialized version of sdist which checks for password information in distribution
+    """Specialized version of sdist which checks for password information in
+    the configuration file before creating the distribution.
 
-    See http://epydoc.sourceforge.net/stdlib/distutils.command.sdist.sdist-class.html
-    for possible sdist instance methods."""
+    For other sdist methods, see:
+ http://epydoc.sourceforge.net/stdlib/distutils.command.sdist.sdist-class.html
+    """
 
     def copy_file(self, f, install_dir, **kwargs):
         """Specialized version of copy_file.
@@ -237,15 +237,19 @@ class weewx_sdist(sdist):
             # If we're working with the configuration file, make sure it doesn't
             # have any private data in it.
 
-            if config.has_key('StdReport') and config['StdReport'].has_key('FTP') and config['StdReport']['FTP'].has_key('password'):
+            if (config.has_key('StdReport') and
+                config['StdReport'].has_key('FTP') and
+                config['StdReport']['FTP'].has_key('password')):
                 sys.stderr.write("\n*** FTP password found in configuration file. Aborting ***\n\n")
                 exit()
 
             rest_dict = config['StdRESTful']
-            if rest_dict.has_key('Wunderground') and rest_dict['Wunderground'].has_key('password'):
+            if (rest_dict.has_key('Wunderground') and
+                rest_dict['Wunderground'].has_key('password')):
                 sys.stderr.write("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
                 exit()
-            if rest_dict.has_key('PWSweather') and rest_dict['PWSweather'].has_key('password'):
+            if (rest_dict.has_key('PWSweather') and
+                rest_dict['PWSweather'].has_key('password')):
                 sys.stderr.write("\n*** PWSweather password found in configuration file. Aborting ***\n\n")
                 exit()
                 
@@ -296,7 +300,8 @@ def remove_obsolete_files(install_dir):
         pass
 
 def check_schema_type(bin_dir):
-    """Checks whether the schema in user.schemas is a new style or old style schema.
+    """Checks whether the schema in user.schemas is a new style or old style
+    schema.
     
     bin_dir: The directory to be checked. This is nominally /home/weewx/bin.
     
@@ -332,7 +337,8 @@ def check_schema_type(bin_dir):
     
     return result
     
-def merge_config_files(new_config_path, old_config_path, weewx_root, version_number):
+def merge_config_files(new_config_path, old_config_path, weewx_root,
+                       version_number=VERSION):
     """Merges any old config file into the new one, and sets WEEWX_ROOT.
     
     If an old configuration file exists, it will merge the contents
@@ -355,7 +361,8 @@ def merge_config_files(new_config_path, old_config_path, weewx_root, version_num
     # Create a ConfigObj using the new contents:
     new_config = configobj.ConfigObj(new_config_path)
     new_config.indent_type = '    '
-    new_version_number = VERSION.split('.')
+    # FIXME: new_version_number is not used
+    new_version_number = version_number.split('.')
     if len(new_version_number[1]) < 2: 
         new_version_number[1] = '0'+new_version_number[1]
     
@@ -470,8 +477,6 @@ def update_config_file(config_dict):
             config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
     except KeyError:
         pass
-            
-        
 
 def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:
@@ -479,6 +484,9 @@ def save_path(filepath):
     newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
     shutil.move(filepath, newpath)
     return newpath
+
+def get_version():
+    return VERSION
 
 #===============================================================================
 #                               setup

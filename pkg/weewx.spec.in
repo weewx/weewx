@@ -21,6 +21,7 @@
 %global dst_bin_dir %{_datadir}/%{name}
 %global dst_doc_dir %{_defaultdocdir}/%{name}-%{version}
 %global dst_cfg_dir %{_sysconfdir}/%{name}
+%global cfg_file    %{dst_cfg_dir}/weewx.conf
 
 Summary: weather software
 Name: weewx
@@ -61,6 +62,7 @@ cp -r util/apache %{buildroot}%{dst_cfg_dir}
 cp -r util/logrotate.d %{buildroot}%{dst_cfg_dir}
 cp -r util/logwatch %{buildroot}%{dst_cfg_dir}
 cp -r util/rsyslog.d %{buildroot}%{dst_cfg_dir}
+cp weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
 
 # remove stuff that should not go out
 rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/butterfly.jpg
@@ -101,7 +103,19 @@ if [ "$1" = "1" ]; then
   chkconfig weewx on
   %{_initrddir}/weewx start
 elif [ "$1" = "2" ]; then
-  # this is an upgrade, so do a full restart not just a HUP
+  # this is an upgrade
+  # merge changes to weewx.conf
+  if [ -f %{cfg_file}.dist ]; then
+    NEWVER=`%{_bindir}/merge_config.py --version`
+    OLDVER=`grep version %{cfg_file} | sed -e 's/\s*version\s*=\s*//'`
+    echo saving previous config file as %{cfg_file}-$OLDVER
+    mv -p %{cfg_file} %{cfg_file}-$OLDVER
+    echo saving distribution config file as %{cfg_file}-$NEWVER
+    cp -p %{cfg_file}.dist %{cfg_file}-$NEWVER
+    echo merging previous and distribution into $cfgfile
+    %{_bindir}/merge_config.py --install-dir / --a %{cfg_file}-$NEWVER --b %{cfg_file}-$OLDVER --c %{cfg_file}
+  fi
+  # do a full restart not just a HUP
   %{_initrddir}/weewx stop
   %{_initrddir}/weewx start
 fi

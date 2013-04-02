@@ -84,6 +84,7 @@ install: build
 # copy the setup script so we can do config file merges if necessary
 	cp $(SRC)/setup.py $(DST_BINDIR)
 	cp $(SRC)/merge_config.py $(DST_BINDIR)
+	cp $(SRC)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 
 binary-indep: build install
 	dh_testdir

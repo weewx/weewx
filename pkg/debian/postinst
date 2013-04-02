@@ -72,16 +72,21 @@ configure_weewxconf() {
 # use weewx setup utilities to merge new features into existing weewx.conf
 merge_weewxconf() {
     NEWVER=`$mergeapp --version`
-    CFGVER=`grep version $cfgfile | sed -e 's/\s*version\s*=\s*//'`
-    if dpkg --compare-versions $CFGVER lt $NEWVER; then
-        # this is an old config, so merge new features into it
-        if [ -f $cfgfile.dpkg-dist ]; then
-            echo saving previous config file as $cfgfile-$OLDVER
-            cp -p $cfgfile $cfgfile-$OLDVER
-            echo saving distribution config file as $cfgfile-$NEWVER
-            cp -p $cfgfile.dpkg-dist $cfgfile-$NEWVER
-            echo merging previous and distribution into $cfgfile
-            $mergeapp --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
+    OLDVER=$(get_conf_version $cfgfile)
+    if dpkg --compare-versions $OLDVER lt $NEWVER; then
+        # this is an old config, so merge it into a new config
+        if [ -f $cfgfile.dist ]; then
+            DSTVER=$(get_conf_version $cfgfile.dist)
+            if dpkg --compare-versions $DSTVER eq $NEWVER; then
+                echo saving previous config file as $cfgfile-$OLDVER
+                mv -p $cfgfile $cfgfile-$OLDVER
+                echo saving distribution config file as $cfgfile-$NEWVER
+                cp -p $cfgfile.dist $cfgfile-$NEWVER
+                echo merging previous and distribution into $cfgfile
+                $mergeapp --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
+            else
+                echo distribution config file is wrong version for merging
+            fi
         else
             echo no distribution config with which to merge
         fi
@@ -89,6 +94,11 @@ merge_weewxconf() {
         # this is a new config, so just insert debconf values into it
         configure_weewxconf
     fi
+}
+
+# get the version number from the specified file, excluding the debian packaging
+get_conf_version() {
+    echo `grep version $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//'`
 }
 
 case "$1" in
