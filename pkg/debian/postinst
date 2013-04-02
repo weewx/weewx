@@ -79,7 +79,7 @@ merge_weewxconf() {
             DSTVER=$(get_conf_version $cfgfile.dist)
             if dpkg --compare-versions $DSTVER eq $NEWVER; then
                 echo saving previous config file as $cfgfile-$OLDVER
-                mv -p $cfgfile $cfgfile-$OLDVER
+                mv $cfgfile $cfgfile-$OLDVER
                 echo saving distribution config file as $cfgfile-$NEWVER
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
                 echo merging previous and distribution into $cfgfile

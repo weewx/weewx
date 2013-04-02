@@ -44,6 +44,11 @@ install: build
 	cp -r $(SRC)/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
 
+# copy the setup script so we can do config file merges if necessary
+	cp $(SRC)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
+	cp $(SRC)/setup.py $(DST_BINDIR)
+	cp $(SRC)/merge_config.py $(DST_BINDIR)
+
 # remove stuff that should not go out
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/butterfly.jpg
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/drops.gif
@@ -80,11 +85,6 @@ install: build
 	mkdir -p $(DST)/DEBIAN
 	cp $(SRC)/debian/config $(DST)/DEBIAN
 	cp $(SRC)/debian/templates $(DST)/DEBIAN
-
-# copy the setup script so we can do config file merges if necessary
-	cp $(SRC)/setup.py $(DST_BINDIR)
-	cp $(SRC)/merge_config.py $(DST_BINDIR)
-	cp $(SRC)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 
 binary-indep: build install
 	dh_testdir
