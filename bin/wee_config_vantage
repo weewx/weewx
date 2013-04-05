@@ -23,7 +23,7 @@ description = """Configures the Davis Vantage weather station."""
 usage="""%prog: [config_file] [--help] [--info] [--clear]
                               [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
                               [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
-                              [--set-lamp=['on'|'off]] [--dump] [--start | --stop]"""
+                              [--set-lamp=['on'|'off]] [--dump] [--logger_summary=FILE] [--start | --stop]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
@@ -61,6 +61,7 @@ def main():
     parser.add_option("--stop",  action="store_true", help="Stop the logger.")
     parser.add_option("--dump",  action="store_true", help="Dump all data to the archive. "\
                           "NB: This may result in many duplicate primary key errors.")
+    parser.add_option("--logger-summary", type="string", dest="logger_summary", metavar="FILE", help="Save diagnostic summary to FILE.")
     
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -97,8 +98,10 @@ def main():
         stop_logger(station)
     if options.dump:
         dump_logger(station, config_dict)
+    if options.logger_summary:
+        logger_summary(station, options.logger_summary)
            
-def info(station):
+def info(station, dest=sys.stdout):
     """Query the configuration of the Vantage, printing out status information"""
     
     print "Querying..."
@@ -115,7 +118,7 @@ def info(station):
     
     console_time = station.getConsoleTime()
     
-    print  """Davis Vantage EEPROM settings:
+    print >>dest, """Davis Vantage EEPROM settings:
     
     CONSOLE TYPE:                   %s
     
@@ -143,7 +146,7 @@ def info(station):
              station.rain_unit, station.wind_unit)
     try:
         (stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone) = station.getStnInfo()
-        print """    CONSOLE STATION INFO:
+        print >>dest, """    CONSOLE STATION INFO:
       Latitude (onboard):           %0.1f
       Longitude (onboard):          %0.1f
       Time zone code:               %s
@@ -159,7 +162,7 @@ def info(station):
     # Add reception statistics if we can:
     try:
         _rx_list = station.getRX()
-        print """    RECEPTION STATS:
+        print >>dest, """    RECEPTION STATS:
       Total packets received:       %d
       Total packets missed:         %d
       Number of resynchronizations: %d
@@ -172,7 +175,7 @@ def info(station):
     # Add barometer calibration data if we can.
     try:
         _bar_list = station.getBarData()
-        print """    BAROMETER CALIBRATION DATA:
+        print >>dest, """    BAROMETER CALIBRATION DATA:
       Current barometer reading:    %.3f inHg
       Altitude:                     %.0f feet
       Dew point:                    %.0f F
@@ -346,6 +349,25 @@ def dump_logger(station, config_dict):
             print >>sys.stdout, "Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(record['dateTime'])),
             sys.stdout.flush()
     print "\nFinished dump. %d records added" % (nrecs,)
+    
+def logger_summary(station, dest_path):
+    dest = open(dest_path, mode="w")
+
+    info(station, dest)
+    
+    print "Starting download of logger summary..."
+    
+    nrecs = 0
+    for (page, index, y, mo, d, h, mn, time_ts) in station.genLoggerSummary():
+        if time_ts:
+            print >>dest, "%4d %4d %4d | %4d-%02d-%02d %02d:%02d | %s" % (nrecs, page, index, y+2000, mo, d, h, mn, weeutil.weeutil.timestamp_to_string(time_ts))
+        else:
+            print >>dest, "%4d %4d %4d [*** Unused index ***]" % (nrecs, page, index)
+        nrecs += 1
+        if nrecs%10 == 0:
+            print >>sys.stdout, "Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(time_ts)),
+            sys.stdout.flush()
+    print "\nFinished download of logger summary to file '%s'. %d records processed." % (dest_path, nrecs)
     
 if __name__=="__main__" :
     main()

@@ -575,6 +575,45 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 _record = self.translateArchivePacket(_packet)
                 yield _record
 
+    def genLoggerSummary(self):
+        """A generator function to return a summary of each page in the logger. 
+        
+        yields: A 8-way tuple containing (page, index, year, month, day, hour, minute, timestamp)
+        """
+        
+        # Wake up the console...
+        self.port.wakeup_console(self.max_tries, self.wait_before_retry)
+        # ... request a dump...
+        self.port.send_data('DMP\n')
+
+        syslog.syslog(syslog.LOG_DEBUG, "VantagePro: Starting logger summary.")
+        
+        # Cycle through the pages...
+        for _ipage in xrange(512) :
+            # ... get a page of archive data
+            _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
+            # Now extract each record from the page
+            for _index in xrange(5) :
+                # If the console has been recently initialized, there will
+                # be unused records, which are filled with 0xff. Detect this
+                # by looking at the first 4 bytes (the date and time):
+                if _page[1+52*_index:5+52*_index] == 4*chr(0xff) :
+                    # This record has never been used.
+                    y = mo = d = h = mn = time_ts = None
+                else:
+                    # Unpack the raw archive packet:
+                    _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
+                    datestamp = _packet['date_stamp']
+                    timestamp = _packet['time_stamp']
+                    time_ts = _archive_datetime(datestamp, timestamp)
+                    y  = (0xfe00 & datestamp) >> 9    # year
+                    mo = (0x01e0 & datestamp) >> 5    # month
+                    d  = (0x001f & datestamp)         # day
+                    h  = timestamp // 100             # hour
+                    mn = timestamp % 100              # minute
+                yield (_ipage, _index, y, mo, d, h, mn, time_ts)
+        syslog.syslog(syslog.LOG_DEBUG, "Vantage: Finished logger summary.")
+
     def getTime(self) :
         """Get the current time from the console, returning it as timestamp"""
 
@@ -870,7 +909,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
         record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
         record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
         record['windchill'] = weewx.wxformulas.windchillF(T, W)
-        record['dateTime']  = _archive_datetime(packet)
+        record['dateTime']  = _archive_datetime(packet['date_stamp'], packet['time_stamp'])
         record['usUnits']   = weewx.US
         
         return record
@@ -1116,26 +1155,23 @@ def _rxcheck(packet):
 #                      Decoding routines
 #===============================================================================
 
-def _archive_datetime(packet) :
+def _archive_datetime(datestamp, timestamp) :
     """Returns the epoch time of the archive packet."""
-    datestamp = packet['date_stamp']
-    timestamp = packet['time_stamp']
-    
-    # Construct a time tuple from Davis time. Unfortunately, as timestamps come
-    # off the Vantage logger, there is no way of telling whether or not DST is
-    # in effect. So, have the operating system guess by using a '-1' in the last
-    # position of the time tuple. It's the best we can do...
-    time_tuple = ((0xfe00 & datestamp) >> 9,    # year
-                  (0x01e0 & datestamp) >> 5,    # month
-                  (0x001f & datestamp),         # day
-                  timestamp // 100,             # hour
-                  timestamp % 100,              # minute
-                  0,                            # second
-                  0, 0, -1)                     # have OS guess DST
-    # Convert to epoch time:
     try:
+        # Construct a time tuple from Davis time. Unfortunately, as timestamps come
+        # off the Vantage logger, there is no way of telling whether or not DST is
+        # in effect. So, have the operating system guess by using a '-1' in the last
+        # position of the time tuple. It's the best we can do...
+        time_tuple = ((0xfe00 & datestamp) >> 9,    # year
+                      (0x01e0 & datestamp) >> 5,    # month
+                      (0x001f & datestamp),         # day
+                      timestamp // 100,             # hour
+                      timestamp % 100,              # minute
+                      0,                            # second
+                      0, 0, -1)                     # have OS guess DST
+        # Convert to epoch time:
         ts = int(time.mktime(time_tuple))
-    except (OverflowError, ValueError):
+    except (OverflowError, ValueError, TypeError):
         ts = None
     return ts
     
