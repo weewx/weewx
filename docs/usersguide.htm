@@ -55,7 +55,7 @@ Version: 2.3.0b1
       see <a href="http://www.threefools.org/weewx">Hood River West</a>. </p>
     <p>Key features: </p>
     <ul>
-      <li>An easy to understand, simple, extensible micro-kernel architecture;</li>
+      <li>Support for many popular weather stations;</li>
       <li>Uploads to popular weather sites, such as Weather Underground and CWOP;</li>
       <li>Uploads to your website using FTP or rsync;</li>
       <li>Support for multiple <em>skins</em>;</li>
@@ -63,6 +63,7 @@ Version: 2.3.0b1
       <li>Support for multiple unit systems;</li>
       <li>Support for sqlite or MySQL databases;</li>
       <li>Calibration corrections;</li>
+      <li>An easy to understand, simple, extensible micro-kernel architecture;</li>
       <li>Ability to extend <span class="code">weewx</span> with new services 
 	and reports. </li>
     </ul>
@@ -393,7 +394,7 @@ Version: 2.3.0b1
       By contrast, the package approach is somewhat simpler, but it requires 
       root privileges and will install the bits and pieces of 
       <span class="code">weewx</span> in standard operating system
-      locations instead of a single directory. The net effect is that
+      locations across the file system instead of in a single directory. The net effect is that
       configuration files, templates, and code will all be installed in
       separate locations, most of which will require root privileges to
       modify.</p>
@@ -639,6 +640,8 @@ Version: 2.3.0b1
       stations support this. Set to the altitude of the station and the unit used 
       for the altitude. Example: </p>
     <p class="tty">altitude = 700, foot</p>
+	  <p>An example in meters:</p>
+	  <p class="tty">altitude = 220, meter</p>
     <p class="config_option"><span class="config_important">rain_year_start
     </span></p>
     <p>Normally the start of the rain year is downloaded from your hardware, but 
@@ -1168,37 +1171,44 @@ Version: 2.3.0b1
     <p>Run it with <span class="code">--help</span> as an option to see its usage: </p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --help </p>
     <p>This will print out something like:</p>
-    <p class="tty">Usage: wee_config_vantage: config_path [--help] [--info] [--clear]
-     [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
-     [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
-     [--set-lamp=['on'|'off']] [--dump] [--start | -- stop]
+    <p class="tty">Usage: wee_config_vantage: [config_file] [--help] [--info] [--clear]
+                           [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
+                           [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
+                           [--set-lamp=['on'|'off]] [--dump] [--logger_summary=FILE] [--start | --stop]
 
-Configures the VantagePro weather station.
+Configures the Davis Vantage weather station.
 
 Options:
-  -h, --help               show this help message and exit
-  --info                   To print configuration, reception, and barometer
-                            calibration information about your weather station.
-  --clear                  To clear the memory of your weather station.
-  --set-interval=SECONDS   Sets the archive interval to the specified number of
-                            seconds. Valid values are 60, 300, 600, 900, 1800,
-                            3600, or 7200.
-  --set-altitude=FEET      Sets the altitude of the station to the specified
-                            number of feet.
-  --set-barometer=inHg     Sets the barometer reading of the station to a known
-                            correct value in inches of mercury. Specify 0 (zero)
-                            to have the console pick a sensible value.
-  --set-bucket=CODE        Set the type of rain bucket. Specify '0' for 0.01
-                            inches; '1' for 0.2 MM; '2' for 0.1 MM
-  --set-rain-year-start=MM Set the rain year start (1=Jan, 2=Feb, etc.).
-  --set-time               Set the onboard clock to the current time.
-  --set-lamp=ON|OFF        Turn the console lamp 'ON' or 'OFF'
-  --start                  Start the logger.
-  --stop                   Stop the logger.
-  --dump                   Dump all data to the archive. NB: This may result in
-                           many duplicate primary key errors.
+  -h, --help            show this help message and exit
+  --config=FILE         use configuration file FILE
+  --info                To print configuration, reception, and barometer
+                        calibration information about your weather station.
+  --clear               To clear the memory of your weather station.
+  --set-interval=SECONDS
+                        Sets the archive interval to the specified number of
+                        seconds. Valid values are 60, 300, 600, 900, 1800,
+                        3600, or 7200.
+  --set-altitude=FEET   Sets the altitude of the station to the specified
+                        number of feet.
+  --set-barometer=inHg  Sets the barometer reading of the station to a known
+                        correct value in inches of mercury. Specify 0 (zero)
+                        to have the console pick a sensible value.
+  --set-bucket=CODE     Set the type of rain bucket. Specify '0' for 0.01
+                        inches; '1' for 0.2 MM; '2' for 0.1 MM
+  --set-rain-year-start=MM
+                        Set the rain year start (1=Jan, 2=Feb, etc.).
+  --set-time            Set the onboard clock to the current time.
+  --set-lamp=ON|OFF     Turn the console lamp 'ON' or 'OFF'
+  --start               Start the logger.
+  --stop                Stop the logger.
+  --dump                Dump all data to the archive. NB: This may result in
+                        many duplicate primary key errors.
+  --logger-summary=FILE
+                        Save diagnostic summary to FILE (for debugging the 
+                        logger).
 
-Mutating actions will request confirmation before proceeding.</p>
+Mutating actions will request confirmation before proceeding.
+</p>
     <p>It is useful to run it with the <span class="code">--info</span> option to 
       see what the current EEPROM settings are on your station: </p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --info </p>
@@ -1264,8 +1274,8 @@ Offset:                       -1.000</p>
       is due. If this is the case, you should pick an archive interval of at least 
       300 seconds, or trim the number of files you are using. </p>
     <p>I have found that a five minute (300 seconds) archive interval works well 
-      for the VantagePro2. Because of the large amount of onboard memory it carries, 
-      going to a larger interval really does not have any advantages. </p>
+      for the Vantage stations. Because of the large amount of onboard memory they carry, 
+      going to a larger interval does not have any real advantages. </p>
     <p><em>Choose your archiving interval carefully! </em>Once chosen, it cannot 
       be changed without messing up your statistics (highs and lows will be OK, but 
       averages and rms wind speed will be wrong). </p>
@@ -1358,7 +1368,9 @@ Mutating actions will request confirmation before proceeding.</p>
 
     <h3>Calibrating the pressure sensor</h3>
     <p>The pressure sensor in Fine Offset stations measures absolute, or station pressure.  The sensor pressure may be off a bit when the station is at sea level, and almost certainly will be off when the station is above sea level.  Stations at sea level are typically off by 1 to 10 millibars, while stations above a few hundred meters may be off by hundreds of millibars.  When reporting weather data, <span class='code'>weewx</span> will calculate the equivalent sea level pressure, but the pressure sensor must be calibrated and an altitude must be specified.</p>
-    <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  If you do not know what the offset should be, use the <span class='code'>wee_config_fousb</span> utility to calculate this offset given the station altitude and a valid sea-level pressure for the station location.</p>
+    <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  If you do not know what the offset should be, use the <span class='code'>wee_config_fousb</span> 
+	utility to calculate this offset given the station altitude and a valid 
+	sea-level pressure from a nearby known-correct station.</p>
     <p>For example, if the sea level pressure from a verified source is 1003.048 hPa, the following example will calculate the offset then ask whether to insert it into <span class='code'>weewx.conf</span>.  It uses the altitude specified in <span class='code'>weewx.conf</span> and the station pressure and temperature.</p>
     <p class='tty'><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --slp=1003.048</p>
     <p>The output will look something like this:</p>
@@ -1490,7 +1502,12 @@ Pressure offset is now 1.247000</p>
       permissions:</p>
     <p class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
-mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</p>
+mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO 
+	<a href="mailto:weewx@localhost">weewx@localhost</a>;</p>
+	  <p>In addition to configuring MySQL, you will also need to indicate to
+	  <span class="code">weewx</span> that you intend to use the configured 
+	  database. See section <span class="code"><a href="#[StdArchive]">
+	  [StdArchive]</a></span> for details.</p>
 
     <h1 id="Running_weewx">Running <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> can be run either from the command line (useful 
@@ -1504,7 +1521,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       weather station uses. For example, if you are using a plain old serial port:
     </p>
     <p class="tty">sudo chmod 666 /dev/ttyS0 </p>
-    <p>Then run the main loop program, <span class="code">weewxd</span>, giving 
+    <p>Then run the main program, <span class="code">weewxd</span>, giving 
       the configuration file as its only parameter: </p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
     <p>It should start by downloading any data stored in your weather station into 
@@ -1713,7 +1730,7 @@ sudo /etc/init.d/apache restart</p>
       </li>
     </ul>
 
-    <h2>Hardware</h2>
+    <h2>Hardware problems</h2>
     <h3>Establishing connectivity</h3>
     <p>If you are unable to get anything out of <span class="code">weewx</span>, first 
       check that you have connectivity to your weather station. For the Davis stations, 
@@ -1848,8 +1865,8 @@ port = /dev/cuaU0</p>
       this case) asks the console for all archive data &quot;since&quot; some time. 
       The console then downloads the records one at a time. After it gets to the very 
       last one, the memory wraps around, and the timestamp will suddenly jump backwards 
-      in time a couple weeks &mdash; the software knows it has downloaded the last 
-      record and stops.</p>
+      in time a couple weeks &mdash; this how the software knows it has downloaded the last 
+      record and so it stops.</p>
     <p>However, if the internal memory gets garbled, the console will immediately 
       return archives in the past, and so it looks like the timestamps have decreased 
       in value and so <span class="code">weewx</span> figures that&#39;s it: there&#39;s 
@@ -1866,7 +1883,7 @@ port = /dev/cuaU0</p>
     </ol>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --clear </p>
 	  <p>See also the section <em><a href="#Dumping_the_logger_memory">Dumping 
-	  the logger memory</a></em>.</p>
+	  the logger memory</a></em>, which may help you avoid data loss.</p>
     <h3>3rd party Vantage connectors</h3>
     <p>This section is for those who are using a homebrew or 3rd party connector 
       to a Davis Vantage console that does not contain a logger, such as the
@@ -1899,7 +1916,7 @@ Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Generator terminated...
 Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</p>
     <p>See the section on option <span class="code">
 	<a href="#record_generation">record_generation</a></span>.</p>
-    <h2>Software</h2>
+    <h2>Software problems</h2>
     <h3><span class="code">configobj</span> errors</h3>
     <p>These are errors in the configuration file. Two are very common. Incidentally, 
       these errors are far easier to diagnose when <span class="code">weewx</span> 

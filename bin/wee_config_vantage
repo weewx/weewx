@@ -21,9 +21,9 @@ import weeutil.weeutil
 description = """Configures the Davis Vantage weather station."""
 
 usage="""%prog: [config_file] [--help] [--info] [--clear]
-                              [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
-                              [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
-                              [--set-lamp=['on'|'off]] [--dump] [--logger_summary=FILE] [--start | --stop]"""
+                           [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
+                           [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
+                           [--set-lamp=['on'|'off]] [--dump] [--logger_summary=FILE] [--start | --stop]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
@@ -61,7 +61,8 @@ def main():
     parser.add_option("--stop",  action="store_true", help="Stop the logger.")
     parser.add_option("--dump",  action="store_true", help="Dump all data to the archive. "\
                           "NB: This may result in many duplicate primary key errors.")
-    parser.add_option("--logger-summary", type="string", dest="logger_summary", metavar="FILE", help="Save diagnostic summary to FILE.")
+    parser.add_option("--logger-summary", type="string", dest="logger_summary", 
+                      metavar="FILE", help="Save diagnostic summary to FILE (for debugging the logger).")
     
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
