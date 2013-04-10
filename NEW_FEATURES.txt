@@ -23,6 +23,9 @@ Move to a "plugin" architecture.
 
 Support the WU "RapidFire" protocol.
 
+Offer out-of-the-box support for "last 24 hours", "last 7 days", and "last 28 days"
+statistics.
+
 Use the tagged stats classes for the archive database as well, thus unifying
 the two databases.
 
