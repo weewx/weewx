@@ -52,6 +52,11 @@ to make them more consistent:
 The interface to the device driver "loader" function has changed slightly. It
 now takes a second parameter, "engine". Details are in the Upgrading doc.
 
+The FineOffsetUSB driver now supports hardware archive record generation.
+
+When starting weewx, the FineOffsetUSB driver will now try to 'catch up' - it
+will read the console memory for any records that are not yet in the database.
+
 Added illuminance-to-radiation conversion in FineOffsetUSB driver.
 
 Added pressure calibration option to wee_config_fousb and explicit support for
