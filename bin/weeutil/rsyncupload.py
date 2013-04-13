@@ -79,9 +79,10 @@ class RsyncUpload(object):
         cmd.extend([rsyncremotespec])
         
         try:
-            syslog.syslog(syslog.LOG_DEBUG, "rsyncupload: rsync invocation: %s" % " ".join(cmd))
-            output = subprocess.check_output(cmd)
-            stroutput = output.encode("utf-8")
+            rsynccmd = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        
+            stdout = rsynccmd.communicate()[0]
+            stroutput = stdout.encode("utf-8")
             syslog.syslog(syslog.LOG_DEBUG, "rsyncupload: rsync reported:\n%s" % stroutput)
         except OSError, e:
             if e.errno == errno.ENOENT:

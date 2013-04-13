@@ -6,6 +6,8 @@ weewx change history
 Fixed bug that prevented Fine Offset stations from downloading archive
 records if the archive database had no records in it.
 
+rsync should now work with Python 2.5 and 2.6 (not just 2.7)
+
 
 2.3.0 04/10/13
 
