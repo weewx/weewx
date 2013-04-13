@@ -970,7 +970,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     raise weewx.WeeWxIOError('invalid read_period in get_records')
                 if fixed_block['data_count'] is None:
                     raise weewx.WeeWxIOError('invalid data_count in get_records')
-                if since_ts != 0:
+                if since_ts:
                     dt = datetime.datetime.utcfromtimestamp(since_ts)
                     dt += datetime.timedelta(seconds=fixed_block['read_period']*30)
                 else:
