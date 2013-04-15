@@ -1,3 +1,6 @@
+weewx (2.3.1-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer <tkeffer@gmail.com>  Mon, 15 Apr 2013 09:06:33 -0700
 weewx (2.3.0-1) unstable; urgency=low
   * ensure that prerm stops any running process on upgrade, not just remove
   * new upstream release
