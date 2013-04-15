@@ -834,6 +834,7 @@ def main(options, args, EngineClass=StdEngine) :
     signal.signal(signal.SIGTERM, sigTERMhandler)
 
     syslog.syslog(syslog.LOG_INFO, "wxengine: Initializing weewx version %s" % weewx.__version__)
+    syslog.syslog(syslog.LOG_INFO, "wxengine: Using Python %s" % sys.version)
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
