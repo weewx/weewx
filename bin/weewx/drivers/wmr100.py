@@ -301,6 +301,39 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
             
         return _record
         
+    def _temperatureonly_packet(self, packet):
+        # function added by fstuyk to manage temperature-only sensor THWR800
+        #
+        _record = {'dateTime'    : int(time.time() + 0.5),
+                   'usUnits'     : weewx.METRIC}
+        # Per Ejeklint's notes don't mention what to do if temperature is
+        # negative. I think the following is correct. 
+        T = (((packet[4] & 0x7f) << 8) + packet[3])/10.0
+        if packet[4] & 0x80 : T = -T
+        channel = packet[2] & 0x0f
+
+        if channel == 0:
+            _record['inTemp']      = T
+            _record['inTempBatteryStatus'] = (packet[0] & 0x40) >> 6
+        elif channel == 1:
+            _record['outTemp']     = T
+            # The WMR does not provide wind information in a temperature packet,
+            # so we have to use old wind data to calculate wind chill, provided
+            # it isn't too old and has gone stale. If no wind data has been seen
+            # yet, then this will raise an AttributeError exception.
+            try:
+                if _record['dateTime'] - self.last_wind_record['dateTime'] <= self.stale_wind:
+                    _record['windchill'] = weewx.wxformulas.windchillC(T, self.last_wind_record['windSpeed'])
+            except AttributeError:
+                pass
+            _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
+        elif channel >= 2:
+            # If additional temperature sensors exist (channel>=2), then
+            # use observation types 'extraTemp1', 'extraTemp2', etc.
+            _record['extraTemp%d'  % (channel-1)] = T
+
+        return _record
+
     def _barometer_packet(self, packet):
         SP  = float(((packet[3] & 0x0f) << 8) + packet[2])
         SLP = float(((packet[5] & 0x0f) << 8) + packet[4])
@@ -353,4 +386,5 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
                       0x46: _barometer_packet,
                       0x47: _uv_packet,
                       0x48: _wind_packet,
-                      0x60: _clock_packet}
+                      0x60: _clock_packet,
+                      0x44: _temperatureonly_packet}

@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+X.Y.0 04/XX/13
+
+Added support for the temperature-only sensor THWR800. Thanks to
+user fstuyk!
+
+
 2.3.1 04/15/13
 
 Fixed bug that prevented Fine Offset stations from downloading archive
