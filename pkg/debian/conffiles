@@ -33,3 +33,4 @@
 /etc/weewx/skins/Standard/weewx.css
 /etc/weewx/skins/Standard/year.html.tmpl
 /etc/weewx/weewx.conf
+/etc/weewx/weewx.conf.dist
