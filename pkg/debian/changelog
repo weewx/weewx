@@ -1,3 +1,6 @@
+weewx (2.3.1-3) unstable; urgency=low
+  * include weewx.conf.dist in conffiles
+ -- Matthew Wall <mwall@users.sourceforge.net>  Tue, 16 Apr 2013 10:42:35 -0400
 weewx (2.3.1-2) unstable; urgency=low
   * in postinst, invoke db_stop at end of script, not end of function
  -- Matthew Wall <mwall@users.sourceforge.net>  Mon, 15 Apr 2013 23:50:06 -0400
