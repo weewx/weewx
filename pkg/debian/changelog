@@ -1,3 +1,6 @@
+weewx (2.3.1-2) unstable; urgency=low
+  * in postinst, invoke db_stop at end of script, not end of function
+ -- Matthew Wall <mwall@users.sourceforge.net>  Mon, 15 Apr 2013 23:50:06 -0400
 weewx (2.3.1-1) unstable; urgency=low
   * new upstream release
  -- Thomas Keffer <tkeffer@gmail.com>  Mon, 15 Apr 2013 09:06:33 -0700

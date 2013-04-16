@@ -64,9 +64,6 @@ configure_weewxconf() {
             sed -i "s%model[ ]*=.*%model = $RET%" $cfgfile
         fi
     fi
-
-    # let debconf know that we are finished
-    db_stop
 }
 
 # use weewx setup utilities to merge new features into existing weewx.conf
@@ -120,7 +117,6 @@ configure)
 
         # start the weewx daemon
         invoke-rc.d weewx start
-
         ;;
 
 abort-remove)
@@ -128,5 +124,8 @@ abort-remove)
         #python -m compileall /usr/share/weewx
         ;;
 esac
+
+# let debconf know that we are finished
+db_stop
 
 exit 0
