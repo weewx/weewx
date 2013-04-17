@@ -194,8 +194,8 @@ class Archive(object):
         
         yields: A dictionary record for each database record within the time interval """
         
+        _cursor = self.connection.cursor()
         try:
-            _cursor = self.connection.cursor()
             if startstamp is None:
                 if stopstamp is None:
                     _gen = _cursor.execute("SELECT * FROM %s" % (self.table,))
@@ -246,9 +246,8 @@ class Archive(object):
     def genSql(self, sql, sqlargs=()):
         """Generator function that executes an arbitrary SQL statement on the database."""
         
+        _cursor = self.connection.cursor()
         try:
-            _cursor = self.connection.cursor()
-            
             for _row in _cursor.execute(sql, sqlargs):
                 yield _row
         finally:
@@ -314,8 +313,9 @@ class Archive(object):
         time_vec = list()
         data_vec = list()
         std_unit_system = None
+
+        _cursor=self.connection.cursor()
         try:
-            _cursor=self.connection.cursor()
     
             if aggregate_interval :
                 if not aggregate_type:
@@ -404,8 +404,8 @@ class Archive(object):
         data_vec = list()
         std_unit_system = None
         
+        _cursor=self.connection.cursor()
         try:
-            _cursor=self.connection.cursor()
     
             # Is aggregation requested?
             if aggregate_interval :
