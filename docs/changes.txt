@@ -1,10 +1,13 @@
 weewx change history
 --------------------
 
-X.Y.0 04/XX/13
+X.Y.0 05/XX/13
 
 Added support for the temperature-only sensor THWR800. Thanks to
 user fstuyk!
+
+Fixed bug that prevented overriding the FTP directory in section
+[[FTP]] of the configuration file.
 
 
 2.3.1 04/15/13

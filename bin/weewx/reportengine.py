@@ -167,13 +167,18 @@ class FtpGenerator(ReportGenerator):
         import weeutil.ftpupload
 
         t1 = time.time()
+        if self.skin_dict.has_key('HTML_ROOT'):
+            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                      self.skin_dict['HTML_ROOT'])
+        else:
+            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                      self.config_dict['StdReport']['HTML_ROOT'])
 
         try:
             ftpData = weeutil.ftpupload.FtpUpload(server      = self.skin_dict['server'],
                                                   user        = self.skin_dict['user'],
                                                   password    = self.skin_dict['password'],
-                                                  local_root  = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                                                             self.config_dict['StdReport']['HTML_ROOT']),
+                                                  local_root  = local_root,
                                                   remote_root = self.skin_dict['path'],
                                                   name        = self.skin_dict['REPORT_NAME'],
                                                   passive     = bool(self.skin_dict.get('passive', True)),
