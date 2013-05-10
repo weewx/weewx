@@ -481,7 +481,7 @@ def sp2ap(sp_mbar, elev_meter):
     ap - sea level pressure (altimeter) in millibars
     """
 
-    if sp_mbar is None or elev_meter is None:
+    if sp_mbar is None or sp_mbar <= 0.3 or elev_meter is None:
         return None
     N = 0.190284
     slp = 1013.25
