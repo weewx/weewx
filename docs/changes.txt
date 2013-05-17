@@ -12,6 +12,8 @@ Fixed bug that prevented overriding the FTP directory in section
 Day plots now show 24 hours instead of 27. If you want the old
 behavior, then change option "time_length" to 97200.
 
+Plots shorter than 24 hours are now possible. Thanks to user Andrew Tridgell.
+
 
 2.3.1 04/15/13
 

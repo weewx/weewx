@@ -139,30 +139,48 @@ def scaletime(tmin_ts, tmax_ts) :
     time, third the increment. All are in seconds (epoch time in the case of the 
     first two).    
     
-    Example 1:
+    Example 1: 24 hours on an hour boundary
     >>> from weeutil.weeutil import timestamp_to_string as to_string
     >>> time_ts = time.mktime(time.strptime("2013-05-17 08:00", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 24*3600, time_ts)
     >>> print to_string(xmin), to_string(xmax), xinc
     2013-05-16 09:00:00 PDT (1368720000) 2013-05-17 09:00:00 PDT (1368806400) 10800
 
-    Example 2:
+    Example 2: 24 hours on a 3-hour boundary
     >>> time_ts = time.mktime(time.strptime("2013-05-17 09:00", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 24*3600, time_ts)
     >>> print to_string(xmin), to_string(xmax), xinc
     2013-05-16 09:00:00 PDT (1368720000) 2013-05-17 09:00:00 PDT (1368806400) 10800
 
-    Example 3:
+    Example 3: 24 hours on a non-hour boundary
     >>> time_ts = time.mktime(time.strptime("2013-05-17 09:01", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 24*3600, time_ts)
     >>> print to_string(xmin), to_string(xmax), xinc
     2013-05-16 12:00:00 PDT (1368730800) 2013-05-17 12:00:00 PDT (1368817200) 10800
 
-    Example 4:
+    Example 4: 27 hours
     >>> time_ts = time.mktime(time.strptime("2013-05-17 07:45", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 27*3600, time_ts)
     >>> print to_string(xmin), to_string(xmax), xinc
     2013-05-16 06:00:00 PDT (1368709200) 2013-05-17 09:00:00 PDT (1368806400) 10800
+
+    Example 5: 3 hours on a 15 minute boundary
+    >>> time_ts = time.mktime(time.strptime("2013-05-17 07:45", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 3*3600, time_ts)
+    >>> print to_string(xmin), to_string(xmax), xinc
+    2013-05-17 04:45:00 PDT (1368791100) 2013-05-17 07:45:00 PDT (1368801900) 900
+
+    Example 6: 3 hours on a non-15 minute boundary
+    >>> time_ts = time.mktime(time.strptime("2013-05-17 07:46", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 3*3600, time_ts)
+    >>> print to_string(xmin), to_string(xmax), xinc
+    2013-05-17 05:00:00 PDT (1368792000) 2013-05-17 08:00:00 PDT (1368802800) 900
+
+    Example 7: 12 hours
+    >>> time_ts = time.mktime(time.strptime("2013-05-17 07:46", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 12*3600, time_ts)
+    >>> print to_string(xmin), to_string(xmax), xinc
+    2013-05-16 20:00:00 PDT (1368759600) 2013-05-17 08:00:00 PDT (1368802800) 3600
 
     """
     if tmax_ts <= tmin_ts :
@@ -173,9 +191,35 @@ def scaletime(tmin_ts, tmax_ts) :
     tmin_dt = datetime.datetime.fromtimestamp(tmin_ts)
     tmax_dt = datetime.datetime.fromtimestamp(tmax_ts)
     
-    
     # How big a time delta are we talking about? 
-    if tdelta <= 27 * 3600:
+    if tdelta <= 3 * 3600:
+        # Three hours or less. Use a time increment of 15 minutes:
+        interval = 900
+        # m is the number of minutes
+        m = tmax_dt.timetuple()[4]
+        # This will be the 15 minute boundary below tmax:
+        stop_dt = tmax_dt.replace(second=0, microsecond=0) - datetime.timedelta(minutes=m%15)
+        # If tmax happens to be on a 15 minute boundary, we're done. Otherwise, round
+        # up to the next one:
+        if tmax_dt > stop_dt:
+            stop_dt += datetime.timedelta(minutes=15)
+        n_hours = int((tdelta + 3599) / 3600)
+        start_dt = stop_dt - datetime.timedelta(hours=n_hours)
+        
+    elif tdelta <= 12 * 3600:
+        # Twelve hours or less. Use an increment of 60 minutes:
+        interval = 3600
+        # Get to the one hour boundary below tmax:
+        stop_dt = tmax_dt.replace(minute=0, second=0, microsecond=0)
+        # if tmax happens to be on a one hour boundary we're done. Otherwise, round
+        # up to the next one hour boundary:
+        if tmax_dt > stop_dt:
+            stop_dt += datetime.timedelta(hours=1)
+        n_hours = int((tdelta + 3599) / 3600)
+        start_dt = stop_dt - datetime.timedelta(hours=n_hours)
+        
+        
+    elif tdelta <= 27 * 3600:
         # A day plot is wanted. A time increment of 3 hours is appropriate
         interval = 3 * 3600
         # h is the hour of tmax_dt
