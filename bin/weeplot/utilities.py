@@ -137,7 +137,34 @@ def scaletime(tmin_ts, tmax_ts) :
     
     Returns a scaling 3-tuple. First element is the start time, second the stop
     time, third the increment. All are in seconds (epoch time in the case of the 
-    first two).    """
+    first two).    
+    
+    Example 1:
+    >>> from weeutil.weeutil import timestamp_to_string as to_string
+    >>> time_ts = time.mktime(time.strptime("2013-05-17 08:00", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 24*3600, time_ts)
+    >>> print to_string(xmin), to_string(xmax), xinc
+    2013-05-16 09:00:00 PDT (1368720000) 2013-05-17 09:00:00 PDT (1368806400) 10800
+
+    Example 2:
+    >>> time_ts = time.mktime(time.strptime("2013-05-17 09:00", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 24*3600, time_ts)
+    >>> print to_string(xmin), to_string(xmax), xinc
+    2013-05-16 09:00:00 PDT (1368720000) 2013-05-17 09:00:00 PDT (1368806400) 10800
+
+    Example 3:
+    >>> time_ts = time.mktime(time.strptime("2013-05-17 09:01", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 24*3600, time_ts)
+    >>> print to_string(xmin), to_string(xmax), xinc
+    2013-05-16 12:00:00 PDT (1368730800) 2013-05-17 12:00:00 PDT (1368817200) 10800
+
+    Example 4:
+    >>> time_ts = time.mktime(time.strptime("2013-05-17 07:45", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 27*3600, time_ts)
+    >>> print to_string(xmin), to_string(xmax), xinc
+    2013-05-16 06:00:00 PDT (1368709200) 2013-05-17 09:00:00 PDT (1368806400) 10800
+
+    """
     if tmax_ts <= tmin_ts :
         raise weeplot.ViolatedPrecondition, "scaletime called with tmax <= tmin"
     
@@ -148,28 +175,25 @@ def scaletime(tmin_ts, tmax_ts) :
     
     
     # How big a time delta are we talking about? 
-    if tdelta <= 27 * 3600 :
+    if tdelta <= 27 * 3600:
         # A day plot is wanted. A time increment of 3 hours is appropriate
-        
-        # h is the hour of tmin_dt
-        h = tmin_dt.timetuple()[3]
-        # Subtract off enough to get to the lower 3-hour boundary, 
-        # zeroing out everything else
-        start_dt = tmin_dt.replace(minute=0, second=0, microsecond=0) - datetime.timedelta(hours = h % 3)
-
-        # Now figure the upper time boundary, which is a bit more complicated if tmax_dt lies
-        # near the 3-hour boundary
-        tmax_tt = tmax_dt.timetuple()
-        # stop_dt is the lower 3-hour boundary from tmax_dt
-        stop_dt = tmax_dt.replace(minute=0, second=0, microsecond=0)
-        # If the tmax_dt was close to the 3-hour boundary, we're done. Otherwise, go up to
-        # the next 3-hour boundary.
-        if tmax_tt[3] % 3 != 0 or tmax_tt[4] != 0 :
-            stop_dt += datetime.timedelta(hours = 3 - tmax_tt[3] % 3)
-            
         interval = 3 * 3600
+        # h is the hour of tmax_dt
+        h = tmax_dt.timetuple()[3]
+        # Subtract off enough to get to the lower 3-hour boundary from tmax: 
+        stop_dt = tmax_dt.replace(minute=0, second=0, microsecond=0) - datetime.timedelta(hours = h % 3)
+        # If tmax happens to lie on a 3 hour boundary we don't need to do anything. If not, we need
+        # to round up to the next 3 hour boundary:
+        if tmax_dt > stop_dt:
+            stop_dt += datetime.timedelta(hours=3)
+        # The stop time is one day earlier
+        start_dt = stop_dt - datetime.timedelta(days=1)
+        
+        if tdelta == 27 * 3600 :
+            # A "slightly more than a day plot" is wanted. Start 3 hours earlier:
+            start_dt -= datetime.timedelta(hours=3)
     
-    elif tdelta > 27 * 3600 and tdelta <= 31 * 24 * 3600 :
+    elif 27 * 3600 < tdelta <= 31 * 24 * 3600 :
         # The time scale is between a day and a month. A time increment of one day is appropriate
         start_dt = tmin_dt.replace(hour=0, minute=0, second=0, microsecond=0)
         stop_dt  = tmax_dt.replace(hour=0, minute=0, second=0, microsecond=0)
