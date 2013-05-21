@@ -39,9 +39,11 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
     def run(self):
 
         self.setup()
-        self.generateSummaryBy('SummaryByMonth', self.gen_ts)
-        self.generateSummaryBy('SummaryByYear', self.gen_ts)
-        self.generateToDate(self.gen_ts)
+        for time_period in self.skin_dict['FileGenerator'].sections:
+            if time_period == 'ToDate':
+                self.generateToDate(self.gen_ts)
+            else:
+                self.generateSummaryBy(time_period, self.gen_ts)
 
     def setup(self):
         
