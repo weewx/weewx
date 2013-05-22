@@ -117,74 +117,6 @@ def stampgen(startstamp, stopstamp, interval):
             yield int(time.mktime(dt.timetuple()))
             dt += delta
 
-def intervalgen(start_ts, stop_ts, interval):
-    """Generator function yielding a sequence of time intervals.
-    
-    Yields a sequence of intervals. First interval is (start_ts, start_ts+interval),
-    second is (start_ts+interval, start_ts+2*interval), etc. The last interval
-    will end at or before stop_ts. It is up to the consumer to interpret whether
-    the end points of any given interval is inclusive or exclusive to the
-    interval.
-    
-    Example:
-    
-    >>> startstamp = 1236560400
-    >>> print timestamp_to_string(startstamp)
-    2009-03-08 18:00:00 PDT (1236560400)
-    >>> stopstamp = 1236607200
-    >>> print timestamp_to_string(stopstamp)
-    2009-03-09 07:00:00 PDT (1236607200)
-    
-    >>> for start,stop in intervalgen(startstamp, stopstamp, 10800):
-    ...     print timestamp_to_string(start), timestamp_to_string(stop)
-    2009-03-08 18:00:00 PDT (1236560400) 2009-03-08 21:00:00 PDT (1236571200)
-    2009-03-08 21:00:00 PDT (1236571200) 2009-03-09 00:00:00 PDT (1236582000)
-    2009-03-09 00:00:00 PDT (1236582000) 2009-03-09 03:00:00 PDT (1236592800)
-    2009-03-09 03:00:00 PDT (1236592800) 2009-03-09 06:00:00 PDT (1236603600)
-    2009-03-09 06:00:00 PDT (1236603600) 2009-03-09 07:00:00 PDT (1236607200)
-
-    start_ts: The start of the first interval in unix epoch time.
-    
-    stop_ts: The end of the last interval will be equal to or less than this.
-    In unix epoch time.
-    
-    interval: The time length of an interval in seconds.
-    
-    yields: A sequence of 2-tuples. First value is start of the interval, second 
-    is the end. Both the start and end will be on the same time boundary as
-    start_ts"""  
-
-    dt1 = datetime.datetime.fromtimestamp(start_ts)
-    stop_dt = datetime.datetime.fromtimestamp(stop_ts)
-    
-    if interval == 365.25 / 12 * 24 * 3600 :
-        # Interval is a nominal month. This algorithm is 
-        # necessary because not all months have the same length.
-        while dt1 < stop_dt :
-            t_tuple = dt1.timetuple()
-            year = t_tuple[0]
-            month = t_tuple[1]
-            month += 1
-            if month > 12 :
-                month -= 12
-                year += 1
-            dt2 = min(dt1.replace(year=year, month=month), stop_dt)
-            stamp1 = time.mktime(t_tuple)
-            stamp2 = time.mktime(dt2.timetuple())
-            yield (stamp1, stamp2)
-            dt1 = dt2
-    else :
-        # This rather complicated algorithm is necessary (rather than just
-        # doing some time stamp arithmetic) because of the possibility that DST
-        # changes in the middle of an interval
-        delta = datetime.timedelta(seconds=interval)
-        while dt1 < stop_dt :
-            dt2 = min(dt1 + delta, stop_dt)
-            stamp1 = time.mktime(dt1.timetuple())
-            stamp2 = time.mktime(dt2.timetuple())
-            yield (stamp1, stamp2)
-            dt1 = dt2
-
 def startOfInterval(time_ts, interval, grace=1):
     """Find the start time of an interval.
     
@@ -241,25 +173,22 @@ def _ord_to_ts(_ord):
 # "weekSpans", etc. They are generally not used between two random times. 
 #===============================================================================
 
-class TimeSpan(object):
-    '''
-    Represents a time span, exclusive on the left, inclusive on the right.
-    '''
+class TimeSpan(tuple):
+    """Represents a time span, exclusive on the left, inclusive on the right."""
+    
+    def __new__(cls, *args):
+        if args[0] > args[1]:
+            raise ValueError, "start time (%d) is greater than stop time (%d)" % (args[0], args[1]) 
+        return tuple.__new__(cls, args)
 
-    def __init__(self, start_ts, stop_ts):
-        '''
-        Initialize a new instance of TimeSpan to the interval start_ts, stop_ts.
-        
-        start_ts: The starting time stamp of the interval.
-        
-        stop_ts: The stopping time stamp of the interval
-        '''
-        
-        self.start = int(start_ts)
-        self.stop = int(stop_ts)
-        if self.start > self.stop:
-            raise ValueError, "start time (%d) is greater than stop time (%d)" % (self.start, self.stop)
-        
+    @property
+    def start(self):
+        return self[0]
+
+    @property
+    def stop(self):
+        return self[1]
+
     def includesArchiveTime(self, timestamp):
         """
         Returns True if the span includes the time timestamp, otherwise False.
@@ -286,6 +215,73 @@ class TimeSpan(object):
         if self.start < other.start :
             return - 1
         return 0 if self.start == other.start else 1
+
+def intervalgen(start_ts, stop_ts, interval):
+    """Generator function yielding a sequence of time spans.
+    
+    Yields a sequence of TimeSpans. The first is (start_ts, start_ts+interval),
+    second is (start_ts+interval, start_ts+2*interval), etc. The last TimeSpan
+    will end at or before stop_ts. It is up to the consumer to interpret whether
+    the end points of any given interval is inclusive or exclusive to the
+    interval.
+    
+    Example:
+    
+    >>> startstamp = 1236560400
+    >>> print timestamp_to_string(startstamp)
+    2009-03-08 18:00:00 PDT (1236560400)
+    >>> stopstamp = 1236607200
+    >>> print timestamp_to_string(stopstamp)
+    2009-03-09 07:00:00 PDT (1236607200)
+    
+    >>> for span in intervalgen(startstamp, stopstamp, 10800):
+    ...     print span
+    [2009-03-08 18:00:00 PDT (1236560400) -> 2009-03-08 21:00:00 PDT (1236571200)]
+    [2009-03-08 21:00:00 PDT (1236571200) -> 2009-03-09 00:00:00 PDT (1236582000)]
+    [2009-03-09 00:00:00 PDT (1236582000) -> 2009-03-09 03:00:00 PDT (1236592800)]
+    [2009-03-09 03:00:00 PDT (1236592800) -> 2009-03-09 06:00:00 PDT (1236603600)]
+    [2009-03-09 06:00:00 PDT (1236603600) -> 2009-03-09 07:00:00 PDT (1236607200)]
+
+    start_ts: The start of the first interval in unix epoch time.
+    
+    stop_ts: The end of the last interval will be equal to or less than this.
+    In unix epoch time.
+    
+    interval: The time length of an interval in seconds.
+    
+    yields: A sequence of TimeSpans. Both the start and end of the timespan
+    will be on the same time boundary as start_ts"""  
+
+    dt1 = datetime.datetime.fromtimestamp(start_ts)
+    stop_dt = datetime.datetime.fromtimestamp(stop_ts)
+    
+    if interval == 365.25 / 12 * 24 * 3600 :
+        # Interval is a nominal month. This algorithm is 
+        # necessary because not all months have the same length.
+        while dt1 < stop_dt :
+            t_tuple = dt1.timetuple()
+            year = t_tuple[0]
+            month = t_tuple[1]
+            month += 1
+            if month > 12 :
+                month -= 12
+                year += 1
+            dt2 = min(dt1.replace(year=year, month=month), stop_dt)
+            stamp1 = time.mktime(t_tuple)
+            stamp2 = time.mktime(dt2.timetuple())
+            yield TimeSpan(stamp1, stamp2)
+            dt1 = dt2
+    else :
+        # This rather complicated algorithm is necessary (rather than just
+        # doing some time stamp arithmetic) because of the possibility that DST
+        # changes in the middle of an interval
+        delta = datetime.timedelta(seconds=interval)
+        while dt1 < stop_dt :
+            dt2 = min(dt1 + delta, stop_dt)
+            stamp1 = time.mktime(dt1.timetuple())
+            stamp2 = time.mktime(dt2.timetuple())
+            yield TimeSpan(stamp1, stamp2)
+            dt1 = dt2
 
 def archiveDaySpan(time_ts, grace=1):
     """Returns a TimeSpan representing a day that includes a given time.
