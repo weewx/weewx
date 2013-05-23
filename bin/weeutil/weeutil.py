@@ -217,32 +217,35 @@ class TimeSpan(tuple):
         return 0 if self.start == other.start else 1
 
 def intervalgen(start_ts, stop_ts, interval):
-    """Generator function yielding a sequence of time spans.
+    """Generator function yielding a sequence of time spans whose boundaries
+    are on constant local time.
     
-    Yields a sequence of TimeSpans. The first is (start_ts, start_ts+interval),
-    second is (start_ts+interval, start_ts+2*interval), etc. The last TimeSpan
-    will end at or before stop_ts. It is up to the consumer to interpret whether
-    the end points of any given interval is inclusive or exclusive to the
-    interval.
+    Yields a sequence of TimeSpans. The start times of the timespans will
+    be on the same local time boundary as the start of the sequence. See the
+    example below.
     
     Example:
     
-    >>> startstamp = 1236560400
+    >>> startstamp = 1236477600
     >>> print timestamp_to_string(startstamp)
-    2009-03-08 18:00:00 PDT (1236560400)
-    >>> stopstamp = 1236607200
+    2009-03-07 18:00:00 PST (1236477600)
+    >>> stopstamp = 1236538800
     >>> print timestamp_to_string(stopstamp)
-    2009-03-09 07:00:00 PDT (1236607200)
+    2009-03-08 12:00:00 PDT (1236538800)
     
     >>> for span in intervalgen(startstamp, stopstamp, 10800):
     ...     print span
-    [2009-03-08 18:00:00 PDT (1236560400) -> 2009-03-08 21:00:00 PDT (1236571200)]
-    [2009-03-08 21:00:00 PDT (1236571200) -> 2009-03-09 00:00:00 PDT (1236582000)]
-    [2009-03-09 00:00:00 PDT (1236582000) -> 2009-03-09 03:00:00 PDT (1236592800)]
-    [2009-03-09 03:00:00 PDT (1236592800) -> 2009-03-09 06:00:00 PDT (1236603600)]
-    [2009-03-09 06:00:00 PDT (1236603600) -> 2009-03-09 07:00:00 PDT (1236607200)]
+    [2009-03-07 18:00:00 PST (1236477600) -> 2009-03-07 21:00:00 PST (1236488400)]
+    [2009-03-07 21:00:00 PST (1236488400) -> 2009-03-08 00:00:00 PST (1236499200)]
+    [2009-03-08 00:00:00 PST (1236499200) -> 2009-03-08 03:00:00 PDT (1236506400)]
+    [2009-03-08 03:00:00 PDT (1236506400) -> 2009-03-08 06:00:00 PDT (1236517200)]
+    [2009-03-08 06:00:00 PDT (1236517200) -> 2009-03-08 09:00:00 PDT (1236528000)]
+    [2009-03-08 09:00:00 PDT (1236528000) -> 2009-03-08 12:00:00 PDT (1236538800)]
 
-    start_ts: The start of the first interval in unix epoch time.
+    (Note how in this example the local time boundaries are constant, despite
+    DST kicking in. The interval length is not constant.)
+    
+    start_ts: The start of the first interval in unix epoch time. In unix epoch time.
     
     stop_ts: The end of the last interval will be equal to or less than this.
     In unix epoch time.
