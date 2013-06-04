@@ -1097,23 +1097,22 @@ class USBHardware(object):
     def ToTemperature(buf, start, startOnLowNibble):
         if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
             result = CWeatherTraits.TemperatureNP()
+        elif USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
+            result = CWeatherTraits.TemperatureOFL()
         else:
-            if USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
-                result = CWeatherTraits.TemperatureOFL()
+            if startOnLowNibble:
+                rawtemp = (buf[0][start+0] & 0xf)*  0.001 \
+                    + (buf[0][start+0] >>  4)*  0.01  \
+                    + (buf[0][start+1] & 0xf)*  0.1   \
+                    + (buf[0][start+1] >>  4)*  1     \
+                    + (buf[0][start+2] & 0xf)* 10
             else:
-                if startOnLowNibble:
-                    rawtemp = (buf[0][start+0] & 0xf)*  0.001 \
-                        + (buf[0][start+0] >>  4)*  0.01  \
-                        + (buf[0][start+1] & 0xf)*  0.1   \
-                        + (buf[0][start+1] >>  4)*  1     \
-                        + (buf[0][start+2] & 0xf)* 10
-                else:
-                    rawtemp = (buf[0][start+0] >>  4)*  0.001 \
-                        + (buf[0][start+1] & 0xf)*  0.01  \
-                        + (buf[0][start+1] >>  4)*  0.1   \
-                        + (buf[0][start+2] & 0xf)*  1     \
-                        + (buf[0][start+2] >>  4)* 10
-                result = rawtemp - CWeatherTraits.TemperatureOffset()
+                rawtemp = (buf[0][start+0] >>  4)*  0.001 \
+                    + (buf[0][start+1] & 0xf)*  0.01  \
+                    + (buf[0][start+1] >>  4)*  0.1   \
+                    + (buf[0][start+2] & 0xf)*  1     \
+                    + (buf[0][start+2] >>  4)* 10
+            result = rawtemp - CWeatherTraits.TemperatureOffset()
         return result
 
     @staticmethod
@@ -1121,18 +1120,17 @@ class USBHardware(object):
         if ( USBHardware.IsErr5(buf, start+0, 1) or
              USBHardware.IsErr2(buf, start+2, 0) ):
             result = CWeatherTraits.RainNP()
+        elif ( USBHardware.IsOFL5(buf, start+1, 1) or
+               USBHardware.IsOFL2(buf, start+2, 0) ):
+            result = CWeatherTraits.RainOFL()
         else:
-            if ( USBHardware.IsOFL5(buf, start+1, 1) or
-                 USBHardware.IsOFL2(buf, start+2, 0) ):
-                result = CWeatherTraits.RainOFL()
-            else:
-                result  = (buf[0][start+0] & 0xf)*  0.001 \
-                    + (buf[0][start+0] >>  4)*  0.01  \
-                    + (buf[0][start+1] & 0xf)*  0.1   \
-                    + (buf[0][start+1] >>  4)*   1    \
-                    + (buf[0][start+2] & 0xf)*  10    \
-                    + (buf[0][start+2] >>  4)* 100    \
-                    + (buf[0][start+3] & 0xf)*1000
+            result  = (buf[0][start+0] & 0xf)*  0.001 \
+                + (buf[0][start+0] >>  4)*  0.01  \
+                + (buf[0][start+1] & 0xf)*  0.1   \
+                + (buf[0][start+1] >>  4)*   1    \
+                + (buf[0][start+2] & 0xf)*  10    \
+                + (buf[0][start+2] >>  4)* 100    \
+                + (buf[0][start+3] & 0xf)*1000
         return result
 
     @staticmethod
@@ -1141,18 +1139,17 @@ class USBHardware(object):
              USBHardware.IsErr2(buf,start+1, 1) or
              USBHardware.IsErr2(buf, start+2, 1) ):
             result = CWeatherTraits.RainNP()
+        elif ( USBHardware.IsOFL2(buf,start+0, 1) or
+               USBHardware.IsOFL2(buf, start+1, 1) or
+               USBHardware.IsOFL2(buf, start+2, 1) ):
+            result = CWeatherTraits.RainOFL()
         else:
-            if ( USBHardware.IsOFL2(buf,start+0, 1) or
-                 USBHardware.IsOFL2(buf, start+1, 1) or
-                 USBHardware.IsOFL2(buf, start+2, 1) ):
-                result = CWeatherTraits.RainOFL()
-            else:
-                result  = (buf[0][start+0] & 0xf)*  0.01 \
-                    + (buf[0][start+0] >>  4)*  0.1  \
-                    + (buf[0][start+1] & 0xf)*   1   \
-                    + (buf[0][start+1] >>  4)*  10   \
-                    + (buf[0][start+2] & 0xf)* 100   \
-                    + (buf[0][start+2] >>  4)*1000
+            result  = (buf[0][start+0] & 0xf)*  0.01 \
+                + (buf[0][start+0] >>  4)*  0.1  \
+                + (buf[0][start+1] & 0xf)*   1   \
+                + (buf[0][start+1] >>  4)*  10   \
+                + (buf[0][start+2] & 0xf)* 100   \
+                + (buf[0][start+2] >>  4)*1000
         return result
 
     @staticmethod
@@ -1209,71 +1206,68 @@ class USBHardware(object):
     def ToPressure(buf, start, startOnLowNibble):
         if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
             result = CWeatherTraits.PressureNP()
+        elif USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
+            result = CWeatherTraits.PressureOFL()
         else:
-            if USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
-                result = CWeatherTraits.PressureOFL()
+            if startOnLowNibble :
+                rawresult = (buf[0][start+2] & 0xF)* 1000   \
+                    + (buf[0][start+1] >>  4)*  100   \
+                    + (buf[0][start+1] & 0xF)*   10   \
+                    + (buf[0][start+0] >>  4)*    1   \
+                    + (buf[0][start+0] & 0xF)*    0.1
             else:
-                if startOnLowNibble :
-                    rawresult = (buf[0][start+2] & 0xF)* 1000   \
-                        + (buf[0][start+1] >>  4)*  100   \
-                        + (buf[0][start+1] & 0xF)*   10   \
-                        + (buf[0][start+0] >>  4)*    1   \
-                        + (buf[0][start+0] & 0xF)*    0.1
-                else:
-                    rawresult = (buf[0][start+2] >>  4)* 1000   \
-                        + (buf[0][start+2] & 0xF)*  100   \
-                        + (buf[0][start+1] >>  4)*   10   \
-                        + (buf[0][start+1] & 0xF)*    1   \
-                        + (buf[0][start+0] >>  4)*    0.1
-                result = rawresult
+                rawresult = (buf[0][start+2] >>  4)* 1000   \
+                    + (buf[0][start+2] & 0xF)*  100   \
+                    + (buf[0][start+1] >>  4)*   10   \
+                    + (buf[0][start+1] & 0xF)*    1   \
+                    + (buf[0][start+0] >>  4)*    0.1
+            result = rawresult
         return result
 
     @staticmethod
     def ToPressureInhg(buf, start, startOnLowNibble):
         if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
             rawresult = CWeatherTraits.PressureNP()
+        elif USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
+            rawresult = CWeatherTraits.PressureOFL()
         else:
-            if USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
-                rawresult = CWeatherTraits.PressureOFL()
+            if startOnLowNibble :
+                rawresult = (buf[0][start+2] & 0xF)* 100    \
+                    + (buf[0][start+1] >>  4)*  10    \
+                    + (buf[0][start+1] & 0xF)*   1    \
+                    + (buf[0][start+0] >>  4)*   0.1  \
+                    + (buf[0][start+0] & 0xF)*   0.01
             else:
-                if startOnLowNibble :
-                    rawresult = (buf[0][start+2] & 0xF)* 100    \
-                        + (buf[0][start+1] >>  4)*  10    \
-                        + (buf[0][start+1] & 0xF)*   1    \
-                        + (buf[0][start+0] >>  4)*   0.1  \
-                        + (buf[0][start+0] & 0xF)*   0.01
-                else:
-                    rawresult = (buf[0][start+2] >>  4)* 100    \
-                        + (buf[0][start+2] & 0xF)*  10    \
-                        + (buf[0][start+1] >>  4)*   1    \
-                        + (buf[0][start+0] & 0xF)*   0.1  \
-                        + (buf[0][start+0] >>  4)*   0.01
-                result = rawresult
+                rawresult = (buf[0][start+2] >>  4)* 100    \
+                    + (buf[0][start+2] & 0xF)*  10    \
+                    + (buf[0][start+1] >>  4)*   1    \
+                    + (buf[0][start+0] & 0xF)*   0.1  \
+                    + (buf[0][start+0] >>  4)*   0.01
+            result = rawresult
         return result
 
     @staticmethod
     def ToTemperatureRingBuffer(buf, start, startOnLowNibble):
         if USBHardware.IsErr3(buf, start+0, startOnLowNibble) :
             result = CWeatherTraits.TemperatureNP()
+        elif USBHardware.IsOFL3(buf, start+0, startOnLowNibble) :
+            result = CWeatherTraits.TemperatureOFL()
         else:
-            if USBHardware.IsOFL3(buf, start+0, startOnLowNibble) :
-                result = CWeatherTraits.TemperatureOFL()
-            else:
-                if startOnLowNibble :
+            if startOnLowNibble :
                     #rawtemp   =  (buf[0][start+0] & 0xF)* 10   \
                     #	  +  (buf[0][start+0] >>  4)*  1   \
                     #	  +  (buf[0][start+1] & 0xF)*  0.1
-                    rawtemp   =  (buf[0][start+0] & 0xF)*  0.1 \
-                        +  (buf[0][start+0] >>  4)*  1   \
-                        +  (buf[0][start+1] & 0xF)* 10
-                else:
+                rawtemp   =  (buf[0][start+0] & 0xF)*  0.1 \
+                    +  (buf[0][start+0] >>  4)*  1   \
+                    +  (buf[0][start+1] & 0xF)* 10
+            else:
                     #rawtemp   =  (buf[0][start+0] >>  4)* 10   \
                     #	  +  (buf[0][start+1] & 0xF)*  1   \
                     #	  +  (buf[0][start+1] >>  4)*  0.1
-                    rawtemp   =  (buf[0][start+0] >>  4)*  0.1 \
-                        +  (buf[0][start+1] & 0xF)*  1   \
-                        +  (buf[0][start+1] >>  4)* 10  
-                result = rawtemp - CWeatherTraits.TemperatureOffset()
+                rawtemp   =  (buf[0][start+0] >>  4)*  0.1 \
+                    +  (buf[0][start+1] & 0xF)*  1   \
+                    +  (buf[0][start+1] >>  4)* 10  
+            result = rawtemp - CWeatherTraits.TemperatureOffset()
         return result
 
     @staticmethod
