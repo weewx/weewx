@@ -1,0 +1,100 @@
+#!/usr/bin/python
+# $Id$
+#
+# Copyright 2013 Matthew Wall
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+# See http://www.gnu.org/licenses/
+
+"""Command line utility for configuring LaCrosse WS-28xx weather stations
+
+Many thanks to Eddie De Pieri, who did the first python implementation.
+"""
+
+import configobj
+import optparse
+import syslog
+
+import weewx.drivers.ws28xx
+import weewx.units
+import weeutil.weeutil
+
+description = """Configuration utility for WS-28xx weather stations."""
+
+usage = """%prog [config_file] [options] [--debug]"""
+
+epilog = """Mutating actions will request confirmation before proceeding."""
+
+def main():
+    syslog.openlog('wee_config_ws28xx', syslog.LOG_PID|syslog.LOG_CONS)
+
+    # Create a command line parser:
+    parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
+    
+    # Add the various options:
+    parser.add_option("--config", dest="cfgfn", type=str, metavar="FILE",
+                      help="configuration file")
+    parser.add_option("--info", dest="info", action="store_true",
+                      help="display weather station configuration")
+    parser.add_option("--current", dest="current", action="store_true",
+                      help="get the current weather conditions")
+    parser.add_option("--pair", dest="pair", action="store_true",
+                      help="pair the USB dongle with a station console")
+    parser.add_option("--maxtries", dest="maxtries", type=int,
+                      help="maximum number of retries, 0 indicates no max")
+    parser.add_option("--debug", dest="debug", action="store_true",
+                      help="display diagnostic information while running")
+
+    # Now we are ready to parse the command line:
+    (options, args) = parser.parse_args()
+    if options.debug is not None:
+        weewx.debug = options.debug
+
+    config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
+    print 'Using configuration file %s' % config_fn
+
+    altitude_m = weewx.drivers.ws28xx.getaltitudeM(config_dict)
+    station = weewx.drivers.ws28xx.WS28xx(altitude=altitude_m,
+                                          **config_dict['WS28xx'])
+
+    maxtries = 3 if options.maxtries is None else int(options.maxtries)
+    if options.pair:
+        pair(station, maxtries)
+    elif options.current:
+        current(station, maxtries)
+    else:
+        info(station, maxtries)
+
+def info(station, maxtries):
+    """Query the station then display the settings."""
+    station.startup()
+    print "Querying the station..."
+    station.shutdown()
+
+def pair(station, maxtries):
+    """Pair the USB transceiver with the station console."""
+    station.startup()
+    try:
+        station.check_transceiver(msg_to_console=True, maxtries=maxtries)
+        station.pair(msg_to_console=True, maxtries=maxtries)
+    except:
+        pass
+    station.shutdown()
+
+def current(station, maxtries):
+    """Get current weather observation."""
+    station.startup()
+    print "Querying the station for current weather..."
+    packet = station.get_observation()
+    print packet
+    station.shutdown()
+
+if __name__=="__main__" :
+    main()
