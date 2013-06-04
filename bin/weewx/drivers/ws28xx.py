@@ -353,8 +353,9 @@ CFG_CACHE = '/tmp/ws28xx.cfg'
 # location of the 'last status' cache file
 STATS_CACHE = '/tmp/ws28xx.tmp'
 
-# set to 0 for minimal debug info, 1 for maximum debug info
-VERBOSITY = 0
+# flags for enabling/disabling debug verbosity
+DEBUG_WRITES = 0
+DEBUG_COMM = 0
 
 def logdbg(msg):
     syslog.syslog(syslog.LOG_DEBUG, 'ws28xx: %s: %s' %
@@ -1559,8 +1560,8 @@ class CCurrentWeatherData(object):
         logdbg("_Dewpoint=       %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._Dewpoint, self._DewpointMinMax._Min._Value, self._DewpointMinMax._Min._Time, self._DewpointMinMax._Max._Value, self._DewpointMinMax._Max._Time))
         logdbg("_WindSpeed=      %7.2f                                   _Max=%7.2f(%s)" % (self._WindSpeed * 3.6, self._WindSpeedMinMax._Max._Value * 3.6, self._WindSpeedMinMax._Max._Time))
         logdbg("_Gust=           %7.2f                                   _Max=%7.2f(%s)" % (self._Gust * 3.6,      self._GustMinMax._Max._Value * 3.6, self._GustMinMax._Max._Time))
-        logdbg("_Pressure_hPa=   %7.2f" % self._PressureRelative_hPa)
-        logdbg("_Pressure_inHg=  %7.2f" % self._PressureRelative_inHg)
+        logdbg("_Pressure_hPa=   %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._PressureRelative_hPa, self._PressureRelative_hPaMinMax._Min._Value, self._PressureRelative_hPaMinMax._Min._Time, self._PressureRelative_hPaMinMax._Max._Value, self._PressureRelative_hPaMinMax._Max._Time))
+        logdbg("_Pressure_inHg=  %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._PressureRelative_inHg, self._PressureRelative_inHgMinMax._Min._Value, self._PressureRelative_inHgMinMax._Min._Time, self._PressureRelative_inHgMinMax._Max._Value, self._PressureRelative_inHgMinMax._Max._Time))
         logdbg("_Rain1H=         %7.2f                                   _Max=%7.2f(%s)" % (self._Rain1H, self._Rain1HMax._Max._Value, self._Rain1HMax._Max._Time))
         logdbg("_Rain24H=        %7.2f                                   _Max=%7.2f(%s)" % (self._Rain24H, self._Rain24HMax._Max._Value, self._Rain24HMax._Max._Time))
         logdbg("_RainLastWeek=   %7.2f                                   _Max=%7.2f(%s)" % (self._RainLastWeek, self._RainLastWeekMax._Max._Value, self._RainLastWeekMax._Max._Time))
@@ -1739,7 +1740,8 @@ class CWeatherStationConfig(object):
         config['ws28xx']['LCDContrast'] = str(self._LCDContrast)
         config['ws28xx']['LowBatFlags'] = str(self._LowBatFlags)
         config['ws28xx']['HistoryInterval'] = str(self._HistoryInterval)
-        logdbg('read: write to %s' % self.filename)
+        if DEBUG_WRITES > 0:
+            logdbg('read: write to %s' % self.filename)
         config.write()
 
         return 1;
@@ -1927,7 +1929,8 @@ class CDataStore(object):
         config['LastStat']['CurrentWeatherTime'] = str(self.LastStat.LastCurrentWeatherTime)
         config['LastStat']['HistoryDataTime'] = str(self.LastStat.LastHistoryDataTime)
         config['LastStat']['ConfigTime'] = str(self.LastStat.LastConfigTime)
-        logdbg('writeLastStat: write to %s' % filename)
+        if DEBUG_WRITES > 0:
+            logdbg('writeLastStat: write to %s' % filename)
         config.write()
 
     def writeTransceiverSettings(self):
@@ -1937,7 +1940,8 @@ class CDataStore(object):
         config['TransceiverSettings']['SerialNumber'] = self.TransceiverSettings.SerialNumber
         config['TransceiverSettings']['DeviceID'] = self.TransceiverSettings.DeviceID
         config['TransceiverSettings']['FrequencyStandard'] = self.TransceiverSettings.FrequencyStandard
-        logdbg('writeTransceiverSettings: write to %s' % self.filename)
+        if DEBUG_WRITES > 0:
+            logdbg('writeTransceiverSettings: write to %s' % self.filename)
         config.write()        
 
     def getFrequencyStandard(self):
@@ -2387,7 +2391,7 @@ class sHID(object):
             if platform.system() is 'Windows':
                 loginf('set USB device configuration to %d' % configuration)
                 self.devh.setConfiguration(configuration)
-            loginf('claiming USB interface %d' % interface)
+            logdbg('claiming USB interface %d' % interface)
             self.devh.claimInterface(interface)
             self.devh.setAltInterface(interface)
         except usb.USBError, e:
@@ -2418,7 +2422,7 @@ class sHID(object):
     def SetTX(self):
         buf = [0]*0x15
         buf[0] = 0xd1;
-        if VERBOSITY > 0:
+        if DEBUG_COMM > 0:
             self.dump('SetTX', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
@@ -2435,7 +2439,7 @@ class sHID(object):
     def SetRX(self):
         buf = [0]*0x15
         buf[0] = 0xD0;
-        if VERBOSITY > 0:
+        if DEBUG_COMM > 0:
             self.dump('SetRX', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
@@ -2470,7 +2474,7 @@ class sHID(object):
                 StateBuffer[0][0]=buf[1]
                 StateBuffer[0][1]=buf[2]
                 result =1
-        if VERBOSITY > 0:
+        if DEBUG_COMM > 0:
             self.dump('GetState', buf)
         return result
 
@@ -2482,7 +2486,8 @@ class sHID(object):
                 buf[1] = 0x0a
                 buf[2] = (addr >>8)  & 0xFF;
                 buf[3] = (addr >>0)  & 0xFF;
-                self.dump('ReadConfigFlash>', buf)
+                if DEBUG_COMM > 0:
+                    self.dump('ReadConfigFlash>', buf)
                 try:
                     # FIXME: check return value
                     self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
@@ -2527,7 +2532,8 @@ class sHID(object):
                         new_data[i] = buf[i+4];
                     numBytes -= 16;
                     addr += 16;
-                self.dump('ReadConfigFlash<', buf)
+                if DEBUG_COMM > 0:
+                    self.dump('ReadConfigFlash<', buf)
 
             result = 1;
         else:
@@ -2540,7 +2546,7 @@ class sHID(object):
         buf = [0]*0x15
         buf[0] = 0xd7;
         buf[1] = state;
-        if VERBOSITY > 0:
+        if DEBUG_COMM > 0:
             self.dump('SetState', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
@@ -2576,7 +2582,7 @@ class sHID(object):
         buf[2] = numBytes;
         for i in xrange(0, numBytes):
             buf[i+3] = data[i]
-        if VERBOSITY > 0:
+        if DEBUG_COMM > 0:
             self.dump('SetFrame', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
@@ -2604,7 +2610,8 @@ class sHID(object):
             new_numBytes=(buf[1] << 8 | buf[2])& 0x1ff;
             for i in xrange(0, new_numBytes):
                 new_data[i] = buf[i+3];
-#            self.dump('GetFrame', buf)
+            if DEBUG_COMM > 0:
+                self.dump('GetFrame', buf)
             data[0] = new_data
             numBytes[0] = new_numBytes
             result = 1
@@ -2635,7 +2642,8 @@ class sHID(object):
         buf = [0]*0x0f #*0x15
         buf[0] = 0xd9;
         buf[1] = command;
-        self.dump('Execute', buf)
+        if DEBUG_COMM > 0:
+            self.dump('Execute', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
                                  request=0x0000009,
@@ -2652,7 +2660,8 @@ class sHID(object):
         buf = [0]*0x15
         buf[0] = 0xd8;
         buf[1] = pattern
-        self.dump('SetPreamblePattern', buf)
+        if DEBUG_COMM > 0:
+            self.dump('SetPreamblePattern', buf)
         try:
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
                                  request=0x0000009,
@@ -2669,7 +2678,7 @@ class sHID(object):
         strbuf = ""
         for i in buf:
             strbuf += str("%.2x" % i)
-        if strbuf != 'de1500000000' or VERBOSITY > 0:
+        if strbuf != 'de1500000000' or DEBUG_COMM > 1:
             logdbg("%s: %s" % (cmd, strbuf))
 
 
@@ -2745,7 +2754,7 @@ class CCommunicationService(object):
         RXMISC           = 0x7D
 
     def __init__(self, cfgfn, interval=3):
-        loginf('initialize communication service')
+        logdbg('CCommunicationService.init')
         now = datetime.now()
 
         self.filename = cfgfn
@@ -3380,6 +3389,7 @@ class CCommunicationService(object):
 
     def calculateFrequency(self, freq):
         logdbg('calculateFrequency')
+        loginf('base frequency: %d' % freq)
         freqVal =  long(freq / 16000000.0 * 16777216.0)
         corVec = [None]
         if self.shid.ReadConfigFlash(0x1F5, 4, corVec):
@@ -3389,11 +3399,11 @@ class CCommunicationService(object):
             corVal |= corVec[0][2]
             corVal <<= 8
             corVal |= corVec[0][3]
-            loginf('frequency correction: %x' % corVal) #0x184e8
+            loginf('frequency correction: %d (%x)' % (corVal,corVal)) #0x184e8
             freqVal += corVal
         if not (freqVal % 2):
             freqVal += 1
-        loginf('frequency: %x' % freqVal)
+        loginf('adjusted frequency: %d (%x)' % (freqVal,freqVal))
         self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3] = (freqVal >>24) & 0xFF
         self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2] = (freqVal >>16) & 0xFF
         self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1] = (freqVal >>8)  & 0xFF
@@ -3483,7 +3493,7 @@ class CCommunicationService(object):
         return 1
 
     def initTransceiver(self):
-        loginf('initializing transceiver')
+        logdbg('initTransceiver')
 
         self.configureRegisterNames()
         self.calculateFrequency(self.DataStore.TransceiverSettings.Frequency)
@@ -3493,6 +3503,7 @@ class CCommunicationService(object):
         if self.shid.ReadConfigFlash(0x1F9, 7, buf):
             ID  = buf[0][5] << 8
             ID += buf[0][6]
+            loginf('transceiver ID: %d (%x)' % (ID,ID))
             self.DataStore.setDeviceID(ID)
 
             SN  = str("%02d"%(buf[0][0]))
@@ -3502,6 +3513,7 @@ class CCommunicationService(object):
             SN += str("%02d"%(buf[0][4]))
             SN += str("%02d"%(buf[0][5]))
             SN += str("%02d"%(buf[0][6]))
+            loginf('transceiver serial: %s' % SN)
             self.DataStore.setTransceiverSerNo(SN)
             
             for r in self.AX5051RegisterNames_map:
@@ -3566,7 +3578,7 @@ class CCommunicationService(object):
     def doRFCommunication(self):
         DeviceWaitEndTime = datetime.now()
         RequestType = self.DataStore.getRequestType()
-        if RequestType != ERequestType.rtINVALID or VERBOSITY > 0:
+        if RequestType != ERequestType.rtINVALID or DEBUG_COMM > 0:
             logdbg('RequestType=%s' % RequestType)
 
         if RequestType == ERequestType.rtFirstConfig:
