@@ -310,7 +310,20 @@ Examples:
  0  0  0  0  0  0
  1  2  3  4  5  6
 
-de 14 00 00 00 00 (between SetPr 3  4  5 
+de 14 00 00 00 00 (between SetPreamblePattern and first de16 message)
+de 15 00 00 00 00 Idle message
+de 16 00 00 00 00 Normal message
+de 0b 00 00 00 00 (detected via USB sniffer)
+
+01:    messageID
+02:    stateID
+03-06: 00
+
+12. Writereg message
+
+Example:
+ 0  0  0  0  0
+ 1  2  3  4  5 
 
 01:    messageID
 02-05: ??
