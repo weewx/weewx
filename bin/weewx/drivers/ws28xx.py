@@ -122,7 +122,7 @@ The first byte of a message determines the message type.
 
 ID   Type               Length
 
-01   (to be done)       0x0f  (15)
+01   ?                  0x0f  (15)
 d0   SetRX              0x15  (21)
 d1   SetTX              0x15  (21)
 d5   SetFrame           0x111 (273)
@@ -146,8 +146,6 @@ Examples:
 
 01:    messageID
 02-15: ??
-
-To be done
 
 2. SetRX message
 
@@ -205,12 +203,12 @@ Send Time:
 
 Action:
 00: rtGetHistory       
-01: rtSetTime (ask WS to send Request Time message)
+01: rtSetTime (ask console to send Request Time message)
 ??: rtGetConfig
 ??: rtSetConfig
 ??: rtFirstConfig 
 05: rtGetCurrent
-c0: Send Time to WS
+c0: Send Time to WS console
 
 5. GetFrame message
 
@@ -270,8 +268,6 @@ d8 aa 00 00 00 00 00 00 00 00 00 00 00 00 00
 02:    ??
 03-15: 00
 
-To be done
-
 8. Execute message
 
 Example:
@@ -283,8 +279,6 @@ d9 05 00 00 00 00 00 00 00 00 00 00 00 00 00
 01:    messageID
 02:    ??
 03-15: 00
-
-To be done
 
 9. ReadConfigFlash< message
 
@@ -298,8 +292,6 @@ dc 0a 01 f9 01 02 0a 0c 0c 01 2e ff ff ff ff
 01:    messageID
 02-15: ??
 
-To be done
-
 10. ReadConfigFlash> message
 
 Examples:
@@ -311,7 +303,6 @@ dd 0a 01 f9 cc cc cc cc cc cc cc cc cc cc cc
 
 01:    messageID
 02-15: ??
-To be done
 
 11. GetState message
 
@@ -323,11 +314,10 @@ de 14 00 00 00 00 (between SetPr 3  4  5
 
 01:    messageID
 02-05: ??
-
-To be done
 """
 
 # TODO: how often is currdat.lst modified with/without hi-speed mode?
+# TODO: add conditionals around DataStore and LastStat
 
 from datetime import datetime
 from datetime import timedelta
@@ -345,6 +335,8 @@ import usb
 import weeutil.weeutil
 import weewx.abstractstation
 import weewx.units
+
+DRIVER_VERSION = '0.2'
 
 # name of the pseudo configuration filename
 # FIXME: consolidate with stats cache, since config comes from weewx
@@ -494,7 +486,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         self._last_rain = None
         self._last_obs_ts = None
 
-        loginf('driver version is %s' % '$Revision$')
+        loginf('driver version is %s' % DRIVER_VERSION)
         loginf('frequency is %s' % self.frequency)
         loginf('altitude is %s meters' % str(self.altitude))
         loginf('pressure offset is %s' % str(self.pressure_offset))
@@ -671,6 +663,10 @@ class WS28xx(weewx.abstractstation.AbstractStation):
             adjp += self.pressure_offset
         packet['barometer'] = sp2bp(adjp, self.altitude, packet['outTemp'])
         packet['altimeter'] = sp2ap(adjp, self.altitude)
+
+        # track the signal strength and battery levels
+        packet['signal'] = self._service.DataStore.LastStat.LastLinkQuality
+        packet['battery'] = self._service.DataStore.LastStat.LastBatteryStatus
 
         return packet
 
