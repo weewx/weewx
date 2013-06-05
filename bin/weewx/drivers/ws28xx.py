@@ -331,6 +331,7 @@ Example:
 
 # TODO: how often is currdat.lst modified with/without hi-speed mode?
 # TODO: add conditionals around DataStore and LastStat
+# TODO: display time of rain reset
 
 from datetime import datetime
 from datetime import timedelta
@@ -2039,6 +2040,11 @@ class CDataStore(object):
         return self.LastStat.LastSeen
 
     def setLastBatteryStatus(self, status):
+        # console, thermo-hygro sensor, rain sensor, wind sensor (solar)
+        # 0 - ?
+        # 1 - ?
+        # 2 - ?
+        # 3 - display battery
         logdbg('setLastBatteryStatus: 3=%d 0=%d 1=%d 2=%d' %
                (BitHandling.testBit(status,3),
                 BitHandling.testBit(status,0),
@@ -3474,7 +3480,7 @@ class CCommunicationService(object):
                 self.RepeatCount = 0
                 self.DataStore.setRequestState(ERequestState.rsWaitConfig)
             else:
-                logcrt('GenerateResponse: device not paired and wrong request type (%s)' % requestType)
+                logcrt('GenerateResponse: message from console contains unknown device ID (id=%x response=%x request=%x frame=%s)' % (bufferID, responseType, requestType, frame2str(Length[0], Buffer[0])))
                 newLength[0] = 0
         else: #Length[0] == 0
             newBuffer[0]=[0]*0x0c
