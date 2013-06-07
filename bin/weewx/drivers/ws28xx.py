@@ -83,6 +83,8 @@ According to the C86234 Operations Manual (Revision 7):
  - Rain data are sent to the temperature/humidity sensor every 19 seconds.
  - Air pressure is measured every 15 seconds.
 
+Each tip of the rain bucket is 0.26 mm of rain.
+
 The following information was obtained by logging messages from the ws28xx.py
 driver in weewx and by capturing USB messages between Heavy Weather Pro for
 ws2800 and the TFA Primus Weather Station via windows program USB sniffer
@@ -437,7 +439,7 @@ def getaltitudeM(config_dict):
 
 # FIXME: this goes in weeutil.weeutil
 # let QC handle rainfall that is too big
-def calculate_rain(newtotal, oldtotal, maxsane=2):
+def calculate_rain(newtotal, oldtotal):
     """Calculate the rain differential given two cumulative measurements."""
     if newtotal is not None and oldtotal is not None:
         if newtotal >= oldtotal:
@@ -1242,7 +1244,7 @@ class USBHardware(object):
                 rawresult = (buf[0][start+2] >>  4)* 100    \
                     + (buf[0][start+2] & 0xF)*  10    \
                     + (buf[0][start+1] >>  4)*   1    \
-                    + (buf[0][start+0] & 0xF)*   0.1  \
+                    + (buf[0][start+1] & 0xF)*   0.1  \
                     + (buf[0][start+0] >>  4)*   0.01
             result = rawresult
         return result
