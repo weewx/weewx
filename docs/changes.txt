@@ -17,6 +17,9 @@ Plots shorter than 24 hours are now possible. Thanks to user Andrew Tridgell.
 If one of the sections SummaryByMonth, SummaryByYear, or ToDate is missing,
 the report engine no longer crashes.
 
+If you live at a high latitude and the sun never sets, the Almanac now
+does the right thing.
+
 
 2.3.1 04/15/13
 

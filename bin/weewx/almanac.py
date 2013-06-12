@@ -104,6 +104,14 @@ class Almanac():
     >>> print "Moon azimuth, altitude = (%.2f, %.2f)" % (almanac.moon.az, almanac.moon.alt)
     Moon azimuth, altitude = (133.55, 47.89)
     
+    Try a time and location where the sun is always up
+    >>> t = 1371044003
+    >>> print timestamp_to_string(t)
+    2013-06-12 06:33:23 PDT (1371044003)
+    >>> almanac = Almanac(t, 64.0, 0.0)
+    >>> print almanac(horizon=-6).sun(use_center=1).rise
+       N/A
+
     Try the pyephem "Naval Observatory" example.
     >>> t = 1252252800
     >>> print timestamp_to_gmtime(t)
@@ -339,7 +347,10 @@ class BodyWrapper(object):
             # These functions have the unfortunate side effect of changing the state of the body
             # being examined. So, create a temporary body and then throw it away
             temp_body = self.body_factory()
-            time_djd = getattr(self.observer, attr)(temp_body, use_center=self.use_center)
+            try:
+                time_djd = getattr(self.observer, attr)(temp_body, use_center=self.use_center)
+            except ephem.AlwaysUpError:
+                time_djd = None
             return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
         elif attr in fn_map:
             # These attribute names have to be mapped to a different function name. Like the
@@ -349,9 +360,14 @@ class BodyWrapper(object):
             temp_body = self.body_factory(self.observer)
             # Look up the function to be called for this attribute (eg, call 'next_rising' for 'rise')
             fn = fn_map[attr]
-            # Call the function, with a second argument giving the start-of-day
-            time_djd = getattr(self.observer, fn)(temp_body, self.sod_djd)
+            # Call the function, with a second argument giving the start-of-day. Be prepared
+            # to catch an exception if the body is always up.
+            try:
+                time_djd = getattr(self.observer, fn)(temp_body, self.sod_djd)
+            except ephem.AlwaysUpError:
+                time_djd = None
             return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
+            
         else:
             # Just return the result unchanged.
             return getattr(self.body, attr)
