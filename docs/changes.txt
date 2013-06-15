@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-X.Y.0 05/XX/13
+X.Y.0 06/XX/13
 
 Added support for the temperature-only sensor THWR800. Thanks to
 user fstuyk!
@@ -19,6 +19,9 @@ the report engine no longer crashes.
 
 If you live at a high latitude and the sun never sets, the Almanac now
 does the right thing.
+
+Fixed bug that causes the first day in the stats database not to be included
+in calculations of all-time stats.
 
 
 2.3.1 04/15/13

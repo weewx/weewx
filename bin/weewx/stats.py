@@ -345,9 +345,12 @@ class StatsDb(object):
             target_val = weewx.units.convertStd(val, self.std_unit_system)[0]
         else:
             target_val = None
+            
+        # Make sure the start time is the start-of-day, so the first day is not missed:
+        first_day = weeutil.weeutil.archiveDaySpan(timespan.start)
         
         # This dictionary is used for interpolating the SQL statement.
-        interDict = {'start'         : timespan.start,
+        interDict = {'start'         : first_day.start,
                      'stop'          : timespan.stop,
                      'stats_type'    : stats_type,
                      'aggregateType' : aggregateType,
