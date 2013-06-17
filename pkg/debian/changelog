@@ -1,3 +1,6 @@
+weewx (2.3.2-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall <mwall@users.sourceforge.net>  Sun, 16 Jun 2013 22:17:57 -0400
 weewx (2.3.1-3) unstable; urgency=low
   * include weewx.conf.dist in conffiles
  -- Matthew Wall <mwall@users.sourceforge.net>  Tue, 16 Apr 2013 10:42:35 -0400
