@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+X.X.X 0x/0x/13
+
+The option week_start now works.
+
+
 2.3.2 06/16/13
 
 Added support for the temperature-only sensor THWR800. Thanks to
