@@ -130,7 +130,7 @@ class UsbDevice(object):
         if not self.dev:
             return False
 
-        # Open the device and get a handle.
+	    # Open the device and get a handle.
         try:
             self.handle = self.dev.open()
         except usb.USBError, exception:
@@ -260,13 +260,14 @@ class Packet(object):
     def __init__(self, wmr200):
         """Initialize base elements of the packet parser."""
         self._pkt_data = []
+        # Record to pass to weewx engine.
+        self._record = None
         # Determines if packet may be sent to weewx engine or not
         self._yieldable = True
         # See note above
         self._bogus_packet = False
         # Add the command byte as the first field
         self.appendData(self.pkt_cmd)
-
         # Keep reference to the wmr200 for any special considerations
         # or options.
         self._wmr200 = wmr200
@@ -348,8 +349,27 @@ class Packet(object):
         return self._sizeActual() == self._sizeExpected()
 
     def packetProcess(self):
-        """Returns a records field to be processed by the weewx engine."""
+        """Process the raw data and creates a record field.
+        
+        This is a parent class method and all derivative children
+        must define this method."""
         dprint('Processing %s' % self.packetName)
+        # Promote this field to an empty dictionary.
+        self._record = {}
+
+    def _packetBeenProcessed(self):
+        """Indication if packet has been processed.
+        
+        Returns: True if packet has been processed."""
+        if self._record is None:
+            return False
+        return True
+
+    def packetRecord(self):
+        """Returns the processed record to the weewx engine."""
+        if not self._packetBeenProcessed():
+            print 'WARN packetRecord() Packet has not been proccessed.'
+        return self._record
 
     def packetYieldable(self):
         """Not all packets are accepted by the weewx engine.
@@ -401,8 +421,11 @@ class Packet(object):
             syslog.syslog(syslog.LOG_ERR, 'wmr200: %s' % str_val)
             raise WMR200CheckSumError(str_val)
 
-    def timeStampEpoch(self):
-        """The timestamp of the packet in seconds since epoch."""
+    def _timeStampEpoch(self):
+        """The timestamp of the packet in seconds since epoch.
+        
+        Must only be called by packets that have timestamps in the
+        protocal packet."""
         try:
             minute = self._pkt_data[2]
             hour = self._pkt_data[3]
@@ -410,18 +433,21 @@ class Packet(object):
             month = self._pkt_data[5]
             year = 2000 + self._pkt_data[6]
 
-            time_epoch = \
+            self._wmr200.last_time_epoch = \
                     time.mktime((year, month, day, hour, minute, 0, -1, -1, -1))
 
             # Option to use PC time and not the console time.
             # Done here so that any error conditions associated with the
             # time fields will cause the same error as using pc time would.
+            # Drawback is making sure the record interval boundaries that
+            # weewx keeps # per loop packet are satisfied.
             if self._wmr200.usePcTime:
-                return time.time()
-            return time_epoch
+                self._wmr200.last_time_epoch = time.time()
+
+            return self._wmr200.last_time_epoch
 
         except IndexError:
-            log_msg = 'Packet length too short to get timestamp'
+            log_msg = 'Packet length too short to get timestamp len:%d' % len(self._pkt_data)
             print log_msg
             syslog.syslog(syslog.LOG_ERR, ('wmr200: %s') % log_msg)
             raise WMR200ProtocolError(log_msg)
@@ -432,18 +458,26 @@ class Packet(object):
             raise WMR200ProtocolError(log_msg)
 
     def printRaw(self, override = False):
-        """Debug method to print the raw packet."""
-        out = ' Packet: '
+        """Debug method to print the raw packet.
+        
+        May be called anytime during packet accumulation."""
+        out = ' Packet Raw: '
         for byte in self._pkt_data:
             out += '%02x '% byte
         dprint(out, override)
 
     def printCooked(self, override = False):
-        """Debug method to print the processed packet."""
-        out = ' Packet: '
-        out += '%s ' % self.packetName
-        out += '%s ' % time.asctime(time.localtime(self.timeStampEpoch()))
-        out += 'len:%d' % self._sizeActual()
+        """Debug method method to print the processed packet.
+        
+        Must be called after the Process() method."""
+        if self._packetBeenProcessed():
+            out = ' Packet: '
+            out += '%s ' % self.packetName
+            out += '%s ' % time.asctime(time.localtime(self._timeStampEpoch()))
+            out += 'len:%d' % self._sizeActual()
+            out += str(self._record)
+        else:
+            out = 'WARN: printCooked() Packet has not been processed'
         dprint(out, override)
 
 
@@ -472,7 +506,10 @@ class PacketHistoryReady(Packet):
         return True
 
     def printCooked(self, override = False):
-        """Print the processed packet"""
+        """Print the processed packet.
+        
+        Not much processing is done in this packet so not much
+        cooked data to print."""
         out = ' Packet: '
         out += '%s ' % self.packetName
         dprint(out, override)
@@ -493,7 +530,10 @@ class PacketHistoryData(Packet):
         self._yieldable = False
 
     def printCooked(self, override = False):
-        """Print the processed packet"""
+        """Print the processed packet.
+        
+        Not much processing is done in this packet so not much
+        cooked data to print."""
         out = ' Packet: '
         out += '%s ' % self.packetName
         dprint(out, override)
@@ -564,20 +604,19 @@ class PacketWind(Packet):
 
         # The console returns wind speeds in m/s. Our metric system requires 
         # kph, so the result needs to be multiplied by 3.6.
-        _record = {'windSpeed'         : avgSpeed * 3.60,
-                   'windDir'           : dirDeg,
-                   'dateTime'          : self.timeStampEpoch(),
-                   'usUnits'           : weewx.METRIC,
-                   'windChill'         : windchill,
-                  }
+        self._record = {'windSpeed'         : avgSpeed * 3.60,
+                        'windDir'           : dirDeg,
+                        'dateTime'          : self._timeStampEpoch(),
+                        'usUnits'           : weewx.METRIC,
+                        'windChill'         : windchill,
+                       }
         # Sometimes the station emits a wind gust that is less than the
         # average wind.  Ignore it if this is the case.
-        if gustSpeed >= _record['windSpeed']:
-            _record['windGust'] = gustSpeed * 3.60
+        if gustSpeed >= self._record['windSpeed']:
+            self._record['windGust'] = gustSpeed * 3.60
 
         # Save the wind record to be used for windchill and heat index
-        self._wmr200.last_wind_record = _record
-        return _record
+        self._wmr200.last_wind_record = self._record
 
 
 class PacketRain(Packet):
@@ -606,14 +645,12 @@ class PacketRain(Packet):
         # 0.04 inches. Per Ejeklint's notes have you divide the packet values by
         # 10, but this would result in an 0.4 inch bucket --- too big. So, I'm
         # dividing by 100.
-        _record = {'rainRate'          : rain_rate,
-                   'hourRain'          : rain_hour,
-                   'dayRain'           : rain_day,
-                   'totalRain'         : rain_total,
-                   'dateTime'          : self.timeStampEpoch(),
-                   'usUnits'           : weewx.US}
-
-        return _record
+        self._record = {'rainRate'          : rain_rate,
+                        'hourRain'          : rain_hour,
+                        'dayRain'           : rain_day,
+                        'totalRain'         : rain_total,
+                        'dateTime'          : self._timeStampEpoch(),
+                        'usUnits'           : weewx.US}
 
 
 class PacketUvi(Packet):
@@ -628,10 +665,9 @@ class PacketUvi(Packet):
         """Returns a packet that can be processed by the weewx engine."""
         super(PacketUvi, self).packetProcess()
 
-        _record = {'UV'              : self._pkt_data[7] & 0xf,
-                   'dateTime'        : self.timeStampEpoch(),
-                   'usUnits'         : weewx.METRIC}
-        return _record
+        self._record = {'UV'              : self._pkt_data[7] & 0xf,
+                        'dateTime'        : self._timeStampEpoch(),
+                        'usUnits'         : weewx.METRIC}
 
 
 class PacketPressure(Packet):
@@ -665,12 +701,11 @@ class PacketPressure(Packet):
             dprint('Pressure unknown nibble: %d' % (unknownNibble))
         dprint('Altitude corrected Pressure: %d hPa' % (altPressure))
 
-        _record = {'barometer'   : pressure,
-                   'pressure'    : pressure,
-                   'altimeter'   : forecast,
-                   'dateTime'    : self.timeStampEpoch(),
-                   'usUnits'     : weewx.METRIC}
-        return _record
+        self._record = {'barometer'   : pressure,
+                        'pressure'    : pressure,
+                        'altimeter'   : forecast,
+                        'dateTime'    : self._timeStampEpoch(),
+                        'usUnits'     : weewx.METRIC}
 
 
 class PacketTemperature(Packet):
@@ -685,8 +720,8 @@ class PacketTemperature(Packet):
         """Returns a packet that can be processed by the weewx engine."""
         super(PacketTemperature, self).packetProcess()
 
-        _record = {'dateTime'    : self.timeStampEpoch(),
-                   'usUnits'     : weewx.METRIC}
+        self._record = {'dateTime'    : self._timeStampEpoch(),
+                        'usUnits'     : weewx.METRIC}
 
         # The historic data can contain data from multiple sensors. I'm not
         # sure if the 0xD7 frames can do too. I've never seen a frame with
@@ -734,19 +769,18 @@ class PacketTemperature(Packet):
             dprint('  Heat index: %d' % (heat_index))
 
         if sensor_id == 0:
-            _record['inTemp']      = temp
-            _record['inHumidity']  = humidity
+            self._record['inTemp']      = temp
+            self._record['inHumidity']  = humidity
         elif sensor_id == 1:
-            _record['outTemp']     = temp
-            _record['dewpoint']    = weewx.wxformulas.dewpointC(temp, humidity)
-            _record['outHumidity'] = humidity
-            _record['heatindex']   = weewx.wxformulas.heatindexC(temp, humidity)
+            self._record['outTemp']     = temp
+            self._record['dewpoint']    = weewx.wxformulas.dewpointC(temp, humidity)
+            self._record['outHumidity'] = humidity
+            self._record['heatindex']   = weewx.wxformulas.heatindexC(temp, humidity)
         elif sensor_id >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
-            _record['extraTemp%d'  % sensor_id] = temp
-            _record['extraHumid%d' % sensor_id] = humidity
-        return _record
+            self._record['extraTemp%d'  % sensor_id] = temp
+            self._record['extraHumid%d' % sensor_id] = humidity
 
 
 class PacketStatus(Packet):
@@ -756,21 +790,27 @@ class PacketStatus(Packet):
     pkt_len = 0x08
     def __init__(self, wmr200):
         super(PacketStatus, self).__init__(wmr200)
-        self._yieldable = False
-
-    def printCooked(self, override = False):
-        """Print the processed packet."""
-        out = ' Packet: '
-        out += '%s ' % self.packetName
-        dprint(out, override)
 
     def packetProcess(self):
         """Returns a packet that can be processed by the weewx engine.
         
-        Currently this console status is not passed to the weewx engine.
-        TODO(cmanton) Add way to push bettery status to information to the
-        user. """
+        Not all console status aligns with the weewx API but we try
+        to make it fit."""
         super(PacketStatus, self).packetProcess()
+
+        # Setup defaults as good.  This packet does not have
+        # a timestamp so we put in the PC timestamp.
+        # This may be a problem if using console timestamps.
+        self._record = {
+            'dateTime'          : self._wmr200.last_time_epoch,
+            'usUnits'           : weewx.METRIC,
+            'inTempBatteryStatus' : 1.0,
+            'OutTempBatteryStatus' : 1.0,
+            'rainBatteryStatus' : 1.0,
+            'windBatteryStatus' : 1.0,
+            'txBatteryStatus' : 1.0,
+            'rxCheckPercent' : 1.0
+        }
 
         if self._pkt_data[2] & 0x2:
             dprint('Sensor 1 fault (temp/hum outdoor)')
@@ -786,15 +826,32 @@ class PacketStatus(Packet):
 
         if self._pkt_data[4] & 0x02:
             dprint('Sensor 1: Battery low')
+            self._record['outTempBatteryStatus'] = 0.0
 
         if self._pkt_data[4] & 0x01:
             dprint('Wind sensor: Battery low')
+            self._record['windBatteryStatus'] = 0.0
 
         if self._pkt_data[5] & 0x20:
             dprint('UV sensor: Battery low')
 
         if self._pkt_data[5] & 0x10:
             dprint('Rain sensor: Battery low')
+            self._record['rainBatteryStatus'] = 0.0
+
+        # Output packet to try to understand other fields.
+        self.printRaw(True)
+
+    def printCooked(self, override = False):
+        """Print the cooked packet."""
+        if self._packetBeenProcessed():
+            out = ' Packet: '
+            out += '%s ' % self.packetName
+            out += 'len:%d' % self._sizeActual()
+            out += str(self._record)
+        else:
+            out = 'WARN: printCooked() Packet has not been processed'
+        dprint(out, override)
 
 
 class PacketEraseAcknowledgement(Packet):
@@ -823,7 +880,9 @@ class PacketEraseAcknowledgement(Packet):
         return True
 
     def printCooked(self, override = False):
-        """Print the processed packet"""
+        """Print the processed packet.
+        
+        This packet consists of a single byte and thus not much to print."""
         out = ' Packet: '
         out += '%s ' % self.packetName
         dprint(out, override)
@@ -909,7 +968,7 @@ class RequestLiveData(threading.Thread):
                 # Data is reeady to read on socket.
                 buf = self.sock_rd.recv(4096)
                 syslog.syslog(syslog.LOG_INFO, ('wmr200: Watchdog'
-                                                ' recieved %s') % buf)
+                                                ' received %s') % buf)
                 break
 
         syslog.syslog(syslog.LOG_INFO, ('wmr200: Watchdog thread exiting'))
@@ -1063,6 +1122,8 @@ class WMR200(weewx.abstractstation.AbstractStation):
 
         # Boolean to use pc timestamps or weather console timestamps.
         self._use_pc_time = int(stn_dict.get('use_pc_time', '0'), 0) == 1
+        syslog.syslog(syslog.LOG_INFO, ('wmr200: Using PC Time:'
+                                        '%d') % self._use_pc_time);
 
         # Buffer of bytes read from weather console device.
         self._buf = []
@@ -1181,7 +1242,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
     def _writeD0(self):
         """Write a command across the USB bus.
         
-        Write a single byte 0xD0 and recieve a single byte back
+        Write a single byte 0xD0 and receive a single byte back
         acknowledging the command, 0xD1
         """
         buf = [0x01, 0xd0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
@@ -1198,7 +1259,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
     def _writeDB(self):
         """Write a command across the USB bus.
 
-        Write a single byte 0xDB and recieve a single byte back
+        Write a single byte 0xDB and receive a single byte back
         acknowledging the command, 0xDB
         """
         buf = [0x01, 0xdb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
@@ -1286,7 +1347,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
                     self.pkt.printRaw(True)
                 else:
                     self.pkt.printRaw()
-                    self.pkt.printCooked()
                     # The packets are fixed lengths and flag if they
                     # are incorrect.
                     if self.pkt.packetVerifyLength():
@@ -1295,7 +1355,9 @@ class WMR200(weewx.abstractstation.AbstractStation):
                         if self.pkt.packetYieldable():
                             # Only send commands weewx engine will handle.
                             self._stat_pkts_sent += 1
-                            yield self.pkt.packetProcess()
+                            self.pkt.packetProcess()
+                            self.pkt.printCooked(override=True)
+                            yield self.pkt.packetRecord()
 
                 # Reset this packet as its complete or bogus.
                 self.pkt = None
