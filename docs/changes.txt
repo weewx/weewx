@@ -5,6 +5,10 @@ X.X.X 0x/0x/13
 
 The option week_start now works.
 
+Updated WMR200 driver from Chris Manton.
+
+Fixed bug that prevented queries from being run against a MySQL database.
+
 
 2.3.2 06/16/13
 
