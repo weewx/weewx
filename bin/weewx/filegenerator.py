@@ -323,7 +323,8 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
                                         converter = self.converter,
                                         rain_year_start = self.station.rain_year_start,
                                         heatbase = heatbase_t,
-                                        coolbase = coolbase_t)
+                                        coolbase = coolbase_t,
+                                        week_start = self.station.week_start)
         
         # IF the user has supplied an '[Extras]' section in the skin dictionary, include
         # it in the search list. Otherwise, just include an empty dictionary.

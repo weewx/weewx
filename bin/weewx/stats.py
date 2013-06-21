@@ -740,7 +740,8 @@ class TaggedStats(object):
                              self.formatter, self.converter, **self.option_dict)
     @property
     def week(self):
-        return TimeSpanStats(weeutil.weeutil.archiveWeekSpan(self.endtime_ts), self.db, 'week', 
+        week_start = self.option_dict.get('week_start', 6)
+        return TimeSpanStats(weeutil.weeutil.archiveWeekSpan(self.endtime_ts, week_start), self.db, 'week', 
                              self.formatter, self.converter, **self.option_dict)
     @property
     def month(self):

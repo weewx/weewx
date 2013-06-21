@@ -164,7 +164,10 @@ class Cursor(object):
         mysql_string = sql_string.replace('?','%s')
             
         try:
-            self.cursor.execute(mysql_string, sql_tuple)
+            # Convert sql_tuple to a plain old tuple, just in case it actually
+            # derives from tuple, but overrides the string conversion (as is the
+            # case with a TimeSpan object):
+            self.cursor.execute(mysql_string, tuple(sql_tuple))
         except (_mysql_exceptions.OperationalError, _mysql_exceptions.ProgrammingError), e:
             raise weedb.OperationalError(e)
         return self
