@@ -1,3 +1,7 @@
+weewx (2.3.3-1) unstable; urgency=low
+  * new upstream release
+  * respect files in user directory
+ -- Matthew Wall <mwall@users.sourceforge.net>  Sat, 22 Jun 2013 08:06:43 -0400
 weewx (2.3.2-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall <mwall@users.sourceforge.net>  Sun, 16 Jun 2013 22:17:57 -0400
