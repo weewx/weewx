@@ -34,3 +34,5 @@
 /etc/weewx/skins/Standard/year.html.tmpl
 /etc/weewx/weewx.conf
 /etc/weewx/weewx.conf.dist
+/usr/share/weewx/user/extensions.py
+/usr/share/weewx/user/schemas.py
