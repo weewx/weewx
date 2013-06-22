@@ -80,7 +80,7 @@ $(SRCPKG)\n\
 --------------------\n\
 weewx change history\n\
 --------------------\n"
-readme:
+readme: docs/changes.txt
 	mkdir -p $(DSTDIR)
 	rm -f $(DSTDIR)/README.txt
 	echo $(README_HEADER) > $(DSTDIR)/README.txt

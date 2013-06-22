@@ -146,5 +146,7 @@ rm -rf %{buildroot}
 %{_bindir}/wee_config_vantage
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
+%config(noreplace) %{_bindir}/user/extensions.py
+%config(noreplace) %{_bindir}/user/schema.py
 
 %changelog
