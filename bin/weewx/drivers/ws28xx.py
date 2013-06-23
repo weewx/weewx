@@ -367,19 +367,19 @@ DEBUG_COMM = 0
 
 def logdbg(msg):
     syslog.syslog(syslog.LOG_DEBUG, 'ws28xx: %s: %s' %
-                  (threading.current_thread().name, msg))
+                  (threading.currentThread().getName(), msg))
 
 def loginf(msg):
     syslog.syslog(syslog.LOG_INFO, 'ws28xx: %s: %s' %
-                  (threading.current_thread().name, msg))
+                  (threading.currentThread().getName(), msg))
 
 def logcrt(msg):
     syslog.syslog(syslog.LOG_CRIT, 'ws28xx: %s: %s' %
-                  (threading.current_thread().name, msg))
+                  (threading.currentThread().getName(), msg))
 
 def logerr(msg):
     syslog.syslog(syslog.LOG_ERR, 'ws28xx: %s: %s' %
-                  (threading.current_thread().name, msg))
+                  (threading.currentThread().getName(), msg))
 
 # noaa definitions for station pressure, altimeter setting, and sea level
 # http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
