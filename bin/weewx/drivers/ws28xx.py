@@ -329,6 +329,108 @@ Example:
 
 01:    messageID
 02-05: ??
+
+13. Current Weather message
+
+start   position in message buffer
+hi-lo   data starts on first (hi) or second (lo) nuibble
+chars   data length in characters (nibbles)
+rem     remark (see below)
+name    variable
+
+start  hi-lo  chars  rem  name
+0      hi     4           DevID
+2      hi     2           Action
+3      hi     2           Quality
+4      hi     4           DeviceCS
+6      hi     4           unknown data
+8      hi     1           _WeatherTendency
+8      lo     1           _WeatherState
+9      hi     1           not used
+9      lo     10          _TempIndoorMinMax._Max._Time
+14     lo     10         _TempIndoorMinMax._Min._Time
+19     lo     5          _TempIndoorMinMax._Max._Value
+22     hi     5          _TempIndoorMinMax._Min._Value
+24     lo     5          _TempIndoor
+27     lo     10         _TempOutdoorMinMax._Max._Time
+32     lo     10         _TempOutdoorMinMax._Min._Time
+37     lo     5          _TempOutdoorMinMax._Max._Value
+40     hi     5          _TempOutdoorMinMax._Min._Value
+42     lo     5          _TempOutdoor
+45     hi     1          not used
+45     lo     10     1   _WindchillMinMax._Max._Time
+50     lo     10     2   _WindchillMinMax._Min._Time
+55     lo     5      1   _WindchillMinMax._Max._Value
+57     hi     5      1   _WindchillMinMax._Min._Value
+60     lo     6          _Windchill
+63     hi     1          not used
+63     lo     10         _DewpointMinMax._Max._Time
+68     lo     10         _DewpointMinMax._Min._Time
+73     lo     5          _DewpointMinMax._Max._Value
+76     hi     5          _DewpointMinMax._Min._Value
+78     lo     5          _Dewpoint
+81     hi     10         _HumidityIndoorMinMax._Max._Time
+86     hi     10         _HumidityIndoorMinMax._Min._Time
+91     hi     2          _HumidityIndoorMinMax._Max._Value
+92     hi     2          _HumidityIndoorMinMax._Min._Value
+93     hi     2          _HumidityIndoor
+94     hi     10         _HumidityOutdoorMinMax._Max._Time
+99     hi     10         _HumidityOutdoorMinMax._Min._Time
+104    hi     2          _HumidityOutdoorMinMax._Max._Value
+105    hi     2          _HumidityOutdoorMinMax._Min._Value
+106    hi     2          _HumidityOutdoor
+107    hi     10     3   _RainLastMonthMax._Time
+112    hi     6      3   _RainLastMonthMax._Max._Value
+115    hi     6          _RainLastMonth
+118    hi     10     3   _RainLastWeekMax._Time
+123    hi     6      3   _RainLastWeekMax._Max._Value
+126    hi     6          _RainLastWeek
+129    hi     10         _Rain24HMax._Time
+134    hi     6          _Rain24HMax._Max._Value
+137    hi     6          _Rain24H
+140    hi     10         _Rain24HMax._Time
+145    hi     6          _Rain24HMax._Max._Value
+148    hi     6          _Rain24H
+151    hi     1          not used
+152    lo     10         _LastRainReset
+158    lo     7          _RainTotal
+160    hi     1          _WindDirection5
+160    lo     1          _WindDirection4
+161    hi     1          _WindDirection3
+161    lo     1          _WindDirection2
+162    hi     1          _WindDirection1
+162    lo     1          _WindDirection
+163    hi     18         unknown data
+172    hi     6          _WindSpeed
+175    hi     1          _GustDirection5
+175    lo     1          _GustDirection4
+176    hi     1          _GustDirection3
+176    lo     1          _GustDirection2
+177    hi     1          _GustDirection1
+177    lo     1          _GustDirection
+178    hi     2          not used
+179    hi     10         _GustMinMax._Max._Time
+184    hi     6          _GustMinMax._Max._Value
+187    hi     6          _Gust
+190    hi     10     4   _PressureRelative_MinMax._Max/Min._Time
+195    hi     5      5   _PressureRelative_inHgMinMax._Max._Value
+197    lo     5      5   _PressureRelative_hPaMinMax._Max._Value
+200    hi     5          _PressureRelative_inHgMinMax._Max._Value
+202    lo     5          _PressureRelative_hPaMinMax._Max._Value
+205    hi     5          _PressureRelative_inHgMinMax._Min._Value
+207    lo     5          _PressureRelative_hPaMinMax._Min._Value
+210    hi     5          _PressureRelative_inHg
+212    lo     5          _PressureRelative_hPa
+
+214    lo     430        end
+
+Remarks
+1  since factory reset
+2  since software reset
+3  not used?
+4  should be: _PressureRelative_MinMax._Max._Time
+5  should be: _PressureRelative_MinMax._Min._Time
+
 """
 
 # TODO: how often is currdat.lst modified with/without hi-speed mode?
