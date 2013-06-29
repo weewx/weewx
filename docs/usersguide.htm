@@ -1502,8 +1502,7 @@ Pressure offset is now 1.247000</p>
       permissions:</p>
     <p class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
-mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO 
-	<a href="mailto:weewx@localhost">weewx@localhost</a>;</p>
+mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost</p>
 	  <p>In addition to configuring MySQL, you will also need to indicate to
 	  <span class="code">weewx</span> that you intend to use the configured 
 	  database. See section <span class="code"><a href="#[StdArchive]">
