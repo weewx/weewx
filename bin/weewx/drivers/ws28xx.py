@@ -1315,40 +1315,38 @@ class USBHardware(object):
             result = CWeatherTraits.PressureOFL()
         else:
             if startOnLowNibble :
-                rawresult = (buf[0][start+2] & 0xF)* 1000   \
+                result = (buf[0][start+2] & 0xF)* 1000   \
                     + (buf[0][start+1] >>  4)*  100   \
                     + (buf[0][start+1] & 0xF)*   10   \
                     + (buf[0][start+0] >>  4)*    1   \
                     + (buf[0][start+0] & 0xF)*    0.1
             else:
-                rawresult = (buf[0][start+2] >>  4)* 1000   \
+                result = (buf[0][start+2] >>  4)* 1000   \
                     + (buf[0][start+2] & 0xF)*  100   \
                     + (buf[0][start+1] >>  4)*   10   \
                     + (buf[0][start+1] & 0xF)*    1   \
                     + (buf[0][start+0] >>  4)*    0.1
-            result = rawresult
         return result
 
     @staticmethod
     def ToPressureInhg(buf, start, startOnLowNibble):
         if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
-            rawresult = CWeatherTraits.PressureNP()
+            result = CWeatherTraits.PressureNP()
         elif USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
-            rawresult = CWeatherTraits.PressureOFL()
+            result = CWeatherTraits.PressureOFL()
         else:
             if startOnLowNibble :
-                rawresult = (buf[0][start+2] & 0xF)* 100    \
+                result = (buf[0][start+2] & 0xF)* 100    \
                     + (buf[0][start+1] >>  4)*  10    \
                     + (buf[0][start+1] & 0xF)*   1    \
                     + (buf[0][start+0] >>  4)*   0.1  \
                     + (buf[0][start+0] & 0xF)*   0.01
             else:
-                rawresult = (buf[0][start+2] >>  4)* 100    \
+                result = (buf[0][start+2] >>  4)* 100    \
                     + (buf[0][start+2] & 0xF)*  10    \
                     + (buf[0][start+1] >>  4)*   1    \
                     + (buf[0][start+1] & 0xF)*   0.1  \
                     + (buf[0][start+0] >>  4)*   0.01
-            result = rawresult
         return result
 
     @staticmethod
