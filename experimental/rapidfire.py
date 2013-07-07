@@ -9,6 +9,27 @@
 """Special service for publishing to the Weather Underground's RapidFire protocol.
 
 This version is experimental and only works with the Davis Vantage instruments.
+Because having the RapidFire protocol run as a separate service is not a very
+elegant solution, all of this is very likely to change in the future!
+
+To use: 
+
+Add a section to your configuration file that looks very similar to the normal
+WeatherUnderground section, except it is a weewx service:
+
+[StdRapidFire]
+  station = KORHOODR9
+  password =  my_password
+  timeout = 5
+  
+Then add the StdRapidFire service to the list of services to be run:
+
+  service_list = ... [services elided] ..., weewx.wxengine.StdRESTful, rapidfire.StdRapidFire, ...
+
+You may have to adjust your PYTHONPATH appropriately. E.G.
+
+  export PYTHONPATH=/home/weewx/experimental
+
 """
 import Queue
 import datetime
@@ -34,7 +55,7 @@ class StdRapidFire(weewx.wxengine.StdService):
         self.rapidfire_queue = Queue.Queue()
         
         # Start up a thread for the RapidFire:
-        self.rapidfire_thread = RapidFire(self.rapidfire_queue, **config_dict['RapidFire'])
+        self.rapidfire_thread = RapidFire(self.rapidfire_queue, **config_dict['StdRapidFire'])
         self.rapidfire_thread.start()
         syslog.syslog(syslog.LOG_DEBUG, "rapidfire: Started RapidFire thread.")
         
@@ -61,6 +82,19 @@ class RapidFire(threading.Thread):
 
     Basically, it watches a queue, and if a packet appears in it, it publishes it.
     """
+
+    # Types and formats of the data to be published:
+    _formats = {'dateTime'    : 'dateutc=%s',
+                'barometer'   : 'baromin=%.1f',
+                'outTemp'     : 'tempf=%.1f',
+                'outHumidity' : 'humidity=%.0f',
+                'windSpeed'   : 'windspeedmph=%.0f',
+                'windDir'     : 'winddir=%.0f',
+                'windGust'    : 'windgustmph=%.0f',
+                'windGustDir' : 'windgustdir=%.0f',
+                'dewpoint'    : 'dewptf=%.1f',
+                'rainRate'    : 'rainin=%.2f',
+                'dayRain'     : 'dailyrainin=%.2f'}
 
     def __init__(self, rapidfire_queue, **rf_dict):
         threading.Thread.__init__(self, name="RapidFireThread")
@@ -100,7 +134,7 @@ class RapidFire(threading.Thread):
         _liststr = ["action=updateraw", "ID=%s" % self.station, "PASSWORD=%s" % self.password ]
         
         # Go through each of the supported types, formatting it, then adding to _liststr:
-        for _key in weewx.restful.Ambient._formats:
+        for _key in RapidFire._formats:
             v = packet.get(_key)
             # Check to make sure the type is not null
             if v is not None :
@@ -111,7 +145,7 @@ class RapidFire(threading.Thread):
                     # its reliability. But, I could be imagining things.
                     v = urllib.quote(datetime.datetime.utcfromtimestamp(v).isoformat('+'), '-+')
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(weewx.restful.Ambient._formats[_key] % v)
+                _liststr.append(RapidFire._formats[_key] % v)
         # Add the realtime flag ...
         _liststr.append("realtime=1")
         # ... and the update frequency ...
