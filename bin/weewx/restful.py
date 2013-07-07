@@ -76,7 +76,7 @@ class REST(object):
         # it should be "the accumulated rainfall in the past 60 min".
         # Presumably, this is exclusive of the archive record 60 minutes before,
         # so the SQL statement is exclusive on the left, inclusive on the right.
-        datadict['rain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
+        datadict['hourRain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
                                          (time_ts - 3600.0, time_ts))[0]
 
         # Similar issue, except for last 24 hours:
@@ -124,7 +124,7 @@ class Ambient(REST):
                 'windDir'     : 'winddir=%03.0f',
                 'windGust'    : 'windgustmph=%03.0f',
                 'dewpoint'    : 'dewptf=%.1f',
-                'rain'        : 'rainin=%.2f',
+                'hourRain'    : 'rainin=%.2f',
                 'dayRain'     : 'dailyrainin=%.2f',
                 'radiation'   : 'solarradiation=%.2f',
                 'UV'          : 'UV=%.2f'}
@@ -248,7 +248,7 @@ class WOW(Ambient):
                 'windGust'    : 'windgustmph=%.0f',
                 'windGustDir' : 'windgustdir=%.0f',
                 'dewpoint'    : 'dewptf=%.1f',
-                'rain'        : 'rainin=%.2f',
+                'hourRain'    : 'rainin=%.2f',
                 'dayRain'     : 'dailyrainin=%.2f'}
 
     def postData(self, archive, time_ts):
@@ -464,7 +464,7 @@ class CWOP(REST):
 
         # Rain
         rain_list = []
-        for obs_type in ('rain', 'rain24', 'dayRain'):
+        for obs_type in ('hourRain', 'rain24', 'dayRain'):
             rain_list.append("%03d" % (record[obs_type]*100.0) if record[obs_type] is not None else '...')
         rain_str = "r%sp%sP%s" % tuple(rain_list)
         
