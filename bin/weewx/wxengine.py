@@ -588,9 +588,18 @@ class StdTimeSynch(StdService):
         self.clock_check = int(config_dict['Station'].get('clock_check', 14400))
         self.max_drift   = int(config_dict['Station'].get('max_drift', 5))
         
+        self.bind(weewx.STARTUP,  self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
+    
+    def startup(self, event):
+        """Called when the engine is starting up."""
+        self.do_sync()
         
     def pre_loop(self, event):
+        """Called before the main event loop is started."""
+        self.do_sync()
+        
+    def do_sync(self):
         """Ask the station to synch up if enough time has passed."""
         # Synch up the station's clock if it's been more than clock_check
         # seconds since the last check:

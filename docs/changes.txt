@@ -1,6 +1,13 @@
 weewx change history
 --------------------
 
+2.3.4 07/XX/13
+
+The service StdTimeSync now catches startup events and syncs the clock
+on them. It has now been moved to the beginning of the list "service_list"
+in weewx.conf. Users may want to do the same with their configuration file.
+
+
 2.3.3 06/21/13
 
 The option week_start now works.

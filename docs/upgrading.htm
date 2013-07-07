@@ -134,6 +134,20 @@ Version: 2.3.3
     <p class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</p>
 
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+	<h2>V2.3.3 or earlier</h2>
+	<p>The service <span class="code">StdTimeSync</span> now synchronizes the 
+	console's onboard clock on startup. This is nice because if the clock 
+	failed, perhaps because the battery was taken out, the time is corrected 
+	first <em>before</em> data is downloaded from the logger's memory. To take 
+	advantage of this, you can move service <span class="code">StdTimeSync</span> 
+	to the front of the list of services to be run:</p>
+	<p class="tty">&nbsp;[[WxEngine]]<br />
+	# The list of services the main weewx engine should run:<br />
+	service_list = <span class="highlight">weewx.wxengine.StdTimeSynch</span>, 
+	weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, 
+	weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdPrint, 
+	weewx.wxengine.StdRESTful, weewx.wxengine.StdReport<br />
+	</p>
 	<h2>V2.3 or earlier</h2>
 	<p>The option <span class="code">time_length</span> will now be the exact 
 	length of the resultant plot. Before, a plot with <span class="code">
