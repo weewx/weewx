@@ -3,9 +3,9 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision: 1122 $
-#    $Author: tkeffer $
-#    $Date: 2013-03-27 11:07:53 -0700 (Wed, 27 Mar 2013) $
+#    $Revision$
+#    $Author$
+#    $Date$
 """Special service for publishing to the Weather Underground's RapidFire protocol.
 
 This version is experimental and only works with the Davis Vantage instruments.
