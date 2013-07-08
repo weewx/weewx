@@ -8,10 +8,10 @@
 #    $Date$
 """Special service for publishing to the Weather Underground's RapidFire protocol.
 
-This version is experimental and only works with the Davis Vantage instruments.
-Because having the RapidFire protocol run as a separate service is not a very
-elegant solution, all of this is very likely to change in the future!
+This version is experimental and could change at any time --- don't get too attached to it!
 
+It only works with the weewx Davis Vantage driver.
+ 
 To use: 
 
 Add a section to your configuration file that looks very similar to the normal
@@ -20,13 +20,12 @@ WeatherUnderground section, except it is a weewx service:
 [StdRapidFire]
   station = KORHOODR9
   password =  my_password
-  timeout = 5
   
 Then add the StdRapidFire service to the list of services to be run:
 
   service_list = ... [services elided] ..., weewx.wxengine.StdRESTful, rapidfire.StdRapidFire, ...
 
-You may have to adjust your PYTHONPATH appropriately. E.G.
+You may have to adjust your PYTHONPATH appropriately. E.g.,
 
   export PYTHONPATH=/home/weewx/experimental
 
@@ -85,16 +84,18 @@ class RapidFire(threading.Thread):
 
     # Types and formats of the data to be published:
     _formats = {'dateTime'    : 'dateutc=%s',
-                'barometer'   : 'baromin=%.1f',
+                'barometer'   : 'baromin=%.3f',
                 'outTemp'     : 'tempf=%.1f',
-                'outHumidity' : 'humidity=%.0f',
-                'windSpeed'   : 'windspeedmph=%.0f',
+                'outHumidity' : 'humidity=%03.0f',
+                'windSpeed'   : 'windspeedmph=%03.0f',
                 'windDir'     : 'winddir=%.0f',
-                'windGust'    : 'windgustmph=%.0f',
-                'windGustDir' : 'windgustdir=%.0f',
+                'windGust'    : 'windgustmph=%03.0f',
+                'windGustDir' : 'windgustdir=%03.0f',
                 'dewpoint'    : 'dewptf=%.1f',
                 'rainRate'    : 'rainin=%.2f',
-                'dayRain'     : 'dailyrainin=%.2f'}
+                'dayRain'     : 'dailyrainin=%.2f',
+                'radiation'   : 'solarradiation=%.2f',
+                'UV'          : 'UV=%.2f'}
 
     def __init__(self, rapidfire_queue, **rf_dict):
         threading.Thread.__init__(self, name="RapidFireThread")
@@ -114,14 +115,14 @@ class RapidFire(threading.Thread):
             # This will block until something appears in the queue:
             packet = self.rapidfire_queue.get()
 
+            # A 'None' value appearing in the queue is our signal to exit
+            if packet is None: break
+        
             # If packets have backed up in the queue, throw them all away except the last one.
             while self.rapidfire_queue.qsize():
                 packet = self.rapidfire_queue.get()
+                if packet is None: break
                 
-            # A 'None' value appearing in the queue is our signal to exit
-            if packet is None:
-                break
-        
             # Form the URL from the information in the packet    
             url = self.getURL(packet)
 
@@ -178,4 +179,3 @@ class RapidFire(threading.Thread):
 
         # Does not seem to be an error. We're done.
         return
-    
