@@ -474,6 +474,11 @@ class StdArchive(StdService):
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
         to break the main loop by throwing an exception."""
+        # Is this the end of the archive period? If so, dispatch an END_ARCHIVE_PERIOD event
+        if event.packet['dateTime'] > self.end_archive_period_ts:
+            self.engine.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD, packet=event))
+            self.end_archive_period_ts += self.archive_interval
+            
         # Has the end of the archive delay period ended? If so, break the loop.
         if event.packet['dateTime'] >= self.end_archive_delay_ts:
             raise BreakLoop

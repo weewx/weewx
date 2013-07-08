@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,12 +7,10 @@
 #    $Author$
 #    $Date$
 #
-"""Package weewx. A set of modules for supporting a weather station on a sqlite database.
-
-"""
+"""Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__="2.3.3"
+__version__="2.4.0a1"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -80,6 +78,8 @@ class CHECK_LOOP(object):
     """Event issued in the main loop, right after a new LOOP packet has been processed. Generally,
     it is used to throw an exception, breaking the main loop, so the console can be used
     for other things."""
+class END_ARCHIVE_PERIOD(object):
+    """Event issued at the end of an archive period."""
 class NEW_ARCHIVE_RECORD(object):
     """Event issued when a new archive record is available. The event contains attribute 'record',
     which is the new archive record."""
@@ -103,5 +103,3 @@ class Event(object):
         et = "Event type: %s | " % self.event_type
         s = "; ".join("%s: %s" %(k, self.__dict__[k]) for k in self.__dict__ if k!="event_type")
         return et + s
-
-

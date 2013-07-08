@@ -1394,6 +1394,7 @@ class VantageService(Vantage, weewx.wxengine.StdService):
         
         self.bind(weewx.STARTUP, self.startup)        
         self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
+        self.bind(weewx.END_ARCHIVE_PERIOD, self.end_archive_period)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def startup(self, event):
@@ -1402,6 +1403,9 @@ class VantageService(Vantage, weewx.wxengine.StdService):
         self.archive = weewx.archive.Archive.open(self.archive_dict)
         self.old_time_12_ts = None
         self.temperature_12 = None
+        
+        self.max_loop_gust = 0.0
+        self.max_loop_gustdir = None
         
     def closePort(self):
         # Close the archive database. In case it doesn't exist yet, enclose
@@ -1414,13 +1418,29 @@ class VantageService(Vantage, weewx.wxengine.StdService):
         Vantage.closePort(self)
 
     def new_loop_packet(self, event):
-        """Calculate the missing pressures in the LOOP packet"""
+        """Calculate the missing pressures in the LOOP packet, and
+        the max gust seen since the last archive record."""
         pressureIn, altimeterIn = self.get_pressures(event.packet['dateTime'],
                                                      event.packet['barometer'], 
                                                      event.packet['outTemp'], 
                                                      event.packet['outHumidity'])
         event.packet['pressure']  = pressureIn
         event.packet['altimeter'] = altimeterIn
+        
+        # Calculate the max gust seen since the start of this archive record and
+        # put it in the packet.
+        windSpeed = event.packet.get('windSpeed')
+        windDir   = event.packet.get('windDir')
+        if windSpeed is not None and windSpeed > self.max_loop_gust:
+            self.max_loop_gust = windSpeed
+            self.max_loop_gustdir = windDir
+        event.packet['windGust'] = self.max_loop_gust
+        event.packet['windGustDir'] = self.max_loop_gustdir
+        
+    def end_archive_period(self, event):
+        """Zero out the max gust seen since the start of the record"""
+        self.max_loop_gust = 0.0
+        self.max_loop_gustdir = None
         
     def new_archive_record(self, event):
         """Calculate the missing pressures in the archive record"""

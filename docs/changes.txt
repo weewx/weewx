@@ -1,11 +1,22 @@
 weewx change history
 --------------------
 
-2.3.4 07/XX/13
+2.4.0 07/XX/13
 
 The service StdTimeSync now catches startup events and syncs the clock
-on them. It has now been moved to the beginning of the list "service_list"
-in weewx.conf. Users may want to do the same with their configuration file.
+on them. It has now been moved to the beginning of the list
+"service_list" in weewx.conf. Users may want to do the same with their
+old configuration file.
+
+A new event, END_ARCHIVE_PERIOD has been added, signaling the end of
+the archive period.
+
+The LOOP packets emitted by the driver for the Davis Vantage series
+now includes the max wind gust and direction seen since the beginning
+of the current archive period.
+
+The driver for the LaCrosse WS-28XX weather series continues to evolve and
+mature. However, you should still consider it experimental.
 
 
 2.3.3 06/21/13
