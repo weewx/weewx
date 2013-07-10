@@ -22,8 +22,10 @@ description = """Configures the Davis Vantage weather station."""
 
 usage="""%prog: [config_file] [--help] [--info] [--clear]
                            [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
-                           [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time] [--set-dst=['AUTO'|'ON'|'OFF']]
-                           [--set-lamp=['ON'|'OFF']] [--dump] [--logger_summary=FILE] [--start | --stop]"""
+                           [--set-bucket=CODE] [--set-rain-year-start=MM] 
+                           [--set-time] [--set-dst=[AUTO|ON|OFF]]
+                           [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
+                           [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE] [--start | --stop]"""
 
 epilog = """Mutating actions will request confirmation before proceeding."""
 
@@ -57,7 +59,10 @@ def main():
                       help="Set the rain year start (1=Jan, 2=Feb, etc.).")
     parser.add_option("--set-time", action="store_true", dest="set_time", help="Set the onboard clock to the current time.")
     parser.add_option("--set-dst",  dest="set_dst",  help="Set DST to 'ON', 'OFF', or 'AUTO'", metavar="AUTO|ON|OFF")
-    parser.add_option("--set-lamp", dest="set_lamp", help="Turn the console lamp 'ON' or 'OFF'", metavar="ON|OFF")
+    parser.add_option("--set-tz-code", type=int, dest="set_tz_code", 
+                      help="Set timezone code to TZCODE. See your Vantage manual for valid codes.", metavar="TZCODE")
+    parser.add_option("--set-tz-offset", dest="set_tz_offset", help="Set timezone offset to HHMM. E.g. '-0800' for U.S. Pacific Time.", metavar="HHMM")
+    parser.add_option("--set-lamp", dest="set_lamp", help="Turn the console lamp 'ON' or 'OFF'.", metavar="ON|OFF")
     parser.add_option("--start", action="store_true", help="Start the logger.")
     parser.add_option("--stop",  action="store_true", help="Stop the logger.")
     parser.add_option("--dump",  action="store_true", help="Dump all data to the archive. "\
@@ -72,6 +77,9 @@ def main():
         
     if options.start and options.stop:
         parser.error("Cannot specify both --start and --stop")
+        
+    if options.set_tz_code and options.set_tz_offset:
+        parser.error("Cannot specify both --set-tz-code and --set-tz-offset")
 
     # Open up the weather station:
     station = weewx.drivers.vantage.Vantage(**config_dict['Vantage'])
@@ -94,6 +102,10 @@ def main():
         set_time(station)
     if options.set_dst:
         set_dst(station, options.set_dst)
+    if options.set_tz_code:
+        set_tz_code(station, options.set_tz_code)
+    if options.set_tz_offset:
+        set_tz_offset(station, options.set_tz_offset)
     if options.set_lamp:
         set_lamp(station, options.set_lamp)
     if options.start:
@@ -149,16 +161,23 @@ def info(station, dest=sys.stdout):
              station.barometer_unit, station.temperature_unit, 
              station.rain_unit, station.wind_unit)
     try:
-        (stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone) = station.getStnInfo()
+        (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset) = station.getStnInfo()
+        if man_or_auto == 'AUTO' :
+            dst = 'N/A'
+        if gmt_or_zone == 'ZONE_CODE':
+            gmt_offset_str = 'N/A'
+        else:
+            gmt_offset_str = "%+.1f hours" % gmt_offset
+            zone_code = 'N/A'
         print >>dest, """    CONSOLE STATION INFO:
       Latitude (onboard):           %0.1f
       Longitude (onboard):          %0.1f
-      Time zone code:               %s
       Use manual or auto DST?       %s
       DST setting:                  %s
-      GMT offset:                   %+.1f hours
-      Use GMT offset or time zone?  %s
-        """ % (stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone)
+      Use GMT offset or zone code?  %s
+      Time zone code:               %s
+      GMT offset:                   %s
+        """ % (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset_str)
     except:
         pass
     
@@ -319,6 +338,25 @@ def set_dst(station, dst):
     station.setDST(dst) 
     print "Set DST on console to '%s'" % dst
     
+def set_tz_code(station, tz_code):
+    print "Setting time zone code to %d..." % tz_code
+    station.setTZcode(tz_code)
+    new_tz_code = station.getStnInfo()[5]
+    print "Set time zone code to %s" % new_tz_code
+
+def set_tz_offset(station, tz_offset):
+    offset_int = int(tz_offset)
+    h = abs(offset_int) // 100
+    m = abs(offset_int) %  100
+    if h>12 or m>=60:
+        raise ValueError("Invalid time zone offset: %s" % tz_offset)
+    offset = h * 100 + (100 * m / 60)
+    if offset_int < 0:
+        offset = -offset
+    station.setTZoffset(offset)
+    new_offset = station.getStnInfo()[6]
+    print "Set time zone offset to %+.1f hours" % new_offset
+
 def set_lamp(station, onoff):
     print "Setting lamp on console..."
     station.setLamp(onoff)

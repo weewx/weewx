@@ -687,8 +687,31 @@ class Vantage(weewx.abstractstation.AbstractStation):
         if _dst in ['on', 'off']:
             on_off = 0 if _dst == 'off' else 1
             self.port.send_data("EEBWR 13 01\n")
-            self.port.send_data_with_crc16(chr(on_off))            
+            self.port.send_data_with_crc16(chr(on_off))
             
+    def setTZcode(self, code):
+        """Set the console's time zone code. See the Davis Vantage manual for the table
+        of preset time zones."""
+        if code < 0 or code > 46:
+            raise weewx.ViolatedPrecondition("Invalid time zone code %d" % code)
+        # Set the GMT_OR_ZONE byte to use TIME_ZONE value
+        self.port.send_data("EEBWR 16 01\n")
+        self.port.send_data_with_crc16(chr(0))
+        # Set the TIME_ZONE value
+        self.port.send_data("EEBWR 11 01\n")
+        self.port.send_data_with_crc16(chr(code))
+        
+    def setTZoffset(self, offset):
+        """Set the console's time zone to a custom offset.
+        
+        offset: Offset. This is an integer in hundredths of hours. E.g., -175 would be 1h45m negative offset."""
+        # Set the GMT_OR_ZONE byte to use GMT_OFFSET value
+        self.port.send_data("EEBWR 16 01\n")
+        self.port.send_data_with_crc16(chr(1))
+        # Set the GMT_OFFSET value
+        self.port.send_data("EEBWR 14 02\n")
+        self.port.send_data_with_crc16(struct.pack("<h", offset))
+
     def setBucketType(self, new_bucket_code):
         """Set the rain bucket type.
         
@@ -830,17 +853,13 @@ class Vantage(weewx.abstractstation.AbstractStation):
         (stnlat, stnlon) = self._getEEPROM_value(0x0B, "<2h")
         stnlat /= 10.0
         stnlon /= 10.0
-        time_zone   = self._getEEPROM_value(0x11)[0]
-        if self._getEEPROM_value(0x12)[0]:
-            man_or_auto = "MANUAL"
-            dst     = "ON" if self._getEEPROM_value(0x13)[0] else "OFF"
-        else:
-            man_or_auto = "AUTO"
-            dst     = "N/A"
+        man_or_auto = "MANUAL"     if self._getEEPROM_value(0x12)[0] else "AUTO"
+        dst         = "ON"         if self._getEEPROM_value(0x13)[0] else "OFF"
+        gmt_or_zone = "GMT_OFFSET" if self._getEEPROM_value(0x16)[0] else "ZONE_CODE"
+        zone_code   = self._getEEPROM_value(0x11)[0]
         gmt_offset  = self._getEEPROM_value(0x14, "<h")[0] / 100.0
-        gmt_or_zone = "GMT_OFFSET" if self._getEEPROM_value(0x16)[0] else "TIME_ZONE"
         
-        return(stnlat, stnlon, time_zone, man_or_auto, dst, gmt_offset, gmt_or_zone)
+        return (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset)
 
     def startLogger(self):
         self.port.send_command("START\n")

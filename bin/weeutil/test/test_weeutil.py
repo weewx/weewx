@@ -14,7 +14,7 @@ import time
 
 from weeutil.weeutil import startOfInterval, option_as_list, TimeSpan, genYearSpans, genMonthSpans, genDaySpans
 from weeutil.weeutil import archiveDaySpan, archiveWeekSpan, archiveMonthSpan, archiveYearSpan, archiveRainYearSpan
-from weeutil.weeutil import startOfDay, startOfArchiveDay
+from weeutil.weeutil import startOfDay, startOfArchiveDay, timestamp_to_string, intervalgen, stampgen
 
 class WeeutilTest(unittest.TestCase):
     
@@ -24,6 +24,20 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(option_as_list(['a', 'b']), ['a', 'b'])
         self.assertEqual(option_as_list(None), None)
         self.assertEqual(option_as_list(''), [''])
+        
+    def test_stampgen(self):
+        
+        # This is over a DST boundary:
+        start = time.mktime((2013,3,10,0,0,0,0,0,-1))
+        stop  = time.mktime((2013,3,10,6,0,0,0,0,-1))
+        print timestamp_to_string(start)
+        print timestamp_to_string(stop)
+        
+        for ts, check_ts in zip(stampgen(start, stop, 1800), [1362902400,1362904200,1362906000,1362907800,
+                                                              1362909600,1362911400,1362913200,1362915000,
+                                                              1362916800,1362918600,1362920400]):
+            print timestamp_to_string(ts)
+            self.assertEqual(ts, check_ts)
 
     def test_startOfInterval(self):
     

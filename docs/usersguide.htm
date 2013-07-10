@@ -1173,8 +1173,10 @@ Version: 2.4.0a1
     <p>This will print out something like:</p>
     <p class="tty">Usage: wee_config_vantage: [config_file] [--help] [--info] [--clear]
                            [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
-                           [--set-bucket=CODE] [--set-rain-year-start=MM] [--set-time]
-                           [--set-lamp=['on'|'off]] [--dump] [--logger_summary=FILE] [--start | --stop]
+                           [--set-bucket=CODE] [--set-rain-year-start=MM] 
+                           [--set-time] [--set-dst=[AUTO|ON|OFF]]
+                           [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
+                           [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE] [--start | --stop]
 
 Configures the Davis Vantage weather station.
 
@@ -1198,13 +1200,19 @@ Options:
   --set-rain-year-start=MM
                         Set the rain year start (1=Jan, 2=Feb, etc.).
   --set-time            Set the onboard clock to the current time.
-  --set-lamp=ON|OFF     Turn the console lamp 'ON' or 'OFF'
+  --set-dst=AUTO|ON|OFF
+                        Set DST to 'ON', 'OFF', or 'AUTO'
+  --set-tz-code=TZCODE  Set timezone code to TZCODE. See your Vantage manual
+                        for valid codes.
+  --set-tz-offset=HHMM  Set timezone offset to HHMM. E.g. '-0800' for U.S.
+                        Pacific Time.
+  --set-lamp=ON|OFF     Turn the console lamp 'ON' or 'OFF'.
   --start               Start the logger.
   --stop                Stop the logger.
   --dump                Dump all data to the archive. NB: This may result in
                         many duplicate primary key errors.
   --logger-summary=FILE
-                        Save diagnostic summary to FILE (for debugging the 
+                        Save diagnostic summary to FILE (for debugging the
                         logger).
 
 Mutating actions will request confirmation before proceeding.
@@ -1213,60 +1221,66 @@ Mutating actions will request confirmation before proceeding.
       see what the current EEPROM settings are on your station: </p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --info </p>
     <p>This will print out something like: </p>
-    <p class="tty">VantagePro EEPROM settings:
-      
-CONSOLE TYPE:                 VantagePro2
-      
-CONSOLE FIRMWARE:
-Date:                         Nov 28 2005
-Version:                      &lt;Unavailable&gt;
-      
-CONSOLE SETTINGS:
-<span class="highlight">Archive interval:             300 (seconds)</span>
-<span class="highlight">Altitude:                     700 (foot)</span>
-Wind cup type:                large
-<span class="highlight">Rain bucket type:             0.01 inches</span>
-<span class="highlight">Rain year start:              10</span>
-<span class="highlight">Onboard time:                 2012-09-30 16:48:27 PDT (1349048907)</span>
-      
-CONSOLE DISPLAY UNITS:
-Barometer:                    mbar
-Temperature:                  degree_F
-Rain:                         inch
-Wind:                         knot
+    <p class="tty">Using configuration file /home/weewx/weewx.conf.
+Querying...
+Davis Vantage EEPROM settings:
+    
+    CONSOLE TYPE:                   VantagePro2
+    
+    CONSOLE FIRMWARE:
+      Date:                         Nov 28 2005
+      Version:                      &lt;Unavailable&gt;
 
-CONSOLE STATION INFO:
-Latitude (onboard):           45.7
-Longitude (onboard):          -121.6
-Time zone code:               4
-Use manual or auto DST?       AUTO
-DST setting:                  N/A
-GMT offset:                   -8.0 hours
-Use GMT offset or time zone?  TIME_ZONE
-
-RECEPTION STATS:
-Total packets received:       22843
-Total packets missed:         748
-Number of resynchronizations: 0
-Longest good stretch:         534
-Number of CRC errors:         647
-
-BAROMETER CALIBRATION DATA:
-<span class="highlight">Current barometer reading:    30.209 inHg</span>
-Altitude:                     700 feet
-Dew point:                    48 F
-Virtual temperature:          66 F
-Humidity correction factor:   23
-Correction ratio:             1.025
-Correction constant:          +0.027 inHg
-Gain:                         -1.000
-Offset:                       -1.000</p>
+    CONSOLE SETTINGS:
+<span class="highlight">      Archive interval:             300 (seconds)
+      Altitude:                     700 (foot)</span>
+      Wind cup type:                large
+<span class="highlight">      Rain bucket type:             0.01 inches
+      Rain year start:              10
+      Onboard time:                 2013-07-10 10:08:41</span>
+      
+    CONSOLE DISPLAY UNITS:
+      Barometer:                    mbar
+      Temperature:                  degree_F
+      Rain:                         inch
+      Wind:                         knot
+      
+    CONSOLE STATION INFO:
+      Latitude (onboard):           45.7
+      Longitude (onboard):          -121.6
+<span class="highlight">      Use manual or auto DST?       AUTO
+      DST setting:                  N/A
+      Use GMT offset or zone code?  ZONE_CODE
+      Time zone code:               4
+      GMT offset:                   N/A</span>
+        
+    RECEPTION STATS:
+      Total packets received:       11105
+      Total packets missed:         3092
+      Number of resynchronizations: 2
+      Longest good stretch:         50
+      Number of CRC errors:         1836
+      
+    BAROMETER CALIBRATION DATA:
+<span class="highlight">      Current barometer reading:    29.932 inHg
+      Altitude:                     700 feet</span>
+      Dew point:                    56 F
+      Virtual temperature:          73 F
+      Humidity correction factor:   30
+      Correction ratio:             1.025
+      Correction constant:          +0.027 inHg
+      Gain:                         -1.000
+      Offset:                       -1.000</p>
     <p>Note that the console version number is available only on consoles with firmware 
       dates after about 2006.</p>
     <p><span class="highlight">Highlighted</span> values can be changed.</p>
     <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-interval=600</p>
-    <p>Other parameters can be set in a similar manner.</p>
+    <p>To set the time zone code to Central European Time (code 20):</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-tz-code=20</p>
+    <p class="warning">You can set either the time zone code <em>or</em> the 
+	time zone offset, but not both. </p>
+	  <p>Other parameters can be set in a similar manner.</p>
     <h3 id="Archive_interval">Archive interval</h3>
     <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
       if you are ftp&#39;ing lots of files to a server, setting it to 60 seconds may 
