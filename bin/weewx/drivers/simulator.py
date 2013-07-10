@@ -99,7 +99,7 @@ class Simulator(weewx.abstractstation.AbstractStation):
                              'windDir'    : Observation(magnitude=360.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
                              'windGust'   : Observation(magnitude=12.0,  average=  6.0, period=48.0, phase_lag=24.0, start=start_ts),
                              'windGustDir': Observation(magnitude=360.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
-                             'humidity'   : Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts),
+                             'outHumidity': Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts),
                              'rain'       : Rain(rain_start=0, rain_length=3, total_rain=0.2, loop_interval=self.loop_interval)}
 
     def genLoopPackets(self):
@@ -135,7 +135,7 @@ class Simulator(weewx.abstractstation.AbstractStation):
                 _packet[obs_type] = self.observations[obs_type].value_at(avg_time)
 
             _packet['windchill'] = weewx.wxformulas.windchillF(_packet['outTemp'], _packet['windSpeed'])
-            _packet['heatindex'] = weewx.wxformulas.heatindexF(_packet['outTemp'], _packet['humidity']) 
+            _packet['heatindex'] = weewx.wxformulas.heatindexF(_packet['outTemp'], _packet['outHumidity']) 
             yield _packet
 
     def getTime(self):
