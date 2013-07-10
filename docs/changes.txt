@@ -3,6 +3,9 @@ weewx change history
 
 2.4.0 07/XX/13
 
+The configuration utility wee_config_vantage now allows you to set
+DST to 'auto', 'off', or 'on'.
+
 The service StdTimeSync now catches startup events and syncs the clock
 on them. It has now been moved to the beginning of the list
 "service_list" in weewx.conf. Users may want to do the same with their

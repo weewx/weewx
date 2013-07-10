@@ -669,6 +669,26 @@ class Vantage(weewx.abstractstation.AbstractStation):
         syslog.syslog(syslog.LOG_ERR, "VantagePro: Max retries exceeded while setting time")
         raise weewx.RetriesExceeded("While setting console time")
     
+    def setDST(self, dst='auto'):
+        """Turn DST on or off, or set it to auto.
+        
+        dst: One of 'auto', 'on' or 'off' """
+        
+        _dst = dst.strip().lower()
+        if _dst not in ['auto', 'on', 'off']:
+            raise weewx.ViolatedPrecondition("Invalid DST setting %s" % dst)
+
+        # Set flag whether DST is auto or manual:        
+        man_auto = 0 if _dst == 'auto' else 1
+        self.port.send_data("EEBWR 12 01\n")
+        self.port.send_data_with_crc16(chr(man_auto))
+        
+        # If DST is manual, set it on or off:
+        if _dst in ['on', 'off']:
+            on_off = 0 if _dst == 'off' else 1
+            self.port.send_data("EEBWR 13 01\n")
+            self.port.send_data_with_crc16(chr(on_off))            
+            
     def setBucketType(self, new_bucket_code):
         """Set the rain bucket type.
         
