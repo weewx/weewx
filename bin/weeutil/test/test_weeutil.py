@@ -27,17 +27,78 @@ class WeeutilTest(unittest.TestCase):
         
     def test_stampgen(self):
         
-        # This is over a DST boundary:
+        # Test the start of DST using a 30 minute increment:
         start = time.mktime((2013,3,10,0,0,0,0,0,-1))
         stop  = time.mktime((2013,3,10,6,0,0,0,0,-1))
-        print timestamp_to_string(start)
-        print timestamp_to_string(stop)
-        
         for ts, check_ts in zip(stampgen(start, stop, 1800), [1362902400,1362904200,1362906000,1362907800,
                                                               1362909600,1362911400,1362913200,1362915000,
                                                               1362916800,1362918600,1362920400]):
-            print timestamp_to_string(ts)
             self.assertEqual(ts, check_ts)
+
+        # Test the ending of DST using a 30 minute increment:
+        start = time.mktime((2013,11,3, 0,0,0,0,0,-1))
+        stop  = time.mktime((2013,11,3, 6,0,0,0,0,-1))
+        for ts, check_ts in zip(stampgen(start, stop, 1800), [1383462000,1383463800,1383465600,1383467400,
+                                                              1383472800,1383474600,1383476400,1383478200,
+                                                              1383480000,1383481800,1383483600,1383485400,
+                                                              1383487200]):
+            self.assertEqual(ts, check_ts)
+
+        # Test the start of DST using a 3 hour increment
+        start = time.mktime((2013,3, 9,12,0,0,0,0,-1))
+        stop  = time.mktime((2013,3,10,11,0,0,0,0,-1))
+        for ts, check_ts in zip(stampgen(start, stop,10800), [1362859200,1362870000,1362880800,1362891600,
+                                                              1362902400,1362909600,1362920400,1362931200]):
+            self.assertEqual(ts, check_ts)
+        
+        # Test the end of DST using a 3 hour increment
+        start = time.mktime((2013,11,2,12,0,0,0,0,-1))
+        stop  = time.mktime((2013,11,3,12,0,0,0,0,-1))
+        for ts, check_ts in zip(stampgen(start, stop,10800), [1383418800,1383429600,1383440400,1383451200,
+                                                              1383462000,1383476400,1383487200,1383498000,
+                                                              1383508800]):
+            self.assertEqual(ts, check_ts)
+    
+    def test_intervalgen(self):
+        
+        # Test the start of DST using a 30 minute increment:
+        start = time.mktime((2013,3,10, 0,0,0,0,0,-1))
+        stop  = time.mktime((2013,3,10, 5,0,0,0,0,-1))
+        for s, check_s in zip(intervalgen(start, stop, 1800), [(1362902400, 1362904200),(1362904200, 1362906000),
+                                                               (1362906000, 1362907800),(1362907800, 1362909600),
+                                                               (1362909600, 1362911400),(1362911400, 1362913200),
+                                                               (1362913200, 1362915000),(1362915000, 1362916800)]):
+            self.assertEqual(s, TimeSpan(check_s[0], check_s[1]))
+
+        # Test the ending of DST using a 30 minute increment:
+        start = time.mktime((2013,11,3, 0,0,0,0,0,-1))
+        stop  = time.mktime((2013,11,3, 6,0,0,0,0,-1))
+        for s, check_s in zip(intervalgen(start, stop, 1800), [(1383462000, 1383463800),(1383463800, 1383465600),
+                                                               (1383465600, 1383467400),(1383467400, 1383472800),
+                                                               (1383472800, 1383474600),(1383474600, 1383476400),
+                                                               (1383476400, 1383478200),(1383478200, 1383480000),
+                                                               (1383480000, 1383481800),(1383481800, 1383483600),
+                                                               (1383483600, 1383485400),(1383485400, 1383487200)]):
+            self.assertEqual(s, TimeSpan(check_s[0], check_s[1]))
+
+        # Test the start of DST using a 3 hour increment:
+        start = time.mktime((2013,3, 9,12,0,0,0,0,-1))
+        stop  = time.mktime((2013,3,10,11,0,0,0,0,-1))
+        for s, check_s in zip(intervalgen(start, stop,10800), [(1362859200, 1362870000),(1362870000, 1362880800),
+                                                               (1362880800, 1362891600),(1362891600, 1362902400),
+                                                               (1362902400, 1362909600),(1362909600, 1362920400),
+                                                               (1362920400, 1362931200),(1362931200, 1362938400)]):
+            self.assertEqual(s, TimeSpan(check_s[0], check_s[1]))
+        
+        # Test the ending of DST using a 3 hour increment:
+        start = time.mktime((2013,11,2,12,0,0,0,0,-1))
+        stop  = time.mktime((2013,11,3,12,0,0,0,0,-1))
+        for s, check_s in zip(intervalgen(start, stop,10800), [(1383418800, 1383429600),(1383429600, 1383440400),
+                                                               (1383440400, 1383451200),(1383451200, 1383462000),
+                                                               (1383462000, 1383476400),(1383476400, 1383487200),
+                                                               (1383487200, 1383498000),(1383498000, 1383508800)]):
+            self.assertEqual(s, TimeSpan(check_s[0], check_s[1]))
+    
 
     def test_startOfInterval(self):
     

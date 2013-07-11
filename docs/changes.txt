@@ -19,6 +19,9 @@ The LOOP packets emitted by the driver for the Davis Vantage series
 now includes the max wind gust and direction seen since the beginning
 of the current archive period.
 
+Fixed a bug that did not allow plots with aggregations less than 60 minutes
+across a DST boundary.
+
 The driver for the LaCrosse WS-28XX weather series continues to evolve and
 mature. However, you should still consider it experimental.
 

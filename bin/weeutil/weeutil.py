@@ -111,10 +111,19 @@ def stampgen(startstamp, stopstamp, interval):
     else :
         # This rather complicated algorithm is necessary (rather than just
         # doing some time stamp arithmetic) because of the possibility that DST
-        # changes in the middle of an interval
+        # changes in the middle of an interval.
         delta = datetime.timedelta(seconds=interval)
+        ts_last = 0
         while dt <= stop_dt :
-            yield int(time.mktime(dt.timetuple()))
+            ts = int(time.mktime(dt.timetuple()))
+            # This check is necessary because time.mktime() cannot
+            # disambiguate between 2am ST and 3am DST. For example,
+            #   time.mktime((2013, 3, 10, 2, 0, 0, 0, 0, -1)) and
+            #   time.mktime((2013, 3, 10, 3, 0, 0, 0, 0, -1))
+            # both give the same value (1362909600)
+            if ts > ts_last:
+                yield ts
+                ts_last = ts
             dt += delta
 
 def startOfInterval(time_ts, interval, grace=1):
@@ -189,6 +198,10 @@ class TimeSpan(tuple):
     def stop(self):
         return self[1]
 
+    @property
+    def length(self):
+        return self[1] - self[0]
+    
     def includesArchiveTime(self, timestamp):
         """
         Returns True if the span includes the time timestamp, otherwise False.
@@ -279,11 +292,14 @@ def intervalgen(start_ts, stop_ts, interval):
         # doing some time stamp arithmetic) because of the possibility that DST
         # changes in the middle of an interval
         delta = datetime.timedelta(seconds=interval)
+        last_stamp1 = 0
         while dt1 < stop_dt :
             dt2 = min(dt1 + delta, stop_dt)
-            stamp1 = time.mktime(dt1.timetuple())
-            stamp2 = time.mktime(dt2.timetuple())
-            yield TimeSpan(stamp1, stamp2)
+            stamp1 = int(time.mktime(dt1.timetuple()))
+            stamp2 = int(time.mktime(dt2.timetuple()))
+            if stamp2 > stamp1 and stamp1 > last_stamp1:
+                yield TimeSpan(stamp1, stamp2)
+                last_stamp1 = stamp1
             dt1 = dt2
 
 def archiveDaySpan(time_ts, grace=1):
