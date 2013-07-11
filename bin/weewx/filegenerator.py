@@ -156,28 +156,9 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
             # Loop through each timespan in the summary period
             for timespan in _genfunc(start_ts, stop_ts):
 
-                #===============================================================
-                # Calculate the destination filename using the template name.
-                # Replace 'YYYY' with the year, 'MM' with the month, and
-                # strip off the trailing '.tmpl':
-                #===============================================================
-                
-                # Start by getting the start time as a timetuple.
-                timespan_start_tt = time.localtime(timespan.start)
-                # Get a string representing the year (e.g., '2009'):
-                _yr_str = "%4d"  % timespan_start_tt[0]
-                # Replace any instances of 'YYYY' with the string
-                _filename = os.path.basename(template).replace('.tmpl','').replace('YYYY', _yr_str)
-                if by_time == 'SummaryByMonth' :
-                    # If this is a summary by month, do something similar for them month 
-                    _mo_str = "%02d" % timespan_start_tt[1]
-                    _filename = _filename.replace('MM', _mo_str)
-                    # Save the resultant Year-Months so they can be used in an HTML drop down list:
-                    self.outputted_dict['SummaryByMonth'].append("%s-%s" %(_yr_str, _mo_str))
-                elif by_time == 'SummaryByYear' :
-                    # Save the resultant years so they can be used in an HTML drop down list:
-                    self.outputted_dict['SummaryByYear'].append(_yr_str)
-
+                # Get the filename:
+                _filename = self.getSummaryByFileName(timespan, by_time, template)
+                # Join it to the destination directory to get the full filename:
                 _fullpath = os.path.join(destination_dir, _filename)
     
                 # If the file doesn't exist, or it is the last month, then
@@ -339,7 +320,35 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
                        'Extras'     : extra_dict},
                        stats]
         return searchList
-            
+
+    def getSummaryByFileName(self, timespan, by_time, template):
+        """Given the time, the type of summary, and a template name,
+        return a filename."""
+
+        #===============================================================
+        # Calculate the destination filename using the template name.
+        # Replace 'YYYY' with the year, 'MM' with the month, and
+        # strip off the trailing '.tmpl':
+        #===============================================================
+        
+        # Start by getting the start time as a timetuple.
+        timespan_start_tt = time.localtime(timespan.start)
+        # Get a string representing the year (e.g., '2009'):
+        _yr_str = "%4d"  % timespan_start_tt[0]
+        # Replace any instances of 'YYYY' with the string
+        _filename = os.path.basename(template).replace('.tmpl','').replace('YYYY', _yr_str)
+        if by_time == 'SummaryByMonth' :
+            # If this is a summary by month, do something similar for them month 
+            _mo_str = "%02d" % timespan_start_tt[1]
+            _filename = _filename.replace('MM', _mo_str)
+            # Save the resultant Year-Months so they can be used in an HTML drop down list:
+            self.outputted_dict['SummaryByMonth'].append("%s-%s" %(_yr_str, _mo_str))
+        elif by_time == 'SummaryByYear' :
+            # Save the resultant years so they can be used in an HTML drop down list:
+            self.outputted_dict['SummaryByYear'].append(_yr_str)
+
+        return _filename
+
     def _prepGen(self, subskin_dict):
         """Gather the options together for a specific report, then
         retrieve the template file, stats database, archive database, the destination directory,

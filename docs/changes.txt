@@ -19,6 +19,10 @@ The LOOP packets emitted by the driver for the Davis Vantage series
 now includes the max wind gust and direction seen since the beginning
 of the current archive period.
 
+The code that picks a filename for "summary by" reports has now been
+factored out into a separate function (getSummaryByFileName). This
+allows the logic to be changed by subclassing.
+
 Fixed a bug that did not allow plots with aggregations less than 60 minutes
 across a DST boundary.
 
