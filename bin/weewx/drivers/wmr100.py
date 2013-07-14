@@ -346,7 +346,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
         return _record
         
     def _uv_packet(self, packet):
-        _record = {'UV'              : float(packet[5]),
+        _record = {'UV'              : float(packet[3]),
                    'UVBatteryStatus' : packet[0] >> 4,
                    'dateTime'        : int(time.time() + 0.5),
                    'usUnits'         : weewx.METRIC}

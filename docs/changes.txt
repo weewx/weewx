@@ -26,6 +26,9 @@ allows the logic to be changed by subclassing.
 Fixed a bug that did not allow plots with aggregations less than 60 minutes
 across a DST boundary.
 
+Fixed bug in the WMR100 driver that prevented UV indexes from being 
+reported.
+
 The driver for the LaCrosse WS-28XX weather series continues to evolve and
 mature. However, you should still consider it experimental.
 
