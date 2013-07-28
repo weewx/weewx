@@ -1,4 +1,4 @@
-# Copyright (c) 2013 Chris Manton <cmanton@gmail.com>
+# Copyright (c) 2013 Chris Manton <cmanton@gmail.com>  www.onesockoff.org
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -91,7 +91,7 @@ def loader(config_dict, engine):
     # value-tuple.
     altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
 
-    station = WMR200(altitude=altitude_m, **config_dict['WMR-USB'])
+    station = WMR200(altitude=altitude_m, **config_dict['WMR200'])
 
     return station
 
@@ -633,14 +633,14 @@ class PacketRain(Packet):
 
         # Bytes 0 and 1: high and low byte of the current rainfall rate
         # in 0.1 in/h
-        rain_rate = ((self._pkt_data[9] << 8) | self._pkt_data[8]) / 3.9370078
+        rain_rate = ((self._pkt_data[8] << 8) | self._pkt_data[7]) / 100.0
         # Bytes 2 and 3: high and low byte of the last hour rainfall in 0.1in
-        rain_hour = ((self._pkt_data[11] << 8) | self._pkt_data[10]) / 3.9370078
+        rain_hour = ((self._pkt_data[10] << 8) | self._pkt_data[9]) / 100.0
         # Bytes 4 and 5: high and low byte of the last day rainfall in 0.1in
-        rain_day = ((self._pkt_data[13] << 8) | self._pkt_data[12]) / 3.9370078
+        rain_day = ((self._pkt_data[12] << 8) | self._pkt_data[11]) / 100.0
         # Bytes 6 and 7: high and low byte of the total rainfall in 0.1in
-        rain_total = ((self._pkt_data[15] << 8)
-                      | self._pkt_data[14]) / 3.9370078
+        rain_total = ((self._pkt_data[14] << 8)
+                      | self._pkt_data[13]) / 100.0
         # NB: in my experiments with the WMR100, it registers in increments of
         # 0.04 inches. Per Ejeklint's notes have you divide the packet values by
         # 10, but this would result in an 0.4 inch bucket --- too big. So, I'm
@@ -701,7 +701,7 @@ class PacketPressure(Packet):
             dprint('Pressure unknown nibble: %d' % (unknownNibble))
         dprint('Altitude corrected Pressure: %d hPa' % (altPressure))
 
-        self._record = {'barometer'   : pressure,
+        self._record = {'barometer'   : altPressure,
                         'pressure'    : pressure,
                         'altimeter'   : forecast,
                         'dateTime'    : self._timeStampEpoch(),
