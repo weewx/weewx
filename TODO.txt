@@ -1,2 +1,3 @@
 TODO before the next release:
 
+Dump should skip records with date and time equal to zero.

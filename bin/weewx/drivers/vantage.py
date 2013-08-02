@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2011, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -1066,28 +1066,35 @@ class Vantage(weewx.abstractstation.AbstractStation):
 #                         LOOP packet helper functions
 #===============================================================================
 
-# A tuple of all the types held in a Vantage LOOP packet in their native order.
-vp2loop = ('loop',            'loop_type',     'packet_type', 'next_record', 'barometer', 
-           'inTemp',          'inHumidity',    'outTemp', 
-           'windSpeed',       'windSpeed10',   'windDir', 
-           'extraTemp1',      'extraTemp2',    'extraTemp3',  'extraTemp4',
-           'extraTemp5',      'extraTemp6',    'extraTemp7', 
-           'soilTemp1',       'soilTemp2',     'soilTemp3',   'soilTemp4',
-           'leafTemp1',       'leafTemp2',     'leafTemp3',   'leafTemp4',
-           'outHumidity',     'extraHumid1',   'extraHumid2', 'extraHumid3',
-           'extraHumid4',     'extraHumid5',   'extraHumid6', 'extraHumid7',
-           'rainRate',        'UV',            'radiation',   'stormRain',   'stormStart',
-           'dayRain',         'monthRain',     'yearRain',    'dayET',       'monthET',    'yearET',
-           'soilMoist1',      'soilMoist2',    'soilMoist3',  'soilMoist4',
-           'leafWet1',        'leafWet2',      'leafWet3',    'leafWet4',
-           'insideAlarm',     'rainAlarm',     'outsideAlarm1', 'outsideAlarm2',
-           'extraAlarm1',     'extraAlarm2',   'extraAlarm3', 'extraAlarm4',
-           'extraAlarm5',     'extraAlarm6',   'extraAlarm7', 'extraAlarm8',
-           'soilLeafAlarm1',  'soilLeafAlarm2', 'soilLeafAlarm3', 'soilLeafAlarm4',
-           'txBatteryStatus', 'consBatteryVoltage', 'forecastIcon', 'forecastRule',
-           'sunrise',         'sunset')
+# A list of all the types held in a Vantage LOOP packet in their native order.
+loop_format = [('loop',              '3s'), ('loop_type',          'b'), ('packet_type',        'B'),
+               ('next_record',        'H'), ('barometer',          'H'), ('inTemp',             'h'),
+               ('inHumidity',         'B'), ('outTemp',            'h'), ('windSpeed',          'B'),
+               ('windSpeed10',        'B'), ('windDir',            'H'), ('extraTemp1',         'B'),
+               ('extraTemp2',         'B'), ('extraTemp3',         'B'), ('extraTemp4',         'B'),
+               ('extraTemp5',         'B'), ('extraTemp6',         'B'), ('extraTemp7',         'B'), 
+               ('soilTemp1',          'B'), ('soilTemp2',          'B'), ('soilTemp3',          'B'),
+               ('soilTemp4',          'B'), ('leafTemp1',          'B'), ('leafTemp2',          'B'),
+               ('leafTemp3',          'B'), ('leafTemp4',          'B'), ('outHumidity',        'B'),
+               ('extraHumid1',        'B'), ('extraHumid2',        'B'), ('extraHumid3',        'B'),
+               ('extraHumid4',        'B'), ('extraHumid5',        'B'), ('extraHumid6',        'B'),
+               ('extraHumid7',        'B'), ('rainRate',           'H'), ('UV',                 'B'),
+               ('radiation',          'H'), ('stormRain',          'H'), ('stormStart',         'H'),
+               ('dayRain',            'H'), ('monthRain',          'H'), ('yearRain',           'H'),
+               ('dayET',              'H'), ('monthET',            'H'), ('yearET',             'H'),
+               ('soilMoist1',         'B'), ('soilMoist2',         'B'), ('soilMoist3',         'B'),
+               ('soilMoist4',         'B'), ('leafWet1',           'B'), ('leafWet2',           'B'),
+               ('leafWet3',           'B'), ('leafWet4',           'B'), ('insideAlarm',        'B'),
+               ('rainAlarm',          'B'), ('outsideAlarm1',      'B'), ('outsideAlarm2',      'B'),
+               ('extraAlarm1',        'B'), ('extraAlarm2',        'B'), ('extraAlarm3',        'B'),
+               ('extraAlarm4',        'B'), ('extraAlarm5',        'B'), ('extraAlarm6',        'B'),
+               ('extraAlarm7',        'B'), ('extraAlarm8',        'B'), ('soilLeafAlarm1',     'B'),
+               ('soilLeafAlarm2',     'B'), ('soilLeafAlarm3',     'B'), ('soilLeafAlarm4',     'B'),
+               ('txBatteryStatus',    'B'), ('consBatteryVoltage', 'H'), ('forecastIcon',       'B'),
+               ('forecastRule',       'B'), ('sunrise',            'H'), ('sunset',             'H')]
 
-loop_format = struct.Struct("<3sbBHHhBhBBH7B4B4BB7BHBHHHHHHHHH4B4B16BBHBBHH")
+loop_types, fmt = zip(*loop_format)
+loop_fmt = struct.Struct('<' + ''.join(fmt))
 
 def unpackLoopPacket(raw_packet) :
     """Decode a Davis LOOP packet, returning the results as a dictionary.
@@ -1096,9 +1103,9 @@ def unpackLoopPacket(raw_packet) :
     the results placed a dictionary"""
 
     # Unpack the data, using the compiled stuct.Struct string 'loop_format'
-    data_tuple = loop_format.unpack(raw_packet)
+    data_tuple = loop_fmt.unpack(raw_packet)
 
-    packet = dict(zip(vp2loop, data_tuple))
+    packet = dict(zip(loop_types, data_tuple))
 
     # Detect the kind of LOOP packet. Type 'A' has the character 'P' in this
     # position. Type 'B' contains the 3-hour barometer trend in this position.
@@ -1121,29 +1128,40 @@ def unpackLoopPacket(raw_packet) :
 #                         archive packet helper functions
 #===============================================================================
 
-# Tuples of all the types held in a VantagePro2 Rev A or Rev B archive packet in their native order.
-vp2archA =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
-           'rain', 'rainRate', 'barometer', 'radiation', 'number_of_wind_samples',
-           'inTemp', 'inHumidity', 'outHumidity', 'windSpeed', 'windGust', 'windGustDir', 'windDir',
-           'UV', 'ET', 'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4', 
-           'soilTemp1', 'soilTemp2', 'soilTemp3','soilTemp4', 
-           'leafWet1', 'leafWet2', 'leafWet3', 'leafWet4',
-           'extraTemp1', 'extraTemp2',
-           'extraHumid1', 'extraHumid2',
-           'readClosed', 'readOpened')
+rec_format_A =[('date_stamp',              'H'), ('time_stamp',    'H'), ('outTemp',    'h'),
+               ('highOutTemp',             'h'), ('lowOutTemp',    'h'), ('rain',       'H'),
+               ('rainRate',                'H'), ('barometer',     'H'), ('radiation',  'H'),
+               ('number_of_wind_samples',  'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
+               ('outHumidity',             'B'), ('windSpeed',     'B'), ('windGust',   'B'),
+               ('windGustDir',             'B'), ('windDir',       'B'), ('UV',         'B'),
+               ('ET',                      'B'), ('invalid_data',  'B'), ('soilMoist1', 'B'),
+               ('soilMoist2',              'B'), ('soilMoist3',    'B'), ('soilMoist4', 'B'),
+               ('soilTemp1',               'B'), ('soilTemp2',     'B'), ('soilTemp3',  'B'),
+               ('soilTemp4',               'B'), ('leafWet1',      'B'), ('leafWet2',   'B'),
+               ('leafWet3',                'B'), ('leafWet4',      'B'), ('extraTemp1', 'B'),
+               ('extraTemp2',              'B'), ('extraHumid1',   'B'), ('extraHumid2','B'),
+               ('readClosed',              'H'), ('readOpened',    'H'), ('unused',     'B')]
 
-vp2archB =('date_stamp', 'time_stamp', 'outTemp', 'highOutTemp', 'lowOutTemp',
-           'rain', 'rainRate', 'barometer', 'radiation', 'number_of_wind_samples',
-           'inTemp', 'inHumidity', 'outHumidity', 'windSpeed', 'windGust', 'windGustDir', 'windDir',
-           'UV', 'ET', 'highRadiation', 'highUV', 'forecastRule',
-           'leafTemp1', 'leafTemp2', 'leafWet1', 'leafWet2',
-           'soilTemp1', 'soilTemp2', 'soilTemp3','soilTemp4', 'download_record_type',
-           'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
-           'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4')
+rec_format_B = [('date_stamp',             'H'), ('time_stamp',    'H'), ('outTemp',    'h'),
+                ('highOutTemp',            'h'), ('lowOutTemp',    'h'), ('rain',       'H'),
+                ('rainRate',               'H'), ('barometer',     'H'), ('radiation',  'H'),
+                ('number_of_wind_samples', 'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
+                ('outHumidity',            'B'), ('windSpeed',     'B'), ('windGust',   'B'),
+                ('windGustDir',            'B'), ('windDir',       'B'), ('UV',         'B'),
+                ('ET',                     'B'), ('highRadiation', 'H'), ('highUV',     'B'),
+                ('forecastRule',           'B'), ('leafTemp1',     'B'), ('leafTemp2',  'B'),
+                ('leafWet1',               'B'), ('leafWet2',      'B'), ('soilTemp1',  'B'),
+                ('soilTemp2',              'B'), ('soilTemp3',     'B'), ('soilTemp4',  'B'),
+                ('download_record_type',   'B'), ('extraHumid1',   'B'), ('extraHumid2','B'),
+                ('extraTemp1',             'B'), ('extraTemp2',    'B'), ('extraTemp3', 'B'),
+                ('soilMoist1',             'B'), ('soilMoist2',    'B'), ('soilMoist3', 'B'),
+                ('soilMoist4',             'B')]
 
-archive_format_revA = struct.Struct("<HHhhhHHHHHhBBBBBBBBx4B4B4B2B2BHHx")
-archive_format_revB = struct.Struct("<HHhhhHHHHHhBBBBBBBBHBB2B2B4BB2B3B4B")
-    
+rec_types_A, fmt = zip(*rec_format_A)
+rec_fmt_A = struct.Struct('<' + ''.join(fmt))
+rec_types_B, fmt = zip(*rec_format_B)
+rec_fmt_B = struct.Struct('<' + ''.join(fmt))
+
 def unpackArchivePacket(raw_packet):
     """Decode a Davis archive packet, returning the results as a dictionary.
     
@@ -1153,14 +1171,14 @@ def unpackArchivePacket(raw_packet):
     # Figure out the packet type:
     packet_type = ord(raw_packet[42])
     
-    if packet_type == 0x00 :
-        # Rev B packet type:
-        archive_format = archive_format_revB
-        dataTypes = vp2archB
-    elif packet_type == 0xff:
+    if packet_type == 0xff:
         # Rev A packet type:
-        archive_format = archive_format_revA
-        dataTypes = vp2archA
+        archive_format = rec_fmt_A
+        dataTypes = rec_types_A
+    elif packet_type == 0x00 :
+        # Rev B packet type:
+        archive_format = rec_fmt_B
+        dataTypes = rec_types_B
     else:
         raise weewx.UnknownArchiveType("Unknown archive type = 0x%x" % (packet_type,)) 
         
@@ -1388,7 +1406,7 @@ _archive_map={'interval'       : _null_int,
               'rainRate'       : _val100,
               'ET'             : _val1000,
               'radiation'      : _big_val,
-              'highRadiation'  : lambda v : float(v) if v else None,
+              'highRadiation'  : _big_val,
               'UV'             : _little_val10,
               'highUV'         : _little_val10, # TODO: not sure about this one. 
               'extraTemp1'     : _little_temp,

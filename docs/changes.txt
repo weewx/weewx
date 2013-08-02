@@ -19,6 +19,9 @@ The LOOP packets emitted by the driver for the Davis Vantage series
 now includes the max wind gust and direction seen since the beginning
 of the current archive period.
 
+Changed the null value from zero (which the Davis documentation specifies)
+to 0x7fff for the VP2 type 'highRadiation'.
+
 The code that picks a filename for "summary by" reports has now been
 factored out into a separate function (getSummaryByFileName). This
 allows the logic to be changed by subclassing.
