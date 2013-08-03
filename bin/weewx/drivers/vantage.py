@@ -407,18 +407,16 @@ class Vantage(weewx.abstractstation.AbstractStation):
             # Get LOOP packets in big batches This is necessary because there is
             # an undocumented limit to how many LOOP records you can request
             # on the VP (somewhere around 220).
-            for _loopPacket in self.genDavisLoopPackets(200):
-                # Translate the LOOP packet to one with physical units:
-                _physicalPacket = self.translateLoopPacket(_loopPacket)
-                yield _physicalPacket
+            for _loop_packet in self.genDavisLoopPackets(200):
+                yield _loop_packet
                 
 
     def genDavisLoopPackets(self, N=1):
-        """Generator function to return N LoopPacket objects from a Vantage console
+        """Generator function to return N loop packets from a Vantage console
         
         N: The number of packets to generate [default is 1]
         
-        yields: up to N DavisLoopPacket objects (could be less in the event of a 
+        yields: up to N loop packets (could be less in the event of a 
         read or CRC error).
         """
 
@@ -452,9 +450,9 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 ntries += 1
                 continue
             # ... decode it
-            pkt_dict = unpackLoopPacket(_buffer[:95])
+            loop_packet = self._unpackLoopPacket(_buffer[:95])
             # Yield it
-            yield pkt_dict
+            yield loop_packet
             ntries = 1
 
     def genArchiveRecords(self, since_ts):
@@ -866,59 +864,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
         
     def stopLogger(self):
         self.port.send_command('STOP\n')
-        
-    def translateLoopPacket(self, packet):
-        """Translates a loop packet from the internal units used by Davis, into US Customary Units.
-        
-        packet: A dictionary holding the LOOP data in the internal units used by Davis.
-        
-        returns: A dictionary with the values in US Customary Units."""
-        # This dictionary maps a type key to a function. The function should be able to
-        # decode a sensor value held in the loop packet in the internal, Davis form into US
-        # units and return it. From the Davis documentation, it's not clear what the
-        # 'dash' value is for some of these, so I'm assuming it's the same as for an archive
-        # packet.
-    
-        if packet['usUnits'] != weewx.US :
-            raise weewx.ViolatedPrecondition("Unit system on the Vantage must be US Customary Units only")
-    
-        record = {}
-        
-        for _type in _loop_map:    
-            # Get the mapping function needed for this key
-            func = _loop_map[_type]
-            # Call it, with the value as an argument, storing the result:
-            record[_type] = func(packet[_type])
-            
-        # Adjust sunrise and sunset:
-        start_of_day = weeutil.weeutil.startOfDay(record['dateTime'])
-        record['sunrise'] += start_of_day
-        record['sunset']  += start_of_day
-    
-        # Add a few derived values that are not in the packet itself.
-        T = record['outTemp']
-        R = record['outHumidity']
-        W = record['windSpeed']
-    
-        record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
-        record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
-        record['windchill'] = weewx.wxformulas.windchillF(T, W)
-        
-        # Because the Davis stations do not offer bucket tips in LOOP data, we
-        # must calculate it by looking for changes in rain totals. This won't
-        # work for the very first rain packet.
-        if self.save_monthRain is None:
-            delta = None
-        else:
-            delta = record['monthRain']-self.save_monthRain
-            # If the difference is negative, we're at the beginning of a month.
-            if delta < 0: delta = None
-        record['rain'] = delta
-        self.save_monthRain = record['monthRain']
-
-        record['usUnits'] = weewx.US
-        
-        return record
 
     def translateArchivePacket(self, packet):
         """Translates an archive packet from the internal units used by Davis, into US units.
@@ -1062,6 +1007,69 @@ class Vantage(weewx.abstractstation.AbstractStation):
             return EthernetWrapper(hostname, tcp_port, timeout, tcp_send_delay)
         raise weewx.UnsupportedFeature(vp_dict['type'])
 
+    def _unpackLoopPacket(self, raw_loop_string):
+        """Decode a raw Davis LOOP packet, returning the results as a dictionary in physical units.
+        
+        raw_loop_string: The loop packet data buffer, passed in as a string. 
+        
+        returns:
+        
+        A dictionary. The key will be an observation type, the value will be
+        the observation in physical units."""
+    
+        # Unpack the data, using the compiled stuct.Struct string 'loop_fmt'
+        data_tuple = loop_fmt.unpack(raw_loop_string)
+
+        # Put the results in a dictionary. The values will not be in physical units yet,
+        # but rather using the raw values from the console.
+        raw_loop_packet = dict(zip(loop_types, data_tuple))
+    
+        # Detect the kind of LOOP packet. Type 'A' has the character 'P' in this
+        # position. Type 'B' contains the 3-hour barometer trend in this position.
+        if raw_loop_packet['loop_type'] == ord('P'):
+            raw_loop_packet['trend'] = None
+            raw_loop_packet['loop_type'] = 'A'
+        else :
+            raw_loop_packet['trend'] = raw_loop_packet['loop_type']
+            raw_loop_packet['loop_type'] = 'B'
+    
+        loop_packet = {'dateTime' : int(time.time() + 0.5),
+                       'usUnits'  : weewx.US}
+        
+        for _type in _loop_map:    
+            # Get the mapping function needed for this key
+            func = _loop_map[_type]
+            # Call it, with the value as an argument, storing the result:
+            loop_packet[_type] = func(raw_loop_packet[_type])
+            
+        # Adjust sunrise and sunset:
+        start_of_day = weeutil.weeutil.startOfDay(loop_packet['dateTime'])
+        loop_packet['sunrise'] += start_of_day
+        loop_packet['sunset']  += start_of_day
+    
+        # Add a few derived values that are not in the packet itself.
+        T = loop_packet['outTemp']
+        R = loop_packet['outHumidity']
+        W = loop_packet['windSpeed']
+    
+        loop_packet['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
+        loop_packet['heatindex'] = weewx.wxformulas.heatindexF(T, R)
+        loop_packet['windchill'] = weewx.wxformulas.windchillF(T, W)
+        
+        # Because the Davis stations do not offer bucket tips in LOOP data, we
+        # must calculate it by looking for changes in rain totals. This won't
+        # work for the very first rain packet.
+        if self.save_monthRain is None:
+            delta = None
+        else:
+            delta = loop_packet['monthRain']-self.save_monthRain
+            # If the difference is negative, we're at the beginning of a month.
+            if delta < 0: delta = None
+        loop_packet['rain'] = delta
+        self.save_monthRain = loop_packet['monthRain']
+
+        return loop_packet
+    
 #===============================================================================
 #                         LOOP packet helper functions
 #===============================================================================
@@ -1095,34 +1103,6 @@ loop_format = [('loop',              '3s'), ('loop_type',          'b'), ('packe
 
 loop_types, fmt = zip(*loop_format)
 loop_fmt = struct.Struct('<' + ''.join(fmt))
-
-def unpackLoopPacket(raw_packet) :
-    """Decode a Davis LOOP packet, returning the results as a dictionary.
-    
-    raw_packet: The loop packet data buffer, passed in as a string. This will be unpacked and 
-    the results placed a dictionary"""
-
-    # Unpack the data, using the compiled stuct.Struct string 'loop_format'
-    data_tuple = loop_fmt.unpack(raw_packet)
-
-    packet = dict(zip(loop_types, data_tuple))
-
-    # Detect the kind of LOOP packet. Type 'A' has the character 'P' in this
-    # position. Type 'B' contains the 3-hour barometer trend in this position.
-    if packet['loop_type'] == ord('P'):
-        packet['trend'] = None
-        packet['loop_type'] = 'A'
-    else :
-        packet['trend'] = packet['loop_type']
-        packet['loop_type'] = 'B'
-
-    # Add a timestamp:
-    packet['dateTime'] = int(time.time() + 0.5)
-
-    # As far as I know, the Davis supports only US units:
-    packet['usUnits'] = weewx.US
-    
-    return packet
 
 #===============================================================================
 #                         archive packet helper functions
@@ -1314,8 +1294,7 @@ def _bucket_2_None(v):
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the LOOP packet in the internal, Davis form into US
 # units and return it.
-_loop_map = {'dateTime'        : _null,
-             'barometer'       : _val1000Zero, 
+_loop_map = {'barometer'       : _val1000Zero, 
              'inTemp'          : _big_val10, 
              'inHumidity'      : _little_val, 
              'outTemp'         : _big_val10, 
