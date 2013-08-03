@@ -409,7 +409,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
             # on the VP (somewhere around 220).
             for _loop_packet in self.genDavisLoopPackets(200):
                 yield _loop_packet
-                
 
     def genDavisLoopPackets(self, N=1):
         """Generator function to return N loop packets from a Vantage console
@@ -508,16 +507,10 @@ class Vantage(weewx.abstractstation.AbstractStation):
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" \
                                   % (unused_ipage, _index))
                     return
+                
                 # Unpack the raw archive packet:
-                _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
-                # Divide archive interval by 60 to keep consistent with wview
-                _packet['interval']   = self.archive_interval / 60 
-                _packet['model_type'] = self.model_type
-                _packet['iss_id']     = self.iss_id
-                _packet['rxCheckPercent'] = _rxcheck(_packet)
+                _record = self._unpackArchivePacket(_page[1+52*_index:53+52*_index])
 
-                # Convert from the internal, Davis encoding to physical units:
-                _record = self.translateArchivePacket(_packet)
                 # Check to see if the time stamps are declining, which would
                 # signal that we are done. 
                 if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts - self.max_dst_jump:
@@ -562,15 +555,8 @@ class Vantage(weewx.abstractstation.AbstractStation):
                                   % (unused_ipage, _index))
                     continue
                 # Unpack the raw archive packet:
-                _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
-                # Divide archive interval by 60 to keep consistent with wview
-                _packet['interval']   = self.archive_interval / 60 
-                _packet['model_type'] = self.model_type
-                _packet['iss_id']     = self.iss_id
-                _packet['rxCheckPercent'] = _rxcheck(_packet)
+                _record = self._unpackArchivePacket(_page[1+52*_index:53+52*_index])
 
-                # Convert from the internal, Davis encoding to physical units:
-                _record = self.translateArchivePacket(_packet)
                 yield _record
 
     def genLoggerSummary(self):
@@ -865,39 +851,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
     def stopLogger(self):
         self.port.send_command('STOP\n')
 
-    def translateArchivePacket(self, packet):
-        """Translates an archive packet from the internal units used by Davis, into US units.
-        
-        packet: A dictionary holding an archive packet in the internal, Davis encoding
-        
-        returns: A dictionary with the values in US units."""
-    
-        if packet['usUnits'] != weewx.US :
-            raise weewx.ViolatedPrecondition("Unit system on the Vantage must be U.S. units only")
-    
-        record = {}
-        
-        for _type in packet:
-            
-            # Get the mapping function needed for this key
-            func = _archive_map.get(_type)
-            if func:
-                # Call it, with the value as an argument, storing the results:
-                record[_type] = func(packet[_type])
-    
-        # Add a few derived values that are not in the packet itself.
-        T = record['outTemp']
-        R = record['outHumidity']
-        W = record['windSpeed']
-        
-        record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
-        record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
-        record['windchill'] = weewx.wxformulas.windchillF(T, W)
-        record['dateTime']  = _archive_datetime(packet['date_stamp'], packet['time_stamp'])
-        record['usUnits']   = weewx.US
-        
-        return record
-    
     #===========================================================================
     #              Davis Vantage utility functions
     #===========================================================================
@@ -1070,8 +1023,56 @@ class Vantage(weewx.abstractstation.AbstractStation):
 
         return loop_packet
     
+    def _unpackArchivePacket(self, raw_archive_string):
+        """Decode a Davis archive packet, returning the results as a dictionary.
+        
+        raw_archive_string: The archive packet data buffer, passed in as a string. This will be unpacked and 
+        the results placed a dictionary"""
+    
+        # Figure out the packet type:
+        packet_type = ord(raw_archive_string[42])
+        
+        if packet_type == 0xff:
+            # Rev A packet type:
+            archive_format = rec_fmt_A
+            dataTypes = rec_types_A
+        elif packet_type == 0x00 :
+            # Rev B packet type:
+            archive_format = rec_fmt_B
+            dataTypes = rec_types_B
+        else:
+            raise weewx.UnknownArchiveType("Unknown archive type = 0x%x" % (packet_type,)) 
+            
+        data_tuple = archive_format.unpack(raw_archive_string)
+        
+        raw_archive_packet = dict(zip(dataTypes, data_tuple))
+        
+        archive_packet = {'dateTime' : _archive_datetime(raw_archive_packet['date_stamp'], raw_archive_packet['time_stamp']),
+                          'usUnits'  : weewx.US}
+        
+        for _type in _archive_map:
+            # If the type exists in the raw packet, then call the mapping function on it,
+            # thus converting from the raw units to physical units:
+            if raw_archive_packet.has_key(_type):
+                archive_packet[_type] = _archive_map[_type](raw_archive_packet[_type])
+    
+        # Add a few derived values that are not in the packet itself.
+        T = archive_packet['outTemp']
+        R = archive_packet['outHumidity']
+        W = archive_packet['windSpeed']
+        
+        archive_packet['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
+        archive_packet['heatindex'] = weewx.wxformulas.heatindexF(T, R)
+        archive_packet['windchill'] = weewx.wxformulas.windchillF(T, W)
+        
+        # Divide archive interval by 60 to keep consistent with wview
+        archive_packet['interval']   = int(self.archive_interval / 60) 
+        archive_packet['rxCheckPercent'] = _rxcheck(self.model_type, archive_packet['interval'], 
+                                                    self.iss_id, raw_archive_packet['number_of_wind_samples'])
+        return archive_packet
+    
 #===============================================================================
-#                         LOOP packet helper functions
+#                                 LOOP packet
 #===============================================================================
 
 # A list of all the types held in a Vantage LOOP packet in their native order.
@@ -1105,7 +1106,7 @@ loop_types, fmt = zip(*loop_format)
 loop_fmt = struct.Struct('<' + ''.join(fmt))
 
 #===============================================================================
-#                         archive packet helper functions
+#                              archive packet
 #===============================================================================
 
 rec_format_A =[('date_stamp',              'H'), ('time_stamp',    'H'), ('outTemp',    'h'),
@@ -1137,53 +1138,25 @@ rec_format_B = [('date_stamp',             'H'), ('time_stamp',    'H'), ('outTe
                 ('soilMoist1',             'B'), ('soilMoist2',    'B'), ('soilMoist3', 'B'),
                 ('soilMoist4',             'B')]
 
-rec_types_A, fmt = zip(*rec_format_A)
-rec_fmt_A = struct.Struct('<' + ''.join(fmt))
-rec_types_B, fmt = zip(*rec_format_B)
-rec_fmt_B = struct.Struct('<' + ''.join(fmt))
+# Extract the types and struct.Struct formats for the two types of archive packets:
+rec_types_A, fmt_A = zip(*rec_format_A)
+rec_types_B, fmt_B = zip(*rec_format_B)
+rec_fmt_A = struct.Struct('<' + ''.join(fmt_A))
+rec_fmt_B = struct.Struct('<' + ''.join(fmt_B))
 
-def unpackArchivePacket(raw_packet):
-    """Decode a Davis archive packet, returning the results as a dictionary.
-    
-    raw_packet: The archive packet data buffer, passed in as a string. This will be unpacked and 
-    the results placed a dictionary"""
-
-    # Figure out the packet type:
-    packet_type = ord(raw_packet[42])
-    
-    if packet_type == 0xff:
-        # Rev A packet type:
-        archive_format = rec_fmt_A
-        dataTypes = rec_types_A
-    elif packet_type == 0x00 :
-        # Rev B packet type:
-        archive_format = rec_fmt_B
-        dataTypes = rec_types_B
-    else:
-        raise weewx.UnknownArchiveType("Unknown archive type = 0x%x" % (packet_type,)) 
-        
-    data_tuple = archive_format.unpack(raw_packet)
-    
-    packet = dict(zip(dataTypes, data_tuple))
-    
-    # As far as I know, the Davis supports only US units:
-    packet['usUnits'] = weewx.US
-
-    return packet
-
-def _rxcheck(packet):
+def _rxcheck(model_type, interval, iss_id, number_of_wind_samples):
     """Gives an estimate of the fraction of packets received.
     
     Ref: Vantage Serial Protocol doc, V2.1.0, released 25-Jan-05; p42"""
     # The formula for the expected # of packets varies with model number.
-    if packet['model_type'] == 1 :
-        _expected_packets = float(packet['interval'] * 60) / ( 2.5 + (packet['iss_id']-1) / 16.0) -\
-                            float(packet['interval'] * 60) / (50.0 + (packet['iss_id']-1) * 1.25)
-    elif packet['model_type'] == 2 :
-        _expected_packets = 960.0 * packet['interval'] / float(41 + packet['iss_id'] - 1)
+    if model_type == 1 :
+        _expected_packets = float(interval * 60) / ( 2.5 + (iss_id-1) / 16.0) -\
+                            float(interval * 60) / (50.0 + (iss_id-1) * 1.25)
+    elif model_type == 2 :
+        _expected_packets = 960.0 * interval / float(41 + iss_id - 1)
     else :
         return None
-    _frac = packet['number_of_wind_samples'] * 100.0 / _expected_packets
+    _frac = number_of_wind_samples * 100.0 / _expected_packets
     if _frac > 100.0 :
         _frac = 100.0
     return _frac
@@ -1369,8 +1342,7 @@ _loop_map = {'barometer'       : _val1000Zero,
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the archive packet in the internal, Davis form into US
 # units and return it.
-_archive_map={'interval'       : _null_int,
-              'barometer'      : _val1000Zero, 
+_archive_map={'barometer'      : _val1000Zero, 
               'inTemp'         : _big_val10,
               'outTemp'        : _big_val10,
               'highOutTemp'    : lambda v : float(v/10.0) if v != -32768 else None,
@@ -1407,7 +1379,6 @@ _archive_map={'interval'       : _null_int,
               'leafWet2'       : _little_val,
               'leafWet3'       : _little_val,
               'leafWet4'       : _little_val,
-              'rxCheckPercent' : _null_float,
               'forecastRule'   : _null,
               'readClosed'     : _null,
               'readOpened'     : _null}
