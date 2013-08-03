@@ -499,17 +499,19 @@ class Vantage(weewx.abstractstation.AbstractStation):
             _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
             # Now extract each record from the page
             for _index in xrange(_start_index, 5) :
+                # Get the record string buffer for this index:
+                _record_string = _page[1+52*_index:53+52*_index]
                 # If the console has been recently initialized, there will
                 # be unused records, which are filled with 0xff. Detect this
                 # by looking at the first 4 bytes (the date and time):
-                if _page[1+52*_index:5+52*_index] == 4*chr(0xff) :
+                if _record_string[0:4] == 4*chr(0xff) or _record_string[0:4] == 4*chr(0x00):
                     # This record has never been used. We're done.
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" \
                                   % (unused_ipage, _index))
                     return
                 
-                # Unpack the raw archive packet:
-                _record = self._unpackArchivePacket(_page[1+52*_index:53+52*_index])
+                # Unpack the archive packet from the string buffer:
+                _record = self._unpackArchivePacket(_record_string)
 
                 # Check to see if the time stamps are declining, which would
                 # signal that we are done. 
@@ -546,16 +548,18 @@ class Vantage(weewx.abstractstation.AbstractStation):
             _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
             # Now extract each record from the page
             for _index in xrange(5) :
+                # Get the record string buffer for this index:
+                _record_string = _page[1+52*_index:53+52*_index]
                 # If the console has been recently initialized, there will
                 # be unused records, which are filled with 0xff. Detect this
                 # by looking at the first 4 bytes (the date and time):
-                if _page[1+52*_index:5+52*_index] == 4*chr(0xff) :
+                if _record_string[0:4] == 4*chr(0xff) or _record_string[0:4] == 4*chr(0x00):
                     # This record has never been used. Skip it
                     syslog.syslog(syslog.LOG_DEBUG, "VantagePro: empty record page %d; index %d" \
                                   % (unused_ipage, _index))
                     continue
                 # Unpack the raw archive packet:
-                _record = self._unpackArchivePacket(_page[1+52*_index:53+52*_index])
+                _record = self._unpackArchivePacket(_record_string)
 
                 yield _record
 
@@ -578,17 +582,17 @@ class Vantage(weewx.abstractstation.AbstractStation):
             _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
             # Now extract each record from the page
             for _index in xrange(5) :
+                # Get the record string buffer for this index:
+                _record_string = _page[1+52*_index:53+52*_index]
                 # If the console has been recently initialized, there will
                 # be unused records, which are filled with 0xff. Detect this
                 # by looking at the first 4 bytes (the date and time):
-                if _page[1+52*_index:5+52*_index] == 4*chr(0xff) :
+                if _record_string[0:4] == 4*chr(0xff) or _record_string[0:4] == 4*chr(0x00):
                     # This record has never been used.
                     y = mo = d = h = mn = time_ts = None
                 else:
-                    # Unpack the raw archive packet:
-                    _packet = unpackArchivePacket(_page[1+52*_index:53+52*_index])
-                    datestamp = _packet['date_stamp']
-                    timestamp = _packet['time_stamp']
+                    # Extract the date and time from the raw buffer:
+                    datestamp, timestamp = struct.unpack("<HH", _record_string[0:4])
                     time_ts = _archive_datetime(datestamp, timestamp)
                     y  = (0xfe00 & datestamp) >> 9    # year
                     mo = (0x01e0 & datestamp) >> 5    # month
