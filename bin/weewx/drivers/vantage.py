@@ -993,12 +993,14 @@ class Vantage(weewx.abstractstation.AbstractStation):
         loop_packet = {'dateTime' : int(time.time() + 0.5),
                        'usUnits'  : weewx.US}
         
-        for _type in _loop_map:    
-            # Get the mapping function needed for this key
-            func = _loop_map[_type]
-            # Call it, with the value as an argument, storing the result:
-            loop_packet[_type] = func(raw_loop_packet[_type])
-            
+        for _type in raw_loop_packet:
+            # Get the mapping function for this type:
+            func = _loop_map.get(_type)
+            # It it exists, apply it:
+            if func:
+                # Call the function, with the value as an argument, storing the result:
+                loop_packet[_type] = func(raw_loop_packet[_type])
+
         # Adjust sunrise and sunset:
         start_of_day = weeutil.weeutil.startOfDay(loop_packet['dateTime'])
         loop_packet['sunrise'] += start_of_day
@@ -1054,12 +1056,14 @@ class Vantage(weewx.abstractstation.AbstractStation):
         archive_packet = {'dateTime' : _archive_datetime(raw_archive_packet['date_stamp'], raw_archive_packet['time_stamp']),
                           'usUnits'  : weewx.US}
         
-        for _type in _archive_map:
-            # If the type exists in the raw packet, then call the mapping function on it,
-            # thus converting from the raw units to physical units:
-            if raw_archive_packet.has_key(_type):
-                archive_packet[_type] = _archive_map[_type](raw_archive_packet[_type])
-    
+        for _type in raw_archive_packet:
+            # Get the mapping function for this type:
+            func = _archive_map.get(_type)
+            # It it exists, apply it:
+            if func:
+                # Call the function, with the value as an argument, storing the result:
+                archive_packet[_type] = func(raw_archive_packet[_type])
+                
         # Add a few derived values that are not in the packet itself.
         T = archive_packet['outTemp']
         R = archive_packet['outHumidity']
@@ -1106,6 +1110,7 @@ loop_format = [('loop',              '3s'), ('loop_type',          'b'), ('packe
                ('txBatteryStatus',    'B'), ('consBatteryVoltage', 'H'), ('forecastIcon',       'B'),
                ('forecastRule',       'B'), ('sunrise',            'H'), ('sunset',             'H')]
 
+# Extract the types and struct.Struct formats for the LOOP packets:
 loop_types, fmt = zip(*loop_format)
 loop_fmt = struct.Struct('<' + ''.join(fmt))
 
@@ -1363,7 +1368,7 @@ _archive_map={'barometer'      : _val1000Zero,
               'radiation'      : _big_val,
               'highRadiation'  : _big_val,
               'UV'             : _little_val10,
-              'highUV'         : _little_val10, # TODO: not sure about this one. 
+              'highUV'         : _little_val10,
               'extraTemp1'     : _little_temp,
               'extraTemp2'     : _little_temp,
               'extraTemp3'     : _little_temp,
@@ -1390,6 +1395,8 @@ _archive_map={'barometer'      : _val1000Zero,
 #===============================================================================
 #                      class VantageService
 #===============================================================================
+
+# This class uses multiple inheritance:
 
 class VantageService(Vantage, weewx.wxengine.StdService):
     """Weewx service for the Vantage weather stations."""

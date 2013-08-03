@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-2.4.0 07/XX/13
+2.4.0 08/03/13
 
 The configuration utility wee_config_vantage now allows you to set
 DST to 'auto', 'off', or 'on'. It also lets you set either a time
