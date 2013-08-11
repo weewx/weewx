@@ -36,6 +36,9 @@ help: info
 	@echo "    upload-deb  upload the deb package"
 	@echo "    upload-rpm  upload the rpm package"
 	@echo " upload-readme  upload the README.txt for sourceforge"
+	@echo ""
+	@echo "          test  run all unit tests"
+	@echo "                SUITE=path/to/foo.py to run only foo tests"
 
 info:
 	@echo "     VERSION: $(VERSION)"
@@ -49,6 +52,21 @@ realclean:
 
 check-docs:
 	weblint docs/*.htm
+
+# if no suite is specified, find all test suites in the source tree
+ifndef SUITE
+SUITE=`find bin -name "test_*.py"`
+endif
+test:
+	@rm -f $(BLDDIR)/test-results
+	@mkdir -p $(BLDDIR)
+	@for f in $(SUITE); do \
+  echo $$f >> $(BLDDIR)/test-results; \
+  PYTHONPATH=bin python $$f 2>> $(BLDDIR)/test-results; \
+  echo >> $(BLDDIR)/test-results; \
+done
+	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results
+	@echo "see $(BLDDIR)/test-results"
 
 install:
 	./setup.py --install

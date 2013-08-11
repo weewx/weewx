@@ -381,6 +381,62 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(start_of_day, int(time.mktime((2007, 3, 11, 0, 0, 0, 0, 0, -1))))
         self.assertEqual(start2      , int(time.mktime((2007, 3, 10, 0, 0, 0, 0, 0, -1))))
 
+    def test_getDayNightTransitions(self):
+        from weeutil.weeutil import getDayNightTransitions
+        times = [
+            [time.mktime((2012, 1, 1, 0, 0, 0, 0, 0, -1)),
+             time.mktime((2012, 1, 2, 1, 0, 0, 0, 0, -1))],
+            [time.mktime((2012, 6, 21, 0, 0, 0, 0, 0, -1)),
+             time.mktime((2012, 6, 22, 1, 0, 0, 0, 0, -1))],
+            [time.mktime((2012, 12, 21, 0, 0, 0, 0, 0, -1)),
+             time.mktime((2012, 12, 22, 1, 0, 0, 0, 0, -1))],
+            ]
+
+        data = [
+            # greenwich
+            
+            [times[0][0], times[0][1], 0, -80,
+             'night', [1325416783.0, 1325460428.0]],
+            [times[0][0], times[0][1], 0, -45,
+             'night', [1325408380.0, 1325452025.0]],
+            [times[0][0], times[0][1], 0, 0,
+             'night', [1325397576.0, 1325441222.0]],
+            [times[0][0], times[0][1], 0, 45,
+             'day', [1325430418.0, 1325473201.0]],
+            [times[0][0], times[0][1], 0, 80,
+             'day', [1325422016.0, 1325464798.0]],
+
+            # negative longitude
+
+            [times[0][0], times[0][1], -70, -80,
+             'night', [1325395405.0, 1325481805.0, 1325481834.0]],
+            [times[0][0], times[0][1], -70, -45,
+             'day', [1325473403.0, 1325473431.0]],
+            [times[0][0], times[0][1], -70, 0,
+             'day', [1325462599.0, 1325462627.0]],
+            [times[0][0], times[0][1], -70, 45,
+             'day', [1325451796.0, 1325451824.0]],
+            [times[0][0], times[0][1], -70, 80,
+             'day', [1325443393.0, 1325443421.0]],
+
+            # positive longitude
+
+            [times[0][0], times[0][1], 70, -80,
+             'night', [1325438605.0, 1325438605.0]],
+            [times[0][0], times[0][1], 70, -45,
+             'night', [1325430203.0, 1325430203.0]],
+            [times[0][0], times[0][1], 70, 0,
+             'night', [1325419399.0, 1325419399.0]],
+            [times[0][0], times[0][1], 70, 45,
+             'night', [1325408596.0, 1325408596.0]],
+            [times[0][0], times[0][1], 70, 80,
+             'night', [1325400193.0, 1325400193.0]],
+            ]
+
+        for j,r in enumerate(data):
+            first, values = getDayNightTransitions(r[0], r[1], r[2], r[3])
+            self.assertEqual("%d %s" % (j, first), "%d %s" % (j, r[4]))
+            self.assertEqual("%d %s" % (j, values), "%d %s" % (j, r[5]))
+
 if __name__ == '__main__':
     unittest.main()
-    
