@@ -59,11 +59,11 @@ Configuration
 
 [Forecast]
     # how often to calculate the forecast, in seconds
-    forecast_interval = 300
+    interval = 300
     # how long to keep old forecasts, in seconds.  use None to keep forever.
-    forecast_max_age = 604800
+    max_age = 604800
     # the database in which to record forecast information
-    forecast_database = forecast_sqlite
+    database = forecast_sqlite
 
     [[Zambretti]]
         # hemisphere can be NORTH or SOUTH
@@ -77,7 +77,7 @@ Configuration
         # to your location.
 
         # how often to download the forecast, in seconds
-        forecast_interval = 10800
+        interval = 10800
         # national weather service location identifier
         id = MAZ014
         # national weather service forecast office identifier
@@ -87,7 +87,7 @@ Configuration
 
     [[WU]]
         # how often to download the forecast, in seconds
-        forecast_interval = 10800
+        interval = 10800
         # an api key is required to access the weather underground.
         # obtain an api key here:
         #   http://www.wunderground.com/weather/api/
@@ -172,29 +172,30 @@ def get_int(config_dict, label, default_value):
 class Forecast(StdService):
     """Provide forecast."""
 
-    def __init__(self, engine, config_dict, method_id):
+    def __init__(self, engine, config_dict, method_id, table='archive'):
         super(Forecast, self).__init__(engine, config_dict)
         d = config_dict['Forecast'] if 'Forecast' in config_dict.keys() else {}
-        self.interval = get_int(d, 'forecast_interval', 300)
-        self.max_age = get_int(d, 'forecast_max_age', 604800)
+        self.interval = get_int(d, 'interval', 300)
+        self.max_age = get_int(d, 'max_age', 604800)
         self.method_id = method_id
-        self.last_forecast_ts = 0
+        self.table = table
+        self.last_ts = 0
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
 
     def update_forecast(self, event):
         now = time.time()
-        if self.last_forecast_ts is not None \
+        if self.last_ts is not None \
                 and self.interval is not None \
-                and now - self.interval < self.last_forecast_ts:
-            logdbg('not yet time to do the forecast')
+                and now - self.interval < self.last_ts:
+            logdbg('not yet time to do the %s forecast' % self.method_id)
             return
         fcast = self.get_forecast(event)
         if fcast is None:
             return
         self.save_forecast(fcast)
-        self.last_forecast_ts = now
+        self.last_ts = now
         if self.max_age is not None:
-            self.prune_forecasts(self.method_id, now - self.max_age)
+            self.prune_forecasts(now - self.max_age)
 
     def get_forecast(self, event):
         """get the forecast, return a forecast record"""
@@ -207,35 +208,48 @@ class Forecast(StdService):
         """
         self.archive.addRecord(record)
 
-    def prune_forecasts(self, method_id, ts):
+    def prune_forecasts(self, ts):
         """remove old forecasts from the database
         
         method_id - string that indicates the forecast method
 
         ts - timestamp, in seconds.  records older than this will be deleted.
         """
-        sql = "delete * from %s where method = '%s' and dateTime < %d" % (self.table, method_id, ts)
+        sql = "delete from %s where method = '%s' and dateTime < %d" % (self.table, self.method_id, ts)
         cursor = self.archive.connection.cursor()
         try:
             cursor.execute(sql)
-            loginf('deleted %s forecasts prior to %d', (method_id, ts))
+            loginf('%s: deleted forecasts prior to %d' % (self.method_id, ts))
         except Exception, e:
-            logerr('unable to delete old %s forecast records: %s' %
-                   (method_id, e))
+            logerr('%s: unable to delete old records: %s' %
+                   (self.method_id, e))
+
+    def get_saved_forecasts(self, since_ts=None):
+        """return saved forecasts since the indicated timestamp
+
+        since_ts - timestamp, in seconds.  a value of None will return all.
+        """
+        sql = "select * from %s where method = '%s'" % (self.table, self.method_id)
+        if since_ts is not None:
+            sql += " and dateTime > %d" % since_ts
+        records = []
+        for r in self.archive.genSql(sql):
+            records.append(r)
+        return records
 
     def setup_database(self, config_dict, forecast_key):
         d = config_dict['Forecast'][forecast_key] \
             if forecast_key in config_dict['Forecast'].keys() else {}
-        forecast_schema_str = d['forecast_schema'] \
-            if 'forecast_schema' in d.keys() else \
-            config_dict['Forecast'].get('forecast_schema',
+        schema_str = d['schema'] \
+            if 'schema' in d.keys() else \
+            config_dict['Forecast'].get('schema',
                                         'user.schemas.defaultForecastSchema')
-        forecast_schema = weeutil.weeutil._get_object(forecast_schema_str)
-        forecast_db = d['forecast_database'] \
-            if 'forecast_database' in d.keys() else \
-            config_dict['Forecast']['forecast_database']
-        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][forecast_db], forecast_schema)
-        loginf('%s forecast using database %s' % (forecast_key, forecast_db))
+        schema = weeutil.weeutil._get_object(schema_str)
+        db = d['database'] \
+            if 'database' in d.keys() else \
+            config_dict['Forecast']['database']
+        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][db], schema, self.table)
+        loginf('%s: using database %s' % (forecast_key, db))
 
 
 # -----------------------------------------------------------------------------
@@ -258,28 +272,29 @@ class ZambrettiForecast(Forecast):
         super(ZambrettiForecast, self).__init__(engine, config_dict, Z_KEY)
         d = config_dict['Forecast'][Z_KEY] \
             if Z_KEY in config_dict['Forecast'].keys() else {}
-        self.interval = get_int(d, 'forecast_interval', self.interval)
-        self.max_age = get_int(d, 'forecast_max_age', self.max_age)
+        self.interval = get_int(d, 'interval', self.interval)
+        self.max_age = get_int(d, 'max_age', self.max_age)
         self.hemisphere = d.get('hemisphere', 'NORTH')
         self.setup_database(config_dict, Z_KEY)
-        loginf('Zambretti: interval=%s max_age=%s hemisphere=%s' %
-               (self.interval, self.max_age, self.hemisphere))
+        loginf('%s: interval=%s max_age=%s hemisphere=%s' %
+               (Z_KEY, self.interval, self.max_age, self.hemisphere))
 
     def get_forecast(self, event):
         record = event.record
         ts = record['dateTime']
         if ts is None:
-            logerr('skipping forecast: null timestamp in archive record')
+            logerr('%s: skipping forecast: null timestamp in archive record' %
+                   Z_KEY)
             return None
         tt = time.gmtime(ts)
         pressure = record['barometer']
         month = tt.tm_mon - 1 # month is [0-11]
         wind = int(record['windDir'] / 22.5) # wind dir is [0-15]
         north = self.hemisphere.lower() != 'south'
-        logdbg('calculate zambretti: pressure=%s month=%s wind=%s north=%s' %
-               (pressure, month, wind, north))
+        logdbg('%s: pressure=%s month=%s wind=%s north=%s' %
+               (Z_KEY, pressure, month, wind, north))
         code = ZambrettiCode(pressure, month, wind, north)
-        logdbg('zambretti code is %s' % code)
+        logdbg('%s: code is %s' % (Z_KEY, code))
         if code is None:
             return None
 
@@ -435,8 +450,8 @@ class NWSForecast(Forecast):
         super(NWSForecast, self).__init__(engine, config_dict, NWS_KEY)
         d = config_dict['Forecast'][NWS_KEY] \
             if NWS_KEY in config_dict['Forecast'].keys() else {}
-        self.interval = get_int(d, 'forecast_interval', self.interval)
-        self.max_age = get_int(d, 'forecast_max_age', self.max_age)
+        self.interval = get_int(d, 'interval', self.interval)
+        self.max_age = get_int(d, 'max_age', self.max_age)
         self.url = d.get('url', DEFAULT_NWS_PFM_URL)
         self.max_tries = d.get('max_tries', 3)
         self.id = d.get('id', None)
@@ -451,21 +466,21 @@ class NWSForecast(Forecast):
         if len(errmsg) > 0:
             raise Exception, '\n'.join(errmsg)
 
-        loginf('NWS: interval=%s max_age=%s id=%s foid=%s' %
-               (self.interval, self.max_age, self.id, self.foid))
+        loginf('%s: interval=%s max_age=%s id=%s foid=%s' %
+               (NWS_KEY, self.interval, self.max_age, self.id, self.foid))
 
     def get_forecast(self, event):
         text = DownloadNWSForecast(self.foid, self.url, self.max_tries)
         if text is None:
-            logerr('no PFM data for %s from %s' %
-                   (self.foid, self.url))
+            logerr('%s: no PFM data for %s from %s' %
+                   (NWS_KEY, self.foid, self.url))
             return None
         matrix = ParseNWSForecast(text, self.id)
         if matrix is None:
-            logerr('no PFM found for %s in forecast from %s' %
-                   (self.id, self.foid))
+            logerr('%s: no PFM found for %s in forecast from %s' %
+                   (NWS_KEY, self.id, self.foid))
             return None
-        logdbg('nws forecast matrix: %s' % matrix)
+        logdbg('%s: forecast matrix: %s' % (NWS_KEY, matrix))
 
         records = []
         for i,ts in enumerate(matrix['ts']):
@@ -520,7 +535,7 @@ def DownloadNWSForecast(foid, url=DEFAULT_NWS_PFM_URL, max_tries=3):
     """Download a point forecast matrix from the US National Weather Service"""
 
     u = '%s&issuedby=%s' % (url, foid) if url == DEFAULT_NWS_PFM_URL else url
-    logdbg("downloading NWS forecast from '%s'" % u)
+    logdbg("%s: downloading forecast from '%s'" % (NWS_KEY, u))
     for count in range(max_tries):
         try:
             response = urllib2.urlopen(u)
@@ -528,10 +543,10 @@ def DownloadNWSForecast(foid, url=DEFAULT_NWS_PFM_URL, max_tries=3):
             return text
         except (urllib2.URLError, socket.error,
                 httplib.BadStatusLine, httplib.IncompleteRead), e:
-            logerr('failed attempt %d to download NWS forecast: %s' %
-                   (count+1, e))
+            logerr('%s: failed attempt %d to download NWS forecast: %s' %
+                   (NWS_KEY, count+1, e))
     else:
-        logerr('failed to download NWS forecast')
+        logerr('%s: failed to download forecast' % NWS_KEY)
     return None
 
 def ParseNWSForecast(text, id):
@@ -706,8 +721,8 @@ class WUForecast(Forecast):
         super(WUForecast, self).__init__(engine, config_dict, WU_KEY)
         d = config_dict['Forecast'][WU_KEY] \
             if WU_KEY in config_dict['Forecast'].keys() else {}
-        self.interval = get_int(d, 'forecast_interval', self.interval)
-        self.max_age = get_int(d, 'forecast_max_age', self.max_age)
+        self.interval = get_int(d, 'interval', self.interval)
+        self.max_age = get_int(d, 'max_age', self.max_age)
         self.url = d.get('url', DEFAULT_WU_URL)
         self.max_tries = d.get('max_tries', 3)
         self.api_key = d.get('api_key', None)
@@ -730,19 +745,19 @@ class WUForecast(Forecast):
         if len(errmsg) > 0:
             raise Exception, '\n'.join(errmsg)
 
-        loginf('WU: interval=%s max_age=%s api_key=%s location=%s' %
-               (self.interval, self.max_age, self.api_key, self.location))
+        loginf('%s: interval=%s max_age=%s api_key=%s location=%s' %
+               (WU_KEY, self.interval, self.max_age, self.api_key, self.location))
 
     def get_forecast(self, event):
         text = DownloadWUForecast(self.api_key, self.location, self.url, self.max_tries)
         if text is None:
-            logerr('no forecast data for %s from %s' %
-                   (self.location, self.url))
+            logerr('%s: no forecast data for %s from %s' %
+                   (WU_KEY, self.location, self.url))
             return None
         matrix = ProcessWUForecast(text)
         if matrix is None:
             return None
-        logdbg('wu forecast matrix: %s' % matrix)
+        logdbg('%s: forecast matrix: %s' % (WU_KEY, matrix))
 
         records = []
         for i,ts in enumerate(matrix['ts']):
@@ -763,7 +778,7 @@ def DownloadWUForecast(api_key, location, url=DEFAULT_WU_URL, max_tries=3):
 
     u = '%s/%s/forecast10day/q/%s.json' % (url, api_key, location) \
         if url == DEFAULT_WU_URL else url
-    logdbg("downloading WU forecast from '%s'" % u)
+    logdbg("%s: downloading forecast from '%s'" % (WU_KEY, u))
     for count in range(max_tries):
         try:
             response = urllib2.urlopen(u)
@@ -771,21 +786,22 @@ def DownloadWUForecast(api_key, location, url=DEFAULT_WU_URL, max_tries=3):
             return text
         except (urllib2.URLError, socket.error,
                 httplib.BadStatusLine, httplib.IncompleteRead), e:
-            logerr('failed attempt %d to download WU forecast: %s' %
-                   (count+1, e))
+            logerr('%s: failed attempt %d to download WU forecast: %s' %
+                   (WU_KEY, count+1, e))
     else:
-        logerr('failed to download WU forecast')
+        logerr('%s: failed to download forecast' % WU_KEY)
     return None
 
 def ProcessWUForecast(text):
     obj = json.loads(text)
     if not 'response' in obj.keys():
-        logerr('unknown format in WU response')
+        logerr('%s: unknown format in response' % WU_KEY)
         return None
     response = obj['response']
     if 'error' in response.keys():
-        logerr('error in WU response: %s: %s' %
-               (response['error']['type'], response['error']['description']))
+        logerr('%s: error in response: %s: %s' %
+               (WU_KEY,
+                response['error']['type'], response['error']['description']))
         return None
 
     fc = obj['forecast']['simpleforecast']['forecastday']
@@ -812,11 +828,11 @@ def ProcessWUForecast(text):
             try:
                 matrix['tempMin'].append(float(period['low']['fahrenheit']))
             except Exception, e:
-                logerr('bogus tempMin in WU forecast: %s' % e)
+                logerr('%s: bogus tempMin in forecast: %s' % (WU_KEY, e))
             try:
                 matrix['tempMax'].append(float(period['high']['fahrenheit']))
             except Exception, e:
-                logerr('bogus tempMax in WU forecast: %s' % e)
+                logerr('%s: bogus tempMax in forecast: %s' % (WU_KEY, e))
             matrix['humidity'].append(period['avehumidity'])
             matrix['pop'].append(period['pop'])
             matrix['qpf'].append(period['qpf_allday']['in'])
@@ -825,7 +841,7 @@ def ProcessWUForecast(text):
             matrix['windDir'].append(dirstr(period['avewind']['dir']))
             matrix['windGust'].append(period['maxwind']['mph'])
         except Exception, e:
-            logerr('bad timestamp in WU forecast: %s' % e)
+            logerr('%s: bad timestamp in forecast: %s' % (WU_KEY, e))
 
     return matrix
 

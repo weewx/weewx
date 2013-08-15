@@ -4,10 +4,36 @@
 
 """Tests for weewx.forecast"""
 
+import os
 import sys
+import time
 import unittest
 
+import weewx
+import weewx.wxengine as wxengine
 import weewx.forecast as forecast
+
+# FIXME: these belong in a common testing library
+TMPDIR = '/var/tmp/weewx_test'
+
+def mkdir(d):
+    try:
+        os.makedirs(os.path.dirname(d))
+    except:
+        pass
+
+def get_tmpdir():
+    return TMPDIR + '/test_forecast'
+
+def get_testdir(name):
+    return get_tmpdir() + '/' + name
+
+def rmfile(name):
+    try:
+        os.remove(name)
+    except Exception, e:
+        pass
+
 
 PFM_BOS = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head>
@@ -1199,6 +1225,33 @@ WU_BOS = '''
 
 class ForecastTest(unittest.TestCase):
 
+    @staticmethod
+    def create_barebones_config(name):
+        config_dict = {}
+        config_dict['Station'] = {}
+        config_dict['Station']['station_type'] = 'Simulator'
+        config_dict['Station']['altitude'] = [0,'foot']
+        config_dict['Station']['latitude'] = 0
+        config_dict['Station']['longitude'] = 0
+        config_dict['Simulator'] = {}
+        config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
+        config_dict['Simulator']['mode'] = 'generator'
+        config_dict['Engines'] = {}
+        config_dict['Engines']['WxEngine'] = {}
+        config_dict['Engines']['WxEngine']['service_list'] = 'weewx.forecast.ZambrettiForecast'
+        config_dict['Databases'] = {}
+        config_dict['Databases']['forecast_sqlite'] = {}
+        config_dict['Databases']['forecast_sqlite']['root'] = '%(WEEWX_ROOT)s'
+        config_dict['Databases']['forecast_sqlite']['database'] = name
+        config_dict['Databases']['forecast_sqlite']['driver'] = 'weedb.sqlite'
+        config_dict['Databases']['forecast_mysql'] = {}
+        config_dict['Databases']['forecast_mysql']['host'] = 'localhost'
+        config_dict['Databases']['forecast_mysql']['user'] = 'weewx'
+        config_dict['Databases']['forecast_mysql']['password'] = 'weewx'
+        config_dict['Databases']['forecast_mysql']['database'] = 'forecast'
+        config_dict['Databases']['forecast_mysql']['driver'] = 'weedb.mysql'
+        return config_dict
+
     def test_zambretti_code(self):
         """run through all of the permutations"""
 
@@ -1463,6 +1516,65 @@ class ForecastTest(unittest.TestCase):
         fcast = forecast.DownloadWUForecast('', '02139')
         matrix = forecast.ProcessWUForecast(fcast)
 #        print matrix
+
+    def test_config_inheritance(self):
+        """ensure that configuration inheritance works properly"""
+
+        dbname = get_testdir('test_config_inheritance') + '/forecast.sdb'
+        config_dict = ForecastTest.create_barebones_config(dbname)
+        config_dict['Forecast'] = {}
+        config_dict['Forecast']['database'] = 'forecast_sqlite'
+        config_dict['Forecast']['max_age'] = 1
+        e = wxengine.StdEngine(config_dict)
+        f = forecast.ZambrettiForecast(e, config_dict)
+        self.assertEqual(f.max_age, 1)
+
+        config_dict['Forecast']['Zambretti'] = {}
+        config_dict['Forecast']['Zambretti']['max_age'] = 300
+        f = forecast.ZambrettiForecast(e, config_dict)
+        self.assertEqual(f.max_age, 300)
+
+    def test_pruning(self):
+        """ensure that forecast pruning works properly"""
+
+        dbname = get_testdir('test_pruning') + '/forecast.sdb'
+        rmfile(dbname)
+
+        # we need a barebones config
+        config_dict = ForecastTest.create_barebones_config(dbname)
+        config_dict['Forecast'] = {}
+        config_dict['Forecast']['database'] = 'forecast_sqlite'
+        config_dict['Forecast']['max_age'] = 1
+
+        # create a zambretti forecaster and simulator with which to test
+        e = wxengine.StdEngine(config_dict)
+        f = forecast.ZambrettiForecast(e, config_dict)
+        record = {}
+        record['barometer'] = 1030
+        record['windDir'] = 180
+        event = weewx.Event(weewx.NEW_ARCHIVE_RECORD)
+        event.record = record
+        record['dateTime'] = int(time.time())
+        f.save_forecast(f.get_forecast(event))
+        time.sleep(1)
+        event.record['dateTime'] = int(time.time())
+        f.save_forecast(f.get_forecast(event))
+        time.sleep(1)
+        event.record['dateTime'] = int(time.time())
+        f.save_forecast(f.get_forecast(event))
+        time.sleep(1)
+        event.record['dateTime'] = int(time.time())
+        f.save_forecast(f.get_forecast(event))
+        time.sleep(1)
+
+        # make sure the records have been saved
+        records = f.get_saved_forecasts()
+        self.assertEqual(len(records), 4)
+
+        # there should be one remaining after a prune
+        f.prune_forecasts(event.record['dateTime'])
+        records = f.get_saved_forecasts()
+        self.assertEqual(len(records), 1)
 
 # use this to run individual tests while debugging
 def suite(testname):
