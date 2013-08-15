@@ -2,7 +2,7 @@
 # Copyright: 2013 Matthew Wall
 # License: GPLv3
 
-"""Tests for weewx.forecast"""
+"""Tests for weewx forecasting module."""
 
 import os
 import sys
@@ -11,7 +11,7 @@ import unittest
 
 import weewx
 import weewx.wxengine as wxengine
-import weewx.forecast as forecast
+import user.forecast as forecast
 
 # FIXME: these belong in a common testing library
 TMPDIR = '/var/tmp/weewx_test'
@@ -1238,7 +1238,7 @@ class ForecastTest(unittest.TestCase):
         config_dict['Simulator']['mode'] = 'generator'
         config_dict['Engines'] = {}
         config_dict['Engines']['WxEngine'] = {}
-        config_dict['Engines']['WxEngine']['service_list'] = 'weewx.forecast.ZambrettiForecast'
+        config_dict['Engines']['WxEngine']['service_list'] = 'user.forecast.ZambrettiForecast'
         config_dict['Databases'] = {}
         config_dict['Databases']['forecast_sqlite'] = {}
         config_dict['Databases']['forecast_sqlite']['root'] = '%(WEEWX_ROOT)s'

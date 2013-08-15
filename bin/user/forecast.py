@@ -2,56 +2,6 @@
 # Copyright 2013 Matthew Wall
 """weewx module that provides forecasts
 
-Database Schema
-
-   The schema is specified in user.schemas.defaultForecastSchema
-   It defines the following fields:
-
-   method - forecast method, e.g., Zambretti, NWS
-   dateTime - timestamp in seconds when forecast was made
-
-   database     nws                    wu                    zambretti
-   field        field                  field                 field
-   -----------  ---------------------  --------------------  ---------
-   method
-   dateTime
-   usUnits
-
-   zcode                                                     CODE
-
-   foid
-   id
-   source
-   desc
-   ts
-   hour         3HRLY | 6HRLY          date.hour
-   tempMin      MIN/MAX | MAX/MIN      low.fahrenheit
-   tempMax      MIN/MAX | MAX/MIN      high.fahrenheit
-   temp         TEMP
-   dewpoint     DEWPT
-   humidity     RH                     avehumidity
-   windDir      WIND DIR | PWIND DIR   avewind.dir
-   windSpeed    WIND SPD               avewind.mph
-   windGust     WIND GUST              maxwind.mph
-   windChar     WIND CHAR
-   clouds       CLOUDS | AVG CLOUNDS
-   pop          POP 12HR               pop
-   qpf          QPF 12HR               qpf_allday.in
-   qsf          SNOW 12HR              snow_allday.in
-   rain         RAIN
-   rainshwrs    RAIN SHWRS
-   tstms        TSTMS
-   drizzle      DRIZZLE
-   snow         SNOW
-   snowshwrs    SNOW SHWRS
-   flurries     FLURRIES
-   sleet        SLEET
-   frzngrain    FRZNG RAIN
-   frzngdrzl    FRZNG DRZL
-   obvis        OBVIS
-   windChill    WIND CHILL
-   heatIndex    HEAT INDEX
-
 Configuration
 
    Some parameters can be defined in the Forecast section, then overridden
@@ -120,7 +70,7 @@ Configuration
 
 [Engines]
     [[WxEngine]]
-        service_list = ... , weewx.forecast.ZambrettiForecast, weewx.forecast.NWSForecast, weewx.forecast.WUForecast
+        service_list = ... , user.forecast.ZambrettiForecast, user.forecast.NWSForecast, user.forecast.WUForecast
 """
 
 # TODO: add option to prune forecast database
@@ -168,6 +118,96 @@ def get_int(config_dict, label, default_value):
         except Exception, e:
             logerr("bad value '%s' for %s" % (value, label))
     return value
+
+"""Database Schema
+
+   The schema is specified in defaultForecastSchema
+   It defines the following fields:
+
+   method - forecast method, e.g., Zambretti, NWS
+   dateTime - timestamp in seconds when forecast was made
+
+   database     nws                    wu                    zambretti
+   field        field                  field                 field
+   -----------  ---------------------  --------------------  ---------
+   method
+   dateTime
+   usUnits
+
+   zcode                                                     CODE
+
+   foid
+   id
+   source
+   desc
+   ts
+   hour         3HRLY | 6HRLY          date.hour
+   tempMin      MIN/MAX | MAX/MIN      low.fahrenheit
+   tempMax      MIN/MAX | MAX/MIN      high.fahrenheit
+   temp         TEMP
+   dewpoint     DEWPT
+   humidity     RH                     avehumidity
+   windDir      WIND DIR | PWIND DIR   avewind.dir
+   windSpeed    WIND SPD               avewind.mph
+   windGust     WIND GUST              maxwind.mph
+   windChar     WIND CHAR
+   clouds       CLOUDS | AVG CLOUNDS
+   pop          POP 12HR               pop
+   qpf          QPF 12HR               qpf_allday.in
+   qsf          SNOW 12HR              snow_allday.in
+   rain         RAIN
+   rainshwrs    RAIN SHWRS
+   tstms        TSTMS
+   drizzle      DRIZZLE
+   snow         SNOW
+   snowshwrs    SNOW SHWRS
+   flurries     FLURRIES
+   sleet        SLEET
+   frzngrain    FRZNG RAIN
+   frzngdrzl    FRZNG DRZL
+   obvis        OBVIS
+   windChill    WIND CHILL
+   heatIndex    HEAT INDEX
+"""
+defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
+                         ('dateTime',   'INTEGER NOT NULL'),
+                         ('usUnits',    'INTEGER NOT NULL'),
+
+                         # Zambretti fields
+                         ('zcode',      'CHAR(1)'),
+
+                         # NWS fields
+                         ('foid',       'CHAR(3)'),     # e.g., BOX
+                         ('id',         'CHAR(6)'),     # e.g., MAZ014
+                         ('ts',         'INTEGER'),     # seconds
+                         ('hour',       'INTEGER'),     # 00 to 23
+                         ('tempMin',    'REAL'),        # degree F
+                         ('tempMax',    'REAL'),        # degree F
+                         ('temp',       'REAL'),        # degree F
+                         ('dewpoint',   'REAL'),        # degree F
+                         ('humidity',   'REAL'),        # percent
+                         ('windDir',    'VARCHAR(3)'),  # N,NE,E,SE,S,SW,W,NW
+                         ('windSpeed',  'REAL'),        # mph
+                         ('windGust',   'REAL'),        # mph
+                         ('windChar',   'VARCHAR(2)'),  # GN,LT
+                         ('clouds',     'VARCHAR(2)'),  # CL,SC,BK,OV, ...
+                         ('pop',        'REAL'),        # percent
+                         ('qpf',        'REAL'),        # inch
+                         ('qsf',        'VARCHAR(5)'),  # inch
+                         ('rain',       'VARCHAR(2)'),  # S,C,L,O,D
+                         ('rainshwrs',  'VARCHAR(2)'),
+                         ('tstms',      'VARCHAR(2)'),
+                         ('drizzle',    'VARCHAR(2)'),
+                         ('snow',       'VARCHAR(2)'),
+                         ('snowshwrs',  'VARCHAR(2)'),
+                         ('flurries',   'VARCHAR(2)'),
+                         ('sleet',      'VARCHAR(2)'),
+                         ('frzngrain',  'VARCHAR(2)'),
+                         ('frzngdrzl',  'VARCHAR(2)'),
+                         ('obvis',      'VARCHAR(3)'),  # F,PF,F+,PF+,H,BS,K,BD
+                         ('windChill',  'REAL'),        # degree F
+                         ('heatIndex',  'REAL'),        # degree F
+                         ]
 
 class Forecast(StdService):
     """Provide forecast."""
@@ -243,7 +283,7 @@ class Forecast(StdService):
         schema_str = d['schema'] \
             if 'schema' in d.keys() else \
             config_dict['Forecast'].get('schema',
-                                        'user.schemas.defaultForecastSchema')
+                                        'user.forecast.defaultForecastSchema')
         schema = weeutil.weeutil._get_object(schema_str)
         db = d['database'] \
             if 'database' in d.keys() else \
