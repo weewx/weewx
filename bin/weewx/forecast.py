@@ -172,15 +172,14 @@ def get_int(config_dict, label, default_value):
 class Forecast(StdService):
     """Provide forecast."""
 
-    def __init__(self, engine, config_dict):
-        super(Forecast, self).__init__(engine, config_dict, method_id)
+    def __init__(self, engine, config_dict, method_id):
+        super(Forecast, self).__init__(engine, config_dict)
         d = config_dict['Forecast'] if 'Forecast' in config_dict.keys() else {}
         self.interval = get_int(d, 'forecast_interval', 300)
         self.max_age = get_int(d, 'forecast_max_age', 604800)
-        self.last_forecast_ts = 0
-        self.setup_database(config_dict)
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
         self.method_id = method_id
+        self.last_forecast_ts = 0
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
 
     def update_forecast(self, event):
         now = time.time()
@@ -206,7 +205,7 @@ class Forecast(StdService):
 
         record - dictionary with keys corresponding to database fields
         """
-        self.database.addRecord(record)
+        self.archive.addRecord(record)
 
     def prune_forecasts(self, method_id, ts):
         """remove old forecasts from the database
@@ -216,7 +215,7 @@ class Forecast(StdService):
         ts - timestamp, in seconds.  records older than this will be deleted.
         """
         sql = "delete * from %s where method = '%s' and dateTime < %d" % (self.table, method_id, ts)
-        cursor = self.database.connection.cursor()
+        cursor = self.archive.connection.cursor()
         try:
             cursor.execute(sql)
             loginf('deleted %s forecasts prior to %d', (method_id, ts))
@@ -224,12 +223,19 @@ class Forecast(StdService):
             logerr('unable to delete old %s forecast records: %s' %
                    (method_id, e))
 
-    def setup_database(self, config_dict):
-        forecast_schema_str = config_dict['Forecast'].get('forecast_schema', 'user.schemas.defaultForecastSchema')
+    def setup_database(self, config_dict, forecast_key):
+        d = config_dict['Forecast'][forecast_key] \
+            if forecast_key in config_dict['Forecast'].keys() else {}
+        forecast_schema_str = d['forecast_schema'] \
+            if 'forecast_schema' in d.keys() else \
+            config_dict['Forecast'].get('forecast_schema',
+                                        'user.schemas.defaultForecastSchema')
         forecast_schema = weeutil.weeutil._get_object(forecast_schema_str)
-        forecast_db = config_dict['Forecast']['forecast_database']
-        self.database = weewx.archive.Archive.open_with_create(config_dict['Databases'][forecast_db], forecast_schema)
-        loginf('using forecast database: %s' % forecast_db)
+        forecast_db = d['forecast_database'] \
+            if 'forecast_database' in d.keys() else \
+            config_dict['Forecast']['forecast_database']
+        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][forecast_db], forecast_schema)
+        loginf('%s forecast using database %s' % (forecast_key, forecast_db))
 
 
 # -----------------------------------------------------------------------------
@@ -255,6 +261,7 @@ class ZambrettiForecast(Forecast):
         self.interval = get_int(d, 'forecast_interval', self.interval)
         self.max_age = get_int(d, 'forecast_max_age', self.max_age)
         self.hemisphere = d.get('hemisphere', 'NORTH')
+        self.setup_database(config_dict, Z_KEY)
         loginf('Zambretti: interval=%s max_age=%s hemisphere=%s' %
                (self.interval, self.max_age, self.hemisphere))
 
@@ -434,6 +441,7 @@ class NWSForecast(Forecast):
         self.max_tries = d.get('max_tries', 3)
         self.id = d.get('id', None)
         self.foid = d.get('foid', None)
+        self.setup_database(config_dict, NWS_KEY)
 
         errmsg = []
         if self.id is None:
@@ -704,6 +712,7 @@ class WUForecast(Forecast):
         self.max_tries = d.get('max_tries', 3)
         self.api_key = d.get('api_key', None)
         self.location = d.get('location', None)
+        self.setup_database(config_dict, WU_KEY)
 
         if self.location is None:
             lat = config_dict['Station'].get('latitude', None)
