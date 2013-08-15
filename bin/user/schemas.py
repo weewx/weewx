@@ -9,17 +9,17 @@
 #
 """Database schemas used by weewx"""
 
-#===============================================================================
+# =============================================================================
 # This is a list containing the default schema of the archive database.  It is
 # identical to what is used by wview. It is only used for initialization ---
 # afterwards, the schema is obtained dynamically from the database.  Although a
 # type may be listed here, it may not necessarily be supported by your weather
 # station hardware.
 #
-# You may trim this list of any unused types if you wish, but it will not result
-# in saving as much space as you may think --- most of the space is taken up by
-# the primary key indexes (type "dateTime").
-# ===============================================================================
+# You may trim this list of any unused types if you wish, but it will not
+# result in saving as much space as you may think --- most of the space is
+# taken up by the primary key indexes (type "dateTime").
+# =============================================================================
 defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
                         ('usUnits',              'INTEGER NOT NULL'),
                         ('interval',             'INTEGER NOT NULL'),
@@ -79,3 +79,44 @@ stats_types = ['barometer', 'inTemp', 'outTemp', 'inHumidity', 'outHumidity',
                'radiation', 'UV', 'extraTemp1', 'rxCheckPercent', 'wind']
 # Add special type 'wind' to the schema
 defaultStatsSchema= [_tuple for _tuple in defaultArchiveSchema if _tuple[0] in stats_types] + [('wind', 'VECTOR')]
+
+# The forecast schema is for keeping track of weather forecasts.
+defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
+                         ('dateTime',   'INTEGER NOT NULL'),
+                         ('usUnits',    'INTEGER NOT NULL'),
+
+                         # Zambretti fields
+                         ('zcode',      'CHAR(1)'),
+
+                         # NWS fields
+                         ('foid',       'CHAR(3)'),     # e.g., BOX
+                         ('id',         'CHAR(6)'),     # e.g., MAZ014
+                         ('ts',         'INTEGER'),     # seconds
+                         ('hour',       'INTEGER'),     # 00 to 23
+                         ('tempMin',    'REAL'),        # degree F
+                         ('tempMax',    'REAL'),        # degree F
+                         ('temp',       'REAL'),        # degree F
+                         ('dewpoint',   'REAL'),        # degree F
+                         ('humidity',   'REAL'),        # percent
+                         ('windDir',    'VARCHAR(3)'),  # N,NE,E,SE,S,SW,W,NW
+                         ('windSpeed',  'REAL'),        # mph
+                         ('windGust',   'REAL'),        # mph
+                         ('windChar',   'VARCHAR(2)'),  # GN,LT
+                         ('clouds',     'VARCHAR(2)'),  # CL,SC,BK,OV, ...
+                         ('pop',        'REAL'),        # percent
+                         ('qpf',        'REAL'),        # inch
+                         ('qsf',        'VARCHAR(5)'),  # inch
+                         ('rain',       'VARCHAR(2)'),  # S,C,L,O,D
+                         ('rainshwrs',  'VARCHAR(2)'),
+                         ('tstms',      'VARCHAR(2)'),
+                         ('drizzle',    'VARCHAR(2)'),
+                         ('snow',       'VARCHAR(2)'),
+                         ('snowshwrs',  'VARCHAR(2)'),
+                         ('flurries',   'VARCHAR(2)'),
+                         ('sleet',      'VARCHAR(2)'),
+                         ('frzngrain',  'VARCHAR(2)'),
+                         ('frzngdrzl',  'VARCHAR(2)'),
+                         ('obvis',      'VARCHAR(3)'),  # F,PF,F+,PF+,H,BS,K,BD
+                         ('windChill',  'REAL'),        # degree F
+                         ('heatIndex',  'REAL'),        # degree F
+                         ]
