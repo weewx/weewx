@@ -1,4 +1,6 @@
                     Possible NEW FEATURES
+                    
+Allow stats of highest minimum and lowest maximum over a time period.
 
 possibly implement averaging rainRate calculation instead of the
 current near-instantaneous implementation in fousb
