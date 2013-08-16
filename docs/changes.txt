@@ -3,8 +3,8 @@ weewx change history
 
 2.X.Y 09/ZZ/13
 
-WMR100 driver now emits a null wind direction when the wind speed is
-zero.
+WMR100 and Vantage drivers now emit a null wind direction when the wind
+speed is zero.
 
 2.4.0 08/03/13
 
