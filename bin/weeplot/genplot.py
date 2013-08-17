@@ -11,8 +11,10 @@
 """
 import colorsys
 import time
-import Image
-import ImageDraw
+try:
+    from PIL import Image, ImageDraw
+except ImportError:
+    import Image, ImageDraw
 
 import weeplot.utilities
 import weeutil.weeutil

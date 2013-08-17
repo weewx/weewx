@@ -10,8 +10,10 @@
 """Various utilities used by the plot package.
 
 """
-import ImageFont
-import ImageColor
+try:
+    from PIL import ImageFont, ImageColor
+except ImportError:
+    import ImageFont, ImageColor
 import datetime
 import time
 import math
