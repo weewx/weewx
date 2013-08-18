@@ -6,6 +6,9 @@ weewx change history
 WMR100 and Vantage drivers now emit a null wind direction when the wind
 speed is zero.
 
+The LOOP value for daily ET on Vantages was too high by a factor of 10. 
+This has been corrected.
+
 Ported to Korora 19 (Fedora 19). Thanks to user zmodemguru!
 
 
