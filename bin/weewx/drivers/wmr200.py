@@ -204,8 +204,15 @@ class UsbDevice(object):
             # to tell the weather console to start streaming live data
             # again.
             log_msg = 'readDevice() USB Error Reason:%s' % exception
-            print log_msg
-            syslog.syslog(syslog.LOG_ERR, 'wmr200: %s' % log_msg)
+            if exception.args[0].find('No data available') == -1:
+                dprint(log_msg)
+                syslog.syslog(syslog.LOG_ERR, 'wmr200: %s' % log_msg)
+                return None
+            else:
+                # No data avail...not an error but probably ok.
+                syslog.syslog(syslog.LOG_NOTICE, 'wmr200: No data received in'
+                              ' %d seconds' % int(self.timeout_read))
+                return []
 
     def writeDevice(self, buf):
         """Writes a command packet to the device."""
@@ -215,7 +222,7 @@ class UsbDevice(object):
 
         if not self.handle:
             log_msg = 'No USB handle for usb_device Write'
-            print log_msg
+            dprint(log_msg)
             syslog.syslog(syslog.LOG_ERR, ('wmr200: %s') % log_msg)
             raise weewx.WeeWxIOError(log_msg)
 
@@ -297,7 +304,7 @@ class Packet(object):
         if self._pkt_data[1] > PACKET_FACTORY_MAX_PACKET_SIZE:
             log_msg = 'Discarding bogus packet cmd:%x size:%d' \
                     % (self._pkt_data[0], self._pkt_data[1])
-            print log_msg
+            dprint(log_msg)
             syslog.syslog(syslog.LOG_INFO, 'wmr200: %s' % log_msg)
             self._bogus_packet = True
 
@@ -306,7 +313,7 @@ class Packet(object):
         if len(self._pkt_data) > PACKET_FACTORY_MAX_PACKET_SIZE:
             log_msg = 'llegal actual packet size cmd:%x size:%d' \
                     % (self._pkt_data[0], len(self._pkt_data))
-            print log_msg
+            dprint(log_msg)
             syslog.syslog(syslog.LOG_INFO, 'wmr200: %s' % log_msg)
             self._bogus_packet = True
         return len(self._pkt_data)
@@ -317,7 +324,7 @@ class Packet(object):
             if self._pkt_data[1] > PACKET_FACTORY_MAX_PACKET_SIZE:
                 log_msg = 'Illegal protocol packet size cmd:%x size:%d' \
                         % (self._pkt_data[0], self._pkt_data[1])
-                print log_msg
+                dprint(log_msg)
                 syslog.syslog(syslog.LOG_INFO, 'wmr200: %s' % log_msg)
                 self._bogus_packet = True
             # Return the actual protocol length from packet.  If bogus
@@ -368,7 +375,7 @@ class Packet(object):
     def packetRecord(self):
         """Returns the processed record to the weewx engine."""
         if not self._packetBeenProcessed():
-            print 'WARN packetRecord() Packet has not been proccessed.'
+            dprint('WARN packetRecord() Packet has not been processed.')
         return self._record
 
     def packetYieldable(self):
@@ -392,7 +399,7 @@ class Packet(object):
 
         except IndexError:
             str_val = 'Packet too small to compute 16 bit checksum'
-            print str_val
+            dprint(str_val)
             raise WMR200CheckSumError(str_val)
 
     def _checkSumField(self):
@@ -405,7 +412,7 @@ class Packet(object):
 
         except IndexError:
             str_val = 'Packet too small to contain 16 bit checksum'
-            print str_val
+            dprint(str_val)
             raise WMR200CheckSumError(str_val)
 
     def verifyCheckSum(self):
@@ -416,7 +423,7 @@ class Packet(object):
         if self._checkSumCalculate() != self._checkSumField():
             str_val =  ('Checksum error act:%x exp:%x'
                         % (self._checkSumCalculate(), self._checkSumField()))
-            print str_val
+            dprint(str_val)
             self.printRaw(True)
             syslog.syslog(syslog.LOG_ERR, 'wmr200: %s' % str_val)
             raise WMR200CheckSumError(str_val)
@@ -447,8 +454,9 @@ class Packet(object):
             return self._wmr200.last_time_epoch
 
         except IndexError:
-            log_msg = 'Packet length too short to get timestamp len:%d' % len(self._pkt_data)
-            print log_msg
+            log_msg = ('Packet length too short to get timestamp len:%d'
+                       % len(self._pkt_data))
+            dprint(log_msg)
             syslog.syslog(syslog.LOG_ERR, ('wmr200: %s') % log_msg)
             raise WMR200ProtocolError(log_msg)
 
@@ -773,9 +781,9 @@ class PacketTemperature(Packet):
             self._record['inHumidity']  = humidity
         elif sensor_id == 1:
             self._record['outTemp']     = temp
-            self._record['dewpoint']    = weewx.wxformulas.dewpointC(temp, humidity)
+            self._record['dewpoint'] = weewx.wxformulas.dewpointC(temp, humidity)
             self._record['outHumidity'] = humidity
-            self._record['heatindex']   = weewx.wxformulas.heatindexC(temp, humidity)
+            self._record['heatindex'] = weewx.wxformulas.heatindexC(temp, humidity)
         elif sensor_id >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -979,7 +987,7 @@ class PollUsbDevice(threading.Thread):
     
     Some devices may overflow buffers if not drained within a timely manner.
     
-    This thread will blocking read the USB port and buffer data from the
+    This thread will read block on the USB port and buffer data from the
     device for consumption."""
     def __init__(self, kwargs):
         super(PollUsbDevice, self).__init__()
@@ -1034,6 +1042,11 @@ class PollUsbDevice(threading.Thread):
                     # Append the list of bytes to this buffer.
                     self._buf.append(buf)
                     self._lock_poll.release()
+                else:
+                    # We probably could poke the device after
+                    # a read timeout.
+                    self.wmr200.readyToPoke(True)
+
             except WMR200ProtocolError as exception:
                 syslog.syslog(syslog.LOG_INFO, ('wmr200: USB overflow'))
                 self.exception = exception
@@ -1066,7 +1079,7 @@ class PollUsbDevice(threading.Thread):
         Called from main thread."""
         if self.exception:
             log_msg = 'Detected exception in USB layer'
-            print log_msg
+            dprint(log_msg)
             syslog.syslog(syslog.LOG_ERR, ('wmr200: %s' % log_msg))
             raise WMR200AccessError(self.exception)
 
@@ -1145,7 +1158,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # Locate the weather console device on the USB bus.
         if not self.usb_device.findDevice(vendor_id, product_id):
             syslog.syslog(syslog.LOG_ERR, 'wmr200: Unable to find device')
-            print 'Unable to find device %x %x' % (vendor_id, product_id)
+            dprint('Unable to find device %x %x' % (vendor_id, product_id))
 
         # Open the weather console USB device for read and writes.
         self.usb_device.openDevice()
@@ -1250,7 +1263,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
             self.usb_device.writeDevice(buf)
         except usb.USBError, exception:
             syslog.syslog(syslog.LOG_ERR,
-                          ('wmr200: writeD0() Unable to send USB control'
+                          ('wmr200: writeD0() Unable to send USB 0xD0 control'
                            ' message'))
             syslog.syslog(syslog.LOG_ERR, '****  %s' % exception)
             # Convert to a Weewx error:
@@ -1267,7 +1280,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
             self.usb_device.writeDevice(buf)
         except usb.USBError, exception:
             syslog.syslog(syslog.LOG_ERR,
-                          ('wmr200: writeDB() Unable to send USB control'
+                          ('wmr200: writeDB() Unable to send USB 0xDB control'
                           ' message'))
             syslog.syslog(syslog.LOG_ERR, '****  %s' % exception)
             # Convert to a Weewx error:
@@ -1369,10 +1382,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
 
             # Pull data from the weather console.
             self._pollForData()
-
-            # Check polled device for any exceptions.
-            # If any, they will be raised in this method.
-            #self._thread_poll_sub.checkException()
 
         syslog.syslog(syslog.LOG_ERR, 'wmr200: Exited genloop packets')
 
