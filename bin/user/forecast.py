@@ -233,7 +233,7 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('windChill',  'REAL'),        # degree F
                          ('heatIndex',  'REAL'),        # degree F
 
-                         # NOAA tide fields
+                         # tide fields
                          ('hilo',     'CHAR(1)'),       # H or L
                          ('offset',   'REAL'),          # relative to mean low
                          ]
@@ -937,201 +937,10 @@ def dirstr(s):
     return s
 
 
-class TideForecast(Forecast):
-    """generic tide forecaster, downloads tides from internet"""
-
-    def __init__(self, engine, config_dict, key):
-        super(TideForecast, self).__init__(engine, config_dict, key)
-        d = config_dict['Forecast'][key] \
-            if key in config_dict['Forecast'].keys() else {}
-        self.max_tries = d.get('max_tries', 3)
-
-    def get_forecast(self, event):
-        text = self.download_forecast()
-        if text is None:
-            logerr('%s: no tide data found' % self.method_id)
-            return None
-        matrix = self.parse_forecast()
-        if matrix is None:
-            logerr('%s: no tides found in tide data' % self.method_id)
-            return None
-        logdbg('%s: tide matrix: %s' % (self.method_id, matrix))
-
-        records = []
-        for i,ts in enumerate(matrix['ts']):
-            record = {}
-            record['usUnits'] = weewx.US
-            record['method'] = self.method_id
-            record['dateTime'] = matrix['dateTime']
-            record['ts'] = ts
-            record['location'] = matrix['location']
-            record['hilo'] = matrix['hilo']
-            record['offset'] = matrix['offset']
-        return records
-
-    def download_forecast(self):
-        return None
-
-    def parse_forecast(self, text):
-        return None
-
-"""saltwatertides.com tide predictor
-
-i get http 500 internal server error when i try to download from saltwatertides
-
-http://www.saltwatertides.com/cgi-local/neatlantic.cgi
-site=Maine
-station_number=8415809
-month=08
-year=2013
-start_date=20
-maximum_days=3
-"""
-
-SWT_KEY = 'SWTides'
-
-class SaltwaterTidesForecast(TideForecast):
-    """download tide forecast from saltwatertides.com"""
-
-    def __init__(self, engine, config_dict):
-        super(SaltwaterTidesForecast, self).__init__(engine, config_dict,
-                                                     SWT_KEY)
-        d = config_dict['Forecast'][self.method_id] \
-            if self.method_id in config_dict['Forecast'].keys() else {}
-        self.url = d['url']
-        self.site = d['site']
-        self.station_number = d['station_number']
-        loginf('%s: interval=%s max_age=%s' %
-               (self.method_id, self.interval, self.max_age))
-
-    def download_forecast(self):
-        return DownloadSaltwaterTides(self.url)
-
-    def parse_forecast(self, text):
-        return ParseSaltwaterTides(text)
-
-def DownloadSaltwaterTides(url, site, station,
-                           start_date=None, month=None, year=None,
-                           maximum_days='3', max_tries=3):
-    """Download tides from saltwatertides.com tide predictor"""
-
-    if start_date is None or month is None or year is None:
-        now = time.time()
-        ts = time.localtime(now)
-        if start_date is None:
-            start_date = ts.tm_mday
-        if month is None:
-            month = ts.tm_month
-        if year is None:
-            year = ts.tm_year
-    logdbg("%s: downloading from '%s'" % (SWT_KEY, url))
-    for count in range(max_tries):
-        try:
-            fields = {}
-            fields['site'] = site
-            fields['station_number'] = station
-            fields['start_date'] = start_date
-            fields['month'] = month
-            fields['year'] = year
-            fields['maximum_days'] = maximum_days
-            loginf('fields: %s' % fields)
-            request = urllib2.Request(url, urllib.urlencode(fields))
-            response = urllib2.urlopen(request)
-            text = response.read()
-            alllines = text.splitlines()
-            lines = None
-            for line in iter(alllines):
-                if line.startswith('Error Message Page'):
-                    logerr('%s: download failed, server did not like request' %
-                           SWT_KEY)
-                    return None
-            return text
-        except (urllib2.URLError, socket.error,
-                httplib.BadStatusLine, httplib.IncompleteRead), e:
-            logerr('%s: failed attempt %d to download tides: %s' %
-                   (SWT_KEY, count+1, e))
-    else:
-        logerr('%s: failed to download tides' % SWT_KEY)
-    return None
-
-def ParseSaltwaterTides(text):
-    """Parse the output from saltwatertides.com tide predictor."""
-
-    alllines = text.splitlines()
-    lines = None
-    for line in iter(alllines):
-        pass
-
-    return None
-
-
-
-"""NOAA tide predictor
-
-the web interface to noaa is horrendous - apparently NOAATidesFacade does some
-magic to make the java app do the right thing, because if you just twiddle the
-cgi arguments you get null pointer exceptions.
-
-http://tidesandcurrents.noaa.gov/noaatidepredictions/NOAATidesFacade.jsp?Stationid=8415809
-
-http://tidesandcurrents.noaa.gov/noaatidepredictions/viewDailyPredictions.jsp?bmon=08&bday=19&byear=2013&timelength=daily&timeZone=2&dataUnits=1&datum=MLLW&timeUnits=1&interval=highlow&format=Submit&Stationid=8415809
-
-http://tidesandcurrents.noaa.gov/faq2.html
-
-http://tidesandcurrents.noaa.gov/accuracy.html
-
-http://tidesandcurrents.noaa.gov/tide_predictions.shtml
-"""
-
-NT_KEY = 'NOAATides'
-
-class NOAATideForecast(TideForecast):
-    """download tide forecast from NOAA"""
-
-    def __init__(self, engine, config_dict):
-        super(NOAATideForecast, self).__init__(engine, config_dict, NT_KEY)
-        d = config_dict['Forecast'][NT_KEY] \
-            if NT_KEY in config_dict['Forecast'].keys() else {}
-        self.url = d['url']
-        loginf('%s: interval=%s max_age=%s' %
-               (NT_KEY, self.interval, self.max_age))
-
-    def download_forecast(self):
-        return DownloadNOAATides(self.url)
-
-    def parse_forecast(self, text):
-        return ParseNOAATides(text)
-
-def DownloadNOAATides(url, max_tries=3):
-    """Download tides from US NOAA tide predictor"""
-
-    logdbg("%s: downloading from '%s'" % (NT_KEY, url))
-    for count in range(max_tries):
-        try:
-            response = urllib2.urlopen(url)
-            text = response.read()
-            return text
-        except (urllib2.URLError, socket.error,
-                httplib.BadStatusLine, httplib.IncompleteRead), e:
-            logerr('%s: failed attempt %d to download tides: %s' %
-                   (NT_KEY, count+1, e))
-    else:
-        logerr('%s: failed to download tides' % NT_KEY)
-    return None
-
-def ParseNOAATides(text):
-    """Parse the output from the US NOAA tide predictor."""
-
-    alllines = text.splitlines()
-    lines = None
-    for line in iter(alllines):
-        pass
-
-    return None
-
-
 """xtide tide predictor
+
    The xtide application must be installed for this to work.
+   This uses the command-line 'tide' program, not the x-windows application.
 """
 
 XT_KEY = 'XTide'
@@ -1173,8 +982,9 @@ class XTideForecast(Forecast):
             logdbg("%s: running command '%s'" % (XT_KEY, cmd))
             p = subprocess.Popen(cmd, shell=True,
                                  stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT)
+                                 stderr=subprocess.PIPE)
             rc = p.returncode
+            print rc
             if rc is not None:
                 logerr('%s: generate tide failed: code=%s' % (XT_KEY, -rc))
                 return None
@@ -1185,7 +995,17 @@ class XTideForecast(Forecast):
                     return None
                 if string.find(line, self.location) >= 0:
                     out.append(line)
-            return out
+            if len(out) > 0:
+                return out
+            err = []
+            for line in p.stderr:
+                line = string.rstrip(line)
+                err.append(line)
+            if len(err) > 0:
+                logerr('%s: generate tide failed: %s' % (XT_KEY, ' '.join(err)))
+                return None
+            logerr('%s: generate tide failed with no reason' % XT_KEY)
+            return None
         except OSError, e:
             logerr('%s: generate tide failed: %s' % (XT_KEY, e))
         return None
@@ -1220,8 +1040,8 @@ class XTideForecast(Forecast):
 class ForecastFileGenerator(FileGenerator):
     """Extend the standard file generator with forecasting variables."""
 
-    def getCommonSearchList(self, archivedb, statsdb, timespan):
-        searchList = super(ForecastFileGenerator, self).getCommonSearchList(archivedb, statsdb, timespan)
-#        fdata = ForecastData()
-#        searchList.append({'forecast', fdata})
+    def getToDateSearchList(self, archivedb, statsdb, timespan):
+        searchList = super(ForecastFileGenerator, self).getToDateSearchList(archivedb, statsdb, timespan)
+        fdata = ForecastData()
+        searchList.append({'forecast' : fdata})
         return searchList
