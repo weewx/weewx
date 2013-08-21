@@ -54,6 +54,14 @@ Configuration
         # if no location is specified, station latitude and longitude are used
         location = 02139
 
+    [[NOAATides]]
+        # url for a specific 2-day tide forecast
+        url = http://tidesandcurrents.noaa.gov/noaatidepredictions/download
+        # how often to download the forecast, in seconds
+        interval = 86400
+        # how long to keep old tides, in seconds.  use None to keep forever.
+        max_age = 17280
+
 [Databases]
     ...
     [[forecast_sqlite]]
@@ -73,17 +81,32 @@ Configuration
         service_list = ... , user.forecast.ZambrettiForecast, user.forecast.NWSForecast, user.forecast.WUForecast
 """
 
-# TODO: add option to prune forecast database
+
+"""
+sample summary sites
+
+http://www.tides4fishing.com/
+
+http://www.surf-forecast.com/
+
+http://ocean.peterbrueggeman.com/tidepredict.html
+"""
+
+# TODO: single table with unused fields, one table per method, or one db per ?
 # TODO: add forecast data to skin variables
 
 import httplib
 import socket
+import string
+import subprocess
 import syslog
 import time
+import urllib
 import urllib2
 
 import weewx
 from weewx.wxengine import StdService
+from weewx.filegenerator import FileGenerator
 import weeutil.weeutil
 
 try:
@@ -119,10 +142,9 @@ def get_int(config_dict, label, default_value):
             logerr("bad value '%s' for %s" % (value, label))
     return value
 
-"""Database Schema
+"""Forecast Schema
 
-   The schema is specified in defaultForecastSchema
-   It defines the following fields:
+   This schema captures all forecasts and defines the following fields:
 
    method - forecast method, e.g., Zambretti, NWS
    dateTime - timestamp in seconds when forecast was made
@@ -168,6 +190,9 @@ def get_int(config_dict, label, default_value):
    obvis        OBVIS
    windChill    WIND CHILL
    heatIndex    HEAT INDEX
+
+   hilo         indicates whether this is a high or low tide
+   offset       how high or low the tide is relative to mean low
 """
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('dateTime',   'INTEGER NOT NULL'),
@@ -207,19 +232,44 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('obvis',      'VARCHAR(3)'),  # F,PF,F+,PF+,H,BS,K,BD
                          ('windChill',  'REAL'),        # degree F
                          ('heatIndex',  'REAL'),        # degree F
+
+                         # NOAA tide fields
+                         ('hilo',     'CHAR(1)'),       # H or L
+                         ('offset',   'REAL'),          # relative to mean low
                          ]
+
+"""Tides Schema
+   This schema captures tidal information.
+"""
+defaultTideSchema = [('location', 'VARCHAR(16) NOT NULL'),
+                     ('dateTime', 'INTEGER NOT NULL'),
+                     ('usUnits',  'INTEGER NOT NULL'),
+                     ('hilo',     'CHAR(1)'),       # H or L
+                     ('offset',   'REAL'),          # relative to mean low
+                     ]
 
 class Forecast(StdService):
     """Provide forecast."""
 
-    def __init__(self, engine, config_dict, method_id, table='archive'):
+    def __init__(self, engine, config_dict, fid, defaultSchema=defaultForecastSchema, table='archive'):
         super(Forecast, self).__init__(engine, config_dict)
         d = config_dict['Forecast'] if 'Forecast' in config_dict.keys() else {}
         self.interval = get_int(d, 'interval', 300)
         self.max_age = get_int(d, 'max_age', 604800)
-        self.method_id = method_id
-        self.table = table
+
+        dd = config_dict['Forecast'][fid] \
+            if fid in config_dict['Forecast'].keys() else {}
+        self.max_age = get_int(dd, 'max_age', self.max_age)
+        schema_str = dd['schema'] \
+            if 'schema' in dd.keys() else d.get('schema', None)
+        schema = weeutil.weeutil._get_object(schema_str) \
+            if schema_str is not None else defaultSchema
+        dbid = dd['database'] \
+            if 'database' in dd.keys() else d['database']
+
+        self.method_id = fid
         self.last_ts = 0
+        self.setup_database(config_dict, dbid, schema, table)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
 
     def update_forecast(self, event):
@@ -277,19 +327,10 @@ class Forecast(StdService):
             records.append(r)
         return records
 
-    def setup_database(self, config_dict, forecast_key):
-        d = config_dict['Forecast'][forecast_key] \
-            if forecast_key in config_dict['Forecast'].keys() else {}
-        schema_str = d['schema'] \
-            if 'schema' in d.keys() else \
-            config_dict['Forecast'].get('schema',
-                                        'user.forecast.defaultForecastSchema')
-        schema = weeutil.weeutil._get_object(schema_str)
-        db = d['database'] \
-            if 'database' in d.keys() else \
-            config_dict['Forecast']['database']
-        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][db], schema, self.table)
-        loginf('%s: using database %s' % (forecast_key, db))
+    def setup_database(self, config_dict, dbid, schema, table):
+        self.table = table
+        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][dbid], schema, table)
+        loginf('%s: using table %s in database %s' % (self.method_id, table, dbid))
 
 
 # -----------------------------------------------------------------------------
@@ -312,10 +353,7 @@ class ZambrettiForecast(Forecast):
         super(ZambrettiForecast, self).__init__(engine, config_dict, Z_KEY)
         d = config_dict['Forecast'][Z_KEY] \
             if Z_KEY in config_dict['Forecast'].keys() else {}
-        self.interval = get_int(d, 'interval', self.interval)
-        self.max_age = get_int(d, 'max_age', self.max_age)
         self.hemisphere = d.get('hemisphere', 'NORTH')
-        self.setup_database(config_dict, Z_KEY)
         loginf('%s: interval=%s max_age=%s hemisphere=%s' %
                (Z_KEY, self.interval, self.max_age, self.hemisphere))
 
@@ -343,6 +381,7 @@ class ZambrettiForecast(Forecast):
         record['method'] = Z_KEY
         record['dateTime'] = ts
         record['zcode'] = code
+        loginf('%s: generated 1 forecast record' % Z_KEY)
         return record
 
 zambretti_dict = {
@@ -445,6 +484,9 @@ def ZambrettiCode(pressure, month, wind, trend,
 # For actual forecasts, see:
 #   http://www.weather.gov/
 #
+# For example:
+#   http://forecast.weather.gov/product.php?site=NWS&product=PFM&format=txt&issuedby=BOX
+#
 # codes for clouds:
 #   CL - clear
 #   FW - mostly clear
@@ -490,13 +532,11 @@ class NWSForecast(Forecast):
         super(NWSForecast, self).__init__(engine, config_dict, NWS_KEY)
         d = config_dict['Forecast'][NWS_KEY] \
             if NWS_KEY in config_dict['Forecast'].keys() else {}
-        self.interval = get_int(d, 'interval', self.interval)
-        self.max_age = get_int(d, 'max_age', self.max_age)
+        self.interval = get_int(d, 'interval', 10800)
         self.url = d.get('url', DEFAULT_NWS_PFM_URL)
         self.max_tries = d.get('max_tries', 3)
         self.id = d.get('id', None)
         self.foid = d.get('foid', None)
-        self.setup_database(config_dict, NWS_KEY)
 
         errmsg = []
         if self.id is None:
@@ -535,6 +575,7 @@ class NWSForecast(Forecast):
                 if isinstance(matrix[label], list):
                     record[label] = matrix[label][i]
             records.append(record)
+        loginf('%s: got %d forecast records' % (NWS_KEY, len(records)))
 
         return records
 
@@ -761,13 +802,11 @@ class WUForecast(Forecast):
         super(WUForecast, self).__init__(engine, config_dict, WU_KEY)
         d = config_dict['Forecast'][WU_KEY] \
             if WU_KEY in config_dict['Forecast'].keys() else {}
-        self.interval = get_int(d, 'interval', self.interval)
-        self.max_age = get_int(d, 'max_age', self.max_age)
+        self.interval = get_int(d, 'interval', 10800)
         self.url = d.get('url', DEFAULT_WU_URL)
         self.max_tries = d.get('max_tries', 3)
         self.api_key = d.get('api_key', None)
         self.location = d.get('location', None)
-        self.setup_database(config_dict, WU_KEY)
 
         if self.location is None:
             lat = config_dict['Station'].get('latitude', None)
@@ -810,6 +849,7 @@ class WUForecast(Forecast):
                 if isinstance(matrix[label], list):
                     record[label] = matrix[label][i]
             records.append(record)
+        loginf('%s: got %d forecast records' % (WU_KEY, len(records)))
 
         return records
 
@@ -895,3 +935,293 @@ def dirstr(s):
     if s in directions.keys():
         s = directions[s]
     return s
+
+
+class TideForecast(Forecast):
+    """generic tide forecaster, downloads tides from internet"""
+
+    def __init__(self, engine, config_dict, key):
+        super(TideForecast, self).__init__(engine, config_dict, key)
+        d = config_dict['Forecast'][key] \
+            if key in config_dict['Forecast'].keys() else {}
+        self.max_tries = d.get('max_tries', 3)
+
+    def get_forecast(self, event):
+        text = self.download_forecast()
+        if text is None:
+            logerr('%s: no tide data found' % self.method_id)
+            return None
+        matrix = self.parse_forecast()
+        if matrix is None:
+            logerr('%s: no tides found in tide data' % self.method_id)
+            return None
+        logdbg('%s: tide matrix: %s' % (self.method_id, matrix))
+
+        records = []
+        for i,ts in enumerate(matrix['ts']):
+            record = {}
+            record['usUnits'] = weewx.US
+            record['method'] = self.method_id
+            record['dateTime'] = matrix['dateTime']
+            record['ts'] = ts
+            record['location'] = matrix['location']
+            record['hilo'] = matrix['hilo']
+            record['offset'] = matrix['offset']
+        return records
+
+    def download_forecast(self):
+        return None
+
+    def parse_forecast(self, text):
+        return None
+
+"""saltwatertides.com tide predictor
+
+i get http 500 internal server error when i try to download from saltwatertides
+
+http://www.saltwatertides.com/cgi-local/neatlantic.cgi
+site=Maine
+station_number=8415809
+month=08
+year=2013
+start_date=20
+maximum_days=3
+"""
+
+SWT_KEY = 'SWTides'
+
+class SaltwaterTidesForecast(TideForecast):
+    """download tide forecast from saltwatertides.com"""
+
+    def __init__(self, engine, config_dict):
+        super(SaltwaterTidesForecast, self).__init__(engine, config_dict,
+                                                     SWT_KEY)
+        d = config_dict['Forecast'][self.method_id] \
+            if self.method_id in config_dict['Forecast'].keys() else {}
+        self.url = d['url']
+        self.site = d['site']
+        self.station_number = d['station_number']
+        loginf('%s: interval=%s max_age=%s' %
+               (self.method_id, self.interval, self.max_age))
+
+    def download_forecast(self):
+        return DownloadSaltwaterTides(self.url)
+
+    def parse_forecast(self, text):
+        return ParseSaltwaterTides(text)
+
+def DownloadSaltwaterTides(url, site, station,
+                           start_date=None, month=None, year=None,
+                           maximum_days='3', max_tries=3):
+    """Download tides from saltwatertides.com tide predictor"""
+
+    if start_date is None or month is None or year is None:
+        now = time.time()
+        ts = time.localtime(now)
+        if start_date is None:
+            start_date = ts.tm_mday
+        if month is None:
+            month = ts.tm_month
+        if year is None:
+            year = ts.tm_year
+    logdbg("%s: downloading from '%s'" % (SWT_KEY, url))
+    for count in range(max_tries):
+        try:
+            fields = {}
+            fields['site'] = site
+            fields['station_number'] = station
+            fields['start_date'] = start_date
+            fields['month'] = month
+            fields['year'] = year
+            fields['maximum_days'] = maximum_days
+            loginf('fields: %s' % fields)
+            request = urllib2.Request(url, urllib.urlencode(fields))
+            response = urllib2.urlopen(request)
+            text = response.read()
+            alllines = text.splitlines()
+            lines = None
+            for line in iter(alllines):
+                if line.startswith('Error Message Page'):
+                    logerr('%s: download failed, server did not like request' %
+                           SWT_KEY)
+                    return None
+            return text
+        except (urllib2.URLError, socket.error,
+                httplib.BadStatusLine, httplib.IncompleteRead), e:
+            logerr('%s: failed attempt %d to download tides: %s' %
+                   (SWT_KEY, count+1, e))
+    else:
+        logerr('%s: failed to download tides' % SWT_KEY)
+    return None
+
+def ParseSaltwaterTides(text):
+    """Parse the output from saltwatertides.com tide predictor."""
+
+    alllines = text.splitlines()
+    lines = None
+    for line in iter(alllines):
+        pass
+
+    return None
+
+
+
+"""NOAA tide predictor
+
+the web interface to noaa is horrendous - apparently NOAATidesFacade does some
+magic to make the java app do the right thing, because if you just twiddle the
+cgi arguments you get null pointer exceptions.
+
+http://tidesandcurrents.noaa.gov/noaatidepredictions/NOAATidesFacade.jsp?Stationid=8415809
+
+http://tidesandcurrents.noaa.gov/noaatidepredictions/viewDailyPredictions.jsp?bmon=08&bday=19&byear=2013&timelength=daily&timeZone=2&dataUnits=1&datum=MLLW&timeUnits=1&interval=highlow&format=Submit&Stationid=8415809
+
+http://tidesandcurrents.noaa.gov/faq2.html
+
+http://tidesandcurrents.noaa.gov/accuracy.html
+
+http://tidesandcurrents.noaa.gov/tide_predictions.shtml
+"""
+
+NT_KEY = 'NOAATides'
+
+class NOAATideForecast(TideForecast):
+    """download tide forecast from NOAA"""
+
+    def __init__(self, engine, config_dict):
+        super(NOAATideForecast, self).__init__(engine, config_dict, NT_KEY)
+        d = config_dict['Forecast'][NT_KEY] \
+            if NT_KEY in config_dict['Forecast'].keys() else {}
+        self.url = d['url']
+        loginf('%s: interval=%s max_age=%s' %
+               (NT_KEY, self.interval, self.max_age))
+
+    def download_forecast(self):
+        return DownloadNOAATides(self.url)
+
+    def parse_forecast(self, text):
+        return ParseNOAATides(text)
+
+def DownloadNOAATides(url, max_tries=3):
+    """Download tides from US NOAA tide predictor"""
+
+    logdbg("%s: downloading from '%s'" % (NT_KEY, url))
+    for count in range(max_tries):
+        try:
+            response = urllib2.urlopen(url)
+            text = response.read()
+            return text
+        except (urllib2.URLError, socket.error,
+                httplib.BadStatusLine, httplib.IncompleteRead), e:
+            logerr('%s: failed attempt %d to download tides: %s' %
+                   (NT_KEY, count+1, e))
+    else:
+        logerr('%s: failed to download tides' % NT_KEY)
+    return None
+
+def ParseNOAATides(text):
+    """Parse the output from the US NOAA tide predictor."""
+
+    alllines = text.splitlines()
+    lines = None
+    for line in iter(alllines):
+        pass
+
+    return None
+
+
+"""xtide tide predictor
+   The xtide application must be installed for this to work.
+"""
+
+XT_KEY = 'XTide'
+XT_PROG = '/usr/bin/tide'
+XT_ARGS = '-fc -df"%Y.%m.%d" -tf"%H:%M"'
+
+class XTideForecast(Forecast):
+    """generate tide forecast using xtide"""
+
+    def __init__(self, engine, config_dict):
+        super(XTideForecast, self).__init__(engine, config_dict, XT_KEY)
+        d = config_dict['Forecast'][XT_KEY] \
+            if XT_KEY in config_dict['Forecast'].keys() else {}
+        self.interval = get_int(d, 'interval', 604800)
+        self.tideprog = d.get('prog', XT_PROG)
+        self.tideargs = d.get('args', XT_ARGS)
+        self.location = d['location']
+        loginf('%s: interval=%s max_age=%s' %
+               (XT_KEY, self.interval, self.max_age))
+
+    def get_forecast(self, event):
+        lines = self.generate_tide()
+        if lines is None:
+            return None
+        records = self.parse_forecast(lines)
+        if records is None:
+            return None
+        logdbg('%s: tide matrix: %s' % (self.method_id, records))
+        return records
+
+    def generate_tide(self, st=None, et=None):
+        if st is None or et is None:
+            now = time.time()
+            st = time.strftime('%Y-%m-%d %H:%M', time.localtime(now))
+            et = time.strftime('%Y-%m-%d %H:%M', time.localtime(now+self.interval))
+        cmd = "%s %s -l'%s' -b'%s' -e'%s'" % (self.tideprog, self.tideargs, self.location, st, et)
+        try:
+            loginf('%s: generating tides for %s days' % (XT_KEY, self.interval / (24*3600)))
+            logdbg("%s: running command '%s'" % (XT_KEY, cmd))
+            p = subprocess.Popen(cmd, shell=True,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT)
+            rc = p.returncode
+            if rc is not None:
+                logerr('%s: generate tide failed: code=%s' % (XT_KEY, -rc))
+                return None
+            out = []
+            for line in p.stdout:
+                if string.find(line, 'Error') >= 0:
+                    logerr('%s: generate tide failed: %s' % (XT_KEY, line))
+                    return None
+                if string.find(line, self.location) >= 0:
+                    out.append(line)
+            return out
+        except OSError, e:
+            logerr('%s: generate tide failed: %s' % (XT_KEY, e))
+        return None
+
+    def parse_forecast(self, lines, now=None):
+        hilo = {}
+        hilo['High Tide'] = 'H'
+        hilo['Low Tide'] = 'L'
+        if now is None:
+            now = int(time.time())
+        records = []
+        for line in lines:
+            line = string.rstrip(line)
+            fields = string.split(line, ',')
+            if fields[4] == 'High Tide' or fields[4] == 'Low Tide':
+                s = '%s %s' % (fields[1], fields[2])
+                tt = time.strptime(s, '%Y.%m.%d %H:%M')
+                ts = time.mktime(tt)
+                ofields = string.split(fields[3], ' ')
+                record = {}
+                record['usUnits'] = weewx.US \
+                    if ofields[1] == 'ft' else weewx.METRIC
+                record['dateTime'] = int(now)
+                record['ts'] = int(ts)
+                record['hilo'] = hilo[fields[4]]
+                record['offset'] = ofields[0]
+                records.append(record)
+        return records
+
+
+
+class ForecastFileGenerator(FileGenerator):
+    """Extend the standard file generator with forecasting variables."""
+
+    def getCommonSearchList(self, archivedb, statsdb, timespan):
+        searchList = super(ForecastFileGenerator, self).getCommonSearchList(archivedb, statsdb, timespan)
+#        fdata = ForecastData()
+#        searchList.append({'forecast', fdata})
+        return searchList

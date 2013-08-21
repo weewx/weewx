@@ -1226,7 +1226,7 @@ WU_BOS = '''
 class ForecastTest(unittest.TestCase):
 
     @staticmethod
-    def create_barebones_config(name):
+    def create_barebones_config(name, fcast):
         config_dict = {}
         config_dict['Station'] = {}
         config_dict['Station']['station_type'] = 'Simulator'
@@ -1238,7 +1238,7 @@ class ForecastTest(unittest.TestCase):
         config_dict['Simulator']['mode'] = 'generator'
         config_dict['Engines'] = {}
         config_dict['Engines']['WxEngine'] = {}
-        config_dict['Engines']['WxEngine']['service_list'] = 'user.forecast.ZambrettiForecast'
+        config_dict['Engines']['WxEngine']['service_list'] = fcast
         config_dict['Databases'] = {}
         config_dict['Databases']['forecast_sqlite'] = {}
         config_dict['Databases']['forecast_sqlite']['root'] = '%(WEEWX_ROOT)s'
@@ -1517,11 +1517,65 @@ class ForecastTest(unittest.TestCase):
         matrix = forecast.ProcessWUForecast(fcast)
 #        print matrix
 
+    def test_xtide(self):
+        dbname = get_testdir('test_xtide') + '/forecast.sdb'
+        rmfile(dbname)
+
+        # we need a barebones config
+        config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.XTideForecast')
+        config_dict['Forecast'] = {}
+        config_dict['Forecast']['database'] = 'forecast_sqlite'
+        config_dict['Forecast']['max_age'] = 3600
+        config_dict['Forecast']['XTide'] = {}
+        config_dict['Forecast']['XTide']['location'] = 'Tenants Harbor'
+
+        # create a zambretti forecaster and simulator with which to test
+        e = wxengine.StdEngine(config_dict)
+        f = forecast.XTideForecast(e, config_dict)
+        st = '2013-08-20 12:00'
+        et = '2013-08-22 12:00'
+        lines = f.generate_tide(st=st, et=et)
+        expect = '''Tenants Harbor| Maine,2013.08.20,16:47,-0.71 ft,Low Tide
+Tenants Harbor| Maine,2013.08.20,19:00,,Moonrise
+Tenants Harbor| Maine,2013.08.20,19:32,,Sunset
+Tenants Harbor| Maine,2013.08.20,21:45,,Full Moon
+Tenants Harbor| Maine,2013.08.20,23:04,11.56 ft,High Tide
+Tenants Harbor| Maine,2013.08.21,05:24,-1.35 ft,Low Tide
+Tenants Harbor| Maine,2013.08.21,05:47,,Sunrise
+Tenants Harbor| Maine,2013.08.21,06:28,,Moonset
+Tenants Harbor| Maine,2013.08.21,11:38,10.73 ft,High Tide
+Tenants Harbor| Maine,2013.08.21,17:41,-0.95 ft,Low Tide
+Tenants Harbor| Maine,2013.08.21,19:31,,Sunset
+Tenants Harbor| Maine,2013.08.21,19:33,,Moonrise
+Tenants Harbor| Maine,2013.08.21,23:57,11.54 ft,High Tide
+Tenants Harbor| Maine,2013.08.22,05:48,,Sunrise
+Tenants Harbor| Maine,2013.08.22,06:13,-1.35 ft,Low Tide
+Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
+'''
+        self.assertEqual(''.join(lines), expect)
+
+        expect = [{'hilo': 'L', 'offset': '-0.71', 'ts': 1377031620,
+                   'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'H', 'offset': '11.56', 'ts': 1377054240,
+                   'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'L', 'offset': '-1.35', 'ts': 1377077040,
+                   'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'H', 'offset': '10.73', 'ts': 1377099480,
+                   'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'L', 'offset': '-0.95', 'ts': 1377121260,
+                   'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'H', 'offset': '11.54', 'ts': 1377143820,
+                   'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'L', 'offset': '-1.35', 'ts': 1377166380,
+                   'usUnits': 1, 'dateTime': 1377043837}]
+        records = f.parse_forecast(lines, now=1377043837)
+        self.assertEqual(records, expect)
+
     def test_config_inheritance(self):
         """ensure that configuration inheritance works properly"""
 
         dbname = get_testdir('test_config_inheritance') + '/forecast.sdb'
-        config_dict = ForecastTest.create_barebones_config(dbname)
+        config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.ZambrettiForecast')
         config_dict['Forecast'] = {}
         config_dict['Forecast']['database'] = 'forecast_sqlite'
         config_dict['Forecast']['max_age'] = 1
@@ -1541,7 +1595,7 @@ class ForecastTest(unittest.TestCase):
         rmfile(dbname)
 
         # we need a barebones config
-        config_dict = ForecastTest.create_barebones_config(dbname)
+        config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.ZambrettiForecast')
         config_dict['Forecast'] = {}
         config_dict['Forecast']['database'] = 'forecast_sqlite'
         config_dict['Forecast']['max_age'] = 1
