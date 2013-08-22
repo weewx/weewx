@@ -5,44 +5,50 @@
 Configuration
 
    Some parameters can be defined in the Forecast section, then overridden
-   for specific forecasting methods as needed.
+   for specific forecasting methods as needed.  Commented parameters will
+   default to the indicated values.  Uncommented parameters must be specified.
 
 [Forecast]
-    # how often to calculate the forecast, in seconds
-    interval = 300
-    # how long to keep old forecasts, in seconds.  use None to keep forever.
-    max_age = 604800
-    # the database in which to record forecast information
+    # The database in which to record forecast information, defined in the
+    # 'Databases' section of the weewx configuration.
     database = forecast_sqlite
+
+    # How often to calculate/download the forecast, in seconds
+    #interval = 300
+
+    # How long to keep old forecasts, in seconds.  use None to keep forever.
+    #max_age = 604800
 
     [[Zambretti]]
         # hemisphere can be NORTH or SOUTH
-        hemisphere = NORTH
+        #hemisphere = NORTH
 
     [[NWS]]
-        # first figure out your forecast office identifier (foid), then request
+        # First figure out your forecast office identifier (foid), then request
         # a point forecast using a url of this form in a web browser:
         #   http://forecast.weather.gov/product.php?site=NWS&product=PFM&format=txt&issuedby=YOUR_THREE_LETTER_FOID
-        # scan the output for a service location identifier corresponding
+        # Scan the output for a service location identifier corresponding
         # to your location.
 
-        # how often to download the forecast, in seconds
-        interval = 10800
-        # national weather service location identifier
+        # National Weather Service location identifier
         id = MAZ014
-        # national weather service forecast office identifier
+
+        # National Weather Service forecast office identifier
         foid = BOX
-        # url for point forecast matrix
-        url = http://forecast.weather.gov/product.php?site=NWS&product=PFM&format=txt
+
+        # URL for point forecast matrix
+        #url = http://forecast.weather.gov/product.php?site=NWS&product=PFM&format=txt
+
+        # How often to download the forecast, in seconds
+        #interval = 10800
 
     [[WU]]
-        # how often to download the forecast, in seconds
-        interval = 10800
-        # an api key is required to access the weather underground.
-        # obtain an api key here:
+        # An API key is required to access the weather underground.
+        # obtain an API key here:
         #   http://www.wunderground.com/weather/api/
         api_key = KEY
-        # the location for the forecast can be one of the following:
+
+        # The location for the forecast can be one of the following:
         #   CA/San_Francisco     - US state/city
         #   60290                - US zip code
         #   Australia/Sydney     - Country/City
@@ -51,15 +57,20 @@ Configuration
         #   pws:KCASANFR70       - PWS id
         #   autoip               - AutoIP address location
         #   autoip.json?geo_ip=38.102.136.138 - specific IP address location
-        # if no location is specified, station latitude and longitude are used
-        location = 02139
+        # If no location is specified, station latitude and longitude are used
+        #location = 02139
+
+        # How often to download the forecast, in seconds
+        #interval = 10800
 
     [[XTide]]
-        # location for which tides are desired
+        # Location for which tides are desired
         location = Boston
-        # how often to generate the tide forecast, in seconds
+
+        # How often to generate the tide forecast, in seconds
         #interval = 604800
-        # how often to prune old tides from database, None to keep forever
+
+        # How often to prune old tides from database, None to keep forever
         #max_age = 1209600
 
 [Databases]
