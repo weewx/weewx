@@ -1525,7 +1525,6 @@ class ForecastTest(unittest.TestCase):
         config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.XTideForecast')
         config_dict['Forecast'] = {}
         config_dict['Forecast']['database'] = 'forecast_sqlite'
-        config_dict['Forecast']['max_age'] = 3600
         config_dict['Forecast']['XTide'] = {}
         config_dict['Forecast']['XTide']['location'] = 'Tenants Harbor'
 
@@ -1583,7 +1582,6 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
         config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.XTideForecast')
         config_dict['Forecast'] = {}
         config_dict['Forecast']['database'] = 'forecast_sqlite'
-        config_dict['Forecast']['max_age'] = 3600
         config_dict['Forecast']['XTide'] = {}
         config_dict['Forecast']['XTide']['location'] = 'FooBar'
 

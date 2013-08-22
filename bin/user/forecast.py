@@ -54,13 +54,13 @@ Configuration
         # if no location is specified, station latitude and longitude are used
         location = 02139
 
-    [[NOAATides]]
-        # url for a specific 2-day tide forecast
-        url = http://tidesandcurrents.noaa.gov/noaatidepredictions/download
-        # how often to download the forecast, in seconds
-        interval = 86400
-        # how long to keep old tides, in seconds.  use None to keep forever.
-        max_age = 17280
+    [[XTide]]
+        # location for which tides are desired
+        location = Boston
+        # how often to generate the tide forecast, in seconds
+        #interval = 604800
+        # how often to prune old tides from database, None to keep forever
+        #max_age = 1209600
 
 [Databases]
     ...
@@ -251,11 +251,13 @@ defaultTideSchema = [('location', 'VARCHAR(16) NOT NULL'),
 class Forecast(StdService):
     """Provide forecast."""
 
-    def __init__(self, engine, config_dict, fid, defaultSchema=defaultForecastSchema, table='archive'):
+    def __init__(self, engine, config_dict, fid,
+                 interval=300, max_age=604800,
+                 defaultSchema=defaultForecastSchema, table='archive'):
         super(Forecast, self).__init__(engine, config_dict)
         d = config_dict['Forecast'] if 'Forecast' in config_dict.keys() else {}
-        self.interval = get_int(d, 'interval', 300)
-        self.max_age = get_int(d, 'max_age', 604800)
+        self.interval = get_int(d, 'interval', interval)
+        self.max_age = get_int(d, 'max_age', max_age)
 
         dd = config_dict['Forecast'][fid] \
             if fid in config_dict['Forecast'].keys() else {}
@@ -529,10 +531,10 @@ class NWSForecast(Forecast):
     """Download forecast from US National Weather Service."""
 
     def __init__(self, engine, config_dict):
-        super(NWSForecast, self).__init__(engine, config_dict, NWS_KEY)
+        super(NWSForecast, self).__init__(engine, config_dict, NWS_KEY,
+                                          interval=10800)
         d = config_dict['Forecast'][NWS_KEY] \
             if NWS_KEY in config_dict['Forecast'].keys() else {}
-        self.interval = get_int(d, 'interval', 10800)
         self.url = d.get('url', DEFAULT_NWS_PFM_URL)
         self.max_tries = d.get('max_tries', 3)
         self.id = d.get('id', None)
@@ -799,10 +801,10 @@ class WUForecast(Forecast):
     """Download forecast from Weather Underground."""
 
     def __init__(self, engine, config_dict):
-        super(WUForecast, self).__init__(engine, config_dict, WU_KEY)
+        super(WUForecast, self).__init__(engine, config_dict, WU_KEY,
+                                         interval=10800)
         d = config_dict['Forecast'][WU_KEY] \
             if WU_KEY in config_dict['Forecast'].keys() else {}
-        self.interval = get_int(d, 'interval', 10800)
         self.url = d.get('url', DEFAULT_WU_URL)
         self.max_tries = d.get('max_tries', 3)
         self.api_key = d.get('api_key', None)
@@ -946,20 +948,22 @@ def dirstr(s):
 XT_KEY = 'XTide'
 XT_PROG = '/usr/bin/tide'
 XT_ARGS = '-fc -df"%Y.%m.%d" -tf"%H:%M"'
+XT_HILO = {'High Tide' : 'H',
+           'Low Tide' : 'L'}
 
 class XTideForecast(Forecast):
     """generate tide forecast using xtide"""
 
     def __init__(self, engine, config_dict):
-        super(XTideForecast, self).__init__(engine, config_dict, XT_KEY)
+        super(XTideForecast, self).__init__(engine, config_dict, XT_KEY,
+                                            interval=604800, max_age=1209600)
         d = config_dict['Forecast'][XT_KEY] \
             if XT_KEY in config_dict['Forecast'].keys() else {}
-        self.interval = get_int(d, 'interval', 604800)
         self.tideprog = d.get('prog', XT_PROG)
         self.tideargs = d.get('args', XT_ARGS)
         self.location = d['location']
-        loginf('%s: interval=%s max_age=%s' %
-               (XT_KEY, self.interval, self.max_age))
+        loginf("%s: interval=%s max_age=%s location='%s'" %
+               (XT_KEY, self.interval, self.max_age, self.location))
 
     def get_forecast(self, event):
         lines = self.generate_tide()
@@ -976,15 +980,16 @@ class XTideForecast(Forecast):
             now = time.time()
             st = time.strftime('%Y-%m-%d %H:%M', time.localtime(now))
             et = time.strftime('%Y-%m-%d %H:%M', time.localtime(now+self.interval))
-        cmd = "%s %s -l'%s' -b'%s' -e'%s'" % (self.tideprog, self.tideargs, self.location, st, et)
+        cmd = "%s %s -l'%s' -b'%s' -e'%s'" % (
+            self.tideprog, self.tideargs, self.location, st, et)
         try:
-            loginf('%s: generating tides for %s days' % (XT_KEY, self.interval / (24*3600)))
+            loginf('%s: generating tides for %s days' %
+                   (XT_KEY, self.interval / (24*3600)))
             logdbg("%s: running command '%s'" % (XT_KEY, cmd))
             p = subprocess.Popen(cmd, shell=True,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             rc = p.returncode
-            print rc
             if rc is not None:
                 logerr('%s: generate tide failed: code=%s' % (XT_KEY, -rc))
                 return None
@@ -1012,9 +1017,6 @@ class XTideForecast(Forecast):
         return None
 
     def parse_forecast(self, lines, now=None):
-        hilo = {}
-        hilo['High Tide'] = 'H'
-        hilo['Low Tide'] = 'L'
         if now is None:
             now = int(time.time())
         records = []
@@ -1031,7 +1033,7 @@ class XTideForecast(Forecast):
                     if ofields[1] == 'ft' else weewx.METRIC
                 record['dateTime'] = int(now)
                 record['ts'] = int(ts)
-                record['hilo'] = hilo[fields[4]]
+                record['hilo'] = XT_HILO[fields[4]]
                 record['offset'] = ofields[0]
                 records.append(record)
         return records
