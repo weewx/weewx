@@ -1529,9 +1529,11 @@ class ForecastTest(unittest.TestCase):
         config_dict['Forecast']['XTide'] = {}
         config_dict['Forecast']['XTide']['location'] = 'Tenants Harbor'
 
-        # create a zambretti forecaster and simulator with which to test
+        # create a simulator with which to test
         e = wxengine.StdEngine(config_dict)
         f = forecast.XTideForecast(e, config_dict)
+
+        # check a regular set of tides
         st = '2013-08-20 12:00'
         et = '2013-08-22 12:00'
         lines = f.generate_tide(st=st, et=et)
@@ -1554,6 +1556,7 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
 '''
         self.assertEqual(''.join(lines), expect)
 
+        # verify that records are created properly
         expect = [{'hilo': 'L', 'offset': '-0.71', 'ts': 1377031620,
                    'usUnits': 1, 'dateTime': 1377043837},
                   {'hilo': 'H', 'offset': '11.56', 'ts': 1377054240,
@@ -1570,6 +1573,29 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
                    'usUnits': 1, 'dateTime': 1377043837}]
         records = f.parse_forecast(lines, now=1377043837)
         self.assertEqual(records, expect)
+
+
+    def test_xtide_error_handling(self):
+        dbname = get_testdir('test_xtide') + '/forecast.sdb'
+        rmfile(dbname)
+
+        # we need a barebones config
+        config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.XTideForecast')
+        config_dict['Forecast'] = {}
+        config_dict['Forecast']['database'] = 'forecast_sqlite'
+        config_dict['Forecast']['max_age'] = 3600
+        config_dict['Forecast']['XTide'] = {}
+        config_dict['Forecast']['XTide']['location'] = 'FooBar'
+
+        # create a simulator with which to test
+        e = wxengine.StdEngine(config_dict)
+        f = forecast.XTideForecast(e, config_dict)
+
+        # check a regular set of tides with the bogus location
+        st = '2013-08-20 12:00'
+        et = '2013-08-22 12:00'
+        lines = f.generate_tide(st=st, et=et)
+        self.assertEquals(lines, None)
 
     def test_config_inheritance(self):
         """ensure that configuration inheritance works properly"""

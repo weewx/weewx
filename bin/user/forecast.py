@@ -990,9 +990,6 @@ class XTideForecast(Forecast):
                 return None
             out = []
             for line in p.stdout:
-                if string.find(line, 'Error') >= 0:
-                    logerr('%s: generate tide failed: %s' % (XT_KEY, line))
-                    return None
                 if string.find(line, self.location) >= 0:
                     out.append(line)
             if len(out) > 0:
@@ -1001,10 +998,14 @@ class XTideForecast(Forecast):
             for line in p.stderr:
                 line = string.rstrip(line)
                 err.append(line)
-            if len(err) > 0:
-                logerr('%s: generate tide failed: %s' % (XT_KEY, ' '.join(err)))
-                return None
-            logerr('%s: generate tide failed with no reason' % XT_KEY)
+            errmsg = ' '.join(err)
+            idx = errmsg.find('XTide Error:')
+            if idx >= 0:
+                errmsg = errmsg[idx:]
+            idx = errmsg.find('XTide Fatal Error:')
+            if idx >= 0:
+                errmsg = errmsg[idx:]
+            logerr('%s: generate tide failed: %s' % (XT_KEY, errmsg))
             return None
         except OSError, e:
             logerr('%s: generate tide failed: %s' % (XT_KEY, e))
@@ -1038,10 +1039,39 @@ class XTideForecast(Forecast):
 
 
 class ForecastFileGenerator(FileGenerator):
-    """Extend the standard file generator with forecasting variables."""
+    """Extend the standard file generator with forecasting variables.
+    The search list is an array of dictionaries.  Each dictionary is
+    a label paired with a tuple or additional dictionary.
+    """
 
     def getToDateSearchList(self, archivedb, statsdb, timespan):
         searchList = super(ForecastFileGenerator, self).getToDateSearchList(archivedb, statsdb, timespan)
         fdata = ForecastData()
-        searchList.append({'forecast' : fdata})
+        searchList.append(fdata)
         return searchList
+
+
+
+class ForecastData():
+    """Bind forecast variables to database records.
+
+$forecast.tides(0).hilo       H or L
+$forecast.tides(0).datetime   date and time of the event as epoch
+$forecast.tides(0).offset     depth above/below mean low tide
+
+$forecast.zambretti.code
+$forecast.zambretti.text
+
+    """
+
+    def __init__(self):
+        self.zambretti.code = 0
+        self.zambretti.text = 'A'
+
+    @property
+    def tides(self, index=0, ts=None):
+        return 0
+
+    @property
+    def zambretti(self, ts=None):
+        return 0
