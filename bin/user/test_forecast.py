@@ -4,11 +4,17 @@
 
 """Tests for weewx forecasting module."""
 
+import configobj
+import math
 import os
+import shutil
+import string
 import sys
 import time
 import unittest
 
+import user
+import weedb
 import weewx
 import weewx.wxengine as wxengine
 import user.forecast as forecast
@@ -16,9 +22,21 @@ import user.forecast as forecast
 # FIXME: these belong in a common testing library
 TMPDIR = '/var/tmp/weewx_test'
 
+def rmdir(d):
+    try:
+        os.rmdir(d)
+    except:
+        pass
+
+def rmtree(d):
+    try:
+        shutil.rmtree(d)
+    except:
+        pass
+
 def mkdir(d):
     try:
-        os.makedirs(os.path.dirname(d))
+        os.makedirs(d)
     except:
         pass
 
@@ -33,6 +51,200 @@ def rmfile(name):
         os.remove(name)
     except Exception, e:
         pass
+
+def create_config(test_dir, service, skin_dir='testskin'):
+    cd = configobj.ConfigObj()
+    cd['debug'] = 1
+    cd['WEEWX_ROOT'] = test_dir
+    cd['Station'] = {
+        'station_type' : 'Simulator',
+        'altitude' : [0,'foot'],
+        'latitude' : 0,
+        'longitude' : 0
+        }
+    cd['Simulator'] = {
+        'driver' : 'weewx.drivers.simulator',
+        'mode' : 'generator'
+        }
+    cd['Engines'] = {
+        'WxEngine' : {
+            'service_list' : service
+            }
+        }
+    cd['Databases'] = {
+        'archive_sqlite' : {
+            'root' : '%(WEEWX_ROOT)s',
+            'database' : test_dir + '/archive.sdb',
+            'driver' : 'weedb.sqlite'
+            },
+        'stats_sqlite' : {
+            'root' : '%(WEEWX_ROOT)s',
+            'database' : test_dir + '/stats.sdb',
+            'driver' : 'weedb.sqlite'
+            },
+        'forecast_sqlite' : {
+            'root' : '%(WEEWX_ROOT)s',
+            'database' : test_dir + '/forecast.sdb',
+            'driver' : 'weedb.sqlite'
+            },
+        'forecast_mysql' : {
+            'host' : 'localhost',
+            'user' : 'weewx',
+            'password' : 'weewx',
+            'database' : 'forecast',
+            'driver' : 'weedb.mysql'
+            }
+        }
+    cd['StdReport'] = {
+        'HTML_ROOT' : test_dir + '/html',
+        'SKIN_ROOT' : test_dir,
+        'TestReport' : { 'skin' : skin_dir }
+        }
+    cd['StdArchive'] = {
+        'archive_database' : 'archive_sqlite',
+        'stats_database' : 'stats_sqlite'
+        }
+    cd['Forecast'] = {
+        'database' : 'forecast_sqlite'
+        }
+    return cd
+
+# FIXME: make weewx work without having to specify so many items in config
+#   Units
+#   Labels
+#   archive/stats databases
+def create_skin_conf(test_dir, skin_dir='testskin'):
+    '''create minimal skin config file for testing'''
+    mkdir(test_dir + '/' + skin_dir)
+    fn = test_dir + '/' + skin_dir + '/skin.conf'
+    f = open(fn, 'w')
+    f.write('''
+[Units]
+    [[Groups]]
+    [[StringFormats]]
+    [[Labels]]
+    [[TimeFormats]]
+    [[DegreeDays]]
+[Labels]
+[Almanac]
+    moon_phases = n,wc,fq,wg,f,wg,lq,wc
+[FileGenerator]
+    encoding = html_entities
+    [[ToDate]]
+        [[[current]]]
+            template = index.html.tmpl
+[Generators]
+        generator_list = user.forecast.ForecastFileGenerator
+''')
+    f.close()
+
+
+class FakeData(object):
+    '''generate fake data for testing. portions copied from gen_fake_data.py'''
+
+    start_tt = (2010,1,1,0,0,0,0,0,-1)
+    stop_tt  = (2010,1,2,0,0,0,0,0,-1)
+    start_ts = int(time.mktime(start_tt))
+    stop_ts  = int(time.mktime(stop_tt))
+    interval = 600
+
+    @staticmethod
+    def create_weather_databases(archive_db_dict, stats_db_dict):
+        with weewx.archive.Archive.open_with_create(archive_db_dict, user.schemas.defaultArchiveSchema) as archive:
+            archive.addRecord(FakeData.gen_fake_data())
+            try:
+                weedb.drop(stats_db_dict)
+            except weedb.NoDatabase:
+                pass
+            with weewx.stats.StatsDb.open_with_create(stats_db_dict, user.schemas.defaultStatsSchema) as stats:
+                stats.backfillFrom(archive)
+
+    @staticmethod
+    def create_forecast_database(forecast_db_dict, records):
+        with weewx.archive.Archive.open_with_create(forecast_db_dict, user.forecast.defaultForecastSchema) as archive:
+            archive.addRecord(records)
+
+    @staticmethod
+    def gen_fake_zambretti_data():
+        ts = int(time.mktime((2013,8,22,12,0,0,0,0,-1)))
+        codes = ['A', 'B', 'C', 'D', 'E', 'F', 'A', 'A', 'A']
+        for code in codes:
+            record = {}
+            record['method'] = 'Zambretti'
+            record['usUnits'] = weewx.US
+            record['dateTime'] = ts
+            record['zcode'] = code
+            ts += 300
+            yield record
+
+    @staticmethod
+    def gen_fake_noaa_data():
+        pass
+
+    @staticmethod
+    def gen_fake_wu_data():
+        pass
+
+    @staticmethod
+    def gen_fake_xtide_data():
+        records = [{'hilo': 'L', 'offset': '-0.71', 'event_ts': 1377031620,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'H', 'offset': '11.56', 'event_ts': 1377054240,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377077040,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'H', 'offset': '10.73', 'event_ts': 1377099480,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'L', 'offset': '-0.95', 'event_ts': 1377121260,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'H', 'offset': '11.54', 'event_ts': 1377143820,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377166380,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837}]
+        return records
+
+    @staticmethod
+    def gen_fake_data(start_ts=start_ts, stop_ts=stop_ts, interval=interval):
+        daily_temp_range = 40.0
+        annual_temp_range = 80.0
+        avg_temp = 40.0
+
+        # Four day weather cycle:
+        weather_cycle = 3600*24.0*4
+        weather_baro_range = 2.0
+        weather_wind_range = 10.0
+        weather_rain_total = 0.5 # This is inches per weather cycle
+        avg_baro = 30.0
+
+        count = 0
+        for ts in xrange(start_ts, stop_ts+interval, interval):
+            daily_phase  = (ts - start_ts) * 2.0 * math.pi / (3600*24.0)
+            annual_phase = (ts - start_ts) * 2.0 * math.pi / (3600*24.0*365.0)
+            weather_phase= (ts - start_ts) * 2.0 * math.pi / weather_cycle
+            record = {}
+            record['dateTime']  = ts
+            record['usUnits']   = weewx.US
+            record['interval']  = interval
+            record['outTemp']   = 0.5 * (-daily_temp_range*math.sin(daily_phase) - annual_temp_range*math.cos(annual_phase)) + avg_temp
+            record['barometer'] = 0.5 * weather_baro_range*math.sin(weather_phase) + avg_baro
+            record['windSpeed'] = abs(weather_wind_range*(1.0 + math.sin(weather_phase)))
+            record['windDir'] = math.degrees(weather_phase) % 360.0
+            record['windGust'] = 1.2*record['windSpeed']
+            record['windGustDir'] = record['windDir']
+            if math.sin(weather_phase) > .95:
+                record['rain'] = 0.02 if math.sin(weather_phase) > 0.98 else 0.01
+            else:
+                record['rain'] = 0.0
+
+        # Make every 71st observation (a prime number) a null. This is a
+        # deterministic algorithm, so it will produce the same results every
+        # time.                             
+            for obs_type in filter(lambda x : x not in ['dateTime', 'usUnits', 'interval'], record):
+                count+=1
+                if count%71 == 0:
+                    record[obs_type] = None
+            yield record
+
 
 
 PFM_BOS = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -1225,32 +1437,28 @@ WU_BOS = '''
 
 class ForecastTest(unittest.TestCase):
 
-    @staticmethod
-    def create_barebones_config(name, fcast):
-        config_dict = {}
-        config_dict['Station'] = {}
-        config_dict['Station']['station_type'] = 'Simulator'
-        config_dict['Station']['altitude'] = [0,'foot']
-        config_dict['Station']['latitude'] = 0
-        config_dict['Station']['longitude'] = 0
-        config_dict['Simulator'] = {}
-        config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
-        config_dict['Simulator']['mode'] = 'generator'
-        config_dict['Engines'] = {}
-        config_dict['Engines']['WxEngine'] = {}
-        config_dict['Engines']['WxEngine']['service_list'] = fcast
-        config_dict['Databases'] = {}
-        config_dict['Databases']['forecast_sqlite'] = {}
-        config_dict['Databases']['forecast_sqlite']['root'] = '%(WEEWX_ROOT)s'
-        config_dict['Databases']['forecast_sqlite']['database'] = name
-        config_dict['Databases']['forecast_sqlite']['driver'] = 'weedb.sqlite'
-        config_dict['Databases']['forecast_mysql'] = {}
-        config_dict['Databases']['forecast_mysql']['host'] = 'localhost'
-        config_dict['Databases']['forecast_mysql']['user'] = 'weewx'
-        config_dict['Databases']['forecast_mysql']['password'] = 'weewx'
-        config_dict['Databases']['forecast_mysql']['database'] = 'forecast'
-        config_dict['Databases']['forecast_mysql']['driver'] = 'weedb.mysql'
-        return config_dict
+    def compareContents(self, test_name, filename, expected):
+        expected_lines = string.split(expected, '\n')
+
+        actual = open(filename)
+        actual_lines = []
+        for actual_line in actual:
+            actual_lines.append(actual_line)
+        actual.close()
+        if len(actual_lines) != len(expected_lines):
+            raise AssertionError('wrong number of lines in %s (%s): %d != %d' %
+                                 (filename, test_name, len(actual_lines), len(expected_lines)))
+
+        lineno = 0
+        diffs = []
+        for actual_line in actual_lines:
+            try:
+                self.assertEqual(string.rstrip(actual_line), expected_lines[lineno])
+            except AssertionError, e:
+                diffs.append('line %d: %s' % (lineno+1, e))
+            lineno += 1
+        if len(diffs) > 0:
+            raise AssertionError('differences found in %s (%s):\n%s' % (filename, test_name, '\n'.join(diffs)))
 
     def test_zambretti_code(self):
         """run through all of the permutations"""
@@ -1383,12 +1591,6 @@ class ForecastTest(unittest.TestCase):
         self.assertEqual(forecast.ZambrettiCode(1013.0, 5, 15, 0), 'B')
         self.assertEqual(forecast.ZambrettiCode(1013.0, 5, 15, -1), 'O')
 
-    def test_bogus_values(self):
-        self.assertEqual(forecast.ZambrettiCode(0, 0, 0, 0), 'Z')
-        self.assertEqual(forecast.ZambrettiCode(None, 0, 0, 0), None)
-        self.assertEqual(forecast.ZambrettiCode(1013.0, 0, 16, 0), None)
-        self.assertEqual(forecast.ZambrettiCode(1013.0, 12, 0, 0), None)
-
     def test_zambretti_text(self):
         self.assertEqual(forecast.ZambrettiText('A'), 'Settled fine')
         self.assertEqual(forecast.ZambrettiText('B'), 'Fine weather')
@@ -1417,6 +1619,75 @@ class ForecastTest(unittest.TestCase):
         self.assertEqual(forecast.ZambrettiText('Y'), 'Stormy, may improve')
         self.assertEqual(forecast.ZambrettiText('Z'), 'Stormy, much rain')
 
+    def test_zambretti_bogus_values(self):
+        self.assertEqual(forecast.ZambrettiCode(0, 0, 0, 0), 'Z')
+        self.assertEqual(forecast.ZambrettiCode(None, 0, 0, 0), None)
+        self.assertEqual(forecast.ZambrettiCode(1013.0, 0, 16, 0), None)
+        self.assertEqual(forecast.ZambrettiCode(1013.0, 12, 0, 0), None)
+
+    def test_zambretti_templates(self):
+        tname = 'test_zambretti_templates'
+        tdir = get_testdir(tname)
+        rmtree(tdir)
+        cd = create_config(tdir, 'user.forecast.ZambrettiForecast')
+        FakeData.create_weather_databases(cd['Databases']['archive_sqlite'],
+                                          cd['Databases']['stats_sqlite'])
+        FakeData.create_forecast_database(cd['Databases']['forecast_sqlite'],
+                                          FakeData.gen_fake_zambretti_data())
+        create_skin_conf(tdir)
+
+        ts = int(time.mktime((2013,8,22,12,0,0,0,0,-1)))
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+        t = weewx.reportengine.StdReportEngine(cd, stn_info, ts)
+
+        # test regular behavior
+        fn = tdir + '/testskin/index.html.tmpl'
+        f = open(fn, 'w')
+        f.write('''<html>
+  <body>
+$forecast.zambretti.dateTime
+$forecast.zambretti.event_ts
+$forecast.zambretti.code
+$forecast.zambretti.text
+  </body>
+</html>
+''')
+        f.close()
+        t.run()
+        self.compareContents(tname, tdir + '/html/index.html', '''<html>
+  <body>
+22-Aug-2013 12:40
+22-Aug-2013 12:40
+A
+Settled fine
+  </body>
+</html>
+''')
+
+        # test behavior when no database
+        rmfile(tdir + '/html/index.html')
+        rmfile(tdir + '/forecast.sdb')
+        t.run()
+        self.assertEqual(os.path.exists(tdir + '/html/index.html'), False)
+
+        # test behavior when empty database
+        rmfile(tdir + '/html/index.html')
+        rmfile(tdir + '/forecast.sdb')
+        FakeData.create_forecast_database(cd['Databases']['forecast_sqlite'],
+                                          [])
+        t.run()
+        self.compareContents(tname, tdir + '/html/index.html', '''<html>
+  <body>
+NULL
+NULL
+NULL
+NULL
+  </body>
+</html>
+''')
+
+        # test behavior with bogus variable
+
     def test_nws_date_to_ts(self):
         data = {'418 PM EDT SAT MAY 11 2013': 1368303480,
                 '400 PM EDT SAT MAY 11 2013': 1368302400,
@@ -1436,7 +1707,6 @@ class ForecastTest(unittest.TestCase):
 
     def test_parse_single_nws_forecast(self):
         matrix = forecast.ParseNWSForecast(PFM_BOS_SINGLE, 'MAZ014')
-#        print matrix
         expected = {}
         expected['ts'] = [1368262800, 1368273600, 1368284400, 1368295200, 1368306000, 1368316800, 1368327600, 1368338400, 1368349200, 1368360000, 1368370800, 1368381600, 1368392400, 1368403200, 1368414000, 1368424800, 1368435600, 1368446400, 1368457200, 1368468000, 1368478800, 1368489600, 1368511200, 1368532800, 1368554400, 1368576000, 1368597600, 1368619200, 1368640800, 1368662400, 1368684000, 1368705600, 1368727200, 1368748800, 1368770400, 1368792000, 1368813600, 1368835200]
         expected['hour'] = ['05', '08', '11', '14', '17', '20', '23', '02', '05', '08', '11', '14', '17', '20', '23', '02', '05', '08', '11', '14', '17', '20', '02', '08', '14', '20', '02', '08', '14', '20', '02', '08', '14', '20', '02', '08', '14', '20']
@@ -1449,7 +1719,6 @@ class ForecastTest(unittest.TestCase):
 
     def test_parse_multiple_nws_forecast(self):
         matrix = forecast.ParseNWSForecast(PFM_BOS, 'CTZ002')
-#        print matrix
         expected = {}
         expected['temp'] = [None, None, None, '68', '67', '66', '62', '59', '57', '59', '63', '69', '65', '58', '48', '43', '40', '45', '56', '61', '61', '52', '40', '44', '62', '54', '43', '49', '70', '63', '52', '56', '72', '66', '56', '60', '75', '66']
         expected['tempMin'] = [None, None, None, None, None, None, None, None, None, '55', None, None, None, None, None, None, None, '38', None, None, None, None, None, '36', None, None, None, '39', None, None, None, '48', None, None, None, '53', None, None]
@@ -1459,7 +1728,6 @@ class ForecastTest(unittest.TestCase):
             self.assertEqual(matrix[label], expected[label])
 
         matrix = forecast.ParseNWSForecast(PFM_BOS, 'RIZ004')
-#        print matrix
         expected = {}
         expected['temp'] = [None, None, None, '66', '65', '63', '60', '59', '59', '60', '64', '71', '68', '62', '52', '47', '43', '48', '57', '61', '60', '53', '43', '46', '61', '55', '45', '49', '65', '60', '52', '55', '68', '63', '56', '59', '71', '64']
         expected['tempMin'] = [None, None, None, None, None, None, None, None, None, '58', None, None, None, None, None, None, None, '42', None, None, None, None, None, '39', None, None, None, '42', None, None, None, '49', None, None, None, '53', None, None]
@@ -1479,7 +1747,6 @@ class ForecastTest(unittest.TestCase):
 
     def test_process_wu_forecast(self):
         matrix = forecast.ProcessWUForecast(WU_BOS)
-#        print matrix
         expected = {}
         expected['ts'] = [1368673200, 1368759600, 1368846000, 1368932400, 1369018800, 1369105200, 1369191600, 1369278000, 1369364400, 1369450800]
         expected['tempMin'] = [55.0, 54.0, 54.0, 48.0, 48.0, 52.0, 54.0, 55.0, 54.0, 57.0]
@@ -1518,13 +1785,10 @@ class ForecastTest(unittest.TestCase):
 #        print matrix
 
     def test_xtide(self):
-        dbname = get_testdir('test_xtide') + '/forecast.sdb'
-        rmfile(dbname)
+        tdir = get_testdir('test_xtide')
+        rmtree(tdir)
 
-        # we need a barebones config
-        config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.XTideForecast')
-        config_dict['Forecast'] = {}
-        config_dict['Forecast']['database'] = 'forecast_sqlite'
+        config_dict = create_config(tdir, 'user.forecast.XTideForecast')
         config_dict['Forecast']['XTide'] = {}
         config_dict['Forecast']['XTide']['location'] = 'Tenants Harbor'
 
@@ -1556,32 +1820,30 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
         self.assertEqual(''.join(lines), expect)
 
         # verify that records are created properly
-        expect = [{'hilo': 'L', 'offset': '-0.71', 'ts': 1377031620,
-                   'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'H', 'offset': '11.56', 'ts': 1377054240,
-                   'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'L', 'offset': '-1.35', 'ts': 1377077040,
-                   'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'H', 'offset': '10.73', 'ts': 1377099480,
-                   'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'L', 'offset': '-0.95', 'ts': 1377121260,
-                   'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'H', 'offset': '11.54', 'ts': 1377143820,
-                   'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'L', 'offset': '-1.35', 'ts': 1377166380,
-                   'usUnits': 1, 'dateTime': 1377043837}]
+        expect = [{'hilo': 'L', 'offset': '-0.71', 'event_ts': 1377031620,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'H', 'offset': '11.56', 'event_ts': 1377054240,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377077040,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'H', 'offset': '10.73', 'event_ts': 1377099480,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'L', 'offset': '-0.95', 'event_ts': 1377121260,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'H', 'offset': '11.54', 'event_ts': 1377143820,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                  {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377166380,
+                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837}]
         records = f.parse_forecast(lines, now=1377043837)
         self.assertEqual(records, expect)
 
 
     def test_xtide_error_handling(self):
-        dbname = get_testdir('test_xtide') + '/forecast.sdb'
-        rmfile(dbname)
+        tdir = get_testdir('test_xtide_error_handling')
+        rmtree(tdir)
 
         # we need a barebones config
-        config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.XTideForecast')
-        config_dict['Forecast'] = {}
-        config_dict['Forecast']['database'] = 'forecast_sqlite'
+        config_dict = create_config(tdir, 'user.forecast.XTideForecast')
         config_dict['Forecast']['XTide'] = {}
         config_dict['Forecast']['XTide']['location'] = 'FooBar'
 
@@ -1595,13 +1857,106 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
         lines = f.generate_tide(st=st, et=et)
         self.assertEquals(lines, None)
 
+    def test_xtide_templates(self):
+        tname = 'test_xtide_templates'
+        tdir = get_testdir(tname)
+        rmtree(tdir)
+        cd = create_config(tdir, 'user.forecast.XTideForecast')
+        FakeData.create_weather_databases(cd['Databases']['archive_sqlite'],
+                                          cd['Databases']['stats_sqlite'])
+        FakeData.create_forecast_database(cd['Databases']['forecast_sqlite'],
+                                          FakeData.gen_fake_xtide_data())
+        create_skin_conf(tdir)
+
+        ts = int(time.mktime((2013,8,22,12,0,0,0,0,-1)))
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+        t = weewx.reportengine.StdReportEngine(cd, stn_info, ts)
+
+        # test regular behavior
+        fn = tdir + '/testskin/index.html.tmpl'
+        f = open(fn, 'w')
+        f.write('''<html>
+  <body>
+$forecast.xtide(0, from_ts=1377043837).dateTime
+$forecast.xtide(0, from_ts=1377043837).event_ts
+$forecast.xtide(0, from_ts=1377043837).hilo
+$forecast.xtide(0, from_ts=1377043837).offset
+
+$forecast.xtide(1, from_ts=1377043837).dateTime
+$forecast.xtide(1, from_ts=1377043837).event_ts
+$forecast.xtide(1, from_ts=1377043837).hilo
+$forecast.xtide(1, from_ts=1377043837).offset
+
+tide forecast as of $forecast.xtide(0, from_ts=1377043837).dateTime
+#for $tide in $forecast.xtides(from_ts=1377043837):
+  $tide.hilo of $tide.offset at $tide.event_ts
+#end for
+  </body>
+</html>
+''')
+        f.close()
+        t.run()
+        self.compareContents(tname, tdir + '/html/index.html', '''<html>
+  <body>
+20-Aug-2013 20:10
+20-Aug-2013 23:04
+H
+11.56
+
+20-Aug-2013 20:10
+21-Aug-2013 05:24
+L
+-1.35
+
+tide forecast as of 20-Aug-2013 20:10
+  H of 11.56 at 20-Aug-2013 23:04
+  L of -1.35 at 21-Aug-2013 05:24
+  H of 10.73 at 21-Aug-2013 11:38
+  L of -0.95 at 21-Aug-2013 17:41
+  </body>
+</html>
+''')
+
+        # test index out of bounds
+        fn = tdir + '/testskin/index.html.tmpl'
+        f = open(fn, 'w')
+        f.write('''<html>
+  <body>
+$forecast.xtide(10, from_ts=1377043837).dateTime
+$forecast.xtide(10, from_ts=1377043837).event_ts
+$forecast.xtide(10, from_ts=1377043837).hilo
+$forecast.xtide(10, from_ts=1377043837).offset
+
+$forecast.xtide(-1, from_ts=1377043837).dateTime
+$forecast.xtide(-1, from_ts=1377043837).event_ts
+$forecast.xtide(-1, from_ts=1377043837).hilo
+$forecast.xtide(-1, from_ts=1377043837).offset
+  </body>
+</html>
+''')
+        f.close()
+        t.run()
+        self.compareContents(tname, tdir + '/html/index.html', '''<html>
+  <body>
+NULL
+NULL
+NULL
+NULL
+
+NULL
+NULL
+NULL
+NULL
+  </body>
+</html>
+''')
+
     def test_config_inheritance(self):
         """ensure that configuration inheritance works properly"""
 
-        dbname = get_testdir('test_config_inheritance') + '/forecast.sdb'
-        config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.ZambrettiForecast')
-        config_dict['Forecast'] = {}
-        config_dict['Forecast']['database'] = 'forecast_sqlite'
+        tdir = get_testdir('test_config_inheritance')
+        rmtree(tdir)
+        config_dict = create_config(tdir, 'user.forecast.ZambrettiForecast')
         config_dict['Forecast']['max_age'] = 1
         e = wxengine.StdEngine(config_dict)
         f = forecast.ZambrettiForecast(e, config_dict)
@@ -1615,13 +1970,10 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
     def test_pruning(self):
         """ensure that forecast pruning works properly"""
 
-        dbname = get_testdir('test_pruning') + '/forecast.sdb'
-        rmfile(dbname)
+        tdir = get_testdir('test_pruning')
+        rmtree(tdir)
 
-        # we need a barebones config
-        config_dict = ForecastTest.create_barebones_config(dbname, 'user.forecast.ZambrettiForecast')
-        config_dict['Forecast'] = {}
-        config_dict['Forecast']['database'] = 'forecast_sqlite'
+        config_dict = create_config(tdir, 'user.forecast.ZambrettiForecast')
         config_dict['Forecast']['max_age'] = 1
 
         # create a zambretti forecaster and simulator with which to test
@@ -1632,7 +1984,7 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
         record['windDir'] = 180
         event = weewx.Event(weewx.NEW_ARCHIVE_RECORD)
         event.record = record
-        record['dateTime'] = int(time.time())
+        event.record['dateTime'] = int(time.time())
         f.save_forecast(f.get_forecast(event))
         time.sleep(1)
         event.record['dateTime'] = int(time.time())

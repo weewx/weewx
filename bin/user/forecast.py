@@ -2,11 +2,23 @@
 # Copyright 2013 Matthew Wall
 """weewx module that provides forecasts
 
+Design
+
+   The forecasting module supports various forecast methods for weather and
+   tides.  Weather forecasting can be downloaded (NWS, WU) or generated
+   (Zambretti).  Tide forecasting is generated using XTide.
+
+   A single table stores all forecast information.  This means that each record
+   may have many unused fields, but it makes querying and database management
+   a bit easier.  There are a few fields in each record that are common to
+   every forecast method.  See the Database section in this file for details.
+
 Configuration
 
-   Some parameters can be defined in the Forecast section, then overridden
-   for specific forecasting methods as needed.  Commented parameters will
-   default to the indicated values.  Uncommented parameters must be specified.
+   Some parameters can be defined in the Forecast section of weewx.conf, then
+   overridden for specific forecasting methods as needed.  In the sample
+   configuration below, the commented parameters will default to the indicated
+   values.  Uncommented parameters must be specified.
 
 [Forecast]
     # The database in which to record forecast information, defined in the
@@ -22,6 +34,9 @@ Configuration
     [[Zambretti]]
         # hemisphere can be NORTH or SOUTH
         #hemisphere = NORTH
+
+        # mapping between zambretti codes and descriptive labels
+        #labels = "Settled fine", "Fine weather", "Becoming fine", "Fine, becoming less settled", "Fine, possible showers", "Fairly fine, improving", "Fairly fine, possible showers early", "Fairly fine, showery later", "Showery early, improving", "Changeable, mending", "Fairly fine, showers likely", "Rather unsettled clearing later", "Unsettled, probably improving", "Showery, bright intervals", "Showery, becoming less settled", "Changeable, some rain", "Unsettled, short fine intervals", "Unsettled, rain later", "Unsettled, some rain", "Mostly very unsettled", "Occasional rain, worsening", "Rain at times, very unsettled", "Rain at frequent intervals", "Rain, very unsettled", "Stormy, may improve", "Stormy, much rain", "unknown"
 
     [[NWS]]
         # First figure out your forecast office identifier (foid), then request
@@ -89,12 +104,13 @@ Configuration
 
 [Engines]
     [[WxEngine]]
-        service_list = ... , user.forecast.ZambrettiForecast, user.forecast.NWSForecast, user.forecast.WUForecast
+        service_list = ... , user.forecast.ZambrettiForecast, user.forecast.NWSForecast, user.forecast.WUForecast, user.forecast.XTideForecast
 """
 
 
 """
-sample summary sites
+here are a few web sites with weather/tide summaries, some more concise than
+others, none quite what we want:
 
 http://www.tides4fishing.com/
 
@@ -104,7 +120,7 @@ http://ocean.peterbrueggeman.com/tidepredict.html
 """
 
 # TODO: single table with unused fields, one table per method, or one db per ?
-# TODO: add forecast data to skin variables
+#       for now we use single table (one schema) for all methods
 
 import httplib
 import socket
@@ -153,27 +169,22 @@ def get_int(config_dict, label, default_value):
             logerr("bad value '%s' for %s" % (value, label))
     return value
 
-"""Forecast Schema
+"""Database Schema
 
    This schema captures all forecasts and defines the following fields:
 
-   method - forecast method, e.g., Zambretti, NWS
-   dateTime - timestamp in seconds when forecast was made
+   method     - forecast method, e.g., Zambretti, NWS, XTide
+   usUnits    - units of the forecast, either US or METRIC
+   dateTime   - timestamp in seconds when forecast was made
+   event_ts   - timestamp in seconds for the event
 
    database     nws                    wu                    zambretti
-   field        field                  field                 field
    -----------  ---------------------  --------------------  ---------
-   method
-   dateTime
-   usUnits
-
    zcode                                                     CODE
 
-   foid
-   id
-   source
-   desc
-   ts
+   foid         field office id
+   id           location id
+   desc         description
    hour         3HRLY | 6HRLY          date.hour
    tempMin      MIN/MAX | MAX/MIN      low.fahrenheit
    tempMax      MIN/MAX | MAX/MIN      high.fahrenheit
@@ -206,8 +217,9 @@ def get_int(config_dict, label, default_value):
    offset       how high or low the tide is relative to mean low
 """
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
-                         ('dateTime',   'INTEGER NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),
+                         ('dateTime',   'INTEGER NOT NULL'),
+                         ('event_ts',   'INTEGER'),     # seconds
 
                          # Zambretti fields
                          ('zcode',      'CHAR(1)'),
@@ -215,7 +227,6 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          # NWS fields
                          ('foid',       'CHAR(3)'),     # e.g., BOX
                          ('id',         'CHAR(6)'),     # e.g., MAZ014
-                         ('ts',         'INTEGER'),     # seconds
                          ('hour',       'INTEGER'),     # 00 to 23
                          ('tempMin',    'REAL'),        # degree F
                          ('tempMax',    'REAL'),        # degree F
@@ -249,22 +260,12 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('offset',   'REAL'),          # relative to mean low
                          ]
 
-"""Tides Schema
-   This schema captures tidal information.
-"""
-defaultTideSchema = [('location', 'VARCHAR(16) NOT NULL'),
-                     ('dateTime', 'INTEGER NOT NULL'),
-                     ('usUnits',  'INTEGER NOT NULL'),
-                     ('hilo',     'CHAR(1)'),       # H or L
-                     ('offset',   'REAL'),          # relative to mean low
-                     ]
-
 class Forecast(StdService):
     """Provide forecast."""
 
     def __init__(self, engine, config_dict, fid,
                  interval=300, max_age=604800,
-                 defaultSchema=defaultForecastSchema, table='archive'):
+                 defaultSchema=defaultForecastSchema):
         super(Forecast, self).__init__(engine, config_dict)
         d = config_dict['Forecast'] if 'Forecast' in config_dict.keys() else {}
         self.interval = get_int(d, 'interval', interval)
@@ -272,17 +273,19 @@ class Forecast(StdService):
 
         dd = config_dict['Forecast'][fid] \
             if fid in config_dict['Forecast'].keys() else {}
+        self.interval = get_int(dd, 'interval', self.interval)
         self.max_age = get_int(dd, 'max_age', self.max_age)
-        schema_str = dd['schema'] \
-            if 'schema' in dd.keys() else d.get('schema', None)
+
+        schema_str = d.get('schema', None)
         schema = weeutil.weeutil._get_object(schema_str) \
             if schema_str is not None else defaultSchema
-        dbid = dd['database'] \
-            if 'database' in dd.keys() else d['database']
+
+        self.database = d['database']
+        self.table = d.get('table', 'archive')
 
         self.method_id = fid
         self.last_ts = 0
-        self.setup_database(config_dict, dbid, schema, table)
+        self.setup_database(config_dict, schema)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
 
     def update_forecast(self, event):
@@ -340,10 +343,10 @@ class Forecast(StdService):
             records.append(r)
         return records
 
-    def setup_database(self, config_dict, dbid, schema, table):
-        self.table = table
-        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][dbid], schema, table)
-        loginf('%s: using table %s in database %s' % (self.method_id, table, dbid))
+    def setup_database(self, config_dict, schema):
+        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][self.database], schema, self.table)
+        loginf("%s: using table '%s' in database '%s'" %
+               (self.method_id, self.table, self.database))
 
 
 # -----------------------------------------------------------------------------
@@ -371,16 +374,16 @@ class ZambrettiForecast(Forecast):
                (Z_KEY, self.interval, self.max_age, self.hemisphere))
 
     def get_forecast(self, event):
-        record = event.record
-        ts = record['dateTime']
+        rec = event.record
+        ts = rec['dateTime']
         if ts is None:
             logerr('%s: skipping forecast: null timestamp in archive record' %
                    Z_KEY)
             return None
         tt = time.gmtime(ts)
-        pressure = record['barometer']
+        pressure = rec['barometer']
         month = tt.tm_mon - 1 # month is [0-11]
-        wind = int(record['windDir'] / 22.5) # wind dir is [0-15]
+        wind = int(rec['windDir'] / 22.5) # wind dir is [0-15]
         north = self.hemisphere.lower() != 'south'
         logdbg('%s: pressure=%s month=%s wind=%s north=%s' %
                (Z_KEY, pressure, month, wind, north))
@@ -390,8 +393,8 @@ class ZambrettiForecast(Forecast):
             return None
 
         record = {}
-        record['usUnits'] = weewx.US
         record['method'] = Z_KEY
+        record['usUnits'] = weewx.US
         record['dateTime'] = ts
         record['zcode'] = code
         loginf('%s: generated 1 forecast record' % Z_KEY)
@@ -423,7 +426,8 @@ zambretti_dict = {
     'W' : "Rain at frequent intervals",
     'X' : "Rain, very unsettled",
     'Y' : "Stormy, may improve",
-    'Z' : "Stormy, much rain"
+    'Z' : "Stormy, much rain",
+    'unknown' : "Unknown"
     }
 
 def ZambrettiText(code):
@@ -578,10 +582,10 @@ class NWSForecast(Forecast):
         records = []
         for i,ts in enumerate(matrix['ts']):
             record = {}
-            record['usUnits'] = weewx.US
             record['method'] = NWS_KEY
-            record['dateTime'] = matrix['dateTime']
-            record['ts'] = ts
+            record['usUnits'] = weewx.US
+            record['dateTime'] = matrix['created_ts']
+            record['event_ts'] = ts
             record['id'] = self.id
             record['foid'] = self.foid
             for label in matrix.keys():
@@ -687,7 +691,7 @@ def ParseNWSForecast(text, id):
     matrix['id'] = id
     matrix['desc'] = lines[1]
     matrix['location'] = lines[2]
-    matrix['dateTime'] = ts
+    matrix['created_ts'] = ts
     matrix['ts'] = []
     matrix['hour'] = []
 
@@ -854,10 +858,10 @@ class WUForecast(Forecast):
         records = []
         for i,ts in enumerate(matrix['ts']):
             record = {}
-            record['usUnits'] = weewx.US
             record['method'] = WU_KEY
-            record['dateTime'] = matrix['dateTime']
-            record['ts'] = ts
+            record['usUnits'] = weewx.US
+            record['dateTime'] = matrix['created_ts']
+            record['event_ts'] = ts
             for label in matrix.keys():
                 if isinstance(matrix[label], list):
                     record[label] = matrix[label][i]
@@ -902,7 +906,7 @@ def ProcessWUForecast(text):
     ts = int(time.time())
 
     matrix = {}
-    matrix['dateTime'] = ts
+    matrix['created_ts'] = ts
     matrix['ts'] = []
     matrix['hour'] = []
     matrix['tempMin'] = []
@@ -1040,10 +1044,11 @@ class XTideForecast(Forecast):
                 ts = time.mktime(tt)
                 ofields = string.split(fields[3], ' ')
                 record = {}
+                record['method'] = XT_KEY
                 record['usUnits'] = weewx.US \
                     if ofields[1] == 'ft' else weewx.METRIC
                 record['dateTime'] = int(now)
-                record['ts'] = int(ts)
+                record['event_ts'] = int(ts)
                 record['hilo'] = XT_HILO[fields[4]]
                 record['offset'] = ofields[0]
                 records.append(record)
@@ -1057,10 +1062,13 @@ class ForecastFileGenerator(FileGenerator):
     a label paired with a tuple or additional dictionary.
     """
 
-    def getToDateSearchList(self, archivedb, statsdb, timespan):
-        searchList = super(ForecastFileGenerator, self).getToDateSearchList(archivedb, statsdb, timespan)
-        fdata = ForecastData()
-        searchList.append(fdata)
+    def getCommonSearchList(self, archivedb, statsdb, timespan):
+        searchList = super(ForecastFileGenerator, self).getCommonSearchList(archivedb, statsdb, timespan)
+        fd = self.config_dict['Forecast'] \
+            if 'Forecast' in self.config_dict.keys() else {}
+        db = self._getArchive(fd['database'])
+        fdata = ForecastData(fd, db, self.formatter, self.converter)
+        searchList.append({'forecast' : fdata})
         return searchList
 
 
@@ -1068,23 +1076,87 @@ class ForecastFileGenerator(FileGenerator):
 class ForecastData():
     """Bind forecast variables to database records.
 
-$forecast.tides(0).hilo       H or L
-$forecast.tides(0).datetime   date and time of the event as epoch
-$forecast.tides(0).offset     depth above/below mean low tide
+$forecast.xtide(0).dateTime     date/time that the forecast was created
+$forecast.xtide(0).event_ts     date/time of the event
+$forecast.xtide(0).hilo         H or L
+$forecast.xtide(0).offset       depth above/below mean low tide
+$forecast.xtide(0).location     where the tide is forecast
 
-$forecast.zambretti.code
-$forecast.zambretti.text
+for tide in $forecast.xtides(max_events=12):
+  $tide.event_ts $tide.hilo $tide.offset
+
+$forecast.zambretti.dateTime    date/time that the forecast was created
+$forecast.zambretti.event_ts    date/time of the forecast
+$forecast.zambretti.code        zambretti forecast code (A-Z)
+$forecast.zambretti.text        description of the zambretti forecast
 
     """
 
-    def __init__(self):
-        self.zambretti.code = 0
-        self.zambretti.text = 'A'
+    def __init__(self, forecast_dict, database, formatter, converter):
+        '''forecast_dict - the 'Forecast' section of weewx.conf'''
+        self.z_dict = forecast_dict['Zambretti']['labels'] \
+            if 'Zambretti' in forecast_dict.keys() and \
+            'labels' in forecast_dict['Zambretti'].keys()\
+            else zambretti_dict
+        self.database = database
+        self.formatter = formatter
+        self.converter = converter
 
-    @property
-    def tides(self, index=0, ts=None):
-        return 0
+    def _getTides(self, max_events=1, from_ts=None):
+        if from_ts is None:
+            from_ts = int(time.time())
+        sql = "select dateTime,event_ts,hilo,offset from archive where method = 'XTide' and dateTime = (select dateTime from archive where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc limit %d" % (from_ts, max_events)
+        records = []
+        for rec in self.database.genSql(sql):
+            r = {}
+            ts = rec[0]
+            tt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
+            th = weewx.units.ValueHelper(tt, 'tides', self.formatter, self.converter)
+            r['dateTime'] = th
+            ts = rec[1]
+            tt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
+            th = weewx.units.ValueHelper(tt, 'tides', self.formatter, self.converter)
+            r['event_ts'] = th
+            r['hilo'] = rec[2]
+            r['offset'] = rec[3]
+            r['location'] = 'FIXME'
+            records.append(r)
+        return records
 
-    @property
-    def zambretti(self, ts=None):
-        return 0
+    def xtide(self, index, from_ts=None):
+        records = self._getTides(max_events=index+1, from_ts=from_ts)
+        if 0 <= index < len(records):
+            return records[index]
+        return { 'dateTime' : 'NULL',
+                 'event_ts' : 'NULL',
+                 'hilo' : 'NULL',
+                 'offset' : 'NULL',
+                 'location' : 'NULL' }
+
+    def xtides(self, max_events=4, from_ts=None):
+        '''The tide forecast returns tide events into the future from the
+        indicated time using the latest tide forecast.'''
+        records = self._getTides(max_events=max_events, from_ts=from_ts)
+        return records
+
+    def zambretti(self):
+        '''The zambretti forecast applies at the time at which it was created,
+        and is good for about 6 hours.  So there is no difference between the
+        created timestamp and event timestamp.'''
+        sql = "select dateTime,zcode from archive where method = 'Zambretti' order by dateTime desc limit 1"
+        record = self.database.getSql(sql)
+        if record is None:
+            return { 'dateTime' : 'NULL',
+                     'event_ts' : 'NULL',
+                     'code' : 'NULL',
+                     'text' : 'NULL' }
+        ts = record[0]
+        tt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
+        th = weewx.units.ValueHelper(tt, 'zambretti', self.formatter, self.converter)
+        code = record[1]
+        text = self.z_dict[code] \
+            if code in self.z_dict.keys() else self.z_dict['unknown']
+        return { 'dateTime' : th,
+                 'event_ts' : th,
+                 'code' : code,
+                 'text' : text, }
