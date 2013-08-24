@@ -122,6 +122,18 @@ http://ocean.peterbrueggeman.com/tidepredict.html
 # TODO: single table with unused fields, one table per method, or one db per ?
 #       for now we use single table (one schema) for all methods
 
+# FIXME: what is correct behavior when error?  display NULL? ''? None?
+
+# FIXME: use separate schema and table for each type, but one database
+
+# FIXME: make tides object be both dict (for datetime) and array (for tides)
+
+# FIXME: resolve the ambiguity in the SNOW12HR spec, which we have interpreted
+# as qsf (quantitative snow forecast).  nws example shows a value of 'mm' but
+# the description says the values will be inches.
+
+# FIXME: add a 'length' unit that has default formatting to two decimal places
+
 import httplib
 import socket
 import string
@@ -504,21 +516,67 @@ def ZambrettiCode(pressure, month, wind, trend,
 # For example:
 #   http://forecast.weather.gov/product.php?site=NWS&product=PFM&format=txt&issuedby=BOX
 #
+# http://www.erh.noaa.gov/car/afmexplain.htm
+#
+# 12-hour:
+# pop12hr: likelihood of measurable precipitation (1/100 inch)
+# qpf12hr: quantitative precipitation forecast; amount in inches
+# mx/mn: temperature in degrees F
+# snow12hr: expected snowfall accumulation (inch); T indicates trace
+#
+# 3-hour:
+# temp - degrees F
+# dewpt - degrees F
+# rh - relative humidity %
+# winddir - 8 compass points
+# windspd - miles per hour
+# windchar - wind character
+# windgust - only displayed if gusts exceed windspd by 10 mph
+# clouds - sky coverage
+# precipitation types
+#   rain
+#   rainshwrs
+#   sprinkles
+#   tstms
+#   drizzle
+#   snow
+#   snowshwrs
+#   flurries
+#   sleet
+#   frzngrain
+#   frzngdrzl
+# windchill
+# heatindex
+# minchill
+# maxheat
+# obvis
+#
 # codes for clouds:
-#   CL - clear
-#   FW - mostly clear
-#   SC - partly cloudy
-#   BK - mostly cloudy
-#   OV - cloudy
+#   CL - clear (0 <= 6%)
+#   FW - few - mostly clear (6% <= 31%)
+#   SC - scattered - partly cloudy (31% <= 69%)
+#   BK - broken - mostly cloudy (69% <= 94%)
+#   OV - overcast - cloudy (94% <= 100%)
 #   B1 -
 #   B2 - 
 #
-# codes for rain, drizzle, flurries, etc:
+# PFM codes for rain, drizzle, flurries, etc:
 #   S - slight chance (< 20%)
 #   C - chance (30%-50%)
 #   L - likely (60%-70%)
 #   O - occasional (80%-100%)
 #   D - definite (80%-100%)
+#
+# AFM probability codes:
+#   IS - isolated < 20%
+#   S  - slight chance < 20%
+#   C  - chance 30% - 50%
+#   SC - scattered 30%-50%
+#   L  - likely 60%-70%
+#   NM - numerous 60%-70%
+#   O  - occasional 80%-100%
+#   D  - definite 80%-100%
+#   WP - widespread 80%-100%
 #
 # codes for obvis (obstruction to visibility):
 #   F   - fog
@@ -530,9 +588,14 @@ def ZambrettiCode(pressure, month, wind, trend,
 #   K   - smoke
 #   BD  - blowing dust
 #
-# codes for wind char:
-#   LT - 
-#   GN - 
+# codes for wind character:
+#   LT - light < 8 mph
+#   GN - gentle 8-14 mph
+#   BZ - breezy 15-22 mph
+#   WY - windy 23-30 mph
+#   VW - very windy 31-39 mph
+#   SD - strong damaging >= 40 mph
+#   HF - hurricane force >= 74 mph
 #
 # -----------------------------------------------------------------------------
 
@@ -578,22 +641,8 @@ class NWSForecast(Forecast):
                    (NWS_KEY, self.id, self.foid))
             return None
         logdbg('%s: forecast matrix: %s' % (NWS_KEY, matrix))
-
-        records = []
-        for i,ts in enumerate(matrix['ts']):
-            record = {}
-            record['method'] = NWS_KEY
-            record['usUnits'] = weewx.US
-            record['dateTime'] = matrix['created_ts']
-            record['event_ts'] = ts
-            record['id'] = self.id
-            record['foid'] = self.foid
-            for label in matrix.keys():
-                if isinstance(matrix[label], list):
-                    record[label] = matrix[label][i]
-            records.append(record)
+        records = ProcessNWSForecast(self.foid, self.foid, matrix)
         loginf('%s: got %d forecast records' % (NWS_KEY, len(records)))
-
         return records
 
 # mapping of NWS names to database fields
@@ -797,6 +846,23 @@ def date2ts(tstr):
         ts += 12 * 3600
     return int(ts)
 
+def ProcessNWSForecast(foid, sid, matrix):
+    records = []
+    if matrix is not None:
+        for i,ts in enumerate(matrix['ts']):
+            record = {}
+            record['method'] = NWS_KEY
+            record['usUnits'] = weewx.US
+            record['dateTime'] = matrix['created_ts']
+            record['event_ts'] = ts
+            record['id'] = sid
+            record['foid'] = foid
+            for label in matrix.keys():
+                if isinstance(matrix[label], list):
+                    record[label] = matrix[label][i]
+            records.append(record)
+    return records
+
 
 # -----------------------------------------------------------------------------
 # Weather Underground Forecasts
@@ -850,24 +916,12 @@ class WUForecast(Forecast):
             logerr('%s: no forecast data for %s from %s' %
                    (WU_KEY, self.location, self.url))
             return None
-        matrix = ProcessWUForecast(text)
+        matrix = CreateWUForecastMatrix(text)
         if matrix is None:
             return None
         logdbg('%s: forecast matrix: %s' % (WU_KEY, matrix))
-
-        records = []
-        for i,ts in enumerate(matrix['ts']):
-            record = {}
-            record['method'] = WU_KEY
-            record['usUnits'] = weewx.US
-            record['dateTime'] = matrix['created_ts']
-            record['event_ts'] = ts
-            for label in matrix.keys():
-                if isinstance(matrix[label], list):
-                    record[label] = matrix[label][i]
-            records.append(record)
+        records = ProcessWUForecast(matrix)
         loginf('%s: got %d forecast records' % (WU_KEY, len(records)))
-
         return records
 
 def DownloadWUForecast(api_key, location, url=DEFAULT_WU_URL, max_tries=3):
@@ -889,7 +943,7 @@ def DownloadWUForecast(api_key, location, url=DEFAULT_WU_URL, max_tries=3):
         logerr('%s: failed to download forecast' % WU_KEY)
     return None
 
-def ProcessWUForecast(text):
+def CreateWUForecastMatrix(text, created_ts=None):
     obj = json.loads(text)
     if not 'response' in obj.keys():
         logerr('%s: unknown format in response' % WU_KEY)
@@ -903,10 +957,11 @@ def ProcessWUForecast(text):
 
     fc = obj['forecast']['simpleforecast']['forecastday']
     tstr = obj['forecast']['txt_forecast']['date']
-    ts = int(time.time())
+    if created_ts is None:
+        created_ts = int(time.time())
 
     matrix = {}
-    matrix['created_ts'] = ts
+    matrix['created_ts'] = created_ts
     matrix['ts'] = []
     matrix['hour'] = []
     matrix['tempMin'] = []
@@ -953,12 +1008,33 @@ def dirstr(s):
         s = directions[s]
     return s
 
+def ProcessWUForecast(matrix):
+    records = []
+    if matrix is not None:
+        for i,ts in enumerate(matrix['ts']):
+            record = {}
+            record['method'] = WU_KEY
+            record['usUnits'] = weewx.US
+            record['dateTime'] = matrix['created_ts']
+            record['event_ts'] = ts
+            for label in matrix.keys():
+                if isinstance(matrix[label], list):
+                    record[label] = matrix[label][i]
+            records.append(record)
+    return records
 
-"""xtide tide predictor
 
-   The xtide application must be installed for this to work.
-   This uses the command-line 'tide' program, not the x-windows application.
-"""
+# -----------------------------------------------------------------------------
+# xtide tide predictor
+#
+# The xtide application must be installed for this to work.  For example, on
+# debian systems do this:
+#
+#   sudo apt-get install xtide
+#
+# This forecasting module uses the command-line 'tide' program, not the
+# x-windows application.
+# -----------------------------------------------------------------------------
 
 XT_KEY = 'XTide'
 XT_PROG = '/usr/bin/tide'
@@ -1105,20 +1181,14 @@ $forecast.zambretti.text        description of the zambretti forecast
     def _getTides(self, max_events=1, from_ts=None):
         if from_ts is None:
             from_ts = int(time.time())
-        sql = "select dateTime,event_ts,hilo,offset from archive where method = 'XTide' and dateTime = (select dateTime from archive where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc limit %d" % (from_ts, max_events)
+        sql = "select dateTime,event_ts,hilo,offset,usUnits from archive where method = 'XTide' and dateTime = (select dateTime from archive where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc limit %d" % (from_ts, max_events)
         records = []
         for rec in self.database.genSql(sql):
             r = {}
-            ts = rec[0]
-            tt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
-            th = weewx.units.ValueHelper(tt, 'tides', self.formatter, self.converter)
-            r['dateTime'] = th
-            ts = rec[1]
-            tt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
-            th = weewx.units.ValueHelper(tt, 'tides', self.formatter, self.converter)
-            r['event_ts'] = th
+            r['dateTime'] = self._create_time(rec[0], 'tides')
+            r['event_ts'] = self._create_time(rec[1], 'tides')
             r['hilo'] = rec[2]
-            r['offset'] = rec[3]
+            r['offset'] = self._create_length(rec[3], rec[4], 'tides')
             r['location'] = 'FIXME'
             records.append(r)
         return records
@@ -1127,11 +1197,11 @@ $forecast.zambretti.text        description of the zambretti forecast
         records = self._getTides(max_events=index+1, from_ts=from_ts)
         if 0 <= index < len(records):
             return records[index]
-        return { 'dateTime' : 'NULL',
-                 'event_ts' : 'NULL',
-                 'hilo' : 'NULL',
-                 'offset' : 'NULL',
-                 'location' : 'NULL' }
+        return { 'dateTime' : '',
+                 'event_ts' : '',
+                 'hilo' : '',
+                 'offset' : '',
+                 'location' : '' }
 
     def xtides(self, max_events=4, from_ts=None):
         '''The tide forecast returns tide events into the future from the
@@ -1146,13 +1216,11 @@ $forecast.zambretti.text        description of the zambretti forecast
         sql = "select dateTime,zcode from archive where method = 'Zambretti' order by dateTime desc limit 1"
         record = self.database.getSql(sql)
         if record is None:
-            return { 'dateTime' : 'NULL',
-                     'event_ts' : 'NULL',
-                     'code' : 'NULL',
-                     'text' : 'NULL' }
-        ts = record[0]
-        tt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
-        th = weewx.units.ValueHelper(tt, 'zambretti', self.formatter, self.converter)
+            return { 'dateTime' : '',
+                     'event_ts' : '',
+                     'code' : '',
+                     'text' : '' }
+        th = self._create_time(record[0], 'zambretti')
         code = record[1]
         text = self.z_dict[code] \
             if code in self.z_dict.keys() else self.z_dict['unknown']
@@ -1160,3 +1228,90 @@ $forecast.zambretti.text        description of the zambretti forecast
                  'event_ts' : th,
                  'code' : code,
                  'text' : text, }
+
+    def _getFC(self, fid, max_events=1, from_ts=None):
+        if from_ts is None:
+            from_ts = int(time.time())
+        sql = "select * from archive where method = '%s' and event_ts >= %d and dateTime = (select dateTime from archive where method = '%s' order by dateTime desc limit 1) order by event_ts asc limit %d" % (fid, from_ts, fid, max_events)
+        records = []
+        for rec in self.database.genSql(sql):
+            r = {}
+            for i,f in enumerate(defaultForecastSchema):
+                r[f[0]] = rec[i]
+            usys = r['usUnits']
+            r['dateTime'] = self._create_time(r['dateTime'], 'nws')
+            r['event_ts'] = self._create_time(r['event_ts'], 'nws')
+            r['tempMin'] = self._create_temp(r['tempMin'], usys, 'nws')
+            r['tempMax'] = self._create_temp(r['tempMax'], usys, 'nws')
+            r['temp'] = self._create_temp(r['temp'], usys, 'nws')            
+            r['dewpoint'] = self._create_temp(r['dewpoint'], usys, 'nws')
+            r['humidity'] = self._create_percent(r['humidity'], 'nws')
+            r['windSpeed'] = self._create_speed(r['windSpeed'], usys, 'nws')
+            r['windGust'] = self._create_speed(r['windGust'], usys, 'nws')
+            r['pop'] = self._create_percent(r['pop'], 'nws')
+            r['qpf'] = self._create_length(r['qpf'], usys, 'nws', unit='inch')
+            r['qsf'] = self._create_length(r['qsf'], usys, 'nws', unit='inch')
+            r['windChill'] = self._create_temp(r['windChill'], usys, 'nws')
+            r['heatIndex'] = self._create_temp(r['heatIndex'], usys, 'nws')
+            # all other records are strings
+            records.append(r)
+        return records
+
+#    def nws(self, index, from_ts=None):
+#        records = self._getFC(max_events=index+1, from_ts=from_ts)
+#        if 0 <= index < len(records):
+#            return records[index]
+#        return None
+
+    @property
+    def current(self):
+        return None
+
+    def nws(self, max_events=40, from_ts=None):
+        '''The NWS forecast returns forecasts at times into the future from the
+        indicated time using the latest NWS foreast.'''
+        records = self._getFC('NWS', max_events=max_events, from_ts=from_ts)
+        return records
+
+    def wu(self, max_events=40, from_ts=None):
+        '''The WU forecast returns forecasts at times into the future from the
+        indicated time using the latest NWS foreast.'''
+        records = self._getFC('WU', max_events=max_events, from_ts=from_ts)
+        return records
+
+    def _create_time(self, ts, context):
+        vt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
+        vh = weewx.units.ValueHelper(vt, context,
+                                     self.formatter, self.converter)
+        return vh
+
+    # FIXME: weewx should define 'length' rather than (as well as?) 'altitude'
+    def _create_length(self, v, usys, context, unit=None):
+        if unit is None:
+            u = 'meter' if usys == weewx.METRIC else 'foot'
+        else:
+            u = unit
+        vt = weewx.units.ValueTuple(v, u, 'group_altitude')
+        vh = weewx.units.ValueHelper(vt, context,
+                                     self.formatter, self.converter)
+        return vh
+
+    def _create_temp(self, v, usys, context):
+        u = 'degree_C' if usys == weewx.METRIC else 'degree_F'
+        vt = weewx.units.ValueTuple(v, u, 'group_temperature')
+        vh = weewx.units.ValueHelper(vt, context,
+                                     self.formatter, self.converter)
+        return vh
+
+    def _create_speed(self, v, usys, context):
+        u = 'km_per_hour' if usys == weewx.METRIC else 'mile_per_hour'
+        vt = weewx.units.ValueTuple(v, u, 'group_speed')
+        vh = weewx.units.ValueHelper(vt, context,
+                                     self.formatter, self.converter)
+        return vh
+
+    def _create_percent(self, v, context):
+        vt = weewx.units.ValueTuple(v, 'percent', 'group_percent')
+        vh = weewx.units.ValueHelper(vt, context,
+                                     self.formatter, self.converter)
+        return vh
