@@ -13,6 +13,15 @@ Design
    a bit easier.  There are a few fields in each record that are common to
    every forecast method.  See the Database section in this file for details.
 
+Prerequisites
+
+   The WU forecast requires json.  json should be included in python 2.6 and
+   2.7.  For python 2.5 on debian systems, do this:
+     sudo apt-get install python-cjson
+
+   The XTide forecast requires xtide.  On debian systems, do this:
+     sudo apt-get install xtide
+
 Configuration
 
    Some parameters can be defined in the Forecast section of weewx.conf, then
@@ -69,7 +78,7 @@ Configuration
         #   Australia/Sydney     - Country/City
         #   37.8,-122.4          - latitude,longitude
         #   KJFK                 - airport code
-        #   pws:KCASANFR70       - PWS id
+        #   pws=KCASANFR70       - PWS id
         #   autoip               - AutoIP address location
         #   autoip.json?geo_ip=38.102.136.138 - specific IP address location
         # If no location is specified, station latitude and longitude are used
