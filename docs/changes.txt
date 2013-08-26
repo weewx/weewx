@@ -14,6 +14,8 @@ Ported to Korora 19 (Fedora 19). Thanks to user zmodemguru!
 Plots under 16 hours in length, now use 1 hour increments (instead of 
 3 hours).
 
+Fixed rain units in ws28xx driver.
+
 
 2.4.0 08/03/13
 
