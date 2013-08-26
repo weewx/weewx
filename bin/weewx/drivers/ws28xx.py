@@ -759,13 +759,13 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
         # calculated elements not directly reported by station
         packet['rainRate'] = self.get_datum_match(
-            self._service.DataStore.CurrentWeather._Rain1H,
+            self._service.DataStore.CurrentWeather._Rain1H / 10, # need cm/hr
             CWeatherTraits.RainNP())
         rain_total = self.get_datum_match(
             self._service.DataStore.CurrentWeather._RainTotal,
             CWeatherTraits.RainNP())
         delta = calculate_rain(rain_total, self._last_rain)
-        packet['rain'] = delta
+        packet['rain'] = delta / 10 # weewx wants cm/hr
         self._last_rain = rain_total
 
         packet['heatindex'] = weewx.wxformulas.heatindexC(
