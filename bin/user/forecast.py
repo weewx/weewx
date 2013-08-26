@@ -8,6 +8,10 @@ Design
    tides.  Weather forecasting can be downloaded (NWS, WU) or generated
    (Zambretti).  Tide forecasting is generated using XTide.
 
+   To enable forecasting, add the appropriate section to weewx.conf then
+   append the appropriate forecast to the WxEngine service_list, also in
+   weewx.conf.
+
    A single table stores all forecast information.  This means that each record
    may have many unused fields, but it makes querying and database management
    a bit easier.  There are a few fields in each record that are common to
@@ -15,12 +19,12 @@ Design
 
 Prerequisites
 
+   The XTide forecast requires xtide.  On debian systems, do this:
+     sudo apt-get install xtide
+
    The WU forecast requires json.  json should be included in python 2.6 and
    2.7.  For python 2.5 on debian systems, do this:
      sudo apt-get install python-cjson
-
-   The XTide forecast requires xtide.  On debian systems, do this:
-     sudo apt-get install xtide
 
 Configuration
 
@@ -35,17 +39,24 @@ Configuration
     database = forecast_sqlite
 
     # How often to calculate/download the forecast, in seconds
-    #interval = 300
+    #interval = 1800
 
     # How long to keep old forecasts, in seconds.  use None to keep forever.
     #max_age = 604800
 
+    [[XTide]]
+        # Location for which tides are desired
+        location = Boston
+
+        # How often to generate the tide forecast, in seconds
+        #interval = 604800
+
+        # How often to prune old tides from database, None to keep forever
+        #max_age = 1209600
+
     [[Zambretti]]
         # hemisphere can be NORTH or SOUTH
         #hemisphere = NORTH
-
-        # mapping between zambretti codes and descriptive labels
-        #labels = "Settled fine", "Fine weather", "Becoming fine", "Fine, becoming less settled", "Fine, possible showers", "Fairly fine, improving", "Fairly fine, possible showers early", "Fairly fine, showery later", "Showery early, improving", "Changeable, mending", "Fairly fine, showers likely", "Rather unsettled clearing later", "Unsettled, probably improving", "Showery, bright intervals", "Showery, becoming less settled", "Changeable, some rain", "Unsettled, short fine intervals", "Unsettled, rain later", "Unsettled, some rain", "Mostly very unsettled", "Occasional rain, worsening", "Rain at times, very unsettled", "Rain at frequent intervals", "Rain, very unsettled", "Stormy, may improve", "Stormy, much rain", "unknown"
 
     [[NWS]]
         # First figure out your forecast office identifier (foid), then request
@@ -55,7 +66,7 @@ Configuration
         # to your location.
 
         # National Weather Service location identifier
-        id = MAZ014
+        lid = MAZ014
 
         # National Weather Service forecast office identifier
         foid = BOX
@@ -87,16 +98,6 @@ Configuration
         # How often to download the forecast, in seconds
         #interval = 10800
 
-    [[XTide]]
-        # Location for which tides are desired
-        location = Boston
-
-        # How often to generate the tide forecast, in seconds
-        #interval = 604800
-
-        # How often to prune old tides from database, None to keep forever
-        #max_age = 1209600
-
 [Databases]
     ...
     [[forecast_sqlite]]
@@ -114,6 +115,153 @@ Configuration
 [Engines]
     [[WxEngine]]
         service_list = ... , user.forecast.ZambrettiForecast, user.forecast.NWSForecast, user.forecast.WUForecast, user.forecast.XTideForecast
+
+
+Skin Configuration
+
+   Here are the options that can be specified in the skin.conf file.
+
+[Forecast]
+
+    [[XTide]]
+        [[Labels]]
+            # labels for tides
+            H = High Tide
+            L = Low Tide
+
+    [[Zambretti]]
+        [[[Labels]]]
+            # mapping between zambretti codes and descriptive labels
+            A = Settled fine
+            B = Fine weather
+            C = Becoming fine
+            D = Fine, becoming less settled
+            E = Fine, possible showers
+            F = Fairly fine, improving
+            G = Fairly fine, possible showers early
+            H = Fairly fine, showery later
+            I = Showery early, improving
+            J = Changeable, mending
+            K = Fairly fine, showers likely
+            L = Rather unsettled clearing later
+            M = Unsettled, probably improving
+            N = Showery, bright intervals
+            O = Showery, becoming less settled
+            P = Changeable, some rain
+            Q = Unsettled, short fine intervals
+            R = Unsettled, rain later
+            S = Unsettled, some rain
+            T = Mostly very unsettled
+            U = Occasional rain, worsening
+            V = Rain at times, very unsettled
+            W = Rain at frequent intervals
+            X = Rain, very unsettled
+            Y = Stormy, may improve
+            Z = Stormy, much rain
+            unknown = unknown
+
+    [[NWS]]
+        [[Labels]]
+            # labels for components of the US NWS forecast
+            temp = Temperature
+            dewpt = Dewpoint
+            humidity = Relative Humidity
+            winddir = Wind Direction
+            windspd = Wind Speed
+            windchar = Wind Character
+            windgust = Wind Gust
+            clouds = Sky Coverage
+            windchill = Wind Chill
+            heatindex = Heat Index
+            obvis = Obstructions to Visibility
+
+            # types of precipitation
+            rain = Rain
+            rainshwrs = Rain Showers
+            sprinkles = Rain Sprinkles
+            tstms = Thunderstorms
+            drizzle = Drizzle
+            snow = Snow
+            snowshwrs = Snow Showers
+            flurries = Snow Flurries
+            sleet = Ice Pellets
+            frzngrain = Freezing Rain
+            frzngdrzl = Freezing Drizzle
+
+            # codes for clouds:
+            CL = Clear
+            FW = Few Clouds
+            SC = Scattered Clouds
+            BK = Broken Clouds
+            B1 = Mostly Cloudy
+            B2 = Considerable Cloudiness
+            OV = Overcast
+
+            # codes for precipitation
+            S = Slight Chance
+            C = Chance
+            L = Likely
+            O = Occasional
+            D = Definite
+
+            IS = Isolated
+            SC = Scattered
+            NM = Numerous
+            EC = Extensive Coverage
+            PA = Patchy
+            AR = Areas
+            WD = Widespread
+
+            # codes for obstructed visibility
+            F = Fog
+            PF = Patchy Fog
+            F+ = Dense Fog
+            PF+ = Patchy Dense Fog
+            H = Haze
+            BS = Blowing Snow
+            K = Smoke
+            BD = Blowing Dust
+            AF = Volcanic Ash
+
+            # codes for wind character:
+            LT = Light
+            GN = Gentle
+            BZ = Breezy
+            WY = Windy
+            VW = Very Windy
+            SD = Strong/Damaging
+            HF = Hurricane Force
+
+
+Skin Variables for Templates
+
+   Here are the variables that can be used in template files.
+
+XTide
+
+   The index is the nth event from the current time.
+
+$forecast.xtide(0).dateTime     date/time that the forecast was created
+$forecast.xtide(0).event_ts     date/time of the event
+$forecast.xtide(0).hilo         H or L
+$forecast.xtide(0).offset       depth above/below mean low tide
+$forecast.xtide(0).location     where the tide is forecast
+
+for tide in $forecast.xtides(max_events=12):
+  $tide.event_ts $tide.hilo $tide.offset
+
+Zambretti
+
+   The Zambretti forecast is typically good for up to 6 hours from when the
+   forecast was made.  The time the forecast was made and the time of the
+   forecast are always the same.  The forecast consists of a code and an
+   associated textual description.
+
+$forecast.zambretti.dateTime    date/time that the forecast was created
+$forecast.zambretti.event_ts    date/time of the forecast
+$forecast.zambretti.code        zambretti forecast code (A-Z)
+$forecast.zambretti.text        description of the zambretti forecast
+
 """
 
 
@@ -139,9 +287,16 @@ http://ocean.peterbrueggeman.com/tidepredict.html
 
 # FIXME: resolve the ambiguity in the SNOW12HR spec, which we have interpreted
 # as qsf (quantitative snow forecast).  nws example shows a value of 'mm' but
-# the description says the values will be inches.
+# the description says the values will be inches.  actual download shows rain
+# quantities as 0.43 but snow quantities as 00-00
 
 # FIXME: add a 'length' unit that has default formatting to two decimal places
+
+# FIXME: three timestamps: when we ask for a forecast, when the forecast is
+# generated, and the timestamp for each event in the forecast.  might need to
+# be explicit and keep the when we ask timestamp?  or index db records?  or
+# an arbitrary identifier for the forecast request?  this is to deal with the
+# case where we ask for the same forecast multiple times.
 
 import httplib
 import socket
@@ -149,7 +304,6 @@ import string
 import subprocess
 import syslog
 import time
-import urllib
 import urllib2
 
 import weewx
@@ -159,8 +313,6 @@ import weeutil.weeutil
 
 try:
     import cjson as json
-    setattr(json, 'dumps', json.encode)
-    setattr(json, 'loads', json.decode)
 except Exception, e:
     try:
         import simplejson as json
@@ -204,7 +356,7 @@ def get_int(config_dict, label, default_value):
    zcode                                                     CODE
 
    foid         field office id
-   id           location id
+   lid          location id
    desc         description
    hour         3HRLY | 6HRLY          date.hour
    tempMin      MIN/MAX | MAX/MIN      low.fahrenheit
@@ -239,15 +391,16 @@ def get_int(config_dict, label, default_value):
 """
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),
-                         ('dateTime',   'INTEGER NOT NULL'),
-                         ('event_ts',   'INTEGER'),     # seconds
+                         ('dateTime',   'INTEGER NOT NULL'),  # epoch
+#                         ('forecast_ts','INTEGER'),           # epoch
+                         ('event_ts',   'INTEGER'),           # epoch
 
                          # Zambretti fields
                          ('zcode',      'CHAR(1)'),
 
                          # NWS fields
                          ('foid',       'CHAR(3)'),     # e.g., BOX
-                         ('id',         'CHAR(6)'),     # e.g., MAZ014
+                         ('lid',        'CHAR(6)'),     # e.g., MAZ014
                          ('hour',       'INTEGER'),     # 00 to 23
                          ('tempMin',    'REAL'),        # degree F
                          ('tempMax',    'REAL'),        # degree F
@@ -257,21 +410,21 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('windDir',    'VARCHAR(3)'),  # N,NE,E,SE,S,SW,W,NW
                          ('windSpeed',  'REAL'),        # mph
                          ('windGust',   'REAL'),        # mph
-                         ('windChar',   'VARCHAR(2)'),  # GN,LT
-                         ('clouds',     'VARCHAR(2)'),  # CL,SC,BK,OV, ...
+                         ('windChar',   'VARCHAR(2)'),  # GN,LT,BZ,WY,VW,SD,HF
+                         ('clouds',     'VARCHAR(2)'),  # CL,FW,SC,BK,OV,B1,B2
                          ('pop',        'REAL'),        # percent
                          ('qpf',        'REAL'),        # inch
                          ('qsf',        'VARCHAR(5)'),  # inch
                          ('rain',       'VARCHAR(2)'),  # S,C,L,O,D
-                         ('rainshwrs',  'VARCHAR(2)'),
-                         ('tstms',      'VARCHAR(2)'),
-                         ('drizzle',    'VARCHAR(2)'),
-                         ('snow',       'VARCHAR(2)'),
-                         ('snowshwrs',  'VARCHAR(2)'),
-                         ('flurries',   'VARCHAR(2)'),
-                         ('sleet',      'VARCHAR(2)'),
-                         ('frzngrain',  'VARCHAR(2)'),
-                         ('frzngdrzl',  'VARCHAR(2)'),
+                         ('rainshwrs',  'VARCHAR(2)'),  # S,C,L,O,D
+                         ('tstms',      'VARCHAR(2)'),  # S,C,L,O,D
+                         ('drizzle',    'VARCHAR(2)'),  # S,C,L,O,D
+                         ('snow',       'VARCHAR(2)'),  # S,C,L,O,D
+                         ('snowshwrs',  'VARCHAR(2)'),  # S,C,L,O,D
+                         ('flurries',   'VARCHAR(2)'),  # S,C,L,O,D
+                         ('sleet',      'VARCHAR(2)'),  # S,C,L,O,D
+                         ('frzngrain',  'VARCHAR(2)'),  # S,C,L,O,D
+                         ('frzngdrzl',  'VARCHAR(2)'),  # S,C,L,O,D
                          ('obvis',      'VARCHAR(3)'),  # F,PF,F+,PF+,H,BS,K,BD
                          ('windChill',  'REAL'),        # degree F
                          ('heatIndex',  'REAL'),        # degree F
@@ -285,15 +438,14 @@ class Forecast(StdService):
     """Provide forecast."""
 
     def __init__(self, engine, config_dict, fid,
-                 interval=300, max_age=604800,
+                 interval=1800, max_age=604800,
                  defaultSchema=defaultForecastSchema):
         super(Forecast, self).__init__(engine, config_dict)
-        d = config_dict['Forecast'] if 'Forecast' in config_dict.keys() else {}
+        d = config_dict.get('Forecast', {})
         self.interval = get_int(d, 'interval', interval)
         self.max_age = get_int(d, 'max_age', max_age)
 
-        dd = config_dict['Forecast'][fid] \
-            if fid in config_dict['Forecast'].keys() else {}
+        dd = config_dict['Forecast'].get(fid, {})
         self.interval = get_int(dd, 'interval', self.interval)
         self.max_age = get_int(dd, 'max_age', self.max_age)
 
@@ -350,6 +502,8 @@ class Forecast(StdService):
         except Exception, e:
             logerr('%s: unable to delete old records: %s' %
                    (self.method_id, e))
+        finally:
+            cursor.close()
 
     def get_saved_forecasts(self, since_ts=None):
         """return saved forecasts since the indicated timestamp
@@ -388,8 +542,7 @@ class ZambrettiForecast(Forecast):
 
     def __init__(self, engine, config_dict):
         super(ZambrettiForecast, self).__init__(engine, config_dict, Z_KEY)
-        d = config_dict['Forecast'][Z_KEY] \
-            if Z_KEY in config_dict['Forecast'].keys() else {}
+        d = config_dict['Forecast'].get(Z_KEY, {})
         self.hemisphere = d.get('hemisphere', 'NORTH')
         loginf('%s: interval=%s max_age=%s hemisphere=%s' %
                (Z_KEY, self.interval, self.max_age, self.hemisphere))
@@ -517,15 +670,16 @@ def ZambrettiCode(pressure, month, wind, trend,
 #   http://www.srh.weather.gov/jetstream/webweather/pinpoint_max.htm
 #
 # For details about how to decode the NWS point forecast matrix, see:
+#   http://www.srh.noaa.gov/mrx/?n=pfm_explain
 #   http://www.srh.noaa.gov/bmx/?n=pfm
+#  For details about the NWS area forecast matrix, see:
+#   http://www.erh.noaa.gov/car/afmexplain.htm
 #
 # For actual forecasts, see:
 #   http://www.weather.gov/
 #
 # For example:
 #   http://forecast.weather.gov/product.php?site=NWS&product=PFM&format=txt&issuedby=BOX
-#
-# http://www.erh.noaa.gov/car/afmexplain.htm
 #
 # 12-hour:
 # pop12hr: likelihood of measurable precipitation (1/100 inch)
@@ -543,17 +697,17 @@ def ZambrettiCode(pressure, month, wind, trend,
 # windgust - only displayed if gusts exceed windspd by 10 mph
 # clouds - sky coverage
 # precipitation types
-#   rain
-#   rainshwrs
-#   sprinkles
-#   tstms
-#   drizzle
-#   snow
-#   snowshwrs
-#   flurries
-#   sleet
-#   frzngrain
-#   frzngdrzl
+#   rain      - rain
+#   rainshwrs - rain showers
+#   sprinkles - sprinkles
+#   tstms     - thunderstorms
+#   drizzle   - drizzle
+#   snow      - snow, snow grains/pellets
+#   snowshwrs - snow showers
+#   flurries  - snow flurries
+#   sleet     - ice pellets
+#   frzngrain - freezing rain
+#   frzngdrzl - freezing drizzle
 # windchill
 # heatindex
 # minchill
@@ -566,26 +720,29 @@ def ZambrettiCode(pressure, month, wind, trend,
 #   SC - scattered - partly cloudy (31% <= 69%)
 #   BK - broken - mostly cloudy (69% <= 94%)
 #   OV - overcast - cloudy (94% <= 100%)
-#   B1 -
-#   B2 - 
 #
-# PFM codes for rain, drizzle, flurries, etc:
+#   CL - sunny or clear (0% <= x <= 5%)
+#   FW - sunny or mostly clear (5% < x <= 25%)
+#   SC - mostly sunny or partly cloudy (25% < x <= 50%)
+#   B1 - partly sunny or mostly cloudy (50% < x <= 69%)
+#   B2 - mostly cloudy or considerable cloudiness (69% < x <= 87%)
+#   OV - cloudy or overcast (87% < x <= 100%)
+#
+# PFM/AFM codes for rain, drizzle, flurries, etc:
 #   S - slight chance (< 20%)
 #   C - chance (30%-50%)
 #   L - likely (60%-70%)
 #   O - occasional (80%-100%)
 #   D - definite (80%-100%)
 #
-# AFM probability codes:
 #   IS - isolated < 20%
-#   S  - slight chance < 20%
-#   C  - chance 30% - 50%
 #   SC - scattered 30%-50%
-#   L  - likely 60%-70%
 #   NM - numerous 60%-70%
-#   O  - occasional 80%-100%
-#   D  - definite 80%-100%
-#   WP - widespread 80%-100%
+#   EC - extensive coverage 80%-100%
+#
+#   PA - patchy < 25%
+#   AR - areas 25%-50%
+#   WD - widespread > 50%
 #
 # codes for obvis (obstruction to visibility):
 #   F   - fog
@@ -596,6 +753,7 @@ def ZambrettiCode(pressure, month, wind, trend,
 #   BS  - blowing snow
 #   K   - smoke
 #   BD  - blowing dust
+#   AF  - volcanic ashfall
 #
 # codes for wind character:
 #   LT - light < 8 mph
@@ -603,14 +761,14 @@ def ZambrettiCode(pressure, month, wind, trend,
 #   BZ - breezy 15-22 mph
 #   WY - windy 23-30 mph
 #   VW - very windy 31-39 mph
-#   SD - strong damaging >= 40 mph
+#   SD - strong/damaging >= 40 mph
 #   HF - hurricane force >= 74 mph
 #
 # -----------------------------------------------------------------------------
 
 # The default URL contains the bare minimum to request a point forecast, less
 # the forecast office identifier.
-DEFAULT_NWS_PFM_URL = 'http://forecast.weather.gov/product.php?site=NWS&product=PFM&format=txt'
+NWS_DEFAULT_PFM_URL = 'http://forecast.weather.gov/product.php?site=NWS&product=PFM&format=txt'
 
 NWS_KEY = 'NWS'
 
@@ -620,23 +778,22 @@ class NWSForecast(Forecast):
     def __init__(self, engine, config_dict):
         super(NWSForecast, self).__init__(engine, config_dict, NWS_KEY,
                                           interval=10800)
-        d = config_dict['Forecast'][NWS_KEY] \
-            if NWS_KEY in config_dict['Forecast'].keys() else {}
-        self.url = d.get('url', DEFAULT_NWS_PFM_URL)
+        d = config_dict['Forecast'].get(NWS_KEY, {})
+        self.url = d.get('url', NWS_DEFAULT_PFM_URL)
         self.max_tries = d.get('max_tries', 3)
-        self.id = d.get('id', None)
+        self.lid = d.get('lid', None)
         self.foid = d.get('foid', None)
 
         errmsg = []
-        if self.id is None:
-            errmsg.append('NWS location ID (id) is not specified')
+        if self.lid is None:
+            errmsg.append('NWS location ID (lid) is not specified')
         if self.foid is None:
             errmsg.append('NWS forecast office ID (foid) is not specified')
         if len(errmsg) > 0:
             raise Exception, '\n'.join(errmsg)
 
-        loginf('%s: interval=%s max_age=%s id=%s foid=%s' %
-               (NWS_KEY, self.interval, self.max_age, self.id, self.foid))
+        loginf('%s: interval=%s max_age=%s lid=%s foid=%s' %
+               (NWS_KEY, self.interval, self.max_age, self.lid, self.foid))
 
     def get_forecast(self, event):
         text = DownloadNWSForecast(self.foid, self.url, self.max_tries)
@@ -644,18 +801,18 @@ class NWSForecast(Forecast):
             logerr('%s: no PFM data for %s from %s' %
                    (NWS_KEY, self.foid, self.url))
             return None
-        matrix = ParseNWSForecast(text, self.id)
+        matrix = ParseNWSForecast(text, self.lid)
         if matrix is None:
             logerr('%s: no PFM found for %s in forecast from %s' %
-                   (NWS_KEY, self.id, self.foid))
+                   (NWS_KEY, self.lid, self.foid))
             return None
         logdbg('%s: forecast matrix: %s' % (NWS_KEY, matrix))
-        records = ProcessNWSForecast(self.foid, self.foid, matrix)
+        records = ProcessNWSForecast(self.foid, self.lid, matrix)
         loginf('%s: got %d forecast records' % (NWS_KEY, len(records)))
         return records
 
 # mapping of NWS names to database fields
-nws_label_dict = {
+nws_schema_dict = {
     'HOUR'       : 'hour',
     'MIN/MAX'    : 'tempMinMax',
     'MAX/MIN'    : 'tempMaxMin',
@@ -687,10 +844,75 @@ nws_label_dict = {
     'HEAT INDEX' : 'heatIndex',
     }
 
-def DownloadNWSForecast(foid, url=DEFAULT_NWS_PFM_URL, max_tries=3):
+nws_label_dict = {
+    'temp'      : 'Temperature',
+    'dewpt'     : 'Dewpoint',
+    'humidity'  : 'Relative Humidity',
+    'winddir'   : 'Wind Direction',
+    'windspd'   : 'Wind Speed',
+    'windchar'  : 'Wind Character',
+    'windgust'  : 'Wind Gust',
+    'clouds'    : 'Sky Coverage',
+    'windchill' : 'Wind Chill',
+    'heatindex' : 'Heat Index',
+    'obvis'     : 'Obstructions to Visibility',
+    # types of precipitation
+    'rain'      : 'Rain',
+    'rainshwrs' : 'Rain Showers',
+    'sprinkles' : 'Rain Sprinkles',
+    'tstms'     : 'Thunderstorms',
+    'drizzle'   : 'Drizzle',
+    'snow'      : 'Snow',
+    'snowshwrs' : 'Snow Showers',
+    'flurries'  : 'Snow Flurries',
+    'sleet'     : 'Ice Pellets',
+    'frzngrain' : 'Freezing Rain',
+    'frzngdrzl' : 'Freezing Drizzle',
+    # codes for clouds
+    'CL' : 'Clear',
+    'FW' : 'Few Clouds',
+    'SC' : 'Scattered Clouds',
+    'BK' : 'Broken Clouds',
+    'B1' : 'Mostly Cloudy',
+    'B2' : 'Considerable Cloudiness',
+    'OV' : 'Overcast',
+    # codes for precipitation
+    'S'  : 'Slight Chance',
+    'C'  : 'Chance',
+    'L'  : 'Likely',
+    'O'  : 'Occasional',
+    'D'  : 'Definite',
+    'IS' : 'Isolated',
+    'SC' : 'Scattered',
+    'NM' : 'Numerous',
+    'EC' : 'Extensive Coverage',
+    'PA' : 'Patchy',
+    'AR' : 'Areas',
+    'WD' : 'Widespread',
+    # codes for obstructed visibility
+    'F'   : 'Fog',
+    'PF'  : 'Patchy Fog',
+    'F+'  : 'Dense Fog',
+    'PF+' : 'Patchy Dense Fog',
+    'H'   : 'Haze',
+    'BS'  : 'Blowing Snow',
+    'K'   : 'Smoke',
+    'BD'  : 'Blowing Dust',
+    'AF'  : 'Volcanic Ash',
+    # codes for wind character
+    'LT' : 'Light',
+    'GN' : 'Gentle',
+    'BZ' : 'Breezy',
+    'WY' : 'Windy',
+    'VW' : 'Very Windy',
+    'SD' : 'Strong/Damaging',
+    'HF' : 'Hurricane Force',
+    }
+
+def DownloadNWSForecast(foid, url=NWS_DEFAULT_PFM_URL, max_tries=3):
     """Download a point forecast matrix from the US National Weather Service"""
 
-    u = '%s&issuedby=%s' % (url, foid) if url == DEFAULT_NWS_PFM_URL else url
+    u = '%s&issuedby=%s' % (url, foid) if url == NWS_DEFAULT_PFM_URL else url
     logdbg("%s: downloading forecast from '%s'" % (NWS_KEY, u))
     for count in range(max_tries):
         try:
@@ -705,7 +927,7 @@ def DownloadNWSForecast(foid, url=DEFAULT_NWS_PFM_URL, max_tries=3):
         logerr('%s: failed to download forecast' % NWS_KEY)
     return None
 
-def ParseNWSForecast(text, id):
+def ParseNWSForecast(text, lid):
     """Parse a United States National Weather Service point forcast matrix.
     Save it into a dictionary with per-hour elements for wind, temperature,
     etc. extracted from the point forecast.
@@ -714,7 +936,7 @@ def ParseNWSForecast(text, id):
     alllines = text.splitlines()
     lines = None
     for line in iter(alllines):
-        if line.startswith(id):
+        if line.startswith(lid):
             lines = []
             lines.append(line)
         elif lines is not None:
@@ -739,14 +961,14 @@ def ParseNWSForecast(text, id):
         elif label.endswith('6HRLY'):
             label = 'HOUR'
             mode = 6
-        if label in nws_label_dict.keys():
+        if label in nws_schema_dict:
             if mode == 3:
-                rows3[nws_label_dict[label]] = line[14:]
+                rows3[nws_schema_dict[label]] = line[14:]
             elif mode == 6:
-                rows6[nws_label_dict[label]] = line[14:]
+                rows6[nws_schema_dict[label]] = line[14:]
 
     matrix = {}
-    matrix['id'] = id
+    matrix['lid'] = lid
     matrix['desc'] = lines[1]
     matrix['location'] = lines[2]
     matrix['created_ts'] = ts
@@ -768,7 +990,6 @@ def ParseNWSForecast(text, id):
         matrix['hour'].append(h)
         indices3[i+1] = idx
         idx += 1
-    nidx3 = idx
 
     # get the 6-hour indexing
     indices6 = {}
@@ -801,8 +1022,8 @@ def ParseNWSForecast(text, id):
 
 def filldata(matrix, nidx, rows, indices):
     """fill matrix with data from rows"""
-    for label in rows.keys():
-        if label not in matrix.keys():
+    for label in rows:
+        if label not in matrix:
             matrix[label] = [None]*nidx
         s = ''
         for i in range(0, len(rows[label])):
@@ -816,11 +1037,11 @@ def filldata(matrix, nidx, rows, indices):
             matrix[label][indices[len(rows[label])-1]] = s
 
     # deal with min/max temperatures
-    if 'tempMin' not in matrix.keys():
+    if 'tempMin' not in matrix:
         matrix['tempMin'] = [None]*nidx
-    if 'tempMax' not in matrix.keys():
+    if 'tempMax' not in matrix:
         matrix['tempMax'] = [None]*nidx
-    if 'tempMinMax' in matrix.keys():
+    if 'tempMinMax' in matrix:
         state = 0
         for i in range(nidx):
             if matrix['tempMinMax'][i] is not None:
@@ -831,7 +1052,7 @@ def filldata(matrix, nidx, rows, indices):
                     matrix['tempMax'][i] = matrix['tempMinMax'][i]
                     state = 0
         del matrix['tempMinMax']
-    if 'tempMaxMin' in matrix.keys():
+    if 'tempMaxMin' in matrix:
         state = 1
         for i in range(nidx):
             if matrix['tempMaxMin'][i] is not None:
@@ -855,7 +1076,7 @@ def date2ts(tstr):
         ts += 12 * 3600
     return int(ts)
 
-def ProcessNWSForecast(foid, sid, matrix):
+def ProcessNWSForecast(foid, lid, matrix):
     records = []
     if matrix is not None:
         for i,ts in enumerate(matrix['ts']):
@@ -864,9 +1085,9 @@ def ProcessNWSForecast(foid, sid, matrix):
             record['usUnits'] = weewx.US
             record['dateTime'] = matrix['created_ts']
             record['event_ts'] = ts
-            record['id'] = sid
+            record['lid'] = lid
             record['foid'] = foid
-            for label in matrix.keys():
+            for label in matrix:
                 if isinstance(matrix[label], list):
                     record[label] = matrix[label][i]
             records.append(record)
@@ -884,8 +1105,8 @@ def ProcessNWSForecast(foid, sid, matrix):
 # -----------------------------------------------------------------------------
 
 WU_KEY = 'WU'
-
-DEFAULT_WU_URL = 'http://api.wunderground.com/api'
+WU_DIRS = {'North':'N', 'South':'S', 'East':'E', 'West':'W', }
+WU_DEFAULT_URL = 'http://api.wunderground.com/api'
 
 class WUForecast(Forecast):
     """Download forecast from Weather Underground."""
@@ -893,9 +1114,8 @@ class WUForecast(Forecast):
     def __init__(self, engine, config_dict):
         super(WUForecast, self).__init__(engine, config_dict, WU_KEY,
                                          interval=10800)
-        d = config_dict['Forecast'][WU_KEY] \
-            if WU_KEY in config_dict['Forecast'].keys() else {}
-        self.url = d.get('url', DEFAULT_WU_URL)
+        d = config_dict['Forecast'].get(WU_KEY, {})
+        self.url = d.get('url', WU_DEFAULT_URL)
         self.max_tries = d.get('max_tries', 3)
         self.api_key = d.get('api_key', None)
         self.location = d.get('location', None)
@@ -933,11 +1153,11 @@ class WUForecast(Forecast):
         loginf('%s: got %d forecast records' % (WU_KEY, len(records)))
         return records
 
-def DownloadWUForecast(api_key, location, url=DEFAULT_WU_URL, max_tries=3):
+def DownloadWUForecast(api_key, location, url=WU_DEFAULT_URL, max_tries=3):
     """Download a forecast from the Weather Underground"""
 
     u = '%s/%s/forecast10day/q/%s.json' % (url, api_key, location) \
-        if url == DEFAULT_WU_URL else url
+        if url == WU_DEFAULT_URL else url
     logdbg("%s: downloading forecast from '%s'" % (WU_KEY, u))
     for count in range(max_tries):
         try:
@@ -954,18 +1174,17 @@ def DownloadWUForecast(api_key, location, url=DEFAULT_WU_URL, max_tries=3):
 
 def CreateWUForecastMatrix(text, created_ts=None):
     obj = json.loads(text)
-    if not 'response' in obj.keys():
+    if not 'response' in obj:
         logerr('%s: unknown format in response' % WU_KEY)
         return None
     response = obj['response']
-    if 'error' in response.keys():
+    if 'error' in response:
         logerr('%s: error in response: %s: %s' %
                (WU_KEY,
                 response['error']['type'], response['error']['description']))
         return None
 
     fc = obj['forecast']['simpleforecast']['forecastday']
-    tstr = obj['forecast']['txt_forecast']['date']
     if created_ts is None:
         created_ts = int(time.time())
 
@@ -999,7 +1218,8 @@ def CreateWUForecastMatrix(text, created_ts=None):
             matrix['qpf'].append(period['qpf_allday']['in'])
             matrix['qsf'].append(period['snow_allday']['in'])
             matrix['windSpeed'].append(period['avewind']['mph'])
-            matrix['windDir'].append(dirstr(period['avewind']['dir']))
+            matrix['windDir'].append(WU_DIRS.get(period['avewind']['dir'],
+                                                 period['avewind']['dir']))
             matrix['windGust'].append(period['maxwind']['mph'])
         except Exception, e:
             logerr('%s: bad timestamp in forecast: %s' % (WU_KEY, e))
@@ -1013,7 +1233,7 @@ def dirstr(s):
                   'West':'W',
                   }
     s = str(s)
-    if s in directions.keys():
+    if s in directions:
         s = directions[s]
     return s
 
@@ -1026,7 +1246,7 @@ def ProcessWUForecast(matrix):
             record['usUnits'] = weewx.US
             record['dateTime'] = matrix['created_ts']
             record['event_ts'] = ts
-            for label in matrix.keys():
+            for label in matrix:
                 if isinstance(matrix[label], list):
                     record[label] = matrix[label][i]
             records.append(record)
@@ -1048,8 +1268,7 @@ def ProcessWUForecast(matrix):
 XT_KEY = 'XTide'
 XT_PROG = '/usr/bin/tide'
 XT_ARGS = '-fc -df"%Y.%m.%d" -tf"%H:%M"'
-XT_HILO = {'High Tide' : 'H',
-           'Low Tide' : 'L'}
+XT_HILO = {'High Tide' : 'H', 'Low Tide' : 'L'}
 
 class XTideForecast(Forecast):
     """generate tide forecast using xtide"""
@@ -1057,8 +1276,7 @@ class XTideForecast(Forecast):
     def __init__(self, engine, config_dict):
         super(XTideForecast, self).__init__(engine, config_dict, XT_KEY,
                                             interval=604800, max_age=1209600)
-        d = config_dict['Forecast'][XT_KEY] \
-            if XT_KEY in config_dict['Forecast'].keys() else {}
+        d = config_dict['Forecast'].get(XT_KEY, {})
         self.tideprog = d.get('prog', XT_PROG)
         self.tideargs = d.get('args', XT_ARGS)
         self.location = d['location']
@@ -1149,39 +1367,27 @@ class ForecastFileGenerator(FileGenerator):
 
     def getCommonSearchList(self, archivedb, statsdb, timespan):
         searchList = super(ForecastFileGenerator, self).getCommonSearchList(archivedb, statsdb, timespan)
-        fd = self.config_dict['Forecast'] \
-            if 'Forecast' in self.config_dict.keys() else {}
+        fd = self.config_dict.get('Forecast', {})
+        sd = self.skin_dict.get('Forecast', {})
         db = self._getArchive(fd['database'])
-        fdata = ForecastData(fd, db, self.formatter, self.converter)
+        fdata = ForecastData(fd, sd, db, self.formatter, self.converter)
         searchList.append({'forecast' : fdata})
         return searchList
 
 
 
-class ForecastData():
-    """Bind forecast variables to database records.
+class ForecastData(object):
+    """Bind forecast variables to database records."""
 
-$forecast.xtide(0).dateTime     date/time that the forecast was created
-$forecast.xtide(0).event_ts     date/time of the event
-$forecast.xtide(0).hilo         H or L
-$forecast.xtide(0).offset       depth above/below mean low tide
-$forecast.xtide(0).location     where the tide is forecast
+    def __init__(self, forecast_dict, skin_dict, database,
+                 formatter, converter):
+        '''
+        forecast_dict - the 'Forecast' section of weewx.conf
 
-for tide in $forecast.xtides(max_events=12):
-  $tide.event_ts $tide.hilo $tide.offset
-
-$forecast.zambretti.dateTime    date/time that the forecast was created
-$forecast.zambretti.event_ts    date/time of the forecast
-$forecast.zambretti.code        zambretti forecast code (A-Z)
-$forecast.zambretti.text        description of the zambretti forecast
-
-    """
-
-    def __init__(self, forecast_dict, database, formatter, converter):
-        '''forecast_dict - the 'Forecast' section of weewx.conf'''
-        self.z_dict = forecast_dict['Zambretti']['labels'] \
-            if 'Zambretti' in forecast_dict.keys() and \
-            'labels' in forecast_dict['Zambretti'].keys()\
+        skin_dict - the 'Forecast' section of skin.conf
+        '''
+        self.z_dict = skin_dict['Zambretti']['labels'] \
+            if 'Zambretti' in skin_dict and 'labels' in skin_dict['Zambretti']\
             else zambretti_dict
         self.database = database
         self.formatter = formatter
@@ -1232,21 +1438,33 @@ $forecast.zambretti.text        description of the zambretti forecast
         th = self._create_time(record[0], 'zambretti')
         code = record[1]
         text = self.z_dict[code] \
-            if code in self.z_dict.keys() else self.z_dict['unknown']
+            if code in self.z_dict else self.z_dict['unknown']
         return { 'dateTime' : th,
                  'event_ts' : th,
                  'code' : code,
                  'text' : text, }
 
-    def _getFC(self, fid, max_events=1, from_ts=None):
+    def _getFC(self, fid, max_events=1, from_ts=None, to_ts=None):
+        return self._fmtFC(self._getRawFC(fid, max_events, from_ts, to_ts))
+
+    def _getRawFC(self, fid, max_events=1, from_ts=None, to_ts=None):
         if from_ts is None:
             from_ts = int(time.time())
-        sql = "select * from archive where method = '%s' and event_ts >= %d and dateTime = (select dateTime from archive where method = '%s' order by dateTime desc limit 1) order by event_ts asc limit %d" % (fid, from_ts, fid, max_events)
+        if to_ts is None:
+            to_ts = from_ts + 14 * 24 * 3600 # 14 days into the future
+        # NB: this query assumes that forecasting is deterministic, i.e., two
+        # queries to a single forecast will always return the same results.
+        sql = "select distinct * from archive where method = '%s' and event_ts >= %d and event_ts <= %d and dateTime = (select dateTime from archive where method = '%s' order by dateTime desc limit 1) order by event_ts asc limit %d" % (fid, from_ts, to_ts, fid, max_events)
         records = []
         for rec in self.database.genSql(sql):
             r = {}
             for i,f in enumerate(defaultForecastSchema):
                 r[f[0]] = rec[i]
+            records.append(r)
+        return records
+
+    def _fmtFC(self, records):
+        for r in records:
             usys = r['usUnits']
             r['dateTime'] = self._create_time(r['dateTime'], 'nws')
             r['event_ts'] = self._create_time(r['event_ts'], 'nws')
@@ -1263,30 +1481,77 @@ $forecast.zambretti.text        description of the zambretti forecast
             r['windChill'] = self._create_temp(r['windChill'], usys, 'nws')
             r['heatIndex'] = self._create_temp(r['heatIndex'], usys, 'nws')
             # all other records are strings
-            records.append(r)
         return records
 
-#    def nws(self, index, from_ts=None):
-#        records = self._getFC(max_events=index+1, from_ts=from_ts)
-#        if 0 <= index < len(records):
-#            return records[index]
-#        return None
 
-    @property
-    def current(self):
-        return None
-
-    def nws(self, max_events=40, from_ts=None):
+    def nws_periods(self, max_events=40, from_ts=None):
         '''The NWS forecast returns forecasts at times into the future from the
         indicated time using the latest NWS foreast.'''
         records = self._getFC('NWS', max_events=max_events, from_ts=from_ts)
         return records
 
-    def wu(self, max_events=40, from_ts=None):
+    def nws_day(self, ts=None):
+        '''Create a summary from NWS periods for the day of the indicated
+        timestamp.  If the timestamp is None, use the current time.'''
+        record = {
+            'temp' : None,
+            'tempMin' : None,
+            'tempMax' : None,
+            'dewpoint' : None,
+            'dewpointMin' : None,
+            'dewpointMax' : None,
+            'humidity' : None,
+            'humidityMin' : None,
+            'humidityMax' : None,
+            'windSpeed' : None,
+            'windSpeedMin' : None,
+            'windSpeedMax' : None,
+            'windGust' : None,
+            }
+        from_ts = weeutil.weeutil.startOfDay(ts)
+        to_ts = from_ts + 24 * 3600
+        records = self._getRawFC('NWS', from_ts=from_ts, to_ts=to_ts, max_events=8)
+        usys = records[0]['usUnits']
+        for r in records:
+            if 'tempN' not in record:
+                record['tempN'] = None 
+            record['temp'], record['tempN'] = self._get_avg('temp', r, record)
+            record['tempMin'] = self._get_min('tempMin', r, record)
+            record['tempMax'] = self._get_max('tempMax', r, record)
+        record['tempMin'] = self._create_temp(record['tempMin'], usys, 'nws')
+        record['tempMax'] = self._create_temp(record['tempMax'], usys, 'nws')
+        record['temp'] = self._create_temp(record['temp'], usys, 'nws')
+        return record
+
+    def wu_periods(self, max_events=40, from_ts=None):
         '''The WU forecast returns forecasts at times into the future from the
         indicated time using the latest NWS foreast.'''
         records = self._getFC('WU', max_events=max_events, from_ts=from_ts)
         return records
+
+    def _get_avg(self, key, a, b):
+        x = a.get(key, None)
+        if x is not None:
+            if b[key] is None:
+                return x, 1
+            else:
+                n = b[key+'N'] + 1
+                return (b[key]*b[key+'N'] + x) / n, n
+        return b[key], b[key+'N']
+
+    def _get_min(self, key, a, b):
+        x = a.get(key, None)
+        if x is not None:
+            if b[key] is None or x < b[key]:
+                return x
+        return b[key]
+
+    def _get_max(self, key, a, b):
+        x = a.get(key, None)
+        if x is not None:
+            if b[key] is None or x > b[key]:
+                return x
+        return b[key]
 
     def _create_time(self, ts, context):
         vt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
