@@ -1393,23 +1393,23 @@ class ForecastData(object):
         self.formatter = formatter
         self.converter = converter
 
-    def _getTides(self, max_events=1, from_ts=None):
+    def _getTides(self, context, max_events=1, from_ts=None):
         if from_ts is None:
             from_ts = int(time.time())
         sql = "select dateTime,event_ts,hilo,offset,usUnits from archive where method = 'XTide' and dateTime = (select dateTime from archive where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc limit %d" % (from_ts, max_events)
         records = []
         for rec in self.database.genSql(sql):
             r = {}
-            r['dateTime'] = self._create_time(rec[0], 'tides')
-            r['event_ts'] = self._create_time(rec[1], 'tides')
+            r['dateTime'] = self._create_time(context, rec[0])
+            r['event_ts'] = self._create_time(context, rec[1])
             r['hilo'] = rec[2]
-            r['offset'] = self._create_length(rec[3], rec[4], 'tides')
+            r['offset'] = self._create_length(context, rec[3], rec[4])
             r['location'] = 'FIXME'
             records.append(r)
         return records
 
     def xtide(self, index, from_ts=None):
-        records = self._getTides(max_events=index+1, from_ts=from_ts)
+        records = self._getTides('xtide', max_events=index+1, from_ts=from_ts)
         if 0 <= index < len(records):
             return records[index]
         return { 'dateTime' : '',
@@ -1421,7 +1421,7 @@ class ForecastData(object):
     def xtides(self, max_events=4, from_ts=None):
         '''The tide forecast returns tide events into the future from the
         indicated time using the latest tide forecast.'''
-        records = self._getTides(max_events=max_events, from_ts=from_ts)
+        records = self._getTides('xtides', max_events=max_events, from_ts=from_ts)
         return records
 
     def zambretti(self):
@@ -1435,7 +1435,7 @@ class ForecastData(object):
                      'event_ts' : '',
                      'code' : '',
                      'text' : '' }
-        th = self._create_time(record[0], 'zambretti')
+        th = self._create_time('zambretti', record[0])
         code = record[1]
         text = self.z_dict[code] \
             if code in self.z_dict else self.z_dict['unknown']
@@ -1444,8 +1444,9 @@ class ForecastData(object):
                  'code' : code,
                  'text' : text, }
 
-    def _getFC(self, fid, max_events=1, from_ts=None, to_ts=None):
-        return self._fmtFC(self._getRawFC(fid, max_events, from_ts, to_ts))
+    def _getFC(self, fid, context, max_events=1, from_ts=None, to_ts=None):
+        return self._fmtFC(self._getRawFC(fid, max_events, from_ts, to_ts),
+                           context)
 
     def _getRawFC(self, fid, max_events=1, from_ts=None, to_ts=None):
         if from_ts is None:
@@ -1463,23 +1464,23 @@ class ForecastData(object):
             records.append(r)
         return records
 
-    def _fmtFC(self, records):
+    def _fmtFC(self, records, ctxt):
         for r in records:
             usys = r['usUnits']
-            r['dateTime'] = self._create_time(r['dateTime'], 'nws')
-            r['event_ts'] = self._create_time(r['event_ts'], 'nws')
-            r['tempMin'] = self._create_temp(r['tempMin'], usys, 'nws')
-            r['tempMax'] = self._create_temp(r['tempMax'], usys, 'nws')
-            r['temp'] = self._create_temp(r['temp'], usys, 'nws')            
-            r['dewpoint'] = self._create_temp(r['dewpoint'], usys, 'nws')
-            r['humidity'] = self._create_percent(r['humidity'], 'nws')
-            r['windSpeed'] = self._create_speed(r['windSpeed'], usys, 'nws')
-            r['windGust'] = self._create_speed(r['windGust'], usys, 'nws')
-            r['pop'] = self._create_percent(r['pop'], 'nws')
-            r['qpf'] = self._create_length(r['qpf'], usys, 'nws', unit='inch')
-            r['qsf'] = self._create_length(r['qsf'], usys, 'nws', unit='inch')
-            r['windChill'] = self._create_temp(r['windChill'], usys, 'nws')
-            r['heatIndex'] = self._create_temp(r['heatIndex'], usys, 'nws')
+            r['dateTime'] = self._create_time(ctxt, r['dateTime'])
+            r['event_ts'] = self._create_time(ctxt, r['event_ts'])
+            r['tempMin'] = self._create_temp(ctxt, r['tempMin'], usys)
+            r['tempMax'] = self._create_temp(ctxt, r['tempMax'], usys)
+            r['temp'] = self._create_temp(ctxt, r['temp'], usys)            
+            r['dewpoint'] = self._create_temp(ctxt, r['dewpoint'], usys)
+            r['humidity'] = self._create_percent(ctxt, r['humidity'])
+            r['windSpeed'] = self._create_speed(ctxt, r['windSpeed'], usys)
+            r['windGust'] = self._create_speed(ctxt, r['windGust'], usys)
+            r['pop'] = self._create_percent(ctxt, r['pop'])
+            r['qpf'] = self._create_length(ctxt, r['qpf'], usys, unit='inch')
+            r['qsf'] = self._create_length(ctxt, r['qsf'], usys, unit='inch')
+            r['windChill'] = self._create_temp(ctxt, r['windChill'], usys)
+            r['heatIndex'] = self._create_temp(ctxt, r['heatIndex'], usys)
             # all other records are strings
         return records
 
@@ -1487,13 +1488,22 @@ class ForecastData(object):
     def nws_periods(self, max_events=40, from_ts=None):
         '''The NWS forecast returns forecasts at times into the future from the
         indicated time using the latest NWS foreast.'''
-        records = self._getFC('NWS', max_events=max_events, from_ts=from_ts)
+        records = self._getFC('NWS', 'nws_periods',
+                              max_events=max_events, from_ts=from_ts)
         return records
 
     def nws_day(self, ts=None):
         '''Create a summary from NWS periods for the day of the indicated
         timestamp.  If the timestamp is None, use the current time.'''
-        record = {
+        if ts is None:
+            ts = int(time.time())
+        from_ts = weeutil.weeutil.startOfDay(ts)
+        to_ts = from_ts + 24 * 3600
+        records = self._getRawFC('NWS', from_ts=from_ts, to_ts=to_ts, max_events=8)
+        rec = {
+            'dateTime' : None,
+            'event_ts' : None,
+            'location' : None,
             'temp' : None,
             'tempMin' : None,
             'tempMax' : None,
@@ -1508,43 +1518,55 @@ class ForecastData(object):
             'windSpeedMax' : None,
             'windGust' : None,
             }
-        from_ts = weeutil.weeutil.startOfDay(ts)
-        to_ts = from_ts + 24 * 3600
-        records = self._getRawFC('NWS', from_ts=from_ts, to_ts=to_ts, max_events=8)
-        usys = records[0]['usUnits']
         for r in records:
-            if 'tempN' not in record:
-                record['tempN'] = None 
-            record['temp'], record['tempN'] = self._get_avg('temp', r, record)
-            record['tempMin'] = self._get_min('tempMin', r, record)
-            record['tempMax'] = self._get_max('tempMax', r, record)
-        record['tempMin'] = self._create_temp(record['tempMin'], usys, 'nws')
-        record['tempMax'] = self._create_temp(record['tempMax'], usys, 'nws')
-        record['temp'] = self._create_temp(record['temp'], usys, 'nws')
-        return record
+            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
+                self._get_stats(s, r, rec)
+            rec['windGust'] = self._get_max('windGust', r, rec)
+        ctxt = 'nws_day'
+        usys = records[0]['usUnits']
+        rec['dateTime'] = self._create_time(ctxt, records[0]['dateTime'])
+        rec['event_ts'] = self._create_time(ctxt, from_ts)
+        rec['location'] = records[0]['foid'] + '_' + records[0]['lid']
+        rec['tempMin'] = self._create_temp(ctxt, rec['tempMin'], usys)
+        rec['tempMax'] = self._create_temp(ctxt, rec['tempMax'], usys)
+        rec['temp'] = self._create_temp(ctxt, rec['temp'], usys)
+        rec['dewpointMin'] = self._create_temp(ctxt, rec['dewpointMin'], usys)
+        rec['dewpointMax'] = self._create_temp(ctxt, rec['dewpointMax'], usys)
+        rec['dewpoint'] = self._create_temp(ctxt, rec['dewpoint'], usys)
+        rec['humidityMin'] = self._create_percent(ctxt, rec['humidityMin'])
+        rec['humidityMax'] = self._create_percent(ctxt, rec['humidityMax'])
+        rec['humidity'] = self._create_percent(ctxt, rec['humidity'])
+        rec['windSpeedMin'] = self._create_speed(ctxt,rec['windSpeedMin'],usys)
+        rec['windSpeedMax'] = self._create_speed(ctxt,rec['windSpeedMax'],usys)
+        rec['windSpeed'] = self._create_speed(ctxt, rec['windSpeed'], usys)
+        rec['windGust'] = self._create_speed(ctxt, rec['windGust'], usys)
+        return rec
 
     def wu_periods(self, max_events=40, from_ts=None):
         '''The WU forecast returns forecasts at times into the future from the
         indicated time using the latest NWS foreast.'''
-        records = self._getFC('WU', max_events=max_events, from_ts=from_ts)
+        records = self._getFC('WU', 'wu_periods',
+                              max_events=max_events, from_ts=from_ts)
         return records
 
-    def _get_avg(self, key, a, b):
+    def _get_stats(self, key, a, b):
+        if key+'N' not in b:
+            b[key+'N'] = None 
         x = a.get(key, None)
         if x is not None:
             if b[key] is None:
-                return x, 1
+                b[key] = x
+                b[key+'N'] = 1
+                b[key+'Min'] = x
+                b[key+'Max'] = x
             else:
                 n = b[key+'N'] + 1
-                return (b[key]*b[key+'N'] + x) / n, n
-        return b[key], b[key+'N']
-
-    def _get_min(self, key, a, b):
-        x = a.get(key, None)
-        if x is not None:
-            if b[key] is None or x < b[key]:
-                return x
-        return b[key]
+                b[key] = (b[key] * b[key+'N'] + x) / n
+                b[key+'N'] = n
+                if x < b[key+'Min']:
+                    b[key+'Min'] = x
+                if x > b[key+'Max']:
+                    b[key+'Max'] = x
 
     def _get_max(self, key, a, b):
         x = a.get(key, None)
@@ -1553,14 +1575,14 @@ class ForecastData(object):
                 return x
         return b[key]
 
-    def _create_time(self, ts, context):
+    def _create_time(self, context, ts):
         vt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
         vh = weewx.units.ValueHelper(vt, context,
                                      self.formatter, self.converter)
         return vh
 
     # FIXME: weewx should define 'length' rather than (as well as?) 'altitude'
-    def _create_length(self, v, usys, context, unit=None):
+    def _create_length(self, context, v, usys, unit=None):
         if unit is None:
             u = 'meter' if usys == weewx.METRIC else 'foot'
         else:
@@ -1570,21 +1592,21 @@ class ForecastData(object):
                                      self.formatter, self.converter)
         return vh
 
-    def _create_temp(self, v, usys, context):
+    def _create_temp(self, context, v, usys):
         u = 'degree_C' if usys == weewx.METRIC else 'degree_F'
         vt = weewx.units.ValueTuple(v, u, 'group_temperature')
         vh = weewx.units.ValueHelper(vt, context,
                                      self.formatter, self.converter)
         return vh
 
-    def _create_speed(self, v, usys, context):
+    def _create_speed(self, context, v, usys):
         u = 'km_per_hour' if usys == weewx.METRIC else 'mile_per_hour'
         vt = weewx.units.ValueTuple(v, u, 'group_speed')
         vh = weewx.units.ValueHelper(vt, context,
                                      self.formatter, self.converter)
         return vh
 
-    def _create_percent(self, v, context):
+    def _create_percent(self, context, v):
         vt = weewx.units.ValueTuple(v, 'percent', 'group_percent')
         vh = weewx.units.ValueHelper(vt, context,
                                      self.formatter, self.converter)

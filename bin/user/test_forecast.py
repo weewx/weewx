@@ -130,7 +130,7 @@ def create_skin_conf(test_dir, skin_dir='testskin'):
         group_radiation    = watt_per_meter_squared
         group_rain         = inch
         group_rainrate     = inch_per_hour
-        group_speed        = knot
+        group_speed        = mile_per_hour
         group_speed2       = knot2
         group_temperature  = degree_F
         group_uv           = uv_index
@@ -162,7 +162,7 @@ def create_skin_conf(test_dir, skin_dir='testskin'):
         meter              = %.0f
         meter_per_second   = %.1f
         meter_per_second2  = %.1f
-        mile_per_hour      = %.0f
+        mile_per_hour      = %.1f
         mile_per_hour2     = %.1f
         mm                 = %.1f
         mmHg               = %.1f
@@ -696,7 +696,9 @@ RAIN SHWRS           S  S                  S  S  S  C    C  C  C  C
 $$
 '''
 
-PFM_GYX_SINGLE = '''MEZ027-260915-
+# this forecast was downloaded on 25aug2013
+# it contains 100% for many rh values, which means parsing on whitespace fails
+PFM_GYX_SINGLE_1 = '''MEZ027-260915-
 ROCKLAND-KNOX ME
 44.07N  69.08W ELEV. 56 FT
 423 PM EDT SUN AUG 25 2013
@@ -732,6 +734,51 @@ AVG CLOUDS    B1 B2   B2 OV B2 B1   B1 SC SC SC   SC FW FW FW   SC SC SC B1
 POP 12HR         40      40    40      20    20      10    10      10    20
 RAIN SHWRS     C  C    C  C  C  C    S  S  S  S                        S  S
 TSTMS          S  S    S  S
+
+$$
+'''
+
+# this forecast was downloaded around 13:00 on 26aug2013
+# it has MM instead of numeric values for many entries
+PFM_GYX_SINGLE_2 = '''MEZ027-262100-
+ROCKLAND-KNOX ME
+44.07N  69.08W ELEV. 56 FT
+115 PM EDT MON AUG 26 2013
+
+DATE             MON 08/26/13            TUE 08/27/13            WED 08/28/13
+EDT 3HRLY     05 08 11 14 17 20 23 02 05 08 11 14 17 20 23 02 05 08 11 14 17 20
+UTC 3HRLY     09 12 15 18 21 00 03 06 09 12 15 18 21 00 03 06 09 12 15 18 21 00
+
+MAX/MIN                      72          58          73          60          68
+TEMP                   69 70 65 63 61 60 63 68 71 68 65 62 61 61 64 66 68 67 64
+DEWPT                  61 62 62 61 61 59 62 65 66 64 63 62 61 61 63 MM 68 MM 64
+RH                     76 76 90 93100 96 97 90 84 87 93100100100 97 MM100 MM100
+WIND DIR               SW SW SW  S  W NE  N  S  S  S  S  S SE  E NE MM  N MM NW
+WIND SPD               10  8  5  5  2  2  2  3  8  4  2  2  2  3  6 MM  2 MM  3
+CLOUDS                 FW SC SC SC SC B1 B2 B1 SC SC SC B1 B1 B2 B2 MM B2 MM B2
+POP 12HR                     20          20          20          20          30
+QPF 12HR                      0        0.01           0           0        0.12
+SNOW 12HR                 00-00       00-00       00-00
+RAIN SHWRS              S  S     S  S  S  S  S  S  S  S  S  S  S  S  S  S  C  C
+TSTMS                                           S  S  S
+OBVIS                                                      PF PF
+WIND CHILL                                                         -120-120-120-120
+MIN CHILL                                                            -120  -120
+
+
+DATE          THU 08/29/13  FRI 08/30/13  SAT 08/31/13  SUN 09/01/13
+EDT 6HRLY     02 08 14 20   02 08 14 20   02 08 14 20   02 08 14 20
+UTC 6HRLY     06 12 18 00   06 12 18 00   06 12 18 00   06 12 18 00
+
+MIN/MAX          61    68      58    73      56    72      57    74
+TEMP          63 65 68 62   60 61 72 64   58 59 71 64   59 60 73 66
+DEWPT         63 62 64 60   58 57 56 56   57 59 59 59   59 60 61 60
+PWIND DIR        NW    NE       N    NW      SW    SW       W    SW
+WIND CHAR        LT    GN      LT    LT      LT    LT      LT    LT
+AVG CLOUDS    B2 B2 B2 B2   B1 B1 SC SC   SC SC SC SC   SC SC B1 SC
+POP 12HR         30    40      10    10      10    10       5     5
+RAIN SHWRS     C  C  C  C
+TSTMS             S  C  C
 
 $$
 '''
@@ -1965,6 +2012,11 @@ $forecast.zambretti.text
     # NWS tests
     # -------------------------------------------------------------------------
 
+    def test_nws_download(self):
+        '''spit out a current text forecast from nws'''
+        fcast = forecast.DownloadNWSForecast('GYX')
+#        print fcast
+
     def test_nws_date_to_ts(self):
         data = {'418 PM EDT SAT MAY 11 2013': 1368303480,
                 '400 PM EDT SAT MAY 11 2013': 1368302400,
@@ -2014,19 +2066,27 @@ $forecast.zambretti.text
             self.assertEqual(matrix[label], expected[label])
 
     def test_parse_nws_forecast_with_100s(self):
-        matrix = forecast.ParseNWSForecast(PFM_GYX_SINGLE, 'MEZ027')
+        matrix = forecast.ParseNWSForecast(PFM_GYX_SINGLE_1, 'MEZ027')
         expected = {}
         expected['humidity'] = ['48', '63', '78', '93', '100', '93', '75', '73', '78', '87', '100', '100', '100', '97', '73', '66', '71', '90', '97', '100', '100', '100', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
         for label in expected.keys():
             self.assertEqual(matrix[label], expected[label])
 
+    def test_parse_nws_forecast_with_mm(self):
+        matrix = forecast.ParseNWSForecast(PFM_GYX_SINGLE_2, 'MEZ027')
+        expected = {}
+        expected['humidity'] = ['76', '79', '90', '93', '100', '96', '97', '90', '84', '87', '93', '100', '100', '100', '97', None, '100', None, '100', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+        for label in expected.keys():
+            self.assertEqual(matrix[label], expected[label])
+
     def test_nws_forecast(self):
-        fcast = forecast.DownloadNWSForecast('BOX')
+#        fcast = forecast.DownloadNWSForecast('BOX') # BOX, GYX
 #        print fcast
-        matrix = forecast.ParseNWSForecast(fcast, 'MAZ014')
+#        matrix = forecast.ParseNWSForecast(fcast, 'MAZ014') # MAZ014, ME027
 #        print matrix
-        records = forecast.ProcessNWSForecast('BOX', 'MAZ014', matrix)
+#        records = forecast.ProcessNWSForecast('BOX', 'MAZ014', matrix)
 #        print records
+        pass
 
     def test_nws_template_periods(self):
         # FIXME: make the LOCATION and DATETIME work
@@ -2035,7 +2095,6 @@ $forecast.zambretti.text
                              FakeData.gen_fake_nws_data(),
                              '''<html>
   <body>
-nws forecast for LOCATION as of DATETIME
 #for $f in $forecast.nws_periods(from_ts=1377043837, max_events=2):
 $f.event_ts $f.tempMin $f.temp $f.tempMax $f.humidity $f.pop
 #end for
@@ -2044,7 +2103,6 @@ $f.event_ts $f.tempMin $f.temp $f.tempMax $f.humidity $f.pop
 ''',
                              '''<html>
   <body>
-nws forecast for LOCATION as of DATETIME
 23-Aug-2013 17:00     - 76.0F     - 48%     -
 23-Aug-2013 20:00     - 70.0F     - 57%     -
   </body>
@@ -2057,8 +2115,8 @@ nws forecast for LOCATION as of DATETIME
                              FakeData.gen_fake_nws_data2(),
                              '''<html>
   <body>
-nws forecast for LOCATION as of DATETIME
 #set $summary = $forecast.nws_day(ts=1377525600)
+nws forecast for $summary.location at $summary.event_ts as of $summary.dateTime
 $summary.tempMin
 $summary.tempMax
 $summary.temp
@@ -2077,20 +2135,20 @@ $summary.windGust
 ''',
                              '''<html>
   <body>
-nws forecast for LOCATION as of DATETIME
-    -
-81.0F
+nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
+68.0F
+79.0F
 74.8F
-
-
-
-
-
-
-
-
-
-
+57.0F
+67.0F
+63.0F
+58%
+81%
+67%
+5.0 mph
+12.0 mph
+9.3 mph
+21.0 mph
   </body>
 </html>
 ''')
@@ -2104,6 +2162,11 @@ nws forecast for LOCATION as of DATETIME
     # -------------------------------------------------------------------------
     # WU tests
     # -------------------------------------------------------------------------
+
+    def test_wu_download(self):
+        '''spit out a current text forecast from wu'''
+        fcast = forecast.DownloadWUForecast('INSERT_KEY_HERE', '02139')
+#        print fcast
 
     def test_create_wu_forecast_matrix(self):
         matrix = forecast.CreateWUForecastMatrix(WU_BOS)
@@ -2122,12 +2185,13 @@ nws forecast for LOCATION as of DATETIME
         self.assertEqual(records, expected)
 
     def test_wu_forecast(self):
-        fcast = forecast.DownloadWUForecast('', '02139')
+#        fcast = forecast.DownloadWUForecast('', '02139')
 #        print fcast
-        matrix = forecast.CreateWUForecastMatrix(fcast)
+#        matrix = forecast.CreateWUForecastMatrix(fcast)
 #        print matrix
-        records = forecast.ProcessWUForecast(matrix)
+#        records = forecast.ProcessWUForecast(matrix)
 #        print records
+        pass
 
     def test_download_wu_forecast_bad_key(self):
         # warning! tabs matter in the following string
