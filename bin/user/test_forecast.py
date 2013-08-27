@@ -739,7 +739,7 @@ $$
 '''
 
 # this forecast was downloaded around 13:00 on 26aug2013
-# it has MM instead of numeric values for many entries
+# it has MM instead of numeric values and odd values for wind chill
 PFM_GYX_SINGLE_2 = '''MEZ027-262100-
 ROCKLAND-KNOX ME
 44.07N  69.08W ELEV. 56 FT
@@ -779,6 +779,48 @@ AVG CLOUDS    B2 B2 B2 B2   B1 B1 SC SC   SC SC SC SC   SC SC B1 SC
 POP 12HR         30    40      10    10      10    10       5     5
 RAIN SHWRS     C  C  C  C
 TSTMS             S  C  C
+
+$$
+'''
+
+# this forecast was downloaded around 19:45 on 26aug2013
+# this forecast cleared the MM values, but still contains many 100 values
+PFM_GYX_SINGLE_3 = '''MEZ027-270915-
+ROCKLAND-KNOX ME
+44.07N  69.08W ELEV. 56 FT
+550 PM EDT MON AUG 26 2013
+
+DATE           08/26/13      TUE 08/27/13            WED 08/28/13            THU
+EDT 3HRLY     17 20 23 02 05 08 11 14 17 20 23 02 05 08 11 14 17 20 23 02 05 08
+UTC 3HRLY     21 00 03 06 09 12 15 18 21 00 03 06 09 12 15 18 21 00 03 06 09 12
+
+MIN/MAX                      58          73          59          68          61
+TEMP             66 62 60 58 61 69 73 72 66 62 60 59 61 66 68 68 65 63 62 61 63
+DEWPT            63 61 60 58 61 65 66 64 63 60 59 59 61 66 68 67 64 63 62 61 62
+RH               90 97100100100 87 79 76 90 93 96100100100100 97 97100100100 97
+WIND DIR         SW  S  W NE  N  S  S  S SE  E NE NE NE  N  N NW NW NW NW  N  N
+WIND SPD          5  5  2  2  2  3  9  8  4  3  2  4  6  4  2  3  3  4  5  8 10
+CLOUDS           FW SC SC SC B1 B1 SC SC B1 B1 B1 B2 B2 B2 B2 B2 B2 B2 B2 B2 B2
+POP 12HR                     20          20          20          30          40
+QPF 12HR                      0           0           0        0.02        0.11
+SNOW 12HR                 00-00       00-00       00-00
+RAIN SHWRS                 S  S  S  S  S  S  S  S  S  S  C  C  C  C  C  C  C  C
+TSTMS                                                 S  C  C  C              C
+
+
+DATE           08/29  FRI 08/30/13  SAT 08/31/13  SUN 09/01/13  MON 09/02/13
+EDT 6HRLY     14 20   02 08 14 20   02 08 14 20   02 08 14 20   02 08 14 20
+UTC 6HRLY     18 00   06 12 18 00   06 12 18 00   06 12 18 00   06 12 18 00
+
+MAX/MIN          68      58    72      59    74      59    76      60    75
+TEMP          68 64   59 61 72 66   60 62 74 67   61 62 76 69   62 63 75 68
+DEWPT         64 60   59 60 60 60   58 60 61 60   60 61 61 60   59 60 62 60
+PWIND DIR        NE      NE     W      SW    SW      SW    SE       S     S
+WIND CHAR        GN      LT    LT      LT    LT      LT    LT      LT    GN
+AVG CLOUDS    B2 B2   B1 B1 SC SC   SC SC SC SC   SC B1 B1 SC   B1 B1 B1 B1
+POP 12HR         40      20    10      10    10      10    10      10    20
+RAIN SHWRS     C  C    S  S                                            S  S
+TSTMS          C  C
 
 $$
 '''
@@ -2015,7 +2057,7 @@ $forecast.zambretti.text
     def test_nws_download(self):
         '''spit out a current text forecast from nws'''
         fcast = forecast.DownloadNWSForecast('GYX')
-#        print fcast
+        print fcast
 
     def test_nws_date_to_ts(self):
         data = {'418 PM EDT SAT MAY 11 2013': 1368303480,
@@ -2033,18 +2075,6 @@ $forecast.zambretti.text
     def test_nws_bogus_location(self):
         matrix = forecast.ParseNWSForecast(PFM_BOS, 'foobar')
         self.assertEqual(matrix, None)
-
-    def test_parse_single_nws_forecast(self):
-        matrix = forecast.ParseNWSForecast(PFM_BOS_SINGLE, 'MAZ014')
-        expected = {}
-        expected['ts'] = [1368262800, 1368273600, 1368284400, 1368295200, 1368306000, 1368316800, 1368327600, 1368338400, 1368349200, 1368360000, 1368370800, 1368381600, 1368392400, 1368403200, 1368414000, 1368424800, 1368435600, 1368446400, 1368457200, 1368468000, 1368478800, 1368489600, 1368511200, 1368532800, 1368554400, 1368576000, 1368597600, 1368619200, 1368640800, 1368662400, 1368684000, 1368705600, 1368727200, 1368748800, 1368770400, 1368792000, 1368813600, 1368835200]
-        expected['hour'] = ['05', '08', '11', '14', '17', '20', '23', '02', '05', '08', '11', '14', '17', '20', '23', '02', '05', '08', '11', '14', '17', '20', '02', '08', '14', '20', '02', '08', '14', '20', '02', '08', '14', '20', '02', '08', '14', '20']
-        expected['temp'] = [None, None, None, '69', '68', '66', '63', '61', '59', '62', '66', '68', '68', '61', '52', '47', '44', '48', '56', '60', '59', '53', '44', '47', '59', '53', '45', '49', '65', '60', '52', '55', '67', '63', '56', '59', '69', '63']
-        expected['tempMin'] = [None, None, None, None, None, None, None, None, None, '57', None, None, None, None, None, None, None, '43', None, None, None, None, None, '41', None, None, None, '42', None, None, None, '49', None, None, None, '54', None, None]
-        expected['tempMax'] = [None, None, None, None, None, '72', None, None, None, None, None, None, None, '69', None, None, None, None, None, None, None, '61', None, None, None, '60', None, None, None, '67', None, None, None, '68', None, None, None, '70']
-        expected['qsf'] = [None, None, None, None, None, '00-00', None, None, None, '00-00', None, None, None, '00-00', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
-        for label in expected.keys():
-            self.assertEqual(matrix[label], expected[label])
 
     def test_parse_multiple_nws_forecast(self):
         matrix = forecast.ParseNWSForecast(PFM_BOS, 'CTZ002')
@@ -2065,17 +2095,36 @@ $forecast.zambretti.text
         for label in expected.keys():
             self.assertEqual(matrix[label], expected[label])
 
-    def test_parse_nws_forecast_with_100s(self):
+    def test_parse_nws_forecast_0(self):
+        matrix = forecast.ParseNWSForecast(PFM_BOS_SINGLE, 'MAZ014')
+        expected = {}
+        expected['ts'] = [1368262800, 1368273600, 1368284400, 1368295200, 1368306000, 1368316800, 1368327600, 1368338400, 1368349200, 1368360000, 1368370800, 1368381600, 1368392400, 1368403200, 1368414000, 1368424800, 1368435600, 1368446400, 1368457200, 1368468000, 1368478800, 1368489600, 1368511200, 1368532800, 1368554400, 1368576000, 1368597600, 1368619200, 1368640800, 1368662400, 1368684000, 1368705600, 1368727200, 1368748800, 1368770400, 1368792000, 1368813600, 1368835200]
+        expected['hour'] = ['05', '08', '11', '14', '17', '20', '23', '02', '05', '08', '11', '14', '17', '20', '23', '02', '05', '08', '11', '14', '17', '20', '02', '08', '14', '20', '02', '08', '14', '20', '02', '08', '14', '20', '02', '08', '14', '20']
+        expected['temp'] = [None, None, None, '69', '68', '66', '63', '61', '59', '62', '66', '68', '68', '61', '52', '47', '44', '48', '56', '60', '59', '53', '44', '47', '59', '53', '45', '49', '65', '60', '52', '55', '67', '63', '56', '59', '69', '63']
+        expected['tempMin'] = [None, None, None, None, None, None, None, None, None, '57', None, None, None, None, None, None, None, '43', None, None, None, None, None, '41', None, None, None, '42', None, None, None, '49', None, None, None, '54', None, None]
+        expected['tempMax'] = [None, None, None, None, None, '72', None, None, None, None, None, None, None, '69', None, None, None, None, None, None, None, '61', None, None, None, '60', None, None, None, '67', None, None, None, '68', None, None, None, '70']
+        expected['qsf'] = [None, None, None, None, None, '00-00', None, None, None, '00-00', None, None, None, '00-00', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+        for label in expected.keys():
+            self.assertEqual(matrix[label], expected[label])
+
+    def test_parse_nws_forecast_1(self):
         matrix = forecast.ParseNWSForecast(PFM_GYX_SINGLE_1, 'MEZ027')
         expected = {}
         expected['humidity'] = ['48', '63', '78', '93', '100', '93', '75', '73', '78', '87', '100', '100', '100', '97', '73', '66', '71', '90', '97', '100', '100', '100', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
         for label in expected.keys():
             self.assertEqual(matrix[label], expected[label])
 
-    def test_parse_nws_forecast_with_mm(self):
+    def test_parse_nws_forecast_2(self):
         matrix = forecast.ParseNWSForecast(PFM_GYX_SINGLE_2, 'MEZ027')
         expected = {}
         expected['humidity'] = ['76', '79', '90', '93', '100', '96', '97', '90', '84', '87', '93', '100', '100', '100', '97', None, '100', None, '100', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+        for label in expected.keys():
+            self.assertEqual(matrix[label], expected[label])
+
+    def test_parse_nws_forecast_3(self):
+        matrix = forecast.ParseNWSForecast(PFM_GYX_SINGLE_3, 'MEZ027')
+        expected = {}
+        expected['humidity'] = ['90', '97', '100', '100', '100', '87', '79', '76', '90', '93', '96', '100', '100', '100', '100', '97', '97', '100', '100', '100', '97', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
         for label in expected.keys():
             self.assertEqual(matrix[label], expected[label])
 

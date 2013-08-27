@@ -298,6 +298,18 @@ http://ocean.peterbrueggeman.com/tidepredict.html
 # an arbitrary identifier for the forecast request?  this is to deal with the
 # case where we ask for the same forecast multiple times.
 
+# FIXME: ensure compatibility with uk met office
+# http://www.metoffice.gov.uk/datapoint/product/uk-3hourly-site-specific-forecast
+# forecast in 3-hour increments for up to 5 days in the future
+# UVIndex (1-11)
+# feels like temperature (wind chill and/or heat index?)
+# weather type (0-30)
+# visibility (UN, VP, PO, MO, GO, VG, EX)
+# textual descriptino
+# wind direction is 16-point compass
+# air quality index
+# also see icons used for uk metoffice
+
 import httplib
 import socket
 import string
@@ -344,6 +356,9 @@ def get_int(config_dict, label, default_value):
 
 """Database Schema
 
+   The schema assumes that forecasts are deterministic - a forecast made at
+   time t will always return the same results.
+
    This schema captures all forecasts and defines the following fields:
 
    method     - forecast method, e.g., Zambretti, NWS, XTide
@@ -388,11 +403,18 @@ def get_int(config_dict, label, default_value):
 
    hilo         indicates whether this is a high or low tide
    offset       how high or low the tide is relative to mean low
+   waveheight   average wave height
+   waveperiod   average wave period
+
+   sunrise
+   sunset
+   moonrise
+   moonset
+   moonphase
 """
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),
                          ('dateTime',   'INTEGER NOT NULL'),  # epoch
-#                         ('forecast_ts','INTEGER'),           # epoch
                          ('event_ts',   'INTEGER'),           # epoch
 
                          # Zambretti fields
@@ -414,7 +436,7 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('clouds',     'VARCHAR(2)'),  # CL,FW,SC,BK,OV,B1,B2
                          ('pop',        'REAL'),        # percent
                          ('qpf',        'REAL'),        # inch
-                         ('qsf',        'VARCHAR(5)'),  # inch
+                         ('qsf',        'REAL'),        # inch
                          ('rain',       'VARCHAR(2)'),  # S,C,L,O,D
                          ('rainshwrs',  'VARCHAR(2)'),  # S,C,L,O,D
                          ('tstms',      'VARCHAR(2)'),  # S,C,L,O,D
@@ -430,8 +452,19 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('heatIndex',  'REAL'),        # degree F
 
                          # tide fields
-                         ('hilo',     'CHAR(1)'),       # H or L
-                         ('offset',   'REAL'),          # relative to mean low
+                         ('hilo',       'CHAR(1)'),     # H or L
+                         ('offset',     'REAL'),        # relative to mean low
+
+                         # marine-specific conditions
+                         ('waveheight', 'REAL'),
+                         ('waveperiod', 'REAL'),
+
+                         # almanac fields
+                         ('sunrise',    'INTEGER'),     # epoch
+                         ('sunset',     'INTEGER'),     # epoch
+                         ('moonrise',   'INTEGER'),     # epoch
+                         ('moonset',    'INTEGER'),     # epoch
+                         ('moonphase',  'INTEGER'),     # percent (full)
                          ]
 
 class Forecast(StdService):
