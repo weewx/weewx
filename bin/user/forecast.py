@@ -607,7 +607,7 @@ class ZambrettiForecast(Forecast):
         loginf('%s: generated 1 forecast record' % Z_KEY)
         return record
 
-zambretti_dict = {
+zambretti_label_dict = {
     'A' : "Settled fine",
     'B' : "Fine weather",
     'C' : "Becoming fine",
@@ -638,7 +638,7 @@ zambretti_dict = {
     }
 
 def ZambrettiText(code):
-    return zambretti_dict[code]
+    return zambretti_label_dict[code]
 
 def ZambrettiCode(pressure, month, wind, trend,
                   north=True, baro_top=1050.0, baro_bottom=950.0):
@@ -876,6 +876,19 @@ nws_schema_dict = {
     'WIND CHILL' : 'windChill',
     'HEAT INDEX' : 'heatIndex',
     }
+
+nws_precip_types = [
+    'rain',
+    'rainshwrs',
+    'tstms',
+    'drizzle',
+    'snow',
+    'snowshwrs',
+    'flurries',
+    'sleet',
+    'frzngrain',
+    'frzngdrzl'
+    ]
 
 nws_label_dict = {
     'temp'      : 'Temperature',
@@ -1430,9 +1443,15 @@ class ForecastData(object):
 
         skin_dict - the 'Forecast' section of skin.conf
         '''
-        self.z_dict = skin_dict['Zambretti']['labels'] \
+        z_dict = skin_dict['Zambretti']['labels'] \
             if 'Zambretti' in skin_dict and 'labels' in skin_dict['Zambretti']\
-            else zambretti_dict
+            else zambretti_label_dict
+        nws_dict = skin_dict['NWS']['labels'] \
+            if 'NWS' in skin_dict and 'labels' in skin_dict['NWS'] \
+            else nws_label_dict
+        self.label_dict = {}
+        self.label_dict.update(z_dict)
+        self.label_dict.update(nws_dict)
         self.database = database
         self.formatter = formatter
         self.converter = converter
@@ -1451,6 +1470,9 @@ class ForecastData(object):
             r['location'] = 'FIXME'
             records.append(r)
         return records
+
+    def label(self, txt):
+        return self.label_dict.get(txt, txt)
 
     def xtide(self, index, from_ts=None):
         records = self._getTides('xtide', max_events=index+1, from_ts=from_ts)
@@ -1525,6 +1547,11 @@ class ForecastData(object):
             r['qsf'] = self._create_length(ctxt, r['qsf'], usys, unit='inch')
             r['windChill'] = self._create_temp(ctxt, r['windChill'], usys)
             r['heatIndex'] = self._create_temp(ctxt, r['heatIndex'], usys)
+            r['precip'] = {}
+            for p in nws_precip_types:
+                v = r.get(p, None)
+                if v is not None:
+                    r['precip'][p] = v
             # all other records are strings
         return records
 
@@ -1563,15 +1590,24 @@ class ForecastData(object):
             'windSpeedMax' : None,
             'windGust' : None,
             'windDir' : None,
+            'windChar' : None,
+            'pop' : None,
+            'precip' : None,
             }
         outlook_histogram = {}
         winddir_histogram = {}
+        windchar_histogram = {}
         for r in records:
             for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
                 self._get_stats(s, r, rec)
             rec['windGust'] = self._get_max('windGust', r, rec)
             self._get_histogram('clouds', r, outlook_histogram)
             self._get_histogram('windDir', r, winddir_histogram)
+            self._get_histogram('windChar', r, windchar_histogram)
+            rec['pop'] = self._get_max('pop', r, rec)
+#            for p in nws_precip_types:
+#                if p in r:
+#                    rec['precip'].append(r[p])
         ctxt = 'nws_day'
         usys = records[0]['usUnits']
         rec['dateTime'] = self._create_time(ctxt, records[0]['dateTime'])
@@ -1592,6 +1628,8 @@ class ForecastData(object):
         rec['windSpeed'] = self._create_speed(ctxt, rec['windSpeed'], usys)
         rec['windGust'] = self._create_speed(ctxt, rec['windGust'], usys)
         rec['windDir'] = self._create_from_histogram(winddir_histogram)
+        rec['windChar'] = self._create_from_histogram(windchar_histogram)
+        rec['pop'] = self._create_percent(ctxt, rec['pop'])
         return rec
 
     def wu_periods(self, max_events=40, from_ts=None):

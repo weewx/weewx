@@ -2242,9 +2242,9 @@ nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
       $summary.tempMax.raw $summary.tempMin.raw
       $summary.dewpointMax.raw<br/>$summary.dewpointMin.raw
       $summary.humidityMax.raw<br/>$summary.humidityMin.raw
-      $summary.windSpeedMin.raw - $summary.windSpeedMax.raw $summary.windGust.raw $summary.windDir
-      pop
-      precip
+      $summary.windSpeedMin.raw - $summary.windSpeedMax.raw $summary.windGust.raw $summary.windDir $summary.windChar
+      $summary.pop
+      $summary.precip
       obvis
     END_TABLE
   END_DIV
@@ -2260,9 +2260,11 @@ nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
       $period.temp.raw
       $period.dewpoint.raw
       $period.humidity.raw
-      $period.windSpeed.raw $period.windGust.raw $period.windDir
+      $period.windSpeed.raw $period.windGust.raw $period.windDir $period.windChar
       $period.pop
-      precip
+  #for $k,$v in $period.precip.items()
+      $forecast.label($k): $forecast.label($v) ($k,$v)
+  #end for
       obvis
       END_ROW
 #end for
