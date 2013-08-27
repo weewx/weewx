@@ -435,8 +435,8 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('windChar',   'VARCHAR(2)'),  # GN,LT,BZ,WY,VW,SD,HF
                          ('clouds',     'VARCHAR(2)'),  # CL,FW,SC,BK,OV,B1,B2
                          ('pop',        'REAL'),        # percent
-                         ('qpf',        'REAL'),        # inch
-                         ('qsf',        'REAL'),        # inch
+                         ('qpf',        'VARCHAR(8)'),  # range or value (inch)
+                         ('qsf',        'VARCHAR(5)'),  # range or value (inch)
                          ('rain',       'VARCHAR(2)'),  # S,C,L,O,D
                          ('rainshwrs',  'VARCHAR(2)'),  # S,C,L,O,D
                          ('tstms',      'VARCHAR(2)'),  # S,C,L,O,D
@@ -716,7 +716,7 @@ def ZambrettiCode(pressure, month, wind, trend,
 #
 # 12-hour:
 # pop12hr: likelihood of measurable precipitation (1/100 inch)
-# qpf12hr: quantitative precipitation forecast; amount in inches
+# qpf12hr: quantitative precipitation forecast; amount or range in inches
 # mx/mn: temperature in degrees F
 # snow12hr: expected snowfall accumulation (inch); T indicates trace
 #
@@ -1013,7 +1013,8 @@ def ParseNWSForecast(text, lid):
     lasth = None
 
     # get the 3-hour indexing
-    indices3 = {}
+    indices3 = {} # index in the hour string mapped to index of the hour
+    idx2hr3 = []  # index of the hour mapped to location in the hour string
     for i in range(0, len(rows3['hour']), 3):
         h = int(rows3['hour'][i:i+2])
         if lasth is not None and h < lasth:
@@ -1023,9 +1024,11 @@ def ParseNWSForecast(text, lid):
         matrix['hour'].append(h)
         indices3[i+1] = idx
         idx += 1
+        idx2hr3.append(i+1)
 
     # get the 6-hour indexing
-    indices6 = {}
+    indices6 = {} # index in the hour string mapped to index of the hour
+    idx2hr6 = []  # index of the hour mapped to location in the hour string
     s = ''
     for i in range(0, len(rows6['hour'])):
         if rows6['hour'][i].isspace():
@@ -1038,6 +1041,7 @@ def ParseNWSForecast(text, lid):
                 matrix['hour'].append(h)
                 indices6[i-1] = idx
                 idx += 1
+                idx2hr6.append(i-1)
             s = ''
         else:
             s += rows6['hour'][i]
@@ -1047,27 +1051,28 @@ def ParseNWSForecast(text, lid):
         matrix['hour'].append(h)
         indices6[len(rows6['hour'])-1] = idx
         idx += 1
+        idx2hr6.append(len(rows6['hour'])-1)
 
     # get the 3 and 6 hour data
-    filldata(matrix, idx, rows3, indices3)
-    filldata(matrix, idx, rows6, indices6)
+    filldata(matrix, idx, rows3, indices3, idx2hr3)
+    filldata(matrix, idx, rows6, indices6, idx2hr6)
     return matrix
 
-def filldata(matrix, nidx, rows, indices):
+def filldata(matrix, nidx, rows, indices, i2h):
     """fill matrix with data from rows"""
+    n = { 'qpf' : 8, 'qsf' : 5 }
     for label in rows:
         if label not in matrix:
             matrix[label] = [None]*nidx
-        s = ''
-        for i in range(0, len(rows[label])):
-            if rows[label][i].isspace():
-                if len(s) > 0:
-                    matrix[label][indices[i-1]] = s
-                s = ''
-            else:
-                s += rows[label][i]
-        if len(s) > 0:
-            matrix[label][indices[len(rows[label])-1]] = s
+        l = n.get(label, 3)
+        q = 0
+        for i in reversed(i2h):
+            if l == 3 or q % 4 == 0:
+                s = 0 if i-l+1 < 0 else i-l+1
+                chunk = rows[label][s:i+1].strip()
+                if len(chunk) > 0:
+                    matrix[label][indices[i]] = chunk
+            q += 1
 
     # deal with min/max temperatures
     if 'tempMin' not in matrix:
@@ -1537,6 +1542,7 @@ class ForecastData(object):
             'dateTime' : None,
             'event_ts' : None,
             'location' : None,
+            'clouds' : None,
             'temp' : None,
             'tempMin' : None,
             'tempMax' : None,
@@ -1550,16 +1556,22 @@ class ForecastData(object):
             'windSpeedMin' : None,
             'windSpeedMax' : None,
             'windGust' : None,
+            'windDir' : None,
             }
+        outlook_histogram = {}
+        winddir_histogram = {}
         for r in records:
             for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
                 self._get_stats(s, r, rec)
             rec['windGust'] = self._get_max('windGust', r, rec)
+            self._get_histogram('clouds', r, outlook_histogram)
+            self._get_histogram('windDir', r, winddir_histogram)
         ctxt = 'nws_day'
         usys = records[0]['usUnits']
         rec['dateTime'] = self._create_time(ctxt, records[0]['dateTime'])
         rec['event_ts'] = self._create_time(ctxt, from_ts)
         rec['location'] = records[0]['foid'] + '_' + records[0]['lid']
+        rec['clouds'] = self._create_from_histogram(outlook_histogram)
         rec['tempMin'] = self._create_temp(ctxt, rec['tempMin'], usys)
         rec['tempMax'] = self._create_temp(ctxt, rec['tempMax'], usys)
         rec['temp'] = self._create_temp(ctxt, rec['temp'], usys)
@@ -1573,6 +1585,7 @@ class ForecastData(object):
         rec['windSpeedMax'] = self._create_speed(ctxt,rec['windSpeedMax'],usys)
         rec['windSpeed'] = self._create_speed(ctxt, rec['windSpeed'], usys)
         rec['windGust'] = self._create_speed(ctxt, rec['windGust'], usys)
+        rec['windDir'] = self._create_from_histogram(winddir_histogram)
         return rec
 
     def wu_periods(self, max_events=40, from_ts=None):
@@ -1581,6 +1594,20 @@ class ForecastData(object):
         records = self._getFC('WU', 'wu_periods',
                               max_events=max_events, from_ts=from_ts)
         return records
+
+    def _get_histogram(self, key, a, histogram):
+        if a[key] not in histogram:
+            histogram[a[key]] = 1
+        else:
+            histogram[a[key]] += 1
+
+    def _create_from_histogram(self, histogram):
+        x = None
+        cnt = 0
+        for key in histogram:
+            if histogram[key] > cnt:
+                x = key
+        return x
 
     def _get_stats(self, key, a, b):
         if key+'N' not in b:

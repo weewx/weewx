@@ -2057,7 +2057,7 @@ $forecast.zambretti.text
     def test_nws_download(self):
         '''spit out a current text forecast from nws'''
         fcast = forecast.DownloadNWSForecast('GYX')
-        print fcast
+#        print fcast
 
     def test_nws_date_to_ts(self):
         data = {'418 PM EDT SAT MAY 11 2013': 1368303480,
@@ -2117,14 +2117,14 @@ $forecast.zambretti.text
     def test_parse_nws_forecast_2(self):
         matrix = forecast.ParseNWSForecast(PFM_GYX_SINGLE_2, 'MEZ027')
         expected = {}
-        expected['humidity'] = ['76', '79', '90', '93', '100', '96', '97', '90', '84', '87', '93', '100', '100', '100', '97', None, '100', None, '100', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+        expected['humidity'] = [None, None, None, '76', '76', '90', '93', '100', '96', '97', '90', '84', '87', '93', '100', '100', '100', '97', 'MM', '100', 'MM', '100', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
         for label in expected.keys():
             self.assertEqual(matrix[label], expected[label])
 
     def test_parse_nws_forecast_3(self):
         matrix = forecast.ParseNWSForecast(PFM_GYX_SINGLE_3, 'MEZ027')
         expected = {}
-        expected['humidity'] = ['90', '97', '100', '100', '100', '87', '79', '76', '90', '93', '96', '100', '100', '100', '100', '97', '97', '100', '100', '100', '97', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+        expected['humidity'] = [None, '90', '97', '100', '100', '100', '87', '79', '76', '90', '93', '96', '100', '100', '100', '100', '97', '97', '100', '100', '100', '97', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
         for label in expected.keys():
             self.assertEqual(matrix[label], expected[label])
 
@@ -2206,6 +2206,86 @@ nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
 #  #for $k,$v in $f.items():
 #$k: $v
 #  #end for
+
+    def test_nws_template_table(self):
+        '''generate a forecast in tabular form that exercises most of the
+        period and summary data elements.  inspect the output manually
+        with a web browser.'''
+
+        t, tdir = self.setupTemplateTest('test_nws_template_table',
+                                         'user.forecast.NWSForecast',
+                                         FakeData.gen_fake_nws_data2(),
+                                         '''<html>
+<body>
+
+#set $lastday = None
+
+#for $period in $forecast.nws_periods(from_ts=1377525600)
+  #set $thisday = $period.event_ts.format('%d')
+  #set $thisdate = $period.event_ts.format('%Y.%m.%d')
+  #set $hourid = $thisdate + '.hours'
+  #if $lastday != $thisday
+    #if $lastday is not None
+    </table>
+  </div>
+    #end if
+    #set $lastday = $thisday
+    #set $summary = $forecast.nws_day($period.event_ts.raw)
+    #set $simg = 'forecast-icons/' + $summary.clouds + '.png'
+    #set $swd = $summary.windDir
+    #if $summary.windGust.raw is None
+      #set $sws = '{0}-{1}'.format($summary.windSpeedMin.raw, $summary.windSpeedMax.raw)
+    #else
+      #set $sws = '{0}-{1} ({2})'.format($summary.windSpeedMin.raw, $summary.windSpeedMax.raw, $summary.windGust.raw)
+    #end if
+
+  <div id='$thisdate'>
+    <table>
+      <tr>
+        <td class='disclosure'><img src='forecast-icons/triangle-right.png' onclick="toggle(this, '$thisdate')" /></td>
+        <td class='col-date'><span class='day'>$summary.event_ts.format('%a')</span><br/><span class='date'>$summary.event_ts.format('%d %b %Y')</span></td>
+        <td class='col-outlook'><img class='outlook-img' src='$simg' /></td>
+        <td class='col-temp'><span class='temphi'>$summary.tempMax.raw</span><br/><span class='templo'>$summary.tempMin.raw</span></td>
+        <td class='col-dewpoint'>$summary.dewpointMax<br/>$summary.dewpointMin</td>
+        <td class='col-humidity'>$summary.humidityMax<br/>$summary.humidityMin</td>
+        <td class='col-wind'>$sws<br/><span class='winddir'>$swd</span></td>
+        <td class='col-pop'></td>
+        <td class='col-precip'></td>
+        <td class='col-obvis'></td>
+      </tr>
+    </table>
+  </div>
+
+  <div id='$hourid' style='display:none'>
+    <table>
+  #end if
+  #set $hour = $period.event_ts.format('%H:%M')
+  #set $img = 'forecast-icons/' + $period.clouds + '.png'
+  #if $period.windGust.raw is None
+    #set $ws = '{0}'.format($period.windSpeed.raw)
+  #else
+    #set $ws = '{0} ({1})'.format($period.windSpeed.raw, $period.windGust.raw)
+  #end if
+      <tr>
+        <td class='disclosure'></td>
+        <td class='col-date'>$hour<br/></td>
+        <td class='col-outlook'><img class='outlook-img' src='$img' /></td>
+        <td class='col-temp'>$period.temp.raw</td>
+        <td class='col-dewpoint'>$period.dewpoint.raw</td>
+        <td class='col-humidity'>$period.humidity.raw</td>
+        <td class='col-wind'>$ws<br/><span class='winddir'>$period.windDir</span></td>
+        <td class='col-pop'></td>
+        <td class='col-precip'></td>
+        <td class='col-obvis'></td>
+      </tr>
+#end for
+    </table>
+  </div>
+
+</body>
+</html>
+''')
+        t.run()
 
 
     # -------------------------------------------------------------------------
