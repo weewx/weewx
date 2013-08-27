@@ -2058,6 +2058,8 @@ $forecast.zambretti.text
         '''spit out a current text forecast from nws'''
         fcast = forecast.DownloadNWSForecast('GYX')
 #        print fcast
+        lines = forecast.GetNWSLocation(fcast, 'MEZ027')
+#        print '\n', '\n'.join(lines)
 
     def test_nws_date_to_ts(self):
         data = {'418 PM EDT SAT MAY 11 2013': 1368303480,
@@ -2209,8 +2211,7 @@ nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
 
     def test_nws_template_table(self):
         '''generate a forecast in tabular form that exercises most of the
-        period and summary data elements.  inspect the output manually
-        with a web browser.'''
+        period and summary data elements.  inspect the output manually.'''
 
         t, tdir = self.setupTemplateTest('test_nws_template_table',
                                          'user.forecast.NWSForecast',
@@ -2226,64 +2227,47 @@ nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
   #set $hourid = $thisdate + '.hours'
   #if $lastday != $thisday
     #if $lastday is not None
-    </table>
-  </div>
+    END_TABLE
+  END_DIV
     #end if
     #set $lastday = $thisday
     #set $summary = $forecast.nws_day($period.event_ts.raw)
     #set $simg = 'forecast-icons/' + $summary.clouds + '.png'
-    #set $swd = $summary.windDir
-    #if $summary.windGust.raw is None
-      #set $sws = '{0}-{1}'.format($summary.windSpeedMin.raw, $summary.windSpeedMax.raw)
-    #else
-      #set $sws = '{0}-{1} ({2})'.format($summary.windSpeedMin.raw, $summary.windSpeedMax.raw, $summary.windGust.raw)
-    #end if
 
-  <div id='$thisdate'>
-    <table>
-      <tr>
-        <td class='disclosure'><img src='forecast-icons/triangle-right.png' onclick="toggle(this, '$thisdate')" /></td>
-        <td class='col-date'><span class='day'>$summary.event_ts.format('%a')</span><br/><span class='date'>$summary.event_ts.format('%d %b %Y')</span></td>
-        <td class='col-outlook'><img class='outlook-img' src='$simg' /></td>
-        <td class='col-temp'><span class='temphi'>$summary.tempMax.raw</span><br/><span class='templo'>$summary.tempMin.raw</span></td>
-        <td class='col-dewpoint'>$summary.dewpointMax<br/>$summary.dewpointMin</td>
-        <td class='col-humidity'>$summary.humidityMax<br/>$summary.humidityMin</td>
-        <td class='col-wind'>$sws<br/><span class='winddir'>$swd</span></td>
-        <td class='col-pop'></td>
-        <td class='col-precip'></td>
-        <td class='col-obvis'></td>
-      </tr>
-    </table>
-  </div>
+  BEG_DIV id='$thisdate'
+    BEG_TABLE
+      $thisdate
+      $summary.event_ts.format('%a') $summary.event_ts.format('%d %b %Y')
+      $simg
+      $summary.tempMax.raw $summary.tempMin.raw
+      $summary.dewpointMax.raw<br/>$summary.dewpointMin.raw
+      $summary.humidityMax.raw<br/>$summary.humidityMin.raw
+      $summary.windSpeedMin.raw - $summary.windSpeedMax.raw $summary.windGust.raw $summary.windDir
+      pop
+      precip
+      obvis
+    END_TABLE
+  END_DIV
 
-  <div id='$hourid' style='display:none'>
-    <table>
+  BEG_DIV id='$hourid'
+    BEG_TABLE
   #end if
   #set $hour = $period.event_ts.format('%H:%M')
   #set $img = 'forecast-icons/' + $period.clouds + '.png'
-  #if $period.windGust.raw is None
-    #set $ws = '{0}'.format($period.windSpeed.raw)
-  #else
-    #set $ws = '{0} ({1})'.format($period.windSpeed.raw, $period.windGust.raw)
-  #end if
-      <tr>
-        <td class='disclosure'></td>
-        <td class='col-date'>$hour<br/></td>
-        <td class='col-outlook'><img class='outlook-img' src='$img' /></td>
-        <td class='col-temp'>$period.temp.raw</td>
-        <td class='col-dewpoint'>$period.dewpoint.raw</td>
-        <td class='col-humidity'>$period.humidity.raw</td>
-        <td class='col-wind'>$ws<br/><span class='winddir'>$period.windDir</span></td>
-        <td class='col-pop'></td>
-        <td class='col-precip'></td>
-        <td class='col-obvis'></td>
-      </tr>
+      BEG_ROW
+      $hour
+      $img
+      $period.temp.raw
+      $period.dewpoint.raw
+      $period.humidity.raw
+      $period.windSpeed.raw $period.windGust.raw $period.windDir
+      $period.pop
+      precip
+      obvis
+      END_ROW
 #end for
-    </table>
-  </div>
-
-</body>
-</html>
+    END_TABLE
+  END_DIV
 ''')
         t.run()
 

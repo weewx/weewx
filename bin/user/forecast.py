@@ -960,11 +960,8 @@ def DownloadNWSForecast(foid, url=NWS_DEFAULT_PFM_URL, max_tries=3):
         logerr('%s: failed to download forecast' % NWS_KEY)
     return None
 
-def ParseNWSForecast(text, lid):
-    """Parse a United States National Weather Service point forcast matrix.
-    Save it into a dictionary with per-hour elements for wind, temperature,
-    etc. extracted from the point forecast.
-    """
+def GetNWSLocation(text, lid):
+    """Extract a single location from a US National Weather Service PFM."""
 
     alllines = text.splitlines()
     lines = None
@@ -977,6 +974,15 @@ def ParseNWSForecast(text, lid):
                 break
             else:
                 lines.append(line)
+    return lines
+
+def ParseNWSForecast(text, lid):
+    """Parse a United States National Weather Service point forcast matrix.
+    Save it into a dictionary with per-hour elements for wind, temperature,
+    etc. extracted from the point forecast.
+    """
+
+    lines = GetNWSLocation(text, lid)
     if lines is None:
         return None
 
