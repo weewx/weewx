@@ -19,6 +19,11 @@ import weewx
 import weewx.wxengine as wxengine
 import user.forecast as forecast
 
+# to display output from tests that are designed to be run manually
+PRINT_OUTPUT = False
+# put your wu api key here for testing
+WU_API_KEY = 'INSERT_KEY_HERE'
+
 # FIXME: these belong in a common testing library
 TMPDIR = '/var/tmp/weewx_test'
 
@@ -2006,7 +2011,7 @@ class ForecastTest(unittest.TestCase):
 $forecast.zambretti.dateTime
 $forecast.zambretti.event_ts
 $forecast.zambretti.code
-$forecast.zambretti.text
+$forecast.zambretti_label($forecast.zambretti.code)
   </body>
 </html>
 ''',
@@ -2027,7 +2032,6 @@ Settled fine
   <body>
 $forecast.zambretti.dateTime
 $forecast.zambretti.code
-$forecast.zambretti.text
   </body>
 </html>
 ''')
@@ -2036,7 +2040,6 @@ $forecast.zambretti.text
         t.run()
         self.compareContents(tdir + '/html/index.html', '''<html>
   <body>
-
 
 
   </body>
@@ -2054,12 +2057,27 @@ $forecast.zambretti.text
     # NWS tests
     # -------------------------------------------------------------------------
 
+    def test_nws_forecast(self):
+        '''end-to-end test of nws forecast; inspect manually'''
+        fcast = forecast.DownloadNWSForecast('BOX') # BOX, GYX
+        if PRINT_OUTPUT:
+            print fcast
+        matrix = forecast.ParseNWSForecast(fcast, 'MAZ014') # MAZ014, ME027
+        if PRINT_OUTPUT:
+            print matrix
+        records = forecast.ProcessNWSForecast('BOX', 'MAZ014', matrix)
+        if PRINT_OUTPUT:
+            print records
+        pass
+
     def test_nws_download(self):
-        '''spit out a current text forecast from nws'''
+        '''spit out a current text forecast from nws; inspect manually'''
         fcast = forecast.DownloadNWSForecast('GYX')
-#        print fcast
+        if PRINT_OUTPUT:
+            print fcast
         lines = forecast.GetNWSLocation(fcast, 'MEZ027')
-#        print '\n', '\n'.join(lines)
+        if PRINT_OUTPUT:
+            print '\n', '\n'.join(lines)
 
     def test_nws_date_to_ts(self):
         data = {'418 PM EDT SAT MAY 11 2013': 1368303480,
@@ -2130,15 +2148,6 @@ $forecast.zambretti.text
         for label in expected.keys():
             self.assertEqual(matrix[label], expected[label])
 
-    def test_nws_forecast(self):
-#        fcast = forecast.DownloadNWSForecast('BOX') # BOX, GYX
-#        print fcast
-#        matrix = forecast.ParseNWSForecast(fcast, 'MAZ014') # MAZ014, ME027
-#        print matrix
-#        records = forecast.ProcessNWSForecast('BOX', 'MAZ014', matrix)
-#        print records
-        pass
-
     def test_nws_template_periods(self):
         # FIXME: make the LOCATION and DATETIME work
         self.runTemplateTest('test_nws_template_periods',
@@ -2167,7 +2176,7 @@ $f.event_ts $f.tempMin $f.temp $f.tempMax $f.humidity $f.pop
                              '''<html>
   <body>
 #set $summary = $forecast.nws_day(ts=1377525600)
-nws forecast for $summary.location at $summary.event_ts as of $summary.dateTime
+nws forecast for $summary.location for the day $summary.event_ts as of $summary.dateTime
 $summary.tempMin
 $summary.tempMax
 $summary.temp
@@ -2181,12 +2190,24 @@ $summary.windSpeedMin
 $summary.windSpeedMax
 $summary.windSpeed
 $summary.windGust
+$summary.windDir
+#for $d in $summary.windDirs
+  $d
+#end for
+$summary.windChar
+#for $c in $summary.windChars
+  $c
+#end for
+$summary.pop
+#for $p in $summary.precip
+  $p
+#end for
   </body>
 </html>
 ''',
                              '''<html>
   <body>
-nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
+nws forecast for BOX_MAZ014 for the day 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
 68.0F
 79.0F
 74.8F
@@ -2200,6 +2221,13 @@ nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
 12.0 mph
 9.3 mph
 21.0 mph
+SW
+  SW
+  W
+
+50%
+  rainshwrs
+  tstms
   </body>
 </html>
 ''')
@@ -2210,8 +2238,7 @@ nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
 #  #end for
 
     def test_nws_template_table(self):
-        '''generate a forecast in tabular form that exercises most of the
-        period and summary data elements.  inspect the output manually.'''
+        '''exercise the period and summary template elements'''
 
         t, tdir = self.setupTemplateTest('test_nws_template_table',
                                          'user.forecast.NWSForecast',
@@ -2278,10 +2305,23 @@ nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
     # WU tests
     # -------------------------------------------------------------------------
 
+    def test_wu_forecast(self):
+        '''end-to-end test of wu forecast; inspect manually'''
+        fcast = forecast.DownloadWUForecast(WU_API_KEY, '02139')
+        if PRINT_OUTPUT:
+            print fcast
+        matrix = forecast.CreateWUForecastMatrix(fcast)
+        if PRINT_OUTPUT:
+            print matrix
+        records = forecast.ProcessWUForecast(matrix)
+        if PRINT_OUTPUT:
+            print records
+
     def test_wu_download(self):
-        '''spit out a current text forecast from wu'''
-        fcast = forecast.DownloadWUForecast('INSERT_KEY_HERE', '02139')
-#        print fcast
+        '''spit out a current text forecast from wu; inspect manually'''
+        fcast = forecast.DownloadWUForecast(WU_API_KEY, '02139')
+        if PRINT_OUTPUT:
+            print fcast
 
     def test_create_wu_forecast_matrix(self):
         matrix = forecast.CreateWUForecastMatrix(WU_BOS)
@@ -2298,15 +2338,6 @@ nws forecast for BOX_MAZ014 at 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
         records = forecast.ProcessWUForecast(matrix)
         expected = [{'qsf': 0, 'hour': 23, 'event_ts': 1368673200, 'qpf': 0.10000000000000001, 'ts': 1368673200, 'pop': 50, 'dateTime': 1377298279, 'windDir': 'SSW', 'tempMin': 55.0, 'windSpeed': 15, 'windGust': 19, 'humidity': 69, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1368759600, 'qpf': 0.0, 'ts': 1368759600, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'W', 'tempMin': 54.0, 'windSpeed': 19, 'windGust': 23, 'humidity': 42, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1368846000, 'qpf': 0.0, 'ts': 1368846000, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'NW', 'tempMin': 54.0, 'windSpeed': 5, 'windGust': 11, 'humidity': 51, 'method': 'WU', 'usUnits': 1, 'tempMax': 72.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1368932400, 'qpf': 0.0, 'ts': 1368932400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 7, 'windGust': 9, 'humidity': 59, 'method': 'WU', 'usUnits': 1, 'tempMax': 70.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369018800, 'qpf': 0.0, 'ts': 1369018800, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 8, 'windGust': 10, 'humidity': 70, 'method': 'WU', 'usUnits': 1, 'tempMax': 66.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369105200, 'qpf': 0.040000000000000001, 'ts': 1369105200, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'S', 'tempMin': 52.0, 'windSpeed': 11, 'windGust': 13, 'humidity': 85, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369191600, 'qpf': 0.02, 'ts': 1369191600, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'E', 'tempMin': 54.0, 'windSpeed': 8, 'windGust': 10, 'humidity': 72, 'method': 'WU', 'usUnits': 1, 'tempMax': 73.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369278000, 'qpf': 0.02, 'ts': 1369278000, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'ESE', 'tempMin': 55.0, 'windSpeed': 6, 'windGust': 8, 'humidity': 76, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369364400, 'qpf': 0.02, 'ts': 1369364400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 54.0, 'windSpeed': 3, 'windGust': 4, 'humidity': 92, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369450800, 'qpf': 0.17999999999999999, 'ts': 1369450800, 'pop': 40, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 57.0, 'windSpeed': 3, 'windGust': 5, 'humidity': 90, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0}]
         self.assertEqual(records, expected)
-
-    def test_wu_forecast(self):
-#        fcast = forecast.DownloadWUForecast('', '02139')
-#        print fcast
-#        matrix = forecast.CreateWUForecastMatrix(fcast)
-#        print matrix
-#        records = forecast.ProcessWUForecast(matrix)
-#        print records
-        pass
 
     def test_download_wu_forecast_bad_key(self):
         # warning! tabs matter in the following string
@@ -2568,4 +2599,3 @@ if __name__ == '__main__':
         unittest.TextTestRunner(verbosity=2).run(suite(testname))
     else:
         unittest.main()
-

@@ -14,8 +14,9 @@ Design
 
    A single table stores all forecast information.  This means that each record
    may have many unused fields, but it makes querying and database management
-   a bit easier.  There are a few fields in each record that are common to
-   every forecast method.  See the Database section in this file for details.
+   a bit easier.  It also minimizes the number of variables needed for use in
+   templates.  There are a few fields in each record that are common to every
+   forecast method.  See the Database section in this file for details.
 
 Prerequisites
 
@@ -235,11 +236,13 @@ Skin Configuration
 
 Skin Variables for Templates
 
-   Here are the variables that can be used in template files.
+  Here are the variables that can be used in template files.
 
 XTide
 
-   The index is the nth event from the current time.
+  The index is the nth event from the current time.
+
+$forecast.xtide_label(text)
 
 $forecast.xtide(0).dateTime     date/time that the forecast was created
 $forecast.xtide(0).event_ts     date/time of the event
@@ -252,43 +255,144 @@ for tide in $forecast.xtides(max_events=12):
 
 Zambretti
 
-   The Zambretti forecast is typically good for up to 6 hours from when the
-   forecast was made.  The time the forecast was made and the time of the
-   forecast are always the same.  The forecast consists of a code and an
-   associated textual description.
+  The Zambretti forecast is typically good for up to 6 hours from when the
+  forecast was made.  The time the forecast was made and the time of the
+  forecast are always the same.  The forecast consists of a code and an
+  associated textual description.
+
+$forecast.zambretti_label(text)
 
 $forecast.zambretti.dateTime    date/time that the forecast was created
 $forecast.zambretti.event_ts    date/time of the forecast
 $forecast.zambretti.code        zambretti forecast code (A-Z)
-$forecast.zambretti.text        description of the zambretti forecast
+
+General
+
+*****
+  WARNING! this section is the design.  implementation does not yet match!
+*****
+
+  The general interface for forecast data returns a list of periods or
+  a single-day summary.
+
+$forecast.label(text)
+
+$forecast.weather_info(source)
+
+  issued_ts
+  source
+  location
+
+$forecast.periods(from_ts=None, max_events=40,
+                  weather='NWS', marine='NOA', tides='XTide', almanac='weewx')
+
+  Each period contains the following elements:
+
+  weather.issued_by
+  weather.issued_ts     when the forecast was created
+  weather.event_ts      timestamp of the event
+  weather.period        how long forecast is valid, in seconds
+  weather.location
+  weather.tempMin
+  weather.tempMax
+  weather.temp
+  weather.dewpoint
+  weather.humidity
+  weather.windSpeed
+  weather.windGust
+  weather.pop
+  weather.qpf
+  weather.qsf
+  weather.windChill
+  weather.heatIndex
+  weather.precip
+  tide.issued_by
+  tide.issued_ts
+  tide.event_ts
+  tide.location
+  tide.hilo
+  tide.offset
+  almanac.issued_by
+  almanac.location
+  almanac.sunrise
+  almanac.sunset
+  almanac.moonrise
+  almanac.moonset
+  almanac.moonphase
+  marine.issued_by
+  marine.issued_ts
+  marine.event_ts
+  marine.location
+  marine.waveheight
+
+$forecast.summary(ts=None,
+                  weather='NWS', marine='NOA', tides='XTide', almanac='weewx')
+
+  A summary contains the following elements:
+
+  weather.issued_by
+  weather.issued_ts     when the forecast was created
+  weather.event_ts      timestamp of the event
+  weather.location
+  weather.clouds
+  weather.temp          average temperature
+  weather.tempMin       minimum temperature
+  weather.tempMax       maximum temperature
+  weather.dewpoint      average dewpoint
+  weather.dewpointMin   minimum dewpoint
+  weather.dewpointMax   maximum dewpoint
+  weather.humidity      average humidity
+  weather.humidityMin   minimum humidity
+  weather.humidityMax   maximum humidity
+  weather.windSpeed     average wind speed
+  weather.windSpeedMin  minimum wind speed
+  weather.windSpeedMax  maximum wind speed
+  weather.windGust      maximum wind gust
+  weather.windDir       dominant wind direction
+  weather.windDirs      list of wind directions
+  weather.windChar      dominant wind characteristic
+  weather.windChars     list of wind characteristics
+  weather.pop           maximum probability of precipitation
+  weather.precip        list of precipitation types
+  tides
+  tides.issued_by
+  tides.issued_ts
+  tides.location
+  tides.tide(0).event_ts
+  tides.tide(0).hilo
+  tides.tide(0).offset
+  almanac.issued_by
+  almanac.issued_ts
+  almanac.location
+  almanac.sunrise
+  almanac.sunset
+  almanac.moonrise
+  almanac.moonset
+  almanac.moonphase
+  marine.issued_by
+  marine.issued_ts
+  marine.event_ts
+  marine.location
+  marine.waveheight
 
 """
 
 
-"""
-here are a few web sites with weather/tide summaries, some more concise than
-others, none quite what we want:
-
-http://www.tides4fishing.com/
-
-http://www.surf-forecast.com/
-
-http://ocean.peterbrueggeman.com/tidepredict.html
-"""
+# here are a few web sites with weather/tide summaries, some more concise than
+# others, none quite what we want:
+#
+# http://www.tides4fishing.com/
+# http://www.surf-forecast.com/
+# http://ocean.peterbrueggeman.com/tidepredict.html
 
 # TODO: single table with unused fields, one table per method, or one db per ?
 #       for now we use single table (one schema) for all methods
 
 # FIXME: what is correct behavior when error?  display NULL? ''? None?
 
-# FIXME: use separate schema and table for each type, but one database
-
 # FIXME: make tides object be both dict (for datetime) and array (for tides)
 
-# FIXME: resolve the ambiguity in the SNOW12HR spec, which we have interpreted
-# as qsf (quantitative snow forecast).  nws example shows a value of 'mm' but
-# the description says the values will be inches.  actual download shows rain
-# quantities as 0.43 but snow quantities as 00-00
+# FIXME: handle ranges (for rain and snow quantities)
 
 # FIXME: add a 'length' unit that has default formatting to two decimal places
 
@@ -528,15 +632,8 @@ class Forecast(StdService):
         ts - timestamp, in seconds.  records older than this will be deleted.
         """
         sql = "delete from %s where method = '%s' and dateTime < %d" % (self.table, self.method_id, ts)
-        cursor = self.archive.connection.cursor()
-        try:
-            cursor.execute(sql)
-            loginf('%s: deleted forecasts prior to %d' % (self.method_id, ts))
-        except Exception, e:
-            logerr('%s: unable to delete old records: %s' %
-                   (self.method_id, e))
-        finally:
-            cursor.close()
+        self.archive.getSql(sql)
+        loginf('%s: deleted forecasts prior to %d' % (self.method_id, ts))
 
     def get_saved_forecasts(self, since_ts=None):
         """return saved forecasts since the indicated timestamp
@@ -841,7 +938,11 @@ class NWSForecast(Forecast):
             return None
         logdbg('%s: forecast matrix: %s' % (NWS_KEY, matrix))
         records = ProcessNWSForecast(self.foid, self.lid, matrix)
-        loginf('%s: got %d forecast records' % (NWS_KEY, len(records)))
+        msg = 'got %d forecast records' % len(records)
+        if 'desc' in matrix or 'location' in matrix:
+            msg += ' for %s %s' % (matrix.get('desc',''),
+                                   matrix.get('location',''))
+        loginf('%s: %s' % (NWS_KEY, msg))
         return records
 
 # mapping of NWS names to database fields
@@ -1443,22 +1544,17 @@ class ForecastData(object):
 
         skin_dict - the 'Forecast' section of skin.conf
         '''
-        z_dict = skin_dict['Zambretti']['labels'] \
+        self.zambretti_dict = skin_dict['Zambretti']['labels'] \
             if 'Zambretti' in skin_dict and 'labels' in skin_dict['Zambretti']\
             else zambretti_label_dict
-        nws_dict = skin_dict['NWS']['labels'] \
+        self.nws_dict = skin_dict['NWS']['labels'] \
             if 'NWS' in skin_dict and 'labels' in skin_dict['NWS'] \
             else nws_label_dict
-        self.label_dict = {}
-        self.label_dict.update(z_dict)
-        self.label_dict.update(nws_dict)
         self.database = database
         self.formatter = formatter
         self.converter = converter
 
-    def _getTides(self, context, max_events=1, from_ts=None):
-        if from_ts is None:
-            from_ts = int(time.time())
+    def _getTides(self, context, max_events=1, from_ts=int(time.time())):
         sql = "select dateTime,event_ts,hilo,offset,usUnits from archive where method = 'XTide' and dateTime = (select dateTime from archive where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc limit %d" % (from_ts, max_events)
         records = []
         for rec in self.database.genSql(sql):
@@ -1471,10 +1567,13 @@ class ForecastData(object):
             records.append(r)
         return records
 
-    def label(self, txt):
-        return self.label_dict.get(txt, txt)
+    def zambretti_label(self, txt):
+        return self.zambretti_dict.get(txt,txt)
 
-    def xtide(self, index, from_ts=None):
+    def nws_label(self, txt):
+        return self.nws_dict.get(txt,txt)
+
+    def xtide(self, index, from_ts=int(time.time())):
         records = self._getTides('xtide', max_events=index+1, from_ts=from_ts)
         if 0 <= index < len(records):
             return records[index]
@@ -1503,8 +1602,7 @@ class ForecastData(object):
                      'text' : '' }
         th = self._create_time('zambretti', record[0])
         code = record[1]
-        text = self.z_dict[code] \
-            if code in self.z_dict else self.z_dict['unknown']
+        text = self.zambretti_dict.get(code, self.zambretti_dict.get('unknown','FAIL'))
         return { 'dateTime' : th,
                  'event_ts' : th,
                  'code' : code,
@@ -1556,18 +1654,16 @@ class ForecastData(object):
         return records
 
 
-    def nws_periods(self, max_events=40, from_ts=None):
+    def nws_periods(self, max_events=40, from_ts=int(time.time())):
         '''The NWS forecast returns forecasts at times into the future from the
         indicated time using the latest NWS foreast.'''
         records = self._getFC('NWS', 'nws_periods',
                               max_events=max_events, from_ts=from_ts)
         return records
 
-    def nws_day(self, ts=None):
+    def nws_day(self, ts=int(time.time())):
         '''Create a summary from NWS periods for the day of the indicated
         timestamp.  If the timestamp is None, use the current time.'''
-        if ts is None:
-            ts = int(time.time())
         from_ts = weeutil.weeutil.startOfDay(ts)
         to_ts = from_ts + 24 * 3600
         records = self._getRawFC('NWS', from_ts=from_ts, to_ts=to_ts, max_events=8)
@@ -1590,24 +1686,33 @@ class ForecastData(object):
             'windSpeedMax' : None,
             'windGust' : None,
             'windDir' : None,
+            'windDirs' : {},
             'windChar' : None,
+            'windChars' : {},
             'pop' : None,
-            'precip' : None,
+            'precip' : [],
             }
         outlook_histogram = {}
-        winddir_histogram = {}
-        windchar_histogram = {}
         for r in records:
-            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
-                self._get_stats(s, r, rec)
-            rec['windGust'] = self._get_max('windGust', r, rec)
             self._get_histogram('clouds', r, outlook_histogram)
-            self._get_histogram('windDir', r, winddir_histogram)
-            self._get_histogram('windChar', r, windchar_histogram)
+            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
+                try:
+                    x = float(r[s])
+                    self._get_stats(s, r, rec)
+                except:
+                    pass
+            rec['windGust'] = self._get_max('windGust', r, rec)
+            x = r['windDir']
+            if x is not None:
+                rec['windDirs'][x] = rec['windDirs'].get(x,0) + 1
+            x = r['windChar']
+            if x is not None:
+                rec['windChars'][x] = rec['windChars'].get(x,0) + 1
             rec['pop'] = self._get_max('pop', r, rec)
-#            for p in nws_precip_types:
-#                if p in r:
-#                    rec['precip'].append(r[p])
+            for p in nws_precip_types:
+                v = r.get(p, None)
+                if v is not None and p not in rec['precip']:
+                    rec['precip'].append(p)
         ctxt = 'nws_day'
         usys = records[0]['usUnits']
         rec['dateTime'] = self._create_time(ctxt, records[0]['dateTime'])
@@ -1627,8 +1732,8 @@ class ForecastData(object):
         rec['windSpeedMax'] = self._create_speed(ctxt,rec['windSpeedMax'],usys)
         rec['windSpeed'] = self._create_speed(ctxt, rec['windSpeed'], usys)
         rec['windGust'] = self._create_speed(ctxt, rec['windGust'], usys)
-        rec['windDir'] = self._create_from_histogram(winddir_histogram)
-        rec['windChar'] = self._create_from_histogram(windchar_histogram)
+        rec['windDir'] = self._create_from_histogram(rec['windDirs'])
+        rec['windChar'] = self._create_from_histogram(rec['windChars'])
         rec['pop'] = self._create_percent(ctxt, rec['pop'])
         return rec
 
@@ -1646,11 +1751,13 @@ class ForecastData(object):
             histogram[a[key]] += 1
 
     def _create_from_histogram(self, histogram):
+        '''use the item with highest count in the histogram'''
         x = None
         cnt = 0
         for key in histogram:
             if histogram[key] > cnt:
                 x = key
+                cnt = histogram[key]
         return x
 
     def _get_stats(self, key, a, b):
