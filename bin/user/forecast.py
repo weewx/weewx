@@ -18,6 +18,11 @@ Design
    templates.  There are a few fields in each record that are common to every
    forecast method.  See the Database section in this file for details.
 
+   The forecasting runs in a separate thread.  It is fire-and-forget - the
+   main thread starts a forecasting thread and does not bother to check its
+   status.  The main thread will never run more than one thread per forecast
+   method.
+
 Prerequisites
 
    The XTide forecast requires xtide.  On debian systems, do this:
@@ -123,9 +128,27 @@ Skin Configuration
    Here are the options that can be specified in the skin.conf file.
 
 [Forecast]
+    [[Directions]]
+        [[[Labels]]]
+            N = N
+            NNE = NNE
+            NE = NE
+            ENE = ENE
+            E = E
+            ESE = ESE
+            SE = SE
+            SSE = SSE
+            S = S
+            SSW = SSW
+            SW = SW
+            WSW = WSW
+            W = W
+            WNW = WNW
+            NW = NW
+            NNW = NNW
 
     [[XTide]]
-        [[Labels]]
+        [[[Labels]]]
             # labels for tides
             H = High Tide
             L = Low Tide
@@ -159,7 +182,6 @@ Skin Configuration
             X = Rain, very unsettled
             Y = Stormy, may improve
             Z = Stormy, much rain
-            unknown = unknown
 
     [[NWS]]
         [[Labels]]
@@ -300,6 +322,7 @@ $forecast.periods(from_ts=None, max_events=40,
   weather.humidity
   weather.windSpeed
   weather.windGust
+  weather.windChar
   weather.pop
   weather.qpf
   weather.qsf
@@ -419,6 +442,7 @@ import socket
 import string
 import subprocess
 import syslog
+import threading
 import time
 import urllib2
 
@@ -439,13 +463,16 @@ except Exception, e:
             json = None
 
 def logdbg(msg):
-    syslog.syslog(syslog.LOG_DEBUG, 'forecast: %s' % msg)
+    syslog.syslog(syslog.LOG_DEBUG, 'forecast: %s: %s' % 
+                  (threading.currentThread().getName(), msg))
 
 def loginf(msg):
-    syslog.syslog(syslog.LOG_INFO, 'forecast: %s' % msg)
+    syslog.syslog(syslog.LOG_INFO, 'forecast: %s: %s' %
+                  (threading.currentThread().getName(), msg))
 
 def logerr(msg):
-    syslog.syslog(syslog.LOG_ERR, 'forecast: %s' % msg)
+    syslog.syslog(syslog.LOG_ERR, 'forecast: %s: %s' %
+                  (threading.currentThread().getName(), msg))
 
 def get_int(config_dict, label, default_value):
     value = config_dict.get(label, default_value)
@@ -504,6 +531,7 @@ def get_int(config_dict, label, default_value):
    obvis        OBVIS
    windChill    WIND CHILL
    heatIndex    HEAT INDEX
+   uvidx
 
    hilo         indicates whether this is a high or low tide
    offset       how high or low the tide is relative to mean low
@@ -520,6 +548,7 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),
                          ('dateTime',   'INTEGER NOT NULL'),  # epoch
                          ('event_ts',   'INTEGER'),           # epoch
+                         ('duration',   'INTEGER'),           # seconds
 
                          # Zambretti fields
                          ('zcode',      'CHAR(1)'),
@@ -571,13 +600,41 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('moonphase',  'INTEGER'),     # percent (full)
                          ]
 
+directions_label_dict = {
+    'N':'N',
+    'NNE':'NNE',
+    'NE':'NE',
+    'ENE':'ENE',
+    'E':'E',
+    'ESE':'ESE',
+    'SE':'SE',
+    'SSE':'SSE',
+    'S':'S',
+    'SSW':'SSW',
+    'SW':'SW',
+    'WSW':'WSW',
+    'W':'W',
+    'WNW':'WNW',
+    'NW':'NW',
+    'NNW':'NNW',
+    }
+
+class ForecastThread(threading.Thread):
+    def __init__(self, target, *args):
+        self._target = target
+        self._args = args
+        threading.Thread.__init__(self)
+
+    def run(self):
+        self._target(*self._args)
+
 class Forecast(StdService):
     """Provide forecast."""
 
     def __init__(self, engine, config_dict, fid,
-                 interval=1800, max_age=604800,
-                 defaultSchema=defaultForecastSchema):
+                 interval=1800, max_age=604800):
         super(Forecast, self).__init__(engine, config_dict)
+
         d = config_dict.get('Forecast', {})
         self.interval = get_int(d, 'interval', interval)
         self.max_age = get_int(d, 'max_age', max_age)
@@ -587,71 +644,103 @@ class Forecast(StdService):
         self.max_age = get_int(dd, 'max_age', self.max_age)
 
         schema_str = d.get('schema', None)
-        schema = weeutil.weeutil._get_object(schema_str) \
-            if schema_str is not None else defaultSchema
+        self.schema = weeutil.weeutil._get_object(schema_str) \
+            if schema_str is not None else defaultForecastSchema
 
         self.database = d['database']
         self.table = d.get('table', 'archive')
 
+        # use single_thread for debugging
+        self.single_thread = d.get('single_thread', False)
+        self.updating = False
+
         self.method_id = fid
         self.last_ts = 0
-        self.setup_database(config_dict, schema)
+        Forecast.setup_database(self.database, self.table, self.method_id,
+                                self.config_dict, self.schema)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
 
     def update_forecast(self, event):
+        if self.single_thread:
+            self.do_forecast(event)
+        else:
+            if self.updating:
+                logdbg('%s: update thread already running' % self.method_id)
+            else:
+                t = ForecastThread(self.do_forecast, event)
+                t.setName(self.method_id + 'Thread')
+                logdbg('%s: starting thread' % self.method_id)
+                t.start()
+
+    def do_forecast(self, event):
+        """do the forecast if it is time, then save to database and prune."""
+        self.updating = True
         now = time.time()
-        if self.last_ts is not None \
-                and self.interval is not None \
-                and now - self.interval < self.last_ts:
-            logdbg('not yet time to do the %s forecast' % self.method_id)
-            return
-        fcast = self.get_forecast(event)
-        if fcast is None:
-            return
-        self.save_forecast(fcast)
-        self.last_ts = now
-        if self.max_age is not None:
-            self.prune_forecasts(now - self.max_age)
+        if self.last_ts is None or now - self.interval > self.last_ts:
+            try:
+                fcast = self.get_forecast(event)
+                if fcast is not None:
+                    archive = Forecast.setup_database(self.database,
+                                                      self.table,
+                                                      self.method_id,
+                                                      self.config_dict,
+                                                      self.schema)
+                    Forecast.save_forecast(archive, fcast)
+                    self.last_ts = now
+                    if self.max_age is not None:
+                        Forecast.prune_forecasts(archive,
+                                                 self.table,
+                                                 self.method_id,
+                                                 now - self.max_age)
+            except Exception, e:
+                logerr('%s: forecast failure: %s' % (self.method_id, e))
+        else:
+            logdbg('%s: not yet time to do the forecast' % self.method_id)
+        logdbg('%s: terminating thread' % self.method_id)
+        self.updating = False
 
     def get_forecast(self, event):
-        """get the forecast, return a forecast record"""
+        """get the forecast, return a forecast record or array of records."""
         return None
 
-    def save_forecast(self, record):
-        """add a forecast record to the forecast database
+    @staticmethod
+    def save_forecast(archive, record):
+        """add a forecast record or array of records to the database.
 
         record - dictionary with keys corresponding to database fields
         """
-        self.archive.addRecord(record)
+        archive.addRecord(record)
 
-    def prune_forecasts(self, ts):
+    @staticmethod
+    def prune_forecasts(archive, table, method_id, ts):
         """remove old forecasts from the database
-        
-        method_id - string that indicates the forecast method
 
         ts - timestamp, in seconds.  records older than this will be deleted.
         """
-        sql = "delete from %s where method = '%s' and dateTime < %d" % (self.table, self.method_id, ts)
-        self.archive.getSql(sql)
-        loginf('%s: deleted forecasts prior to %d' % (self.method_id, ts))
+        sql = "delete from %s where method = '%s' and dateTime < %d" % (table, method_id, ts)
+        archive.getSql(sql)
+        loginf('%s: deleted forecasts prior to %d' % (method_id, ts))
 
-    def get_saved_forecasts(self, since_ts=None):
+    @staticmethod
+    def get_saved_forecasts(archive, table, method_id, since_ts=None):
         """return saved forecasts since the indicated timestamp
 
         since_ts - timestamp, in seconds.  a value of None will return all.
         """
-        sql = "select * from %s where method = '%s'" % (self.table, self.method_id)
+        sql = "select * from %s where method = '%s'" % (table, method_id)
         if since_ts is not None:
             sql += " and dateTime > %d" % since_ts
         records = []
-        for r in self.archive.genSql(sql):
+        for r in archive.genSql(sql):
             records.append(r)
         return records
 
-    def setup_database(self, config_dict, schema):
-        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][self.database], schema, self.table)
+    @staticmethod
+    def setup_database(database, table, method_id, config_dict, schema):
+        archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][database], schema, table)
         loginf("%s: using table '%s' in database '%s'" %
-               (self.method_id, self.table, self.database))
+               (method_id, table, database))
+        return archive
 
 
 # -----------------------------------------------------------------------------
@@ -678,6 +767,7 @@ class ZambrettiForecast(Forecast):
                (Z_KEY, self.interval, self.max_age, self.hemisphere))
 
     def get_forecast(self, event):
+        logdbg('%s: generating zambretti forecast' % Z_KEY)
         rec = event.record
         ts = rec['dateTime']
         if ts is None:
@@ -731,7 +821,6 @@ zambretti_label_dict = {
     'X' : "Rain, very unsettled",
     'Y' : "Stormy, may improve",
     'Z' : "Stormy, much rain",
-    'unknown' : "Unknown"
     }
 
 def ZambrettiText(code):
@@ -814,8 +903,8 @@ def ZambrettiCode(pressure, month, wind, trend,
 # 12-hour:
 # pop12hr: likelihood of measurable precipitation (1/100 inch)
 # qpf12hr: quantitative precipitation forecast; amount or range in inches
+# snow12hr: snowfall accumulation; amount or range in inches; T indicates trace
 # mx/mn: temperature in degrees F
-# snow12hr: expected snowfall accumulation (inch); T indicates trace
 #
 # 3-hour:
 # temp - degrees F
@@ -842,7 +931,7 @@ def ZambrettiCode(pressure, month, wind, trend,
 # heatindex
 # minchill
 # maxheat
-# obvis
+# obvis - obstructions to visibility
 #
 # codes for clouds:
 #   CL - clear (0 <= 6%)
@@ -858,7 +947,7 @@ def ZambrettiCode(pressure, month, wind, trend,
 #   B2 - mostly cloudy or considerable cloudiness (69% < x <= 87%)
 #   OV - cloudy or overcast (87% < x <= 100%)
 #
-# PFM/AFM codes for rain, drizzle, flurries, etc:
+# PFM/AFM codes for precipitation types (rain, drizzle, flurries, etc):
 #   S - slight chance (< 20%)
 #   C - chance (30%-50%)
 #   L - likely (60%-70%)
@@ -874,7 +963,7 @@ def ZambrettiCode(pressure, month, wind, trend,
 #   AR - areas 25%-50%
 #   WD - widespread > 50%
 #
-# codes for obvis (obstruction to visibility):
+# codes for obstructions to visibility:
 #   F   - fog
 #   PF  - patchy fog
 #   F+  - dense fog
@@ -1127,6 +1216,7 @@ def ParseNWSForecast(text, lid):
     matrix['created_ts'] = ts
     matrix['ts'] = []
     matrix['hour'] = []
+    matrix['duration'] = []
 
     idx = 0
     day = day_ts
@@ -1142,6 +1232,7 @@ def ParseNWSForecast(text, lid):
         lasth = h
         matrix['ts'].append(day + h*3600)
         matrix['hour'].append(h)
+        matrix['duration'].append(3*3600)
         indices3[i+1] = idx
         idx += 1
         idx2hr3.append(i+1)
@@ -1159,6 +1250,7 @@ def ParseNWSForecast(text, lid):
                 lasth = h
                 matrix['ts'].append(day + h*3600)
                 matrix['hour'].append(h)
+                matrix['duration'].append(6*3600)
                 indices6[i-1] = idx
                 idx += 1
                 idx2hr6.append(i-1)
@@ -1169,6 +1261,7 @@ def ParseNWSForecast(text, lid):
         h = int(s)
         matrix['ts'].append(day + h*3600)
         matrix['hour'].append(h)
+        matrix['duration'].append(3*3600)
         indices6[len(rows6['hour'])-1] = idx
         idx += 1
         idx2hr6.append(len(rows6['hour'])-1)
@@ -1544,10 +1637,13 @@ class ForecastData(object):
 
         skin_dict - the 'Forecast' section of skin.conf
         '''
-        self.zambretti_dict = skin_dict['Zambretti']['labels'] \
+        self.directions_label_dict = skin_dict['Directions']['Labels'] \
+            if 'Directions' in skin_dict and 'labels' in skin_dict['Directions'] \
+            else directions_label_dict
+        self.zambretti_label_dict = skin_dict['Zambretti']['Labels'] \
             if 'Zambretti' in skin_dict and 'labels' in skin_dict['Zambretti']\
             else zambretti_label_dict
-        self.nws_dict = skin_dict['NWS']['labels'] \
+        self.nws_label_dict = skin_dict['NWS']['Labels'] \
             if 'NWS' in skin_dict and 'labels' in skin_dict['NWS'] \
             else nws_label_dict
         self.database = database
@@ -1567,11 +1663,14 @@ class ForecastData(object):
             records.append(r)
         return records
 
+    def label(self, txt):
+        return self.directions_label_dict.get(txt,txt)
+
     def zambretti_label(self, txt):
-        return self.zambretti_dict.get(txt,txt)
+        return self.zambretti_label_dict.get(txt,txt)
 
     def nws_label(self, txt):
-        return self.nws_dict.get(txt,txt)
+        return self.nws_label_dict.get(txt,txt)
 
     def xtide(self, index, from_ts=int(time.time())):
         records = self._getTides('xtide', max_events=index+1, from_ts=from_ts)
@@ -1602,7 +1701,7 @@ class ForecastData(object):
                      'text' : '' }
         th = self._create_time('zambretti', record[0])
         code = record[1]
-        text = self.zambretti_dict.get(code, self.zambretti_dict.get('unknown','FAIL'))
+        text = self.zambretti_label_dict.get(code, code)
         return { 'dateTime' : th,
                  'event_ts' : th,
                  'code' : code,

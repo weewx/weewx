@@ -21,6 +21,7 @@ import user.forecast as forecast
 
 # to display output from tests that are designed to be run manually
 PRINT_OUTPUT = False
+#PRINT_OUTPUT = True
 # put your wu api key here for testing
 WU_API_KEY = 'INSERT_KEY_HERE'
 
@@ -110,7 +111,8 @@ def create_config(test_dir, service, skin_dir='testskin'):
         'stats_database' : 'stats_sqlite'
         }
     cd['Forecast'] = {
-        'database' : 'forecast_sqlite'
+        'database' : 'forecast_sqlite',
+        'single_thread' : True,
         }
     return cd
 
@@ -358,46 +360,8 @@ TSTMS          C     S  S
 
 $$
 '''
-        records = [
-            {'qpf': None, 'pop': None, 'humidity': None, 'lid': 'MAZ014', 'ts': 1377507600, 'method': 'NWS', 'qsf': None, 'dewpoint': None, 'tempMin': None, 'clouds': None, 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': None, 'hour': '05', 'event_ts': 1377507600, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': None, 'windSpeed': None, 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '68', 'lid': 'MAZ014', 'ts': 1377518400, 'method': 'NWS', 'qsf': None, 'dewpoint': '57', 'tempMin': None, 'clouds': 'OV', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '68', 'hour': '08', 'event_ts': 1377518400, 'rainshwrs': 'C', 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': '8', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '62', 'lid': 'MAZ014', 'ts': 1377529200, 'method': 'NWS', 'qsf': None, 'dewpoint': '60', 'tempMin': None, 'clouds': 'OV', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '74', 'hour': '11', 'event_ts': 1377529200, 'rainshwrs': 'C', 'dateTime': 1377515940, 'windDir': 'W', 'windSpeed': '11', 'windGust': '21', 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '58', 'lid': 'MAZ014', 'ts': 1377540000, 'method': 'NWS', 'qsf': None, 'dewpoint': '63', 'tempMin': None, 'clouds': 'OV', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '79', 'hour': '14', 'event_ts': 1377540000, 'rainshwrs': 'C', 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': '12', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '64', 'lid': 'MAZ014', 'ts': 1377550800, 'method': 'NWS', 'qsf': None, 'dewpoint': '65', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'S', 'temp': '78', 'hour': '17', 'event_ts': 1377550800, 'rainshwrs': 'C', 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': '11', 'windGust': None, 'windChar': None},
-            {'qpf': '0.11', 'pop': '50', 'humidity': '69', 'lid': 'MAZ014', 'ts': 1377561600, 'method': 'NWS', 'qsf': '00-00', 'dewpoint': '66', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': '81', 'tstms': 'S', 'temp': '77', 'hour': '20', 'event_ts': 1377561600, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': '9', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '81', 'lid': 'MAZ014', 'ts': 1377572400, 'method': 'NWS', 'qsf': None, 'dewpoint': '67', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'S', 'temp': '73', 'hour': '23', 'event_ts': 1377572400, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': '5', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '87', 'lid': 'MAZ014', 'ts': 1377583200, 'method': 'NWS', 'qsf': None, 'dewpoint': '66', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '70', 'hour': '02', 'event_ts': 1377583200, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': '3', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '87', 'lid': 'MAZ014', 'ts': 1377594000, 'method': 'NWS', 'qsf': None, 'dewpoint': '65', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '69', 'hour': '05', 'event_ts': 1377594000, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'W', 'windSpeed': '3', 'windGust': None, 'windChar': None},
-            {'qpf': '0.06', 'pop': '20', 'humidity': '87', 'lid': 'MAZ014', 'ts': 1377604800, 'method': 'NWS', 'qsf': '00-00', 'dewpoint': '67', 'tempMin': '68', 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '71', 'hour': '08', 'event_ts': 1377604800, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'N', 'windSpeed': '3', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '69', 'lid': 'MAZ014', 'ts': 1377615600, 'method': 'NWS', 'qsf': None, 'dewpoint': '66', 'tempMin': None, 'clouds': 'B1', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '77', 'hour': '11', 'event_ts': 1377615600, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'E', 'windSpeed': '3', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '60', 'lid': 'MAZ014', 'ts': 1377626400, 'method': 'NWS', 'qsf': None, 'dewpoint': '65', 'tempMin': None, 'clouds': 'B1', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'S', 'temp': '80', 'hour': '14', 'event_ts': 1377626400, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'E', 'windSpeed': '6', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '67', 'lid': 'MAZ014', 'ts': 1377637200, 'method': 'NWS', 'qsf': None, 'dewpoint': '67', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'S', 'temp': '79', 'hour': '17', 'event_ts': 1377637200, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'E', 'windSpeed': '6', 'windGust': None, 'windChar': None},
-            {'qpf': '0', 'pop': '20', 'humidity': '74', 'lid': 'MAZ014', 'ts': 1377648000, 'method': 'NWS', 'qsf': '00-00', 'dewpoint': '67', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': '83', 'tstms': None, 'temp': '76', 'hour': '20', 'event_ts': 1377648000, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'E', 'windSpeed': '5', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '87', 'lid': 'MAZ014', 'ts': 1377658800, 'method': 'NWS', 'qsf': None, 'dewpoint': '68', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'S', 'temp': '72', 'hour': '23', 'event_ts': 1377658800, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'SE', 'windSpeed': '3', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '87', 'lid': 'MAZ014', 'ts': 1377669600, 'method': 'NWS', 'qsf': None, 'dewpoint': '66', 'tempMin': None, 'clouds': 'B1', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'S', 'temp': '70', 'hour': '02', 'event_ts': 1377669600, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'SE', 'windSpeed': '2', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '87', 'lid': 'MAZ014', 'ts': 1377680400, 'method': 'NWS', 'qsf': None, 'dewpoint': '65', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'S', 'temp': '69', 'hour': '05', 'event_ts': 1377680400, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'SE', 'windSpeed': '1', 'windGust': None, 'windChar': None},
-            {'qpf': '0', 'pop': '20', 'humidity': '90', 'lid': 'MAZ014', 'ts': 1377691200, 'method': 'NWS', 'qsf': None, 'dewpoint': '68', 'tempMin': '67', 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'S', 'temp': '71', 'hour': '08', 'event_ts': 1377691200, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'NW', 'windSpeed': '5', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '76', 'lid': 'MAZ014', 'ts': 1377702000, 'method': 'NWS', 'qsf': None, 'dewpoint': '69', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'C', 'temp': '77', 'hour': '11', 'event_ts': 1377702000, 'rainshwrs': 'C', 'dateTime': 1377515940, 'windDir': 'NE', 'windSpeed': '4', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '69', 'lid': 'MAZ014', 'ts': 1377712800, 'method': 'NWS', 'qsf': None, 'dewpoint': '70', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'C', 'temp': '81', 'hour': '14', 'event_ts': 1377712800, 'rainshwrs': 'C', 'dateTime': 1377515940, 'windDir': 'E', 'windSpeed': '9', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': '72', 'lid': 'MAZ014', 'ts': 1377723600, 'method': 'NWS', 'qsf': None, 'dewpoint': '69', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'C', 'temp': '79', 'hour': '17', 'event_ts': 1377723600, 'rainshwrs': 'C', 'dateTime': 1377515940, 'windDir': 'E', 'windSpeed': '8', 'windGust': None, 'windChar': None},
-            {'qpf': '0.30', 'pop': '40', 'humidity': '87', 'lid': 'MAZ014', 'ts': 1377734400, 'method': 'NWS', 'qsf': None, 'dewpoint': '69', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': '82', 'tstms': 'C', 'temp': '73', 'hour': '20', 'event_ts': 1377734400, 'rainshwrs': 'C', 'dateTime': 1377515940, 'windDir': 'NE', 'windSpeed': '4', 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': None, 'humidity': None, 'lid': 'MAZ014', 'ts': 1377756000, 'method': 'NWS', 'qsf': None, 'dewpoint': '66', 'tempMin': None, 'clouds': 'B2', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'C', 'temp': '69', 'hour': '02', 'event_ts': 1377756000, 'rainshwrs': 'C', 'dateTime': 1377515940, 'windDir': None, 'windSpeed': None, 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': '40', 'humidity': None, 'lid': 'MAZ014', 'ts': 1377777600, 'method': 'NWS', 'qsf': None, 'dewpoint': '66', 'tempMin': '66', 'clouds': 'B1', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '69', 'hour': '08', 'event_ts': 1377777600, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'NE', 'windSpeed': None, 'windGust': None, 'windChar': 'LT'},
-            {'qpf': None, 'pop': None, 'humidity': None, 'lid': 'MAZ014', 'ts': 1377799200, 'method': 'NWS', 'qsf': None, 'dewpoint': '64', 'tempMin': None, 'clouds': 'B1', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': 'S', 'temp': '79', 'hour': '14', 'event_ts': 1377799200, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': None, 'windSpeed': None, 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': '30', 'humidity': None, 'lid': 'MAZ014', 'ts': 1377820800, 'method': 'NWS', 'qsf': None, 'dewpoint': '62', 'tempMin': None, 'clouds': 'B1', 'foid': 'BOX', 'usUnits': 1, 'tempMax': '80', 'tstms': 'S', 'temp': '72', 'hour': '20', 'event_ts': 1377820800, 'rainshwrs': 'S', 'dateTime': 1377515940, 'windDir': 'N', 'windSpeed': None, 'windGust': None, 'windChar': 'LT'},
-            {'qpf': None, 'pop': None, 'humidity': None, 'lid': 'MAZ014', 'ts': 1377842400, 'method': 'NWS', 'qsf': None, 'dewpoint': '61', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '66', 'hour': '02', 'event_ts': 1377842400, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': None, 'windSpeed': None, 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': '10', 'humidity': None, 'lid': 'MAZ014', 'ts': 1377864000, 'method': 'NWS', 'qsf': None, 'dewpoint': '61', 'tempMin': '63', 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '67', 'hour': '08', 'event_ts': 1377864000, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'N', 'windSpeed': None, 'windGust': None, 'windChar': 'LT'},
-            {'qpf': None, 'pop': None, 'humidity': None, 'lid': 'MAZ014', 'ts': 1377885600, 'method': 'NWS', 'qsf': None, 'dewpoint': '60', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '79', 'hour': '14', 'event_ts': 1377885600, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': None, 'windSpeed': None, 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': '10', 'humidity': None, 'lid': 'MAZ014', 'ts': 1377907200, 'method': 'NWS', 'qsf': None, 'dewpoint': '60', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': '80', 'tstms': None, 'temp': '73', 'hour': '20', 'event_ts': 1377907200, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'N', 'windSpeed': None, 'windGust': None, 'windChar': 'LT'},
-            {'qpf': None, 'pop': None, 'humidity': None, 'lid': 'MAZ014', 'ts': 1377928800, 'method': 'NWS', 'qsf': None, 'dewpoint': '59', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '67', 'hour': '02', 'event_ts': 1377928800, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': None, 'windSpeed': None, 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': '10', 'humidity': None, 'lid': 'MAZ014', 'ts': 1377950400, 'method': 'NWS', 'qsf': None, 'dewpoint': '60', 'tempMin': '64', 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '69', 'hour': '08', 'event_ts': 1377950400, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': None, 'windGust': None, 'windChar': 'LT'},
-            {'qpf': None, 'pop': None, 'humidity': None, 'lid': 'MAZ014', 'ts': 1377972000, 'method': 'NWS', 'qsf': None, 'dewpoint': '59', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '83', 'hour': '14', 'event_ts': 1377972000, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': None, 'windSpeed': None, 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': '10', 'humidity': None, 'lid': 'MAZ014', 'ts': 1377993600, 'method': 'NWS', 'qsf': None, 'dewpoint': '60', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': '84', 'tstms': None, 'temp': '74', 'hour': '20', 'event_ts': 1377993600, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': None, 'windGust': None, 'windChar': 'LT'},
-            {'qpf': None, 'pop': None, 'humidity': None, 'lid': 'MAZ014', 'ts': 1378015200, 'method': 'NWS', 'qsf': None, 'dewpoint': '61', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '68', 'hour': '02', 'event_ts': 1378015200, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': None, 'windSpeed': None, 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': '5', 'humidity': None, 'lid': 'MAZ014', 'ts': 1378036800, 'method': 'NWS', 'qsf': None, 'dewpoint': '63', 'tempMin': '64', 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '68', 'hour': '08', 'event_ts': 1378036800, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': None, 'windGust': None, 'windChar': 'LT'},
-            {'qpf': None, 'pop': None, 'humidity': None, 'lid': 'MAZ014', 'ts': 1378058400, 'method': 'NWS', 'qsf': None, 'dewpoint': '62', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': None, 'tstms': None, 'temp': '84', 'hour': '14', 'event_ts': 1378058400, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': None, 'windSpeed': None, 'windGust': None, 'windChar': None},
-            {'qpf': None, 'pop': '10', 'humidity': None, 'lid': 'MAZ014', 'ts': 1378080000, 'method': 'NWS', 'qsf': None, 'dewpoint': '63', 'tempMin': None, 'clouds': 'SC', 'foid': 'BOX', 'usUnits': 1, 'tempMax': '86', 'tstms': None, 'temp': '76', 'hour': '20', 'event_ts': 1378080000, 'rainshwrs': None, 'dateTime': 1377515940, 'windDir': 'SW', 'windSpeed': None, 'windGust': None, 'windChar': 'LT'}
-            ]
+        matrix = forecast.ParseNWSForecast(text, 'MAZ014')
+        records = forecast.ProcessNWSForecast('BOX', 'MAZ014', matrix)
         return records
 
     @staticmethod
@@ -2149,22 +2113,41 @@ $forecast.zambretti.code
             self.assertEqual(matrix[label], expected[label])
 
     def test_nws_template_periods(self):
-        # FIXME: make the LOCATION and DATETIME work
+        matrix = forecast.ParseNWSForecast(PFM_BOS_SINGLE, 'MAZ014')
+        records = forecast.ProcessNWSForecast('BOX', 'MAZ014', matrix)
         self.runTemplateTest('test_nws_template_periods',
                              'user.forecast.NWSForecast',
-                             FakeData.gen_fake_nws_data(),
+                             records,
                              '''<html>
   <body>
-#for $f in $forecast.nws_periods(from_ts=1377043837, max_events=2):
-$f.event_ts $f.tempMin $f.temp $f.tempMax $f.humidity $f.pop
+#for $f in $forecast.nws_periods(from_ts=1368328140, max_events=20):
+$f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f.windSpeed $f.windGust $f.windDir $f.windChar $f.pop
 #end for
   </body>
 </html>
 ''',
                              '''<html>
   <body>
-23-Aug-2013 17:00     - 76.0F     - 48%     -
-23-Aug-2013 20:00     - 70.0F     - 57%     -
+12-May-2013 02:00 10800     - 61.0F     - 87% 57.0F 8.0 mph     - S      -
+12-May-2013 05:00 10800     - 59.0F     - 90% 56.0F 8.0 mph     - S      -
+12-May-2013 08:00 10800 57.0F 62.0F     - 81% 56.0F 10.0 mph     - SW  90%
+12-May-2013 11:00 10800     - 66.0F     - 68% 55.0F 11.0 mph     - W      -
+12-May-2013 14:00 10800     - 68.0F     - 51% 49.0F 16.0 mph     - W      -
+12-May-2013 17:00 10800     - 68.0F     - 37% 41.0F 18.0 mph     - W      -
+12-May-2013 20:00 10800     - 61.0F 69.0F 41% 37.0F 14.0 mph 27.0 mph W  70%
+12-May-2013 23:00 10800     - 52.0F     - 48% 33.0F 11.0 mph     - W      -
+13-May-2013 02:00 10800     - 47.0F     - 53% 31.0F 10.0 mph     - W      -
+13-May-2013 05:00 10800     - 44.0F     - 55% 29.0F 8.0 mph     - W      -
+13-May-2013 08:00 10800 43.0F 48.0F     - 47% 29.0F 12.0 mph 23.0 mph W  0%
+13-May-2013 11:00 10800     - 56.0F     - 35% 29.0F 9.0 mph 20.0 mph W      -
+13-May-2013 14:00 10800     - 60.0F     - 27% 26.0F 16.0 mph     - W      -
+13-May-2013 17:00 10800     - 59.0F     - 30% 28.0F 12.0 mph 23.0 mph SW      -
+13-May-2013 20:00 10800     - 53.0F 61.0F 35% 26.0F 9.0 mph     - W  5%
+14-May-2013 02:00 21600     - 44.0F     -     - 35.0F     -     -       -
+14-May-2013 08:00 21600 41.0F 47.0F     -     - 33.0F     -     - NW GN 5%
+14-May-2013 14:00 21600     - 59.0F     -     - 29.0F     -     -       -
+14-May-2013 20:00 21600     - 53.0F 60.0F     - 32.0F     -     - NW LT 10%
+15-May-2013 02:00 21600     - 45.0F     -     - 33.0F     -     -       -
   </body>
 </html>
 ''')
@@ -2358,6 +2341,36 @@ SW
 '''
         fcast = forecast.DownloadWUForecast('foobar', '02139')
         self.assertEqual(fcast, expected)
+
+    def test_wu_template_periods(self):
+        matrix = forecast.CreateWUForecastMatrix(WU_BOS)
+        records = forecast.ProcessWUForecast(matrix)
+        self.runTemplateTest('test_wu_template_periods',
+                             'user.forecast.WUForecast',
+                             records,
+                             '''<html>
+  <body>
+#for $f in $forecast.wu_periods(from_ts=1368328140, max_events=20):
+$f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f.windSpeed $f.windGust $f.windDir $f.windChar $f.pop
+#end for
+  </body>
+</html>
+''',
+                             '''<html>
+  <body>
+15-May-2013 23:00  55.0F     - 68.0F 69%     - 15.0 mph 19.0 mph SSW  50%
+16-May-2013 23:00  54.0F     - 77.0F 42%     - 19.0 mph 23.0 mph W  10%
+17-May-2013 23:00  54.0F     - 72.0F 51%     - 5.0 mph 11.0 mph NW  10%
+18-May-2013 23:00  48.0F     - 70.0F 59%     - 7.0 mph 9.0 mph SE  0%
+19-May-2013 23:00  48.0F     - 66.0F 70%     - 8.0 mph 10.0 mph SE  0%
+20-May-2013 23:00  52.0F     - 68.0F 85%     - 11.0 mph 13.0 mph S  0%
+21-May-2013 23:00  54.0F     - 73.0F 72%     - 8.0 mph 10.0 mph E  0%
+22-May-2013 23:00  55.0F     - 77.0F 76%     - 6.0 mph 8.0 mph ESE  0%
+23-May-2013 23:00  54.0F     - 75.0F 92%     - 3.0 mph 4.0 mph SE  0%
+24-May-2013 23:00  57.0F     - 75.0F 90%     - 3.0 mph 5.0 mph SE  40%
+  </body>
+</html>
+''')
 
 
     # -------------------------------------------------------------------------
@@ -2554,6 +2567,13 @@ $forecast.xtide(-1, from_ts=1377043837).offset
         config_dict = create_config(tdir, 'user.forecast.ZambrettiForecast')
         config_dict['Forecast']['max_age'] = 1
 
+        method_id = 'Zambretti'
+        table = 'archive'
+        dbspec = config_dict['Forecast']['database']
+        archive = forecast.Forecast.setup_database(dbspec, table, method_id,
+                                                   config_dict,
+                                                   forecast.defaultForecastSchema)
+
         # create a zambretti forecaster and simulator with which to test
         e = wxengine.StdEngine(config_dict)
         f = forecast.ZambrettiForecast(e, config_dict)
@@ -2563,25 +2583,25 @@ $forecast.xtide(-1, from_ts=1377043837).offset
         event = weewx.Event(weewx.NEW_ARCHIVE_RECORD)
         event.record = record
         event.record['dateTime'] = int(time.time())
-        f.save_forecast(f.get_forecast(event))
+        forecast.Forecast.save_forecast(archive, f.get_forecast(event))
         time.sleep(1)
         event.record['dateTime'] = int(time.time())
-        f.save_forecast(f.get_forecast(event))
+        forecast.Forecast.save_forecast(archive, f.get_forecast(event))
         time.sleep(1)
         event.record['dateTime'] = int(time.time())
-        f.save_forecast(f.get_forecast(event))
+        forecast.Forecast.save_forecast(archive, f.get_forecast(event))
         time.sleep(1)
         event.record['dateTime'] = int(time.time())
-        f.save_forecast(f.get_forecast(event))
+        forecast.Forecast.save_forecast(archive, f.get_forecast(event))
         time.sleep(1)
 
         # make sure the records have been saved
-        records = f.get_saved_forecasts()
+        records = forecast.Forecast.get_saved_forecasts(archive, table, method_id)
         self.assertEqual(len(records), 4)
 
         # there should be one remaining after a prune
-        f.prune_forecasts(event.record['dateTime'])
-        records = f.get_saved_forecasts()
+        forecast.Forecast.prune_forecasts(archive, table, method_id, event.record['dateTime'])
+        records = forecast.Forecast.get_saved_forecasts(archive, table, method_id)
         self.assertEqual(len(records), 1)
 
 
