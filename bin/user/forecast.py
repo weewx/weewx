@@ -264,16 +264,17 @@ XTide
 
   The index is the nth event from the current time.
 
-$forecast.xtide_label(text)
-
-$forecast.xtide(0).dateTime     date/time that the forecast was created
+$forecast.xtide(0).dateTime     date/time that the forecast was requested
+$forecast.xtide(0).issued_ts    date/time that the forecast was created
 $forecast.xtide(0).event_ts     date/time of the event
 $forecast.xtide(0).hilo         H or L
 $forecast.xtide(0).offset       depth above/below mean low tide
 $forecast.xtide(0).location     where the tide is forecast
 
-for tide in $forecast.xtides(max_events=12):
-  $tide.event_ts $tide.hilo $tide.offset
+for tide in $forecast.xtides(max_events=12)
+  $tide.event_ts $tide.hilo $tide.offse
+
+$forecast.xtide_label(text)
 
 Zambretti
 
@@ -282,11 +283,48 @@ Zambretti
   forecast are always the same.  The forecast consists of a code and an
   associated textual description.
 
-$forecast.zambretti_label(text)
-
-$forecast.zambretti.dateTime    date/time that the forecast was created
+$forecast.zambretti.dateTime    date/time that the forecast was requested
+$forecast.zambretti.issued_ts   date/time that the forecast was created
 $forecast.zambretti.event_ts    date/time of the forecast
 $forecast.zambretti.code        zambretti forecast code (A-Z)
+
+$forecast.zambretti_label(text)
+
+NWS
+
+  Elements of a NWS forecast are referred to by period or daily summary.
+
+for $period in $forecast.nws_periods(from_ts=EPOCH, max_events=40)
+  $period.dateTime
+  $period.event_ts
+  ...
+
+$summary = $forecast.nws_day(ts=EPOCH)
+$summary.dateTime
+$summary.event_ts
+$summary.location
+$summary.clouds
+$summary.temp
+$summary.tempMin
+$summary.tempMax
+$summary.dewpoint
+$summary.dewpointMin
+$summary.dewpointMax
+$summary.humidity
+$summary.humidityMin
+$summary.humidityMax
+$summary.windSpeed
+$summary.windSpeedMin
+$summary.windSpeedMax
+$summary.windGust
+$summary.windDir
+$summary.windDirs        dictionary
+$summary.windChar
+$summary.windChars       dictionary
+$summary.pop
+$summary.precip          array
+
+$forecast.nws_label(text)
 
 General
 
@@ -299,21 +337,22 @@ General
 
 $forecast.label(text)
 
-$forecast.weather_info(source)
+$forecast.source_info(source)
 
   issued_ts
   source
   location
+  desc
 
-$forecast.periods(from_ts=None, max_events=40,
-                  weather='NWS', marine='NOA', tides='XTide', almanac='weewx')
+$forecast.periods(from_ts=NOW, max_events=40,
+                  weather='NWS', marine='NWS', tides='XTide', almanac='weewx')
 
   Each period contains the following elements:
 
   weather.issued_by
   weather.issued_ts     when the forecast was created
   weather.event_ts      timestamp of the event
-  weather.period        how long forecast is valid, in seconds
+  weather.period        time period covered by the forecast, in seconds
   weather.location
   weather.tempMin
   weather.tempMax
@@ -329,18 +368,19 @@ $forecast.periods(from_ts=None, max_events=40,
   weather.windChill
   weather.heatIndex
   weather.precip
-  tide.issued_by
-  tide.issued_ts
-  tide.event_ts
-  tide.location
-  tide.hilo
-  tide.offset
+  tides
+  tides.issued_by
+  tides.issued_ts
+  tides.location
+  tides.tide(0).event_ts
+  tides.tide(0).hilo
+  tides.tide(0).offset
   almanac.issued_by
   almanac.location
-  almanac.sunrise
-  almanac.sunset
-  almanac.moonrise
-  almanac.moonset
+  almanac.sunrise(0)
+  almanac.sunset(0)
+  almanac.moonrise(0)
+  almanac.moonset(0)
   almanac.moonphase
   marine.issued_by
   marine.issued_ts
@@ -348,16 +388,13 @@ $forecast.periods(from_ts=None, max_events=40,
   marine.location
   marine.waveheight
 
-$forecast.summary(ts=None,
+$forecast.summary(ts=NOW,
                   weather='NWS', marine='NOA', tides='XTide', almanac='weewx')
 
-  A summary contains the following elements:
+  Elements of a summary are aggregated over any forecast periods in the
+  timespan of the summary.  A summary contains the elements of a period,
+  plus the following:
 
-  weather.issued_by
-  weather.issued_ts     when the forecast was created
-  weather.event_ts      timestamp of the event
-  weather.location
-  weather.clouds
   weather.temp          average temperature
   weather.tempMin       minimum temperature
   weather.tempMax       maximum temperature
@@ -387,10 +424,10 @@ $forecast.summary(ts=None,
   almanac.issued_by
   almanac.issued_ts
   almanac.location
-  almanac.sunrise
-  almanac.sunset
-  almanac.moonrise
-  almanac.moonset
+  almanac.sunrise(0)
+  almanac.sunset(0)
+  almanac.moonrise(0)
+  almanac.moonset(0)
   almanac.moonphase
   marine.issued_by
   marine.issued_ts
@@ -412,8 +449,6 @@ $forecast.summary(ts=None,
 #       for now we use single table (one schema) for all methods
 
 # FIXME: what is correct behavior when error?  display NULL? ''? None?
-
-# FIXME: make tides object be both dict (for datetime) and array (for tides)
 
 # FIXME: handle ranges (for rain and snow quantities)
 
@@ -494,8 +529,11 @@ def get_int(config_dict, label, default_value):
 
    method     - forecast method, e.g., Zambretti, NWS, XTide
    usUnits    - units of the forecast, either US or METRIC
-   dateTime   - timestamp in seconds when forecast was made
+   dateTime   - timestamp in seconds when forecast was obtained
+   issued_ts  - timestamp in seconds when forecast was made
    event_ts   - timestamp in seconds for the event
+   duration   - length of the forecast period
+   location
 
    database     nws                    wu                    zambretti
    -----------  ---------------------  --------------------  ---------
@@ -531,7 +569,8 @@ def get_int(config_dict, label, default_value):
    obvis        OBVIS
    windChill    WIND CHILL
    heatIndex    HEAT INDEX
-   uvidx
+   uvIndex
+   airQuality
 
    hilo         indicates whether this is a high or low tide
    offset       how high or low the tide is relative to mean low
@@ -547,8 +586,10 @@ def get_int(config_dict, label, default_value):
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),
                          ('dateTime',   'INTEGER NOT NULL'),  # epoch
+                         ('issued_ts',  'INTEGER NOT NULL'),  # epoch
                          ('event_ts',   'INTEGER'),           # epoch
                          ('duration',   'INTEGER'),           # seconds
+                         ('location',   'VARCHAR(64)'),
 
                          # Zambretti fields
                          ('zcode',      'CHAR(1)'),
@@ -773,10 +814,6 @@ class ZambrettiForecast(Forecast):
         logdbg('%s: generating zambretti forecast' % Z_KEY)
         rec = event.record
         ts = rec['dateTime']
-        if ts is None:
-            logerr('%s: skipping forecast: null timestamp in archive record' %
-                   Z_KEY)
-            return None
         tt = time.gmtime(ts)
         pressure = rec['barometer']
         month = tt.tm_mon - 1 # month is [0-11]
@@ -793,6 +830,8 @@ class ZambrettiForecast(Forecast):
         record['method'] = Z_KEY
         record['usUnits'] = weewx.US
         record['dateTime'] = ts
+        record['issued_ts'] = ts
+        record['event_ts'] = ts
         record['zcode'] = code
         loginf('%s: generated 1 forecast record' % Z_KEY)
         return record
@@ -1216,7 +1255,7 @@ def ParseNWSForecast(text, lid):
     matrix['lid'] = lid
     matrix['desc'] = lines[1]
     matrix['location'] = lines[2]
-    matrix['created_ts'] = ts
+    matrix['issued_ts'] = ts
     matrix['ts'] = []
     matrix['hour'] = []
     matrix['duration'] = []
@@ -1331,13 +1370,15 @@ def date2ts(tstr):
     return int(ts)
 
 def ProcessNWSForecast(foid, lid, matrix):
+    now = int(time.time())
     records = []
     if matrix is not None:
         for i,ts in enumerate(matrix['ts']):
             record = {}
             record['method'] = NWS_KEY
             record['usUnits'] = weewx.US
-            record['dateTime'] = matrix['created_ts']
+            record['dateTime'] = now
+            record['issued_ts'] = matrix['issued_ts']
             record['event_ts'] = ts
             record['lid'] = lid
             record['foid'] = foid
@@ -1426,7 +1467,7 @@ def DownloadWUForecast(api_key, location, url=WU_DEFAULT_URL, max_tries=3):
         logerr('%s: failed to download forecast' % WU_KEY)
     return None
 
-def CreateWUForecastMatrix(text, created_ts=None):
+def CreateWUForecastMatrix(text, issued_ts=None):
     obj = json.loads(text)
     if not 'response' in obj:
         logerr('%s: unknown format in response' % WU_KEY)
@@ -1439,11 +1480,11 @@ def CreateWUForecastMatrix(text, created_ts=None):
         return None
 
     fc = obj['forecast']['simpleforecast']['forecastday']
-    if created_ts is None:
-        created_ts = int(time.time())
+    if issued_ts is None:
+        issued_ts = int(time.time())
 
     matrix = {}
-    matrix['created_ts'] = created_ts
+    matrix['issued_ts'] = issued_ts
     matrix['ts'] = []
     matrix['hour'] = []
     matrix['tempMin'] = []
@@ -1480,25 +1521,15 @@ def CreateWUForecastMatrix(text, created_ts=None):
 
     return matrix
 
-def dirstr(s):
-    directions = {'North':'N',
-                  'South':'S',
-                  'East':'E',
-                  'West':'W',
-                  }
-    s = str(s)
-    if s in directions:
-        s = directions[s]
-    return s
-
-def ProcessWUForecast(matrix):
+def ProcessWUForecast(matrix, now=int(time.time())):
     records = []
     if matrix is not None:
         for i,ts in enumerate(matrix['ts']):
             record = {}
             record['method'] = WU_KEY
             record['usUnits'] = weewx.US
-            record['dateTime'] = matrix['created_ts']
+            record['dateTime'] = now
+            record['issued_ts'] = matrix['issued_ts']
             record['event_ts'] = ts
             for label in matrix:
                 if isinstance(matrix[label], list):
@@ -1605,9 +1636,11 @@ class XTideForecast(Forecast):
                 record['usUnits'] = weewx.US \
                     if ofields[1] == 'ft' else weewx.METRIC
                 record['dateTime'] = int(now)
+                record['issued_ts'] = int(now)
                 record['event_ts'] = int(ts)
                 record['hilo'] = XT_HILO[fields[4]]
                 record['offset'] = ofields[0]
+                record['location'] = self.location
                 records.append(record)
         return records
 
@@ -1652,63 +1685,21 @@ class ForecastData(object):
         self.database = database
         self.formatter = formatter
         self.converter = converter
+        self.table = forecast_dict.get('table','archive')
 
     def _getTides(self, context, max_events=1, from_ts=int(time.time())):
-        sql = "select dateTime,event_ts,hilo,offset,usUnits from archive where method = 'XTide' and dateTime = (select dateTime from archive where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc limit %d" % (from_ts, max_events)
+        sql = "select dateTime,issued_ts,event_ts,hilo,offset,usUnits,location from %s where method = 'XTide' and dateTime = (select dateTime from %s where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc limit %d" % (self.table, self.table, from_ts, max_events)
         records = []
         for rec in self.database.genSql(sql):
             r = {}
             r['dateTime'] = self._create_time(context, rec[0])
-            r['event_ts'] = self._create_time(context, rec[1])
-            r['hilo'] = rec[2]
-            r['offset'] = self._create_length(context, rec[3], rec[4])
-            r['location'] = 'FIXME'
+            r['issued_ts'] = self._create_time(context, rec[1])
+            r['event_ts'] = self._create_time(context, rec[2])
+            r['hilo'] = rec[3]
+            r['offset'] = self._create_length(context, rec[4], rec[5])
+            r['location'] = rec[6]
             records.append(r)
         return records
-
-    def label(self, txt):
-        return self.directions_label_dict.get(txt,txt)
-
-    def zambretti_label(self, txt):
-        return self.zambretti_label_dict.get(txt,txt)
-
-    def nws_label(self, txt):
-        return self.nws_label_dict.get(txt,txt)
-
-    def xtide(self, index, from_ts=int(time.time())):
-        records = self._getTides('xtide', max_events=index+1, from_ts=from_ts)
-        if 0 <= index < len(records):
-            return records[index]
-        return { 'dateTime' : '',
-                 'event_ts' : '',
-                 'hilo' : '',
-                 'offset' : '',
-                 'location' : '' }
-
-    def xtides(self, max_events=4, from_ts=None):
-        '''The tide forecast returns tide events into the future from the
-        indicated time using the latest tide forecast.'''
-        records = self._getTides('xtides', max_events=max_events, from_ts=from_ts)
-        return records
-
-    def zambretti(self):
-        '''The zambretti forecast applies at the time at which it was created,
-        and is good for about 6 hours.  So there is no difference between the
-        created timestamp and event timestamp.'''
-        sql = "select dateTime,zcode from archive where method = 'Zambretti' order by dateTime desc limit 1"
-        record = self.database.getSql(sql)
-        if record is None:
-            return { 'dateTime' : '',
-                     'event_ts' : '',
-                     'code' : '',
-                     'text' : '' }
-        th = self._create_time('zambretti', record[0])
-        code = record[1]
-        text = self.zambretti_label_dict.get(code, code)
-        return { 'dateTime' : th,
-                 'event_ts' : th,
-                 'code' : code,
-                 'text' : text, }
 
     def _getFC(self, fid, context, max_events=1, from_ts=None, to_ts=None):
         return self._fmtFC(self._getRawFC(fid, max_events, from_ts, to_ts),
@@ -1721,14 +1712,13 @@ class ForecastData(object):
             to_ts = from_ts + 14 * 24 * 3600 # 14 days into the future
         # NB: this query assumes that forecasting is deterministic, i.e., two
         # queries to a single forecast will always return the same results.
-        # FIXME: select only the fields we want?
-        # FIXME: compare length of select against schema to see if mismatch
-        sql = "select distinct * from archive where method = '%s' and event_ts >= %d and event_ts <= %d and dateTime = (select dateTime from archive where method = '%s' order by dateTime desc limit 1) order by event_ts asc limit %d" % (fid, from_ts, to_ts, fid, max_events)
+        sql = "select * from %s where method = '%s' and event_ts >= %d and event_ts <= %d and dateTime = (select dateTime from %s where method = '%s' order by dateTime desc limit 1) order by event_ts asc limit %d" % (self.table, fid, from_ts, to_ts, self.table, fid, max_events)
         records = []
+        columns = self.database.connection.columnsOf(self.table)
         for rec in self.database.genSql(sql):
             r = {}
-            for i,f in enumerate(defaultForecastSchema):
-                r[f[0]] = rec[i]
+            for i,f in enumerate(columns):
+                r[f] = rec[i]
             records.append(r)
         return records
 
@@ -1736,6 +1726,7 @@ class ForecastData(object):
         for r in records:
             usys = r['usUnits']
             r['dateTime'] = self._create_time(ctxt, r['dateTime'])
+            r['issued_ts'] = self._create_time(ctxt, r['issued_ts'])
             r['event_ts'] = self._create_time(ctxt, r['event_ts'])
             r['tempMin'] = self._create_temp(ctxt, r['tempMin'], usys)
             r['tempMax'] = self._create_temp(ctxt, r['tempMax'], usys)
@@ -1755,97 +1746,6 @@ class ForecastData(object):
                 if v is not None:
                     r['precip'][p] = v
             # all other records are strings
-        return records
-
-
-    def nws_periods(self, max_events=40, from_ts=int(time.time())):
-        '''The NWS forecast returns forecasts at times into the future from the
-        indicated time using the latest NWS foreast.'''
-        records = self._getFC('NWS', 'nws_periods',
-                              max_events=max_events, from_ts=from_ts)
-        return records
-
-    def nws_day(self, ts=int(time.time())):
-        '''Create a summary from NWS periods for the day of the indicated
-        timestamp.  If the timestamp is None, use the current time.'''
-        from_ts = weeutil.weeutil.startOfDay(ts)
-        to_ts = from_ts + 24 * 3600
-        records = self._getRawFC('NWS', from_ts=from_ts, to_ts=to_ts, max_events=8)
-        rec = {
-            'dateTime' : None,
-            'event_ts' : None,
-            'location' : None,
-            'clouds' : None,
-            'temp' : None,
-            'tempMin' : None,
-            'tempMax' : None,
-            'dewpoint' : None,
-            'dewpointMin' : None,
-            'dewpointMax' : None,
-            'humidity' : None,
-            'humidityMin' : None,
-            'humidityMax' : None,
-            'windSpeed' : None,
-            'windSpeedMin' : None,
-            'windSpeedMax' : None,
-            'windGust' : None,
-            'windDir' : None,
-            'windDirs' : {},
-            'windChar' : None,
-            'windChars' : {},
-            'pop' : None,
-            'precip' : [],
-            }
-        outlook_histogram = {}
-        for r in records:
-            self._get_histogram('clouds', r, outlook_histogram)
-            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
-                try:
-                    x = float(r[s])
-                    self._get_stats(s, r, rec)
-                except:
-                    pass
-            rec['windGust'] = self._get_max('windGust', r, rec)
-            x = r['windDir']
-            if x is not None:
-                rec['windDirs'][x] = rec['windDirs'].get(x,0) + 1
-            x = r['windChar']
-            if x is not None:
-                rec['windChars'][x] = rec['windChars'].get(x,0) + 1
-            rec['pop'] = self._get_max('pop', r, rec)
-            for p in nws_precip_types:
-                v = r.get(p, None)
-                if v is not None and p not in rec['precip']:
-                    rec['precip'].append(p)
-        ctxt = 'nws_day'
-        usys = records[0]['usUnits']
-        rec['dateTime'] = self._create_time(ctxt, records[0]['dateTime'])
-        rec['event_ts'] = self._create_time(ctxt, from_ts)
-        rec['location'] = records[0]['foid'] + '_' + records[0]['lid']
-        rec['clouds'] = self._create_from_histogram(outlook_histogram)
-        rec['tempMin'] = self._create_temp(ctxt, rec['tempMin'], usys)
-        rec['tempMax'] = self._create_temp(ctxt, rec['tempMax'], usys)
-        rec['temp'] = self._create_temp(ctxt, rec['temp'], usys)
-        rec['dewpointMin'] = self._create_temp(ctxt, rec['dewpointMin'], usys)
-        rec['dewpointMax'] = self._create_temp(ctxt, rec['dewpointMax'], usys)
-        rec['dewpoint'] = self._create_temp(ctxt, rec['dewpoint'], usys)
-        rec['humidityMin'] = self._create_percent(ctxt, rec['humidityMin'])
-        rec['humidityMax'] = self._create_percent(ctxt, rec['humidityMax'])
-        rec['humidity'] = self._create_percent(ctxt, rec['humidity'])
-        rec['windSpeedMin'] = self._create_speed(ctxt,rec['windSpeedMin'],usys)
-        rec['windSpeedMax'] = self._create_speed(ctxt,rec['windSpeedMax'],usys)
-        rec['windSpeed'] = self._create_speed(ctxt, rec['windSpeed'], usys)
-        rec['windGust'] = self._create_speed(ctxt, rec['windGust'], usys)
-        rec['windDir'] = self._create_from_histogram(rec['windDirs'])
-        rec['windChar'] = self._create_from_histogram(rec['windChars'])
-        rec['pop'] = self._create_percent(ctxt, rec['pop'])
-        return rec
-
-    def wu_periods(self, max_events=40, from_ts=None):
-        '''The WU forecast returns forecasts at times into the future from the
-        indicated time using the latest NWS foreast.'''
-        records = self._getFC('WU', 'wu_periods',
-                              max_events=max_events, from_ts=from_ts)
         return records
 
     def _get_histogram(self, key, a, histogram):
@@ -1926,3 +1826,160 @@ class ForecastData(object):
         vh = weewx.units.ValueHelper(vt, context,
                                      self.formatter, self.converter)
         return vh
+
+
+    def label(self, txt):
+        return self.directions_label_dict.get(txt,txt)
+
+    def zambretti_label(self, txt):
+        return self.zambretti_label_dict.get(txt,txt)
+
+    def nws_label(self, txt):
+        return self.nws_label_dict.get(txt,txt)
+
+    def xtide(self, index, from_ts=int(time.time())):
+        records = self._getTides('xtide', max_events=index+1, from_ts=from_ts)
+        if 0 <= index < len(records):
+            return records[index]
+        return { 'dateTime' : '',
+                 'issued_ts' : '',
+                 'event_ts' : '',
+                 'hilo' : '',
+                 'offset' : '',
+                 'location' : '' }
+
+    def xtides(self, max_events=4, from_ts=int(time.time())):
+        '''The tide forecast returns tide events into the future from the
+        indicated time using the latest tide forecast.'''
+        records = self._getTides('xtides', max_events=max_events, from_ts=from_ts)
+        return records
+
+    def zambretti(self):
+        '''The zambretti forecast applies at the time at which it was created,
+        and is good for about 6 hours.  So there is no difference between the
+        created timestamp and event timestamp.'''
+        sql = "select dateTime,zcode from %s where method = 'Zambretti' order by dateTime desc limit 1" % self.table
+        record = self.database.getSql(sql)
+        if record is None:
+            return { 'dateTime' : '', 'issued_ts' : '', 'event_ts' : '',
+                     'code' : '', 'text' : '' }
+        th = self._create_time('zambretti', record[0])
+        code = record[1]
+        text = self.zambretti_label_dict.get(code, code)
+        return { 'dateTime' : th, 'issued_ts' : th, 'event_ts' : th,
+                 'code' : code, 'text' : text, }
+
+    def nws_periods(self, max_events=40, from_ts=int(time.time())):
+        '''The NWS forecast returns forecasts at times into the future from the
+        indicated time using the latest NWS foreast.'''
+        records = self._getFC('NWS', 'nws_periods',
+                              max_events=max_events, from_ts=from_ts)
+        return records
+
+    def nws_day(self, ts=int(time.time())):
+        '''Create a summary from NWS periods for the day of the indicated
+        timestamp.  If the timestamp is None, use the current time.'''
+        from_ts = weeutil.weeutil.startOfDay(ts)
+        to_ts = from_ts + 24 * 3600
+        foid = None
+        lid = None
+        dateTime = None
+        issued_ts = None
+        usys = None
+        rec = {
+            'dateTime' : None,
+            'issued_ts' : None,
+            'event_ts' : None,
+            'location' : None,
+            'clouds' : None,
+            'temp' : None,
+            'tempMin' : None,
+            'tempMax' : None,
+            'dewpoint' : None,
+            'dewpointMin' : None,
+            'dewpointMax' : None,
+            'humidity' : None,
+            'humidityMin' : None,
+            'humidityMax' : None,
+            'windSpeed' : None,
+            'windSpeedMin' : None,
+            'windSpeedMax' : None,
+            'windGust' : None,
+            'windDir' : None,
+            'windDirs' : {},
+            'windChar' : None,
+            'windChars' : {},
+            'pop' : None,
+            'precip' : [],
+            }
+        outlook_histogram = {}
+        records = self._getRawFC('NWS', from_ts=from_ts, to_ts=to_ts, max_events=8)
+        for r in records:
+            if foid is None:
+                foid = r['foid']
+            if lid is None:
+                lid = r['lid']
+            if dateTime is None:
+                dateTime = r['dateTime']
+            if issued_ts is None:
+                issued_ts = r['issued_ts']
+            if usys is None:
+                usys = r['usUnits']
+            self._get_histogram('clouds', r, outlook_histogram)
+            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
+                try:
+                    x = float(r[s])
+                    self._get_stats(s, r, rec)
+                except:
+                    pass
+            rec['windGust'] = self._get_max('windGust', r, rec)
+            x = r['windDir']
+            if x is not None:
+                rec['windDirs'][x] = rec['windDirs'].get(x,0) + 1
+            x = r['windChar']
+            if x is not None:
+                rec['windChars'][x] = rec['windChars'].get(x,0) + 1
+            rec['pop'] = self._get_max('pop', r, rec)
+            for p in nws_precip_types:
+                v = r.get(p, None)
+                if v is not None and p not in rec['precip']:
+                    rec['precip'].append(p)
+        ctxt = 'nws_day'
+        rec['dateTime'] = self._create_time(ctxt, dateTime)
+        rec['issued_ts'] = self._create_time(ctxt, issued_ts)
+        rec['event_ts'] = self._create_time(ctxt, from_ts)
+        rec['location'] = '%s %s' % (foid, lid)
+        rec['clouds'] = self._create_from_histogram(outlook_histogram)
+        rec['tempMin'] = self._create_temp(ctxt, rec['tempMin'], usys)
+        rec['tempMax'] = self._create_temp(ctxt, rec['tempMax'], usys)
+        rec['temp'] = self._create_temp(ctxt, rec['temp'], usys)
+        rec['dewpointMin'] = self._create_temp(ctxt, rec['dewpointMin'], usys)
+        rec['dewpointMax'] = self._create_temp(ctxt, rec['dewpointMax'], usys)
+        rec['dewpoint'] = self._create_temp(ctxt, rec['dewpoint'], usys)
+        rec['humidityMin'] = self._create_percent(ctxt, rec['humidityMin'])
+        rec['humidityMax'] = self._create_percent(ctxt, rec['humidityMax'])
+        rec['humidity'] = self._create_percent(ctxt, rec['humidity'])
+        rec['windSpeedMin'] = self._create_speed(ctxt,rec['windSpeedMin'],usys)
+        rec['windSpeedMax'] = self._create_speed(ctxt,rec['windSpeedMax'],usys)
+        rec['windSpeed'] = self._create_speed(ctxt, rec['windSpeed'], usys)
+        rec['windGust'] = self._create_speed(ctxt, rec['windGust'], usys)
+        rec['windDir'] = self._create_from_histogram(rec['windDirs'])
+        rec['windChar'] = self._create_from_histogram(rec['windChars'])
+        rec['pop'] = self._create_percent(ctxt, rec['pop'])
+        return rec
+
+    def wu_periods(self, max_events=40, from_ts=None):
+        '''The WU forecast returns forecasts at times into the future from the
+        indicated time using the latest NWS foreast.'''
+        records = self._getFC('WU', 'wu_periods',
+                              max_events=max_events, from_ts=from_ts)
+        return records
+
+    def periods(self, from_ts=int(time.time()), max_events=40,
+                weather_source='NWS',
+                tide_source='XTide',
+                almanac_source='weewx',
+                marine_source='NWS'):
+        records = self._getFC(weather_source, 'periods',
+                              from_ts=from_ts, max_events=max_events)
+        return records

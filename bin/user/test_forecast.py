@@ -268,6 +268,8 @@ class FakeData(object):
             record['method'] = 'Zambretti'
             record['usUnits'] = weewx.US
             record['dateTime'] = ts
+            record['issued_ts'] = ts
+            record['event_ts'] = ts
             record['zcode'] = code
             ts += 300
             yield record
@@ -371,19 +373,26 @@ $$
     @staticmethod
     def gen_fake_xtide_data():
         records = [{'hilo': 'L', 'offset': '-0.71', 'event_ts': 1377031620,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'H', 'offset': '11.56', 'event_ts': 1377054240,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377077040,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'H', 'offset': '10.73', 'event_ts': 1377099480,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'L', 'offset': '-0.95', 'event_ts': 1377121260,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'H', 'offset': '11.54', 'event_ts': 1377143820,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
-                  {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377166380,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837}]
+                    'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837,
+                    'issued_ts': 1377031620 },
+                   {'hilo': 'H', 'offset': '11.56', 'event_ts': 1377054240,
+                    'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837,
+                    'issued_ts': 1377031620 },
+                   {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377077040,
+                    'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837,
+                    'issued_ts': 1377031620 },
+                   {'hilo': 'H', 'offset': '10.73', 'event_ts': 1377099480,
+                    'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837,
+                    'issued_ts': 1377031620 },
+                   {'hilo': 'L', 'offset': '-0.95', 'event_ts': 1377121260,
+                    'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837,
+                    'issued_ts': 1377031620 },
+                   {'hilo': 'H', 'offset': '11.54', 'event_ts': 1377143820,
+                    'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837,
+                    'issued_ts': 1377031620 },
+                   {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377166380,
+                    'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837,
+                    'issued_ts': 1377031620 }]
         return records
 
     @staticmethod
@@ -1973,6 +1982,7 @@ class ForecastTest(unittest.TestCase):
                              '''<html>
   <body>
 $forecast.zambretti.dateTime
+$forecast.zambretti.issued_ts
 $forecast.zambretti.event_ts
 $forecast.zambretti.code
 $forecast.zambretti_label($forecast.zambretti.code)
@@ -1981,6 +1991,7 @@ $forecast.zambretti_label($forecast.zambretti.code)
 ''',
                              '''<html>
   <body>
+22-Aug-2013 12:40
 22-Aug-2013 12:40
 22-Aug-2013 12:40
 A
@@ -2159,7 +2170,7 @@ $f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f
                              '''<html>
   <body>
 #set $summary = $forecast.nws_day(ts=1377525600)
-nws forecast for $summary.location for the day $summary.event_ts as of $summary.dateTime
+nws forecast for $summary.location for the day $summary.event_ts as of $summary.issued_ts
 $summary.tempMin
 $summary.tempMax
 $summary.temp
@@ -2190,7 +2201,7 @@ $summary.pop
 ''',
                              '''<html>
   <body>
-nws forecast for BOX_MAZ014 for the day 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
+nws forecast for BOX MAZ014 for the day 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
 68.0F
 79.0F
 74.8F
@@ -2317,9 +2328,20 @@ SW
             self.assertEqual(matrix[label], expected[label])
 
     def test_process_wu_forecast(self):
-        matrix = forecast.CreateWUForecastMatrix(WU_BOS, created_ts=1377298279)
-        records = forecast.ProcessWUForecast(matrix)
-        expected = [{'qsf': 0, 'hour': 23, 'event_ts': 1368673200, 'qpf': 0.10000000000000001, 'ts': 1368673200, 'pop': 50, 'dateTime': 1377298279, 'windDir': 'SSW', 'tempMin': 55.0, 'windSpeed': 15, 'windGust': 19, 'humidity': 69, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1368759600, 'qpf': 0.0, 'ts': 1368759600, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'W', 'tempMin': 54.0, 'windSpeed': 19, 'windGust': 23, 'humidity': 42, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1368846000, 'qpf': 0.0, 'ts': 1368846000, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'NW', 'tempMin': 54.0, 'windSpeed': 5, 'windGust': 11, 'humidity': 51, 'method': 'WU', 'usUnits': 1, 'tempMax': 72.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1368932400, 'qpf': 0.0, 'ts': 1368932400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 7, 'windGust': 9, 'humidity': 59, 'method': 'WU', 'usUnits': 1, 'tempMax': 70.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369018800, 'qpf': 0.0, 'ts': 1369018800, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 8, 'windGust': 10, 'humidity': 70, 'method': 'WU', 'usUnits': 1, 'tempMax': 66.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369105200, 'qpf': 0.040000000000000001, 'ts': 1369105200, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'S', 'tempMin': 52.0, 'windSpeed': 11, 'windGust': 13, 'humidity': 85, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369191600, 'qpf': 0.02, 'ts': 1369191600, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'E', 'tempMin': 54.0, 'windSpeed': 8, 'windGust': 10, 'humidity': 72, 'method': 'WU', 'usUnits': 1, 'tempMax': 73.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369278000, 'qpf': 0.02, 'ts': 1369278000, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'ESE', 'tempMin': 55.0, 'windSpeed': 6, 'windGust': 8, 'humidity': 76, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369364400, 'qpf': 0.02, 'ts': 1369364400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 54.0, 'windSpeed': 3, 'windGust': 4, 'humidity': 92, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0}, {'qsf': 0, 'hour': 23, 'event_ts': 1369450800, 'qpf': 0.17999999999999999, 'ts': 1369450800, 'pop': 40, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 57.0, 'windSpeed': 3, 'windGust': 5, 'humidity': 90, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0}]
+        matrix = forecast.CreateWUForecastMatrix(WU_BOS, issued_ts=1377298279)
+        records = forecast.ProcessWUForecast(matrix, now=1377298279)
+        expected = [
+            {'qsf': 0, 'hour': 23, 'event_ts': 1368673200, 'qpf': 0.10000000000000001, 'ts': 1368673200, 'pop': 50, 'dateTime': 1377298279, 'windDir': 'SSW', 'tempMin': 55.0, 'windSpeed': 15, 'windGust': 19, 'humidity': 69, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0},
+            {'qsf': 0, 'hour': 23, 'event_ts': 1368759600, 'qpf': 0.0, 'ts': 1368759600, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'W', 'tempMin': 54.0, 'windSpeed': 19, 'windGust': 23, 'humidity': 42, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0},
+            {'qsf': 0, 'hour': 23, 'event_ts': 1368846000, 'qpf': 0.0, 'ts': 1368846000, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'NW', 'tempMin': 54.0, 'windSpeed': 5, 'windGust': 11, 'humidity': 51, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 72.0},
+            {'qsf': 0, 'hour': 23, 'event_ts': 1368932400, 'qpf': 0.0, 'ts': 1368932400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 7, 'windGust': 9, 'humidity': 59, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 70.0},
+            {'qsf': 0, 'hour': 23, 'event_ts': 1369018800, 'qpf': 0.0, 'ts': 1369018800, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 8, 'windGust': 10, 'humidity': 70, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 66.0},
+            {'qsf': 0, 'hour': 23, 'event_ts': 1369105200, 'qpf': 0.040000000000000001, 'ts': 1369105200, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'S', 'tempMin': 52.0, 'windSpeed': 11, 'windGust': 13, 'humidity': 85, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0},
+            {'qsf': 0, 'hour': 23, 'event_ts': 1369191600, 'qpf': 0.02, 'ts': 1369191600, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'E', 'tempMin': 54.0, 'windSpeed': 8, 'windGust': 10, 'humidity': 72, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 73.0},
+            {'qsf': 0, 'hour': 23, 'event_ts': 1369278000, 'qpf': 0.02, 'ts': 1369278000, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'ESE', 'tempMin': 55.0, 'windSpeed': 6, 'windGust': 8, 'humidity': 76, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0},
+            {'qsf': 0, 'hour': 23, 'event_ts': 1369364400, 'qpf': 0.02, 'ts': 1369364400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 54.0, 'windSpeed': 3, 'windGust': 4, 'humidity': 92, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0},
+            {'qsf': 0, 'hour': 23, 'event_ts': 1369450800, 'qpf': 0.17999999999999999, 'ts': 1369450800, 'pop': 40, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 57.0, 'windSpeed': 3, 'windGust': 5, 'humidity': 90, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0}
+            ]
         self.assertEqual(records, expected)
 
     def test_download_wu_forecast_bad_key(self):
@@ -2414,19 +2436,26 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
 
         # verify that records are created properly
         expect = [{'hilo': 'L', 'offset': '-0.71', 'event_ts': 1377031620,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                   'method': 'XTide', 'usUnits': 1, 'issued_ts': 1377043837,
+                   'dateTime': 1377043837, 'location': 'Tenants Harbor' },
                   {'hilo': 'H', 'offset': '11.56', 'event_ts': 1377054240,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                   'method': 'XTide', 'usUnits': 1, 'issued_ts': 1377043837,
+                   'dateTime': 1377043837, 'location': 'Tenants Harbor' },
                   {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377077040,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                   'method': 'XTide', 'usUnits': 1, 'issued_ts': 1377043837,
+                   'dateTime': 1377043837, 'location': 'Tenants Harbor' },
                   {'hilo': 'H', 'offset': '10.73', 'event_ts': 1377099480,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                   'method': 'XTide', 'usUnits': 1, 'issued_ts': 1377043837,
+                   'dateTime': 1377043837, 'location': 'Tenants Harbor' },
                   {'hilo': 'L', 'offset': '-0.95', 'event_ts': 1377121260,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                   'method': 'XTide', 'usUnits': 1, 'issued_ts': 1377043837,
+                   'dateTime': 1377043837, 'location': 'Tenants Harbor' },
                   {'hilo': 'H', 'offset': '11.54', 'event_ts': 1377143820,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837},
+                   'method': 'XTide', 'usUnits': 1, 'issued_ts': 1377043837,
+                   'dateTime': 1377043837, 'location': 'Tenants Harbor' },
                   {'hilo': 'L', 'offset': '-1.35', 'event_ts': 1377166380,
-                   'method': 'XTide', 'usUnits': 1, 'dateTime': 1377043837}]
+                   'method': 'XTide', 'usUnits': 1, 'issued_ts': 1377043837,
+                   'dateTime': 1377043837, 'location': 'Tenants Harbor' }]
         records = f.parse_forecast(lines, now=1377043837)
         self.assertEqual(records, expect)
 
@@ -2603,6 +2632,29 @@ $forecast.xtide(-1, from_ts=1377043837).offset
         forecast.Forecast.prune_forecasts(archive, table, method_id, event.record['dateTime'])
         records = forecast.Forecast.get_saved_forecasts(archive, table, method_id)
         self.assertEqual(len(records), 1)
+
+    def test_periods(self):
+        matrix = forecast.ParseNWSForecast(PFM_BOS_SINGLE, 'MAZ014')
+        records = forecast.ProcessNWSForecast('BOX', 'MAZ014', matrix)
+        self.runTemplateTest('test_periods',
+                             'user.forecast.NWSForecast',
+                             records,
+                             '''<html>
+  <body>
+#for $f in $forecast.nws_periods(from_ts=1368328140, max_events=2):
+$f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f.windSpeed $f.windGust $f.windDir $f.windChar $f.pop
+#end for
+  </body>
+</html>
+''',
+                             '''<html>
+  <body>
+12-May-2013 02:00 10800     - 61.0F     - 87% 57.0F 8.0 mph     - S      -
+12-May-2013 05:00 10800     - 59.0F     - 90% 56.0F 8.0 mph     - S      -
+  </body>
+</html>
+''')
+        
 
 
 # use this to run individual tests while debugging
