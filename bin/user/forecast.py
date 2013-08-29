@@ -584,6 +584,9 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('windChill',  'REAL'),        # degree F
                          ('heatIndex',  'REAL'),        # degree F
 
+                         ('uvIndex',    'INTEGER'),     # 1-15
+                         ('airQuality', 'INTEGER'),     # 1-10
+
                          # tide fields
                          ('hilo',       'CHAR(1)'),     # H or L
                          ('offset',     'REAL'),        # relative to mean low
@@ -1113,18 +1116,18 @@ nws_label_dict = {
     'B2' : 'Considerable Cloudiness',
     'OV' : 'Overcast',
     # codes for precipitation
-    'S'  : 'Slight Chance',
-    'C'  : 'Chance',
-    'L'  : 'Likely',
-    'O'  : 'Occasional',
-    'D'  : 'Definite',
-    'IS' : 'Isolated',
-    'SC' : 'Scattered',
-    'NM' : 'Numerous',
-    'EC' : 'Extensive Coverage',
-    'PA' : 'Patchy',
-    'AR' : 'Areas',
-    'WD' : 'Widespread',
+    'S'  : 'Slight Chance',      'Sq'  : '<20%',
+    'C'  : 'Chance',             'Cq'  : '30-50%',
+    'L'  : 'Likely',             'Lq'  : '60-70%',
+    'O'  : 'Occasional',         'Oq'  : '80-100%',
+    'D'  : 'Definite',           'Dq'  : '80-100%',
+    'IS' : 'Isolated',           'ISq' : '<20%',
+    'SC' : 'Scattered',          'SCq' : '30-50%',
+    'NM' : 'Numerous',           'NMq' : '60-70%',
+    'EC' : 'Extensive Coverage', 'ECq' : '80-100%',
+    'PA' : 'Patchy',             'PAq' : '<25%',
+    'AR' : 'Areas',              'ARq' : '25-50%',
+    'WD' : 'Widespread',         'WDq' : '>50%',
     # codes for obstructed visibility
     'F'   : 'Fog',
     'PF'  : 'Patchy Fog',
@@ -1718,6 +1721,8 @@ class ForecastData(object):
             to_ts = from_ts + 14 * 24 * 3600 # 14 days into the future
         # NB: this query assumes that forecasting is deterministic, i.e., two
         # queries to a single forecast will always return the same results.
+        # FIXME: select only the fields we want?
+        # FIXME: compare length of select against schema to see if mismatch
         sql = "select distinct * from archive where method = '%s' and event_ts >= %d and event_ts <= %d and dateTime = (select dateTime from archive where method = '%s' order by dateTime desc limit 1) order by event_ts asc limit %d" % (fid, from_ts, to_ts, fid, max_events)
         records = []
         for rec in self.database.genSql(sql):
