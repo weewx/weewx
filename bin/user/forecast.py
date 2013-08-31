@@ -373,6 +373,9 @@ import weeutil.weeutil
 
 try:
     import cjson as json
+    # XXX: maintain compatibility w/ json module 
+    setattr(json, 'dumps', json.encode)
+    setattr(json, 'loads', json.decode)
 except Exception, e:
     try:
         import simplejson as json
