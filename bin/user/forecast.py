@@ -1508,15 +1508,16 @@ class XTideForecast(Forecast):
         logdbg('%s: tide matrix: %s' % (self.method_id, records))
         return records
 
-    def generate_tide(self, st=None, et=None):
+    def generate_tide(self, sts=None, ets=None):
         '''Generate tide information from the indicated period.  If no start
-        and end time are specified, start with the current time and end at
-        twice the interval.'''
-        if st is None or et is None:
-            sts = time.time()
+        and end time are specified, start with the start of the day of the 
+        current time and end at twice the interval.'''
+        if sts is None:
+            sts = weeutil.weeutil.startOfDay(int(time.time()))
+        if ets is None:
             ets = sts + 2 * self.interval
-            st = time.strftime('%Y-%m-%d %H:%M', time.localtime(sts))
-            et = time.strftime('%Y-%m-%d %H:%M', time.localtime(ets))
+        st = time.strftime('%Y-%m-%d %H:%M', time.localtime(sts))
+        et = time.strftime('%Y-%m-%d %H:%M', time.localtime(ets))
         cmd = "%s %s -l'%s' -b'%s' -e'%s'" % (
             self.tideprog, self.tideargs, self.location, st, et)
         try:
