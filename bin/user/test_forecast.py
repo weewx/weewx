@@ -3414,6 +3414,9 @@ SSW
         tt = time.strptime(et, '%Y-%m-%d %H:%M')
         ets = time.mktime(tt)
         lines = f.generate_tide(sts=sts, ets=ets)
+        if lines is None:
+            return
+        
         expect = '''Tenants Harbor| Maine,2013.08.20,16:47,-0.71 ft,Low Tide
 Tenants Harbor| Maine,2013.08.20,19:00,,Moonrise
 Tenants Harbor| Maine,2013.08.20,19:32,,Sunset
