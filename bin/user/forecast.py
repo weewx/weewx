@@ -95,7 +95,7 @@ Configuration
         #   Australia/Sydney     - Country/City
         #   37.8,-122.4          - latitude,longitude
         #   KJFK                 - airport code
-        #   pws=KCASANFR70       - PWS id
+        #   pws:KCASANFR70       - PWS id
         #   autoip               - AutoIP address location
         #   autoip.json?geo_ip=38.102.136.138 - specific IP address location
         # If no location is specified, station latitude and longitude are used
@@ -465,6 +465,9 @@ def get_int(config_dict, label, default_value):
    waveheight   average wave height
    waveperiod   average wave period
 """
+# FIXME: WU defines the following:
+#  maxhumidity
+#  minhumidity
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),
                          ('dateTime',   'INTEGER NOT NULL'),  # epoch
@@ -575,8 +578,30 @@ class Forecast(StdService):
 
         self.method_id = fid
         self.last_ts = 0
-        Forecast.setup_database(self.database, self.table, self.method_id,
-                                self.config_dict, self.schema)
+
+        # do the database setup here, only as a way to check the schema
+        # compatibility between database and software.
+        archive = Forecast.setup_database(self.database,
+                                          self.table, self.method_id,
+                                          self.config_dict, self.schema)
+        columns = archive.connection.columnsOf(self.table)
+        errmsg = None
+        if len(columns) == len(self.schema):
+            labels = []
+            for i,f in enumerate(columns):
+                if f != self.schema[i][0]:
+                    labels.append("'%s'!='%s'" % (f, self.schema[i][0]))
+            if len(labels) > 0:
+                errmsg = '%s: schema mismatch: %s' % (self.method_id,
+                                                      ' '.join(labels))
+        else:
+            errmsg = '%s: schema mismatch: %d != %d' % (self.method_id,
+                                                        len(columns),
+                                                        len(self.schema))
+        if errmsg is not None:
+            raise Exception(errmsg)
+
+        # ensure that the forecast has a chance to update on each new record
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
 
     def update_forecast(self, event):
@@ -1275,7 +1300,22 @@ def ProcessNWSForecast(foid, lid, matrix):
 # -----------------------------------------------------------------------------
 
 WU_KEY = 'WU'
-WU_DIRS = {'North':'N', 'South':'S', 'East':'E', 'West':'W', }
+WU_DIR_DICT = {
+    'North':'N',
+    'South':'S',
+    'East':'E',
+    'West':'W',
+    }
+WU_SKY_DICT = {
+    'sunny':'CL',
+    'mostlysunny':'FW',
+    'partlysunny':'SC',
+    'FIXME':'BK',
+    'partlycloudy':'B1',
+    'mostlycloudy':'B2',
+    'cloudy':'OV',
+    }
+
 WU_DEFAULT_URL = 'http://api.wunderground.com/api'
 
 class WUForecast(Forecast):
@@ -1362,6 +1402,8 @@ def CreateWUForecastMatrix(text, issued_ts=None):
     matrix['issued_ts'] = issued_ts
     matrix['ts'] = []
     matrix['hour'] = []
+    matrix['duration'] = []
+    matrix['clouds'] = []
     matrix['tempMin'] = []
     matrix['tempMax'] = []
     matrix['humidity'] = []
@@ -1375,21 +1417,29 @@ def CreateWUForecastMatrix(text, issued_ts=None):
         try:
             matrix['ts'].append(int(period['date']['epoch']))
             matrix['hour'].append(period['date']['hour'])
+            matrix['duration'].append(24*3600)
+            clouds = WU_SKY_DICT.get(period['skyicon'], None)
+            if clouds is not None:
+                matrix['clouds'].append(clouds)
+            else:
+                logerr('%s: unknown skyicon %s' % (WU_KEY, period['skyicon']))
             try:
                 matrix['tempMin'].append(float(period['low']['fahrenheit']))
             except Exception, e:
                 logerr('%s: bogus tempMin in forecast: %s' % (WU_KEY, e))
+                matrix['tempMin'].append(None)
             try:
                 matrix['tempMax'].append(float(period['high']['fahrenheit']))
             except Exception, e:
                 logerr('%s: bogus tempMax in forecast: %s' % (WU_KEY, e))
+                matrix['tempMax'].append(None)
             matrix['humidity'].append(period['avehumidity'])
             matrix['pop'].append(period['pop'])
             matrix['qpf'].append(period['qpf_allday']['in'])
             matrix['qsf'].append(period['snow_allday']['in'])
             matrix['windSpeed'].append(period['avewind']['mph'])
-            matrix['windDir'].append(WU_DIRS.get(period['avewind']['dir'],
-                                                 period['avewind']['dir']))
+            matrix['windDir'].append(WU_DIR_DICT.get(period['avewind']['dir'],
+                                                     period['avewind']['dir']))
             matrix['windGust'].append(period['maxwind']['mph'])
         except Exception, e:
             logerr('%s: bad timestamp in forecast: %s' % (WU_KEY, e))
@@ -1798,13 +1848,11 @@ class ForecastData(object):
         dur = 24 * 3600 # one day
         foid = None
         lid = None
-        dateTime = None
-        issued_ts = None
         usys = None
         rec = {
-            'dateTime' : None,
+            'dateTime' : ts,
             'issued_ts' : None,
-            'event_ts' : None,
+            'event_ts' : int(from_ts),
             'duration' : dur,
             'location' : None,
             'clouds' : None,
@@ -1827,6 +1875,7 @@ class ForecastData(object):
             'windChars' : {},
             'pop' : None,
             'precip' : [],
+            'obvis' : [],
             }
         outlook_histogram = {}
         records = self._getRecords(fid, from_ts, from_ts+dur, max_events=40)
@@ -1835,10 +1884,8 @@ class ForecastData(object):
                 foid = r['foid']
             if lid is None:
                 lid = r['lid']
-            if dateTime is None:
-                dateTime = r['dateTime']
-            if issued_ts is None:
-                issued_ts = r['issued_ts']
+            if rec['issued_ts'] is None:
+                rec['issued_ts'] = r['issued_ts']
             if usys is None:
                 usys = r['usUnits']
             self._get_histogram('clouds', r, outlook_histogram)
@@ -1860,10 +1907,12 @@ class ForecastData(object):
                 v = r.get(p, None)
                 if v is not None and p not in rec['precip']:
                     rec['precip'].append(p)
+            if r['obvis'] is not None and r['obvis'] not in rec['obvis']:
+                rec['obvis'].append(r['obvis'])
         ctxt = 'weather_summary'
-        rec['dateTime'] = self._create_time(ctxt, dateTime)
-        rec['issued_ts'] = self._create_time(ctxt, issued_ts)
-        rec['event_ts'] = self._create_time(ctxt, from_ts)
+        rec['dateTime'] = self._create_time(ctxt, rec['dateTime'])
+        rec['issued_ts'] = self._create_time(ctxt, rec['issued_ts'])
+        rec['event_ts'] = self._create_time(ctxt, rec['event_ts'])
         rec['location'] = '%s %s' % (foid, lid)
         rec['clouds'] = self._create_from_histogram(outlook_histogram)
         rec['tempMin'] = self._create_temp(ctxt, rec['tempMin'], usys)

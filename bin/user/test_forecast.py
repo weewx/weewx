@@ -1048,7 +1048,7 @@ WU_BOS = '''
                             "minhumidity": 31
                             }
                           ,
-                          {"date":{
+                          { "date":{
                               "epoch":"1368759600",
                                 "pretty":"11:00 PM EDT on May 16, 2013",
                                 "day":16,
@@ -1066,62 +1066,62 @@ WU_BOS = '''
                                 "tz_short":"EDT",
                                 "tz_long":"America/New_York"
                                 },
-                              "period":2,
-                                "high": {
-                                "fahrenheit":"77",
-                                  "celsius":"25"
-                                  },
-                                "low": {
-                                  "fahrenheit":"54",
-                                    "celsius":"12"
-                                    },
-                                  "conditions":"Partly Cloudy",
-                                    "icon":"partlycloudy",
-                                    "icon_url":"http://icons-ak.wxug.com/i/c/k/partlycloudy.gif",
-                                    "skyicon":"mostlysunny",
-                                    "pop":10,
-                                    "qpf_allday": {
-                                    "in": 0.00,
-                                      "mm": 0.0
-                                      },
-                                    "qpf_day": {
-                                      "in": 0.00,
-                                        "mm": 0.0
-                                        },
-                                      "qpf_night": {
-                                        "in": 0.00,
-                                          "mm": 0.0
-                                          },
-                                        "snow_allday": {
-                                          "in": 0,
-                                            "cm": 0
-                                            },
-                                          "snow_day": {
-                                            "in": 0,
-                                              "cm": 0
-                                              },
-                                            "snow_night": {
-                                              "in": 0,
-                                                "cm": 0
-                                                },
-                                              "maxwind": {
-                                                "mph": 23,
-                                                  "kph": 37,
-                                                  "dir": "West",
-                                                  "degrees": 270
-                                                  },
-                                                "avewind": {
-                                                  "mph": 19,
-                                                    "kph": 30,
-                                                    "dir": "West",
-                                                    "degrees": 271
-                                                    },
-                                                  "avehumidity": 42,
-                                                    "maxhumidity": 80,
-                                                    "minhumidity": 31
-                                                    }
+                            "period":2,
+                            "high": {
+                              "fahrenheit":"77",
+                              "celsius":"25"
+                              },
+                            "low": {
+                              "fahrenheit":"54",
+                              "celsius":"12"
+                              },
+                            "conditions":"Partly Cloudy",
+                            "icon":"partlycloudy",
+                            "icon_url":"http://icons-ak.wxug.com/i/c/k/partlycloudy.gif",
+                            "skyicon":"mostlysunny",
+                            "pop":10,
+                            "qpf_allday": {
+                              "in": 0.00,
+                              "mm": 0.0
+                              },
+                            "qpf_day": {
+                              "in": 0.00,
+                              "mm": 0.0
+                              },
+                            "qpf_night": {
+                              "in": 0.00,
+                              "mm": 0.0
+                              },
+                            "snow_allday": {
+                              "in": 0,
+                              "cm": 0
+                              },
+                            "snow_day": {
+                              "in": 0,
+                              "cm": 0
+                              },
+                            "snow_night": {
+                              "in": 0,
+                              "cm": 0
+                              },
+                            "maxwind": {
+                              "mph": 23,
+                              "kph": 37,
+                              "dir": "West",
+                              "degrees": 270
+                              },
+                            "avewind": {
+                              "mph": 19,
+                              "kph": 30,
+                              "dir": "West",
+                              "degrees": 271
+                              },
+                            "avehumidity": 42,
+                            "maxhumidity": 80,
+                            "minhumidity": 31
+                            }
                           ,
-                          {"date":{
+                          { "date":{
                               "epoch":"1368846000",
                                 "pretty":"11:00 PM EDT on May 17, 2013",
                                 "day":17,
@@ -1139,62 +1139,62 @@ WU_BOS = '''
                                 "tz_short":"EDT",
                                 "tz_long":"America/New_York"
                                 },
-                              "period":3,
-                                "high": {
-                                "fahrenheit":"72",
-                                  "celsius":"22"
-                                  },
-                                "low": {
-                                  "fahrenheit":"54",
-                                    "celsius":"12"
-                                    },
-                                  "conditions":"Clear",
-                                    "icon":"clear",
-                                    "icon_url":"http://icons-ak.wxug.com/i/c/k/clear.gif",
-                                    "skyicon":"mostlysunny",
-                                    "pop":10,
-                                    "qpf_allday": {
-                                    "in": 0.00,
-                                      "mm": 0.0
-                                      },
-                                    "qpf_day": {
-                                      "in": 0.00,
-                                        "mm": 0.0
-                                        },
-                                      "qpf_night": {
-                                        "in": 0.00,
-                                          "mm": 0.0
-                                          },
-                                        "snow_allday": {
-                                          "in": 0,
-                                            "cm": 0
-                                            },
-                                          "snow_day": {
-                                            "in": 0,
-                                              "cm": 0
-                                              },
-                                            "snow_night": {
-                                              "in": 0,
-                                                "cm": 0
-                                                },
-                                              "maxwind": {
-                                                "mph": 11,
-                                                  "kph": 18,
-                                                  "dir": "NW",
-                                                  "degrees": 319
-                                                  },
-                                                "avewind": {
-                                                  "mph": 5,
-                                                    "kph": 8,
-                                                    "dir": "NW",
-                                                    "degrees": 308
-                                                    },
-                                                  "avehumidity": 51,
-                                                    "maxhumidity": 71,
-                                                    "minhumidity": 31
-                                                    }
+                            "period":3,
+                            "high": {
+                              "fahrenheit":"72",
+                              "celsius":"22"
+                              },
+                            "low": {
+                              "fahrenheit":"54",
+                              "celsius":"12"
+                              },
+                            "conditions":"Clear",
+                            "icon":"clear",
+                            "icon_url":"http://icons-ak.wxug.com/i/c/k/clear.gif",
+                            "skyicon":"mostlysunny",
+                            "pop":10,
+                            "qpf_allday": {
+                              "in": 0.00,
+                              "mm": 0.0
+                              },
+                            "qpf_day": {
+                              "in": 0.00,
+                              "mm": 0.0
+                              },
+                            "qpf_night": {
+                              "in": 0.00,
+                              "mm": 0.0
+                              },
+                            "snow_allday": {
+                              "in": 0,
+                              "cm": 0
+                              },
+                            "snow_day": {
+                              "in": 0,
+                              "cm": 0
+                              },
+                            "snow_night": {
+                              "in": 0,
+                              "cm": 0
+                              },
+                            "maxwind": {
+                              "mph": 11,
+                              "kph": 18,
+                              "dir": "NW",
+                              "degrees": 319
+                              },
+                            "avewind": {
+                              "mph": 5,
+                              "kph": 8,
+                              "dir": "NW",
+                              "degrees": 308
+                              },
+                            "avehumidity": 51,
+                            "maxhumidity": 71,
+                            "minhumidity": 31
+                            }
                           ,
-                          {"date":{
+                          { "date":{
                               "epoch":"1368932400",
                                 "pretty":"11:00 PM EDT on May 18, 2013",
                                 "day":18,
@@ -1710,6 +1710,105 @@ WU_BOS = '''
 }
 '''
 
+# generic templates for combinations of summary and period
+# should work with each forecast source
+SUMMARY_TEMPLATE = '''<html>
+  <body>
+#set $summary = $forecast.weather_summary('SOURCE', ts=TS)
+forecast for $summary.location for the day $summary.event_ts as of $summary.issued_ts
+$summary.tempMin
+$summary.tempMax
+$summary.temp
+$summary.dewpointMin
+$summary.dewpointMax
+$summary.dewpoint
+$summary.humidityMin
+$summary.humidityMax
+$summary.humidity
+$summary.windSpeedMin
+$summary.windSpeedMax
+$summary.windSpeed
+$summary.windGust
+$summary.windDir
+#for $d in $summary.windDirs
+  $d
+#end for
+$summary.windChar
+#for $c in $summary.windChars
+  $c
+#end for
+$summary.pop
+#for $p in $summary.precip
+  $p
+#end for
+#for $o in $summary.obvis
+  $o
+#end for
+  </body>
+</html>
+'''
+
+TABLE_TEMPLATE = '''<html>
+<body>
+
+#set $lastday = None
+
+#for $period in $forecast.weather_periods('SOURCE', from_ts=TS)
+  #set $thisday = $period.event_ts.format('%d')
+  #set $thisdate = $period.event_ts.format('%Y.%m.%d')
+  #set $hourid = $thisdate + '.hours'
+  #if $lastday != $thisday
+    #if $lastday is not None
+    END_TABLE
+  END_DIV
+    #end if
+    #set $lastday = $thisday
+    #set $summary = $forecast.weather_summary('SOURCE', $period.event_ts.raw)
+
+  BEG_DIV id='$thisdate'
+    BEG_TABLE
+      $thisdate
+      $summary.event_ts.format('%a') $summary.event_ts.format('%d %b %Y')
+    #if $summary.clouds is not None
+      #set $simg = 'forecast-icons/' + $summary.clouds + '.png'
+      $simg
+    #end if
+      $summary.tempMax.raw $summary.tempMin.raw
+      $summary.dewpointMax.raw<br/>$summary.dewpointMin.raw
+      $summary.humidityMax.raw<br/>$summary.humidityMin.raw
+      $summary.windSpeedMin.raw - $summary.windSpeedMax.raw $summary.windGust.raw $summary.windDir $summary.windChar
+      $summary.pop
+      $summary.precip
+      $summary.obvis
+    END_TABLE
+  END_DIV
+
+  BEG_DIV id='$hourid'
+    BEG_TABLE
+  #end if
+  #set $hour = $period.event_ts.format('%H:%M')
+      BEG_ROW
+      $hour
+    #if $period.clouds is not None
+      #set $img = 'forecast-icons/' + $period.clouds + '.png'
+      $img
+    #end if
+      $period.temp.raw
+      $period.dewpoint.raw
+      $period.humidity.raw
+      $period.windSpeed.raw $period.windGust.raw $period.windDir $period.windChar
+      $period.pop
+  #for $k,$v in $period.precip.items()
+      $forecast.label('NWS',$k): $forecast.label('NWS',$v) ($k,$v)
+  #end for
+      $period.obvis
+      END_ROW
+#end for
+    END_TABLE
+  END_DIV
+'''
+
+
 class ForecastTest(unittest.TestCase):
 
     def compareContents(self, filename, expected):
@@ -2118,44 +2217,15 @@ $f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f
 ''')
 
     def test_nws_template_summary(self):
+        template = SUMMARY_TEMPLATE.replace('SOURCE', 'NWS')
+        template = template.replace('TS', '1377525600')
         self.runTemplateTest('test_nws_template_summary',
                              'user.forecast.NWSForecast',
                              FakeData.gen_fake_nws_data(),
+                             template,
                              '''<html>
   <body>
-#set $summary = $forecast.weather_summary('NWS', ts=1377525600)
-nws forecast for $summary.location for the day $summary.event_ts as of $summary.issued_ts
-$summary.tempMin
-$summary.tempMax
-$summary.temp
-$summary.dewpointMin
-$summary.dewpointMax
-$summary.dewpoint
-$summary.humidityMin
-$summary.humidityMax
-$summary.humidity
-$summary.windSpeedMin
-$summary.windSpeedMax
-$summary.windSpeed
-$summary.windGust
-$summary.windDir
-#for $d in $summary.windDirs
-  $d
-#end for
-$summary.windChar
-#for $c in $summary.windChars
-  $c
-#end for
-$summary.pop
-#for $p in $summary.precip
-  $p
-#end for
-  </body>
-</html>
-''',
-                             '''<html>
-  <body>
-nws forecast for BOX MAZ014 for the day 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
+forecast for BOX MAZ014 for the day 26-Aug-2013 00:00 as of 26-Aug-2013 07:19
 68.0F
 79.0F
 74.8F
@@ -2188,64 +2258,12 @@ SW
     def test_nws_template_table(self):
         '''exercise the period and summary template elements'''
 
+        template = TABLE_TEMPLATE.replace('SOURCE', 'NWS')
+        template = template.replace('TS', '1377525600')
         t, tdir = self.setupTemplateTest('test_nws_template_table',
                                          'user.forecast.NWSForecast',
                                          FakeData.gen_fake_nws_data(),
-                                         '''<html>
-<body>
-
-#set $lastday = None
-
-#for $period in $forecast.weather_periods('NWS', from_ts=1377525600)
-  #set $thisday = $period.event_ts.format('%d')
-  #set $thisdate = $period.event_ts.format('%Y.%m.%d')
-  #set $hourid = $thisdate + '.hours'
-  #if $lastday != $thisday
-    #if $lastday is not None
-    END_TABLE
-  END_DIV
-    #end if
-    #set $lastday = $thisday
-    #set $summary = $forecast.weather_summary($period.event_ts.raw)
-    #set $simg = 'forecast-icons/' + $summary.clouds + '.png'
-
-  BEG_DIV id='$thisdate'
-    BEG_TABLE
-      $thisdate
-      $summary.event_ts.format('%a') $summary.event_ts.format('%d %b %Y')
-      $simg
-      $summary.tempMax.raw $summary.tempMin.raw
-      $summary.dewpointMax.raw<br/>$summary.dewpointMin.raw
-      $summary.humidityMax.raw<br/>$summary.humidityMin.raw
-      $summary.windSpeedMin.raw - $summary.windSpeedMax.raw $summary.windGust.raw $summary.windDir $summary.windChar
-      $summary.pop
-      $summary.precip
-      obvis
-    END_TABLE
-  END_DIV
-
-  BEG_DIV id='$hourid'
-    BEG_TABLE
-  #end if
-  #set $hour = $period.event_ts.format('%H:%M')
-  #set $img = 'forecast-icons/' + $period.clouds + '.png'
-      BEG_ROW
-      $hour
-      $img
-      $period.temp.raw
-      $period.dewpoint.raw
-      $period.humidity.raw
-      $period.windSpeed.raw $period.windGust.raw $period.windDir $period.windChar
-      $period.pop
-  #for $k,$v in $period.precip.items()
-      $forecast.label($k): $forecast.label($v) ($k,$v)
-  #end for
-      obvis
-      END_ROW
-#end for
-    END_TABLE
-  END_DIV
-''')
+                                         template)
         t.run()
 
 
@@ -2285,16 +2303,16 @@ SW
         matrix = forecast.CreateWUForecastMatrix(WU_BOS, issued_ts=1377298279)
         records = forecast.ProcessWUForecast(matrix, now=1377298279)
         expected = [
-            {'qsf': 0, 'hour': 23, 'event_ts': 1368673200, 'qpf': 0.10000000000000001, 'ts': 1368673200, 'pop': 50, 'dateTime': 1377298279, 'windDir': 'SSW', 'tempMin': 55.0, 'windSpeed': 15, 'windGust': 19, 'humidity': 69, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0},
-            {'qsf': 0, 'hour': 23, 'event_ts': 1368759600, 'qpf': 0.0, 'ts': 1368759600, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'W', 'tempMin': 54.0, 'windSpeed': 19, 'windGust': 23, 'humidity': 42, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0},
-            {'qsf': 0, 'hour': 23, 'event_ts': 1368846000, 'qpf': 0.0, 'ts': 1368846000, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'NW', 'tempMin': 54.0, 'windSpeed': 5, 'windGust': 11, 'humidity': 51, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 72.0},
-            {'qsf': 0, 'hour': 23, 'event_ts': 1368932400, 'qpf': 0.0, 'ts': 1368932400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 7, 'windGust': 9, 'humidity': 59, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 70.0},
-            {'qsf': 0, 'hour': 23, 'event_ts': 1369018800, 'qpf': 0.0, 'ts': 1369018800, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 8, 'windGust': 10, 'humidity': 70, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 66.0},
-            {'qsf': 0, 'hour': 23, 'event_ts': 1369105200, 'qpf': 0.040000000000000001, 'ts': 1369105200, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'S', 'tempMin': 52.0, 'windSpeed': 11, 'windGust': 13, 'humidity': 85, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0},
-            {'qsf': 0, 'hour': 23, 'event_ts': 1369191600, 'qpf': 0.02, 'ts': 1369191600, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'E', 'tempMin': 54.0, 'windSpeed': 8, 'windGust': 10, 'humidity': 72, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 73.0},
-            {'qsf': 0, 'hour': 23, 'event_ts': 1369278000, 'qpf': 0.02, 'ts': 1369278000, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'ESE', 'tempMin': 55.0, 'windSpeed': 6, 'windGust': 8, 'humidity': 76, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0},
-            {'qsf': 0, 'hour': 23, 'event_ts': 1369364400, 'qpf': 0.02, 'ts': 1369364400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 54.0, 'windSpeed': 3, 'windGust': 4, 'humidity': 92, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0},
-            {'qsf': 0, 'hour': 23, 'event_ts': 1369450800, 'qpf': 0.17999999999999999, 'ts': 1369450800, 'pop': 40, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 57.0, 'windSpeed': 3, 'windGust': 5, 'humidity': 90, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0}
+            {'clouds': 'B2', 'qsf': 0, 'hour': 23, 'event_ts': 1368673200, 'qpf': 0.10000000000000001, 'ts': 1368673200, 'pop': 50, 'dateTime': 1377298279, 'windDir': 'SSW', 'tempMin': 55.0, 'windSpeed': 15, 'windGust': 19, 'duration': 86400, 'humidity': 69, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0},
+            {'clouds': 'FW', 'qsf': 0, 'hour': 23, 'event_ts': 1368759600, 'qpf': 0.0, 'ts': 1368759600, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'W', 'tempMin': 54.0, 'windSpeed': 19, 'windGust': 23, 'duration': 86400, 'humidity': 42, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0},
+            {'clouds': 'FW', 'qsf': 0, 'hour': 23, 'event_ts': 1368846000, 'qpf': 0.0, 'ts': 1368846000, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'NW', 'tempMin': 54.0, 'windSpeed': 5, 'windGust': 11, 'duration': 86400, 'humidity': 51, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 72.0},
+            {'clouds': 'B1', 'qsf': 0, 'hour': 23, 'event_ts': 1368932400, 'qpf': 0.0, 'ts': 1368932400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 7, 'windGust': 9, 'duration': 86400, 'humidity': 59, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 70.0},
+            {'clouds': 'B2', 'qsf': 0, 'hour': 23, 'event_ts': 1369018800, 'qpf': 0.0, 'ts': 1369018800, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 48.0, 'windSpeed': 8, 'windGust': 10, 'duration': 86400, 'humidity': 70, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 66.0},
+            {'clouds': 'OV', 'qsf': 0, 'hour': 23, 'event_ts': 1369105200, 'qpf': 0.040000000000000001, 'ts': 1369105200, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'S', 'tempMin': 52.0, 'windSpeed': 11, 'windGust': 13, 'duration': 86400, 'humidity': 85, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0},
+            {'clouds': 'B2', 'qsf': 0, 'hour': 23, 'event_ts': 1369191600, 'qpf': 0.02, 'ts': 1369191600, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'E', 'tempMin': 54.0, 'windSpeed': 8, 'windGust': 10, 'duration': 86400, 'humidity': 72, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 73.0},
+            {'clouds': 'B1', 'qsf': 0, 'hour': 23, 'event_ts': 1369278000, 'qpf': 0.02, 'ts': 1369278000, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'ESE', 'tempMin': 55.0, 'windSpeed': 6, 'windGust': 8, 'duration': 86400, 'humidity': 76, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0},
+            {'clouds': 'B1', 'qsf': 0, 'hour': 23, 'event_ts': 1369364400, 'qpf': 0.02, 'ts': 1369364400, 'pop': 0, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 54.0, 'windSpeed': 3, 'windGust': 4, 'duration': 86400, 'humidity': 92, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0},
+            {'clouds': 'B1', 'qsf': 0, 'hour': 23, 'event_ts': 1369450800, 'qpf': 0.17999999999999999, 'ts': 1369450800, 'pop': 40, 'dateTime': 1377298279, 'windDir': 'SE', 'tempMin': 57.0, 'windSpeed': 3, 'windGust': 5, 'duration': 86400, 'humidity': 90, 'issued_ts':1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 75.0}
             ]
         self.assertEqual(records, expected)
 
@@ -2353,19 +2371,49 @@ $f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f
 ''',
                              '''<html>
   <body>
-15-May-2013 23:00  55.0F     - 68.0F 69%     - 15.0 mph 19.0 mph SSW  50%
-16-May-2013 23:00  54.0F     - 77.0F 42%     - 19.0 mph 23.0 mph W  10%
-17-May-2013 23:00  54.0F     - 72.0F 51%     - 5.0 mph 11.0 mph NW  10%
-18-May-2013 23:00  48.0F     - 70.0F 59%     - 7.0 mph 9.0 mph SE  0%
-19-May-2013 23:00  48.0F     - 66.0F 70%     - 8.0 mph 10.0 mph SE  0%
-20-May-2013 23:00  52.0F     - 68.0F 85%     - 11.0 mph 13.0 mph S  0%
-21-May-2013 23:00  54.0F     - 73.0F 72%     - 8.0 mph 10.0 mph E  0%
-22-May-2013 23:00  55.0F     - 77.0F 76%     - 6.0 mph 8.0 mph ESE  0%
-23-May-2013 23:00  54.0F     - 75.0F 92%     - 3.0 mph 4.0 mph SE  0%
-24-May-2013 23:00  57.0F     - 75.0F 90%     - 3.0 mph 5.0 mph SE  40%
+15-May-2013 23:00 86400 55.0F     - 68.0F 69%     - 15.0 mph 19.0 mph SSW  50%
+16-May-2013 23:00 86400 54.0F     - 77.0F 42%     - 19.0 mph 23.0 mph W  10%
+17-May-2013 23:00 86400 54.0F     - 72.0F 51%     - 5.0 mph 11.0 mph NW  10%
+18-May-2013 23:00 86400 48.0F     - 70.0F 59%     - 7.0 mph 9.0 mph SE  0%
+19-May-2013 23:00 86400 48.0F     - 66.0F 70%     - 8.0 mph 10.0 mph SE  0%
+20-May-2013 23:00 86400 52.0F     - 68.0F 85%     - 11.0 mph 13.0 mph S  0%
+21-May-2013 23:00 86400 54.0F     - 73.0F 72%     - 8.0 mph 10.0 mph E  0%
+22-May-2013 23:00 86400 55.0F     - 77.0F 76%     - 6.0 mph 8.0 mph ESE  0%
+23-May-2013 23:00 86400 54.0F     - 75.0F 92%     - 3.0 mph 4.0 mph SE  0%
+24-May-2013 23:00 86400 57.0F     - 75.0F 90%     - 3.0 mph 5.0 mph SE  40%
   </body>
 </html>
 ''')
+
+#FIXME: wrong ts on these
+
+    def test_wu_template_summary(self):
+        matrix = forecast.CreateWUForecastMatrix(WU_BOS)
+        records = forecast.ProcessWUForecast(matrix)
+        template = SUMMARY_TEMPLATE.replace('SOURCE', 'WU')
+        template = SUMMARY_TEMPLATE.replace('TS', '1368673200')
+        self.runTemplateTest('test_wu_template_summary',
+                             'user.forecast.WUForecast',
+                             records,
+                             template,
+                             '''<html>
+  <body>
+  </body>
+</html>
+''')
+
+    def test_wu_template_table(self):
+        '''exercise the period and summary template elements'''
+
+        matrix = forecast.CreateWUForecastMatrix(WU_BOS)
+        records = forecast.ProcessWUForecast(matrix)
+        template = TABLE_TEMPLATE.replace('SOURCE', 'WU')
+        template = template.replace('TS', '1377525600')
+        t, tdir = self.setupTemplateTest('test_wu_template_table',
+                                         'user.forecast.WUForecast',
+                                         records,
+                                         template)
+        t.run()
 
 
     # -------------------------------------------------------------------------
