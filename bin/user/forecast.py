@@ -64,6 +64,15 @@ Configuration
         # hemisphere can be NORTH or SOUTH
         #hemisphere = NORTH
 
+        # The interval determines how often the trend is calculated
+        #interval = 600
+
+        # The lower and upper pressure define the range to which the forecaster
+        # should be calibrated, in units of millibar (hPa).  The 'barometer'
+        # pressure (not station pressure) is used to calculate the forecast.
+        #lower_pressure = 950.0
+        #upper_pressure = 1050.0
+
     [[NWS]]
         # First figure out your forecast office identifier (foid), then request
         # a point forecast using a url of this form in a web browser:
@@ -106,6 +115,8 @@ Configuration
 
 [Databases]
     ...
+    # a typical installation will use either sqlite or mysql
+
     [[forecast_sqlite]]
         root = %(WEEWX_ROOT)s
         database = archive/forecast.sdb
@@ -120,6 +131,7 @@ Configuration
 
 [Engines]
     [[WxEngine]]
+        # append only the forecasting service(s) that you need
         service_list = ... , user.forecast.ZambrettiForecast, user.forecast.NWSForecast, user.forecast.WUForecast, user.forecast.XTideForecast
 
 
@@ -439,7 +451,7 @@ def get_int(config_dict, label, default_value):
    windSpeed    WIND SPD               avewind.mph
    windGust     WIND GUST              maxwind.mph
    windChar     WIND CHAR
-   clouds       CLOUDS | AVG CLOUNDS
+   clouds       CLOUDS | AVG CLOUNDS   skyicon
    pop          POP 12HR               pop
    qpf          QPF 12HR               qpf_allday.in
    qsf          SNOW 12HR              snow_allday.in
@@ -652,6 +664,8 @@ class Forecast(StdService):
 
         record - dictionary with keys corresponding to database fields
         """
+        if record is None:
+            return
         archive.addRecord(record)
 
     @staticmethod
@@ -703,11 +717,16 @@ class ZambrettiForecast(Forecast):
     """calculate zambretti code"""
 
     def __init__(self, engine, config_dict):
-        super(ZambrettiForecast, self).__init__(engine, config_dict, Z_KEY)
+        super(ZambrettiForecast, self).__init__(engine, config_dict, Z_KEY,
+                                                interval=600)
         d = config_dict['Forecast'].get(Z_KEY, {})
         self.hemisphere = d.get('hemisphere', 'NORTH')
-        loginf('%s: interval=%s max_age=%s hemisphere=%s' %
-               (Z_KEY, self.interval, self.max_age, self.hemisphere))
+        self.lower_pressure = d.get('lower_pressure', 950.0)
+        self.upper_pressure = d.get('upper_pressure', 1050.0)
+        self.last_pressure = None
+        loginf('%s: interval=%s max_age=%s hemisphere=%s lower_pressure=%s upper_pressure=%s' %
+               (Z_KEY, self.interval, self.max_age, self.hemisphere,
+                self.lower_pressure, self.upper_pressure))
 
     def get_forecast(self, event):
         logdbg('%s: generating zambretti forecast' % Z_KEY)
@@ -715,12 +734,22 @@ class ZambrettiForecast(Forecast):
         ts = rec['dateTime']
         tt = time.gmtime(ts)
         pressure = rec['barometer']
+        if rec['usUnits'] == weewx.US:
+            vt = (float(pressure), "inHg", "group_pressure")
+            pressure = weewx.units.convert(vt, 'mbar')[0]
         month = tt.tm_mon - 1 # month is [0-11]
         wind = int(rec['windDir'] / 22.5) # wind dir is [0-15]
+        if self.last_pressure is not None and pressure is not None:
+            trend = self.last_pressure - pressure
+        else:
+            trend = None
+        self.last_pressure = pressure
         north = self.hemisphere.lower() != 'south'
-        logdbg('%s: pressure=%s month=%s wind=%s north=%s' %
-               (Z_KEY, pressure, month, wind, north))
-        code = ZambrettiCode(pressure, month, wind, north)
+        logdbg('%s: pressure=%s month=%s wind=%s trend=%s north=%s' %
+               (Z_KEY, pressure, month, wind, trend, north))
+        code = ZambrettiCode(pressure, month, wind, trend, north,
+                             baro_bottom=self.lower_pressure,
+                             baro_top=self.upper_pressure)
         logdbg('%s: code is %s' % (Z_KEY, code))
         if code is None:
             return None
@@ -784,6 +813,8 @@ def ZambrettiCode(pressure, month, wind, trend,
     """
 
     if pressure is None:
+        return None
+    if trend is None:
         return None
     if month < 0 or month > 11:
         return None

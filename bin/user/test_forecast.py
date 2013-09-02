@@ -2663,6 +2663,15 @@ WU_TENANTS_HARBOR = '''
 
 # generic templates for combinations of summary and period
 # should work with each forecast source
+PERIODS_TEMPLATE = '''<html>
+  <body>
+#for $f in $forecast.weather_periods('SOURCE', from_ts=TS, max_events=20)
+$f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f.windSpeed $f.windGust $f.windDir $f.windChar $f.pop
+#end for
+  </body>
+</html>
+'''
+
 SUMMARY_TEMPLATE = '''<html>
   <body>
 #set $summary = $forecast.weather_summary('SOURCE', ts=TS)
@@ -2974,6 +2983,61 @@ class ForecastTest(unittest.TestCase):
         self.assertEqual(forecast.ZambrettiText('Y'), 'Stormy, may improve')
         self.assertEqual(forecast.ZambrettiText('Z'), 'Stormy, much rain')
 
+    def test_zambretti_generator(self):
+        tname = 'test_zambretti_generator'
+        tdir = get_testdir(tname)
+        rmtree(tdir)
+        cd = create_config(tdir, 'user.forecast.ZambrettiForecast')
+        eng = weewx.wxengine.StdEngine(cd)
+        zf = forecast.ZambrettiForecast(eng, cd)
+
+        # first record, no trend, so no zambretti
+        event = weewx.Event(weewx.NEW_ARCHIVE_RECORD)
+        event.record = {'interval': 5, 'outHumidity': 60.0, 'rainRate': 0.0, 'heatindex': 62.779999999999994, 'radiation': None, 'inTemp': 66.230000000000004, 'windGustDir': 112.5, 'status': 0.0, 'barometer': 29.838662744470582, 'windchill': 62.779999999999994, 'dewpoint': 48.684961368525371, 'rain': 0.0, 'pressure': 29.806556408741884, 'rainTotal': 0.68999999999999995, 'altimeter': 29.830054257884523, 'usUnits': 1, 'UV': None, 'dateTime': 1378143300, 'windDir': 90.0, 'outTemp': 62.779999999999994, 'windSpeed': 0.0, 'inHumidity': 78.0, 'windGust': 0.0}
+        record = zf.get_forecast(event)
+        self.assertEqual(record, None)
+
+        # next record gives us a trend
+        event.record = {'barometer': 29.834685721179159, 'usUnits': 1, 'dateTime': 1378143900, 'windDir': 90.0}
+        record = zf.get_forecast(event)
+        self.assertEqual(record, {'event_ts': 1378143900, 'dateTime': 1378143900, 'zcode': 'C', 'issued_ts': 1378143900, 'method': 'Zambretti', 'usUnits': 1})
+
+        # now the pressure goes up slightly
+        event.record = {'barometer': 29.835649151484603, 'usUnits': 1, 'dateTime': 1378144200, 'windDir': 90.0}
+        record = zf.get_forecast(event)
+        self.assertEqual(record, {'event_ts': 1378144200, 'dateTime': 1378144200, 'zcode': 'K', 'issued_ts': 1378144200, 'method': 'Zambretti', 'usUnits': 1})
+
+        # now the pressure drops
+        event.record = {'barometer': 29.0, 'usUnits': 1, 'dateTime': 1378144500, 'windDir': 90.0}
+        record = zf.get_forecast(event)
+        self.assertEqual(record, {'event_ts': 1378144500, 'dateTime': 1378144500, 'zcode': 'L', 'issued_ts': 1378144500, 'method': 'Zambretti', 'usUnits': 1})
+
+    def test_zambretti_units(self):
+        '''ensure that zambretti works with both US and METRIC'''
+
+        tname = 'test_zambretti_units'
+        tdir = get_testdir(tname)
+        rmtree(tdir)
+        cd = create_config(tdir, 'user.forecast.ZambrettiForecast')
+        eng = weewx.wxengine.StdEngine(cd)
+        zf = forecast.ZambrettiForecast(eng, cd)
+
+        # first record, no trend, so no zambretti
+        event = weewx.Event(weewx.NEW_ARCHIVE_RECORD)
+        event.record = {'barometer': 1010.33712053, 'usUnits': weewx.METRIC, 'dateTime': 1378143300, 'windDir': 90.0}
+        record = zf.get_forecast(event)
+        self.assertEqual(record, None)
+
+        # next record gives us a trend
+        event.record = {'barometer': 1010.20245852, 'usUnits': weewx.METRIC, 'dateTime': 1378143900, 'windDir': 90.0}
+        record = zf.get_forecast(event)
+        self.assertEqual(record, {'event_ts': 1378143900, 'dateTime': 1378143900, 'zcode': 'C', 'issued_ts': 1378143900, 'method': 'Zambretti', 'usUnits': 1})
+
+        # now the pressure goes up slightly
+        event.record = {'barometer': 1010.23508027, 'usUnits': weewx.METRIC, 'dateTime': 1378144200, 'windDir': 90.0}
+        record = zf.get_forecast(event)
+        self.assertEqual(record, {'event_ts': 1378144200, 'dateTime': 1378144200, 'zcode': 'K', 'issued_ts': 1378144200, 'method': 'Zambretti', 'usUnits': 1})
+
     def test_zambretti_bogus_values(self):
         self.assertEqual(forecast.ZambrettiCode(0, 0, 0, 0), 'Z')
         self.assertEqual(forecast.ZambrettiCode(None, 0, 0, 0), None)
@@ -3131,17 +3195,12 @@ $forecast.zambretti.code
     def test_nws_template_periods(self):
         matrix = forecast.ParseNWSForecast(PFM_BOS_SINGLE, 'MAZ014')
         records = forecast.ProcessNWSForecast('BOX', 'MAZ014', matrix)
+        template = PERIODS_TEMPLATE.replace('SOURCE', 'NWS')
+        template = template.replace('TS', '1368328140')
         self.runTemplateTest('test_nws_template_periods',
                              'user.forecast.NWSForecast',
                              records,
-                             '''<html>
-  <body>
-#for $f in $forecast.weather_periods('NWS', from_ts=1368328140, max_events=20)
-$f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f.windSpeed $f.windGust $f.windDir $f.windChar $f.pop
-#end for
-  </body>
-</html>
-''',
+                             template,
                              '''<html>
   <body>
 12-May-2013 02:00 10800     - 61.0F     - 87% 57.0F 8.0 mph     - S      -
@@ -3309,36 +3368,30 @@ SW
         self.assertEqual(matrix, None)
 
     def test_wu_template_periods(self):
-        matrix = forecast.CreateWUForecastMatrix(WU_BOS)
+        matrix = forecast.CreateWUForecastMatrix(WU_TENANTS_HARBOR,
+                                                 issued_ts=1378090800)
         records = forecast.ProcessWUForecast(matrix)
+        template = PERIODS_TEMPLATE.replace('SOURCE', 'WU')
+        template = template.replace('TS', '1378090800')
         self.runTemplateTest('test_wu_template_periods',
                              'user.forecast.WUForecast',
                              records,
+                             template,
                              '''<html>
   <body>
-#for $f in $forecast.weather_periods('WU', from_ts=1368328140, max_events=20)
-$f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f.windSpeed $f.windGust $f.windDir $f.windChar $f.pop
-#end for
-  </body>
-</html>
-''',
-                             '''<html>
-  <body>
-15-May-2013 23:00 86400 55.0F     - 68.0F 69%     - 15.0 mph 19.0 mph SSW  50%
-16-May-2013 23:00 86400 54.0F     - 77.0F 42%     - 19.0 mph 23.0 mph W  10%
-17-May-2013 23:00 86400 54.0F     - 72.0F 51%     - 5.0 mph 11.0 mph NW  10%
-18-May-2013 23:00 86400 48.0F     - 70.0F 59%     - 7.0 mph 9.0 mph SE  0%
-19-May-2013 23:00 86400 48.0F     - 66.0F 70%     - 8.0 mph 10.0 mph SE  0%
-20-May-2013 23:00 86400 52.0F     - 68.0F 85%     - 11.0 mph 13.0 mph S  0%
-21-May-2013 23:00 86400 54.0F     - 73.0F 72%     - 8.0 mph 10.0 mph E  0%
-22-May-2013 23:00 86400 55.0F     - 77.0F 76%     - 6.0 mph 8.0 mph ESE  0%
-23-May-2013 23:00 86400 54.0F     - 75.0F 92%     - 3.0 mph 4.0 mph SE  0%
-24-May-2013 23:00 86400 57.0F     - 75.0F 90%     - 3.0 mph 5.0 mph SE  40%
+01-Sep-2013 23:00 86400 73.0F     - 86.0F 83%     - 10.0 mph 11.0 mph SSW  40%
+02-Sep-2013 23:00 86400 72.0F     - 81.0F 91%     - 8.0 mph 10.0 mph S  60%
+03-Sep-2013 23:00 86400 61.0F     - 81.0F 70%     - 8.0 mph 9.0 mph SW  50%
+04-Sep-2013 23:00 86400 59.0F     - 79.0F 78%     - 10.0 mph 11.0 mph NW  0%
+05-Sep-2013 23:00 86400 57.0F     - 75.0F 90%     - 8.0 mph 10.0 mph W  0%
+06-Sep-2013 23:00 86400 54.0F     - 72.0F 74%     - 4.0 mph 6.0 mph ESE  0%
+07-Sep-2013 23:00 86400 63.0F     - 79.0F 93%     - 11.0 mph 14.0 mph SW  0%
+08-Sep-2013 23:00 86400 61.0F     - 77.0F 65%     - 7.0 mph 9.0 mph E  0%
+09-Sep-2013 23:00 86400 61.0F     - 77.0F 75%     - 3.0 mph 4.0 mph SW  0%
+10-Sep-2013 23:00 86400 61.0F     - 79.0F 86%     - 2.0 mph 3.0 mph SSW  0%
   </body>
 </html>
 ''')
-
-#FIXME: wrong ts on these
 
     def test_wu_template_summary(self):
         matrix = forecast.CreateWUForecastMatrix(WU_TENANTS_HARBOR,
@@ -3647,10 +3700,14 @@ $a.moon_fullness
         e = wxengine.StdEngine(config_dict)
         f = forecast.ZambrettiForecast(e, config_dict)
         record = {}
+        record['usUnits'] = weewx.METRIC
         record['barometer'] = 1030
         record['windDir'] = 180
         event = weewx.Event(weewx.NEW_ARCHIVE_RECORD)
         event.record = record
+        event.record['dateTime'] = int(time.time())
+        f.get_forecast(event) # first zambretti is None to set trend
+        time.sleep(1)
         event.record['dateTime'] = int(time.time())
         forecast.Forecast.save_forecast(archive, f.get_forecast(event))
         time.sleep(1)
