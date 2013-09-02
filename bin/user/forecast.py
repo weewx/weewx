@@ -366,7 +366,6 @@ import time
 import urllib2
 
 import weewx
-from weewx.almanac import Almanac
 from weewx.wxengine import StdService
 from weewx.filegenerator import FileGenerator
 import weeutil.weeutil
@@ -1413,7 +1412,7 @@ def CreateWUForecastMatrix(text, issued_ts=None):
     matrix['windSpeed'] = []
     matrix['windDir'] = []
     matrix['windGust'] = []
-    for i,period in enumerate(fc):
+    for period in fc:
         try:
             matrix['ts'].append(int(period['date']['epoch']))
             matrix['hour'].append(period['date']['hour'])

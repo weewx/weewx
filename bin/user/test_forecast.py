@@ -55,7 +55,7 @@ def get_testdir(name):
 def rmfile(name):
     try:
         os.remove(name)
-    except Exception, e:
+    except Exception:
         pass
 
 def create_config(test_dir, service, skin_dir='testskin'):
@@ -359,7 +359,6 @@ $$
         weather_cycle = 3600*24.0*4
         weather_baro_range = 2.0
         weather_wind_range = 10.0
-        weather_rain_total = 0.5 # This is inches per weather cycle
         avg_baro = 30.0
 
         count = 0
