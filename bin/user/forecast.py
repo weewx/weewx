@@ -1298,7 +1298,7 @@ def date2ts(tstr):
     parts = tstr.split(' ')
     s = '%s %s %s %s' % (parts[0], parts[4], parts[5], parts[6])
     ts = time.mktime(time.strptime(s, "%H%M %b %d %Y"))
-    if parts[1] == 'PM' and parts[0] < 1200:
+    if parts[1] == 'PM' and int(parts[0]) < 1200:
         ts += 12 * 3600
     return int(ts)
 
@@ -1686,7 +1686,8 @@ def WUCreateRecordsFromHourly(fc, issued_ts, now):
             r['dewpoint'] = str2float('dewpoint',period['dewpoint']['english'])
             r['humidity'] = str2int('humidity', period['humidity'])
             r['windSpeed'] = str2float('wspd', period['wspd']['english'])
-            r['windDir'] = period['wdir']['dir']
+            r['windDir'] = WU_DIR_DICT.get(period['wdir']['dir'],
+                                           period['wdir']['dir'])
             r['pop'] = str2int('pop', period['pop'])
             r['qpf'] = str2float('qpf', period['qpf']['english'])
             r['qsf'] = str2float('snow', period['snow']['english'])
@@ -2092,8 +2093,6 @@ class ForecastData(object):
             r['windGust'] = self._create_speed(ctxt, r['windGust'], usys)
             r['pop'] = self._create_percent(ctxt, r['pop'])
             # FIXME: format qpf and qsf as range or value
-            r['qpf'] = None
-            r['qsf'] = None
             r['windChill'] = self._create_temp(ctxt, r['windChill'], usys)
             r['heatIndex'] = self._create_temp(ctxt, r['heatIndex'], usys)
             r['precip'] = {}
@@ -2179,6 +2178,7 @@ class ForecastData(object):
                     rec['precip'].append(p)
             if r['obvis'] is not None and r['obvis'] not in rec['obvis']:
                 rec['obvis'].append(r['obvis'])
+            # FIXME: aggregate qpf and qsf
         ctxt = 'weather_summary'
         rec['dateTime'] = self._create_time(ctxt, rec['dateTime'])
         rec['issued_ts'] = self._create_time(ctxt, rec['issued_ts'])

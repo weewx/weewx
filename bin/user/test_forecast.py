@@ -9403,8 +9403,8 @@ SW
         ts = 1378215570
         records = forecast.WUParseForecast(WU_BOS_HOURLY, issued_ts=ts, now=ts)
         self.assertEqual(records[0:2], [
-                {'windDir': u'South', 'clouds': 'OV', 'temp': 72.0, 'hour': 22, 'event_ts': 1378173600, 'uvIndex': 0, 'qpf': None, 'pop': 100, 'dateTime': 1378215570, 'dewpoint': 69.0, 'windSpeed': 3.0, 'obvis': None, 'rainshwrs': 'C', 'duration': 3600, 'tstms': 'S', 'humidity': 90, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1, 'qsf': None},
-                {'windDir': u'South', 'clouds': 'OV', 'temp': 72.0, 'hour': 23, 'event_ts': 1378177200, 'uvIndex': 0, 'qpf': 0.040000000000000001, 'pop': 80, 'dateTime': 1378215570, 'dewpoint': 68.0, 'windSpeed': 1.0, 'obvis': 'PF', 'rainshwrs': 'C', 'duration': 3600, 'tstms': 'S', 'humidity': 87, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1, 'qsf': None}
+                {'windDir': u'S', 'clouds': 'OV', 'temp': 72.0, 'hour': 22, 'event_ts': 1378173600, 'uvIndex': 0, 'qpf': None, 'pop': 100, 'dateTime': 1378215570, 'dewpoint': 69.0, 'windSpeed': 3.0, 'obvis': None, 'rainshwrs': 'C', 'duration': 3600, 'tstms': 'S', 'humidity': 90, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1, 'qsf': None},
+                {'windDir': u'S', 'clouds': 'OV', 'temp': 72.0, 'hour': 23, 'event_ts': 1378177200, 'uvIndex': 0, 'qpf': 0.040000000000000001, 'pop': 80, 'dateTime': 1378215570, 'dewpoint': 68.0, 'windSpeed': 1.0, 'obvis': 'PF', 'rainshwrs': 'C', 'duration': 3600, 'tstms': 'S', 'humidity': 87, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1, 'qsf': None}
                 ])
 
     def test_wu_bad_key(self):
@@ -9502,16 +9502,16 @@ SSW
                              template,
                              '''<html>
   <body>
-02-Sep-2013 22:00 3600     - 72.0F     - 90% 69.0F 3.0 mph     - South  100% {'tstms': u'S', 'rainshwrs': u'C'}
-02-Sep-2013 23:00 3600     - 72.0F     - 87% 68.0F 1.0 mph     - South  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 00:00 3600     - 72.0F     - 86% 68.0F 2.0 mph     - South  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 01:00 3600     - 72.0F     - 85% 68.0F 4.0 mph     - South  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
+02-Sep-2013 22:00 3600     - 72.0F     - 90% 69.0F 3.0 mph     - S  100% {'tstms': u'S', 'rainshwrs': u'C'}
+02-Sep-2013 23:00 3600     - 72.0F     - 87% 68.0F 1.0 mph     - S  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 00:00 3600     - 72.0F     - 86% 68.0F 2.0 mph     - S  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 01:00 3600     - 72.0F     - 85% 68.0F 4.0 mph     - S  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
 03-Sep-2013 02:00 3600     - 72.0F     - 84% 68.0F 5.0 mph     - WNW  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
 03-Sep-2013 03:00 3600     - 72.0F     - 82% 67.0F 5.0 mph     - WNW  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
 03-Sep-2013 04:00 3600     - 72.0F     - 81% 67.0F 6.0 mph     - WNW  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 05:00 3600     - 72.0F     - 79% 66.0F 6.0 mph     - West  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
-03-Sep-2013 06:00 3600     - 72.0F     - 80% 66.0F 6.0 mph     - West  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
-03-Sep-2013 07:00 3600     - 73.0F     - 80% 66.0F 7.0 mph     - West  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
+03-Sep-2013 05:00 3600     - 72.0F     - 79% 66.0F 6.0 mph     - W  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
+03-Sep-2013 06:00 3600     - 72.0F     - 80% 66.0F 6.0 mph     - W  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
+03-Sep-2013 07:00 3600     - 73.0F     - 80% 66.0F 7.0 mph     - W  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
 03-Sep-2013 08:00 3600     - 73.0F     - 81% 66.0F 7.0 mph     - WSW  70% {'tstms': u'S', 'rainshwrs': u'C'} PF
 03-Sep-2013 09:00 3600     - 74.0F     - 78% 67.0F 8.0 mph     - WSW  70% {'tstms': u'S', 'rainshwrs': u'C'} PF
 03-Sep-2013 10:00 3600     - 76.0F     - 75% 67.0F 8.0 mph     - WSW  70% {'tstms': u'S', 'rainshwrs': u'C'} PF
@@ -9553,8 +9553,8 @@ OV
 3.0 mph
 2.0 mph
     -
-South
-  South
+S
+  S
 
 100%
   rainshwrs
