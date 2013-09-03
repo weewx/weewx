@@ -9212,11 +9212,14 @@ $forecast.zambretti.code
     def test_nws_date_to_ts(self):
         data = {'418 PM EDT SAT MAY 11 2013': 1368303480,
                 '400 PM EDT SAT MAY 11 2013': 1368302400,
-                '1200 AM EDT SAT MAY 11 2013': 1368288000,
+                '1200 AM EDT SAT MAY 11 2013': 1368244800,
+                '1201 AM EDT SAT MAY 11 2013': 1368244860,
+                '1200 PM EDT SAT MAY 11 2013': 1368288000,
+                '1201 PM EDT SAT MAY 11 2013': 1368288060,
                 '1100 AM EDT SAT MAY 11 2013': 1368284400,
                 '418 AM EDT SAT MAY 11 2013': 1368260280,
                 '400 AM EDT SAT MAY 11 2013': 1368259200,
-                '000 AM EDT SAT MAY 11 2013': 1368244800,
+#                '000 AM EDT SAT MAY 11 2013': 1368244800,
                 '1239 PM EDT TUE SEP 3 2013': 1378226340,
                 }
 

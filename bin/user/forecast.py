@@ -1296,10 +1296,8 @@ def date2ts(tstr):
     """
 
     parts = tstr.split(' ')
-    s = '%s %s %s %s' % (parts[0], parts[4], parts[5], parts[6])
-    ts = time.mktime(time.strptime(s, "%H%M %b %d %Y"))
-    if parts[1] == 'PM' and int(parts[0]) < 1200:
-        ts += 12 * 3600
+    s = '%s %s %s %s %s' % (parts[0], parts[1], parts[4], parts[5], parts[6])
+    ts = time.mktime(time.strptime(s, "%I%M %p %b %d %Y"))
     return int(ts)
 
 def NWSProcessForecast(foid, lid, matrix):
