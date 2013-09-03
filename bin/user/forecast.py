@@ -479,6 +479,12 @@ def get_int(config_dict, label, default_value):
 # FIXME: WU defines the following:
 #  maxhumidity
 #  minhumidity
+#  feelslike
+#  uvi
+#  mslp
+#  condition - what are all the options?
+#  wx - what are all the options?
+#  fctcode - what is this?
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),
                          ('dateTime',   'INTEGER NOT NULL'),  # epoch
@@ -1327,6 +1333,132 @@ def ProcessNWSForecast(foid, lid, matrix):
 #
 # For the weather underground api, see:
 #   http://www.wunderground.com/weather/api/d/docs?MR=1
+#
+# There are two WU forecasts - daily (forecast10day) and hourly (hourly10day)
+#
+# forecast10day
+#
+# date
+# period
+# high
+# low
+# conditions
+# icon
+# icon_url
+# skyicon
+# pop
+# qpf_allday
+# qpf_day
+# qpf_night
+# snow_allday
+# snow_day
+# snow_night
+# maxwind
+# avewind
+# avehumidity
+# maxhumidity
+# minhumidity
+#
+# hourly10day
+#
+# fcttime
+# dewpoint
+# condition
+# icon
+# icon_url
+# fctcode
+#    1 clear
+#    2 partly cloudy
+#    3 mostly cloudy
+#    4 cloudy
+#    5 hazy
+#    6 foggy
+#    7 very hot
+#    8 very cold
+#    9 blowing snow
+#   10 chance of showers
+#   11 showers
+#   12 chance of rain
+#   13 rain
+#   14 chance of a thunderstorm
+#   15 thunderstorm
+#   16 flurries
+#   17
+#   18 chance of snow showers
+#   19 snow showers
+#   20 chance of snow
+#   21 snow
+#   22 chance of ice pellets
+#   23 ice pellets
+#   24 blizzard
+# sky
+# wspd
+# wdir
+# wx
+# uvi
+# humidity
+# windchill
+# heatindex
+# feelslike
+# qpf
+# snow
+# pop
+# mslp
+#
+# codes for condition
+#   [Light/Heavy] Drizzle
+#   [Light/Heavy] Rain
+#   [Light/Heavy] Snow
+#   [Light/Heavy] Snow Grains
+#   [Light/Heavy] Ice Crystals
+#   [Light/Heavy] Ice Pellets
+#   [Light/Heavy] Hail
+#   [Light/Heavy] Mist
+#   [Light/Heavy] Fog
+#   [Light/Heavy] Fog Patches
+#   [Light/Heavy] Smoke
+#   [Light/Heavy] Volcanic Ash
+#   [Light/Heavy] Widespread Dust
+#   [Light/Heavy] Sand
+#   [Light/Heavy] Haze
+#   [Light/Heavy] Spray
+#   [Light/Heavy] Dust Whirls
+#   [Light/Heavy] Sandstorm
+#   [Light/Heavy] Low Drifting Snow
+#   [Light/Heavy] Low Drifting Widespread Dust
+#   [Light/Heavy] Low Drifting Sand
+#   [Light/Heavy] Blowing Snow
+#   [Light/Heavy] Blowing Widespread Dust
+#   [Light/Heavy] Blowing Sand
+#   [Light/Heavy] Rain Mist
+#   [Light/Heavy] Rain Showers
+#   [Light/Heavy] Snow Showers
+#   [Light/Heavy] Snow Blowing Snow Mist
+#   [Light/Heavy] Ice Pellet Showers
+#   [Light/Heavy] Hail Showers
+#   [Light/Heavy] Small Hail Showers
+#   [Light/Heavy] Thunderstorm
+#   [Light/Heavy] Thunderstorms and Rain
+#   [Light/Heavy] Thunderstorms and Snow
+#   [Light/Heavy] Thunderstorms and Ice Pellets
+#   [Light/Heavy] Thunderstorms with Hail
+#   [Light/Heavy] Thunderstorms with Small Hail
+#   [Light/Heavy] Freezing Drizzle
+#   [Light/Heavy] Freezing Rain
+#   [Light/Heavy] Freezing Fog
+#   Patches of Fog
+#   Shallow Fog
+#   Partial Fog
+#   Overcast
+#   Clear
+#   Partly Cloudy
+#   Mostly Cloudy
+#   Scattered Clouds
+#   Small Hail
+#   Squalls
+#   Funnel Cloud
+#   Unknown Precipitation
+#   Unknown
 # -----------------------------------------------------------------------------
 
 WU_KEY = 'WU'
@@ -1380,23 +1512,20 @@ class WUForecast(Forecast):
                (WU_KEY, self.interval, self.max_age, self.api_key, self.location))
 
     def get_forecast(self, event):
-        text = DownloadWUForecast(self.api_key, self.location, self.url, self.max_tries)
+        text = WUDownloadForecast(self.api_key, self.location, self.url, self.max_tries)
         if text is None:
             logerr('%s: no forecast data for %s from %s' %
                    (WU_KEY, self.location, self.url))
             return None
-        matrix = CreateWUForecastMatrix(text)
-        if matrix is None:
-            return None
-        logdbg('%s: forecast matrix: %s' % (WU_KEY, matrix))
-        records = ProcessWUForecast(matrix)
+        records = WUCreateForecastRecords(text)
         loginf('%s: got %d forecast records' % (WU_KEY, len(records)))
         return records
 
-def DownloadWUForecast(api_key, location, url=WU_DEFAULT_URL, max_tries=3):
+def WUDownloadForecast(api_key, location, url=WU_DEFAULT_URL, max_tries=3):
     """Download a forecast from the Weather Underground"""
 
-    u = '%s/%s/forecast10day/q/%s.json' % (url, api_key, location) \
+    # hourly10day or forecast10day
+    u = '%s/%s/hourly10day/q/%s.json' % (url, api_key, location) \
         if url == WU_DEFAULT_URL else url
     logdbg("%s: downloading forecast from '%s'" % (WU_KEY, u))
     for count in range(max_tries):
@@ -1412,84 +1541,149 @@ def DownloadWUForecast(api_key, location, url=WU_DEFAULT_URL, max_tries=3):
         logerr('%s: failed to download forecast' % WU_KEY)
     return None
 
-def CreateWUForecastMatrix(text, issued_ts=None):
+def WUParseForecast(text, issued_ts=None, now=None):
     obj = json.loads(text)
     if not 'response' in obj:
         logerr('%s: unknown format in response' % WU_KEY)
-        return None
+        return []
     response = obj['response']
     if 'error' in response:
         logerr('%s: error in response: %s: %s' %
                (WU_KEY,
                 response['error']['type'], response['error']['description']))
-        return None
+        return []
 
-    fc = obj['forecast']['simpleforecast']['forecastday']
-    if issued_ts is None:
-        issued_ts = int(time.time())
+    if issued_ts is None or now is None:
+        n = int(time.time())
+        if issued_ts is None:
+            issued_ts = n
+        if now is None:
+            now = n
 
-    matrix = {}
-    matrix['issued_ts'] = issued_ts
-    matrix['ts'] = []
-    matrix['hour'] = []
-    matrix['duration'] = []
-    matrix['clouds'] = []
-    matrix['tempMin'] = []
-    matrix['tempMax'] = []
-    matrix['humidity'] = []
-    matrix['pop'] = []
-    matrix['qpf'] = []
-    matrix['qsf'] = []
-    matrix['windSpeed'] = []
-    matrix['windDir'] = []
-    matrix['windGust'] = []
-    for period in fc:
-        try:
-            matrix['ts'].append(int(period['date']['epoch']))
-            matrix['hour'].append(period['date']['hour'])
-            matrix['duration'].append(24*3600)
-            clouds = WU_SKY_DICT.get(period['skyicon'], None)
-            if clouds is not None:
-                matrix['clouds'].append(clouds)
-            else:
-                logerr('%s: unknown skyicon %s' % (WU_KEY, period['skyicon']))
-            try:
-                matrix['tempMin'].append(float(period['low']['fahrenheit']))
-            except Exception, e:
-                logerr('%s: bogus tempMin in forecast: %s' % (WU_KEY, e))
-                matrix['tempMin'].append(None)
-            try:
-                matrix['tempMax'].append(float(period['high']['fahrenheit']))
-            except Exception, e:
-                logerr('%s: bogus tempMax in forecast: %s' % (WU_KEY, e))
-                matrix['tempMax'].append(None)
-            matrix['humidity'].append(period['avehumidity'])
-            matrix['pop'].append(period['pop'])
-            matrix['qpf'].append(period['qpf_allday']['in'])
-            matrix['qsf'].append(period['snow_allday']['in'])
-            matrix['windSpeed'].append(period['avewind']['mph'])
-            matrix['windDir'].append(WU_DIR_DICT.get(period['avewind']['dir'],
-                                                     period['avewind']['dir']))
-            matrix['windGust'].append(period['maxwind']['mph'])
-        except Exception, e:
-            logerr('%s: bad timestamp in forecast: %s' % (WU_KEY, e))
+    if 'hourly_forecast' in obj:
+        records = WUCreateRecordsFromHourly(obj, issued_ts, now)
+    elif 'forecast' in obj:
+        records = WUCreateRecordsFromDaily(obj, issued_ts, now)
+    else:
+        records = []
+    return records
 
-    return matrix
+def sky2clouds(sky):
+    if 0 <= sky <= 5:
+        return 'CL'
+    elif 5 < sky <= 25:
+        return 'FW'
+    elif 25 < sky <= 50:
+        return 'SC'
+    elif 50 < sky <= 69:
+        return 'B1'
+    elif 69 < sky <= 87:
+        return 'B2'
+    elif 87 < sky <= 100:
+        return 'OV'
+    return None
 
-def ProcessWUForecast(matrix, now=int(time.time())):
+# FIXME: add precip types supported by wu but not nws
+wx2precip_dict = {
+    'Rain': 'rain',
+    'Rain Showers': 'rainshwrs',
+    'Thunderstorms': 'tstms',
+    'Drizzle': 'drizzle',
+    'Snow': 'snow',
+    'Snow Showers': 'snowshwrs',
+    'Flurries': 'flurries',
+    'Sleet': 'sleet',
+    'Freezing Rain': 'frzngrain',
+    'Freezing Drizzle': 'frzngdrzl',
+}
+
+# FIXME: make this matching work properly for all precip types
+def wx2precip(wx):
+    '''return a dict with recognized types of precipitation'''
+    p = {}
+    for x in [w.strip() for w in wx.split(',')]:
+        for k in wx2precip_dict:
+            if k.find(x) >= 0:
+                p[wx2precip_dict[k]] = 10 # FIXME: use proper percentage
+    return p
+
+wx2obvis_dict = {
+    'Fog': 'F',
+    'Patchy Fog': 'PF',
+    'Dense Fog': 'F+',
+    'Patchy Dense Fog': 'PF+',
+    'Haze': 'H',
+    'Blowing Snow': 'BS',
+    'Smoke': 'K',
+    'Blowing Dust': 'BD',
+    'Volcanic Ash': 'AF',
+}
+
+def wx2obvis(wx):
+    '''return the first match we find, otherwise None'''
+    for x in [w.strip() for w in wx.split(',')]:
+        if x in wx2obvis_dict:
+            return wx2obvis_dict[x]
+    return None
+
+def WUCreateRecordsFromHourly(fc, issued_ts, now):
+    '''create from hourly10day'''
     records = []
-    if matrix is not None:
-        for i,ts in enumerate(matrix['ts']):
-            record = {}
-            record['method'] = WU_KEY
-            record['usUnits'] = weewx.US
-            record['dateTime'] = now
-            record['issued_ts'] = matrix['issued_ts']
-            record['event_ts'] = ts
-            for label in matrix:
-                if isinstance(matrix[label], list):
-                    record[label] = matrix[label][i]
-            records.append(record)
+    for period in fc['hourly_forecast']:
+        try:
+            r = {}
+            r['method'] = WU_KEY
+            r['usUnits'] = weewx.US
+            r['dateTime'] = now
+            r['issued_ts'] = issued_ts
+            r['event_ts'] = int(period['FCTTIME']['epoch'])
+            r['hour'] = int(period['FCTTIME']['hour'])
+            r['duration'] = 3600
+            r['clouds'] = sky2clouds(period['sky'])
+            r['temp'] = float(period['temp']['english'])
+            r['dewpoint'] = float(period['dewpoint']['english'])
+            r['humidity'] = int(period['humidity'])
+            r['windSpeed'] = float(period['wspd']['english'])
+            r['windDir'] = period['wdir']['dir']
+            r['pop'] = int(period['pop'])
+#            r['qpf'] = float(period['qpf']['english'])
+#            r['qsf'] = float(period['snow']['english'])
+            r['obvis'] = wx2obvis(period['wx'])
+            r['uvIndex'] = int(period['uvi'])
+            r.update(wx2precip(period['wx']))
+            records.append(r)
+        except Exception, e:
+            logerr('%s: failure in hourly forecast: %s' % (WU_KEY, e))
+    return records
+
+def WUCreateRecordsFromDaily(fc, issued_ts, now):
+    '''create from forecast10day data'''
+    records = []
+    for period in fc['forecast']['simpleforecast']['forecastday']:
+        try:
+            r = {}
+            r['method'] = WU_KEY
+            r['usUnits'] = weewx.US
+            r['dateTime'] = now
+            r['issued_ts'] = issued_ts
+            r['event_ts'] = int(period['date']['epoch'])
+            r['hour'] = int(period['date']['hour'])
+            r['duration'] = 24*3600
+            r['clouds'] = WU_SKY_DICT.get(period['skyicon'], None)
+            r['tempMin'] = float(period['low']['fahrenheit'])
+            r['tempMax'] = float(period['high']['fahrenheit'])
+            r['temp'] = (r['tempMin'] + r['tempMax']) / 2
+            r['humidity'] = int(period['avehumidity'])
+            r['pop'] = int(period['pop'])
+            r['qpf'] = float(period['qpf_allday']['in'])
+            r['qsf'] = float(period['snow_allday']['in'])
+            r['windSpeed'] = float(period['avewind']['mph'])
+            r['windDir'] = WU_DIR_DICT.get(period['avewind']['dir'],
+                                           period['avewind']['dir'])
+            r['windGust'] = float(period['maxwind']['mph'])
+            records.append(r)
+        except Exception, e:
+            logerr('%s: failure in daily forecast: %s' % (WU_KEY, e))
     return records
 
 
@@ -1964,6 +2158,7 @@ class ForecastData(object):
         rec['pop'] = self._create_percent(ctxt, rec['pop'])
         return rec
 
+    # FIXME: this is more appropriately called astronomy
     def almanac(self, ts=int(time.time())):
         '''Returns the almanac object for the indicated timestamp.'''
         return weewx.almanac.Almanac(ts,
