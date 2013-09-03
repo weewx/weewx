@@ -356,18 +356,6 @@ $summary.precip          array
 
 # FIXME: make the forecasting extensible
 
-# FIXME: ensure compatibility with uk met office
-# http://www.metoffice.gov.uk/datapoint/product/uk-3hourly-site-specific-forecast
-# forecast in 3-hour increments for up to 5 days in the future
-# UVIndex (1-11)
-# feels like temperature (wind chill and/or heat index?)
-# weather type (0-30)
-# visibility (UN, VP, PO, MO, GO, VG, EX)
-# textual descriptino
-# wind direction is 16-point compass
-# air quality index
-# also see icons used for uk metoffice
-
 import httplib
 import socket
 import string
@@ -419,6 +407,28 @@ def get_int(config_dict, label, default_value):
             logerr("bad value '%s' for %s" % (value, label))
     return value
 
+# FIXME: WU defines the following:
+#  maxhumidity
+#  minhumidity
+#  feelslike
+#  uvi
+#  mslp
+#  condition
+#  wx
+#  fctcode
+
+# FIXME: ensure compatibility with uk met office
+# http://www.metoffice.gov.uk/datapoint/product/uk-3hourly-site-specific-forecast
+# forecast in 3-hour increments for up to 5 days in the future
+# UVIndex (1-11)
+# feels like temperature
+# weather type (0-30)
+# visibility (UN, VP, PO, MO, GO, VG, EX)
+# textual description
+# wind direction is 16-point compass
+# air quality index
+# also see icons used for uk metoffice
+
 """Database Schema
 
    The schema assumes that forecasts are deterministic - a forecast made at
@@ -434,59 +444,46 @@ def get_int(config_dict, label, default_value):
    duration   - length of the forecast period
    location
 
-   database     nws                    wu                    zambretti
-   -----------  ---------------------  --------------------  ---------
-   zcode                                                     CODE
+   database     nws                    wu-daily           wu-hourly
+   -----------  ---------------------  -----------------  ---------
 
-   foid         field office id
-   lid          location id
-   desc         description
-   hour         3HRLY | 6HRLY          date.hour
+   hour         3HRLY | 6HRLY          date.hour          FCTTIME.hour
    tempMin      MIN/MAX | MAX/MIN      low.fahrenheit
    tempMax      MIN/MAX | MAX/MIN      high.fahrenheit
-   temp         TEMP
-   dewpoint     DEWPT
-   humidity     RH                     avehumidity
-   windDir      WIND DIR | PWIND DIR   avewind.dir
-   windSpeed    WIND SPD               avewind.mph
+   temp         TEMP                                      temp.english
+   dewpoint     DEWPT                                     dewpoint.english
+   humidity     RH                     avehumidity        humidity
+   windDir      WIND DIR | PWIND DIR   avewind.dir        wdir.dir
+   windSpeed    WIND SPD               avewind.mph        wspd.english
    windGust     WIND GUST              maxwind.mph
    windChar     WIND CHAR
-   clouds       CLOUDS | AVG CLOUNDS   skyicon
-   pop          POP 12HR               pop
-   qpf          QPF 12HR               qpf_allday.in
-   qsf          SNOW 12HR              snow_allday.in
-   rain         RAIN
-   rainshwrs    RAIN SHWRS
-   tstms        TSTMS
-   drizzle      DRIZZLE
-   snow         SNOW
-   snowshwrs    SNOW SHWRS
-   flurries     FLURRIES
-   sleet        SLEET
-   frzngrain    FRZNG RAIN
-   frzngdrzl    FRZNG DRZL
-   obvis        OBVIS
-   windChill    WIND CHILL
-   heatIndex    HEAT INDEX
-   uvIndex
+   clouds       CLOUDS | AVG CLOUNDS   skyicon            sky
+   pop          POP 12HR               pop                pop
+   qpf          QPF 12HR               qpf_allday.in      qpf.english
+   qsf          SNOW 12HR              snow_allday.in     qsf.english
+   rain         RAIN                                      wx
+   rainshwrs    RAIN SHWRS                                wx
+   tstms        TSTMS                                     wx
+   drizzle      DRIZZLE                                   wx
+   snow         SNOW                                      wx
+   snowshwrs    SNOW SHWRS                                wx
+   flurries     FLURRIES                                  wx
+   sleet        SLEET                                     wx
+   frzngrain    FRZNG RAIN                                wx
+   frzngdrzl    FRZNG DRZL                                wx
+   obvis        OBVIS                                     wx
+   windChill    WIND CHILL                                windchill
+   heatIndex    HEAT INDEX                                heatindex
+   uvIndex                                                uvi
    airQuality
 
    hilo         indicates whether this is a high or low tide
    offset       how high or low the tide is relative to mean low
    waveheight   average wave height
    waveperiod   average wave period
-"""
-# FIXME: eliminate separate foid and lid fields, just use location
 
-# FIXME: WU defines the following:
-#  maxhumidity
-#  minhumidity
-#  feelslike
-#  uvi
-#  mslp
-#  condition
-#  wx
-#  fctcode
+   zcode        used only by zambretti forecast
+"""
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),
                          ('dateTime',   'INTEGER NOT NULL'),  # epoch
@@ -499,8 +496,6 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('zcode',      'CHAR(1)'),
 
                          # NWS fields
-                         ('foid',       'CHAR(3)'),     # e.g., BOX
-                         ('lid',        'CHAR(6)'),     # e.g., MAZ014
                          ('hour',       'INTEGER'),     # 00 to 23
                          ('tempMin',    'REAL'),        # degree F
                          ('tempMax',    'REAL'),        # degree F
@@ -995,18 +990,18 @@ class NWSForecast(Forecast):
                (NWS_KEY, self.interval, self.max_age, self.lid, self.foid))
 
     def get_forecast(self, event):
-        text = DownloadNWSForecast(self.foid, self.url, self.max_tries)
+        text = NWSDownloadForecast(self.foid, self.url, self.max_tries)
         if text is None:
             logerr('%s: no PFM data for %s from %s' %
                    (NWS_KEY, self.foid, self.url))
             return None
-        matrix = ParseNWSForecast(text, self.lid)
+        matrix = NWSParseForecast(text, self.lid)
         if matrix is None:
             logerr('%s: no PFM found for %s in forecast from %s' %
                    (NWS_KEY, self.lid, self.foid))
             return None
         logdbg('%s: forecast matrix: %s' % (NWS_KEY, matrix))
-        records = ProcessNWSForecast(self.foid, self.lid, matrix)
+        records = NWSProcessForecast(self.foid, self.lid, matrix)
         msg = 'got %d forecast records' % len(records)
         if 'desc' in matrix or 'location' in matrix:
             msg += ' for %s %s' % (matrix.get('desc',''),
@@ -1125,7 +1120,7 @@ nws_label_dict = {
     'HF' : 'Hurricane Force',
     }
 
-def DownloadNWSForecast(foid, url=NWS_DEFAULT_PFM_URL, max_tries=3):
+def NWSDownloadForecast(foid, url=NWS_DEFAULT_PFM_URL, max_tries=3):
     """Download a point forecast matrix from the US National Weather Service"""
 
     u = '%s&issuedby=%s' % (url, foid) if url == NWS_DEFAULT_PFM_URL else url
@@ -1143,7 +1138,7 @@ def DownloadNWSForecast(foid, url=NWS_DEFAULT_PFM_URL, max_tries=3):
         logerr('%s: failed to download forecast' % NWS_KEY)
     return None
 
-def GetNWSLocation(text, lid):
+def NWSExtractLocation(text, lid):
     """Extract a single location from a US National Weather Service PFM."""
 
     alllines = text.splitlines()
@@ -1159,13 +1154,13 @@ def GetNWSLocation(text, lid):
                 lines.append(line)
     return lines
 
-def ParseNWSForecast(text, lid):
+def NWSParseForecast(text, lid):
     """Parse a United States National Weather Service point forcast matrix.
     Save it into a dictionary with per-hour elements for wind, temperature,
     etc. extracted from the point forecast.
     """
 
-    lines = GetNWSLocation(text, lid)
+    lines = NWSExtractLocation(text, lid)
     if lines is None:
         return None
 
@@ -1303,11 +1298,12 @@ def date2ts(tstr):
     parts = tstr.split(' ')
     s = '%s %s %s %s' % (parts[0], parts[4], parts[5], parts[6])
     ts = time.mktime(time.strptime(s, "%H%M %b %d %Y"))
-    if parts[1] == 'PM':
+    if parts[1] == 'PM' and parts[0] < 1200:
         ts += 12 * 3600
     return int(ts)
 
-def ProcessNWSForecast(foid, lid, matrix):
+def NWSProcessForecast(foid, lid, matrix):
+    '''convert NWS matrix to records'''
     now = int(time.time())
     records = []
     if matrix is not None:
@@ -1318,8 +1314,7 @@ def ProcessNWSForecast(foid, lid, matrix):
             record['dateTime'] = now
             record['issued_ts'] = matrix['issued_ts']
             record['event_ts'] = ts
-            record['lid'] = lid
-            record['foid'] = foid
+            record['location'] = '%s %s' % (foid, lid)
             for label in matrix:
                 if isinstance(matrix[label], list):
                     record[label] = matrix[label][i]
@@ -1946,12 +1941,6 @@ class ForecastData(object):
             records.append(r)
         return records
 
-    def _get_histogram(self, key, a, histogram):
-        if a[key] not in histogram:
-            histogram[a[key]] = 1
-        else:
-            histogram[a[key]] += 1
-
     def _create_from_histogram(self, histogram):
         '''use the item with highest count in the histogram'''
         x = None
@@ -2041,9 +2030,15 @@ class ForecastData(object):
                  'offset' : '',
                  'location' : '' }
 
-    def xtides(self, from_ts=int(time.time()), max_events=32):
+    def xtides(self, from_ts=int(time.time()), max_events=40):
         '''The tide forecast returns tide events into the future from the
-        indicated time using the latest tide forecast.'''
+        indicated time using the latest tide forecast.
+
+        from_ts - timestamp in epoch seconds.  if nothing is specified, the
+                  current time is used.
+
+        max_events - maximum number of events to return.  default to 10 days'
+                     worth of tides.'''
         records = self._getTides('xtides', from_ts=from_ts, max_events=max_events)
         return records
 
@@ -2097,6 +2092,8 @@ class ForecastData(object):
             r['windGust'] = self._create_speed(ctxt, r['windGust'], usys)
             r['pop'] = self._create_percent(ctxt, r['pop'])
             # FIXME: format qpf and qsf as range or value
+            r['qpf'] = None
+            r['qsf'] = None
             r['windChill'] = self._create_temp(ctxt, r['windChill'], usys)
             r['heatIndex'] = self._create_temp(ctxt, r['heatIndex'], usys)
             r['precip'] = {}
@@ -2119,8 +2116,6 @@ class ForecastData(object):
             ts = int(time.time())
         from_ts = weeutil.weeutil.startOfDay(ts)
         dur = 24 * 3600 # one day
-        foid = None
-        lid = None
         usys = None
         rec = {
             'dateTime' : ts,
@@ -2147,21 +2142,23 @@ class ForecastData(object):
             'windChar' : None,
             'windChars' : {},
             'pop' : None,
+            'qpf' : None,
+            'qsf' : None,
             'precip' : [],
             'obvis' : [],
             }
         outlook_histogram = {}
         records = self._getRecords(fid, from_ts, from_ts+dur, max_events=40)
         for r in records:
-            if foid is None:
-                foid = r['foid']
-            if lid is None:
-                lid = r['lid']
+            if rec['location'] is None:
+                rec['location'] = r['location']
             if rec['issued_ts'] is None:
                 rec['issued_ts'] = r['issued_ts']
             if usys is None:
                 usys = r['usUnits']
-            self._get_histogram('clouds', r, outlook_histogram)
+            x = r['clouds']
+            if x is not None:
+                outlook_histogram[x] = outlook_histogram.get(x,0) + 1
             for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
                 try:
                     x = float(r[s])
@@ -2186,7 +2183,6 @@ class ForecastData(object):
         rec['dateTime'] = self._create_time(ctxt, rec['dateTime'])
         rec['issued_ts'] = self._create_time(ctxt, rec['issued_ts'])
         rec['event_ts'] = self._create_time(ctxt, rec['event_ts'])
-        rec['location'] = '%s %s' % (foid, lid)
         rec['clouds'] = self._create_from_histogram(outlook_histogram)
         rec['tempMin'] = self._create_temp(ctxt, rec['tempMin'], usys)
         rec['tempMax'] = self._create_temp(ctxt, rec['tempMax'], usys)
@@ -2206,7 +2202,8 @@ class ForecastData(object):
         rec['pop'] = self._create_percent(ctxt, rec['pop'])
         return rec
 
-    # FIXME: this is more appropriately called astronomy
+    # FIXME: this is more appropriately called astronomy, at least from
+    #        the template point of view.
     def almanac(self, ts=int(time.time())):
         '''Returns the almanac object for the indicated timestamp.'''
         return weewx.almanac.Almanac(ts,
