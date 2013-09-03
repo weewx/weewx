@@ -55,10 +55,10 @@ Configuration
         location = Boston
 
         # How often to generate the tide forecast, in seconds
-        #interval = 604800
+        #interval = 1209600
 
         # How often to prune old tides from database, None to keep forever
-        #max_age = 1209600
+        #max_age = 2419200
 
     [[Zambretti]]
         # hemisphere can be NORTH or SOUTH
@@ -1585,7 +1585,6 @@ def sky2clouds(sky):
         return 'OV'
     return None
 
-# FIXME: add precip types supported by wu but not nws
 wx2precip_dict = {
     'Rain': 'rain',
     'Rain Showers': 'rainshwrs',
@@ -1597,18 +1596,8 @@ wx2precip_dict = {
     'Sleet': 'sleet',
     'Freezing Rain': 'frzngrain',
     'Freezing Drizzle': 'frzngdrzl',
+# FIXME: add precip types supported by wu but not nws
 }
-
-# FIXME: make this matching work properly for all precip types
-def wx2precip(wx):
-    '''return a dict with recognized types of precipitation'''
-    p = {}
-    for x in [w.strip() for w in wx.split(',')]:
-        if x != '':
-            for k in wx2precip_dict:
-                if k.find(x) >= 0:
-                    p[wx2precip_dict[k]] = '' # FIXME: use proper percentage
-    return p
 
 wx2obvis_dict = {
     'Fog': 'F',
@@ -1620,13 +1609,68 @@ wx2obvis_dict = {
     'Smoke': 'K',
     'Blowing Dust': 'BD',
     'Volcanic Ash': 'AF',
+# FIXME: add obvis types supported by wu but not nws
 }
 
-def wx2obvis(wx):
-    '''return the first match we find, otherwise None'''
-    for x in [w.strip() for w in wx.split(',')]:
+wx2chance_dict = {
+    'Slight Chance': 'S',
+    'Chance': 'C',
+    'Likely': 'L',
+    'Occasional': 'O',
+    'Definite': 'D',
+    'Isolated': 'IS',
+    'Scattered': 'SC',
+    'Numerous': 'NM',
+    'Extensive': 'EC',
+# FIXME: add other wu likeliehoods
+}
+
+def wx2pc(s):
+    '''parse a wu wx string for the precipitation type and likeliehood
+
+    Chance of Light Rain Showers  -> rainshwrs,C
+    Isolated Thunderstorms        -> tstms,IS
+    '''
+    for x in wx2precip_dict:
+        if s.endswith(x):
+            for y in wx2chance_dict:
+                if s.startswith(y):
+                    return wx2precip_dict[x],wx2chance_dict[y]
+            return wx2precip_dict[x],''
+    return None, 0
+
+def wu2precip(period):
+    '''return a dictionary of precipitation with corresponding likeliehoods'''
+    p = {}
+    for w in period['wx'].split(','):
+        precip,chance = wx2pc(w.strip())
+        if precip is not None:
+            p[precip] = chance
+    return p
+
+def wu2obvis(period):
+    '''return a single obvis type'''
+    for x in [w.strip() for w in period['wx'].split(',')]:
         if x in wx2obvis_dict:
             return wx2obvis_dict[x]
+    return None
+
+def str2int(n, s):
+    if s == '':
+        return None
+    try:
+        return int(s)
+    except Exception, e:
+        logerr("%s: conversion error for %s from '%s': %s" % (WU_KEY, n, s, e))
+    return None
+
+def str2float(n, s):
+    if s == '':
+        return None
+    try:
+        return float(s)
+    except Exception, e:
+        logerr("%s: conversion error for %s from '%s': %s" % (WU_KEY, n, s, e))
     return None
 
 def WUCreateRecordsFromHourly(fc, issued_ts, now):
@@ -1639,21 +1683,21 @@ def WUCreateRecordsFromHourly(fc, issued_ts, now):
             r['usUnits'] = weewx.US
             r['dateTime'] = now
             r['issued_ts'] = issued_ts
-            r['event_ts'] = int(period['FCTTIME']['epoch'])
-            r['hour'] = int(period['FCTTIME']['hour'])
+            r['event_ts'] = str2int('epoch', period['FCTTIME']['epoch'])
+            r['hour'] = str2int('hour', period['FCTTIME']['hour'])
             r['duration'] = 3600
-            r['clouds'] = sky2clouds(period['sky'])
-            r['temp'] = float(period['temp']['english'])
-            r['dewpoint'] = float(period['dewpoint']['english'])
-            r['humidity'] = int(period['humidity'])
-            r['windSpeed'] = float(period['wspd']['english'])
+            r['clouds'] = sky2clouds(int(period['sky']))
+            r['temp'] = str2float('temp', period['temp']['english'])
+            r['dewpoint'] = str2float('dewpoint',period['dewpoint']['english'])
+            r['humidity'] = str2int('humidity', period['humidity'])
+            r['windSpeed'] = str2float('wspd', period['wspd']['english'])
             r['windDir'] = period['wdir']['dir']
-            r['pop'] = int(period['pop'])
-#            r['qpf'] = float(period['qpf']['english'])
-#            r['qsf'] = float(period['snow']['english'])
-            r['obvis'] = wx2obvis(period['wx'])
-            r['uvIndex'] = int(period['uvi'])
-            r.update(wx2precip(period['wx']))
+            r['pop'] = str2int('pop', period['pop'])
+            r['qpf'] = str2float('qpf', period['qpf']['english'])
+            r['qsf'] = str2float('snow', period['snow']['english'])
+            r['obvis'] = wu2obvis(period)
+            r['uvIndex'] = str2int('uvi', period['uvi'])
+            r.update(wu2precip(period))
             records.append(r)
         except Exception, e:
             logerr('%s: failure in hourly forecast: %s' % (WU_KEY, e))
@@ -1669,21 +1713,21 @@ def WUCreateRecordsFromDaily(fc, issued_ts, now):
             r['usUnits'] = weewx.US
             r['dateTime'] = now
             r['issued_ts'] = issued_ts
-            r['event_ts'] = int(period['date']['epoch'])
-            r['hour'] = int(period['date']['hour'])
+            r['event_ts'] = str2int('epoch', period['date']['epoch'])
+            r['hour'] = str2int('hour', period['date']['hour'])
             r['duration'] = 24*3600
             r['clouds'] = WU_SKY_DICT.get(period['skyicon'], None)
-            r['tempMin'] = float(period['low']['fahrenheit'])
-            r['tempMax'] = float(period['high']['fahrenheit'])
+            r['tempMin'] = str2float('low', period['low']['fahrenheit'])
+            r['tempMax'] = str2float('high', period['high']['fahrenheit'])
             r['temp'] = (r['tempMin'] + r['tempMax']) / 2
-            r['humidity'] = int(period['avehumidity'])
-            r['pop'] = int(period['pop'])
-            r['qpf'] = float(period['qpf_allday']['in'])
-            r['qsf'] = float(period['snow_allday']['in'])
-            r['windSpeed'] = float(period['avewind']['mph'])
+            r['humidity'] = str2int('humidity', period['avehumidity'])
+            r['pop'] = str2int('pop', period['pop'])
+            r['qpf'] = str2float('qpf', period['qpf_allday']['in'])
+            r['qsf'] = str2float('qsf', period['snow_allday']['in'])
+            r['windSpeed'] = str2float('avewind', period['avewind']['mph'])
             r['windDir'] = WU_DIR_DICT.get(period['avewind']['dir'],
                                            period['avewind']['dir'])
-            r['windGust'] = float(period['maxwind']['mph'])
+            r['windGust'] = str2float('maxwind', period['maxwind']['mph'])
             records.append(r)
         except Exception, e:
             logerr('%s: failure in daily forecast: %s' % (WU_KEY, e))
@@ -1717,7 +1761,7 @@ class XTideForecast(Forecast):
 
     def __init__(self, engine, config_dict):
         super(XTideForecast, self).__init__(engine, config_dict, XT_KEY,
-                                            interval=604800, max_age=1209600)
+                                            interval=1209600, max_age=2419200)
         d = config_dict['Forecast'].get(XT_KEY, {})
         self.tideprog = d.get('prog', XT_PROG)
         self.tideargs = d.get('args', XT_ARGS)
@@ -2018,7 +2062,7 @@ class ForecastData(object):
         return { 'dateTime' : th, 'issued_ts' : th, 'event_ts' : th,
                  'code' : code, 'text' : text, }
 
-    def weather_periods(self, fid, from_ts=None, to_ts=None, max_events=40):
+    def weather_periods(self, fid, from_ts=None, to_ts=None, max_events=240):
         '''Returns forecast records for the indicated source from the 
         specified time.
 
@@ -2031,6 +2075,7 @@ class ForecastData(object):
                 days from the from_ts is used.
 
         max_events - maximum number of events to return.  None is no limit.
+                     default to 240 (24 hours * 10 days).
         '''
         if from_ts is None:
             from_ts = int(time.time())

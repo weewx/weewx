@@ -8747,7 +8747,7 @@ TABLE_TEMPLATE = '''<html>
 
 #set $lastday = None
 
-#for $period in $forecast.weather_periods('SOURCE', from_ts=TS)
+#for $period in $forecast.weather_periods('SOURCE', from_ts=TS, max_events=40)
   #set $thisday = $period.event_ts.format('%d')
   #set $thisdate = $period.event_ts.format('%Y.%m.%d')
   #set $hourid = $thisdate + '.hours'
@@ -9353,8 +9353,8 @@ SW
         ts = 1378215570
         records = forecast.WUParseForecast(WU_BOS_HOURLY, issued_ts=ts, now=ts)
         self.assertEqual(records[0:2], [
-                {'windDir': u'South', 'clouds': None, 'temp': 72.0, 'hour': 22, 'event_ts': 1378173600, 'uvIndex': 0, 'pop': 100, 'dateTime': 1378215570, 'dewpoint': 69.0, 'windSpeed': 3.0, 'obvis': None, 'duration': 3600, 'humidity': 90, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1},
-                {'windDir': u'South', 'clouds': None, 'temp': 72.0, 'hour': 23, 'event_ts': 1378177200, 'uvIndex': 0, 'pop': 80, 'dateTime': 1378215570, 'dewpoint': 68.0, 'windSpeed': 1.0, 'obvis': u'PF', 'duration': 3600, 'humidity': 87, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1}
+                {'windDir': u'South', 'clouds': 'OV', 'temp': 72.0, 'hour': 22, 'event_ts': 1378173600, 'uvIndex': 0, 'qpf': None, 'pop': 100, 'dateTime': 1378215570, 'dewpoint': 69.0, 'windSpeed': 3.0, 'obvis': None, 'rainshwrs': 'C', 'duration': 3600, 'tstms': 'S', 'humidity': 90, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1, 'qsf': None},
+                {'windDir': u'South', 'clouds': 'OV', 'temp': 72.0, 'hour': 23, 'event_ts': 1378177200, 'uvIndex': 0, 'qpf': 0.040000000000000001, 'pop': 80, 'dateTime': 1378215570, 'dewpoint': 68.0, 'windSpeed': 1.0, 'obvis': 'PF', 'rainshwrs': 'C', 'duration': 3600, 'tstms': 'S', 'humidity': 87, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1, 'qsf': None}
                 ])
 
     def test_wu_bad_key(self):
@@ -9452,26 +9452,26 @@ SSW
                              template,
                              '''<html>
   <body>
-02-Sep-2013 22:00 3600     - 72.0F     - 90% 69.0F 3.0 mph     - South  100% {}
-02-Sep-2013 23:00 3600     - 72.0F     - 87% 68.0F 1.0 mph     - South  80% {} PF
-03-Sep-2013 00:00 3600     - 72.0F     - 86% 68.0F 2.0 mph     - South  80% {} PF
-03-Sep-2013 01:00 3600     - 72.0F     - 85% 68.0F 4.0 mph     - South  80% {} PF
-03-Sep-2013 02:00 3600     - 72.0F     - 84% 68.0F 5.0 mph     - WNW  80% {} PF
-03-Sep-2013 03:00 3600     - 72.0F     - 82% 67.0F 5.0 mph     - WNW  80% {} PF
-03-Sep-2013 04:00 3600     - 72.0F     - 81% 67.0F 6.0 mph     - WNW  80% {} PF
-03-Sep-2013 05:00 3600     - 72.0F     - 79% 66.0F 6.0 mph     - West  80% {} PF
-03-Sep-2013 06:00 3600     - 72.0F     - 80% 66.0F 6.0 mph     - West  80% {} PF
-03-Sep-2013 07:00 3600     - 73.0F     - 80% 66.0F 7.0 mph     - West  80% {} PF
-03-Sep-2013 08:00 3600     - 73.0F     - 81% 66.0F 7.0 mph     - WSW  70% {} PF
-03-Sep-2013 09:00 3600     - 74.0F     - 78% 67.0F 8.0 mph     - WSW  70% {} PF
-03-Sep-2013 10:00 3600     - 76.0F     - 75% 67.0F 8.0 mph     - WSW  70% {} PF
-03-Sep-2013 11:00 3600     - 77.0F     - 72% 68.0F 9.0 mph     - WSW  60% {}
-03-Sep-2013 12:00 3600     - 79.0F     - 68% 67.0F 10.0 mph     - WSW  60% {}
-03-Sep-2013 13:00 3600     - 80.0F     - 64% 67.0F 10.0 mph     - WSW  60% {}
-03-Sep-2013 14:00 3600     - 82.0F     - 60% 66.0F 11.0 mph     - WSW  60% {}
-03-Sep-2013 15:00 3600     - 81.0F     - 60% 65.0F 11.0 mph     - WSW  60% {}
-03-Sep-2013 16:00 3600     - 80.0F     - 61% 65.0F 10.0 mph     - WSW  60% {}
-03-Sep-2013 17:00 3600     - 79.0F     - 61% 64.0F 10.0 mph     - WSW  60% {}
+02-Sep-2013 22:00 3600     - 72.0F     - 90% 69.0F 3.0 mph     - South  100% {'tstms': u'S', 'rainshwrs': u'C'}
+02-Sep-2013 23:00 3600     - 72.0F     - 87% 68.0F 1.0 mph     - South  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 00:00 3600     - 72.0F     - 86% 68.0F 2.0 mph     - South  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 01:00 3600     - 72.0F     - 85% 68.0F 4.0 mph     - South  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 02:00 3600     - 72.0F     - 84% 68.0F 5.0 mph     - WNW  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 03:00 3600     - 72.0F     - 82% 67.0F 5.0 mph     - WNW  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 04:00 3600     - 72.0F     - 81% 67.0F 6.0 mph     - WNW  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 05:00 3600     - 72.0F     - 79% 66.0F 6.0 mph     - West  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
+03-Sep-2013 06:00 3600     - 72.0F     - 80% 66.0F 6.0 mph     - West  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
+03-Sep-2013 07:00 3600     - 73.0F     - 80% 66.0F 7.0 mph     - West  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
+03-Sep-2013 08:00 3600     - 73.0F     - 81% 66.0F 7.0 mph     - WSW  70% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 09:00 3600     - 74.0F     - 78% 67.0F 8.0 mph     - WSW  70% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 10:00 3600     - 76.0F     - 75% 67.0F 8.0 mph     - WSW  70% {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 11:00 3600     - 77.0F     - 72% 68.0F 9.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 12:00 3600     - 79.0F     - 68% 67.0F 10.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 13:00 3600     - 80.0F     - 64% 67.0F 10.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 14:00 3600     - 82.0F     - 60% 66.0F 11.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 15:00 3600     - 81.0F     - 60% 65.0F 11.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 16:00 3600     - 80.0F     - 61% 65.0F 10.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 17:00 3600     - 79.0F     - 61% 64.0F 10.0 mph     - WSW  60% {'tstms': u'S', 'rainshwrs': u'C'}
   </body>
 </html>
 ''')
@@ -9489,7 +9489,7 @@ SSW
                              '''<html>
   <body>
 forecast for None None for the day 02-Sep-2013 00:00 as of 02-Sep-2013 22:00
-
+OV
 72.0F
 72.0F
 72.0F
@@ -9507,6 +9507,8 @@ South
   South
 
 100%
+  rainshwrs
+  tstms
   PF
   </body>
 </html>
@@ -9522,7 +9524,7 @@ South
                                  'user.forecast.WUForecast',
                                  records,
                                  template,
-                                 422)
+                                 515)
 
 
     # -------------------------------------------------------------------------
