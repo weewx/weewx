@@ -1517,7 +1517,7 @@ class WUForecast(Forecast):
             logerr('%s: no forecast data for %s from %s' %
                    (WU_KEY, self.location, self.url))
             return None
-        records = WUCreateForecastRecords(text)
+        records = WUParseForecast(text)
         loginf('%s: got %d forecast records' % (WU_KEY, len(records)))
         return records
 
