@@ -476,15 +476,17 @@ def get_int(config_dict, label, default_value):
    waveheight   average wave height
    waveperiod   average wave period
 """
+# FIXME: eliminate separate foid and lid fields, just use location
+
 # FIXME: WU defines the following:
 #  maxhumidity
 #  minhumidity
 #  feelslike
 #  uvi
 #  mslp
-#  condition - what are all the options?
-#  wx - what are all the options?
-#  fctcode - what is this?
+#  condition
+#  wx
+#  fctcode
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),
                          ('dateTime',   'INTEGER NOT NULL'),  # epoch
@@ -1602,9 +1604,10 @@ def wx2precip(wx):
     '''return a dict with recognized types of precipitation'''
     p = {}
     for x in [w.strip() for w in wx.split(',')]:
-        for k in wx2precip_dict:
-            if k.find(x) >= 0:
-                p[wx2precip_dict[k]] = 10 # FIXME: use proper percentage
+        if x != '':
+            for k in wx2precip_dict:
+                if k.find(x) >= 0:
+                    p[wx2precip_dict[k]] = '' # FIXME: use proper percentage
     return p
 
 wx2obvis_dict = {
