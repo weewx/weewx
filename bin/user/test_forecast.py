@@ -19,6 +19,8 @@ import weewx
 import weewx.wxengine as wxengine
 import user.forecast as forecast
 
+# to run manual tests, remove the x from xtest
+# keep a copy of your wu api key in ~/.weewx as wu_api_key=xxxx
 # parameters for manual testing
 WU_LOCATION = '02139'
 WU_API_KEY = 'INSERT_KEY_HERE'
@@ -9221,6 +9223,7 @@ $forecast.zambretti.code
                 '400 AM EDT SAT MAY 11 2013': 1368259200,
 #                '000 AM EDT SAT MAY 11 2013': 1368244800,
                 '1239 PM EDT TUE SEP 3 2013': 1378226340,
+                '645 AM EDT WED SEP 4 2013': 1378291500,
                 }
 
         for x in data.keys():
@@ -9375,7 +9378,9 @@ SW
 
     def xtest_wu_forecast(self):
         '''end-to-end test of wu forecast; inspect manually'''
-        fcast = forecast.WUDownloadForecast(WU_API_KEY, WU_LOCATION)
+        url = 'http://api.wunderground.com/api/%s/hourly10day/q/%s.json' % (
+            (WU_API_KEY, WU_LOCATION))
+        fcast = forecast.WUDownloadForecast(WU_API_KEY, WU_LOCATION, url=url)
         print fcast
         records = forecast.WUParseForecast(fcast)
         print records
@@ -9863,6 +9868,16 @@ def suite(testname):
             
 # use '--test test_name' to specify a single test
 if __name__ == '__main__':
+    # get wu_api_key from ~/.weewx if it exists
+    cfgfn = os.path.expanduser('~') + '/.weewx'
+    if os.path.exists(cfgfn):
+        f = open(cfgfn)
+        for line in f:
+            if line.startswith('wu_api_key'):
+                k,v = line.split('=')
+                WU_API_KEY = v.strip()
+        f.close()
+    # check for a single test, if not then run them all
     testname = None
     if len(sys.argv) == 3 and sys.argv[1] == '--test':
         testname = sys.argv[2]

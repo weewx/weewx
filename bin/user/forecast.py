@@ -137,11 +137,13 @@ Configuration
 
 Skin Configuration
 
-   Here are the options that can be specified in the skin.conf file.
+   Here are the options that can be specified in the skin.conf file.  The
+   values below are the defaults.  Add these only to override the defaults.
 
 [Forecast]
-    [[Directions]]
-        [[[Labels]]]
+    [[Labels]]
+        [[[Directions]]]
+            # labels for compass directions
             N = N
             NNE = NNE
             NE = NE
@@ -159,14 +161,12 @@ Skin Configuration
             NW = NW
             NNW = NNW
 
-    [[XTide]]
-        [[[Labels]]]
+        [[[Tide]]]
             # labels for tides
             H = High Tide
             L = Low Tide
 
-    [[Zambretti]]
-        [[[Labels]]]
+        [[[Zambretti]]]
             # mapping between zambretti codes and descriptive labels
             A = Settled fine
             B = Fine weather
@@ -195,9 +195,8 @@ Skin Configuration
             Y = Stormy, may improve
             Z = Stormy, much rain
 
-    [[NWS]]
-        [[Labels]]
-            # labels for components of the US NWS forecast
+        [[[Weather]]]
+            # labels for components of a weather forecast
             temp = Temperature
             dewpt = Dewpoint
             humidity = Relative Humidity
@@ -240,7 +239,7 @@ Skin Configuration
             D = Definite
 
             IS = Isolated
-            SC = Scattered
+            #SC = Scattered      # conflicts with scattered clouds
             NM = Numerous
             EC = Extensive Coverage
             PA = Patchy
@@ -303,11 +302,14 @@ $forecast.zambretti.code        zambretti forecast code (A-Z)
 NWS, WU
 
   Elements of a weather forecast are referred to by period or daily summary.
+  A forecast source must be specified.
 
 for $period in $forecast.weather_periods('NWS')
   $period.dateTime
   $period.event_ts
   ...
+
+  The summary is a single-day aggregate of any periods in that day.
 
 $summary = $forecast.weather_summary('NWS')
 $summary.dateTime
@@ -333,6 +335,7 @@ $summary.windChar
 $summary.windChars       dictionary
 $summary.pop
 $summary.precip          array
+$summary.obvis           array
 """
 
 
@@ -355,6 +358,8 @@ $summary.precip          array
 # FIXME: make the labels extensible
 
 # FIXME: make the forecasting extensible
+
+# FIXME: 'method' should be called 'source'
 
 import httplib
 import socket
@@ -495,7 +500,7 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          # Zambretti fields
                          ('zcode',      'CHAR(1)'),
 
-                         # NWS fields
+                         # weather fields
                          ('hour',       'INTEGER'),     # 00 to 23
                          ('tempMin',    'REAL'),        # degree F
                          ('tempMax',    'REAL'),        # degree F
@@ -1082,7 +1087,7 @@ nws_label_dict = {
     # codes for clouds
     'CL' : 'Clear',
     'FW' : 'Few Clouds',
-    'SC' : 'Scattered Clouds',
+#    'SC' : 'Scattered Clouds',
     'BK' : 'Broken Clouds',
     'B1' : 'Mostly Cloudy',
     'B2' : 'Considerable Cloudiness',
@@ -1168,6 +1173,7 @@ def NWSParseForecast(text, lid):
     rows6 = {}
     ts = date2ts(lines[3])
     day_ts = weeutil.weeutil.startOfDay(ts)
+    loginf("%s: tstr='%s' ts=%s day_ts=%s" % (NWS_KEY, lines[3], ts, day_ts))
     for line in lines:
         label = line[0:14].strip()
         if label.startswith('UTC'):
@@ -1512,7 +1518,7 @@ class WUForecast(Forecast):
             logerr('%s: no forecast data for %s from %s' %
                    (WU_KEY, self.location, self.url))
             return None
-        records = WUParseForecast(text)
+        records = WUParseForecast(text, location=self.location)
         loginf('%s: got %d forecast records' % (WU_KEY, len(records)))
         return records
 
@@ -1536,7 +1542,7 @@ def WUDownloadForecast(api_key, location, url=WU_DEFAULT_URL, max_tries=3):
         logerr('%s: failed to download forecast' % WU_KEY)
     return None
 
-def WUParseForecast(text, issued_ts=None, now=None):
+def WUParseForecast(text, issued_ts=None, now=None, location=None):
     obj = json.loads(text)
     if not 'response' in obj:
         logerr('%s: unknown format in response' % WU_KEY)
@@ -1556,9 +1562,11 @@ def WUParseForecast(text, issued_ts=None, now=None):
             now = n
 
     if 'hourly_forecast' in obj:
-        records = WUCreateRecordsFromHourly(obj, issued_ts, now)
+        records = WUCreateRecordsFromHourly(obj, issued_ts, now,
+                                            location=location)
     elif 'forecast' in obj:
-        records = WUCreateRecordsFromDaily(obj, issued_ts, now)
+        records = WUCreateRecordsFromDaily(obj, issued_ts, now,
+                                           location=location)
     else:
         records = []
     return records
@@ -1666,7 +1674,7 @@ def str2float(n, s):
         logerr("%s: conversion error for %s from '%s': %s" % (WU_KEY, n, s, e))
     return None
 
-def WUCreateRecordsFromHourly(fc, issued_ts, now):
+def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None):
     '''create from hourly10day'''
     records = []
     for period in fc['hourly_forecast']:
@@ -1692,12 +1700,14 @@ def WUCreateRecordsFromHourly(fc, issued_ts, now):
             r['obvis'] = wu2obvis(period)
             r['uvIndex'] = str2int('uvi', period['uvi'])
             r.update(wu2precip(period))
+            if location is not None:
+                r['location'] = location
             records.append(r)
         except Exception, e:
             logerr('%s: failure in hourly forecast: %s' % (WU_KEY, e))
     return records
 
-def WUCreateRecordsFromDaily(fc, issued_ts, now):
+def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None):
     '''create from forecast10day data'''
     records = []
     for period in fc['forecast']['simpleforecast']['forecastday']:
@@ -1722,6 +1732,8 @@ def WUCreateRecordsFromDaily(fc, issued_ts, now):
             r['windDir'] = WU_DIR_DICT.get(period['avewind']['dir'],
                                            period['avewind']['dir'])
             r['windGust'] = str2float('maxwind', period['maxwind']['mph'])
+            if location is not None:
+                r['location'] = location
             records.append(r)
         except Exception, e:
             logerr('%s: failure in daily forecast: %s' % (WU_KEY, e))
