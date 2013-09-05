@@ -65,7 +65,7 @@ test:
   PYTHONPATH=bin python $$f 2>> $(BLDDIR)/test-results; \
   echo >> $(BLDDIR)/test-results; \
 done
-	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results
+	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
 	@echo "see $(BLDDIR)/test-results"
 
 install:
