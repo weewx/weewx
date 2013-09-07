@@ -2003,7 +2003,7 @@ class ForecastData(object):
         x = None
         xmin = None
         xmax = None
-        if s is None:
+        if s is None or s == '':
             return x,xmin,xmax
         elif s.find('-') >= 0:
             [lo,hi] = s.split('-')
@@ -2053,12 +2053,20 @@ class ForecastData(object):
                 if x > b[key+'Max']:
                     b[key+'Max'] = x
 
+    def _get_sum(self, key, a, b):
+        x = a.get(key, None)
+        if x is not None:
+            if b.get(key, None) is None:
+                b[key] = 0
+            return b[key] + x
+        return b.get(key, None)
+
     def _get_max(self, key, a, b):
         x = a.get(key, None)
         if x is not None:
-            if b[key] is None or x > b[key]:
+            if b.get(key, None) is None or x > b[key]:
                 return x
-        return b[key]
+        return b.get(key, None)
 
     def _create_value(self, context, value_str, group,
                       units=None, unit_system=weewx.US):
@@ -2207,6 +2215,9 @@ class ForecastData(object):
             # all other fields are strings
         return records
 
+    # FIXME: when used in a table, this doubles the database queries since it
+    # does a lookup for each day even though we (typically) have already done
+    # a query for all days.
     def weather_summary(self, fid, ts=None):
         '''Create a weather summary from periods for the day of the indicated
         timestamp.  If the timestamp is None, use the current time.
@@ -2266,7 +2277,7 @@ class ForecastData(object):
             x = r['clouds']
             if x is not None:
                 outlook_histogram[x] = outlook_histogram.get(x,0) + 1
-            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed', 'qpf', 'qsf']:
+            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
                 try:
                     x = float(r[s])
                     self._get_stats(s, r, rec)
@@ -2280,6 +2291,10 @@ class ForecastData(object):
             if x is not None:
                 rec['windChars'][x] = rec['windChars'].get(x,0) + 1
             rec['pop'] = self._get_max('pop', r, rec)
+            r['qpf'],r['qpfMin'],r['qpfMax'] = self._parse_precip_qty(r['qpf'])
+            r['qsf'],r['qsfMin'],r['qsfMax'] = self._parse_precip_qty(r['qsf'])
+            for s in ['qpf', 'qpfMin', 'qpfMax', 'qsf', 'qsfMin', 'qsfMax']:
+                rec[s] = self._get_sum(s, r, rec)
             for p in nws_precip_types:
                 v = r.get(p, None)
                 if v is not None and p not in rec['precip']:
