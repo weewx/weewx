@@ -116,18 +116,24 @@ def create_config(test_dir, service, skin_dir='testskin'):
         }
     return cd
 
-# FIXME: make weewx work without having to specify so many items in config
-#   Units
-#   Labels
-#   archive/stats databases
-def create_skin_conf(test_dir, skin_dir='testskin'):
-    '''create minimal skin config file for testing'''
-    mkdir(test_dir + '/' + skin_dir)
-    fn = test_dir + '/' + skin_dir + '/skin.conf'
-    f = open(fn, 'w')
-    f.write('''
-[Units]
-    [[Groups]]
+metric_unit_groups = '''
+        group_altitude     = meter
+        group_degree_day   = degree_C_day
+        group_direction    = degree_compass
+        group_moisture     = centibar
+        group_percent      = percent
+        group_pressure     = inHg
+        group_radiation    = watt_per_meter_squared
+        group_rain         = mm
+        group_rainrate     = mm_per_hour
+        group_speed        = km_per_hour
+        group_speed2       = km_per_hour2
+        group_temperature  = degree_C
+        group_uv           = uv_index
+        group_volt         = volt
+'''
+
+us_unit_groups = '''
         group_altitude     = foot
         group_degree_day   = degree_F_day
         group_direction    = degree_compass
@@ -142,6 +148,16 @@ def create_skin_conf(test_dir, skin_dir='testskin'):
         group_temperature  = degree_F
         group_uv           = uv_index
         group_volt         = volt
+'''
+
+# FIXME: make weewx work without having to specify so many items in config
+#   Units
+#   Labels
+#   archive/stats databases
+skin_contents = '''
+[Units]
+    [[Groups]]
+        GROUPS
 
         # The following groups are used internally and should not be changed:
         group_count        = count
@@ -230,7 +246,16 @@ def create_skin_conf(test_dir, skin_dir='testskin'):
             template = index.html.tmpl
 [Generators]
         generator_list = user.forecast.ForecastFileGenerator
-''')
+'''
+
+def create_skin_conf(test_dir, skin_dir='testskin', units=weewx.US):
+    '''create minimal skin config file for testing'''
+    groups = metric_unit_groups if units == weewx.METRIC else us_unit_groups
+    contents = skin_contents.replace('GROUPS', groups)
+    mkdir(test_dir + '/' + skin_dir)
+    fn = test_dir + '/' + skin_dir + '/skin.conf'
+    f = open(fn, 'w')
+    f.write(contents)
     f.close()
 
 def create_template(text, source, ts):
@@ -8741,7 +8766,7 @@ WU_BOS_HOURLY = '''
 PERIODS_TEMPLATE = '''<html>
   <body>
 #for $f in $forecast.weather_periods('SOURCE', from_ts=TS, max_events=20)
-$f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f.windSpeed $f.windGust $f.windDir $f.windChar $f.pop $f.precip $f.obvis
+$f.event_ts $f.duration $f.tempMin $f.temp $f.tempMax $f.humidity $f.dewpoint $f.windSpeed $f.windGust $f.windDir $f.windChar $f.pop $f.qpf $f.qpfMin $f.qpfMax $f.qsf $f.qsfMin $f.qsfMax $f.precip $f.obvis
 #end for
   </body>
 </html>
@@ -8774,6 +8799,12 @@ $summary.windChar
   $c
 #end for
 $summary.pop
+$summary.qpf
+$summary.qpfMin
+$summary.qpfMax
+$summary.qsf
+$summary.qsfMin
+$summary.qsfMax
 #for $p in $summary.precip
   $p
 #end for
@@ -8880,7 +8911,7 @@ class ForecastTest(unittest.TestCase):
         if len(diffs) > 0:
             raise AssertionError('differences found in %s:\n%s' % (filename, '\n'.join(diffs)))
 
-    def setupTemplateTest(self, tname, module, data, tmpl):
+    def setupTemplateTest(self, tname, module, data, tmpl, units=weewx.US):
         tdir = get_testdir(tname)
         rmtree(tdir)
         cd = create_config(tdir, module)
@@ -8888,7 +8919,7 @@ class ForecastTest(unittest.TestCase):
                                           cd['Databases']['stats_sqlite'])
         FakeData.create_forecast_database(cd['Databases']['forecast_sqlite'],
                                           data)
-        create_skin_conf(tdir)
+        create_skin_conf(tdir, units=units)
 
         ts = int(time.mktime((2013,8,22,12,0,0,0,0,-1)))
         stn_info = weewx.station.StationInfo(**cd['Station'])
@@ -8899,13 +8930,15 @@ class ForecastTest(unittest.TestCase):
         f.close()
         return t, tdir
           
-    def runTemplateTest(self, tname, module, data, tmpl, expected_lines):
-        t, tdir = self.setupTemplateTest(tname, module, data, tmpl)
+    def runTemplateTest(self, tname, module, data, tmpl, expected_lines,
+                        units=weewx.US):
+        t, tdir = self.setupTemplateTest(tname, module, data, tmpl, units=units)
         t.run()
         self.compareContents(tdir + '/html/index.html', expected_lines)
 
-    def runTemplateLineTest(self, tname, module, data, tmpl, expected_count):
-        t, tdir = self.setupTemplateTest(tname, module, data, tmpl)
+    def runTemplateLineTest(self, tname, module, data, tmpl, expected_count,
+                            units=weewx.US):
+        t, tdir = self.setupTemplateTest(tname, module, data, tmpl, units=units)
         t.run()
         self.compareLineCount(tdir + '/html/index.html', expected_count)
 
@@ -9304,26 +9337,26 @@ $forecast.zambretti.code
                              template,
                              '''<html>
   <body>
-12-May-2013 02:00 10800     - 61.0F     - 87% 57.0F 8.0 mph     - S      - {'tstms': u'S', 'rainshwrs': u'C'} PF
-12-May-2013 05:00 10800     - 59.0F     - 90% 56.0F 8.0 mph     - S      - {'rainshwrs': u'L'} PF
-12-May-2013 08:00 10800 57.0F 62.0F     - 81% 56.0F 10.0 mph     - SW  90% {'rainshwrs': u'L'} PF
-12-May-2013 11:00 10800     - 66.0F     - 68% 55.0F 11.0 mph     - W      - {'tstms': u'S', 'rainshwrs': u'C'}
-12-May-2013 14:00 10800     - 68.0F     - 51% 49.0F 16.0 mph     - W      - {'tstms': u'S', 'rainshwrs': u'C'}
-12-May-2013 17:00 10800     - 68.0F     - 37% 41.0F 18.0 mph     - W      - {'rainshwrs': u'S'}
-12-May-2013 20:00 10800     - 61.0F 69.0F 41% 37.0F 14.0 mph 27.0 mph W  70% {}
-12-May-2013 23:00 10800     - 52.0F     - 48% 33.0F 11.0 mph     - W      - {}
-13-May-2013 02:00 10800     - 47.0F     - 53% 31.0F 10.0 mph     - W      - {}
-13-May-2013 05:00 10800     - 44.0F     - 55% 29.0F 8.0 mph     - W      - {}
-13-May-2013 08:00 10800 43.0F 48.0F     - 47% 29.0F 12.0 mph 23.0 mph W  0% {}
-13-May-2013 11:00 10800     - 56.0F     - 35% 29.0F 9.0 mph 20.0 mph W      - {}
-13-May-2013 14:00 10800     - 60.0F     - 27% 26.0F 16.0 mph     - W      - {}
-13-May-2013 17:00 10800     - 59.0F     - 30% 28.0F 12.0 mph 23.0 mph SW      - {}
-13-May-2013 20:00 10800     - 53.0F 61.0F 35% 26.0F 9.0 mph     - W  5% {}
-14-May-2013 02:00 21600     - 44.0F     -     - 35.0F     -     -       - {}
-14-May-2013 08:00 21600 41.0F 47.0F     -     - 33.0F     -     - NW GN 5% {}
-14-May-2013 14:00 21600     - 59.0F     -     - 29.0F     -     -       - {'rainshwrs': u'S'}
-14-May-2013 20:00 21600     - 53.0F 60.0F     - 32.0F     -     - NW LT 10% {'rainshwrs': u'S'}
-15-May-2013 02:00 21600     - 45.0F     -     - 33.0F     -     -       - {}
+12-May-2013 02:00 10800     - 61.0F     - 87% 57.0F 8.0 mph     - S      -     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'} PF
+12-May-2013 05:00 10800     - 59.0F     - 90% 56.0F 8.0 mph     - S      -     -     -     -     -     -     - {'rainshwrs': u'L'} PF
+12-May-2013 08:00 10800 57.0F 62.0F     - 81% 56.0F 10.0 mph     - SW  90% 0.14 in 0.14 in 0.14 in 0.00 in 0.00 in 0.00 in {'rainshwrs': u'L'} PF
+12-May-2013 11:00 10800     - 66.0F     - 68% 55.0F 11.0 mph     - W      -     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'}
+12-May-2013 14:00 10800     - 68.0F     - 51% 49.0F 16.0 mph     - W      -     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'}
+12-May-2013 17:00 10800     - 68.0F     - 37% 41.0F 18.0 mph     - W      -     -     -     -     -     -     - {'rainshwrs': u'S'}
+12-May-2013 20:00 10800     - 61.0F 69.0F 41% 37.0F 14.0 mph 27.0 mph W  70% 0.05 in 0.05 in 0.05 in 0.00 in 0.00 in 0.00 in {}
+12-May-2013 23:00 10800     - 52.0F     - 48% 33.0F 11.0 mph     - W      -     -     -     -     -     -     - {}
+13-May-2013 02:00 10800     - 47.0F     - 53% 31.0F 10.0 mph     - W      -     -     -     -     -     -     - {}
+13-May-2013 05:00 10800     - 44.0F     - 55% 29.0F 8.0 mph     - W      -     -     -     -     -     -     - {}
+13-May-2013 08:00 10800 43.0F 48.0F     - 47% 29.0F 12.0 mph 23.0 mph W  0% 0.00 in 0.00 in 0.00 in     -     -     - {}
+13-May-2013 11:00 10800     - 56.0F     - 35% 29.0F 9.0 mph 20.0 mph W      -     -     -     -     -     -     - {}
+13-May-2013 14:00 10800     - 60.0F     - 27% 26.0F 16.0 mph     - W      -     -     -     -     -     -     - {}
+13-May-2013 17:00 10800     - 59.0F     - 30% 28.0F 12.0 mph 23.0 mph SW      -     -     -     -     -     -     - {}
+13-May-2013 20:00 10800     - 53.0F 61.0F 35% 26.0F 9.0 mph     - W  5% 0.00 in 0.00 in 0.00 in     -     -     - {}
+14-May-2013 02:00 21600     - 44.0F     -     - 35.0F     -     -       -     -     -     -     -     -     - {}
+14-May-2013 08:00 21600 41.0F 47.0F     -     - 33.0F     -     - NW GN 5%     -     -     -     -     -     - {}
+14-May-2013 14:00 21600     - 59.0F     -     - 29.0F     -     -       -     -     -     -     -     -     - {'rainshwrs': u'S'}
+14-May-2013 20:00 21600     - 53.0F 60.0F     - 32.0F     -     - NW LT 10%     -     -     -     -     -     - {'rainshwrs': u'S'}
+15-May-2013 02:00 21600     - 45.0F     -     - 33.0F     -     -       -     -     -     -     -     -     - {}
   </body>
 </html>
 ''')
@@ -9356,6 +9389,12 @@ SW
   W
 
 50%
+0.11 in
+0.11 in
+0.11 in
+    -
+    -
+    -
   rainshwrs
   tstms
   </body>
@@ -9383,6 +9422,17 @@ SW
         fcast = forecast.WUDownloadForecast(WU_API_KEY, WU_LOCATION, url=url)
         print fcast
         records = forecast.WUParseForecast(fcast)
+        print records
+
+    def xtest_wu_forecast_from_file(self):
+        '''parse wu forecast and spit out records'''
+        fn = 'wu'
+        f = open(fn)
+        lines = []
+        for line in f:
+            lines.append(line)
+        f.close()
+        records = forecast.WUParseForecast(''.join(lines))
         print records
 
     def xtest_wu_download_daily(self):
@@ -9437,16 +9487,16 @@ SW
                              template,
                              '''<html>
   <body>
-01-Sep-2013 23:00 86400 73.0F 79.5F 86.0F 83%     - 10.0 mph 11.0 mph SSW  40% {}
-02-Sep-2013 23:00 86400 72.0F 76.5F 81.0F 91%     - 8.0 mph 10.0 mph S  60% {}
-03-Sep-2013 23:00 86400 61.0F 71.0F 81.0F 70%     - 8.0 mph 9.0 mph SW  50% {}
-04-Sep-2013 23:00 86400 59.0F 69.0F 79.0F 78%     - 10.0 mph 11.0 mph NW  0% {}
-05-Sep-2013 23:00 86400 57.0F 66.0F 75.0F 90%     - 8.0 mph 10.0 mph W  0% {}
-06-Sep-2013 23:00 86400 54.0F 63.0F 72.0F 74%     - 4.0 mph 6.0 mph ESE  0% {}
-07-Sep-2013 23:00 86400 63.0F 71.0F 79.0F 93%     - 11.0 mph 14.0 mph SW  0% {}
-08-Sep-2013 23:00 86400 61.0F 69.0F 77.0F 65%     - 7.0 mph 9.0 mph E  0% {}
-09-Sep-2013 23:00 86400 61.0F 69.0F 77.0F 75%     - 3.0 mph 4.0 mph SW  0% {}
-10-Sep-2013 23:00 86400 61.0F 70.0F 79.0F 86%     - 2.0 mph 3.0 mph SSW  0% {}
+01-Sep-2013 23:00 86400 73.0F 79.5F 86.0F 83%     - 10.0 mph 11.0 mph SSW  40% 0.38 in 0.38 in 0.38 in 0.00 in 0.00 in 0.00 in {}
+02-Sep-2013 23:00 86400 72.0F 76.5F 81.0F 91%     - 8.0 mph 10.0 mph S  60% 0.72 in 0.72 in 0.72 in 0.00 in 0.00 in 0.00 in {}
+03-Sep-2013 23:00 86400 61.0F 71.0F 81.0F 70%     - 8.0 mph 9.0 mph SW  50% 0.21 in 0.21 in 0.21 in 0.00 in 0.00 in 0.00 in {}
+04-Sep-2013 23:00 86400 59.0F 69.0F 79.0F 78%     - 10.0 mph 11.0 mph NW  0% 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in {}
+05-Sep-2013 23:00 86400 57.0F 66.0F 75.0F 90%     - 8.0 mph 10.0 mph W  0% 0.02 in 0.02 in 0.02 in 0.00 in 0.00 in 0.00 in {}
+06-Sep-2013 23:00 86400 54.0F 63.0F 72.0F 74%     - 4.0 mph 6.0 mph ESE  0% 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in {}
+07-Sep-2013 23:00 86400 63.0F 71.0F 79.0F 93%     - 11.0 mph 14.0 mph SW  0% 0.01 in 0.01 in 0.01 in 0.00 in 0.00 in 0.00 in {}
+08-Sep-2013 23:00 86400 61.0F 69.0F 77.0F 65%     - 7.0 mph 9.0 mph E  0% 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in {}
+09-Sep-2013 23:00 86400 61.0F 69.0F 77.0F 75%     - 3.0 mph 4.0 mph SW  0% 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in {}
+10-Sep-2013 23:00 86400 61.0F 70.0F 79.0F 86%     - 2.0 mph 3.0 mph SSW  0% 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in {}
   </body>
 </html>
 ''')
@@ -9482,9 +9532,56 @@ SSW
   SSW
 
 40%
+0.38 in
+0.38 in
+0.38 in
+0.00 in
+0.00 in
+0.00 in
   </body>
 </html>
 ''')
+
+    def test_wu_template_summary_daily_metric(self):
+        '''verify the summary behavior'''
+        records = forecast.WUParseForecast(WU_TENANTS_HARBOR,
+                                           issued_ts=1378090800,
+                                           now=1378090800)
+        template = create_template(SUMMARY_TEMPLATE, 'WU', '1378090800')
+        self.runTemplateTest('test_wu_template_summary_daily_metric',
+                             'user.forecast.WUForecast',
+                             records,
+                             template,
+                             '''<html>
+  <body>
+forecast for  for the day 01-Sep-2013 00:00 as of 01-Sep-2013 23:00
+B2
+26.4C
+26.4C
+26.4C
+    -
+    -
+    -
+83%
+83%
+83%
+16 kph
+16 kph
+16 kph
+18 kph
+SSW
+  SSW
+
+40%
+9.7 mm
+9.7 mm
+9.7 mm
+0.0 mm
+0.0 mm
+0.0 mm
+  </body>
+</html>
+''', units=weewx.METRIC)
 
     def test_wu_template_table_daily(self):
         '''exercise the period and summary template elements'''
@@ -9510,26 +9607,26 @@ SSW
                              template,
                              '''<html>
   <body>
-02-Sep-2013 22:00 3600     - 72.0F     - 90% 69.0F 3.0 mph     - S  100% {'tstms': u'S', 'rainshwrs': u'C'}
-02-Sep-2013 23:00 3600     - 72.0F     - 87% 68.0F 1.0 mph     - S  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 00:00 3600     - 72.0F     - 86% 68.0F 2.0 mph     - S  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 01:00 3600     - 72.0F     - 85% 68.0F 4.0 mph     - S  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 02:00 3600     - 72.0F     - 84% 68.0F 5.0 mph     - WNW  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 03:00 3600     - 72.0F     - 82% 67.0F 5.0 mph     - WNW  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 04:00 3600     - 72.0F     - 81% 67.0F 6.0 mph     - WNW  80% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 05:00 3600     - 72.0F     - 79% 66.0F 6.0 mph     - W  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
-03-Sep-2013 06:00 3600     - 72.0F     - 80% 66.0F 6.0 mph     - W  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
-03-Sep-2013 07:00 3600     - 73.0F     - 80% 66.0F 7.0 mph     - W  80% {'tstms': u'IS', 'rainshwrs': u'S'} PF
-03-Sep-2013 08:00 3600     - 73.0F     - 81% 66.0F 7.0 mph     - WSW  70% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 09:00 3600     - 74.0F     - 78% 67.0F 8.0 mph     - WSW  70% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 10:00 3600     - 76.0F     - 75% 67.0F 8.0 mph     - WSW  70% {'tstms': u'S', 'rainshwrs': u'C'} PF
-03-Sep-2013 11:00 3600     - 77.0F     - 72% 68.0F 9.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
-03-Sep-2013 12:00 3600     - 79.0F     - 68% 67.0F 10.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
-03-Sep-2013 13:00 3600     - 80.0F     - 64% 67.0F 10.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
-03-Sep-2013 14:00 3600     - 82.0F     - 60% 66.0F 11.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
-03-Sep-2013 15:00 3600     - 81.0F     - 60% 65.0F 11.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
-03-Sep-2013 16:00 3600     - 80.0F     - 61% 65.0F 10.0 mph     - WSW  60% {'tstms': u'C', 'rainshwrs': u'L'}
-03-Sep-2013 17:00 3600     - 79.0F     - 61% 64.0F 10.0 mph     - WSW  60% {'tstms': u'S', 'rainshwrs': u'C'}
+02-Sep-2013 22:00 3600     - 72.0F     - 90% 69.0F 3.0 mph     - S  100%     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'}
+02-Sep-2013 23:00 3600     - 72.0F     - 87% 68.0F 1.0 mph     - S  80% 0.04 in 0.04 in 0.04 in     -     -     - {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 00:00 3600     - 72.0F     - 86% 68.0F 2.0 mph     - S  80%     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 01:00 3600     - 72.0F     - 85% 68.0F 4.0 mph     - S  80%     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 02:00 3600     - 72.0F     - 84% 68.0F 5.0 mph     - WNW  80% 0.04 in 0.04 in 0.04 in 0.00 in 0.00 in 0.00 in {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 03:00 3600     - 72.0F     - 82% 67.0F 5.0 mph     - WNW  80%     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 04:00 3600     - 72.0F     - 81% 67.0F 6.0 mph     - WNW  80%     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 05:00 3600     - 72.0F     - 79% 66.0F 6.0 mph     - W  80% 0.00 in 0.00 in 0.00 in     -     -     - {'tstms': u'IS', 'rainshwrs': u'S'} PF
+03-Sep-2013 06:00 3600     - 72.0F     - 80% 66.0F 6.0 mph     - W  80%     -     -     -     -     -     - {'tstms': u'IS', 'rainshwrs': u'S'} PF
+03-Sep-2013 07:00 3600     - 73.0F     - 80% 66.0F 7.0 mph     - W  80%     -     -     -     -     -     - {'tstms': u'IS', 'rainshwrs': u'S'} PF
+03-Sep-2013 08:00 3600     - 73.0F     - 81% 66.0F 7.0 mph     - WSW  70% 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in 0.00 in {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 09:00 3600     - 74.0F     - 78% 67.0F 8.0 mph     - WSW  70%     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 10:00 3600     - 76.0F     - 75% 67.0F 8.0 mph     - WSW  70%     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'} PF
+03-Sep-2013 11:00 3600     - 77.0F     - 72% 68.0F 9.0 mph     - WSW  60% 0.07 in 0.07 in 0.07 in     -     -     - {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 12:00 3600     - 79.0F     - 68% 67.0F 10.0 mph     - WSW  60%     -     -     -     -     -     - {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 13:00 3600     - 80.0F     - 64% 67.0F 10.0 mph     - WSW  60%     -     -     -     -     -     - {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 14:00 3600     - 82.0F     - 60% 66.0F 11.0 mph     - WSW  60% 0.07 in 0.07 in 0.07 in 0.00 in 0.00 in 0.00 in {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 15:00 3600     - 81.0F     - 60% 65.0F 11.0 mph     - WSW  60%     -     -     -     -     -     - {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 16:00 3600     - 80.0F     - 61% 65.0F 10.0 mph     - WSW  60%     -     -     -     -     -     - {'tstms': u'C', 'rainshwrs': u'L'}
+03-Sep-2013 17:00 3600     - 79.0F     - 61% 64.0F 10.0 mph     - WSW  60% 0.09 in 0.09 in 0.09 in     -     -     - {'tstms': u'S', 'rainshwrs': u'C'}
   </body>
 </html>
 ''')
@@ -9565,6 +9662,12 @@ S
   S
 
 100%
+0.04 in
+0.04 in
+0.04 in
+    -
+    -
+    -
   rainshwrs
   tstms
   PF
@@ -9583,7 +9686,6 @@ S
                                  records,
                                  template,
                                  515)
-
 
     # -------------------------------------------------------------------------
     # xtide tests

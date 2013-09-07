@@ -222,7 +222,7 @@ Skin Configuration
             frzngrain = Freezing Rain
             frzngdrzl = Freezing Drizzle
 
-            # codes for clouds:
+            # codes for sky cover
             CL = Clear
             FW = Few Clouds
             SC = Scattered Clouds
@@ -246,7 +246,22 @@ Skin Configuration
             AR = Areas
             WD = Widespread
 
-            # codes for obstructed visibility
+            # quantifiers for the precipitation codes
+            Sq  = '<20%'
+            Cq  = '30-50%'
+            Lq  = '60-70%'
+            Oq  = '80-100%'
+            Dq  = '80-100%'
+
+            ISq = '<20%'
+            SCq = '30-50%'
+            NMq = '60-70%'
+            ECq = '80-100%'
+            PAq = '<25%'
+            ARq = '25-50%'
+            WDq = '>50%'
+
+            # codes for obstructions to visibility
             F = Fog
             PF = Patchy Fog
             F+ = Dense Fog
@@ -361,6 +376,8 @@ $summary.obvis           array
 
 # FIXME: 'method' should be called 'source'
 
+# FIXME: add option to WU forecast for daily (day/night) or hourly
+
 import httplib
 import socket
 import string
@@ -433,6 +450,9 @@ def get_int(config_dict, label, default_value):
 # wind direction is 16-point compass
 # air quality index
 # also see icons used for uk metoffice
+
+# FIXME: since we are using a single schema for any number of sources, make the
+#        schema self-consistent instead of being so much like NWS naming.
 
 """Database Schema
 
@@ -558,6 +578,76 @@ directions_label_dict = {
     'WNW':'WNW',
     'NW':'NW',
     'NNW':'NNW',
+    }
+
+tide_label_dict = {
+    'H': 'High Tide',
+    'L': 'Low Tide',
+    }
+
+weather_label_dict = {
+    'temp'      : 'Temperature',
+    'dewpt'     : 'Dewpoint',
+    'humidity'  : 'Relative Humidity',
+    'winddir'   : 'Wind Direction',
+    'windspd'   : 'Wind Speed',
+    'windchar'  : 'Wind Character',
+    'windgust'  : 'Wind Gust',
+    'clouds'    : 'Sky Coverage',
+    'windchill' : 'Wind Chill',
+    'heatindex' : 'Heat Index',
+    'obvis'     : 'Obstructions to Visibility',
+    # types of precipitation
+    'rain'      : 'Rain',
+    'rainshwrs' : 'Rain Showers',
+    'sprinkles' : 'Rain Sprinkles',
+    'tstms'     : 'Thunderstorms',
+    'drizzle'   : 'Drizzle',
+    'snow'      : 'Snow',
+    'snowshwrs' : 'Snow Showers',
+    'flurries'  : 'Snow Flurries',
+    'sleet'     : 'Ice Pellets',
+    'frzngrain' : 'Freezing Rain',
+    'frzngdrzl' : 'Freezing Drizzle',
+    # codes for clouds
+    'CL' : 'Clear',
+    'FW' : 'Few Clouds',
+#    'SC' : 'Scattered Clouds',
+    'BK' : 'Broken Clouds',
+    'B1' : 'Mostly Cloudy',
+    'B2' : 'Considerable Cloudiness',
+    'OV' : 'Overcast',
+    # codes for precipitation
+    'S'  : 'Slight Chance',      'Sq'  : '<20%',
+    'C'  : 'Chance',             'Cq'  : '30-50%',
+    'L'  : 'Likely',             'Lq'  : '60-70%',
+    'O'  : 'Occasional',         'Oq'  : '80-100%',
+    'D'  : 'Definite',           'Dq'  : '80-100%',
+    'IS' : 'Isolated',           'ISq' : '<20%',
+    'SC' : 'Scattered',          'SCq' : '30-50%',
+    'NM' : 'Numerous',           'NMq' : '60-70%',
+    'EC' : 'Extensive Coverage', 'ECq' : '80-100%',
+    'PA' : 'Patchy',             'PAq' : '<25%',
+    'AR' : 'Areas',              'ARq' : '25-50%',
+    'WD' : 'Widespread',         'WDq' : '>50%',
+    # codes for obstructed visibility
+    'F'   : 'Fog',
+    'PF'  : 'Patchy Fog',
+    'F+'  : 'Dense Fog',
+    'PF+' : 'Patchy Dense Fog',
+    'H'   : 'Haze',
+    'BS'  : 'Blowing Snow',
+    'K'   : 'Smoke',
+    'BD'  : 'Blowing Dust',
+    'AF'  : 'Volcanic Ash',
+    # codes for wind character
+    'LT' : 'Light',
+    'GN' : 'Gentle',
+    'BZ' : 'Breezy',
+    'WY' : 'Windy',
+    'VW' : 'Very Windy',
+    'SD' : 'Strong/Damaging',
+    'HF' : 'Hurricane Force',
     }
 
 class ForecastThread(threading.Thread):
@@ -1059,71 +1149,6 @@ nws_precip_types = [
     'frzngrain',
     'frzngdrzl'
     ]
-
-nws_label_dict = {
-    'temp'      : 'Temperature',
-    'dewpt'     : 'Dewpoint',
-    'humidity'  : 'Relative Humidity',
-    'winddir'   : 'Wind Direction',
-    'windspd'   : 'Wind Speed',
-    'windchar'  : 'Wind Character',
-    'windgust'  : 'Wind Gust',
-    'clouds'    : 'Sky Coverage',
-    'windchill' : 'Wind Chill',
-    'heatindex' : 'Heat Index',
-    'obvis'     : 'Obstructions to Visibility',
-    # types of precipitation
-    'rain'      : 'Rain',
-    'rainshwrs' : 'Rain Showers',
-    'sprinkles' : 'Rain Sprinkles',
-    'tstms'     : 'Thunderstorms',
-    'drizzle'   : 'Drizzle',
-    'snow'      : 'Snow',
-    'snowshwrs' : 'Snow Showers',
-    'flurries'  : 'Snow Flurries',
-    'sleet'     : 'Ice Pellets',
-    'frzngrain' : 'Freezing Rain',
-    'frzngdrzl' : 'Freezing Drizzle',
-    # codes for clouds
-    'CL' : 'Clear',
-    'FW' : 'Few Clouds',
-#    'SC' : 'Scattered Clouds',
-    'BK' : 'Broken Clouds',
-    'B1' : 'Mostly Cloudy',
-    'B2' : 'Considerable Cloudiness',
-    'OV' : 'Overcast',
-    # codes for precipitation
-    'S'  : 'Slight Chance',      'Sq'  : '<20%',
-    'C'  : 'Chance',             'Cq'  : '30-50%',
-    'L'  : 'Likely',             'Lq'  : '60-70%',
-    'O'  : 'Occasional',         'Oq'  : '80-100%',
-    'D'  : 'Definite',           'Dq'  : '80-100%',
-    'IS' : 'Isolated',           'ISq' : '<20%',
-    'SC' : 'Scattered',          'SCq' : '30-50%',
-    'NM' : 'Numerous',           'NMq' : '60-70%',
-    'EC' : 'Extensive Coverage', 'ECq' : '80-100%',
-    'PA' : 'Patchy',             'PAq' : '<25%',
-    'AR' : 'Areas',              'ARq' : '25-50%',
-    'WD' : 'Widespread',         'WDq' : '>50%',
-    # codes for obstructed visibility
-    'F'   : 'Fog',
-    'PF'  : 'Patchy Fog',
-    'F+'  : 'Dense Fog',
-    'PF+' : 'Patchy Dense Fog',
-    'H'   : 'Haze',
-    'BS'  : 'Blowing Snow',
-    'K'   : 'Smoke',
-    'BD'  : 'Blowing Dust',
-    'AF'  : 'Volcanic Ash',
-    # codes for wind character
-    'LT' : 'Light',
-    'GN' : 'Gentle',
-    'BZ' : 'Breezy',
-    'WY' : 'Windy',
-    'VW' : 'Very Windy',
-    'SD' : 'Strong/Damaging',
-    'HF' : 'Hurricane Force',
-    }
 
 def NWSDownloadForecast(foid, url=NWS_DEFAULT_PFM_URL, max_tries=3):
     """Download a point forecast matrix from the US National Weather Service"""
@@ -1629,8 +1654,9 @@ wx2chance_dict = {
 def wx2pc(s):
     '''parse a wu wx string for the precipitation type and likeliehood
 
-    Chance of Light Rain Showers  -> rainshwrs,C
-    Isolated Thunderstorms        -> tstms,IS
+    Slight Chance Light Rain Showers -> rainshwrs,S
+    Chance of Light Rain Showers     -> rainshwrs,C
+    Isolated Thunderstorms           -> tstms,IS
     '''
     for x in wx2precip_dict:
         if s.endswith(x):
@@ -1757,11 +1783,6 @@ XT_PROG = '/usr/bin/tide'
 XT_ARGS = '-fc -df"%Y.%m.%d" -tf"%H:%M"'
 XT_HILO = {'High Tide' : 'H', 'Low Tide' : 'L'}
 
-xtide_label_dict = {
-    'H': 'High Tide',
-    'L': 'Low Tide',
-    }
-
 class XTideForecast(Forecast):
     """generate tide forecast using xtide"""
 
@@ -1886,6 +1907,28 @@ class ForecastFileGenerator(FileGenerator):
 # ForecastData
 # -----------------------------------------------------------------------------
 
+TRACE_AMOUNT = 0.001
+
+# FIXME: weewx should define 'length' rather than (as well as?) 'altitude'
+DEFAULT_UNITS = {
+    weewx.US: {
+        'group_time': 'unix_epoch',
+        'group_altitude': 'foot',
+        'group_temperature': 'degree_F',
+        'group_speed': 'mile_per_hour',
+        'group_rain': 'inch',
+        'group_percent': 'percent',
+        },
+    weewx.METRIC: {
+        'group_time': 'unix_epoch',
+        'group_altitude': 'meter',
+        'group_temperature': 'degree_C',
+        'group_speed': 'km_per_hour',
+        'group_rain': 'mm',
+        'group_percent': 'percent',
+        }
+    }
+
 class ForecastData(object):
     """Bind forecast variables to database records."""
 
@@ -1900,19 +1943,14 @@ class ForecastData(object):
         self.latitude = lat
         self.longitude = lon
         self.altitude = alt
+
+        label_dict = skin_dict.get('Labels', {})
         self.labels = {}
-        self.labels['Directions'] = skin_dict['Directions']['Labels'] \
-            if 'Directions' in skin_dict and 'Labels' in skin_dict['Directions'] \
-            else directions_label_dict
-        self.labels['XTide'] = skin_dict['XTide']['Labels'] \
-            if 'XTide' in skin_dict and 'Labels' in skin_dict['XTide']\
-            else xtide_label_dict
-        self.labels['Zambretti'] = skin_dict['Zambretti']['Labels'] \
-            if 'Zambretti' in skin_dict and 'Labels' in skin_dict['Zambretti']\
-            else zambretti_label_dict
-        self.labels['NWS'] = skin_dict['NWS']['Labels'] \
-            if 'NWS' in skin_dict and 'Labels' in skin_dict['NWS'] \
-            else nws_label_dict
+        self.labels['Directions'] = dict(directions_label_dict.items() + label_dict.get('Directions', {}).items())
+        self.labels['Tide'] = dict(tide_label_dict.items() + label_dict.get('Tide', {}).items())
+        self.labels['Weather'] = dict(weather_label_dict.items() + label_dict.get('Weather', {}).items())
+        self.labels['Zambretti'] = dict(zambretti_label_dict.items() + label_dict.get('Zambretti', {}).items())
+
         self.moon_phases = skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
         self.database = database
         self.formatter = formatter
@@ -1926,11 +1964,12 @@ class ForecastData(object):
         records = []
         for rec in self.database.genSql(sql):
             r = {}
-            r['dateTime'] = self._create_time(context, rec[0])
-            r['issued_ts'] = self._create_time(context, rec[1])
-            r['event_ts'] = self._create_time(context, rec[2])
+            r['dateTime'] = self._create_value(context, rec[0], 'group_time')
+            r['issued_ts'] = self._create_value(context, rec[1], 'group_time')
+            r['event_ts'] = self._create_value(context, rec[2], 'group_time')
             r['hilo'] = rec[3]
-            r['offset'] = self._create_length(context, rec[4], rec[5])
+            r['offset'] = self._create_value(context, rec[4], 'group_altitude',
+                                             unit_system=rec[5])
             r['location'] = rec[6]
             records.append(r)
         return records
@@ -1952,6 +1991,41 @@ class ForecastData(object):
             records.append(r)
         return records
 
+    def _parse_precip_qty(self, s):
+        '''convert the string to a qty,min,max tuple
+
+        0.4       -> 0.4,0.4,0.4
+        0.5-0.8   -> 0.65,0.5,0.8
+        0.00-0.00 -> 0,0,0
+        00-00     -> 0,0,0
+        T         -> 0
+        '''
+        x = None
+        xmin = None
+        xmax = None
+        if s is None:
+            return x,xmin,xmax
+        elif s.find('-') >= 0:
+            [lo,hi] = s.split('-')
+            try:
+                xmin = float(lo)
+                xmax = float(hi)
+                x = (xmax - xmin) / 2
+            except Exception, e:
+                logerr("unrecognized precipitation quantity '%s': %s" % (s,e))
+        elif s.find('T') >= 0:
+            x = TRACE_AMOUNT
+            xmin = TRACE_AMOUNT
+            xmax = TRACE_AMOUNT
+        else:
+            try:
+                x = float(s)
+                xmin = x
+                xmax = x
+            except Exception, e:
+                logerr("unrecognized precipitation quantity '%s': %s" % (s,e))
+        return x,xmin,xmax
+
     def _create_from_histogram(self, histogram):
         '''use the item with highest count in the histogram'''
         x = None
@@ -1963,8 +2037,6 @@ class ForecastData(object):
         return x
 
     def _get_stats(self, key, a, b):
-        if key+'N' not in b:
-            b[key+'N'] = None 
         x = a.get(key, None)
         if x is not None:
             if b[key] is None:
@@ -1988,47 +2060,29 @@ class ForecastData(object):
                 return x
         return b[key]
 
-    def _create_time(self, context, ts):
-        vt = weewx.units.ValueTuple(ts, 'unix_epoch', 'group_time') 
-        vh = weewx.units.ValueHelper(vt, context,
-                                     self.formatter, self.converter)
-        return vh
-
-    # FIXME: weewx should define 'length' rather than (as well as?) 'altitude'
-    def _create_length(self, context, v, usys, unit=None):
-        if unit is None:
-            u = 'meter' if usys == weewx.METRIC else 'foot'
-        else:
-            u = unit
-        vt = weewx.units.ValueTuple(v, u, 'group_altitude')
-        vh = weewx.units.ValueHelper(vt, context,
-                                     self.formatter, self.converter)
-        return vh
-
-    def _create_temp(self, context, v, usys):
-        u = 'degree_C' if usys == weewx.METRIC else 'degree_F'
-        vt = weewx.units.ValueTuple(v, u, 'group_temperature')
-        vh = weewx.units.ValueHelper(vt, context,
-                                     self.formatter, self.converter)
-        return vh
-
-    def _create_speed(self, context, v, usys):
-        u = 'km_per_hour' if usys == weewx.METRIC else 'mile_per_hour'
-        vt = weewx.units.ValueTuple(v, u, 'group_speed')
-        vh = weewx.units.ValueHelper(vt, context,
-                                     self.formatter, self.converter)
-        return vh
-
-    def _create_percent(self, context, v):
-        vt = weewx.units.ValueTuple(v, 'percent', 'group_percent')
+    def _create_value(self, context, value_str, group,
+                      units=None, unit_system=weewx.US):
+        '''create a value with units from the specified string'''
+        v = None
+        if value_str is not None:
+            try:
+                if group == 'group_time':
+                    v = int(value_str)
+                else:
+                    v = float(value_str)
+            except Exception, e:
+                logerr("cannot create value from '%s': %s" % (value_str,e))
+        if units is None:
+            units = DEFAULT_UNITS[unit_system][group]
+        vt = weewx.units.ValueTuple(v, units, group)
         vh = weewx.units.ValueHelper(vt, context,
                                      self.formatter, self.converter)
         return vh
 
     def label(self, module, txt):
-        if module in self.labels:
-            return self.labels[module].get(txt,txt)
-        return txt
+        if module == 'NWS':  # for backward compatibility
+            module = 'Weather'
+        return self.labels.get(module, {}).get(txt, txt)
 
     def xtide(self, index, from_ts=int(time.time())):
         records = self._getTides('xtide', from_ts=from_ts, max_events=index+1)
@@ -2062,7 +2116,7 @@ class ForecastData(object):
         if record is None:
             return { 'dateTime' : '', 'issued_ts' : '', 'event_ts' : '',
                      'code' : '', 'text' : '' }
-        th = self._create_time('zambretti', record[0])
+        th = self._create_value('zambretti', record[0], 'group_time')
         code = record[1]
         text = self.labels['Zambretti'].get(code, code)
         return { 'dateTime' : th, 'issued_ts' : th, 'event_ts' : th,
@@ -2070,7 +2124,8 @@ class ForecastData(object):
 
     def weather_periods(self, fid, from_ts=None, to_ts=None, max_events=240):
         '''Returns forecast records for the indicated source from the 
-        specified time.
+        specified time.  For quantities that have units, create an appropriate
+        ValueHelper so that units conversions can happen.
 
         fid - a weather forecast identifier, e.g., 'NWS', 'WU'
 
@@ -2090,21 +2145,60 @@ class ForecastData(object):
         records = self._getRecords(fid, from_ts, to_ts, max_events=max_events)
         ctxt = 'weather_periods'
         for r in records:
-            usys = r['usUnits']
-            r['dateTime'] = self._create_time(ctxt, r['dateTime'])
-            r['issued_ts'] = self._create_time(ctxt, r['issued_ts'])
-            r['event_ts'] = self._create_time(ctxt, r['event_ts'])
-            r['tempMin'] = self._create_temp(ctxt, r['tempMin'], usys)
-            r['tempMax'] = self._create_temp(ctxt, r['tempMax'], usys)
-            r['temp'] = self._create_temp(ctxt, r['temp'], usys)            
-            r['dewpoint'] = self._create_temp(ctxt, r['dewpoint'], usys)
-            r['humidity'] = self._create_percent(ctxt, r['humidity'])
-            r['windSpeed'] = self._create_speed(ctxt, r['windSpeed'], usys)
-            r['windGust'] = self._create_speed(ctxt, r['windGust'], usys)
-            r['pop'] = self._create_percent(ctxt, r['pop'])
-            # FIXME: format qpf and qsf as range or value
-            r['windChill'] = self._create_temp(ctxt, r['windChill'], usys)
-            r['heatIndex'] = self._create_temp(ctxt, r['heatIndex'], usys)
+            r['dateTime']  = self._create_value(ctxt, r['dateTime'],
+                                               'group_time')
+            r['issued_ts'] = self._create_value(ctxt, r['issued_ts'],
+                                                'group_time')
+            r['event_ts']  = self._create_value(ctxt, r['event_ts'],
+                                                'group_time')
+            r['tempMin']   = self._create_value(ctxt, r['tempMin'],
+                                                'group_temperature',
+                                                unit_system=r['usUnits'])
+            r['tempMax']   = self._create_value(ctxt, r['tempMax'],
+                                                'group_temperature',
+                                                unit_system=r['usUnits'])
+            r['temp']      = self._create_value(ctxt, r['temp'],
+                                                'group_temperature',
+                                                unit_system=r['usUnits'])
+            r['dewpoint']  = self._create_value(ctxt, r['dewpoint'],
+                                                'group_temperature',
+                                                unit_system=r['usUnits'])
+            r['humidity']  = self._create_value(ctxt, r['humidity'],
+                                                'group_percent')
+            r['windSpeed'] = self._create_value(ctxt, r['windSpeed'],
+                                                'group_speed',
+                                                unit_system=r['usUnits'])
+            r['windGust']  = self._create_value(ctxt, r['windGust'],
+                                                'group_speed',
+                                                unit_system=r['usUnits'])
+            r['pop']       = self._create_value(ctxt, r['pop'],
+                                                'group_percent')
+            r['qpf'],r['qpfMin'],r['qpfMax'] = self._parse_precip_qty(r['qpf'])
+            r['qsf'],r['qsfMin'],r['qsfMax'] = self._parse_precip_qty(r['qsf'])
+            r['qpf']       = self._create_value(ctxt, r['qpf'],
+                                                'group_rain',
+                                                unit_system=r['usUnits'])
+            r['qpfMin']    = self._create_value(ctxt, r['qpfMin'],
+                                                'group_rain',
+                                                unit_system=r['usUnits'])
+            r['qpfMax']    = self._create_value(ctxt, r['qpfMax'],
+                                                'group_rain',
+                                                unit_system=r['usUnits'])
+            r['qsf']       = self._create_value(ctxt, r['qsf'],
+                                                'group_rain',
+                                                unit_system=r['usUnits'])
+            r['qsfMin']    = self._create_value(ctxt, r['qsfMin'],
+                                                'group_rain',
+                                                unit_system=r['usUnits'])
+            r['qsfMax']    = self._create_value(ctxt, r['qsfMax'],
+                                                'group_rain',
+                                                unit_system=r['usUnits'])
+            r['windChill'] = self._create_value(ctxt, r['windChill'],
+                                                'group_temperature',
+                                                unit_system=r['usUnits'])
+            r['heatIndex'] = self._create_value(ctxt, r['heatIndex'],
+                                                'group_temperature',
+                                                unit_system=r['usUnits'])
             r['precip'] = {}
             for p in nws_precip_types:
                 v = r.get(p, None)
@@ -2125,9 +2219,9 @@ class ForecastData(object):
             ts = int(time.time())
         from_ts = weeutil.weeutil.startOfDay(ts)
         dur = 24 * 3600 # one day
-        usys = None
         rec = {
             'dateTime' : ts,
+            'usUnits' : None,
             'issued_ts' : None,
             'event_ts' : int(from_ts),
             'duration' : dur,
@@ -2152,7 +2246,11 @@ class ForecastData(object):
             'windChars' : {},
             'pop' : None,
             'qpf' : None,
+            'qpfMin' : None,
+            'qpfMax' : None,
             'qsf' : None,
+            'qsfMin' : None,
+            'qsfMax' : None,
             'precip' : [],
             'obvis' : [],
             }
@@ -2163,12 +2261,12 @@ class ForecastData(object):
                 rec['location'] = r['location']
             if rec['issued_ts'] is None:
                 rec['issued_ts'] = r['issued_ts']
-            if usys is None:
-                usys = r['usUnits']
+            if rec['usUnits'] is None:
+                rec['usUnits'] = r['usUnits']
             x = r['clouds']
             if x is not None:
                 outlook_histogram[x] = outlook_histogram.get(x,0) + 1
-            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
+            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed', 'qpf', 'qsf']:
                 try:
                     x = float(r[s])
                     self._get_stats(s, r, rec)
@@ -2188,28 +2286,72 @@ class ForecastData(object):
                     rec['precip'].append(p)
             if r['obvis'] is not None and r['obvis'] not in rec['obvis']:
                 rec['obvis'].append(r['obvis'])
-            # FIXME: aggregate qpf and qsf
         ctxt = 'weather_summary'
-        rec['dateTime'] = self._create_time(ctxt, rec['dateTime'])
-        rec['issued_ts'] = self._create_time(ctxt, rec['issued_ts'])
-        rec['event_ts'] = self._create_time(ctxt, rec['event_ts'])
-        rec['clouds'] = self._create_from_histogram(outlook_histogram)
-        rec['tempMin'] = self._create_temp(ctxt, rec['tempMin'], usys)
-        rec['tempMax'] = self._create_temp(ctxt, rec['tempMax'], usys)
-        rec['temp'] = self._create_temp(ctxt, rec['temp'], usys)
-        rec['dewpointMin'] = self._create_temp(ctxt, rec['dewpointMin'], usys)
-        rec['dewpointMax'] = self._create_temp(ctxt, rec['dewpointMax'], usys)
-        rec['dewpoint'] = self._create_temp(ctxt, rec['dewpoint'], usys)
-        rec['humidityMin'] = self._create_percent(ctxt, rec['humidityMin'])
-        rec['humidityMax'] = self._create_percent(ctxt, rec['humidityMax'])
-        rec['humidity'] = self._create_percent(ctxt, rec['humidity'])
-        rec['windSpeedMin'] = self._create_speed(ctxt,rec['windSpeedMin'],usys)
-        rec['windSpeedMax'] = self._create_speed(ctxt,rec['windSpeedMax'],usys)
-        rec['windSpeed'] = self._create_speed(ctxt, rec['windSpeed'], usys)
-        rec['windGust'] = self._create_speed(ctxt, rec['windGust'], usys)
-        rec['windDir'] = self._create_from_histogram(rec['windDirs'])
-        rec['windChar'] = self._create_from_histogram(rec['windChars'])
-        rec['pop'] = self._create_percent(ctxt, rec['pop'])
+        rec['dateTime']    = self._create_value(ctxt, rec['dateTime'],
+                                                'group_time')
+        rec['issued_ts']   = self._create_value(ctxt, rec['issued_ts'],
+                                                'group_time')
+        rec['event_ts']    = self._create_value(ctxt, rec['event_ts'],
+                                                'group_time')
+        rec['clouds']      = self._create_from_histogram(outlook_histogram)
+        rec['tempMin']     = self._create_value(ctxt, rec['tempMin'],
+                                                'group_temperature',
+                                                unit_system=rec['usUnits'])
+        rec['tempMax']     = self._create_value(ctxt, rec['tempMax'],
+                                                'group_temperature',
+                                                unit_system=rec['usUnits'])
+        rec['temp']        = self._create_value(ctxt, rec['temp'],
+                                                'group_temperature',
+                                                unit_system=rec['usUnits'])
+        rec['dewpointMin'] = self._create_value(ctxt, rec['dewpointMin'],
+                                                'group_temperature',
+                                                unit_system=rec['usUnits'])
+        rec['dewpointMax'] = self._create_value(ctxt, rec['dewpointMax'],
+                                                'group_temperature',
+                                                unit_system=rec['usUnits'])
+        rec['dewpoint']    = self._create_value(ctxt, rec['dewpoint'],
+                                                'group_temperature',
+                                                unit_system=rec['usUnits'])
+        rec['humidityMin'] = self._create_value(ctxt, rec['humidityMin'],
+                                                'group_percent')
+        rec['humidityMax'] = self._create_value(ctxt, rec['humidityMax'],
+                                                'group_percent')
+        rec['humidity']    = self._create_value(ctxt, rec['humidity'],
+                                               'group_percent')
+        rec['windSpeedMin'] = self._create_value(ctxt,rec['windSpeedMin'],
+                                                 'group_speed',
+                                                 unit_system=rec['usUnits'])
+        rec['windSpeedMax'] = self._create_value(ctxt,rec['windSpeedMax'],
+                                                 'group_speed',
+                                                 unit_system=rec['usUnits'])
+        rec['windSpeed']    = self._create_value(ctxt, rec['windSpeed'],
+                                                 'group_speed',
+                                                 unit_system=rec['usUnits'])
+        rec['windGust']     = self._create_value(ctxt, rec['windGust'],
+                                                 'group_speed',
+                                                 unit_system=rec['usUnits'])
+        rec['windDir']      = self._create_from_histogram(rec['windDirs'])
+        rec['windChar']     = self._create_from_histogram(rec['windChars'])
+        rec['pop']          = self._create_value(ctxt, rec['pop'],
+                                                 'group_percent')
+        rec['qpf']          = self._create_value(ctxt, rec['qpf'],
+                                                 'group_rain',
+                                                 unit_system=rec['usUnits'])
+        rec['qpfMin']       = self._create_value(ctxt, rec['qpfMin'],
+                                                 'group_rain',
+                                                 unit_system=rec['usUnits'])
+        rec['qpfMax']       = self._create_value(ctxt, rec['qpfMax'],
+                                                 'group_rain',
+                                                 unit_system=rec['usUnits'])
+        rec['qsf']          = self._create_value(ctxt, rec['qsf'],
+                                                 'group_rain',
+                                                 unit_system=rec['usUnits'])
+        rec['qsfMin']       = self._create_value(ctxt, rec['qsfMin'],
+                                                 'group_rain',
+                                                 unit_system=rec['usUnits'])
+        rec['qsfMax']       = self._create_value(ctxt, rec['qsfMax'],
+                                                 'group_rain',
+                                                 unit_system=rec['usUnits'])
         return rec
 
     # FIXME: this is more appropriately called astronomy, at least from
