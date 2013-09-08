@@ -2237,7 +2237,7 @@ class ForecastData(object):
         dur = 24 * 3600 # one day
         rec = {
             'dateTime' : ts,
-            'usUnits' : None,
+            'usUnits' : weewx.US,
             'issued_ts' : None,
             'event_ts' : int(from_ts),
             'duration' : dur,
@@ -2277,8 +2277,7 @@ class ForecastData(object):
                 rec['location'] = r['location']
             if rec['issued_ts'] is None:
                 rec['issued_ts'] = r['issued_ts']
-            if rec['usUnits'] is None:
-                rec['usUnits'] = r['usUnits']
+            rec['usUnits'] = r['usUnits']
             x = r['clouds']
             if x is not None:
                 outlook_histogram[x] = outlook_histogram.get(x,0) + 1
@@ -2306,8 +2305,6 @@ class ForecastData(object):
                     rec['precip'].append(p)
             if r['obvis'] is not None and r['obvis'] not in rec['obvis']:
                 rec['obvis'].append(r['obvis'])
-        if rec['usUnits'] is None:
-            rec['usUnits'] = weewx.US
         ctxt = 'weather_summary'
         rec['dateTime']    = self._create_value(ctxt, rec['dateTime'],
                                                 'group_time')
