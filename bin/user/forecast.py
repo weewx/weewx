@@ -1867,8 +1867,13 @@ class XTideForecast(Forecast):
                 ofields = string.split(fields[3], ' ')
                 record = {}
                 record['method'] = XT_KEY
-                record['usUnits'] = weewx.US \
-                    if ofields[1] == 'ft' else weewx.METRIC
+                if ofields[1] == 'ft':
+                    record['usUnits'] = weewx.US
+                elif ofields[1] == 'm':
+                    record['usUnits'] = weewx.METRIC
+                else:
+                    record['usUnits'] = None
+                    logerr("%s: unknown units '%s'" % (XT_KEY, ofields[1]))
                 record['dateTime'] = int(now)
                 record['issued_ts'] = int(now)
                 record['event_ts'] = int(ts)
@@ -2301,6 +2306,8 @@ class ForecastData(object):
                     rec['precip'].append(p)
             if r['obvis'] is not None and r['obvis'] not in rec['obvis']:
                 rec['obvis'].append(r['obvis'])
+        if rec['usUnits'] is None:
+            rec['usUnits'] = weewx.US
         ctxt = 'weather_summary'
         rec['dateTime']    = self._create_value(ctxt, rec['dateTime'],
                                                 'group_time')
