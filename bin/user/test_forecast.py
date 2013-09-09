@@ -8819,8 +8819,8 @@ TABLE_TEMPLATE = '''<html>
 <body>
 
 #set $lastday = None
-
-#for $period in $forecast.weather_periods('SOURCE', from_ts=TS, max_events=40)
+#set $periods = $forecast.weather_periods('SOURCE', from_ts=TS, max_events=40)
+#for $period in $periods
   #set $thisday = $period.event_ts.format('%d')
   #set $thisdate = $period.event_ts.format('%Y.%m.%d')
   #set $hourid = $thisdate + '.hours'
@@ -8874,7 +8874,6 @@ TABLE_TEMPLATE = '''<html>
     END_TABLE
   END_DIV
 '''
-
 
 class ForecastTest(unittest.TestCase):
 
@@ -9408,7 +9407,7 @@ SW
                                  'user.forecast.NWSForecast',
                                  FakeData.gen_fake_nws_data(),
                                  template,
-                                 540)
+                                 539)
 
 
     # -------------------------------------------------------------------------
@@ -9593,7 +9592,7 @@ SSW
                                  'user.forecast.WUForecast',
                                  records,
                                  template,
-                                 305)
+                                 304)
 
     def test_wu_template_periods_hourly(self):
         '''verify the period behavior for hourly'''
@@ -9685,7 +9684,20 @@ S
                                  'user.forecast.WUForecast',
                                  records,
                                  template,
-                                 515)
+                                 514)
+
+    def test_wu_template_table(self):
+        '''exercise the period and summary template elements'''
+        records = forecast.WUParseForecast(WU_BOS_HOURLY,
+                                           issued_ts=1378173600,
+                                           now=1378173600)
+        template = create_template(TABLE_TEMPLATE, 'WU', '1378173600')
+        template = template.replace('period.event_ts.raw', 'period.event_ts.raw, periods=$periods')
+        self.runTemplateLineTest('test_wu_template_table',
+                                 'user.forecast.WUForecast',
+                                 records,
+                                 template,
+                                 514)
 
     # -------------------------------------------------------------------------
     # xtide tests

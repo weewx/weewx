@@ -559,6 +559,19 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('waveperiod', 'REAL'),
                          ]
 
+precip_types = [
+    'rain',
+    'rainshwrs',
+    'tstms',
+    'drizzle',
+    'snow',
+    'snowshwrs',
+    'flurries',
+    'sleet',
+    'frzngrain',
+    'frzngdrzl'
+    ]
+
 directions_label_dict = {
     'N':'N',
     'NNE':'NNE',
@@ -686,7 +699,7 @@ class Forecast(StdService):
         self.method_id = fid
         self.last_ts = 0
 
-        # do the database setup here, only as a way to check the schema
+        # do the database setup here, as a way to check the schema
         # compatibility between database and software.
         archive = Forecast.setup_database(self.database,
                                           self.table, self.method_id,
@@ -707,6 +720,11 @@ class Forecast(StdService):
                                                         len(self.schema))
         if errmsg is not None:
             raise Exception(errmsg)
+
+        # find out when the last forecast happened
+        self.last_ts = Forecast.get_last_forecast_ts(archive,
+                                                     self.table,
+                                                     self.method_id)
 
         # ensure that the forecast has a chance to update on each new record
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
@@ -753,6 +771,18 @@ class Forecast(StdService):
     def get_forecast(self, event):
         """get the forecast, return a forecast record or array of records."""
         return None
+
+    @staticmethod
+    def get_last_forecast_ts(archive, table, method_id):
+        sql = "select dateTime,issued_ts from %s where method = '%s' and dateTime = (select dateTime from %s where method = '%s' order by dateTime desc limit 1)" % (table, method_id, table, method_id)
+        r = archive.getSql(sql)
+        if r is None:
+            return None
+        logdbg('%s: last forecast issued %s, requested %s' % 
+               (method_id,
+                weeutil.weeutil.timestamp_to_string(r[1]),
+                weeutil.weeutil.timestamp_to_string(r[0])))
+        return int(r[0])
 
     @staticmethod
     def save_forecast(archive, record):
@@ -817,8 +847,8 @@ class ZambrettiForecast(Forecast):
                                                 interval=600)
         d = config_dict['Forecast'].get(Z_KEY, {})
         self.hemisphere = d.get('hemisphere', 'NORTH')
-        self.lower_pressure = d.get('lower_pressure', 950.0)
-        self.upper_pressure = d.get('upper_pressure', 1050.0)
+        self.lower_pressure = float(d.get('lower_pressure', 950.0))
+        self.upper_pressure = float(d.get('upper_pressure', 1050.0))
         self.last_pressure = None
         loginf('%s: interval=%s max_age=%s hemisphere=%s lower_pressure=%s upper_pressure=%s' %
                (Z_KEY, self.interval, self.max_age, self.hemisphere,
@@ -827,15 +857,17 @@ class ZambrettiForecast(Forecast):
     def get_forecast(self, event):
         logdbg('%s: generating zambretti forecast' % Z_KEY)
         rec = event.record
-        ts = rec['dateTime']
-        tt = time.gmtime(ts)
-        pressure = rec['barometer']
+        if rec['barometer'] is None:
+            return None
+        pressure = float(rec['barometer'])
         if rec['usUnits'] == weewx.US:
             vt = (float(pressure), "inHg", "group_pressure")
             pressure = weewx.units.convert(vt, 'mbar')[0]
+        ts = rec['dateTime']
+        tt = time.gmtime(ts)
         month = tt.tm_mon - 1 # month is [0-11]
         wind = int(rec['windDir'] / 22.5) # wind dir is [0-15]
-        if self.last_pressure is not None and pressure is not None:
+        if self.last_pressure is not None:
             trend = self.last_pressure - pressure
         else:
             trend = None
@@ -1134,19 +1166,6 @@ nws_schema_dict = {
     'WIND CHILL' : 'windChill',
     'HEAT INDEX' : 'heatIndex',
     }
-
-nws_precip_types = [
-    'rain',
-    'rainshwrs',
-    'tstms',
-    'drizzle',
-    'snow',
-    'snowshwrs',
-    'flurries',
-    'sleet',
-    'frzngrain',
-    'frzngdrzl'
-    ]
 
 def NWSDownloadForecast(foid, url=NWS_DEFAULT_PFM_URL, max_tries=3):
     """Download a point forecast matrix from the US National Weather Service"""
@@ -2040,8 +2059,12 @@ class ForecastData(object):
         return x
 
     def _get_stats(self, key, a, b):
-        x = a.get(key, None)
-        if x is not None:
+        try:
+            s = a.get(key, None)
+            if type(s) == weewx.units.ValueHelper:
+                x = s.raw
+            else:
+                x = float(s)
             if b[key] is None:
                 b[key] = x
                 b[key+'N'] = 1
@@ -2055,20 +2078,34 @@ class ForecastData(object):
                     b[key+'Min'] = x
                 if x > b[key+'Max']:
                     b[key+'Max'] = x
+        except Exception, e:
+            pass
 
     def _get_sum(self, key, a, b):
-        x = a.get(key, None)
-        if x is not None:
+        try:
+            s = a.get(key, None)
+            if type(s) == weewx.units.ValueHelper:
+                x = s.raw
+            else:
+                x = float(s)
             if b.get(key, None) is None:
                 b[key] = 0
             return b[key] + x
+        except Exception, e:
+            pass
         return b.get(key, None)
 
     def _get_max(self, key, a, b):
-        x = a.get(key, None)
-        if x is not None:
+        try:
+            s = a.get(key, None)
+            if type(s) == weewx.units.ValueHelper:
+                x = s.raw
+            else:
+                x = float(s)
             if b.get(key, None) is None or x > b[key]:
                 return x
+        except Exception, e:
+            pass
         return b.get(key, None)
 
     def _create_value(self, context, value_str, group,
@@ -2211,7 +2248,7 @@ class ForecastData(object):
                                                 'group_temperature',
                                                 unit_system=r['usUnits'])
             r['precip'] = {}
-            for p in nws_precip_types:
+            for p in precip_types:
                 v = r.get(p, None)
                 if v is not None:
                     r['precip'][p] = v
@@ -2221,7 +2258,7 @@ class ForecastData(object):
     # FIXME: when used in a table, this doubles the database queries since it
     # does a lookup for each day even though we (typically) have already done
     # a query for all days.
-    def weather_summary(self, fid, ts=None):
+    def weather_summary(self, fid, ts=None, periods=None):
         '''Create a weather summary from periods for the day of the indicated
         timestamp.  If the timestamp is None, use the current time.
 
@@ -2269,40 +2306,62 @@ class ForecastData(object):
             'obvis' : [],
             }
         outlook_histogram = {}
-        records = self._getRecords(fid, from_ts, from_ts+dur, max_events=40)
-        for r in records:
-            if rec['location'] is None:
-                rec['location'] = r['location']
-            if rec['issued_ts'] is None:
-                rec['issued_ts'] = r['issued_ts']
-            rec['usUnits'] = r['usUnits']
-            x = r['clouds']
-            if x is not None:
-                outlook_histogram[x] = outlook_histogram.get(x,0) + 1
-            for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
-                try:
-                    x = float(r[s])
+        if periods is not None:
+            for p in periods:
+                if from_ts <= p['event_ts'].raw <= from_ts + dur:
+                    if rec['location'] is None:
+                        rec['location'] = p['location']
+                    if rec['issued_ts'] is None:
+                        rec['issued_ts'] = p['issued_ts'].raw
+                    rec['usUnits'] = p['usUnits']
+                    x = p['clouds']
+                    if x is not None:
+                        outlook_histogram[x] = outlook_histogram.get(x,0) + 1
+                    for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
+                        self._get_stats(s, p, rec)
+                    rec['windGust'] = self._get_max('windGust', p, rec)
+                    x = p['windDir']
+                    if x is not None:
+                        rec['windDirs'][x] = rec['windDirs'].get(x,0) + 1
+                    x = p['windChar']
+                    if x is not None:
+                        rec['windChars'][x] = rec['windChars'].get(x,0) + 1
+                    rec['pop'] = self._get_max('pop', p, rec)
+                    for pt in p['precip']:
+                        if pt not in rec['precip']:
+                            rec['precip'].append(pt)
+                    if p['obvis'] is not None and p['obvis'] not in rec['obvis']:
+                        rec['obvis'].append(p['obvis'])
+        else:
+            records = self._getRecords(fid, from_ts, from_ts+dur, max_events=40)
+            for r in records:
+                if rec['location'] is None:
+                    rec['location'] = r['location']
+                if rec['issued_ts'] is None:
+                    rec['issued_ts'] = r['issued_ts']
+                rec['usUnits'] = r['usUnits']
+                x = r['clouds']
+                if x is not None:
+                    outlook_histogram[x] = outlook_histogram.get(x,0) + 1
+                for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
                     self._get_stats(s, r, rec)
-                except:
-                    pass
-            rec['windGust'] = self._get_max('windGust', r, rec)
-            x = r['windDir']
-            if x is not None:
-                rec['windDirs'][x] = rec['windDirs'].get(x,0) + 1
-            x = r['windChar']
-            if x is not None:
-                rec['windChars'][x] = rec['windChars'].get(x,0) + 1
-            rec['pop'] = self._get_max('pop', r, rec)
-            r['qpf'],r['qpfMin'],r['qpfMax'] = self._parse_precip_qty(r['qpf'])
-            r['qsf'],r['qsfMin'],r['qsfMax'] = self._parse_precip_qty(r['qsf'])
-            for s in ['qpf', 'qpfMin', 'qpfMax', 'qsf', 'qsfMin', 'qsfMax']:
-                rec[s] = self._get_sum(s, r, rec)
-            for p in nws_precip_types:
-                v = r.get(p, None)
-                if v is not None and p not in rec['precip']:
-                    rec['precip'].append(p)
-            if r['obvis'] is not None and r['obvis'] not in rec['obvis']:
-                rec['obvis'].append(r['obvis'])
+                rec['windGust'] = self._get_max('windGust', r, rec)
+                x = r['windDir']
+                if x is not None:
+                    rec['windDirs'][x] = rec['windDirs'].get(x,0) + 1
+                x = r['windChar']
+                if x is not None:
+                    rec['windChars'][x] = rec['windChars'].get(x,0) + 1
+                rec['pop'] = self._get_max('pop', r, rec)
+                r['qpf'],r['qpfMin'],r['qpfMax'] = self._parse_precip_qty(r['qpf'])
+                r['qsf'],r['qsfMin'],r['qsfMax'] = self._parse_precip_qty(r['qsf'])
+                for s in ['qpf', 'qpfMin', 'qpfMax', 'qsf', 'qsfMin', 'qsfMax']:
+                    rec[s] = self._get_sum(s, r, rec)
+                for pt in precip_types:
+                    if r.get(pt, None) is not None and pt not in rec['precip']:
+                        rec['precip'].append(pt)
+                if r['obvis'] is not None and r['obvis'] not in rec['obvis']:
+                    rec['obvis'].append(r['obvis'])
         ctxt = 'weather_summary'
         rec['dateTime']    = self._create_value(ctxt, rec['dateTime'],
                                                 'group_time')
