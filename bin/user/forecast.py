@@ -366,13 +366,7 @@ $summary.obvis           array
 
 # FIXME: what is correct behavior when error?  display NULL? ''? None?
 
-# FIXME: handle ranges (for rain and snow quantities)
-
-# FIXME: add a 'length' unit that has default formatting to two decimal places
-
-# FIXME: make the labels extensible
-
-# FIXME: make the forecasting extensible
+# FIXME: make the forecasting extensible, both download/generate and templates
 
 # FIXME: 'method' should be called 'source'
 
@@ -394,7 +388,7 @@ import weeutil.weeutil
 
 try:
     import cjson as json
-    # XXX: maintain compatibility w/ json module 
+    # rename methods to maintain compatibility w/ json module 
     setattr(json, 'dumps', json.encode)
     setattr(json, 'loads', json.decode)
 except Exception, e:
@@ -509,8 +503,12 @@ def get_int(config_dict, label, default_value):
 
    zcode        used only by zambretti forecast
 """
+# FIXME: event_ts should be NOT NULL
+# FIXME: add these conditions: hail, tornado, hurricane/cyclone
+# FIXME: obvis should be an array?
+# FIXME: add textual description field
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
-                         ('usUnits',    'INTEGER NOT NULL'),
+                         ('usUnits',    'INTEGER NOT NULL'),  # weewx.US
                          ('dateTime',   'INTEGER NOT NULL'),  # epoch
                          ('issued_ts',  'INTEGER NOT NULL'),  # epoch
                          ('event_ts',   'INTEGER'),           # epoch
@@ -660,7 +658,7 @@ class ForecastThread(threading.Thread):
         self._target(*self._args)
 
 class Forecast(StdService):
-    """Provide forecast."""
+    """Provide a forecast for weather or tides."""
 
     def __init__(self, engine, config_dict, fid,
                  interval=1800, max_age=604800):
