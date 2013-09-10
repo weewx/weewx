@@ -3,6 +3,11 @@ weewx change history
 
 2.X.Y 09/ZZ/13
 
+Weewx now allows easier localization to non-English speaking locales.
+In particular, set the environment variable LANG to your locale, and
+then weewx date and number formatting will follow local conventions.
+Details in a new section in the Customization Guide.
+
 WMR100 and Vantage drivers now emit a null wind direction when the wind
 speed is zero.
 

@@ -10,6 +10,7 @@
 """Routines for generating image plots.
 """
 import colorsys
+import locale
 import time
 try:
     from PIL import Image, ImageDraw
@@ -501,11 +502,11 @@ class GeneralPlot(object):
             self.y_label_format = weeplot.utilities.pickLabelFormat(self.yscale[2])
         
     def _genXLabel(self, x):
-        xlabel = self.x_label_format % x
+        xlabel = locale.format(self.x_label_format, x)
         return xlabel
     
     def _genYLabel(self, y):
-        ylabel = self.y_label_format % y
+        ylabel = locale.format(self.y_label_format, y)
         return ylabel
     
     def _calcXMinMax(self):

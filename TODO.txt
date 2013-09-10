@@ -2,5 +2,3 @@ TODO before the next release:
 
 ET values are not being generated when using software record generation.
 
-Add a note in the User's Guide about setting the locale on program startup. Or,
-maybe we should add a configuration option to do this?

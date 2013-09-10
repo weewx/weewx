@@ -10,6 +10,7 @@
 #
 """Data structures and functions for dealing with units."""
 
+import locale
 import time
 import syslog
 
@@ -429,12 +430,12 @@ class Formatter(object):
             # It's not a time. It's a regular value.
             try:
                 if useThisFormat:
-                    val_str = useThisFormat % val_t[0]
+                    val_str = locale.format(useThisFormat, val_t[0])
                 else:
-                    val_str = self.unit_format_dict[val_t[1]] % val_t[0]
+                    val_str = locale.format(self.unit_format_dict[val_t[1]], val_t[0])
             except (KeyError, TypeError):
                 # If all else fails, ask Python to convert to a string:
-                val_str = str(val_t[0])
+                val_str = locale.str(val_t[0])
 
         if addLabel:
             val_str += self.unit_label_dict.get(val_t[1],'')
