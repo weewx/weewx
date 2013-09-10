@@ -857,7 +857,7 @@ class ZambrettiForecast(Forecast):
     def get_forecast(self, event):
         logdbg('%s: generating zambretti forecast' % Z_KEY)
         rec = event.record
-        if rec['barometer'] is None:
+        if rec['barometer'] is None or rec['windDir'] is None:
             return None
         pressure = float(rec['barometer'])
         if rec['usUnits'] == weewx.US:

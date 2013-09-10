@@ -241,6 +241,8 @@ skin_contents = '''
     moon_phases = n,wc,fq,wg,f,wg,lq,wc
 [FileGenerator]
     encoding = html_entities
+    [[SummaryByMonth]]
+    [[SummaryByYear]]
     [[ToDate]]
         [[[current]]]
             template = index.html.tmpl
@@ -9169,6 +9171,41 @@ class ForecastTest(unittest.TestCase):
         self.assertEqual(forecast.ZambrettiCode(None, 0, 0, 0), None)
         self.assertEqual(forecast.ZambrettiCode(1013.0, 0, 16, 0), None)
         self.assertEqual(forecast.ZambrettiCode(1013.0, 12, 0, 0), None)
+
+    def test_zambretti_types(self):
+        '''ensure zambretti config and params are typesafe'''
+        tdir = get_testdir('test_zambretti_settings')
+        rmtree(tdir)
+        config_dict = create_config(tdir, 'user.forecast.ZambrettiForecast')
+        config_dict['Forecast']['lower_pressure'] = '950.0'
+        config_dict['Forecast']['upper_pressure'] = '1050.0'
+        e = wxengine.StdEngine(config_dict)
+        f = forecast.ZambrettiForecast(e, config_dict)
+        self.assertEqual(f.lower_pressure, 950)
+
+        event = weewx.Event(weewx.NEW_ARCHIVE_RECORD)
+        event.record = {}
+        event.record['usUnits'] = weewx.METRIC
+        event.record['barometer'] = 1030
+        event.record['windDir'] = 180
+        event.record['dateTime'] = 1368303480
+        c = f.get_forecast(event)
+        self.assertEqual(c, None)
+        event.record['barometer'] = 1025
+        event.record['windDir'] = 180
+        event.record['dateTime'] = 1368303780
+        c = f.get_forecast(event)
+        self.assertEqual(c, {'event_ts': 1368303780, 'dateTime': 1368303780, 'zcode': 'C', 'issued_ts': 1368303780, 'method': 'Zambretti', 'usUnits': 1})
+        event.record['barometer'] = 1030
+        event.record['windDir'] = None
+        event.record['dateTime'] = 1368304080
+        c = f.get_forecast(event)
+        self.assertEqual(c, None)
+        event.record['barometer'] = None
+        event.record['windDir'] = 180
+        event.record['dateTime'] = 1368304580
+        c = f.get_forecast(event)
+        self.assertEqual(c, None)
 
     def test_zambretti_templates(self):
         self.runTemplateTest('test_zambretti_templates',
