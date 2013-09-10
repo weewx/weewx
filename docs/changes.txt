@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-2.X.Y 09/ZZ/13
+2.5.0 09/ZZ/13
 
 Weewx now allows easier localization to non-English speaking locales.
 In particular, set the environment variable LANG to your locale, and
@@ -13,6 +13,9 @@ speed is zero.
 
 The LOOP value for daily ET on Vantages was too high by a factor of 10. 
 This has been corrected.
+
+Fixed a bug that caused values of ET to be miscalculated when using
+software record generation.
 
 Ported to Korora 19 (Fedora 19). Thanks to user zmodemguru!
 
