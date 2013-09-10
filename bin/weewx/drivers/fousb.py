@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 567 2013-04-01 15:26:33Z mwall $
+# $Id$
 #
 # Copyright 2012 Matthew Wall
 #
