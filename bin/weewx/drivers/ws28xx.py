@@ -745,7 +745,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
             self._service.DataStore.CurrentWeather._Gust,
             CWeatherTraits.WindNP())
 
-        if packet['windSpeed'] is not None:
+        if packet['windSpeed'] is not None and packet['windSpeed'] != 0:
             packet['windSpeed'] *= 3.6 # weewx wants km/h
             packet['windDir'] = self._service.DataStore.CurrentWeather._WindDirection * 360 / 16
         else:

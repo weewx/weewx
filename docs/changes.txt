@@ -8,8 +8,8 @@ In particular, set the environment variable LANG to your locale, and
 then weewx date and number formatting will follow local conventions.
 Details in a new section in the Customization Guide.
 
-WMR100 and Vantage drivers now emit a null wind direction when the wind
-speed is zero.
+WMR100, Vantage, FineOffset, and WS28xx drivers now emit a null wind
+direction when the wind speed is zero.
 
 The LOOP value for daily ET on Vantages was too high by a factor of 10. 
 This has been corrected.
