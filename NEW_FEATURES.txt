@@ -46,3 +46,6 @@ Werkzeug. http://werkzeug.pocoo.org
 Dynamic web updates, using AJAX.
 
 Port to Windows.
+
+Allow variable y-axis labelling. Right now it's hardwired to every other major
+tick mark.

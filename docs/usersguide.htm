@@ -1669,6 +1669,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
     <p class='tty'>debug = 1</p>
 
     <h1 id="Compatibility_with_wview">Compatibility with <span class="code">wview</span></h1>
+	  <h2>sqlite3</h2>
     <p>The sqlite3 archive database used by <span class="code">weewx</span>
       (nominally, <span class="code">weewx.sdb</span>) is completely
       compatible with the database used by
@@ -1696,6 +1697,27 @@ sudo /etc/init.d/weewx start</p>
     <p>On my modest 500 MHz <a href="http://www.fit-pc.com/">fit-PC Slim</a>
       with 512 MB of memory it took a little over 4 minutes for a year and a
       half (25 MB) of data.</p>
+	  <h2>MySQL</h2>
+	  <p>The MySQL archive database used by wview is "almost" compatible with
+	  <span class="code">weewx</span>. The one difference is that in wview, the column '<span class="code">interval</span>' 
+	  is named '<span class="code">arcInt</span>' (presumably because
+	  <span class="code">interval</span> is a keyword in MySQL, although it can 
+	  still be used by surrounding the word with backquotes). </p>
+	  <p>To change the column name to what <span class="code">weewx</span> uses, namely <span class="code">interval</span>, 
+	  use the utility <span class="code">mysql</span> and issue the command:</p>
+	  <p class="tty">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt 
+	  `interval` INTEGER NOT NULL; </p>
+	  <p>where <span class="code"><em>your-wview-archive-name</em></span> is the 
+	  name of your wview archive database. Note that the word <span class="code">
+	  interval</span> is surrounded by backquotes.</p>
+	  <p>Then in the <span class="code">[Databases]</span> section of
+	  <span class="code">weewx.conf</span>, replace the name of the database 
+	  with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:</p>
+	  <p class="tty">[[archive_mysql]]<br />
+&nbsp; host = ...<br />
+&nbsp; user = ...<br />
+&nbsp; database = <em>your-wview-archive-name</em><br />
+&nbsp; ...</p>
 
     <h1>Integrating <span class='code'>weewx</span> with a web server</h1>
     <h2>If the server is on the same machine</h2>
