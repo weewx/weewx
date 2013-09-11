@@ -80,14 +80,20 @@ select_unit_str   = """SELECT value FROM metadata WHERE name = 'unit_system';"""
 
 # Set of SQL statements to be used for calculating aggregate statistics. Key is the aggregation type.
 sqlDict = {'min'        : "SELECT MIN(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'minmax'     : "SELECT MIN(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'max'        : "SELECT MAX(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'maxmin'     : "SELECT MAX(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'meanmin'    : "SELECT AVG(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'meanmax'    : "SELECT AVG(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'maxsum'     : "SELECT MAX(sum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'mintime'    : "SELECT mintime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
                           "min = (SELECT MIN(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'maxmintime' : "SELECT mintime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "min = (SELECT MAX(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
            'maxtime'    : "SELECT maxtime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
                           "max = (SELECT MAX(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'minmaxtime' : "SELECT maxtime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "max = (SELECT MIN(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
            'maxsumtime' : "SELECT maxtime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
                           "sum = (SELECT MAX(sum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
            'gustdir'    : "SELECT gustdir FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
@@ -327,7 +333,7 @@ class StatsDb(object):
         
         # This entry point won't work for heating or cooling degree days:
         if weewx.debug:
-            assert(stats_type not in ('heatdeg', 'cooldeg'))
+            assert(stats_type not in ['heatdeg', 'cooldeg'])
             assert(timespan is not None)
 
         # Check to see if this is a valid stats type:
@@ -338,9 +344,9 @@ class StatsDb(object):
             # The following is for backwards compatibility when ValueTuples had
             # just two members. This hack avoids breaking old skins.
             if len(val) == 2:
-                if val[1] in ('degree_F', 'degree_C'):
+                if val[1] in ['degree_F', 'degree_C']:
                     val += ("group_temperature",)
-                elif val[1] in ('inch', 'mm', 'cm'):
+                elif val[1] in ['inch', 'mm', 'cm']:
                     val += ("group_rain",)
             target_val = weewx.units.convertStd(val, self.std_unit_system)[0]
         else:
@@ -367,25 +373,25 @@ class StatsDb(object):
             _result = None
         
         # Do the required calculation for this aggregat type
-        elif aggregateType in ('min', 'max', 'meanmin', 'meanmax', 'maxsum','sum', 'gustdir'):
+        elif aggregateType in ['min', 'maxmin', 'max', 'minmax', 'meanmin', 'meanmax', 'maxsum', 'sum', 'gustdir']:
             # These aggregates are passed through 'as is'.
             _result = _row[0]
         
-        elif aggregateType in ('mintime', 'maxtime', 'maxsumtime',
-                               'count', 'max_ge', 'max_le', 'min_le', 'sum_ge'):
+        elif aggregateType in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
+                               'count', 'max_ge', 'max_le', 'min_le', 'sum_ge']:
             # These aggregates are always integers:
             _result = int(_row[0])
 
-        elif aggregateType in ('avg',):
+        elif aggregateType == 'avg':
             _result = _row[0]/_row[1] if _row[1] else None
 
-        elif aggregateType in ('rms', ):
+        elif aggregateType == 'rms':
             _result = math.sqrt(_row[0]/_row[1]) if _row[1] else None
         
-        elif aggregateType in ('vecavg', ):
+        elif aggregateType == 'vecavg':
             _result = math.sqrt((_row[0]**2 + _row[1]**2) / _row[2]**2) if _row[2] else None
         
-        elif aggregateType in ('vecdir',):
+        elif aggregateType == 'vecdir':
             if _row == (0.0, 0.0):
                 _result = None
             deg = 90.0 - math.degrees(math.atan2(_row[1], _row[0]))
@@ -937,7 +943,7 @@ class StatsTypeHelper(object):
             return self.stats_type in self.db.statsTypes
         elif aggregateType == 'has_data':
             return self.stats_type in self.db.statsTypes and self.db.getAggregate(self.timespan, self.stats_type, 'count')[0] != 0
-        elif self.stats_type in ('heatdeg', 'cooldeg'):
+        elif self.stats_type in ['heatdeg', 'cooldeg']:
             # Heating and cooling degree days use a different entry point into Stats:
             result = get_heat_cool(self.db, self.timespan, self.stats_type, aggregateType, self.option_dict['heatbase'], self.option_dict['coolbase'])
         else:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2010, 2011, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -88,7 +88,9 @@ obs_group_dict = {"altitude"           : "group_altitude",
 # Some aggregations when applied to a type result in a different unit
 # group. This data structure maps aggregation type to the group:
 agg_group = {'mintime'    : "group_time",
+             'maxmintime' : "group_time",
              'maxtime'    : "group_time",
+             'minmaxtime' : "group_time",
              "maxsumtime" : "group_time",
              'count'      : "group_count",
              'max_ge'     : "group_count",

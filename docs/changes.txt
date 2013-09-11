@@ -8,6 +8,9 @@ In particular, set the environment variable LANG to your locale, and
 then weewx date and number formatting will follow local conventions.
 Details in a new section in the Customization Guide.
 
+Added aggregate type "minmax" and "maxmin", thanks to user Gary Roderick.
+Thanks, Gary!
+
 WMR100, Vantage, FineOffset, and WS28xx drivers now emit a null wind
 direction when the wind speed is zero.
 
