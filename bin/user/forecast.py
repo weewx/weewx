@@ -372,6 +372,8 @@ $summary.obvis           array
 
 # FIXME: add option to WU forecast for daily (day/night) or hourly
 
+# FIXME: is the context necessary for the template variables?
+
 import httplib
 import socket
 import string
@@ -1951,6 +1953,174 @@ DEFAULT_UNITS = {
         }
     }
 
+UNIT_GROUPS = {
+    'dateTime':     'group_time',
+    'issued_ts':    'group_time',
+    'event_ts':     'group_time',
+    'temp':         'group_temperature',
+    'tempMin':      'group_temperature',
+    'tempMax':      'group_temperature',
+    'dewpoint':     'group_temperature',
+    'dewpointMin':  'group_temperature',
+    'dewpointMax':  'group_temperature',
+    'humidity':     'group_percent',
+    'humidityMin':  'group_percent',
+    'humidityMax':  'group_percent',
+    'windSpeed':    'group_speed',
+    'windSpeedMin': 'group_speed',
+    'windSpeedMax': 'group_speed',
+    'windGust':     'group_speed',
+    'pop':          'group_percent',
+    'qpf':          'group_rain',
+    'qpfMin':       'group_rain',
+    'qpfMax':       'group_rain',
+    'qsf':          'group_rain',
+    'qsfMin':       'group_rain',
+    'qsfMax':       'group_rain',
+    'windChill':    'group_temperature',
+    'heatIndex':    'group_temperature',
+    }
+
+PERIOD_FIELDS_WITH_UNITS = [
+    'dateTime',
+    'issued_ts',
+    'event_ts',
+    'tempMin',
+    'tempMax',
+    'temp',
+    'dewpoint',
+    'humidity',
+    'windSpeed',
+    'windGust',
+    'pop',
+    'qpf',
+    'qpfMin',
+    'qpfMax',
+    'qsf',
+    'qsfMin',
+    'qsfMax',
+    'windChill',
+    'heatIndex',
+    ]
+
+SUMMARY_FIELDS_WITH_UNITS = [
+    'dateTime',
+    'issued_ts',
+    'event_ts',
+    'temp',
+    'tempMin',
+    'tempMax',
+    'dewpoint',
+    'dewpointMin',
+    'dewpointMax',
+    'humidity',
+    'humidityMin',
+    'humidityMax',
+    'windSpeed',
+    'windSpeedMin',
+    'windSpeedMax',
+    'windGust',
+    'pop',
+    'qpf',
+    'qpfMin',
+    'qpfMax',
+    'qsf',
+    'qsfMin',
+    'qsfMax',
+    ]
+
+def _parse_precip_qty(s):
+    '''convert the string to a qty,min,max tuple
+
+    0.4       -> 0.4,0.4,0.4
+    0.5-0.8   -> 0.65,0.5,0.8
+    0.00-0.00 -> 0,0,0
+    00-00     -> 0,0,0
+    T         -> 0
+    '''
+    if s is None or s == '':
+        return None,None,None
+    elif s.find('T') >= 0:
+        return TRACE_AMOUNT,TRACE_AMOUNT,TRACE_AMOUNT
+    elif s.find('-') >= 0:
+        try:
+            [lo,hi] = s.split('-')
+            xmin = float(lo)
+            xmax = float(hi)
+            x = (xmax - xmin) / 2
+            return x,xmin,xmax
+        except Exception, e:
+            logerr("unrecognized precipitation quantity '%s': %s" % (s,e))
+    else:
+        try:
+            x = float(s)
+            xmin = x
+            xmax = x
+            return x,xmin,xmax
+        except Exception, e:
+            logerr("unrecognized precipitation quantity '%s': %s" % (s,e))
+    return None,None,None
+
+def _create_from_histogram(histogram):
+    '''use the item with highest count in the histogram'''
+    x = None
+    cnt = 0
+    for key in histogram:
+        if histogram[key] > cnt:
+            x = key
+            cnt = histogram[key]
+    return x
+
+def _get_stats(key, a, b):
+    try:
+        s = a.get(key, None)
+        if type(s) == weewx.units.ValueHelper:
+            x = s.raw
+        else:
+            x = float(s)
+        if b[key] is None:
+            b[key] = x
+            b[key+'N'] = 1
+            b[key+'Min'] = x
+            b[key+'Max'] = x
+        else:
+            n = b[key+'N'] + 1
+            b[key] = (b[key] * b[key+'N'] + x) / n
+            b[key+'N'] = n
+            if x < b[key+'Min']:
+                b[key+'Min'] = x
+            if x > b[key+'Max']:
+                b[key+'Max'] = x
+    except Exception, e:
+        pass
+
+def _get_sum(key, a, b):
+    try:
+        s = a.get(key, None)
+        if type(s) == weewx.units.ValueHelper:
+            x = s.raw
+        else:
+            x = float(s)
+        if b.get(key, None) is None:
+            b[key] = 0
+        return b[key] + x
+    except Exception, e:
+        pass
+    return b.get(key, None)
+
+def _get_max(key, a, b):
+    try:
+        s = a.get(key, None)
+        if type(s) == weewx.units.ValueHelper:
+            x = s.raw
+        else:
+            x = float(s)
+        if b.get(key, None) is None or x > b[key]:
+            return x
+    except Exception, e:
+        pass
+    return b.get(key, None)
+
 class ForecastData(object):
     """Bind forecast variables to database records."""
 
@@ -2012,101 +2182,6 @@ class ForecastData(object):
                 r[f] = rec[i]
             records.append(r)
         return records
-
-    def _parse_precip_qty(self, s):
-        '''convert the string to a qty,min,max tuple
-
-        0.4       -> 0.4,0.4,0.4
-        0.5-0.8   -> 0.65,0.5,0.8
-        0.00-0.00 -> 0,0,0
-        00-00     -> 0,0,0
-        T         -> 0
-        '''
-        x = None
-        xmin = None
-        xmax = None
-        if s is None or s == '':
-            return x,xmin,xmax
-        elif s.find('-') >= 0:
-            [lo,hi] = s.split('-')
-            try:
-                xmin = float(lo)
-                xmax = float(hi)
-                x = (xmax - xmin) / 2
-            except Exception, e:
-                logerr("unrecognized precipitation quantity '%s': %s" % (s,e))
-        elif s.find('T') >= 0:
-            x = TRACE_AMOUNT
-            xmin = TRACE_AMOUNT
-            xmax = TRACE_AMOUNT
-        else:
-            try:
-                x = float(s)
-                xmin = x
-                xmax = x
-            except Exception, e:
-                logerr("unrecognized precipitation quantity '%s': %s" % (s,e))
-        return x,xmin,xmax
-
-    def _create_from_histogram(self, histogram):
-        '''use the item with highest count in the histogram'''
-        x = None
-        cnt = 0
-        for key in histogram:
-            if histogram[key] > cnt:
-                x = key
-                cnt = histogram[key]
-        return x
-
-    def _get_stats(self, key, a, b):
-        try:
-            s = a.get(key, None)
-            if type(s) == weewx.units.ValueHelper:
-                x = s.raw
-            else:
-                x = float(s)
-            if b[key] is None:
-                b[key] = x
-                b[key+'N'] = 1
-                b[key+'Min'] = x
-                b[key+'Max'] = x
-            else:
-                n = b[key+'N'] + 1
-                b[key] = (b[key] * b[key+'N'] + x) / n
-                b[key+'N'] = n
-                if x < b[key+'Min']:
-                    b[key+'Min'] = x
-                if x > b[key+'Max']:
-                    b[key+'Max'] = x
-        except Exception, e:
-            pass
-
-    def _get_sum(self, key, a, b):
-        try:
-            s = a.get(key, None)
-            if type(s) == weewx.units.ValueHelper:
-                x = s.raw
-            else:
-                x = float(s)
-            if b.get(key, None) is None:
-                b[key] = 0
-            return b[key] + x
-        except Exception, e:
-            pass
-        return b.get(key, None)
-
-    def _get_max(self, key, a, b):
-        try:
-            s = a.get(key, None)
-            if type(s) == weewx.units.ValueHelper:
-                x = s.raw
-            else:
-                x = float(s)
-            if b.get(key, None) is None or x > b[key]:
-                return x
-        except Exception, e:
-            pass
-        return b.get(key, None)
 
     def _create_value(self, context, value_str, group,
                       units=None, unit_system=weewx.US):
@@ -2191,62 +2266,13 @@ class ForecastData(object):
         if to_ts is None:
             to_ts = from_ts + 14 * 24 * 3600 # 14 days into the future
         records = self._getRecords(fid, from_ts, to_ts, max_events=max_events)
-        ctxt = 'weather_periods'
         for r in records:
-            r['dateTime']  = self._create_value(ctxt, r['dateTime'],
-                                               'group_time')
-            r['issued_ts'] = self._create_value(ctxt, r['issued_ts'],
-                                                'group_time')
-            r['event_ts']  = self._create_value(ctxt, r['event_ts'],
-                                                'group_time')
-            r['tempMin']   = self._create_value(ctxt, r['tempMin'],
-                                                'group_temperature',
-                                                unit_system=r['usUnits'])
-            r['tempMax']   = self._create_value(ctxt, r['tempMax'],
-                                                'group_temperature',
-                                                unit_system=r['usUnits'])
-            r['temp']      = self._create_value(ctxt, r['temp'],
-                                                'group_temperature',
-                                                unit_system=r['usUnits'])
-            r['dewpoint']  = self._create_value(ctxt, r['dewpoint'],
-                                                'group_temperature',
-                                                unit_system=r['usUnits'])
-            r['humidity']  = self._create_value(ctxt, r['humidity'],
-                                                'group_percent')
-            r['windSpeed'] = self._create_value(ctxt, r['windSpeed'],
-                                                'group_speed',
-                                                unit_system=r['usUnits'])
-            r['windGust']  = self._create_value(ctxt, r['windGust'],
-                                                'group_speed',
-                                                unit_system=r['usUnits'])
-            r['pop']       = self._create_value(ctxt, r['pop'],
-                                                'group_percent')
-            r['qpf'],r['qpfMin'],r['qpfMax'] = self._parse_precip_qty(r['qpf'])
-            r['qsf'],r['qsfMin'],r['qsfMax'] = self._parse_precip_qty(r['qsf'])
-            r['qpf']       = self._create_value(ctxt, r['qpf'],
-                                                'group_rain',
-                                                unit_system=r['usUnits'])
-            r['qpfMin']    = self._create_value(ctxt, r['qpfMin'],
-                                                'group_rain',
-                                                unit_system=r['usUnits'])
-            r['qpfMax']    = self._create_value(ctxt, r['qpfMax'],
-                                                'group_rain',
-                                                unit_system=r['usUnits'])
-            r['qsf']       = self._create_value(ctxt, r['qsf'],
-                                                'group_rain',
-                                                unit_system=r['usUnits'])
-            r['qsfMin']    = self._create_value(ctxt, r['qsfMin'],
-                                                'group_rain',
-                                                unit_system=r['usUnits'])
-            r['qsfMax']    = self._create_value(ctxt, r['qsfMax'],
-                                                'group_rain',
-                                                unit_system=r['usUnits'])
-            r['windChill'] = self._create_value(ctxt, r['windChill'],
-                                                'group_temperature',
-                                                unit_system=r['usUnits'])
-            r['heatIndex'] = self._create_value(ctxt, r['heatIndex'],
-                                                'group_temperature',
-                                                unit_system=r['usUnits'])
+            r['qpf'],r['qpfMin'],r['qpfMax'] = _parse_precip_qty(r['qpf'])
+            r['qsf'],r['qsfMin'],r['qsfMax'] = _parse_precip_qty(r['qsf'])
+            for f in PERIOD_FIELDS_WITH_UNITS:
+                r[f] = self._create_value('weather_periods',
+                                          r[f], UNIT_GROUPS[f],
+                                          unit_system=r['usUnits'])
             r['precip'] = {}
             for p in precip_types:
                 v = r.get(p, None)
@@ -2255,9 +2281,10 @@ class ForecastData(object):
             # all other fields are strings
         return records
 
-    # FIXME: when used in a table, this doubles the database queries since it
-    # does a lookup for each day even though we (typically) have already done
-    # a query for all days.
+    # the 'periods' option is a weak attempt to reduce database hits when
+    # the summary is used in tables.  early testing shows a reduction in
+    # time to generate 'toDate' files from about 40s to about 16s on a slow
+    # arm cpu for the exfoliation skin (primarily the forecast.html page).
     def weather_summary(self, fid, ts=None, periods=None):
         '''Create a weather summary from periods for the day of the indicated
         timestamp.  If the timestamp is None, use the current time.
@@ -2278,30 +2305,16 @@ class ForecastData(object):
             'duration' : dur,
             'location' : None,
             'clouds' : None,
-            'temp' : None,
-            'tempMin' : None,
-            'tempMax' : None,
-            'dewpoint' : None,
-            'dewpointMin' : None,
-            'dewpointMax' : None,
-            'humidity' : None,
-            'humidityMin' : None,
-            'humidityMax' : None,
-            'windSpeed' : None,
-            'windSpeedMin' : None,
-            'windSpeedMax' : None,
+            'temp' : None, 'tempMin' : None, 'tempMax' : None,
+            'dewpoint' : None, 'dewpointMin' : None, 'dewpointMax' : None,
+            'humidity' : None, 'humidityMin' : None, 'humidityMax' : None,
+            'windSpeed' : None, 'windSpeedMin' : None, 'windSpeedMax' : None,
             'windGust' : None,
-            'windDir' : None,
-            'windDirs' : {},
-            'windChar' : None,
-            'windChars' : {},
+            'windDir' : None, 'windDirs' : {},
+            'windChar' : None, 'windChars' : {},
             'pop' : None,
-            'qpf' : None,
-            'qpfMin' : None,
-            'qpfMax' : None,
-            'qsf' : None,
-            'qsfMin' : None,
-            'qsfMax' : None,
+            'qpf' : None, 'qpfMin' : None, 'qpfMax' : None,
+            'qsf' : None, 'qsfMin' : None, 'qsfMax' : None,
             'precip' : [],
             'obvis' : [],
             }
@@ -2318,15 +2331,15 @@ class ForecastData(object):
                     if x is not None:
                         outlook_histogram[x] = outlook_histogram.get(x,0) + 1
                     for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
-                        self._get_stats(s, p, rec)
-                    rec['windGust'] = self._get_max('windGust', p, rec)
+                        _get_stats(s, p, rec)
+                    rec['windGust'] = _get_max('windGust', p, rec)
                     x = p['windDir']
                     if x is not None:
                         rec['windDirs'][x] = rec['windDirs'].get(x,0) + 1
                     x = p['windChar']
                     if x is not None:
                         rec['windChars'][x] = rec['windChars'].get(x,0) + 1
-                    rec['pop'] = self._get_max('pop', p, rec)
+                    rec['pop'] = _get_max('pop', p, rec)
                     for pt in p['precip']:
                         if pt not in rec['precip']:
                             rec['precip'].append(pt)
@@ -2344,90 +2357,32 @@ class ForecastData(object):
                 if x is not None:
                     outlook_histogram[x] = outlook_histogram.get(x,0) + 1
                 for s in ['temp', 'dewpoint', 'humidity', 'windSpeed']:
-                    self._get_stats(s, r, rec)
-                rec['windGust'] = self._get_max('windGust', r, rec)
+                    _get_stats(s, r, rec)
+                rec['windGust'] = _get_max('windGust', r, rec)
                 x = r['windDir']
                 if x is not None:
                     rec['windDirs'][x] = rec['windDirs'].get(x,0) + 1
                 x = r['windChar']
                 if x is not None:
                     rec['windChars'][x] = rec['windChars'].get(x,0) + 1
-                rec['pop'] = self._get_max('pop', r, rec)
-                r['qpf'],r['qpfMin'],r['qpfMax'] = self._parse_precip_qty(r['qpf'])
-                r['qsf'],r['qsfMin'],r['qsfMax'] = self._parse_precip_qty(r['qsf'])
+                rec['pop'] = _get_max('pop', r, rec)
+                r['qpf'],r['qpfMin'],r['qpfMax'] = _parse_precip_qty(r['qpf'])
+                r['qsf'],r['qsfMin'],r['qsfMax'] = _parse_precip_qty(r['qsf'])
                 for s in ['qpf', 'qpfMin', 'qpfMax', 'qsf', 'qsfMin', 'qsfMax']:
-                    rec[s] = self._get_sum(s, r, rec)
+                    rec[s] = _get_sum(s, r, rec)
                 for pt in precip_types:
                     if r.get(pt, None) is not None and pt not in rec['precip']:
                         rec['precip'].append(pt)
                 if r['obvis'] is not None and r['obvis'] not in rec['obvis']:
                     rec['obvis'].append(r['obvis'])
-        ctxt = 'weather_summary'
-        rec['dateTime']    = self._create_value(ctxt, rec['dateTime'],
-                                                'group_time')
-        rec['issued_ts']   = self._create_value(ctxt, rec['issued_ts'],
-                                                'group_time')
-        rec['event_ts']    = self._create_value(ctxt, rec['event_ts'],
-                                                'group_time')
-        rec['clouds']      = self._create_from_histogram(outlook_histogram)
-        rec['tempMin']     = self._create_value(ctxt, rec['tempMin'],
-                                                'group_temperature',
-                                                unit_system=rec['usUnits'])
-        rec['tempMax']     = self._create_value(ctxt, rec['tempMax'],
-                                                'group_temperature',
-                                                unit_system=rec['usUnits'])
-        rec['temp']        = self._create_value(ctxt, rec['temp'],
-                                                'group_temperature',
-                                                unit_system=rec['usUnits'])
-        rec['dewpointMin'] = self._create_value(ctxt, rec['dewpointMin'],
-                                                'group_temperature',
-                                                unit_system=rec['usUnits'])
-        rec['dewpointMax'] = self._create_value(ctxt, rec['dewpointMax'],
-                                                'group_temperature',
-                                                unit_system=rec['usUnits'])
-        rec['dewpoint']    = self._create_value(ctxt, rec['dewpoint'],
-                                                'group_temperature',
-                                                unit_system=rec['usUnits'])
-        rec['humidityMin'] = self._create_value(ctxt, rec['humidityMin'],
-                                                'group_percent')
-        rec['humidityMax'] = self._create_value(ctxt, rec['humidityMax'],
-                                                'group_percent')
-        rec['humidity']    = self._create_value(ctxt, rec['humidity'],
-                                               'group_percent')
-        rec['windSpeedMin'] = self._create_value(ctxt,rec['windSpeedMin'],
-                                                 'group_speed',
-                                                 unit_system=rec['usUnits'])
-        rec['windSpeedMax'] = self._create_value(ctxt,rec['windSpeedMax'],
-                                                 'group_speed',
-                                                 unit_system=rec['usUnits'])
-        rec['windSpeed']    = self._create_value(ctxt, rec['windSpeed'],
-                                                 'group_speed',
-                                                 unit_system=rec['usUnits'])
-        rec['windGust']     = self._create_value(ctxt, rec['windGust'],
-                                                 'group_speed',
-                                                 unit_system=rec['usUnits'])
-        rec['windDir']      = self._create_from_histogram(rec['windDirs'])
-        rec['windChar']     = self._create_from_histogram(rec['windChars'])
-        rec['pop']          = self._create_value(ctxt, rec['pop'],
-                                                 'group_percent')
-        rec['qpf']          = self._create_value(ctxt, rec['qpf'],
-                                                 'group_rain',
-                                                 unit_system=rec['usUnits'])
-        rec['qpfMin']       = self._create_value(ctxt, rec['qpfMin'],
-                                                 'group_rain',
-                                                 unit_system=rec['usUnits'])
-        rec['qpfMax']       = self._create_value(ctxt, rec['qpfMax'],
-                                                 'group_rain',
-                                                 unit_system=rec['usUnits'])
-        rec['qsf']          = self._create_value(ctxt, rec['qsf'],
-                                                 'group_rain',
-                                                 unit_system=rec['usUnits'])
-        rec['qsfMin']       = self._create_value(ctxt, rec['qsfMin'],
-                                                 'group_rain',
-                                                 unit_system=rec['usUnits'])
-        rec['qsfMax']       = self._create_value(ctxt, rec['qsfMax'],
-                                                 'group_rain',
-                                                 unit_system=rec['usUnits'])
+
+        for f in SUMMARY_FIELDS_WITH_UNITS:
+            rec[f] = self._create_value('weather_summary',
+                                        rec[f], UNIT_GROUPS[f],
+                                        unit_system=rec['usUnits'])
+        rec['clouds']   = _create_from_histogram(outlook_histogram)
+        rec['windDir']  = _create_from_histogram(rec['windDirs'])
+        rec['windChar'] = _create_from_histogram(rec['windChars'])
         return rec
 
     # FIXME: this is more appropriately called astronomy, at least from
