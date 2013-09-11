@@ -58,9 +58,12 @@ Version: 2.5.0a1
       <li>Support for many popular weather stations;</li>
       <li>Uploads to popular weather sites, such as Weather Underground and CWOP;</li>
       <li>Uploads to your website using FTP or rsync;</li>
-      <li>Support for multiple <em>skins</em>;</li>
+		<li>Extensive celestial <em>almanac</em>;</li>
+        <li>Ability to create or modify <em>skins</em> (the look and feel of 
+		your weather site);</li>
+		<li>Support for <em>localization</em>;</li>
       <li>Simple, but extensible templating system;</li>
-      <li>Support for multiple unit systems;</li>
+      <li>Native support for US or Metric unit systems;</li>
       <li>Support for sqlite or MySQL databases;</li>
       <li>Calibration corrections;</li>
       <li>An easy to understand, simple, extensible micro-kernel architecture;</li>
@@ -83,8 +86,10 @@ Version: 2.5.0a1
       truth be told, the roots of Python are nearly as old as C++!). I ended up picking 
       Python because its libraries are more mature and there are many mores choices 
       for third party libraries. </p>
-    <p><span class="code">Weewx</span> is about 7,000 lines of code, 
-      with another 4,400 comment lines. Because it is pure Python, it requires no 
+    <p><span class="code">Weewx</span> is about 8,500 lines of code (plus 2,500 
+	for the experimental driver for the LaCrosse WS28xx series, which was 
+	machine translated), 
+      with another 6,200 comment lines. Because it is pure Python, it requires no 
       makefiles, no builds, no special installs. It offers very powerful configuration 
       and templating options, as well as an internally extensible engine, making it 
       easy to customize. Its internal modular design and use of modern exception handling 

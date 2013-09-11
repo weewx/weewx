@@ -822,7 +822,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         while True:
             try:
                 if self.polling_mode.lower() == ADAPTIVE_POLLING.lower():
-                    for data,ptr,logged in self.live_data():
+                    for data,ptr,logged in self.live_data():  # @UnusedVariable
                         nerr = 0
                         yield data
                 elif self.polling_mode.lower() == PERIODIC_POLLING.lower():

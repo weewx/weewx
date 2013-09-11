@@ -1761,14 +1761,14 @@ outTemp = Outside Temperature</p>
       <p class="config_option">generator_list </p>
       <p>This option controls which generators get run for this skin. It is a comma 
 	separated list. The generators will be run in this order. </p>
-	<h1 id="Customizing your locale">Customizing your locale</h1>
-	<p>Weewx has been designed to make localization fairly straightforward. Here 
-	are the steps you will need to take in order to localize to a non-English 
+	<h1 id="Localization">Localization</h1>
+	<p>Weewx has been designed to make localization fairly straightforward. What 
+	follows is a guide to what you will need to do in order to localize to a non-English 
 	language and/or locale.</p>
 		<h2>Translate the templates</h2>
 		<p>First, you will need to go through the templates and translate to 
-		your target language. Obvious text strings such as "Current Weather 
-		Conditions" will need to be translated.</p>
+		your target language. Obvious text strings such as "<span class="code">Current Weather 
+		Conditions</span>" will need to be translated.</p>
 		<h2>Modify skin.conf to reflect local conventions</h2>
 		<p>Next, you will need to go through <span class="code">skin.conf</span> 
 		and modify options to follow local conventions. This includes dates and 
@@ -1776,11 +1776,28 @@ outTemp = Outside Temperature</p>
 		<h3>Dates</h3>
 		<p>Date formats may need to be changed. For example, if you wish to 
 		follow the European convention Day/Month/Year, rather than the US 
-		convention of Month/Day/Year, then lines such as</p>
-		<p class="tty">bottom_label_format = %m/%d/%y</p>
-		<p>need to be changed to</p>
-		<p class="tty">bottom_label_format = %d/%m/%y</p>
-		<p>There are several other, similar, date formats.</p>
+		convention of Month/Day/Year, then several lines in the
+		<span class="code">[[TimeFormats]]</span> section may have to be 
+		changed. Note that the format for '<span class="code">week</span>' also 
+		includes the preposition '<span class="code">on</span>', which may have 
+		to be translated to your language.</p>
+		<pre class="tty">    [[TimeFormats]]
+        #
+        # This section sets the string format to be used
+        # each time scale.
+        #
+        day        = %H:%M
+        week       = %H:%M on %A
+        month      = %d-%b-%Y %H:%M
+        year       = %d-%b-%Y %H:%M
+        rainyear   = %d-%b-%Y %H:%M
+        current    = %d-%b-%Y %H:%M
+        ephem_day  = %H:%M
+        ephem_year = %d-%b-%Y %H:%M</pre>
+		<p>    The bottom label format used in plots may need to be changed from</p>
+		<pre class="tty">bottom_label_format = %m/%d/%y</pre>
+		<p>to</p>
+		<pre class="tty">bottom_label_format = %d/%m/%y</pre>
 		<h3>Labels</h3>
 		<p>There are several almanac labels that may need to be changed. These 
 		include:</p>
@@ -1790,7 +1807,8 @@ outTemp = Outside Temperature</p>
 		gibbous, Full, Waning gibbous, Last quarter, Waning crescent</p>
 		<p>You will also have to change the generic labels given to your weather 
 		observations:</p>
-		<pre class="tty">         barometer      = Barometer
+		<pre class="tty">
+        barometer      = Barometer
         dewpoint       = Dew Point
         heatindex      = Heat Index
         inHumidity     = Inside Humidity
