@@ -244,8 +244,17 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         windGustSpeed = ((gust10th/10.0) + gust1 + (gust10*10)) * 3.6
         if windGustSpeed >= _record['windSpeed']:
             _record['windGust'] = windGustSpeed
-        # Save the wind record to be used for windchill and heat index
-        self.last_wind_record = _record
+
+        # Bit 1 of chillstatus is on if there is no wind chill data;
+        # Bit 2 is on if it has overflowed. Check them both:
+        if chillstatus & 0x6 == 0:
+            chill = chill1 + (10*chill10)
+            if chillstatus & 0x8:
+                chill = -chill
+            _record['windchill'] = chill
+        else:
+            _record['windchill'] = None
+        
         return _record
 
     @wmr9x8_registerpackettype(typecode=0x01, size=16)
@@ -297,15 +306,6 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
                 _record['dewpoint']  = dew
             if dewunder and not tempoverunder:
                 _record['dewpoint']  = weewx.wxformulas.dewpointC(temp, hum)
-            # The WMR does not provide wind information in a temperature packet,
-            # so we have to use old wind data to calculate wind chill, provided
-            # it isn't too old and has gone stale. If no wind data has been seen
-            # yet, then this will raise an AttributeError exception.
-            try:
-                if _record['dateTime'] - self.last_wind_record['dateTime'] <= self.stale_wind:
-                    _record['windchill'] = weewx.wxformulas.windchillC(temp, self.last_wind_record['windSpeed'])
-            except AttributeError:
-                pass
         else:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.

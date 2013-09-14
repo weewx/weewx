@@ -1,2 +1,4 @@
 TODO before the next release:
 
+Can wind chill be retrieved from the hardware for the WMR918
+(as well as WMR9x8)?
