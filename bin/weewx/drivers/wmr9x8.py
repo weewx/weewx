@@ -292,19 +292,27 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         }
 
         temp = (temp10th/10.0) + temp1 + (temp10*10) + ((temp100etc&0x03) * 100)
-        temp *= -1 if (temp100etc&0x08) else 1
+        if temp100etc & 0x08:
+            temp = -temp
         tempoverunder = temp100etc&0x04
         dew = dew1 + (dew10 * 10)
         hum = hum1 + (hum10 * 10)
         if chan <= 1:
             _record['outTempBatteryStatus'] = battery
             _record['outHumidity']   = hum
+            
+            # If temperature is valid, save it and calculate heat index
             if not tempoverunder:
                 _record['outTemp']   = temp
                 _record['heatindex'] = weewx.wxformulas.heatindexC(temp, hum)
+            else:
+                _record['outTemp'] = None
+
+            # If dew  point is valid, save it. Otherwise, try calculating it
+            # in software
             if not dewunder:
                 _record['dewpoint']  = dew
-            if dewunder and not tempoverunder:
+            else:
                 _record['dewpoint']  = weewx.wxformulas.dewpointC(temp, hum)
         else:
             # If additional temperature sensors exist (channel>=2), then
@@ -322,13 +330,14 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
                    'usUnits'     : weewx.METRIC}
 
         temp = (temp10th/10.0) + temp1 + (temp10*10) + ((temp100etc&0x03) * 100)
-        temp *= -1 if (temp100etc&0x08) else 1
+        if temp100etc & 0x08:
+            temp = -temp
         tempoverunder = temp100etc&0x04
         battery = bool(status&0x04)
         if chan <= 1:
             _record['outTempBatteryStatus'] = battery
-            if not tempoverunder:
-                _record['outTemp']          = temp
+            _record['outTemp'] = temp if not tempoverunder else None
+                
         else:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -342,7 +351,8 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         battery = bool(status&0x04)
 
         temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
-        temp *= -1 if (temp100etc&0x08) else 1
+        if temp100etc & 0x08:
+            temp = -temp
         tempoverunder = bool(temp100etc & 0x04)
         hum = hum1 + (hum10 * 10)
         dew = dew1 + (dew10 * 10)
@@ -361,10 +371,8 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             'dateTime'    : int(time.time() + 0.5),
             'usUnits'     : weewx.METRIC
         }
-        if not tempoverunder:
-            _record['inTemp']     = temp
-        if not dewunder:
-            _record['inDewpoint'] = dew
+        _record['inTemp'] = temp if not tempoverunder else None
+        _record['inDewpoint'] = dew if not dewunder else None
         if dewunder and not tempoverunder:
             _record['inDewpoint'] = weewx.wxformulas.dewpointC(temp, hum)
         return _record
@@ -374,7 +382,8 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, baro100, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100, slpoff1000 = self._get_nibble_data(packet[1:]) # @UnusedVariable
         battery = bool(status&0x04)
         temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
-        temp *= -1 if (temp100etc&0x08) else 1
+        if temp100etc & 0x08:
+            temp = -temp
         tempoverunder = bool(temp100etc & 0x04)
         hum = hum1 + (hum10 * 10)
         dew = dew1 + (dew10 * 10)
