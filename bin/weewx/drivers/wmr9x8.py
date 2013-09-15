@@ -268,7 +268,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             'rainBatteryStatus' : battery,
             'rainRate'          : (cur1 + (cur10 * 10) + (cur100 * 100))/10.0,
             'dayRain'           : (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000))/10.0,
-            'totalRain'         : ((tot10th / 10.0) + tot1 + (tot10 * 10) + (tot100 * 100) + (tot1000 * 1000) - 0.5)/10.0,
+            'totalRain'         : (tot10th/10.0 + tot1 + 10.0*tot10 + 100.0*tot100 + 1000.0*tot1000)/10.0,
             'dateTime'          : int(time.time() + 0.5),
             'usUnits'           : weewx.METRIC
         }
@@ -468,7 +468,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         _record = {
             'rainRate'          : (cur1 + (cur10 * 10) + (cur100 * 100)) / 10.0,
             'yesterdayRain'     : (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000))/10.0,
-            'totalRain'         : tot1 + (tot10 * 10) + (tot100 * 100) + (tot1000 * 1000),
+            'totalRain'         : (tot1 + (tot10 * 10) + (tot100 * 100) + (tot1000 * 1000))/10.0,
             'dateTime'          : int(time.time() + 0.5),
             'usUnits'           : weewx.METRIC
         }
@@ -477,7 +477,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         # won't work for the very first rain packet.
         # the WM reports rain rate as rain_rate, rain yesterday (updated by wm at midnight) and total rain since last reset
         # weewx needs rain since last packet we need to divide by 10 to mimic Vantage reading
-        _record['rain'] = ((_record['totalRain']-self.last_totalRain) / 10.0) if self.last_totalRain is not None else None
+        _record['rain'] = (_record['totalRain'] - self.last_totalRain) if self.last_totalRain is not None else None
         self.last_totalRain = _record['totalRain']
         return _record
 
@@ -512,9 +512,9 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         }
 
         try:
-           _record['heatindex'] = weewx.wxformulas.heatindexC(tempout, self.last_outHumidity)
+            _record['heatindex'] = weewx.wxformulas.heatindexC(tempout, self.last_outHumidity)
         except AttributeError:
-           _record['heatindex'] = None
+            _record['heatindex'] = None
 
         try:
             _record['windchill'] = weewx.wxformulas.windchillC(tempout, self.last_windSpeed)
