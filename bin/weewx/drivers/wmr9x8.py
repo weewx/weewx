@@ -324,25 +324,17 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
 
     @wmr9x8_registerpackettype(typecode=0x04, size=7)
     def _wmr9x8_therm_packet(self, packet):
-        chan, status, temp10th, temp1, temp10, temp100etc = self._get_nibble_data(packet[1:])
+        chan, dummy_status, temp10th, temp1, temp10, temp100etc = self._get_nibble_data(packet[1:])
 
         _record = {'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
 
-        temp = (temp10th/10.0) + temp1 + (temp10*10) + ((temp100etc&0x03) * 100)
+        temp = temp10th / 10.0 + temp1 + 10.0 * temp10 + 100.0 * (temp100etc & 0x03)
         if temp100etc & 0x08:
             temp = -temp
-        tempoverunder = temp100etc&0x04
-        battery = bool(status&0x04)
-        if chan <= 1:
-            _record['outTempBatteryStatus'] = battery
-            _record['outTemp'] = temp if not tempoverunder else None
-                
-        else:
-            # If additional temperature sensors exist (channel>=2), then
-            # use observation types 'extraTemp1', 'extraTemp2', etc.
-            if not tempoverunder:
-                _record['extraTemp%d' % chan] = temp
+        tempoverunder = temp100etc &  0x04
+        _record['extraTemp%d' % chan] = temp if not tempoverunder else None
+
         return _record
 
     @wmr9x8_registerpackettype(typecode=0x05, size=13)

@@ -16,6 +16,10 @@ direction when the wind speed is zero.
 For WMR9x8 stations, wind chill is now retrieved from the console
 rather than calculated in software. Thank you user Peter Ferencz!
 
+For WMR9x8 stations, the first extra temperature sensor (packet code 4)
+now shows up as extraTemp1 (instead of outTemp). Thanks again to 
+Peter Ferencz.
+
 The LOOP value for daily ET on Vantages was too high by a factor of 10. 
 This has been corrected.
 
@@ -28,6 +32,7 @@ Plots under 16 hours in length, now use 1 hour increments (instead of
 3 hours).
 
 Fixed rain units in ws28xx driver.
+
 
 
 2.4.0 08/03/13
