@@ -706,22 +706,11 @@ class Forecast(StdService):
         archive = Forecast.setup_database(self.database,
                                           self.table, self.method_id,
                                           self.config_dict, self.schema)
-        columns = archive.connection.columnsOf(self.table)
-        errmsg = None
-        if len(columns) == len(self.schema):
-            labels = []
-            for i,f in enumerate(columns):
-                if f != self.schema[i][0]:
-                    labels.append("'%s'!='%s'" % (f, self.schema[i][0]))
-            if len(labels) > 0:
-                errmsg = '%s: schema mismatch: %s' % (self.method_id,
-                                                      ' '.join(labels))
-        else:
-            errmsg = '%s: schema mismatch: %d != %d' % (self.method_id,
-                                                        len(columns),
-                                                        len(self.schema))
-        if errmsg is not None:
-            raise Exception(errmsg)
+        dbcol = archive.connection.columnsOf(self.table)
+        memcol = [x[0] for x in self.schema]
+        if dbcol != memcol:
+            raise Exception('%s: schema mismatch: %s != %s' % (self.method_id,
+                                                               dbcol, memcol))
 
         # find out when the last forecast happened
         self.last_ts = Forecast.get_last_forecast_ts(archive,
