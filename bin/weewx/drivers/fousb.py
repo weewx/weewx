@@ -282,6 +282,8 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     # if windspeed is zero there is no wind direction
     if packet['windSpeed'] is None or packet['windSpeed'] == 0:
         packet['windDir'] = None
+    if packet['windGust'] is None or packet['windGust'] == 0:
+        packet['windGustDir'] = None
 
     # calculated elements not directly reported by station
     packet['heatindex'] = weewx.wxformulas.heatindexC(
