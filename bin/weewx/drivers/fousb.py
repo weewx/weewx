@@ -798,7 +798,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                self.pressure_offset, self.altitude,
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
-            data['interval'] = self._archive_interval_minutes()
+            data['interval'] = r['interval']
             self._last_rain_arc = data['rainTotal']
             self._last_rain_ts_arc = ts
             logdbg('returning archive record %s' % ts)
@@ -999,6 +999,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                         record['datetime'] = dts
                         record['data'] = data
                         record['raw_data'] = raw_data
+                        record['interval'] = data['delay']
                         records.append(record)
                         count += 1
                         dts -= datetime.timedelta(minutes=data['delay'])
@@ -1031,7 +1032,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         range_hi = datetime.datetime.max
         range_lo = datetime.datetime.min
         ptr = self.current_pos()
-        data = self.get_data(ptr)
+        data = self.get_data(ptr, unbuffered=True)
         last_delay = data['delay']
         if last_delay is None or last_delay == 0:
             prev_date = datetime.datetime.min
