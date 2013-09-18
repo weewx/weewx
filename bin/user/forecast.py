@@ -2036,7 +2036,7 @@ def _parse_precip_qty(s):
             [lo,hi] = s.split('-')
             xmin = float(lo)
             xmax = float(hi)
-            x = (xmax - xmin) / 2
+            x = (xmax + xmin) / 2
             return x,xmin,xmax
         except Exception, e:
             logerr("unrecognized precipitation quantity '%s': %s" % (s,e))
