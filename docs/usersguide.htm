@@ -41,10 +41,12 @@ Version: 2.5.0a1
   </p>
   
   <h1>Table of Contents</h1>
-  <div id="technical_content">
     <div id="toc"></div>
 
-    <h1 id="About_weewx">About <span class="code">weewx</span></h1>
+  <div id="technical_content">
+
+    <a name='about'></a>
+    <h1>About <span class="code">weewx</span></h1>
     <p><span class="code">weewx</span> is a piece of software, written in
       <a href="http://www.python.org">Python</a>, that interacts with your weather 
       station to produce plots, reports, and HTML pages. It can optionally upload 
@@ -96,7 +98,9 @@ Version: 2.5.0a1
       make it very robust and difficult to crash. It is also architecturally very 
       simple and easy to understand.</p>
 
-    <h1 id="Supported_hardware">Supported Hardware</h1>
+
+    <a name='hardware'></a>
+    <h1>Supported Hardware</h1>
     <p>
       Many types of station hardware are supported.  In addition to hardware support, <span class="code">weewx</span> comes with a software simulator, useful for testing and evaluation.
     </p>
@@ -347,32 +351,34 @@ Version: 2.5.0a1
     </table>
 
     <ol>
-      <li id="vantage">Davis &quot;Vantage&quot; series of weather stations, including the
+      <li><a name='vantage'>Davis &quot;Vantage&quot; series</a> of weather stations, including the
          <a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">
 	     VantagePro2</a>&trade; and <a href="http://www.vantagevue.com/">VantageVue</a>&trade;, 
 	     using serial, USB, or <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">
 	     WeatherLinkIP</a>&trade; connections. Both the &quot;Rev A&quot; (firmware 
          dated before 22 April 2002) and &quot;Rev B&quot; versions are supported.
       </li>
-      <li id="wmr100">Oregon Scientific WMR100 series.  Tested on the
+      <li><a name='wmr100'>Oregon Scientific WMR100 series.</a> Tested on the
         <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">WMR100N</a>, other stations may work as well.</li>
-      <li id="wmr200">Oregon Scientific WMR200 series. This is an experimental version 
+      <li><a name='wmr200'>Oregon Scientific WMR200 series.</a> This is an experimental version 
 	  &mdash; it may or may not work. Please report any problems!
 	  </li>
-      <li id="wmr9x8">Oregon Scientific WMR-918/968 series.  Tested on the
+      <li><a name='wmr9x8'>Oregon Scientific WMR-918/968 series.</a> Tested on the
         <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR-968</a>, other stations may work as well.
       </li>
-      <li id="fousb">Fine Offset series of weather stations. These are branded by
+      <li><a name="fousb">Fine Offset series.</a> These are branded by
         many vendors, including Ambient Weather, National Geographic, Watson,
         Elecsa, Tycon, Maplin, Froggit, Velleman, and others. Tested on the
         <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.
       </li>
-      <li id='ws28xx'>La Crosse WS-28xx series.  This is an experimental version 
+      <li><a name='ws28xx'>La Crosse WS-28xx series.</a> This is an experimental version 
 	  &mdash; it may or may not work.  Please report any problems!
       </li>
     </ol>
 
-    <h1 id="Prerequisites">System Requirements</h1>
+
+    <a name='prerequisites'></a>
+    <h1>System Requirements</h1>
 
     <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
       Geode processor and 512 MB of memory. Configured this way, it
@@ -395,6 +401,8 @@ Version: 2.5.0a1
     <h2>Python</h2>
     <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work.</p>
 
+
+    <a name='installing'></a>
     <h1>Installing <span class="code">weewx</span></h1>
     <p>
       <span class='code'>weewx</span> can be installed using the standard
@@ -602,6 +610,8 @@ Version: 2.5.0a1
     <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
     <p>For all operating systems.</p>
 
+
+    <a name='configuring'></a>
     <h1>Configuring <span class="code">weewx</span></h1>
     <p>This section covers configuring <span class="code">weewx</span>, in particular 
       the configuration files <span class="code">weewx.conf</span> and
@@ -886,7 +896,7 @@ Version: 2.5.0a1
       air for a long period of time, then <span class="code">weewx</span>
       attempts a catch up, old data could be interpreted as the current
       conditions. Optional. Default is 1800 seconds.</p>
-    <h2 id="[Reports]" class="config_section">[StdReport]</h2>
+    <h2 class="config_section">[StdReport]</h2>
     <p>This section is for configuring the <span class="code">StdReport</span> service, 
       which controls which reports are to be generated. While it can be highly customized 
       for your individual situation, this documentation describes the section as shipped 
@@ -973,7 +983,7 @@ Version: 2.5.0a1
       <span class="code">path</span>, this can cause unexpected files to be deleted 
       on the remote server. Valid values are 1 to enable and 0 to disable. Required. 
       Default is 0.</p>
-    <h2 id="[StdConvert]" class="config_section">[StdConvert]</h2>
+    <h2 class="config_section">[StdConvert]</h2>
     <p>This section is for configuring the <span class="code">StdConvert</span> 
       service. This service acts as a filter, converting the unit system coming off 
       your hardware to a target output unit system. Everything that follows, including 
@@ -998,7 +1008,7 @@ Version: 2.5.0a1
     <p class="config_option">target_unit</p>
     <p>Set to either <span class="code">US</span> or <span class="code">METRIC</span>. 
       Default is <span class="code">US</span>.</p>
-    <h2 id="Calibrate" class="config_section">[StdCalibrate]</h2>
+    <h2 class="config_section">[StdCalibrate]</h2>
     <p>This section is for configuring the <span class="code">StdCalibrate</span> 
       service. This service offers an opportunity to correct for any calibration errors 
       in your instruments. It is very general and flexible. </p>
@@ -1027,7 +1037,7 @@ Version: 2.5.0a1
     <p>If you are using a Davis Vantage instrument and all you require is a simple 
       correction offset, this can also be done in the hardware. See your manual for 
       instructions. </p>
-    <h2 id="QC" class="config_section">[StdQC]</h2>
+    <h2 class="config_section">[StdQC]</h2>
     <p>This section is for configuring the <span class="code">StdQC</span> service. 
       This service offers a very simple <em>Quality Control</em> that only checks 
       that values are within a minimum and maximum range.</p>
@@ -1062,7 +1072,7 @@ Version: 2.5.0a1
       <span class="code">0xff</span> is devoted to a bad value, so the only possible 
       values that could appear are 0 through 126 mph, a reasonable range. So, for 
       the VP2, there is no real point in checking wind speed. </p>
-    <h2 id="[StdArchive]" class="config_section">[StdArchive]</h2>
+    <h2 class="config_section">[StdArchive]</h2>
     <p>This section is for configuring <span class="code">StdArchive</span>, the 
       service that stores data in the databases. Options allow choosing which database 
       to use for archiving and statistics.</p>
@@ -1085,7 +1095,7 @@ Version: 2.5.0a1
       00:05:15, 00:10:15, etc. This delay is to give the station a few seconds to 
       archive the data internally, and in case your server has any other tasks to 
       do at the top of the minute. Default is 15 seconds. </p>
-    <p id="record_generation" class="config_option">record_generation</p>
+    <p class="config_option">record_generation</p>
     <p>Set to whether records should be downloaded off the hardware (recommended), 
       or generated in software. If set to '<span class="code">hardware</span>', then
       <span class="code">weewx</span> tries to download archive records from your 
@@ -1118,7 +1128,7 @@ Version: 2.5.0a1
     <p class="config_option">max_drift</p>
     <p>The maximum amount of clock drift to tolerate, in seconds, before resetting 
       the clock. Default is 5.</p>
-    <h2 id="[Databases]" class="config_section">[Databases]</h2>
+    <h2 class="config_section">[Databases]</h2>
     <p>This section lists actual database bindings. The name of each database is 
       given in double brackets below (for example, <span class="code">[[archive_sqlite]]</span>). 
       The details of the binding follow. You are free to add new bindings.</p>
@@ -1169,7 +1179,7 @@ Version: 2.5.0a1
 	  weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
     <h3 class="config_section">[[WxEngine]]</h3>
     <p>This section is for options used by the service engine. </p>
-    <p id="service_list" class="config_option">service_list </p>
+    <p class="config_option">service_list </p>
     <p>This option is the list of <em>services</em> that are to be run by the service 
       engine. After each event (such as the arrival of LOOP data, etc.), they will 
       be run in the given order. The standard list of services run by weewx is:
@@ -1183,6 +1193,8 @@ Version: 2.5.0a1
     <p class="tty" style='white-space:pre-line'>service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
     <p>However, this will only make a slight difference in execution speed. </p>
 
+
+    <a name='configuring_hardware'></a>
     <h1>Configuring Station Hardware</h1>
     <h2>Davis Vantage</h2>
     <p>Weewx comes with a configuration utlity, <span class="code">wee_config_vantage</span>, 
@@ -1301,7 +1313,7 @@ Davis Vantage EEPROM settings:
     <p class="warning">You can set either the time zone code <em>or</em> the 
 	time zone offset, but not both. </p>
 	  <p>Other parameters can be set in a similar manner.</p>
-    <h3 id="Archive_interval">Archive interval</h3>
+    <h3>Archive Interval</h3>
     <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
       if you are ftp&#39;ing lots of files to a server, setting it to 60 seconds may 
       not give enough time to have them all uploaded before the next archive record 
@@ -1505,7 +1517,9 @@ Pressure offset is now 1.247000</p>
     <p>If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
     </p>
 
-      <h1>Configuring MySQL</h1>
+
+    <a name='configuring_mysql'></a>
+    <h1>Configuring MySQL</h1>
     <p>This section applies only for those using MySQL.</p>
     <p>Assuming that you want to use the default database configuration, your
       <span class="code"><a href="#[Databases]">[Databases]</a></span> section 
@@ -1537,12 +1551,14 @@ Pressure offset is now 1.247000</p>
     <p class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
 mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost</p>
-	  <p>In addition to configuring MySQL, you will also need to indicate to
-	  <span class="code">weewx</span> that you intend to use the configured 
+    <p>In addition to configuring MySQL, you will also need to indicate to
+      <span class="code">weewx</span> that you intend to use the configured 
 	  database. See section <span class="code"><a href="#[StdArchive]">
 	  [StdArchive]</a></span> for details.</p>
 
-    <h1 id="Running_weewx">Running <span class="code">weewx</span></h1>
+
+    <a name='running'></a>
+    <h1>Running <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> can be run either from the command line (useful 
       for diagnostic purposes because it will print out a summary of every LOOP data), 
       or as a daemon. When first trying <span class="code">weewx</span>, it&#39;s 
@@ -1572,7 +1588,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 kill -HUP <em>pid</em> # Send it a HUP signal</p>
     <p>Note that this <em>only</em> rereads the configuration file. It will not 
       reload any code.</p>
-    <h2 id="Running_as_a_daemon">Running as a daemon</h2>
+    <h2>Running as a Daemon</h2>
     <p>For unattended operations it is best to have <span class="code">weewx</span> 
       run as a daemon, started automatically when the server is rebooted. </p>
     <p>If you use a packaged install from a DEB or RPM distribution, this is 
@@ -1660,7 +1676,9 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       file without stopping by using the &#39;reload&#39; option: </p>
     <p class="tty">/etc/init.d/weewx reload </p>
 
-    <h1 id="Monitoring_weewx">Monitoring <span class="code">weewx</span></h1>
+
+    <a name='monitoring'></a>
+    <h1>Monitoring <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> logs many events to the system log.
       On Debian systems, this is <span class="code">/var/log/syslog</span>,
       on SuSE, <span class="code">/var/log/messages</span>. Your system may
@@ -1673,8 +1691,10 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       useful for diagnosing problems and debugging.</p>
     <p class='tty'>debug = 1</p>
 
-    <h1 id="Compatibility_with_wview">Compatibility with <span class="code">wview</span></h1>
-	  <h2>sqlite3</h2>
+
+    <a name='wview_compatibility'></a>
+    <h1>Compatibility with <span class="code">wview</span></h1>
+    <h2>sqlite3</h2>
     <p>The sqlite3 archive database used by <span class="code">weewx</span>
       (nominally, <span class="code">weewx.sdb</span>) is completely
       compatible with the database used by
@@ -1702,31 +1722,32 @@ sudo /etc/init.d/weewx start</p>
     <p>On my modest 500 MHz <a href="http://www.fit-pc.com/">fit-PC Slim</a>
       with 512 MB of memory it took a little over 4 minutes for a year and a
       half (25 MB) of data.</p>
-	  <h2>MySQL</h2>
-	  <p>The MySQL archive database used by wview is "almost" compatible with
-	  <span class="code">weewx</span>. The one difference is that in wview, the column '<span class="code">interval</span>' 
-	  is named '<span class="code">arcInt</span>' (presumably because
-	  <span class="code">interval</span> is a keyword in MySQL, although it can 
-	  still be used by surrounding the word with backquotes). </p>
-	  <p>To change the column name to what <span class="code">weewx</span> uses, namely <span class="code">interval</span>, 
-	  use the utility <span class="code">mysql</span> and issue the command:</p>
-	  <p class="tty">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt 
-	  `interval` INTEGER NOT NULL; </p>
-	  <p>where <span class="code"><em>your-wview-archive-name</em></span> is the 
-	  name of your wview archive database. Note that the word <span class="code">
-	  interval</span> is surrounded by backquotes.</p>
-	  <p>Then in the <span class="code">[Databases]</span> section of
-	  <span class="code">weewx.conf</span>, replace the name of the database 
-	  with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:</p>
-	  <p class="tty">[[archive_mysql]]<br />
-&nbsp; host = ...<br />
-&nbsp; user = ...<br />
-&nbsp; database = <em>your-wview-archive-name</em><br />
-&nbsp; ...</p>
+    <h2>MySQL</h2>
+    <p>The MySQL archive database used by wview is "almost" compatible with
+      <span class="code">weewx</span>. The one difference is that in wview, the column '<span class="code">interval</span>' 
+      is named '<span class="code">arcInt</span>' (presumably because
+      <span class="code">interval</span> is a keyword in MySQL, although it can 
+      still be used by surrounding the word with backquotes). </p>
+    <p>To change the column name to what <span class="code">weewx</span> uses, namely <span class="code">interval</span>, 
+      use the utility <span class="code">mysql</span> and issue the command:</p>
+	  <p class="tty">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL; </p>
+    <p>where <span class="code"><em>your-wview-archive-name</em></span> is the 
+      name of your wview archive database. Note that the word <span class="code">
+	interval</span> is surrounded by backquotes.</p>
+    <p>Then in the <span class="code">[Databases]</span> section of
+      <span class="code">weewx.conf</span>, replace the name of the database 
+      with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:</p>
+    <p class="tty">[[archive_mysql]]
+&nbsp; host = ...
+&nbsp; user = ...
+&nbsp; database = <em>your-wview-archive-name</em>
+...</p>
 
+
+    <a name='integrating_with_webserver'></a>
     <h1>Integrating <span class='code'>weewx</span> with a web server</h1>
     <h2>If the server is on the same machine</h2>
-	  <p>The reports generated by <span class='code'>weewx</span> can be
+    <p>The reports generated by <span class='code'>weewx</span> can be
       served by a web server running on the same computer as
       <span class='code'>weewx</span>. Here's how.</p>
 
@@ -1762,7 +1783,9 @@ sudo /etc/init.d/apache restart</p>
       directory to a location on the remote server on which the web server
       is running.</p>
 
-    <h1 id="Troubleshooting">Troubleshooting</h1>
+
+    <a name='troubleshooting'></a>
+    <h1>Troubleshooting</h1>
     <p>This section lists some common problems installing and running
       <span class="code">weewx</span>. If you are still stuck, be sure to: </p>
     <ul>
@@ -2027,7 +2050,10 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       not recognize (in this example, it&#39;s the tag <span class="code">$fubar</span> 
       in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
     </p>
-    <h1 id="Architectural_notes">Architectural Notes</h1>
+
+
+    <a name='architecture'></a>
+    <h1>Architectural Notes</h1>
     <p>This section is not needed to get started. </p>
     <h2>Goals</h2>
     <p>The primary design goals of <span class="code">weewx </span>are: </p>
@@ -2272,19 +2298,20 @@ next_ts = int(time.mktime(next_dt.timetuple()))</p>
     <p>Other time conversion problems are handled in a similar manner. </p>
 
 
-    <p class='copyright'>
-      &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
-    </p>
-
-
   </div>
+
+
+  <p class='copyright'>
+    &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
+  </p>
+
+
   <script type="text/javascript">
     samaxesJS.toc({
     exclude : 'h4, h5, h6',
     autoId : true,
     context : 'technical_content'
     });
-
   </script>
 
 </body>

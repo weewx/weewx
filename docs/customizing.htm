@@ -24,11 +24,13 @@
       Version: 2.5.0a1
       </span>
     </h1>
-    <h1>Table of Contents</h1>
-    <div id="technical_content">
-      <div id="toc"></div>
 
-      <h1 id="Introduction">Introduction</h1>
+    <h1>Table of Contents</h1>
+    <div id="toc"></div>
+
+    <div id="technical_content">
+      <a name='introduction'></a>
+      <h1>Introduction</h1>
       <p>This document covers the customization of <span class="code">weewx</span>. 
 	It assumes that you have read and are reasonably familiar with the
 	<a href="usersguide.htm">Users Guide</a>. </p>
@@ -110,8 +112,7 @@
 	section <em><a href="#Customizing_the_weewx_service_engine">Customizing the 
 	    weewx service engine</a></em>. </p>
 
-      <h2 id="The_standard_reporting_service,_StdReportService">The standard reporting 
-	service, <span class="code">StdReport</span></h2>
+      <h2>The standard reporting service, <span class="code">StdReport</span></h2>
       <p>For the moment, let us focus on the last service, <span class="code">weewx.wxengine.StdReport</span>, 
 	the standard service for creating reports. This will be what most users will 
 	want to customize even if it means changing just a few options. </p>
@@ -203,7 +204,7 @@
       <p>Which generators are to be run for a given skin is specified in the skin&#39;s 
 	configuration file <span class="code">skin.conf</span>, in section
 	<span class="code">[Generators]</span>.</p>
-      <h2 id="Databases">Databases</h2>
+      <h2>Databases</h2>
       <p>There are two databases used by <span class="code">weewx</span>, which can 
 	be implemented either by using <a href="http://www.sqlite.org/">SQLITE3</a>, 
 	an open-source, lightweight SQL database, or <a href="http://www.mysql.com/">
@@ -236,8 +237,10 @@
 	<span class="code">$month</span>, <span class="code">$year</span>, and
 	<span class="code">$rainyear</span>, depending on the aggregation time period).
       </p>
-      <h1 id="Opportunities_for_customizing_reports">Opportunities for customizing 
-	reports</h1>
+
+
+      <a name='reports'></a>
+      <h1>Opportunities for customizing reports</h1>
       <p>This section discusses the two general strategies for customizing reports: 
 	by changing options in one or more configuration file, or by changing the template 
 	files. The former is generally easier, but occasionally the latter is necessary.
@@ -311,8 +314,7 @@
         outTemp = Outside Temperature
         ...</p>
 
-      <h3>Overriding options in <span class="code">skin.conf</span> from
-	<span class="code">weewx.conf</span></h3>
+      <h3>Overriding options in <span class="code">skin.conf</span> from <span class="code">weewx.conf</span></h3>
       <p>This approach is very similar, except that instead of changing the skin configuration 
 	file directly, you override its options by editing the main configuration file,
 	<span class="code">weewx.conf</span>. The advantage of this approach is that 
@@ -376,7 +378,7 @@
 	it puts its results in a different spot and uses different units. Both use the 
 	same skin, the <span class="code">Standard </span>skin. </p>
 
-      <h2 id="Customizing_templates">Customizing templates</h2>
+      <h2>Customizing templates</h2>
       <p>If you cannot achieve the results you need by changing a configuration option, 
 	you may have to modify the templates that come with <span class="code">weewx</span>, 
 	or write your own. </p>
@@ -489,7 +491,7 @@ $month.outTemp.max</p>
 	an optional formatting tag that controls how the value will appear. See the 
 	section <em><a href="#Formatting_options">Formatting Options</a></em> below.
       </p>
-      <h4 id="Unit_conversion_options">Unit conversion options</h4>
+      <h4>Unit conversion options</h4>
       <p>The tag <span class="code"><em>optional_unit_conversion</em></span> can be 
 	used with either current observations or aggregations. If supplied, the results 
 	will be converted to the specified units. For example, if you have set
@@ -503,22 +505,22 @@ $month.outTemp.max</p>
       <p>then the results will be in millibars: </p>
       <p class="example_output">Today&#39;s average pressure=1017.5 mbar </p>
       <h5>Wind ordinals</h5>
-		<p>Using this method, you can output compass ordinals for wind 
-		direction. For example, the template</p>
-		<p class="tty">Current wind direction is $current.windDir ($current.windDir.ordinal_compass)</p>
-		<p>would result in:</p>
-		<p class="example_output">Current wind direction is 138&deg; (SW)</p>
-		<p>The ordinal abbreviations that are used are set by option
-		<span class="code">directions</span> in the skin configuration file
-		<span class="code">skin.conf</span>.</p>
-		<h5>Illegal conversions</h5>
-		<p>If an inappropriate conversion is asked for, <em>e.g.</em>, </p>
+      <p>Using this method, you can output compass ordinals for wind 
+	direction. For example, the template</p>
+      <p class="tty">Current wind direction is $current.windDir ($current.windDir.ordinal_compass)</p>
+      <p>would result in:</p>
+      <p class="example_output">Current wind direction is 138&deg; (SW)</p>
+      <p>The ordinal abbreviations that are used are set by option
+	<span class="code">directions</span> in the skin configuration file
+	<span class="code">skin.conf</span>.</p>
+      <h5>Illegal conversions</h5>
+      <p>If an inappropriate conversion is asked for, <em>e.g.</em>, </p>
       <p class="tty">Today&#39;s average pressure=$day.barometer.degree_C </p>
       <p>then the offending tag will be put in the output: </p>
       <p class="example_output">Today&#39;s average pressure=$day.barometer.degree_C
       </p>
 
-      <h4 id="Formatting_options">Formatting options</h4>
+      <h4>Formatting options</h4>
       <p>The tag <span class="code"><em>optional_formatting</em></span> can be used 
 	with either current observations or aggregations. It can be one of: </p>
       <table class="center" style="width: 90%" summary="Formatting Options">
@@ -768,7 +770,7 @@ $month.outTemp.max</p>
 	  value of <span class="code">NONE_string</span>. They produce the same results.
 	</li>
       </ul>
-      <h3 id="Type_dateTime">Type <span class="code">dateTime</span></h3>
+      <h3>Type <span class="code">dateTime</span></h3>
       <p>While not an observation type, in many ways the time of an observation,
 	<span class="code">dateTime</span>, can be treated as one. A tag such as
 	<span class="code">$current.dateTime</span> represents the <em>current time</em> 
@@ -1049,7 +1051,7 @@ Sunrise, sunset: 06:51 19:30</p>
       <h2>Writing a custom generator</h2>
       <p>To do more sophisticated customization it may be necessary to extend an existing 
 	generator, or write your own. </p>
-      <h4 id="Extending_an_existing_generator">Extending an existing report generator</h4>
+      <h4>Extending an existing report generator</h4>
       <p>In the section on <em><a href="#Customizing_templates">Customizing templates</a></em>, 
 	we have seen how you can change a template and make use of the various tags 
 	available such as <span class="code">$day.outTemp.max</span> for the maximum 
@@ -1224,8 +1226,10 @@ class MyFileGenerator(FileGenerator):                                  # 1
 	  <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>, then modify them there. 
 	This subdirectory is preserved through upgrades, so you won&#39;t have to redo 
 	any changes you might have made. </p>
-      <h1 id="The_Standard_skin_configuration_file">Reference: The Standard skin configuration 
-	file</h1>
+
+
+      <a name='standard_skin'></a>
+      <h1>Reference: The Standard skin configuration file</h1>
       <p>This section is a reference to the options appearing in the Standard skin 
 	configuration file, found in <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>.
       </p>
@@ -1234,7 +1238,7 @@ class MyFileGenerator(FileGenerator):                                  # 1
 	options are up near the top of the file. The truly important ones, the 
 	ones you are likely to have to customize for your station, are
 	<span class="config_important"><strong>highlighted</strong></span>. </p>
-      <h2 id="[Extras]" class="config_section">[Extras]</h2>
+      <h2 class="config_section">[Extras]</h2>
       <p>This section is available to you to add any static tags that you might want 
 	to be available in the templates. As an example, the stock
 	<span class="code">skin.conf</span> file includes two options:
@@ -1336,7 +1340,7 @@ class MyFileGenerator(FileGenerator):                                  # 1
       <p class="config_option">group_volt </p>
       <p>The measurement unit to be used for voltages. The only option is &quot;<span class="code">volt</span>.&quot;
       </p>
-      <h3 id="Units_StringFormats" class="config_section">[[StringFormats]]</h3>
+      <h3 class="config_section">[[StringFormats]]</h3>
       <p>This sub-section is used to specify what string format is to be used for 
 	each unit when a quantity needs to be converted to a string. Typically, this 
 	happens with y-axis labeling on plots and for statistics in HTML file generation. 
@@ -1352,7 +1356,7 @@ inch     = %.2f</p>
       <p>You can also specify what string to use for an invalid or unavailable measurement 
 	(value &#39;<span class="code">None</span>&#39;). For example, </p>
       <p class='tty'>NONE = &quot; N/A &quot;</p>
-      <h3 id="[[Labels]]" class="config_section">[[Labels]]</h3>
+      <h3 class="config_section">[[Labels]]</h3>
       <p>This subsection specifies what label is to be used for each measurement unit 
 	type. For example, the options </p>
       <p class='tty'>degree_F = &deg;F
@@ -1363,7 +1367,7 @@ inch     = &#39; in&#39;</p>
 	be encoded in UTF-8. This is generally what most text editors use if you cut-and-paste 
 	from a character map. Labels used in plot images will be converted to Latin-1 
 	first (this is all the Python Imaging Library can handle). </p>
-      <h3 id="TimeFormats" class="config_section">[[TimeFormats]]</h3>
+      <h3 class="config_section">[[TimeFormats]]</h3>
       <p>This sub-section is used for time labels. It uses
 	<a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> 
 	formats. For example </p>
@@ -1379,11 +1383,11 @@ ephem_year = %d-%b-%Y %H:%M</p>
 	times within the day, such as sunrise or sunset. The second,
 	<span class="code">ephem_year</span>, is used for almanac times within the year, 
 	such as the next equinox or full moon. </p>
-		<h3 class="config_section">[[Ordinates]]</h3>
-		<p class="config_option">directions</p>
-		<p>Set to the abbreviations to be used for ordinal directions. By 
-		default, this is <span class="code">N, NNE, NE, ENE, E, ESE, SE, SSE, S 
-		, SSW, SW, WSW, W, WNW, NW, NNW, N</span>.</p>
+      <h3 class="config_section">[[Ordinates]]</h3>
+      <p class="config_option">directions</p>
+      <p>Set to the abbreviations to be used for ordinal directions. By 
+	default, this is <span class="code">N, NNE, NE, ENE, E, ESE, SE, SSE,
+          S, SSW, SW, WSW, W, WNW, NW, NNW, N</span>.</p>
       <h3 class="config_section">[[DegreeDays]]</h3>
       <p class="config_important">heating_base <br />
 	cooling_base </p>
@@ -1391,7 +1395,7 @@ ephem_year = %d-%b-%Y %H:%M</p>
 	along with the unit to be used. Examples:</p>
       <p class='tty'>heating_base = 65.0, degree_F
 cooling_base = 20.0, degree_C</p>
-      <h3 id="[[Trend]]" class="config_section">[[Trend]]</h3>
+      <h3 class="config_section">[[Trend]]</h3>
       <p class="config_option">time_delta</p>
       <p>Set to the time difference over which you want trends to be calculated. The 
 	default is 3 hours.</p>
@@ -1761,27 +1765,20 @@ outTemp = Outside Temperature</p>
       <p class="config_option">generator_list </p>
       <p>This option controls which generators get run for this skin. It is a comma 
 	separated list. The generators will be run in this order. </p>
-	<h1 id="Localization">Localization</h1>
-	<p>Weewx has been designed to make localization fairly straightforward. What 
+
+
+      <a name='localization'></a>
+      <h1>Localization</h1>
+      <p>Weewx has been designed to make localization fairly straightforward. What 
 	follows is a guide to what you will need to do in order to localize to a non-English 
 	language and/or locale.</p>
-		<h2>Translate the templates</h2>
-		<p>First, you will need to go through the templates and translate to 
-		your target language. Obvious text strings such as "<span class="code">Current Weather 
-		Conditions</span>" will need to be translated.</p>
-		<h2>Modify skin.conf to reflect local conventions</h2>
-		<p>Next, you will need to go through <span class="code">skin.conf</span> 
-		and modify options to follow local conventions. This includes dates and 
-		labels.</p>
-		<h3>Dates</h3>
-		<p>Date formats may need to be changed. For example, if you wish to 
-		follow the European convention Day/Month/Year, rather than the US 
-		convention of Month/Day/Year, then several lines in the
-		<span class="code">[[TimeFormats]]</span> section may have to be 
-		changed. Note that the format for '<span class="code">week</span>' also 
-		includes the preposition '<span class="code">on</span>', which may have 
-		to be translated to your language.</p>
-		<pre class="tty">    [[TimeFormats]]
+      <h2>Translate the templates</h2>
+      <p>First, you will need to go through the templates and translate to your target language. Obvious text strings such as &quot;<span class="code">Current Weather Conditions</span>&quot; will need to be translated.</p>
+      <h2>Modify skin.conf to reflect local conventions</h2>
+      <p>Next, you will need to go through <span class="code">skin.conf</span> and modify options to follow local conventions. This includes dates and labels.</p>
+      <h3>Dates</h3>
+      <p>Date formats may need to be changed. For example, if you wish to follow the European convention Day/Month/Year, rather than the US convention of Month/Day/Year, then several lines in the <span class="code">[[TimeFormats]]</span> section may have to be changed. Note that the format for '<span class="code">week</span>' also includes the preposition '<span class="code">on</span>', which may have to be translated to your language.</p>
+      <pre class="tty">    [[TimeFormats]]
         #
         # This section sets the string format to be used
         # each time scale.
@@ -1794,21 +1791,18 @@ outTemp = Outside Temperature</p>
         current    = %d-%b-%Y %H:%M
         ephem_day  = %H:%M
         ephem_year = %d-%b-%Y %H:%M</pre>
-		<p>    The bottom label format used in plots may need to be changed from</p>
-		<pre class="tty">bottom_label_format = %m/%d/%y</pre>
-		<p>to</p>
-		<pre class="tty">bottom_label_format = %d/%m/%y</pre>
-		<h3>Labels</h3>
-		<p>There are several almanac labels that may need to be changed. These 
-		include:</p>
-		<p class="tty">hemisphere = N, S, E, W</p>
-		<p>and</p>
-		<p class="tty">moon_phases = New, Waxing crescent, First quarter, Waxing 
+      <p>The bottom label format used in plots may need to be changed from</p>
+      <pre class="tty">bottom_label_format = %m/%d/%y</pre>
+      <p>to</p>
+      <pre class="tty">bottom_label_format = %d/%m/%y</pre>
+      <h3>Labels</h3>
+      <p>There are several almanac labels that may need to be changed. These include:</p>
+      <p class="tty">hemisphere = N, S, E, W</p>
+      <p>and</p>
+      <p class="tty">moon_phases = New, Waxing crescent, First quarter, Waxing 
 		gibbous, Full, Waning gibbous, Last quarter, Waning crescent</p>
-		<p>You will also have to change the generic labels given to your weather 
-		observations:</p>
-		<pre class="tty">
-        barometer      = Barometer
+      <p>You will also have to change the generic labels given to your weather observations:</p>
+      <pre class="tty">        barometer      = Barometer
         dewpoint       = Dew Point
         heatindex      = Heat Index
         inHumidity     = Inside Humidity
@@ -1827,16 +1821,14 @@ outTemp = Outside Temperature</p>
         windgustvec    = Gust Vector
         windvec        = Wind Vector
         extraTemp1     = Pond Temperature</pre>
-		<h2>Environment variable <span class="code">LANG</span></h2>
-		<p>Finally, you will need to set the environment variable
-		<span class="code">LANG</span> to reflect your locale. For example, 
-		assuming you set</p>
-		<p class="tty">$ export LANG=es_ES.UTF-8</p>
-		<p>before running <span class="code">weewx</span>, then the local 
-		Spanish names for days of the week and months of the year will be used. 
-		The decimal point for numbers will also be modified appropriately.</p>
-      <h1 id="Customizing_the_weewx_service_engine">Customizing the
-	<span class="code">weewx</span> service engine</h1>
+      <h2>Environment variable <span class="code">LANG</span></h2>
+      <p>Finally, you will need to set the environment variable	<span class="code">LANG</span> to reflect your locale. For example, assuming you set</p>
+      <p class="tty">$ export LANG=es_ES.UTF-8</p>
+      <p>before running <span class="code">weewx</span>, then the local Spanish names for days of the week and months of the year will be used. The decimal point for numbers will also be modified appropriately.</p>
+
+
+      <a name='service_engine'></a>
+      <h1>Customizing the <span class="code">weewx</span> service engine</h1>
       <p>This is an advance topic intended for those who wish to try their hand at 
 	extending the internal engine in weewx. You should have a passing familiarity 
 	with Python or, at least, be willing to learn it. </p>
@@ -1900,13 +1892,12 @@ outTemp = Outside Temperature</p>
 	    easily by the user.</td>
 	</tr>
       </table>
-      <h2 id="Preserving_your_changes_across_an_upgrade">Preserving your changes across 
-	an upgrade</h2>
+      <h2>Preserving your changes across an upgrade</h2>
       <p>Generally, if you change the code in <span class="code">weewx</span> you 
 	will have to cut-and-paste any changes you have made to the new code. However, 
 	if you put the changes in the special directory <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>, the installation routines 
 	  will arrange for the changes to be preserved across an upgrade. </p>
-      <h2 id="Customizing_a_service">Customizing a Service</h2>
+      <h2>Customizing a Service</h2>
       <p>The service <span class="code">weewx.wxengine.StdPrint</span> prints out 
 	new LOOP and archive packets to the console when they arrive. By default, it 
 	prints out the entire record, which generally includes a lot of possibly distracting 
@@ -1942,7 +1933,7 @@ class MyPrint(StdPrint):
       <p>Note that the <span class='code'>service_list</span> must be all on one line. Unfortunately, the parser
 	<span class="code">ConfigObj</span> does not allow options to be continued on 
 	to following lines.</p>
-      <h2 id="Adding_a_Service">Adding a Service</h2>
+      <h2>Adding a Service</h2>
       <p>Suppose there is no service that can be easily customized for your needs. 
 	In this case, a new one can easily be created by subclassing off the abstract 
 	base class <span class="code">StdService</span>, and then adding the functionality 
@@ -2116,6 +2107,9 @@ class MyAlarm(StdService):
       <p>In addition to the example above, the distribution also includes a low-battery 
 	alarm (<span class="code">lowBattery.py</span>), which is very similar, except 
 	that it intercepts LOOP events (instead of archiving events). </p>
+
+
+      <a name='archive_database'></a>
       <h1>Customizing the archive database</h1>
       <p>For most users the default database will work just fine. It has the added 
 	advantage of being compatible with the wview database. Nevertheless, there may 
@@ -2157,8 +2151,7 @@ class MyAlarm(StdService):
 	  service_list</span> in <span class="code">weewx.conf</span>, making sure it 
 	appears before <span class="code">StdArchive</span> so your new value is inserted 
 	into the record <em>before</em> the data is archived.</p>
-      <h3><a id="Adding_a_new_type_to_the_archive_database">Adding a new type to the 
-	  archive database</a></h3>
+      <h3>Adding a new type to the archive database</h3>
       <p>So, now you have created a new observation type, '<span class="code">electricity</span>'. 
 	Trouble is, there is no corresponding type in the schema of the SQL database 
 	and, therefore, it won't be stored there. How would you add such a type?</p>
@@ -2289,7 +2282,7 @@ mv weewx.sdb_new weewx.sdb</p>
 	  <td>The number of days where more than 5.0 kWH of energy was consumed.</td>
 	</tr>
       </table>
-      <h2 id="Changing_the_unit_system">Changing the unit system</h2>
+      <h2>Changing the unit system</h2>
       <p>Normally, data is stored in the databases using US Customary units and, normally, 
 	you don't care --- data can always be displayed using any units you choose. 
 	It's an "implementation detail." Nevertheless, there may be special situations 
@@ -2339,6 +2332,9 @@ mv weewx.sdb_new weewx.sdb</p>
       <p>5. <strong>Recreate the stats database.</strong> Delete the stats database, 
 	then let <span class="code">weewx</span> regenerate it. It will use the new 
 	unit system.</p>
+
+
+      <a name='porting'></a>
       <h1>Porting to new weather station hardware</h1>
       <p>Naturally, this is an advanced topic but, nevertheless, I'd really like to 
 	encourage any Python wizards out there to give it a try. Of course, I have selfish 
@@ -2446,7 +2442,10 @@ mv weewx.sdb_new weewx.sdb</p>
 	  participates in the engine as a service.</p>
       <p>Naturally, there are a lot of subtleties that I've glossed over in this high-level 
 	description. If you're game, give it a try &mdash; I'm happy to help you out!</p>
-      <h1 id="Archive_types">Appendix A: Archive Types</h1>
+
+
+      <a name='archive_types'></a>
+      <h1>Appendix A: Archive Types</h1>
       <p><em>Archive types</em> are weather observations that have come from your 
 	instrument and been stored in the <em>archive database</em>, a SQL database. 
 	They represent the <em>current conditions</em> as of some time. They are available 
@@ -2785,7 +2784,10 @@ mv weewx.sdb_new weewx.sdb</p>
 	  <td>X</td>
 	</tr>
       </table>
-      <h1 id="Units">Appendix B: Units</h1>
+
+
+      <a name='units'></a>
+      <h1>Appendix B: Units</h1>
       <p>The table below lists all the unit groups, their members, and which units 
 	are options for the group. </p>
       <table class="center" style="width: 60%">
@@ -2934,7 +2936,10 @@ mv weewx.sdb_new weewx.sdb</p>
 	  <td>NONE</td>
 	</tr>
       </table>
-      <h1 id="Statistical_types">Appendix C: Statistical Types</h1>
+
+
+      <a name='statistical_types'></a>
+      <h1>Appendix C: Statistical Types</h1>
       <p>Most of the templates are devoted to reporting <em>statistical types</em>, 
 	such as temperature, wind, or rainfall, using various <em>aggregates</em>, such 
 	as min, max, or sum. These are called <em>aggregations</em>, because they are 
@@ -3235,7 +3240,10 @@ mv weewx.sdb_new weewx.sdb</p>
 	  <td>&nbsp;</td>
 	</tr>
       </table>
-      <h1 id="Packet_types">Appendix D: Packet Types</h1>
+
+
+      <a name='packet_types'></a>
+      <h1>Appendix D: Packet Types</h1>
       <p><em>Packets</em> are the raw data coming off the instrument (as opposed to
 	<em>records</em>, which are stored on the database). The observation types available 
 	in a packet are useful when setting <em><a href="usersguide.htm#QC">quality 
@@ -3864,11 +3872,14 @@ mv weewx.sdb_new weewx.sdb</p>
 	</tr>
       </table>
 
-      <p class='copyright'>
-        &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
-      </p>
-
     </div>
+
+
+    <p class='copyright'>
+      &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
+    </p>
+
+
     <script type="text/javascript">
       samaxesJS.toc({
       exclude : 'h4, h5, h6',
