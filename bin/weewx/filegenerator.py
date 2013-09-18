@@ -179,11 +179,11 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
                     try:
                         # Write it out
                         print >> _file, text
-                    except Cheetah.NameMapper.NotFound, e:
-                        (cl, unused_ob, unused_tr) = sys.exc_info()
-                        syslog.syslog(syslog.LOG_ERR, """filegenerator: Caught exception "%s" """ % cl) 
-                        syslog.syslog(syslog.LOG_ERR, """         ****  Message: "%s in template %s" """ % (e, template))
-                        syslog.syslog(syslog.LOG_ERR, """         ****  Ignoring template and continuing.""")
+                    except Exception, e:
+                        syslog.syslog(syslog.LOG_ERR, 'filegenerator: %s failed with exception "%s" ' % (by_time,type(e))) 
+                        syslog.syslog(syslog.LOG_ERR, '****  Ignoring template %s' % template)
+                        syslog.syslog(syslog.LOG_ERR, '****  Reason: %s' % e)
+                        weeutil.weeutil.log_traceback('****  ')
                     else:
                         ngen += 1
                     finally:
@@ -234,11 +234,11 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
             try:
                 # Write it out
                 print >> _file, text
-            except Cheetah.NameMapper.NotFound, e:
-                (cl, unused_ob, unused_tr) = sys.exc_info()
-                syslog.syslog(syslog.LOG_ERR, """filegenerator: Caught exception "%s" """ % cl) 
-                syslog.syslog(syslog.LOG_ERR, """         ****  Message: "%s in template %s" """ % (e, template))
-                syslog.syslog(syslog.LOG_ERR, """         ****  Ignoring template and continuing.""")
+            except Exception, e:
+                syslog.syslog(syslog.LOG_ERR, 'filegenerator: ToDate failed with exception "%s" ' % type(e)) 
+                syslog.syslog(syslog.LOG_ERR, '****  Ignoring template %s' % template)
+                syslog.syslog(syslog.LOG_ERR, '****  Reason: %s' % e)
+                weeutil.weeutil.log_traceback('****  ')
             else:
                 ngen += 1
             finally:
@@ -247,7 +247,7 @@ class FileGenerator(weewx.reportengine.CachedReportGenerator):
                     
         elapsed_time = time.time() - t1
         syslog.syslog(syslog.LOG_INFO, "filegenerator: generated %d 'toDate' files in %.2f seconds" % (ngen, elapsed_time))
-    
+
     def getSummaryBySearchList(self, archivedb, statsdb, timespan):
         """Return the searchList for the Cheetah Template engine for "summarize by" reports.
         

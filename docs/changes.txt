@@ -3,6 +3,9 @@ weewx change history
 
 2.5.0 09/ZZ/13
 
+When a template fails, skip only that template, not everything that the
+generator is processing.
+
 FineOffset driver now uses the 'delay' field instead of the fixed_block
 'read_period' for the archive record interval when reading records from
 console memory.
