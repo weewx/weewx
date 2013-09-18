@@ -78,13 +78,13 @@ Version: 2.5.0a1
       easy-to-understand server to run my Davis VantagePro2 weather station on a Linux 
       box. I had been using <a href="http://www.wviewweather.com/">wview</a>, which 
       is a high-performance and feature rich system authored by Mark Teel with lots 
-      of users. Written in C, it&#39;s an efficient system that can run on underpowered 
-      boxes. In exchange, it&#39;s huge (45,000+ lines of code), tightly integrated 
+      of users. Written in C, it is an efficient system that can run on underpowered 
+      boxes. In exchange, it is huge (45,000+ lines of code), tightly integrated 
       in with its companion library, radlib (another 14,000+ lines), and very complex, 
       making it difficult to understand and reliably customize. I wanted something 
       more modern and much, much simpler. </p>
     <p>Having made a career in C++ and Java, I was also interested in some more 
-      modern languages, so I thought I&#39;d try either Python or Ruby (although, 
+      modern languages, so I thought I would try either Python or Ruby (although, 
       truth be told, the roots of Python are nearly as old as C++!). I ended up picking 
       Python because its libraries are more mature and there are many mores choices 
       for third party libraries. </p>
@@ -621,7 +621,7 @@ Version: 2.5.0a1
 	<span class="symcode">$CONFIG_ROOT</span><span class="code"><em>/weewx.conf</em></span>. (There is another configuration 
       file <span class="code">skin.conf</span> for presentation-specific options, 
       which is described in the <a href="customizing.htm">Customizing Guide</a> under section <em>
-	<a href="customizing.htm#The_Standard_skin_configuration_file">Reference: The 
+	<a href="customizing.htm#standard_skin">Reference: The 
 	  standard skin configuration file</a></em>.) </p>
     <p>Most of the important options are up near the top of the file. They are all 
       documented in this section, although you can safely ignore most of them. The 
@@ -908,7 +908,7 @@ Version: 2.5.0a1
       <span class="code">[[StandardReport]]</span> will be run first, then report
       <span class="code">[[FTP]]</span> (which actually optionally uploads the results 
       to a remote web server). Details for how to customize reports are in the section
-      <em><a href="customizing.htm#Opportunities_for_customizing_reports">Opportunities 
+      <em><a href="customizing.htm#reports">Opportunities 
 	  for customizing reports</a></em>, in the 
       <a href="customizing.htm">Customizing Guide</a>.
     </p>
@@ -928,7 +928,7 @@ Version: 2.5.0a1
       in <span class="code">public_html</span> and subdirectory <span class="code">
 	public_html/NOAA</span>. </p>
     <h3 class="config_section">[[FTP]]</h3>
-    <p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
+    <p>While this &quot;report&quot; does not actually generate anything, it 
       uses the report machinery to upload files from directory <span class="symcode">
 	$HTML_ROOT</span> to a remote webserver. It does an incremental update, 
       that is, it only FTPs any files that have changed, saving the outgoing bandwidth 
@@ -948,7 +948,7 @@ Version: 2.5.0a1
     <p class="config_important">path </p>
     <p>Set to the path where the weather data will be stored on your webserver (<em>e.g.</em>, <span class="code">/weather</span>). 
       NB: some FTP servers require a leading slash (&#39;<span class="code">/</span>&#39;), 
-      some don&#39;t. Required. No default. </p>
+      some do not. Required. No default. </p>
     <p class="config_important">passive </p>
     <p>Set to 1 if you wish to use the more modern, FTP passive mode, 0 if you wish 
       to use active mode. Passive mode generally works better through firewalls, but 
@@ -960,7 +960,7 @@ Version: 2.5.0a1
     <p><span class="code">Weewx</span> will try up to this many times to FTP a file 
       up to your server before giving up. Default is 3. </p>
     <h3 class="config_section">[[RSYNC]]</h3>
-    <p>While this &quot;report&quot; doesn&#39;t actually generate anything, it 
+    <p>While this &quot;report&quot; does not actually generate anything, it 
       uses the report machinery to upload files from directory <span class="symcode">
 	$HTML_ROOT</span> to a remote webserver. It does an incremental update, 
       that is, it only synchronizes those files that have changed, saving the outgoing 
@@ -983,6 +983,7 @@ Version: 2.5.0a1
       <span class="code">path</span>, this can cause unexpected files to be deleted 
       on the remote server. Valid values are 1 to enable and 0 to disable. Required. 
       Default is 0.</p>
+    <a name='StdConvert'></a>
     <h2 class="config_section">[StdConvert]</h2>
     <p>This section is for configuring the <span class="code">StdConvert</span> 
       service. This service acts as a filter, converting the unit system coming off 
@@ -994,7 +995,7 @@ Version: 2.5.0a1
       stick with it. This means that users coming from wview (which uses US Customary) 
       should not change the default setting. Having said this, there is a way of reconfiguring 
       the database to use another unit system. See the section
-      <a href="customizing.htm#Changing_the_unit_system">Changing the Unit System</a> 
+      <a href="customizing.htm#changing_unit_system">Changing the Unit System</a> 
       in the Customizing Guide.</p>
     <p>Note that whatever you choose here, it does not affect your options for the 
       unit system to be used for <i>reporting</i>. Because of this, unless you 
@@ -1003,11 +1004,12 @@ Version: 2.5.0a1
 	  <p class="warning"><strong>Warning!</strong><br />
 	  If, despite these precautions, you do 
       decide to change to Metric, be sure to read the sections <span class="code">
-	<a href="#Calibrate">[StdCalibrate]</a></span> and <span class="code">
-	<a href="#QC">[StdQC]</a></span> below, and change the units there as well!</p>
+	<a href="#StdCalibrate">[StdCalibrate]</a></span> and <span class="code">
+	<a href="#StdQC">[StdQC]</a></span> below, and change the units there as well!</p>
     <p class="config_option">target_unit</p>
     <p>Set to either <span class="code">US</span> or <span class="code">METRIC</span>. 
       Default is <span class="code">US</span>.</p>
+    <a name='StdCalibrate'></a>
     <h2 class="config_section">[StdCalibrate]</h2>
     <p>This section is for configuring the <span class="code">StdCalibrate</span> 
       service. This service offers an opportunity to correct for any calibration errors 
@@ -1037,13 +1039,14 @@ Version: 2.5.0a1
     <p>If you are using a Davis Vantage instrument and all you require is a simple 
       correction offset, this can also be done in the hardware. See your manual for 
       instructions. </p>
+    <a name='StdQC'></a>
     <h2 class="config_section">[StdQC]</h2>
     <p>This section is for configuring the <span class="code">StdQC</span> service. 
       This service offers a very simple <em>Quality Control</em> that only checks 
       that values are within a minimum and maximum range.</p>
     <p>Because this service is normally run after <span class="code">StdConvert</span>, 
       the units to be used should be the same as the target unit system chosen in
-      <a href="#[StdConvert]"><span class="code">StdConvert</span></a>. It is also 
+      <a href="#StdConvert"><span class="code">StdConvert</span></a>. It is also 
       important that it be run after the calibration service, <span class="code">StdCalibrate
       </span>and before the archiving service <span class="code">StdArchive</span>, 
       so that it is the calibrated and corrected data that is stored. </p>
@@ -1054,7 +1057,7 @@ Version: 2.5.0a1
     <p>In this section you list the observation types you wish to have checked, 
       along with their minimum and maximum values. The units should be in <em>the 
 	same unit system as specified in section <span class="code">
-	  <a href="#[StdConvert]">StdConvert</a></span> above</em>. </p>
+	  <a href="#StdConvert">StdConvert</a></span> above</em>. </p>
     <p>Example, </p>
     <p class="tty">[[MinMax]]
     outTemp = -40, 120
@@ -1072,19 +1075,20 @@ Version: 2.5.0a1
       <span class="code">0xff</span> is devoted to a bad value, so the only possible 
       values that could appear are 0 through 126 mph, a reasonable range. So, for 
       the VP2, there is no real point in checking wind speed. </p>
+    <a name='StdArchive'></a>
     <h2 class="config_section">[StdArchive]</h2>
     <p>This section is for configuring <span class="code">StdArchive</span>, the 
       service that stores data in the databases. Options allow choosing which database 
       to use for archiving and statistics.</p>
     <p class="config_option">archive_database</p>
     <p>The database to be used to store the archive data. This should match a section 
-      given in the section <span class="code"><a href="#[Databases]">[Databases]</a></span> 
+      given in the section <span class="code"><a href="#Databases">[Databases]</a></span> 
       below. Normally, this is set to <span class="code">archive_sqlite</span>. If 
       you are using MySQL, you will want to change this to <span class="code">
 	archive_mysql</span>.</p>
     <p class="config_option">stats_database</p>
     <p>The database to be used to store the statistical data. This should match 
-      a section given in the section <span class="code"><a href="#[Databases]">[Databases]</a></span> 
+      a section given in the section <span class="code"><a href="#Databases">[Databases]</a></span> 
       below. Normally, this is set to <span class="code">stats_sqlite</span>. If 
       you are using MySQL, you will want to change this to <span class="code">
 	stats_mysql</span>.</p>
@@ -1095,6 +1099,7 @@ Version: 2.5.0a1
       00:05:15, 00:10:15, etc. This delay is to give the station a few seconds to 
       archive the data internally, and in case your server has any other tasks to 
       do at the top of the minute. Default is 15 seconds. </p>
+    <a name='record_generation'></a>
     <p class="config_option">record_generation</p>
     <p>Set to whether records should be downloaded off the hardware (recommended), 
       or generated in software. If set to '<span class="code">hardware</span>', then
@@ -1128,6 +1133,7 @@ Version: 2.5.0a1
     <p class="config_option">max_drift</p>
     <p>The maximum amount of clock drift to tolerate, in seconds, before resetting 
       the clock. Default is 5.</p>
+    <a name='Databases'></a>
     <h2 class="config_section">[Databases]</h2>
     <p>This section lists actual database bindings. The name of each database is 
       given in double brackets below (for example, <span class="code">[[archive_sqlite]]</span>). 
@@ -1175,10 +1181,11 @@ Version: 2.5.0a1
     <p>This section is used to configure the internal service engine in
       <span class="code">weewx</span>. It is for advanced customization. Details on 
       how to do this can be found in the section <em>
-	<a href="customizing.htm#Customizing_the_weewx_service_engine">Customizing the 
+	<a href="customizing.htm#service_engine">Customizing the 
 	  weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
     <h3 class="config_section">[[WxEngine]]</h3>
     <p>This section is for options used by the service engine. </p>
+    <a name='service_list'></a>
     <p class="config_option">service_list </p>
     <p>This option is the list of <em>services</em> that are to be run by the service 
       engine. After each event (such as the arrival of LOOP data, etc.), they will 
@@ -1334,7 +1341,7 @@ Davis Vantage EEPROM settings:
 	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
 	  records from the on-board logger in the Vantage. However, occasionally the 
 	  memory in the Vantage will get corrupted, making this impossible. See the 
-	  troubleshooting section below <em>"<a href="#Weewx_generates_HTML_pages,_but_it_does_not_update_them">Weewx 
+	  troubleshooting section below <em>"<a href="#html_generated_but_not_updated">Weewx 
 	  generates HTML pages, but it does not update them</a></em>". The 
 	  fix involves clearing the memory but, unfortunately, this means you may 
 	  lose any data which might have accumulated in the logger memory, but not 
@@ -1522,7 +1529,7 @@ Pressure offset is now 1.247000</p>
     <h1>Configuring MySQL</h1>
     <p>This section applies only for those using MySQL.</p>
     <p>Assuming that you want to use the default database configuration, your
-      <span class="code"><a href="#[Databases]">[Databases]</a></span> section 
+      <span class="code"><a href="#Databases">[Databases]</a></span> section 
       should 
       look something like this:</p>
     <p class="tty">[Databases]
@@ -1553,7 +1560,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@local
 mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost</p>
     <p>In addition to configuring MySQL, you will also need to indicate to
       <span class="code">weewx</span> that you intend to use the configured 
-	  database. See section <span class="code"><a href="#[StdArchive]">
+	  database. See section <span class="code"><a href="#StdArchive">
 	  [StdArchive]</a></span> for details.</p>
 
 
@@ -1561,7 +1568,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <h1>Running <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> can be run either from the command line (useful 
       for diagnostic purposes because it will print out a summary of every LOOP data), 
-      or as a daemon. When first trying <span class="code">weewx</span>, it&#39;s 
+      or as a daemon. When first trying <span class="code">weewx</span>, it is 
       probably best to run it from the command line because you will be able to see 
       command line diagnostics, as well as log messages. </p>
     <h2>Running from the command line</h2>
@@ -1575,7 +1582,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
     <p>It should start by downloading any data stored in your weather station into 
       the archive database. As the Davis VantagePro can store a couple thousand archive 
-      records internally, this could take a minute or two. I&#39;ve found this process 
+      records internally, this could take a minute or two. I have found this process 
       particularly slow on SuSE for some reason. </p>
     <p><span class="code">Weewx</span> will then start monitoring LOOP data, printing 
       a short version of the received data on standard output, about once every two 
@@ -1612,7 +1619,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
     <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 
       has been set to the proper root directory for your 
 	<span class="code">weewx</span> installation (it should have been set to the correct value automatically 
-      by the install process, but it&#39;s worth checking). </p>
+      by the install process, but it is worth checking). </p>
     <p>Copy it to the proper location for your system: </p>
     <table class="locations center" style="width: 90%">
       <tr>
@@ -1795,7 +1802,7 @@ sudo /etc/init.d/apache restart</p>
         be very useful for troubleshooting and debugging!
         <p class='tty' style="margin-top:1em">debug = 1</p>
       </li>
-      <li style="margin-bottom:1em"><a href="#Monitoring_weewx">Look at the log file</a>. I am always
+      <li style="margin-bottom:1em"><a href="#monitoring">Look at the log file</a>. I am always
         happy to take questions, but the first thing I will ask you is,
         &quot;Did you look at the log file?&quot;
         <p class='tty' style="margin-top:1em">tail -f /var/log/messages</p>
@@ -1840,7 +1847,7 @@ sudo /etc/init.d/apache restart</p>
         probably be OK.
       </li>
       <li>Run headless. Modern graphical systems are extremely complex. As new 
-	features are added, test suites don&#39;t always catch up. Your system
+	features are added, test suites do not always catch up. Your system
         will be much more reliable if you run it without a windowing system (X
         Windows, in the case of Linux). </li>
       <li>Use an Uninterruptible Power Supply (UPS). The vast majority of power
@@ -1859,7 +1866,7 @@ sudo /etc/init.d/apache restart</p>
     <p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
       problems. The symptom is that the Linux kernel will disconnect from your old 
       USB port claiming &quot;EMI noise&quot;, and reconnect to a new and different 
-      port, where <span class="code">weewx</span> can&#39;t find it. Here&#39;s a 
+      port, where <span class="code">weewx</span> cannot find it. Here is a 
       typical log output: </p>
     <p class='tty'>Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?), re-enabling... 
 Nov 29 10:40:21 hummingbird kernel: [6661624.786871] usb 2-3: USB disconnect, address 2 
@@ -1894,7 +1901,7 @@ ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Contr
       <span class="code">interface</span> that is equal to &quot;<span class="code">CP2102 
 	USB to UART Bridge Controller</span>&quot;, then add a symbolic link for its 
       physical port to <span class="code">/dev/vpro</span>. </p>
-    <p>Here&#39;s a rule that works for my Serial-to-USB cable, made by Prolific 
+    <p>Here is a rule that works for my Serial-to-USB cable, made by Prolific 
       Technology, Inc.:</p>
     <p class='tty'># Automount Serial-to-USB cable to port /dev/vpro
 # Install in /etc/udev/rules.d/cable.rules
@@ -1915,7 +1922,7 @@ ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYML
       <span class="code">interface</span>, others are possible. For example, the second 
       example, for the serial-to-USB cable, chose to match the attribute
       <span class="code">product</span>. </p>
-    <p>Once you&#39;ve installed your <span class="code">udev</span> rule, you can 
+    <p>Once you have installed your <span class="code">udev</span> rule, you can 
       then set <span class="code">port=/dev/vpro</span> in <span class="code">weewx.conf</span>, 
       confident that it will always point to your VantagePro2, no matter which USB 
       port it is actually attached to! </p>
@@ -1934,6 +1941,7 @@ Which gives here an output like:
 uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
 And put in weewx.conf:
 port = /dev/cuaU0</p>
+    <a name='html_generated_but_not_updated'></a>
     <h3>Weewx generates HTML pages, but it does not update them</h3>
     <p>If you are getting a symptom that everything appears normal, that is HTML 
       is getting generated and getting FTP&#39;d to your webserver <em>(look in the 
@@ -1947,7 +1955,7 @@ port = /dev/cuaU0</p>
       record and so it stops.</p>
     <p>However, if the internal memory gets garbled, the console will immediately 
       return archives in the past, and so it looks like the timestamps have decreased 
-      in value and so <span class="code">weewx</span> figures that&#39;s it: there&#39;s 
+      in value and so <span class="code">weewx</span> figures that is it: there is 
       no more data.</p>
     <p>I have received reports from a couple of users who have had this problem. 
       There seems to be two fixes:</p>
@@ -2047,7 +2055,7 @@ Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </p>
 Apr 12 05:12:32 raven reportengine[3074]:   ****  Message: &quot;cannot find &#39;fubar&#39; in template /home/weewx/skins/Standard/index.html.tmpl&quot;
 Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continuing.</p>
     <p>you have a tag in your template that <span class="code">weewx</span> does 
-      not recognize (in this example, it&#39;s the tag <span class="code">$fubar</span> 
+      not recognize (in this example, it is the tag <span class="code">$fubar</span> 
       in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
     </p>
 
@@ -2066,15 +2074,15 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
 	and elegance trump speed. </li>
       <li>One code base. The same code base should be used for all platforms, 
 	all weather stations, all reports, and any combination of features. Ample 
-	configuration and customization options should be provided so the user doesn&#39;t 
+	configuration and customization options should be provided so the user does not 
 	feel tempted to start hacking code. At worse, the user may have to subclass, 
 	which is much easier to port to newer versions of the code base, than customizing 
 	the base code. </li>
-      <li>Minimal reliance on external packages, so the user doesn&#39;t have 
+      <li>Minimal reliance on external packages, so the user does not have 
 	to go chase them down all over the Web before getting started. </li>
-      <li>Support only the Davis VantagePro2 initially (that&#39;s what I have), 
+      <li>Support only the Davis VantagePro2 initially (that is what I have), 
 	but make no architectural decisions that lock out other stations. </li>
-      <li>As &quot;pythonic&quot; as I know how to make it. I&#39;m a beginner 
+      <li>As &quot;pythonic&quot; as I know how to make it. I am a beginner 
 	Python programmer with two decades of experience in C++. I tried hard to 
 	not make the code base look like it was written by a C++ programmer who 
 	stumbled across a Python manual! </li>
@@ -2155,7 +2163,7 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       <tr>
 	<td class="text_highlight">archive packet</td>
 	<td>A packet obtained from the store on the weather station. For
-          example, with a Davis VantagePro, it&#39;s obtained using the
+          example, with a Davis VantagePro, it is obtained using the
 	  <span class="code">DMPAFT</span> command. </td>
       </tr>
       <tr>
