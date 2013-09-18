@@ -1799,8 +1799,7 @@ outTemp = Outside Temperature</p>
       <p>There are several almanac labels that may need to be changed. These include:</p>
       <p class="tty">hemisphere = N, S, E, W</p>
       <p>and</p>
-      <p class="tty">moon_phases = New, Waxing crescent, First quarter, Waxing 
-		gibbous, Full, Waning gibbous, Last quarter, Waning crescent</p>
+      <p class="tty">moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</p>
       <p>You will also have to change the generic labels given to your weather observations:</p>
       <pre class="tty">        barometer      = Barometer
         dewpoint       = Dew Point
@@ -1829,7 +1828,7 @@ outTemp = Outside Temperature</p>
 
       <a name='service_engine'></a>
       <h1>Customizing the <span class="code">weewx</span> service engine</h1>
-      <p>This is an advance topic intended for those who wish to try their hand at 
+      <p>This is an advanced topic intended for those who wish to try their hand at 
 	extending the internal engine in weewx. You should have a passing familiarity 
 	with Python or, at least, be willing to learn it. </p>
       <p><em>Please note that the service engine is likely to change in future versions!
@@ -1927,9 +1926,9 @@ class MyPrint(StdPrint):
 	your service name for <span class="code">StdPrint</span> in
 	<span class="code">service_list</span>, located in <span class="code">[Engines][[WxEngine]]</span>:
       </p>
-      <p class='tty' style='white-space:pre-line'>[Engines]
-        &nbsp;&nbsp;&nbsp;&nbsp;[[WxEngine]]
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, user.myprint.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+      <p class='tty'>[Engines]
+    [[WxEngine]]
+        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, user.myprint.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
       <p>Note that the <span class='code'>service_list</span> must be all on one line. Unfortunately, the parser
 	<span class="code">ConfigObj</span> does not allow options to be continued on 
 	to following lines.</p>
@@ -2098,9 +2097,9 @@ class MyAlarm(StdService):
       <p>To make this all work, you must tell the engine to load this new service. 
 	This is done by adding your service name to the list <span class="code">service_list</span>, 
 	located in <span class="code">[Engines][[WxEngine]]</span>: </p>
-      <p class='tty' style='white-space:pre-line'>[Engines]
-        &nbsp;&nbsp;&nbsp;&nbsp;[[WxEngine]]
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.alarm.MyAlarm</p>
+      <p class='tty'>[Engines]
+   [[WxEngine]]
+	service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.alarm.MyAlarm</p>
       <p>Note that the <span class='code'>service_list</span> must be all on one line. Unfortunately, the parser
 	<span class="code">ConfigObj</span> does not allow options to be continued on 
 	to following lines.</p>
