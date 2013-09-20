@@ -413,7 +413,7 @@ class Formatter(object):
         [Optional. If not given, the string given unit_format_dict['NONE'] will be used.]
         """
         if val_t is None or val_t[0] is None:
-            if NONE_string: 
+            if NONE_string is not None: 
                 return NONE_string
             else:
                 return self.unit_format_dict.get('NONE', 'N/A')
@@ -421,7 +421,7 @@ class Formatter(object):
         if val_t[1] == "unix_epoch":
             # Different formatting routines are used if the value is a time.
             try:
-                if useThisFormat:
+                if useThisFormat is not None:
                     val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
                 else:
                     val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), time.localtime(val_t[0]))
@@ -431,8 +431,8 @@ class Formatter(object):
         else:
             # It's not a time. It's a regular value.
             try:
-                if useThisFormat:
-                    val_str = locale.format(useThisFormat, val_t[0])
+                if useThisFormat is not None:
+                    val_str = locale.format_string(useThisFormat, (val_t[0],))
                 else:
                     val_str = locale.format(self.unit_format_dict[val_t[1]], val_t[0])
             except (KeyError, TypeError):
