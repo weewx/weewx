@@ -108,11 +108,12 @@ upload-readme: readme
 	scp $(DSTDIR)/README.txt $(USER)@$(RELDIR)
 
 # update the version in all relevant places
+VDOCS=customizing.htm usersguide.htm upgrading.htm
 version:
-	for f in docs/customizing.htm docs/usersguide.htm docs/upgrading.htm; do \
-          sed -e 's/Version: [0-9].*/Version: $(VERSION)/' $$f > $$f.tmp; \
-          mv $$f.tmp $$f; \
-        done
+	for f in $(VDOCS); do \
+  sed -e 's/Version: [0-9].*/Version: $(VERSION)/' docs/$$f > docs/$$f.tmp; \
+  mv docs/$$f.tmp docs/$$f; \
+done
 	sed -e 's/version =.*/version = $(VERSION)/' weewx.conf > weewx.conf.tmp; mv weewx.conf.tmp weewx.conf
 
 DEBREVISION=1
