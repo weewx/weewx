@@ -1002,7 +1002,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                         record['data'] = data
                         record['raw_data'] = raw_data
                         record['interval'] = data['delay']
-                        records.append(record)
+                        records.insert(0, record)
                         count += 1
                         dts -= datetime.timedelta(minutes=data['delay'])
                     ptr = self.dec_ptr(ptr)
