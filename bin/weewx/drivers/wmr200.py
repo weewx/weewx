@@ -632,6 +632,10 @@ class PacketRain(Packet):
     pkt_cmd = 0xd4
     pkt_name = 'Rain'
     pkt_len = 0x16
+
+    # static class variable
+    rain_last_totalRain = None
+
     def __init__(self, wmr200):
         super(PacketRain, self).__init__(wmr200)
 
@@ -659,7 +663,13 @@ class PacketRain(Packet):
                         'totalRain'         : rain_total,
                         'dateTime'          : self._timeStampEpoch(),
                         'usUnits'           : weewx.US}
-
+        # Because the WMR does not offer anything like bucket tips, we must
+        # calculate it by looking for the change in total rain. Of course, this
+        # won't work for the very first rain packet.
+        self._record['rain'] = \
+        (self._record['totalRain']-PacketRain.rain_last_totalRain) \
+                if PacketRain.rain_last_totalRain is not None else None
+        PacketRain.rain_last_totalRain = self._record['totalRain']
 
 class PacketUvi(Packet):
     """Packet parser for ultra violet sensor."""
