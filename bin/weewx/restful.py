@@ -664,13 +664,13 @@ class StationRegistry(REST):
             except (urllib2.URLError, socket.error,
                     httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and try again
-                syslog.syslog(syslog.LOG_ERROR, 'register: failed attempt %d of %d: %e' % (_count+1, self.max_tries, e))
+                syslog.syslog(syslog.LOG_ERR, 'register: failed attempt %d of %d: %e' % (_count+1, self.max_tries, e))
             else:
                 # Check for the server response
                 for line in _response:
                     # Registration failed, log it and bail out
                     if line.startswith('FAIL'):
-                        syslog.syslog(syslog.LOG_ERROR, "register: registration server returned %s" % line)
+                        syslog.syslog(syslog.LOG_ERR, "register: registration server returned %s" % line)
                         raise weewx.restful.FailedPost, line
                 # Registration was successful
                 syslog.syslog(syslog.LOG_DEBUG, 'register: registration successful')
@@ -679,7 +679,7 @@ class StationRegistry(REST):
         else:
             # The upload failed max_tries times. Log it.
             msg = 'failed to register after %d tries' % self.max_tries
-            syslog.syslog(syslog.LOG_ERROR, 'register: %s' % msg)
+            syslog.syslog(syslog.LOG_ERR, 'register: %s' % msg)
             raise IOError, msg
 
     def getURL(self):
@@ -714,9 +714,9 @@ class StationRegistry(REST):
 
         if len(msgs) > 0:
             errmsg = 'one or more unusable parameters.'
-            syslog.syslog(syslog.LOG_ERROR, 'register: %s' % errmsg)
+            syslog.syslog(syslog.LOG_ERR, 'register: %s' % errmsg)
             for m in msgs:
-                syslog.syslog(syslog.LOG_ERROR, '   **** %s' % m)
+                syslog.syslog(syslog.LOG_ERR, '   **** %s' % m)
             raise ValueError(errmsg)
     
 
