@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -756,20 +756,18 @@ class StdRESTful(StdService):
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Shut down StdRESTful thread.")
             
     def getSiteDict(self, config_dict, site):
-        """Return the site dictionary for the given site.
+        """Return the site dictionary for the given site."""
         
-        This function can be overridden by subclassing if you need something
-        extra in the site dictionary.
-        """
+        # This function can be overridden by subclassing if you need something
+        # extra in the site dictionary.
+
         # Get the dictionary for this site out of the config dictionary:
         site_dict = config_dict['StdRESTful'][site]
-        # Some protocols require extra entries:
-        site_dict['latitude']  = config_dict['Station']['latitude']
-        site_dict['longitude'] = config_dict['Station']['longitude']
-        # If a hardware type has not been specified, then provide a default:
-        # TODO: Can now get this directly from the hardware
-        if not site_dict.has_key('hardware'):
-            site_dict['hardware'] = config_dict['Station']['station_type']
+        # Add some extra entries if they are missing from the site's dictionary:
+        site_dict.setdefault('latitude',  config_dict['Station'].get('latitude'))
+        site_dict.setdefault('longitude', config_dict['Station'].get('longitude'))
+        site_dict.setdefault('hardware',  config_dict['Station'].get('station_type'))
+        site_dict.setdefault('location',  config_dict['Station'].get('location'))
         return site_dict
     
     
