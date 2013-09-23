@@ -627,7 +627,7 @@ class StationRegistry(REST):
             self.description = kwargs.get('location', None)
 
         self.weewx_info = weewx.__version__
-        self.python_info = sys.version
+        self.python_info = platform.python_version()
         self.platform_info = platform.platform()
         self._last_ts = None
 
