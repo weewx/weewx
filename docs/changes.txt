@@ -3,19 +3,19 @@ weewx change history
 
 2.5.0 09/ZZ/13
 
-When a template fails, skip only that template, not everything that the
-generator is processing.
-
-FineOffset driver now uses the 'delay' field instead of the fixed_block
-'read_period' for the archive record interval when reading records from
-console memory.
-
 Weewx now allows easier localization to non-English speaking locales.
 In particular, set the environment variable LANG to your locale, and
 then weewx date and number formatting will follow local conventions.
 Details in a new section in the Customization Guide.
 
 Added aggregate type "minmax" and "maxmin". Thank you user Gary Roderick!
+
+When a template fails, skip only that template, not everything that the
+generator is processing.
+
+FineOffset driver now uses the 'delay' field instead of the fixed_block
+'read_period' for the archive record interval when reading records from
+console memory.
 
 WMR100, Vantage, FineOffset, and WS28xx drivers now emit a null wind
 direction when the wind speed is zero.  Same for wind gust.
@@ -39,6 +39,9 @@ Plots under 16 hours in length, now use 1 hour increments (instead of
 3 hours).
 
 Fixed rain units in ws28xx driver.
+
+No longer emits "deprecation" warning when working with some versions
+of the MySQLdb python driver.
 
 
 
