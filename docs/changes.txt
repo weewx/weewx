@@ -3,6 +3,8 @@ weewx change history
 
 2.5.0 09/ZZ/13
 
+Added station registry service.
+
 Weewx now allows easier localization to non-English speaking locales.
 In particular, set the environment variable LANG to your locale, and
 then weewx date and number formatting will follow local conventions.
