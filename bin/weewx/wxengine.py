@@ -712,7 +712,7 @@ class StdRESTful(StdService):
                 obj = weeutil.weeutil._get_object(site_dict['driver'])(site, **site_dict)
             except KeyError, e:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
-                syslog.syslog(syslog.LOG_DEBUG, "    ****  %s" % e)
+                syslog.syslog(syslog.LOG_DEBUG, "    **** required parameter '%s' is not specified" % e)
             else:
                 obj_list.append(obj)
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will be posted to %s" % (site,))
