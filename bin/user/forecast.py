@@ -1974,9 +1974,9 @@ PERIOD_FIELDS_WITH_UNITS = [
     'dateTime',
     'issued_ts',
     'event_ts',
+    'temp',
     'tempMin',
     'tempMax',
-    'temp',
     'dewpoint',
     'humidity',
     'windSpeed',
@@ -2064,7 +2064,7 @@ def _get_stats(key, a, b):
     try:
         s = a.get(key, None)
         if type(s) == weewx.units.ValueHelper:
-            x = s.raw
+            x = weewx.units.convertStd(s.getValueTuple(), weewx.US)[0]
         else:
             x = float(s)
         if b[key] is None:
@@ -2087,7 +2087,7 @@ def _get_sum(key, a, b):
     try:
         s = a.get(key, None)
         if type(s) == weewx.units.ValueHelper:
-            x = s.raw
+            x = weewx.units.convertStd(s.getValueTuple(), weewx.US)[0]
         else:
             x = float(s)
         if b.get(key, None) is None:
@@ -2101,7 +2101,7 @@ def _get_max(key, a, b):
     try:
         s = a.get(key, None)
         if type(s) == weewx.units.ValueHelper:
-            x = s.raw
+            x = weewx.units.convertStd(s.getValueTuple(), weewx.US)[0]
         else:
             x = float(s)
         if b.get(key, None) is None or x > b[key]:

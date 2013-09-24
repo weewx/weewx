@@ -8817,6 +8817,24 @@ $summary.qsfMax
 </html>
 '''
 
+SUMMARY_PERIODS_TEMPLATE = '''<html>
+  <body>
+#set $periods = $forecast.weather_periods('SOURCE', from_ts=TS)
+#set $summary = $forecast.weather_summary('SOURCE', ts=TS, periods=$periods)
+forecast for $summary.location for the day $summary.event_ts as of $summary.issued_ts
+$summary.tempMin
+$summary.tempMax
+$summary.temp
+$summary.dewpointMin
+$summary.dewpointMax
+$summary.dewpoint
+$summary.windSpeedMin
+$summary.windSpeedMax
+$summary.windSpeed
+  </body>
+</html>
+'''
+
 TABLE_TEMPLATE = '''<html>
 <body>
 
@@ -9518,9 +9536,7 @@ SW
                                            now=1378090800)
         template = create_template(PERIODS_TEMPLATE, 'WU', '1378090800')
         self.runTemplateTest('test_wu_template_periods_daily',
-                             'user.forecast.WUForecast',
-                             records,
-                             template,
+                             'user.forecast.WUForecast', records, template,
                              '''<html>
   <body>
 01-Sep-2013 23:00 86400 73.0F 79.5F 86.0F 83%     - 10.0 mph 11.0 mph SSW  40% 0.38 in 0.38 in 0.38 in 0.00 in 0.00 in 0.00 in {}
@@ -9544,9 +9560,7 @@ SW
                                            now=1378090800)
         template = create_template(SUMMARY_TEMPLATE, 'WU', '1378090800')
         self.runTemplateTest('test_wu_template_summary_daily',
-                             'user.forecast.WUForecast',
-                             records,
-                             template,
+                             'user.forecast.WUForecast', records, template,
                              '''<html>
   <body>
 forecast for  for the day 01-Sep-2013 00:00 as of 01-Sep-2013 23:00
@@ -9585,9 +9599,7 @@ SSW
                                            now=1378090800)
         template = create_template(SUMMARY_TEMPLATE, 'WU', '1378090800')
         self.runTemplateTest('test_wu_template_summary_daily_metric',
-                             'user.forecast.WUForecast',
-                             records,
-                             template,
+                             'user.forecast.WUForecast', records, template,
                              '''<html>
   <body>
 forecast for  for the day 01-Sep-2013 00:00 as of 01-Sep-2013 23:00
@@ -9619,6 +9631,54 @@ SSW
 </html>
 ''', units=weewx.METRIC)
 
+    def test_wu_template_summary_periods_daily(self):
+        '''verify the summary behavior using periods'''
+        records = forecast.WUParseForecast(WU_TENANTS_HARBOR,
+                                           issued_ts=1378090800,
+                                           now=1378090800)
+        template = create_template(SUMMARY_PERIODS_TEMPLATE,'WU','1378090800')
+        self.runTemplateTest('test_wu_template_summary_periods_daily',
+                             'user.forecast.WUForecast', records, template,
+                             '''<html>
+  <body>
+forecast for  for the day 01-Sep-2013 00:00 as of 01-Sep-2013 23:00
+79.5F
+79.5F
+79.5F
+    -
+    -
+    -
+10.0 mph
+10.0 mph
+10.0 mph
+  </body>
+</html>
+''')
+
+    def test_wu_template_summary_periods_daily_metric(self):
+        '''verify the summary behavior using periods'''
+        records = forecast.WUParseForecast(WU_TENANTS_HARBOR,
+                                           issued_ts=1378090800,
+                                           now=1378090800)
+        template = create_template(SUMMARY_PERIODS_TEMPLATE,'WU','1378090800')
+        self.runTemplateTest('test_wu_template_summary_periods_daily_metric',
+                             'user.forecast.WUForecast', records, template,
+                             '''<html>
+  <body>
+forecast for  for the day 01-Sep-2013 00:00 as of 01-Sep-2013 23:00
+26.4C
+26.4C
+26.4C
+    -
+    -
+    -
+16 kph
+16 kph
+16 kph
+  </body>
+</html>
+''', units=weewx.METRIC)
+
     def test_wu_template_table_daily(self):
         '''exercise the period and summary template elements'''
         records = forecast.WUParseForecast(WU_TENANTS_HARBOR,
@@ -9626,9 +9686,7 @@ SSW
                                            now=1378090800)
         template = create_template(TABLE_TEMPLATE, 'WU', '1378090800')
         self.runTemplateLineTest('test_wu_template_table_daily',
-                                 'user.forecast.WUForecast',
-                                 records,
-                                 template,
+                                 'user.forecast.WUForecast', records, template,
                                  304)
 
     def test_wu_template_periods_hourly(self):
@@ -9638,9 +9696,7 @@ SSW
                                            now=1378173600)
         template = create_template(PERIODS_TEMPLATE, 'WU', '1378173600')
         self.runTemplateTest('test_wu_template_periods_hourly',
-                             'user.forecast.WUForecast',
-                             records,
-                             template,
+                             'user.forecast.WUForecast', records, template,
                              '''<html>
   <body>
 02-Sep-2013 22:00 3600     - 72.0F     - 90% 69.0F 3.0 mph     - S  100%     -     -     -     -     -     - {'tstms': u'S', 'rainshwrs': u'C'}
@@ -9674,9 +9730,7 @@ SSW
                                            now=1378173600)
         template = create_template(SUMMARY_TEMPLATE, 'WU', '1378173600')
         self.runTemplateTest('test_wu_template_summary_hourly',
-                             'user.forecast.WUForecast',
-                             records,
-                             template,
+                             'user.forecast.WUForecast', records, template,
                              '''<html>
   <body>
 forecast for  for the day 02-Sep-2013 00:00 as of 02-Sep-2013 22:00
@@ -9718,9 +9772,7 @@ S
                                            now=1378173600)
         template = create_template(TABLE_TEMPLATE, 'WU', '1378173600')
         self.runTemplateLineTest('test_wu_template_table_hourly',
-                                 'user.forecast.WUForecast',
-                                 records,
-                                 template,
+                                 'user.forecast.WUForecast', records, template,
                                  514)
 
     def test_wu_template_table(self):
@@ -9731,9 +9783,7 @@ S
         template = create_template(TABLE_TEMPLATE, 'WU', '1378173600')
         template = template.replace('period.event_ts.raw', 'period.event_ts.raw, periods=$periods')
         self.runTemplateLineTest('test_wu_template_table',
-                                 'user.forecast.WUForecast',
-                                 records,
-                                 template,
+                                 'user.forecast.WUForecast', records, template,
                                  514)
 
     # -------------------------------------------------------------------------
