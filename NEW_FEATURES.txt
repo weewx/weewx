@@ -1,25 +1,28 @@
                     Possible NEW FEATURES
                     
-Move to a "plugin" architecture. Services would be discovered at runtime (instead
-of listed in service_list). Where do configuration files go? Model it like Apache?
+Move to a "plugin" architecture. Services would be discovered at runtime
+(instead of listed in service_list). Where do configuration files go? Model it
+like Apache?
 
-Same with file generators. They should be discovered at runtime. Graceful fallback
-if the necessary software is not installed. Regeneration happens in selectable
-time periods.
+Same with file generators. They should be discovered at runtime. Graceful
+fallback if the necessary software is not installed. Regeneration happens in
+selectable time periods.
 
-Offer tags to support JSON. In particular, vectors. A tag like $day.outTemp.vector
-would offer a vector of temperatures for the day. Aggregation would be nice.
+Offer tags to support JSON. In particular, vectors. A tag like
+$day.outTemp.vector would offer a vector of temperatures for the day.
+Aggregation would be nice.
 
-Allow statistics to be extracted from the archive database, as well as the stats
-database. This would allow hourly statistics. Taken to the extreme, it could
-also allow the elimination of the stats database if the performance is acceptable.
+Allow statistics to be extracted from the archive database, as well as the
+stats database. This would allow hourly statistics. Taken to the extreme, it
+could also allow the elimination of the stats database if the performance is
+acceptable.
 
-Allow new derived types to be created by the user. Right now, things like heating
-and cooling degree days are hardwired in, but it ought to be possible to add
-things like that modularly. 
+Allow new derived types to be created by the user. Right now, things like
+heating and cooling degree days are hardwired in, but it ought to be possible
+to add things like that modularly. 
 
-The Davis console could intercept new archive record events and add rxcheckpercent
-and rain to software generated records.
+The Davis console could intercept new archive record events and add
+rxcheckpercent and rain to software generated records.
 
 Consider breaking the rule that reporting can only be done through the 
 databases and, instead, offer up the last record when the reporting thread
