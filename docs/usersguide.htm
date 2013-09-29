@@ -1771,7 +1771,7 @@ sudo /etc/init.d/weewx start</p>
       snippet that comes with <span class="code">weewx</span> to the apache configuration directory, then restart 
 	Apache:</p>
     <p class='tty'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d
-sudo /etc/init.d/apache restart</p>
+sudo /etc/init.d/apache2 restart</p>
     <p>Be sure that the path in the Apache configuration snippet matches the <span class='code'>HTML_ROOT</span> defined in the
       <span class='code'>weewx</span> configuration file.</p>
     <p class='tty'>Alias /weewx <strong>/home/weewx/public_html</strong>
