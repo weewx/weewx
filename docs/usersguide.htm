@@ -1591,11 +1591,11 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       its configuration file by sending it the <span class="code">HUP</span> signal. 
       First run <span class="code">ps</span> to find out the Process ID (PID) number 
       of the instance, then send it the <span class="code">HUP</span> signal: </p>
-    <p class="tty">ps -a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Note the PID of the weewxd process
-kill -HUP <em>pid</em> # Send it a HUP signal</p>
+    <p class="tty">ps -a          # Note the PID of the weewxd process
+kill -HUP <em>pid</em>  # Send it a HUP signal</p>
     <p>Note that this <em>only</em> rereads the configuration file. It will not 
       reload any code.</p>
-    <h2>Running as a Daemon</h2>
+    <h2>Running as a daemon</h2>
     <p>For unattended operations it is best to have <span class="code">weewx</span> 
       run as a daemon, started automatically when the server is rebooted. </p>
     <p>If you use a packaged install from a DEB or RPM distribution, this is 
@@ -1668,9 +1668,9 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
     <p><span class="code">Weewx</span> will now start automatically whenever your 
       system is booted. You can also manually start, stop, and restart the
       <span class="code">weewx</span> daemon: </p>
-    <p class="tty">/etc/init.d/weewx start
-/etc/init.d/weewx stop
-/etc/init.d/weewx restart</p>
+    <p class="tty">sudo /etc/init.d/weewx start
+sudo /etc/init.d/weewx stop
+sudo /etc/init.d/weewx restart</p>
     <p>By default, the scripts are designed to have <span class="code">weewx</span> 
       run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels 
       with Debian (Ubuntu, Mint) systems is
@@ -1681,7 +1681,7 @@ kill -HUP <em>pid</em> # Send it a HUP signal</p>
       to see the run levels. </p>
     <p>You can also tell <span class="code">weewx</span> to reread its configuration 
       file without stopping by using the &#39;reload&#39; option: </p>
-    <p class="tty">/etc/init.d/weewx reload </p>
+    <p class="tty">sudo /etc/init.d/weewx reload </p>
 
 
     <a name='monitoring'></a>
