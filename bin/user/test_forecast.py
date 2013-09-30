@@ -46,17 +46,17 @@ def mkdir(d):
     except:
         pass
 
+def rmfile(name):
+    try:
+        os.remove(name)
+    except:
+        pass
+
 def get_tmpdir():
     return TMPDIR + '/test_forecast'
 
 def get_testdir(name):
     return get_tmpdir() + '/' + name
-
-def rmfile(name):
-    try:
-        os.remove(name)
-    except Exception:
-        pass
 
 def create_config(test_dir, service, skin_dir='testskin'):
     cd = configobj.ConfigObj()

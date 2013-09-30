@@ -364,6 +364,8 @@ $summary.obvis           array
 # TODO: single table with unused fields, one table per method, or one db per ?
 #       for now we use single table (one schema) for all methods
 
+# TODO: add variable for text desription, display this on exfo index page
+
 # FIXME: what is correct behavior when error?  display NULL? ''? None?
 
 # FIXME: make the forecasting extensible, both download/generate and templates
