@@ -639,6 +639,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         product_id: The USB product ID for the station.
         [Optional. Default is 8021]
 
+        device_id: The USB device ID for the station.  Specify this if there
+        are multiple devices of the same type on the bus.
+        [Optional. No default]
+
         interface: The USB interface.
         [Optional. Default is 0]
 
@@ -660,6 +664,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.interface         = int(stn_dict.get('interface', 0))
         self.vendor_id         = int(stn_dict.get('vendor_id',  '0x1941'), 0)
         self.product_id        = int(stn_dict.get('product_id', '0x8021'), 0)
+        self.device_id         = stn_dict.get('device_id', None)
         self.usb_endpoint      = int(stn_dict.get('usb_endpoint', '0x81'), 0)
         self.usb_read_size     = int(stn_dict.get('usb_read_size', '0x20'), 0)
         self.data_format       = stn_dict.get('data_format', '1080')
@@ -709,8 +714,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
     def openPort(self):
         dev = self._find_device()
         if not dev:
-            logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x" %
-                   (self.vendor_id, self.product_id))
+            logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s" % (self.vendor_id, self.product_id, self.device_id))
             raise weewx.WeeWxIOError("Unable to find USB device")
         self.devh = dev.open()
         # Detach any old claimed interfaces
@@ -736,11 +740,13 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             pass
                                
     def _find_device(self):
-        """Find the vendor and product ID on the USB bus."""
+        """Find the vendor and product ID on the USB."""
         for bus in usb.busses():
             for dev in bus.devices:
                 if dev.idVendor == self.vendor_id and dev.idProduct == self.product_id:
-                    return dev
+                    if self.device_id is None or dev.filename == self.device_id:
+                        loginf('found station on USB bus=%s device=%s' % (bus.dirname, dev.filename))
+                        return dev
         return None
 
     # FIXME: get last_rain_arc and last_rain_ts_arc from database on startup
