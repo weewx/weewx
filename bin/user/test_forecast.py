@@ -240,14 +240,13 @@ skin_contents = '''
 [Almanac]
     moon_phases = n,wc,fq,wg,f,wg,lq,wc
 [FileGenerator]
+    search_list_extensions = user.forecast.ForecastVariables
     encoding = html_entities
-    [[SummaryByMonth]]
-    [[SummaryByYear]]
     [[ToDate]]
         [[[current]]]
             template = index.html.tmpl
 [Generators]
-        generator_list = user.forecast.ForecastFileGenerator
+        generator_list = user.cheetahgenerator.CheetahGenerator
 '''
 
 def create_skin_conf(test_dir, skin_dir='testskin', units=weewx.US):
@@ -9982,10 +9981,10 @@ $a.moon_fullness
   <body>
 00:36
 12:09
-34
-00:37
+48
+00:36
 12:10
-55
+66
   </body>
 </html>
 ''')

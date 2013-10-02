@@ -1,0 +1,534 @@
+#
+#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
+#    $Revision: 1360 $
+#    $Author: mwall $
+#    $Date: 2013-09-18 10:53:41 -0400 (Wed, 18 Sep 2013) $
+#
+"""Generate files from templates using Cheetah.
+
+search_list_extensions = a, b, c
+encoding = (html_entities|utf8|strict_ascii)
+template = filename.tmpl
+stale_age = s
+
+the strings YYYY and MM will be replaced if they appear in the filename.
+
+example:
+
+[CheetahGenerator]
+    search_list_extensions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
+    encoding = html_entities      # html_entities, utf8, strict_ascii
+    [[SummaryByMonth]]                              # period
+        [[[NOAA_month]]]                            # report
+            encoding = strict_ascii
+            template = NOAA-YYYY-MM.txt.tmpl
+    [[SummaryByYear]]
+        [[[NOAA_year]]]]
+            encoding = strict_ascii
+            template = NOAA-YYYY.txt.tmpl
+    [[ToDate]]
+        [[[day]]]
+            template = index.html.tmpl
+        [[[week]]]
+            template = week.html.tmpl
+    [[wuforecast_details]]                 # period/report
+        stale_age = 3600                   # how old before regenerating
+        template = wuforecast.html.tmpl
+    [[nwsforecast_details]]                # period/report
+        stale_age = 10800                  # how old before generating
+        template = nwsforecast.html.tmpl
+
+"""
+
+import os.path
+import sys
+import syslog
+import time
+import urlparse
+
+import Cheetah.Template
+import Cheetah.Filters
+
+import user.cheetahgenerator
+import weeutil.weeutil
+import weewx.almanac
+import weewx.reportengine
+import weewx.station
+import weewx.units
+
+# Default base temperature and unit type for heating and cooling degree days
+# as a value tuple
+default_heatbase = (65.0, "degree_F", "group_temperature")
+default_coolbase = (65.0, "degree_F", "group_temperature")
+
+def logmsg(lvl, msg):
+    syslog.syslog(lvl, 'cheetahgenerator: %s' % msg)
+
+def logdbg(msg):
+    logmsg(syslog.LOG_DEBUG, msg)
+
+def loginf(msg):
+    logmsg(syslog.LOG_INFO, msg)
+
+def logerr(msg):
+    logmsg(syslog.LOG_ERR, msg)
+
+def logcrt(msg):
+    logmsg(syslog.LOG_CRIT, msg)
+
+# =============================================================================
+# SearchList
+# =============================================================================
+
+class SearchList():
+    """Provide binding between variable name and data"""
+
+    def __init__(self, generator):
+        """Create an instance of the search list.
+
+        generator: The generator that is using this search list
+        """
+        pass
+
+    def getSearchList(self, timespan, archivedb, statsdb):
+        """Derived classes must define this method.  Return a list of name-
+        value pairs that bind a variable name to the object that returns the
+        data for that name.
+
+        timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
+                   start and stop times of the domain of valid times.
+
+        archivedb: An instance of weewx.archive.Archive
+
+        statsdb:   An instance of weewx.stats.StatsDb
+        """
+        return []
+
+# =============================================================================
+# CheetahGenerator
+# =============================================================================
+
+class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
+    """Class for generating files from cheetah templates.
+
+    config_dict - weewx.conf
+    skin_dict - skin.conf
+    gen_dict - ['CheetahGenerator'] from skin.conf as a configobj
+    """
+
+    def run(self):
+        self.setup()
+        for time_period in self.gen_dict.sections:
+            self.generate(time_period, self.gen_ts)
+
+    def setup(self):
+        self.gen_dict = self.skin_dict['FileGenerator']
+        self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }
+        self.initUnits()
+        self.initStation()
+        self.initAlmanac(self.gen_ts)
+        self.initExtensions()
+
+    def teardown(self):
+        self.deleteExtensions()
+
+    def initUnits(self):        
+        self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
+        self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
+        self.unitInfoHelper = weewx.units.UnitInfoHelper(self.formatter,
+                                                         self.converter)
+
+    def initStation(self):
+        # FIXME: webpath belongs in StationInfo, and Station should go away
+        # FIXME: webpath should be (optional) part of [Station]?
+        webpath = 'FIXME'
+        self.station = weewx.station.Station(self.stn_info, webpath,
+                                             self.formatter, self.converter,
+                                             self.skin_dict)
+
+    def initAlmanac(self, celestial_ts):
+        """ Initialize an instance of weewx.almanac.Almanac for the station's
+        latitude, longitude, and for a specific time.
+        
+        celestial_ts: The timestamp of the time for which the Almanac is to
+        be initialized."""
+                
+        # For better accuracy, the almanac requires the current temperature
+        # and barometric pressure, so retrieve them from the default archive,
+        # using celestial_ts as the time
+        
+        temperature_C = pressure_mbar = None
+
+        archivedb = self._getArchive(self.skin_dict['archive_database'])
+        if not celestial_ts:
+            celestial_ts = archivedb.lastGoodStamp()
+        rec = self._getRecord(archivedb, celestial_ts)
+
+        if rec is not None:
+            if rec.has_key('outTemp'):
+                temperature_C = rec['outTemp'].degree_C.raw 
+            if rec.has_key('barometer'):
+                pressure_mbar = rec['barometer'].mbar.raw
+        if temperature_C is None: temperature_C = 15.0
+        if pressure_mbar is None: pressure_mbar = 1010.0
+
+        self.moonphases = self.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
+
+        altitude_vt = weewx.units.convert(self.station.altitude_vt, "meter")
+        
+        self.almanac = weewx.almanac.Almanac(celestial_ts, 
+                                             self.station.latitude_f, 
+                                             self.station.longitude_f,
+                                             altitude=altitude_vt[0],
+                                             temperature=temperature_C,
+                                             pressure=pressure_mbar,
+                                             moon_phases=self.moonphases,
+                                             formatter=self.formatter)
+
+    def initExtensions(self):
+        """figure out which search list extensions we will load"""
+        # silly configobj returns a string if no commas, array if commas
+        exts = self.gen_dict.get('search_list_extensions', [])
+        if type(exts) == str:
+            exts = [exts]
+        self.extObjs = []
+        for c in exts:
+            x = c.strip()
+            if len(x) > 0:
+                logdbg("loading search list extension '%s'" % c)
+                obj = weeutil.weeutil._get_object(c)
+                self.extObjs.append(obj(self))
+
+    def deleteExtensions(self):
+        for obj in self.extObjs:
+            del obj
+        self.extObjs = []
+
+    def generate(self, period, gen_ts):
+        """Generate one or more reports for the indicated period.  Each section
+        in a period is a report.  A report has one or more templates.
+
+        The periods SummaryByMonth and SummaryByYear get special treatment."""
+
+        logdbg('generating for period %s' % period)
+
+        spans = self.gen_dict[period].get('spans', None)
+        # SummaryByMonth and SummaryByYear have special meaning
+        if spans is None:
+            if period == 'SummaryByMonth':
+                spans = 'month'
+            elif period == 'SummaryByYear':
+                spans = 'year'
+
+        # break the period into time spans as necessary.
+        if spans == 'month':
+            _spangen = weeutil.weeutil.genMonthSpans
+        elif spans == 'year':
+            _spangen = weeutil.weeutil.genYearSpans
+        else:
+            _spangen = self.genSingleSpan;
+
+        # a period may have a single template, or it might have sections,
+        # each with its own template.
+        sections = self.gen_dict[period].sections
+        if sections is None:
+            reports = [period]
+        else:
+            reports = sections
+
+        ngen = 0
+        t1 = time.time()
+        for report in reports:
+            if sections is None:
+                report_dict = self.gen_dict[period]
+            else:
+                report_dict = self.gen_dict[period][report]
+            (template, statsdb, archivedb, dest_dir, encoding) = self._prepGen(report_dict)
+            start_ts = archivedb.firstGoodStamp()
+            if not start_ts:
+                loginf('skipping report %s: cannot find start time' % period)
+                break
+            stop_ts = gen_ts if gen_ts else archivedb.lastGoodStamp()
+
+            for timespan in _spangen(start_ts, stop_ts):
+                logdbg('period=%s report=%s timespan=%s' %
+                       (period, report, timespan))
+                if period == 'SummaryByMonth' or period == 'SummaryByYear':
+                    # Save YYYY-MM so they can be used within the document
+                    timespan_start_tt = time.localtime(timespan.start)
+                    _yr_str = "%4d"  % timespan_start_tt[0]
+                    if period == 'SummaryByMonth':
+                        _mo_str = "%02d" % timespan_start_tt[1]
+                        self.outputted_dict['SummaryByMonth'].append("%s-%s" % (_yr_str, _mo_str))
+                    if period == 'SummaryByYear':
+                        self.outputted_dict['SummaryByYear'].append(_yr_str)
+
+                _filename = self._getFileName(template, timespan)
+                _fullname = os.path.join(dest_dir, _filename)
+                logdbg('fullname=%s' % _fullname)
+                stale = self.gen_dict[period][report].get('stale_age', None)
+                if stale is not None:
+                    stale = int(stale)
+                    try:
+                        last_mod = os.path.getmtime(_fullname)
+                        stale_at = t1 - stale
+                        if last_mod > stale_at:
+                            logdbg("skipping file '%s' last_mod=%s stale_at=%s" % (_filename, weeutil.weeutil.timestamp_to_string(last_mod), weeutil.weeutil.timestamp_to_string(stale_at)))
+                            break
+                    except os.error:
+                        pass
+
+                searchList = self._getSearchList(encoding, timespan, archivedb, statsdb)
+                text = Cheetah.Template.Template(file = template,
+                                                 searchList = searchList,
+                                                 filter = encoding,
+                                                 filtersLib = user.cheetahgenerator)
+                _file = None
+                try:
+                    _file = open(_fullname, mode='w')
+                    print >> _file, text
+                except Exception, e:
+                    logerr("generate failed with exception '%s'" % type(e))
+                    logerr("**** ignoring template %s" % template)
+                    logerr("**** reason: %s" % e)
+                    weeutil.weeutil.log_traceback("****  ")
+                else:
+                    ngen += 1
+                finally:
+                    if _file is not None: _file.close()
+        elapsed_time = time.time() - t1
+        loginf("generated %d files for '%s' in %.2f seconds" %
+               (ngen, period, elapsed_time))
+
+    def _getSearchList(self, encoding, timespan, archivedb, statsdb):
+        return [{'encoding':encoding}] + self._getCommonSearchList(timespan, archivedb, statsdb) + self._getSummaryBySearchList(timespan) + self._getToDateSearchList(timespan, archivedb, statsdb) + self._getSearchListExtensions(timespan, archivedb, statsdb)
+
+    def _getCommonSearchList(self, timespan, archivedb, statsdb):
+        """Assemble the common searchList elements for all reports."""
+
+        heatbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
+        coolbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
+        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature") if heatbase else default_heatbase
+        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature") if coolbase else default_coolbase
+
+        # Get a TaggedStats structure. This allows constructs such as
+        # stats.month.outTemp.max
+        stats = weewx.stats.TaggedStats(statsdb,
+                                        timespan.stop,
+                                        formatter = self.formatter,
+                                        converter = self.converter,
+                                        rain_year_start = self.station.rain_year_start,
+                                        heatbase = heatbase_t,
+                                        coolbase = coolbase_t,
+                                        week_start = self.station.week_start)
+        
+        # If the user has supplied an '[Extras]' section in the skin
+        # dictionary, include it in the search list. Otherwise, just include
+        # an empty dictionary.
+        extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
+
+        # Put together the search list:
+        searchList = [{'station'    : self.station,
+                       'almanac'    : self.almanac,
+                       'unit'       : self.unitInfoHelper,
+                       'heatbase'   : heatbase_t,
+                       'coolbase'   : coolbase_t,
+                       'Extras'     : extra_dict},
+                       stats]
+        return searchList
+
+    def _getSummaryBySearchList(self, timespan):
+        # Return the search list variables for 'summarize by' reports.
+        timespan_start_tt = time.localtime(timespan.start)
+        searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
+                       'year_name'  : timespan_start_tt[0]}]
+        return searchList
+
+    def _getToDateSearchList(self, timespan, archivedb, statsdb):
+        # Return the search list variables for 'to date' reports.
+        # Get the time over which a trend will be determine. In case the skin
+        # dictionary does not have the necessary information, catch the
+        # exception and substitute a default.
+        try:
+            time_delta = int(self.skin_dict['Units']['Trend']['time_delta'])
+        except KeyError:
+            time_delta = 10800    # 3 hours
+            
+        # Get current record, and one from the beginning of the trend period.
+        current_rec = self._getRecord(archivedb, timespan.stop)
+        former_rec  = self._getRecord(archivedb, timespan.stop - time_delta)
+        
+        trend = Trend(former_rec, current_rec, time_delta)
+
+        searchList = [self.outputted_dict,
+                      {'current' : current_rec,
+                       'trend'   : trend}]
+        return searchList
+
+    def _getSearchListExtensions(self, timespan, archivedb, statsdb):
+        searchList = []
+        for obj in self.extObjs:
+            searchList = searchList + obj.getSearchList(timespan, archivedb, statsdb)
+        return searchList
+
+    def _getFileName(self, template, timespan):
+        """Calculate a destination filename given a template filename.
+        Replace 'YYYY' with the year, 'MM' with the month.  Strip off any
+        trailing .tmpl"""
+
+        _filename = os.path.basename(template).replace('.tmpl','')
+
+        if _filename.find('YYYY') >= 0 or _filename.find('MM') >= 0:
+            # Start by getting the start time as a timetuple.
+            timespan_start_tt = time.localtime(timespan.start)
+            # Get a string representing the year (e.g., '2009') and month
+            _yr_str = "%4d"  % timespan_start_tt[0]
+            _mo_str = "%02d" % timespan_start_tt[1]
+            # Replace any instances of 'YYYY' with the year string
+            _filename = _filename.replace('YYYY', _yr_str)
+            # Do the same thing with the month
+            _filename = _filename.replace('MM', _mo_str)
+
+        return _filename
+
+    def genSingleSpan(self, start_ts, stop_ts):
+        return [weeutil.weeutil.TimeSpan(start_ts, stop_ts)]
+
+    def _getRecord(self, archivedb, time_ts):
+        """Get an observation record from the archive database, returning
+        it as a ValueDict."""
+
+        # Get the record...
+        record_dict = archivedb.getRecord(time_ts)
+        if record_dict is None: return None
+        # ... convert to a dictionary with ValueTuples as values...
+        record_dict_vt = weewx.units.dictFromStd(record_dict)
+        # ... then wrap it in a ValueDict:
+        record_vd = weewx.units.ValueDict(record_dict_vt, context='current', 
+                                          formatter=self.formatter,
+                                          converter=self.converter)
+        return record_vd
+
+    def _prepGen(self, subskin_dict):
+        """Gather the options together for a specific report, then
+        retrieve the template file, stats database, archive database,
+        the destination directory, and the encoding from those options."""
+        
+        # Walk the tree back to the root, accumulating options
+        accum_dict = weeutil.weeutil.accumulateLeaves(subskin_dict)
+        template = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                self.config_dict['StdReport']['SKIN_ROOT'],
+                                accum_dict['skin'],
+                                accum_dict['template'])
+        destination_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                       accum_dict['HTML_ROOT'],
+                                       os.path.dirname(accum_dict['template']))
+        encoding = accum_dict['encoding']
+
+        statsdb   = self._getStats(accum_dict['stats_database'])
+        archivedb = self._getArchive(accum_dict['archive_database'])
+
+        try:
+            # Create the directory that is to receive the generated files.  If
+            # it already exists an exception will be thrown, so be prepared to
+            # catch it.
+            os.makedirs(destination_dir)
+        except OSError:
+            pass
+
+        return (template, statsdb, archivedb, destination_dir, encoding)
+
+class Trend(object):
+    """Helper class that binds together a current record and one a delta
+    time in the past. Useful for trends.
+    
+    This class allows tags such as:
+      $trend.barometer
+    """
+        
+    def __init__(self, last_rec, now_rec, time_delta):
+        """Initialize a Trend object
+        
+        last_rec: A ValueDict containing records from the past.
+        
+        now_rec: A ValueDict containing current records
+        
+        time_delta: The time difference in seconds between them.
+        """
+        self.last_rec = last_rec
+        self.now_rec  = now_rec
+        self.time_delta = weewx.units.ValueHelper((time_delta, 'second', 'group_elapsed'))
+        
+    def __getattr__(self, obs_type):
+        """Return the trend for the given observation type."""
+        # The following is so the Python version of Cheetah's NameMapper
+        # does not think I'm a dictionary:
+        if obs_type == 'has_key':
+            raise AttributeError
+        
+        # Wrap in a try block because the 'last' record might not exist,
+        # or the 'now' or 'last' value might be None. 
+        try:
+            # Do the unit conversion now, rather than lazily. This is because,
+            # in the case of temperature, the difference between two converted
+            # values is not the same as the conversion of the difference
+            # between two values. E.g., 20C - 10C is not equal to
+            # F_to_C(68F - 50F). We want the former, not the latter.  
+            vt_now = self.now_rec[obs_type]._raw_value_tuple
+            trend = vt_now - self.last_rec[obs_type]._raw_value_tuple
+        except TypeError:
+            trend = (None,) + vt_now[1:3]
+
+        # Return the results as a ValueHelper. Use the formatting and labeling
+        # options from the current time record. The user can always override
+        # these.
+        return weewx.units.ValueHelper(trend, self.now_rec.context,
+                                       self.now_rec.formatter,
+                                       self.now_rec.converter)
+
+# =============================================================================
+# Filters used for encoding
+# =============================================================================
+
+class html_entities(Cheetah.Filters.Filter):
+
+    def filter(self, val, **dummy_kw): #@ReservedAssignment
+        """Filter incoming strings so they use HTML entity characters"""
+        if isinstance(val, unicode):
+            filtered = val.encode('ascii', 'xmlcharrefreplace')
+        elif val is None:
+            filtered = ''
+        elif isinstance(val, str):
+            filtered = val.decode('utf-8').encode('ascii', 'xmlcharrefreplace')
+        else:
+            filtered = self.filter(str(val))
+        return filtered
+
+class strict_ascii(Cheetah.Filters.Filter):
+
+    def filter(self, val, **dummy_kw): #@ReservedAssignment
+        """Filter incoming strings to strip out any non-ascii characters"""
+        if isinstance(val, unicode):
+            filtered = val.encode('ascii', 'ignore')
+        elif val is None:
+            filtered = ''
+        elif isinstance(val, str):
+            filtered = val.decode('utf-8').encode('ascii', 'ignore')
+        else:
+            filtered = self.filter(str(val))
+        return filtered
+    
+class utf8(Cheetah.Filters.Filter):
+
+    def filter(self, val, **dummy_kw): #@ReservedAssignment
+        """Filter incoming strings, converting to UTF-8"""
+        if isinstance(val, unicode):
+            filtered = val.encode('utf8')
+        elif val is None:
+            filtered = ''
+        else:
+            filtered = str(val)
+        return filtered

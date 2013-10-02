@@ -2,6 +2,8 @@
 # Copyright 2013 Matthew Wall
 """weewx module that provides forecasts
 
+API_VERSION: 2
+
 Design
 
    The forecasting module supports various forecast methods for weather and
@@ -389,6 +391,7 @@ import weewx
 from weewx.wxengine import StdService
 from weewx.filegenerator import FileGenerator
 import weeutil.weeutil
+from user.cheetahgenerator import SearchList
 
 try:
     import cjson as json
@@ -404,17 +407,18 @@ except Exception, e:
         except Exception, e:
             json = None
 
-def logdbg(msg):
-    syslog.syslog(syslog.LOG_DEBUG, 'forecast: %s: %s' % 
+def logmsg(level, msg):
+    syslog.syslog(level, 'forecast: %s: %s' % 
                   (threading.currentThread().getName(), msg))
+
+def logdbg(msg):
+    logmsg(syslog.LOG_DEBUG, msg)
 
 def loginf(msg):
-    syslog.syslog(syslog.LOG_INFO, 'forecast: %s: %s' %
-                  (threading.currentThread().getName(), msg))
+    logmsg(syslog.LOG_INFO, msg)
 
 def logerr(msg):
-    syslog.syslog(syslog.LOG_ERR, 'forecast: %s: %s' %
-                  (threading.currentThread().getName(), msg))
+    logmsg(syslog.LOG_ERR, msg)
 
 def get_int(config_dict, label, default_value):
     value = config_dict.get(label, default_value)
@@ -1894,29 +1898,6 @@ class XTideForecast(Forecast):
         return records
 
 
-# -----------------------------------------------------------------------------
-# ForecastFileGenerator
-# -----------------------------------------------------------------------------
-
-class ForecastFileGenerator(FileGenerator):
-    """Extend the standard file generator with forecasting variables.
-    The search list is an array of dictionaries.  Each dictionary is
-    a label paired with a tuple or additional dictionary.
-    """
-
-    def getCommonSearchList(self, archivedb, statsdb, timespan):
-        searchList = super(ForecastFileGenerator, self).getCommonSearchList(archivedb, statsdb, timespan)
-        fd = self.config_dict.get('Forecast', {})
-        sd = self.skin_dict.get('Forecast', {})
-        db = self._getArchive(fd['database'])
-        altitude_vt = weewx.units.convert(self.station.altitude_vt, "meter")
-        fdata = ForecastData(fd, sd, db, self.formatter, self.converter,
-                             self.station.latitude_f,
-                             self.station.longitude_f,
-                             altitude_vt[0])
-        searchList.append({'forecast' : fdata})
-        return searchList
-
 
 # -----------------------------------------------------------------------------
 # ForecastData
@@ -2112,33 +2093,39 @@ def _get_max(key, a, b):
         pass
     return b.get(key, None)
 
-class ForecastData(object):
+class ForecastVariables(SearchList):
     """Bind forecast variables to database records."""
 
-    def __init__(self, forecast_dict, skin_dict, database,
-                 formatter, converter,
-                 lat, lon, alt):
+    def __init__(self, generator):
         '''
-        forecast_dict - the 'Forecast' section of weewx.conf
+        generator - the FileGenerator that uses this extension
 
-        skin_dict - the 'Forecast' section of skin.conf
+        fd - the 'Forecast' section of weewx.conf
+        sd - the 'Forecast' section of skin.conf
         '''
-        self.latitude = lat
-        self.longitude = lon
-        self.altitude = alt
+        fd = generator.config_dict.get('Forecast', {})
+        sd = generator.skin_dict.get('Forecast', {})
+        db = generator._getArchive(fd['database'])
 
-        label_dict = skin_dict.get('Labels', {})
+        self.latitude = generator.station.latitude_f
+        self.longitude = generator.station.latitude_f
+        self.altitude = generator.station.altitude_vt[0]
+        self.moon_phases = generator.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
+        self.formatter = generator.formatter
+        self.converter = generator.converter
+
+        label_dict = sd.get('Labels', {})
         self.labels = {}
         self.labels['Directions'] = dict(directions_label_dict.items() + label_dict.get('Directions', {}).items())
         self.labels['Tide'] = dict(tide_label_dict.items() + label_dict.get('Tide', {}).items())
         self.labels['Weather'] = dict(weather_label_dict.items() + label_dict.get('Weather', {}).items())
         self.labels['Zambretti'] = dict(zambretti_label_dict.items() + label_dict.get('Zambretti', {}).items())
 
-        self.moon_phases = skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
-        self.database = database
-        self.formatter = formatter
-        self.converter = converter
-        self.table = forecast_dict.get('table','archive')
+        self.database = db
+        self.table = fd.get('table','archive')
+
+    def getSearchList(self, timespan, archivedb, statsdb):
+        return [{'forecast': self}]
 
     def _getTides(self, context, from_ts=int(time.time()), max_events=1):
         sql = "select dateTime,issued_ts,event_ts,hilo,offset,usUnits,location from %s where method = 'XTide' and dateTime = (select dateTime from %s where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc" % (self.table, self.table, from_ts)
