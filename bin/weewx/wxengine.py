@@ -116,14 +116,24 @@ class StdEngine(object):
         # Wrap the instantiation of the services in a try block, so if an exception
         # occurs, any service that may have started can be shut down in an orderly way.
         try:
+            # For each service in service_list, look for an appropriate driver and load it.
             for svc in service_names:
-                # For each listed service in service_list, instantiates an
-                # instance of the class, passing self and the configuration
-                # dictionary as the arguments:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
-                self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
+                try:
+                    # This will raise an exception if there is no explicit driver for the service
+                    driver = config_dict[svc]['driver']
+                except KeyError:
+                    # No explicit driver. Use a default, which is this module name, followed by the service name
+                    driver = "%s.%s" % (__name__, svc)
+                try:
+                    # Try to instantiate the driver. Be prepared to catch an AttributeError exception
+                    # if the driver does not exist.
+                    self.service_obj.append(weeutil.weeutil._get_object(driver)(self, config_dict))
+                except AttributeError:
+                    syslog.syslog(syslog.LOG_CRIT, "wxengine: No driver found for service %s" % svc)
+                    raise weewx.UnknownDriver("No driver found for service %s" % svc)
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
-        except:
+        except Exception:
             # An exception occurred. Shut down any running services, then
             # reraise the exception.
             self.shutDown()

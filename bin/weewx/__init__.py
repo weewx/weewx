@@ -63,6 +63,9 @@ class StopNow(StandardError):
 class UninitializedDatabase(StandardError):
     """Exception thrown when attempting to use an unitialized database."""
     
+class UnknownDriver(StandardError):
+    """Exception thrown when trying to use an unknown driver."""
+    
 #===============================================================================
 #                       Possible event types.
 #===============================================================================
