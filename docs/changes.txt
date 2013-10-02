@@ -45,6 +45,9 @@ Fixed rain units in ws28xx driver.
 No longer emits "deprecation" warning when working with some versions
 of the MySQLdb python driver.
 
+Reduce logging verbosity when bad magic numbers appear on FineOffset
+stations.  Log only when the numbers are unrecognized or change.
+The purpose of the magic numbers is still unknown.
 
 
 2.4.0 08/03/13

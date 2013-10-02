@@ -25,6 +25,8 @@
 # FineOffset support in wview was inspired by the fowsr project by Arne-Jorgen
 # Auberg (arne.jorgen.auberg@gmail.com) with hidapi mods by Bill Northcott.
 
+# USB Lockups
+#
 # the ws2080 will frequently lock up and require a power cycle to regain
 # communications.  my sample size is small (3 ws2080 consoles running
 # for 1.5 years), but fairly repeatable.  one of the consoles has never
@@ -35,7 +37,14 @@
 # hopefully the device is simply trying to tell us something.  on the other
 # hand it could just be bad firmware.  it seems to happen when the data
 # logging buffer on the console is full, but not always when the buffer
-# is full.  --mwall 30dec2012
+# is full.
+# --mwall 30dec2012
+#
+# the magic numbers do not seem to be correlated with lockups.  in some cases,
+# a lockup happens immediately following an unknown magic number.  in other
+# cases, data collection continues with no problem.  for example, a brand new
+# WS2080A console reports 44 bf as its magic number, but performs just fine.
+# --mwall 02oct2013
 
 # FIXME: determine why sensor spikes happen with PERIODIC but not ADAPTIVE
 
@@ -690,6 +699,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self._current_ptr = None
         self._station_clock = None
         self._sensor_clock = None
+        # start with known magic numbers.  report any additional we encounter.
+        # these are from wview: ffff, 5555, c400
+        self._magic_numbers = ['55aa']
+        self._last_magic = None
 
         self.openPort()
         self._setup()
@@ -1378,10 +1391,16 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         result = []
         for mempos in range(0x0000, hi, 0x0020):
             result += self._read_block(mempos)
-        # check 'magic number'
-        if result[:2] not in ([0x55, 0xAA], [0xFF, 0xFF],
-                              [0x55, 0x55], [0xC4, 0x00]):
-            logcrt('unrecognised magic number %02x %02x' % (result[0], result[1]))
+        # check 'magic number'.  log each new one we encounter.
+        magic = '%02x%02x' % (result[0], result[1])
+        if magic not in self._magic_numbers:
+            logcrt('unrecognised magic number %s' % magic)
+            self._magic_numbers.append(magic)
+        if magic != self._last_magic:
+            if self._last_magic is not None:
+                logcrt('magic number changed old=%s new=%s' %
+                       (self._last_magic, magic))
+            self._last_magic = magic
         return result
 
     def _write_byte(self, ptr, value):
