@@ -114,15 +114,16 @@ class SearchList():
 class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
     """Class for generating files from cheetah templates.
 
-    config_dict - weewx.conf
-    skin_dict - skin.conf
-    gen_dict - ['CheetahGenerator'] from skin.conf as a configobj
+    config_dict - weewx.conf as a ConfigObj
+    skin_dict - skin.conf as a ConfigObj
+    gen_dict - ['CheetahGenerator'] from skin.conf as a ConfigObj
     """
 
     def run(self):
         self.setup()
         for time_period in self.gen_dict.sections:
             self.generate(time_period, self.gen_ts)
+        self.teardown()
 
     def setup(self):
         self.gen_dict = self.skin_dict['FileGenerator']
@@ -203,6 +204,8 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                 self.extObjs.append(obj(self))
 
     def deleteExtensions(self):
+        """delete any extension objects we created to prevent back references
+        from blocking garbage collection"""
         for obj in self.extObjs:
             del obj
         self.extObjs = []
@@ -215,15 +218,14 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
 
         logdbg('generating for period %s' % period)
 
+        # break the period into time spans as necessary.
+        # SummaryByMonth and SummaryByYear have spans plus special meaning.
         spans = self.gen_dict[period].get('spans', None)
-        # SummaryByMonth and SummaryByYear have special meaning
         if spans is None:
             if period == 'SummaryByMonth':
                 spans = 'month'
             elif period == 'SummaryByYear':
                 spans = 'year'
-
-        # break the period into time spans as necessary.
         if spans == 'month':
             _spangen = weeutil.weeutil.genMonthSpans
         elif spans == 'year':
@@ -256,8 +258,9 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
             for timespan in _spangen(start_ts, stop_ts):
                 logdbg('period=%s report=%s timespan=%s' %
                        (period, report, timespan))
+
+                # Save YYYY-MM so they can be used within the document
                 if period == 'SummaryByMonth' or period == 'SummaryByYear':
-                    # Save YYYY-MM so they can be used within the document
                     timespan_start_tt = time.localtime(timespan.start)
                     _yr_str = "%4d"  % timespan_start_tt[0]
                     if period == 'SummaryByMonth':
@@ -266,17 +269,21 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                     if period == 'SummaryByYear':
                         self.outputted_dict['SummaryByYear'].append(_yr_str)
 
+                # figure out the filename for this template
                 _filename = self._getFileName(template, timespan)
                 _fullname = os.path.join(dest_dir, _filename)
                 logdbg('fullname=%s' % _fullname)
-                stale = self.gen_dict[period][report].get('stale_age', None)
+
+                # skip files that are fresh, only if staleness is defined
+                stale = report_dict.get('stale_age', None)
                 if stale is not None:
                     stale = int(stale)
                     try:
                         last_mod = os.path.getmtime(_fullname)
                         stale_at = t1 - stale
                         if last_mod > stale_at:
-                            logdbg("skipping file '%s' last_mod=%s stale_at=%s" % (_filename, weeutil.weeutil.timestamp_to_string(last_mod), weeutil.weeutil.timestamp_to_string(stale_at)))
+                            logdbg("skip file '%s' last_mod=%s stale_at=%s" %
+                                   (_filename, last_mod, stale_at))
                             break
                     except os.error:
                         pass
@@ -300,11 +307,15 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                 finally:
                     if _file is not None: _file.close()
         elapsed_time = time.time() - t1
-        loginf("generated %d files for '%s' in %.2f seconds" %
-               (ngen, period, elapsed_time))
+        loginf("generated %d '%s' files for %s in %.2f seconds" %
+               (ngen, period, self.skin_dict['REPORT_NAME'], elapsed_time))
 
     def _getSearchList(self, encoding, timespan, archivedb, statsdb):
-        return [{'encoding':encoding}] + self._getCommonSearchList(timespan, archivedb, statsdb) + self._getSummaryBySearchList(timespan) + self._getToDateSearchList(timespan, archivedb, statsdb) + self._getSearchListExtensions(timespan, archivedb, statsdb)
+        return [{'encoding':encoding}] \
+            + self._getCommonSearchList(timespan, archivedb, statsdb) \
+            + self._getSummaryBySearchList(timespan) \
+            + self._getToDateSearchList(timespan, archivedb, statsdb) \
+            + self._getSearchListExtensions(timespan, archivedb, statsdb)
 
     def _getCommonSearchList(self, timespan, archivedb, statsdb):
         """Assemble the common searchList elements for all reports."""
