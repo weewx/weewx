@@ -134,16 +134,6 @@ def startOfInterval(time_ts, interval, grace=1):
     figures out which interval it lies in, returning the start
     time.
     
-    Examples (human readable times shown instead of timestamps):
-    
-      time_ts     interval    returns
-      01:57:35       300      01:55:00
-      01:57:35       600      01:50:00
-      01:57:35       900      01:45:00
-      01:57:35      3600      01:00:00
-      01:57:35      7200      00:00:00
-      01:00:00       300      00:55:00
-    
     time_ts: A timestamp. The start of the interval containing this
     timestamp will be returned.
     
@@ -153,7 +143,31 @@ def startOfInterval(time_ts, interval, grace=1):
     included in the last interval. Set to zero to have an
     inclusive start of an interval. [Optional. Default is 1 second.]
     
-    Returns: A timestamp with the start of the interval."""
+    Returns: A timestamp with the start of the interval.
+
+    Examples:
+    
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  300))
+    'Thu Jul  4 01:55:00 2013'
+    >>> time.ctime(startOfInterval(start_ts,  600))
+    'Thu Jul  4 01:50:00 2013'
+    >>> time.ctime(startOfInterval(start_ts,  900))
+    'Thu Jul  4 01:45:00 2013'
+    >>> time.ctime(startOfInterval(start_ts, 3600))
+    'Thu Jul  4 01:00:00 2013'
+    >>> time.ctime(startOfInterval(start_ts, 7200))
+    'Thu Jul  4 00:00:00 2013'
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 01:00:00", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  300))
+    'Thu Jul  4 00:55:00 2013'
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 01:00:01", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  300))
+    'Thu Jul  4 01:00:00 2013'
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 01:04:59", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  300))
+    'Thu Jul  4 01:00:00 2013'
+    """
 
     interval_m = interval/60
     interval_h = interval/3600

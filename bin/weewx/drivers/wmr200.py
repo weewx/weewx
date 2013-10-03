@@ -449,7 +449,7 @@ class Packet(object):
             # Drawback is making sure the record interval boundaries that
             # weewx keeps # per loop packet are satisfied.
             if self._wmr200.usePcTime:
-                self._wmr200.last_time_epoch = time.time()
+                self._wmr200.last_time_epoch = int(time.time() + 0.5)
 
             return self._wmr200.last_time_epoch
 
