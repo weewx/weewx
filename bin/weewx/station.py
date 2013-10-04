@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -14,11 +14,23 @@ import weeutil.weeutil
 import weewx.units
 
 class StationInfo(object):
-    """Readonly class with static station information."""
+    """Readonly class with static station information. It has no formatting information. Just a POS.
     
+    Attributes:
+    
+    altitude_vt:     Station altitude as a ValueTuple
+    hardware:        A string holding a hardware description
+    rain_year_start: The start of the rain year (1=January)
+    latitude_f:      Floating point latitude
+    longitude_f:     Floating point longitude
+    location:        String holding a description of the station location
+    week_start:      The start of the week (0=Monday)
+    webpath:         Path to informative website (if any)
+    """
+
     def __init__(self, console=None, **stn_dict):
         """Extracts info from the console and stn_dict and stores it in self."""
-        
+
         if console and hasattr(console, "altitude_vt"):
             self.altitude_vt = console.altitude_vt
         else:
@@ -39,10 +51,11 @@ class StationInfo(object):
         self.longitude_f     = float(stn_dict['longitude'])
         self.location        = stn_dict.get('location', 'Unknown')
         self.week_start      = int(stn_dict.get('week_start', 6))
+        self.webpath         = stn_dict.get('webpath', 'www.weewx.com')
 
 class Station(object):
     """Formatted data about the station. Rarely changes."""
-    def __init__(self, stn_info,  webpath, formatter, converter, skin_dict):
+    def __init__(self, stn_info, formatter, converter, skin_dict):
         """Extracts info from the config_dict and stores it in self."""
         self.hemispheres = skin_dict['Labels'].get('hemispheres', ('N','S','E','W'))
         self.latitude_f  = stn_info.latitude_f
@@ -62,9 +75,9 @@ class Station(object):
         self.version = weewx.__version__
         # The following works on Linux only:
         try:
-            os_uptime_secs =  float(open("/proc/uptime").read().split()[0])
+            os_uptime_secs = float(open("/proc/uptime").read().split()[0])
             self.os_uptime = weeutil.weeutil.secs_to_string(int(os_uptime_secs + 0.5))
         except (IOError, KeyError):
             self.os_uptime = ''
-    
-        self.webpath = webpath
+
+        self.webpath = stn_info.webpath

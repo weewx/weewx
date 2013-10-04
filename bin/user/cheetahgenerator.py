@@ -83,7 +83,7 @@ def logcrt(msg):
 # SearchList
 # =============================================================================
 
-class SearchList():
+class SearchList(object):
     """Provide binding between variable name and data"""
 
     def __init__(self, generator):
@@ -143,10 +143,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                                                          self.converter)
 
     def initStation(self):
-        # FIXME: webpath belongs in StationInfo, and Station should go away
-        # FIXME: webpath should be (optional) part of [Station]?
-        webpath = 'FIXME'
-        self.station = weewx.station.Station(self.stn_info, webpath,
+        self.station = weewx.station.Station(self.stn_info,
                                              self.formatter, self.converter,
                                              self.skin_dict)
 
