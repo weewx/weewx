@@ -1,11 +1,11 @@
 #
-#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2010, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision: 1360 $
-#    $Author: mwall $
-#    $Date: 2013-09-18 10:53:41 -0400 (Wed, 18 Sep 2013) $
+#    $Revision$
+#    $Author$
+#    $Date$
 #
 """Generate files from templates using Cheetah.
 
@@ -64,7 +64,9 @@ default_heatbase = (65.0, "degree_F", "group_temperature")
 default_coolbase = (65.0, "degree_F", "group_temperature")
 
 # Default search list:
-default_search_list = ["weewx.cheetahgenerator.Almanac", "weewx.cheetahgenerator.Station", "weewx.cheetahgenerator.Stats", "weewx.cheetahgenerator.UnitInfo"]
+default_search_list = ["weewx.cheetahgenerator.Almanac", "weewx.cheetahgenerator.Station", 
+                       "weewx.cheetahgenerator.Stats", "weewx.cheetahgenerator.UnitInfo",
+                       "weewx.cheetahgenerator.Extras"]
 
 def logmsg(lvl, msg):
     syslog.syslog(lvl, 'cheetahgenerator: %s' % msg)
@@ -112,21 +114,17 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         # Look for my section name, but accept [FileGenerator] for backwards compatibility:
         self.gen_dict = self.skin_dict['CheetahGenerator'] if self.skin_dict.has_key('CheetahGenerator') else self.skin_dict['FileGenerator']
         self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }
-        self.initUnits()
-#         self.initStation()
+        
+        self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
+        self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
+        
         self.initExtensions()
 
     def teardown(self):
         self.deleteExtensions()
 
-    def initUnits(self):        
-        self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
-        self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
-        self.unitInfoHelper = weewx.units.UnitInfoHelper(self.formatter,
-                                                         self.converter)
-
     def initExtensions(self):
-        """figure out which search list extensions we will load"""
+        """Load the search list"""
         self.search_list_objs = []
 
         search_list = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list'))
@@ -257,14 +255,14 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         """Assemble the common searchList elements for all reports."""
 
         
-        # If the user has supplied an '[Extras]' section in the skin
-        # dictionary, include it in the search list. Otherwise, just include
-        # an empty dictionary.
-        extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
-
-        # Put together the search list:
-        searchList = [{'unit'       : self.unitInfoHelper,
-                       'Extras'     : extra_dict}]
+#         # If the user has supplied an '[Extras]' section in the skin
+#         # dictionary, include it in the search list. Otherwise, just include
+#         # an empty dictionary.
+#         extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
+# 
+#         # Put together the search list:
+#         searchList = [{'Extras'     : extra_dict}]
+        searchList = []
 
         return searchList
 
@@ -523,6 +521,18 @@ class UnitInfo(SearchList):
         SearchList.__init__(self, generator)
         self.unit = weewx.units.UnitInfoHelper(generator.formatter,
                                                generator.converter)
+        
+    def get_extension(self, timespan, archivedb, statsdb):
+        return self
+
+class Extras(SearchList):
+    """Class for exposing the [Extras] section in the skin config dictionary."""
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
+        # If the user has supplied an '[Extras]' section in the skin
+        # dictionary, include it in the search list. Otherwise, just include
+        # an empty dictionary.
+        self.Extras = generator.skin_dict['Extras'] if generator.skin_dict.has_key('Extras') else {}
         
     def get_extension(self, timespan, archivedb, statsdb):
         return self
