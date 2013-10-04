@@ -7,7 +7,7 @@
 #    $Author$
 #    $Date$
 #
-"""Defines the default station data, available for processing data."""
+"""Defines (mostly static) information about a station."""
 import time
 
 import weeutil.weeutil
@@ -54,23 +54,21 @@ class StationInfo(object):
         self.webpath         = stn_dict.get('webpath', 'www.weewx.com')
 
 class Station(object):
-    """Formatted data about the station. Rarely changes."""
+    """Formatted version of StationInfo."""
+    
     def __init__(self, stn_info, formatter, converter, skin_dict):
-        """Extracts info from the config_dict and stores it in self."""
+        
+        # Store away my instance of StationInfo
+        self.stn_info = stn_info
+        
+        # Add a bunch of formatted attributes:
         self.hemispheres = skin_dict['Labels'].get('hemispheres', ('N','S','E','W'))
-        self.latitude_f  = stn_info.latitude_f
-        self.longitude_f = stn_info.longitude_f
         self.latitude    = weeutil.weeutil.latlon_string(stn_info.latitude_f,  self.hemispheres[0:2], 'lat')
         self.longitude   = weeutil.weeutil.latlon_string(stn_info.longitude_f, self.hemispheres[2:4], 'lon')
-        self.location    = stn_info.location
-        self.hardware    = stn_info.hardware
-        self.altitude_vt = stn_info.altitude_vt
         self.altitude    = weewx.units.ValueHelper(value_t=stn_info.altitude_vt,
                                                    formatter=formatter,
                                                    converter=converter)
-        self.rain_year_start = stn_info.rain_year_start
         self.rain_year_str   = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
-        self.week_start      = stn_info.week_start
         self.uptime = weeutil.weeutil.secs_to_string(time.time() - weewx.launchtime_ts) if weewx.launchtime_ts else ''
         self.version = weewx.__version__
         # The following works on Linux only:
@@ -80,4 +78,7 @@ class Station(object):
         except (IOError, KeyError):
             self.os_uptime = ''
 
-        self.webpath = stn_info.webpath
+    def __getattr__(self, name):
+        # For anything that is not an explicit attribute of me, try
+        # my instance of StationInfo. 
+        return getattr(self.stn_info, name)

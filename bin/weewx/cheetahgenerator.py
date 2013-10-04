@@ -101,7 +101,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         self.gen_dict = self.skin_dict['CheetahGenerator'] if self.skin_dict.has_key('CheetahGenerator') else self.skin_dict['FileGenerator']
         self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }
         self.initUnits()
-        self.initStation()
+#         self.initStation()
         self.initExtensions()
 
     def teardown(self):
@@ -112,11 +112,6 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
         self.unitInfoHelper = weewx.units.UnitInfoHelper(self.formatter,
                                                          self.converter)
-
-    def initStation(self):
-        self.station = weewx.station.Station(self.stn_info,
-                                             self.formatter, self.converter,
-                                             self.skin_dict)
 
     def initExtensions(self):
         """figure out which search list extensions we will load"""
@@ -259,10 +254,10 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                                         timespan.stop,
                                         formatter = self.formatter,
                                         converter = self.converter,
-                                        rain_year_start = self.station.rain_year_start,
+                                        rain_year_start = self.stn_info.rain_year_start,
                                         heatbase = heatbase_t,
                                         coolbase = coolbase_t,
-                                        week_start = self.station.week_start)
+                                        week_start = self.stn_info.week_start)
         
         # If the user has supplied an '[Extras]' section in the skin
         # dictionary, include it in the search list. Otherwise, just include
@@ -270,9 +265,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
 
         # Put together the search list:
-        searchList = [{'station'    : self.station,
-#                        'almanac'    : self.almanac,
-                       'unit'       : self.unitInfoHelper,
+        searchList = [{'unit'       : self.unitInfoHelper,
                        'heatbase'   : heatbase_t,
                        'coolbase'   : coolbase_t,
                        'Extras'     : extra_dict},
@@ -443,16 +436,16 @@ class SearchList(object):
         self.generator = generator
 
     def get_extension(self, timespan):
-        """Derived classes must define this method.  Return a dictionary of name-
-        value pairs that bind a variable name to the object that returns the
-        data for that name.
-
+        """Derived classes must define this method.  Should return an object
+        whose attributes or keys define the extension.
+        
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
                    start and stop times of the domain of valid times.
         """
         raise NotImplementedError("Function 'get_extension' not implemented")
 
 class Almanac(SearchList):
+    """Class that implements the 'almanac' extension."""
     
     def __init__(self, generator):
         SearchList.__init__(self, generator)
@@ -480,11 +473,11 @@ class Almanac(SearchList):
 
         self.moonphases = generator.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
 
-        altitude_vt = weewx.units.convert(generator.station.altitude_vt, "meter")
+        altitude_vt = weewx.units.convert(generator.stn_info.altitude_vt, "meter")
         
         self.almanac = weewx.almanac.Almanac(celestial_ts, 
-                                             generator.station.latitude_f, 
-                                             generator.station.longitude_f,
+                                             generator.stn_info.latitude_f, 
+                                             generator.stn_info.longitude_f,
                                              altitude=altitude_vt[0],
                                              temperature=temperature_C,
                                              pressure=pressure_mbar,
@@ -492,8 +485,20 @@ class Almanac(SearchList):
                                              formatter=generator.formatter)
         
     def get_extension(self, timespan):
-        return {'almanac' : self.almanac}
-    
+        return self
+
+
+class Station(SearchList):
+    """Class that represents the 'station' extension."""
+    def __init__(self, generator):
+        
+        self.station = weewx.station.Station(generator.stn_info,
+                                             generator.formatter, generator.converter,
+                                             generator.skin_dict)
+        
+    def get_extension(self, timespan):
+        return self
+            
 # =============================================================================
 # Filters used for encoding
 # =============================================================================
