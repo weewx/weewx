@@ -63,6 +63,9 @@ import weewx.units
 default_heatbase = (65.0, "degree_F", "group_temperature")
 default_coolbase = (65.0, "degree_F", "group_temperature")
 
+# Default search list:
+default_search_list = ["weewx.cheetahgenerator.Almanac", "weewx.cheetahgenerator.Station", "weewx.cheetahgenerator.Stats", "weewx.cheetahgenerator.UnitInfo"]
+
 def logmsg(lvl, msg):
     syslog.syslog(lvl, 'cheetahgenerator: %s' % msg)
 
@@ -126,10 +129,11 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         """figure out which search list extensions we will load"""
         self.search_list_objs = []
 
-        exts = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list'))
-        if exts is None: return
+        search_list = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list'))
+        if search_list is None:
+            search_list = default_search_list
         
-        for c in exts:
+        for c in search_list:
             x = c.strip()
             if len(x) > 0:
                 logdbg("loading search list extension '%s'" % c)
@@ -483,7 +487,7 @@ class Almanac(SearchList):
 class Station(SearchList):
     """Class that represents the 'station' extension."""
     def __init__(self, generator):
-        
+        SearchList.__init__(self, generator)
         self.station = weewx.station.Station(generator.stn_info,
                                              generator.formatter, generator.converter,
                                              generator.skin_dict)
@@ -513,6 +517,16 @@ class Stats(SearchList):
         
         return stats
 
+class UnitInfo(SearchList):
+    """Class that contains 'unit' information."""
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
+        self.unit = weewx.units.UnitInfoHelper(generator.formatter,
+                                               generator.converter)
+        
+    def get_extension(self, timespan, archivedb, statsdb):
+        return self
+    
 # =============================================================================
 # Filters used for encoding
 # =============================================================================
