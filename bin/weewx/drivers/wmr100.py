@@ -363,6 +363,9 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
                    'windBatteryStatus' : (packet[0] >> 4),
                    'dateTime'          : int(time.time() + 0.5),
                    'usUnits'           : weewx.METRIC}
+        # Wind direction is undefined if wind speed is zero:
+        if _record['windSpeed'] == 0:
+            _record['windDir'] = None
         # Sometimes the station emits a wind gust that is less than the average wind.
         # Ignore it if this is the case.
         windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) * 3.6 / 10.0

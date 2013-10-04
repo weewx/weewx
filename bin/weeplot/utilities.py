@@ -10,8 +10,10 @@
 """Various utilities used by the plot package.
 
 """
-import ImageFont
-import ImageColor
+try:
+    from PIL import ImageFont, ImageColor
+except ImportError:
+    import ImageFont, ImageColor
 import datetime
 import time
 import math
@@ -182,6 +184,11 @@ def scaletime(tmin_ts, tmax_ts) :
     >>> print to_string(xmin), to_string(xmax), xinc
     2013-05-16 20:00:00 PDT (1368759600) 2013-05-17 08:00:00 PDT (1368802800) 3600
 
+    Example 8: 15 hours
+    >>> time_ts = time.mktime(time.strptime("2013-05-17 07:46", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 15*3600, time_ts)
+    >>> print to_string(xmin), to_string(xmax), xinc
+    2013-05-16 17:00:00 PDT (1368748800) 2013-05-17 08:00:00 PDT (1368802800) 3600
     """
     if tmax_ts <= tmin_ts :
         raise weeplot.ViolatedPrecondition, "scaletime called with tmax <= tmin"
@@ -191,9 +198,16 @@ def scaletime(tmin_ts, tmax_ts) :
     tmin_dt = datetime.datetime.fromtimestamp(tmin_ts)
     tmax_dt = datetime.datetime.fromtimestamp(tmax_ts)
     
-    if tdelta <= 12 * 3600:
-        # For time intervals 3 hours or more, use one hour increment. Else, 15 minutes.
-        interval = 3600 if tdelta > 3*3600 else 900
+    if tdelta <= 16 * 3600:
+        if tdelta <= 3*3600:
+            # For time intervals less than 3 hours, use an increment of 15 minutes
+            interval = 900
+        elif tdelta <= 12 * 3600:
+            # For intervals from 3 hours up through 12 hours, use one hour
+            interval = 3600
+        else:
+            # For intervals from 12 through 16 hours, use two hours.
+            interval = 7200
         # Get to the one hour boundary below tmax:
         stop_dt = tmax_dt.replace(minute=0, second=0, microsecond=0)
         # if tmax happens to be on a one hour boundary we're done. Otherwise, round

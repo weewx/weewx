@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# $Id: ws28xx.py 563 2013-03-31 16:10:16Z mwall $
+# $Id$
 #
 # Copyright 2013 Matthew Wall
 #
@@ -745,13 +745,13 @@ class WS28xx(weewx.abstractstation.AbstractStation):
             self._service.DataStore.CurrentWeather._Gust,
             CWeatherTraits.WindNP())
 
-        if packet['windSpeed'] is not None:
+        if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
             packet['windSpeed'] *= 3.6 # weewx wants km/h
             packet['windDir'] = self._service.DataStore.CurrentWeather._WindDirection * 360 / 16
         else:
             packet['windDir'] = None
 
-        if packet['windGust'] is not None:
+        if packet['windGust'] is not None and packet['windGust'] > 0:
             packet['windGust'] *= 3.6 # weewx wants km/h
             packet['windGustDir'] = self._service.DataStore.CurrentWeather._GustDirection * 360 / 16
         else:
@@ -761,12 +761,16 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         packet['rainRate'] = self.get_datum_match(
             self._service.DataStore.CurrentWeather._Rain1H,
             CWeatherTraits.RainNP())
+        if packet['rainRate'] is not None:
+            packet['rainRate'] /= 10 # weewx wants cm/hr
         rain_total = self.get_datum_match(
             self._service.DataStore.CurrentWeather._RainTotal,
             CWeatherTraits.RainNP())
         delta = calculate_rain(rain_total, self._last_rain)
-        packet['rain'] = delta
         self._last_rain = rain_total
+        packet['rain'] = delta
+        if packet['rain'] is not None:
+            packet['rain'] /= 10 # weewx wants cm/hr
 
         packet['heatindex'] = weewx.wxformulas.heatindexC(
             packet['outTemp'], packet['outHumidity'])

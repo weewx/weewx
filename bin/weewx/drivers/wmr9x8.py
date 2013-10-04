@@ -244,8 +244,17 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         windGustSpeed = ((gust10th/10.0) + gust1 + (gust10*10)) * 3.6
         if windGustSpeed >= _record['windSpeed']:
             _record['windGust'] = windGustSpeed
-        # Save the wind record to be used for windchill and heat index
-        self.last_wind_record = _record
+
+        # Bit 1 of chillstatus is on if there is no wind chill data;
+        # Bit 2 is on if it has overflowed. Check them both:
+        if chillstatus & 0x6 == 0:
+            chill = chill1 + (10*chill10)
+            if chillstatus & 0x8:
+                chill = -chill
+            _record['windchill'] = chill
+        else:
+            _record['windchill'] = None
+        
         return _record
 
     @wmr9x8_registerpackettype(typecode=0x01, size=16)
@@ -259,7 +268,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             'rainBatteryStatus' : battery,
             'rainRate'          : (cur1 + (cur10 * 10) + (cur100 * 100))/10.0,
             'dayRain'           : (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000))/10.0,
-            'totalRain'         : ((tot10th / 10.0) + tot1 + (tot10 * 10) + (tot100 * 100) + (tot1000 * 1000) - 0.5)/10.0,
+            'totalRain'         : (tot10th/10.0 + tot1 + 10.0*tot10 + 100.0*tot100 + 1000.0*tot1000)/10.0,
             'dateTime'          : int(time.time() + 0.5),
             'usUnits'           : weewx.METRIC
         }
@@ -283,29 +292,28 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         }
 
         temp = (temp10th/10.0) + temp1 + (temp10*10) + ((temp100etc&0x03) * 100)
-        temp *= -1 if (temp100etc&0x08) else 1
+        if temp100etc & 0x08:
+            temp = -temp
         tempoverunder = temp100etc&0x04
         dew = dew1 + (dew10 * 10)
         hum = hum1 + (hum10 * 10)
         if chan <= 1:
             _record['outTempBatteryStatus'] = battery
             _record['outHumidity']   = hum
+            
+            # If temperature is valid, save it and calculate heat index
             if not tempoverunder:
                 _record['outTemp']   = temp
                 _record['heatindex'] = weewx.wxformulas.heatindexC(temp, hum)
+            else:
+                _record['outTemp'] = None
+
+            # If dew  point is valid, save it. Otherwise, try calculating it
+            # in software
             if not dewunder:
                 _record['dewpoint']  = dew
-            if dewunder and not tempoverunder:
+            else:
                 _record['dewpoint']  = weewx.wxformulas.dewpointC(temp, hum)
-            # The WMR does not provide wind information in a temperature packet,
-            # so we have to use old wind data to calculate wind chill, provided
-            # it isn't too old and has gone stale. If no wind data has been seen
-            # yet, then this will raise an AttributeError exception.
-            try:
-                if _record['dateTime'] - self.last_wind_record['dateTime'] <= self.stale_wind:
-                    _record['windchill'] = weewx.wxformulas.windchillC(temp, self.last_wind_record['windSpeed'])
-            except AttributeError:
-                pass
         else:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -316,24 +324,17 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
 
     @wmr9x8_registerpackettype(typecode=0x04, size=7)
     def _wmr9x8_therm_packet(self, packet):
-        chan, status, temp10th, temp1, temp10, temp100etc = self._get_nibble_data(packet[1:])
+        chan, dummy_status, temp10th, temp1, temp10, temp100etc = self._get_nibble_data(packet[1:])
 
         _record = {'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
 
-        temp = (temp10th/10.0) + temp1 + (temp10*10) + ((temp100etc&0x03) * 100)
-        temp *= -1 if (temp100etc&0x08) else 1
-        tempoverunder = temp100etc&0x04
-        battery = bool(status&0x04)
-        if chan <= 1:
-            _record['outTempBatteryStatus'] = battery
-            if not tempoverunder:
-                _record['outTemp']          = temp
-        else:
-            # If additional temperature sensors exist (channel>=2), then
-            # use observation types 'extraTemp1', 'extraTemp2', etc.
-            if not tempoverunder:
-                _record['extraTemp%d' % chan] = temp
+        temp = temp10th / 10.0 + temp1 + 10.0 * temp10 + 100.0 * (temp100etc & 0x03)
+        if temp100etc & 0x08:
+            temp = -temp
+        tempoverunder = temp100etc &  0x04
+        _record['extraTemp%d' % chan] = temp if not tempoverunder else None
+
         return _record
 
     @wmr9x8_registerpackettype(typecode=0x05, size=13)
@@ -342,7 +343,8 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         battery = bool(status&0x04)
 
         temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
-        temp *= -1 if (temp100etc&0x08) else 1
+        if temp100etc & 0x08:
+            temp = -temp
         tempoverunder = bool(temp100etc & 0x04)
         hum = hum1 + (hum10 * 10)
         dew = dew1 + (dew10 * 10)
@@ -361,10 +363,8 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             'dateTime'    : int(time.time() + 0.5),
             'usUnits'     : weewx.METRIC
         }
-        if not tempoverunder:
-            _record['inTemp']     = temp
-        if not dewunder:
-            _record['inDewpoint'] = dew
+        _record['inTemp'] = temp if not tempoverunder else None
+        _record['inDewpoint'] = dew if not dewunder else None
         if dewunder and not tempoverunder:
             _record['inDewpoint'] = weewx.wxformulas.dewpointC(temp, hum)
         return _record
@@ -374,7 +374,8 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, baro100, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100, slpoff1000 = self._get_nibble_data(packet[1:]) # @UnusedVariable
         battery = bool(status&0x04)
         temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
-        temp *= -1 if (temp100etc&0x08) else 1
+        if temp100etc & 0x08:
+            temp = -temp
         tempoverunder = bool(temp100etc & 0x04)
         hum = hum1 + (hum10 * 10)
         dew = dew1 + (dew10 * 10)
@@ -468,7 +469,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         _record = {
             'rainRate'          : (cur1 + (cur10 * 10) + (cur100 * 100)) / 10.0,
             'yesterdayRain'     : (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000))/10.0,
-            'totalRain'         : tot1 + (tot10 * 10) + (tot100 * 100) + (tot1000 * 1000),
+            'totalRain'         : (tot1 + (tot10 * 10) + (tot100 * 100) + (tot1000 * 1000))/10.0,
             'dateTime'          : int(time.time() + 0.5),
             'usUnits'           : weewx.METRIC
         }
@@ -477,7 +478,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         # won't work for the very first rain packet.
         # the WM reports rain rate as rain_rate, rain yesterday (updated by wm at midnight) and total rain since last reset
         # weewx needs rain since last packet we need to divide by 10 to mimic Vantage reading
-        _record['rain'] = ((_record['totalRain']-self.last_totalRain) / 10.0) if self.last_totalRain is not None else None
+        _record['rain'] = (_record['totalRain'] - self.last_totalRain) if self.last_totalRain is not None else None
         self.last_totalRain = _record['totalRain']
         return _record
 
@@ -512,9 +513,9 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         }
 
         try:
-           _record['heatindex'] = weewx.wxformulas.heatindexC(tempout, self.last_outHumidity)
+            _record['heatindex'] = weewx.wxformulas.heatindexC(tempout, self.last_outHumidity)
         except AttributeError:
-           _record['heatindex'] = None
+            _record['heatindex'] = None
 
         try:
             _record['windchill'] = weewx.wxformulas.windchillC(tempout, self.last_windSpeed)

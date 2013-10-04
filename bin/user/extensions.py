@@ -15,3 +15,8 @@ executed before anything else happens. This makes it a good place to put user
 extensions.
 """
 
+import locale
+# This will use the locale specified by the environment variable 'LANG'
+# Other options are possible. See:
+# http://docs.python.org/2/library/locale.html#locale.setlocale
+locale.setlocale(locale.LC_ALL, '')

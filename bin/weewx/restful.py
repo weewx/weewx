@@ -17,6 +17,9 @@ import urllib
 import urllib2
 import socket
 import time
+import platform
+import re
+import sys
 
 import weewx.archive
 import weewx.units
@@ -551,6 +554,170 @@ class CWOP(REST):
             # the send failed max_tries times. Log it.
             syslog.syslog(syslog.LOG_ERR, "restful: Failed to upload to %s" % self.site)
             raise IOError, "Failed CWOP upload to site %s after %d tries" % (self.site, self.max_tries)
+
+
+#==============================================================================
+# class StationRegistry
+#==============================================================================
+# Periodically 'phone home' to register a weewx station.
+#
+#  This will periodically do a http GET with the following information:
+#
+#    station_url           should be world-accessible
+#    description           description of station
+#    latitude, longitude   must be in decimal format
+#    station_type          for example Vantage, FineOffsetUSB
+#
+#  The station_url is the unique key by which a station is identified.
+#
+#  To enable this module, add the following to weewx.conf:
+#
+# [StdRESTful]
+#     ...
+#     [[StationRegistry]]
+#         #description = My Little Weather Station
+#         station_url = http://example.com/weather/
+#         driver = weewx.register.StationRegistry
+
+WEEWX_SERVER_URL = 'http://weewx.com/register/register.cgi'
+
+class StationRegistry(REST):
+    """Class for phoning home to register a weewx station."""
+
+    def __init__(self, site, **kwargs):
+        """
+        station_url: URL of the weather station
+        [Required]
+
+        description: description of station
+        [Optional.  Default is location from weewx.conf]
+
+        latitude: station latitude
+        [Optional.  Default is latitude from weewx.conf]
+
+        longitude: station longitude
+        [Optional.  Default is longitude from weewx.conf]
+
+        hardware: station hardware
+        [Optional.  Default is station_type from weewx.conf]
+
+        server_url - site at which to register
+        [Optional.  Default is weewx.com]
+
+        interval: time in seconds between posts
+        [Optional.  Default is 604800 (once per week)]
+
+        max_tries: number of attempts to make before giving up
+        [Optional.  Default is 5]
+        """
+
+        self.server_url = kwargs.get('server_url', WEEWX_SERVER_URL)
+        self.station_url = kwargs['station_url']
+
+        # these are defined by RESTful
+        self.latitude = float(kwargs['latitude'])
+        self.longitude = float(kwargs['longitude'])
+        self.hardware = kwargs['hardware']
+
+        # these are optional
+        self.interval = int(kwargs.get('interval', 604800))
+        self.max_tries = int(kwargs.get('max_tries', 5))
+        self.description = kwargs.get('description', None)
+        if self.description is None:
+            self.description = kwargs.get('location', None)
+
+        self.weewx_info = weewx.__version__
+        self.python_info = platform.python_version()
+        self.platform_info = platform.platform()
+        self._last_ts = None
+
+        # these two must be defined to keep RESTful happy
+        self.site = 'StationRegistry'
+        self.station = self.station_url
+
+        # adapted from django URLValidator
+        self._urlregex = re.compile(
+            r'^(?:http)s?://' # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+            r'localhost|' #localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+            r'(?::\d+)?' # optional port
+            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+        self._validateParameters()
+
+        syslog.syslog(syslog.LOG_INFO, 'register: station will register with %s' % self.server_url)
+
+    def postData(self, archive, time_ts):
+        now = time.time()
+        if self._last_ts is not None and now - self._last_ts < self.interval:
+            msg = 'registration interval (%d) has not passed.' % self.interval
+            syslog.syslog(syslog.LOG_DEBUG, 'register: %s' % msg)
+            raise weewx.restful.SkippedPost, msg
+
+        url = self.getURL()
+        for _count in range(self.max_tries):
+            # Use HTTP GET to convey the station data
+            try:
+                syslog.syslog(syslog.LOG_DEBUG, "register: attempt to register using '%s'" % url)
+                _response = urllib2.urlopen(url)
+            except (urllib2.URLError, socket.error,
+                    httplib.BadStatusLine, httplib.IncompleteRead), e:
+                # Unsuccessful. Log it and try again
+                syslog.syslog(syslog.LOG_ERR, 'register: failed attempt %d of %d: %e' % (_count+1, self.max_tries, e))
+            else:
+                # Check for the server response
+                for line in _response:
+                    # Registration failed, log it and bail out
+                    if line.startswith('FAIL'):
+                        syslog.syslog(syslog.LOG_ERR, "register: registration server returned %s" % line)
+                        raise weewx.restful.FailedPost, line
+                # Registration was successful
+                syslog.syslog(syslog.LOG_DEBUG, 'register: registration successful')
+                self._last_ts = time.time()
+                return
+        else:
+            # The upload failed max_tries times. Log it.
+            msg = 'failed to register after %d tries' % self.max_tries
+            syslog.syslog(syslog.LOG_ERR, 'register: %s' % msg)
+            raise IOError, msg
+
+    def getURL(self):
+        args = {
+            'station_url' : self.station_url,
+            'latitude' : self.latitude,
+            'longitude' : self.longitude,
+            'station_type' : self.hardware,
+            'weewx_info' : self.weewx_info,
+            'python_info' : self.python_info,
+            'platform_info' : self.platform_info,
+            }
+        if self.description is not None:
+            args['description'] = self.description
+        return '%s?%s' % (self.server_url, urllib.urlencode(args))
+
+    def _checkURL(self, url):
+        return self._urlregex.search(url)
+
+    def _validateParameters(self):
+        msgs = []
+        # ensure the url does not have problem characters.  do not check
+        # to see whether the site actually exists.
+        if not self._checkURL(self.station_url):
+            msgs.append("station_url '%s' is not a valid URL" %
+                        self.station_url)
+
+        # check server url just in case someone modified the default
+        url = self.server_url
+        if not self._checkURL(url):
+            msgs.append("server_url '%s' is not a valid URL" % self.server_url)
+
+        if len(msgs) > 0:
+            errmsg = 'one or more unusable parameters.'
+            syslog.syslog(syslog.LOG_ERR, 'register: %s' % errmsg)
+            for m in msgs:
+                syslog.syslog(syslog.LOG_ERR, '   **** %s' % m)
+            raise ValueError(errmsg)
     
 
 #===============================================================================

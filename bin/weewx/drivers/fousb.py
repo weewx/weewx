@@ -1,5 +1,5 @@
 # FineOffset module for weewx
-# $Id: fousb.py 567 2013-04-01 15:26:33Z mwall $
+# $Id$
 #
 # Copyright 2012 Matthew Wall
 #
@@ -25,6 +25,8 @@
 # FineOffset support in wview was inspired by the fowsr project by Arne-Jorgen
 # Auberg (arne.jorgen.auberg@gmail.com) with hidapi mods by Bill Northcott.
 
+# USB Lockups
+#
 # the ws2080 will frequently lock up and require a power cycle to regain
 # communications.  my sample size is small (3 ws2080 consoles running
 # for 1.5 years), but fairly repeatable.  one of the consoles has never
@@ -35,7 +37,14 @@
 # hopefully the device is simply trying to tell us something.  on the other
 # hand it could just be bad firmware.  it seems to happen when the data
 # logging buffer on the console is full, but not always when the buffer
-# is full.  --mwall 30dec2012
+# is full.
+# --mwall 30dec2012
+#
+# the magic numbers do not seem to be correlated with lockups.  in some cases,
+# a lockup happens immediately following an unknown magic number.  in other
+# cases, data collection continues with no problem.  for example, a brand new
+# WS2080A console reports 44 bf as its magic number, but performs just fine.
+# --mwall 02oct2013
 
 # FIXME: determine why sensor spikes happen with PERIODIC but not ADAPTIVE
 
@@ -278,6 +287,12 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     # station status is an integer
     if packet['status'] is not None:
         packet['status'] = int(packet['status'])
+
+    # if windspeed is zero there is no wind direction
+    if packet['windSpeed'] is None or packet['windSpeed'] == 0:
+        packet['windDir'] = None
+    if packet['windGust'] is None or packet['windGust'] == 0:
+        packet['windGustDir'] = None
 
     # calculated elements not directly reported by station
     packet['heatindex'] = weewx.wxformulas.heatindexC(
@@ -633,6 +648,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         product_id: The USB product ID for the station.
         [Optional. Default is 8021]
 
+        device_id: The USB device ID for the station.  Specify this if there
+        are multiple devices of the same type on the bus.
+        [Optional. No default]
+
         interface: The USB interface.
         [Optional. Default is 0]
 
@@ -654,6 +673,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.interface         = int(stn_dict.get('interface', 0))
         self.vendor_id         = int(stn_dict.get('vendor_id',  '0x1941'), 0)
         self.product_id        = int(stn_dict.get('product_id', '0x8021'), 0)
+        self.device_id         = stn_dict.get('device_id', None)
         self.usb_endpoint      = int(stn_dict.get('usb_endpoint', '0x81'), 0)
         self.usb_read_size     = int(stn_dict.get('usb_read_size', '0x20'), 0)
         self.data_format       = stn_dict.get('data_format', '1080')
@@ -679,6 +699,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self._current_ptr = None
         self._station_clock = None
         self._sensor_clock = None
+        # start with known magic numbers.  report any additional we encounter.
+        # these are from wview: ffff, 5555, c400
+        self._magic_numbers = ['55aa']
+        self._last_magic = None
 
         self.openPort()
         self._setup()
@@ -703,8 +727,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
     def openPort(self):
         dev = self._find_device()
         if not dev:
-            logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x" %
-                   (self.vendor_id, self.product_id))
+            logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s" % (self.vendor_id, self.product_id, self.device_id))
             raise weewx.WeeWxIOError("Unable to find USB device")
         self.devh = dev.open()
         # Detach any old claimed interfaces
@@ -730,11 +753,13 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             pass
                                
     def _find_device(self):
-        """Find the vendor and product ID on the USB bus."""
+        """Find the vendor and product ID on the USB."""
         for bus in usb.busses():
             for dev in bus.devices:
                 if dev.idVendor == self.vendor_id and dev.idProduct == self.product_id:
-                    return dev
+                    if self.device_id is None or dev.filename == self.device_id:
+                        loginf('found station on USB bus=%s device=%s' % (bus.dirname, dev.filename))
+                        return dev
         return None
 
     # FIXME: get last_rain_arc and last_rain_ts_arc from database on startup
@@ -794,7 +819,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                self.pressure_offset, self.altitude,
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
-            data['interval'] = self._archive_interval_minutes()
+            data['interval'] = r['interval']
             self._last_rain_arc = data['rainTotal']
             self._last_rain_ts_arc = ts
             logdbg('returning archive record %s' % ts)
@@ -818,7 +843,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         while True:
             try:
                 if self.polling_mode.lower() == ADAPTIVE_POLLING.lower():
-                    for data,ptr,logged in self.live_data():
+                    for data,ptr,logged in self.live_data():  # @UnusedVariable
                         nerr = 0
                         yield data
                 elif self.polling_mode.lower() == PERIODIC_POLLING.lower():
@@ -995,7 +1020,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                         record['datetime'] = dts
                         record['data'] = data
                         record['raw_data'] = raw_data
-                        records.append(record)
+                        record['interval'] = data['delay']
+                        records.insert(0, record)
                         count += 1
                         dts -= datetime.timedelta(minutes=data['delay'])
                     ptr = self.dec_ptr(ptr)
@@ -1027,7 +1053,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         range_hi = datetime.datetime.max
         range_lo = datetime.datetime.min
         ptr = self.current_pos()
-        data = self.get_data(ptr)
+        data = self.get_data(ptr, unbuffered=True)
         last_delay = data['delay']
         if last_delay is None or last_delay == 0:
             prev_date = datetime.datetime.min
@@ -1365,10 +1391,16 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         result = []
         for mempos in range(0x0000, hi, 0x0020):
             result += self._read_block(mempos)
-        # check 'magic number'
-        if result[:2] not in ([0x55, 0xAA], [0xFF, 0xFF],
-                              [0x55, 0x55], [0xC4, 0x00]):
-            logcrt('unrecognised magic number %02x %02x' % (result[0], result[1]))
+        # check 'magic number'.  log each new one we encounter.
+        magic = '%02x%02x' % (result[0], result[1])
+        if magic not in self._magic_numbers:
+            logcrt('unrecognised magic number %s' % magic)
+            self._magic_numbers.append(magic)
+        if magic != self._last_magic:
+            if self._last_magic is not None:
+                logcrt('magic number changed old=%s new=%s' %
+                       (self._last_magic, magic))
+            self._last_magic = magic
         return result
 
     def _write_byte(self, ptr, value):

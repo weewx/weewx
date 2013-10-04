@@ -59,7 +59,7 @@ def drop(host='localhost', user='', password='', database='', driver='', **kwarg
         raise weedb.OperationalError(e)
     
 class Connection(weedb.Connection):
-    """A database independent connection object."""
+    """A wrapper around a MySQL connection object."""
     
     def __init__(self, host='localhost', user='', password='', database='', **kwargs):
         """Initialize an instance of Connection.
@@ -84,10 +84,8 @@ class Connection(weedb.Connection):
         weedb.Connection.__init__(self, connection, database, 'mysql')
         
         # Allowing threads other than the main thread to see any transactions
-        # seems to require an isolation level of READ UNCOMMITTED. 
-        cursor = self.connection.cursor()
-        cursor.execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED")
-        cursor.close()
+        # seems to require an isolation level of READ UNCOMMITTED.
+        self.connection.query("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED") 
         
     def cursor(self):
         """Return a cursor object."""
@@ -139,7 +137,7 @@ class Connection(weedb.Connection):
     
     def begin(self):
         """Begin a transaction."""
-        self.connection.begin()
+        self.connection.query("START TRANSACTION")
     
 class Cursor(object):
     """A wrapper around the MySQLdb cursor object"""

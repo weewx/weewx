@@ -5,3 +5,6 @@ setup.py should deal with webpath in weewx.conf
 Docs should be updated to reflect the change from FileGenerator to CheetahGenerator.
 This includes:
   o Change in section name from [FileGenerator] to [CheetahGenerator]
+
+Can wind chill be retrieved from the hardware for the WMR918
+(as well as WMR9x8)?

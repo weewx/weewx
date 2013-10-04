@@ -10,9 +10,12 @@
 """Routines for generating image plots.
 """
 import colorsys
+import locale
 import time
-import Image
-import ImageDraw
+try:
+    from PIL import Image, ImageDraw
+except ImportError:
+    import Image, ImageDraw
 
 import weeplot.utilities
 import weeutil.weeutil
@@ -227,13 +230,13 @@ class GeneralPlot(object):
             # gradient is longer at the poles than the equator
             d = 120 + 300 * (1 - (90.0 - abs(self.latitude)) / 90.0)
             for i in range(len(transitions)):
-                last = self.xscale[0] if i == 0 else transitions[i-1]
-                next = transitions[i+1] if i < len(transitions)-1 else self.xscale[1]
+                last_ = self.xscale[0] if i == 0 else transitions[i-1]
+                next_ = transitions[i+1] if i < len(transitions)-1 else self.xscale[1]
                 for z in range(1,nfade):
                     c = blend_hls(color2, color1, float(z)/float(nfade))
                     rgbc = int2rgbstr(c)
                     x1 = transitions[i]-d*(nfade+1)/2+d*z
-                    if last < x1 < next:
+                    if last_ < x1 < next_:
                         sdraw.rectangle(((x1, self.yscale[0]),
                                          (x1+d, self.yscale[1])),
                                         fill=rgbc)
@@ -499,11 +502,11 @@ class GeneralPlot(object):
             self.y_label_format = weeplot.utilities.pickLabelFormat(self.yscale[2])
         
     def _genXLabel(self, x):
-        xlabel = self.x_label_format % x
+        xlabel = locale.format(self.x_label_format, x)
         return xlabel
     
     def _genYLabel(self, y):
-        ylabel = self.y_label_format % y
+        ylabel = locale.format(self.y_label_format, y)
         return ylabel
     
     def _calcXMinMax(self):

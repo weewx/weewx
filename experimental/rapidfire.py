@@ -11,6 +11,8 @@
 This version is experimental and could change at any time --- don't get too attached to it!
 
 It only works with the weewx Davis Vantage driver.
+
+It also only works with databases that are in US Customary units. NOT Metric!
  
 To use: 
 

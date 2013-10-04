@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2010, 2011, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -10,6 +10,7 @@
 #
 """Data structures and functions for dealing with units."""
 
+import locale
 import time
 import syslog
 
@@ -87,7 +88,9 @@ obs_group_dict = {"altitude"           : "group_altitude",
 # Some aggregations when applied to a type result in a different unit
 # group. This data structure maps aggregation type to the group:
 agg_group = {'mintime'    : "group_time",
+             'maxmintime' : "group_time",
              'maxtime'    : "group_time",
+             'minmaxtime' : "group_time",
              "maxsumtime" : "group_time",
              'count'      : "group_count",
              'max_ge'     : "group_count",
@@ -410,7 +413,7 @@ class Formatter(object):
         [Optional. If not given, the string given unit_format_dict['NONE'] will be used.]
         """
         if val_t is None or val_t[0] is None:
-            if NONE_string: 
+            if NONE_string is not None: 
                 return NONE_string
             else:
                 return self.unit_format_dict.get('NONE', 'N/A')
@@ -418,7 +421,7 @@ class Formatter(object):
         if val_t[1] == "unix_epoch":
             # Different formatting routines are used if the value is a time.
             try:
-                if useThisFormat:
+                if useThisFormat is not None:
                     val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
                 else:
                     val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), time.localtime(val_t[0]))
@@ -428,13 +431,13 @@ class Formatter(object):
         else:
             # It's not a time. It's a regular value.
             try:
-                if useThisFormat:
-                    val_str = useThisFormat % val_t[0]
+                if useThisFormat is not None:
+                    val_str = locale.format_string(useThisFormat, (val_t[0],))
                 else:
-                    val_str = self.unit_format_dict[val_t[1]] % val_t[0]
+                    val_str = locale.format(self.unit_format_dict[val_t[1]], val_t[0])
             except (KeyError, TypeError):
                 # If all else fails, ask Python to convert to a string:
-                val_str = str(val_t[0])
+                val_str = locale.str(val_t[0])
 
         if addLabel:
             val_str += self.unit_label_dict.get(val_t[1],'')

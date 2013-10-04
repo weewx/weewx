@@ -1,40 +1,52 @@
                     Possible NEW FEATURES
+                    
+An option not to use LOOP data for the stats file data.
 
-possibly implement averaging rainRate calculation instead of the
-current near-instantaneous implementation in fousb
+Move to a "plugin" architecture. Services would be discovered at runtime
+(instead of listed in service_list). Where do configuration files go? Model it
+like Apache?
 
-Offer tags to support JSON. In particular, vectors.
+Same with file generators. They should be discovered at runtime. Graceful
+fallback if the necessary software is not installed. Regeneration happens in
+selectable time periods.
 
-Make record generation from the accumulators into a separate service, allowing 
-easier customization. This would also make calculation of extensive quantities
-easier.
+Offer tags to support JSON. In particular, vectors. A tag like
+$day.outTemp.vector would offer a vector of temperatures for the day.
+Aggregation would be nice.
 
-The Davis console could intercept new archive record events and add rxcheckpercent
-and rain to software generated records.
+Allow statistics to be extracted from the archive database, as well as the
+stats database. This would allow hourly statistics. Taken to the extreme, it
+could also allow the elimination of the stats database if the performance is
+acceptable.
+
+Allow new derived types to be created by the user. Right now, things like
+heating and cooling degree days are hardwired in, but it ought to be possible
+to add things like that modularly. 
+
+The Davis console could intercept new archive record events and add
+rxcheckpercent and rain to software generated records.
 
 Consider breaking the rule that reporting can only be done through the 
 databases and, instead, offer up the last record when the reporting thread
 starts.
 
+A QC "Spike" detector.
+
+possibly implement averaging rainRate calculation instead of the
+current near-instantaneous implementation in fousb
+
 New observation types would have their unit group attached as a suffix.
 E.g., _energy.
 
-Move to a "plugin" architecture.
+Offer a more "weather friendly" Metric unit system.
 
 Support the WU "RapidFire" protocol.
-
-Offer out-of-the-box support for "last 24 hours", "last 7 days", and "last 28 days"
-statistics.
-
-Use the tagged stats classes for the archive database as well, thus unifying
-the two databases.
 
 Offer "cumulative" as an aggregation type.
 
 Allow rain-to-date to be added to a partial rainyear.
 
-ET appears only at the top of the hour in an archive record. So, it's effective
-archive interval is 60 minutes. Does this carry through?
+Current ET for the VP2 should show the value it emitted at the top of the hour.
 
 Fix scaling for aggregate interval of a week, so it starts on a Sunday.
 
@@ -44,3 +56,6 @@ Werkzeug. http://werkzeug.pocoo.org
 Dynamic web updates, using AJAX.
 
 Port to Windows.
+
+Allow variable y-axis labelling. Right now it's hardwired to every other major
+tick mark.
