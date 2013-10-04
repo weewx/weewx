@@ -79,34 +79,6 @@ def logcrt(msg):
     logmsg(syslog.LOG_CRIT, msg)
 
 # =============================================================================
-# SearchList
-# =============================================================================
-
-class SearchList(object):
-    """Provide binding between variable name and data"""
-
-    def __init__(self, generator):
-        """Create an instance of the search list.
-
-        generator: The generator that is using this search list
-        """
-        pass
-
-    def getSearchList(self, timespan, archivedb, statsdb):
-        """Derived classes must define this method.  Return a list of name-
-        value pairs that bind a variable name to the object that returns the
-        data for that name.
-
-        timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
-                   start and stop times of the domain of valid times.
-
-        archivedb: An instance of weewx.archive.Archive
-
-        statsdb:   An instance of weewx.stats.StatsDb
-        """
-        return []
-
-# =============================================================================
 # CheetahGenerator
 # =============================================================================
 
@@ -130,7 +102,6 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }
         self.initUnits()
         self.initStation()
-        self.initAlmanac(self.gen_ts)
         self.initExtensions()
 
     def teardown(self):
@@ -147,65 +118,25 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                                              self.formatter, self.converter,
                                              self.skin_dict)
 
-    def initAlmanac(self, celestial_ts):
-        """ Initialize an instance of weewx.almanac.Almanac for the station's
-        latitude, longitude, and for a specific time.
-        
-        celestial_ts: The timestamp of the time for which the Almanac is to
-        be initialized."""
-                
-        # For better accuracy, the almanac requires the current temperature
-        # and barometric pressure, so retrieve them from the default archive,
-        # using celestial_ts as the time
-        
-        temperature_C = pressure_mbar = None
-
-        archivedb = self._getArchive(self.skin_dict['archive_database'])
-        if not celestial_ts:
-            celestial_ts = archivedb.lastGoodStamp()
-        rec = self._getRecord(archivedb, celestial_ts)
-
-        if rec is not None:
-            if rec.has_key('outTemp'):
-                temperature_C = rec['outTemp'].degree_C.raw 
-            if rec.has_key('barometer'):
-                pressure_mbar = rec['barometer'].mbar.raw
-        if temperature_C is None: temperature_C = 15.0
-        if pressure_mbar is None: pressure_mbar = 1010.0
-
-        self.moonphases = self.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
-
-        altitude_vt = weewx.units.convert(self.station.altitude_vt, "meter")
-        
-        self.almanac = weewx.almanac.Almanac(celestial_ts, 
-                                             self.station.latitude_f, 
-                                             self.station.longitude_f,
-                                             altitude=altitude_vt[0],
-                                             temperature=temperature_C,
-                                             pressure=pressure_mbar,
-                                             moon_phases=self.moonphases,
-                                             formatter=self.formatter)
-
     def initExtensions(self):
         """figure out which search list extensions we will load"""
-        # silly configobj returns a string if no commas, array if commas
-        exts = self.gen_dict.get('search_list_extensions', [])
-        if type(exts) == str:
-            exts = [exts]
         self.extObjs = []
+
+        exts = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list'))
+        if exts is None: return
+        
         for c in exts:
             x = c.strip()
             if len(x) > 0:
                 logdbg("loading search list extension '%s'" % c)
-                obj = weeutil.weeutil._get_object(c)
-                self.extObjs.append(obj(self))
+                Cls = weeutil.weeutil._get_object(c)
+                self.extObjs.append(Cls(self))
 
     def deleteExtensions(self):
         """delete any extension objects we created to prevent back references
         from blocking garbage collection"""
-        for obj in self.extObjs:
-            del obj
-        self.extObjs = []
+        while len(self.extObjs):
+            del self.extObjs[-1]
 
     def generate(self, period, gen_ts):
         """Generate one or more reports for the indicated period.  Each section
@@ -340,7 +271,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
 
         # Put together the search list:
         searchList = [{'station'    : self.station,
-                       'almanac'    : self.almanac,
+#                        'almanac'    : self.almanac,
                        'unit'       : self.unitInfoHelper,
                        'heatbase'   : heatbase_t,
                        'coolbase'   : coolbase_t,
@@ -379,7 +310,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
     def _getSearchListExtensions(self, timespan, archivedb, statsdb):
         searchList = []
         for obj in self.extObjs:
-            searchList = searchList + obj.getSearchList(timespan, archivedb, statsdb)
+            searchList.append(obj.get_extension(timespan))
         return searchList
 
     def _getFileName(self, template, timespan):
@@ -497,6 +428,72 @@ class Trend(object):
                                        self.now_rec.formatter,
                                        self.now_rec.converter)
 
+# =============================================================================
+# Search list extensions
+# =============================================================================
+
+class SearchList(object):
+    """Provide binding between variable name and data"""
+
+    def __init__(self, generator):
+        """Create an instance of the search list.
+
+        generator: The generator that is using this search list
+        """
+        self.generator = generator
+
+    def get_extension(self, timespan):
+        """Derived classes must define this method.  Return a dictionary of name-
+        value pairs that bind a variable name to the object that returns the
+        data for that name.
+
+        timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
+                   start and stop times of the domain of valid times.
+        """
+        raise NotImplementedError("Function 'get_extension' not implemented")
+
+class Almanac(SearchList):
+    
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
+        
+        celestial_ts = generator.gen_ts
+
+        # For better accuracy, the almanac requires the current temperature
+        # and barometric pressure, so retrieve them from the default archive,
+        # using celestial_ts as the time
+        
+        temperature_C = pressure_mbar = None
+
+        archivedb = generator._getArchive(generator.skin_dict['archive_database'])
+        if not celestial_ts:
+            celestial_ts = archivedb.lastGoodStamp()
+        rec = generator._getRecord(archivedb, celestial_ts)
+
+        if rec is not None:
+            if rec.has_key('outTemp'):
+                temperature_C = rec['outTemp'].degree_C.raw 
+            if rec.has_key('barometer'):
+                pressure_mbar = rec['barometer'].mbar.raw
+        if temperature_C is None: temperature_C = 15.0
+        if pressure_mbar is None: pressure_mbar = 1010.0
+
+        self.moonphases = generator.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
+
+        altitude_vt = weewx.units.convert(generator.station.altitude_vt, "meter")
+        
+        self.almanac = weewx.almanac.Almanac(celestial_ts, 
+                                             generator.station.latitude_f, 
+                                             generator.station.longitude_f,
+                                             altitude=altitude_vt[0],
+                                             temperature=temperature_C,
+                                             pressure=pressure_mbar,
+                                             moon_phases=self.moonphases,
+                                             formatter=generator.formatter)
+        
+    def get_extension(self, timespan):
+        return {'almanac' : self.almanac}
+    
 # =============================================================================
 # Filters used for encoding
 # =============================================================================

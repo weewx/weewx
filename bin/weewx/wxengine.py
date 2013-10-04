@@ -196,16 +196,16 @@ class StdEngine(object):
         # If we've gotten as far as having a list of service objects, then shut
         # them all down:
         if hasattr(self, 'service_obj'):
-            # Shutdown all the services:
-            for obj in self.service_obj:
+            while len(self.service_obj):
                 # Wrap each individual service shutdown, in case of a problem.
                 try:
-                    obj.shutDown()
+                    # Start from the end of the list and move forward
+                    self.service_obj[-1].shutDown()
                 except:
                     pass
-            # Unbind the service. This will allow it to be garbage collected w/o
-            # a circular reference:
-                del obj
+                # Delete the actual service
+                del self.service_obj[-1]
+
             del self.service_obj
             
         try:
