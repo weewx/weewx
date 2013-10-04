@@ -84,10 +84,19 @@ def logcrt(msg):
 
 class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
     """Class for generating files from cheetah templates.
+    
+    Useful attributes (some inherited from ReportGenerator):
 
-    config_dict - weewx.conf as a ConfigObj
-    skin_dict - skin.conf as a ConfigObj
-    gen_dict - ['CheetahGenerator'] from skin.conf as a ConfigObj
+        config_dict:      The weewx configuration dictionary 
+        skin_dict:        The dictionary for this skin
+        gen_dict:         The section ['CheetahGenerator'] from skin.conf
+        gen_ts:           The generation time
+        first_run:        Whether this is the first time the generator has been run
+        stn_info:         An instance of weewx.station.StationInfo
+        formatter:        An instance of weewx.units.Formatter
+        converter:        An instance of weewx.units.Converter
+        unitInfoHelper:   An instance of weewx.units.UnitInfoHelper
+        search_list_objs: A list holding the search list objects
     """
 
     def run(self):
@@ -115,7 +124,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
 
     def initExtensions(self):
         """figure out which search list extensions we will load"""
-        self.extObjs = []
+        self.search_list_objs = []
 
         exts = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list'))
         if exts is None: return
@@ -125,13 +134,13 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
             if len(x) > 0:
                 logdbg("loading search list extension '%s'" % c)
                 Cls = weeutil.weeutil._get_object(c)
-                self.extObjs.append(Cls(self))
+                self.search_list_objs.append(Cls(self))
 
     def deleteExtensions(self):
         """delete any extension objects we created to prevent back references
         from blocking garbage collection"""
-        while len(self.extObjs):
-            del self.extObjs[-1]
+        while len(self.search_list_objs):
+            del self.search_list_objs[-1]
 
     def generate(self, period, gen_ts):
         """Generate one or more reports for the indicated period.  Each section
@@ -243,21 +252,6 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
     def _getCommonSearchList(self, timespan, archivedb, statsdb):
         """Assemble the common searchList elements for all reports."""
 
-        heatbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
-        coolbase = self.skin_dict['Units']['DegreeDays'].get('heating_base')
-        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature") if heatbase else default_heatbase
-        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature") if coolbase else default_coolbase
-
-        # Get a TaggedStats structure. This allows constructs such as
-        # stats.month.outTemp.max
-        stats = weewx.stats.TaggedStats(statsdb,
-                                        timespan.stop,
-                                        formatter = self.formatter,
-                                        converter = self.converter,
-                                        rain_year_start = self.stn_info.rain_year_start,
-                                        heatbase = heatbase_t,
-                                        coolbase = coolbase_t,
-                                        week_start = self.stn_info.week_start)
         
         # If the user has supplied an '[Extras]' section in the skin
         # dictionary, include it in the search list. Otherwise, just include
@@ -266,10 +260,8 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
 
         # Put together the search list:
         searchList = [{'unit'       : self.unitInfoHelper,
-                       'heatbase'   : heatbase_t,
-                       'coolbase'   : coolbase_t,
-                       'Extras'     : extra_dict},
-                       stats]
+                       'Extras'     : extra_dict}]
+
         return searchList
 
     def _getSummaryBySearchList(self, timespan):
@@ -302,8 +294,8 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
 
     def _getSearchListExtensions(self, timespan, archivedb, statsdb):
         searchList = []
-        for obj in self.extObjs:
-            searchList.append(obj.get_extension(timespan))
+        for obj in self.search_list_objs:
+            searchList.append(obj.get_extension(timespan, archivedb, statsdb))
         return searchList
 
     def _getFileName(self, template, timespan):
@@ -435,7 +427,7 @@ class SearchList(object):
         """
         self.generator = generator
 
-    def get_extension(self, timespan):
+    def get_extension(self, timespan, archivedb, statsdb):
         """Derived classes must define this method.  Should return an object
         whose attributes or keys define the extension.
         
@@ -484,7 +476,7 @@ class Almanac(SearchList):
                                              moon_phases=self.moonphases,
                                              formatter=generator.formatter)
         
-    def get_extension(self, timespan):
+    def get_extension(self, timespan, archivedb, statsdb):
         return self
 
 
@@ -496,9 +488,31 @@ class Station(SearchList):
                                              generator.formatter, generator.converter,
                                              generator.skin_dict)
         
-    def get_extension(self, timespan):
+    def get_extension(self, timespan, archivedb, statsdb):
         return self
             
+class Stats(SearchList):
+    """Class that represents the 'station' extension."""
+        
+    def get_extension(self, timespan, archivedb, statsdb):
+        heatbase = self.generator.skin_dict['Units']['DegreeDays'].get('heating_base')
+        coolbase = self.generator.skin_dict['Units']['DegreeDays'].get('heating_base')
+        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature") if heatbase else default_heatbase
+        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature") if coolbase else default_coolbase
+
+        # Get a TaggedStats structure. This allows constructs such as
+        # stats.month.outTemp.max
+        stats = weewx.stats.TaggedStats(statsdb,
+                                        timespan.stop,
+                                        formatter = self.generator.formatter,
+                                        converter = self.generator.converter,
+                                        rain_year_start = self.generator.stn_info.rain_year_start,
+                                        heatbase = heatbase_t,
+                                        coolbase = coolbase_t,
+                                        week_start = self.generator.stn_info.week_start)
+        
+        return stats
+
 # =============================================================================
 # Filters used for encoding
 # =============================================================================
