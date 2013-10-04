@@ -1,3 +1,7 @@
 TODO before the next release:
 
 setup.py should deal with webpath in weewx.conf
+
+Docs should be updated to reflect the change from FileGenerator to CheetahGenerator.
+This includes:
+  o Change in section name from [FileGenerator] to [CheetahGenerator]

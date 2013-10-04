@@ -52,7 +52,6 @@ import urlparse
 import Cheetah.Template
 import Cheetah.Filters
 
-import user.cheetahgenerator
 import weeutil.weeutil
 import weewx.almanac
 import weewx.reportengine
@@ -126,7 +125,8 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         self.teardown()
 
     def setup(self):
-        self.gen_dict = self.skin_dict['FileGenerator']
+        # Look for my section name, but accept [FileGenerator] for backwards compatibility:
+        self.gen_dict = self.skin_dict['CheetahGenerator'] if self.skin_dict.has_key('CheetahGenerator') else self.skin_dict['FileGenerator']
         self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }
         self.initUnits()
         self.initStation()
@@ -289,7 +289,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                 text = Cheetah.Template.Template(file = template,
                                                  searchList = searchList,
                                                  filter = encoding,
-                                                 filtersLib = user.cheetahgenerator)
+                                                 filtersLib = weewx.cheetahgenerator)
                 _file = None
                 try:
                     _file = open(_fullname, mode='w')
