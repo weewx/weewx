@@ -1,10 +1,16 @@
 TODO before the next release:
 
-setup.py should deal with webpath in weewx.conf
-
 Docs should be updated to reflect the change from FileGenerator to CheetahGenerator.
 This includes:
   o Change in section name from [FileGenerator] to [CheetahGenerator]
+  o How to write new-style search list extensions
+  
+Clean up all the _getSearchList() functions in cheetahgenerator.py. Do we really
+need them all?
+
+Every file seems to be getting regenerated instead of just stale ones.
+
+setup.py should deal with webpath in weewx.conf
 
 Can wind chill be retrieved from the hardware for the WMR918
 (as well as WMR9x8)?
