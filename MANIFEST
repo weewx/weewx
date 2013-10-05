@@ -17,7 +17,11 @@ bin/examples/lowBattery.py
 bin/examples/mygenerator.py
 bin/user/__init__.py
 bin/user/extensions.py
+bin/user/extstats.py
+bin/user/forecast.py
 bin/user/schemas.py
+bin/user/test_cheetahgenerator.py
+bin/user/test_forecast.py
 bin/weedb/__init__.py
 bin/weedb/mysql.py
 bin/weedb/sqlite.py
@@ -35,8 +39,8 @@ bin/weewx/abstractstation.py
 bin/weewx/accum.py
 bin/weewx/almanac.py
 bin/weewx/archive.py
+bin/weewx/cheetahgenerator.py
 bin/weewx/crc16.py
-bin/weewx/filegenerator.py
 bin/weewx/imagegenerator.py
 bin/weewx/reportengine.py
 bin/weewx/restful.py

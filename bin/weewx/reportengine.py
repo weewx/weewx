@@ -113,8 +113,8 @@ class StdReportEngine(threading.Thread):
             
             for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
                 # For backwards compatibility:
-                if generator == 'weewx.filegenerator.FileGenerator':
-                    generator = 'weewx.cheetahgenerator.CheetahGenerator'
+#                 if generator == 'weewx.filegenerator.FileGenerator':
+#                     generator = 'weewx.cheetahgenerator.CheetahGenerator'
                 try:
                     # Instantiate an instance of the class.
                     obj = weeutil.weeutil._get_object(generator)(self.config_dict, 

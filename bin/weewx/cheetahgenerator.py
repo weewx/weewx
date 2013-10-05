@@ -245,15 +245,11 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                (ngen, period, self.skin_dict['REPORT_NAME'], elapsed_time))
 
     def _getSearchList(self, encoding, timespan, archivedb, statsdb):
-        return [{'encoding':encoding}] \
-            + self._getCommonSearchList(timespan, archivedb, statsdb) \
+        return [{'encoding':encoding}]\
+            + self.getToDateSearchList(archivedb, statsdb, timespan)\
             + self._getSummaryBySearchList(timespan) \
             + self._getToDateSearchList(timespan, archivedb, statsdb) \
             + self._getSearchListExtensions(timespan, archivedb, statsdb)
-
-    def _getCommonSearchList(self, timespan, archivedb, statsdb):
-        """Assemble the common searchList elements for all reports."""
-        return []
 
     def _getSummaryBySearchList(self, timespan):
         # Return the search list variables for 'summarize by' reports.
@@ -272,6 +268,10 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         searchList = [obj.get_extension(timespan, archivedb, statsdb) for obj in self.search_list_objs]
         return searchList
 
+    def getToDateSearchList(self, archivedb, statsdb, timespan):
+        """Backwards compatible entry."""
+        return []
+    
     def _getFileName(self, template, timespan):
         """Calculate a destination filename given a template filename.
         Replace 'YYYY' with the year, 'MM' with the month.  Strip off any
