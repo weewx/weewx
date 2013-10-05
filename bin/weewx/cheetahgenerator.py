@@ -66,7 +66,7 @@ default_coolbase = (65.0, "degree_F", "group_temperature")
 # Default search list:
 default_search_list = ["weewx.cheetahgenerator.Almanac", "weewx.cheetahgenerator.Station", 
                        "weewx.cheetahgenerator.Stats",   "weewx.cheetahgenerator.UnitInfo",
-                       "weewx.cheetahgenerator.Extras",  "weewx.cheetahgenerator.Trend"]
+                       "weewx.cheetahgenerator.Extras",  "weewx.cheetahgenerator.Current"]
 
 def logmsg(lvl, msg):
     syslog.syslog(lvl, 'cheetahgenerator: %s' % msg)
@@ -253,18 +253,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
 
     def _getCommonSearchList(self, timespan, archivedb, statsdb):
         """Assemble the common searchList elements for all reports."""
-
-        
-#         # If the user has supplied an '[Extras]' section in the skin
-#         # dictionary, include it in the search list. Otherwise, just include
-#         # an empty dictionary.
-#         extra_dict = self.skin_dict['Extras'] if self.skin_dict.has_key('Extras') else {}
-# 
-#         # Put together the search list:
-#         searchList = [{'Extras'     : extra_dict}]
-        searchList = []
-
-        return searchList
+        return []
 
     def _getSummaryBySearchList(self, timespan):
         # Return the search list variables for 'summarize by' reports.
@@ -276,16 +265,11 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
     def _getToDateSearchList(self, timespan, archivedb, statsdb):
         # Return the search list variables for 'to date' reports.
 
-        current_rec = self._getRecord(archivedb, timespan.stop)
-
-        searchList = [self.outputted_dict,
-                      {'current' : current_rec}]
-        return searchList
+        return [self.outputted_dict]
 
     def _getSearchListExtensions(self, timespan, archivedb, statsdb):
-        searchList = []
-        for obj in self.search_list_objs:
-            searchList.append(obj.get_extension(timespan, archivedb, statsdb))
+
+        searchList = [obj.get_extension(timespan, archivedb, statsdb) for obj in self.search_list_objs]
         return searchList
 
     def _getFileName(self, template, timespan):
@@ -404,7 +388,7 @@ class TrendObj(object):
                                        self.now_rec.converter)
 
 # =============================================================================
-# Search list extensions
+# Classes used to implement the Search list
 # =============================================================================
 
 class SearchList(object):
@@ -512,8 +496,9 @@ class Extras(SearchList):
         # an empty dictionary.
         self.Extras = generator.skin_dict['Extras'] if generator.skin_dict.has_key('Extras') else {}
 
-class Trend(SearchList):
-    """Class for implmenting the $trend tag"""
+class Current(SearchList):
+    """Class for implementing the $current and $trend tags"""
+
     def get_extension(self, timespan, archivedb, statsdb):
         
         try:
@@ -525,8 +510,8 @@ class Trend(SearchList):
         current_rec = self.generator._getRecord(archivedb, timespan.stop)
         former_rec  = self.generator._getRecord(archivedb, timespan.stop - time_delta)
         
-        return {'trend': TrendObj(former_rec, current_rec, time_delta)}
-
+        return {'current' : current_rec,
+                'trend'   : TrendObj(former_rec, current_rec, time_delta)}
         
 # =============================================================================
 # Filters used for encoding
