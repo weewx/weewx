@@ -65,8 +65,8 @@ default_coolbase = (65.0, "degree_F", "group_temperature")
 
 # Default search list:
 default_search_list = ["weewx.cheetahgenerator.Almanac", "weewx.cheetahgenerator.Station", 
-                       "weewx.cheetahgenerator.Stats", "weewx.cheetahgenerator.UnitInfo",
-                       "weewx.cheetahgenerator.Extras"]
+                       "weewx.cheetahgenerator.Stats",   "weewx.cheetahgenerator.UnitInfo",
+                       "weewx.cheetahgenerator.Extras",  "weewx.cheetahgenerator.Trend"]
 
 def logmsg(lvl, msg):
     syslog.syslog(lvl, 'cheetahgenerator: %s' % msg)
@@ -275,23 +275,11 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
 
     def _getToDateSearchList(self, timespan, archivedb, statsdb):
         # Return the search list variables for 'to date' reports.
-        # Get the time over which a trend will be determine. In case the skin
-        # dictionary does not have the necessary information, catch the
-        # exception and substitute a default.
-        try:
-            time_delta = int(self.skin_dict['Units']['Trend']['time_delta'])
-        except KeyError:
-            time_delta = 10800    # 3 hours
-            
-        # Get current record, and one from the beginning of the trend period.
+
         current_rec = self._getRecord(archivedb, timespan.stop)
-        former_rec  = self._getRecord(archivedb, timespan.stop - time_delta)
-        
-        trend = Trend(former_rec, current_rec, time_delta)
 
         searchList = [self.outputted_dict,
-                      {'current' : current_rec,
-                       'trend'   : trend}]
+                      {'current' : current_rec}]
         return searchList
 
     def _getSearchListExtensions(self, timespan, archivedb, statsdb):
@@ -367,7 +355,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
 
         return (template, statsdb, archivedb, destination_dir, encoding)
 
-class Trend(object):
+class TrendObj(object):
     """Helper class that binds together a current record and one a delta
     time in the past. Useful for trends.
     
@@ -436,7 +424,7 @@ class SearchList(object):
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
                    start and stop times of the domain of valid times.
         """
-        raise NotImplementedError("Function 'get_extension' not implemented")
+        return self
 
 class Almanac(SearchList):
     """Class that implements the 'almanac' extension."""
@@ -477,10 +465,6 @@ class Almanac(SearchList):
                                              pressure=pressure_mbar,
                                              moon_phases=self.moonphases,
                                              formatter=generator.formatter)
-        
-    def get_extension(self, timespan, archivedb, statsdb):
-        return self
-
 
 class Station(SearchList):
     """Class that represents the 'station' extension."""
@@ -490,9 +474,6 @@ class Station(SearchList):
                                              generator.formatter, generator.converter,
                                              generator.skin_dict)
         
-    def get_extension(self, timespan, archivedb, statsdb):
-        return self
-            
 class Stats(SearchList):
     """Class that represents the 'station' extension."""
         
@@ -522,9 +503,6 @@ class UnitInfo(SearchList):
         self.unit = weewx.units.UnitInfoHelper(generator.formatter,
                                                generator.converter)
         
-    def get_extension(self, timespan, archivedb, statsdb):
-        return self
-
 class Extras(SearchList):
     """Class for exposing the [Extras] section in the skin config dictionary."""
     def __init__(self, generator):
@@ -533,10 +511,23 @@ class Extras(SearchList):
         # dictionary, include it in the search list. Otherwise, just include
         # an empty dictionary.
         self.Extras = generator.skin_dict['Extras'] if generator.skin_dict.has_key('Extras') else {}
-        
+
+class Trend(SearchList):
+    """Class for implmenting the $trend tag"""
     def get_extension(self, timespan, archivedb, statsdb):
-        return self
-    
+        
+        try:
+            time_delta = int(self.generator.skin_dict['Units']['Trend']['time_delta'])
+        except KeyError:
+            time_delta = 10800    # 3 hours
+            
+        # Get current record, and one from the beginning of the trend period.
+        current_rec = self.generator._getRecord(archivedb, timespan.stop)
+        former_rec  = self.generator._getRecord(archivedb, timespan.stop - time_delta)
+        
+        return {'trend': TrendObj(former_rec, current_rec, time_delta)}
+
+        
 # =============================================================================
 # Filters used for encoding
 # =============================================================================
