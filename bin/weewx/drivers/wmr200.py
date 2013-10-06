@@ -13,6 +13,9 @@
 # Special recognition to Lars de Bruin <l...@larsdebruin.net> for contributing
 # packet decoding code.
 #
+#    $Revision$
+#    $Date$
+#
 """Classes and functions to interfacing with an Oregon Scientific WMR200 station
 
     Oregon Scientific
