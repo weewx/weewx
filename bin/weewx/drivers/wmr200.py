@@ -703,6 +703,8 @@ class PacketPressure(Packet):
         # Low byte of pressure. Value is in hPa.
         # High nibble is forecast
         # Low nibble is high byte of pressure.
+        # Unfortunately, we do not know if this is MSLP corrected pressure,
+        # or "gauge" pressure. We will assume the former.
         pressure = float(((self._pkt_data[8] & 0x0f) << 8) | self._pkt_data[7])
         forecast = float((self._pkt_data[7] >> 4))
 
@@ -719,9 +721,9 @@ class PacketPressure(Packet):
             dprint('Pressure unknown nibble: %d' % (unknownNibble))
         dprint('Altitude corrected Pressure: %d hPa' % (altPressure))
 
-        self._record = {'barometer'   : altPressure,
-                        'pressure'    : pressure,
-                        'altimeter'   : forecast,
+        self._record = {'barometer'   : pressure,
+                        'altimeter'   : altPressure,
+                        'forecastIcon': forecast,
                         'dateTime'    : self._timeStampEpoch(),
                         'usUnits'     : weewx.METRIC}
 
