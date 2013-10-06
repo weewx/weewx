@@ -400,7 +400,7 @@ class StdArchive(StdService):
     
     def __init__(self, engine, config_dict):
         super(StdArchive, self).__init__(engine, config_dict)
-
+        
         # Get the archive interval from the configuration file
         software_archive_interval = config_dict['StdArchive'].as_int('archive_interval')
 
@@ -424,6 +424,10 @@ class StdArchive(StdService):
         self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
         syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be attempted in '%s'" % (self.record_generation,))
 
+        # Get whether to use LOOP data in the high/low statistics (or just archive data):
+        self.loop_hilo = weeutil.weeutil.tobool(config_dict['StdArchive'].get('loop_hilo', True))
+        syslog.syslog(syslog.LOG_DEBUG, "wxengine: Use LOOP data in hi/low calculations: %d" % self.loop_hilo)
+        
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
         
@@ -464,7 +468,7 @@ class StdArchive(StdService):
         # Try adding the LOOP packet to the existing accumulator. If the timestamp is
         # outside the timespan of the accumulator, an exception will be thrown:
         try:
-            self.accumulator.addRecord(event.packet)
+            self.accumulator.addRecord(event.packet, self.loop_hilo)
         except weewx.accum.OutOfSpan:
             # Shuffle accumulators:
             (self.old_accumulator, self.accumulator) = (self.accumulator, self._new_accumulator(the_time))

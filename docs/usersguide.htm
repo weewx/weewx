@@ -1112,6 +1112,12 @@ Version: 2.5.0a1
       that do not include memory for a logger. These users should set this option 
       to '<span class="code">software</span>', forcing software record generation. 
       Default is <span class="code">hardware</span>.</p>
+	  <p class="config_option">loop_hilo</p>
+	  <p>Set to <span class="code">True</span> to have LOOP data and archive 
+	  data to be used for high / low statistics. Set to <span class="code">False</span> 
+	  to have only archive data used. If your sensor emits lots of spiky data, 
+	  setting to <span class="code">False</span> may help. Default is
+	  <span class="code">True</span>.</p>
     <p class="config_option">archive_schema</p>
     <p>This is used only when the archive database is first created. Thereafter, 
       it is downloaded from the database. It should point to a Python list 

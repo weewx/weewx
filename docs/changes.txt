@@ -12,6 +12,10 @@ Details in a new section in the Customization Guide.
 
 Added aggregate type "minmax" and "maxmin". Thank you user Gary Roderick!
 
+New option in [StdArchive] called "loop_hilo". Setting to True will
+cause only LOOP and archive data to be used for high/low statistics.
+Setting to False causes only archive data to be used.
+
 When a template fails, skip only that template, not everything that the
 generator is processing.
 
