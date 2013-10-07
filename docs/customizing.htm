@@ -3,10 +3,10 @@
   <!-- $Revision$ --><!-- $Author$ --><!-- $Date$ --><!-- For some reason, the table of contents generator used in this --><!-- document demands that all heading elements be on one line. -->
   <head>
     <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8" />
-    <meta http-equiv="Content-Language" content="en-us" />
+    <meta content="en-us" http-equiv="Content-Language" />
     <title>weewx: Customization Guide</title>
-    <link rel="stylesheet" href="weewx_docs.css" />
-    <script type="text/javascript" src="samaxesjs.toc-1.5.min.js"></script>
+    <link href="weewx_docs.css" rel="stylesheet" />
+    <script src="samaxesjs.toc-1.5.min.js" type="text/javascript"></script>
     <style>
     </style>
   </head>
@@ -42,7 +42,7 @@
         loading "<em>services</em>", then arranging for them to be called when
         key events occur, such as the arrival of LOOP data. The default install
         of <span class="code">weewx</span> includes the following services: </p>
-      <table summary="Overview of the weewx architecture" style="width: 80%" class="center">
+      <table class="center" style="width: 80%" summary="Overview of the weewx architecture">
         <tbody>
           <tr>
             <td><strong>Service</strong></td>
@@ -108,7 +108,7 @@
       </p>
       <p>The default distribution of <span class="code">weewx</span> includes
         three reports: </p>
-      <table summary="Standard reports included in weewx" style="width: 80%" class="center">
+      <table class="center" style="width: 80%" summary="Standard reports included in weewx">
         <tbody>
           <tr>
             <td><strong>Report</strong></td>
@@ -159,15 +159,15 @@
         Generators can also copy files around or FTP/rsync them to remote
         locations. The default install of <span class="code">weewx </span>includes
         the following generators: </p>
-      <table summary="Generators included in weewx" style="width: 80%" class="center">
+      <table class="center" style="width: 80%" summary="Generators included in weewx">
         <tbody>
           <tr>
             <td><strong>Generator</strong></td>
             <td><strong>Function</strong></td>
           </tr>
           <tr>
-            <td class="code">weewx.filegenerator.FileGenerator</td>
-            <td>Generates files from templates. Used to generate HTML and text
+            <td class="code">weewx.cheetahgenerator.CheetahGenerator</td>
+            <td>Generates files from templates, using the Cheetah template engine. Used to generate HTML and text
               files.</td>
           </tr>
           <tr>
@@ -194,7 +194,7 @@
         layer. Instead, they just move files around. </p>
       <p>Which generators are to be run for a given skin is specified in the
         skin's configuration file <span class="code">skin.conf</span>, in
-        section <span class="code">[Generators]</span>.</p>
+        section <a href="#Generators_section"><span class="code">[Generators]</span></a>.</p>
       <h2>Databases</h2>
       <p>There are two databases used by <span class="code">weewx</span>, which
         can be implemented either by using <a href="http://www.sqlite.org/">SQLITE3</a>,
@@ -514,7 +514,7 @@ $month.outTemp.max</pre>
       <p>The tag <span class="code"><em>optional_formatting</em></span> can be
         used with either current observations or aggregations. It can be one of:
       </p>
-      <table summary="Formatting Options" style="width: 90%" class="center">
+      <table class="center" style="width: 90%" summary="Formatting Options">
         <tbody>
           <tr>
             <td><strong>Optional Formatting Tag</strong></td>
@@ -573,7 +573,7 @@ $month.outTemp.max</pre>
         </tbody>
       </table>
       <p>Summary: </p>
-      <table summary="Summary of formatting options" style="width: 80%" class="center">
+      <table class="center" style="width: 80%" summary="Summary of formatting options">
         <tbody>
           <tr>
             <td><strong>Formatting Tag</strong></td>
@@ -627,7 +627,7 @@ $month.outTemp.max</pre>
         </tbody>
       </table>
       <p>Here are some examples with the expected results: </p>
-      <table summary="Formatting options with expected results" class="center">
+      <table class="center" summary="Formatting options with expected results">
         <tbody>
           <tr>
             <td><strong>Tag</strong></td>
@@ -778,7 +778,7 @@ $month.outTemp.max</pre>
       <h3>Tag <span class="code">$trend</span></h3>
       <p>The tag <span class="code">$trend</span> is available for time trends,
         such as barometer trends. Here are some examples:</p>
-      <table summary="Examples of using unit formats" style="width: 40%" class="center">
+      <table class="center" style="width: 40%" summary="Examples of using unit formats">
         <tbody>
           <tr>
             <td><strong>Tag</strong></td>
@@ -812,7 +812,7 @@ $month.outTemp.max</pre>
       <h3>Tag <span class="code">$unit</span></h3>
       <p>The unit type, label, and string formats are also available, allowing
         you to do highly customized labels: </p>
-      <table summary="Examples of using unit formats" style="width: 40%" class="center">
+      <table class="center" style="width: 40%" summary="Examples of using unit formats">
         <tbody>
           <tr>
             <td><strong>Tag</strong></td>
@@ -929,7 +929,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>or </p>
       <pre class="tty">$almanac.next_first_quarter_moon</pre>
       <p>Here is a table of the information that falls into this category:</p>
-      <table align="center" style="width: 60%" class="code">
+      <table align="center" class="code" style="width: 60%">
         <tbody>
           <tr>
             <td>previous_equinox</td>
@@ -997,7 +997,7 @@ Sunrise, sunset: 06:51 19:30</pre>
           class="code"><em>heavenly_body</em></span> tag. All the planets and
         many stars are in the list.</p>
       <p>The <span class="code">attribute</span> tag can be one of </p>
-      <table align="center" style="width: 60%" class="code">
+      <table align="center" class="code" style="width: 60%">
         <tbody>
           <tr>
             <td>az</td>
@@ -1043,32 +1043,42 @@ Sunrise, sunset: 06:51 19:30</pre>
           </tr>
         </tbody>
       </table>
-      <h2>Writing a custom generator</h2>
-      <p>To do more sophisticated customization it may be necessary to extend an
-        existing generator, or write your own. </p>
-      <h4>Extending an existing report generator</h4>
-      <p>In the section on <em><a href="#templates">Customizing templates</a></em>,
-        we have seen how you can change a template and make use of the various
-        tags available such as <span class="code">$day.outTemp.max</span> for
-        the maximum outside temperature for the day. But, what if you want to
-        introduce some new data for which no tag is available? </p>
+      <h2 id="Defining_new_tags">Defining new tags</h2>
+      In the section on <em><a href="#templates">Customizing templates</a></em>,
+      we have seen how you can change a template and make use of the various
+      tags available such as <span class="code">$day.outTemp.max</span> for the
+      maximum outside temperature for the day. But, what if you want to
+      introduce some new data for which no tag is available?
       <p>If you wish to introduce a static tag, that is, one that will not
         change with time (such as a Google analytics Tracker ID, or your name),
         then this is very easy: simply put it in section <span class="code"><a
             href="#Extras">[Extras]</a></span> in the skin configuration file.
         More information on how to do this can be found there. </p>
       <p>But, what if you wish to introduce a more dynamic tag, one that
-        requires some calculation, or that uses the database? Simply putting it
+        requires some calculation, or perhaps uses the database? Simply putting it
         in the <span class="code">[Extras]</span> section won't do, because
         then it cannot change. </p>
-      <p>The answer is to extend the default file generator<span class="code">
-          weewx.filegenerator.FileGenerator</span> by subclassing, then override
-        the function that returns the <em>search list</em>. The search list is
-        a list of dictionaries that the template engine searches through, trying
-        all keys in each dictionary, looking for a match for your tag. For
-        example, for the "ToDate" generator, you would override function <span
-          class="code">getToDateSearchList()</span>, and add a small dictionary
-        with your tag as the key to the list returned by the superclass. </p>
+      <p>The answer is to write a <em>search list extension</em>.</p>
+      <h3>Search list</h3>
+      <p> The Cheetah template engine (which <span class="code">weewx</span> uses) finds tags by 
+		scanning a <em>search
+          list</em>,
+          a Python list of objects. For example, for a tag <span class="code">$foo</span>, the
+          engine will scan down the list, trying each object <span class="code">obj</span> in turn. First
+          it tries using <span class="code">foo</span> as an attribute, that is, 
+		<span class="code">obj.foo</span>. If that raises an
+          exception <span class="code">AttributeError</span>, then it will try 
+		<span class="code">foo</span> as a key, that is
+          <span class="code">obj[key]</span>. If that raises a 
+		<span class="code">KeyError</span>, then it moves on to the next item
+          in the list. The first match that does not raise an exception is
+          returned. If no match is found, it raises a <span class="code">NameMapper.NotFound</span>
+          exception.</p>
+		<h3>
+        Extending the list</h3>
+      <p>Weewx comes with a number of objects already in the search list, but you can 
+	  extend it. To do so, you should have some familiarity with Python, in
+      particular, how to write new classes and member functions for them. </p>
       <p>Let's look at an example. The regular version of <span class="code">weewx</span>
         offers statistical summaries by day, week, month, and year. Suppose we
         would like to add two more: </p>
@@ -1081,63 +1091,71 @@ Sunrise, sunset: 06:51 19:30</pre>
           week, that is since midnight seven days ago.</li>
       </ul>
       <p>This example is included in the distribution as <span class="symcode">
-          $BIN_ROOT</span><span class="code">/examples/mygenerator.py</span>: </p>
-      <pre class="tty">import datetime
+          $BIN_ROOT</span><span class="code">/examples/xsearch.py</span>: </p>
+        <pre class="tty">import datetime
 import time
 
-from weewx.filegenerator import FileGenerator
+from weewx.cheetahgenerator import SearchList
 from weewx.stats import TimeSpanStats
 from weeutil.weeutil import TimeSpan
 
-class MyFileGenerator(FileGenerator):                                  # 1
-
-    def getToDateSearchList(self, archivedb, statsdb, valid_timespan): # 2
+class MyXSearch(SearchList):                                #1
+    
+    def __init__(self, generator):                          #2
+        SearchList.__init__(self, generator)
+  
+    def get_extension(self, valid_timespan, archivedb, statsdb): #3
 
         # First, get a TimeSpanStats object for all time. This one is easy
         # because the object valid_timespan already holds all valid times to be
         # used in the report.
         all_stats = TimeSpanStats(valid_timespan,
                                   statsdb,
-                                  formatter=self.formatter,
-                                  converter=self.converter)            # 3
-
+                                  formatter=self.generator.formatter,
+                                  converter=self.generator.converter)         # 4
+        
         # Now get a TimeSpanStats object for the last seven days. This one we
         # will have to calculate. First, calculate the time at midnight, seven
         # days ago. The variable week_dt will be an instance of datetime.date.
-        week_dt = datetime.date.fromtimestamp(valid_timespan.stop) - datetime.timedelta(weeks=1) # 4
+        week_dt = datetime.date.fromtimestamp(valid_timespan.stop) - datetime.timedelta(weeks=1)    #5
         # Now convert it to unix epoch time:
-        week_ts = time.mktime(week_dt.timetuple())                     # 5
+        week_ts = time.mktime(week_dt.timetuple())                  # 6
         # Now form a TimeSpanStats object, using the time span we just calculated:
         seven_day_stats = TimeSpanStats(TimeSpan(week_ts, valid_timespan.stop),
                                         statsdb,
-                                        formatter=self.formatter,
-                                        converter=self.converter)      # 6
+                                        formatter=self.generator.formatter,
+                                        converter=self.generator.converter)   #7
 
-        # Get the superclass's search list:       
-        search_list = FileGenerator.getToDateSearchList(self, archivedb, statsdb, valid_timespan) # 7
-
-        # Now tack on my two additions as a small dictionary with keys 'alltime' and 'seven_day':
-        search_list += [ {'alltime'   : all_stats,
-                          'seven_day' : seven_day_stats} ]             # 8
-
-        return search_list</pre>
+        # Now create a small dictionary with keys 'alltime' and 'seven_day':
+        search_list_extension = {'alltime'   : all_stats,
+                                 'seven_day' : seven_day_stats}               # 8
+        
+        return search_list_extension&nbsp;</pre>
       <p>Going through the example, line by line: </p>
       <ol>
-        <li>Subclass from class <span class="code">FileGenerator</span>. The
-          new class will be caled <span class="code">MyFileGenerator</span> </li>
-        <li>Override member function <span class="code">getToDateSearchList()</span>.
-          The parameters that will be passed in are:
+          <li>Create a
+          new class called <span class="code">MyXSearch</span>, which will 
+		  inherit from class <span class="code">SearchList</span>. All search 
+		  list extensions inherit from this class.</li>
+		  <li>Create an initializer for our new class. In this case, the 
+		  initializer does nothing except pass its only parameter,
+		  <span class="code">generator</span>, a reference to the calling 
+		  generator, to its superclass, <span class="code">SearchList</span>. 
+		  The superclass will store it in <span class="code">self</span>.</li>
+        <li>Override member function <span class="code">get_extension()</span>.
+          This function will be called when the generator is ready to accept 
+		your new search list extension. The parameters that will be passed in are:
           <ul>
             <li><span class="code">self</span> Python's way of indicating the
               instance we are working with;</li>
-            <li><span class="code">archivedb</span> An instance of <span class="code">weewx.archive.Archive</span>,
-              holding the archive database;</li>
-            <li><span class="code">statsdb</span> An instance of <span class="code">weewx.stats.StatsDb</span>,
-              holding the statistical database;</li>
             <li><span class="code">valid_timespan</span> An instance of the
               utility class <span class="code">TimeSpan</span>. This will
-              contain the valid start and ending times of the "to date" summary
-              period; nominally all possible times. </li>
+              contain the valid start and ending times used by the template. 
+			Normally, this is all valid times; </li>
+            <li><span class="code">archivedb</span> An instance of <span class="code">weewx.archive.Archive</span>,
+              holding the archive database;</li>
+            <li><span class="code">statsdb</span> An instance of <span class="code">weewx.stats.StatsDb</span>, 
+			holding the statistical database.</li>
           </ul>
         </li>
         <li>The class <span class="code">TimeSpanStats</span> represents a
@@ -1148,18 +1166,18 @@ class MyFileGenerator(FileGenerator):                                  # 1
             <li>The first is the timespan over which the calculation is to be
               done. Here, we have a lucky coincidence: the variable <span class="code">valid_timespan</span>
               already holds a <span class="code">TimeSpan</span> object
-              representing the domain of valid timespans, so we simply pass it
+              representing the domain of all valid timespans, so we simply pass it
               in.</li>
             <li>The second is the statistical database the calculation is to be
               run against. We simply pass in <span class="code">statsdb</span>.</li>
-            <li>The third should be an instance of class <span class="code">weewx.units.Formatter</span>,
-              which contains information about how the results should be
-              formatted. We just pass in the formatter set up by our superclass,
-              <span class="code">self.formatter</span>.</li>
+            <li>The third should be an instance of class <span class="code">weewx.units.Formatter</span>, 
+			which contains information about how the results should be 
+			formatted. We just pass in the formatter set up by the generator,
+              <span class="code">self.generator.formatter</span>.</li>
             <li>The fourth should be an instance of <span class="code">weewx.units.Converter</span>,
               which contains information about the target units (<em>e.g.</em>,
-              "<span class="code">degree_C</span>") that are to be used. Again,
-              we just pass in the instance set up by our superclass, <span class="code">self.converter</span>.</li>
+              "<span class="code">degree_C</span>") that are to be used. Again, 
+			we just pass in the instance set up by the generator, <span class="code">self.generator.converter</span>.</li>
           </ul>
         </li>
       </ol>
@@ -1168,25 +1186,50 @@ class MyFileGenerator(FileGenerator):                                  # 1
         that represented the time over which we wanted to do the calculations.
         Setting up an instance that will work for the last seven days is a bit
         trickier. Continuing our example...</p>
-      <ol start="4">
+        <ol start="5">
         <li>The object <span class="code">valid_timespan</span> holds the
-          domain of valid times, but we need not the time of the report, which
-          will be <span class="code">valid_timespan.stop</span>, but the time
+          domain of all valid times, but in order to calculate statistics for 
+		the last seven days, we need not the earliest valid time, but the time
           at midnight seven days ago. So, we do a little Python date arithmetic
           to calculate this. The object <span class="code">week_dt</span> will
           be an instance of <span class="code">datetime.date</span>.</li>
         <li>We convert it to unix epoch time.</li>
         <li>Now we are ready to initialize an appropriate <span class="code">TimeSpanStats</span>
-          object. It's the same as in step #3, except we use our new timespan
+          object. It's the same as in step #4, except we use our new timespan
           object.</li>
-        <li>Get the search list from the superclass. </li>
-        <li>Tack on our addition and return the results. The search list will
-          now consist of a list of dictionaries, including a small one we added
-          on the end that has two keys, '<span class="code">alltime</span>', and
-          '<span class="code">seven_day</span>'. If one of these keys is used,
-          the appropriate <span class="code">TimeSpanStats</span> object will
-          be returned.</li>
+        <li>Create a small dictionary with two keys, '<span class="code">alltime</span>', and
+          '<span class="code">seven_day</span>' and return it. </li>
       </ol>
+        <p>The last step is to tell the template engine where to find our 
+		extension. You do that by going into the skin configuration file,
+		<span class="code">skin.conf</span>, and editing the option
+		<span class="code">search_list</span>, adding our new extension 
+		somewhere in the list. When you're done, it will look something like 
+		this:</p>
+		<pre class="tty">[CheetahGenerator]
+
+    #
+    # This section is used by the generator CheetahGenerator, and specifies which
+    # files are to be generated from which template.
+    #
+
+    encoding = html_entities    # Possible encodings are 'html_entities', 'utf8', or 'strict_ascii'
+    
+    search_list = <span class="highlight">examples.xsearch.MyXSearch, </span>weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras, weewx.cheetahgenerator.Current
+  
+    ... (as before)</pre>
+		<p>Here, the addition has been <span class="highlight">highlighted</span>. 
+		Note that it is in the section <span class="code">[CheetahGenerator]</span>. 
+		This section was called <span class="code">[FileGenerator]</span> in 
+		earlier versions of <span class="code">weewx</span>, a name which will 
+		still work. Incidentally, you can see the search list extensions that 
+		come with <span class="code">weewx</span>, and the familiar tags they provide.</p>
+		<p>Now, if the Cheetah engine encounters the tag <span class="code">
+		$alltime</span>, it will scan the search list, looking for an attribute 
+		or key that matches <span class="code">alltime</span>. When it gets to 
+		the little dictionary we provided, it will find a matching key, allowing 
+		it to retrieve
+          the appropriate <span class="code">TimeSpanStats</span> object.</p>
       <p>With this approach, you can now include "all time" or "seven day"
         statistics in your HTML templates: </p>
       <pre class="tty">...
@@ -1204,17 +1247,12 @@ class MyFileGenerator(FileGenerator):                                  # 1
         &lt;td&gt;$seven_day.rain.sum
     &lt;/tr&gt;
     ... (more table entries)</pre>
-      <p>One additonal step is required: to tell the report service to run your
-        generator instead of the default generator. Modify option <span class="code">[Generators]generator_list</span>
-        in the skin configuration file <span class="code">skin.conf</span> to
-        read: </p>
-      <pre class="tty">generator_list = examples.mygenerator.MyFileGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator</pre>
       <p>NB: If you create a custom generator some place other than where <span
           class="code">weewxd</span> resides, you may have to specify its
         location in the environment variable <span class="code">PYTHONPATH</span>:
       </p>
-      <p>export PYTHONPATH=/home/me/secret_location</p>
-      <h2>Upgrades and user extensions</h2>
+        <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
+		<h2>Upgrades and user extensions</h2>
       <p>In the examples above, we subclassed <span class="code">weewx</span>
         classes to add functionality. Where should you put your new code? If you
         simply modify the examples in place, then your changes will get
@@ -1295,7 +1333,7 @@ class MyFileGenerator(FileGenerator):                                  # 1
         See the Appendix <em> <a href="#units">Units</a></em> for more
         information, including a concise summary of the groups, their members,
         and which options can be used for each group. </p>
-      <p class="config_important"><a name="group_altitude" class="config_option">group_altitude</a>
+      <p class="config_important"><a class="config_option" name="group_altitude">group_altitude</a>
       </p>
       <p>Which measurement unit to be used for altitude. Possible options are '<span
           class="code">foot</span>' or '<span class="code">meter</span>'. </p>
@@ -1333,7 +1371,7 @@ class MyFileGenerator(FileGenerator):                                  # 1
         resolution. Possible options are one "<span class="code">mile_per_hour2</span>",
         "<span class="code">km_per_hour2</span>", "<span class="code">knot2</span>",
         or "<span class="code">meter_per_second2</span>". </p>
-      <p><a name="group_temperature" class="config_important">group_temperature</a>
+      <p><a class="config_important" name="group_temperature">group_temperature</a>
       </p>
       <p>The measurement unit to be used for temperatures. Options are "<span class="code">degree_F</span>"
         or "<span class="code">degree_C</span>." </p>
@@ -1398,7 +1436,7 @@ ephem_year = %d-%b-%Y %H:%M</pre>
       <pre class="tty">heating_base = 65.0, degree_F
 cooling_base = 20.0, degree_C</pre>
       <h3 class="config_section">[[Trend]]</h3>
-      <p class="config_option" id="Trend">time_delta</p>
+      <p id="Trend" class="config_option">time_delta</p>
       <p>Set to the time difference over which you want trends to be calculated.
         The default is 3 hours.</p>
       <h2 class="config_section">[Labels]</h2>
@@ -1421,8 +1459,10 @@ outTemp = Outside Temperature</pre>
         eight phases of the moon. Default is "<span class="code">New, Waxing
           crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last
           quarter, Waning crescent</span>". </p>
-      <h2 class="config_section">[FileGenerator]</h2>
-      <p>This section is used by generator <span class="code">weewx.reportengine.FileGenerator</span>
+      <h2 class="config_section">[CheetahGenerator]</h2>
+      <p>Before V2.5, this section was called <span class="code">[FileGenerator]</span>. 
+	  Older versions and names are 100% backwards compatible.</p>
+		<p>This section is used by generator <span class="code">weewx.cheetahgenerator.CheetahGenerator</span>
         and controls text generation from templates, specifically which files
         are to be produced from which template. </p>
       <h3>Overview of file generation</h3>
@@ -1463,15 +1503,15 @@ outTemp = Outside Temperature</pre>
       <p class="config_option">encoding </p>
       <p>This option controls which encoding is to be used for the generated
         output. There are 3 possible choices: </p>
-      <table style="width: 90%" class="center">
+      <table class="center" style="width: 90%">
         <tbody>
           <tr>
             <td><strong>Encoding</strong></td>
             <td><strong>Comments</strong></td>
           </tr>
           <tr>
-            <td class="code">html_entities</td>
-            <td>Non 7-bit characters will be represented as HTML entities (<em>e.g.</em>,
+            <td class="code" style="height: 53px">html_entities</td>
+            <td style="height: 53px">Non 7-bit characters will be represented as HTML entities (<em>e.g.</em>,
               the degree sign will be represented as <span class="code">&amp;#176;</span>)</td>
           </tr>
           <tr>
@@ -1487,6 +1527,13 @@ outTemp = Outside Temperature</pre>
       <p>By default, the encoding <span class="code">html_entities</span> is
         used for HTML files, <span class="code">strict_ascii</span> for the
         NOAA template files. </p>
+		<p class="config_option">search_list</p>
+		<p>This is the list of search list extensions that will be scanned by 
+		the template engine, looking for tags. See the section <em>
+		<a href="#Defining_new_tags">Defining new tags</a></em> and the 
+		<a href="http://cheetahtemplate.org/docs/users_guide_html/users_guide.html">Cheetah documentation</a> for details on 
+		search lists. The default list is:</p>
+		<pre class="tty"> search_list = weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras, weewx.cheetahgenerator.Current</pre>
       <h3 class="config_section">[[SummaryByMonth]]</h3>
       <p>This section controls which summaries-by-month are generated. For each
         such summary, it should have its own sub-subsection, with option <span
@@ -1635,13 +1682,13 @@ outTemp = Outside Temperature</pre>
         for line graphs, the latter, <span class="code">bar_gap_fraction</span>,
         for bar graphs. Here's what the resultant plots look like without and
         with this option being specified:</p>
-      <div style="width:80%;margin:0 auto;" class="center">
-        <div style="float:left"> <img width="334" height="197" alt="Gap not shown"
-            src="day-gap-not-shown.png" />
+      <div class="center" style="width:80%;margin:0 auto;">
+        <div style="float:left"> <img width="334" height="197" src="day-gap-not-shown.png"
+            alt="Gap not shown" />
           <p class="caption"> No <span class="code">line_gap_fraction</span>
             specified</p>
         </div>
-        <div> <img width="334" height="197" alt="Gap showing" src="day-gap-showing.png" />
+        <div> <img width="334" height="197" src="day-gap-showing.png" alt="Gap showing" />
           <p class="caption"> With <span class="code">line_gap_fraction=0.01</span></p>
         </div>
       </div>
@@ -1689,8 +1736,8 @@ outTemp = Outside Temperature</pre>
         use averaging. </p>
       <p>The result is a nice plot of the day's temperature, overlaid with a
         3-hour smoothed average: </p>
-      <p class="center"> <img width="300" height="180" src="daytemp_with_avg.png"
-          alt="Daytime temperature with running average" /> </p>
+      <p class="center"> <img width="300" height="180" alt="Daytime temperature with running average"
+          src="daytemp_with_avg.png" /> </p>
       <p>One more example. This one shows daily high and low temperatures for a
         year:</p>
       <pre class="tty">[[year_images]]
@@ -1705,8 +1752,8 @@ outTemp = Outside Temperature</pre>
             aggregate_type = min
            label = Low Temperature</pre>
       <p>This results in the plot <span class="code">yearhilow.png</span>:</p>
-      <p class="center"><img width="300" height="180" src="yearhilow.png" alt="Daily highs and lows" />
-      </p>
+      <p class="center"><img width="300" height="180" alt="Daily highs and lows"
+          src="yearhilow.png" /> </p>
       <h3>Progressive vector plots</h3>
       <p><span class="code">Weewx</span> can produce progressive vector plots as
         well as the more conventional x-y plots. To produce these, use plot type
@@ -1734,8 +1781,8 @@ outTemp = Outside Temperature</pre>
         aggregation (3,600 seconds). For the first set of vectors, the hourly
         average will be used. In the second, the max of the gusts will be used:
       </p>
-      <p class="center"> <img width="300" height="180" src="weekgustoverlay.png"
-          alt="hourly average wind vector overlaid with gust vectors" /> </p>
+      <p class="center"> <img width="300" height="180" alt="hourly average wind vector overlaid with gust vectors"
+          src="weekgustoverlay.png" /> </p>
       <p>By default, the sticks in the progressive wind plots point towards the
         wind source. That is, the stick for a wind from the west will point
         left. If you have a chronic wind direction (as I do), you may want to
@@ -1771,14 +1818,14 @@ outTemp = Outside Temperature</pre>
     image_width  = 600
     image_height = 360
     [[[[barometer]]]]</pre>
-      <h2 class="config_section">[Generators]</h2>
-      <p class="config_option">generator_list </p>
+      <h2 class="config_section" id="Generators_section">[Generators]</h2>
+      <p class="config_option" id="generator_list">generator_list </p>
       <p>This option controls which generators get run for this skin. It is a
         comma separated list. The generators will be run in this order. </p>
       <a name="localization"></a>
       <h1>Localization</h1>
       <p>Weewx has been designed to make localization fairly straightforward.
-        What follows is a guide to what you will need to do in order to localize
+        What follows is a guide to localizing
         to a non-English language and/or locale.</p>
       <h2>Translate the templates</h2>
       <p>First, you will need to go through the templates and translate to your
@@ -1865,7 +1912,7 @@ outTemp = Outside Temperature</pre>
       </ul>
       <p>The default install of <span class="code">weewx</span> includes the
         following services, shown in the order they are normally run:</p>
-      <table style="width: 80%" class="center">
+      <table class="center" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Service</strong></td>
@@ -1954,7 +2001,7 @@ class MyPrint(StdPrint):
       </p>
       <pre class="tty">[Engines]
     [[WxEngine]]
-        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, user.myprint.MyPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
+        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, <span class="highlight">user.myprint.MyPrint, </span>weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
       <p>Note that the <span class="code">service_list</span> must be all on
         one line. Unfortunately, the parser <span class="code">ConfigObj</span>
         does not allow options to be continued on to following lines.</p>
@@ -2128,7 +2175,7 @@ class MyAlarm(StdService):
         located in <span class="code">[Engines][[WxEngine]]</span>: </p>
       <pre class="tty">[Engines]
    [[WxEngine]]
-	service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.alarm.MyAlarm</pre>
+	service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport<span class="highlight">, examples.alarm.MyAlarm</span></pre>
       <p>Note that the <span class="code">service_list</span> must be all on
         one line. Unfortunately, the parser <span class="code">ConfigObj</span>
         does not allow options to be continued on to following lines.</p>
@@ -2162,13 +2209,13 @@ class MyAlarm(StdService):
         will look something like this:</p>
       <pre class="tty">from weewx.wxengine import StdService
 	
-    class AddElectricity(StdService):
+class AddElectricity(StdService):
 
-        def new_archive_packet(self, event):
+    def new_archive_packet(self, event):
 
-            (code that downloads the consumption data from the connection to the meter)
+        (code that downloads the consumption data from the connection to the meter)
 
-            event.record['electricity'] = retrieved_value</pre>
+        event.record['electricity'] = retrieved_value</pre>
       <p>This adds a new key '<span class="code">electricity</span>' to the
         record dictionary and sets it equal to some value. As an aside, if you
         do something like this, you would want to make sure that the code to
@@ -2288,7 +2335,7 @@ mv weewx.sdb_new weewx.sdb</pre>
       <p>If you wish to use the new type in the templates, it will be available
         using the same syntax as any other type. Here are some other tags that
         might be useful:</p>
-      <table style="width: 80%" class="center">
+      <table class="center" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Tag</strong></td>
@@ -2392,7 +2439,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         function that yields loop packets, one after another. Don't worry about
         stopping it: the engine will do this when an archive record is due. A
         loop packet is a dictionary. At the very minimum it must contain keys</p>
-      <table style="width: 60%" class="center">
+      <table class="center" style="width: 60%">
         <tbody>
           <tr>
             <td class="code">dateTime</td>
@@ -2431,7 +2478,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <p>Be careful when reporting pressure. There are three observations
         related to pressure. Some stations report only the station pressure,
         others calculate and report sea level pressures. </p>
-      <table style="width: 60%" class="center">
+      <table class="center" style="width: 60%">
         <tbody>
           <tr>
             <td class="code">pressure</td>
@@ -2511,7 +2558,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         plot. Note that just because a type appears in the table does not
         necessarily mean that it is available for <em>your</em> station setup.
         That would depend on whether your instrument supports the type. </p>
-      <table style="width: 80%" class="center">
+      <table class="center" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Archive Type</strong></td>
@@ -2728,7 +2775,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
             <td>X</td>
           </tr>
           <tr>
-            <td style="height: 33px" class="code">soilMoist3</td>
+            <td class="code" style="height: 33px">soilMoist3</td>
             <td style="height: 33px">X</td>
             <td style="height: 33px">X</td>
             <td style="height: 33px">X</td>
@@ -2835,7 +2882,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <h1>Appendix B: Units</h1>
       <p>The table below lists all the unit groups, their members, and which
         units are options for the group. </p>
-      <table style="width: 60%" class="center">
+      <table class="center" style="width: 60%">
         <tbody>
           <tr>
             <td><strong>Group</strong></td>
@@ -3307,7 +3354,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
             Vantage Pro and Pro2 Serial Communications Reference</a></em>
         (available on the Davis website) for more information about these types.
       </p>
-      <table style="width: 60%" class="center">
+      <table class="center" style="width: 60%">
         <tbody>
           <tr>
             <td><strong>Type</strong></td>
