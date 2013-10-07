@@ -245,29 +245,19 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                (ngen, period, self.skin_dict['REPORT_NAME'], elapsed_time))
 
     def _getSearchList(self, encoding, timespan, archivedb, statsdb):
-        return [{'encoding':encoding}]\
-            + self.getToDateSearchList(archivedb, statsdb, timespan)\
-            + self._getSummaryBySearchList(timespan) \
-            + self._getToDateSearchList(timespan, archivedb, statsdb) \
-            + self._getSearchListExtensions(timespan, archivedb, statsdb)
+        """Get the complete search list to be used by Cheetah."""
 
-    def _getSummaryBySearchList(self, timespan):
-        # Return the search list variables for 'summarize by' reports.
         timespan_start_tt = time.localtime(timespan.start)
+        
         searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
-                       'year_name'  : timespan_start_tt[0]}]
+                       'year_name'  : timespan_start_tt[0],
+                       'encoding' : encoding},
+                      self.outputted_dict] \
+            + [obj.get_extension(timespan, archivedb, statsdb) for obj in self.search_list_objs]\
+            + self.getToDateSearchList(archivedb, statsdb, timespan)
+
         return searchList
-
-    def _getToDateSearchList(self, timespan, archivedb, statsdb):
-        # Return the search list variables for 'to date' reports.
-
-        return [self.outputted_dict]
-
-    def _getSearchListExtensions(self, timespan, archivedb, statsdb):
-
-        searchList = [obj.get_extension(timespan, archivedb, statsdb) for obj in self.search_list_objs]
-        return searchList
-
+    
     def getToDateSearchList(self, archivedb, statsdb, timespan):
         """Backwards compatible entry."""
         return []
