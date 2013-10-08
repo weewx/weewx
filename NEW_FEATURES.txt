@@ -1,8 +1,5 @@
                     Possible NEW FEATURES
                     
-Allow continuation lines in ConfigObj. This would require writing a super
-class to the facility.
-
 Move to a "plugin" architecture. Services would be discovered at runtime
 (instead of listed in service_list). Where do configuration files go? Model it
 like Apache?

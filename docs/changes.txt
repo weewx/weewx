@@ -1,9 +1,10 @@
 weewx change history
 --------------------
 
-2.5.0 09/ZZ/13
+2.5.0 10/XX/13
 
-Added station registry service.
+Added station registry service. This allows weewx to optionally
+"phone home" and put your station location on a map.
 
 Weewx now allows easier localization to non-English speaking locales.
 In particular, set the environment variable LANG to your locale, and
@@ -13,7 +14,7 @@ Details in a new section in the Customization Guide.
 Added aggregate type "minmax" and "maxmin". Thank you user Gary Roderick!
 
 New option in [StdArchive] called "loop_hilo". Setting to True will
-cause only LOOP and archive data to be used for high/low statistics.
+cause both LOOP and archive data to be used for high/low statistics.
 Setting to False causes only archive data to be used.
 
 When a template fails, skip only that template, not everything that the
@@ -22,6 +23,12 @@ generator is processing.
 FineOffset driver now uses the 'delay' field instead of the fixed_block
 'read_period' for the archive record interval when reading records from
 console memory.
+
+FineOffset driver now support for multiple stations on the same USB.
+
+FineOffset driver now reduces logging verbosity when bad magic numbers
+appear. Log only when the numbers are unrecognized or change.
+The purpose of the magic numbers is still unknown.
 
 WMR100, Vantage, FineOffset, and WS28xx drivers now emit a null wind
 direction when the wind speed is zero.  Same for wind gust.
@@ -33,7 +40,19 @@ For WMR9x8 stations, the first extra temperature sensor (packet code 4)
 now shows up as extraTemp1 (instead of outTemp). Thanks again to 
 Peter Ferencz.
 
+For WMR9x8 stations, packet types 2 and 3 have been separated. Only the
+latter is used for outside temperature, humidity, dewpoint. The former
+is used for "extra" sensors. Thanks to Per Edström for his patience
+in figuring this out!
+
 For WMR200 stations, altitude-corrected pressure is now emitted correctly.
+
+ws28xx driver improvements, including: better thread control; better logging
+for debugging/diagnostics; better timing to reduce dropouts; eliminate writes
+to disk to reduce wear when used on flash devices. Plus, support for
+multiple stations on the same USB.
+
+Fixed rain units in ws28xx driver.
 
 The LOOP value for daily ET on Vantages was too high by a factor of 10. 
 This has been corrected.
@@ -46,22 +65,8 @@ Ported to Korora 19 (Fedora 19). Thanks to user zmodemguru!
 Plots under 16 hours in length, now use 1 hour increments (instead of 
 3 hours).
 
-Added support for multiple stations on the same USB for FineOffset stations.
-
-Added support for multiple stations on the same USB for ws28xx stations.
-
-Fixed rain units in ws28xx driver.
-
-ws28xx driver improvements, including: better thread control; better logging
-for debugging/diagnostics; better timing to reduce dropouts; eliminate writes
-to disk to reduce wear when used on flash devices.
-
 No longer emits "deprecation" warning when working with some versions
 of the MySQLdb python driver.
-
-Reduce logging verbosity when bad magic numbers appear on FineOffset
-stations.  Log only when the numbers are unrecognized or change.
-The purpose of the magic numbers is still unknown.
 
 2.4.0 08/03/13
 

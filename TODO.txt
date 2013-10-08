@@ -2,3 +2,7 @@ TODO before the next release:
 
 Can wind chill be retrieved from the hardware for the WMR918
 (as well as WMR9x8)?
+
+Document the station registry facility.
+
+Merge the search list extension changes back into the main trunk.
