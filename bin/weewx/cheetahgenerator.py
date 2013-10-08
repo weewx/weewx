@@ -7,19 +7,21 @@
 #    $Author$
 #    $Date$
 #
-"""Generate files from templates using Cheetah.
+"""Generate files from templates using the Cheetah template engine.
 
-search_list_extensions = a, b, c
+For more information about Cheetah, see http://www.cheetahtemplate.org
+
+search_list = a, b, c
 encoding = (html_entities|utf8|strict_ascii)
 template = filename.tmpl
 stale_age = s
 
-the strings YYYY and MM will be replaced if they appear in the filename.
+The strings YYYY and MM will be replaced if they appear in the filename.
 
-example:
+Example:
 
 [CheetahGenerator]
-    search_list_extensions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
+    search_list = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables, weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras, weewx.cheetahgenerator.Current
     encoding = html_entities      # html_entities, utf8, strict_ascii
     [[SummaryByMonth]]                              # period
         [[[NOAA_month]]]                            # report
@@ -114,10 +116,10 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         # Look for my section name, but accept [FileGenerator] for backwards compatibility:
         self.gen_dict = self.skin_dict['CheetahGenerator'] if self.skin_dict.has_key('CheetahGenerator') else self.skin_dict['FileGenerator']
         self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }
-        
+
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
-        
+
         self.initExtensions()
 
     def teardown(self):
@@ -130,7 +132,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         search_list = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list'))
         if search_list is None:
             search_list = default_search_list
-        
+
         for c in search_list:
             x = c.strip()
             if len(x) > 0:
@@ -196,7 +198,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                 # Save YYYY-MM so they can be used within the document
                 if period == 'SummaryByMonth' or period == 'SummaryByYear':
                     timespan_start_tt = time.localtime(timespan.start)
-                    _yr_str = "%4d"  % timespan_start_tt[0]
+                    _yr_str = "%4d" % timespan_start_tt[0]
                     if period == 'SummaryByMonth':
                         _mo_str = "%02d" % timespan_start_tt[1]
                         self.outputted_dict['SummaryByMonth'].append("%s-%s" % (_yr_str, _mo_str))
@@ -223,10 +225,10 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                         pass
 
                 searchList = self._getSearchList(encoding, timespan, archivedb, statsdb)
-                text = Cheetah.Template.Template(file = template,
-                                                 searchList = searchList,
-                                                 filter = encoding,
-                                                 filtersLib = weewx.cheetahgenerator)
+                text = Cheetah.Template.Template(file=template,
+                                                 searchList=searchList,
+                                                 filter=encoding,
+                                                 filtersLib=weewx.cheetahgenerator)
                 _file = None
                 try:
                     _file = open(_fullname, mode='w')
@@ -248,7 +250,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         """Get the complete search list to be used by Cheetah."""
 
         timespan_start_tt = time.localtime(timespan.start)
-        
+
         searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
                        'year_name'  : timespan_start_tt[0],
                        'encoding' : encoding},
@@ -257,17 +259,17 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
             + self.getToDateSearchList(archivedb, statsdb, timespan)
 
         return searchList
-    
+
     def getToDateSearchList(self, archivedb, statsdb, timespan):
         """Backwards compatible entry."""
         return []
-    
+
     def _getFileName(self, template, timespan):
         """Calculate a destination filename given a template filename.
         Replace 'YYYY' with the year, 'MM' with the month.  Strip off any
         trailing .tmpl"""
 
-        _filename = os.path.basename(template).replace('.tmpl','')
+        _filename = os.path.basename(template).replace('.tmpl', '')
 
         if _filename.find('YYYY') >= 0 or _filename.find('MM') >= 0:
             # Start by getting the start time as a timetuple.
@@ -283,6 +285,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         return _filename
 
     def genSingleSpan(self, start_ts, stop_ts):
+        """Generator function used when doing "to date" generation."""
         return [weeutil.weeutil.TimeSpan(start_ts, stop_ts)]
 
     def _getRecord(self, archivedb, time_ts):
@@ -295,7 +298,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         # ... convert to a dictionary with ValueTuples as values...
         record_dict_vt = weewx.units.dictFromStd(record_dict)
         # ... then wrap it in a ValueDict:
-        record_vd = weewx.units.ValueDict(record_dict_vt, context='current', 
+        record_vd = weewx.units.ValueDict(record_dict_vt, context='current',
                                           formatter=self.formatter,
                                           converter=self.converter)
         return record_vd
@@ -304,7 +307,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         """Gather the options together for a specific report, then
         retrieve the template file, stats database, archive database,
         the destination directory, and the encoding from those options."""
-        
+
         # Walk the tree back to the root, accumulating options
         accum_dict = weeutil.weeutil.accumulateLeaves(subskin_dict)
         template = os.path.join(self.config_dict['WEEWX_ROOT'],
@@ -397,21 +400,25 @@ class SearchList(object):
         
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
                    start and stop times of the domain of valid times.
+                   
+        archivedb: An instance of class weewx.archive.Archive.
+        
+        statsdb:   An instance of class weewx.stats.StatsDb
         """
         return self
 
 class Almanac(SearchList):
-    """Class that implements the 'almanac' extension."""
-    
+    """Class that implements the '$almanac' tag."""
+
     def __init__(self, generator):
         SearchList.__init__(self, generator)
-        
+
         celestial_ts = generator.gen_ts
 
         # For better accuracy, the almanac requires the current temperature
         # and barometric pressure, so retrieve them from the default archive,
         # using celestial_ts as the time
-        
+
         temperature_C = pressure_mbar = None
 
         archivedb = generator._getArchive(generator.skin_dict['archive_database'])
@@ -421,7 +428,7 @@ class Almanac(SearchList):
 
         if rec is not None:
             if rec.has_key('outTemp'):
-                temperature_C = rec['outTemp'].degree_C.raw 
+                temperature_C = rec['outTemp'].degree_C.raw
             if rec.has_key('barometer'):
                 pressure_mbar = rec['barometer'].mbar.raw
         if temperature_C is None: temperature_C = 15.0
@@ -430,9 +437,9 @@ class Almanac(SearchList):
         self.moonphases = generator.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
 
         altitude_vt = weewx.units.convert(generator.stn_info.altitude_vt, "meter")
-        
-        self.almanac = weewx.almanac.Almanac(celestial_ts, 
-                                             generator.stn_info.latitude_f, 
+
+        self.almanac = weewx.almanac.Almanac(celestial_ts,
+                                             generator.stn_info.latitude_f,
                                              generator.stn_info.longitude_f,
                                              altitude=altitude_vt[0],
                                              temperature=temperature_C,
@@ -441,7 +448,7 @@ class Almanac(SearchList):
                                              formatter=generator.formatter)
 
 class Station(SearchList):
-    """Class that represents the 'station' extension."""
+    """Class that implements the '$station' tag."""
     def __init__(self, generator):
         SearchList.__init__(self, generator)
         self.station = weewx.station.Station(generator.stn_info,
@@ -449,8 +456,8 @@ class Station(SearchList):
                                              generator.skin_dict)
         
 class Stats(SearchList):
-    """Class that represents the 'station' extension."""
-        
+    """Class that implements the time-based statistical tags, such as $day.outTemp.max"""
+
     def get_extension(self, timespan, archivedb, statsdb):
         heatbase = self.generator.skin_dict['Units']['DegreeDays'].get('heating_base')
         coolbase = self.generator.skin_dict['Units']['DegreeDays'].get('heating_base')
@@ -461,24 +468,24 @@ class Stats(SearchList):
         # stats.month.outTemp.max
         stats = weewx.stats.TaggedStats(statsdb,
                                         timespan.stop,
-                                        formatter = self.generator.formatter,
-                                        converter = self.generator.converter,
-                                        rain_year_start = self.generator.stn_info.rain_year_start,
-                                        heatbase = heatbase_t,
-                                        coolbase = coolbase_t,
-                                        week_start = self.generator.stn_info.week_start)
-        
+                                        formatter=self.generator.formatter,
+                                        converter=self.generator.converter,
+                                        rain_year_start=self.generator.stn_info.rain_year_start,
+                                        heatbase=heatbase_t,
+                                        coolbase=coolbase_t,
+                                        week_start=self.generator.stn_info.week_start)
+
         return stats
 
 class UnitInfo(SearchList):
-    """Class that contains 'unit' information."""
+    """Class that implements the '$unit' tag."""
     def __init__(self, generator):
         SearchList.__init__(self, generator)
         self.unit = weewx.units.UnitInfoHelper(generator.formatter,
                                                generator.converter)
-        
+
 class Extras(SearchList):
-    """Class for exposing the [Extras] section in the skin config dictionary."""
+    """Class for exposing the [Extras] section in the skin config dictionary as tag $Extras."""
     def __init__(self, generator):
         SearchList.__init__(self, generator)
         # If the user has supplied an '[Extras]' section in the skin
@@ -490,16 +497,16 @@ class Current(SearchList):
     """Class for implementing the $current and $trend tags"""
 
     def get_extension(self, timespan, archivedb, statsdb):
-        
+
         try:
             time_delta = int(self.generator.skin_dict['Units']['Trend']['time_delta'])
         except KeyError:
-            time_delta = 10800    # 3 hours
-            
+            time_delta = 10800  # 3 hours
+
         # Get current record, and one from the beginning of the trend period.
         current_rec = self.generator._getRecord(archivedb, timespan.stop)
-        former_rec  = self.generator._getRecord(archivedb, timespan.stop - time_delta)
-        
+        former_rec = self.generator._getRecord(archivedb, timespan.stop - time_delta)
+
         return {'current' : current_rec,
                 'trend'   : TrendObj(former_rec, current_rec, time_delta)}
         

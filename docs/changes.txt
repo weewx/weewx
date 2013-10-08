@@ -3,6 +3,9 @@ weewx change history
 
 2.5.0 09/ZZ/13
 
+Introduced a new architecture that makes it easier to define search
+list extensions. The old architecture is 100% backwards compatible.
+
 Added station registry service.
 
 Weewx now allows easier localization to non-English speaking locales.
