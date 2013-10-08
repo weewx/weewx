@@ -280,46 +280,69 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         return _record
 
     @wmr9x8_registerpackettype(typecode=0x02, size=9)
-    @wmr9x8_registerpackettype(typecode=0x03, size=9)
     def _wmr9x8_thermohygro_packet(self, packet):
         chan, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10 = self._get_nibble_data(packet[1:])
 
-        battery = bool(status&0x04)
-        dewunder = bool(status&0x01)
+        _record = {
+            'dateTime' : int(time.time() + 0.5),
+            'usUnits'  : weewx.METRIC
+        }
+        if chan==0:
+            syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Channel 0 detected. Please contact the author.")
+
+        battery  = bool(status & 0x04)
+        _record['tgBatteryStatus'] = battery
+
+        _record['extraHumid%d' % chan] = hum1 + (hum10 * 10)
+
+        tempoverunder = temp100etc & 0x04
+        if not tempoverunder:
+            temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc & 0x03) * 100)
+            if temp100etc & 0x08:
+                temp = -temp
+            _record['extraTemp%d' % chan] = temp
+        else:
+            _record['extraTemp%d' % chan] = None
+
+        dewunder = bool(status & 0x01)
+        if not dewunder:
+            _record['dewpoint%d' % chan] = dew1 + (dew10 * 10)
+        else:
+            _record['dewpoint%d' % chan] = None
+
+        return _record
+
+    @wmr9x8_registerpackettype(typecode=0x03, size=9)
+    def _wmr9x8_mushroom_packet(self, packet):
+        _, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10 = self._get_nibble_data(packet[1:])
+
         _record = {
             'dateTime'          : int(time.time() + 0.5),
             'usUnits'           : weewx.METRIC
         }
 
-        temp = (temp10th/10.0) + temp1 + (temp10*10) + ((temp100etc&0x03) * 100)
-        if temp100etc & 0x08:
-            temp = -temp
-        tempoverunder = temp100etc&0x04
-        dew = dew1 + (dew10 * 10)
-        hum = hum1 + (hum10 * 10)
-        if chan <= 1:
-            _record['outTempBatteryStatus'] = battery
-            _record['outHumidity']   = hum
-            
-            # If temperature is valid, save it and calculate heat index
-            if not tempoverunder:
-                _record['outTemp']   = temp
-                _record['heatindex'] = weewx.wxformulas.heatindexC(temp, hum)
-            else:
-                _record['outTemp'] = None
+        battery  = bool(status & 0x04)
+        _record['txBatteryStatus'] = battery
+        
+        _record['outHumidity'] = hum1 + (hum10 * 10)
 
-            # If dew  point is valid, save it. Otherwise, try calculating it
-            # in software
-            if not dewunder:
-                _record['dewpoint']  = dew
-            else:
-                _record['dewpoint']  = weewx.wxformulas.dewpointC(temp, hum)
+        tempoverunder = temp100etc & 0x04
+        if not tempoverunder:
+            temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc & 0x03) * 100)
+            if temp100etc & 0x08:
+                temp = -temp
+            _record['outTemp'] = temp
+            _record['heatindex'] = weewx.wxformulas.heatindexC(temp, _record['outHumidity'])
         else:
-            # If additional temperature sensors exist (channel>=2), then
-            # use observation types 'extraTemp1', 'extraTemp2', etc.
-            _record['extraHumid%d' % chan] = hum
-            if not tempoverunder:
-                _record['extraTemp%d' % chan] = temp
+            _record['outTemp'] = _record['heatindex'] = None
+            
+        dewunder = bool(status & 0x01)
+        # If dew  point is valid, save it. Otherwise, try calculating it in software
+        if not dewunder:
+            _record['dewpoint'] = dew1 + (dew10 * 10)
+        else:
+            _record['dewpoint'] = weewx.wxformulas.dewpointC(_record['outTemp'], _record['outHumidity'])
+
         return _record
 
     @wmr9x8_registerpackettype(typecode=0x04, size=7)
