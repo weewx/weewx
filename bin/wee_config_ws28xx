@@ -15,7 +15,8 @@
 
 """Command line utility for configuring LaCrosse WS-28xx weather stations
 
-Many thanks to Eddie De Pieri, who did the first python implementation.
+Many thanks to Eddie De Pieri, who did the first python implementation and
+Lucas Heijst, who sorted out communication and timing issues.
 """
 
 import configobj
@@ -45,6 +46,8 @@ def main():
                       help="display weather station configuration")
     parser.add_option("--current", dest="current", action="store_true",
                       help="get the current weather conditions")
+    parser.add_option("--history", dest="history", action="store_true",
+                      help="get historical records from station console")
     parser.add_option("--pair", dest="pair", action="store_true",
                       help="pair the USB dongle with a station console")
     parser.add_option("--maxtries", dest="maxtries", type=int,
@@ -69,14 +72,10 @@ def main():
         pair(station, maxtries)
     elif options.current:
         current(station, maxtries)
+    elif options.history:
+        history(station, maxtries)
     else:
         info(station, maxtries)
-
-def info(station, maxtries):
-    """Query the station then display the settings."""
-    station.startup()
-    print "Querying the station..."
-    station.shutdown()
 
 def pair(station, maxtries):
     """Pair the USB transceiver with the station console."""
@@ -88,12 +87,28 @@ def pair(station, maxtries):
         pass
     station.shutdown()
 
+def info(station, maxtries):
+    """Query the station then display the settings."""
+    station.startup()
+    print "Querying the station..."
+    config = station.get_config()
+    print config
+    station.shutdown()
+
 def current(station, maxtries):
     """Get current weather observation."""
     station.startup()
     print "Querying the station for current weather..."
     packet = station.get_observation()
     print packet
+    station.shutdown()
+
+def history(station, maxtries):
+    """Get historical records from station console."""
+    station.startup()
+    print "Querying the station for historical records..."
+    records = station.get_history()
+    print records
     station.shutdown()
 
 if __name__=="__main__" :

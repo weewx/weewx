@@ -46,7 +46,15 @@ Ported to Korora 19 (Fedora 19). Thanks to user zmodemguru!
 Plots under 16 hours in length, now use 1 hour increments (instead of 
 3 hours).
 
+Added support for multiple stations on the same USB for FineOffset stations.
+
+Added support for multiple stations on the same USB for ws28xx stations.
+
 Fixed rain units in ws28xx driver.
+
+ws28xx driver improvements, including: better thread control; better logging
+for debugging/diagnostics; better timing to reduce dropouts; eliminate writes
+to disk to reduce wear when used on flash devices.
 
 No longer emits "deprecation" warning when working with some versions
 of the MySQLdb python driver.
@@ -54,7 +62,6 @@ of the MySQLdb python driver.
 Reduce logging verbosity when bad magic numbers appear on FineOffset
 stations.  Log only when the numbers are unrecognized or change.
 The purpose of the magic numbers is still unknown.
-
 
 2.4.0 08/03/13
 
