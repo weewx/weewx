@@ -1,6 +1,7 @@
                     Possible NEW FEATURES
                     
-An option not to use LOOP data for the stats file data.
+Allow continuation lines in ConfigObj. This would require writing a super
+class to the facility.
 
 Move to a "plugin" architecture. Services would be discovered at runtime
 (instead of listed in service_list). Where do configuration files go? Model it
@@ -31,6 +32,11 @@ databases and, instead, offer up the last record when the reporting thread
 starts.
 
 A QC "Spike" detector.
+
+Harden up the MySQL database connection.
+
+Allow reporting services to be fired off at something other than every
+archive period. In particular, FTP.
 
 possibly implement averaging rainRate calculation instead of the
 current near-instantaneous implementation in fousb

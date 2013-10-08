@@ -15,6 +15,10 @@ Details in a new section in the Customization Guide.
 
 Added aggregate type "minmax" and "maxmin". Thank you user Gary Roderick!
 
+New option in [StdArchive] called "loop_hilo". Setting to True will
+cause only LOOP and archive data to be used for high/low statistics.
+Setting to False causes only archive data to be used.
+
 When a template fails, skip only that template, not everything that the
 generator is processing.
 
@@ -31,6 +35,8 @@ rather than calculated in software. Thank you user Peter Ferencz!
 For WMR9x8 stations, the first extra temperature sensor (packet code 4)
 now shows up as extraTemp1 (instead of outTemp). Thanks again to 
 Peter Ferencz.
+
+For WMR200 stations, altitude-corrected pressure is now emitted correctly.
 
 The LOOP value for daily ET on Vantages was too high by a factor of 10. 
 This has been corrected.
