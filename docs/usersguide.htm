@@ -809,6 +809,12 @@ Version: 2.5.0a1
 
     <h3 class='config_section'>[WS28xx]</h3>
     <p>This section is for options relating to the La Crosse WS-28xx series of weather stations.</p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, LaCross WS2810, TFA Primus, etc.</p>
+    <p class="config_important">transceiver_frequency</p>
+    <p>Radio frequency to use between USB transceiver and console. Specify
+      either US or EU.  US uses 915 MHz, EU uses 868.3 MHz.  Default is US.
+    </p>
     <p class='config_option'>pressure_offset</p>
     <p>The offset, in millibars, that is applied to values from the station sensor.  This offset is applied to the station pressure <i>before</i> calculating barometer and altimeter sea level pressures.  Only the raw station pressure is recorded to database, not the station pressure with offset applied.</p>
 

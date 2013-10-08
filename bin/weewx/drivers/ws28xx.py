@@ -834,6 +834,10 @@ transceiver serial: 01021012120146
 
 # TODO: how often is currdat.lst modified with/without hi-speed mode?
 # TODO: display time of rain reset
+# TODO: during weewx startup, do 'catchup' of old history records
+# TODO: thread locking around observation data
+# TODO: eliminate polling, make MainThread get data as soon as RFThread updates
+# TODO: eliminate pressure_offset and use StdCalibrate instead?
 
 from datetime import datetime
 from datetime import timedelta
