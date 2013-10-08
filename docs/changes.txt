@@ -3,6 +3,9 @@ weewx change history
 
 2.5.0 10/XX/13
 
+Introduced a new architecture that makes it easier to define search
+list extensions. The old architecture is 100% backwards compatible.
+
 Added station registry service. This allows weewx to optionally
 "phone home" and put your station location on a map.
 
