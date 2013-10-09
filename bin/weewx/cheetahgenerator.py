@@ -66,9 +66,14 @@ default_heatbase = (65.0, "degree_F", "group_temperature")
 default_coolbase = (65.0, "degree_F", "group_temperature")
 
 # Default search list:
-default_search_list = ["weewx.cheetahgenerator.Almanac", "weewx.cheetahgenerator.Station", 
-                       "weewx.cheetahgenerator.Stats",   "weewx.cheetahgenerator.UnitInfo",
-                       "weewx.cheetahgenerator.Extras",  "weewx.cheetahgenerator.Current"]
+default_search_list = [
+    "weewx.cheetahgenerator.Almanac",
+    "weewx.cheetahgenerator.Station",
+    "weewx.cheetahgenerator.Stats",
+    "weewx.cheetahgenerator.UnitInfo",
+    "weewx.cheetahgenerator.Extras",
+    "weewx.cheetahgenerator.Current"
+    ]
 
 def logmsg(lvl, msg):
     syslog.syslog(lvl, 'cheetahgenerator: %s' % msg)
@@ -98,7 +103,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         skin_dict:        The dictionary for this skin
         gen_dict:         The section ['CheetahGenerator'] from skin.conf
         gen_ts:           The generation time
-        first_run:        Whether this is the first time the generator has been run
+        first_run:        Is this is the first time the generator has been run
         stn_info:         An instance of weewx.station.StationInfo
         formatter:        An instance of weewx.units.Formatter
         converter:        An instance of weewx.units.Converter
@@ -113,7 +118,8 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         self.teardown()
 
     def setup(self):
-        # Look for my section name, but accept [FileGenerator] for backwards compatibility:
+        # Look for my section name, but accept [FileGenerator] for backwards
+        # compatibility:
         self.gen_dict = self.skin_dict['CheetahGenerator'] if self.skin_dict.has_key('CheetahGenerator') else self.skin_dict['FileGenerator']
         self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }
 
@@ -137,8 +143,8 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
             x = c.strip()
             if len(x) > 0:
                 logdbg("loading search list extension '%s'" % c)
-                Cls = weeutil.weeutil._get_object(c)
-                self.search_list_objs.append(Cls(self))
+                class_ = weeutil.weeutil._get_object(c)
+                self.search_list_objs.append(class_(self))
 
     def deleteExtensions(self):
         """delete any extension objects we created to prevent back references
@@ -255,7 +261,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                        'year_name'  : timespan_start_tt[0],
                        'encoding' : encoding},
                       self.outputted_dict] \
-            + [obj.get_extension(timespan, archivedb, statsdb) for obj in self.search_list_objs]\
+            + [obj.get_extension(timespan, archivedb, statsdb) for obj in self.search_list_objs] \
             + self.getToDateSearchList(archivedb, statsdb, timespan)
 
         return searchList
@@ -448,15 +454,18 @@ class Almanac(SearchList):
                                              formatter=generator.formatter)
 
 class Station(SearchList):
-    """Class that implements the '$station' tag."""
+    """Class that implements the $station tag."""
+
     def __init__(self, generator):
         SearchList.__init__(self, generator)
         self.station = weewx.station.Station(generator.stn_info,
-                                             generator.formatter, generator.converter,
+                                             generator.formatter,
+                                             generator.converter,
                                              generator.skin_dict)
         
 class Stats(SearchList):
-    """Class that implements the time-based statistical tags, such as $day.outTemp.max"""
+    """Class that implements the time-based statistical tags, such
+    as $day.outTemp.max"""
 
     def get_extension(self, timespan, archivedb, statsdb):
         heatbase = self.generator.skin_dict['Units']['DegreeDays'].get('heating_base')
@@ -478,14 +487,17 @@ class Stats(SearchList):
         return stats
 
 class UnitInfo(SearchList):
-    """Class that implements the '$unit' tag."""
+    """Class that implements the $unit tag."""
+
     def __init__(self, generator):
         SearchList.__init__(self, generator)
         self.unit = weewx.units.UnitInfoHelper(generator.formatter,
                                                generator.converter)
 
 class Extras(SearchList):
-    """Class for exposing the [Extras] section in the skin config dictionary as tag $Extras."""
+    """Class for exposing the [Extras] section in the skin config dictionary
+    as tag $Extras."""
+
     def __init__(self, generator):
         SearchList.__init__(self, generator)
         # If the user has supplied an '[Extras]' section in the skin

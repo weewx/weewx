@@ -391,7 +391,7 @@ import weewx
 from weewx.wxengine import StdService
 from weewx.filegenerator import FileGenerator
 import weeutil.weeutil
-from user.cheetahgenerator import SearchList
+from weewx.cheetahgenerator import SearchList
 
 try:
     import cjson as json
@@ -2093,6 +2093,7 @@ def _get_max(key, a, b):
         pass
     return b.get(key, None)
 
+
 class ForecastVariables(SearchList):
     """Bind forecast variables to database records."""
 
@@ -2107,9 +2108,9 @@ class ForecastVariables(SearchList):
         sd = generator.skin_dict.get('Forecast', {})
         db = generator._getArchive(fd['database'])
 
-        self.latitude = generator.station.latitude_f
-        self.longitude = generator.station.latitude_f
-        self.altitude = generator.station.altitude_vt[0]
+        self.latitude = generator.stn_info.latitude_f
+        self.longitude = generator.stn_info.latitude_f
+        self.altitude = generator.stn_info.altitude_vt[0]
         self.moon_phases = generator.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
         self.formatter = generator.formatter
         self.converter = generator.converter
@@ -2124,8 +2125,8 @@ class ForecastVariables(SearchList):
         self.database = db
         self.table = fd.get('table','archive')
 
-    def getSearchList(self, timespan, archivedb, statsdb):
-        return [{'forecast': self}]
+    def get_extension(self, timespan, archivedb, statsdb):
+        return {'forecast': self}
 
     def _getTides(self, context, from_ts=int(time.time()), max_events=1):
         sql = "select dateTime,issued_ts,event_ts,hilo,offset,usUnits,location from %s where method = 'XTide' and dateTime = (select dateTime from %s where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc" % (self.table, self.table, from_ts)

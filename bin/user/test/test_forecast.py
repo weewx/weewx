@@ -240,13 +240,13 @@ skin_contents = '''
 [Almanac]
     moon_phases = n,wc,fq,wg,f,wg,lq,wc
 [FileGenerator]
-    search_list_extensions = user.forecast.ForecastVariables
+    search_list = user.forecast.ForecastVariables
     encoding = html_entities
     [[ToDate]]
         [[[current]]]
             template = index.html.tmpl
 [Generators]
-        generator_list = user.cheetahgenerator.CheetahGenerator
+        generator_list = weewx.cheetahgenerator.CheetahGenerator
 '''
 
 def create_skin_conf(test_dir, skin_dir='testskin', units=weewx.US):

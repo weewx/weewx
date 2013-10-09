@@ -61,6 +61,7 @@ test:
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
 	@for f in $(SUITE); do \
+  echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \
   PYTHONPATH=bin python $$f 2>> $(BLDDIR)/test-results; \
   echo >> $(BLDDIR)/test-results; \

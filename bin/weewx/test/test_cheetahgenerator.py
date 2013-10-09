@@ -16,8 +16,7 @@ import unittest
 import user
 import weedb
 import weewx
-from weewx.filegenerator import FileGenerator
-from cheetahgenerator import CheetahGenerator
+from weewx.cheetahgenerator import CheetahGenerator
 import user.forecast
 
 def rmdir(d):
@@ -295,7 +294,7 @@ class TestConfig(object):
 [Labels]
 [Almanac]
     moon_phases = n,wc,fq,wg,f,wg,lq,wc
-[FileGenerator]
+[CheetahGenerator]
     encoding = html_entities
     [[SummaryByMonth]]
         [[[NOAA_month]]]
@@ -307,7 +306,7 @@ class TestConfig(object):
         [[[current]]]
             template = index.html.tmpl
 [Generators]
-        generator_list = user.filegenerator.FileGenerator
+        generator_list = weewx.cheetahgenerator.CheetahGenerator
 '''
 
     index_template = '''
@@ -605,7 +604,7 @@ class CheetahGeneratorTest(unittest.TestCase):
     #   run vs start for cached vs not cached
     #   finalize?
     #   report generator stuffs things into skin_dict from cfg_dict
-    # FIXME: setting up to test FileGenerator is a pain
+    # FIXME: setting up to test CheetahGenerator is a pain
     def setup(self, tdir):
         # create the bits we need to run a report
         self.setup_databases()
@@ -632,23 +631,6 @@ class CheetahGeneratorTest(unittest.TestCase):
 
         return (cd, sd, ts, first_run, stn_info)
 
-    def test_filegenerator(self):
-        '''test for baseline behavior'''
-        tdir = get_testdir('test_filegenerator')
-        rmtree(tdir)
-        (cd, sd, ts, first_run, stn_info) = self.setup(tdir)
-
-        # run the reports
-        gen = FileGenerator(cd, sd, ts, first_run, stn_info)
-        gen.start()
-        gen.finalize()
-
-        # check the output
-        outdir = tdir + '/html/'
-        self.compare_contents(outdir + 'index.html', content_index_html)
-        self.compare_contents(outdir + '2010.txt', content_2010_txt)
-        self.compare_contents(outdir + '2010-01.txt', content_2010_01_txt)
-
     def test_cheetahgenerator(self):
         tdir = get_testdir('test_cheetahgenerator')
         rmtree(tdir)
@@ -674,10 +656,10 @@ class CheetahGeneratorTest(unittest.TestCase):
         gen = CheetahGenerator(cd, sd, ts, first_run, stn_info)
 
         # add forecasting extension
-        sd['FileGenerator']['search_list_extensions'] = 'user.forecast.ForecastVariables'
+        sd['CheetahGenerator']['search_list'] = ['weewx.cheetahgenerator.Station','weewx.cheetahgenerator.Stats','user.forecast.ForecastVariables']
         # add forecast template to list of files
-        sd['FileGenerator']['ToDate']['forecast'] = {}
-        sd['FileGenerator']['ToDate']['forecast']['template'] = 'forecast.html.tmpl'
+        sd['CheetahGenerator']['ToDate']['forecast'] = {}
+        sd['CheetahGenerator']['ToDate']['forecast']['template'] = 'forecast.html.tmpl'
         # add forecasting database settings
         cd['Forecast'] = {}
         cd['Forecast']['database'] = 'forecast_sqlite'
