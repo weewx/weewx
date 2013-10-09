@@ -1445,7 +1445,7 @@ class CWeatherTraits(object):
     windDirMap = {
         0:"N", 1:"NNE", 2:"NE", 3:"ENE", 4:"E", 5:"ESE", 6:"SE", 7:"SSE",
         8:"S", 9:"SSW", 10:"SW", 11:"WSW", 12:"W", 13:"WNW", 14:"NW",
-        15:"NWN", 16:"err", 17:"inv" }
+        15:"NWN", 16:"err", 17:"inv", 18:"None" }
     forecastMap = {
         0:"Rainy(Bad)", 1:"Cloudy(Neutral)", 2:"Sunny(Good)",  3:"Error" }
     trends = {
@@ -1807,20 +1807,14 @@ class USBHardware(object):
         return result
 
     @staticmethod
-    def toWindspeed_5_2(buf, start, StartOnHiNibble):
-        '''read 5 nibbles, presentation with 2 decimals; units of km/h'''
-        if StartOnHiNibble:
-            result = (buf[0][start+2] >> 4)* 16**6 \
-                + (buf[0][start+0] >>  4)*   16**5 \
-                + (buf[0][start+0] & 0xF)*   16**4 \
-                + (buf[0][start+1] >>  4)*   16**3 \
-                + (buf[0][start+1] & 0xF)*   16**2
-        else:
-            result = (buf[0][start+2] >> 4)* 16**6 \
-                + (buf[0][start+2] & 0xF)*   16**5 \
-                + (buf[0][start+0] >>  4)*   16**5 \
-                + (buf[0][start+1] & 0xF)*   16**3 \
-                + (buf[0][start+1] >>  4)*   16**2
+    def toWindspeed_6_2(buf, start):
+        '''read 6 nibbles, presentation with 2 decimals; units of km/h'''
+        result = (buf[0][start+0] >> 4)* 16**5 \
+            + (buf[0][start+0] & 0xF)*   16**4 \
+            + (buf[0][start+1] >>  4)*   16**3 \
+            + (buf[0][start+1] & 0xF)*   16**2 \
+            + (buf[0][start+2] >>  4)*   16**1 \
+            + (buf[0][start+2] & 0xF)
         result = result / 256.0
         result = result / 100.0             # km/h
         return result
@@ -2066,7 +2060,7 @@ class CCurrentWeatherData(object):
                 strbuf += str("%.2x " % i)
             logdbg('Bytes with unknown meaning at 157-165: %s' % strbuf)
 
-        self._WindSpeed = USBHardware.toWindspeed_5_2(nbuf, 172, 1)
+        self._WindSpeed = USBHardware.toWindspeed_6_2(nbuf, 172)
 
         # FIXME: read the WindErrFlags
         (g ,g1) = USBHardware.readWindDirectionShared(nbuf, 177)
@@ -2079,11 +2073,11 @@ class CCurrentWeatherData(object):
         self._GustDirection4 = g4
         self._GustDirection5 = g5
 
-        self._GustMax._Max._Value = USBHardware.toWindspeed_5_2(nbuf, 184, 1)
+        self._GustMax._Max._Value = USBHardware.toWindspeed_6_2(nbuf, 184)
         self._GustMax._Max._IsError = (self._GustMax._Max._Value == CWeatherTraits.WindNP())
         self._GustMax._Max._IsOverflow = (self._GustMax._Max._Value == CWeatherTraits.WindOFL())
         self._GustMax._Max._Time = None if self._GustMax._Max._IsError or self._GustMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 179, 1, 'GustMax')
-        self._Gust = USBHardware.toWindspeed_5_2(nbuf, 187, 1)
+        self._Gust = USBHardware.toWindspeed_6_2(nbuf, 187)
 
         # Apparently the station returns only ONE date time for both hPa/inHg
         # Min Time Reset and Max Time Reset
@@ -2213,6 +2207,9 @@ class CWeatherStationConfig(object):
         return 1
     
     def setGust(self,WindSpeedFormat,GustHi):
+        logdbg('setGust: not yet implemented')
+        if True:
+            return 1
         f1 = WindSpeedFormat
         g1 = GustHi
         if (f1 >= EWindspeedFormat.wfMs) and (f1 <= EWindspeedFormat.wfMph):
@@ -2224,7 +2221,7 @@ class CWeatherStationConfig(object):
         else:
             logerr('setGust: unknown format %s' % WindSpeedFormat)
             return 0
-        self._GustMax._Max._Value = g1
+        self._GustMax._Max._Value = int(g1) # apparently gust value is always an integer
         return 1
     
     def setPresRels(self,PressureFormat,PresRelhPaLo,PresRelhPaHi,PresRelinHgLo,PresRelinHgHi):
@@ -2284,15 +2281,16 @@ class CWeatherStationConfig(object):
                 buf[0][2+start] = parsebuf[3]*16 + parsebuf[2]
                 buf[0][3+start] = parsebuf[1]*16 + parsebuf[0]
                         
-    def parseWind_2(self, number, buf, start, StartOnHiNibble, numbytes):
-        '''Parse 4-digit number with 1 decimal'''
-        num = int(number*100)
-        parsebuf=[0]*5
-        for i in xrange(5-numbytes,5):
+    def parseWind_6(self, number, buf, start):
+        '''Parse float number to 6 bytes'''
+        num = int(number*100*256)
+        parsebuf=[0]*6
+        for i in xrange(0,6):
             parsebuf[i] = num%16
             num = num//16
-        buf[0][0+start] = parsebuf[3]*16 + parsebuf[2]
-        buf[0][1+start] = parsebuf[1]*16 + parsebuf[0]
+        buf[0][0+start] = parsebuf[5]*16 + parsebuf[4]
+        buf[0][1+start] = parsebuf[3]*16 + parsebuf[2]
+        buf[0][2+start] = parsebuf[1]*16 + parsebuf[0]
         
     def parse_0(self, number, buf, start, StartOnHiNibble, numbytes):
         '''Parse 5-digit number with 0 decimals'''
@@ -2385,7 +2383,7 @@ class CWeatherStationConfig(object):
         self._HumidityOutdoorMinMax._Min._Value = USBHardware.toHumidity_2_0(nbuf, 24, 1)
         self._Rain24HMax._Max._Value = USBHardware.toRain_7_3(nbuf, 25, 0)
         self._HistoryInterval = nbuf[0][29]
-        self._GustMax._Max._Value = USBHardware.toWindspeed_5_2(nbuf, 30, 1)
+        self._GustMax._Max._Value = USBHardware.toWindspeed_6_2(nbuf, 30)
         (self._PressureRelative_hPaMinMax._Min._Value, self._PressureRelative_inHgMinMax._Min._Value) = USBHardware.readPressureShared(nbuf, 33, 1)
         (self._PressureRelative_hPaMinMax._Max._Value, self._PressureRelative_inHgMinMax._Max._Value) = USBHardware.readPressureShared(nbuf, 38, 1)
         self._ResetMinMaxFlags = (nbuf[0][43]) <<16 | (nbuf[0][44] << 8) | (nbuf[0][45])
@@ -2434,14 +2432,14 @@ class CWeatherStationConfig(object):
         setTemps(self,TempFormat,InTempLo,InTempHi,OutTempLo,OutTempHi) 
         setHums(self,InHumLo,InHumHi,OutHumLo,OutHumHi)
         setPresRels(self,PressureFormat,PresRelhPaLo,PresRelhPaHi,PresRelinHgLo,PresRelinHgHi)  
-        setGust(self,WindSpeedFormat,GustHi)
+        setGust(self,WindSpeedFormat,GustHi) # (not yet implemented)
         setRain24H(self,RainFormat,Rain24hHi)
         """
         # Examples:
         ###self.setTemps(ETemperatureFormat.tfCelsius,1.0,41.0,2.0,42.0) 
         ###self.setHums(41,71,42,72)
         ###self.setPresRels(EPressureFormat.pfHPa,960.1,1040.1,28.36,30.72)
-        ###self.setGust(EWindspeedFormat.wfKmh,100.0)
+        ###self.setGust(EWindspeedFormat.wfMph,008.0) # setGust not yet implemented
         ##self.setRain24H(ERainFormat.rfMm,50.0)        
 
         # Preset historyInterval to 1 minute (default: 2 hours)
@@ -2467,7 +2465,7 @@ class CWeatherStationConfig(object):
         self.parse_1(self._PressureRelative_hPaMinMax._Max._Value, nbuf, 9, 0, 5)
         self.parse_2(self._PressureRelative_inHgMinMax._Min._Value, nbuf, 12, 1, 5)
         self.parse_1(self._PressureRelative_hPaMinMax._Min._Value, nbuf, 14, 0, 5)
-        self.parseWind_2(self._GustMax._Max._Value, nbuf, 17, 0, 5)
+        self.parseWind_6(self._GustMax._Max._Value, nbuf, 17)
         nbuf[0][20] = self._HistoryInterval & 0xF
         self.parseRain_3(self._Rain24HMax._Max._Value, nbuf, 21, 0, 7)
         self.parse_0(self._HumidityOutdoorMinMax._Max._Value, nbuf, 25, 1, 2)
@@ -2541,7 +2539,7 @@ class CHistoryDataSet(object):
         self.TempOutdoor = CWeatherTraits.TemperatureNP()
         self.HumidityOutdoor = CWeatherTraits.HumidityNP()
         self.PressureRelative = None
-        self.WindDirection = 16
+        self.WindDirection = EWindDirection.wdERR #16
         self.RainCounterRaw = 0
         self.WindSpeed = CWeatherTraits.WindNP()
         self.Gust = CWeatherTraits.WindNP()
@@ -2577,7 +2575,7 @@ class CHistoryDataSet(object):
         logdbg("HumidityOutdoor=  %7.0f" % self.HumidityOutdoor)
         logdbg("PressureRelative= %7.1f" % self.PressureRelative)
         logdbg("RainCounterRaw=   %7.1f" % self.RainCounterRaw)
-        logdbg("WindDirection=        %.3s" % CWeatherTraits.windDirMap[self.WindDirection])
+        logdbg("WindDirection=    %s" % CWeatherTraits.windDirMap[self.WindDirection])
         logdbg("WindSpeed=        %7.1f" % self.WindSpeed)
         logdbg("Gust=             %7.1f" % self.Gust)
 
@@ -3339,6 +3337,7 @@ class CCommunicationService(object):
         cfgBuffer[0] = [0]*44
         changed = self.DataStore.DeviceConfig.testConfigChanged(cfgBuffer)
         if changed:
+            self.shid.dump('OutBuf', cfgBuffer[0], fmt='long')
             newBuffer[0][0] = Buffer[0][0]
             newBuffer[0][1] = Buffer[0][1]
             newBuffer[0][2] = EAction.aSendConfig # 0x40 # change this value if we won't store config
@@ -3451,6 +3450,7 @@ class CCommunicationService(object):
 
     def handleConfig(self,Buffer,Length):
         logdbg('handleConfig: %s' % self.timing())
+        self.shid.dump('InBuf', Buffer[0], fmt='long')
         newBuffer=[0]
         newBuffer[0] = Buffer[0]
         newLength = [0]
@@ -3483,6 +3483,7 @@ class CCommunicationService(object):
             or chksum != self.DataStore.CurrentWeather.checksum()):
             data = CCurrentWeatherData()
             data.read(Buffer)
+            self.shid.dump('CurWea', Buffer[0], fmt='long')
             self.DataStore.setCurrentWeather(data)
 
         # update the connection cache
