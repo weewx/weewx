@@ -800,6 +800,7 @@ class Forecast(StdService):
         sql = "delete from %s where method = '%s' and dateTime < %d" % (table, method_id, ts)
         archive.getSql(sql)
         loginf('%s: deleted forecasts prior to %d' % (method_id, ts))
+        # FIXME: if this is sqlite, do a vacuum too
 
     @staticmethod
     def get_saved_forecasts(archive, table, method_id, since_ts=None):
@@ -1212,7 +1213,7 @@ def NWSParseForecast(text, lid):
     rows6 = {}
     ts = date2ts(lines[3])
     day_ts = weeutil.weeutil.startOfDay(ts)
-    loginf("%s: tstr='%s' ts=%s day_ts=%s" % (NWS_KEY, lines[3], ts, day_ts))
+#    loginf("%s: tstr='%s' ts=%s day_ts=%s" % (NWS_KEY, lines[3], ts, day_ts))
     for line in lines:
         label = line[0:14].strip()
         if label.startswith('UTC'):
