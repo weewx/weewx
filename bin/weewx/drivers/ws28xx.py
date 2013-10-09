@@ -858,7 +858,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxengine
 
-DRIVER_VERSION = '0.13'
+DRIVER_VERSION = '0.14'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
@@ -1352,6 +1352,7 @@ class EWindDirection:
     wdNNW            = 0x0F
     wdERR            = 0x10
     wdInvalid        = 0x11
+    wdNone           = 0x12
 
 class EResetMinMaxFlags:
     rmTempIndoorHi   = 0
@@ -1895,20 +1896,20 @@ class CCurrentWeatherData(object):
         self._PressureRelative_inHg = CWeatherTraits.PressureNP()
         self._PressureRelative_inHgMinMax = CMinMaxMeasurement()
         self._WindSpeed = CWeatherTraits.WindNP()
-        self._WindDirection = EWindDirection.wdERR
-        self._WindDirection1 = EWindDirection.wdERR
-        self._WindDirection2 = EWindDirection.wdERR
-        self._WindDirection3 = EWindDirection.wdERR
-        self._WindDirection4 = EWindDirection.wdERR
-        self._WindDirection5 = EWindDirection.wdERR
+        self._WindDirection = EWindDirection.wdNone
+        self._WindDirection1 = EWindDirection.wdNone
+        self._WindDirection2 = EWindDirection.wdNone
+        self._WindDirection3 = EWindDirection.wdNone
+        self._WindDirection4 = EWindDirection.wdNone
+        self._WindDirection5 = EWindDirection.wdNone
         self._Gust = CWeatherTraits.WindNP()
         self._GustMax = CMinMaxMeasurement()
-        self._GustDirection = EWindDirection.wdERR
-        self._GustDirection1 = EWindDirection.wdERR
-        self._GustDirection2 = EWindDirection.wdERR
-        self._GustDirection3 = EWindDirection.wdERR
-        self._GustDirection4 = EWindDirection.wdERR
-        self._GustDirection5 = EWindDirection.wdERR
+        self._GustDirection = EWindDirection.wdNone
+        self._GustDirection1 = EWindDirection.wdNone
+        self._GustDirection2 = EWindDirection.wdNone
+        self._GustDirection3 = EWindDirection.wdNone
+        self._GustDirection4 = EWindDirection.wdNone
+        self._GustDirection5 = EWindDirection.wdNone
         self._Rain1H = CWeatherTraits.RainNP()
         self._Rain1HMax = CMinMaxMeasurement()
         self._Rain24H = CWeatherTraits.RainNP()
@@ -2539,7 +2540,7 @@ class CHistoryDataSet(object):
         self.TempOutdoor = CWeatherTraits.TemperatureNP()
         self.HumidityOutdoor = CWeatherTraits.HumidityNP()
         self.PressureRelative = None
-        self.WindDirection = EWindDirection.wdERR #16
+        self.WindDirection = EWindDirection.wdNone
         self.RainCounterRaw = 0
         self.WindSpeed = CWeatherTraits.WindNP()
         self.Gust = CWeatherTraits.WindNP()
@@ -2553,10 +2554,10 @@ class CHistoryDataSet(object):
         # FIXME: what about gust direction?
         self.WindDirection = (nbuf[0][14] >> 4) & 0xF
         self.WindSpeed = USBHardware.toWindspeed_3_1(nbuf, 14, 0)
-        if (self.WindSpeed == CWeatherTraits.WindNP() or self.WindSpeed == 0):
-            self.WindDirection = None
-        if (self.WindDirection < 0 and self.WindDirection > 16):
-            self.WindDirection = 16 
+        if self.WindSpeed == 0 or self.WindSpeed == CWeatherTraits.WindNP():
+            self.WindDirection = EWindDirection.wdNone
+        if self.WindDirection < 0 and self.WindDirection > 16:
+            self.WindDirection = EWindDirection.wdInvalid 
         self.RainCounterRaw = USBHardware.toRain_3_1(nbuf, 16, 1)
         self.HumidityOutdoor = USBHardware.toHumidity_2_0(nbuf, 17, 0)
         self.HumidityIndoor = USBHardware.toHumidity_2_0(nbuf, 18, 0)    
@@ -2575,7 +2576,7 @@ class CHistoryDataSet(object):
         logdbg("HumidityOutdoor=  %7.0f" % self.HumidityOutdoor)
         logdbg("PressureRelative= %7.1f" % self.PressureRelative)
         logdbg("RainCounterRaw=   %7.1f" % self.RainCounterRaw)
-        logdbg("WindDirection=    %s" % CWeatherTraits.windDirMap[self.WindDirection])
+        logdbg("WindDirection=    % 3s" % CWeatherTraits.windDirMap[self.WindDirection])
         logdbg("WindSpeed=        %7.1f" % self.WindSpeed)
         logdbg("Gust=             %7.1f" % self.Gust)
 
