@@ -312,8 +312,8 @@ Additional bytes ReadConfig and WriteConfig
 01:    length
 02-03: address
 
-Additional bytes frequention correction
-05lo-07hi: frequention correction
+Additional bytes frequency correction
+05lo-07hi: frequency correction
 
 Additional bytes transceiver data
 05-10:     serial number
@@ -814,10 +814,10 @@ time sent: 2013-06-24 12:14:19
 -------------------------------------------------------------------------------
 ReadConfigFlash data
 
-Ask for frequention correction 
+Ask for frequency correction 
 rcfo  000: dd 0a 01 f5 cc cc cc cc cc cc  cc cc cc cc cc
 
-readConfigFlash frequention correction
+readConfigFlash frequency correction
 rcfi  000: dc 0a 01 f5 00 01 78 a0 01 02  0a 0c 0c 01 2e ff ff ff ff ff
 frequency correction: 96416 (178a0)
 adjusted frequency: 910574957 (3646456d)
@@ -2015,7 +2015,7 @@ class CCurrentWeatherData(object):
         self._HumidityIndoorMinMax._Max._IsError = (self._HumidityIndoorMinMax._Max._Value == CWeatherTraits.HumidityNP())
         self._HumidityIndoorMinMax._Max._IsOverflow = (self._HumidityIndoorMinMax._Max._Value == CWeatherTraits.HumidityOFL())
         self._HumidityIndoorMinMax._Max._Time = None if self._HumidityIndoorMinMax._Max._IsError or self._HumidityIndoorMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 81, 1, 'HumidityIndoorMax')
-        self._HumidityIndoorMinMax._Min._Time = None if self._HumidityIndoorMinMax._Min._IsError or self._HumidityIndoorMinMax._Min._IsOverflow USBHardware.toDateTime(nbuf, 86, 1, 'HumidityIndoorMin')
+        self._HumidityIndoorMinMax._Min._Time = None if self._HumidityIndoorMinMax._Min._IsError or self._HumidityIndoorMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 86, 1, 'HumidityIndoorMin')
 
         self._HumidityOutdoorMinMax._Max._Value = USBHardware.toHumidity_2_0(nbuf, 104, 1)
         self._HumidityOutdoorMinMax._Min._Value = USBHardware.toHumidity_2_0(nbuf, 105, 1)
