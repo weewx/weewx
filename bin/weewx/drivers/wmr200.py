@@ -209,11 +209,11 @@ class UsbDevice(object):
             log_msg = 'readDevice() USB Error Reason:%s' % ex
             if ex.args[0].find('No data available') == -1:
                 dprint(log_msg)
-                syslog.syslog(syslog.LOG_ERR, 'wmr200: %s' % log_msg)
+                syslog.syslog(syslog.LOG_DEBUG, 'wmr200: %s' % log_msg)
                 return None
             else:
                 # No data avail...not an error but probably ok.
-                syslog.syslog(syslog.LOG_NOTICE, 'wmr200: No data received in'
+                syslog.syslog(syslog.LOG_DEBUG, 'wmr200: No data received in'
                               ' %d seconds' % int(self.timeout_read))
                 return []
 
