@@ -833,11 +833,11 @@ transceiver serial: 01021012120146
 """
 
 # TODO: how often is currdat.lst modified with/without hi-speed mode?
-# TODO: display time of rain reset
 # TODO: during weewx startup, do 'catchup' of old history records
 # TODO: thread locking around observation data
 # TODO: eliminate polling, make MainThread get data as soon as RFThread updates
 # TODO: eliminate pressure_offset and use StdCalibrate instead?
+# TODO: get rid of Length/Buffer construct, replace with a Buffer class or obj
 
 from datetime import datetime
 from datetime import timedelta
@@ -858,7 +858,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxengine
 
-DRIVER_VERSION = '0.12'
+DRIVER_VERSION = '0.13'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
@@ -900,7 +900,7 @@ def log_frame(n, buf):
         if (i+1) % 16 == 0:
             logdbg(strbuf)
             strbuf = ''
-    if len(strbuf) > 0:
+    if strbuf:
         logdbg(strbuf)
 
 def get_datum_diff(v, np):
@@ -1742,7 +1742,7 @@ class USBHardware(object):
             minutes = USBHardware.toInt_2(buf, start+4, StartOnHiNibble)
             try:
                 result = datetime(year, month, days, hours, minutes)
-            except:
+            except ValueError:
                 if label not in _bad_labels:
                     logerr(('ToDateTime: bogus date for %s:'
                             ' bad date conversion from'
@@ -1980,144 +1980,52 @@ class CCurrentWeatherData(object):
         self._TempOutdoorMinMax._Max._Value = USBHardware.toTemperature_5_3(nbuf, 37, 0)
         self._TempOutdoorMinMax._Min._Value = USBHardware.toTemperature_5_3(nbuf, 40, 1)
         self._TempOutdoor = USBHardware.toTemperature_5_3(nbuf, 42, 0)
-        if self._TempOutdoorMinMax._Min._Value == CWeatherTraits.TemperatureNP():
-            self._TempOutdoorMinMax._Min._IsError = 1
-        else:
-            self._TempOutdoorMinMax._Min._IsError = 0
-        if self._TempOutdoorMinMax._Min._Value == CWeatherTraits.TemperatureOFL():
-            self._TempOutdoorMinMax._Min._IsOverflow = 1
-        else:
-            self._TempOutdoorMinMax._Min._IsOverflow = 0
-        if self._TempOutdoorMinMax._Max._Value == CWeatherTraits.TemperatureNP():
-            self._TempOutdoorMinMax._Max._IsError = 1
-        else:
-            self._TempOutdoorMinMax._Max._IsError = 0
-        if self._TempOutdoorMinMax._Max._Value == CWeatherTraits.TemperatureOFL():
-            self._TempOutdoorMinMax._Max._IsOverflow = 1
-        else:
-            self._TempOutdoorMinMax._Max._IsOverflow = 0
-        if self._TempOutdoorMinMax._Max._IsError or self._TempOutdoorMinMax._Max._IsOverflow:
-            self._TempOutdoorMinMax._Max._Time = None
-        else:
-            self._TempOutdoorMinMax._Max._Time = USBHardware.toDateTime(nbuf, 27, 0, 'TempOutdoorMax')
-        if self._TempOutdoorMinMax._Min._IsError or self._TempOutdoorMinMax._Min._IsOverflow:
-            self._TempOutdoorMinMax._Min._Time = None
-        else:
-            self._TempOutdoorMinMax._Min._Time = USBHardware.toDateTime(nbuf, 32, 0, 'TempOutdoorMin')
+        self._TempOutdoorMinMax._Min._IsError = (self._TempOutdoorMinMax._Min._Value == CWeatherTraits.TemperatureNP())
+        self._TempOutdoorMinMax._Min._IsOverflow = (self._TempOutdoorMinMax._Min._Value == CWeatherTraits.TemperatureOFL())
+        self._TempOutdoorMinMax._Max.IsError = (self._TempOutdoorMinMax._Max._Value == CWeatherTraits.TemperatureNP())
+        self._TempOutdoorMinMax._Max.IsOverflow = (self._TempOutdoorMinMax._Max._Value == CWeatherTraits.TemperatureOFL())
+        self._TempOutdoorMinMax._Max._Time = None if self._TempOutdoorMinMax._Max._IsError or self._TempOutdoorMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 27, 0, 'TempOutdoorMax')
+        self._TempOutdoorMinMax._Min._Time = None if self._TempOutdoorMinMax._Min._IsError or self._TempOutdoorMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 32, 0, 'TempOutdoorMin')
 
         self._WindchillMinMax._Max._Value = USBHardware.toTemperature_5_3(nbuf, 55, 0)
         self._WindchillMinMax._Min._Value = USBHardware.toTemperature_5_3(nbuf, 58, 1)
         self._Windchill = USBHardware.toTemperature_5_3(nbuf, 60, 0)
-        if self._WindchillMinMax._Min._Value == CWeatherTraits.TemperatureNP():
-            self._WindchillMinMax._Min._IsError = 1
-        else:
-            self._WindchillMinMax._Min._IsError = 0
-        if self._WindchillMinMax._Min._Value == CWeatherTraits.TemperatureOFL():
-            self._WindchillMinMax._Min._IsOverflow = 1
-        else:
-            self._WindchillMinMax._Min._IsOverflow = 0
-        
-        if self._WindchillMinMax._Max._Value == CWeatherTraits.TemperatureNP():
-            self._WindchillMinMax._Max._IsError = 1
-        else:
-            self._WindchillMinMax._Max._IsError = 0
-        if self._WindchillMinMax._Max._Value == CWeatherTraits.TemperatureOFL():
-            self._WindchillMinMax._Max._IsOverflow = 1
-        else:
-            self._WindchillMinMax._Max._IsOverflow = 0
-        if self._WindchillMinMax._Max._IsError or self._WindchillMinMax._Max._IsOverflow:
-            self._WindchillMinMax._Max._Time = None
-        else:
-            self._WindchillMinMax._Max._Time = USBHardware.toDateTime(nbuf, 45, 0, 'WindchillMax')
-        if self._WindchillMinMax._Min._IsError or self._WindchillMinMax._Min._IsOverflow:
-            self._WindchillMinMax._Min._Time = None
-        else:
-            self._WindchillMinMax._Min._Time = USBHardware.toDateTime(nbuf, 50, 0, 'WindchillMin')
+        self._WindchillMinMax._Min._IsError = (self._WindchillMinMax._Min._Value == CWeatherTraits.TemperatureNP())
+        self._WindchillMinMax._Min._IsOverflow = (self._WindchillMinMax._Min._Value == CWeatherTraits.TemperatureOFL())
+        self._WindchillMinMax._Max._IsError = (self._WindchillMinMax._Max._Value == CWeatherTraits.TemperatureNP())
+        self._WindchillMinMax._Max._IsOverflow = (self._WindchillMinMax._Max._Value == CWeatherTraits.TemperatureOFL())
+        self._WindchillMinMax._Max._Time = None if self._WindchillMinMax._Max._IsError or self._WindchillMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 45, 0, 'WindchillMax')
+        self._WindchillMinMax._Min._Time = None if self._WindchillMinMax._Min._IsError or self._WindchillMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 50, 0, 'WindchillMin')
 
         self._DewpointMinMax._Max._Value = USBHardware.toTemperature_5_3(nbuf, 73, 0)
         self._DewpointMinMax._Min._Value = USBHardware.toTemperature_5_3(nbuf, 76, 1)
         self._Dewpoint = USBHardware.toTemperature_5_3(nbuf, 78, 0)
-        if self._DewpointMinMax._Min._Value == CWeatherTraits.TemperatureNP():
-            self._DewpointMinMax._Min._IsError = 1
-        else:
-            self._DewpointMinMax._Min._IsError = 0
-        if self._DewpointMinMax._Min._Value == CWeatherTraits.TemperatureOFL():
-            self._DewpointMinMax._Min._IsOverflow = 1
-        else:
-            self._DewpointMinMax._Min._IsOverflow = 0
-        if self._DewpointMinMax._Max._Value == CWeatherTraits.TemperatureNP():
-            self._DewpointMinMax._Max._IsError = 1
-        else:
-            self._DewpointMinMax._Max._IsError = 0
-        if self._DewpointMinMax._Max._Value == CWeatherTraits.TemperatureOFL():
-            self._DewpointMinMax._Max._IsOverflow = 1
-        else:
-            self._DewpointMinMax._Max._IsOverflow = 0
-        if self._DewpointMinMax._Min._IsError or self._DewpointMinMax._Min._IsOverflow:
-            self._DewpointMinMax._Min._Time = None
-        else:
-            self._DewpointMinMax._Min._Time = USBHardware.toDateTime(nbuf, 68, 0, 'DewpointMin')
-        if self._DewpointMinMax._Max._IsError or self._DewpointMinMax._Max._IsOverflow:
-            self._DewpointMinMax._Max._Time = None
-        else:
-            self._DewpointMinMax._Max._Time = USBHardware.toDateTime(nbuf, 63, 0, 'DewpointMax')
+        self._DewpointMinMax._Min.IsError = (self._DewpointMinMax._Min._Value == CWeatherTraits.TemperatureNP())
+        self._DewpointMinMax._Min._IsOverflow = (self._DewpointMinMax._Min._Value == CWeatherTraits.TemperatureOFL())
+        self._DewpointMinMax._Max._IsError = (self._DewpointMinMax._Max._Value == CWeatherTraits.TemperatureNP())
+        self._DewpointMinMax._Max._IsOverflow = (self._DewpointMinMax._Max._Value == CWeatherTraits.TemperatureOFL())
+        self._DewpointMinMax._Min._Time = None if self._DewpointMinMax._Min._IsError or self._DewpointMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 68, 0, 'DewpointMin')
+        self._DewpointMinMax._Max._Time = None if self._DewpointMinMax._Max._IsError or self._DewpointMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 63, 0, 'DewpointMax')
 
         self._HumidityIndoorMinMax._Max._Value = USBHardware.toHumidity_2_0(nbuf, 91, 1)
         self._HumidityIndoorMinMax._Min._Value = USBHardware.toHumidity_2_0(nbuf, 92, 1)
         self._HumidityIndoor = USBHardware.toHumidity_2_0(nbuf, 93, 1)
-        if self._HumidityIndoorMinMax._Min._Value == CWeatherTraits.HumidityNP():
-            self._HumidityIndoorMinMax._Min._IsError = 1
-        else:
-            self._HumidityIndoorMinMax._Min._IsError = 0
-        if self._HumidityIndoorMinMax._Min._Value == CWeatherTraits.HumidityOFL():
-            self._HumidityIndoorMinMax._Min._IsOverflow = 1
-        else:
-            self._HumidityIndoorMinMax._Min._IsOverflow = 0
-        if self._HumidityIndoorMinMax._Max._Value == CWeatherTraits.HumidityNP():
-            self._HumidityIndoorMinMax._Max._IsError = 1
-        else:
-            self._HumidityIndoorMinMax._Max._IsError = 0
-        if self._HumidityIndoorMinMax._Max._Value == CWeatherTraits.HumidityOFL():
-            self._HumidityIndoorMinMax._Max._IsOverflow = 1
-        else:
-            self._HumidityIndoorMinMax._Max._IsOverflow = 0
-        if self._HumidityIndoorMinMax._Max._IsError or self._HumidityIndoorMinMax._Max._IsOverflow:
-            self._HumidityIndoorMinMax._Max._Time = None
-        else:
-            self._HumidityIndoorMinMax._Max._Time = USBHardware.toDateTime(nbuf, 81, 1, 'HumidityIndoorMax')
-        if self._HumidityIndoorMinMax._Min._IsError or self._HumidityIndoorMinMax._Min._IsOverflow:
-            self._HumidityIndoorMinMax._Min._Time = None
-        else:
-            self._HumidityIndoorMinMax._Min._Time = USBHardware.toDateTime(nbuf, 86, 1, 'HumidityIndoorMin')
+        self._HumidityIndoorMinMax._Min._IsError = (self._HumidityIndoorMinMax._Min._Value == CWeatherTraits.HumidityNP())
+        self._HumidityIndoorMinMax._Min._IsOverflow = (self._HumidityIndoorMinMax._Min._Value == CWeatherTraits.HumidityOFL())
+        self._HumidityIndoorMinMax._Max._IsError = (self._HumidityIndoorMinMax._Max._Value == CWeatherTraits.HumidityNP())
+        self._HumidityIndoorMinMax._Max._IsOverflow = (self._HumidityIndoorMinMax._Max._Value == CWeatherTraits.HumidityOFL())
+        self._HumidityIndoorMinMax._Max._Time = None if self._HumidityIndoorMinMax._Max._IsError or self._HumidityIndoorMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 81, 1, 'HumidityIndoorMax')
+        self._HumidityIndoorMinMax._Min._Time = None if self._HumidityIndoorMinMax._Min._IsError or self._HumidityIndoorMinMax._Min._IsOverflow USBHardware.toDateTime(nbuf, 86, 1, 'HumidityIndoorMin')
 
         self._HumidityOutdoorMinMax._Max._Value = USBHardware.toHumidity_2_0(nbuf, 104, 1)
         self._HumidityOutdoorMinMax._Min._Value = USBHardware.toHumidity_2_0(nbuf, 105, 1)
         self._HumidityOutdoor = USBHardware.toHumidity_2_0(nbuf, 106, 1)
-        if self._HumidityOutdoorMinMax._Min._Value == CWeatherTraits.HumidityNP():
-            self._HumidityOutdoorMinMax._Min._IsError = 1
-        else:
-            self._HumidityOutdoorMinMax._Min._IsError = 0
-        if self._HumidityOutdoorMinMax._Min._Value == CWeatherTraits.HumidityOFL():
-            self._HumidityOutdoorMinMax._Min._IsOverflow = 1
-        else:
-            self._HumidityOutdoorMinMax._Min._IsOverflow = 0
-
-        if self._HumidityOutdoorMinMax._Max._Value == CWeatherTraits.HumidityNP():
-            self._HumidityOutdoorMinMax._Max._IsError = 1
-        else:
-            self._HumidityOutdoorMinMax._Max._IsError = 0
-        if self._HumidityOutdoorMinMax._Max._Value == CWeatherTraits.HumidityOFL():
-            self._HumidityOutdoorMinMax._Max._IsOverflow = 1
-        else:
-            self._HumidityOutdoorMinMax._Max._IsOverflow = 0
-        if self._HumidityOutdoorMinMax._Max._IsError or self._HumidityOutdoorMinMax._Max._IsOverflow:
-            self._HumidityOutdoorMinMax._Max._Time = None
-        else:
-            self._HumidityOutdoorMinMax._Max._Time = USBHardware.toDateTime(nbuf, 94, 1, 'HumidityOutdoorMax')
-        if self._HumidityOutdoorMinMax._Min._IsError or self._HumidityOutdoorMinMax._Min._IsOverflow:
-            self._HumidityOutdoorMinMax._Min._Time = None
-        else:
-            self._HumidityOutdoorMinMax._Min._Time = USBHardware.toDateTime(nbuf, 99, 1, 'HumidityOutdoorMin')
+        self._HumidityOutdoorMinMax._Min._IsError = (self._HumidityOutdoorMinMax._Min._Value == CWeatherTraits.HumidityNP())
+        self._HumidityOutdoorMinMax._Min._IsOverflow = (self._HumidityOutdoorMinMax._Min._Value == CWeatherTraits.HumidityOFL())
+        self._HumidityOutdoorMinMax._Max._IsError = (self._HumidityOutdoorMinMax._Max._Value == CWeatherTraits.HumidityNP())
+        self._HumidityOutdoorMinMax._Max._IsOverflow = (self._HumidityOutdoorMinMax._Max._Value == CWeatherTraits.HumidityOFL())
+        self._HumidityOutdoorMinMax._Max._Time = None if self._HumidityOutdoorMinMax._Max._IsError or self._HumidityOutdoorMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 94, 1, 'HumidityOutdoorMax')
+        self._HumidityOutdoorMinMax._Min._Time = None if self._HumidityOutdoorMinMax._Min._IsError or self._HumidityOutdoorMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 99, 1, 'HumidityOutdoorMin')
 
         self._RainLastMonthMax._Max._Time = USBHardware.toDateTime(nbuf, 107, 1, 'RainLastMonthMax')
         self._RainLastMonthMax._Max._Value = USBHardware.toRain_6_2(nbuf, 112, 1)
@@ -2159,7 +2067,6 @@ class CCurrentWeatherData(object):
             logdbg('Bytes with unknown meaning at 157-165: %s' % strbuf)
 
         self._WindSpeed = USBHardware.toWindspeed_5_2(nbuf, 172, 1)
-        # FIXME: add NP and OFL checks for wind speed
 
         # FIXME: read the WindErrFlags
         (g ,g1) = USBHardware.readWindDirectionShared(nbuf, 177)
@@ -2172,11 +2079,11 @@ class CCurrentWeatherData(object):
         self._GustDirection4 = g4
         self._GustDirection5 = g5
 
-        self._GustMax._Max._Time = USBHardware.toDateTime(nbuf, 179, 1, 'GustMax')
         self._GustMax._Max._Value = USBHardware.toWindspeed_5_2(nbuf, 184, 1)
+        self._GustMax._Max._IsError = (self._GustMax._Max._Value == CWeatherTraits.WindNP())
+        self._GustMax._Max._IsOverflow = (self._GustMax._Max._Value == CWeatherTraits.WindOFL())
+        self._GustMax._Max._Time = None if self._GustMax._Max._IsError or self._GustMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 179, 1, 'GustMax')
         self._Gust = USBHardware.toWindspeed_5_2(nbuf, 187, 1)
-        # FIXME: add NP and OFL checks for gust
-        # FIXME: add NP and OFL checks for gust max
 
         # Apparently the station returns only ONE date time for both hPa/inHg
         # Min Time Reset and Max Time Reset
@@ -2940,7 +2847,7 @@ class CDataStore(object):
 
         try:
             self.Request.CondFinish.acquire()
-        except:
+        except Exception:
             pass
 
         if self.Request.CondFinish.wait(timedelta(milliseconds=timeout).seconds):
@@ -2971,7 +2878,7 @@ class CDataStore(object):
 
         try:
             self.Request.CondFinish.acquire()
-        except:
+        except Exception:
             pass
         if self.Request.CondFinish.wait(timedelta(milliseconds=timeout).seconds):
             # FIXME: implement getHistory
@@ -3068,7 +2975,7 @@ class sHID(object):
         # detach any old claimed interfaces
         try:
             self.devh.detachKernelDriver(self._interface.interfaceNumber)
-        except:
+        except Exception:
             pass
 
         # FIXME: this seems to be specific to ws28xx?
@@ -3105,12 +3012,12 @@ class sHID(object):
         try:
             logdbg('release USB interface')
             self.devh.releaseInterface()
-        except:
+        except Exception:
             pass
         try:
             logdbg('detach kernel driver')
             self.devh.detachKernelDriver(self._interface.interfaceNumber)
-        except:
+        except Exception:
             pass
 
     def setTX(self):
@@ -3288,7 +3195,7 @@ class sHID(object):
                 strbuf = ''
             if fmt == 'short' and i+1 >= 16:
                 break
-        if len(strbuf) > 0:
+        if strbuf:
             self.dumpstr(cmd, strbuf)
 
     # filter output that we do not care about, pad the command string.
@@ -3305,7 +3212,7 @@ class sHID(object):
 
 class CCommunicationService(object):
 
-    AX5051RegisterNames_map = dict()
+    reg_names = dict()
 
     class AX5051RegisterNames:
         REVISION         = 0x0
@@ -3704,58 +3611,6 @@ class CCommunicationService(object):
         Length[0] = newLength[0]
         Buffer[0] = newBuffer[0]
 
-    def configureRegisterNames(self):
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.IFMODE]    =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.MODULATION]=0x41 #fsk
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.ENCODING]  =0x07
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FRAMING]   =0x84 #1000:0100 ##?hdlc? |1000 010 0
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CRCINIT3]  =0xff
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CRCINIT2]  =0xff
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CRCINIT1]  =0xff
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CRCINIT0]  =0xff
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3]     =0x38
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2]     =0x90
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1]     =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ0]     =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLLOOP]   =0x1d
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLRANGING]=0x08
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLRNGCLK] =0x03
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.MODMISC]   =0x03
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.SPAREOUT]  =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TESTOBS]   =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.APEOVER]   =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TMMUX]     =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLVCOI]   =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLCPEN]   =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.RFMISC]    =0xb0
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.REF]       =0x23
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.IFFREQHI]  =0x20
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.IFFREQLO]  =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.ADCMISC]   =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AGCTARGET] =0x0e
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AGCATTACK] =0x11
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AGCDECAY]  =0x0e
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CICDEC]    =0x3f
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.DATARATEHI]=0x19
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.DATARATELO]=0x66
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TMGGAINHI] =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TMGGAINLO] =0x96
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PHASEGAIN] =0x03
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQGAIN]  =0x04
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQGAIN2] =0x0a
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AMPLGAIN]  =0x06
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AGCMANUAL] =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.ADCDCLEVEL]=0x10
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.RXMISC]    =0x35
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FSKDEV2]   =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FSKDEV1]   =0x31
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FSKDEV0]   =0x27
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXPWR]     =0x03
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXRATEHI]  =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXRATEMID] =0x51
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXRATELO]  =0xec
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXDRIVER]  =0x88
-
     def generateResponse(self, Buffer, Length):
         logdbg('generateResponse: %s' % self.timing())
         newBuffer = [0]
@@ -3833,9 +3688,62 @@ class CCommunicationService(object):
         Buffer[0] = newBuffer[0]
         Length[0] = newLength[0]
 
-    def initTransceiver(self):
-        logdbg('initTransceiver')
+    def configureRegisterNames(self):
+        self.reg_names[self.AX5051RegisterNames.IFMODE]    =0x00
+        self.reg_names[self.AX5051RegisterNames.MODULATION]=0x41 #fsk
+        self.reg_names[self.AX5051RegisterNames.ENCODING]  =0x07
+        self.reg_names[self.AX5051RegisterNames.FRAMING]   =0x84 #1000:0100 ##?hdlc? |1000 010 0
+        self.reg_names[self.AX5051RegisterNames.CRCINIT3]  =0xff
+        self.reg_names[self.AX5051RegisterNames.CRCINIT2]  =0xff
+        self.reg_names[self.AX5051RegisterNames.CRCINIT1]  =0xff
+        self.reg_names[self.AX5051RegisterNames.CRCINIT0]  =0xff
+        self.reg_names[self.AX5051RegisterNames.FREQ3]     =0x38
+        self.reg_names[self.AX5051RegisterNames.FREQ2]     =0x90
+        self.reg_names[self.AX5051RegisterNames.FREQ1]     =0x00
+        self.reg_names[self.AX5051RegisterNames.FREQ0]     =0x01
+        self.reg_names[self.AX5051RegisterNames.PLLLOOP]   =0x1d
+        self.reg_names[self.AX5051RegisterNames.PLLRANGING]=0x08
+        self.reg_names[self.AX5051RegisterNames.PLLRNGCLK] =0x03
+        self.reg_names[self.AX5051RegisterNames.MODMISC]   =0x03
+        self.reg_names[self.AX5051RegisterNames.SPAREOUT]  =0x00
+        self.reg_names[self.AX5051RegisterNames.TESTOBS]   =0x00
+        self.reg_names[self.AX5051RegisterNames.APEOVER]   =0x00
+        self.reg_names[self.AX5051RegisterNames.TMMUX]     =0x00
+        self.reg_names[self.AX5051RegisterNames.PLLVCOI]   =0x01
+        self.reg_names[self.AX5051RegisterNames.PLLCPEN]   =0x01
+        self.reg_names[self.AX5051RegisterNames.RFMISC]    =0xb0
+        self.reg_names[self.AX5051RegisterNames.REF]       =0x23
+        self.reg_names[self.AX5051RegisterNames.IFFREQHI]  =0x20
+        self.reg_names[self.AX5051RegisterNames.IFFREQLO]  =0x00
+        self.reg_names[self.AX5051RegisterNames.ADCMISC]   =0x01
+        self.reg_names[self.AX5051RegisterNames.AGCTARGET] =0x0e
+        self.reg_names[self.AX5051RegisterNames.AGCATTACK] =0x11
+        self.reg_names[self.AX5051RegisterNames.AGCDECAY]  =0x0e
+        self.reg_names[self.AX5051RegisterNames.CICDEC]    =0x3f
+        self.reg_names[self.AX5051RegisterNames.DATARATEHI]=0x19
+        self.reg_names[self.AX5051RegisterNames.DATARATELO]=0x66
+        self.reg_names[self.AX5051RegisterNames.TMGGAINHI] =0x01
+        self.reg_names[self.AX5051RegisterNames.TMGGAINLO] =0x96
+        self.reg_names[self.AX5051RegisterNames.PHASEGAIN] =0x03
+        self.reg_names[self.AX5051RegisterNames.FREQGAIN]  =0x04
+        self.reg_names[self.AX5051RegisterNames.FREQGAIN2] =0x0a
+        self.reg_names[self.AX5051RegisterNames.AMPLGAIN]  =0x06
+        self.reg_names[self.AX5051RegisterNames.AGCMANUAL] =0x00
+        self.reg_names[self.AX5051RegisterNames.ADCDCLEVEL]=0x10
+        self.reg_names[self.AX5051RegisterNames.RXMISC]    =0x35
+        self.reg_names[self.AX5051RegisterNames.FSKDEV2]   =0x00
+        self.reg_names[self.AX5051RegisterNames.FSKDEV1]   =0x31
+        self.reg_names[self.AX5051RegisterNames.FSKDEV0]   =0x27
+        self.reg_names[self.AX5051RegisterNames.TXPWR]     =0x03
+        self.reg_names[self.AX5051RegisterNames.TXRATEHI]  =0x00
+        self.reg_names[self.AX5051RegisterNames.TXRATEMID] =0x51
+        self.reg_names[self.AX5051RegisterNames.TXRATELO]  =0xec
+        self.reg_names[self.AX5051RegisterNames.TXDRIVER]  =0x88
 
+    def initTransceiver(self, frequency_standard):
+        logdbg('initTransceiver: frequency_standard=%s' % frequency_standard)
+
+        self.DataStore.setFrequencyStandard(frequency_standard)
         self.configureRegisterNames()
 
         # calculate the frequency then set frequency registers
@@ -3855,49 +3763,48 @@ class CCommunicationService(object):
         if not (freqVal % 2):
             freqVal += 1
         loginf('adjusted frequency: %d (0x%x)' % (freqVal,freqVal))
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3] = (freqVal >>24) & 0xFF
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2] = (freqVal >>16) & 0xFF
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1] = (freqVal >>8)  & 0xFF
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ0] = (freqVal >>0)  & 0xFF
+        self.reg_names[self.AX5051RegisterNames.FREQ3] = (freqVal >>24) & 0xFF
+        self.reg_names[self.AX5051RegisterNames.FREQ2] = (freqVal >>16) & 0xFF
+        self.reg_names[self.AX5051RegisterNames.FREQ1] = (freqVal >>8)  & 0xFF
+        self.reg_names[self.AX5051RegisterNames.FREQ0] = (freqVal >>0)  & 0xFF
         logdbg('frequency registers: %x %x %x %x' % (
-                self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3],
-                self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2],
-                self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1],
-                self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ0]))
+                self.reg_names[self.AX5051RegisterNames.FREQ3],
+                self.reg_names[self.AX5051RegisterNames.FREQ2],
+                self.reg_names[self.AX5051RegisterNames.FREQ1],
+                self.reg_names[self.AX5051RegisterNames.FREQ0]))
 
         # figure out the transceiver id
         buf = [None]
         self.shid.readConfigFlash(0x1F9, 7, buf)
-        ID  = buf[0][5] << 8
-        ID += buf[0][6]
-        loginf('transceiver ID: %d (0x%04x)' % (ID,ID))
-        self.DataStore.setDeviceID(ID)
+        tid  = buf[0][5] << 8
+        tid += buf[0][6]
+        loginf('transceiver identifier: %d (0x%04x)' % (tid,tid))
+        self.DataStore.setDeviceID(tid)
 
         # figure out the transceiver serial number
-        SN  = str("%02d"%(buf[0][0]))
-        SN += str("%02d"%(buf[0][1]))
-        SN += str("%02d"%(buf[0][2]))
-        SN += str("%02d"%(buf[0][3]))
-        SN += str("%02d"%(buf[0][4]))
-        SN += str("%02d"%(buf[0][5]))
-        SN += str("%02d"%(buf[0][6]))
-        loginf('transceiver serial: %s' % SN)
-        self.DataStore.setTransceiverSerNo(SN)
+        sn  = str("%02d"%(buf[0][0]))
+        sn += str("%02d"%(buf[0][1]))
+        sn += str("%02d"%(buf[0][2]))
+        sn += str("%02d"%(buf[0][3]))
+        sn += str("%02d"%(buf[0][4]))
+        sn += str("%02d"%(buf[0][5]))
+        sn += str("%02d"%(buf[0][6]))
+        loginf('transceiver serial: %s' % sn)
+        self.DataStore.setTransceiverSerNo(sn)
             
-        for r in self.AX5051RegisterNames_map:
-            self.shid.writeReg(r, self.AX5051RegisterNames_map[r])
+        for r in self.reg_names:
+            self.shid.writeReg(r, self.reg_names[r])
 
         self.shid.execute(5)
         self.shid.setPreamblePattern(0xaa)
         self.shid.setState(0x1e)
-        time.sleep(1)
-
-    def setup(self, frequency, vendor_id, product_id, device_id):
-        self.DataStore.setFrequencyStandard(frequency)
-        self.shid.open(vendor_id, product_id, device_id)
-        self.initTransceiver()
-        self.DataStore.setTransceiverPresent(True)
+        time.sleep(1) # FIXME: is this necessary?
         self.shid.setRX()
+
+    def setup(self, frequency_standard, vendor_id, product_id, device_id):
+        self.shid.open(vendor_id, product_id, device_id)
+        self.initTransceiver(frequency_standard)
+        self.DataStore.setTransceiverPresent(True)
 
     def teardown(self):
         self.shid.close()
