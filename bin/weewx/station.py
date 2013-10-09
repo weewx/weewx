@@ -51,7 +51,7 @@ class StationInfo(object):
         self.longitude_f     = float(stn_dict['longitude'])
         self.location        = stn_dict.get('location', 'Unknown')
         self.week_start      = int(stn_dict.get('week_start', 6))
-        self.webpath         = stn_dict.get('webpath', 'www.weewx.com')
+        self.webpath         = stn_dict.get('webpath', None)
 
 class Station(object):
     """Formatted version of StationInfo."""
