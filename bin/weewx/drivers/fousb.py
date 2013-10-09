@@ -467,17 +467,20 @@ def _bcd_encode(value):
     lo = value % 10
     return (hi * 16) + lo
 
+def logmsg(level, msg):
+    syslog.syslog(level, 'fousb: %s' % msg)
+
 def logdbg(msg):
-    syslog.syslog(syslog.LOG_DEBUG, 'fousb: %s' % msg)
+    logmsg(syslog.LOG_DEBUG, msg)
 
 def loginf(msg):
-    syslog.syslog(syslog.LOG_INFO, 'fousb: %s' % msg)
+    msg(syslog.LOG_INFO, msg)
 
 def logerr(msg):
-    syslog.syslog(syslog.LOG_ERR, 'fousb: %s' % msg)
+    logmsg(syslog.LOG_ERR, msg)
 
 def logcrt(msg):
-    syslog.syslog(syslog.LOG_CRIT, 'fousb: %s' % msg)
+    logmsg(syslog.LOG_CRIT, msg)
 
 # FIXME: the pressure calculations belong in wxformulas
 
