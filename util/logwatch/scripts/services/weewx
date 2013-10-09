@@ -4,6 +4,12 @@
 # Copyright 2013 Matthew Wall
 #
 # Revision History
+#  0.3 09oct13
+#   * match cheetahgenerator
+#   * match failed restful uploads
+#   * recognize forecast events
+#   * match weewx HUPs
+#   * recognize new driver startup diagnostics
 #  0.2 03jan13
 #   * better labels for counts
 #  0.1 01jan13
@@ -12,6 +18,7 @@
 use strict;
 
 my $STARTUPS = 'wxengine: startups';
+my $HUP_RESTARTS = 'wxengine: restart from HUP';
 my $ARCHIVES_GENERATED = 'Archive: archives generated';
 my $IMAGES_GENERATED = 'genimages: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
@@ -23,8 +30,10 @@ my $FOUSB_LOST_LOG_SYNC = 'fousb: lost log sync';
 my $FOUSB_LOST_SYNC = 'fousb: lost sync';
 my $FOUSB_MISSED_DATA = 'fousb: missed data';
 my $FOUSB_STATION_SYNC = 'fousb: station sync';
+my $FORECAST_RECORDS = 'forecast: records generated';
 my %counts = (
     $STARTUPS, 0,
+    $HUP_RESTARTS, 0,
     $ARCHIVES_GENERATED, 0,
     $IMAGES_GENERATED, 0,
     $FILES_GENERATED, 0,
@@ -36,8 +45,10 @@ my %counts = (
     $FOUSB_LOST_SYNC, 0,
     $FOUSB_MISSED_DATA, 0,
     $FOUSB_STATION_SYNC, 0,
+    $FORECAST_RECORDS, 0,
 );
 my %reports;
+my $RECORDS_FAILED = 'restful: publish failed';
 my %errors;
 my @unmatched = ();
 
@@ -47,10 +58,13 @@ while(defined($_ = <STDIN>)) {
         $counts{$ARCHIVES_GENERATED} += 1;
     } elsif (/genimages: Generated (\d+) images/) {
         $counts{$IMAGES_GENERATED} += $1;
-    } elsif (/filegenerator: generated (\d+)/) {
+    } elsif (/filegenerator: generated (\d+)/ ||
+             /cheetahgenerator: generated (\d+)/) {
         $counts{$FILES_GENERATED} += $1;
     } elsif (/wxengine: Starting up weewx version/) {
         $counts{$STARTUPS} += 1;
+    } elsif (/wxengine: Received signal HUP/) {
+        $counts{$HUP_RESTARTS} += 1;
     } elsif (/reportengine: copied (\d+) files/) {
         $counts{$FILES_COPIED} += $1;
     } elsif (/fousb: unstable read: blocks differ/) {
@@ -61,8 +75,12 @@ while(defined($_ = <STDIN>)) {
         $counts{$FOUSB_LOST_SYNC} += 1;
     } elsif (/fousb: missed data/) {
         $counts{$FOUSB_MISSED_DATA} += 1;
-    } elsif(/fousb: synchronising to the weather station/) {
+    } elsif (/fousb: synchronising to the weather station/) {
         $counts{$FOUSB_STATION_SYNC} += 1;
+    } elsif (/forecast: .* generated 1 forecast record/) {
+        $counts{$FORECAST_RECORDS} += 1;
+    } elsif (/forecast: .* got (\d+) forecast records/) {
+        $counts{$FORECAST_RECORDS} += $1;
     } elsif (/restful: Skipped record/) {
         $counts{$RECORDS_SKIPPED} += 1;
     } elsif (/restful: Published record/) {
@@ -73,6 +91,12 @@ while(defined($_ = <STDIN>)) {
     } elsif (/genimages: aggregate interval required for aggregate type/ ||
              /genimages: line type \S+ skipped/) {
         $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
+    } elsif (/restful: Unable to publish record/) {
+        my $key = $RECORDS_FAILED;
+        if (/restful: Unable to publish record \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d \S\S\S \(\d+\) to (\S+)/) {
+            $key .= ' to site ' . $1;
+        }
+        $errors{$key} = $errors{$key} ? $errors{$key} + 1 : 1;
     } elsif (/reportengine: Running reports for latest time/ ||
              /reportengine: Found configuration file/ ||
              /reportengine: FTP upload not requested/ ||
@@ -104,6 +128,8 @@ while(defined($_ = <STDIN>)) {
              /wxengine: Started thread for RESTful upload sites./ ||
              /wxengine: No RESTful upload sites/ ||
              /wxengine: retrying/ ||
+             /wxengine: Loading station type/ ||
+             /fousb: found station on USB/ ||
              /fousb: altitude is/ ||
              /fousb: archive interval is/ ||
              /fousb: pressure offset is/ ||
@@ -125,7 +151,19 @@ while(defined($_ = <STDIN>)) {
              /fousb: found \d+ archive records/ ||
              /fousb: get \d+ records since/ ||
              /fousb: synchronised to/ ||
-             /fousb: pressures:/) {
+             /fousb: pressures:/ ||
+             /forecast: .* using table/ ||
+             /forecast: .* tstr=/ ||
+             /forecast: .* interval=\d+ max_age=/ ||
+             /emoncms: Failed upload attempt/ ||
+             /emoncms: Failed upload to EmonCMS/ ||
+             /\*\*\*\*  Failed upload to EmonCMS/ ||
+             /seg: Failed upload attempt/ ||
+             /seg: Failed upload to SmartEnergyGroups/ ||
+             /\*\*\*\*  Failed upload to SmartEnergyGroups/ ||
+             /cosm: Failed upload attempt/ ||
+             /cosm: Failed upload to COSM/ ||
+             /\*\*\*\*  Failed upload to COSM/) {
         # ignore
     } elsif (! /weewx/) {
         # ignore
