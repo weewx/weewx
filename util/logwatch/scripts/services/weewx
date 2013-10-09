@@ -10,6 +10,8 @@
 #   * recognize forecast events
 #   * match weewx HUPs
 #   * recognize new driver startup diagnostics
+#   * recognize new weewx wxengine startup diagnostics
+#   * recognize ws28xx driver entries
 #  0.2 03jan13
 #   * better labels for counts
 #  0.1 01jan13
@@ -47,7 +49,6 @@ my %counts = (
     $FOUSB_STATION_SYNC, 0,
     $FORECAST_RECORDS, 0,
 );
-my %reports;
 my $RECORDS_FAILED = 'restful: publish failed';
 my %errors;
 my @unmatched = ();
@@ -85,9 +86,6 @@ while(defined($_ = <STDIN>)) {
         $counts{$RECORDS_SKIPPED} += 1;
     } elsif (/restful: Published record/) {
         $counts{$RECORDS_PUBLISHED} += 1;
-    } elsif (/reportengine: Running report (\S+)/) {
-        my $report = $1;
-        $reports{$report} = $reports{$report} ? $reports{$report} + 1 : 1;
     } elsif (/genimages: aggregate interval required for aggregate type/ ||
              /genimages: line type \S+ skipped/) {
         $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
@@ -100,6 +98,7 @@ while(defined($_ = <STDIN>)) {
     } elsif (/reportengine: Running reports for latest time/ ||
              /reportengine: Found configuration file/ ||
              /reportengine: FTP upload not requested/ ||
+             /reportengine: Running report / ||  # only when debug=1
              /register:/ ||
              /\*\*\*\*  registration interval/ ||
              /stats: Back calculated schema/ ||
@@ -121,6 +120,7 @@ while(defined($_ = <STDIN>)) {
              /wxengine: Using configuration file/ ||
              /wxengine: Using stats database/ ||
              /wxengine: Using station hardware archive interval/ ||
+             /wxengine: Using config file archive interval of/ ||
              /wxengine: Record generation will be attempted in/ ||
              /wxengine: StdConvert target unit is/ ||
              /wxengine: Data will not be posted to/ ||
@@ -129,6 +129,10 @@ while(defined($_ = <STDIN>)) {
              /wxengine: No RESTful upload sites/ ||
              /wxengine: retrying/ ||
              /wxengine: Loading station type/ ||
+             /wxengine: Initializing weewx version/ ||
+             /wxengine: Using Python/ ||
+             /wxengine: Terminating weewx version/ ||
+             /wxengine: pid file is / ||
              /fousb: found station on USB/ ||
              /fousb: altitude is/ ||
              /fousb: archive interval is/ ||
@@ -152,6 +156,20 @@ while(defined($_ = <STDIN>)) {
              /fousb: get \d+ records since/ ||
              /fousb: synchronised to/ ||
              /fousb: pressures:/ ||
+             /ws28xx: .* driver version is/ ||
+             /ws28xx: .* frequency is/ ||
+             /ws28xx: .* pressure offset is/ ||
+             /ws28xx: .* altitude is/ ||
+             /ws28xx: .* found transceiver on USB/ ||
+             /ws28xx: .* manufacturer: LA CROSSE TECHNOLOGY/ ||
+             /ws28xx: .* product: Weather Direct Light Wireless/ ||
+             /ws28xx: .* interface/ ||
+             /ws28xx: .* base frequency/ ||
+             /ws28xx: .* frequency correction/ ||
+             /ws28xx: .* adjusted frequency/ ||
+             /ws28xx: .* transceiver identifier/ ||
+             /ws28xx: .* transceiver serial/ ||
+             /ws28xx: .* console is paired to device/ ||
              /forecast: .* using table/ ||
              /forecast: .* tstr=/ ||
              /forecast: .* interval=\d+ max_age=/ ||
@@ -177,11 +195,7 @@ foreach my $k (sort keys %counts) {
     next if $counts{$k} == 0;
     printf("  %-40s %6d\n", $k, $counts{$k});
 }
-print "\nreport generation counts:\n";
-foreach my $k (keys %reports) {
-    printf("  %-40s %6d\n", $k, $reports{$k});
-}
-print "\nerror messages:\n";
+print "\nerrors:\n";
 foreach my $k (keys %errors) {
     printf("  %3d   %s\n", $errors{$k}, $k);
 }
