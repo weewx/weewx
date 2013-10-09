@@ -68,6 +68,11 @@ for signing rpm packages:
   %_signature gpg
   %_gpg_name  Matthew Wall
 
+to display debconf variables:
+sudo debconf-show weewx
+
+to manually purge debconf variables:
+sudo echo PURGE | debconf-communicate weewx
 
 
 notes:
