@@ -53,3 +53,16 @@ Type: string
 Default: WS2080
 Description: weather station model:
  Specify the station model, for example WH1080, WS2080, WH3080.
+
+Template: weewx/ws28xx_model
+Type: string
+Default: LaCrosse WS-2810
+Description: weather station model:
+ Specify the station model, for example TFA Primus, La Crosse C86234.
+
+Template: weewx/ws28xx_frequency
+Type: select
+Choices: US, EU
+Default: US
+Description: weather station frequency:
+ Specify the frequency used between the station and the transceiver, either US (915 MHz) or EU (868.3 MHz).

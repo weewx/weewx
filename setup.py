@@ -521,6 +521,7 @@ if __name__ == "__main__":
           scripts     = ['bin/wee_config_database',
                          'bin/wee_config_fousb',
                          'bin/wee_config_vantage',
+                         'bin/wee_config_ws28xx',
                          'bin/weewxd',
                          'bin/wee_reports'],
           data_files  = [('',

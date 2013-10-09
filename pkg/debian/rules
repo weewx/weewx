@@ -77,6 +77,7 @@ install: build
 	ln -s ../share/weewx/wee_config_database $(DST)/usr/bin/wee_config_database
 	ln -s ../share/weewx/wee_config_fousb $(DST)/usr/bin/wee_config_fousb
 	ln -s ../share/weewx/wee_config_vantage $(DST)/usr/bin/wee_config_vantage
+	ln -s ../share/weewx/wee_config_ws28xx $(DST)/usr/bin/wee_config_ws28xx
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)

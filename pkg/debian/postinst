@@ -61,7 +61,13 @@ configure_weewxconf() {
         fi
         if [ "$RET" = "FineOffsetUSB" ]; then
             db_get weewx/fousb_model
-            sed -i "s%model[ ]*=.*%model = $RET%" $cfgfile
+            sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+        fi
+        if [ "$RET" = "WS28xx" ]; then
+            db_get weewx/ws28xx_model
+            sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            db_get weewx/ws28xx_frequency
+            sed -i "s%[# ]*transceiver_frequency[ ]*=.*%    transceiver_frequency = $RET%" $cfgfile
         fi
     fi
 }

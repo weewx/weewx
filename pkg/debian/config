@@ -47,6 +47,12 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
             if [ "$RET" = "FineOffsetUSB" ]; then
                 db_input high weewx/fousb_model || true
             fi
+
+            if [ "$RET" = "WS28xx" ]; then
+                db_input high weewx/ws28xx_model || true
+                db_go
+                db_input high weewx/ws28xx_frequency || true
+            fi
             ;;
     esac
 
