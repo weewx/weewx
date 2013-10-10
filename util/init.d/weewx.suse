@@ -29,6 +29,7 @@
 WEEWX_BIN=/home/weewx/bin/weewxd
 WEEWX_CFG=/home/weewx/weewx.conf
 WEEWX_ARGS="--daemon $WEEWX_CFG"
+WEEWX_PID_FILE=/var/run/weewx.pid
 test -x $WEEWX_BIN || { echo "$WEEWX_BIN not installed"; 
 	if [ "$1" = "stop" ]; then exit 0;
 	else exit 5; fi; }
@@ -85,7 +86,7 @@ case "$1" in
 	echo -n "Shutting down weewx "
 	## Stop daemon with killproc(8) and if this fails
 	## killproc sets the return value according to LSB.
-	killproc -TERM $WEEWX_BIN
+	killproc -TERM -p $WEEWX_PID_FILE python
 	rc_status -v
 	;;
     try-restart|condrestart)
@@ -111,12 +112,12 @@ case "$1" in
 	;;
     force-reload)
 	echo -n "Reload service weewx "
-	killproc -HUP $WEEWX_BIN
+	killproc -HUP -p $WEEWX_PID_FILE python
 	rc_status -v
 	;;
     reload)
 	echo -n "Reload service weewx "
-	killproc -HUP $WEEWX_BIN
+	killproc -HUP -p $WEEWX_PID_FILE python
 	rc_status -v
 	;;
     status)

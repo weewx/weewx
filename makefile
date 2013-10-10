@@ -170,10 +170,11 @@ rpm-changelog:
 	cat pkg/changelog.rpm >> pkg/changelog.rpm.new
 	mv pkg/changelog.rpm.new pkg/changelog.rpm
 
-# use rpmbuild to create the redhat package
+# use rpmbuild to create the rpm package
 RPMARCH=noarch
-RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)_$(RPMARCH)
-RPMPKG=weewx-$(RPMVER).$(RPMARCH).rpm
+RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; fi)
+RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)$(RPMOS).$(RPMARCH)
+RPMPKG=weewx-$(RPMVER)$(RPMOS).$(RPMARCH).rpm
 rpm-package: $(DSTDIR)/$(SRCPKG)
 	rm -rf $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)
@@ -190,9 +191,9 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
-	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER).src.rpm $(DSTDIR)
+	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER)$(RPMOS).src.rpm $(DSTDIR)
 #	rpm --addsign $(DSTDIR)/$(RPMPKG)
-#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER).src.rpm
+#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
 
 # run rpmlint on the redhat package
 check-rpm:

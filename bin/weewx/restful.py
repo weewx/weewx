@@ -704,9 +704,13 @@ class StationRegistry(REST):
 
     def _validateParameters(self):
         msgs = []
-        # ensure the url does not have problem characters.  do not check
-        # to see whether the site actually exists.
-        if not self._checkURL(self.station_url):
+
+        if self.station_url is None:
+            # the station url must be defined
+            msgs.append("station_url is not defined")
+        elif not self._checkURL(self.station_url):
+            # ensure the url does not have problem characters.  do not check
+            # to see whether the site actually exists.
             msgs.append("station_url '%s' is not a valid URL" %
                         self.station_url)
 
@@ -715,12 +719,16 @@ class StationRegistry(REST):
         if not self._checkURL(url):
             msgs.append("server_url '%s' is not a valid URL" % self.server_url)
 
-        if len(msgs) > 0:
+        if msgs:
             errmsg = 'one or more unusable parameters.'
             syslog.syslog(syslog.LOG_ERR, 'register: %s' % errmsg)
             for m in msgs:
                 syslog.syslog(syslog.LOG_ERR, '   **** %s' % m)
-            raise ValueError(errmsg)
+            # FIXME: restful depends on a hack - throw a KeyError to indicate
+            # that a restful service should not start.  here we should throw
+            # a ValueError, but that kills StdRESTful instead of simply
+            # indicating that this restful service is not ready to run.
+            raise KeyError(errmsg)
     
 
 #===============================================================================

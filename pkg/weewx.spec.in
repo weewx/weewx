@@ -5,12 +5,14 @@
 
 # suse
 %if 0%{?suse_version}
-%define relos .suse%{suse_version}
+#%define relos .suse%{suse_version}
+%define relos .suse
 %define platform suse
 %define initdir /etc/init.d
 %endif
 %if 0%{?sles_version}
-%define relos .sles%{sles_version}
+#%define relos .sles%{sles_version}
+%define relos .sles
 %define platform suse
 %define initdir /etc/init.d
 %endif
@@ -38,10 +40,10 @@ Group: Applications/Science
 Source: http://sourceforge.net/projects/weewx/files/weewx/%{version}/%{name}-%{version}.tar.gz
 URL: http://www.weewx.com
 License: GPLv3
-Requires: python, python-configobj, python-cheetah, python-imaging, pyserial, pyusb
+Requires: python, python-configobj, python-cheetah, python-imaging, python-pyserial, python-usb
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildArch: noarch
-BuildRequires: python2
+BuildRequires: python, python-configobj
 
 %description
 weewx interacts with a weather station to produce graphs, reports, and HTML
