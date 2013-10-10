@@ -590,16 +590,16 @@ class StationRegistry(REST):
         [Required]
 
         description: description of station
-        [Optional.  Default is location from weewx.conf]
+        [Optional]
 
         latitude: station latitude
-        [Optional.  Default is latitude from weewx.conf]
+        [Required]
 
         longitude: station longitude
-        [Optional.  Default is longitude from weewx.conf]
+        [Required]
 
         hardware: station hardware
-        [Optional.  Default is station_type from weewx.conf]
+        [Required]
 
         server_url - site at which to register
         [Optional.  Default is weewx.com]
@@ -611,8 +611,10 @@ class StationRegistry(REST):
         [Optional.  Default is 5]
         """
 
-        self.server_url = kwargs.get('server_url', WEEWX_SERVER_URL)
-        self.station_url = kwargs['station_url']
+        # this uniquely identifies the station
+        self.station_url = kwargs.get('station_url', None)
+        if self.station_url is None:
+            self.station_url = kwargs['station_url']
 
         # these are defined by RESTful
         self.latitude = float(kwargs['latitude'])
@@ -620,6 +622,7 @@ class StationRegistry(REST):
         self.hardware = kwargs['hardware']
 
         # these are optional
+        self.server_url = kwargs.get('server_url', WEEWX_SERVER_URL)
         self.interval = int(kwargs.get('interval', 604800))
         self.max_tries = int(kwargs.get('max_tries', 5))
         self.description = kwargs.get('description', None)

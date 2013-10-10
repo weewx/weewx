@@ -767,11 +767,17 @@ class StdRESTful(StdService):
 
         # Get the dictionary for this site out of the config dictionary:
         site_dict = config_dict['StdRESTful'][site]
-        # Add some extra entries if they are missing from the site's dictionary:
-        site_dict.setdefault('latitude',  config_dict['Station'].get('latitude'))
-        site_dict.setdefault('longitude', config_dict['Station'].get('longitude'))
-        site_dict.setdefault('hardware',  config_dict['Station'].get('station_type'))
-        site_dict.setdefault('location',  config_dict['Station'].get('location'))
+        # Add some extra entries if they are missing from the site's dictionary
+        site_dict.setdefault('latitude',
+                             config_dict['Station'].get('latitude'))
+        site_dict.setdefault('longitude',
+                             config_dict['Station'].get('longitude'))
+        site_dict.setdefault('hardware',
+                             config_dict['Station'].get('station_type'))
+        site_dict.setdefault('location',
+                             config_dict['Station'].get('location'))
+        site_dict.setdefault('station_url',
+                             config_dict['Station'].get('station_url', None)
         return site_dict
     
     
