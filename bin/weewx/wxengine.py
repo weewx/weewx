@@ -777,7 +777,7 @@ class StdRESTful(StdService):
         site_dict.setdefault('location',
                              config_dict['Station'].get('location'))
         site_dict.setdefault('station_url',
-                             config_dict['Station'].get('station_url', None)
+                             config_dict['Station'].get('station_url', None))
         return site_dict
     
     
