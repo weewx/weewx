@@ -858,7 +858,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxengine
 
-DRIVER_VERSION = '0.14'
+DRIVER_VERSION = '0.16'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
@@ -2151,26 +2151,21 @@ class CWeatherStationConfig(object):
         self._PressureRelative_hPaMinMax = CMinMaxMeasurement()
         self._PressureRelative_inHgMinMax = CMinMaxMeasurement()
 
-    def readAlertFlags(self,buf):
-        logdbg('readAlertFlags')
-
     def setTemps(self,TempFormat,InTempLo,InTempHi,OutTempLo,OutTempHi):
-        logdbg('setTemps')
         f1 = TempFormat
         t1 = InTempLo
         t2 = InTempHi
         t3 = OutTempLo
         t4 = OutTempHi
-        if (f1 == ETemperatureFormat.tfFahrenheit) or (f1 == ETemperatureFormat.tfCelsius):
-            if ((t1 >= -40.0) and (t1 <= 59.9) and (t2 >= -40.0) and (t2 <= 59.9) and \
-                (t3 >= -40.0) and (t3 <= 59.9) and (t4 >= -40.0) and (t4 <= 59.9)):
-                self._TemperatureFormat = f1
-            else:
-                logerr('setTemps: one or more values out of range')
-                return 0
-        else:
+        if f1 not in [ETemperatureFormat.tfFahrenheit,
+                      ETemperatureFormat.tfCelsius]:
             logerr('setTemps: unknown temperature format %s' % TempFormat)
             return 0
+        if t1 < -40.0 or t1 > 59.9 or t2 < -40.0 or t2 > 59.9 or \
+                t3 < -40.0 or t3 > 59.9 or t4 < -40.0 or t4 > 59.9:
+            logerr('setTemps: one or more values out of range')
+            return 0
+        self._TemperatureFormat = f1
         self._TempIndoorMinMax._Min._Value = t1
         self._TempIndoorMinMax._Max._Value = t2
         self._TempOutdoorMinMax._Min._Value = t3
@@ -2181,9 +2176,9 @@ class CWeatherStationConfig(object):
         h1 = InHumLo
         h2 = InHumHi
         h3 = OutHumLo
-        h4 = OutHumHi 
-        if not ((h1 >= 1) and (h1 <= 99) and (h2 >= 1) and (h2 <= 99) and \
-            (h3 >= 1) and (h3 <= 99) and (h4 >= 1) and (h4 <= 99)):
+        h4 = OutHumHi
+        if h1 < 1 or h1 > 99 or h2 < 1 or h2 > 99 or \
+                h3 < 1 or h3 > 99 or h4 < 1 or h4 > 99:
             logerr('setHums: one or more values out of range')
             return 0
         self._HumidityIndoorMinMax._Min._Value = h1
@@ -2195,33 +2190,39 @@ class CWeatherStationConfig(object):
     def setRain24H(self,RainFormat,Rain24hHi):
         f1 = RainFormat
         r1 = Rain24hHi 
-        if (f1 == ERainFormat.rfMm) or (f1 == ERainFormat.rfInch):
-            if (r1>=0.0) and (r1 <= 9999.9):
-                self._RainFormat = f1
-            else:
-                logerr('setRain24: value outside range')
-                return 0
-        else:
+        if f1 not in [ERainFormat.rfMm, ERainFormat.rfInch]:
             logerr('setRain24: unknown format %s' % RainFormat)
             return 0
+        if r1 < 0.0 or r1 > 9999.9:
+            logerr('setRain24: value outside range')
+            return 0
+        self._RainFormat = f1
         self._Rain24HMax._Max._Value = r1
         return 1
     
     def setGust(self,WindSpeedFormat,GustHi):
-        logdbg('setGust: not yet implemented')
-        if True:
-            return 1
+        # When the units of a max gust alarm are changed in the weather
+        # station itself, automatically the value is converted to the new
+        # unit and rounded to a whole number.  Weewx receives a value
+        # converted to km/h.
+        #
+        # It is too much trouble to sort out what exactly the internal
+        # conversion algoritms are for the other wind units.
+        #
+        # Setting a value in km/h units is tested and works, so this will
+        # be the only option available.  
         f1 = WindSpeedFormat
         g1 = GustHi
-        if (f1 >= EWindspeedFormat.wfMs) and (f1 <= EWindspeedFormat.wfMph):
-            if (g1>=0.0) and (g1 <= 180.0):
-                self._WindSpeedFormat = f1
-            else:
-                logerr('setGust: value outside range')
-                return 0 
-        else:
+        if f1 < EWindspeedFormat.wfMs or f1 > EWindspeedFormat.wfMph:
             logerr('setGust: unknown format %s' % WindSpeedFormat)
             return 0
+        if f1 != EWindspeedFormat.wfKmh:
+            logerr('setGust: only units of km/h are supported')
+            return 0
+        if g1 < 0.0 or g1 > 180.0:
+            logerr('setGust: value outside range')
+            return 0 
+        self._WindSpeedFormat = f1
         self._GustMax._Max._Value = int(g1) # apparently gust value is always an integer
         return 1
     
@@ -2231,16 +2232,14 @@ class CWeatherStationConfig(object):
         p2 = PresRelhPaHi
         p3 = PresRelinHgLo
         p4 = PresRelinHgHi
-        if (f1 == EPressureFormat.pfinHg) or (f1 == EPressureFormat.pfHPa):
-            if ((p1>=920.0) and (p1 <= 1080.0) and (p2>=920.0) and (p2 <= 1080.0) and \
-                (p3>=27.10) and (p3 <= 31.90) and (p4>=27.10) and (p4 <= 31.90)):
-                self._RainFormat = f1
-            else:
-                logerr('setPresRel: value outside range')
-                return 0
-        else:
+        if f1 not in [EPressureFormat.pfinHg, EPressureFormat.pfHPa]:
             logerr('setPresRel: unknown format %s' % PressureFormat)
             return 0
+        if p1 < 920.0 or p1 > 1080.0 or p2 < 920.0 or p2 > 1080.0 or \
+                p3 < 27.10 or p3 > 31.90 or p4 < 27.10 or p4 > 31.90:
+            logerr('setPresRel: value outside range')
+            return 0
+        self._RainFormat = f1
         self._PressureRelative_hPaMinMax._Min._Value = p1
         self._PressureRelative_hPaMinMax._Max._Value = p2
         self._PressureRelative_inHgMinMax._Min._Value = p3
@@ -2433,22 +2432,22 @@ class CWeatherStationConfig(object):
         setTemps(self,TempFormat,InTempLo,InTempHi,OutTempLo,OutTempHi) 
         setHums(self,InHumLo,InHumHi,OutHumLo,OutHumHi)
         setPresRels(self,PressureFormat,PresRelhPaLo,PresRelhPaHi,PresRelinHgLo,PresRelinHgHi)  
-        setGust(self,WindSpeedFormat,GustHi) # (not yet implemented)
+        setGust(self,WindSpeedFormat,GustHi)
         setRain24H(self,RainFormat,Rain24hHi)
         """
         # Examples:
-        ###self.setTemps(ETemperatureFormat.tfCelsius,1.0,41.0,2.0,42.0) 
-        ###self.setHums(41,71,42,72)
-        ###self.setPresRels(EPressureFormat.pfHPa,960.1,1040.1,28.36,30.72)
-        ###self.setGust(EWindspeedFormat.wfMph,008.0) # setGust not yet implemented
-        ##self.setRain24H(ERainFormat.rfMm,50.0)        
+        #self.setTemps(ETemperatureFormat.tfCelsius,1.0,41.0,2.0,42.0) 
+        #self.setHums(41,71,42,72)
+        #self.setPresRels(EPressureFormat.pfHPa,960.1,1040.1,28.36,30.72)
+        #self.setGust(EWindspeedFormat.wfKmh,040.0)
+        #self.setRain24H(ERainFormat.rfMm,50.0)        
 
         # Preset historyInterval to 1 minute (default: 2 hours)
         self._HistoryInterval = EHistoryInterval.hi60Min
         # Clear all alarm flags, otherwise the datastream from the weather
         # station will pause during an alarm and connection will be lost.
-        ###self._WindDirAlarmFlags = 0x0000
-        ###self._OtherAlarmFlags   = 0x0000
+        self._WindDirAlarmFlags = 0x0000
+        self._OtherAlarmFlags   = 0x0000
         return 1
     
     def testConfigChanged(self,buf):
@@ -3184,15 +3183,26 @@ class sHID(object):
                              index=0x0000000,
                              timeout=self.timeout)
 
-    # two formats, long and short.  short shows only the first 16 bytes.
-    def dump(self, cmd, buf, fmt='short'):
+    # three formats, long, short, auto.  short shows only the first 16 bytes.
+    # long shows the full length of the buffer.  auto shows the message length
+    # as indicated by the length in the message itself for setFrame and
+    # getFrame, or the first 16 bytes for any other message.
+    def dump(self, cmd, buf, fmt='auto'):
         strbuf = ''
+        msglen = None
+        if fmt == 'auto':
+            if buf[0] in [0xd5, 0x00]:
+                msglen = buf[2] + 3        # use msg length for set/get frame
+            else:
+                msglen = 16                # otherwise do same as short format
+        elif fmt == 'short':
+            msglen = 16
         for i,x in enumerate(buf):
             strbuf += str('%02x ' % x)
             if (i+1) % 16 == 0:
                 self.dumpstr(cmd, strbuf)
                 strbuf = ''
-            if fmt == 'short' and i+1 >= 16:
+            if msglen is not None and i+1 >= msglen:
                 break
         if strbuf:
             self.dumpstr(cmd, strbuf)
@@ -3338,7 +3348,6 @@ class CCommunicationService(object):
         cfgBuffer[0] = [0]*44
         changed = self.DataStore.DeviceConfig.testConfigChanged(cfgBuffer)
         if changed:
-            self.shid.dump('OutBuf', cfgBuffer[0], fmt='long')
             newBuffer[0][0] = Buffer[0][0]
             newBuffer[0][1] = Buffer[0][1]
             newBuffer[0][2] = EAction.aSendConfig # 0x40 # change this value if we won't store config
@@ -3451,7 +3460,6 @@ class CCommunicationService(object):
 
     def handleConfig(self,Buffer,Length):
         logdbg('handleConfig: %s' % self.timing())
-        self.shid.dump('InBuf', Buffer[0], fmt='long')
         newBuffer=[0]
         newBuffer[0] = Buffer[0]
         newLength = [0]
@@ -3484,7 +3492,6 @@ class CCommunicationService(object):
             or chksum != self.DataStore.CurrentWeather.checksum()):
             data = CCurrentWeatherData()
             data.read(Buffer)
-            self.shid.dump('CurWea', Buffer[0], fmt='long')
             self.DataStore.setCurrentWeather(data)
 
         # update the connection cache
