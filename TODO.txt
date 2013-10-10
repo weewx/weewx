@@ -2,7 +2,7 @@ TODO before the next release:
 
 Every file seems to be getting regenerated instead of just stale ones.
 
-setup.py should deal with webpath in weewx.conf
+setup.py should deal with station_url in weewx.conf
 
 Can wind chill be retrieved from the hardware for the WMR918
 (as well as WMR9x8)?

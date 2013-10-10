@@ -7,7 +7,7 @@
      xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" >
    <channel>
       <title>$station.location, Weather Conditions</title>
-      <link>$station.webpath</link>
+      <link>$station.station_url</link>
       <description>Current conditions, and daily, monthly, and yearly summaries</description>
       <language>en-us</language>
       <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
@@ -19,7 +19,7 @@
       
       <item>
          <title>Weather Conditions at $current.dateTime</title>
-         <link>$station.webpath/index.html</link>
+         <link>$station.station_url</link>
          <description>
            Outside temperature: $current.outTemp; 
            Barometer: $current.barometer; 
@@ -48,7 +48,7 @@
 
       <item>
          <title>Daily Weather Summary as of $current.dateTime</title>
-         <link>$station.webpath/index.html</link>
+         <link>$station.station_url</link>
          <description>
 	        Min outside temperature: $day.outTemp.min at $day.outTemp.mintime;
          	Max outside temperature: $day.outTemp.max at $day.outTemp.maxtime;
@@ -79,7 +79,7 @@
 
       <item>
          <title>Monthly Weather Summary as of $current.dateTime</title>
-         <link>$station.webpath/month.html</link>
+         <link>$station.station_url/month.html</link>
          <description>
 	        Min outside temperature: $month.outTemp.min at $month.outTemp.mintime;
          	Max outside temperature: $month.outTemp.max at $month.outTemp.maxtime;

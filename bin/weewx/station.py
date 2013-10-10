@@ -25,7 +25,7 @@ class StationInfo(object):
     longitude_f:     Floating point longitude
     location:        String holding a description of the station location
     week_start:      The start of the week (0=Monday)
-    webpath:         Path to informative website (if any)
+    station_url:     An URL with an informative website (if any) about the station
     """
 
     def __init__(self, console=None, **stn_dict):
@@ -51,7 +51,9 @@ class StationInfo(object):
         self.longitude_f     = float(stn_dict['longitude'])
         self.location        = stn_dict.get('location', 'Unknown')
         self.week_start      = int(stn_dict.get('week_start', 6))
-        self.webpath         = stn_dict.get('webpath', None)
+        self.station_url     = stn_dict.get('station_url', None)
+        # For backwards compatibility:
+        self.webpath         = self.station_url
 
 class Station(object):
     """Formatted version of StationInfo."""
