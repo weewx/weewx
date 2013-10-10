@@ -1,7 +1,6 @@
 #! /bin/sh
-#
+# $Id$
 # Author: Tom Keffer <keffer@gmail.com>
-#
 # Startup script for Debian derivatives
 #
 # the skeleton script in debian 6 does not work properly in package scripts.

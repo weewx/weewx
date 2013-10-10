@@ -1,5 +1,5 @@
 #!/bin/sh
-#
+# $Id$
 # Start script for FreeBSD, contributed by user Fabian Abplanalp
 # Adjust app and cfg locations as appropriate, then put this script
 # in /usr/local/etc/rc.d

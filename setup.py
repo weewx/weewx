@@ -76,6 +76,7 @@ sys.path = save_syspath
 
 start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.debian',
+                 'util/init.d/weewx.lsb',
                  'util/init.d/weewx.redhat',
                  'util/init.d/weewx.suse']
 

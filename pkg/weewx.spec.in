@@ -1,3 +1,4 @@
+# spec for building a weewx rpm for redhat or suse systems
 # $Id$
 # License: GPLv3
 # Author: (c) 2013 Matthew Wall
@@ -5,14 +6,20 @@
 # suse
 %if 0%{?suse_version}
 %define relos .suse%{suse_version}
+%define platform suse
+%define initdir /etc/init.d
 %endif
 %if 0%{?sles_version}
 %define relos .sles%{sles_version}
+%define platform suse
+%define initdir /etc/init.d
 %endif
 
 # redhat, fedora, centos
 %if "%{_vendor}" == "redhat"
 %define relos %{?dist:%{dist}}
+%define platform redhat
+%define initdir %{_initrddir}
 %endif
 
 %global relnum 1
@@ -52,7 +59,7 @@ mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{dst_bin_dir}
 mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}%{dst_cfg_dir}
-mkdir -p %{buildroot}%{_initrddir}
+mkdir -p %{buildroot}%{initdir}
 
 # copy files from the source tree
 cp -r bin/* %{buildroot}%{dst_bin_dir}
@@ -84,11 +91,11 @@ cat weewx.conf | sed \
  -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
  -e 's%archive/stats.sdb%/var/lib/weewx/stats.sdb%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
-cat util/init.d/weewx.redhat | sed \
+cat util/init.d/weewx.%{platform} | sed \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
- > %{buildroot}%{_initrddir}/weewx
-chmod 755 %{buildroot}%{_initrddir}/weewx
+ > %{buildroot}%{initdir}/weewx
+chmod 755 %{buildroot}%{initdir}/weewx
 
 # create symlinks to the code entry points
 ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
@@ -106,7 +113,7 @@ python -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
   chkconfig weewx on
-  %{_initrddir}/weewx start
+  %{initdir}/weewx start
 elif [ "$1" = "2" ]; then
   # this is an upgrade
   # merge changes to weewx.conf
@@ -121,14 +128,14 @@ elif [ "$1" = "2" ]; then
     /usr/share/weewx/merge_config.py --install-dir / --a %{cfg_file}-$NEWVER --b %{cfg_file}-$OLDVER --c %{cfg_file}
   fi
   # do a full restart not just a HUP
-  %{_initrddir}/weewx stop
-  %{_initrddir}/weewx start
+  %{initdir}/weewx stop
+  %{initdir}/weewx start
 fi
 
 %preun
 if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
-  %{_initrddir}/weewx stop
+  %{initdir}/weewx stop
   chkconfig weewx off
 fi
 # otherwise this is an upgrade (1), so do nothing
@@ -138,7 +145,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-%attr(755,root,root) %{_initrddir}/weewx
+%attr(755,root,root) %{initdir}/weewx
 %{dst_bin_dir}/
 %{_bindir}/weewxd
 %{_bindir}/wee_reports

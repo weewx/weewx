@@ -1,7 +1,6 @@
 #!/bin/sh
-#
+# $Id$
 # Author: Mark Jenks <mjenks@netnet.net>
-#
 # Startup script for Redhat derivatives
 #
 # chkconfig: 2345 99 01
@@ -15,7 +14,7 @@ WEEWX_BIN=/home/weewx/bin/weewxd
 WEEWX_CFG=/home/weewx/weewx.conf
 NAME=weewx
 PIDFILE=/var/run/$NAME.pid
-LOCKFILE=/var/lock/subsys/weewx
+LOCKFILE=/var/lock/subsys/$NAME
 DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG"
 
 # Source function library.
@@ -28,7 +27,7 @@ DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG"
 case "$1" in
   start)
         # Start daemon.
-        echo -n $"Starting weewx: "
+        echo -n $"Starting $NAME: "
         daemon --pidfile $PIDFILE $WEEWX_BIN $DAEMON_ARGS
         RETVAL=$?
         echo
@@ -36,25 +35,25 @@ case "$1" in
         ;;
   stop)
         # Stop daemon.
-        echo -n $"Shutting down weewx: "
-        killproc weewx
+        echo -n $"Shutting down $NAME: "
+        killproc $NAME
         RETVAL=$?
         echo
         [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
         ;;
   status)
-        echo -n $"Checking for weewx: "
-        status weewx
+        echo -n $"Checking for $NAME: "
+        status $NAME
         RETVAL=$?
         ;;
   restart)
-        echo -n $"Restarting weewx: "
+        echo -n $"Restarting $NAME: "
         $0 stop
         $0 start
         ;;
   reload)
-        echo -n $"Reloading weewx: "
-        killproc weewx -HUP
+        echo -n $"Reloading $NAME: "
+        killproc $NAME -HUP
         RETVAL=$?
         echo
         ;;
