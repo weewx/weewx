@@ -142,7 +142,6 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         for c in search_list:
             x = c.strip()
             if len(x) > 0:
-                logdbg("loading search list extension '%s'" % c)
                 class_ = weeutil.weeutil._get_object(c)
                 self.search_list_objs.append(class_(self))
 
@@ -157,8 +156,6 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         in a period is a report.  A report has one or more templates.
 
         The periods SummaryByMonth and SummaryByYear get special treatment."""
-
-        logdbg('generating for period %s' % period)
 
         # break the period into time spans as necessary.
         # SummaryByMonth and SummaryByYear have spans plus special meaning.
@@ -198,8 +195,6 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
             stop_ts = gen_ts if gen_ts else archivedb.lastGoodStamp()
 
             for timespan in _spangen(start_ts, stop_ts):
-                logdbg('period=%s report=%s timespan=%s' %
-                       (period, report, timespan))
 
                 # Save YYYY-MM so they can be used within the document
                 if period == 'SummaryByMonth' or period == 'SummaryByYear':
@@ -214,7 +209,6 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                 # figure out the filename for this template
                 _filename = self._getFileName(template, timespan)
                 _fullname = os.path.join(dest_dir, _filename)
-                logdbg('fullname=%s' % _fullname)
 
                 # skip files that are fresh, only if staleness is defined
                 stale = report_dict.get('stale_age', None)
