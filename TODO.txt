@@ -6,3 +6,6 @@ Can wind chill be retrieved from the hardware for the WMR918
 (as well as WMR9x8)?
 
 Figure out why the heartbeat doesn't work on the WMR200.
+
+implement a mechanism to enable/disable restful services instead of depending
+on KeyError during initialization.

@@ -103,7 +103,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         skin_dict:        The dictionary for this skin
         gen_dict:         The section ['CheetahGenerator'] from skin.conf
         gen_ts:           The generation time
-        first_run:        Is this is the first time the generator has been run
+        first_run:        Is this the first time the generator has been run?
         stn_info:         An instance of weewx.station.StationInfo
         formatter:        An instance of weewx.units.Formatter
         converter:        An instance of weewx.units.Converter
@@ -222,15 +222,15 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                     stale = int(stale)
                     try:
                         last_mod = os.path.getmtime(_fullname)
-                        stale_at = t1 - stale
-                        if last_mod > stale_at:
-                            logdbg("skip file '%s' last_mod=%s stale_at=%s" %
-                                   (_filename, last_mod, stale_at))
+                        if t1 - last_mod < stale:
+                            logdbg("skip '%s': last_mod=%s age=%s stale=%s" %
+                                   (_filename, last_mod, t1-last_mod, stale))
                             break
                     except os.error:
                         pass
 
-                searchList = self._getSearchList(encoding, timespan, archivedb, statsdb)
+                searchList = self._getSearchList(encoding, timespan,
+                                                 archivedb, statsdb)
                 text = Cheetah.Template.Template(file=template,
                                                  searchList=searchList,
                                                  filter=encoding,
