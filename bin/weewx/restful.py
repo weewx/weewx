@@ -615,8 +615,8 @@ class StationRegistry(REST):
 
         # should this service run?
         optin = kwargs.get('register_this_station', None)
-        if optin is None or optin.lower() == 'false':                
-            raise KeyError('registration not requested')
+        if optin is None or optin.lower() != 'true':                
+            raise KeyError('register_this_station')
 
         # this uniquely identifies the station
         self.station_url = kwargs.get('station_url', None)
