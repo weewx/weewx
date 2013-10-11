@@ -9,19 +9,24 @@
 %define relos .suse
 %define platform suse
 %define initdir /etc/init.d
+%define deps , python-pyserial, python-usb
 %endif
 %if 0%{?sles_version}
 #%define relos .sles%{sles_version}
 %define relos .sles
 %define platform suse
 %define initdir /etc/init.d
+%define deps , python-pyserial, python-usb
 %endif
 
 # redhat, fedora, centos
 %if "%{_vendor}" == "redhat"
-%define relos %{?dist:%{dist}}
+#%define relos %{?dist:%{dist}}
+%define relos .rhel
 %define platform redhat
 %define initdir %{_initrddir}
+# on redhat, must install serial and/or usb using easy_install or pip
+%define deps , python-setuptools
 %endif
 
 %global relnum 1
@@ -40,7 +45,7 @@ Group: Applications/Science
 Source: http://sourceforge.net/projects/weewx/files/weewx/%{version}/%{name}-%{version}.tar.gz
 URL: http://www.weewx.com
 License: GPLv3
-Requires: python, python-configobj, python-cheetah, python-imaging, python-pyserial, python-usb
+Requires: python, python-configobj, python-cheetah, python-imaging, %{deps}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildArch: noarch
 BuildRequires: python, python-configobj

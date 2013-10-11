@@ -172,7 +172,7 @@ rpm-changelog:
 
 # use rpmbuild to create the rpm package
 RPMARCH=noarch
-RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; fi)
+RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; else echo .rhel; fi)
 RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)$(RPMOS).$(RPMARCH)
 RPMPKG=weewx-$(RPMVER)$(RPMOS).$(RPMARCH).rpm
 rpm-package: $(DSTDIR)/$(SRCPKG)
