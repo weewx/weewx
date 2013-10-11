@@ -303,16 +303,12 @@ class CachedReportGenerator(ReportGenerator):
         self.archive_cache = {}
         
     def _closeArchiveCache(self):
-        try:
-            for archive in self.archive_cache.values():
-                try:
-                    archive.close()
-                    del archive
-                except:
-                    pass
-        except:
-            pass
-        self.archive_cache = {}
+        for archive_name in self.archive_cache:
+            try:
+                self.archive_cache[archive_name].close()
+                del self.archive_cache[archive_name]
+            except Exception:
+                pass
             
     def _getArchive(self, archive_name):
         if archive_name not in self.archive_cache:
@@ -324,16 +320,12 @@ class CachedReportGenerator(ReportGenerator):
         self.stats_cache = {}
         
     def _closeStatsCache(self):
-        try:
-            for stats in self.stats_cache.values():
-                try:
-                    stats.close()
-                    del stats
-                except:
-                    pass
-        except:
-            pass
-        self.stats_cache = {}
+        for stats_name in self.stats_cache:
+            try:
+                self.stats_cache[stats_name].close()
+                del self.stats_cache[stats_name]
+            except Exception:
+                pass
             
     def _getStats(self, stats_name):
         if stats_name not in self.stats_cache:
