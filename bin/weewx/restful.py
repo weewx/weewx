@@ -575,8 +575,7 @@ class CWOP(REST):
 # [StdRESTful]
 #     ...
 #     [[StationRegistry]]
-#         #description = My Little Weather Station
-#         station_url = http://example.com/weather/
+#         register_this_station = True
 #         driver = weewx.register.StationRegistry
 
 WEEWX_SERVER_URL = 'http://weewx.com/register/register.cgi'
@@ -586,6 +585,9 @@ class StationRegistry(REST):
 
     def __init__(self, site, **kwargs):
         """
+        register_this_station: indicates whether to run this service
+        [Required]
+
         station_url: URL of the weather station
         [Required]
 
@@ -610,6 +612,11 @@ class StationRegistry(REST):
         max_tries: number of attempts to make before giving up
         [Optional.  Default is 5]
         """
+
+        # should this service run?
+        optin = kwargs.get('register_this_station', None)
+        if optin is None or optin.lower() == 'false':                
+            raise KeyError('registration not requested')
 
         # this uniquely identifies the station
         self.station_url = kwargs.get('station_url', None)

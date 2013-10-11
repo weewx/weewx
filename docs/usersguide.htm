@@ -915,6 +915,8 @@ Version: 2.5.0a4
     <p>A registry of weewx weather stations is maintained at weewx.com.  Stations are displayed on a map and a list at <a href="http://weewx.com/stations.html">http://weewx.com/stations.html</a></p>
     <p>How does the registry work?  Individual weather stations periodically contact the registry. Each station provides a URL to identify itself, plus other information such as the station type and weewx version. The registry does not keep track of meteorological data; no information about the weather is sent to the registry.</p>
     <p>To add your station to this list, enable the StationRegistry in weewx.conf. Your station will contact the registry once per week. If your station does not contact the registry for about a month, it will be removed from the list.</p>
+    <p class="config_option">register_this_station</p>
+    <p>Set this to <span class="code">True</span> to register the weather station.</p>
     <p class="config_option">description</p>
     <p>A description of the station. If no description is specified, the <span class="config_option">location</span> from the <span class="code">[Station]</span> section will be used.
     <p class="config_option">station_url</p>
