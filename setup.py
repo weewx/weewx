@@ -44,7 +44,7 @@
 
  6. It saves any pre-existing bin subdirectory.
  
- 7. It saves the ./bin/user subdirectory.
+ 7. It saves the bin/user subdirectory.
 """
 
 import os.path
@@ -80,9 +80,9 @@ start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.redhat',
                  'util/init.d/weewx.suse']
 
-#===============================================================================
-#                            weewx_install_lib
-#===============================================================================
+#==============================================================================
+# weewx_install_lib
+#==============================================================================
 
 class weewx_install_lib(install_lib):
     """Specialized version of install_lib""" 
@@ -116,9 +116,9 @@ class weewx_install_lib(install_lib):
             target_path = os.path.join(self.install_dir, 'user/schemas.py')
             distutils.file_util.copy_file(incoming_schema_path, target_path)
 
-#===============================================================================
-#                         install_data
-#===============================================================================
+#==============================================================================
+# install_data
+#==============================================================================
 
 class weewx_install_data(install_data):
     """Specialized version of install_data """
@@ -139,7 +139,8 @@ class weewx_install_data(install_data):
     def run(self):
         # If there is an existing skins subdirectory, do not overwrite it.
         if os.path.exists(os.path.join(self.install_dir, 'skins')):
-            # Do this by filtering it out of the list of subdirectories to be installed:
+            # Do this by filtering it out of the list of subdirectories to
+            # be installed:
             self.data_files = filter(lambda dat : not dat[0].startswith('skins/'), self.data_files)
 
         remove_obsolete_files(self.install_dir)
@@ -196,9 +197,9 @@ class weewx_install_data(install_data):
 
         return rv
 
-#===============================================================================
-#                         install_scripts
-#===============================================================================
+#==============================================================================
+# install_scripts
+#==============================================================================
 
 class weewx_install_scripts(install_scripts):
     
@@ -212,9 +213,9 @@ class weewx_install_scripts(install_scripts):
         dest   = os.path.join(self.install_dir, 'weewxd.py')
         os.symlink(source, dest)
         
-#===============================================================================
-#                                  sdist
-#===============================================================================
+#==============================================================================
+# sdist
+#==============================================================================
 
 class weewx_sdist(sdist):
     """Specialized version of sdist which checks for password information in
@@ -235,8 +236,8 @@ class weewx_sdist(sdist):
         if f == 'weewx.conf':
             config = configobj.ConfigObj(f)
 
-            # If we're working with the configuration file, make sure it doesn't
-            # have any private data in it.
+            # If we're working with the configuration file, make sure it
+            # does not have any private data in it.
 
             if (config.has_key('StdReport') and
                 config['StdReport'].has_key('FTP') and
@@ -257,9 +258,10 @@ class weewx_sdist(sdist):
         # Pass on to my superclass:
         return sdist.copy_file(self, f, install_dir, **kwargs)
 
-#===============================================================================
-#                         utility functions
-#===============================================================================
+#==============================================================================
+# utility functions
+#==============================================================================
+
 def remove_obsolete_files(install_dir):
     """Remove no longer needed files from the installation
     directory, nominally /home/weewx."""
@@ -322,7 +324,8 @@ def check_schema_type(bin_dir):
     else:
         # There is a schema. Determine if it is old-style or new-style
         try:
-            # Try the old style 'drop_list'. If it fails, it must be a new-style schema
+            # Try the old style 'drop_list'. If it fails, it must be
+            # a new-style schema
             drop_list = user.schemas.drop_list # @UnusedVariable @UndefinedVariable
         except AttributeError:
             # New style schema 
@@ -412,6 +415,13 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
 
 def update_config_file(config_dict):
     """Updates a configuration file to reflect any recent changes."""
+
+    # webpath is now station_url
+    webpath = config_dict['Station'].get('webpath', None)
+    station_url = config_dict['Station'].get('station_url', None)
+    if webpath is not None and station_url is None:
+        config_dict['Station']['station_url'] = webpath
+    config_dict['Station'].pop('webpath', None)
     
     # Option stats_types is no longer used. Get rid of it.
     config_dict['StdArchive'].pop('stats_types', None)
@@ -466,6 +476,7 @@ def update_config_file(config_dict):
         pass
     
     # --- Fine Offset instruments ---
+
     try:
         if config_dict['FineOffsetUSB']['driver'].strip() == 'weewx.fousb':
             config_dict['FineOffsetUSB']['driver'] = 'weewx.drivers.fousb'
@@ -473,6 +484,7 @@ def update_config_file(config_dict):
         pass
 
     #--- The weewx Simulator ---
+
     try:
         if config_dict['Simulator']['driver'].strip() == 'weewx.simulator':
             config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
@@ -489,9 +501,9 @@ def save_path(filepath):
 def get_version():
     return VERSION
 
-#===============================================================================
-#                               setup
-#===============================================================================
+#==============================================================================
+# setup
+#==============================================================================
 if __name__ == "__main__":
 
     setup(name='weewx',
@@ -538,6 +550,8 @@ if __name__ == "__main__":
                            'docs/daytemp_with_avg.png',
                            'docs/debian.htm',
                            'docs/ferrites.jpg',
+                           'docs/jquery.min.js',
+                           'docs/jquery.toc-1.1.4.min.js',
                            'docs/logo-apple.png',
                            'docs/logo-centos.png',
                            'docs/logo-debian.png',
@@ -549,8 +563,6 @@ if __name__ == "__main__":
                            'docs/logo-ubuntu.png',
                            'docs/readme.htm',
                            'docs/redhat.htm',
-                           'docs/samaxesjs.toc-1.5.js',
-                           'docs/samaxesjs.toc-1.5.min.js',
                            'docs/setup.htm',
                            'docs/sheeva.htm',
                            'docs/upgrading.htm',
@@ -598,6 +610,7 @@ if __name__ == "__main__":
                          ('util/init.d',
                           ['util/init.d/weewx.bsd',
                            'util/init.d/weewx.debian',
+                           'util/init.d/weewx.lsb',
                            'util/init.d/weewx.redhat',
                            'util/init.d/weewx.suse']),
                          ('util/logrotate.d',

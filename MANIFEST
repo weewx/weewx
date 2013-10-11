@@ -77,8 +77,8 @@ docs/logo-suse.png
 docs/logo-ubuntu.png
 docs/readme.htm
 docs/redhat.htm
-docs/samaxesjs.toc-1.5.js
-docs/samaxesjs.toc-1.5.min.js
+docs/jquery.min.js
+docs/jquery.toc-1.1.4.min.js
 docs/setup.htm
 docs/sheeva.htm
 docs/upgrading.htm
