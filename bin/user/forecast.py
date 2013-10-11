@@ -1570,7 +1570,7 @@ class WUForecast(Forecast):
             errmsg.append('WU API key (api_key) is not specified')
         if self.location is None:
             errmsg.append('WU location is not specified')
-        if errmsg > 0:
+        if errmsg:
             raise Exception, '\n'.join(errmsg)
 
         loginf('%s: interval=%s max_age=%s api_key=%s location=%s fc=%s' %
