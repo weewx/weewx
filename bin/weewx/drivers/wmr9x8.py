@@ -31,6 +31,9 @@ import weewx.units
 import weewx.wxformulas
 from math import exp
 
+class WMRx8ProtocolError(weewx.WeeWxIOError):
+    """Used to signal a protocol error condition"""
+
 # Dictionary that maps a measurement code, to a function that can decode it:
 # packet_type_decoder_map and packet_type_size_map are filled out using the @<type>_registerpackettype
 # decorator below
@@ -283,15 +286,16 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
     def _wmr9x8_thermohygro_packet(self, packet):
         chan, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10 = self._get_nibble_data(packet[1:])
 
-        _record = {
-            'dateTime' : int(time.time() + 0.5),
-            'usUnits'  : weewx.METRIC
-        }
+        chan = channel_decoder(chan)
         if chan==0:
             syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Channel 0 detected. Please contact the author.")
 
         battery  = bool(status & 0x04)
-        _record['tgBatteryStatus'] = battery
+        _record = {
+            'dateTime'        : int(time.time() + 0.5),
+            'usUnits'         : weewx.METRIC,
+            'batteryStatus_2' : battery
+        }
 
         _record['extraHumid%d' % chan] = hum1 + (hum10 * 10)
 
@@ -305,10 +309,11 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             _record['extraTemp%d' % chan] = None
 
         dewunder = bool(status & 0x01)
+        # If dew point is valid, save it. Otherwise, try calculating it in software
         if not dewunder:
             _record['dewpoint%d' % chan] = dew1 + (dew10 * 10)
         else:
-            _record['dewpoint%d' % chan] = None
+            _record['dewpoint%d' % chan] = weewx.wxformulas.dewpointC(_record['outTemp'], _record['outHumid%d' % chan])
 
         return _record
 
@@ -316,15 +321,13 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
     def _wmr9x8_mushroom_packet(self, packet):
         _, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10 = self._get_nibble_data(packet[1:])
 
-        _record = {
-            'dateTime'          : int(time.time() + 0.5),
-            'usUnits'           : weewx.METRIC
-        }
-
         battery  = bool(status & 0x04)
-        _record['txBatteryStatus'] = battery
-        
-        _record['outHumidity'] = hum1 + (hum10 * 10)
+        _record = {
+            'dateTime'             : int(time.time() + 0.5),
+            'usUnits'              : weewx.METRIC,
+            'outTempBatteryStatus' : battery,
+            'outHumidity'          : hum1 + (hum10 * 10)
+        }
 
         tempoverunder = temp100etc & 0x04
         if not tempoverunder:
@@ -337,7 +340,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             _record['outTemp'] = _record['heatindex'] = None
             
         dewunder = bool(status & 0x01)
-        # If dew  point is valid, save it. Otherwise, try calculating it in software
+        # If dew point is valid, save it. Otherwise, try calculating it in software
         if not dewunder:
             _record['dewpoint'] = dew1 + (dew10 * 10)
         else:
@@ -347,10 +350,14 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
 
     @wmr9x8_registerpackettype(typecode=0x04, size=7)
     def _wmr9x8_therm_packet(self, packet):
-        chan, dummy_status, temp10th, temp1, temp10, temp100etc = self._get_nibble_data(packet[1:])
+        chan, status, temp10th, temp1, temp10, temp100etc = self._get_nibble_data(packet[1:])
 
-        _record = {'dateTime'    : int(time.time() + 0.5),
-                   'usUnits'     : weewx.METRIC}
+        chan = channel_decoder(chan)
+        battery  = bool(status & 0x04)
+
+        _record = {'dateTime'        : int(time.time() + 0.5),
+                   'usUnits'         : weewx.METRIC,
+                   'batteryStatus_4' : battery}
 
         temp = temp10th / 10.0 + temp1 + 10.0 * temp10 + 100.0 * (temp100etc & 0x03)
         if temp100etc & 0x08:
@@ -363,66 +370,82 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
     @wmr9x8_registerpackettype(typecode=0x05, size=13)
     def _wmr9x8_in_thermohygrobaro_packet(self, packet):
         null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100 = self._get_nibble_data(packet[1:]) # @UnusedVariable
-        battery = bool(status&0x04)
 
-        temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
-        if temp100etc & 0x08:
-            temp = -temp
-        tempoverunder = bool(temp100etc & 0x04)
+        battery = bool(status&0x04)
         hum = hum1 + (hum10 * 10)
-        dew = dew1 + (dew10 * 10)
+
+        tempoverunder = bool(temp100etc & 0x04)
+        if not tempoverunder:
+            temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
+            if temp100etc & 0x08:
+                temp = -temp
+        else:
+            temp = None
+            
         dewunder = bool(status&0x01)
+        if not dewunder:
+            dew = dew1 + (dew10 * 10)
+        else:
+            dew = weewx.wxformulas.dewpointC(temp, hum)
+            
         rawsp = ((baro10&0xF) << 4) | baro1
         sp = rawsp + 795
         pre_slpoff = (slpoff10th / 10.0) + slpoff1 + (slpoff10 * 10) + (slpoff100 * 100)
         slpoff = (1000 + pre_slpoff) if pre_slpoff < 400.0 else pre_slpoff
         sa = weewx.wxformulas.altimeter_pressure_Metric(sp, self.altitude)
+        
         _record = {
             'inTempBatteryStatus' : battery,
             'inHumidity'  : hum,
+            'inTemp'      : temp,
+            'dewpoint'    : dew,
             'barometer'   : rawsp+slpoff,
             'pressure'    : sp,
             'altimeter'   : sa,
             'dateTime'    : int(time.time() + 0.5),
             'usUnits'     : weewx.METRIC
         }
-        _record['inTemp'] = temp if not tempoverunder else None
-        _record['inDewpoint'] = dew if not dewunder else None
-        if dewunder and not tempoverunder:
-            _record['inDewpoint'] = weewx.wxformulas.dewpointC(temp, hum)
+
         return _record
 
     @wmr9x8_registerpackettype(typecode=0x06, size=14)
     def _wmr9x8_in_ext_thermohygrobaro_packet(self, packet):
         null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, baro100, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100, slpoff1000 = self._get_nibble_data(packet[1:]) # @UnusedVariable
+
         battery = bool(status&0x04)
-        temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
-        if temp100etc & 0x08:
-            temp = -temp
-        tempoverunder = bool(temp100etc & 0x04)
         hum = hum1 + (hum10 * 10)
-        dew = dew1 + (dew10 * 10)
+
+        tempoverunder = bool(temp100etc & 0x04)
+        if not tempoverunder:
+            temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc&0x03) * 100)
+            if temp100etc & 0x08:
+                temp = -temp
+        else:
+            temp = None
+
         dewunder = bool(status&0x01)
+        if not dewunder:
+            dew = dew1 + (dew10 * 10)
+        else:
+            dew = weewx.wxformulas.dewpointC(temp, hum)
 
         rawsp = ((baro100&0x01) << 8) | ((baro10&0xF) << 4) | baro1
         sp = rawsp + 600
         slpoff = (slpoff10th / 10.0) + slpoff1 + (slpoff10 * 10) + (slpoff100 * 100) + (slpoff1000 * 1000)
         sa = weewx.wxformulas.altimeter_pressure_Metric(sp, self.altitude)
+        
         _record = {
             'inTempBatteryStatus' : battery,
             'inHumidity'  : hum,
+            'inTemp'      : temp,
+            'inDewpoint'  : dew,
             'barometer'   : rawsp+slpoff,
             'pressure'    : sp,
             'altimeter'   : sa,
             'dateTime'    : int(time.time() + 0.5),
             'usUnits'     : weewx.METRIC
         }
-        if not tempoverunder:
-            _record['inTemp']     = temp
-        if not dewunder:
-            _record['inDewpoint'] = dew
-        if dewunder and not tempoverunder:
-            _record['inDewpoint'] = weewx.wxformulas.dewpointC(temp, hum)
+
         return _record
 
     @wmr9x8_registerpackettype(typecode=0x0e, size=5)
@@ -581,3 +604,14 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         }
 
         return _record
+
+def channel_decoder(chan):
+    if chan <=2:
+        outchan = chan
+    elif chan==4:
+        outchan = 3
+    elif chan==8:
+        outchan = 4
+    else:
+        raise WMRx8ProtocolError("Bad channel number %d" % chan)
+    return outchan
