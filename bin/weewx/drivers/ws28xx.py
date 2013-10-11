@@ -858,7 +858,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxengine
 
-DRIVER_VERSION = '0.16'
+DRIVER_VERSION = '0.17'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
@@ -866,7 +866,7 @@ DEBUG_COMM = 0
 DEBUG_CONFIG_DATA = 0
 DEBUG_WEATHER_DATA = 0
 DEBUG_HISTORY_DATA = 0
-DEBUG_DUMP_FORMAT = 'short'
+DEBUG_DUMP_FORMAT = 'auto'
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'ws28xx: %s: %s' %
@@ -1063,7 +1063,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         global DEBUG_HISTORY_DATA
         DEBUG_HISTORY_DATA = int(stn_dict.get('debug_history_data', 0))
         global DEBUG_DUMP_FORMAT
-        DEBUG_DUMP_FORMAT = stn_dict.get('debug_dump_format', 'short')
+        DEBUG_DUMP_FORMAT = stn_dict.get('debug_dump_format', 'auto')
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('frequency is %s' % self.frequency)
@@ -3348,6 +3348,7 @@ class CCommunicationService(object):
         cfgBuffer[0] = [0]*44
         changed = self.DataStore.DeviceConfig.testConfigChanged(cfgBuffer)
         if changed:
+            self.shid.dump('OutBuf', cfgBuffer[0], fmt='long')
             newBuffer[0][0] = Buffer[0][0]
             newBuffer[0][1] = Buffer[0][1]
             newBuffer[0][2] = EAction.aSendConfig # 0x40 # change this value if we won't store config
@@ -3360,49 +3361,33 @@ class CCommunicationService(object):
             Length = 0
         return Length
 
-    def buildTimeFrame(self,Buffer,deviceCS,checkMinuteOverflow):
-        logdbg("buildTimeFrame: deviceCS=%04x checkMinuteOverflow=%s" % 
-               (deviceCS, checkMinuteOverflow))
+    def buildTimeFrame(self,Buffer,deviceCS):
+        logdbg("buildTimeFrame: deviceCS=%04x" % deviceCS)
 
         now = time.time()
         tm = time.localtime(now)
 
         newBuffer=[0]
         newBuffer[0]=Buffer[0]
-        sec = tm[5]
-        if sec > 59:
-            sec = 0 # I don't know if La Crosse support leap seconds...
-        if ( checkMinuteOverflow and (sec <= 5 or sec >= 55) ):
-            if ( sec < 55 ):
-                sec = 6 - sec
-            else:
-                sec = 60 - sec + 6
-            logdbg('buildTimeFrame: second=%s' % sec)
-            idx = self.DataStore.getLastHistoryIndex()
-            self.DataStore.setRequestType(ERequestType.rtGetCurrent)
-            self.setSleep(0.380,0.200)
-            Length = self.buildACKFrame(newBuffer, EAction.aGetCurrent, deviceCS, idx, sec)
-            Buffer[0]=newBuffer[0]
-        else:
-            #00000000: d5 00 0c 00 32 c0 00 8f 45 25 15 91 31 20 01 00
-            #00000000: d5 00 0c 00 32 c0 06 c1 47 25 15 91 31 20 01 00
-            #                             3  4  5  6  7  8  9 10 11
-            newBuffer[0][2] = EAction.aSendTime # 0xc0
-            newBuffer[0][3] = (deviceCS >>8)  & 0xFF
-            newBuffer[0][4] = (deviceCS >>0)  & 0xFF
-            newBuffer[0][5] = (tm[5] % 10) + 0x10 * (tm[5] // 10) #sec
-            newBuffer[0][6] = (tm[4] % 10) + 0x10 * (tm[4] // 10) #min
-            newBuffer[0][7] = (tm[3] % 10) + 0x10 * (tm[3] // 10) #hour
-            #DayOfWeek = tm[6] - 1; #ole from 1 - 7 - 1=Sun... 0-6 0=Sun
-            DayOfWeek = tm[6]       #py  from 0 - 6 - 0=Mon
-            newBuffer[0][8] = DayOfWeek % 10 + 0x10 *  (tm[2] % 10)          #DoW + Day
-            newBuffer[0][9] =  (tm[2] // 10) + 0x10 *  (tm[1] % 10)          #day + month
-            newBuffer[0][10] = (tm[1] // 10) + 0x10 * ((tm[0] - 2000) % 10)  #month + year
-            newBuffer[0][11] = (tm[0] - 2000) // 10                          #year
-            self.Regenerate = 1
-            self.TimeSent = 1
-            Buffer[0]=newBuffer[0]
-            Length = 0x0c
+        #00000000: d5 00 0c 00 32 c0 00 8f 45 25 15 91 31 20 01 00
+        #00000000: d5 00 0c 00 32 c0 06 c1 47 25 15 91 31 20 01 00
+        #                             3  4  5  6  7  8  9 10 11
+        newBuffer[0][2] = EAction.aSendTime # 0xc0
+        newBuffer[0][3] = (deviceCS >>8)  & 0xFF
+        newBuffer[0][4] = (deviceCS >>0)  & 0xFF
+        newBuffer[0][5] = (tm[5] % 10) + 0x10 * (tm[5] // 10) #sec
+        newBuffer[0][6] = (tm[4] % 10) + 0x10 * (tm[4] // 10) #min
+        newBuffer[0][7] = (tm[3] % 10) + 0x10 * (tm[3] // 10) #hour
+        #DayOfWeek = tm[6] - 1; #ole from 1 - 7 - 1=Sun... 0-6 0=Sun
+        DayOfWeek = tm[6]       #py  from 0 - 6 - 0=Mon
+        newBuffer[0][8] = DayOfWeek % 10 + 0x10 *  (tm[2] % 10)          #DoW + Day
+        newBuffer[0][9] =  (tm[2] // 10) + 0x10 *  (tm[1] % 10)          #day + month
+        newBuffer[0][10] = (tm[1] // 10) + 0x10 * ((tm[0] - 2000) % 10)  #month + year
+        newBuffer[0][11] = (tm[0] - 2000) // 10                          #year
+        self.Regenerate = 1
+        self.TimeSent = 1
+        Buffer[0]=newBuffer[0]
+        Length = 0x0c
         return Length
 
     def buildACKFrame(self,Buffer, action, deviceCS, historyIndex, comInt):
@@ -3460,6 +3445,7 @@ class CCommunicationService(object):
 
     def handleConfig(self,Buffer,Length):
         logdbg('handleConfig: %s' % self.timing())
+        self.shid.dump('InBuf', Buffer[0], fmt='long')
         newBuffer=[0]
         newBuffer[0] = Buffer[0]
         newLength = [0]
@@ -3492,6 +3478,7 @@ class CCommunicationService(object):
             or chksum != self.DataStore.CurrentWeather.checksum()):
             data = CCurrentWeatherData()
             data.read(Buffer)
+#            self.shid.dump('CurWea', Buffer[0], fmt='long')
             self.DataStore.setCurrentWeather(data)
 
         # update the connection cache
@@ -3608,7 +3595,7 @@ class CCommunicationService(object):
             self.setSleep(0.085,0.005)
         elif (Buffer[0][2] & 0xEF) == EResponseType.rtReqSetTime:
             logdbg('handleNextAction: a3 (set time data)')
-            newLength[0] = self.buildTimeFrame(newBuffer, cs, True)
+            newLength[0] = self.buildTimeFrame(newBuffer, cs)
             self.setSleep(0.085,0.005)
         else:
             logdbg('handleNextAction: %02x' % (Buffer[0][2] & 0xEF))
