@@ -9,6 +9,12 @@ list extensions. The old architecture is 100% backwards compatible.
 Added station registry service. This allows weewx to optionally
 "phone home" and put your station location on a map.
 
+Added a forecast service and reporting options.  The forecast service
+can generate Zambretti weather or XTide tide forecasts, or it can download
+Weather Underground or US National Weather Service weather forecasts.  These
+data can then be displayed in reports using the Cheetah template engine.  The
+forecast service is disabled by default.
+
 Weewx now allows easier localization to non-English speaking locales.
 In particular, set the environment variable LANG to your locale, and
 then weewx date and number formatting will follow local conventions.
@@ -74,6 +80,14 @@ Plots under 16 hours in length, now use 1 hour increments (instead of
 
 No longer emits "deprecation" warning when working with some versions
 of the MySQLdb python driver.
+
+Added ability to build platform-specific RPMs, e.g., one for RedHat-based
+distributions and one for SuSE-based distributions.
+
+Fixed the 'stop' and 'restart' options in the SuSE rc script.
+
+The weewx logwatch script now recognizes more log entries and errors.
+
 
 2.4.0 08/03/13
 
