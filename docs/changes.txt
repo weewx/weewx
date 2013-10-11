@@ -51,8 +51,9 @@ Peter Ferencz.
 
 For WMR9x8 stations, packet types 2 and 3 have been separated. Only the
 latter is used for outside temperature, humidity, dewpoint. The former
-is used for "extra" sensors. Thanks to Per Edström for his patience
-in figuring this out!
+is used for "extra" sensors. Corrected the calculation for channel
+numbers >=3. Also, extended the number of battery codes. Thanks to Per
+Edström for his patience in figuring this out!
 
 For WMR200 stations, altitude-corrected pressure is now emitted correctly.
 

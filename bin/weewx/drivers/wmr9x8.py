@@ -287,14 +287,12 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         chan, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10 = self._get_nibble_data(packet[1:])
 
         chan = channel_decoder(chan)
-        if chan==0:
-            syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Channel 0 detected. Please contact the author.")
 
         battery  = bool(status & 0x04)
         _record = {
-            'dateTime'        : int(time.time() + 0.5),
-            'usUnits'         : weewx.METRIC,
-            'batteryStatus_2' : battery
+            'dateTime' : int(time.time() + 0.5),
+            'usUnits'  : weewx.METRIC,
+            'batteryStatusTH%d' % chan : battery
         }
 
         _record['extraHumid%d' % chan] = hum1 + (hum10 * 10)
@@ -355,9 +353,9 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         chan = channel_decoder(chan)
         battery  = bool(status & 0x04)
 
-        _record = {'dateTime'        : int(time.time() + 0.5),
-                   'usUnits'         : weewx.METRIC,
-                   'batteryStatus_4' : battery}
+        _record = {'dateTime' : int(time.time() + 0.5),
+                   'usUnits'  : weewx.METRIC,
+                   'batteryStatusT%d' % chan : battery}
 
         temp = temp10th / 10.0 + temp1 + 10.0 * temp10 + 100.0 * (temp100etc & 0x03)
         if temp100etc & 0x08:
@@ -606,12 +604,10 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         return _record
 
 def channel_decoder(chan):
-    if chan <=2:
+    if 1 <= chan <=2:
         outchan = chan
     elif chan==4:
         outchan = 3
-    elif chan==8:
-        outchan = 4
     else:
         raise WMRx8ProtocolError("Bad channel number %d" % chan)
     return outchan
