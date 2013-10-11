@@ -45,11 +45,10 @@ Example:
 
 """
 
+from __future__ import with_statement
 import os.path
-import sys
 import syslog
 import time
-import urlparse
 
 import Cheetah.Template
 import Cheetah.Filters
@@ -214,7 +213,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                 if (period == 'SummaryByMonth' or period == 'SummaryByYear') \
                         and os.path.exists(_fullname) \
                         and not timespan.includesArchiveTime(stop_ts):
-                    break
+                    continue
 
                 # skip files that are fresh, only if staleness is defined
                 stale = report_dict.get('stale_age', None)
@@ -225,7 +224,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                         if t1 - last_mod < stale:
                             logdbg("skip '%s': last_mod=%s age=%s stale=%s" %
                                    (_filename, last_mod, t1-last_mod, stale))
-                            break
+                            continue
                     except os.error:
                         pass
 
@@ -235,19 +234,18 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                                                  searchList=searchList,
                                                  filter=encoding,
                                                  filtersLib=weewx.cheetahgenerator)
-                _file = None
-                try:
-                    _file = open(_fullname, mode='w')
-                    print >> _file, text
-                except Exception, e:
-                    logerr("generate failed with exception '%s'" % type(e))
-                    logerr("**** ignoring template %s" % template)
-                    logerr("**** reason: %s" % e)
-                    weeutil.weeutil.log_traceback("****  ")
-                else:
-                    ngen += 1
-                finally:
-                    if _file is not None: _file.close()
+
+                with open(_fullname, mode='w') as _file:
+                    try:
+                        print >> _file, text
+                    except Exception, e:
+                        logerr("generate failed with exception '%s'" % type(e))
+                        logerr("**** ignoring template %s" % template)
+                        logerr("**** reason: %s" % e)
+                        weeutil.weeutil.log_traceback("****  ")
+                    else:
+                        ngen += 1
+
         elapsed_time = time.time() - t1
         loginf("generated %d '%s' files for %s in %.2f seconds" %
                (ngen, period, self.skin_dict['REPORT_NAME'], elapsed_time))
