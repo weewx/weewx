@@ -474,7 +474,7 @@ def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
 
 def loginf(msg):
-    msg(syslog.LOG_INFO, msg)
+    logmsg(syslog.LOG_INFO, msg)
 
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
