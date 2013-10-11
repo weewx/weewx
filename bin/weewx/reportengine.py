@@ -303,7 +303,7 @@ class CachedReportGenerator(ReportGenerator):
         self.archive_cache = {}
         
     def _closeArchiveCache(self):
-        for archive_name in self.archive_cache:
+        for archive_name in self.archive_cache.keys():
             try:
                 self.archive_cache[archive_name].close()
                 del self.archive_cache[archive_name]
@@ -320,7 +320,7 @@ class CachedReportGenerator(ReportGenerator):
         self.stats_cache = {}
         
     def _closeStatsCache(self):
-        for stats_name in self.stats_cache:
+        for stats_name in self.stats_cache.keys():
             try:
                 self.stats_cache[stats_name].close()
                 del self.stats_cache[stats_name]
