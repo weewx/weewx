@@ -13,6 +13,10 @@ import sys
 import time
 import unittest
 
+# if you try to run these tests on python 2.5 you might have to do a json
+# import as it is done in forecast.py
+import json
+
 import user
 import weedb
 import weewx
@@ -21,11 +25,11 @@ import user.forecast as forecast
 
 # to run manual tests, remove the x from xtest
 # keep a copy of your wu api key in ~/.weewx as wu_api_key=xxxx
-# parameters for manual testing
+# parameters for manual testing:
 WU_LOCATION = '02139'
 WU_API_KEY = 'INSERT_KEY_HERE'
 
-# FIXME: these belong in a common testing library
+# FIXME: these belong in a common testing library for weewx
 TMPDIR = '/var/tmp/weewx_test'
 
 def rmdir(d):
@@ -239,14 +243,14 @@ skin_contents = '''
 [Labels]
 [Almanac]
     moon_phases = n,wc,fq,wg,f,wg,lq,wc
-[FileGenerator]
+[CheetahGenerator]
     search_list = user.forecast.ForecastVariables
     encoding = html_entities
     [[ToDate]]
         [[[current]]]
             template = index.html.tmpl
 [Generators]
-        generator_list = weewx.cheetahgenerator.CheetahGenerator
+    generator_list = weewx.cheetahgenerator.CheetahGenerator
 '''
 
 def create_skin_conf(test_dir, skin_dir='testskin', units=weewx.US):
@@ -826,20 +830,18 @@ RAIN SHWRS                                 S  S  C  C
 $$
 '''
 
-# warning! tabs matter in the following string
 WU_ERROR_NOKEY = '''
 {
-	"response": {
-		"version": "0.1"
-		,"termsofService": "http://www.wunderground.com/weather/api/d/terms.html"
-		,"features": {
-		}
-		,
-	"error": {
-		"type": "keynotfound"
-		,"description": "this key does not exist"
-	}
-	}
+  "response": {
+    "version": "0.1",
+    "termsofService": "http://www.wunderground.com/weather/api/d/terms.html",
+    "features": {
+    },
+    "error": {
+      "type": "keynotfound",
+      "description": "this key does not exist"
+    }
+  }
 }
 '''
 
@@ -8764,6 +8766,7 @@ WU_BOS_HOURLY = '''
 
 # generic templates for combinations of summary and period
 # should work with each forecast source
+
 PERIODS_TEMPLATE = '''<html>
   <body>
 #for $f in $forecast.weather_periods('SOURCE', from_ts=TS, max_events=20)
@@ -9521,7 +9524,9 @@ SW
     def test_wu_bad_key(self):
         '''confirm server response when bad api key is presented'''
         fcast = forecast.WUDownloadForecast('foobar', '02139')
-        self.assertEqual(fcast, WU_ERROR_NOKEY)
+        fcast_obj = json.loads(fcast)
+        error_obj = json.loads(WU_ERROR_NOKEY)
+        self.assertEqual(fcast_obj, error_obj)
 
     def test_wu_detect_download_errors(self):
         '''ensure proper behavior when server replies with error'''
@@ -10010,15 +10015,8 @@ $a.moon_fullness
         f = forecast.ZambrettiForecast(e, config_dict)
         self.assertEqual(f.max_age, 300)
 
-    def test_pruning(self):
-        """ensure that forecast pruning works properly"""
-
-        tdir = get_testdir('test_pruning')
-        rmtree(tdir)
-
+    def setup_pruning_tests(self, tdir, numrec):
         config_dict = create_config(tdir, 'user.forecast.ZambrettiForecast')
-        config_dict['Forecast']['max_age'] = 1
-
         method_id = 'Zambretti'
         table = 'archive'
         dbspec = config_dict['Forecast']['database']
@@ -10037,29 +10035,61 @@ $a.moon_fullness
         event.record = record
         event.record['dateTime'] = int(time.time())
         f.get_forecast(event) # first zambretti is None to set trend
+        for t in range(0,numrec):
+            time.sleep(1)
+            event.record['dateTime'] = int(time.time())
+            forecast.Forecast.save_forecast(archive, f.get_forecast(event))
         time.sleep(1)
-        event.record['dateTime'] = int(time.time())
-        forecast.Forecast.save_forecast(archive, f.get_forecast(event))
-        time.sleep(1)
-        event.record['dateTime'] = int(time.time())
-        forecast.Forecast.save_forecast(archive, f.get_forecast(event))
-        time.sleep(1)
-        event.record['dateTime'] = int(time.time())
-        forecast.Forecast.save_forecast(archive, f.get_forecast(event))
-        time.sleep(1)
-        event.record['dateTime'] = int(time.time())
-        forecast.Forecast.save_forecast(archive, f.get_forecast(event))
-        time.sleep(1)
+
+        return (archive, table, method_id, event.record['dateTime'])
+
+
+    def test_pruning(self):
+        """ensure that forecast pruning works properly"""
+
+        tdir = get_testdir('test_pruning')
+        rmtree(tdir)
+
+        numrec = 4
+        (archive, table, method_id, ts) = self.setup_pruning_tests(tdir,
+                                                                   numrec)
 
         # make sure the records have been saved
-        records = forecast.Forecast.get_saved_forecasts(archive, table, method_id)
-        self.assertEqual(len(records), 4)
+        records = forecast.Forecast.get_saved_forecasts(archive, table,
+                                                        method_id)
+        self.assertEqual(len(records), numrec)
 
         # there should be one remaining after a prune
-        forecast.Forecast.prune_forecasts(archive, table, method_id, event.record['dateTime'])
-        records = forecast.Forecast.get_saved_forecasts(archive, table, method_id)
+        forecast.Forecast.prune_forecasts(archive, table, method_id, ts)
+        records = forecast.Forecast.get_saved_forecasts(archive, table,
+                                                        method_id)
         self.assertEqual(len(records), 1)
 
+    def test_vacuuming(self):
+        '''ensure that vacuuming works'''
+
+        tdir = get_testdir('test_vacuuming')
+        rmtree(tdir)
+        dbfile = tdir + '/forecast.sdb'
+
+        numrec = 30
+        (archive, table, method_id, ts) = self.setup_pruning_tests(tdir, 
+                                                                   numrec)
+
+        # make sure the records have been saved
+        records = forecast.Forecast.get_saved_forecasts(archive, table,
+                                                        method_id)
+        self.assertEqual(len(records), numrec)
+        size1 = os.path.getsize(dbfile)
+
+        # there should be one remaining after a prune
+        forecast.Forecast.prune_forecasts(archive, table, method_id, ts, True)
+        records = forecast.Forecast.get_saved_forecasts(archive, table,
+                                                        method_id)
+        self.assertEqual(len(records), 1)
+        size2 = os.path.getsize(dbfile)
+
+        self.assertNotEqual(size1, size2)
 
 # use this to run individual tests while debugging
 def suite(testname):

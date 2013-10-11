@@ -10,9 +10,11 @@ Design
    tides.  Weather forecasting can be downloaded (NWS, WU) or generated
    (Zambretti).  Tide forecasting is generated using XTide.
 
-   To enable forecasting, add the appropriate section to weewx.conf then
-   append the appropriate forecast to the WxEngine service_list, also in
-   weewx.conf.
+   To enable forecasting, add a [Forecast] section to weewx.conf, add a
+   section to [Databases] to indicate where forecast data should be stored,
+   then append user.forecast.XXXForecast to the WxEngine service_list for each
+   forecasting method that should be enabled.  Details in the Configuration
+   section below.
 
    A single table stores all forecast information.  This means that each record
    may have many unused fields, but it makes querying and database management
@@ -111,6 +113,11 @@ Configuration
         #   autoip.json?geo_ip=38.102.136.138 - specific IP address location
         # If no location is specified, station latitude and longitude are used
         #location = 02139
+
+        # There are two types of forecast available, daily for 10 days and
+        # hourly for 10 days.  Default is hourly for 10 days.
+        #forecast_type = forecast10day
+        #forecast_type = hourly10day
 
         # How often to download the forecast, in seconds
         #interval = 10800
@@ -363,20 +370,7 @@ $summary.obvis           array
 # http://www.surf-forecast.com/
 # http://ocean.peterbrueggeman.com/tidepredict.html
 
-# TODO: single table with unused fields, one table per method, or one db per ?
-#       for now we use single table (one schema) for all methods
-
-# TODO: add variable for text desription, display this on exfo index page
-
-# FIXME: what is correct behavior when error?  display NULL? ''? None?
-
-# FIXME: make the forecasting extensible, both download/generate and templates
-
 # FIXME: 'method' should be called 'source'
-
-# FIXME: add option to WU forecast for daily (day/night) or hourly
-
-# FIXME: is the context necessary for the template variables?
 
 import httplib
 import socket
@@ -453,13 +447,22 @@ def get_int(config_dict, label, default_value):
 # air quality index
 # also see icons used for uk metoffice
 
-# FIXME: since we are using a single schema for any number of sources, make the
-#        schema self-consistent instead of being so much like NWS naming.
-
 """Database Schema
 
    The schema assumes that forecasts are deterministic - a forecast made at
    time t will always return the same results.
+
+   For most use cases, the database will contain only the latest forecast or
+   perhaps the latest plus one or two previous forecasts.  However there is
+   also a use case in which forecasts are retained indefinitely for analysis.
+
+   The names in the schema are based on NWS point and area forecasts, plus
+   extensions to include additional information from Weather Underground.
+
+   When deciding what to store in the database, try to focus on just the facts.
+   There is room for interpretation in the description field, but otherwise
+   leave the interpretation out.  For example, storm surge warnings, small
+   craft advisories are derivative - they are based on wind/wave levels.
 
    This schema captures all forecasts and defines the following fields:
 
@@ -470,6 +473,7 @@ def get_int(config_dict, label, default_value):
    event_ts   - timestamp in seconds for the event
    duration   - length of the forecast period
    location
+   desc       - textual description of the forecast
 
    database     nws                    wu-daily           wu-hourly
    -----------  ---------------------  -----------------  ---------
@@ -511,17 +515,18 @@ def get_int(config_dict, label, default_value):
 
    zcode        used only by zambretti forecast
 """
-# FIXME: event_ts should be NOT NULL
-# FIXME: add these conditions: hail, tornado, hurricane/cyclone
+
 # FIXME: obvis should be an array?
-# FIXME: add textual description field
+# FIXME: add field for tornado, hurricane/cyclone?
+
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),  # weewx.US
                          ('dateTime',   'INTEGER NOT NULL'),  # epoch
                          ('issued_ts',  'INTEGER NOT NULL'),  # epoch
-                         ('event_ts',   'INTEGER'),           # epoch
+                         ('event_ts',   'INTEGER NOT NULL'),  # epoch
                          ('duration',   'INTEGER'),           # seconds
                          ('location',   'VARCHAR(64)'),
+                         ('desc',       'VARCHAR(256)'),
 
                          # Zambretti fields
                          ('zcode',      'CHAR(1)'),
@@ -551,6 +556,7 @@ defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('sleet',      'VARCHAR(2)'),  # S,C,L,O,D
                          ('frzngrain',  'VARCHAR(2)'),  # S,C,L,O,D
                          ('frzngdrzl',  'VARCHAR(2)'),  # S,C,L,O,D
+                         ('hail',       'VARCHAR(2)'),  # S,C,L,O,D
                          ('obvis',      'VARCHAR(3)'),  # F,PF,F+,PF+,H,BS,K,BD
                          ('windChill',  'REAL'),        # degree F
                          ('heatIndex',  'REAL'),        # degree F
@@ -577,7 +583,8 @@ precip_types = [
     'flurries',
     'sleet',
     'frzngrain',
-    'frzngdrzl'
+    'frzngdrzl',
+    'hail'
     ]
 
 directions_label_dict = {
@@ -628,6 +635,7 @@ weather_label_dict = {
     'sleet'     : 'Ice Pellets',
     'frzngrain' : 'Freezing Rain',
     'frzngdrzl' : 'Freezing Drizzle',
+    'hail'      : 'Hail',
     # codes for clouds
     'CL' : 'Clear',
     'FW' : 'Few Clouds',
@@ -704,6 +712,9 @@ class Forecast(StdService):
         self.single_thread = d.get('single_thread', False)
         self.updating = False
 
+        # option to vacuum the sqlite database when pruning
+        self.vacuum = d.get('vacuum', False)
+
         self.method_id = fid
         self.last_ts = 0
 
@@ -757,7 +768,8 @@ class Forecast(StdService):
                         Forecast.prune_forecasts(archive,
                                                  self.table,
                                                  self.method_id,
-                                                 now - self.max_age)
+                                                 now - self.max_age,
+                                                 vacuum=self.vacuum)
             except Exception, e:
                 logerr('%s: forecast failure: %s' % (self.method_id, e))
         else:
@@ -792,7 +804,7 @@ class Forecast(StdService):
         archive.addRecord(record)
 
     @staticmethod
-    def prune_forecasts(archive, table, method_id, ts):
+    def prune_forecasts(archive, table, method_id, ts, vacuum=False):
         """remove old forecasts from the database
 
         ts - timestamp, in seconds.  records older than this will be deleted.
@@ -800,7 +812,17 @@ class Forecast(StdService):
         sql = "delete from %s where method = '%s' and dateTime < %d" % (table, method_id, ts)
         archive.getSql(sql)
         loginf('%s: deleted forecasts prior to %d' % (method_id, ts))
-        # FIXME: if this is sqlite, do a vacuum too
+
+        # vacuum will only work on sqlite databases.  it will compact the
+        # database file.  if we do not do this, the file grows even though
+        # we prune records from the database.  it should be ok to run this
+        # on a mysql database - it will silently fail.
+        if vacuum:
+            try:
+                archive.getSql('vacuum')
+            except Exception, e:
+                logdbg('vacuuming failed: %s' % e)
+                pass
 
     @staticmethod
     def get_saved_forecasts(archive, table, method_id, since_ts=None):
@@ -1106,14 +1128,15 @@ class NWSForecast(Forecast):
             errmsg.append('NWS location ID (lid) is not specified')
         if self.foid is None:
             errmsg.append('NWS forecast office ID (foid) is not specified')
-        if len(errmsg) > 0:
+        if errmsg:
             raise Exception, '\n'.join(errmsg)
 
         loginf('%s: interval=%s max_age=%s lid=%s foid=%s' %
                (NWS_KEY, self.interval, self.max_age, self.lid, self.foid))
 
     def get_forecast(self, event):
-        text = NWSDownloadForecast(self.foid, self.url, self.max_tries)
+        text = NWSDownloadForecast(self.foid, url=self.url,
+                                   max_tries=self.max_tries)
         if text is None:
             logerr('%s: no PFM data for %s from %s' %
                    (NWS_KEY, self.foid, self.url))
@@ -1532,6 +1555,7 @@ class WUForecast(Forecast):
         self.max_tries = d.get('max_tries', 3)
         self.api_key = d.get('api_key', None)
         self.location = d.get('location', None)
+        self.forecast_type = d.get('forecast_type', 'hourly10day')
 
         if self.location is None:
             lat = config_dict['Station'].get('latitude', None)
@@ -1546,14 +1570,17 @@ class WUForecast(Forecast):
             errmsg.append('WU API key (api_key) is not specified')
         if self.location is None:
             errmsg.append('WU location is not specified')
-        if len(errmsg) > 0:
+        if errmsg > 0:
             raise Exception, '\n'.join(errmsg)
 
-        loginf('%s: interval=%s max_age=%s api_key=%s location=%s' %
-               (WU_KEY, self.interval, self.max_age, self.api_key, self.location))
+        loginf('%s: interval=%s max_age=%s api_key=%s location=%s fc=%s' %
+               (WU_KEY, self.interval, self.max_age, self.api_key,
+                self.location, self.forecast_type))
 
     def get_forecast(self, event):
-        text = WUDownloadForecast(self.api_key, self.location, self.url, self.max_tries)
+        text = WUDownloadForecast(self.api_key, self.location,
+                                  url=self.url, fc_type=self.forecast_type,
+                                  max_tries=self.max_tries)
         if text is None:
             logerr('%s: no forecast data for %s from %s' %
                    (WU_KEY, self.location, self.url))
@@ -1562,11 +1589,24 @@ class WUForecast(Forecast):
         loginf('%s: got %d forecast records' % (WU_KEY, len(records)))
         return records
 
-def WUDownloadForecast(api_key, location, url=WU_DEFAULT_URL, max_tries=3):
-    """Download a forecast from the Weather Underground"""
+def WUDownloadForecast(api_key, location,
+                       url=WU_DEFAULT_URL, fc_type='hourly10day', max_tries=3):
+    """Download a forecast from the Weather Underground
 
-    # hourly10day or forecast10day
-    u = '%s/%s/hourly10day/q/%s.json' % (url, api_key, location) \
+    api_key - key for downloading from WU
+
+    location - lat/lon, post code, or other location identifier
+
+    url - URL to the weather underground service.  if anything other than the
+          default is specified, that entire URL is used.  if the default is
+          specified, it is used as the base and other items are added to it.
+
+    fc_type - forecast type, one of hourly10day or forecast10day
+
+    max_tries - how many times to try before giving up
+    """
+
+    u = '%s/%s/%s/q/%s.json' % (url, api_key, fc_type, location) \
         if url == WU_DEFAULT_URL else url
     logdbg("%s: downloading forecast from '%s'" % (WU_KEY, u))
     for count in range(max_tries):
@@ -1848,7 +1888,7 @@ class XTideForecast(Forecast):
             for line in p.stdout:
                 if string.find(line, self.location) >= 0:
                     out.append(line)
-            if len(out) > 0:
+            if out:
                 return out
             err = []
             for line in p.stderr:
