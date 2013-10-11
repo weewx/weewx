@@ -210,6 +210,12 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                 _filename = self._getFileName(template, timespan)
                 _fullname = os.path.join(dest_dir, _filename)
 
+                # skip SummaryBy files outside the timespan
+                if (period == 'SummaryByMonth' or period == 'SummaryByYear') \
+                        and os.path.exists(_fullname) \
+                        and not timespan.includesArchiveTime(stop_ts):
+                    break
+
                 # skip files that are fresh, only if staleness is defined
                 stale = report_dict.get('stale_age', None)
                 if stale is not None:
