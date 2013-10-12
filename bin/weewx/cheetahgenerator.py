@@ -11,10 +11,13 @@
 
 For more information about Cheetah, see http://www.cheetahtemplate.org
 
-search_list = a, b, c
-encoding = (html_entities|utf8|strict_ascii)
-template = filename.tmpl
-stale_age = s
+Configuration Options
+
+  search_list = a, b, c              # list of classes derived from SearchList
+  search_list_extensions = d, e, f   # will be appended to search_list
+  encoding = (html_entities|utf8|strict_ascii)
+  template = filename.tmpl           # must end with .tmpl
+  stale_age = s                      # age in seconds
 
 The strings YYYY and MM will be replaced if they appear in the filename.
 
@@ -137,6 +140,10 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         search_list = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list'))
         if search_list is None:
             search_list = default_search_list
+
+        search_list_ext = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list_extensions'))
+        if search_list_ext is not None:
+            search_list.extend(search_list_ext)
 
         for c in search_list:
             x = c.strip()
