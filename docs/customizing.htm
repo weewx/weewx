@@ -1213,16 +1213,22 @@ class MyXSearch(SearchList):                                #1
 	<span class="code">search_list_extensions</span> with our new
         extension. When you're done, it will look something like this:</p>
       <pre class="tty">[CheetahGenerator]
-    ...    
-    search_list_extensions = examples.xsearch.MyXSearch
+    # This section is used by the generator CheetahGenerator, and specifies
+    # which files are to be generated from which template.
+
+    # Possible encodings are 'html_entities', 'utf8', or 'strict_ascii'
+    encoding = html_entities
+
+    <span class="highlight">search_list_extensions = examples.xsearch.MyXSearch</span>
+
+    [[SummaryByMonth]]
+    ...
 </pre>
-      <p>Note that it is in the section
+      <p>Our addition has been <span class="highlight">highlighted</span>. Note that it is in the section
         <span class="code">[CheetahGenerator]</span>. 
-        This section was called <span class="code">[FileGenerator]</span> in 
+        (This section was called <span class="code">[FileGenerator]</span> in 
         earlier versions of <span class="code">weewx</span>, a name which will 
-        still work. Incidentally, you can see the search list extensions that 
-        come with <span class="code">weewx</span>, and the familiar tags they
-        provide.</p>
+        still work.)</p>
       <p>Now, if the Cheetah engine encounters the tag <span class="code">
 	  $alltime</span>, it will scan the search list, looking for an
         attribute or key that matches <span class="code">alltime</span>. When
