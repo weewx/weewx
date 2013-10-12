@@ -1130,18 +1130,18 @@ class MyXSearch(SearchList):                                #1
         return search_list_extension&nbsp;</pre>
       <p>Going through the example, line by line: </p>
       <ol>
-          <li>Create a
-          new class called <span class="code">MyXSearch</span>, which will 
-		  inherit from class <span class="code">SearchList</span>. All search 
-		  list extensions inherit from this class.</li>
-		  <li>Create an initializer for our new class. In this case, the 
-		  initializer does nothing except pass its only parameter,
-		  <span class="code">generator</span>, a reference to the calling 
-		  generator, to its superclass, <span class="code">SearchList</span>. 
-		  The superclass will store it in <span class="code">self</span>.</li>
+        <li>Create a new class called <span class="code">MyXSearch</span>,
+          which will inherit from class <span class="code">SearchList</span>.
+          All search list extensions inherit from this class.</li>
+	<li>Create an initializer for our new class. In this case, the 
+	  initializer does nothing except pass its only parameter,
+	  <span class="code">generator</span>, a reference to the calling 
+	  generator, to its superclass, <span class="code">SearchList</span>. 
+	  The superclass will store it in <span class="code">self</span>.</li>
         <li>Override member function <span class="code">get_extension()</span>.
           This function will be called when the generator is ready to accept 
-		your new search list extension. The parameters that will be passed in are:
+	  your new search list extension. The parameters that will be passed
+          in are:
           <ul>
             <li><span class="code">self</span> Python's way of indicating the
               instance we are working with;</li>
@@ -1149,10 +1149,12 @@ class MyXSearch(SearchList):                                #1
               utility class <span class="code">TimeSpan</span>. This will
               contain the valid start and ending times used by the template. 
 			Normally, this is all valid times; </li>
-            <li><span class="code">archivedb</span> An instance of <span class="code">weewx.archive.Archive</span>,
+            <li><span class="code">archivedb</span> An instance of
+              <span class="code">weewx.archive.Archive</span>,
               holding the archive database;</li>
-            <li><span class="code">statsdb</span> An instance of <span class="code">weewx.stats.StatsDb</span>, 
-			holding the statistical database.</li>
+            <li><span class="code">statsdb</span> An instance of
+              <span class="code">weewx.stats.StatsDb</span>, 
+	      holding the statistical database.</li>
           </ul>
         </li>
         <li>The class <span class="code">TimeSpanStats</span> represents a
@@ -1161,72 +1163,72 @@ class MyXSearch(SearchList):                                #1
           takes 4 parameters.
           <ul>
             <li>The first is the timespan over which the calculation is to be
-              done. Here, we have a lucky coincidence: the variable <span class="code">valid_timespan</span>
+              done. Here, we have a lucky coincidence: the variable
+              <span class="code">valid_timespan</span>
               already holds a <span class="code">TimeSpan</span> object
-              representing the domain of all valid timespans, so we simply pass it
-              in.</li>
+              representing the domain of all valid timespans, so we simply
+              pass it in.</li>
             <li>The second is the statistical database the calculation is to be
-              run against. We simply pass in <span class="code">statsdb</span>.</li>
-            <li>The third should be an instance of class <span class="code">weewx.units.Formatter</span>, 
-			which contains information about how the results should be 
-			formatted. We just pass in the formatter set up by the generator,
+              run against. We simply pass in
+              <span class="code">statsdb</span>.</li>
+            <li>The third should be an instance of class
+              <span class="code">weewx.units.Formatter</span>, 
+	      which contains information about how the results should be 
+	      formatted. We just pass in the formatter set up by the generator,
               <span class="code">self.generator.formatter</span>.</li>
-            <li>The fourth should be an instance of <span class="code">weewx.units.Converter</span>,
+            <li>The fourth should be an instance of
+              <span class="code">weewx.units.Converter</span>,
               which contains information about the target units (<em>e.g.</em>,
-              "<span class="code">degree_C</span>") that are to be used. Again, 
-			we just pass in the instance set up by the generator, <span class="code">self.generator.converter</span>.</li>
+              "<span class="code">degree_C</span>") that are to be used. Again,
+	      we just pass in the instance set up by the generator,
+              <span class="code">self.generator.converter</span>.</li>
           </ul>
         </li>
       </ol>
-      <p>That one was relatively easy because we already had an instance of <span
-          class="code">TimeSpan</span>, <span class="code">valid_timespan</span>,
+      <p>That one was relatively easy because we already had an instance of
+        <span class="code">TimeSpan</span>,
+        <span class="code">valid_timespan</span>,
         that represented the time over which we wanted to do the calculations.
         Setting up an instance that will work for the last seven days is a bit
         trickier. Continuing our example...</p>
-        <ol start="5">
+      <ol start="5">
         <li>The object <span class="code">valid_timespan</span> holds the
           domain of all valid times, but in order to calculate statistics for 
-		the last seven days, we need not the earliest valid time, but the time
-          at midnight seven days ago. So, we do a little Python date arithmetic
-          to calculate this. The object <span class="code">week_dt</span> will
-          be an instance of <span class="code">datetime.date</span>.</li>
+	  the last seven days, we need not the earliest valid time, but the
+          time at midnight seven days ago. So, we do a little Python date
+          arithmetic to calculate this. The object
+          <span class="code">week_dt</span> will be an instance of
+          <span class="code">datetime.date</span>.</li>
         <li>We convert it to unix epoch time.</li>
-        <li>Now we are ready to initialize an appropriate <span class="code">TimeSpanStats</span>
-          object. It's the same as in step #4, except we use our new timespan
-          object.</li>
-        <li>Create a small dictionary with two keys, '<span class="code">alltime</span>', and
+        <li>Now we are ready to initialize an appropriate
+          <span class="code">TimeSpanStats</span> object. It's the same as in
+          step #4, except we use our new timespan object.</li>
+        <li>Create a small dictionary with two keys,
+          '<span class="code">alltime</span>', and
           '<span class="code">seven_day</span>' and return it. </li>
       </ol>
-        <p>The last step is to tell the template engine where to find our 
-		extension. You do that by going into the skin configuration file,
-		<span class="code">skin.conf</span>, and editing the option
-		<span class="code">search_list</span>, adding our new extension 
-		somewhere in the list. When you're done, it will look something like 
-		this:</p>
-		<pre class="tty">[CheetahGenerator]
-
-    #
-    # This section is used by the generator CheetahGenerator, and specifies which
-    # files are to be generated from which template.
-    #
-
-    encoding = html_entities    # Possible encodings are 'html_entities', 'utf8', or 'strict_ascii'
-    
-    search_list = <span class="highlight">examples.xsearch.MyXSearch, </span>weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras, weewx.cheetahgenerator.Current
-  
-    ... (as before)</pre>
-		<p>Here, the addition has been <span class="highlight">highlighted</span>. 
-		Note that it is in the section <span class="code">[CheetahGenerator]</span>. 
-		This section was called <span class="code">[FileGenerator]</span> in 
-		earlier versions of <span class="code">weewx</span>, a name which will 
-		still work. Incidentally, you can see the search list extensions that 
-		come with <span class="code">weewx</span>, and the familiar tags they provide.</p>
-		<p>Now, if the Cheetah engine encounters the tag <span class="code">
-		$alltime</span>, it will scan the search list, looking for an attribute 
-		or key that matches <span class="code">alltime</span>. When it gets to 
-		the little dictionary we provided, it will find a matching key, allowing 
-		it to retrieve
-          the appropriate <span class="code">TimeSpanStats</span> object.</p>
+      <p>The last step is to tell the template engine where to find our 
+	extension. You do that by going into the skin configuration file,
+	<span class="code">skin.conf</span>, and adding the option
+	<span class="code">search_list_extensions</span> with our new
+        extension. When you're done, it will look something like this:</p>
+      <pre class="tty">[CheetahGenerator]
+    ...    
+    search_list_extensions = examples.xsearch.MyXSearch
+</pre>
+      <p>Note that it is in the section
+        <span class="code">[CheetahGenerator]</span>. 
+        This section was called <span class="code">[FileGenerator]</span> in 
+        earlier versions of <span class="code">weewx</span>, a name which will 
+        still work. Incidentally, you can see the search list extensions that 
+        come with <span class="code">weewx</span>, and the familiar tags they
+        provide.</p>
+      <p>Now, if the Cheetah engine encounters the tag <span class="code">
+	  $alltime</span>, it will scan the search list, looking for an
+        attribute or key that matches <span class="code">alltime</span>. When
+        it gets to the little dictionary we provided, it will find a matching
+        key, allowing it to retrieve the appropriate
+        <span class="code">TimeSpanStats</span> object.</p>
       <p>With this approach, you can now include "all time" or "seven day"
         statistics in your HTML templates: </p>
       <pre class="tty">...
@@ -1244,29 +1246,35 @@ class MyXSearch(SearchList):                                #1
         &lt;td&gt;$seven_day.rain.sum
     &lt;/tr&gt;
     ... (more table entries)</pre>
-      <p>NB: If you create a custom generator some place other than where <span
-          class="code">weewxd</span> resides, you may have to specify its
-        location in the environment variable <span class="code">PYTHONPATH</span>:
+      <p>If you place a custom generator somewhere other than the
+        <span class="symcode">$BIN_ROOT</span> hierarchy where
+        <span class="code">weewxd</span> resides, you may have to specify its
+        location in the environment variable
+        <span class="code">PYTHONPATH</span>
+        in the shell where you start weewx:
       </p>
         <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
-		<h2>Upgrades and user extensions</h2>
+
+	<h2>Upgrades and user extensions</h2>
       <p>In the examples above, we subclassed <span class="code">weewx</span>
-        classes to add functionality. Where should you put your new code? If you
-        simply modify the examples in place, then your changes will get
+        classes to add functionality. Where should you put your new code? If
+        you simply modify the examples in place, then your changes will get
         overwritten the next time you do an upgrade, forcing you to cut and
         paste any changes you have made. </p>
-      <p>A better idea is to copy over the examples to the subdirectory <span class="symcode">$BIN_ROOT</span><span
-          class="code">/user</span>, then modify them there. This subdirectory
-        is preserved through upgrades, so you won't have to redo any changes you
-        might have made. </p>
+      <p>A better idea is to copy over the examples to the subdirectory
+        <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>,
+        then modify them there. This subdirectory is preserved through
+        upgrades, so you won't have to redo any changes you might have
+        made.</p>
       <h1 id="standard_skin">Reference: The Standard skin configuration file</h1>
       <p>This section is a reference to the options appearing in the Standard
-        skin configuration file, found in <span class="symcode">$SKIN_ROOT</span><span
-          class="code">/Standard/skin.conf</span>. </p>
-      <p>It is worth noting that, like the main configuration file <span class="code">weewx.conf</span>,
-        UTF-8 is used throughout. The most important options are up near the top
-        of the file. The truly important ones, the ones you are likely to have
-        to customize for your station, are <span class="config_important"><strong>highlighted</strong></span>.
+        skin configuration file, found in
+        <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>. </p>
+      <p>It is worth noting that, like the main configuration file
+        <span class="code">weewx.conf</span>, UTF-8 is used throughout. The
+        most important options are up near the top of the file. The truly
+        important ones, the ones you are likely to have to customize for your
+        station, are <span class="config_important"><strong>highlighted</strong></span>.
       </p>
       <h2 class="config_section" id="Extras">[Extras]</h2>
       <p>This section is available to you to add any static tags that you might
@@ -1451,50 +1459,68 @@ outTemp = Outside Temperature</pre>
         eight phases of the moon. Default is "<span class="code">New, Waxing
           crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last
           quarter, Waning crescent</span>". </p>
+
       <h2 class="config_section">[CheetahGenerator]</h2>
-      <p>Before V2.5, this section was called <span class="code">[FileGenerator]</span>. 
-	  Older versions and names are 100% backwards compatible.</p>
-		<p>This section is used by generator <span class="code">weewx.cheetahgenerator.CheetahGenerator</span>
+      <p>Before V2.5, this section was called
+        <span class="code">[FileGenerator]</span>. 
+	Older versions and names are 100% backwards compatible.</p>
+      <p>This section is used by generator
+        <span class="code">weewx.cheetahgenerator.CheetahGenerator</span>
         and controls text generation from templates, specifically which files
         are to be produced from which template. </p>
       <h3>Overview of file generation</h3>
-      <p>Customization of file generation consists of playing with the various
-        options offered below and, failing that, modifying the template files
-        that come with the distribution. </p>
-      <p>Each template file is named something like <span class="code"><em>D/F.E.tmpl</em></span>,
-        where <span class="code">D</span> is the subdirectory the template sits
-        in and will also be the subdirectory the results will be put in, and <span
-          class="code">F.E</span> is the generated file name. So, given a
-        template file with name <span class="code">Acme/index.html.tmpl</span>,
-        the results will be put in <span class="symcode">$HTML_ROOT</span><span
-          class="code">/Acme/index.html</span>. </p>
-      <p>The skin that comes with the standard distribution of <span class="code">
-          weewx</span> contains three different kinds of generated output: </p>
-      <ol>
-        <li>Summary by month. In addition to the naming rules above, if the
-          template file has the letters <span class="code">YYYY</span> and <span
-            class="code">MM</span> in its name, these will be substituted for
-          the year and month, respectively. So, a template with the name <span
-            class="code">summary-YYYY-MM.html.tmpl</span> would have name <span
-            class="code">summary-2010-03.html</span> for the month of March,
-          2010. The default distribution has been set up to produce NOAA monthly
-          summaries, one for each month, as a simple text file (no HTML). </li>
-        <li>Summary by year. In addition to the naming rules above, if the
-          template file has the letters <span class="code">YYYY</span> in its
-          name, the year will be substituted. The default distribution has been
-          set up to produce NOAA yearly summaries, one for each year, as a
-          simple text file (no HTML). </li>
-        <li>Summary "To Date". The default distribution has been set up to
-          produce reports for the day, week, month, and year-to-date
-          observations. These four files are all HTML files. The first, the
-          daily summary (output file i<span class="code">ndex.html</span>),
-          includes a drop-down list that allows the NOAA month and yearly
-          summaries to be displayed. </li>
-      </ol>
-      <h3>General</h3>
+      <p>Files are generated from templates, and each template is identified
+        by the <span class="config_option">template</span> parameter.</p>
+      <p>Each template file is named something like
+        <span class="code"><em>D/F.E.tmpl</em></span>, where
+        <span class="code">D</span> is the (optional) directory the
+        template sits in and will also be the directory the results will be
+        put in, and <span class="code">F.E</span> is the generated file name.
+        So, given a template file with name <span class="code">Acme/index.html.tmpl</span>,
+        the results will be put in <span class="symcode">$HTML_ROOT</span><span class="code">/Acme/index.html</span>. </p>
+      <p>The configuration for a group of templates will look something like this:</p>
+    <pre class="tty">[CheetahGenerator]
+    [[index]]
+        template = index.html.tmpl
+    [[textfile]]
+        template = filename.txt.tmpl
+    [[xmlfile]]
+        template = filename.xml.tmpl</pre>
+      <p>There can be only one <span class="config_option">template</span> in
+        each block.  In most cases, the block name does not matter - it is
+        used only to isolate each template.  However, there are two block names
+        that have speacial meaning:  SummaryByMonth and SummaryByYear.  These
+        are described below.</p>
+      <p>The file generator runs on each new archive record.  In a default
+        weewx installation, that would be every 5 minutes.</p>
+      <p>Cheetah processes each template to generate a file.  Cheetah follows
+        any logic defined by directives such as <span class="code">for</span>
+        or <span class="code">if ... else</span>, and it replaces variables
+        such as <span class="code">$Extras.radar_url</span> or
+        <span class="code">$current.outTemp.max</span>.</p>
+      <p>Variables are defined by objects in weewx.  Some variables are static,
+        others are linked to data in databases.  The list of variables can be
+        extended.</p>
+
+      <h3>File generation options</h3>
+      <p class="config_option">search_list</p>
+      <p>This is the list of search list objects that will be scanned by 
+        the template engine, looking for tags. See the section <em>
+	  <a href="#defining_new_tags">Defining new tags</a></em> and the 
+        <a href="http://cheetahtemplate.org/docs/users_guide_html/users_guide.html">Cheetah documentation</a> for details on 
+        search lists. If no <span class="config_option">search_list</span>
+        is specified, a default list will be
+        used.  The default list is:</p>
+      <pre class="tty">search_list = weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras, weewx.cheetahgenerator.Current</pre>
+      <p class="config_option">search_list_extensions</p>
+      <p>This defines one or more search list objects that will be appended to
+        the <span class="config_option">search_list</span>.  For example, the
+        following adds alltime and forecast variables to the search list.</p>
+      <pre class="tty">search_list_extensions = examples.xsearch.MyXSearch, user.forecast.ForecastVariables</pre>
       <p class="config_option">encoding </p>
       <p>This option controls which encoding is to be used for the generated
-        output. There are 3 possible choices: </p>
+        output. The encoding can be specified for individual files.  There are
+        3 possible choices: </p>
       <table class="center" style="width: 90%">
         <tbody>
           <tr>
@@ -1502,9 +1528,10 @@ outTemp = Outside Temperature</pre>
             <td><strong>Comments</strong></td>
           </tr>
           <tr>
-            <td class="code" style="height: 53px">html_entities</td>
-            <td style="height: 53px">Non 7-bit characters will be represented as HTML entities (<em>e.g.</em>,
-              the degree sign will be represented as <span class="code">&amp;#176;</span>)</td>
+            <td class="code">html_entities</td>
+            <td>Non 7-bit characters will be represented
+              as HTML entities (<em>e.g.</em>, the degree sign will be
+              represented as <span class="code">&amp;#176;</span>)</td>
           </tr>
           <tr>
             <td class="code">utf8</td>
@@ -1516,80 +1543,119 @@ outTemp = Outside Temperature</pre>
           </tr>
         </tbody>
       </table>
-      <p>By default, the encoding <span class="code">html_entities</span> is
-        used for HTML files, <span class="code">strict_ascii</span> for the
-        NOAA template files. </p>
-		<p class="config_option">search_list</p>
-		<p>This is the list of search list extensions that will be scanned by 
-		the template engine, looking for tags. See the section <em>
-		<a href="#defining_new_tags">Defining new tags</a></em> and the 
-		<a href="http://cheetahtemplate.org/docs/users_guide_html/users_guide.html">Cheetah documentation</a> for details on 
-		search lists. The default list is:</p>
-		<pre class="tty"> search_list = weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras, weewx.cheetahgenerator.Current</pre>
-      <h3 class="config_section">[[SummaryByMonth]]</h3>
-      <p>This section controls which summaries-by-month are generated. For each
-        such summary, it should have its own sub-subsection, with option <span
-          class="code">template</span> listing the template to be used. The
-        default configuration generates NOAA-by-month summaries and is
-        summarized below as an example. Additional "by month" summaries can be
-        added easily by following the same pattern. </p>
-      <h4 class="config_section">[[[NOAA_month]]]</h4>
-      <p class="config_option">encoding </p>
-      <p>Set to <span class="code">strict_ascii</span> for the NOAA monthly
-        summary. </p>
-      <p class="config_option">template </p>
-      <p>This option is set to the source template for the NOAA monthly summary,
-        <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span>. </p>
-      <h3 class="config_section">[[SummaryByYear]]</h3>
-      <p>This section controls which summaries-by-year are generated. For each
-        such summary, it should have its own sub-subsection, with option <span
-          class="code">template</span> listing the template to be used. The
-        default configuration generates NOAA-by-year summaries and is summarized
-        below as an example. Additional "by year" summaries can be added easily
-        by following the pattern. </p>
-      <h4 class="config_section">[[[NOAA_year]]]</h4>
-      <p class="config_option">encoding </p>
-      <p>Set to <span class="code">strict_ascii</span> for the NOAA year
-        summary. </p>
-      <p class="config_option">template </p>
-      <p>This option is set to the source template for the NOAA yearly summary,
-        <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span>. </p>
-      <h3 class="config_section">[[ToDate]]</h3>
-      <p>This section controls which observations-to-date are generated. The
-        default configuration generates four files: one for day, week, month,
-        and year. Although the sub-subsections below have names such as 'week'
-        or 'month', this is not used in their generation. Output is set by the
-        template <em>content</em>, not the name of the sub-subsection — the
-        names below could as easily have been 'Fred', 'Mary', 'Peter', and
-        'George' and had the same output. </p>
-      <p>Additional observations-to-date pages can be created easily by adding a
-        new sub-subsection and giving it a unique name ("Jill"?), then giving
-        the path to its template as option <span class="code">template</span>.
+      <p>The encoding <span class="code">html_entities</span> is the
+        default.</p>
+      <p class="config_option">template</p>
+      <p>The name of a template file.  A template filename must end with
+        <span class="code">.tmpl</span>.  Filenames are case-sensitive.
+        If the template filename has the letters <span class="code">YYYY</span>
+        or <span class="code">MM</span> in its name, these will be substituted
+        for the year and month, respectively. So, a template with the name
+        <span class="code">summary-YYYY-MM.html.tmpl</span> would have name
+        <span class="code">summary-2010-03.html</span> for the month of March,
+        2010.</p>
+      <p class="config_option">[[SummaryByMonth]]</p>
+      <p>The <span class="code">SummaryByMonth</span> section defines some
+        special behavior.  Each template in this section will be used
+        multiple times, each time with a different per-month timespan.
+        Be sure to include <span class="code">YYYY</span> and 
+        <span class="code">MM</span> in the filename of any template in this
+        section.</p>
+      <p class="config_option">[[SummaryByYear]]</p>
+      <p>The <span class="code">SummaryByYear</span> section defines some
+        special behavior.  Each template in this section will be used
+        multiple times, each time with a different per-year timespan.
+        Be sure to include <span class="code">YYYY</span> in the filename
+        of any template in this section.</p>
+
+      <h3>Customizing file generation</h3>
+      <p>The best way to customization file generation is to make a copy of
+        a working report/skin, then make incremental changes.</p>
+      <p>When there is an error during template generation, the error will
+        show up in the log file.  Many errors are obvious - Cheetah will
+        display a line number and list the template file in which the error
+        occurred.  In some cases the error reporting is rather obscure.  So
+        make small changes and tests often.  Use
+        <span class="code">wee_report</span>
+        to test modifications to the generator configuration and/or the
+        template contents.</p>
+
+      <h3>An Example: the Standard skin</h3>
+      <p>Here is the <span class="code">[CheetahGenerator]</span> section from
+        the Standard <span class="code">skin.conf</span></p>
+
+      <pre class="tty">[CheetahGenerator]
+    # This section is used by the generator CheetahGenerator, and specifies
+    # which files are to be generated from which template.
+
+    encoding = html_entities
+
+    [[SummaryByMonth]]
+        # Reports that summarize "by month"
+        [[[NOAA_month]]]
+            encoding = strict_ascii
+            template = NOAA/NOAA-YYYY-MM.txt.tmpl
+
+    [[SummaryByYear]]
+        # Reports that summarize "by year"
+        [[[NOAA_year]]]
+            encoding = strict_ascii
+            template = NOAA/NOAA-YYYY.txt.tmpl
+        
+    [[ToDate]]
+        # Reports that show statistics "to date", such as day-to-date,
+        # week-to-date, month-to-date, etc.
+        [[[day]]]
+            template = index.html.tmpl
+        
+        [[[week]]]
+            template = week.html.tmpl
+        
+        [[[month]]]
+            template = month.html.tmpl
+        
+        [[[year]]]
+            template = year.html.tmpl
+            
+        [[[RSS]]]
+            template = RSS/weewx_rss.xml.tmpl
+                
+        [[[Mobile]]]
+            template = mobile.html.tmpl</pre>
+
+      <p>The Standard skin contains three different kinds of generated
+        output: </p>
+      <ol>
+        <li>Summary by Month. The Standard skin uses
+          <span class="code">SummaryByMonth</span> to produce NOAA summaries,
+          one for each month, as a simple text file.</li>
+        <li>Summary by Year. The Standard skin uses
+          <span class="code">SummaryByYear</span> to produce NOAA summaries,
+          one for each year, as a simple text file.</li>
+        <li>Summary "To Date". The Standard skin produce reports for the day,
+          week, month, and year-to-date observations. These files are HTML.
+          The first, the daily summary (output filename is
+          <span class="code">index.html</span>),
+          includes a drop-down list that displays the NOAA month and yearly
+          summaries. </li>
+      </ol>
+      <p>The encoding for text files is <span class="code">strict_ansii</span>,
+        whereas the encoding for html files is
+        <span class="code">html_entities</span>.  In the Standard skin this is
+        specified by declaring
+        <span class="code">encoding = html_entities</span> at the top level
+        of <span class="code">[CheetahGenerator]</span> then
+        <span class="code">encoding = strict_ansii</span> for each text file.
       </p>
-      <h4 class="config_section">[[[day]]]</h4>
-      <p class="config_option">template </p>
-      <p>Set to <span class="code">index.html.tmpl</span>, which contains the
-        template for the day summary. </p>
-      <h4 class="config_section">[[[week]]]</h4>
-      <p class="config_option">template </p>
-      <p>Set to <span class="code">week.html.tmpl</span>, which contains the
-        template for the week summary. </p>
-      <h4 class="config_section">[[[month]]]</h4>
-      <p class="config_option">template </p>
-      <p>Set to <span class="code">month.html.tmpl</span>, which contains the
-        template for the month summary. </p>
-      <h4 class="config_section">[[[year]]]</h4>
-      <p class="config_option">template </p>
-      <p>Set to <span class="code">year.html.tmpl</span>, which contains the
-        template for the year summary. </p>
-      <h4 class="config_section">[[[RSS]]]</h4>
-      <p class="config_option">template </p>
-      <p>Set to <span class="code">RSS/weewx_rss.xml.tmpl</span>, which
-        contains a template for an RSS feed. </p>
-      <h4 class="config_section">[[[Mobile]]]</h4>
-      <p class="config_option">template </p>
-      <p>Set to <span class="code">mobile.html.tmpl</span>, which contains a
-        template for a page formatted for mobile phones. </p>
+      <p>Other than <span class="code">SummaryByMonth</span> and
+        <span class="code">SummaryByYear</span>, the section names are
+        arbitrary.  <span class="code">ToDate</span> could just as well have
+        been called <span class="code">files_to_date</span>, and the sections
+        <span class="code">day</span>, <span class="code">week</span>, and
+        <span class="code">month</span> could just as well have been called
+        <span class="code">tom</span>, <span class="code">dick</span>, and
+        <span class="code">harry</span>.</p>
+
       <h2 class="config_section">[CopyGenerator]</h2>
       <p>This section is used by generator <span class="code">weewx.reportengine.CopyGenerator</span>
         and controls which files are to be copied over from the skin
