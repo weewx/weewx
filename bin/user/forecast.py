@@ -383,21 +383,20 @@ import urllib2
 
 import weewx
 from weewx.wxengine import StdService
-from weewx.filegenerator import FileGenerator
 import weeutil.weeutil
 from weewx.cheetahgenerator import SearchList
 
 try:
-    import cjson as json
+    import cjson as json    # @UnresolvedImport
     # rename methods to maintain compatibility w/ json module 
     setattr(json, 'dumps', json.encode)
     setattr(json, 'loads', json.decode)
 except Exception, e:
     try:
-        import simplejson as json
+        import simplejson as json  # @Reimport @UnusedImport
     except Exception, e:
         try:
-            import json
+            import json  # @Reimport
         except Exception, e:
             json = None
 

@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-2.5.0 10/XX/13
+2.5.0 10/12/13
 
 Introduced a new architecture that makes it easier to define search
 list extensions. The old architecture is 100% backwards compatible.
@@ -56,10 +56,6 @@ numbers >=3. Also, extended the number of battery codes. Thanks to Per
 Edström for his patience in figuring this out!
 
 For WMR200 stations, altitude-corrected pressure is now emitted correctly.
-
-For WMR200 stations, a "could not detach kernel driver" is now a DEBUG
-message, instead of an error message. This will make the driver much less
-chatty.
 
 ws28xx driver improvements, including: better thread control; better logging
 for debugging/diagnostics; better timing to reduce dropouts; eliminate writes

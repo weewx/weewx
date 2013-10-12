@@ -614,8 +614,8 @@ class StationRegistry(REST):
         """
 
         # should this service run?
-        optin = kwargs.get('register_this_station', None)
-        if optin is None or optin.lower() != 'true':                
+        optin = weeutil.weeutil.tobool(kwargs.get('register_this_station', 'false'))
+        if not optin:
             raise KeyError('register_this_station')
 
         # this uniquely identifies the station
@@ -827,7 +827,6 @@ class RESTThread(threading.Thread):
 
 if __name__ == '__main__':
            
-    import sys
     import configobj
     from optparse import OptionParser
     import Queue
