@@ -4,7 +4,7 @@
 
 """Tests for weewx forecasting module."""
 
-import configobj
+from __future__ import with_statement
 import math
 import os
 import shutil
@@ -12,6 +12,8 @@ import string
 import sys
 import time
 import unittest
+
+import configobj
 
 # if you try to run these tests on python 2.5 you might have to do a json
 # import as it is done in forecast.py
@@ -10096,7 +10098,7 @@ $ts $a.sunrise $a.sunset $gmstr
         event.record = record
         event.record['dateTime'] = int(time.time())
         f.get_forecast(event) # first zambretti is None to set trend
-        for t in range(0,numrec):
+        for _ in range(0,numrec):
             time.sleep(1)
             event.record['dateTime'] = int(time.time())
             forecast.Forecast.save_forecast(archive, f.get_forecast(event))
