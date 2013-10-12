@@ -1,3 +1,6 @@
+weewx (2.5.0b1-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall <mwall@users.sourceforge.net>  Sat, 12 Oct 2013 15:33:16 -0400
 weewx (2.5.0a3-1) unstable; urgency=low
   * new upstream release
   * added config support for ws28xx driver
