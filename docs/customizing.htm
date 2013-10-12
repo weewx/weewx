@@ -126,7 +126,7 @@
           <tr>
             <td class="code">FTP</td>
             <td>Arranges to upload everything in the <span class="symcode">$HTML_ROOT</span>
-              subdirectory up to a remote webserver.</td>
+              directory up to a remote webserver.</td>
           </tr>
           <tr>
             <td class="code">RSYNC</td>
@@ -154,7 +154,7 @@
         configuration file <span class="code">skin.conf</span>. </p>
       <p>Like all reports, the FTP and RSYNC "Reports" also use a skin, and
         include a skin configuration file, although they are quite minimal. </p>
-      <p>Skins live in their own subdirectory located in <span class="symcode">$SKIN_ROOT</span>.
+      <p>Skins live in their own directory located in <span class="symcode">$SKIN_ROOT</span>.
       </p>
       <h3>Generators</h3>
       <p>To create their output, skins rely on one or more <em>Generators, </em>code
@@ -233,7 +233,28 @@
         <span class="code">$month</span>, <span class="code">$year</span>, and
         <span class="code">$rainyear</span>, depending on the aggregation time
         period). </p>
-      <h1 id="reports">Opportunities for customizing reports</h1>
+
+      <h2>Where to put customizations</h2>
+      <p>For configuration changes, simply modify the
+        <span class="code">weewx</span> configuration file
+        <span class="code">weewx.conf</span>, and possibly modify the
+        skin configuration file <span class="code">skin.conf</span> as
+        described later in this document.  These files will be preserved
+        when you upgrade.</p>
+      <p>Other customizations require new Python code or modifications of
+        example code. Where should you put the code? If you simply modify
+        the examples in place, then your changes will be overwritten the
+        next time you do an upgrade.</p>
+      <p>A better idea is to put the code in the
+        <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>,
+        directory. For example, copy example code from the 
+        <span class="code">examples</span> directory to the
+        <span class="code">user</span> directory, then modify it there.
+        The <span class="code">user</span> directory is preserved through
+        upgrades, so you won't have to redo any changes you might have
+        made.</p>
+
+      <h1 id="reports">Customizing reports</h1>
       <p>This section discusses the two general strategies for customizing
         reports: by changing options in one or more configuration file, or by
         changing the template files. The former is generally easier, but
@@ -314,11 +335,11 @@
         several different output, each with separate options. </p>
       <p>Revisiting our example, suppose you want two reports, one in US
         Customary, the other in Metric. The former will go in the directory <span
-          class="symcode"> $HTML_ROOT</span>, the latter in a subdirectory, <span
+          class="symcode"> $HTML_ROOT</span>, the latter in a directory, <span
           class="symcode"> $HTML_ROOT</span><span class="code">/metric</span>.
         If you just simply modify <span class="code">skin.conf</span>, you can
         get one, but not both at the same time. Alternatively, you could create
-        a whole new skin by copying all the files to a new skin subdirectory
+        a whole new skin by copying all the files to a new skin directory
         then editing the new <span class="code">skin.conf</span>. The trouble
         with this approach is that you would then have <em>two</em> skins you
         would have to maintain. If you change something, you have to remember to
@@ -346,7 +367,7 @@
     [[MetricReport]]
         # It is also based on the Standard skin:
         skin = Standard 
-        # However, override where the results will go and put them in a subdirectory:
+        # However, override where the results will go and put them in a directory:
         HTML_ROOT = public_html/metric
     
         # And override the options that were not in metric units
@@ -375,7 +396,7 @@
         option, you may have to modify the templates that come with <span class="code">weewx</span>,
         or write your own. </p>
       <p>Template modifications are preserved across upgrades (indeed,
-        everything in the <span class="code">./skins</span> subdirectory is
+        everything in the <span class="code">./skins</span> directory is
         preserved), so you don't have to worry about losing changes.</p>
       <p>Template generation is done using the <a href="http://www.cheetahtemplate.org/">Cheetah</a>
         templating engine. This is a very powerful engine, which essentially
@@ -1263,18 +1284,7 @@ class MyXSearch(SearchList):                                #1
       </p>
         <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
 
-	<h2>Upgrades and user extensions</h2>
-      <p>In the examples above, we subclassed <span class="code">weewx</span>
-        classes to add functionality. Where should you put your new code? If
-        you simply modify the examples in place, then your changes will get
-        overwritten the next time you do an upgrade, forcing you to cut and
-        paste any changes you have made. </p>
-      <p>A better idea is to copy over the examples to the subdirectory
-        <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>,
-        then modify them there. This subdirectory is preserved through
-        upgrades, so you won't have to redo any changes you might have
-        made.</p>
-      <h1 id="standard_skin">Reference: The Standard skin configuration file</h1>
+      <h1 id="standard_skin">Customizing skins: the Standard skin</h1>
       <p>This section is a reference to the options appearing in the Standard
         skin configuration file, found in
         <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>. </p>
@@ -1284,29 +1294,36 @@ class MyXSearch(SearchList):                                #1
         important ones, the ones you are likely to have to customize for your
         station, are <span class="config_important"><strong>highlighted</strong></span>.
       </p>
+
       <h2 class="config_section" id="Extras">[Extras]</h2>
       <p>This section is available to you to add any static tags that you might
-        want to be available in the templates. As an example, the stock <span class="code">skin.conf</span>
+        want to be available in the templates.</p>
+
+      <h3>An Example: the Standard skin</h3>
+      <p>As an example, the Standard <span class="code">skin.conf</span>
         file includes two options: <span class="code">radar_url</span>, which
-        is available as tag <span class="code">$Extras.radar_url</span>, and <span
-          class="code">googleAnalyticsId</span>, available as tag <span class="code">$Extras.googleAnalyticsId</span>.
-        If you take a look at the template <span class="code">index.html.tmpl</span>
-        you will see examples of testing for these tags (search the file for the
-        string <span class="code">radar_url</span> or <span class="code">googleAnalyticsId</span>
-        to find them). </p>
+        is available as tag <span class="code">$Extras.radar_url</span>, and
+        <span class="code">googleAnalyticsId</span>, available as tag
+        <span class="code">$Extras.googleAnalyticsId</span>.
+        If you take a look at the template
+        <span class="code">index.html.tmpl</span> you will see examples of
+        testing for these tags (search the file for the string
+        <span class="code">radar_url</span> or
+        <span class="code">googleAnalyticsId</span> to find them). </p>
       <p class="config_option">radar_url </p>
       <p>If set, the NOAA radar image will be displayed. If commented out, no
         image will be displayed. </p>
       <p class="config_option">googleAnalyticsId </p>
       <p>If you have a <a href="http://www.google.com/analytics/">Google
-          Analytics ID</a>, you can set it here. The Google Analytics Javascript
-        code will then be included, enabling analytics of your website usage. If
-        commented out, the code will not be included. </p>
-      <h4>Extending <span class="code">[Extras]</span></h4>
-      <p>Other tags can be added in a similar manner, including subsections. For
-        example, say you have added a video camera and you would like to add a
-        still image with a hyperlink to a page with the video. You want all of
-        these options to be neatly contained in a subsection. </p>
+          Analytics ID</a>, you can set it here. The Google Analytics
+        Javascript code will then be included, enabling analytics of your
+        website usage. If commented out, the code will not be included. </p>
+
+      <h3>Extending <span class="code">[Extras]</span></h3>
+      <p>Other tags can be added in a similar manner, including sub-sections.
+        For example, say you have added a video camera and you would like to
+        add a still image with a hyperlink to a page with the video. You want
+        all of these options to be neatly contained in a sub-section. </p>
       <pre class="tty">[Extras]
     [[video]]
         still = video_capture.jpg
@@ -1318,8 +1335,8 @@ class MyXSearch(SearchList):                                #1
       <h2 class="config_section">[Units]</h2>
       <p>This section deals with Units and their formatting. </p>
       <h3 class="config_section">[[Groups]]</h3>
-      <p>This subsection lists all the <em>Unit Groups</em> and specifies which
-        unit system is to be used for each one of them. </p>
+      <p>This sub-section lists all the <em>Unit Groups</em> and specifies
+        which unit system is to be used for each one of them. </p>
       <p>As there are many different observational measurement types (such as '<span
           class="code">outTemp</span>', '<span class="code">barometer</span>',
         etc.) used in <span class="code">weewx</span> (more than 50 at last
@@ -1405,8 +1422,8 @@ inch     = %.2f</pre>
         measurement (value '<span class="code">None</span>'). For example, </p>
       <pre class="tty">NONE = " N/A "</pre>
       <h3 class="config_section" id="Units_Labels">[[Labels]]</h3>
-      <p>This subsection specifies what label is to be used for each measurement
-        unit type. For example, the options </p>
+      <p>This sub-section specifies what label is to be used for each
+        measurement unit type. For example, the options </p>
       <pre class="tty">degree_F = °F
 inch     = ' in'</pre>
       <p>would cause all temperatures to have unit labels <span class="code">°F</span>
@@ -1453,7 +1470,7 @@ cooling_base = 20.0, degree_C</pre>
       <p>Comma separated list for the labels to be used for the four
         hemispheres. The default is "<span class="code">N, S, E, W</span>". </p>
       <h3 class="config_section">[[Generic]]</h3>
-      <p>This sub-sections specifies default labels to be used for each SQL
+      <p>This sub-section specifies default labels to be used for each SQL
         type. For example, options </p>
       <pre class="tty">inTemp = Temperature inside the house
 outTemp = Outside Temperature</pre>
@@ -1469,13 +1486,13 @@ outTemp = Outside Temperature</pre>
           quarter, Waning crescent</span>". </p>
 
       <h2 class="config_section">[CheetahGenerator]</h2>
-      <p>Before V2.5, this section was called
-        <span class="code">[FileGenerator]</span>. 
-	Older versions and names are 100% backwards compatible.</p>
       <p>This section is used by generator
         <span class="code">weewx.cheetahgenerator.CheetahGenerator</span>
         and controls text generation from templates, specifically which files
         are to be produced from which template. </p>
+      <p>Before V2.5, this section was called
+        <span class="code">[FileGenerator]</span>. 
+	Older versions and names are 100% backwards compatible.</p>
       <h3>Overview of file generation</h3>
       <p>Files are generated from templates, and each template is identified
         by the <span class="config_option">template</span> parameter.</p>
@@ -1667,9 +1684,11 @@ outTemp = Outside Temperature</pre>
       <h2 class="config_section">[CopyGenerator]</h2>
       <p>This section is used by generator <span class="code">weewx.reportengine.CopyGenerator</span>
         and controls which files are to be copied over from the skin
-        subdirectory to the destination directory. Think of it as "file
+        directory to the destination directory. Think of it as "file
         generation," except that rather than going through the template engine,
         the files are simply copied over. </p>
+
+      <h3>Copy generator options</h3>
       <p class="config_option">copy_once </p>
       <p>This option controls which files get copied over on the first
         invocation of the report engine service. Typically, this is things such
@@ -1677,6 +1696,22 @@ outTemp = Outside Temperature</pre>
       <p class="config_option">copy_always </p>
       <p>This is a list of files that should be copied on every invocation.
         Wildcards can be used. </p>
+
+      <h3>An Example: the Standard skin</h3>
+      <p>Here is the <span class="code">[CopyGenerator]</span> section from
+        the Standard <span class="code">skin.conf</span></p>
+      <pre class="tty">[CopyGenerator]
+    # This section is used by the generator CopyGenerator
+
+    # List of files to be copied only the first time the generator runs
+    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico
+    
+    # List of files to be copied each time the generator runs
+    # copy_always = </pre>
+      <p>The Standard skin includes some background images, CSS files, and
+        icons that need to be copied once.  There are no files that need
+        to be copied each time the generator runs.</p>
+
       <h2 class="config_section">[ImageGenerator]</h2>
       <p>This section is used by generator <span class="code">weewx.reportengine.ImageGenerator</span>
         and controls which images (plots) get generated and with which options.
@@ -1884,10 +1919,102 @@ outTemp = Outside Temperature</pre>
     image_width  = 600
     image_height = 360
     [[[[barometer]]]]</pre>
+
+      <h3>An Example: the Standard skin</h3>
+      <p>Here is part of the <span class="code">[ImageGenerator]</span>
+        section from the Standard <span class="code">skin.conf</span></p>
+      <pre class="tty">[ImageGenerator]
+    image_width = 300
+    image_height = 180
+    ...
+    plot_type = line       # default to line, can be overridden at any level
+    aggregate_type = none  # default to none, can be overridden at any level
+    width = 1              # default to skinny lines
+    time_length = 86400    # == 24 hours
+
+    [[day_images]]
+        x_label_format = %H:%M
+        bottom_label_format = %m/%d/%y %H:%M
+        time_length = 97200    # == 27 hours
+        
+        [[[daybarometer]]]
+            [[[[barometer]]]]
+        
+        [[[dayrain]]]
+            # Make sure the y-axis increment is at least 0.02 for the rain plot
+            yscale = None, None, 0.02
+            plot_type = bar
+            [[[[rain]]]]
+                aggregate_type = sum
+                aggregate_interval = 3600
+                label = Rain (hourly total)
+        
+        [[[daywinddir]]]
+            # Hardwire in the y-axis scale for wind direction
+            yscale = 0.0, 360.0, 45.0
+            [[[[windDir]]]]
+    
+        [[[daywindvec]]]
+            [[[[windvec]]]]
+                plot_type = vector
+
+        [[[dayradiation]]]
+            [[[[radiation]]]]
+            
+    [[week_images]]
+        x_label_format = %d
+        bottom_label_format = %m/%d/%y %H:%M
+        time_length = 604800    # == 7 days
+        aggregate_type = avg
+        aggregate_interval = 3600
+        
+        [[[weekbarometer]]]
+            [[[[barometer]]]]        
+
+        [[[weekrain]]]
+            yscale = None, None, 0.02
+            plot_type = bar
+            [[[[rain]]]]
+                aggregate_type = sum
+                aggregate_interval = 86400
+                label = Rain (daily total)
+        
+        [[[weekwinddir]]]
+            yscale = 0.0, 360.0, 45.0
+            [[[[windDir]]]]
+    
+        [[[weekwindvec]]]
+            [[[[windvec]]]]
+                plot_type = vector
+
+        [[[weekradiation]]]
+            [[[[radiation]]]]
+
+     ...
+</pre>
+      <p>The Standard skin defines many different types of plots.  Note that
+        each plot will be created only if there are data that match the
+        definition.  For example, if a station does not produce radiation
+        data, no radiation images will be generated.  This means that a single
+        report can be used for many different stations, even if the stations
+        have different sensors or capabilities.</p>
+
       <h2 class="config_section" id="generators">[Generators]</h2>
+      <p>This section defines the generators that should be run as well as
+        options for specific generators.</p>
+
+      <h3>Generator options</h3>
       <p class="config_option">generator_list </p>
       <p>This option controls which generators get run for this skin. It is a
         comma separated list. The generators will be run in this order. </p>
+
+      <h3>An Example: the Standard skin</h3>
+      <p>Here is the <span class="code">[Generators]</span> section from the
+        Standard <span class="code">skin.conf</span></p>
+      <pre class="tty">[Generators]
+    generator_list = weewx.cheetahgenerator.CheetahGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator</pre>
+      <p>The Standard skin uses three generators: CheetahGenerator, ImageGenerator, and CopyGenerator.</p>
+
       <h1 id="localization">Localization</h1>
       <p>Weewx has been designed to make localization fairly straightforward.
         What follows is a guide to localizing
@@ -2076,7 +2203,7 @@ class MyPrint(StdPrint):
         adding the functionality you need. Here is an example that implements an
         alarm that sends off an email when an arbitrary expression evaluates <span
           class="code">True</span>. This example is included in the standard
-        distribution in subdirectory <span class="symcode">$BIN_ROOT</span><span
+        distribution in directory <span class="symcode">$BIN_ROOT</span><span
           class="code">/examples</span>.</p>
       <p>File <span class="code">examples/alarm.py</span>: </p>
       <pre class="tty">import time
