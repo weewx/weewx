@@ -4,6 +4,10 @@
 # Copyright 2013 Matthew Wall
 #
 # Revision History
+#  0.4 12oct13
+#   * recognize more fousb log output
+#   * recognize more ws28xx log output
+#   * track forecasting counts
 #  0.3 09oct13
 #   * match cheetahgenerator
 #   * match failed restful uploads
@@ -21,7 +25,7 @@ use strict;
 
 my $STARTUPS = 'wxengine: startups';
 my $HUP_RESTARTS = 'wxengine: restart from HUP';
-my $ARCHIVES_GENERATED = 'Archive: archives generated';
+my $ARCHIVE_RECORDS_ADDED = 'archive: records added';
 my $IMAGES_GENERATED = 'genimages: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
 my $FILES_COPIED = 'reportengine: files copied';
@@ -33,10 +37,12 @@ my $FOUSB_LOST_SYNC = 'fousb: lost sync';
 my $FOUSB_MISSED_DATA = 'fousb: missed data';
 my $FOUSB_STATION_SYNC = 'fousb: station sync';
 my $FORECAST_RECORDS = 'forecast: records generated';
+my $FORECAST_PRUNINGS = 'forecast: prunings';
+my $FORECAST_DOWNLOADS = 'forecast: downloads';
 my %counts = (
     $STARTUPS, 0,
     $HUP_RESTARTS, 0,
-    $ARCHIVES_GENERATED, 0,
+    $ARCHIVE_RECORDS_ADDED, 0,
     $IMAGES_GENERATED, 0,
     $FILES_GENERATED, 0,
     $FILES_COPIED, 0,
@@ -48,6 +54,8 @@ my %counts = (
     $FOUSB_MISSED_DATA, 0,
     $FOUSB_STATION_SYNC, 0,
     $FORECAST_RECORDS, 0,
+    $FORECAST_PRUNINGS, 0,
+    $FORECAST_DOWNLOADS, 0,
 );
 my $RECORDS_FAILED = 'restful: publish failed';
 my %errors;
@@ -56,7 +64,7 @@ my @unmatched = ();
 while(defined($_ = <STDIN>)) {
     chomp;
     if (/Archive: added archive record/) {
-        $counts{$ARCHIVES_GENERATED} += 1;
+        $counts{$ARCHIVE_RECORDS_ADDED} += 1;
     } elsif (/genimages: Generated (\d+) images/) {
         $counts{$IMAGES_GENERATED} += $1;
     } elsif (/filegenerator: generated (\d+)/ ||
@@ -82,6 +90,10 @@ while(defined($_ = <STDIN>)) {
         $counts{$FORECAST_RECORDS} += 1;
     } elsif (/forecast: .* got (\d+) forecast records/) {
         $counts{$FORECAST_RECORDS} += $1;
+    } elsif (/forecast: .* deleted forecasts/) {
+        $counts{$FORECAST_PRUNINGS} += 1;
+    } elsif (/forecast: .* downloading forecast/) {
+        $counts{$FORECAST_DOWNLOADS} += 1;
     } elsif (/restful: Skipped record/) {
         $counts{$RECORDS_SKIPPED} += 1;
     } elsif (/restful: Published record/) {
@@ -105,7 +117,8 @@ while(defined($_ = <STDIN>)) {
              /stats: Backfilling stats database/ ||
              /stats: backfilled \d+ days of statistics/ ||
              /stats: stats database up to date/ ||
-             /stats: created schema for statistical database/ ||
+             /stats: Created schema for statistical database/ ||
+             /stats: Schema exists with/ ||
              /\*\*\*\*  \'station\'/ ||
              /\*\*\*\*  Waiting 60 seconds then retrying/ ||
              /wxengine: Station does not support reading the time/ ||
@@ -133,11 +146,15 @@ while(defined($_ = <STDIN>)) {
              /wxengine: Using Python/ ||
              /wxengine: Terminating weewx version/ ||
              /wxengine: pid file is / ||
+             /wxengine: Use LOOP data in/ ||
+             /wxengine: Received signal/ ||
+             /cheetahgenerator: skip/ ||
              /fousb: found station on USB/ ||
              /fousb: altitude is/ ||
              /fousb: archive interval is/ ||
              /fousb: pressure offset is/ ||
              /fousb: polling mode is/ ||
+             /fousb: polling interval is/ ||
              /fousb: using \S+ polling mode/ ||
              /fousb: ptr changed/ ||
              /fousb: new ptr/ ||
@@ -156,23 +173,78 @@ while(defined($_ = <STDIN>)) {
              /fousb: get \d+ records since/ ||
              /fousb: synchronised to/ ||
              /fousb: pressures:/ ||
-             /ws28xx: .* driver version is/ ||
-             /ws28xx: .* frequency is/ ||
-             /ws28xx: .* pressure offset is/ ||
-             /ws28xx: .* altitude is/ ||
-             /ws28xx: .* found transceiver on USB/ ||
-             /ws28xx: .* manufacturer: LA CROSSE TECHNOLOGY/ ||
-             /ws28xx: .* product: Weather Direct Light Wireless/ ||
-             /ws28xx: .* interface/ ||
-             /ws28xx: .* base frequency/ ||
-             /ws28xx: .* frequency correction/ ||
-             /ws28xx: .* adjusted frequency/ ||
-             /ws28xx: .* transceiver identifier/ ||
-             /ws28xx: .* transceiver serial/ ||
-             /ws28xx: .* console is paired to device/ ||
+             /ws28xx: MainThread: driver version is/ ||
+             /ws28xx: MainThread: frequency is/ ||
+             /ws28xx: MainThread: altitude is/ ||
+             /ws28xx: MainThread: pressure offset is/ ||
+             /ws28xx: MainThread: found transceiver on USB/ ||
+             /ws28xx: MainThread: manufacturer: LA CROSSE TECHNOLOGY/ ||
+             /ws28xx: MainThread: product: Weather Direct Light Wireless/ ||
+             /ws28xx: MainThread: interface/ ||
+             /ws28xx: MainThread: base frequency/ ||
+             /ws28xx: MainThread: frequency correction/ ||
+             /ws28xx: MainThread: adjusted frequency/ ||
+             /ws28xx: MainThread: transceiver identifier/ ||
+             /ws28xx: MainThread: transceiver serial/ ||
+             /ws28xx: MainThread: execute/ ||
+             /ws28xx: MainThread: setState/ ||
+             /ws28xx: MainThread: setPreamPattern/ ||
+             /ws28xx: MainThread: setRX/ ||
+             /ws28xx: MainThread: readCfgFlash/ ||
+             /ws28xx: MainThread: setFrequency/ ||
+             /ws28xx: MainThread: setDeviceID/ ||
+             /ws28xx: MainThread: setTransceiverSerialNumber/ ||
+             /ws28xx: MainThread: setCommModeInterval/ ||
+             /ws28xx: MainThread: frequency registers/ ||
+             /ws28xx: MainThread: initTransceiver/ ||
+             /ws28xx: MainThread: startRFThread/ ||
+             /ws28xx: MainThread: stopRFThread/ ||
+             /ws28xx: MainThread: detach kernel driver/ ||
+             /ws28xx: MainThread: release USB interface/ ||
+             /ws28xx: MainThread: claiming USB interface/ ||
+             /ws28xx: MainThread: CCommunicationService.init/ ||
+             /ws28xx: RFComm: console is paired to device/ ||
+             /ws28xx: RFComm: starting rf communication/ ||
+             /ws28xx: RFComm: stopping rf communication/ ||
+             /ws28xx: RFComm: setTX/ ||
+             /ws28xx: RFComm: setRX/ ||
+             /ws28xx: RFComm: setState/ ||
+             /ws28xx: RFComm: getState/ ||
+             /ws28xx: RFComm: setFrame/ ||
+             /ws28xx: RFComm: getFrame/ ||
+             /ws28xx: RFComm: InBuf/ ||
+             /ws28xx: RFComm: generateResponse: sleep/ ||
+             /ws28xx: RFComm: generateResponse: id/ ||
+             /ws28xx: RFComm: handleCurrentData/ ||
+             /ws28xx: RFComm: handleHistoryData/ ||
+             /ws28xx: RFComm: handleNextAction/ ||
+             /ws28xx: RFComm: handleConfig/ ||
+             /ws28xx: RFComm: buildACKFrame/ ||
+             /ws28xx: RFComm: buildTimeFrame/ ||
+             /ws28xx: RFComm: setCurrentWeather/ ||
+             /ws28xx: RFComm: setHistoryData/ ||
+             /ws28xx: RFComm: setDeviceCS/ ||
+             /ws28xx: RFComm: setRequestType/ ||
+             /ws28xx: RFComm: setResetMinMaxFlags/ ||
+             /ws28xx: RFComm: setLastStatCache/ ||
+             /ws28xx: RFComm: setLastConfigTime/ ||
+             /ws28xx: RFComm: setLastHistoryIndex/ ||
+             /ws28xx: RFComm: setLastHistoryDataTime/ ||
+             /ws28xx: RFComm: CCurrentWeatherData.read/ ||
+             /ws28xx: RFComm: CWeatherStationConfig.read/ ||
+             /ws28xx: RFComm: CHistoryDataSet.read/ ||
+             /ws28xx: RFComm: testConfigChanged/ ||
+             /ws28xx: RFComm: SetTime/ ||
+             /forecast: .* starting thread/ ||
+             /forecast: .* terminating thread/ ||
+             /forecast: .* not yet time to do the forecast/ ||
+             /forecast: .* last forecast issued/ ||
              /forecast: .* using table/ ||
              /forecast: .* tstr=/ ||
              /forecast: .* interval=\d+ max_age=/ ||
+             /forecast: NWSThread: NWS: forecast matrix/ ||
+             /forecast: XTideThread: XTide: tide matrix/ ||
+             /forecast: XTideThread: XTide: generating tides/ ||
              /emoncms: Failed upload attempt/ ||
              /emoncms: Failed upload to EmonCMS/ ||
              /\*\*\*\*  Failed upload to EmonCMS/ ||

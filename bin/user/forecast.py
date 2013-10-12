@@ -1192,7 +1192,7 @@ def NWSDownloadForecast(foid, url=NWS_DEFAULT_PFM_URL, max_tries=3):
     """Download a point forecast matrix from the US National Weather Service"""
 
     u = '%s&issuedby=%s' % (url, foid) if url == NWS_DEFAULT_PFM_URL else url
-    logdbg("%s: downloading forecast from '%s'" % (NWS_KEY, u))
+    loginf("%s: downloading forecast from '%s'" % (NWS_KEY, u))
     for count in range(max_tries):
         try:
             response = urllib2.urlopen(u)
@@ -1608,7 +1608,7 @@ def WUDownloadForecast(api_key, location,
 
     u = '%s/%s/%s/q/%s.json' % (url, api_key, fc_type, location) \
         if url == WU_DEFAULT_URL else url
-    logdbg("%s: downloading forecast from '%s'" % (WU_KEY, u))
+    loginf("%s: downloading forecast from '%s'" % (WU_KEY, u))
     for count in range(max_tries):
         try:
             response = urllib2.urlopen(u)
