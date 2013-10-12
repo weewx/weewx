@@ -2150,7 +2150,7 @@ class ForecastVariables(SearchList):
         db = generator._getArchive(fd['database'])
 
         self.latitude = generator.stn_info.latitude_f
-        self.longitude = generator.stn_info.latitude_f
+        self.longitude = generator.stn_info.longitude_f
         self.altitude = generator.stn_info.altitude_vt[0]
         self.moon_phases = generator.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
         self.formatter = generator.formatter

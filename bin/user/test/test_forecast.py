@@ -69,8 +69,8 @@ def create_config(test_dir, service, skin_dir='testskin'):
     cd['Station'] = {
         'station_type' : 'Simulator',
         'altitude' : [10,'foot'],
-        'latitude' : 10,
-        'longitude' : 10
+        'latitude' : 42.358,
+        'longitude' : -71.106
         }
     cd['Simulator'] = {
         'driver' : 'weewx.drivers.simulator',
@@ -9965,6 +9965,7 @@ $forecast.xtide(-1, from_ts=1377043837).dateTime
     # -------------------------------------------------------------------------
 
     # FIXME: rename almanac to astronomy
+    # FIXME: how to use the $almanac(almanac_time=xx) syntax?
     def test_astronomy(self):
         self.runTemplateTest('test_astronomy',
                              '',
@@ -9984,15 +9985,75 @@ $a.moon_fullness
 ''',
                              '''<html>
   <body>
-00:36
-12:09
+07:13
+16:21
 48
-00:36
-12:10
+07:13
+16:23
 66
   </body>
 </html>
 ''')
+
+    def test_astronomy_iteration(self):
+        self.runTemplateTest('test_astronomy_iteration',
+                             '',
+                             [],
+                             '''<html>
+  <body>
+#for $x in range(0,96,12)
+#set $ts = 1381536000 + $x * 3600
+#set ($y,$m,$d) = time.gmtime($ts)[:3]
+#set $gmstr = time.strftime('%Y.%m.%d %H:%M:%S UTC', time.gmtime($ts))
+#set $a = $forecast.almanac(ts=$ts)
+$ts $a.sunrise $a.sunset $gmstr
+#end for
+  </body>
+</html>
+''',
+                             '''<html>
+  <body>
+1381536000 06:52 18:08 2013.10.12 00:00:00 UTC
+1381579200 06:53 18:07 2013.10.12 12:00:00 UTC
+1381622400 06:53 18:07 2013.10.13 00:00:00 UTC
+1381665600 06:54 18:05 2013.10.13 12:00:00 UTC
+1381708800 06:54 18:05 2013.10.14 00:00:00 UTC
+1381752000 06:56 18:03 2013.10.14 12:00:00 UTC
+1381795200 06:56 18:03 2013.10.15 00:00:00 UTC
+1381838400 06:57 18:02 2013.10.15 12:00:00 UTC
+  </body>
+</html>
+''')
+
+    # FIXME: in almanac.py, line 172 should be gmtime not localtime?
+    # Sun.sunRiseSet is UTC, so why pass y,m,d as localtime?
+    # it is a problem whenever the timezone offset crosses midnight
+
+    def xtest_ss(self):
+        import weeutil.weeutil
+        lat = 42.358
+        lon = -71.106
+        tsbase = 1381536000 # 00:00:00 12oct2013
+        # for fri, 11oct2013 emacs says sunrise at 06:54 sunset at 18:08
+        # for fri, 11oct2013 wu says sunrise at 06:52 sunset at 18:08
+        for x in range(0,96,12):
+            (y,m,d) = time.gmtime(tsbase+x*3600)[0:3]
+            (sunrise_utc,sunset_utc) = weeutil.Sun.sunRiseSet(y,m,d,lon,lat)
+            sunrise_tt = weeutil.weeutil.utc_to_local_tt(y, m, d, sunrise_utc)
+            sunset_tt  = weeutil.weeutil.utc_to_local_tt(y, m, d, sunset_utc)
+            sunrise_str = time.strftime("%H:%M", sunrise_tt)
+            sunset_str = time.strftime("%H:%M", sunset_tt)
+            print y,m,d,sunrise_utc,sunset_utc,sunrise_str,sunset_str
+            
+            (y,m,d) = time.localtime(tsbase+x*3600)[0:3]
+            (sunrise_utc,sunset_utc) = weeutil.Sun.sunRiseSet(y,m,d,lon,lat)
+            sunrise_tt = weeutil.weeutil.utc_to_local_tt(y, m, d, sunrise_utc)
+            sunset_tt  = weeutil.weeutil.utc_to_local_tt(y, m, d, sunset_utc)
+            sunrise_str = time.strftime("%H:%M", sunrise_tt)
+            sunset_str = time.strftime("%H:%M", sunset_tt)
+            print y,m,d,sunrise_utc,sunset_utc,sunrise_str,sunset_str
+
+            print ''
 
 
     # -------------------------------------------------------------------------
