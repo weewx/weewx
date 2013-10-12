@@ -156,20 +156,24 @@ function showstartup(id) {
       </div>
       <div id='prereq-suse' style='display:none'>
         <p class='tty'># suse
-          
+          # on some SuSE systems, use 'yast -i' instead of 'zypper install'
+
           # required packages:
-          sudo yast -i gcc
-          sudo yast -i python-configobj
-          sudo yast -i python-imaging
-          sudo yast -i python-devel
-          sudo yast -i setuptools
-          sudo pip install Cheetah
+          sudo zypper install python-configobj
+          sudo zypper install python-imaging
+          sudo zypper install python-Cheetah
           
           # required if hardware is serial or USB:
-          sudo yast -i python-pyserial
-          sudo yast -i pyton-usb
+          sudo zypper install python-pyserial
+          sudo zypper install pyton-usb
+          
+          # required if using MySQL:
+          sudo zypper install mysql-community-server-client
+          sudo zypper install python-mysql
           
           # optional for extended almanac information:
+          sudo zypper install python-devel
+          sudo zypper install setuptools
           sudo pip install pyephem
         </p>
       </div>

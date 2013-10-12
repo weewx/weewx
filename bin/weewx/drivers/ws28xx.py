@@ -18,8 +18,8 @@
 # and reverse engineering into a functional Python implementation.  Eddie's
 # work was based on reverse engineering of HeavyWeather 2800 v 1.54
 #
-# Thanks to Luc for enumerating the console message types and for debugging
-# the transceiver/console communication timing issues.
+# Thanks to Lucas Heijst for enumerating the console message types and for
+# debugging the transceiver/console communication timing issues.
 
 """Classes and functions for interfacing with WS-28xx weather stations.
 
@@ -106,17 +106,15 @@ by one of the following methods:
 
 In each case a Request Time message is received by the transceiver from the
 console. The 'Send Time to WS' message should be sent within ms (10 ms
-typical). The transceiver should handle the 'Time SET' message about 125 ms
-after the 'Send Time to WS' message. When complete, the console and transceiver
-will have been synchronized.
+typical). The transceiver should handle the 'Time SET' message then send a
+'Time/Config written' message about 85 ms after the 'Send Time to WS' message.
+When complete, the console and transceiver will have been synchronized.
 
 Timing
 
-Outstanding history messages follow each other after 300 - 2600 ms (typical
-500 ms). The best polling period appears to be 50 ms, with an average duration
-of the polling loop of 3 - 4 ms. This will catch both Clock SET and History
-messages. A longer polling period will catch some messages, but often misses
-History messages and results in console and transceiver becoming out of synch.
+Current Weather messages, History messages, getConfig/setConfig messages, and
+setTime messages each have their own timing.  Missed History messages - as a
+result of bad timing - result in console and transceiver becoming out of synch.
 
 Message Types
 

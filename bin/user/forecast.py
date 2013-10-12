@@ -146,6 +146,14 @@ Configuration
 
 Skin Configuration
 
+  To use the forecast variables in a skin, extend the search_list by adding
+  something like this to weewx.conf:
+
+[StdReport]
+    [[StandardReport]]
+        [[[CheetahGenerator]]]
+            search_list_extensions = user.forecast.ForecastVariables
+
    Here are the options that can be specified in the skin.conf file.  The
    values below are the defaults.  Add these only to override the defaults.
 
@@ -290,8 +298,7 @@ Skin Configuration
             SD = Strong/Damaging
             HF = Hurricane Force
 
-
-Skin Variables for Templates
+Variables for Templates
 
   Here are the variables that can be used in template files.
 
