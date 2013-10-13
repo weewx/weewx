@@ -8,13 +8,14 @@
 
    The weewx setup.py script must be in the same directory as this script."""
 
-import setup
-import configobj
 import optparse
 import os
 import shutil
-import sys
 import tempfile
+
+import configobj
+
+import setup
 
 description = """merge weewx configuration file"""
 usage = """%prog --install-dir dir --a file --b file --c file"""
@@ -35,7 +36,7 @@ def main():
     parser.add_option('--debug', dest='debug', action='store_true',
                       help='display contents of merged file to stdout')
 
-    (options, args) = parser.parse_args()
+    (options, _args) = parser.parse_args()
     if options.version:
         print setup.get_version()
         exit(0)
@@ -62,18 +63,18 @@ def main():
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         merged_cfg.write(tmpfile)
         if os.path.exists(options.filec):
-            bup_cfg = setup.save_path(options.filec)
+            _bup_cfg = setup.save_path(options.filec)
         shutil.copyfile(tmpfile.name, options.filec)
 
 def printdict(d, indent=0):
     for k in d.keys():
         if type(d[k]) is configobj.Section:
-            for i in range(indent):
+            for _i in range(indent):
                 print ' ',
             print k
             printdict(d[k], indent=indent+1)
         else:
-            for i in range(indent):
+            for _i in range(indent):
                 print ' ',
             print k, '=', d[k]
 

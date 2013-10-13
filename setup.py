@@ -427,11 +427,12 @@ def update_config_file(config_dict):
     config_dict['StdArchive'].pop('stats_types', None)
     
     # --- Davis Vantage series ---
-    try:
-        if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
-            config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
-    except KeyError:
-        pass
+    if config_dict.has_key('Vantage'):
+        try:
+            if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
+                config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
+        except KeyError:
+            pass
     
     # --- Oregon Scientific WMR100 ---
     

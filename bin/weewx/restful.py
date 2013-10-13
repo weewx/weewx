@@ -656,40 +656,40 @@ class StationRegistry(REST):
 
         self._validateParameters()
 
-        syslog.syslog(syslog.LOG_INFO, 'register: station will register with %s' % self.server_url)
+        syslog.syslog(syslog.LOG_INFO, 'restful: station will register with %s' % self.server_url)
 
     def postData(self, archive, time_ts):
         now = time.time()
         if self._last_ts is not None and now - self._last_ts < self.interval:
-            msg = 'registration interval (%d) has not passed.' % self.interval
-            syslog.syslog(syslog.LOG_DEBUG, 'register: %s' % msg)
+            msg = 'Registration interval (%d) has not passed.' % self.interval
+            syslog.syslog(syslog.LOG_DEBUG, 'restful: %s' % msg)
             raise weewx.restful.SkippedPost, msg
 
         url = self.getURL()
         for _count in range(self.max_tries):
             # Use HTTP GET to convey the station data
             try:
-                syslog.syslog(syslog.LOG_DEBUG, "register: attempt to register using '%s'" % url)
+                syslog.syslog(syslog.LOG_DEBUG, "restful: Attempting to register using '%s'" % url)
                 _response = urllib2.urlopen(url)
             except (urllib2.URLError, socket.error,
                     httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and try again
-                syslog.syslog(syslog.LOG_ERR, 'register: failed attempt %d of %d: %e' % (_count+1, self.max_tries, e))
+                syslog.syslog(syslog.LOG_ERR, 'restful: Failed attempt %d of %d: %e' % (_count+1, self.max_tries, e))
             else:
                 # Check for the server response
                 for line in _response:
                     # Registration failed, log it and bail out
                     if line.startswith('FAIL'):
-                        syslog.syslog(syslog.LOG_ERR, "register: registration server returned %s" % line)
+                        syslog.syslog(syslog.LOG_ERR, "restful: Registration server returned %s" % line)
                         raise weewx.restful.FailedPost, line
                 # Registration was successful
-                syslog.syslog(syslog.LOG_DEBUG, 'register: registration successful')
+                syslog.syslog(syslog.LOG_DEBUG, 'restful: Registration successful')
                 self._last_ts = time.time()
                 return
         else:
             # The upload failed max_tries times. Log it.
-            msg = 'failed to register after %d tries' % self.max_tries
-            syslog.syslog(syslog.LOG_ERR, 'register: %s' % msg)
+            msg = 'Failed to register after %d tries' % self.max_tries
+            syslog.syslog(syslog.LOG_ERR, 'restful: %s' % msg)
             raise IOError, msg
 
     def getURL(self):
@@ -727,8 +727,8 @@ class StationRegistry(REST):
             msgs.append("server_url '%s' is not a valid URL" % self.server_url)
 
         if msgs:
-            errmsg = 'one or more unusable parameters.'
-            syslog.syslog(syslog.LOG_ERR, 'register: %s' % errmsg)
+            errmsg = 'One or more unusable parameters.'
+            syslog.syslog(syslog.LOG_ERR, 'restful: %s' % errmsg)
             for m in msgs:
                 syslog.syslog(syslog.LOG_ERR, '   **** %s' % m)
             # FIXME: restful depends on a hack - throw a KeyError to indicate
@@ -736,7 +736,6 @@ class StationRegistry(REST):
             # a ValueError, but that kills StdRESTful instead of simply
             # indicating that this restful service is not ready to run.
             raise KeyError(errmsg)
-    
 
 #===============================================================================
 #                             class RESTThread
