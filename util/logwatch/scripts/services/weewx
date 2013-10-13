@@ -111,7 +111,7 @@ while(defined($_ = <STDIN>)) {
              /reportengine: Found configuration file/ ||
              /reportengine: FTP upload not requested/ ||
              /reportengine: Running report / ||  # only when debug=1
-             /register:/ ||
+             /restful: station will register with/ ||
              /\*\*\*\*  registration interval/ ||
              /stats: Back calculated schema/ ||
              /stats: Backfilling stats database/ ||
