@@ -250,6 +250,9 @@
         directory. For example, copy example code from the 
         <span class="code">examples</span> directory to the
         <span class="code">user</span> directory, then modify it there.
+        If your modification does not contain much code, consider putting
+        it in the extensions.py file in the <span class="code">user</span>
+        directory.
         The <span class="code">user</span> directory is preserved through
         upgrades, so you won't have to redo any changes you might have
         made.</p>
@@ -305,7 +308,7 @@
 <span class="highlight">        group_temperature = degree_C</span>
         group_uv          = uv_index 
         group_volt        = volt</pre>
-      <p>The options that were changed have been <span class="highlight">highlighted</span>.
+      <p>The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>.
         Details of the various unit options are given in <em><a href="#units">Appendix
             B: Units</a></em>. </p>
       <p>Other options are available, such as changing the text label for
@@ -404,6 +407,8 @@
         As this would make the templates incomprehensible to anyone but a Python
         programmer, <span class="code">weewx</span> adopts a very small subset
         of its power. </p>
+
+      <h3>The dot code</h3>
       <p>The key construct is a 'dot' code, specifying what value you want. For
         example: </p>
       <pre class="tty">$month.outTemp.max
@@ -432,7 +437,6 @@ $current.outTemp</pre>
             href="#Units_Labels">[Units][[Labels]]</a></span>, while the time
         format is from <span class="code"><a href="#Units_TimeFormats">[Units][[TimeFormats]]</a></span>.
       </p>
-      <h3>The dot code</h3>
       <p>As we saw above, the dot codes can be very simple: </p>
       <pre class="tty">## Output max outside temperature using an appropriate format and label:
 $month.outTemp.max</pre>
@@ -443,8 +447,9 @@ $month.outTemp.max</pre>
         reports). This section specifies the various options available. </p>
       <p>There are two different versions of the dot code, depending on whether
         the data is "current", or an aggregation over time. However, both
-        versions are very similar </p>
-      <h4>Time period <span class="code">$current</span></h4>
+        versions are similar.</p>
+
+      <h3>Time period <span class="code">$current</span></h3>
       <p>Time period <span class="code">$current</span> represents a <em>current
           observation</em>. An example would be the current barometric pressure:
       </p>
@@ -467,9 +472,11 @@ $month.outTemp.max</pre>
         is an optional formatting tag that controls how the value will appear.
         See the section <em><a href="#formatting_options">Formatting Options</a></em>
         below. </p>
-      <h4>Aggregation periods <span class="code">$day</span>, <span class="code">$week</span>,
-        <span class="code">$month</span>, <span class="code">$year</span>, <span
-          class="code">$rainyear</span> </h4>
+
+      <h3>Aggregation periods <span class="code">$day</span>,
+        <span class="code">$week</span>, <span class="code">$month</span>,
+        <span class="code">$year</span>, <span class="code">$rainyear</span>
+      </h3>
       <p>The other time periods represent an <em>aggregation over time</em>. In
         addition to the time period over which the aggregation will occur, they
         also require an <em>aggregation type</em>. An example would be the
@@ -503,7 +510,8 @@ $month.outTemp.max</pre>
         is an optional formatting tag that controls how the value will appear.
         See the section <em><a href="#formatting_options">Formatting Options</a></em>
         below. </p>
-      <h4 id="unit_conversion_options">Unit conversion options</h4>
+
+      <h3 id="unit_conversion_options">Unit conversion options</h3>
       <p>The tag <span class="code"><em>optional_unit_conversion</em></span>
         can be used with either current observations or aggregations. If
         supplied, the results will be converted to the specified units. For
@@ -516,7 +524,7 @@ $month.outTemp.max</pre>
       <pre class="tty">$day.barometer.avg.mbar </pre>
       <p>then the results will be in millibars: </p>
       <p class="example_output">Today's average pressure=1017.5 mbar </p>
-      <h5>Wind ordinals</h5>
+      <h4>Wind ordinals</h4>
       <p>Using this method, you can output compass ordinals for wind direction.
         For example, the template</p>
       <pre class="tty">Current wind direction is $current.windDir ($current.windDir.ordinal_compass)</pre>
@@ -524,13 +532,14 @@ $month.outTemp.max</pre>
       <p class="example_output">Current wind direction is 138° (SW)</p>
       <p>The ordinal abbreviations that are used are set by option <span class="code">directions</span>
         in the skin configuration file <span class="code">skin.conf</span>.</p>
-      <h5>Illegal conversions</h5>
+      <h4>Illegal conversions</h4>
       <p>If an inappropriate conversion is asked for, <em>e.g.</em>, </p>
       <pre class="tty">Today's average pressure=$day.barometer.degree_C </pre>
       <p>then the offending tag will be put in the output: </p>
       <p class="example_output">Today's average pressure=$day.barometer.degree_C
       </p>
-      <h4 id="formatting_options">Formatting options</h4>
+
+      <h3 id="formatting_options">Formatting options</h3>
       <p>The tag <span class="code"><em>optional_formatting</em></span> can be
         used with either current observations or aggregations. It can be one of:
       </p>
@@ -867,7 +876,7 @@ $month.outTemp.max</pre>
         the only two iteration periods available as of this version. </p>
       <p>This example uses a Cheetah '<span class="code">for</span>' loop to
         iterate over all months in a year, printing out each month's min and max
-        temperature (the iteration loop is highlighted): </p>
+        temperature (the iteration loop is <span class="highlight">&nbsp;highlighted&nbsp;</span>): </p>
       <pre class="tty">&lt;html&gt;
     &lt;head&gt;
         &lt;title&gt;Year stats by month&lt;/title&gt;
@@ -1247,7 +1256,7 @@ class MyXSearch(SearchList):                                #1
     [[SummaryByMonth]]
     ...
 </pre>
-      <p>Our addition has been <span class="highlight">highlighted</span>. Note that it is in the section
+      <p>Our addition has been <span class="highlight">&nbsp;highlighted&nbsp;</span>. Note that it is in the section
         <span class="code">[CheetahGenerator]</span>. 
         (This section was called <span class="code">[FileGenerator]</span> in 
         earlier versions of <span class="code">weewx</span>, a name which will 
@@ -1579,6 +1588,10 @@ outTemp = Outside Temperature</pre>
         <span class="code">summary-YYYY-MM.html.tmpl</span> would have name
         <span class="code">summary-2010-03.html</span> for the month of March,
         2010.</p>
+      <p class="config_option">stale_age</p>
+      <p>File staleness age, in seconds.  If the file is older than this age
+        it will be generated from the template. If no stale_age is specified
+        the file will be generated each time the generator runs.</p>
       <p class="config_option">[[SummaryByMonth]]</p>
       <p>The <span class="code">SummaryByMonth</span> section defines some
         special behavior.  Each template in this section will be used
@@ -2152,12 +2165,6 @@ outTemp = Outside Temperature</pre>
           </tr>
         </tbody>
       </table>
-      <h2>Preserving your changes across an upgrade</h2>
-      <p>Generally, if you change the code in <span class="code">weewx</span>
-        you will have to cut-and-paste any changes you have made to the new
-        code. However, if you put the changes in the special directory <span class="symcode">$BIN_ROOT</span><span
-          class="code">/user</span>, the installation routines will arrange for
-        the changes to be preserved across an upgrade. </p>
       <h2>Customizing a Service</h2>
       <p>The service <span class="code">weewx.wxengine.StdPrint</span> prints
         out new LOOP and archive packets to the console when they arrive. By
@@ -2168,7 +2175,7 @@ outTemp = Outside Temperature</pre>
         This could be done by subclassing the default print service <span class="code">StdPrint</span>
         and overriding member function <span class="code">new_loop_packet()</span>.
       </p>
-      <p>In file <span class="symcode">$BIN_ROOT</span><span class="code">/user/myprint.py</span>:
+      <p>Create the file <span class="symcode">$BIN_ROOT</span><span class="code">/user/myprint.py</span>:
       </p>
       <pre class="tty">from weewx.wxengine import StdPrint
 from weeutil.weeutil import timestamp_to_string
@@ -2372,7 +2379,7 @@ class MyAlarm(StdService):
         does not allow options to be continued on to following lines.</p>
       <p>In addition to the example above, the distribution also includes a
         low-battery alarm (<span class="code">lowBattery.py</span>), which is
-        very similar, except that it intercepts LOOP events (instead of
+        similar, except that it intercepts LOOP events (instead of
         archiving events). </p>
       <h1 id ="archive_database">Customizing the archive database</h1>
       <p>For most users the default database will work just fine. It has the
@@ -2463,7 +2470,7 @@ class AddElectricity(StdService):
         ...
 <span class="highlight">        ('electricity',          'REAL'),</span>
         ('inTempBatteryStatus',  'REAL')]</pre>
-      <p>The new line has been <span class="highlight">highlighted</span>.</p>
+      <p>The new line has been <span class="highlight">&nbsp;highlighted&nbsp;</span>.</p>
       <p>2. <strong>Check permissions.</strong> The reconfiguration utility
         will create a new database with the same name as the old, except with
         the suffix '<span class="code">_new</span>' attached to the end. Make

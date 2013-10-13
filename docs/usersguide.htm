@@ -609,45 +609,51 @@ Version: 2.5.0b1
       <a href='debian.htm'>Installation on Debian Linux systems</a>.</p>
     <h2><a href='redhat.htm'>Installing from RPM package</a></h2>
     <p>For Redhat, CentOS, Fedora operating systems, follow the instructions in
-      <a href='redhat.htm'>Installation on Redhat Linux<a>.  The Redhat
+      <a href='redhat.htm'>Installation on Redhat Linux</a>.  The Redhat
           RPM will not work on SuSE operating systems.  Instructions for SuSE
           are similar to Redhat, but using SuSE tools such as zypper instead
           of Redhat tools such as yum.</p>
     <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
     <p>For all operating systems, follow the instructions in
-      <a href='setup.htm'>Installation using <span class="code">setup.py</span></a>.</p>
+      <a href='setup.htm'>Installation using
+        <span class="code">setup.py</span></a>.</p>
 
     <h1 id="configuring">Configuring <span class="code">weewx</span></h1>
-    <p>This section covers configuring <span class="code">weewx</span>, in particular 
-      the configuration files <span class="code">weewx.conf</span> and
+    <p>This section covers configuring <span class="code">weewx</span>,
+      in particular the configuration files
+      <span class="code">weewx.conf</span> and
       <span class="code">skin.conf</span>. </p>
 
     <p>Station specific information is set in the configuration file 
-	<span class="symcode">$CONFIG_ROOT</span><span class="code"><em>/weewx.conf</em></span>. (There is another configuration 
-      file <span class="code">skin.conf</span> for presentation-specific options, 
-      which is described in the <a href="customizing.htm">Customizing Guide</a> under section <em>
+      <span class="symcode">$CONFIG_ROOT</span><span class="code"><em>/weewx.conf</em></span>.
+      (There is another configuration file <span class="code">skin.conf</span>
+      for presentation-specific options, which is described in the
+      <a href="customizing.htm">Customizing Guide</a> under section <em>
 	<a href="customizing.htm#standard_skin">Reference: The 
 	  standard skin configuration file</a></em>.) </p>
-    <p>Most of the important options are up near the top of the file. They are all 
-      documented in this section, although you can safely ignore most of them. The 
-      truly important ones, the ones you are likely to have to customize for your 
-      station, are <span class="config_important"><strong>highlighted</strong></span>.
+    <p>Most of the important options are up near the top of the file. They are
+      all documented in this section, although you can safely ignore most of
+      them. The truly important ones, the ones you are likely to have to
+      customize for your station, are
+      <span class="config_important">highlighted</span>.
     </p>
-    <p>Default values are provided for many of them, meaning that if they are not 
-      listed in the configuration file <em>at all</em>, <span class="code">weewx</span> 
-      will pick sensible values. When the documentation below gives a &quot;default 
-      value&quot; this is what it means. However, all options have been given values 
-      in the configuration file that ships with <span class="code">weewx</span>, so 
-      you can see what they look like. The value given in this shipped configuration 
+    <p>Default values are provided for many of them, meaning that if they are
+      not listed in the configuration file <em>at all</em>,
+      <span class="code">weewx</span> will pick sensible values. When the
+      documentation below gives a &quot;default value&quot; this is what it
+      means. However, all options have been given values in the configuration
+      file that ships with <span class="code">weewx</span>, so you can see
+      what they look like. The value given in this shipped configuration 
       file is not necessarily the same as the &quot;default value&quot;. </p>
-    <p>What follows is organized by the different sections of the configuration 
-      file. </p>
+    <p>What follows is organized by the different sections of the
+      configuration file. </p>
 
     <h2>General</h2>
     <p>The options declared at the top are not actually part of any section.</p>
     <p class="config_option">debug </p>
-    <p>Set to 1 to have the program perform extra debug checks, as well as emit 
-      extra information in the log file. Otherwise, set to 0. Default is 0 (no debug).
+    <p>Set to 1 to have the program perform extra debug checks, as well as
+      emit extra information in the log file. Otherwise, set to 0. Default
+      is 0 (no debug).
     </p>
     <p class="config_option">WEEWX_ROOT </p>
     <p>Set to the root directory of the <span class="code">weewx</span> file 
@@ -655,38 +661,49 @@ Version: 2.5.0b1
 	installation process. Required. No default.
     </p>
     <p class="config_option">socket_timeout </p>
-    <p>Set to how long to wait before declaring a socket time out. This is used 
-      when FTP&#39;ing data to a web server or sending data to the Weather Underground. 
-      Twenty (20) seconds is reasonable. Default is 20. </p>
+    <p>Set to how long to wait before declaring a socket time out. This is
+      used when using FTP to send data to a web server or when sending data
+      to the Weather Underground. Twenty (20) seconds is reasonable. Default
+      is 20. </p>
 
     <h2 class="config_section">[Station]</h2>
     <p>This section covers options relating to your weather station setup. </p>
     <p class="config_important">location </p>
     <p>The station location should be a UTF-8 string that describes the
-      geography of where your weather station is located, such as
-      <span class="code">Hood River, Oregon</span>. Required.
-      No default. </p>
+      geography of where your weather station is located. Required.
+      No default.</p>
+    <p class="tty">location = A small ranch in Kentucky</p>
+    <p>If the description contains commas, it must be enclosed
+      in quotation marks.</p>
+    <p class="tty">location = "Hood River, Oregon"</p>
     <p class="config_important">latitude <br />
       longitude </p>
-    <p>The lat/lon should be set in decimal degrees, negative for southern and western 
-      hemispheres, respectively. Required. No default. </p>
+    <p>The lat/lon should be set in decimal degrees, negative for southern and
+      western hemispheres, respectively. Required. No default. </p>
+    <p class="tty">latitude = 38.8977
+longitude = -77.0366</p>
     <p class="config_option"><span class="config_important">altitude</span></p>
-    <p>Normally the station altitude is downloaded from your hardware, but not all 
-      stations support this. Set to the altitude of the station and the unit used 
-      for the altitude. Example: </p>
+    <p>Normally the station altitude is downloaded from your hardware, but not
+      all stations support this. Set to the altitude of the station and the
+      unit used for the altitude. Example: </p>
     <p class="tty">altitude = 700, foot</p>
-	  <p>An example in meters:</p>
-	  <p class="tty">altitude = 220, meter</p>
+    <p>An example in meters:</p>
+    <p class="tty">altitude = 220, meter</p>
     <p class="config_option"><span class="config_important">rain_year_start
     </span></p>
-    <p>Normally the start of the rain year is downloaded from your hardware, but 
-      not all stations support this. Set to the start of your rain year, for example, 
-      10, if your rain year starts in October (as mine does). Default is 1. </p>
+    <p>Normally the start of the rain year is downloaded from your hardware,
+      but not all stations support this. Set to the start of your rain year,
+      for example, 10, if your rain year starts in October (as mine does).
+      Default is 1. </p>
+    <p class="tty">rain_year_start = 1</p>
     <p class="config_option">week_start </p>
     <p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 (Sunday)
     </p>
+    <p class="tty">week_start = 0</p>
     <p class="config_important">station_type </p>
-    <p>Set to the type of hardware you are using. Valid options include:</p>
+    <p>Set to the type of hardware you are using.</p>
+    <p class="tty">station_type = Simulator</p>
+    <p>Valid options include:</p>
     <table style="width: 60%" class="center">
       <tr>
 	<td class="code">Vantage</td>
@@ -859,6 +876,11 @@ Version: 2.5.0b1
       <a href="http://www.wunderground.com/">Weather Underground</a>. If you
       do not wish to do this, leave the <span class='code'>station</span>
       commented.</p>
+    <p class="tty">[StdRestful]
+    [[Wunderground]]
+        station = 12345678  # Replace with your station number
+        password = xxxxx    # Replace with your password
+        driver = weewx.restful.Ambient</p>
     <p class="config_important">station </p>
     <p>Set to your Weather Underground station ID (<em>e.g.</em>, <span class="code">KORHOODR3</span>). 
       Required. </p>
@@ -870,6 +892,11 @@ Version: 2.5.0b1
       <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
       do not wish to do this, leave the <span class='code'>station</span>
       commented.</p>
+    <p class="tty">[StdRestful]
+    [[PWSweather]]
+        station = 12345678  # Replace with your station number
+        password = xxxxx    # Replace with your password
+        driver = weewx.restful.Ambient</p>
     <p class="config_important">station </p>
     <p>Set to your PWSweather station ID. Required. </p>
     <p class="config_important">password </p>
@@ -883,16 +910,27 @@ Version: 2.5.0b1
       will have to add it. When you are done, it will look something
       like this:</p>
     <p class="tty">[StdRestful]
-  [[WOW]]
-    station = 12345678  # Replace with your station number
-    password = xxxxx    # Replace with your password
-    driver = weewx.restful.WOW</p>
+    [[WOW]]
+        station = 12345678  # Replace with your station number
+        password = xxxxx    # Replace with your password
+        driver = weewx.restful.WOW</p>
+    <p class="config_important">station </p>
+    <p>Set to your WOW station ID. Required. </p>
+    <p class="config_important">password </p>
+    <p>Set to your WOW password. Required. </p>
 
     <h3 class="config_section">[[CWOP]]</h3>
     <p><span class="code">Weewx</span> can send your data to the
       <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If
       you do not wish to do this, leave the <span class="code">station</span>
       commented. </p>
+    <p class="tty">[StdRestful]
+    [[CWOP]]
+        station = 12345678  # Replace with your station number
+        passcode = xxxxx    # Replace with your passcode (APRS stations only)
+        server = cwop.aprs.net:14580, cwop.aprs.net:23
+        interval = 600  
+        driver = weewx.restful.CWOP</p>
     <p class="config_important">station </p>
     <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>). Required.
     </p>
@@ -921,6 +959,10 @@ Version: 2.5.0b1
     <p>A registry of weewx weather stations is maintained at weewx.com.  Stations are displayed on a map and a list at <a href="http://weewx.com/stations.html">http://weewx.com/stations.html</a></p>
     <p>How does the registry work?  Individual weather stations periodically contact the registry. Each station provides a URL to identify itself, plus other information such as the station type and weewx version. The registry does not keep track of meteorological data; no information about the weather is sent to the registry.</p>
     <p>To add your station to this list, enable the StationRegistry in weewx.conf. Your station will contact the registry once per week. If your station does not contact the registry for about a month, it will be removed from the list.</p>
+    <p class="tty">[StdRestful]
+    [[StationRegistry]]
+        register_this_station = True
+        driver = weewx.restful.StationRegistry</p>
     <p class="config_option">register_this_station</p>
     <p>Set this to <span class="code">True</span> to register the weather station.</p>
     <p class="config_option">description</p>
