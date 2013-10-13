@@ -42,7 +42,7 @@ Name: weewx
 Version: WEEWX_VERSION
 Release: %{release}
 Group: Applications/Science
-Source: http://sourceforge.net/projects/weewx/files/weewx/%{version}/%{name}-%{version}.tar.gz
+Source: %{name}-%{version}.tar.gz
 URL: http://www.weewx.com
 License: GPLv3
 Requires: python, python-configobj, python-cheetah, python-imaging, %{deps}
