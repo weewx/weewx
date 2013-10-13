@@ -481,11 +481,11 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
              cur.tm_wday, cur.tm_yday, cur.tm_isdst))
         return None
 
-    @wmr9x8_registerpackettype(typecode=0xcf, size=27)
+    @wm918_registerpackettype(typecode=0xcf, size=27)
     def _wm918_wind_packet(self, packet):
         """Decode a wind packet. Wind speed will be in m/s"""
-        gust1, gust10th, dir1, gust10, dir100, dir10, avg1, avg10th, avgdir1, avg10, avgdir100, avgdir10 = self._get_nibble_data(packet[1:7])
-        chill10, chill1 = self._get_nibble_data(packet[16:17])
+        gust10th, gust1, gust10, dir1, dir10, dir100, avg10th, avg1, avg10, avgdir1, avgdir10, avgdir100 = self._get_nibble_data(packet[1:7])
+        _chill10, _chill1 = self._get_nibble_data(packet[16:17])
 
         # The console returns wind speeds in m/s. Our metric system requires kph,
         # so the result needs to be multiplied by 3.6
@@ -507,7 +507,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
 
     @wm918_registerpackettype(typecode=0xbf, size=14)
     def _wm918_rain_packet(self, packet):
-        cur1, cur10, cur100, stat, yest1, yest10, yest100, yest1000, tot1, tot10, tot100, tot1000 = self._get_nibble_data(packet[1:7])
+        cur1, cur10, cur100, _stat, yest1, yest10, yest100, yest1000, tot1, tot10, tot100, tot1000 = self._get_nibble_data(packet[1:7])
 
         # It is reported that total rainfall is biased by +0.5 mm
         _record = {
