@@ -1,4 +1,9 @@
                     Possible NEW FEATURES
+
+Eliminate the need for Ftp/skin.conf and Rsync/skin.conf.  More generally,
+do not require a skin.conf file for each report.  In the case of Ftp and Rsync
+one can simply put the generator_list in weewx.conf as part of the report
+definition.  A report with no skin.conf should run with sane defaults.
                     
 Move to a "plugin" architecture. Services would be discovered at runtime
 (instead of listed in service_list). Where do configuration files go? Model it
