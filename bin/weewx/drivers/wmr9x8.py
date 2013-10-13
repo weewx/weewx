@@ -311,7 +311,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         if not dewunder:
             _record['dewpoint%d' % chan] = dew1 + (dew10 * 10)
         else:
-            _record['dewpoint%d' % chan] = weewx.wxformulas.dewpointC(_record['outTemp'], _record['outHumid%d' % chan])
+            _record['dewpoint%d' % chan] = weewx.wxformulas.dewpointC(_record['extraTemp%d' % chan], _record['extraHumid%d' % chan])
 
         return _record
 
