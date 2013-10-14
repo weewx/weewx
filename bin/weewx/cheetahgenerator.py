@@ -328,7 +328,9 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         destination_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                        accum_dict['HTML_ROOT'],
                                        os.path.dirname(accum_dict['template']))
-        encoding = accum_dict['encoding']
+        encoding = accum_dict.get('encoding', 'html_entities').strip().lower()
+        if encoding == 'utf-8':
+            encoding = 'utf8'
 
         statsdb   = self._getStats(accum_dict['stats_database'])
         archivedb = self._getArchive(accum_dict['archive_database'])
