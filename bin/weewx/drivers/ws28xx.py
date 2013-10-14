@@ -2440,7 +2440,7 @@ class CWeatherStationConfig(object):
         #self.setGust(EWindspeedFormat.wfKmh,040.0)
         #self.setRain24H(ERainFormat.rfMm,50.0)        
 
-        # Preset historyInterval to 1 minute (default: 2 hours)
+        # Preset historyInterval to 60 minutes (default: 2 hours)
         self._HistoryInterval = EHistoryInterval.hi60Min
         # Clear all alarm flags, otherwise the datastream from the weather
         # station will pause during an alarm and connection will be lost.
