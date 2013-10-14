@@ -112,7 +112,10 @@ while(defined($_ = <STDIN>)) {
              /reportengine: FTP upload not requested/ ||
              /reportengine: Running report / ||  # only when debug=1
              /restful: station will register with/ ||
-             /\*\*\*\*  registration interval/ ||
+             /restful: Registration interval/ ||
+             /\*\*\*\*  Registration interval/ ||
+             /restful: Registration successful/ ||
+             /restful: Attempting to register/ ||
              /stats: Back calculated schema/ ||
              /stats: Backfilling stats database/ ||
              /stats: backfilled \d+ days of statistics/ ||
@@ -213,6 +216,7 @@ while(defined($_ = <STDIN>)) {
              /ws28xx: RFComm: setFrame/ ||
              /ws28xx: RFComm: getFrame/ ||
              /ws28xx: RFComm: InBuf/ ||
+             /ws28xx: RFComm: OutBuf/ ||
              /ws28xx: RFComm: generateResponse: sleep/ ||
              /ws28xx: RFComm: generateResponse: id/ ||
              /ws28xx: RFComm: handleCurrentData/ ||
@@ -221,6 +225,7 @@ while(defined($_ = <STDIN>)) {
              /ws28xx: RFComm: handleConfig/ ||
              /ws28xx: RFComm: buildACKFrame/ ||
              /ws28xx: RFComm: buildTimeFrame/ ||
+             /ws28xx: RFComm: buildConfigFrame/ ||
              /ws28xx: RFComm: setCurrentWeather/ ||
              /ws28xx: RFComm: setHistoryData/ ||
              /ws28xx: RFComm: setDeviceCS/ ||
