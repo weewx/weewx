@@ -224,7 +224,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                 ngen += 1
         t2 = time.time()
         
-        syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images in %.2f seconds" % (ngen, t2 - t1))
+        syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
 
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
