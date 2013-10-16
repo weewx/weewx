@@ -139,7 +139,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
 
         search_list = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list'))
         if search_list is None:
-            search_list = default_search_list
+            search_list = list(default_search_list)
 
         search_list_ext = weeutil.weeutil.option_as_list(self.gen_dict.get('search_list_extensions'))
         if search_list_ext is not None:
