@@ -21,10 +21,17 @@ Configuration Options
 
 The strings YYYY and MM will be replaced if they appear in the filename.
 
+search_list will override the default search_list
+
+search_list_extension will be appended to search_list
+
+Generally it is better to extend by using search_list_extension rather than
+search_list, just in case the default search list changes.
+
 Example:
 
 [CheetahGenerator]
-    search_list = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables, weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras, weewx.cheetahgenerator.Current
+    search_list_extensions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
     encoding = html_entities      # html_entities, utf8, strict_ascii
     [[SummaryByMonth]]                              # period
         [[[NOAA_month]]]                            # report
