@@ -2619,15 +2619,18 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         database, then let <span class="code">weewx</span> regenerate it. It
         will use the new unit system.</p>
       <h1 id="porting">Porting to new weather station hardware</h1>
-      <p>Naturally, this is an advanced topic but, nevertheless, I'd really like
-        to encourage any Python wizards out there to give it a try. Of course, I
-        have selfish reasons for encouraging you: I don't want to have to go out
-        and buy every type of hardware there is! It's expensive and my roof
-        would look like a weather station farm.</p>
-      <p>Here's the general strategy for doing a port:</p>
-      <p>Inherit from the abstract base class <span class="code">weewx.abstractstation.AbstractStation</span>.
-        Try to implement as many of its methods as you can. At the very minimum,
-        you must implement the following two: </p>
+      <p>Naturally, this is an advanced topic but, nevertheless, I'd really
+        like to encourage any Python wizards out there to give it a try. Of
+        course, I have selfish reasons for encouraging you: I don't want to
+        have to go out and buy every type of hardware there is! It's expensive
+        and my roof would look like a weather station farm.</p>
+      <p>Here's the general strategy for doing a port.</p>
+      <h2>Implement the driver</h2>
+      <p>Inherit from the abstract base class
+        <span class="code">weewx.abstractstation.AbstractStation</span>.
+        Try to implement as many of its methods as you can. At the very
+        minimum, you must implement <span class="code">hardware_name</span>
+        and <span class="code">genLoopPackets</span>. </p>
       <p><span class="code">hardware_name</span>: Return a string with a short
         nickname for the hardware, such as "<span class="code">ACME X90</span>"</p>
       <p><span class="code">genLoopPackets</span>: This should be a generator
@@ -2661,13 +2664,15 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         the amount of rain that fell in that packet period included as
         observation '<span class="code">rain</span>'. It then sums up all the
         values to get the total rainfall and emits that in the archive record.
-        If your hardware does not provide this value, you might have to infer it
-        from changes in whatever value it provides, for example changes in the
-        daily or monthly rainfall. I know this is not the best solution, but it
-        is the most general solution. Any alternatives are welcome!</p>
+        If your hardware does not provide this value, you might have to infer
+        it from changes in whatever value it provides, for example changes in
+        the daily or monthly rainfall. I know this is not the best solution,
+        but it is the most general solution. Any alternatives are welcome!</p>
       <p>Wind is another tricky one. It is actually broken up into four
-        different observations: '<span class="code">windSpeed</span>', '<span class="code">windDir</span>',
-        '<span class="code">windGust</span>', and '<span class="code">windGustDir</span>'.
+        different observations: '<span class="code">windSpeed</span>',
+        '<span class="code">windDir</span>',
+        '<span class="code">windGust</span>', and
+        '<span class="code">windGustDir</span>'.
         Supply as many as you can. The directions should be compass directions
         in degrees (0=North, 90=East, etc.).</p>
       <p>Be careful when reporting pressure. There are three observations
@@ -2708,18 +2713,25 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         do the record generation for you. It will automatically collect all the
         types it sees in your loop packets then emit a record with the averages
         (in some cases the sum or max value) of all those types. If it doesn't
-        see a type, then it won't appear in the emitted record. If your hardware
-        does have a logger, then you should implement method <span class="code">genArchiveRecords</span>
+        see a type, then it won't appear in the emitted record. If your
+        hardware does have a logger, then you should implement method
+        <span class="code">genArchiveRecords</span>
         as well. It should be a generator function that returns all the records
         since a given time. </p>
+      <p><span class="code">closePort:</span> If the driver needs to close a
+        serial port, terminate a thread, close a database, or perform any
+        other activity before the application terminates, do it in this
+        method.</p>
       <p><span class="code">loader:</span> This is a factory function that
         returns an instance of your driver. It has two arguments: the
         configuration dictionary, and a reference to the weewx engine.</p>
+      <h2>Define the configuration</h2>
       <p>You then include a new section in the configuration file <span class="code">weewx.conf</span>
         that includes any options your driver needs. It should also include an
         entry '<span class="code">driver</span>' that points to where your
         driver can be found. Set option <span class="code">station_type</span>
         to your new section type and your driver will be loaded.</p>
+      <h2>Examples</h2>
       <p>Take a look at the simulator code in <span class="code">simulator.py</span>
         for a dirt simple example of a driver. The next most complicated is the
         driver for the WMR100 series, located in <span class="code">wmr100.py</span>.
