@@ -116,6 +116,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
     def run(self):
         self.setup()
         for time_period in self.gen_dict.sections:
+            logdbg("Running %s report for time period %s" % (self.skin_dict['REPORT_NAME'], time_period))
             self.generate(time_period, self.gen_ts)
         self.teardown()
 
