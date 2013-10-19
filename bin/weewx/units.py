@@ -395,6 +395,32 @@ class Formatter(object):
                          skin_dict['Units']['TimeFormats'],
                          ordinate_names)
 
+    def get_format_string(self, unit):
+        """Return a suitable format string."""
+
+        # First, try my internal format dict
+        if self.unit_format_dict.has_key(unit):
+            return self.unit_format_dict[unit]
+        # If that didn't work, try the default dict:
+        elif default_unit_format_dict.has_key(unit):
+            return default_unit_format_dict[unit]
+        else:
+            # Can't find one. Return a generic formatter:
+            return '%f'
+
+    def get_label_string(self, unit):
+        """Return a suitable label."""
+
+        # First, try my internal label dictionary:
+        if self.unit_label_dict.has_key(unit):
+            return self.unit_label_dict[unit]
+        # If that didn't work, try the default label dictionary:
+        elif default_unit_label_dict.has_key(unit):
+            return default_unit_label_dict[unit]
+        else:
+            # Can't find a label. Just return an empty string:
+            return ''
+
     def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
         """Format the value as a string.
         
@@ -429,31 +455,19 @@ class Formatter(object):
                 # If all else fails, use this weeutil utility:
                 val_str = weeutil.weeutil.timestamp_to_string(val_t[0])
         else:
-            # It's not a time. It's a regular value. If the user has supplied a format
-            # string, use that.
-            if useThisFormat is not None:
-                val_str = locale.format_string(useThisFormat, (val_t[0],))
+            # It's not a time. It's a regular value. Get a suitable format string:
+            if useThisFormat is None:
+                # No user-specified format string. Go get one:
+                format_string = self.get_format_string(val_t[1])
             else:
-                # Find a suitable format string. First, try my internal format dict
-                if self.unit_format_dict.has_key(val_t[1]):
-                    val_str = locale.format(self.unit_format_dict[val_t[1]], val_t[0])
-                # If that didn't work, try the default dict:
-                elif default_unit_format_dict.has_key(val_t[1]):
-                    val_str = locale.format(default_unit_format_dict[val_t[1]], val_t[0])
-                else:
-                    # If all else fails, ask Python to convert to a string:
-                    val_str = locale.str(val_t[0])
+                # User has specified a string. Use it.
+                format_string = useThisFormat
+            # Now use the format string to format the value:
+            val_str = locale.format(format_string, val_t[0])
 
+        # Add a label, if requested:
         if addLabel:
-            # A label has been requested. Try my internal label dictionary:
-            if self.unit_label_dict.has_key(val_t[1]):
-                val_str += self.unit_label_dict[val_t[1]]
-            # If that didn't work, try the default label dictionary:
-            elif default_unit_label_dict.has_key(val_t[1]):
-                val_str += default_unit_label_dict[val_t[1]]
-            else:
-                # Can't find a label. Do nothing.
-                pass
+            val_str += self.get_label_string(val_t[1])
 
         return val_str
 
@@ -832,8 +846,8 @@ class UnitInfoHelper(object):
         self.format    = {}
         for obs_type in obs_group_dict:
             self.unit_type[obs_type] = u = converter.getTargetUnit(obs_type)[0]
-            self.label[obs_type]  = formatter.unit_label_dict.get(u, '')
-            self.format[obs_type] = formatter.unit_format_dict.get(u, '%s')
+            self.format[obs_type] = formatter.get_format_string(u)
+            self.label[obs_type]  = formatter.get_label_string(u)
     
     # This is here for backwards compatibility:
     @property
