@@ -89,8 +89,11 @@ weewx packages      \n\
 $(DEBPKG)\n\
    for Debian, Ubuntu, Mint\n\
 \n\
-$(RPMPKG)\n\
+weewx-$(RPMVER).rhel.$(RPMARCH).rpm\n\
    for Redhat, CentOS, Fedora\n\
+\n\
+weewx-$(RPMVER).suse.$(RPMARCH).rpm\n\
+   for SuSE, OpenSuSE\n\
 \n\
 $(SRCPKG)\n\
    for all operating systems including Linux, BSD, MacOSX\n\
