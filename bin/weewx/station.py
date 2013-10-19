@@ -64,10 +64,13 @@ class Station(object):
         self.stn_info = stn_info
         
         # Add a bunch of formatted attributes:
-        self.hemispheres = skin_dict['Labels'].get('hemispheres', ('N','S','E','W'))
-        self.latitude    = weeutil.weeutil.latlon_string(stn_info.latitude_f,  self.hemispheres[0:2], 'lat')
-        self.longitude   = weeutil.weeutil.latlon_string(stn_info.longitude_f, self.hemispheres[2:4], 'lon')
-        self.altitude    = weewx.units.ValueHelper(value_t=stn_info.altitude_vt,
+        hemispheres    = skin_dict['Labels'].get('hemispheres', ('N','S','E','W'))
+        latlon_formats = skin_dict['Labels'].get('latlon_formats')
+        self.latitude  = weeutil.weeutil.latlon_string(stn_info.latitude_f,  
+                                                         hemispheres[0:2], 'lat', latlon_formats)
+        self.longitude = weeutil.weeutil.latlon_string(stn_info.longitude_f, 
+                                                         hemispheres[2:4], 'lon', latlon_formats)
+        self.altitude  = weewx.units.ValueHelper(value_t=stn_info.altitude_vt,
                                                    formatter=formatter,
                                                    converter=converter)
         self.rain_year_str   = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))

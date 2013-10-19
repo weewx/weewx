@@ -1477,7 +1477,17 @@ cooling_base = 20.0, degree_C</pre>
       <p>This section sets the various labels to use. </p>
       <p class="config_option">hemispheres </p>
       <p>Comma separated list for the labels to be used for the four
-        hemispheres. The default is "<span class="code">N, S, E, W</span>". </p>
+        hemispheres. The default is "<span class="code">N, S, E, W</span>".</p>
+		<p class="config_option">latlon_formats</p>
+		<p>Comma separated list for the formatting to be used when converting 
+		latitude and longitude to strings. There should be three elements:</p>
+		<ol>
+			<li>The format to be used for whole degrees of latitude</li>
+			<li>The format to be used for whole degrees of longitude</li>
+			<li>The format to be used for minutes.</li>
+		</ol>
+		<p>This allows you to decide whether or not you want leading zeroes. The 
+		default includes leading zeroes and is &quot;%02d&quot;, &quot;%03d&quot;, &quot;%05.2f&quot;</p>
       <h3 class="config_section">[[Generic]]</h3>
       <p>This sub-section specifies default labels to be used for each SQL
         type. For example, options </p>
@@ -2070,27 +2080,32 @@ outTemp = Outside Temperature</pre>
       <pre class="tty">hemisphere = N, S, E, W</pre>
       <p>and</p>
       <pre class="tty">moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</pre>
-      <p>You will also have to change the generic labels given to your weather
+      <p>Most of the unit labels either follow ISO conventions, or are unlikely 
+	  to be used outside English speaking countries (an example would be 
+	  &quot;foot&quot;). But, there are two exceptions:</p>
+		<pre class="tty">hour           = &quot; hrs&quot;
+second         = &quot; secs&quot;</pre>
+		<p>You will also have to change the generic labels given to your weather
         observations:</p>
-      <pre class="tty">        barometer      = Barometer
-        dewpoint       = Dew Point
-        heatindex      = Heat Index
-        inHumidity     = Inside Humidity
-        inTemp         = Inside Temperature
-        outHumidity    = Outside Humidity
-        outTemp        = Outside Temperature
-        radiation      = Radiation
-        rain           = Rain
-        rainRate       = Rain Rate
-        rxCheckPercent = ISS Signal Quality
-        windDir        = Wind Direction
-        windGust       = Gust Speed
-        windGustDir    = Gust Direction
-        windSpeed      = Wind Speed
-        windchill      = Wind Chill
-        windgustvec    = Gust Vector
-        windvec        = Wind Vector
-        extraTemp1     = Pond Temperature</pre>
+      <pre class="tty"> barometer      = Barometer
+dewpoint       = Dew Point
+heatindex      = Heat Index
+inHumidity     = Inside Humidity
+inTemp         = Inside Temperature
+outHumidity    = Outside Humidity
+outTemp        = Outside Temperature
+radiation      = Radiation
+rain           = Rain
+rainRate       = Rain Rate
+rxCheckPercent = ISS Signal Quality
+windDir        = Wind Direction
+windGust       = Gust Speed
+windGustDir    = Gust Direction
+windSpeed      = Wind Speed
+windchill      = Wind Chill
+windgustvec    = Gust Vector
+windvec        = Wind Vector
+extraTemp1     = Pond Temperature</pre>
       <h2>Environment variable <span class="code">LANG</span></h2>
       <p>Finally, you will need to set the environment variable <span class="code">LANG</span>
         to reflect your locale. For example, assuming you set</p>

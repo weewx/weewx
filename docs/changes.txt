@@ -18,7 +18,8 @@ forecast service is disabled by default.
 Weewx now allows easier localization to non-English speaking locales.
 In particular, set the environment variable LANG to your locale, and
 then weewx date and number formatting will follow local conventions.
-Details in a new section in the Customization Guide.
+There are also more labeling options in skin.conf. Details in a new section
+in the Customization Guide.
 
 Added aggregate type "minmax" and "maxmin". Thank you user Gary Roderick!
 

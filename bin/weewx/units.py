@@ -429,18 +429,31 @@ class Formatter(object):
                 # If all else fails, use this weeutil utility:
                 val_str = weeutil.weeutil.timestamp_to_string(val_t[0])
         else:
-            # It's not a time. It's a regular value.
-            try:
-                if useThisFormat is not None:
-                    val_str = locale.format_string(useThisFormat, (val_t[0],))
-                else:
+            # It's not a time. It's a regular value. If the user has supplied a format
+            # string, use that.
+            if useThisFormat is not None:
+                val_str = locale.format_string(useThisFormat, (val_t[0],))
+            else:
+                # Find a suitable format string. First, try my internal format dict
+                if self.unit_format_dict.has_key(val_t[1]):
                     val_str = locale.format(self.unit_format_dict[val_t[1]], val_t[0])
-            except (KeyError, TypeError):
-                # If all else fails, ask Python to convert to a string:
-                val_str = locale.str(val_t[0])
+                # If that didn't work, try the default dict:
+                elif default_unit_format_dict.has_key(val_t[1]):
+                    val_str = locale.format(default_unit_format_dict[val_t[1]], val_t[0])
+                else:
+                    # If all else fails, ask Python to convert to a string:
+                    val_str = locale.str(val_t[0])
 
         if addLabel:
-            val_str += self.unit_label_dict.get(val_t[1],'')
+            # A label has been requested. Try my internal label dictionary:
+            if self.unit_label_dict.has_key(val_t[1]):
+                val_str += self.unit_label_dict[val_t[1]]
+            # If that didn't work, try the default label dictionary:
+            elif default_unit_label_dict.has_key(val_t[1]):
+                val_str += default_unit_label_dict[val_t[1]]
+            else:
+                # Can't find a label. Do nothing.
+                pass
 
         return val_str
 

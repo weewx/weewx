@@ -698,12 +698,23 @@ def utc_to_local_tt(y, m, d,  hrs_utc):
     time_local_tt = time.localtime(time_ts)
     return time_local_tt
 
-def latlon_string(ll, hemi, which):
-    """Decimal degrees into a string for degrees, and one for minutes."""
+def latlon_string(ll, hemi, which, format_list=None):
+    """Decimal degrees into a string for degrees, and one for minutes.
+    ll: The decimal latitude or longitude
+    hemi: A tuple holding strings representing positive or negative values. E.g.: ('N', 'S')
+    which: 'lat' for latitude, 'long' for longitude
+    format_list: A list or tuple holding the format strings to be used. These are [whole degrees latitude, 
+                 whole degrees longitude, minutes]
+                 
+    Returns:
+    A 3-way tuple holding (latlon whole degrees, latlon minutes, hemisphere designator). 
+    Example: (022, 08.3, 'N') """
     labs = abs(ll)
     (frac, deg) = math.modf(labs)
     minutes = frac * 60.0
-    return (("%02d" if which == 'lat' else "%03d") % (deg,), "%05.2f" % (minutes,), hemi[0] if ll >= 0 else hemi[1])
+    if format_list is None:
+        format_list = ["%02d", "%03d", "%05.2f"]
+    return ((format_list[0] if which == 'lat' else format_list[1]) % (deg,), format_list[2] % (minutes,), hemi[0] if ll >= 0 else hemi[1])
 
 def utf8_to_latin1(instring):
     """Convert from UTF-8 to Latin-1 encoding."""

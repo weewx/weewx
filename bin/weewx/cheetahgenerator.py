@@ -361,7 +361,7 @@ class TrendObj(object):
       $trend.barometer
     """
         
-    def __init__(self, last_rec, now_rec, time_delta):
+    def __init__(self, last_rec, now_rec, time_delta, formatter, converter):
         """Initialize a Trend object
         
         last_rec: A ValueDict containing records from the past.
@@ -372,7 +372,12 @@ class TrendObj(object):
         """
         self.last_rec = last_rec
         self.now_rec  = now_rec
-        self.time_delta = weewx.units.ValueHelper((time_delta, 'second', 'group_elapsed'))
+        self.formatter = formatter
+        self.converter = converter
+        self.time_delta = weewx.units.ValueHelper((time_delta, 'second', 'group_elapsed'),
+                                                  'current',
+                                                  formatter,
+                                                  converter)
         
     def __getattr__(self, obs_type):
         """Return the trend for the given observation type."""
@@ -392,14 +397,14 @@ class TrendObj(object):
             vt_now = self.now_rec[obs_type]._raw_value_tuple
             trend = vt_now - self.last_rec[obs_type]._raw_value_tuple
         except TypeError:
-            trend = (None,) + vt_now[1:3]
+            trend = (None, None, None)
 
         # Return the results as a ValueHelper. Use the formatting and labeling
         # options from the current time record. The user can always override
         # these.
-        return weewx.units.ValueHelper(trend, self.now_rec.context,
-                                       self.now_rec.formatter,
-                                       self.now_rec.converter)
+        return weewx.units.ValueHelper(trend, 'current',
+                                       self.formatter,
+                                       self.converter)
 
 # =============================================================================
 # Classes used to implement the Search list
@@ -535,7 +540,8 @@ class Current(SearchList):
         former_rec = self.generator._getRecord(archivedb, timespan.stop - time_delta)
 
         return {'current' : current_rec,
-                'trend'   : TrendObj(former_rec, current_rec, time_delta)}
+                'trend'   : TrendObj(former_rec, current_rec, time_delta, 
+                                     self.generator.formatter, self.generator.converter)}
         
 # =============================================================================
 # Filters used for encoding
