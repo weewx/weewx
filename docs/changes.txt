@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-2.5.0 10/12/13
+2.5.0 10/18/13
 
 Introduced a new architecture that makes it easier to define search
 list extensions. The old architecture is 100% backwards compatible.
