@@ -576,7 +576,22 @@ def startOfDay(time_ts):
                             _time_tt.tm_mday,
                             0, 0, 0, 0, 0, -1))
     return int(_bod_ts)
-
+        
+def startOfDayUTC(time_ts):
+    """Calculate the unix epoch time for the start of a UTC day.
+    
+    time_ts: A timestamp somewhere in the day for which the start-of-day
+    is desired.
+    
+    returns: The timestamp for the start-of-day (00:00) in unix epoch time.
+    
+    """
+    _time_tt = time.gmtime(time_ts)
+    _bod_ts = calendar.timegm((_time_tt.tm_year,
+                               _time_tt.tm_mon,
+                               _time_tt.tm_mday,
+                               0, 0, 0, 0, 0, -1))
+    return int(_bod_ts)
 
 def startOfArchiveDay(time_ts, grace=1):
     """Given an archive time stamp, calculate its start of day.
@@ -607,7 +622,7 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     first = 'day'
     values = []
     for t in range(start_ts, end_ts+1, 3600*24):
-        x = startOfDay(t) + 7200
+        x = startOfDayUTC(t)
         x_tt = time.gmtime(x)
         y, m, d = x_tt[:3]
         (sunrise_utc, sunset_utc) = Sun.sunRiseSet(y, m, d, lon, lat)

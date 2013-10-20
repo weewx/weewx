@@ -10,6 +10,7 @@
 """Test routines for weeutil.weeutil."""
 
 import unittest
+import calendar
 import time
 
 from weeutil.weeutil import startOfInterval, option_as_list, TimeSpan, genYearSpans, genMonthSpans, genDaySpans
@@ -390,6 +391,13 @@ class WeeutilTest(unittest.TestCase):
              time.mktime((2012, 6, 22, 1, 0, 0, 0, 0, -1))],
             [time.mktime((2012, 12, 21, 0, 0, 0, 0, 0, -1)),
              time.mktime((2012, 12, 22, 1, 0, 0, 0, 0, -1))],
+
+            [calendar.timegm((2012, 1, 1, 0, 0, 0, 0, 0, -1)),
+             calendar.timegm((2012, 1, 2, 1, 0, 0, 0, 0, -1))],
+            [calendar.timegm((2012, 6, 21, 0, 0, 0, 0, 0, -1)),
+             calendar.timegm((2012, 6, 22, 1, 0, 0, 0, 0, -1))],
+            [calendar.timegm((2012, 12, 21, 0, 0, 0, 0, 0, -1)),
+             calendar.timegm((2012, 12, 22, 1, 0, 0, 0, 0, -1))],
             ]
 
         data = [
@@ -430,6 +438,45 @@ class WeeutilTest(unittest.TestCase):
             [times[0][0], times[0][1], 70, 45,
              'night', [1325408596.0, 1325408596.0]],
             [times[0][0], times[0][1], 70, 80,
+             'night', [1325400193.0, 1325400193.0]],
+
+            # greenwich
+            
+            [times[3][0], times[3][1], 0, -80,
+             'night', [1325416783.0, 1325460428.0]],
+            [times[3][0], times[3][1], 0, -45,
+             'night', [1325408380.0, 1325452025.0]],
+            [times[3][0], times[3][1], 0, 0,
+             'night', [1325397576.0, 1325441222.0]],
+            [times[3][0], times[3][1], 0, 45,
+             'night', [1325386773.0, 1325430418.0]],
+            [times[3][0], times[3][1], 0, 80,
+             'night', [1325378370.0, 1325422016.0, 1325464798.0]],
+
+            # negative longitude
+
+            [times[3][0], times[3][1], -70, -80,
+             'night', [1325395405.0]],
+            [times[3][0], times[3][1], -70, -45,
+             'night', [1325387003.0]],
+            [times[3][0], times[3][1], -70, 0,
+             'night', [1325376199.0, 1325462599.0, 1325462627.0]],
+            [times[3][0], times[3][1], -70, 45,
+             'day', [1325451796.0, 1325451824.0]],
+            [times[3][0], times[3][1], -70, 80,
+             'day', [1325443393.0, 1325443421.0]],
+
+            # positive longitude
+
+            [times[3][0], times[3][1], 70, -80,
+             'night', [1325438605.0, 1325438605.0]],
+            [times[3][0], times[3][1], 70, -45,
+             'night', [1325430203.0, 1325430203.0]],
+            [times[3][0], times[3][1], 70, 0,
+             'night', [1325419399.0, 1325419399.0]],
+            [times[3][0], times[3][1], 70, 45,
+             'night', [1325408596.0, 1325408596.0]],
+            [times[3][0], times[3][1], 70, 80,
              'night', [1325400193.0, 1325400193.0]],
             ]
 
