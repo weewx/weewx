@@ -8,6 +8,7 @@
   create 644 root adm
   sharedscripts
   postrotate
-    /etc/init.d/weewx restart > /dev/null
+    /etc/init.d/rsyslog stop
+    /etc/init.d/rsyslog start
   endscript
 }
