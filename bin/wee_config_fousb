@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # $Id: config_fousb.py 481 2013-02-14 19:22:56Z mwall $
 #
 # Copyright 2012 Matthew Wall
