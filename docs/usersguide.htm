@@ -966,9 +966,9 @@ longitude = -77.0366</p>
     <p class="config_option">register_this_station</p>
     <p>Set this to <span class="code">True</span> to register the weather station.</p>
     <p class="config_option">description</p>
-    <p>A description of the station. If no description is specified, the <span class="config_option">location</span> from the <span class="code">[Station]</span> section will be used.
+    <p>A description of the station. If no description is specified, the <span class="config_option">location</span> from the <span class="code">[Station]</span> section will be used.</p>
     <p class="config_option">station_url</p>
-    <p>The URL to the weather station. If no URL is specified, the <span class="config_option">station_url</span> from the <span class="code">[Station]</span> section will be used.
+    <p>The URL to the weather station. If no URL is specified, the <span class="config_option">station_url</span> from the <span class="code">[Station]</span> section will be used.</p>
 
     <h2 class="config_section">[StdReport]</h2>
     <p>This section is for configuring the <span class="code">StdReport</span> service, 
@@ -1992,16 +1992,6 @@ ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYML
       in the middle of an FTP upload: <span class="code">weewx</span> will recover.
     </p>
     <p>Or, at least, it should! </p>
-    <h3>FreeBSD</h3>
-    <p>User Fabian reports that the following had to be done to get the VantagePro2 
-      working under FreeBSD:</p>
-    <p class="tty">I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
-Loading the Driver:
-Put uslcom_load=&quot;YES&quot; in /boot/loader.conf (to load it as module).
-Which gives here an output like:
-uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
-And put in weewx.conf:
-port = /dev/cuaU0</p>
     <h3 id="html_generated_but_not_updated">Weewx generates HTML pages, but it does not update them</h3>
     <p>If you are getting a symptom that everything appears normal, that is HTML 
       is getting generated and getting FTP&#39;d to your webserver <em>(look in the 
@@ -2062,6 +2052,30 @@ Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Generator terminated...
 Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</p>
     <p>See the section on option <span class="code">
 	<a href="#record_generation">record_generation</a></span>.</p>
+	<h3>Raspberry Pi</h3>
+	  <p>Running <span class="code">weewx</span> on a Raspberry Pi has become 
+	  very popular. You'll have to look elsewhere for instructions on setting up 
+	  your RPi (I don't own one), but there is one very common problem with 
+	  them.</p>
+	  <p class="warning">You must run NTP on your RPi, and you must make sure it 
+	  starts and updates the time <em>before</em> <span class="code">weewx</span> 
+	  runs.</p>
+	  <p>The reason is that the RPi does not have an onboard clock. If you lose 
+	  power and, say, an hour later it comes back, your RPi will simply pick up 
+	  where it left off — one hour behind. The symptom that something is amiss 
+	  is that everything will appear to be running normally, but your webpage 
+	  will not get updated (at least, until the length of the power failure has 
+	  elapsed).
+	  <a href="https://groups.google.com/forum/#!searchin/weewx-user/clock/weewx-user/tmbrOC6-UiM/1xohs9WUAW8J">
+	  Here's one user's nice analysis of the problem.</a></p>
+	  <p>What this means is that it is not enough to simply run the 
+	  <span class="code">weewx</span> 
+	  daemon. You need some way of delaying its start until NTP is not only up 
+	  and running, but has contacted a time server and corrected the RPi's 
+	  clock. </p>
+	  <p>Several users are working on a solution to this problem. Perhaps you'll 
+	  be the one to figure it out?!</p>
+	
     <h2>Software problems</h2>
     <h3><span class="code">configobj</span> errors</h3>
     <p>These are errors in the configuration file. Two are very common. Incidentally, 
@@ -2118,6 +2132,17 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       not recognize (in this example, it is the tag <span class="code">$fubar</span> 
       in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
     </p>
+
+    <h3>FreeBSD</h3>
+    <p>User Fabian reports that the following had to be done to get the VantagePro2 
+      working under FreeBSD:</p>
+    <p class="tty">I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
+Loading the Driver:
+Put uslcom_load=&quot;YES&quot; in /boot/loader.conf (to load it as module).
+Which gives here an output like:
+uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
+And put in weewx.conf:
+port = /dev/cuaU0</p>
 
 
     <h1 id="architecture">Architectural Notes</h1>

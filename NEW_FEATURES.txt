@@ -4,14 +4,15 @@ Eliminate the need for Ftp/skin.conf and Rsync/skin.conf.  More generally,
 do not require a skin.conf file for each report.  In the case of Ftp and Rsync
 one can simply put the generator_list in weewx.conf as part of the report
 definition.  A report with no skin.conf should run with sane defaults.
+Templates should also be "drop in." If they appear in the directory, they
+get used.
                     
-Move to a "plugin" architecture. Services would be discovered at runtime
-(instead of listed in service_list). Where do configuration files go? Model it
-like Apache?
+The weewx service would support dependencies or, at least, be grouped into
+like services. This would make it easier to install new services by
+3rd parties.
 
-Same with file generators. They should be discovered at runtime. Graceful
-fallback if the necessary software is not installed. Regeneration happens in
-selectable time periods.
+RESTful services should become 1st class weewx services. This would make it
+easy to implement something like the Rapidfire protocol.
 
 Offer tags to support JSON. In particular, vectors. A tag like
 $day.outTemp.vector would offer a vector of temperatures for the day.
@@ -61,7 +62,7 @@ Fix scaling for aggregate interval of a week, so it starts on a Sunday.
 More dynamic access to the database. Check out
 Werkzeug. http://werkzeug.pocoo.org
 
-Dynamic web updates, using AJAX.
+Dynamic web updates, using AJAX, or Meteor.
 
 Port to Windows.
 
