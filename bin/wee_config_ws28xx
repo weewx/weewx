@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # $Id$
 #
 # Copyright 2013 Matthew Wall
@@ -15,13 +15,14 @@
 
 """Command line utility for configuring LaCrosse WS-28xx weather stations
 
-Many thanks to Eddie De Pieri, who did the first python implementation and
-Lucas Heijst, who sorted out communication and timing issues.
+Many thanks to Eddie De Pieri, who did the first python implementation of a
+WS-28xx driver, and Lucas Heijst, who sorted out the communication and timing
+issues between weather station console and transceiver.
 """
 
-import configobj
 import optparse
 import syslog
+import time
 
 import weewx.drivers.ws28xx
 import weewx.units
@@ -42,14 +43,20 @@ def main():
     # Add the various options:
     parser.add_option("--config", dest="cfgfn", type=str, metavar="FILE",
                       help="configuration file")
+    parser.add_option("--check-transceiver", dest="check", action="store_true",
+                      help="check USB transceiver")
+    parser.add_option("--pair", dest="pair", action="store_true",
+                      help="pair the USB transceiver with a station console")
     parser.add_option("--info", dest="info", action="store_true",
                       help="display weather station configuration")
     parser.add_option("--current", dest="current", action="store_true",
                       help="get the current weather conditions")
-    parser.add_option("--history", dest="history", action="store_true",
-                      help="get historical records from station console")
-    parser.add_option("--pair", dest="pair", action="store_true",
-                      help="pair the USB dongle with a station console")
+    parser.add_option("--history-since", dest="recmin", type=int, metavar="N",
+                      help="display history records since N minutes ago")
+    parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                      help="display N history records")
+    parser.add_option("--format", dest="format", type=str, metavar="FORMAT",
+                      help="format for history, one of raw, table, or dict")
     parser.add_option("--maxtries", dest="maxtries", type=int,
                       help="maximum number of retries, 0 indicates no max")
     parser.add_option("--debug", dest="debug", action="store_true",
@@ -63,53 +70,172 @@ def main():
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
     print 'Using configuration file %s' % config_fn
 
+    print 'Using ws28xx driver %s' % weewx.drivers.ws28xx.DRIVER_VERSION
     altitude_m = weewx.drivers.ws28xx.getaltitudeM(config_dict)
     station = weewx.drivers.ws28xx.WS28xx(altitude=altitude_m,
                                           **config_dict['WS28xx'])
 
+    if options.format is None:
+        options.format = 'table'
+    elif (options.format.lower() != 'raw' and
+          options.format.lower() != 'table' and
+          options.format.lower() != 'dict'):
+        print "Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format
+        exit(1)
+
     maxtries = 3 if options.maxtries is None else int(options.maxtries)
-    if options.pair:
+    if options.check:
+        check_transceiver(station, maxtries)
+    elif options.pair:
         pair(station, maxtries)
     elif options.current:
         current(station, maxtries)
-    elif options.history:
-        history(station, maxtries)
+    elif options.nrecords is not None:
+        history(station, maxtries, count=options.nrecords, fmt=options.format)
+    elif options.recmin is not None:
+        ts = int(time.time()) - options.recmin * 60
+        history(station, maxtries, ts=ts, fmt=options.format)
     else:
         info(station, maxtries)
 
-def pair(station, maxtries):
-    """Pair the USB transceiver with the station console."""
-    station.startup()
+    station.shutDown()
+
+
+
+def check_transceiver(station, maxtries):
+    """See if the transceiver is installed and operational."""
+    print 'Checking for transceiver...'
+    ntries = 0
     try:
-        station.check_transceiver(msg_to_console=True, maxtries=maxtries)
-        station.pair(msg_to_console=True, maxtries=maxtries)
-    except:
+        while ntries < maxtries:
+            ntries += 1
+            if station.transceiver_is_present():
+                print 'Transceiver is present'
+                sn = station.transceiver_serial()
+                print 'serial: ' %  sn
+                tid = station.transceiver_id()
+                print 'id: %d (0x%04x)' % (tid, tid)
+                break
+            print 'Not found (attempt %d of %d) ...' % (ntries, maxtries)
+            time.sleep(5)
+        else:
+            print 'Transceiver not responding.'
+    except Exception, e:
         pass
-    station.shutdown()
+
+def pair(station, maxtries):
+    """Pair the transceiver with the station console."""
+    print 'Pairing transceiver with console...'
+    ntries = 0
+    try:
+        while ntries < maxtries or maxtries == 0:
+            if station.transceiver_is_paired():
+                print 'Transceiver is paired to console'
+                break
+            ntries += 1
+            msg = 'Press and hold the [v] key on station console'
+            if maxtries > 0:
+                msg += ' (attempt %d of %d)' % (ntries, maxtries)
+            else:
+                msg += ' (attempt %d)' % ntries
+            print msg
+            station.pair_transceiver(30000) # milliseconds
+        else:
+            print 'Transceiver not paired to console.'
+    except Exception, e:
+        pass
 
 def info(station, maxtries):
     """Query the station then display the settings."""
-    station.startup()
-    print "Querying the station..."
-    config = station.get_config()
-    print config
-    station.shutdown()
+    print 'Querying the station for the configuration...'
+    start_ts = None
+    ntries = 0
+    try:
+        while ntries < maxtries:
+            config = station.get_config()
+            if config is not None:
+                print_dict(config)
+                break
+            if start_ts is None:
+                start_ts = int(time.time())
+            else:
+                dur = int(time.time()) - start_ts
+                print 'No data after %d seconds (press SET to sync)' % dur
+            time.sleep(30)
+    except Exception:
+        pass
 
 def current(station, maxtries):
     """Get current weather observation."""
-    station.startup()
-    print "Querying the station for current weather..."
-    packet = station.get_observation()
-    print packet
-    station.shutdown()
+    print 'Querying the station for current weather data...'
+    start_ts = None
+    ntries = 0
+    try:
+        while ntries < maxtries:
+            packet = station.get_observation()
+            if packet is not None:
+                print_dict(packet)
+                break
+            if start_ts is None:
+                start_ts = int(time.time())
+            else:
+                dur = int(time.time()) - start_ts
+                print 'No data after %d seconds (press SET to sync)' % dur
+            time.sleep(30)
+    except Exception:
+        pass
 
-def history(station, maxtries):
-    """Get historical records from station console."""
-    station.startup()
+def history(station, maxtries, ts=0, count=0, fmt='raw'):
+    """Display the indicated number of records or the records since the 
+    specified timestamp (local time, in seconds)"""
     print "Querying the station for historical records..."
-    records = station.get_history()
-    print records
-    station.shutdown()
+    records = []
+    start_ts = None
+    ntries = 0
+    try:
+        while ntries < maxtries:
+            records = station.get_history(since_ts=ts, num_rec=count)
+            if records is not None:
+                break
+            if start_ts is None:
+                start_ts = int(time.time())
+            else:
+                dur = int(time.time()) - start_ts
+                print 'No data after %d seconds (press SET to sync)' % dur
+            time.sleep(30)
+    except Exception:
+        pass
+
+    for i,r in enumerate(records):
+        if fmt.lower() == 'raw':
+            raw_dump(r['datetime'], r['ptr'], r['raw_data'])
+        elif fmt.lower() == 'table':
+            table_dump(r['datetime'], r['data'], i==0)
+        else:
+            print r['datetime'], r['data']
+
+def raw_dump(date, pos, data):
+    print date,
+    print "%04x" % pos,
+    for item in data:
+        print "%02x" % item,
+    print
+
+def table_dump(date, data, showlabels=False):
+    if showlabels:
+        print '# date time',
+        for key in data:
+            print key,
+        print
+    print date,
+    for key in data:
+        print data[key],
+    print
+
+def print_dict(data):
+    for key in sorted(data, key=data.get):
+        print '%s: %s' % (key, data[key])
+
 
 if __name__=="__main__" :
     main()
