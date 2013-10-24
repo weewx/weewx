@@ -47,7 +47,7 @@ Version: 2.5.0b3
   <div id="technical_content">
 
     <h1 id="about">About <span class="code">weewx</span></h1>
-    <p><span class="code">weewx</span> is a piece of software, written in
+    <p><span class="code"><a href="http://www.weewx.com">weewx</a></span> is a piece of software, written in
       <a href="http://www.python.org">Python</a>, that interacts with your weather 
       station to produce plots, reports, and HTML pages. It can optionally upload 
       the reports to a remote Web server as well as publish to the
@@ -100,7 +100,8 @@ Version: 2.5.0b3
 
     <h1 id="hardware">Supported Hardware</h1>
     <p>
-      Many types of station hardware are supported.  In addition to hardware support, <span class="code">weewx</span> comes with a software simulator, useful for testing and evaluation.
+      Many types of station hardware are supported.  In addition to hardware support, <span class="code">weewx</span> 
+      comes with a software simulator, useful for testing and evaluation.
     </p>
     <table style="width: 90%" class="center">
       <tr>
@@ -672,37 +673,37 @@ Version: 2.5.0b3
     <p>The station location should be a UTF-8 string that describes the
       geography of where your weather station is located. Required.
       No default.</p>
-    <p class="tty">location = A small ranch in Kentucky</p>
-    <p>If the description contains commas, it must be enclosed
+      <pre class="tty">location = A small ranch in Kentucky</pre>
+	  <p>If the description contains commas, it must be enclosed
       in quotation marks.</p>
-    <p class="tty">location = "Hood River, Oregon"</p>
-    <p class="config_important">latitude <br />
+	  <pre class="tty">location = "Hood River, Oregon"</pre>
+	  <p class="config_important">latitude <br />
       longitude </p>
     <p>The lat/lon should be set in decimal degrees, negative for southern and
       western hemispheres, respectively. Required. No default. </p>
-    <p class="tty">latitude = 38.8977
-longitude = -77.0366</p>
+    <pre class="tty">latitude = 38.8977
+longitude = -77.0366</pre>
     <p class="config_option"><span class="config_important">altitude</span></p>
     <p>Normally the station altitude is downloaded from your hardware, but not
       all stations support this. Set to the altitude of the station and the
       unit used for the altitude. Example: </p>
-    <p class="tty">altitude = 700, foot</p>
+    <pre class="tty">altitude = 700, foot</pre>
     <p>An example in meters:</p>
-    <p class="tty">altitude = 220, meter</p>
-    <p class="config_option"><span class="config_important">rain_year_start
-    </span></p>
+    <pre class="tty">altitude = 220, meter</pre>
+    <p class="config_option">rain_year_start
+    </p>
     <p>Normally the start of the rain year is downloaded from your hardware,
       but not all stations support this. Set to the start of your rain year,
       for example, 10, if your rain year starts in October (as mine does).
       Default is 1. </p>
-    <p class="tty">rain_year_start = 1</p>
+    <pre class="tty">rain_year_start = 1</pre>
     <p class="config_option">week_start </p>
     <p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 (Sunday)
     </p>
-    <p class="tty">week_start = 0</p>
+    <pre class="tty">week_start = 0</pre>
     <p class="config_important">station_type </p>
     <p>Set to the type of hardware you are using.</p>
-    <p class="tty">station_type = Simulator</p>
+    <pre class="tty">station_type = Simulator</pre>
     <p>Valid options include:</p>
     <table style="width: 60%" class="center">
       <tr>
@@ -734,7 +735,7 @@ longitude = -77.0366</p>
     <p class="config_option"><span class="config_important">station_url</span></p>
     <p>If you have a website, you may optionally specify an URL for
       its HTML server. Example (this is mine):</p>
-	  <p class="tty">station_url = http://www.threefools.org</p>
+	  <pre class="tty">station_url = http://www.threefools.org</pre>
 
     <h3 class="config_section">[Vantage]</h3>
     <p>This section is for options relating to the Davis Vantage series of hardware 
@@ -876,11 +877,11 @@ longitude = -77.0366</p>
       <a href="http://www.wunderground.com/">Weather Underground</a>. If you
       do not wish to do this, leave the <span class='code'>station</span>
       commented.</p>
-    <p class="tty">[StdRestful]
+    <pre class="tty">[StdRestful]
     [[Wunderground]]
         station = 12345678  # Replace with your station number
         password = xxxxx    # Replace with your password
-        driver = weewx.restful.Ambient</p>
+        driver = weewx.restful.Ambient</pre>
     <p class="config_important">station </p>
     <p>Set to your Weather Underground station ID (<em>e.g.</em>, <span class="code">KORHOODR3</span>). 
       Required. </p>
@@ -892,11 +893,11 @@ longitude = -77.0366</p>
       <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
       do not wish to do this, leave the <span class='code'>station</span>
       commented.</p>
-    <p class="tty">[StdRestful]
+    <pre class="tty">[StdRestful]
     [[PWSweather]]
         station = 12345678  # Replace with your station number
         password = xxxxx    # Replace with your password
-        driver = weewx.restful.Ambient</p>
+        driver = weewx.restful.Ambient</pre>
     <p class="config_important">station </p>
     <p>Set to your PWSweather station ID. Required. </p>
     <p class="config_important">password </p>
@@ -909,11 +910,11 @@ longitude = -77.0366</p>
       <em>not</em> included in <span class="code">weewx.conf</span>, so you
       will have to add it. When you are done, it will look something
       like this:</p>
-    <p class="tty">[StdRestful]
+    <pre class="tty">[StdRestful]
     [[WOW]]
         station = 12345678  # Replace with your station number
         password = xxxxx    # Replace with your password
-        driver = weewx.restful.WOW</p>
+        driver = weewx.restful.WOW</pre>
     <p class="config_important">station </p>
     <p>Set to your WOW station ID. Required. </p>
     <p class="config_important">password </p>
@@ -924,13 +925,13 @@ longitude = -77.0366</p>
       <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If
       you do not wish to do this, leave the <span class="code">station</span>
       commented. </p>
-    <p class="tty">[StdRestful]
+    <pre class="tty">[StdRestful]
     [[CWOP]]
         station = 12345678  # Replace with your station number
         passcode = xxxxx    # Replace with your passcode (APRS stations only)
         server = cwop.aprs.net:14580, cwop.aprs.net:23
         interval = 600  
-        driver = weewx.restful.CWOP</p>
+        driver = weewx.restful.CWOP</pre>
     <p class="config_important">station </p>
     <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>). Required.
     </p>
@@ -959,10 +960,10 @@ longitude = -77.0366</p>
     <p>A registry of weewx weather stations is maintained at weewx.com.  Stations are displayed on a map and a list at <a href="http://weewx.com/stations.html">http://weewx.com/stations.html</a></p>
     <p>How does the registry work?  Individual weather stations periodically contact the registry. Each station provides a URL to identify itself, plus other information such as the station type and weewx version. The registry does not keep track of meteorological data; no information about the weather is sent to the registry.</p>
     <p>To add your station to this list, enable the StationRegistry in weewx.conf. Your station will contact the registry once per week. If your station does not contact the registry for about a month, it will be removed from the list.</p>
-    <p class="tty">[StdRestful]
+    <pre class="tty">[StdRestful]
     [[StationRegistry]]
         register_this_station = True
-        driver = weewx.restful.StationRegistry</p>
+        driver = weewx.restful.StationRegistry</pre>
     <p class="config_option">register_this_station</p>
     <p>Set this to <span class="code">True</span> to register the weather station.</p>
     <p class="config_option">description</p>
@@ -1130,10 +1131,10 @@ longitude = -77.0366</p>
 	same unit system as specified in section <span class="code">
 	  <a href="#StdConvert">StdConvert</a></span> above</em>. </p>
     <p>Example, </p>
-    <p class="tty">[[MinMax]]
+    <pre class="tty">[[MinMax]]
     outTemp = -40, 120
     barometer = 28, 32.5
-    outHumidity = 0, 100 </p>
+    outHumidity = 0, 100 </pre>
     <p>In this example, if a temperature should fall outside of the inclusive range 
       -40 &deg;F through 120 &deg;F, then it will be set to the null value,
       <span class="code">None</span>, and ignored. In a similar manner, the acceptable 
@@ -1264,13 +1265,13 @@ longitude = -77.0366</p>
       engine. After each event (such as the arrival of LOOP data, etc.), they will 
       be run in the given order. The standard list of services run by weewx is:
     </p>
-    <p class='tty' style='white-space:pre-line'>service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
-    <p>Note that despite how it reads above, this option must be all on one line! </p>
+    <pre class='tty' style='white-space:pre-line'>service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
+    <p>Note that despite how it may or may not read above, this option must be <em>all on one line!</em> </p>
     <p>You can leave some of these services out if you do not need them. For example, 
       the bare minimum if you are using a Davis Vantage instrument, storing your data 
       in US Customary units, doing no data corrections or quality control and running 
       as a daemon (no printing to console) would be:</p>
-    <p class="tty" style='white-space:pre-line'>service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</p>
+    <pre class="tty" style='white-space:pre-line'>service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
     <p>However, this will only make a slight difference in execution speed. </p>
 
     <h1 id="configuring_hardware">Configuring Station Hardware</h1>
@@ -1279,9 +1280,9 @@ longitude = -77.0366</p>
       that can set many of the on-board EEPROM constants in the Davis Vantage stations, 
       such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
     <p>Run it with <span class="code">--help</span> as an option to see its usage: </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --help </p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --help </pre>
     <p>This will print out something like:</p>
-    <p class="tty">Usage: wee_config_vantage: [config_file] [--help] [--info] [--clear]
+    <pre class="tty">Usage: wee_config_vantage: [config_file] [--help] [--info] [--clear]
                            [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
                            [--set-bucket=CODE] [--set-rain-year-start=MM] 
                            [--set-time] [--set-dst=[AUTO|ON|OFF]]
@@ -1326,12 +1327,12 @@ Options:
                         logger).
 
 Mutating actions will request confirmation before proceeding.
-</p>
+</pre>
     <p>It is useful to run it with the <span class="code">--info</span> option to 
       see what the current EEPROM settings are on your station: </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --info </p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --info </pre>
     <p>This will print out something like: </p>
-    <p class="tty">Using configuration file /home/weewx/weewx.conf.
+    <pre class="tty">Using configuration file /home/weewx/weewx.conf.
 Querying...
 Davis Vantage EEPROM settings:
     
@@ -1380,14 +1381,14 @@ Davis Vantage EEPROM settings:
       Correction ratio:             1.025
       Correction constant:          +0.027 inHg
       Gain:                         -1.000
-      Offset:                       -1.000</p>
+      Offset:                       -1.000</pre>
     <p>Note that the console version number is available only on consoles with firmware 
       dates after about 2006.</p>
     <p><span class="highlight">Highlighted</span> values can be changed.</p>
     <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-interval=600</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-interval=600</pre>
     <p>To set the time zone code to Central European Time (code 20):</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-tz-code=20</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-tz-code=20</pre>
     <p class="warning">You can set either the time zone code <em>or</em> the 
 	time zone offset, but not both. </p>
 	  <p>Other parameters can be set in a similar manner.</p>
@@ -1407,7 +1408,7 @@ Davis Vantage EEPROM settings:
     <p>Normally, this is set by Davis, but if you have replaced your bucket with 
       a different kind, you might want to reconfigure. For example, to change to a 
       0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-bucket=2</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-bucket=2</pre>
     <h3>Dumping the logger memory</h3>
 	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
 	  records from the on-board logger in the Vantage. However, occasionally the 
@@ -1418,7 +1419,7 @@ Davis Vantage EEPROM settings:
 	  lose any data which might have accumulated in the logger memory, but not 
 	  yet downloaded. By using the <span class="code">--dump</span> command 
 	  before clearing the memory, you might be able to save these data. </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --dump</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --dump</pre>
 	  <p>This will dump all data archived in the Vantage memory directly to the 
 	  database, without regard to whether or not they have been seen before. 
 	  Because the command dumps <em>all</em> data, it may result in many 
@@ -1428,7 +1429,7 @@ Davis Vantage EEPROM settings:
     <p>The configuration utility <span class='code'>wee_config_fousb</span> is
       designed to diagnose and configure Fine Offset stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --help </p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --help </pre>
     <p>This will print out something like:</p>
     <p class='tty'>Usage: wee_config_fousb [config_file] [options] [--help]
 
@@ -1459,9 +1460,9 @@ Options:
 Mutating actions will request confirmation before proceeding.</p>
     <p>Display the station settings with the <span class='code'>--info</span>
       option.</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --info </p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --info </pre>
     <p>This will result in something like this:</p>
-    <p class='tty'>Fine Offset station settings:
+    <pre class='tty'>Fine Offset station settings:
                     local time: 2013.02.11 18:34:28 CET
                   polling_mode: ADAPTIVE
 
@@ -1487,7 +1488,7 @@ Mutating actions will request confirmation before proceeding.</p>
                     unknown_18: 0
                        version: 255
                      wind_coef: None
-                     wind_mult: 0</p>
+                     wind_mult: 0</pre>
     <p><span class="highlight">Highlighted</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
 
     <h3>Calibrating the pressure sensor</h3>
@@ -1505,19 +1506,19 @@ Pressure offset is now 1.247000</p>
     <p>For those using Imperial units, to convert inHg to hPa (mbar), multiply by 33.86389</p>
     <p><span class='code'>weewx</span> does not use the <i>relative pressure</i> in the Fine Offset console.</p>
     <p>To display sensor, relative, and calculated pressures:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-pressures</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-pressures</pre>
 
     <h3>Dumping the console memory</h3>
     <p>Fine Offset stations store records in a circular buffer - once the buffer fills, the oldest records are replaced by newer records.  The 1080 and 2080 consoles store up to 4080 records.  The 3080 consoles store up to 3264 records.  The <span class='code'>data_count</span> indicates how many records are in memory.  The <span class='code'>read_period</span> indicates the number of minutes between records.  <span class='code'>wee_config_fousb</span> can display these records in space-delimited, raw bytes, or dictionary format.</p>
     <p>For example, to display the most recent 30 records from the console memory:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --history=30</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --history=30</pre>
     <p>To clear the console memory:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --clear-memory</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --clear-memory</pre>
 
     <h3>Checking the USB quality</h3>
     <p>Use the <span class='code'>wee_config_fousb</span> utility to test the quality of the USB connection between computer and console.  Poor quality USB cables, under-powered USB hubs, and other devices on the bus can interfere with communication.</p>
     <p>To test the quality of the USB connection to the console:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-usb</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-usb</pre>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
     <h3>Operating modes</h3>
@@ -1601,7 +1602,7 @@ Pressure offset is now 1.247000</p>
       <span class="code"><a href="#Databases">[Databases]</a></span> section 
       should 
       look something like this:</p>
-    <p class="tty">[Databases]
+    <pre class="tty">[Databases]
   [[archive_mysql]]
       host = localhost
       user = weewx
@@ -1614,7 +1615,7 @@ Pressure offset is now 1.247000</p>
       user = weewx
       password = weewx
       database = stats
-      driver = weedb.mysql</p>
+      driver = weedb.mysql</pre>
     <p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
       Adjust as necessary.</p>
     <p>If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
@@ -1624,9 +1625,9 @@ Pressure offset is now 1.247000</p>
       and '<span class="code">stats</span>' to whatever MySQL user you choose, by 
       default, user '<span class="code">weewx</span>'. Here are the necessary minimum 
       permissions:</p>
-    <p class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
+    <pre class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
-mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost</p>
+mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost</pre>
     <p>In addition to configuring MySQL, you will also need to indicate to
       <span class="code">weewx</span> that you intend to use the configured 
 	  database. See section <span class="code"><a href="#StdArchive">
@@ -1643,10 +1644,10 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       Start by making sure you have appropriate permissions to the serial port your 
       weather station uses. For example, if you are using a plain old serial port:
     </p>
-    <p class="tty">sudo chmod 666 /dev/ttyS0 </p>
+    <pre class="tty">sudo chmod 666 /dev/ttyS0 </pre>
     <p>Then run the main program, <span class="code">weewxd</span>, giving 
       the configuration file as its only parameter: </p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
     <p>It should start by downloading any data stored in your weather station into 
       the archive database. As the Davis VantagePro can store a couple thousand archive 
       records internally, this could take a minute or two. I have found this process 
@@ -1658,8 +1659,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       its configuration file by sending it the <span class="code">HUP</span> signal. 
       First run <span class="code">ps</span> to find out the Process ID (PID) number 
       of the instance, then send it the <span class="code">HUP</span> signal: </p>
-    <p class="tty">ps -a          # Note the PID of the weewxd process
-kill -HUP <em>pid</em>  # Send it a HUP signal</p>
+    <pre class="tty">ps -a          # Note the PID of the weewxd process
+kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
     <p>Note that this <em>only</em> rereads the configuration file. It will not 
       reload any code.</p>
     <h2>Running as a daemon</h2>
@@ -1735,9 +1736,9 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</p>
     <p><span class="code">Weewx</span> will now start automatically whenever your 
       system is booted. You can also manually start, stop, and restart the
       <span class="code">weewx</span> daemon: </p>
-    <p class="tty">sudo /etc/init.d/weewx start
+    <pre class="tty">sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop
-sudo /etc/init.d/weewx restart</p>
+sudo /etc/init.d/weewx restart</pre>
     <p>By default, the scripts are designed to have <span class="code">weewx</span> 
       run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels 
       with Debian (Ubuntu, Mint) systems is
@@ -1748,7 +1749,7 @@ sudo /etc/init.d/weewx restart</p>
       to see the run levels. </p>
     <p>You can also tell <span class="code">weewx</span> to reread its configuration 
       file without stopping by using the &#39;reload&#39; option: </p>
-    <p class="tty">sudo /etc/init.d/weewx reload </p>
+    <pre class="tty">sudo /etc/init.d/weewx reload </pre>
 
     <h1 id="monitoring">Monitoring <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> logs many events to the system log.
@@ -1800,18 +1801,18 @@ sudo /etc/init.d/weewx start</p>
       still be used by surrounding the word with backquotes). </p>
     <p>To change the column name to what <span class="code">weewx</span> uses, namely <span class="code">interval</span>, 
       use the utility <span class="code">mysql</span> and issue the command:</p>
-	  <p class="tty">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL; </p>
+	  <pre class="tty">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL; </pre>
     <p>where <span class="code"><em>your-wview-archive-name</em></span> is the 
       name of your wview archive database. Note that the word <span class="code">
 	interval</span> is surrounded by backquotes.</p>
     <p>Then in the <span class="code">[Databases]</span> section of
       <span class="code">weewx.conf</span>, replace the name of the database 
       with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:</p>
-    <p class="tty">[[archive_mysql]]
+    <pre class="tty">[[archive_mysql]]
 &nbsp; host = ...
 &nbsp; user = ...
 &nbsp; database = <em>your-wview-archive-name</em>
-...</p>
+...</pre>
 
 
     <h1 id="integrating_with_webserver">Integrating <span class='code'>weewx</span> with a web server</h1>
@@ -1883,7 +1884,7 @@ sudo /etc/init.d/apache2 restart</p>
       you can use a terminal emulator (I like <span class="code">minicom</span> because 
       it can be run from through a simple TTY connection) to run a simple test. Set 
       it up to communicate using the appropriate port and baudrate. For example</p>
-    <p class="tty">minicom -b 19200 -D /dev/ttyUSB0</p>
+    <pre class="tty">minicom -b 19200 -D /dev/ttyUSB0</pre>
     <p>Then type in <span class="code">TEST</span>, all in capital letters. It will 
       not echo the characters. Then hit the <span class="code">&lt;enter&gt;</span> 
       key. It should echo back <span class="code">TEST</span>.</p>
@@ -2017,7 +2018,7 @@ ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYML
 	<span class="code">wee_config_vantage</span>. This may cause loss of data, but 
 	usually works. Adjust paths as necessary:</li>
     </ol>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --clear </p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --clear </pre>
 	  <p>See also the section <em><a href="#Dumping_the_logger_memory">Dumping 
 	  the logger memory</a></em>, which may help you avoid data loss.</p>
     <h3>3rd party Vantage connectors</h3>
@@ -2030,7 +2031,7 @@ ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYML
       Without this information, <span class="code">weewx</span> is unable to detect 
       the absence of onboard memory. If you do not do this, you will get errors that 
       look like the following in your syslog:</p>
-    <p class="tty">Nov 27 20:30:21 raspberrypi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
+    <pre class="tty">Nov 27 20:30:21 raspberrypi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  'NoneType' object has no attribute '__getitem__'
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Traceback (most recent call last):
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 132, in run
@@ -2049,7 +2050,7 @@ Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/w
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      std_unit_system = d['usUnits']
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  TypeError: 'NoneType' object has no attribute '__getitem__'
 Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Generator terminated...
-Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</p>
+Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</pre>
     <p>See the section on option <span class="code">
 	<a href="#record_generation">record_generation</a></span>.</p>
 	<h3>Raspberry Pi</h3>
@@ -2113,13 +2114,13 @@ Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </p>
       problem may be a mismatch between the unit system used for service
       <span class="code">StdConvert</span> and the unit system used by service
       <span class="code">StdQC</span>. For example:</p>
-    <p class="tty">[StdConvert]
+    <pre class="tty">[StdConvert]
     target_unit = METRIC
     ...
 
 [StdQC]
     [[MinMax]]
-        barometer = 28, 32.5</p>
+        barometer = 28, 32.5</pre>
     <p>The problem is that you are requiring the barometer data to be between 28 
       and 32.5, but with the unit system set to <span class="code">METRIC</span>, 
       the data will be in the range 990 to 1050 or so!</p>
@@ -2136,13 +2137,13 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
     <h3>FreeBSD</h3>
     <p>User Fabian reports that the following had to be done to get the VantagePro2 
       working under FreeBSD:</p>
-    <p class="tty">I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
+    <pre class="tty">I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
 Loading the Driver:
 Put uslcom_load=&quot;YES&quot; in /boot/loader.conf (to load it as module).
 Which gives here an output like:
 uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
 And put in weewx.conf:
-port = /dev/cuaU0</p>
+port = /dev/cuaU0</pre>
 
 
     <h1 id="architecture">Architectural Notes</h1>
@@ -2373,7 +2374,7 @@ port = /dev/cuaU0</p>
     <p>For example, if one wanted to plot something every 3 hours in UTC time, it 
       would be very simple: to get the next plot point, just add 10,800 to the epoch 
       time: </p>
-    <p class="tty">next_ts = last_ts + 10800 </p>
+    <pre class="tty">next_ts = last_ts + 10800 </pre>
     <p>But, if one wanted to plot something for every 3 hours <em>in local time</em> 
       (that is, at 0000, 0300, 0600, etc.), despite a possible DST change in the middle, 
       then things get a bit more complicated. One could modify the above to recognize 
@@ -2383,10 +2384,10 @@ port = /dev/cuaU0</p>
       </span>takes a different approach and converts from UTC to local, does the arithmetic, 
       then converts back. This is inefficient, but bulletproof against changes in 
       DST algorithms, etc: </p>
-    <p class="tty">time_dt = datetime.datetime.fromtimestamp(last_ts)
+    <pre class="tty">time_dt = datetime.datetime.fromtimestamp(last_ts)
 delta = datetime.timedelta(seconds=10800)
 next_dt = time_dt + delta
-next_ts = int(time.mktime(next_dt.timetuple()))</p>
+next_ts = int(time.mktime(next_dt.timetuple()))</pre>
     <p>Other time conversion problems are handled in a similar manner. </p>
 
 
