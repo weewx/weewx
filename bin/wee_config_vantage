@@ -274,10 +274,10 @@ def clear(station):
     
     ans = None
     while ans not in ['y', 'n']:
-        print "Clearing the archive memory ..."
         print "Proceeding will erase old archive records."
         ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
+            print "Clearing the archive memory ..."
             station.clearLog()
             print "Archive records cleared."
         elif ans == 'n':

@@ -160,7 +160,7 @@
       <p>To create their output, skins rely on one or more <em>Generators, </em>code
         that actually create useful things such as HTML files or plot images.
         Generators can also copy files around or FTP/rsync them to remote
-        locations. The default install of <span class="code">weewx </span>includes
+        locations. The default install of <span class="code">weewx</span> includes
         the following generators: </p>
       <table class="center" style="width: 80%" summary="Generators included in weewx">
         <tbody>
@@ -295,7 +295,7 @@
       <pre class="tty">[Units]
     [[Groups]]
 <span class="highlight">        group_altitude    = meter</span>
-<span class="highlight">        group_degree_day  = degree_C_day </span>
+<span class="highlight">        group_degree_day  = degree_C_day</span>
         group_direction   = degree_compass
         group_moisture    = centibar
         group_percent     = percent
@@ -388,12 +388,12 @@
     ...
     ... (as before) </pre>
       <p>We have done two things different from the stock reports. First (1), we
-        have renamed the first report from <span class="code">StandardReport </span>to
-        <span class="code">USReport </span>for clarity; and (2) we have
+        have renamed the first report from <span class="code">StandardReport</span> to
+        <span class="code">USReport</span> for clarity; and (2) we have
         introduced a new report <span class="code">MetricReport</span>, just
         like the first, except it puts its results in a different spot and uses
-        different units. Both use the same skin, the <span class="code">Standard
-          </span>skin. </p>
+        different units. Both use the same skin, the <span class="code">Standard</span> 
+        skin.</p>
       <h2 id="templates">Customizing templates</h2>
       <p>If you cannot achieve the results you need by changing a configuration
         option, you may have to modify the templates that come with <span class="code">weewx</span>,
@@ -885,7 +885,7 @@ $month.outTemp.max</pre>
         &lt;p&gt;Min, max temperatures by month:&lt;/p&gt;
 <span class="highlight">        #for $month in $year.months</span>
         &lt;p&gt;$month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.outTemp.max&lt;/p&gt;
-<span class="highlight">        #end for </span>
+<span class="highlight">        #end for</span>
     &lt;/body&gt;
 &lt;/html&gt;</pre>
       <p>Produces results: </p>
@@ -1494,7 +1494,7 @@ cooling_base = 20.0, degree_C</pre>
       <pre class="tty">inTemp = Temperature inside the house
 outTemp = Outside Temperature</pre>
       <p>would cause the given labels to be used for plots involving SQL types <span
-          class="code">inTemp </span>and <span class="code">outTemp</span>. </p>
+          class="code">inTemp</span> and <span class="code">outTemp</span>. </p>
       <h2 class="config_section">[Almanac]</h2>
       <p>This section controls what text to use for the almanac. It consists of
         only one entry </p>
@@ -2087,7 +2087,7 @@ outTemp = Outside Temperature</pre>
 second         = &quot; secs&quot;</pre>
 		<p>You will also have to change the generic labels given to your weather
         observations:</p>
-      <pre class="tty"> barometer      = Barometer
+      <pre class="tty">barometer      = Barometer
 dewpoint       = Dew Point
 heatindex      = Heat Index
 inHumidity     = Inside Humidity
@@ -3228,7 +3228,8 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
           <tr class="code">
             <td>group_time</td>
             <td>dateTime</td>
-            <td>unix_epoch</td>
+            <td>unix_epoch <br />
+              dublin_jd</td>
           </tr>
           <tr class="code">
             <td>group_uv</td>

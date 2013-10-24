@@ -212,16 +212,25 @@ class Archive(object):
         finally:
             _cursor.close()
         
-    def getRecord(self, timestamp):
+    def getRecord(self, timestamp, max_delta=None):
         """Get a single archive record with a given epoch time stamp.
         
         timestamp: The epoch time of the desired record.
+        
+        max_delta: The largest difference in time that is acceptable. 
+        [Optional. The default is no difference]
         
         returns: a record dictionary or None if the record does not exist."""
 
         _cursor = self.connection.cursor()
         try:
-            _cursor.execute("SELECT * FROM %s WHERE dateTime=?" % (self.table,), (timestamp,))
+            if max_delta:
+                time_start_ts = timestamp - max_delta
+                time_stop_ts  = timestamp + max_delta
+                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? ORDER BY ABS(dateTime-?) ASC LIMIT 1" % (self.table,),
+                                (time_start_ts, time_stop_ts, timestamp))
+            else:
+                _cursor.execute("SELECT * FROM %s WHERE dateTime=?" % (self.table,), (timestamp,))
             _row = _cursor.fetchone()
             return dict(zip(self.sqlkeys, _row)) if _row else None
         finally:
