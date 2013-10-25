@@ -315,7 +315,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         record_dict = archivedb.getRecord(time_ts)
         if record_dict is None: return None
         # ... convert to a dictionary with ValueTuples as values...
-        record_dict_vt = weewx.units.dictFromStd(record_dict)
+        record_dict_vt = weewx.units.ValueTupleDict(record_dict)
         # ... then wrap it in a ValueDict:
         record_vd = weewx.units.ValueDict(record_dict_vt, context='current',
                                           formatter=self.formatter,
@@ -450,13 +450,22 @@ class Almanac(SearchList):
         archivedb = generator._getArchive(generator.skin_dict['archive_database'])
         if not celestial_ts:
             celestial_ts = archivedb.lastGoodStamp()
-        rec = generator._getRecord(archivedb, celestial_ts)
+
+        # Look for the record closest in time. Up to one hour off is fine:            
+        rec = archivedb.getRecord(celestial_ts, max_delta=3600)
 
         if rec is not None:
-            if rec.has_key('outTemp'):
-                temperature_C = rec['outTemp'].degree_C.raw
-            if rec.has_key('barometer'):
-                pressure_mbar = rec['barometer'].mbar.raw
+
+            # Wrap the record in a ValueTupleDict. This makes it easy to do
+            # unit conversions.
+            rec_vtd = weewx.units.ValueTupleDict(rec)
+            
+            if rec_vtd.has_key('outTemp'):
+                temperature_C = weewx.units.convert(rec_vtd['outTemp'], 'degree_C')[0]
+
+            if rec_vtd.has_key('barometer'):
+                pressure_mbar = weewx.units.convert(rec_vtd['barometer'], 'mbar')[0]
+
         if temperature_C is None: temperature_C = 15.0
         if pressure_mbar is None: pressure_mbar = 1010.0
 

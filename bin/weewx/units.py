@@ -463,7 +463,7 @@ class Formatter(object):
                 # User has specified a string. Use it.
                 format_string = useThisFormat
             # Now use the format string to format the value:
-            val_str = locale.format(format_string, val_t[0])
+            val_str = locale.format_string(format_string, val_t[0])
 
         # Add a label, if requested:
         if addLabel:
@@ -539,8 +539,12 @@ class Converter(object):
         ...     print "Exception thrown"
         Exception thrown
         """
-        if val_t[1] is None and val_t[2] is None:
-            return val_t
+        try:
+            if val_t[1] is None and val_t[2] is None:
+                return val_t
+        except TypeError, e:
+            print e
+            raise
         # Determine which units (eg, "mbar") this group should be in.
         # If the user has not specified anything, then fall back to US Units.
         new_unit_type = self.group_unit_dict.get(val_t[2], USUnits[val_t[2]])
@@ -747,7 +751,7 @@ class ValueHelper(ValueOutputter):
 #                            class ValueDict
 #===============================================================================
 
-class ValueDict(dict):
+class ValueDict(object):
     """A dictionary that returns contents as a DictBinder.
     
     This dictionary is like any other dictionary except, when keyed, it returns a
@@ -783,15 +787,14 @@ class ValueDict(dict):
         DictBinder. [Optional. If not given, the default Converter() will
         be passed on.] 
         """
-        # Initialize my superclass, the dictionary:
-        super(ValueDict, self).__init__(d)
+        self.dictionary= d
         self.context   = context
         self.formatter = formatter
         self.converter = converter
         
     def __getitem__(self, obs_type):
         """Look up an observation type (eg, 'outTemp') and return it as a DictBinder."""
-        return DictBinder(obs_type, self, context=self.context, 
+        return DictBinder(obs_type, self.dictionary, context=self.context, 
                           formatter=self.formatter, converter=self.converter)
     
 
@@ -806,7 +809,7 @@ class DictBinder(ValueOutputter):
         
     def getValueTuple(self):
         # Get the value tuple from the underlying dictionary:
-        vt = dict.__getitem__(self.valuedict, self.obs_type)
+        vt = self.valuedict[self.obs_type]
         return vt
 
     def __getattr__(self, target_unit):
@@ -828,6 +831,42 @@ class DictBinder(ValueOutputter):
     @property
     def has_data(self):
         return self.exists and self.getValueTuple()[0] is not None
+    
+#===============================================================================
+#                             class ValueTupleDict
+#===============================================================================
+
+class ValueTupleDict(dict):
+    """A dictionary like any other dictionary, except that when keyed, it returns
+    its results as a ValueTuple.
+    
+    Example:
+    >>> vtd = ValueTupleDict({'usUnits' : 1, 'outTemp' : 68.0})
+    >>> print vtd['outTemp']
+    (68.0, 'degree_F', 'group_temperature')
+    >>> print vtd.get('outTemp')
+    (68.0, 'degree_F', 'group_temperature')
+    >>> print vtd.get('foo', 100.0)
+    100.0
+    """
+    def __getitem__(self, key):
+
+        # Get the standard unit system from the underlying dictionary:
+        std_unit_system = dict.__getitem__(self, 'usUnits')
+        # Get the unadorned value from the underlying dictionary:
+        val = dict.__getitem__(self, key)
+        
+        # Given this standard unit system, what is the unit type of this
+        # particular observation type?
+        (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(key)
+        # Form the value-tuple and return it 
+        return ValueTuple(val, unit_type, unit_group)
+    
+    def get(self, key, default=None):
+        if self.has_key(key):
+            return self[key]
+        else:
+            return default
     
 #===============================================================================
 #                             class UnitInfoHelper
@@ -961,36 +1000,6 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
         return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
     else:
         return (None, None)
-
-def dictFromStd(d):
-    """Map an observation dictionary to a dictionary with values of ValueTuples.
-    
-    d: A dictionary containing the key-value pairs for observation types
-    and their values. It must include an entry 'usUnits', giving the
-    standard unit system the entries are in.
-        
-    returns: a dictionary with keys of observation type, value the
-    corresponding ValueTuple.
-         
-    Example where the input dictionary is Metric:
-    >>> d = {'outTemp'   : 23.9,
-    ...      'barometer' : 1002.3,
-    ...      'usUnits'   : 16}
-    >>> print dictFromStd(d)
-    {'outTemp': (23.9, 'degree_C', 'group_temperature'), 'barometer': (1002.3, 'mbar', 'group_pressure')}
-    """
-        
-    # Find out what standard unit system (US or Metric) the dictionary is in:
-    std_unit_system = d['usUnits']
-    resultDict = {}
-    for obs_type in d:
-        if obs_type == 'usUnits': continue
-        # Given this standard unit system, what is the unit type of this
-        # particular observation type?
-        (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
-        # Form the value-tuple. 
-        resultDict[obs_type] = ValueTuple(d[obs_type], unit_type, unit_group)
-    return resultDict
 
 class GenWithConvert(object):
     """Generator wrapper. Converts the output of the wrapped generator to a target
