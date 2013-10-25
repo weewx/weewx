@@ -30,6 +30,9 @@ Setting to False causes only archive data to be used.
 When a template fails, skip only that template, not everything that the
 generator is processing.
 
+Trend calculations no longer need a record at precisely (for example)
+3 hours in the past. It can be within a "grace" period.
+
 FineOffset driver now uses the 'delay' field instead of the fixed_block
 'read_period' for the archive record interval when reading records from
 console memory.

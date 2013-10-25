@@ -34,9 +34,6 @@ Consider breaking the rule that reporting can only be done through the
 databases and, instead, offer up the last record when the reporting thread
 starts.
 
-Trend calculations should accept an old record that is not necessarily
-exactly 3 hours old. It can fall in some band.
-
 A QC "Spike" detector.
 
 Harden up the MySQL database connection.

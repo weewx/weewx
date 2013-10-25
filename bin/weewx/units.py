@@ -539,12 +539,8 @@ class Converter(object):
         ...     print "Exception thrown"
         Exception thrown
         """
-        try:
-            if val_t[1] is None and val_t[2] is None:
-                return val_t
-        except TypeError, e:
-            print e
-            raise
+        if val_t[1] is None and val_t[2] is None:
+            return val_t
         # Determine which units (eg, "mbar") this group should be in.
         # If the user has not specified anything, then fall back to US Units.
         new_unit_type = self.group_unit_dict.get(val_t[2], USUnits[val_t[2]])

@@ -307,20 +307,17 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         """Generator function used when doing "to date" generation."""
         return [weeutil.weeutil.TimeSpan(start_ts, stop_ts)]
 
-    def _getRecord(self, archivedb, time_ts):
+    def _getRecord(self, archivedb, time_ts, max_delta=None):
         """Get an observation record from the archive database, returning
-        it as a ValueDict."""
+        it as a ValueTupleDict."""
 
         # Get the record...
-        record_dict = archivedb.getRecord(time_ts)
+        record_dict = archivedb.getRecord(time_ts, max_delta)
         if record_dict is None: return None
         # ... convert to a dictionary with ValueTuples as values...
-        record_dict_vt = weewx.units.ValueTupleDict(record_dict)
-        # ... then wrap it in a ValueDict:
-        record_vd = weewx.units.ValueDict(record_dict_vt, context='current',
-                                          formatter=self.formatter,
-                                          converter=self.converter)
-        return record_vd
+        record_dict_vtd = weewx.units.ValueTupleDict(record_dict)
+        # ... and return it
+        return record_dict_vtd
 
     def _prepGen(self, subskin_dict):
         """Gather the options together for a specific report, then
@@ -393,9 +390,10 @@ class TrendObj(object):
             # in the case of temperature, the difference between two converted
             # values is not the same as the conversion of the difference
             # between two values. E.g., 20C - 10C is not equal to
-            # F_to_C(68F - 50F). We want the former, not the latter.  
-            vt_now = self.now_rec[obs_type]._raw_value_tuple
-            trend = vt_now - self.last_rec[obs_type]._raw_value_tuple
+            # F_to_C(68F - 50F). We want the former, not the latter.
+            now_val  = self.converter.convert(self.now_rec[obs_type])
+            last_val = self.converter.convert(self.last_rec[obs_type])
+            trend = now_val - last_val
         except TypeError:
             trend = (None, None, None)
 
@@ -537,20 +535,32 @@ class Extras(SearchList):
 class Current(SearchList):
     """Class for implementing the $current and $trend tags"""
 
-    def get_extension(self, timespan, archivedb, statsdb):
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
 
         try:
-            time_delta = int(self.generator.skin_dict['Units']['Trend']['time_delta'])
+            self.time_delta = int(generator.skin_dict['Units']['Trend']['time_delta'])
+            self.time_grace = int(generator.skin_dict['Units']['Trend'].get('time_grace', 300))
         except KeyError:
-            time_delta = 10800  # 3 hours
+            self.time_delta = 10800  # 3 hours
+            self.time_grace = 300    # 5 minutes
+
+    def get_extension(self, timespan, archivedb, statsdb):
 
         # Get current record, and one from the beginning of the trend period.
-        current_rec = self.generator._getRecord(archivedb, timespan.stop)
-        former_rec = self.generator._getRecord(archivedb, timespan.stop - time_delta)
+        current_vtd = self.generator._getRecord(archivedb, timespan.stop)
+        former_vtd  = self.generator._getRecord(archivedb, timespan.stop - self.time_delta, 
+                                                max_delta=self.time_grace)
 
-        return {'current' : current_rec,
-                'trend'   : TrendObj(former_rec, current_rec, time_delta, 
-                                     self.generator.formatter, self.generator.converter)}
+        return {
+                # Wrap the current record in a ValueDict (so it can be formatted):
+                'current' : weewx.units.ValueDict(current_vtd, context='current',
+                                                  formatter=self.generator.formatter,
+                                                  converter=self.generator.converter),
+                'trend'   : TrendObj(former_vtd, current_vtd, self.time_delta,
+                                     formatter=self.generator.formatter, 
+                                     converter=self.generator.converter)
+                }
         
 # =============================================================================
 # Filters used for encoding

@@ -1473,6 +1473,10 @@ cooling_base = 20.0, degree_C</pre>
       <p class="config_option">time_delta</p>
       <p>Set to the time difference over which you want trends to be calculated.
         The default is 3 hours.</p>
+      <p class="config_option">time_grace</p>
+      <p>When searching for a previous record to be used in calculating a trend,
+      a record within this amount of <span class="code">time_delta</span>
+      will be accepted. Default is 300 seconds.</p>
       <h2 class="config_section">[Labels]</h2>
       <p>This section sets the various labels to use. </p>
       <p class="config_option">hemispheres </p>
