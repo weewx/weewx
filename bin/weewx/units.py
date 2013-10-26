@@ -304,11 +304,11 @@ default_ordinate_names = ['N', 'NNE','NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
 # useful because its contents can be accessed using named attributes.
 #
 # Item   attribute   Meaning
-#    0    value      The data value (eg, 20.2)
+#    0    value      The datum value (eg, 20.2)
 #    1    unit       The unit it is in ("degree_C")
 #    2    group      The unit group ("group_temperature")
 #
-# It is valid to have a data value of None.
+# It is valid to have a datum value of None.
 #
 # It is also valid to have a unit type of None (meaning there is no information about
 # the unit the value is in). In this case, you won't be able to convert it to another
@@ -502,7 +502,7 @@ class Converter(object):
     def convert(self, val_t):
         """Convert a value from a given unit type to the target type.
         
-        val_t: A value tuple with the data, a unit type, and a unit group
+        val_t: A value tuple with the datum, a unit type, and a unit group
         
         returns: A value tuple in the new, target unit type. If the input
         value tuple contains an unknown unit type an exception of type KeyError
@@ -555,7 +555,8 @@ class Converter(object):
         converter to figure out what unit system it is in.
         
         The output dictionary will contain no information about the unit
-        system (that is, it will not contain a 'usUnits' entry).
+        system (that is, it will not contain a 'usUnits' entry). This is because
+        the conversion is general: it may not result in a standard unit system.
         
         Example: convert a dictionary which is in the metric unit system into US units
         
@@ -568,23 +569,16 @@ class Converter(object):
         >>> print target_dict
         {'outTemp': 68.0, 'interval': 15, 'barometer': 30.0, 'dateTime': 194758100}
         """
-        # Get the unit system the source is in. This will be something like weewx.US or weewx.METRIC.
-        source_unit_system = obs_dict['usUnits']
+        # Wrap the source dictionary in a ValueTupleDict. This will cause
+        # keyed values to be returned as ValueTuples:
+        obs_vdt = ValueTupleDict(obs_dict)
         
-        # Get a converter for the source unit system. We won't be actually using it to convert
-        # anything; instead, we'll be using it to get the source units and unit groups.
-        source_converter = StdUnitConverters[source_unit_system]
-
         target_dict = {}
-        for obs_type in obs_dict:
-            if obs_type in ['usUnits']: continue
-            # Construct a value tuple for the source observation
-            val_t = (obs_dict[obs_type], ) + source_converter.getTargetUnit(obs_type)
-            # Now use it to convert into a value tuple in the target units. Strip
-            # off and save only the first element (the observation value):
-            target_dict[obs_type] = self.convert(val_t)[0]
+        for obs_type in obs_vdt:
+            if obs_type == 'usUnits': continue
+            # Do the conversion, but keep only the first value in the ValueTuple:
+            target_dict[obs_type] = self.convert(obs_vdt[obs_type])[0]
         return target_dict
-            
             
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
@@ -655,11 +649,11 @@ class ValueOutputter(object):
         return self.toString(NONE_string=NONE_string)
     
     def format(self, format_string, NONE_string=None):
-        """Returns a formatted version of the data, using a user-supplied format."""
+        """Returns a formatted version of the datum, using a user-supplied format."""
         return self.toString(useThisFormat=format_string, NONE_string=NONE_string)
     
     def nolabel(self, format_string, NONE_string=None):
-        """Returns a formatted version of the data, using a user-supplied format. No label."""
+        """Returns a formatted version of the datum, using a user-supplied format. No label."""
         return self.toString(addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
     
     def ordinal_compass(self):
@@ -669,7 +663,7 @@ class ValueOutputter(object):
         
     @property
     def formatted(self):
-        """Return a formatted version of the data. No label."""
+        """Return a formatted version of the datum. No label."""
         return self.toString(addLabel=False)
         
     @property
@@ -713,7 +707,7 @@ class ValueHelper(ValueOutputter):
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
         """Initialize a ValueHelper.
         
-        value_t: A value tuple holding the data.
+        value_t: A value tuple holding the datum.
         
         context: The time context. Something like 'current', 'day', 'week', etc.
         [Optional. If not given, context 'current' will be used.]
