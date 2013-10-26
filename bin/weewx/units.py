@@ -386,13 +386,28 @@ class Formatter(object):
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
         try:
+            unit_format_dict = skin_dict['Units']['StringFormats']
+        except KeyError:
+            unit_format_dict = default_unit_format_dict
+
+        try:
+            unit_label_dict = skin_dict['Units']['Labels']
+        except KeyError:
+            unit_label_dict = default_unit_label_dict
+
+        try:
+            time_format_dict = skin_dict['Units']['TimeFormats']
+        except KeyError:
+            time_format_dict = default_time_format_dict
+
+        try:
             ordinate_names = weeutil.weeutil.option_as_list(skin_dict['Units']['Ordinates']['directions'])
         except KeyError:
             ordinate_names = default_ordinate_names
-        
-        return Formatter(skin_dict['Units']['StringFormats'],
-                         skin_dict['Units']['Labels'],
-                         skin_dict['Units']['TimeFormats'],
+
+        return Formatter(unit_format_dict,
+                         unit_label_dict,
+                         time_format_dict,
                          ordinate_names)
 
     def get_format_string(self, unit):
@@ -497,7 +512,11 @@ class Converter(object):
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
-        return Converter(skin_dict['Units']['Groups'])
+        try:
+            group_unit_dict = skin_dict['Units']['Groups']
+        except KeyError:
+            group_unit_dict = USUnits
+        return Converter(group_unit_dict)
 
     def convert(self, val_t):
         """Convert a value from a given unit type to the target type.
