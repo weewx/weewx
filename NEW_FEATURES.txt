@@ -14,6 +14,12 @@ like services. This would make it easier to install new services by
 RESTful services should become 1st class weewx services. This would make it
 easy to implement something like the Rapidfire protocol.
 
+Fixes to REST base class:
+ - eliminate requirement that derived must define site (or make it ctor arg)
+ - eliminate requirement that derived must have station member
+ - make extractRecordFrom extensible (allow override of archive_types and
+     possibly sql_select)
+
 Offer tags to support JSON. In particular, vectors. A tag like
 $day.outTemp.vector would offer a vector of temperatures for the day.
 Aggregation would be nice.
