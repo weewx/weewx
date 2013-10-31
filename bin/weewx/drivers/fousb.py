@@ -773,8 +773,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         loginf('altitude is %s meters' % str(self.altitude))
         loginf('pressure offset is %s' % str(self.pressure_offset))
 
-# FIXME: is station UTC or local?
-# FIXME: does weewx want UTC or local?
 # There is no point in using the station clock since it cannot be trusted and
 # since we cannot synchronize it with the computer clock.
 
@@ -1061,7 +1059,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         if last_delay is None or last_delay == 0:
             prev_date = datetime.datetime.min
         else:
-            prev_date = datetime.datetime.now()
+            prev_date = datetime.datetime.utcnow()
         maxcount = 10
         count = 0
         for data, last_ptr, logged in self.live_data(logged_only=(quality>1)):
@@ -1110,9 +1108,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 # methods for reading data from the weather station
 # the following were adapted from WeatherStation.py in pywws
 #
-# commit c853b29ee968117ca9e6cf497d9a8afe73367c76
+# commit 7d2e8ec700a652426c0114e7baebcf3460b1ef0f
 # Author: Jim Easterbrook <jim@jim-easterbrook.me.uk>
-# Date:   Mon Apr 1 11:59:54 2013 +0100
+# Date:   Thu Oct 31 13:04:29 2013 +0000
 #==============================================================================
 
     def live_data(self, logged_only=False):
@@ -1202,8 +1200,14 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 result = dict(new_data)
                 if valid_time:
                     # data has just changed, so definitely at a 48s update time
-                    self._sensor_clock = data_time
-                    logdbg('setting sensor clock %g' % (data_time % live_interval))
+                    if self._sensor_clock:
+                        diff = (data_time - self._sensor_clock) % live_interval
+                        if diff > 2.0 and diff < (live_interval - 2.0):
+                            logdbg('unexpected sensor clock change')
+                            self._sensor_clock = None
+                    if not self._sensor_clock:
+                        self._sensor_clock = data_time
+                        logdbg('setting sensor clock %g' % (data_time % live_interval))
                     if not next_live:
                         logdbg('live synchronised')
                     next_live = data_time
@@ -1237,8 +1241,14 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 result = dict(new_data)
                 if valid_time:
                     # pointer has just changed, so definitely at a logging time
-                    self._station_clock = ptr_time
-                    logdbg('setting station clock %g' % (ptr_time % 60.0))
+                    if self._station_clock:
+                        diff = (ptr_time - self._station_clock) % 60
+                        if diff > 2 and diff < 58:
+                            logdbg('unexpected station clock change')
+                            self._station_clock = None
+                    if not self._station_clock:
+                        self._station_clock = ptr_time
+                        logdbg('setting station clock %g' % (ptr_time % 60.0))
                     if not next_log:
                         logdbg('log synchronised')
                     next_log = ptr_time
@@ -1370,7 +1380,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     self._sensor_clock = None
                 else:
                     pause = min(pause, (self.avoid - phase) % 48)
-            if pause > self.avoid * 2.0:
+            if pause >= self.avoid * 2.0:
                 return
             logdbg('avoid %s' % str(pause))
             time.sleep(pause)
