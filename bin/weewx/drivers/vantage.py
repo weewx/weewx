@@ -536,8 +536,12 @@ class Vantage(weewx.abstractstation.AbstractStation):
                                      weeutil.weeutil.timestamp_to_string(_last_good_ts)))
                     syslog.syslog(syslog.LOG_DEBUG, "vantage: Catch up complete.")
                     return
-                # Set the last time to the current time, and yield the packet
+            
+                # Set the last time to the current time...
                 _last_good_ts = _record['dateTime']
+                # ... record this stamp...
+                self.seen_stamps.append(_last_good_ts)
+                # ... and yield it
                 yield _record
 
             # The starting index for pages other than the first is always zero
@@ -1129,13 +1133,11 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 # Yes, DST was active. Let's try again, this time w/o DST
                 tryagain_tt = time_tuple[:-1] + (0,)
                 new_ts = int(time.mktime(tryagain_tt))
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: Disambiguated timestamp from %d to %d" % (ts, new_ts))
-                ts = new_ts
-            
-        # Record this stamp...
-        self.seen_stamps.append(ts)
-
-        # ... and return it
+                if new_ts not in self.seen_stamps:
+                    syslog.syslog(syslog.LOG_NOTICE, "vantage: Disambiguated timestamp from %d to %d" % (ts, new_ts))
+                    ts = new_ts
+                else:
+                    syslog.syslog(syslog.LOG_NOTICE, "vantage: Unable to disambiguate timestamps. Tried %d and %d" % (ts, new_ts))
         return ts
     
 #===============================================================================
