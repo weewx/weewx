@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+2.6.0 11/XX/13
+
+Vantage driver uses a new strategy to disambiguate the fall DST transition.
+
+
 2.5.0 10/18/13
 
 Introduced a new architecture that makes it easier to define search

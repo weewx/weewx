@@ -917,6 +917,25 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
         raise
 
     return config_fn, config_dict
+
+class FixedList(list):
+    """A list of a fixed length.
+     
+    Example:
+    >>> l = FixedList(5)
+    >>> for i in range(10):
+    ...    l.append(i)
+    >>> print l
+    [5, 6, 7, 8, 9]
+    """
+    def __init__(self, max_len, *args, **kwargs):
+        list.__init__(self, *args, **kwargs)
+        self.max_len = max_len
+ 
+    def append(self, ts):
+        while len(self) >= self.max_len:
+            self.pop(0)
+        list.append(self, ts)
     
 if __name__ == '__main__':
     import doctest
