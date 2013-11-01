@@ -213,7 +213,7 @@ import datetime
 import math
 import time
 import syslog
-
+import threading
 import usb
 
 import weeutil.weeutil
@@ -327,14 +327,6 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
         else:
             packet[k] = None
 
-    # check for spurious sensor readings
-    if packet['rain'] is not None and last_rain is not None and \
-            packet['rain'] < last_rain and \
-            last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
-        loginf('ignoring data: spurious rain counter decrement: new: %s old: %s' % (packet['rain'], last_rain))
-        packet = {'usUnits':weewx.METRIC, 'dateTime':ts}
-        return packet
-
     # station status is an integer
     if packet['status'] is not None:
         packet['status'] = int(packet['status'])
@@ -362,10 +354,16 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
 
     # calculate the rain increment from the rain total
     total = packet['rain']
-    if packet['status'] & rain_overflow:
-        loginf('rain counter wraparound detected')
-        total += rain_max * 0.3
-    packet['rainTotal'] = packet['rain']
+    if packet['rain'] is not None and last_rain is not None and \
+            packet['rain'] < last_rain and \
+            last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
+        loginf('ignoring spurious rain counter decrement: new: %s old: %s' % (packet['rain'], last_rain))
+        packet['rainTotal'] = last_rain
+    else:
+        if packet['status'] is not None and packet['status'] & rain_overflow:
+            loginf('rain counter wraparound detected')
+            total += rain_max * 0.3
+        packet['rainTotal'] = packet['rain']
     packet['rain'] = calculate_rain(total, last_rain)
 
     # calculate the rain rate
