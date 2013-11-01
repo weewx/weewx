@@ -46,8 +46,6 @@
 # WS2080A console reports 44 bf as its magic number, but performs just fine.
 # --mwall 02oct2013
 
-# FIXME: determine why sensor spikes happen with PERIODIC but not ADAPTIVE
-
 """Classes and functions for interfacing with FineOffset weather stations.
 
 FineOffset stations are branded by many vendors, including
@@ -82,6 +80,8 @@ by weewx.  The pywws code is mostly untouched - it has been modified to
 conform to weewx error handling and reporting, and some additional error
 checks have been added.
 
+Rainfall and Spurious Sensor Readings
+
 The rain counter occasionally reports incorrect rainfall.  On some stations,
 the counter decrements then increments.  Or the counter may increase by more
 than the number of bucket tips that actually occurred.  The max_rain_rate
@@ -90,10 +90,23 @@ period.  If the volume of the samples in the period divided by the sample
 period interval are greater than the maximum rain rate, the samples are
 ignored.
 
+Spurious rain counter decrements often accompany what appear to be noisy
+sensor readings.  So if we detect a spurious rain counter decrement, we ignore
+the rest of the sensor data as well.  The suspect sensor readings appear
+despite the double reading (to ensure the read is not happening mid-write)
+and do not seem to correlate to unstable reads.
+
 A single bucket tip is equivalent to 0.3 mm of rain.  The default maximum
 rate is 24 cm/hr (9.44 in/hr).  For a sample period of 5 minutes this would
 be 2 cm (0.78 in) or about 66 bucket tips, or one tip every 4 seconds.  For
 a sample period of 30 minutes this would be 12 cm (4.72 in)
+
+The rain counter is two bytes, so the maximum value is 0xffff or 65535.  This
+translates to 19660.5 mm of rainfall (19.66 m or 64.9 ft).  The console would
+have to run for two years with 2 inches of rainfall a day before the counter
+wraps around.
+
+Pressure Calculations
 
 Pressures are calculated and reported differently by pywws and wview.  These
 are the variables:
@@ -252,6 +265,36 @@ keymap = {
     'status'      : ('status',       1.0),
 }
 
+# formats for displaying fixed_format fields
+datum_display_formats = {
+    'magic_1' : '0x%2x',
+    'magic_2' : '0x%2x',
+    }
+
+# wrap value for rain counter
+rain_max = 0x10000
+
+# values for status:
+rain_overflow   = 0x80
+lost_connection = 0x40
+#  unknown         = 0x20
+#  unknown         = 0x10
+#  unknown         = 0x08
+#  unknown         = 0x04
+#  unknown         = 0x02
+#  unknown         = 0x01
+
+def decode_status(status):
+    result = {}
+    if status is None:
+        return result
+    for key, mask in (('rain_overflow',   0x80),
+                      ('lost_connection', 0x40),
+                      ('unknown',         0x3f),
+                      ):
+        result[key] = status & mask
+    return result
+
 def pywws2weewx(p, ts, pressure_offset, altitude,
                 last_rain, last_rain_ts, max_rain_rate):
     """Map the pywws dictionary to something weewx understands.
@@ -284,6 +327,14 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
         else:
             packet[k] = None
 
+    # check for spurious sensor readings
+    if packet['rain'] is not None and last_rain is not None and \
+            packet['rain'] < last_rain and \
+            last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
+        loginf('ignoring data: spurious rain counter decrement: new: %s old: %s' % (packet['rain'], last_rain))
+        packet = {'usUnits':weewx.METRIC, 'dateTime':ts}
+        return packet
+
     # station status is an integer
     if packet['status'] is not None:
         packet['status'] = int(packet['status'])
@@ -310,8 +361,12 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     packet['altimeter'] = sp2ap(adjp, altitude)
 
     # calculate the rain increment from the rain total
+    total = packet['rain']
+    if packet['status'] & rain_overflow:
+        loginf('rain counter wraparound detected')
+        total += rain_max * 0.3
     packet['rainTotal'] = packet['rain']
-    packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+    packet['rain'] = calculate_rain(total, last_rain)
 
     # calculate the rain rate
     packet['rainRate'] = calculate_rain_rate(packet['rain'],
@@ -331,36 +386,6 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
         packet['rainRate'] = None
 
     return packet
-
-# formats for displaying fixed_format fields
-datum_display_formats = {
-    'magic_1' : '0x%2x',
-    'magic_2' : '0x%2x',
-    }
-
-# wrap value for rain counter
-#  rain_max = 0x10000
-
-# values for status:
-#  rain_overflow   = 0x80
-#  lost_connection = 0x40
-#  unknown         = 0x20
-#  unknown         = 0x10
-#  unknown         = 0x08
-#  unknown         = 0x04
-#  unknown         = 0x02
-#  unknown         = 0x01
-
-def decode_status(status):
-    result = {}
-    if status is None:
-        return result
-    for key, mask in (('rain_overflow',   0x80),
-                      ('lost_connection', 0x40),
-                      ('unknown',         0x3f),
-                      ):
-        result[key] = status & mask
-    return result
 
 # decode weather station raw data formats
 def _signed_byte(raw, offset):
@@ -548,9 +573,9 @@ def calculate_rain(newtotal, oldtotal):
     if newtotal is not None and oldtotal is not None:
         if newtotal >= oldtotal:
             delta = newtotal - oldtotal
-        else:  # wraparound
-            logerr('rain counter wraparound detected: new: %s old: %s' % (newtotal, oldtotal))
+        else:
             delta = None
+            logerr('rain counter decrement: new: %s old: %s' % (newtotal, oldtotal))
     else:
         delta = None
     return delta
@@ -587,12 +612,7 @@ def calculate_rain_rate(delta_cm, curr_ts, last_ts):
     return rate
 
 class ObservationError(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-    def __repr__(self):
-        return repr(self.msg)
-    def __str__(self):
-        return self.msg
+    pass
 
 # mechanisms for polling the station
 PERIODIC_POLLING = 'PERIODIC'
@@ -671,7 +691,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.polling_interval  = int(stn_dict.get('polling_interval', 60))
         self.max_rain_rate     = int(stn_dict.get('max_rain_rate', 24))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
-        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
+        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 60.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
         self.interface         = int(stn_dict.get('interface', 0))
         self.vendor_id         = int(stn_dict.get('vendor_id',  '0x1941'), 0)
@@ -703,7 +723,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self._station_clock = None
         self._sensor_clock = None
         # start with known magic numbers.  report any additional we encounter.
-        # these are from wview: ffff, 5555, c400
+        # these are from wview: 55??, ff??, 01??, 001e, 0001
+        # these are from pywws: 55aa, ffff, 5555, c400
         self._magic_numbers = ['55aa']
         self._last_magic = None
 
@@ -791,9 +812,10 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                  self.pressure_offset, self.altitude,
                                  self._last_rain_loop, self._last_rain_ts_loop,
                                  self.max_rain_rate)
-            self._last_rain_loop = packet['rainTotal']
-            self._last_rain_ts_loop = ts
-            if packet['status'] != self._last_status:
+            if packet.has_key('rainTotal'):
+                self._last_rain_loop = packet['rainTotal']
+                self._last_rain_ts_loop = ts
+            if packet.has_key('status') and packet['status'] != self._last_status:
                 loginf('station status %s (%s)' % 
                        (decode_status(packet['status']), packet['status']))
                 self._last_status = packet['status']
@@ -821,8 +843,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
             data['interval'] = r['interval']
-            self._last_rain_arc = data['rainTotal']
-            self._last_rain_ts_arc = ts
+            if data.has_key('rainTotal'):
+                self._last_rain_arc = data['rainTotal']
+                self._last_rain_ts_arc = ts
             logdbg('returning archive record %s' % ts)
             yield data
 
@@ -986,7 +1009,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         Use the computer clock since we cannot trust the station clock.
 
         Return an array of dict, with each dict containing a datetimestamp
-        in UTC, the pointer, the decoded data, and the raw data.
+        in UTC, the pointer, the decoded data, and the raw data.  Items in the
+        array go from oldest to newest.
         """
         nerr = 0
         while True:
