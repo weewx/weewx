@@ -353,17 +353,19 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     packet['altimeter'] = sp2ap(adjp, altitude)
 
     # calculate the rain increment from the rain total
+    # watch for spurious rain counter decrement.  if small decrement then it
+    # is a sensor glitch.  if decrement is significant, then it is a counter
+    # wraparound.
     total = packet['rain']
-    if packet['rain'] is not None and last_rain is not None and \
-            packet['rain'] < last_rain and \
-            last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
-        loginf('ignoring spurious rain counter decrement: new: %s old: %s' % (packet['rain'], last_rain))
-        packet['rainTotal'] = last_rain
-    else:
-        if packet['status'] is not None and packet['status'] & rain_overflow:
-            loginf('rain counter wraparound detected')
-            total += rain_max * 0.3
-        packet['rainTotal'] = packet['rain']
+    packet['rainTotal'] = packet['rain']
+    if packet['rain'] is not None and last_rain is not None:
+        if packet['rain'] < last_rain:
+            if last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
+                loginf('ignoring spurious rain counter decrement: new: %s old: %s' % (packet['rain'], last_rain))
+                packet['rainTotal'] = last_rain
+            else:
+                loginf('rain counter wraparound detected: new: %s old: %s' % (packet['rain'], last_rain))
+                total += rain_max * 0.3
     packet['rain'] = calculate_rain(total, last_rain)
 
     # calculate the rain rate
@@ -489,6 +491,10 @@ def _bcd_encode(value):
     hi = value // 10
     lo = value % 10
     return (hi * 16) + lo
+
+#def logmsg(level, msg):
+#    syslog.syslog(level, 'fousb: %s: %s' %
+#                  (threading.currentThread().getName(), msg))
 
 def logmsg(level, msg):
     syslog.syslog(level, 'fousb: %s' % msg)
@@ -810,10 +816,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                  self.pressure_offset, self.altitude,
                                  self._last_rain_loop, self._last_rain_ts_loop,
                                  self.max_rain_rate)
-            if packet.has_key('rainTotal'):
-                self._last_rain_loop = packet['rainTotal']
-                self._last_rain_ts_loop = ts
-            if packet.has_key('status') and packet['status'] != self._last_status:
+            self._last_rain_loop = packet['rainTotal']
+            self._last_rain_ts_loop = ts
+            if packet['status'] != self._last_status:
                 loginf('station status %s (%s)' % 
                        (decode_status(packet['status']), packet['status']))
                 self._last_status = packet['status']
@@ -841,9 +846,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
             data['interval'] = r['interval']
-            if data.has_key('rainTotal'):
-                self._last_rain_arc = data['rainTotal']
-                self._last_rain_ts_arc = ts
+            self._last_rain_arc = data['rainTotal']
+            self._last_rain_ts_arc = ts
             logdbg('returning archive record %s' % ts)
             yield data
 
