@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Classes and functions for interfacing with a Davis VantagePro, VantagePro2, or VantageVue weather station"""
 

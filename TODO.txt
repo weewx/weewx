@@ -1,3 +1,6 @@
 TODO before the next release:
 
 Figure out why the heartbeat doesn't work on the WMR200.
+
+Remove contingent FixedList entry in vantage.py
+Change logging priority for disambiguation events back to DEBUG.
