@@ -937,6 +937,13 @@ class FixedList(list):
             self.pop(0)
         list.append(self, ts)
     
+def urlencode(url_dict):
+    url_list = []
+    for _key in url_dict:
+        url_list.append("%s=%s" % (_key, url_dict[_key]))
+    url_string = '&'.join(url_list)
+    return url_string
+
 if __name__ == '__main__':
     import doctest
 

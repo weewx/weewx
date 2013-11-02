@@ -141,14 +141,24 @@ class Ambient(StdRESTbase):
             if do_rapidfire_post or do_archive_post:
                 self.archive = weewx.archive.Archive.open(ambient_dict['archive_db_dict'])
 
-
         except KeyError, e:
             raise ServiceError("No keyword: %s" % (e,))
+
+    def new_loop_packet(self, event):
+        _record = self.assemble_data(event.packet, self.archive)
+        _post_dict = self.extract_from(_record)
+        # Add the rapidfire specific keywords:
+        _post_dict['realtime'] = '1'
+        _post_dict['rtfreq'] = '2.5'
+        _url = self.rapidfire_url + '?' + weeutil.weeutil.urlencode(_post_dict)
+        _request = urllib2.Request(_url)
+        self.loop_queue.put(_request)
+        pass
 
     def new_archive_record(self, event):
         _record = self.assemble_data(event.record, self.archive)
         _post_dict = self.extract_from(_record)
-        _url = self.archive_url + '?' + urllib.urlencode(_post_dict)
+        _url = self.archive_url + '?' + weeutil.weeutil.urlencode(_post_dict)
         _request = urllib2.Request(_url)
         self.archive_queue.put(_request)
         pass
@@ -252,6 +262,7 @@ class PostRequest(threading.Thread):
             # Now use urllib2 to post the data. Wrap in a try block
             # in case there's a network problem.
             try:
+                print request._Request__original
                 _response = urllib2.urlopen(request)
             except (urllib2.URLError, socket.error, httplib.BadStatusLine), e:
                 # Unsuccessful. Log it and go around again for another try
