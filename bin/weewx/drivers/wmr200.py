@@ -54,33 +54,79 @@ FORECAST_MAP = { 0:'Partly Cloudy', 1:'Rainy', 2:'Cloudy', 3:'Sunny',
                 6:'Partly Cloudy Night', 7:'Unknown7' }
 TRENDS =      { 0:'Stable', 1:'Rising', 2:'Falling', 3:'Undefined' }
 
-# Global debug logging switch for this module.
-WMR200_DEBUG = False
-
 # Size of USB frame to read from weather console.
-WMR200_USB_FRAME_SIZE = 8
+_WMR200_USB_FRAME_SIZE = 8
 
 # Time to sleep in seconds between querying usb device thread
 # for data.  This should be non-zero and reduces load on the machine.
-WMR200_USB_POLL_INTERVAL = 1
+_WMR200_USB_POLL_INTERVAL = 1
 
 # Time interval in secs to send data to the wmr200 to request live data.
-WMR200_REQUEST_LIVE_DATA_INTERVAL = 30
+_WMR200_REQUEST_LIVE_DATA_INTERVAL = 30
 
 # Time in secs to block and wait for data from the weather console device.
 # Related to time to request live data.
-WMR200_USB_READ_DATA_INTERVAL = WMR200_REQUEST_LIVE_DATA_INTERVAL / 2
+_WMR200_USB_READ_DATA_INTERVAL = _WMR200_REQUEST_LIVE_DATA_INTERVAL / 2
 
 # Time in ms to wait for USB reset to complete.
-WMR200_USB_RESET_TIMEOUT = 1000
+_WMR200_USB_RESET_TIMEOUT = 1000
 
-def dprint(log_msg, override=False):
-    """Debug print helper for non-daemon execution.
-    
-    Can also be overridden to provide additional failure
-    information when error occurs."""
-    if WMR200_DEBUG or override:
-        print 'wmr200: %s' % log_msg
+#
+# Flags for enabling/disabling debug verbosity.
+#
+# Prints processed packets with context from console.
+DEBUG_PACKETS_COOKED = 0
+# Prints raw pre-processed packets from console.
+DEBUG_PACKETS_RAW = 0
+
+# Prints respective packets individually.
+DEBUG_PACKETS_PRESSURE = 0
+DEBUG_PACKETS_RAIN = 0
+DEBUG_PACKETS_STATUS = 0
+DEBUG_PACKETS_TEMP = 0
+DEBUG_PACKETS_UVI = 0
+DEBUG_PACKETS_WIND = 0
+
+# Print communication messages 
+DEBUG_COMM = 0
+# Print weather station configuration.
+DEBUG_CONFIG_DATA = 0
+# Print all writes to weather console.
+DEBUG_WRITES = 0
+DEBUG_READS = 0
+
+DRIVER_NAME = 'wmr200'
+
+def logmsg(dst, msg):
+    """Base syslog helper"""
+    syslog.syslog(dst, '%s: %s: %s' %
+                  (DRIVER_NAME, threading.currentThread().getName(), msg))
+
+
+def logdbg(msg):
+    """Debug syslog helper"""
+    logmsg(syslog.LOG_DEBUG, msg)
+
+
+def loginf(msg):
+    """Info syslog helper"""
+    logmsg(syslog.LOG_INFO, msg)
+
+
+def logwar(msg):
+    """Warning syslog helper"""
+    logmsg(syslog.LOG_WARNING, msg)
+
+
+def logerr(msg):
+    """Error syslog helper"""
+    logmsg(syslog.LOG_ERR, msg)
+
+
+def logcrt(msg):
+    """Critical syslog helper"""
+    logmsg(syslog.LOG_CRIT, msg)
+
 
 def loader(config_dict, engine):
     """Used to load the driver."""
@@ -103,9 +149,9 @@ class UsbDevice(object):
     """General class to handles all access to device via USB bus."""
     def __init__(self):
         # Reset timeout in ms.
-        self.timeout_reset = WMR200_USB_RESET_TIMEOUT
+        self.timeout_reset = _WMR200_USB_RESET_TIMEOUT
         # Polling read timeout.
-        self.timeout_read = WMR200_USB_READ_DATA_INTERVAL
+        self.timeout_read = _WMR200_USB_READ_DATA_INTERVAL
 
         # USB device used for libusb
         self.dev = None
@@ -137,8 +183,8 @@ class UsbDevice(object):
         try:
             self.handle = self.dev.open()
         except usb.USBError, exception:
-            syslog.syslog(syslog.LOG_CRIT, 'wmr200: openDevice() Unable to'
-                          ' open USB interface.  Reason: %s' % exception)
+            logcrt('openDevice() Unable to'
+                   ' open USB interface.  Reason: %s' % exception)
             raise weewx.WeeWxIOError(exception)
 
         # Detach any old claimed interfaces
@@ -150,8 +196,8 @@ class UsbDevice(object):
         try:
             self.handle.claimInterface(self.interface)
         except usb.USBError, exception:
-            syslog.syslog(syslog.LOG_CRIT, 'wmr200: openDevice() Unable to'
-                          ' claim USB interface. Reason: %s' % exception)
+            logcrt('openDevice() Unable to'
+                   ' claim USB interface. Reason: %s' % exception)
             raise weewx.WeeWxIOError(exception)
 
     def closeDevice(self):
@@ -159,13 +205,13 @@ class UsbDevice(object):
         try:
             self.handle.releaseInterface()
         except usb.USBError, exception:
-            syslog.syslog(syslog.LOG_CRIT, 'wmr200: closeDevice() Unable to'
-                          ' release device interface. Reason: %s' % exception)
+            logcrt('closeDevice() Unable to'
+                   ' release device interface. Reason: %s' % exception)
 
         try:
             self.handle.detachKernelDriver(self.interface)
         except usb.USBError, exception:
-            syslog.syslog(syslog.LOG_CRIT, 'wmr200: closeDevice() Unable to'
+            logcrt('closeDevice() Unable to'
                           ' detach driver interface. Reason: %s' % exception)
 
     def readDevice(self):
@@ -177,24 +223,29 @@ class UsbDevice(object):
         the first byte that are valid protocol bytes.  Only the valid
         protocol bytes are returned.  """
         if not self.handle:
-            syslog.syslog(syslog.LOG_ERR, ('wmr200: readDevice() No USB handle'
+            logerr(('readDevice() No USB handle'
                                            ' for usb_device Read'))
             raise weewx.WeeWxIOError('No USB handle for usb_device Read')
 
         try:
             report = self.handle.interruptRead(self.in_endpoint,
-                                               WMR200_USB_FRAME_SIZE,
+                                               _WMR200_USB_FRAME_SIZE,
                                                int(self.timeout_read) * 1000)
 
             # I think this value indicates that the buffer has overflowed.
             if report[0] == 8:
                 log_msg = 'USB readDevice overflow error'
-                syslog.syslog(syslog.LOG_ERR, 'wmr200: %s' % log_msg)
+                logerr(log_msg)
                 raise WMR200ProtocolError(log_msg)
 
             self.debug_byte_cnt += 1
             # The first byte is the size of valid data following.
             # We only want to return the valid data.
+            if DEBUG_READS:
+                buf = ''
+                for b in report[1:report[0]+1]:
+                    buf += '%02x ' % b
+                loginf('readDevice(): %s' % buf)
             return report[1:report[0] + 1]
         except IndexError:
             # This indicates we failed an index range above.
@@ -208,12 +259,11 @@ class UsbDevice(object):
             # again.
             log_msg = 'readDevice() USB Error Reason:%s' % ex
             if ex.args[0].find('No data available') == -1:
-                dprint(log_msg)
-                syslog.syslog(syslog.LOG_DEBUG, 'wmr200: %s' % log_msg)
+                logdbg(log_msg)
                 return None
             else:
                 # No data avail...not an error but probably ok.
-                syslog.syslog(syslog.LOG_DEBUG, 'wmr200: No data received in'
+                logdbg('No data received in'
                               ' %d seconds' % int(self.timeout_read))
                 return []
 
@@ -225,11 +275,12 @@ class UsbDevice(object):
 
         if not self.handle:
             log_msg = 'No USB handle for usb_device Write'
-            dprint(log_msg)
-            syslog.syslog(syslog.LOG_ERR, ('wmr200: %s') % log_msg)
+            logerr(log_msg)
             raise weewx.WeeWxIOError(log_msg)
 
         try:
+            if DEBUG_WRITES:
+                loginf('writeDevice(): %s' % buf)
             self.handle.controlMsg(
                 usb.TYPE_CLASS + usb.RECIP_INTERFACE, # requestType
                 0x0000009,                            # request
@@ -238,9 +289,9 @@ class UsbDevice(object):
                 0x0000000,                            # index
                 self.timeout_reset)                   # timeout
         except usb.USBError, exception:
-            syslog.syslog(syslog.LOG_ERR, ('wmr200: writeDevice() Unable to'
+            logerr(('writeDevice() Unable to'
                           ' send USB control message'))
-            syslog.syslog(syslog.LOG_ERR, '****  %s' % exception)
+            logerr('****  %s' % exception)
             # Convert to a Weewx error:
             raise weewx.WakeupError(exception)
 
@@ -307,8 +358,7 @@ class Packet(object):
         if self._pkt_data[1] > PACKET_FACTORY_MAX_PACKET_SIZE:
             log_msg = 'Discarding bogus packet cmd:%x size:%d' \
                     % (self._pkt_data[0], self._pkt_data[1])
-            dprint(log_msg)
-            syslog.syslog(syslog.LOG_INFO, 'wmr200: %s' % log_msg)
+            logerr(log_msg)
             self._bogus_packet = True
 
     def _sizeActual(self):
@@ -316,8 +366,7 @@ class Packet(object):
         if len(self._pkt_data) > PACKET_FACTORY_MAX_PACKET_SIZE:
             log_msg = 'llegal actual packet size cmd:%x size:%d' \
                     % (self._pkt_data[0], len(self._pkt_data))
-            dprint(log_msg)
-            syslog.syslog(syslog.LOG_INFO, 'wmr200: %s' % log_msg)
+            logerr(log_msg)
             self._bogus_packet = True
         return len(self._pkt_data)
 
@@ -327,8 +376,7 @@ class Packet(object):
             if self._pkt_data[1] > PACKET_FACTORY_MAX_PACKET_SIZE:
                 log_msg = 'Illegal protocol packet size cmd:%x size:%d' \
                         % (self._pkt_data[0], self._pkt_data[1])
-                dprint(log_msg)
-                syslog.syslog(syslog.LOG_INFO, 'wmr200: %s' % log_msg)
+                logwar(log_msg)
                 self._bogus_packet = True
             # Return the actual protocol length from packet.  If bogus
             # we will deal with it later.
@@ -342,8 +390,8 @@ class Packet(object):
         if (self.pkt_len == self._sizeExpected() and
             self.pkt_len == self._sizeActual()):
             return True
-        self.printRaw(True)
-        syslog.syslog(syslog.LOG_ERR, ('wmr200: Discarding illegal size packet'
+        self.printRaw()
+        loginf(('Discarding illegal size packet'
                                        ' act:%d proto:%d exp:%d'
                                        % (self._sizeActual(),
                                           self._sizeExpected(),
@@ -363,7 +411,8 @@ class Packet(object):
         
         This is a parent class method and all derivative children
         must define this method."""
-        dprint('Processing %s' % self.packetName)
+        if DEBUG_PACKETS_RAW or DEBUG_PACKETS_COOKED:
+            logdbg('Processing %s' % self.packetName)
         # Promote this field to an empty dictionary.
         self._record = {}
 
@@ -378,7 +427,7 @@ class Packet(object):
     def packetRecord(self):
         """Returns the processed record to the weewx engine."""
         if not self._packetBeenProcessed():
-            dprint('WARN packetRecord() Packet has not been processed.')
+            logwar('packetRecord() Packet has not been processed.')
         return self._record
 
     def packetYieldable(self):
@@ -402,7 +451,7 @@ class Packet(object):
 
         except IndexError:
             str_val = 'Packet too small to compute 16 bit checksum'
-            dprint(str_val)
+            logerr(str_val)
             raise WMR200CheckSumError(str_val)
 
     def _checkSumField(self):
@@ -415,7 +464,7 @@ class Packet(object):
 
         except IndexError:
             str_val = 'Packet too small to contain 16 bit checksum'
-            dprint(str_val)
+            logerr(str_val)
             raise WMR200CheckSumError(str_val)
 
     def verifyCheckSum(self):
@@ -426,14 +475,18 @@ class Packet(object):
         if self._checkSumCalculate() != self._checkSumField():
             str_val = ('Checksum error act:%x exp:%x'
                         % (self._checkSumCalculate(), self._checkSumField()))
-            dprint(str_val)
-            self.printRaw(True)
-            syslog.syslog(syslog.LOG_ERR, 'wmr200: %s' % str_val)
+            logerr(str_val)
+            self.printRaw()
             raise WMR200CheckSumError(str_val)
 
     def _timeStampEpoch(self):
-        """The timestamp of the packet in seconds since epoch.
+        """Pulls the timestamp from the packet.  
         
+        Returns either that timestamp or the PC time based upon configuration.
+
+        Cached the last timestamp to add to packets that do not provide
+        timestamps.
+
         Must only be called by packets that have timestamps in the
         protocal packet."""
         try:
@@ -443,9 +496,6 @@ class Packet(object):
             month  = self._pkt_data[5]
             year   = 2000 + self._pkt_data[6]
 
-            self._wmr200.last_time_epoch = \
-                    time.mktime((year, month, day, hour, minute, 0, -1, -1, -1))
-
             # Option to use PC time and not the console time.
             # Done here so that any error conditions associated with the
             # time fields will cause the same error as using pc time would.
@@ -453,44 +503,49 @@ class Packet(object):
             # weewx keeps # per loop packet are satisfied.
             if self._wmr200.usePcTime:
                 self._wmr200.last_time_epoch = int(time.time() + 0.5)
+            else:
+                self._wmr200.last_time_epoch = \
+                        time.mktime((year, month, day, hour, minute, \
+                                     0, -1, -1, -1))
 
             return self._wmr200.last_time_epoch
 
         except IndexError:
             log_msg = ('Packet length too short to get timestamp len:%d'
                        % len(self._pkt_data))
-            dprint(log_msg)
-            syslog.syslog(syslog.LOG_ERR, ('wmr200: %s') % log_msg)
+            logerr(log_msg)
             raise WMR200ProtocolError(log_msg)
 
         except (OverflowError, ValueError), exception:
             log_msg = 'Packet timestamp with bogus fields %s' % exception
-            syslog.syslog(syslog.LOG_ERR, ('wmr200: %s') % log_msg)
+            logerr(log_msg)
             raise WMR200ProtocolError(log_msg)
 
-    def printRaw(self, override=False):
+    def printRaw(self):
         """Debug method to print the raw packet.
         
         May be called anytime during packet accumulation."""
-        out = ' Packet Raw: '
-        for byte in self._pkt_data:
-            out += '%02x ' % byte
-        dprint(out, override)
+        if DEBUG_PACKETS_RAW:
+            out = ' Packet raw: '
+            for byte in self._pkt_data:
+                out += '%02x ' % byte
+            logdbg(out)
 
     def printCooked(self, override=False):
         """Debug method method to print the processed packet.
         
         Must be called after the Process() method."""
-        if self._packetBeenProcessed():
-            out = ' Packet: '
-            out += '%s ' % self.packetName
-            out += '%s ' % time.asctime(time.localtime(self._timeStampEpoch()))
-            out += 'len:%d' % self._sizeActual()
-            out += str(self._record)
-        else:
-            out = 'WARN: printCooked() Packet has not been processed'
-        dprint(out, override)
-
+        if DEBUG_PACKETS_COOKED:
+            if self._packetBeenProcessed():
+                out = ' Packet cooked: '
+                out += '%s ' % self.packetName
+                out += '%s ' % time.asctime \
+                        (time.localtime(self._timeStampEpoch()))
+                out += 'len:%d' % self._sizeActual()
+                out += str(self._record)
+            else:
+                out = 'WARN: printCooked() Packet has not been processed'
+            logdbg(out)
 
 class PacketHistoryReady(Packet):
     """Packet parser for archived data is ready to receive."""
@@ -521,9 +576,10 @@ class PacketHistoryReady(Packet):
         
         Not much processing is done in this packet so not much
         cooked data to print."""
-        out = ' Packet: '
-        out += '%s ' % self.packetName
-        dprint(out, override)
+        if DEBUG_PACKETS_COOKED:
+            out = ' Packet cooked: '
+            out += '%s ' % self.packetName
+            logdbg(out)
 
     def packetProcess(self):
         """Returns a records field to be processed by the weewx engine."""
@@ -545,9 +601,10 @@ class PacketHistoryData(Packet):
         
         Not much processing is done in this packet so not much
         cooked data to print."""
-        out = ' Packet: '
-        out += '%s ' % self.packetName
-        dprint(out, override)
+        if DEBUG_PACKETS_COOKED:
+            out = ' Packet cooked: '
+            out += '%s ' % self.packetName
+            logdbg(out)
 
     def packetVerifyLength(self):
         """Check packet to verify actual length of packet against the
@@ -559,12 +616,12 @@ class PacketHistoryData(Packet):
         if (self._sizeExpected() >= self.pkt_len and self._sizeActual() >=
             self.pkt_len):
             return True
-        self.printRaw(True)
-        syslog.syslog(syslog.LOG_ERR, ('wmr200: Discarding illegal size packet'
-                                       ' act:%d proto:%d min_exp:%d'
-                                       % (self._sizeActual(),
-                                          self._sizeExpected(),
-                                          self.pkt_len)))
+        logerr(('Discarding illegal size packet'
+                ' act:%d proto:%d min_exp:%d'
+                % (self._sizeActual(),
+                   self._sizeExpected(),
+                   self.pkt_len)))
+        self.printRaw()
 
     def packetProcess(self):
         """Returns a records field to be processed by the weewx engine."""
@@ -607,11 +664,12 @@ class PacketWind(Packet):
         else:
             windchill = None
 
-        dprint('Wind Dir: %s' % (WIND_DIR_MAP[self._pkt_data[8] & 0x0f]))
-        dprint('  Gust: %.1f m/s' % (gustSpeed))
-        dprint('  Wind: %.1f m/s' % (avgSpeed))
-        if windchill != None:
-            dprint('  Windchill: %.1f C' % (windchill))
+        if DEBUG_PACKETS_WIND:
+            loginf('Wind Dir: %s' % (WIND_DIR_MAP[self._pkt_data[8] & 0x0f]))
+            loginf('  Gust: %.1f m/s' % (gustSpeed))
+            loginf('  Wind: %.1f m/s' % (avgSpeed))
+            if windchill != None:
+                loginf('  Windchill: %.1f C' % (windchill))
 
         # The console returns wind speeds in m/s. Our metric system requires
         # kph, so the result needs to be multiplied by 3.6.
@@ -637,7 +695,8 @@ class PacketRain(Packet):
     pkt_len = 0x16
 
     # static class variable
-    rain_last_totalRain = None
+    rain_base_totalRain = None
+    rain_last_totalRain = 0
 
     def __init__(self, wmr200):
         super(PacketRain, self).__init__(wmr200)
@@ -656,6 +715,13 @@ class PacketRain(Packet):
         # Bytes 6 and 7: high and low byte of the total rainfall in 0.1in
         rain_total = ((self._pkt_data[14] << 8)
                       | self._pkt_data[13]) / 100.0
+        # Upon start we need to calibrate the total rain presented by the
+        # console.
+        if PacketRain.rain_base_totalRain is None:
+            PacketRain.rain_base_totalRain = rain_total
+        # Normalize rain total to value since last driver boot.
+        rain_total -= PacketRain.rain_base_totalRain
+
         # NB: in my experiments with the WMR100, it registers in increments of
         # 0.04 inches. Per Ejeklint's notes have you divide the packet values by
         # 10, but this would result in an 0.4 inch bucket --- too big. So, I'm
@@ -667,12 +733,12 @@ class PacketRain(Packet):
                         'dateTime'          : self._timeStampEpoch(),
                         'usUnits'           : weewx.US}
         # Because the WMR does not offer anything like bucket tips, we must
-        # calculate it by looking for the change in total rain. Of course, this
-        # won't work for the very first rain packet.
+        # calculate it by looking for the change in total rain.
+        # This record is the amount of rain occuring since last poll time.
         self._record['rain'] = \
-        (self._record['totalRain'] - PacketRain.rain_last_totalRain) \
-                if PacketRain.rain_last_totalRain is not None else None
+                self._record['totalRain'] - PacketRain.rain_last_totalRain
         PacketRain.rain_last_totalRain = self._record['totalRain']
+
 
 class PacketUvi(Packet):
     """Packet parser for ultra violet sensor."""
@@ -718,11 +784,12 @@ class PacketPressure(Packet):
                             | self._pkt_data[9])
         unknownNibble = (self._pkt_data[10] >> 4)
 
-        dprint('Forecast: %s' % (forecast))
-        dprint('Measured Pressure: %d hPa' % (pressure))
-        if unknownNibble != 3:
-            dprint('Pressure unknown nibble: %d' % (unknownNibble))
-        dprint('Altitude corrected Pressure: %d hPa' % (altPressure))
+        if DEBUG_PACKETS_PRESSURE:
+            loginf('Forecast: %s' % FORECAST_MAP[forecast])
+            loginf('Measured Pressure: %d hPa' % (pressure))
+            if unknownNibble != 3:
+                loginf('Pressure unknown nibble: %d' % (unknownNibble))
+            loginf('Altitude corrected Pressure: %d hPa' % (altPressure))
 
         self._record = {'barometer'   : pressure,
                         'altimeter'   : altPressure,
@@ -782,23 +849,26 @@ class PacketTemperature(Packet):
         else:
             heat_index = None
 
-        dprint(('Temperature sensor_id:%d %.1f C  Trend: %s'
-                % (sensor_id, temp,
-                   TRENDS[temp_trend])))
-        dprint('  Humidity %d: %d%%   Trend: %s' % (sensor_id, humidity,
-                                                    TRENDS[hum_trend]))
-        dprint(('  Dew point %d: %.1f C' % (sensor_id, dew_point)))
-        if heat_index:
-            dprint('  Heat index: %d' % (heat_index))
+        if DEBUG_PACKETS_TEMP:
+            loginf(('Temperature sensor_id:%d %.1f C  Trend: %s'
+                    % (sensor_id, temp,
+                       TRENDS[temp_trend])))
+            loginf('  Humidity %d: %d%%   Trend: %s' % (sensor_id, humidity,
+                                                        TRENDS[hum_trend]))
+            loginf(('  Dew point %d: %.1f C' % (sensor_id, dew_point)))
+            if heat_index:
+                loginf('  Heat index: %d' % (heat_index))
 
         if sensor_id == 0:
             self._record['inTemp']      = temp
             self._record['inHumidity']  = humidity
         elif sensor_id == 1:
             self._record['outTemp']     = temp
-            self._record['dewpoint'] = weewx.wxformulas.dewpointC(temp, humidity)
+            self._record['dewpoint'] = \
+                    weewx.wxformulas.dewpointC(temp, humidity)
             self._record['outHumidity'] = humidity
-            self._record['heatindex'] = weewx.wxformulas.heatindexC(temp, humidity)
+            self._record['heatindex'] = \
+                    weewx.wxformulas.heatindexC(temp, humidity)
         elif sensor_id >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -814,6 +884,13 @@ class PacketStatus(Packet):
     def __init__(self, wmr200):
         super(PacketStatus, self).__init__(wmr200)
 
+    def _timeStampEpoch(self):
+        """This packet does not have a timestamp so we just return the
+        last timestamp from the previous packet read.  
+        If there is no previous timestamp then we return the initial PC
+        timestamp."""
+        return self._wmr200.last_time_epoch
+
     def packetProcess(self):
         """Returns a packet that can be processed by the weewx engine.
         
@@ -825,7 +902,7 @@ class PacketStatus(Packet):
         # a timestamp so we put in the PC timestamp.
         # This may be a problem if using console timestamps.
         self._record = {
-            'dateTime'          : self._wmr200.last_time_epoch,
+            'dateTime'          : self._timeStampEpoch(),
             'usUnits'           : weewx.METRIC,
             'inTempBatteryStatus' : 1.0,
             'OutTempBatteryStatus' : 1.0,
@@ -836,45 +913,55 @@ class PacketStatus(Packet):
         }
 
         if self._pkt_data[2] & 0x2:
-            dprint('Sensor 1 fault (temp/hum outdoor)')
+            if self._wmr200._sensor_stat:
+                logwar('Sensor 1 fault (temp/hum outdoor)')
 
         if self._pkt_data[2] & 0x1:
-            dprint('Wind sensor fault')
+            if self._wmr200._sensor_stat:
+                logwar('Wind sensor fault')
 
         if self._pkt_data[3] & 0x20:
-            dprint('UV Sensor fault')
+            if self._wmr200._sensor_stat:
+                logwar('UV Sensor fault')
 
         if self._pkt_data[3] & 0x10:
-            dprint('Rain sensor fault')
+            if self._wmr200._sensor_stat:
+                logwar('Rain sensor fault')
 
         if self._pkt_data[4] & 0x02:
-            dprint('Sensor 1: Battery low')
+            if self._wmr200._sensor_stat:
+                logwar('Sensor 1: Battery low')
             self._record['outTempBatteryStatus'] = 0.0
 
         if self._pkt_data[4] & 0x01:
-            dprint('Wind sensor: Battery low')
+            if self._wmr200._sensor_stat:
+                logwar('Wind sensor: Battery low')
             self._record['windBatteryStatus'] = 0.0
 
         if self._pkt_data[5] & 0x20:
-            dprint('UV sensor: Battery low')
+            if self._wmr200._sensor_stat:
+                logwar('UV sensor: Battery low')
 
         if self._pkt_data[5] & 0x10:
-            dprint('Rain sensor: Battery low')
+            if self._wmr200._sensor_stat:
+                logwar('Rain sensor: Battery low')
             self._record['rainBatteryStatus'] = 0.0
 
         # Output packet to try to understand other fields.
-        self.printRaw(True)
+        if DEBUG_PACKETS_STATUS:
+            self.printRaw()
 
     def printCooked(self, override=False):
         """Print the cooked packet."""
-        if self._packetBeenProcessed():
-            out = ' Packet: '
-            out += '%s ' % self.packetName
-            out += 'len:%d' % self._sizeActual()
-            out += str(self._record)
-        else:
-            out = 'WARN: printCooked() Packet has not been processed'
-        dprint(out, override)
+        if DEBUG_PACKETS_COOKED:
+            if self._packetBeenProcessed():
+                out = ' Packet cooked: '
+                out += '%s ' % self.packetName
+                out += 'len:%d' % self._sizeActual()
+                out += str(self._record)
+            else:
+                out = 'WARN: printCooked() Packet has not been processed'
+            logdbg(out)
 
 
 class PacketEraseAcknowledgement(Packet):
@@ -906,9 +993,10 @@ class PacketEraseAcknowledgement(Packet):
         """Print the processed packet.
         
         This packet consists of a single byte and thus not much to print."""
-        out = ' Packet: '
-        out += '%s ' % self.packetName
-        dprint(out, override)
+        if DEBUG_PACKETS_COOKED:
+            out = ' Packet cooked: '
+            out += '%s ' % self.packetName
+            logdbg(out)
 
     def packetProcess(self):
         """Returns a records field to be processed by the weewx engine."""
@@ -934,7 +1022,7 @@ class PacketFactory(object):
         if pkt_cmd in self.subclass:
             if self.skipped_bytes:
                 print 'Skipped bytes until re-sync:%d' % self.skipped_bytes
-                syslog.syslog(syslog.LOG_INFO, ('wmr200: Skipped bytes before'
+                loginf(('Skipped bytes before'
                                                 ' resync:%d' %
                                                 self.skipped_bytes))
                 self.skipped_bytes = 0
@@ -973,7 +1061,7 @@ class RequestLiveData(threading.Thread):
         # Make sure we pass along the signal to kill the thread when
         # the time comes.
         self.daemon = True
-        syslog.syslog(syslog.LOG_INFO, ('wmr200: Created watchdog thread to'
+        loginf(('Created watchdog thread to'
                                         ' poke for live data every %d seconds')
                       % self.poke_time)
 
@@ -983,17 +1071,18 @@ class RequestLiveData(threading.Thread):
         When its time to shutdown this thread, the main thread will send any
         string across the socket.  This both wakes up this timer thread and
         also tells it to expire."""
+        loginf('Started watchdog thread live data')
         while True:
             self.wmr200.readyToPoke(True)
-            main_thread_comm = select.select([self.sock_rd], [], [], self.poke_time)
+            main_thread_comm = \
+                    select.select([self.sock_rd], [], [], self.poke_time)
             if main_thread_comm[0]:
                 # Data is ready to read on socket.
                 buf = self.sock_rd.recv(4096)
-                syslog.syslog(syslog.LOG_INFO, ('wmr200: Watchdog'
-                                                ' received %s') % buf)
+                loginf('Watchdog received %s' % buf)
                 break
 
-        syslog.syslog(syslog.LOG_INFO, ('wmr200: Watchdog thread exiting'))
+        logwar('Watchdog thread exiting')
 
 
 class PollUsbDevice(threading.Thread):
@@ -1023,7 +1112,7 @@ class PollUsbDevice(threading.Thread):
         # One thread is created for each reset sequence.
         self._reset_sent = False
 
-        syslog.syslog(syslog.LOG_INFO, ('wmr200: Created USB polling thread to'
+        loginf(('Created USB polling thread to'
                                         ' read block on device'))
 
     def run(self):
@@ -1036,13 +1125,14 @@ class PollUsbDevice(threading.Thread):
         Once this thread is started it will be gated by
         a reset to the weather console device to sync it
         up."""
+        loginf('Started poll_usb_device thread live data')
+
         # Wait for a reset to occur from the main thread.
         self._cv_poll.acquire()
         while not self._reset_sent:
             self._cv_poll.wait()
         self._cv_poll.release()
-        syslog.syslog(syslog.LOG_INFO, ('wmr200: USB polling thread'
-                                        ' reset sent'))
+        loginf('USB polling thread reset sent')
 
         # Read and discard next data from weather console device.
         buf = self.usb_device.readDevice()
@@ -1062,11 +1152,10 @@ class PollUsbDevice(threading.Thread):
                     self.wmr200.readyToPoke(True)
 
             except WMR200ProtocolError, ex:
-                syslog.syslog(syslog.LOG_INFO, ('wmr200: USB overflow'))
+                loginf('USB overflow')
                 self.exception = ex
 
-        syslog.syslog(syslog.LOG_INFO, ('wmr200: USB device polling thread'
-                                        ' exiting'))
+        loginf(('USB device polling thread exiting'))
 
     def readUsbDevice(self):
         """Reads the buffered USB device data.
@@ -1086,15 +1175,14 @@ class PollUsbDevice(threading.Thread):
         self._lock_poll.acquire()
         self._buf = []
         self._lock_poll.release()
-        syslog.syslog(syslog.LOG_INFO, ('wmr200: Flushed USB device'))
+        loginf('Flushed USB device')
 
     def checkException(self):
         """Called my main thread to check if any exceptions occurred.
         Called from main thread."""
         if self.exception:
             log_msg = 'Detected exception in USB layer'
-            dprint(log_msg)
-            syslog.syslog(syslog.LOG_ERR, ('wmr200: %s' % log_msg))
+            logerr(log_msg)
             raise WMR200AccessError(self.exception)
 
     def resetConsole(self):
@@ -1105,20 +1193,19 @@ class PollUsbDevice(threading.Thread):
         buf = [0x20, 0x00, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00]
         try:
             self.usb_device.writeDevice(buf)
-            syslog.syslog(syslog.LOG_INFO, 'wmr200: Reset device')
+            if DEBUG_COMM:
+                loginf('Reset device')
             self._reset_sent = True
             time.sleep(1)
             # Tell thread it can proceed
             self._cv_poll.acquire()
             self._cv_poll.notify()
             self._cv_poll.release()
-            dprint('Reset device')
 
         except usb.USBError, exception:
-            syslog.syslog(syslog.LOG_ERR,
-                          ('wmr200: resetConsole() Unable to send USB control'
+            logerr(('resetConsole() Unable to send USB control'
                            'message'))
-            syslog.syslog(syslog.LOG_ERR, '****  %s' % exception)
+            logerr('****  %s' % exception)
             # Convert to a Weewx error:
             raise weewx.WakeupError(exception)
 
@@ -1130,27 +1217,39 @@ class WMR200(weewx.abstractstation.AbstractStation):
         """Initialize the wmr200 driver.
         
         NAMED ARGUMENTS:
-        altitude: The altitude in meters. Required.
-        
-        vendor_id: The USB vendor ID for the WMR [Optional. Default is 0xfde.
-        product_id: The USB product ID for the WM [Optional. Default is 0xca01.
-        
-        interface: The USB interface [Optional. Default is 0]
-        
-        in_endpoint: The IN USB endpoint used by the WMR.
-            [Optional. Default is usb.ENDPOINT_IN + 1]"""
-        self.altitude     = stn_dict['altitude']
+        altitude: The altitude in meters. [Required]
+        sensor_status: Print sensor faults or failures to syslog. [Optional]
+          Default is True.
+        use_pc_time: Use the console timestamp or the Pc. [Optional]
+          Default is False
+       
+        --- User should not typically change anything below here ---
 
+        vendor_id: The USB vendor ID for the WMR [Optional]
+          Default is 0xfde.
+        product_id: The USB product ID for the WM [Optional]
+          Default is 0xca01.
+        interface: The USB interface [Optional]
+          Default is 0]
+        in_endpoint: The IN USB endpoint used by the WMR [Optional]
+          Default is usb.ENDPOINT_IN + 1]
+        """
+        ## User configurable options
+        # TODO(cmanton) This also get set in loader; not seem to be used
+        self._altitude     = stn_dict['altitude']
+        # Provide sensor faults in syslog.
+        self._sensor_stat = weeutil.weeutil.tobool(stn_dict.get('sensor_status',
+                                                                True))
+        # Use pc timestamps or weather console timestamps.
+        self._use_pc_time = \
+                weeutil.weeutil.tobool(stn_dict.get('use_pc_time', False))
+
+        # User configurable options but not recommended
         vendor_id         = int(stn_dict.get('vendor_id',  '0x0fde'), 0)
         product_id        = int(stn_dict.get('product_id', '0xca01'), 0)
         interface         = int(stn_dict.get('interface', 0))
         in_endpoint       = int(stn_dict.get('IN_endpoint',
                                              usb.ENDPOINT_IN + 1))
-
-        # Boolean to use pc timestamps or weather console timestamps.
-        self._use_pc_time = weeutil.weeutil.tobool(stn_dict.get('use_pc_time', False))
-        syslog.syslog(syslog.LOG_INFO, ('wmr200: Using PC Time:'
-                                        '%d') % self._use_pc_time);
 
         # Buffer of bytes read from weather console device.
         self._buf = []
@@ -1171,8 +1270,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
 
         # Locate the weather console device on the USB bus.
         if not self.usb_device.findDevice(vendor_id, product_id):
-            syslog.syslog(syslog.LOG_ERR, 'wmr200: Unable to find device')
-            dprint('Unable to find device %x %x' % (vendor_id, product_id))
+            logcrt('Unable to find device %x %x' % (vendor_id, product_id))
 
         # Open the weather console USB device for read and writes.
         self.usb_device.openDevice()
@@ -1191,7 +1289,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # Create the watchdog thread to request live data.
         self._thread_watchdog = RequestLiveData(
             kwargs = {'wmr200'    : self,
-                      'poke_time' : WMR200_REQUEST_LIVE_DATA_INTERVAL,
+                      'poke_time' : _WMR200_REQUEST_LIVE_DATA_INTERVAL,
                       'sock_rd'   : self.sock_rd})
 
         # Create the usb polling device thread.
@@ -1201,31 +1299,74 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # Start the usb polling device thread.
         self._poll_device_enable = True
         self._thread_usb_poll.start()
-        syslog.syslog(syslog.LOG_INFO, ('wmr200: Started poll_usb_device'
-                                        ' thread live data'))
 
         # Send the device a reset
         self._thread_usb_poll.resetConsole()
 
         # Start the watchdog for live data thread.
         self._thread_watchdog.start()
-        syslog.syslog(syslog.LOG_INFO, ('wmr200: Started watchdog thread'
-                                        ' live data'))
 
         # Stats
         self._stat_bytes_read = 0
         self._stat_pkts_sent  = 0
 
-        # General restart counter.
+        # Not all packets from wmr200 have timestamps, yet weewx requires
+        # timestamps on all packets pass up the stack.  So we will use the 
+        # timestamp from the most recent packet, but still need to see an
+        # initial timestamp, so we'll just use PC time.
+        last_time_epoch = int(time.time() + 0.5)
+
+        # Restart counter in case driver crashes and is restarted by the
+        # weewx engine.
         global STAT_RESTART
         STAT_RESTART += 1
         if STAT_RESTART > 1:
-            syslog.syslog(syslog.LOG_INFO, ('wmr200: Restart count: %d') % STAT_RESTART)
+            logwar(('Restart count: %d') % STAT_RESTART)
+
+        # Debugging flags
+        global DEBUG_WRITES
+        DEBUG_WRITES = int(stn_dict.get('debug_writes', 0))
+        global DEBUG_COMM
+        DEBUG_COMM = int(stn_dict.get('debug_comm', 0))
+        global DEBUG_CONFIG_DATA
+        DEBUG_CONFIG_DATA = int(stn_dict.get('debug_config_data',
+                         0))
+        global DEBUG_WEATHER_DATA
+        DEBUG_WEATHER_DATA = int(stn_dict.get('debug_weather_data',
+                         0))
+        global DEBUG_HISTORY_DATA
+        DEBUG_HISTORY_DATA = int(stn_dict.get('debug_history_data',
+                         0))
+        global DEBUG_PACKETS_RAW
+        DEBUG_PACKETS_RAW = int(stn_dict.get('debug_packets_raw',
+                         0))
+        global DEBUG_PACKETS_COOKED
+        DEBUG_PACKETS_COOKED = int(stn_dict.get('debug_packets_cooked',
+                         0))
+        global DEBUG_PACKETS_TEMP
+        DEBUG_PACKETS_TEMP = int(stn_dict.get('debug_packets_temp',
+                         0))
+        global DEBUG_PACKETS_WIND
+        DEBUG_PACKETS_WIND = int(stn_dict.get('debug_packets_wind',
+                         0))
+        global DEBUG_PACKETS_STATUS
+        DEBUG_PACKETS_STATUS = int(stn_dict.get('debug_packets_status',
+                         0))
+        global DEBUG_PACKETS_PRESURE
+        DEBUG_PACKETS_PRESURE = int(stn_dict.get('debug_packets_pressure',
+                         0))
+
+        if DEBUG_CONFIG_DATA:
+            loginf('Configuration setup');
+            loginf('  Altitude:%d' % self._altitude);
+            loginf('  Log sensor faults: %s' % self._sensor_stat)
+            loginf('  Using PC Time: %s' % self._use_pc_time)
 
     @property
     def hardware_name(self):
         """Return the name of the hardware/driver."""
-        return 'WMR200'
+        global DRIVER_NAME
+        return DRIVER_NAME
 
     @property
     def usePcTime(self):
@@ -1237,7 +1378,8 @@ class WMR200(weewx.abstractstation.AbstractStation):
         self._poke_lock.acquire()
         self._rdy_to_poke = val
         self._poke_lock.release()
-        dprint('Set ready to poke:%r' % val)
+        if DEBUG_COMM:
+            loginf('Set ready to poke:%r' % val)
 
     def isReadyToPoke(self):
         """Get info that device is ready to be poked."""
@@ -1260,7 +1402,8 @@ class WMR200(weewx.abstractstation.AbstractStation):
         self._writeDB()
         # Reset the ready to poke flag.
         self.readyToPoke(False)
-        dprint('Poked device for live data')
+        if DEBUG_COMM:
+            loginf('Poked device for live data')
 
     def _writeD0(self):
         """Write a command across the USB bus.
@@ -1272,9 +1415,8 @@ class WMR200(weewx.abstractstation.AbstractStation):
         try:
             self.usb_device.writeDevice(buf)
         except usb.USBError, exception:
-            syslog.syslog(syslog.LOG_ERR,
-                          ('wmr200: writeD0() Unable to send USB 0xD0 control message'))
-            syslog.syslog(syslog.LOG_ERR, '****  %s' % exception)
+            logerr(('writeD0() Unable to send USB 0xD0 control message'))
+            logerr('****  %s' % exception)
             # Convert to a Weewx error:
             raise weewx.WakeupError(exception)
 
@@ -1288,9 +1430,8 @@ class WMR200(weewx.abstractstation.AbstractStation):
         try:
             self.usb_device.writeDevice(buf)
         except usb.USBError, exception:
-            syslog.syslog(syslog.LOG_ERR,
-                          ('wmr200: writeDB() Unable to send USB 0xDB control message'))
-            syslog.syslog(syslog.LOG_ERR, '****  %s' % exception)
+            logerr(('writeDB() Unable to send USB 0xDB control message'))
+            logerr('****  %s' % exception)
             # Convert to a Weewx error:
             raise weewx.WakeupError(exception)
 
@@ -1345,7 +1486,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # Prevent busy loop by suspending process a bit to
         # wait for usb read thread to accumulate data from the
         # weather console.
-        time.sleep(WMR200_USB_POLL_INTERVAL)
+        time.sleep(_WMR200_USB_POLL_INTERVAL)
 
     def genLoopPackets(self):
         """Main generator function that continuously returns loop packets
@@ -1362,8 +1503,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
             if self.pkt is not None and self.pkt.packetComplete():
                 # Drop any bogus packets.
                 if self.pkt.isBogus:
-                    syslog.syslog(syslog.LOG_ERR,
-                                  'wmr200: Discarding bogus packet')
+                    logerr('Discarding bogus packet')
                     self.pkt.printRaw(True)
                 else:
                     self.pkt.printRaw()
@@ -1390,7 +1530,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
             # Pull data from the weather console.
             self._pollForData()
 
-        syslog.syslog(syslog.LOG_ERR, 'wmr200: Exited genloop packets')
+        logerr('Exited genloop packets')
 
     def closePort(self):
         """Closes the USB port to the device."""
@@ -1399,18 +1539,18 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # Join with the polling thread.
         self._thread_usb_poll.join()
         if self._thread_usb_poll.isAlive():
-            syslog.syslog(syslog.LOG_INFO, 'wmr200: USB polling thread still alive')
+            loginf('USB polling thread still alive')
         else:
-            syslog.syslog(syslog.LOG_INFO, 'wmr200: USB polling thread expired')
+            loginf('USB polling thread expired')
 
         # Shutdown the wathdog thread.
         self.sock_wr.send('shutdown')
         # Join with the polling thread.
         self._thread_watchdog.join()
         if self._thread_watchdog.isAlive():
-            syslog.syslog(syslog.LOG_INFO, 'wmr200: watchdog thread still alive')
+            loginf('watchdog thread still alive')
         else:
-            syslog.syslog(syslog.LOG_INFO, 'wmr200: watchdog thread expired')
+            loginf('watchdog thread expired')
 
         # Shutdown the USB acccess to the weather console device.
         self.usb_device.closeDevice()
