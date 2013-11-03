@@ -47,56 +47,18 @@ Version: 2.5.0
   <div id="technical_content">
 
     <h1 id="about">About <span class="code">weewx</span></h1>
-    <p><span class="code"><a href="http://www.weewx.com">weewx</a></span> is a piece of software, written in
-      <a href="http://www.python.org">Python</a>, that interacts with your weather 
-      station to produce plots, reports, and HTML pages. It can optionally upload 
-      the reports to a remote Web server as well as publish to the
+    <p><span class="code"><a href="http://www.weewx.com">weewx</a></span> is
+      software, written in <a href="http://www.python.org">Python</a>, that
+      interacts with a weather station to produce plots, reports, and HTML
+      pages. It can optionally upload the reports to a remote Web server as
+      well as publish to weather services such as
       <a href="http://www.wunderground.com">WeatherUnderground</a> or
-      <a href="http://www.pwsweather.com/">PWSweather.com</a>. It uses modern software 
-      concepts, making it simple, robust, and easy to extend. For an example station 
-      see <a href="http://www.threefools.org/weewx">Hood River West</a>. </p>
-    <p>Key features: </p>
-    <ul>
-      <li>Support for many popular weather stations;</li>
-      <li>Uploads to popular weather sites, such as Weather Underground and CWOP;</li>
-      <li>Uploads to your website using FTP or rsync;</li>
-		<li>Extensive celestial <em>almanac</em>;</li>
-        <li>Ability to create or modify <em>skins</em> (the look and feel of 
-		your weather site);</li>
-		<li>Support for <em>localization</em>;</li>
-      <li>Simple, but extensible templating system;</li>
-      <li>Native support for US or Metric unit systems;</li>
-      <li>Support for sqlite or MySQL databases;</li>
-      <li>Calibration corrections;</li>
-      <li>An easy to understand, simple, extensible micro-kernel architecture;</li>
-      <li>Ability to extend <span class="code">weewx</span> with new services 
-	and reports. </li>
-    </ul>
-    <p>I wrote <span class="code">weewx</span> over the winter of 2008-2009 for 
-      two reasons: it was a wet and miserable winter here in Oregon with not much 
-      else to do, so there was no good reason not to, and because I wanted a simple, 
-      easy-to-understand server to run my Davis VantagePro2 weather station on a Linux 
-      box. I had been using <a href="http://www.wviewweather.com/">wview</a>, which 
-      is a high-performance and feature rich system authored by Mark Teel with lots 
-      of users. Written in C, it is an efficient system that can run on underpowered 
-      boxes. In exchange, it is huge (45,000+ lines of code), tightly integrated 
-      in with its companion library, radlib (another 14,000+ lines), and very complex, 
-      making it difficult to understand and reliably customize. I wanted something 
-      more modern and much, much simpler. </p>
-    <p>Having made a career in C++ and Java, I was also interested in some more 
-      modern languages, so I thought I would try either Python or Ruby (although, 
-      truth be told, the roots of Python are nearly as old as C++!). I ended up picking 
-      Python because its libraries are more mature and there are many mores choices 
-      for third party libraries. </p>
-    <p><span class="code">Weewx</span> is about 8,500 lines of code (plus 2,500 
-	for the experimental driver for the LaCrosse WS28xx series, which was 
-	machine translated), 
-      with another 6,200 comment lines. Because it is pure Python, it requires no 
-      makefiles, no builds, no special installs. It offers very powerful configuration 
-      and templating options, as well as an internally extensible engine, making it 
-      easy to customize. Its internal modular design and use of modern exception handling 
-      make it very robust and difficult to crash. It is also architecturally very 
-      simple and easy to understand.</p>
+      <a href="http://www.pwsweather.com/">PWSweather.com</a>.</p>
+    <p>Initial development began in the winter of 2008-2009, with the first
+      release in 2009.  The SourceForge project was registered in October of
+      2009.</p>
+    <p><span class="code">weewx</span> is small, with under 10,000 lines of
+      code, and well-documented, with over 6000 lines of comments.</p>
 
     <h1 id="hardware">Supported Hardware</h1>
     <p>
