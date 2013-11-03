@@ -3,7 +3,9 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Id$
+#    $Revision: 1459 $
+#    $Author: mwall $
+#    $Date: 2013-10-08 17:44:50 -0700 (Tue, 08 Oct 2013) $
 #
 """Classes and functions for interfacing with a Davis VantagePro, VantagePro2, or VantageVue weather station"""
 
@@ -19,18 +21,6 @@ import weewx.wxformulas
 import weewx.abstractstation
 import weewx.wxengine
 import weewx.uwxutils
-try:
-    from weeutil.weeutil import FixedList
-except ImportError:
-    class FixedList(list):
-        def __init__(self, max_len, *args, **kwargs):
-            list.__init__(self, *args, **kwargs)
-            self.max_len = max_len
-
-        def append(self, ts):
-            while len(self) >= self.max_len:
-                self.pop(0)
-            list.append(self, ts)
 
 # A few handy constants:
 _ack    = chr(0x06)
@@ -208,8 +198,8 @@ class SerialWrapper(BaseWrapper):
             _buffer = self.serial_port.read(chars)
         except serial.serialutil.SerialException, e:
             syslog.syslog(syslog.LOG_ERR, "vantage: SerialException.")
-            syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
-            syslog.syslog(syslog.LOG_ERR, "      ****  Is there a competing process running??")
+            syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
+            syslog.syslog(syslog.LOG_ERR, "   ****  Is there a competing process running??")
             # Reraise as a Weewx error I/O error:
             raise weewx.WeeWxIOError(e)
         N = len(_buffer)
@@ -334,7 +324,7 @@ class EthernetWrapper(BaseWrapper):
             raise weewx.WeeWxIOError(ex)
 
 #===============================================================================
-#                           Class VantagePro
+#                           Class Vantage
 #===============================================================================
 
 class Vantage(weewx.abstractstation.AbstractStation):
@@ -401,9 +391,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
         # Read the EEPROM and fill in properties in this instance
         self._setup()
         
-        # This is a list of recently seen timestamps.
-        self.seen_stamps = FixedList(int(2 * 3600 / self.archive_interval))
-        
     def openPort(self):
         """Open up the connection to the console"""
         self.port.openPort()
@@ -451,7 +438,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 _buffer = self.port.read(99)
             except weewx.WeeWxIOError, e:
                 syslog.syslog(syslog.LOG_ERR, "vantage: LOOP #%d; read error. Try #%d" % (loop, ntries))
-                syslog.syslog(syslog.LOG_ERR, "      ****  %s" % e)
+                syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
                 ntries += 1
                 continue
 
@@ -534,12 +521,8 @@ class Vantage(weewx.abstractstation.AbstractStation):
                                      weeutil.weeutil.timestamp_to_string(_last_good_ts)))
                     syslog.syslog(syslog.LOG_DEBUG, "vantage: Catch up complete.")
                     return
-            
-                # Set the last time to the current time...
+                # Set the last time to the current time, and yield the packet
                 _last_good_ts = _record['dateTime']
-                # ... record this stamp...
-                self.seen_stamps.append(_last_good_ts)
-                # ... and yield it
                 yield _record
 
             # The starting index for pages other than the first is always zero
@@ -609,7 +592,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 else:
                     # Extract the date and time from the raw buffer:
                     datestamp, timestamp = struct.unpack("<HH", _record_string[0:4])
-                    time_ts = self._archive_datetime(datestamp, timestamp)
+                    time_ts = _archive_datetime(datestamp, timestamp)
                     y  = (0xfe00 & datestamp) >> 9    # year
                     mo = (0x01e0 & datestamp) >> 5    # month
                     d  = (0x001f & datestamp)         # day
@@ -1073,7 +1056,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
         
         raw_archive_packet = dict(zip(dataTypes, data_tuple))
         
-        archive_packet = {'dateTime' : self._archive_datetime(raw_archive_packet['date_stamp'], raw_archive_packet['time_stamp']),
+        archive_packet = {'dateTime' : _archive_datetime(raw_archive_packet['date_stamp'], raw_archive_packet['time_stamp']),
                           'usUnits'  : weewx.US}
         
         for _type in raw_archive_packet:
@@ -1102,41 +1085,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
         archive_packet['rxCheckPercent'] = _rxcheck(self.model_type, archive_packet['interval'], 
                                                     self.iss_id, raw_archive_packet['number_of_wind_samples'])
         return archive_packet
-    
-    def _archive_datetime(self, datestamp, timestamp) :
-        """Returns the epoch time of the archive packet."""
-        try:
-            # Construct a time tuple from Davis time. Unfortunately, as timestamps come
-            # off the Vantage logger, there is no way of telling whether or not DST is
-            # in effect. So, have the operating system guess by using a '-1' in the last
-            # position of the time tuple. 
-            time_tuple = ((0xfe00 & datestamp) >> 9,    # year
-                          (0x01e0 & datestamp) >> 5,    # month
-                          (0x001f & datestamp),         # day
-                          timestamp // 100,             # hour
-                          timestamp % 100,              # minute
-                          0,                            # second
-                          0, 0, -1)                     # have OS guess DST
-            # Convert to epoch time:
-            ts = int(time.mktime(time_tuple))
-        except (OverflowError, ValueError, TypeError):
-            return None
-        
-        # Check to see if we have seen this timestamp before:
-        if ts in self.seen_stamps:
-            # We have. We may be in the middle of the DST fall transition.
-            # See if ts has the DST flag set. If so, we can try again, but this time
-            # without DST.
-            if time.localtime(ts).tm_isdst:
-                # Yes, DST was active. Let's try again, this time w/o DST
-                tryagain_tt = time_tuple[:-1] + (0,)
-                new_ts = int(time.mktime(tryagain_tt))
-                if new_ts not in self.seen_stamps:
-                    syslog.syslog(syslog.LOG_NOTICE, "vantage: Disambiguated timestamp from %d to %d" % (ts, new_ts))
-                    ts = new_ts
-                else:
-                    syslog.syslog(syslog.LOG_NOTICE, "vantage: Unable to disambiguate timestamps. Tried %d and %d" % (ts, new_ts))
-        return ts
     
 #===============================================================================
 #                                 LOOP packet
@@ -1233,6 +1181,26 @@ def _rxcheck(model_type, interval, iss_id, number_of_wind_samples):
 #                      Decoding routines
 #===============================================================================
 
+def _archive_datetime(datestamp, timestamp) :
+    """Returns the epoch time of the archive packet."""
+    try:
+        # Construct a time tuple from Davis time. Unfortunately, as timestamps come
+        # off the Vantage logger, there is no way of telling whether or not DST is
+        # in effect. So, have the operating system guess by using a '-1' in the last
+        # position of the time tuple. It's the best we can do...
+        time_tuple = ((0xfe00 & datestamp) >> 9,    # year
+                      (0x01e0 & datestamp) >> 5,    # month
+                      (0x001f & datestamp),         # day
+                      timestamp // 100,             # hour
+                      timestamp % 100,              # minute
+                      0,                            # second
+                      0, 0, -1)                     # have OS guess DST
+        # Convert to epoch time:
+        ts = int(time.mktime(time_tuple))
+    except (OverflowError, ValueError, TypeError):
+        ts = None
+    return ts
+    
 def _loop_date(v):
     """Returns the epoch time stamp of a time encoded in the LOOP packet, 
     which, for some reason, uses a different encoding scheme than the archive packet.
