@@ -429,6 +429,7 @@ def get_int(config_dict, label, default_value):
             value = int(value)
         except Exception, e:
             logerr("bad value '%s' for %s" % (value, label))
+            value = default_value
     return value
 
 # FIXME: WU defines the following:
@@ -700,11 +701,11 @@ class Forecast(StdService):
         super(Forecast, self).__init__(engine, config_dict)
 
         d = config_dict.get('Forecast', {})
-        self.interval = get_int(d, 'interval', interval)
+        self.interval = int(d.get('interval', interval))
         self.max_age = get_int(d, 'max_age', max_age)
 
         dd = config_dict['Forecast'].get(fid, {})
-        self.interval = get_int(dd, 'interval', self.interval)
+        self.interval = int(dd.get('interval', self.interval))
         self.max_age = get_int(dd, 'max_age', self.max_age)
 
         schema_str = d.get('schema', None)
@@ -1125,7 +1126,7 @@ class NWSForecast(Forecast):
                                           interval=10800)
         d = config_dict['Forecast'].get(NWS_KEY, {})
         self.url = d.get('url', NWS_DEFAULT_PFM_URL)
-        self.max_tries = d.get('max_tries', 3)
+        self.max_tries = int(d.get('max_tries', 3))
         self.lid = d.get('lid', None)
         self.foid = d.get('foid', None)
 
@@ -1558,7 +1559,7 @@ class WUForecast(Forecast):
                                          interval=10800)
         d = config_dict['Forecast'].get(WU_KEY, {})
         self.url = d.get('url', WU_DEFAULT_URL)
-        self.max_tries = d.get('max_tries', 3)
+        self.max_tries = int(d.get('max_tries', 3))
         self.api_key = d.get('api_key', None)
         self.location = d.get('location', None)
         self.forecast_type = d.get('forecast_type', 'hourly10day')
