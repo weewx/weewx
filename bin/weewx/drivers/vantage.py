@@ -381,6 +381,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
         
         self.save_monthRain = None
+        self.max_dst_jump = 7200
 
         # Get an appropriate port, depending on the connection type:
         self.port = Vantage._port_factory(vp_dict)
@@ -514,7 +515,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
 
                 # Check to see if the time stamps are declining, which would
                 # signal that we are done. 
-                if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts:
+                if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts - self.max_dst_jump:
                     # The time stamp is declining. We're done.
                     syslog.syslog(syslog.LOG_DEBUG, "vantage: DMPAFT complete: page timestamp %s less than final timestamp %s"\
                                   % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
