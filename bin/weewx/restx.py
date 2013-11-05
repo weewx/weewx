@@ -252,43 +252,36 @@ class PostRequest(threading.Thread):
         
     def run(self):
 
-        try:
+        while True:
+
             while True:
-                _request_tuple = self.fetch_from_queue()
-    
-                # If packets have backed up in the queue, throw them all away except the last one.
-                if self.max_backlog is not None:
-                    _request_tuple = self.fetch_from_queue()
-                    
-                # Unpack the timestamp and Request object
-                _timestamp, _request = _request_tuple
-                
-                try:
-                    # Now post it
-                    self.post_request(_request)
-                except FailedPost:
-                    syslog.syslog(syslog.LOG_ERR, "restx: Failed to upload to '%s'" % self.name)
-                except BadLogin, e:
-                    syslog.syslog(syslog.LOG_CRIT, "restx: Failed to post to '%s'" % self.name)
-                    syslog.syslog(syslog.LOG_CRIT, " ****  Reason: %s" % e)
-                    syslog.syslog(syslog.LOG_CRIT, " ****  Terminating %s thread" % self.name)
+                # This will block until a request shows up.
+                _request_tuple = self.queue.get()
+                # If a "None" value appears in the pipe, it's our signal to exit:
+                if _request_tuple is None:
                     return
-                else:
-                    _time_str = weeutil.weeutil.timestamp_to_string(_timestamp)
-                    syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.name))
-        except TimeToExit:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Thread %s received request to exit." % self.name)
+                # If packets have backed up in the queue, trim it until it's no bigger
+                # than the max allowed backlog:
+                if self.max_backlog is None or self.queue.qsize() <= self.max_backlog:
+                    break
 
-    def fetch_from_queue(self):
-        
-        # This will block until a request shows up.
-        _request_tuple = self.queue.get()
-        # If a "None" value appears in the pipe, it's our signal to exit:
-        if _request_tuple is None:
-            raise TimeToExit
+            # Unpack the timestamp and Request object
+            _timestamp, _request = _request_tuple
 
-        return _request_tuple
-            
+            try:
+                # Now post it
+                self.post_request(_request)
+            except FailedPost:
+                syslog.syslog(syslog.LOG_ERR, "restx: Failed to upload to '%s'" % self.name)
+            except BadLogin, e:
+                syslog.syslog(syslog.LOG_CRIT, "restx: Failed to post to '%s'" % self.name)
+                syslog.syslog(syslog.LOG_CRIT, " ****  Reason: %s" % e)
+                syslog.syslog(syslog.LOG_CRIT, " ****  Terminating %s thread" % self.name)
+                return
+            else:
+                _time_str = weeutil.weeutil.timestamp_to_string(_timestamp)
+                syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.name))
+
     def post_request(self, request):
         """Post a request.
         
