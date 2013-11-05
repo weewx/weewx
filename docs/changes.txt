@@ -1,6 +1,10 @@
 weewx change history
 --------------------
 
+X.X.X XX/XX/XX
+
+Fixed bug in setting of CheetahGenerator options.
+
 2.5.0 10/29/13
 
 Introduced a new architecture that makes it easier to define search
