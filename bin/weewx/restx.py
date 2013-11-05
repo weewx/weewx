@@ -132,17 +132,21 @@ class Ambient(StdRESTbase):
                 self.rapidfire_url = ambient_dict['rapidfire_url']
                 self.init_loop_queue()
                 self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-                max_backlog = int(ambient_dict.get('rapidfire_max_backlog', 0))
+                ambient_dict.setdefault('log_success', False)
+                ambient_dict.setdefault('log_failure', False)
+                ambient_dict.setdefault('max_tries',   1)
+                ambient_dict.setdefault('max_backlog', 0)
                 self.loop_thread = PostRequest(self.loop_queue,
                                                name="Wunderground-Rapidfire",
-                                               max_backlog=max_backlog)
+                                               **ambient_dict)
                 self.loop_thread.start()
             if do_archive_post:
                 self.archive_url = ambient_dict['archive_url']
                 self.init_archive_queue()
                 self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
                 self.archive_thread = PostRequest(self.archive_queue,
-                                                  name="Wunderground")
+                                                  name="Wunderground",
+                                                  **ambient_dict)
                 self.archive_thread.start()
 
             if do_rapidfire_post or do_archive_post:
@@ -235,7 +239,7 @@ class Wunderground(Ambient):
 #===============================================================================
 
 class PostRequest(threading.Thread):
-    """Post an urllib2 "Request" object"""
+    """Post an urllib2 "Request" object, using a separate thread."""
     
     
     def __init__(self, queue, **kwargs):
@@ -243,6 +247,8 @@ class PostRequest(threading.Thread):
         threading.Thread.__init__(self, name=name)
 
         self.queue = queue
+        self.log_success = weeutil.weeutil.tobool(kwargs.get('log_success', True))
+        self.log_failure = weeutil.weeutil.tobool(kwargs.get('log_failure', True))
         self.max_tries = int(kwargs.get('max_tries', 3))
         self.max_backlog = kwargs.get('max_backlog')
         if self.max_backlog is not None:
@@ -272,15 +278,17 @@ class PostRequest(threading.Thread):
                 # Now post it
                 self.post_request(_request)
             except FailedPost:
-                syslog.syslog(syslog.LOG_ERR, "restx: Failed to upload to '%s'" % self.name)
+                if self.log_failure:
+                    syslog.syslog(syslog.LOG_ERR, "restx: Failed to upload to '%s'" % self.name)
             except BadLogin, e:
                 syslog.syslog(syslog.LOG_CRIT, "restx: Failed to post to '%s'" % self.name)
                 syslog.syslog(syslog.LOG_CRIT, " ****  Reason: %s" % e)
                 syslog.syslog(syslog.LOG_CRIT, " ****  Terminating %s thread" % self.name)
                 return
             else:
-                _time_str = weeutil.weeutil.timestamp_to_string(_timestamp)
-                syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.name))
+                if self.log_success:
+                    _time_str = weeutil.weeutil.timestamp_to_string(_timestamp)
+                    syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.name))
 
     def post_request(self, request):
         """Post a request.
@@ -296,8 +304,8 @@ class PostRequest(threading.Thread):
                 _response = urllib2.urlopen(request)
             except (urllib2.URLError, socket.error, httplib.BadStatusLine), e:
                 # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_ERR, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
-                syslog.syslog(syslog.LOG_ERR, " ****  Reason: %s" % (e,))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
+                syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
             else:
                 # No exception thrown, but we're still not done.
                 # We have to also check for a bad station ID or password.
