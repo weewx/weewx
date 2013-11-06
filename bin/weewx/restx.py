@@ -1,4 +1,3 @@
-#
 #    Copyright (c) 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
@@ -12,6 +11,7 @@ import httplib
 import socket
 import syslog
 import threading
+import time
 import urllib
 import urllib2
 
@@ -22,13 +22,11 @@ import weewx.wxengine
 class ServiceError(Exception):
     """Raised when not enough info is available to start a service."""
 class FailedPost(IOError):
-    """Raised when a post fails, usually because of a login problem"""
+    """Raised when a post fails after trying the max number of allowed times"""
 class SkippedPost(Exception):
     """Raised when a post is skipped."""
 class BadLogin(StandardError):
     """Raised when login information is bad or missing."""
-class TimeToExit(Exception):
-    """Raised when it's time for a threaded queue to exit."""
         
 #===============================================================================
 #                    Class StdRESTbase
@@ -42,6 +40,13 @@ class StdRESTbase(weewx.wxengine.StdService):
         self.loop_queue = None
         self.archive_queue = None
 
+    def init_info(self, site_dict):
+        self.latitude     = float(site_dict.get('latitude', self.engine.stn_info.latitude_f))
+        self.longitude    = float(site_dict.get('longitude', self.engine.stn_info.longitude_f))
+        self.hardware     = site_dict.get('station_type', self.engine.stn_info.hardware)
+        self.location     = site_dict.get('location',     self.engine.stn_info.location)
+        self.station_url  = site_dict.get('station_url',  self.engine.stn_info.station_url)
+        
     def init_loop_queue(self):
         self.loop_queue = Queue.Queue()
 
@@ -136,8 +141,8 @@ class Ambient(StdRESTbase):
                 ambient_dict.setdefault('log_failure', False)
                 ambient_dict.setdefault('max_tries',   1)
                 ambient_dict.setdefault('max_backlog', 0)
-                self.loop_thread = PostRequest(self.loop_queue,
-                                               name="Wunderground-Rapidfire",
+                self.loop_thread = PostRequest(self.loop_queue, 
+                                               ambient_dict['name']+'-Rapidfire',
                                                **ambient_dict)
                 self.loop_thread.start()
             if do_archive_post:
@@ -145,8 +150,8 @@ class Ambient(StdRESTbase):
                 self.init_archive_queue()
                 self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
                 self.archive_thread = PostRequest(self.archive_queue,
-                                                  name="Wunderground",
-                                                  **ambient_dict)
+                                                  ambient_dict['name'],
+                                                   **ambient_dict)
                 self.archive_thread.start()
 
             if do_rapidfire_post or do_archive_post:
@@ -164,7 +169,6 @@ class Ambient(StdRESTbase):
         _url = self.rapidfire_url + '?' + weeutil.weeutil.urlencode(_post_dict)
         _request = urllib2.Request(_url)
         self.loop_queue.put((_record['dateTime'], _request))
-        pass
 
     def new_archive_record(self, event):
         _record = self.assemble_data(event.record, self.archive)
@@ -172,7 +176,6 @@ class Ambient(StdRESTbase):
         _url = self.archive_url + '?' + weeutil.weeutil.urlencode(_post_dict)
         _request = urllib2.Request(_url)
         self.loop_queue.put((_record['dateTime'], _request))
-        pass
 
     def extract_from(self, record):
         """Given a record, format it using the Ambient protocol.
@@ -228,6 +231,7 @@ class Wunderground(Ambient):
             ambient_dict['archive_db_dict'] = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
             ambient_dict.setdefault('rapidfire_url', Wunderground.rapidfire_url)
             ambient_dict.setdefault('archive_url',   Wunderground.archive_url)
+            ambient_dict.setdefault('name', 'Wunderground')
             super(Wunderground, self).__init__(engine, ambient_dict)
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to Wunderground")
         except ServiceError, e:
@@ -242,9 +246,8 @@ class PostRequest(threading.Thread):
     """Post an urllib2 "Request" object, using a separate thread."""
     
     
-    def __init__(self, queue, **kwargs):
-        name  = kwargs.get('name', 'Unknown')
-        threading.Thread.__init__(self, name=name)
+    def __init__(self, queue, thread_name, **kwargs):
+        threading.Thread.__init__(self, name=thread_name)
 
         self.queue = queue
         self.log_success = weeutil.weeutil.tobool(kwargs.get('log_success', True))
@@ -321,3 +324,315 @@ class PostRequest(threading.Thread):
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Log it.
             raise FailedPost("Failed upload to site %s after %d tries" % (self.name, self.max_tries))
+
+#===============================================================================
+#                             class CWOP
+#===============================================================================
+
+class CWOP(StdRESTbase):
+    """Upload using the CWOP protocol. """
+    
+    # Station IDs must start with one of these:
+    valid_prefixes = ['CW', 'DW', 'EW']
+    
+    default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
+
+    def __init__(self, engine, config_dict):
+        """Initialize for a post to CWOP.
+        
+        site: The upload site ("CWOP")
+        
+        station: The name of the station (e.g., "CW1234") as a string [Required]
+        
+        server: List of APRS servers and ports in the 
+        form cwop.aprs.net:14580 [Required]
+         
+        latitude: Station latitude [Required]
+        
+        longitude: Station longitude [Required]
+
+        hardware: Station hardware (eg, "VantagePro") [Required]
+        
+        passcode: Passcode for your station [Optional. APRS only]
+        
+        interval: The interval in seconds between posts [Optional. 
+        Default is 0 (send every post)]
+        
+        stale: How old a record can be before it will not be 
+        used for a catchup [Optional. Default is 1800]
+        
+        max_tries: Max # of tries before giving up [Optional. Default is 3]
+
+        CWOP does not like heavy traffic on their servers, so they encourage
+        posts roughly every 15 minutes and at most every 5 minutes. So,
+        key 'interval' should be set to no less than 300, but preferably 900.
+        Setting it to zero will cause every archive record to be posted.
+        """
+        
+        super(CWOP, self).__init__(engine, config_dict)
+        
+        # First extract the required parameters. If one of them is missing,
+        # a KeyError exception will occur. Be prepared to catch it.
+        try:
+            # Extract the CWOP dictionary:
+            cwop_dict=dict(config_dict['StdRESTful']['CWOP'])
+
+            # Extract the station and (if necessary) passcode
+            self.station = cwop_dict['station'].upper()
+            if self.station[0:2] in CWOP.valid_prefixes:
+                self.passcode = "-1"
+            else:
+                self.passcode = cwop_dict['passcode']
+            # Find and open the archive database:
+            archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+            self.archive = weewx.archive.Archive.open(archive_db_dict)
+            
+        except KeyError, e:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to CWOP")
+            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
+            return
+            
+        # If we made it this far, we can post. Everything else is optional.
+        self.interval  = int(cwop_dict.get('interval', 0))
+        self.stale     = int(cwop_dict.get('stale', 1800))
+        
+        self.init_info(cwop_dict)
+        
+        self._lastpost = None
+    
+        self.init_archive_queue()
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        
+        # Get the stuff the TNC thread will need....
+        cwop_dict.setdefault('max_tries', 3)
+        cwop_dict.setdefault('log_success', True)
+        cwop_dict.setdefault('log_failure', True)
+        cwop_dict.setdefault('name', 'CWOP')
+        if cwop_dict.has_key('server'):
+            cwop_dict['server'] = weeutil.weeutil.option_as_list(cwop_dict['server'])
+        else:
+            cwop_dict['server'] = CWOP.default_servers
+
+        # ... launch it ...
+        self.archive_thread = PostTNC(self.archive_queue,
+                                      cwop_dict['name'],
+                                      **cwop_dict)
+        # ... then start it
+        self.archive_thread.start()
+
+        syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to CWOP station %s" % (self.station,))
+        
+    def new_archive_record(self, event):
+        """Post data to CWOP, using the CWOP protocol."""
+
+        _time_ts = event.record['dateTime']
+
+        # There are a couple of reasons to skip a post to CWOP.
+
+        # 1. They do not allow backfilling, so there is no reason to post
+        #    an old out-of-date record.
+        _how_old = time.time() - _time_ts
+        if self.stale and _how_old > self.stale:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP record %s is stale (%d > %d)." % \
+                    (weeutil.weeutil.timestamp_to_string(_time_ts), _how_old, self.stale))
+            return
+ 
+        # 2. We don't want to post more often than the interval
+        if self._lastpost and _time_ts - self._lastpost < self.interval:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP wait interval (%d) has not passed." % \
+                    (self.interval,))
+            return
+        
+        # Get the data record for this time:
+        _record = self.assemble_data(event.record, self.archive)
+        # Get the login string
+        _login = self.get_login_string()
+        # And the TNC packet
+        _tnc_packet = self.get_tnc_packet(_record)
+        # Shove everything into the queue
+        self.archive_queue.put((_record['dateTime'], _login, _tnc_packet))
+
+        self._lastpost = _time_ts
+
+    def get_login_string(self):
+        login = "user %s pass %s vers weewx %s\r\n" % (self.station, self.passcode, weewx.__version__)
+        return login
+
+    def get_tnc_packet(self, record):
+        """Form the TNC2 packet used by CWOP."""
+
+        # Preamble to the TNC packet:
+        prefix = "%s>APRS,TCPIP*:" % (self.station,)
+
+        # Time:
+        time_tt = time.gmtime(record['dateTime'])
+        time_str = time.strftime("@%d%H%Mz", time_tt)
+
+        # Position:
+        lat_str = weeutil.weeutil.latlon_string(self.latitude, ('N', 'S'), 'lat')
+        lon_str = weeutil.weeutil.latlon_string(self.longitude, ('E', 'W'), 'lon')
+        latlon_str = '%s%s%s/%s%s%s' % (lat_str + lon_str)
+
+        # Wind and temperature
+        wt_list = []
+        for obs_type in ('windDir', 'windSpeed', 'windGust', 'outTemp'):
+            wt_list.append("%03d" % record[obs_type] if record[obs_type] is not None else '...')
+        wt_str = "_%s/%sg%st%s" % tuple(wt_list)
+
+        # Rain
+        rain_list = []
+        for obs_type in ('hourRain', 'rain24', 'dayRain'):
+            rain_list.append("%03d" % (record[obs_type] * 100.0) if record[obs_type] is not None else '...')
+        rain_str = "r%sp%sP%s" % tuple(rain_list)
+
+        # Barometer:
+        if record['altimeter'] is None:
+            baro_str = "b....."
+        else:
+            # Figure out what unit type barometric pressure is in for this record:
+            (u, g) = weewx.units.getStandardUnitType(record['usUnits'], 'altimeter')
+            # Convert to millibars:
+            baro = weewx.units.convert((record['altimeter'], u, g), 'mbar')
+            baro_str = "b%05d" % (baro[0] * 10.0)
+
+        # Humidity:
+        humidity = record['outHumidity']
+        if humidity is None:
+            humid_str = "h.."
+        else:
+            humid_str = ("h%02d" % humidity) if humidity < 100.0 else "h00"
+
+        # Radiation:
+        radiation = record['radiation']
+        if radiation is None:
+            radiation_str = ""
+        elif radiation < 1000.0:
+            radiation_str = "L%03d" % radiation
+        elif radiation < 2000.0:
+            radiation_str = "l%03d" % (radiation - 1000)
+        else:
+            radiation_str = ""
+
+        # Station equipment
+        equipment_str = ".weewx-%s-%s" % (weewx.__version__, self.hardware)
+
+        tnc_packet = prefix + time_str + latlon_str + wt_str + rain_str + \
+                     baro_str + humid_str + radiation_str + equipment_str + "\r\n"
+
+        return tnc_packet
+
+#===============================================================================
+#                    Class PostTNC
+#===============================================================================
+
+class PostTNC(threading.Thread):
+    """Post using the CWOP TNC protocol."""
+
+    def __init__(self, queue, thread_name, **kwargs):
+        threading.Thread.__init__(self, name=thread_name)
+
+        self.queue = queue
+        self.log_success = weeutil.weeutil.tobool(kwargs.get('log_success', True))
+        self.log_failure = weeutil.weeutil.tobool(kwargs.get('log_failure', True))
+        self.max_tries = int(kwargs.get('max_tries', 3))
+        self.max_backlog = kwargs.get('max_backlog')
+        self.server = kwargs['server']
+        if self.max_backlog is not None:
+            self.max_backlog = int(self.max_backlog)
+
+        self.setDaemon(True)
+
+    def run(self):
+
+        while True:
+            while True:
+                # This will block until a request shows up.
+                _request_tuple = self.queue.get()
+                # If a "None" value appears in the pipe, it's our signal to exit:
+                if _request_tuple is None:
+                    return
+                # If packets have backed up in the queue, trim it until it's no bigger
+                # than the max allowed backlog:
+                if self.max_backlog is None or self.queue.qsize() <= self.max_backlog:
+                    break
+
+            # Unpack the timestamp, login, tnc packet:
+            _timestamp, _login, _tnc_packet = _request_tuple
+
+            try:
+                # Now post it
+                self.send_packet(_login, _tnc_packet)
+            except FailedPost:
+                if self.log_failure:
+                    syslog.syslog(syslog.LOG_ERR, "restx: Failed to upload to '%s'" % self.name)
+            except BadLogin, e:
+                syslog.syslog(syslog.LOG_CRIT, "restx: Failed to post to '%s'" % self.name)
+                syslog.syslog(syslog.LOG_CRIT, " ****  Reason: %s" % e)
+                syslog.syslog(syslog.LOG_CRIT, " ****  Terminating %s thread" % self.name)
+                return
+            else:
+                if self.log_success:
+                    _time_str = weeutil.weeutil.timestamp_to_string(_timestamp)
+                    syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.name))
+
+    def send_packet(self, _login, _tnc_packet):
+
+        # Get a socket connection:
+        _sock = self._get_connect()
+
+        try:
+            # Send the login:
+            self._send(_sock, _login)
+
+            # And then the packet
+            self._send(_sock, _tnc_packet)
+        except:
+            _sock.close()
+            raise
+
+    def _get_connect(self):
+
+        # Go through the list of known server:ports, looking for
+        # a connection that works:
+        for serv_addr_str in self.server:
+            server, port = serv_addr_str.split(":")
+            port = int(port)
+            for _count in range(self.max_tries):
+                try:
+                    sock = socket.socket()
+                    sock.connect((server, port))
+                except socket.error, e:
+                    # Unsuccessful. Log it and try again
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: Connection attempt #%d failed to %s server %s:%d" % (_count + 1, self.name, server, port))
+                    syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
+                else:
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: Connected to %s server %s:%d" % (self.name, server, port))
+                    return sock
+                # Couldn't connect on this attempt. Close it, try again.
+                try:
+                    sock.close()
+                except:
+                    pass
+            # If we got here, that server didn't work. Log it and go on to the next one.
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Unable to connect to %s server %s:%d" % (self.name, server, port))
+
+        # If we got here. None of the servers worked. Raise an exception
+        raise IOError, "Unable to obtain a socket connection to %s" % (self.name,)
+
+    def _send(self, sock, msg):
+
+        for _count in range(self.max_tries):
+
+            try:
+                sock.send(msg)
+            except (IOError, socket.error), e:
+                # Unsuccessful. Log it and go around again for another try
+                syslog.syslog(syslog.LOG_DEBUG, "restx: Attempt #%d failed to send to %s" % (_count + 1, self.name))
+                syslog.syslog(syslog.LOG_DEBUG, "  ***  Reason: %s" % (e,))
+            else:
+                _resp = sock.recv(1024)
+                return _resp
+        else:
+            # This is executed only if the loop terminates normally, meaning
+            # the send failed max_tries times. Log it.
+            raise FailedPost, "Failed CWOP upload to site %s after %d tries" % (self.name, self.max_tries)
