@@ -1314,7 +1314,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # timestamps on all packets pass up the stack.  So we will use the 
         # timestamp from the most recent packet, but still need to see an
         # initial timestamp, so we'll just use PC time.
-        last_time_epoch = int(time.time() + 0.5)
+        self.last_time_epoch = int(time.time() + 0.5)
 
         # Restart counter in case driver crashes and is restarted by the
         # weewx engine.
