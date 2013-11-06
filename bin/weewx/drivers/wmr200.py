@@ -677,7 +677,7 @@ class PacketWind(Packet):
                         'windDir'           : dirDeg,
                         'dateTime'          : self._timeStampEpoch(),
                         'usUnits'           : weewx.METRIC,
-                        'windChill'         : windchill,
+                        'windchill'         : windchill,
                        }
         # Sometimes the station emits a wind gust that is less than the
         # average wind.  Ignore it if this is the case.
