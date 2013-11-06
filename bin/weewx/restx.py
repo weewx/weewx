@@ -53,6 +53,22 @@ class StdRESTbase(weewx.wxengine.StdService):
     def init_archive_queue(self):
         self.archive_queue = Queue.Queue()
 
+    def shutDown(self):
+        """Shut down any threads"""
+        self.shutDown_thread(self.loop_queue, self.loop_thread)
+        self.shutDown_thread(self.archive_queue, self.archive_thread)
+
+    def shutDown_thread(self, q, t):
+        if q:
+            # Put a None in the queue. This will signal to the thread to shutdown
+            q.put(None)
+            # Wait up to 20 seconds for the thread to exit:
+            t.join(20.0)
+            if t.isAlive():
+                syslog.syslog(syslog.LOG_ERR, "restx: Unable to shut down %s thread" % t.name)
+            else:
+                syslog.syslog(syslog.LOG_DEBUG, "restx: Shut down %s thread." % t.name)
+        
     def assemble_data(self, record, archive):
         """Augment record data with additional data from the archive
         
@@ -475,35 +491,38 @@ class CWOP(StdRESTbase):
 
         # Wind and temperature
         wt_list = []
-        for obs_type in ('windDir', 'windSpeed', 'windGust', 'outTemp'):
-            wt_list.append("%03d" % record[obs_type] if record[obs_type] is not None else '...')
+        for obs_type in ['windDir', 'windSpeed', 'windGust', 'outTemp']:
+            v = record.get(obs_type)
+            wt_list.append("%03d" % v if v is not None else '...')
         wt_str = "_%s/%sg%st%s" % tuple(wt_list)
 
         # Rain
         rain_list = []
-        for obs_type in ('hourRain', 'rain24', 'dayRain'):
-            rain_list.append("%03d" % (record[obs_type] * 100.0) if record[obs_type] is not None else '...')
+        for obs_type in ['hourRain', 'rain24', 'dayRain']:
+            v = record.get(obs_type)
+            rain_list.append("%03d" % (v * 100.0) if v is not None else '...')
         rain_str = "r%sp%sP%s" % tuple(rain_list)
 
         # Barometer:
-        if record['altimeter'] is None:
+        baro = record.get('altimeter')
+        if baro is None:
             baro_str = "b....."
         else:
             # Figure out what unit type barometric pressure is in for this record:
             (u, g) = weewx.units.getStandardUnitType(record['usUnits'], 'altimeter')
             # Convert to millibars:
-            baro = weewx.units.convert((record['altimeter'], u, g), 'mbar')
-            baro_str = "b%05d" % (baro[0] * 10.0)
+            baro_vt = weewx.units.convert((baro, u, g), 'mbar')
+            baro_str = "b%05d" % (baro_vt[0] * 10.0)
 
         # Humidity:
-        humidity = record['outHumidity']
+        humidity = record.get('outHumidity')
         if humidity is None:
             humid_str = "h.."
         else:
             humid_str = ("h%02d" % humidity) if humidity < 100.0 else "h00"
 
         # Radiation:
-        radiation = record['radiation']
+        radiation = record.get('radiation')
         if radiation is None:
             radiation_str = ""
         elif radiation < 1000.0:
@@ -562,14 +581,10 @@ class PostTNC(threading.Thread):
             try:
                 # Now post it
                 self.send_packet(_login, _tnc_packet)
-            except FailedPost:
+            except (FailedPost, IOError), e:
                 if self.log_failure:
                     syslog.syslog(syslog.LOG_ERR, "restx: Failed to upload to '%s'" % self.name)
-            except BadLogin, e:
-                syslog.syslog(syslog.LOG_CRIT, "restx: Failed to post to '%s'" % self.name)
-                syslog.syslog(syslog.LOG_CRIT, " ****  Reason: %s" % e)
-                syslog.syslog(syslog.LOG_CRIT, " ****  Terminating %s thread" % self.name)
-                return
+                    syslog.syslog(syslog.LOG_ERR, " ****  Reason: %s" % e)
             else:
                 if self.log_success:
                     _time_str = weeutil.weeutil.timestamp_to_string(_timestamp)
@@ -586,9 +601,8 @@ class PostTNC(threading.Thread):
 
             # And then the packet
             self._send(_sock, _tnc_packet)
-        except:
+        finally:
             _sock.close()
-            raise
 
     def _get_connect(self):
 
@@ -635,4 +649,4 @@ class PostTNC(threading.Thread):
         else:
             # This is executed only if the loop terminates normally, meaning
             # the send failed max_tries times. Log it.
-            raise FailedPost, "Failed CWOP upload to site %s after %d tries" % (self.name, self.max_tries)
+            raise FailedPost, "Failed upload to site %s after %d tries" % (self.name, self.max_tries)
