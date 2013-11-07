@@ -4,7 +4,6 @@
 #
 #    $Id$
 #
-from __future__ import with_statement
 import Queue
 import datetime
 import httplib
@@ -42,11 +41,11 @@ class StdRESTbase(weewx.wxengine.StdService):
         self.archive_thread = None
 
     def init_info(self, site_dict):
-        self.latitude     = float(site_dict.get('latitude', self.engine.stn_info.latitude_f))
-        self.longitude    = float(site_dict.get('longitude', self.engine.stn_info.longitude_f))
-        self.hardware     = site_dict.get('station_type', self.engine.stn_info.hardware)
-        self.location     = site_dict.get('location',     self.engine.stn_info.location)
-        self.station_url  = site_dict.get('station_url',  self.engine.stn_info.station_url)
+        self.latitude    = float(site_dict.get('latitude', self.engine.stn_info.latitude_f))
+        self.longitude   = float(site_dict.get('longitude', self.engine.stn_info.longitude_f))
+        self.hardware    = site_dict.get('station_type', self.engine.stn_info.hardware)
+        self.location    = site_dict.get('location',     self.engine.stn_info.location)
+        self.station_url = site_dict.get('station_url',  self.engine.stn_info.station_url)
         
     def init_loop_queue(self):
         self.loop_queue = Queue.Queue()
@@ -56,9 +55,21 @@ class StdRESTbase(weewx.wxengine.StdService):
 
     def shutDown(self):
         """Shut down any threads"""
-        shutDown_thread(self.loop_queue, self.loop_thread)
-        shutDown_thread(self.archive_queue, self.archive_thread)
+        StdRESTbase.shutDown_thread(self.loop_queue, self.loop_thread)
+        StdRESTbase.shutDown_thread(self.archive_queue, self.archive_thread)
 
+    @staticmethod
+    def shutDown_thread(q, t):
+        if q:
+            # Put a None in the queue. This will signal to the thread to shutdown
+            q.put(None)
+            # Wait up to 20 seconds for the thread to exit:
+            t.join(20.0)
+            if t.isAlive():
+                syslog.syslog(syslog.LOG_ERR, "restx: Unable to shut down %s thread" % t.name)
+            else:
+                syslog.syslog(syslog.LOG_DEBUG, "restx: Shut down %s thread." % t.name)
+        
     def assemble_data(self, record, archive):
         """Augment record data with additional data from the archive.
         Always returns results in US Customary.
@@ -110,17 +121,6 @@ class StdRESTbase(weewx.wxengine.StdService):
             
         return _datadict
 
-def shutDown_thread(q, t):
-    if q:
-        # Put a None in the queue. This will signal to the thread to shutdown
-        q.put(None)
-        # Wait up to 20 seconds for the thread to exit:
-        t.join(20.0)
-        if t.isAlive():
-            syslog.syslog(syslog.LOG_ERR, "restx: Unable to shut down %s thread" % t.name)
-        else:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Shut down %s thread." % t.name)
-        
 #===============================================================================
 #                    Class Ambient
 #===============================================================================
@@ -129,7 +129,7 @@ class Ambient(StdRESTbase):
     """Base class for weather sites that use the Ambient protocol."""
 
     # Types and formats of the data to be published:
-    _formats = {'dateTime'    : ('dateutc', '%s'),
+    _formats = {'dateTime'    : ('dateutc', lambda _v : urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')),
                 'barometer'   : ('baromin', '%.3f'),
                 'outTemp'     : ('tempf', '%.1f'),
                 'outHumidity' : ('humidity', '%03.0f'),
@@ -267,27 +267,14 @@ class Ambient(StdRESTbase):
             # Add the new unit system
             _datadict['usUnits'] = weewx.US
 
-        _post_dict = {'action'   : 'updateraw',
-                      'ID'       : station,
-                      'PASSWORD' : password,
-                      'softwaretype' : "weewx-%s" % weewx.__version__}
+        # Reformat according to the Ambient protocol:
+        _post_dict = reformat_dict(_datadict, Ambient._formats)
 
-        # Go through each of the supported types, formatting it, then adding to _post_dict:
-        for _weewx_key in Ambient._formats:
-            _v = _datadict.get(_weewx_key)
-            # Check to make sure the type is not null
-            if _v is None:
-                continue
-            # This will be the key and format used by the Ambient protocol:
-            _k, _f = Ambient._formats[_weewx_key]
-            if _weewx_key == 'dateTime':
-                # For dates, convert from time stamp to a string, using what
-                # the Weather Underground calls "MySQL format." I've fiddled
-                # with formatting, and it seems that escaping the colons helps
-                # its reliability. But, I could be imagining things.
-                _v = urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')
-            # Format the value, and accumulate in _post_dict:
-            _post_dict[_k] = _f % _v
+        # Then add a few Ambient-specific keywords:
+        _post_dict['action'] = 'updateraw'
+        _post_dict['ID'] = station
+        _post_dict['PASSWORD'] = password
+        _post_dict['softwaretype'] = "weewx-%s" % weewx.__version__
 
         return _post_dict
 
@@ -313,6 +300,28 @@ class StdWunderground(Ambient):
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to Wunderground")
         except ServiceError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to Wunderground")
+            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
+
+#===============================================================================
+#                    Class StdPWS
+#===============================================================================
+
+class StdPWS(Ambient):
+    """Specialized version of the Ambient protocol for PWS"""
+
+    # The URL used by PWS:
+    archive_url = "http://www.pwsweather.com/pwsupdate/pwsupdate.php"
+
+    def __init__(self, engine, config_dict):
+        
+        try:
+            ambient_dict=dict(config_dict['StdRESTful']['PWSweather'])
+            ambient_dict.setdefault('archive_url',   StdPWS.archive_url)
+            ambient_dict.setdefault('name', 'PWSweather')
+            super(StdWunderground, self).__init__(engine, ambient_dict)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to PWSweather")
+        except ServiceError, e:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to PWSweather")
             syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
 
 #===============================================================================
@@ -482,8 +491,8 @@ class StdCWOP(StdRESTbase):
  
         # 2. We don't want to post more often than the interval
         if self._lastpost and _time_ts - self._lastpost < self.interval:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP wait interval (%d) has not passed." % \
-                    (self.interval,))
+            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP record %s wait interval (%d) has not passed." % \
+                    (weeutil.weeutil.timestamp_to_string(_time_ts), self.interval))
             return
         
         # Get the data record for this time:
@@ -683,6 +692,45 @@ class PostTNC(threading.Thread):
             # This is executed only if the loop terminates normally, meaning
             # the send failed max_tries times. Log it.
             raise FailedPost, "Failed upload to site %s after %d tries" % (self.name, self.max_tries)
+
+#===============================================================================
+#                           UTILITIES
+#===============================================================================
+def reformat_dict(record, format_dict):
+    """Given a record, reformat it.
+    
+    record: A dictionary containing observation types
+    
+    format_dict: A dictionary containing the key and format to be used for the reformatting.
+    The format can either be a string format, or a function.
+    
+    Example:
+    >>> form = {'dateTime'    : ('dateutc', lambda _v : urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')),
+    ...         'barometer'   : ('baromin', '%.3f'),
+    ...         'outTemp'     : ('tempf', '%.1f')}
+    >>> record = {'dateTime' : 1383755400, 'usUnits' : 16, 'outTemp' : 20.0, 'barometer' : 1020.0}
+    >>> print reformat_dict(record, form)
+    {'baromin': '1020.000', 'tempf': '20.0', 'dateutc': '2013-11-06+16%3A30%3A00'}
+    """
+
+    _post_dict = dict()
+
+    # Go through each of the supported types, formatting it, then adding to _post_dict:
+    for _key in format_dict:
+        _v = record.get(_key)
+        # Check to make sure the type is not null
+        if _v is None:
+            continue
+        # Extract the key to be used in the reformatted dictionary, as well
+        # as the format to be used.
+        _k, _f = format_dict[_key]
+        # First try formatting as a string. If that doesn't work, try it as a function.
+        try:
+            _post_dict[_k] = _f % _v
+        except TypeError:
+            _post_dict[_k] = _f(_v)
+
+    return _post_dict
 
 if __name__ == '__main__':
     import doctest
