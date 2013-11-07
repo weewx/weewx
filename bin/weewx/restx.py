@@ -37,8 +37,11 @@ class StdRESTbase(weewx.wxengine.StdService):
 
     def __init__(self, engine, config_dict):
         super(StdRESTbase, self).__init__(engine, config_dict)
-        self.loop_queue = None
-        self.archive_queue = None
+        self.loop_queue  = None
+        self.loop_thread = None
+        self.archive_queue  = None
+        self.archive_thread = None
+        self.archive = None
 
     def init_info(self, site_dict):
         self.latitude     = float(site_dict.get('latitude', self.engine.stn_info.latitude_f))
@@ -55,22 +58,14 @@ class StdRESTbase(weewx.wxengine.StdService):
 
     def shutDown(self):
         """Shut down any threads"""
-        self.shutDown_thread(self.loop_queue, self.loop_thread)
-        self.shutDown_thread(self.archive_queue, self.archive_thread)
+        shutDown_thread(self.loop_queue, self.loop_thread)
+        shutDown_thread(self.archive_queue, self.archive_thread)
+        if self.archive:
+            self.archive.close()
 
-    def shutDown_thread(self, q, t):
-        if q:
-            # Put a None in the queue. This will signal to the thread to shutdown
-            q.put(None)
-            # Wait up to 20 seconds for the thread to exit:
-            t.join(20.0)
-            if t.isAlive():
-                syslog.syslog(syslog.LOG_ERR, "restx: Unable to shut down %s thread" % t.name)
-            else:
-                syslog.syslog(syslog.LOG_DEBUG, "restx: Shut down %s thread." % t.name)
-        
     def assemble_data(self, record, archive):
-        """Augment record data with additional data from the archive
+        """Augment record data with additional data from the archive.
+        Always returns results in US Customary.
         
         This is a general version that works for:
           - WeatherUnderground
@@ -92,33 +87,44 @@ class StdRESTbase(weewx.wxengine.StdService):
             # it should be "the accumulated rainfall in the past 60 min".
             # Presumably, this is exclusive of the archive record 60 minutes before,
             # so the SQL statement is exclusive on the left, inclusive on the right.
-            _datadict['hourRain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
-                                                   (_time_ts - 3600.0, _time_ts))[0]
+            _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>? AND dateTime<=?",
+                                                   (_time_ts - 3600.0, _time_ts))
+            if not _result[1] == _result[2] == record['usUnits']:
+                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % (_result[1], _result[2], record['usUnits']))
+            _datadict['hourRain'] = _result[0]
 
         if not _datadict.has_key('rain24'):
             # Similar issue, except for last 24 hours:
-            _datadict['rain24'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>? AND dateTime<=?",
-                                                 (_time_ts - 24*3600.0, _time_ts))[0]
+            _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>? AND dateTime<=?",
+                                                 (_time_ts - 24*3600.0, _time_ts))
+            if not _result[1] == _result[2] == record['usUnits']:
+                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % (_result[1], _result[2], record['usUnits']))
+            _datadict['rain24'] = _result[0]
 
         if not _datadict.has_key('dayRain'):
             # NB: The WU considers the archive with time stamp 00:00 (midnight) as
             # (wrongly) belonging to the current day (instead of the previous
             # day). But, it's their site, so we'll do it their way.  That means the
             # SELECT statement is inclusive on both time ends:
-            _datadict['dayRain'] = archive.getSql("SELECT SUM(rain) FROM archive WHERE dateTime>=? AND dateTime<=?", 
-                                                  (_sod_ts, _time_ts))[0]
+            _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>=? AND dateTime<=?", 
+                                                  (_sod_ts, _time_ts))
+            if not _result[1] == _result[2] == record['usUnits']:
+                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % (_result[1], _result[2], record['usUnits']))
+            _datadict['dayRain'] = _result[0]
+            
+        return _datadict
 
-        # All these online weather sites require US units. 
-        if _datadict['usUnits'] == weewx.US:
-            # It's already in US units.
-            return _datadict
+def shutDown_thread(q, t):
+    if q:
+        # Put a None in the queue. This will signal to the thread to shutdown
+        q.put(None)
+        # Wait up to 20 seconds for the thread to exit:
+        t.join(20.0)
+        if t.isAlive():
+            syslog.syslog(syslog.LOG_ERR, "restx: Unable to shut down %s thread" % t.name)
         else:
-            # It's in something else. Perform the conversion
-            _datadict_us = weewx.units.StdUnitConverters[weewx.US].convertDict(_datadict)
-            # Add the new unit system
-            _datadict_us['usUnits'] = weewx.US
-            return _datadict_us
-                
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Shut down %s thread." % t.name)
+        
 #===============================================================================
 #                    Class Ambient
 #===============================================================================
@@ -141,78 +147,141 @@ class Ambient(StdRESTbase):
                 'UV'          : ('UV', '%.2f')}
 
     def __init__(self, engine, ambient_dict):
+        """Base class that implements the Ambient protocol.
+        
+        Named parameters:
+        station: The station ID (eg. KORHOODR3) [Required]
+        
+        password: Password for the station [Required]
+        
+        name: The name of the site we are posting to. Something 
+        like "Wunderground" will do. [Required]
+        
+        rapidfire: Set to true to have every LOOP packet post. Default is False.
+        
+        archive_post: Set to true to have every archive packet post. Default is 
+        the opposite of rapidfire value.
+        
+        rapidfire_url: The base URL to be used when posting LOOP packets.
+        Required if rapidfire is true.
+        
+        archive_url: The base URL to be used when posting archive records.
+        Required if archive_post is true.
+        
+        log_success: Set to True if we are to log successful posts to the syslog.
+        Default is false if rapidfire is true, else true.
+        
+        log_failure: Set to True if we are to log unsuccessful posts to the syslog.
+        Default is false if rapidfire is true, else true.
+        
+        max_tries: The max number of tries allowed when doing archive posts.
+        (Always 1 for rapidfire posts) Default is 3
+        
+        max_backlog: The max number of queued posts that will be allowed to accumulate.
+        (Always 0 for rapidfire posts). Default is infinite.
+        """
+        
         super(Ambient, self).__init__(engine, ambient_dict)
 
+        # Try extracting the required keywords. If this fails, an exception
+        # of type KeyError will be raised. Be prepared to catch it.
         try:
             self.station = ambient_dict['station']
             self.password = ambient_dict['password']
-
-            do_rapidfire_post = weeutil.weeutil.tobool(ambient_dict.get('rapidfire', False))
-            do_archive_post = weeutil.weeutil.tobool(ambient_dict.get('archive_post', not do_rapidfire_post))
-            if do_rapidfire_post:
-                self.rapidfire_url = ambient_dict['rapidfire_url']
-                self.init_loop_queue()
-                self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-                ambient_dict.setdefault('log_success', False)
-                ambient_dict.setdefault('log_failure', False)
-                ambient_dict.setdefault('max_tries',   1)
-                ambient_dict.setdefault('max_backlog', 0)
-                self.loop_thread = PostRequest(self.loop_queue, 
-                                               ambient_dict['name']+'-Rapidfire',
-                                               **ambient_dict)
-                self.loop_thread.start()
-            if do_archive_post:
-                self.archive_url = ambient_dict['archive_url']
-                self.init_archive_queue()
-                self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-                self.archive_thread = PostRequest(self.archive_queue,
-                                                  ambient_dict['name'],
-                                                   **ambient_dict)
-                self.archive_thread.start()
-
-            if do_rapidfire_post or do_archive_post:
-                self.archive = weewx.archive.Archive.open(ambient_dict['archive_db_dict'])
-
+            site_name = ambient_dict['name']
         except KeyError, e:
+            # Something was missing. 
             raise ServiceError("No keyword: %s" % (e,))
 
+        # If we got here, we have the minimum necessary.
+        do_rapidfire_post = weeutil.weeutil.tobool(ambient_dict.get('rapidfire', False))
+        do_archive_post = weeutil.weeutil.tobool(ambient_dict.get('archive_post', not do_rapidfire_post))
+
+        if do_rapidfire_post:
+            self.rapidfire_url = ambient_dict['rapidfire_url']
+            self.init_loop_queue()
+            self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+            ambient_dict.setdefault('log_success', False)
+            ambient_dict.setdefault('log_failure', False)
+            ambient_dict.setdefault('max_tries',   1)
+            ambient_dict.setdefault('max_backlog', 0)
+            self.loop_thread = PostRequest(self.loop_queue, 
+                                           site_name + '-Rapidfire',
+                                           **ambient_dict)
+            self.loop_thread.start()
+        if do_archive_post:
+            self.archive_url = ambient_dict['archive_url']
+            self.init_archive_queue()
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+            self.archive_thread = PostRequest(self.archive_queue,
+                                              site_name,
+                                               **ambient_dict)
+            self.archive_thread.start()
+
+        if do_rapidfire_post or do_archive_post:
+            self.archive = weewx.archive.Archive.open(ambient_dict['archive_db_dict'])
+
     def new_loop_packet(self, event):
+        # Extract the record from the event, then augment it with data from the archive:
         _record = self.assemble_data(event.packet, self.archive)
-        _post_dict = self.extract_from(_record)
+        # Convert to the notation used by the Ambient protocol
+        _post_dict = Ambient.format_ambient(self.station, self.password, _record)
         # Add the rapidfire specific keywords:
         _post_dict['realtime'] = '1'
         _post_dict['rtfreq'] = '2.5'
+        # Form the full URL
         _url = self.rapidfire_url + '?' + weeutil.weeutil.urlencode(_post_dict)
+        # Convert to a Request object:
         _request = urllib2.Request(_url)
+        # Stuff it in the loop queue:
         self.loop_queue.put((_record['dateTime'], _request))
 
     def new_archive_record(self, event):
+        # Extract the record from the event, then augment it with data from the archive:
         _record = self.assemble_data(event.record, self.archive)
-        _post_dict = self.extract_from(_record)
+        # Convert to the notation used by the Ambient protocol
+        _post_dict = Ambient.format_ambient(self.station, self.password, _record)
+        # Form the full URL
         _url = self.archive_url + '?' + weeutil.weeutil.urlencode(_post_dict)
+        # Convert to a Request object:
         _request = urllib2.Request(_url)
-        self.loop_queue.put((_record['dateTime'], _request))
+        # Stuff it in the archive queue:
+        self.archive_queue.put((_record['dateTime'], _request))
 
-    def extract_from(self, record):
+    @staticmethod
+    def format_ambient(station, password, record):
         """Given a record, format it using the Ambient protocol.
+        
+        Performs any necessary unit conversions.
         
         Returns:
         A dictionary where the keys are the Ambient keywords, and the values
-        are strings formatted according to the Ambient protocol."""
+        are strings formatted according to the Ambient protocol.
         
-        if record['usUnits'] != weewx.US:
-            raise weewx.ViolatedPrecondition("Unit system (%d) must be in US Customary" % record['usUnits'])
+        Example:
+        >>> record = {'dateTime' : 1383755400, 'usUnits' : 16, 'outTemp' : 20.0, 'barometer' : 1020.0}
+        >>> print Ambient.format_ambient("KSTATION", "my_password", record)
+        {'dateutc': '2013-11-06+16%3A30%3A00', 'softwaretype': 'weewx-2.6.0a1', 'tempf': '68.0', 'baromin': '30.124', 'action': 'updateraw', 'PASSWORD': 'my_password', 'ID': 'KSTATION'}
+        """
 
-        _post_dict = {
-                      'action'   : 'updateraw',
-                      'ID'       : self.station,
-                      'PASSWORD' : self.password,
-                      'softwaretype' : "weewx-%s" % weewx.__version__
-                      }        
+        # Requires US units.
+        if record['usUnits'] == weewx.US:
+            # It's already in US units.
+            _datadict = record
+        else:
+            # It's in something else. Perform the conversion
+            _datadict = weewx.units.StdUnitConverters[weewx.US].convertDict(record)
+            # Add the new unit system
+            _datadict['usUnits'] = weewx.US
+
+        _post_dict = {'action'   : 'updateraw',
+                      'ID'       : station,
+                      'PASSWORD' : password,
+                      'softwaretype' : "weewx-%s" % weewx.__version__}
 
         # Go through each of the supported types, formatting it, then adding to _post_dict:
         for _weewx_key in Ambient._formats:
-            _v = record.get(_weewx_key)
+            _v = _datadict.get(_weewx_key)
             # Check to make sure the type is not null
             if _v is None:
                 continue
@@ -354,37 +423,6 @@ class CWOP(StdRESTbase):
     default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
 
     def __init__(self, engine, config_dict):
-        """Initialize for a post to CWOP.
-        
-        site: The upload site ("CWOP")
-        
-        station: The name of the station (e.g., "CW1234") as a string [Required]
-        
-        server: List of APRS servers and ports in the 
-        form cwop.aprs.net:14580 [Required]
-         
-        latitude: Station latitude [Required]
-        
-        longitude: Station longitude [Required]
-
-        hardware: Station hardware (eg, "VantagePro") [Required]
-        
-        passcode: Passcode for your station [Optional. APRS only]
-        
-        interval: The interval in seconds between posts [Optional. 
-        Default is 0 (send every post)]
-        
-        stale: How old a record can be before it will not be 
-        used for a catchup [Optional. Default is 1800]
-        
-        max_tries: Max # of tries before giving up [Optional. Default is 3]
-
-        CWOP does not like heavy traffic on their servers, so they encourage
-        posts roughly every 15 minutes and at most every 5 minutes. So,
-        key 'interval' should be set to no less than 300, but preferably 900.
-        Setting it to zero will cause every archive record to be posted.
-        """
-        
         super(CWOP, self).__init__(engine, config_dict)
         
         # First extract the required parameters. If one of them is missing,
@@ -474,8 +512,15 @@ class CWOP(StdRESTbase):
         login = "user %s pass %s vers weewx %s\r\n" % (self.station, self.passcode, weewx.__version__)
         return login
 
-    def get_tnc_packet(self, record):
+    def get_tnc_packet(self, in_record):
         """Form the TNC2 packet used by CWOP."""
+
+        # Make sure the record is in US units:
+        if in_record['usUnits'] == weewx.US:
+            record = in_record
+        else:
+            record = weewx.units.StdUnitConverters[weewx.US].convertDict(in_record)
+            record['usUnits'] = weewx.US
 
         # Preamble to the TNC packet:
         prefix = "%s>APRS,TCPIP*:" % (self.station,)
@@ -508,10 +553,9 @@ class CWOP(StdRESTbase):
         if baro is None:
             baro_str = "b....."
         else:
-            # Figure out what unit type barometric pressure is in for this record:
-            (u, g) = weewx.units.getStandardUnitType(record['usUnits'], 'altimeter')
-            # Convert to millibars:
-            baro_vt = weewx.units.convert((baro, u, g), 'mbar')
+            # While everything else in the CWOP protocol is in US Customary, they
+            # want the barometer in millibars.
+            baro_vt = weewx.units.convert((baro, 'inHg', 'group_pressure'), 'mbar')
             baro_str = "b%05d" % (baro_vt[0] * 10.0)
 
         # Humidity:
@@ -650,3 +694,9 @@ class PostTNC(threading.Thread):
             # This is executed only if the loop terminates normally, meaning
             # the send failed max_tries times. Log it.
             raise FailedPost, "Failed upload to site %s after %d tries" % (self.name, self.max_tries)
+
+if __name__ == '__main__':
+    import doctest
+
+    if not doctest.testmod().failed:
+        print "PASSED"
