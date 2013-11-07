@@ -16,7 +16,6 @@ import urllib
 import urllib2
 
 import weeutil.weeutil
-import weewx.archive
 import weewx.wxengine
 
 class ServiceError(Exception):
@@ -293,10 +292,10 @@ class Ambient(StdRESTbase):
         return _post_dict
 
 #===============================================================================
-#                    Class Wunderground
+#                    Class StdWunderground
 #===============================================================================
 
-class Wunderground(Ambient):
+class StdWunderground(Ambient):
     """Specialized version of the Ambient protocol for the Weather Underground."""
 
     # The URLs used by the WU:
@@ -307,11 +306,10 @@ class Wunderground(Ambient):
         
         try:
             ambient_dict=dict(config_dict['StdRESTful']['Wunderground'])
-            ambient_dict['archive_db_dict'] = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
-            ambient_dict.setdefault('rapidfire_url', Wunderground.rapidfire_url)
-            ambient_dict.setdefault('archive_url',   Wunderground.archive_url)
+            ambient_dict.setdefault('rapidfire_url', StdWunderground.rapidfire_url)
+            ambient_dict.setdefault('archive_url',   StdWunderground.archive_url)
             ambient_dict.setdefault('name', 'Wunderground')
-            super(Wunderground, self).__init__(engine, ambient_dict)
+            super(StdWunderground, self).__init__(engine, ambient_dict)
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to Wunderground")
         except ServiceError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to Wunderground")
@@ -405,10 +403,10 @@ class PostRequest(threading.Thread):
             raise FailedPost("Failed upload to site %s after %d tries" % (self.name, self.max_tries))
 
 #===============================================================================
-#                             class CWOP
+#                             class StdCWOP
 #===============================================================================
 
-class CWOP(StdRESTbase):
+class StdCWOP(StdRESTbase):
     """Upload using the CWOP protocol. """
     
     # Station IDs must start with one of these:
@@ -417,7 +415,7 @@ class CWOP(StdRESTbase):
     default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
 
     def __init__(self, engine, config_dict):
-        super(CWOP, self).__init__(engine, config_dict)
+        super(StdCWOP, self).__init__(engine, config_dict)
         
         # First extract the required parameters. If one of them is missing,
         # a KeyError exception will occur. Be prepared to catch it.
@@ -427,12 +425,10 @@ class CWOP(StdRESTbase):
 
             # Extract the station and (if necessary) passcode
             self.station = cwop_dict['station'].upper()
-            if self.station[0:2] in CWOP.valid_prefixes:
+            if self.station[0:2] in StdCWOP.valid_prefixes:
                 self.passcode = "-1"
             else:
                 self.passcode = cwop_dict['passcode']
-            # Find and open the archive database:
-            archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
             
         except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to CWOP")
@@ -458,7 +454,7 @@ class CWOP(StdRESTbase):
         if cwop_dict.has_key('server'):
             cwop_dict['server'] = weeutil.weeutil.option_as_list(cwop_dict['server'])
         else:
-            cwop_dict['server'] = CWOP.default_servers
+            cwop_dict['server'] = StdCWOP.default_servers
 
         # ... launch it ...
         self.archive_thread = PostTNC(self.archive_queue,
