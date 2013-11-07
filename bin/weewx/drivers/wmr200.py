@@ -130,7 +130,7 @@ def logcrt(msg):
 
 def loader(config_dict, engine):
     """Used to load the driver."""
-    # The WMR driver needs the altitude in meters. Get it from the Station data
+    # The driver needs the altitude in meters. Get it from the Station data
     # and do any necessary conversions.
     altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get(
         'altitude', (None, None)))
@@ -298,14 +298,20 @@ class UsbDevice(object):
 
 class WMR200ProtocolError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
+    def __init__(self):
+        pass
 
 
 class WMR200CheckSumError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
+    def __init__(self):
+        pass
 
 
 class WMR200AccessError(weewx.WeeWxIOError):
     """Used to signal a USB or device access error condition"""
+    def __init__(self):
+        pass
 
 
 class Packet(object):
@@ -531,7 +537,7 @@ class Packet(object):
                 out += '%02x ' % byte
             logdbg(out)
 
-    def printCooked(self, override=False):
+    def printCooked(self):
         """Debug method method to print the processed packet.
         
         Must be called after the Process() method."""
@@ -571,7 +577,7 @@ class PacketHistoryReady(Packet):
         """This packet is always complete as it consists of a single byte."""
         return True
 
-    def printCooked(self, override=False):
+    def printCooked(self):
         """Print the processed packet.
         
         Not much processing is done in this packet so not much
@@ -596,7 +602,7 @@ class PacketHistoryData(Packet):
         super(PacketHistoryData, self).__init__(wmr200)
         self._yieldable = False
 
-    def printCooked(self, override=False):
+    def printCooked(self):
         """Print the processed packet.
         
         Not much processing is done in this packet so not much
@@ -662,13 +668,6 @@ class PacketWind(Packet):
         else:
             windchill = None
 
-        if DEBUG_PACKETS_WIND:
-            loginf('Wind Dir: %s' % (WIND_DIR_MAP[self._pkt_data[8] & 0x0f]))
-            loginf('  Gust: %.1f m/s' % (gustSpeed))
-            loginf('  Wind: %.1f m/s' % (avgSpeed))
-            if windchill != None:
-                loginf('  Windchill: %.1f C' % (windchill))
-
         # The console returns wind speeds in m/s. Our metric system requires
         # kph, so the result needs to be multiplied by 3.6.
         self._record = {'windSpeed'         : avgSpeed * 3.60,
@@ -684,6 +683,14 @@ class PacketWind(Packet):
 
         # Save the wind record to be used for windchill and heat index
         self._wmr200.last_wind_record = self._record
+
+        if DEBUG_PACKETS_WIND:
+            loginf('Wind Dir: %s' % (WIND_DIR_MAP[self._pkt_data[8] & 0x0f]))
+            loginf('  Gust: %.1f m/s' % (gustSpeed))
+            loginf('  Wind: %.1f m/s' % (avgSpeed))
+            if windchill != None:
+                loginf('  Windchill: %.1f C' % (windchill))
+
 
 
 class PacketRain(Packet):
@@ -737,6 +744,10 @@ class PacketRain(Packet):
                 self._record['totalRain'] - PacketRain.rain_last_totalRain
         PacketRain.rain_last_totalRain = self._record['totalRain']
 
+        if DEBUG_PACKETS_RAIN:
+            loginf("  Rain rate:%.02f hour_rain:%.02f day_rain:%.02f" %
+                   (rain_rate, rain_hour, rain_day))
+            loginf("  Total rain:%.02f" % rain_total)
 
 class PacketUvi(Packet):
     """Packet parser for ultra violet sensor."""
@@ -754,6 +765,8 @@ class PacketUvi(Packet):
                         'dateTime'        : self._timeStampEpoch(),
                         'usUnits'         : weewx.METRIC}
 
+        if DEBUG_PACKETS_UVI:
+            loginf("  UV index:%s\n" % self._record['UV'])
 
 class PacketPressure(Packet):
     """Packet parser for barometer sensor."""
@@ -773,27 +786,35 @@ class PacketPressure(Packet):
         # Unfortunately, we do not know if this is MSLP corrected pressure,
         # or "gauge" pressure. We will assume the former.
         pressure = float(((self._pkt_data[8] & 0x0f) << 8) | self._pkt_data[7])
-        forecast = float((self._pkt_data[7] >> 4))
+        forecast = (self._pkt_data[8] >> 4) & 0x7
 
         # Similar to bytes 0 and 1, but altitude corrected
         # pressure. Upper nibble of byte 3 is still unknown. Seems to
         # be always 3.
-        altPressure = float(((self._pkt_data[10] & 0x0f) << 8)
-                            | self._pkt_data[9])
+        alt_pressure_console = float(((self._pkt_data[10] & 0x0f) << 8)
+                                     | self._pkt_data[9])
         unknownNibble = (self._pkt_data[10] >> 4)
 
-        if DEBUG_PACKETS_PRESSURE:
-            loginf('Forecast: %s' % FORECAST_MAP[forecast])
-            loginf('Measured Pressure: %d hPa' % (pressure))
-            if unknownNibble != 3:
-                loginf('Pressure unknown nibble: %d' % (unknownNibble))
-            loginf('Altitude corrected Pressure: %d hPa' % (altPressure))
+        alt_pressure_weewx = \
+                weewx.wxformulas.altimeter_pressure_Metric(pressure,
+                                                           self._wmr200.Altitude)
 
         self._record = {'barometer'   : pressure,
-                        'altimeter'   : altPressure,
+                        'altimeter'   : alt_pressure_console,
+                        'presure'     : alt_pressure_weewx,
                         'forecastIcon': forecast,
                         'dateTime'    : self._timeStampEpoch(),
                         'usUnits'     : weewx.METRIC}
+
+        if DEBUG_PACKETS_PRESSURE:
+            loginf('  Forecast: %s' % FORECAST_MAP[forecast])
+            loginf('  Raw pressure: %.02f hPa' % (pressure))
+            if unknownNibble != 3:
+                loginf('  Pressure unknown nibble: 0x%x' % (unknownNibble))
+            loginf('  Altitude corrected pressure: %.02f hPa console' %
+                   (alt_pressure_console))
+            loginf('  Altitude corrected pressure: %.02f hPa weewx' %
+                   (alt_pressure_weewx))
 
 
 class PacketTemperature(Packet):
@@ -847,16 +868,6 @@ class PacketTemperature(Packet):
         else:
             heat_index = None
 
-        if DEBUG_PACKETS_TEMP:
-            loginf(('Temperature sensor_id:%d %.1f C  Trend: %s'
-                    % (sensor_id, temp,
-                       TRENDS[temp_trend])))
-            loginf('  Humidity %d: %d%%   Trend: %s' % (sensor_id, humidity,
-                                                        TRENDS[hum_trend]))
-            loginf(('  Dew point %d: %.1f C' % (sensor_id, dew_point)))
-            if heat_index:
-                loginf('  Heat index: %d' % (heat_index))
-
         if sensor_id == 0:
             self._record['inTemp']      = temp
             self._record['inHumidity']  = humidity
@@ -872,6 +883,16 @@ class PacketTemperature(Packet):
             # use observation types 'extraTemp1', 'extraTemp2', etc.
             self._record['extraTemp%d'  % sensor_id] = temp
             self._record['extraHumid%d' % sensor_id] = humidity
+
+        if DEBUG_PACKETS_TEMP:
+            loginf(('  Temperature id:%d %.1f C trend: %s'
+                    % (sensor_id, temp,
+                       TRENDS[temp_trend])))
+            loginf('  Humidity id:%d %d%% trend: %s' % (sensor_id, humidity,
+                                                        TRENDS[hum_trend]))
+            loginf(('  Dew point id:%d: %.1f C' % (sensor_id, dew_point)))
+            if heat_index:
+                loginf('  Heat id:%d index:%d' % (sensor_id, heat_index))
 
 
 class PacketStatus(Packet):
@@ -911,37 +932,37 @@ class PacketStatus(Packet):
         }
 
         if self._pkt_data[2] & 0x2:
-            if self._wmr200._sensor_stat:
+            if self._wmr200.SensorStat:
                 logwar('Sensor 1 fault (temp/hum outdoor)')
 
         if self._pkt_data[2] & 0x1:
-            if self._wmr200._sensor_stat:
+            if self._wmr200.SensorStat:
                 logwar('Wind sensor fault')
 
         if self._pkt_data[3] & 0x20:
-            if self._wmr200._sensor_stat:
+            if self._wmr200.SensorStat:
                 logwar('UV Sensor fault')
 
         if self._pkt_data[3] & 0x10:
-            if self._wmr200._sensor_stat:
+            if self._wmr200.SensorStat:
                 logwar('Rain sensor fault')
 
         if self._pkt_data[4] & 0x02:
-            if self._wmr200._sensor_stat:
+            if self._wmr200.SensorStat:
                 logwar('Sensor 1: Battery low')
             self._record['outTempBatteryStatus'] = 0.0
 
         if self._pkt_data[4] & 0x01:
-            if self._wmr200._sensor_stat:
+            if self._wmr200.SensorStat:
                 logwar('Wind sensor: Battery low')
             self._record['windBatteryStatus'] = 0.0
 
         if self._pkt_data[5] & 0x20:
-            if self._wmr200._sensor_stat:
+            if self._wmr200.SensorStat:
                 logwar('UV sensor: Battery low')
 
         if self._pkt_data[5] & 0x10:
-            if self._wmr200._sensor_stat:
+            if self._wmr200.SensorStat:
                 logwar('Rain sensor: Battery low')
             self._record['rainBatteryStatus'] = 0.0
 
@@ -949,7 +970,7 @@ class PacketStatus(Packet):
         if DEBUG_PACKETS_STATUS:
             self.printRaw()
 
-    def printCooked(self, override=False):
+    def printCooked(self):
         """Print the cooked packet."""
         if DEBUG_PACKETS_COOKED:
             if self._packetBeenProcessed():
@@ -987,7 +1008,7 @@ class PacketEraseAcknowledgement(Packet):
         """This packet is always complete as it consists of a single byte."""
         return True
 
-    def printCooked(self, override=False):
+    def printCooked(self):
         """Print the processed packet.
         
         This packet consists of a single byte and thus not much to print."""
@@ -1233,7 +1254,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
           Default is usb.ENDPOINT_IN + 1]
         """
         ## User configurable options
-        # TODO(cmanton) This also get set in loader; not seem to be used
         self._altitude     = stn_dict['altitude']
         # Provide sensor faults in syslog.
         self._sensor_stat = weeutil.weeutil.tobool(stn_dict.get('sensor_status',
@@ -1329,12 +1349,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
         global DEBUG_CONFIG_DATA
         DEBUG_CONFIG_DATA = int(stn_dict.get('debug_config_data',
                          0))
-        global DEBUG_WEATHER_DATA
-        DEBUG_WEATHER_DATA = int(stn_dict.get('debug_weather_data',
-                         0))
-        global DEBUG_HISTORY_DATA
-        DEBUG_HISTORY_DATA = int(stn_dict.get('debug_history_data',
-                         0))
         global DEBUG_PACKETS_RAW
         DEBUG_PACKETS_RAW = int(stn_dict.get('debug_packets_raw',
                          0))
@@ -1350,21 +1364,30 @@ class WMR200(weewx.abstractstation.AbstractStation):
         global DEBUG_PACKETS_STATUS
         DEBUG_PACKETS_STATUS = int(stn_dict.get('debug_packets_status',
                          0))
-        global DEBUG_PACKETS_PRESURE
-        DEBUG_PACKETS_PRESURE = int(stn_dict.get('debug_packets_pressure',
+        global DEBUG_PACKETS_PRESSURE
+        DEBUG_PACKETS_PRESSURE = int(stn_dict.get('debug_packets_pressure',
                          0))
 
         if DEBUG_CONFIG_DATA:
-            loginf('Configuration setup');
-            loginf('  Altitude:%d' % self._altitude);
+            loginf('Configuration setup')
+            loginf('  Altitude:%d' % self._altitude)
             loginf('  Log sensor faults: %s' % self._sensor_stat)
             loginf('  Using PC Time: %s' % self._use_pc_time)
 
     @property
     def hardware_name(self):
         """Return the name of the hardware/driver."""
-        global DRIVER_NAME
         return DRIVER_NAME
+
+    @property
+    def Altitude(self):
+        """Return the altitude in meters for various calculations."""
+        return self._altitude
+
+    @property
+    def SensorStat(self):
+        """Return if sensor status is enabled for device."""
+        return self._sensor_stat
 
     @property
     def usePcTime(self):
@@ -1514,7 +1537,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                             # Only send commands weewx engine will handle.
                             self._stat_pkts_sent += 1
                             self.pkt.packetProcess()
-                            self.pkt.printCooked(override=True)
+                            self.pkt.printCooked()
                             yield self.pkt.packetRecord()
 
                 # Reset this packet as its complete or bogus.
