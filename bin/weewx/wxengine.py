@@ -225,7 +225,15 @@ class StdEngine(object):
             return self.console.getTime()
         except NotImplementedError:
             return int(time.time()+0.5)
-        
+
+    # The following getter and setter allow an open Archive object
+    # to be attached to the engine.
+    @property
+    def archive(self):
+        return self.archive_db
+    @archive.setter
+    def archive(self, archive_db):
+        self.archive_db = archive_db
         
 #===============================================================================
 #                    Class StdService
@@ -524,9 +532,11 @@ class StdArchive(StdService):
         archive_schema_str = config_dict['StdArchive'].get('archive_schema', 'user.schemas.defaultArchiveSchema')
         archive_schema = weeutil.weeutil._get_object(archive_schema_str)
         archive_db = config_dict['StdArchive']['archive_database']
-        # This will create the database if it doesn't exist, the return an
-        # opened instance of Archive:
-        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], archive_schema)
+        # This will create the database if it doesn't exist, then return an
+        # opened instance of Archive. It also attaches a reference to the engine, so other
+        # services can use it.
+        self.archive = self.engine.archive = \
+            weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], archive_schema)
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (archive_db,))
 
     def setupStatsDatabase(self, config_dict):

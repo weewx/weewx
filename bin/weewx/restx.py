@@ -41,7 +41,6 @@ class StdRESTbase(weewx.wxengine.StdService):
         self.loop_thread = None
         self.archive_queue  = None
         self.archive_thread = None
-        self.archive = None
 
     def init_info(self, site_dict):
         self.latitude     = float(site_dict.get('latitude', self.engine.stn_info.latitude_f))
@@ -60,8 +59,6 @@ class StdRESTbase(weewx.wxengine.StdService):
         """Shut down any threads"""
         shutDown_thread(self.loop_queue, self.loop_thread)
         shutDown_thread(self.archive_queue, self.archive_thread)
-        if self.archive:
-            self.archive.close()
 
     def assemble_data(self, record, archive):
         """Augment record data with additional data from the archive.
@@ -218,12 +215,9 @@ class Ambient(StdRESTbase):
                                                **ambient_dict)
             self.archive_thread.start()
 
-        if do_rapidfire_post or do_archive_post:
-            self.archive = weewx.archive.Archive.open(ambient_dict['archive_db_dict'])
-
     def new_loop_packet(self, event):
         # Extract the record from the event, then augment it with data from the archive:
-        _record = self.assemble_data(event.packet, self.archive)
+        _record = self.assemble_data(event.packet, self.engine.archive)
         # Convert to the notation used by the Ambient protocol
         _post_dict = Ambient.format_ambient(self.station, self.password, _record)
         # Add the rapidfire specific keywords:
@@ -238,7 +232,7 @@ class Ambient(StdRESTbase):
 
     def new_archive_record(self, event):
         # Extract the record from the event, then augment it with data from the archive:
-        _record = self.assemble_data(event.record, self.archive)
+        _record = self.assemble_data(event.record, self.engine.archive)
         # Convert to the notation used by the Ambient protocol
         _post_dict = Ambient.format_ambient(self.station, self.password, _record)
         # Form the full URL
@@ -439,7 +433,6 @@ class CWOP(StdRESTbase):
                 self.passcode = cwop_dict['passcode']
             # Find and open the archive database:
             archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
-            self.archive = weewx.archive.Archive.open(archive_db_dict)
             
         except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to CWOP")
@@ -498,7 +491,7 @@ class CWOP(StdRESTbase):
             return
         
         # Get the data record for this time:
-        _record = self.assemble_data(event.record, self.archive)
+        _record = self.assemble_data(event.record, self.engine.archive)
         # Get the login string
         _login = self.get_login_string()
         # And the TNC packet
