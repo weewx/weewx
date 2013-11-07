@@ -655,12 +655,10 @@ class PacketWind(Packet):
         avgSpeed = ((self._pkt_data[10] >> 4)
                     | ((self._pkt_data[11] << 4))) / 10.0
 
-        # Low and high byte of windchill temperature. The value is
-        # in 0.1F. If no windchill is available byte 5 is 0 and byte 6 0x20.
-        # Looks like OS hasn't had their Mars Climate Orbiter experience yet.
-        if self._pkt_data[12] != 0 or self._pkt_data[13] != 0x20:
-            windchill = (((self._pkt_data[12] << 8)
-                          | self._pkt_data[13]) - 320) * (5.0 / 90.0)
+        # Windchill temperature. The value is in degrees F. If no windchill is
+        # available byte 12 is zero.
+        if self._pkt_data[12] != 0:
+            windchill = (self._pkt_data[12] - 32.0) * (5.0 / 9.0)
         else:
             windchill = None
 
