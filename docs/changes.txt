@@ -5,6 +5,9 @@ X.X.X XX/XX/XX
 
 Fixed bug in setting of CheetahGenerator options.
 
+Fixed qsf and qpf summary values in forecast module.
+
+
 2.5.0 10/29/13
 
 Introduced a new architecture that makes it easier to define search

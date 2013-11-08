@@ -2128,6 +2128,19 @@ def _get_sum(key, a, b):
         pass
     return b.get(key, None)
 
+def _get_min(key, a, b):
+    try:
+        s = a.get(key, None)
+        if type(s) == weewx.units.ValueHelper:
+            x = weewx.units.convertStd(s.getValueTuple(), weewx.US)[0]
+        else:
+            x = float(s)
+        if b.get(key, None) is None or x < b[key]:
+            return x
+    except Exception, e:
+        pass
+    return b.get(key, None)
+
 def _get_max(key, a, b):
     try:
         s = a.get(key, None)
@@ -2367,6 +2380,12 @@ class ForecastVariables(SearchList):
                     if x is not None:
                         rec['windChars'][x] = rec['windChars'].get(x,0) + 1
                     rec['pop'] = _get_max('pop', p, rec)
+                    for s in ['qpf','qsf']:
+                        rec[s] = _get_sum(s, p, rec)
+                    for s in ['qpfMin','qsfMin']:
+                        rec[s] = _get_min(s, p, rec)
+                    for s in ['qpfMax','qsfMax']:
+                        rec[s] = _get_max(s, p, rec)
                     for pt in p['precip']:
                         if pt not in rec['precip']:
                             rec['precip'].append(pt)
@@ -2395,8 +2414,12 @@ class ForecastVariables(SearchList):
                 rec['pop'] = _get_max('pop', r, rec)
                 r['qpf'],r['qpfMin'],r['qpfMax'] = _parse_precip_qty(r['qpf'])
                 r['qsf'],r['qsfMin'],r['qsfMax'] = _parse_precip_qty(r['qsf'])
-                for s in ['qpf', 'qpfMin', 'qpfMax', 'qsf', 'qsfMin', 'qsfMax']:
+                for s in ['qpf', 'qsf']:
                     rec[s] = _get_sum(s, r, rec)
+                for s in ['qpfMin', 'qsfMin']:
+                    rec[s] = _get_min(s, r, rec)
+                for s in ['qpfMax', 'qsfMax']:
+                    rec[s] = _get_max(s, r, rec)
                 for pt in precip_types:
                     if r.get(pt, None) is not None and pt not in rec['precip']:
                         rec['precip'].append(pt)
