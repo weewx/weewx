@@ -47,15 +47,25 @@ class StdRESTbase(weewx.wxengine.StdService):
     # All these steps are combined in function process_record.
     #
 
-    def __init__(self, engine, config_dict):
+    def __init__(self, engine, config_dict, **protocol_dict):
+        """Initialize StdRESTbase.
+        
+        Named parameters:
+        
+        stale: If non-None, how "fresh" a post has to be before it is accepted.
+        
+        interval: If non-None, how long to wait from the last post before accepting
+        a new post.
+        """
         super(StdRESTbase, self).__init__(engine, config_dict)
+        
         self.loop_queue  = None
         self.loop_thread = None
         self.archive_queue  = None
         self.archive_thread = None
-        self.stale = None
+        self.stale         = protocol_dict.get('stale')
+        self.post_interval = protocol_dict.get('interval')
         self.lastpost= None
-        self.post_interval = 0
 
     def init_info(self, site_dict):
         self.latitude    = float(site_dict.get('latitude', self.engine.stn_info.latitude_f))
@@ -101,21 +111,21 @@ class StdRESTbase(weewx.wxengine.StdService):
             raise SkippedPost("Record %s wait interval (%d) has not passed." % \
                     (weeutil.weeutil.timestamp_to_string(time_ts), self.post_interval))
     
-    def process_record(self, event):
+    def process_record(self, record):
         """Generic processing function that follows the protocol model."""
         
         try:
-            self.skip_this_post(event)
+            self.skip_this_post(record['dateTime'])
         except SkippedPost, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: %s" % e)
             return
         # Extract the record from the event, then augment it with data from the archive:
-        _record = self.augment_from_database(event.record, self.engine.archive)
+        _record = self.augment_from_database(record, self.engine.archive)
         # Then augment it with any protocol-specific data:
         self.augment_protocol(_record)
         # Format and convert to the outgoing protocol
         _request = self.format_protocol(_record)
-        # Stuff it in the archive queue:
+        # Stuff it in the archive queue along with the timestamp:
         self.archive_queue.put((_record['dateTime'], _request))
 
     def augment_from_database(self, record, archive):
@@ -200,7 +210,7 @@ class Ambient(StdRESTbase):
                 'radiation'   : ('solarradiation', '%.2f'),
                 'UV'          : ('UV', '%.2f')}
 
-    def __init__(self, engine, ambient_dict):
+    def __init__(self, engine, config_dict, **ambient_dict):
         """Base class that implements the Ambient protocol.
         
         Named parameters:
@@ -235,7 +245,7 @@ class Ambient(StdRESTbase):
         (Always 0 for rapidfire posts). Default is infinite.
         """
         
-        super(Ambient, self).__init__(engine, ambient_dict)
+        super(Ambient, self).__init__(engine, config_dict, **ambient_dict)
 
         # Try extracting the required keywords. If this fails, an exception
         # of type KeyError will be raised. Be prepared to catch it.
@@ -248,8 +258,13 @@ class Ambient(StdRESTbase):
             raise ServiceError("No keyword: %s" % (e,))
 
         # If we got here, we have the minimum necessary.
+        
+        # It's not actually used by the Ambient protocol, but, for completeness,
+        # initialize the site-specific information:
+        self.init_info(ambient_dict)
+
         do_rapidfire_post = weeutil.weeutil.tobool(ambient_dict.get('rapidfire', False))
-        do_archive_post = weeutil.weeutil.tobool(ambient_dict.get('archive_post', not do_rapidfire_post))
+        do_archive_post   = weeutil.weeutil.tobool(ambient_dict.get('archive_post', not do_rapidfire_post))
 
         if do_rapidfire_post:
             self.rapidfire_url = ambient_dict['rapidfire_url']
@@ -278,7 +293,7 @@ class Ambient(StdRESTbase):
         # The only difference is we have to add the keywords 'realtime' and 'rtfreq'.
         
         try:
-            self.skip_this_post(event)
+            self.skip_this_post(event.packet['dateTime'])
         except SkippedPost, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: %s" % e)
             return
@@ -298,7 +313,7 @@ class Ambient(StdRESTbase):
     def new_archive_record(self, event):
         """Process a new archive event."""
         # Ambient archive posts can just follow the standard protocol model:
-        return self.process_record(event)
+        return self.process_record(event.record)
 
     def augment_protocol(self, record):
         """Augment a record with the Ambient-specific keywords."""
@@ -331,7 +346,6 @@ class Ambient(StdRESTbase):
 
         # Form the full URL
         _url = self.archive_url + '?' + weeutil.weeutil.urlencode(_post_dict)
-        print _url
         # Convert to a Request object:
         _request = urllib2.Request(_url)
         return _request
@@ -349,12 +363,15 @@ class StdWunderground(Ambient):
 
     def __init__(self, engine, config_dict):
         
+        # First extract the required parameters. If one of them is missing,
+        # a KeyError exception will occur. Be prepared to catch it.
         try:
+            # Extract the dictionary with the WU options:
             ambient_dict=dict(config_dict['StdRESTful']['Wunderground'])
             ambient_dict.setdefault('rapidfire_url', StdWunderground.rapidfire_url)
             ambient_dict.setdefault('archive_url',   StdWunderground.archive_url)
             ambient_dict.setdefault('name', 'Wunderground')
-            super(StdWunderground, self).__init__(engine, ambient_dict)
+            super(StdWunderground, self).__init__(engine, config_dict, **ambient_dict)
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to Wunderground")
         except ServiceError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to Wunderground")
@@ -376,7 +393,7 @@ class StdPWS(Ambient):
             ambient_dict=dict(config_dict['StdRESTful']['PWSweather'])
             ambient_dict.setdefault('archive_url',   StdPWS.archive_url)
             ambient_dict.setdefault('name', 'PWSweather')
-            super(StdWunderground, self).__init__(engine, ambient_dict)
+            super(StdWunderground, self).__init__(engine, config_dict, **ambient_dict)
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to PWSweather")
         except ServiceError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to PWSweather")
@@ -478,17 +495,17 @@ class StdCWOP(StdRESTbase):
     
     # Station IDs must start with one of these:
     valid_prefixes = ['CW', 'DW', 'EW']
-    
     default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
 
     def __init__(self, engine, config_dict):
-        super(StdCWOP, self).__init__(engine, config_dict)
         
         # First extract the required parameters. If one of them is missing,
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract the CWOP dictionary:
             cwop_dict=dict(config_dict['StdRESTful']['CWOP'])
+            cwop_dict.setdefault('name', 'CWOP')
+            super(StdCWOP, self).__init__(engine, config_dict, **cwop_dict)
 
             # Extract the station and (if necessary) passcode
             self.station = cwop_dict['station'].upper()
@@ -503,13 +520,8 @@ class StdCWOP(StdRESTbase):
             return
             
         # If we made it this far, we can post. Everything else is optional.
-        self.interval  = int(cwop_dict.get('interval', 0))
-        self.stale     = int(cwop_dict.get('stale', 1800))
-        
         self.init_info(cwop_dict)
         
-        self._lastpost = None
-    
         self.init_archive_queue()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
@@ -517,7 +529,6 @@ class StdCWOP(StdRESTbase):
         cwop_dict.setdefault('max_tries', 3)
         cwop_dict.setdefault('log_success', True)
         cwop_dict.setdefault('log_failure', True)
-        cwop_dict.setdefault('name', 'CWOP')
         if cwop_dict.has_key('server'):
             cwop_dict['server'] = weeutil.weeutil.option_as_list(cwop_dict['server'])
         else:
@@ -533,36 +544,9 @@ class StdCWOP(StdRESTbase):
         syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to CWOP station %s" % (self.station,))
         
     def new_archive_record(self, event):
-        """Post data to CWOP, using the CWOP protocol."""
-
-        _time_ts = event.record['dateTime']
-
-        # There are a couple of reasons to skip a post to CWOP.
-
-        # 1. They do not allow backfilling, so there is no reason to post
-        #    an old out-of-date record.
-        _how_old = time.time() - _time_ts
-        if self.stale and _how_old > self.stale:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP record %s is stale (%d > %d)." % \
-                    (weeutil.weeutil.timestamp_to_string(_time_ts), _how_old, self.stale))
-            return
- 
-        # 2. We don't want to post more often than the interval
-        if self._lastpost and _time_ts - self._lastpost < self.interval:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP record %s wait interval (%d) has not passed." % \
-                    (weeutil.weeutil.timestamp_to_string(_time_ts), self.interval))
-            return
-        
-        # Get the data record for this time:
-        _record = self.augment_from_database(event.record, self.engine.archive)
-        # Get the login string
-        _login = self.get_login_string()
-        # And the TNC packet
-        _tnc_packet = self.get_tnc_packet(_record)
-        # Shove everything into the queue
-        self.archive_queue.put((_record['dateTime'], _login, _tnc_packet))
-
-        self._lastpost = _time_ts
+        """Process a new archive event."""
+        # CWOP archive posts can just follow the standard protocol model:
+        return self.process_record(event.record)
 
     def get_login_string(self):
         login = "user %s pass %s vers weewx %s\r\n" % (self.station, self.passcode, weewx.__version__)
@@ -640,6 +624,14 @@ class StdCWOP(StdRESTbase):
 
         return tnc_packet
 
+    def format_protocol(self, record):
+        # Get the login string
+        _login = self.get_login_string()
+        # And the TNC packet
+        _tnc_packet = self.get_tnc_packet(record)
+        
+        return (_login, _tnc_packet)
+
 #===============================================================================
 #                    Class PostTNC
 #===============================================================================
@@ -676,7 +668,7 @@ class PostTNC(threading.Thread):
                     break
 
             # Unpack the timestamp, login, tnc packet:
-            _timestamp, _login, _tnc_packet = _request_tuple
+            _timestamp, (_login, _tnc_packet) = _request_tuple
 
             try:
                 # Now post it
