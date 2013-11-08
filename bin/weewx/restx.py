@@ -25,6 +25,7 @@ class SkippedPost(Exception):
     """Raised when a post is skipped."""
 class BadLogin(StandardError):
     """Raised when login information is bad or missing."""
+
         
 #===============================================================================
 #                    Class StdRESTbase
@@ -33,12 +34,28 @@ class BadLogin(StandardError):
 class StdRESTbase(weewx.wxengine.StdService):
     """Base class for RESTful weewx services."""
 
+    #
+    # This class implements a generic protocol processing model:
+    #
+    # 1. Extract record or packet from the incoming event.
+    # 2. Test whether to post.                                   Function skip_this_post
+    # 3. Augment with data from database, according to protocol. Function augment_from_database
+    # 4. Augment with protocol-specific entries.                 Function augment_protocol
+    # 5. Format and convert to outgoing protocol.                Function format_protocol.
+    # 6. Post to the appropriate queue
+    #
+    # All these steps are combined in function process_record.
+    #
+
     def __init__(self, engine, config_dict):
         super(StdRESTbase, self).__init__(engine, config_dict)
         self.loop_queue  = None
         self.loop_thread = None
         self.archive_queue  = None
         self.archive_thread = None
+        self.stale = None
+        self.lastpost= None
+        self.post_interval = 0
 
     def init_info(self, site_dict):
         self.latitude    = float(site_dict.get('latitude', self.engine.stn_info.latitude_f))
@@ -69,10 +86,41 @@ class StdRESTbase(weewx.wxengine.StdService):
                 syslog.syslog(syslog.LOG_ERR, "restx: Unable to shut down %s thread" % t.name)
             else:
                 syslog.syslog(syslog.LOG_DEBUG, "restx: Shut down %s thread." % t.name)
+
+    def skip_this_post(self, time_ts):
+        """Check whether the post is current"""
         
-    def assemble_data(self, record, archive):
+        # Don't post if this record is too old
+        _how_old = time.time() - time_ts
+        if self.stale and _how_old > self.stale:
+            raise SkippedPost("Record %s is stale (%d > %d)." % \
+                    (weeutil.weeutil.timestamp_to_string(time_ts), _how_old, self.stale))
+ 
+        # We don't want to post more often than the post interval
+        if self.lastpost and time_ts - self.lastpost < self.post_interval:
+            raise SkippedPost("Record %s wait interval (%d) has not passed." % \
+                    (weeutil.weeutil.timestamp_to_string(time_ts), self.post_interval))
+    
+    def process_record(self, event):
+        """Generic processing function that follows the protocol model."""
+        
+        try:
+            self.skip_this_post(event)
+        except SkippedPost, e:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s" % e)
+            return
+        # Extract the record from the event, then augment it with data from the archive:
+        _record = self.augment_from_database(event.record, self.engine.archive)
+        # Then augment it with any protocol-specific data:
+        self.augment_protocol(_record)
+        # Format and convert to the outgoing protocol
+        _request = self.format_protocol(_record)
+        # Stuff it in the archive queue:
+        self.archive_queue.put((_record['dateTime'], _request))
+
+    def augment_from_database(self, record, archive):
         """Augment record data with additional data from the archive.
-        Always returns results in US Customary.
+        Returns results in the same units as the record and the database.
         
         This is a general version that works for:
           - WeatherUnderground
@@ -121,6 +169,12 @@ class StdRESTbase(weewx.wxengine.StdService):
             
         return _datadict
 
+    def augment_protocol(self, record):
+        pass
+    
+    def format_protocol(self, record):
+        raise NotImplementedError("Method 'format_protocol' not implemented")
+    
 #===============================================================================
 #                    Class Ambient
 #===============================================================================
@@ -130,6 +184,10 @@ class Ambient(StdRESTbase):
 
     # Types and formats of the data to be published:
     _formats = {'dateTime'    : ('dateutc', lambda _v : urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')),
+                'action'      : ('action', '%s'),
+                'ID'          : ('ID', '%s'),
+                'PASSWORD'    : ('PASSWORD', '%s'),
+                'softwaretype': ('softwaretype', '%s'),
                 'barometer'   : ('baromin', '%.3f'),
                 'outTemp'     : ('tempf', '%.1f'),
                 'outHumidity' : ('humidity', '%03.0f'),
@@ -215,46 +273,47 @@ class Ambient(StdRESTbase):
             self.archive_thread.start()
 
     def new_loop_packet(self, event):
+        """Process a new LOOP event."""
+        # Ambient loop posts can almost follow the standard protocol model.
+        # The only difference is we have to add the keywords 'realtime' and 'rtfreq'.
+        
+        try:
+            self.skip_this_post(event)
+        except SkippedPost, e:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s" % e)
+            return
+
         # Extract the record from the event, then augment it with data from the archive:
-        _record = self.assemble_data(event.packet, self.engine.archive)
-        # Convert to the notation used by the Ambient protocol
-        _post_dict = Ambient.format_ambient(self.station, self.password, _record)
-        # Add the rapidfire specific keywords:
-        _post_dict['realtime'] = '1'
-        _post_dict['rtfreq'] = '2.5'
-        # Form the full URL
-        _url = self.rapidfire_url + '?' + weeutil.weeutil.urlencode(_post_dict)
-        # Convert to a Request object:
-        _request = urllib2.Request(_url)
+        _record = self.augment_from_database(event.packet, self.engine.archive)
+        # Then augment it with any Ambient-specific data:
+        self.augment_protocol(_record)
+        # Add the Rapidfire-specific keywords:
+        _record['realtime'] = '1'
+        _record['rtfreq'] = '2.5'
+        # Format and convert to the outgoing protocol
+        _request = self.format_protocol(_record)
         # Stuff it in the loop queue:
         self.loop_queue.put((_record['dateTime'], _request))
 
     def new_archive_record(self, event):
-        # Extract the record from the event, then augment it with data from the archive:
-        _record = self.assemble_data(event.record, self.engine.archive)
-        # Convert to the notation used by the Ambient protocol
-        _post_dict = Ambient.format_ambient(self.station, self.password, _record)
-        # Form the full URL
-        _url = self.archive_url + '?' + weeutil.weeutil.urlencode(_post_dict)
-        # Convert to a Request object:
-        _request = urllib2.Request(_url)
-        # Stuff it in the archive queue:
-        self.archive_queue.put((_record['dateTime'], _request))
+        """Process a new archive event."""
+        # Ambient archive posts can just follow the standard protocol model:
+        return self.process_record(event)
 
-    @staticmethod
-    def format_ambient(station, password, record):
+    def augment_protocol(self, record):
+        """Augment a record with the Ambient-specific keywords."""
+        record['action'] = 'updateraw'
+        record['ID'] = self.station
+        record['PASSWORD'] = self.password
+        record['softwaretype'] = "weewx-%s" % weewx.__version__
+        
+    def format_protocol(self, record):
         """Given a record, format it using the Ambient protocol.
         
         Performs any necessary unit conversions.
         
         Returns:
-        A dictionary where the keys are the Ambient keywords, and the values
-        are strings formatted according to the Ambient protocol.
-        
-        Example:
-        >>> record = {'dateTime' : 1383755400, 'usUnits' : 16, 'outTemp' : 20.0, 'barometer' : 1020.0}
-        >>> print Ambient.format_ambient("KSTATION", "my_password", record)
-        {'dateutc': '2013-11-06+16%3A30%3A00', 'softwaretype': 'weewx-2.6.0a1', 'tempf': '68.0', 'baromin': '30.124', 'action': 'updateraw', 'PASSWORD': 'my_password', 'ID': 'KSTATION'}
+        A Request object
         """
 
         # Requires US units.
@@ -270,13 +329,12 @@ class Ambient(StdRESTbase):
         # Reformat according to the Ambient protocol:
         _post_dict = reformat_dict(_datadict, Ambient._formats)
 
-        # Then add a few Ambient-specific keywords:
-        _post_dict['action'] = 'updateraw'
-        _post_dict['ID'] = station
-        _post_dict['PASSWORD'] = password
-        _post_dict['softwaretype'] = "weewx-%s" % weewx.__version__
-
-        return _post_dict
+        # Form the full URL
+        _url = self.archive_url + '?' + weeutil.weeutil.urlencode(_post_dict)
+        print _url
+        # Convert to a Request object:
+        _request = urllib2.Request(_url)
+        return _request
 
 #===============================================================================
 #                    Class StdWunderground
@@ -496,7 +554,7 @@ class StdCWOP(StdRESTbase):
             return
         
         # Get the data record for this time:
-        _record = self.assemble_data(event.record, self.engine.archive)
+        _record = self.augment_from_database(event.record, self.engine.archive)
         # Get the login string
         _login = self.get_login_string()
         # And the TNC packet
