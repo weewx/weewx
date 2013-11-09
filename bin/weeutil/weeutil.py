@@ -948,13 +948,6 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
 
     return config_fn, config_dict
 
-def urlencode(url_dict):
-    url_list = []
-    for _key in url_dict:
-        url_list.append("%s=%s" % (_key, url_dict[_key]))
-    url_string = '&'.join(url_list)
-    return url_string
-
 if __name__ == '__main__':
     import doctest
 

@@ -7,6 +7,8 @@
 import Queue
 import datetime
 import httplib
+import platform
+import re
 import socket
 import syslog
 import threading
@@ -201,7 +203,7 @@ class Ambient(StdRESTbase):
 
     # Types and formats of the data to be published, using the Ambient notation
     _formats = {'dateTime'    : ('dateutc',
-                                 lambda _v : urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')),
+                                 lambda _v : lambda _v : datetime.datetime.utcfromtimestamp(_v).isoformat(' ')),
                 'action'      : ('action', '%s'),
                 'station'     : ('ID', '%s'),
                 'password'    : ('PASSWORD', '%s'),
@@ -362,7 +364,7 @@ class Ambient(StdRESTbase):
         _post_dict = reformat_dict(_datadict, self.format_dict)
 
         # Form the full URL
-        _url = self.archive_url + '?' + weeutil.weeutil.urlencode(_post_dict)
+        _url = self.archive_url + '?' + urllib.urlencode(_post_dict)
         # Convert to a Request object:
         _request = urllib2.Request(_url)
         return _request
@@ -431,7 +433,7 @@ class StdWOW(Ambient):
     """
 
     # Types and formats of the data to be published:
-    _formats = {'dateTime'    : ('dateutc', lambda _v : urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')),
+    _formats = {'dateTime'    : ('dateutc', lambda _v : lambda _v : datetime.datetime.utcfromtimestamp(_v).isoformat(' ')),
                 'station'     : ('siteid', '%s'),
                 'password'    : ('siteAuthenticationKey', '%s'),
                 'softwaretype': ('softwaretype', '%s'),
@@ -467,98 +469,195 @@ class StdWOW(Ambient):
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to WOW")
             syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
     
-#===============================================================================
-#                    Class PostRequest
-#===============================================================================
+#==============================================================================
+#                   class StationRegistry
+#==============================================================================
+# Periodically 'phone home' to register a weewx station.
+#
+#  This will periodically do a http GET with the following information:
+#
+#    station_url           should be world-accessible
+#    description           description of station
+#    latitude, longitude   must be in decimal format
+#    station_type          for example Vantage, FineOffsetUSB
+#
+#  The station_url is the unique key by which a station is identified.
+#
+#  To enable this module, add the following to weewx.conf:
+#
+# [StdRESTful]
+#     ...
+#     [[StationRegistry]]
+#         register_this_station = True
+#         driver = weewx.register.StationRegistry
 
-class PostRequest(threading.Thread):
-    """Post an urllib2 "Request" object, using a separate thread."""
-    
-    
-    def __init__(self, queue, thread_name, **kwargs):
-        threading.Thread.__init__(self, name=thread_name)
+class StdStationRegistry(StdRESTbase):
+    """Class for phoning home to register a weewx station."""
 
-        self.queue = queue
-        self.log_success = to_bool(kwargs.get('log_success', True))
-        self.log_failure = to_bool(kwargs.get('log_failure', True))
-        self.max_tries   = to_int(kwargs.get('max_tries', 3))
-        self.max_backlog = to_int(kwargs.get('max_backlog'))
+    WEEWX_SERVER_URL = 'http://weewx.com/register/register.cgi'
 
-        self.setDaemon(True)
-        
-    def run(self):
+    _formats = {'station_url'   : ('station_url', '%s'),
+                'latitude'      : ('latitude',  '%.4f'),
+                'longitude'     : ('longitude', '%.4f'),
+                'description'   : ('description', '%s'),
+                'station_type'  : ('station_type', '%s'),
+                'softwaretype'  : ('weewx_info', '%s'),
+                'python_info'   : ('python_info', '%s'),
+                'platform_info' : ('platform_info', '%s')}
 
-        while True:
+    # adapted from django URLValidator
+    _urlregex = re.compile(r'^(?:http)s?://' # http:// or https://
+                           r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+                           r'localhost|' #localhost...
+                           r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+                           r'(?::\d+)?' # optional port
+                           r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
-            while True:
-                # This will block until a request shows up.
-                _request_tuple = self.queue.get()
-                # If a "None" value appears in the pipe, it's our signal to exit:
-                if _request_tuple is None:
-                    return
-                # If packets have backed up in the queue, trim it until it's no bigger
-                # than the max allowed backlog:
-                if self.max_backlog is None or self.queue.qsize() <= self.max_backlog:
-                    break
-
-            # Unpack the timestamp and Request object
-            _timestamp, _request = _request_tuple
-
-            try:
-                # Now post it
-                self.post_request(_request)
-            except FailedPost:
-                if self.log_failure:
-                    syslog.syslog(syslog.LOG_ERR, "restx: Failed to upload to '%s'" % self.name)
-            except BadLogin, e:
-                syslog.syslog(syslog.LOG_CRIT, "restx: Failed to post to '%s'" % self.name)
-                syslog.syslog(syslog.LOG_CRIT, " ****  Reason: %s" % e)
-                syslog.syslog(syslog.LOG_CRIT, " ****  Terminating %s thread" % self.name)
-                return
-            else:
-                if self.log_success:
-                    _time_str = timestamp_to_string(_timestamp)
-                    syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.name))
-
-    def post_request(self, request):
-        """Post a request.
-        
-        request: An instance of urllib2.Request
+    def __init__(self, engine, config_dict):
         """
+        register_this_station: indicates whether to run this service
+        [Required]
 
-        # Retry up to max_tries times:
-        for _count in range(self.max_tries):
-            # Now use urllib2 to post the data. Wrap in a try block
-            # in case there's a network problem.
-            try:
-                _response = urllib2.urlopen(request)
-            except urllib2.HTTPError, e:
-                # WOW signals a bad login with a HTML Error 403 code:
-                if e.code == 403:
-                    raise BadLogin(e)
-                else:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
-                    syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
-            except (urllib2.URLError, socket.error, httplib.BadStatusLine), e:
-                # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
-                syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
-            else:
-                # No exception thrown, but we're still not done.
-                # We have to also check for a bad station ID or password.
-                # It will have the error encoded in the return message:
-                for line in _response:
-                    # PWSweather signals with 'ERROR', WU with 'INVALID':
-                    if line.startswith('ERROR') or line.startswith('INVALID'):
-                        # Bad login. No reason to retry. Raise an exception.
-                        raise BadLogin, line
-                # Does not seem to be an error. We're done.
-                return
+        station_url: URL of the weather station
+        [Required]
+
+        description: description of station
+        [Optional]
+
+        latitude: station latitude
+        [Required]
+
+        longitude: station longitude
+        [Required]
+
+        hardware: station hardware
+        [Required]
+
+        server_url - site at which to register
+        [Optional.  Default is weewx.com]
+
+        interval: time in seconds between posts
+        [Optional.  Default is 604800 (once per week)]
+
+        max_tries: number of attempts to make before giving up
+        [Optional.  Default is 5]
+        """
+        try:
+            registry_dict = dict(config_dict['StdRESTful']['StationRegistry'])
+        except KeyError, e:
+            syslog.syslog(syslog.LOG_INFO, "restx: Station registry will not be run.")
+            syslog.syslog(syslog.LOG_INFO, " ****  Reason: missing key %s" % (e,))
+            return
+        
+        # Should the service be run?
+        _optin = to_bool(registry_dict.get('register_this_station', False))
+        if not _optin:
+            syslog.syslog(syslog.LOG_INFO, "restx: Station registry not requested.")
+            return
+
+        # Set any missing options needed by my base class, then initialize the base class:
+        registry_dict.setdefault('name', 'StationRegistry')
+        registry_dict['stale']     = to_int(registry_dict.get('stale'))
+        registry_dict['interval']  = to_int(registry_dict.get('interval', 604800))
+        
+        super(StdStationRegistry, self).__init__(engine, config_dict, **registry_dict)
+
+        # Set lat, lon, station info, etc:
+        self.init_info(registry_dict)
+
+        # these are optional
+        self.archive_url  = registry_dict.get('server_url', StdStationRegistry.WEEWX_SERVER_URL)
+        self.description = registry_dict.get('description', config_dict['Station'].get('location'))
+
+        self.weewx_info = weewx.__version__
+        self.python_info = platform.python_version()
+        self.platform_info = platform.platform()
+
+        if self._validateParameters():
+            syslog.syslog(syslog.LOG_INFO, 'restx: station will register with %s' % self.archive_url)
         else:
-            # This is executed only if the loop terminates normally, meaning
-            # the upload failed max_tries times. Log it.
-            raise FailedPost("Failed upload to site %s after %d tries" % (self.name, self.max_tries))
+            syslog.syslog(syslog.LOG_INFO, 'restx: station will not register with %s' % self.archive_url)
+            return
+        
+        self.init_archive_queue()
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
+        # Add some more options needed by the PostRequest thread
+        registry_dict.setdefault('log_success', True)
+        registry_dict.setdefault('log_failure', True)
+        registry_dict.setdefault('max_tries',   5)
+        registry_dict.setdefault('max_backlog', 0)
+        self.archive_thread = PostRequest(self.archive_queue,
+                                          'StationRegistry',
+                                           **registry_dict)
+        self.archive_thread.start()
+
+        
+    def new_archive_record(self, event):
+        time_ts = int(time.time())
+        try:
+            self.skip_this_post(time_ts)
+        except SkippedPost, e:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: StationRegistry %s" % (e,))
+            return
+        # Start with an empty dictionary
+        _record = dict()
+        # Add the station registry information
+        self.augment_protocol(_record)
+        # Encode using registry protocol
+        _request = self.format_protocol(_record)
+        # Put in the queue
+        self.archive_queue.put((time_ts, _request))
+
+    def augment_protocol(self, record):
+        
+        record['station_url']   = self.station_url
+        record['latitude']      = self.latitude
+        record['longitude']     = self.longitude
+        record['station_type']  = self.hardware
+        record['weewx_info']    = self.weewx_info
+        record['python_info']   = self.python_info
+        record['platform_info'] = self.platform_info
+        if self.description:
+            record['description'] = self.description
+            
+    def format_protocol(self, record):
+        
+        _post_dict = reformat_dict(record, StdStationRegistry._formats)
+        # Form the full URL
+        _url = self.archive_url + '?' + urllib.urlencode(_post_dict)
+        # Convert to a Request object:
+        _request = urllib2.Request(_url)
+        return _request
+                
+    @staticmethod
+    def _checkURL(url):
+        return StdStationRegistry._urlregex.search(url)
+
+    def _validateParameters(self):
+        msgs = []
+
+        if self.station_url is None:
+            # the station url must be defined
+            msgs.append("station_url is not defined")
+        elif not StdStationRegistry._checkURL(self.station_url):
+            # ensure the url does not have problem characters.  do not check
+            # to see whether the site actually exists.
+            msgs.append("station_url '%s' is not a valid URL" %
+                        self.station_url)
+
+        # check server url just in case someone modified the default
+        url = self.archive_url
+        if not StdStationRegistry._checkURL(url):
+            msgs.append("server_url '%s' is not a valid URL" % self.archive_url)
+
+        if msgs:
+            errmsg = 'One or more unusable parameters.'
+            syslog.syslog(syslog.LOG_ERR, 'restx: %s' % errmsg)
+            for m in msgs:
+                syslog.syslog(syslog.LOG_ERR, '  **** %s' % m)
+            return False
+        return True
 #===============================================================================
 #                             class StdCWOP
 #===============================================================================
@@ -709,6 +808,98 @@ class StdCWOP(StdRESTbase):
         return (_login, _tnc_packet)
 
 #===============================================================================
+#                    Class PostRequest
+#===============================================================================
+
+class PostRequest(threading.Thread):
+    """Post an urllib2 "Request" object, using a separate thread."""
+    
+    
+    def __init__(self, queue, thread_name, **kwargs):
+        threading.Thread.__init__(self, name=thread_name)
+
+        self.queue = queue
+        self.log_success = to_bool(kwargs.get('log_success', True))
+        self.log_failure = to_bool(kwargs.get('log_failure', True))
+        self.max_tries   = to_int(kwargs.get('max_tries', 3))
+        self.max_backlog = to_int(kwargs.get('max_backlog'))
+
+        self.setDaemon(True)
+        
+    def run(self):
+
+        while True:
+
+            while True:
+                # This will block until a request shows up.
+                _request_tuple = self.queue.get()
+                # If a "None" value appears in the pipe, it's our signal to exit:
+                if _request_tuple is None:
+                    return
+                # If packets have backed up in the queue, trim it until it's no bigger
+                # than the max allowed backlog:
+                if self.max_backlog is None or self.queue.qsize() <= self.max_backlog:
+                    break
+
+            # Unpack the timestamp and Request object
+            _timestamp, _request = _request_tuple
+
+            try:
+                # Now post it
+                self.post_request(_request)
+            except FailedPost:
+                if self.log_failure:
+                    syslog.syslog(syslog.LOG_ERR, "restx: Failed to upload to '%s'" % self.name)
+            except BadLogin, e:
+                syslog.syslog(syslog.LOG_CRIT, "restx: Failed to post to '%s'" % self.name)
+                syslog.syslog(syslog.LOG_CRIT, " ****  Reason: %s" % e)
+                syslog.syslog(syslog.LOG_CRIT, " ****  Terminating %s thread" % self.name)
+                return
+            else:
+                if self.log_success:
+                    _time_str = timestamp_to_string(_timestamp)
+                    syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.name))
+
+    def post_request(self, request):
+        """Post a request.
+        
+        request: An instance of urllib2.Request
+        """
+
+        # Retry up to max_tries times:
+        for _count in range(self.max_tries):
+            # Now use urllib2 to post the data. Wrap in a try block
+            # in case there's a network problem.
+            try:
+                _response = urllib2.urlopen(request)
+            except urllib2.HTTPError, e:
+                # WOW signals a bad login with a HTML Error 403 code:
+                if e.code == 403:
+                    raise BadLogin(e)
+                else:
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
+                    syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
+            except (urllib2.URLError, socket.error, httplib.BadStatusLine), e:
+                # Unsuccessful. Log it and go around again for another try
+                syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
+                syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
+            else:
+                # No exception thrown, but we're still not done.
+                # We have to also check for a bad station ID or password.
+                # It will have the error encoded in the return message:
+                for line in _response:
+                    # PWSweather signals with 'ERROR', WU with 'INVALID':
+                    if line.startswith('ERROR') or line.startswith('INVALID'):
+                        # Bad login. No reason to retry. Raise an exception.
+                        raise BadLogin, line
+                # Does not seem to be an error. We're done.
+                return
+        else:
+            # This is executed only if the loop terminates normally, meaning
+            # the upload failed max_tries times. Log it.
+            raise FailedPost("Failed upload to site %s after %d tries" % (self.name, self.max_tries))
+
+#===============================================================================
 #                    Class PostTNC
 #===============================================================================
 
@@ -829,12 +1020,12 @@ def reformat_dict(record, format_dict):
     The format can either be a string format, or a function.
     
     Example:
-    >>> form = {'dateTime'    : ('dateutc', lambda _v : urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')),
+    >>> form = {'dateTime'    : ('dateutc', lambda _v : datetime.datetime.utcfromtimestamp(_v).isoformat(' ')),
     ...         'barometer'   : ('baromin', '%.3f'),
     ...         'outTemp'     : ('tempf', '%.1f')}
     >>> record = {'dateTime' : 1383755400, 'usUnits' : 16, 'outTemp' : 20.0, 'barometer' : 1020.0}
     >>> print reformat_dict(record, form)
-    {'baromin': '1020.000', 'tempf': '20.0', 'dateutc': '2013-11-06+16%3A30%3A00'}
+    {'baromin': '1020.000', 'tempf': '20.0', 'dateutc': '2013-11-06 16:30:00'}
     """
 
     _post_dict = dict()
