@@ -4,6 +4,7 @@
 #
 #    $Id$
 #
+"""Publish weather data to RESTful sites such as the Weather Underground or PWSWeather."""
 import Queue
 import datetime
 import httplib
@@ -22,10 +23,13 @@ from weeutil.weeutil import to_int, to_bool, timestamp_to_string
 
 class ServiceError(Exception):
     """Raised when not enough info is available to start a service."""
+
 class FailedPost(IOError):
     """Raised when a post fails after trying the max number of allowed times"""
+
 class SkippedPost(Exception):
     """Raised when a post is skipped."""
+
 class BadLogin(StandardError):
     """Raised when login information is bad or missing."""
         
@@ -77,7 +81,8 @@ class StdRESTbase(weewx.wxengine.StdService):
         station info structure."""
         self.latitude    = float(site_dict.get('latitude',  self.engine.stn_info.latitude_f))
         self.longitude   = float(site_dict.get('longitude', self.engine.stn_info.longitude_f))
-        self.hardware    = site_dict.get('station_type', self.engine.stn_info.hardware)
+        self.station_type  = site_dict.get('station_type', self.config_dict['Station']['station_type'])
+        self.station_model = site_dict.get('station_model', self.engine.stn_info.hardware)
         self.location    = site_dict.get('location',     self.engine.stn_info.location)
         self.station_url = site_dict.get('station_url',  self.engine.stn_info.station_url)
         
@@ -120,6 +125,8 @@ class StdRESTbase(weewx.wxengine.StdService):
             raise SkippedPost("record %s wait interval (%d) has not passed." % \
                     (timestamp_to_string(time_ts), self.post_interval))
     
+        self.lastpost = time_ts
+        
     def process_record(self, record):
         """Generic processing function that follows the protocol model."""
         # See whether this post should be skipped.
@@ -472,27 +479,26 @@ class StdWOW(Ambient):
 #==============================================================================
 #                   class StationRegistry
 #==============================================================================
-# Periodically 'phone home' to register a weewx station.
-#
-#  This will periodically do a http GET with the following information:
-#
-#    station_url           should be world-accessible
-#    description           description of station
-#    latitude, longitude   must be in decimal format
-#    station_type          for example Vantage, FineOffsetUSB
-#
-#  The station_url is the unique key by which a station is identified.
-#
-#  To enable this module, add the following to weewx.conf:
-#
-# [StdRESTful]
-#     ...
-#     [[StationRegistry]]
-#         register_this_station = True
-#         driver = weewx.register.StationRegistry
 
 class StdStationRegistry(StdRESTbase):
-    """Class for phoning home to register a weewx station."""
+    """Class for phoning home to register a weewx station.
+
+    This will periodically do a http GET with the following information:
+
+        station_url           should be world-accessible
+        description           description of station
+        latitude, longitude   must be in decimal format
+        station_type          for example Vantage, FineOffsetUSB
+
+    The station_url is the unique key by which a station is identified.
+
+    To enable this module, add the following to weewx.conf:
+
+ [StdRESTful]
+     ...
+     [[StationRegistry]]
+         register_this_station = True
+    """
 
     WEEWX_SERVER_URL = 'http://weewx.com/register/register.cgi'
 
@@ -501,9 +507,11 @@ class StdStationRegistry(StdRESTbase):
                 'longitude'     : ('longitude', '%.4f'),
                 'description'   : ('description', '%s'),
                 'station_type'  : ('station_type', '%s'),
+                'station_model' : ('station_model', '%s'),
                 'softwaretype'  : ('weewx_info', '%s'),
                 'python_info'   : ('python_info', '%s'),
-                'platform_info' : ('platform_info', '%s')}
+                'platform_info' : ('platform_info', '%s'),
+                'weewx_info'    : ('weewx_info', '%s')}
 
     # adapted from django URLValidator
     _urlregex = re.compile(r'^(?:http)s?://' # http:// or https://
@@ -515,35 +523,43 @@ class StdStationRegistry(StdRESTbase):
 
     def __init__(self, engine, config_dict):
         """
+        The following options are accepted in subsection [[StationRegistry]]
+        
         register_this_station: indicates whether to run this service
-        [Required]
+        [Optional. Default is False]
 
         station_url: URL of the weather station
-        [Required]
-
-        description: description of station
-        [Optional]
-
-        latitude: station latitude
-        [Required]
-
-        longitude: station longitude
-        [Required]
-
-        hardware: station hardware
-        [Required]
-
-        server_url - site at which to register
-        [Optional.  Default is weewx.com]
+        [Required either in this section, or in section [Station] as the option 'station_url']
 
         interval: time in seconds between posts
         [Optional.  Default is 604800 (once per week)]
+
+        latitude: station latitude
+        [Optional. If not specified, it's taken from section [Station]
+
+        longitude: station longitude
+        [Optional. If not specified, it's taken from section [Station]
+        
+        station_type: The generic type of station.
+        [Optional. If not specified, then the driver section name is used. E.g., 'Vantage']
+
+        station_model: The specific type of hardware.
+        [Optional. If not specified, then the attribute 'hardware' of the console
+        will be used. E.g., 'VantagePro2']
+        
+        description: A short description of the station.
+        [Optional. If not specified, then the option 'location' in section [Station] will
+        be used.
+        
+        server_url - site at which to register
+        [Optional.  Default is weewx.com]
 
         max_tries: number of attempts to make before giving up
         [Optional.  Default is 5]
         """
         try:
             registry_dict = dict(config_dict['StdRESTful']['StationRegistry'])
+            # Set lat, lon, station info, etc:
         except KeyError, e:
             syslog.syslog(syslog.LOG_INFO, "restx: Station registry will not be run.")
             syslog.syslog(syslog.LOG_INFO, " ****  Reason: missing key %s" % (e,))
@@ -562,9 +578,12 @@ class StdStationRegistry(StdRESTbase):
         
         super(StdStationRegistry, self).__init__(engine, config_dict, **registry_dict)
 
-        # Set lat, lon, station info, etc:
         self.init_info(registry_dict)
-
+        if self.station_url is None:
+            syslog.syslog(syslog.LOG_INFO, "restx: Station registry will not be run.")
+            syslog.syslog(syslog.LOG_INFO, " ****  Reason: key station_url is required.")
+            return
+        
         # these are optional
         self.archive_url  = registry_dict.get('server_url', StdStationRegistry.WEEWX_SERVER_URL)
         self.description = registry_dict.get('description', config_dict['Station'].get('location'))
@@ -614,7 +633,8 @@ class StdStationRegistry(StdRESTbase):
         record['station_url']   = self.station_url
         record['latitude']      = self.latitude
         record['longitude']     = self.longitude
-        record['station_type']  = self.hardware
+        record['station_type']  = self.station_type
+        record['station_model'] = self.station_model
         record['weewx_info']    = self.weewx_info
         record['python_info']   = self.python_info
         record['platform_info'] = self.platform_info
@@ -879,21 +899,28 @@ class PostRequest(threading.Thread):
                 else:
                     syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
                     syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
-            except (urllib2.URLError, socket.error, httplib.BadStatusLine), e:
+            except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and go around again for another try
                 syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
                 syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
             else:
-                # No exception thrown, but we're still not done.
-                # We have to also check for a bad station ID or password.
-                # It will have the error encoded in the return message:
-                for line in _response:
-                    # PWSweather signals with 'ERROR', WU with 'INVALID':
-                    if line.startswith('ERROR') or line.startswith('INVALID'):
-                        # Bad login. No reason to retry. Raise an exception.
-                        raise BadLogin, line
-                # Does not seem to be an error. We're done.
-                return
+                if _response.code != 200:
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
+                    syslog.syslog(syslog.LOG_DEBUG, " ****  Response code: %d" % (_response.code,))
+                else:
+                    # No exception thrown and we got a good response code, but we're still not done.
+                    # We have to also check for a bad station ID or password.
+                    # It will have the error encoded in the return message:
+                    for line in _response:
+                        # PWSweather signals with 'ERROR', WU with 'INVALID':
+                        if line.startswith('ERROR') or line.startswith('INVALID'):
+                            # Bad login. No reason to retry. Raise an exception.
+                            raise BadLogin(line)
+                        # Station registry indicates something is malformed by signalling "FAIL"
+                        elif line.startswith('FAIL'):
+                            raise FailedPost(line)
+                    # Does not seem to be an error. We're done.
+                    return
         else:
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Log it.
