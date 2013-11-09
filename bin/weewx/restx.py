@@ -16,6 +16,7 @@ import urllib2
 
 import weeutil.weeutil
 import weewx.wxengine
+from weeutil.weeutil import to_int, to_bool, timestamp_to_string
 
 class ServiceError(Exception):
     """Raised when not enough info is available to start a service."""
@@ -65,10 +66,11 @@ class StdRESTbase(weewx.wxengine.StdService):
         self.archive_thread = None
         self.stale         = protocol_dict.get('stale')
         self.post_interval = protocol_dict.get('interval')
+        self.protocol      = protocol_dict.get('name', "Unknown")
         self.lastpost= None
 
     def init_info(self, site_dict):
-        self.latitude    = float(site_dict.get('latitude', self.engine.stn_info.latitude_f))
+        self.latitude    = float(site_dict.get('latitude',  self.engine.stn_info.latitude_f))
         self.longitude   = float(site_dict.get('longitude', self.engine.stn_info.longitude_f))
         self.hardware    = site_dict.get('station_type', self.engine.stn_info.hardware)
         self.location    = site_dict.get('location',     self.engine.stn_info.location)
@@ -103,13 +105,13 @@ class StdRESTbase(weewx.wxengine.StdService):
         # Don't post if this record is too old
         _how_old = time.time() - time_ts
         if self.stale and _how_old > self.stale:
-            raise SkippedPost("Record %s is stale (%d > %d)." % \
-                    (weeutil.weeutil.timestamp_to_string(time_ts), _how_old, self.stale))
+            raise SkippedPost("record %s is stale (%d > %d)." % \
+                    (timestamp_to_string(time_ts), _how_old, self.stale))
  
         # We don't want to post more often than the post interval
         if self.lastpost and time_ts - self.lastpost < self.post_interval:
-            raise SkippedPost("Record %s wait interval (%d) has not passed." % \
-                    (weeutil.weeutil.timestamp_to_string(time_ts), self.post_interval))
+            raise SkippedPost("record %s wait interval (%d) has not passed." % \
+                    (timestamp_to_string(time_ts), self.post_interval))
     
     def process_record(self, record):
         """Generic processing function that follows the protocol model."""
@@ -117,7 +119,7 @@ class StdRESTbase(weewx.wxengine.StdService):
         try:
             self.skip_this_post(record['dateTime'])
         except SkippedPost, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s %s" % (self.protocol, e))
             return
         # Extract the record from the event, then augment it with data from the archive:
         _record = self.augment_from_database(record, self.engine.archive)
@@ -263,8 +265,8 @@ class Ambient(StdRESTbase):
         # initialize the site-specific information:
         self.init_info(ambient_dict)
 
-        do_rapidfire_post = weeutil.weeutil.tobool(ambient_dict.get('rapidfire', False))
-        do_archive_post   = weeutil.weeutil.tobool(ambient_dict.get('archive_post', not do_rapidfire_post))
+        do_rapidfire_post = to_bool(ambient_dict.get('rapidfire', False))
+        do_archive_post   = to_bool(ambient_dict.get('archive_post', not do_rapidfire_post))
 
         if do_rapidfire_post:
             self.rapidfire_url = ambient_dict['rapidfire_url']
@@ -411,12 +413,10 @@ class PostRequest(threading.Thread):
         threading.Thread.__init__(self, name=thread_name)
 
         self.queue = queue
-        self.log_success = weeutil.weeutil.tobool(kwargs.get('log_success', True))
-        self.log_failure = weeutil.weeutil.tobool(kwargs.get('log_failure', True))
-        self.max_tries = int(kwargs.get('max_tries', 3))
-        self.max_backlog = kwargs.get('max_backlog')
-        if self.max_backlog is not None:
-            self.max_backlog = int(self.max_backlog)
+        self.log_success = to_bool(kwargs.get('log_success', True))
+        self.log_failure = to_bool(kwargs.get('log_failure', True))
+        self.max_tries   = to_int(kwargs.get('max_tries', 3))
+        self.max_backlog = to_int(kwargs.get('max_backlog'))
 
         self.setDaemon(True)
         
@@ -451,7 +451,7 @@ class PostRequest(threading.Thread):
                 return
             else:
                 if self.log_success:
-                    _time_str = weeutil.weeutil.timestamp_to_string(_timestamp)
+                    _time_str = timestamp_to_string(_timestamp)
                     syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.name))
 
     def post_request(self, request):
@@ -505,6 +505,8 @@ class StdCWOP(StdRESTbase):
             # Extract the CWOP dictionary:
             cwop_dict=dict(config_dict['StdRESTful']['CWOP'])
             cwop_dict.setdefault('name', 'CWOP')
+            cwop_dict['stale']    = to_int(cwop_dict.get('stale', 1800))
+            cwop_dict['interval'] = to_int(cwop_dict.get('interval'))
             super(StdCWOP, self).__init__(engine, config_dict, **cwop_dict)
 
             # Extract the station and (if necessary) passcode
@@ -643,13 +645,11 @@ class PostTNC(threading.Thread):
         threading.Thread.__init__(self, name=thread_name)
 
         self.queue = queue
-        self.log_success = weeutil.weeutil.tobool(kwargs.get('log_success', True))
-        self.log_failure = weeutil.weeutil.tobool(kwargs.get('log_failure', True))
-        self.max_tries = int(kwargs.get('max_tries', 3))
-        self.max_backlog = kwargs.get('max_backlog')
+        self.log_success = to_bool(kwargs.get('log_success', True))
+        self.log_failure = to_bool(kwargs.get('log_failure', True))
+        self.max_tries   = to_int(kwargs.get('max_tries', 3))
+        self.max_backlog = to_int(kwargs.get('max_backlog'))
         self.server = kwargs['server']
-        if self.max_backlog is not None:
-            self.max_backlog = int(self.max_backlog)
 
         self.setDaemon(True)
 
@@ -679,7 +679,7 @@ class PostTNC(threading.Thread):
                     syslog.syslog(syslog.LOG_ERR, " ****  Reason: %s" % e)
             else:
                 if self.log_success:
-                    _time_str = weeutil.weeutil.timestamp_to_string(_timestamp)
+                    _time_str = timestamp_to_string(_timestamp)
                     syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.name))
 
     def send_packet(self, _login, _tnc_packet):
