@@ -850,6 +850,36 @@ def tobool(x):
         pass
     raise ValueError("Unknown boolean specifier: '%s'." % x)
 
+to_bool = tobool
+
+def to_int(x):
+    """Convert an object to an integer, unless it is None
+    
+    Examples:
+    >>> print to_int(123)
+    123
+    >>> print to_int('123')
+    123
+    >>> print to_int(-5.2)
+    -5
+    >>> print to_int(None)
+    None
+    """
+    return int(x) if x is not None else None
+
+def to_float(x):
+    """Convert an object to a float, unless it is None
+    
+    Examples:
+    >>> print to_float(12.3)
+    12.3
+    >>> print to_float('12.3')
+    12.3
+    >>> print to_float(None)
+    None
+    """
+    return float(x) if x is not None else None
+
 def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
     """Read the specified configuration file, return a dictionary of the
     file contents. If no file is specified, look in the standard locations
@@ -918,25 +948,6 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
 
     return config_fn, config_dict
 
-class FixedList(list):
-    """A list of a fixed length.
-     
-    Example:
-    >>> l = FixedList(5)
-    >>> for i in range(10):
-    ...    l.append(i)
-    >>> print l
-    [5, 6, 7, 8, 9]
-    """
-    def __init__(self, max_len, *args, **kwargs):
-        list.__init__(self, *args, **kwargs)
-        self.max_len = max_len
- 
-    def append(self, ts):
-        while len(self) >= self.max_len:
-            self.pop(0)
-        list.append(self, ts)
-    
 def urlencode(url_dict):
     url_list = []
     for _key in url_dict:
