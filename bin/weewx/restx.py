@@ -26,7 +26,6 @@ class SkippedPost(Exception):
     """Raised when a post is skipped."""
 class BadLogin(StandardError):
     """Raised when login information is bad or missing."""
-
         
 #===============================================================================
 #                    Class StdRESTbase
@@ -383,7 +382,7 @@ class StdWunderground(Ambient):
 #                    Class StdPWS
 #===============================================================================
 
-class StdPWS(Ambient):
+class StdPWSweather(Ambient):
     """Specialized version of the Ambient protocol for PWS"""
 
     # The URL used by PWS:
@@ -393,9 +392,9 @@ class StdPWS(Ambient):
         
         try:
             ambient_dict=dict(config_dict['StdRESTful']['PWSweather'])
-            ambient_dict.setdefault('archive_url',   StdPWS.archive_url)
+            ambient_dict.setdefault('archive_url',   StdPWSweather.archive_url)
             ambient_dict.setdefault('name', 'PWSweather')
-            super(StdWunderground, self).__init__(engine, config_dict, **ambient_dict)
+            super(StdPWSweather, self).__init__(engine, config_dict, **ambient_dict)
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to PWSweather")
         except ServiceError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to PWSweather")
