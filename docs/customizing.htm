@@ -9,6 +9,9 @@
     <script src="jquery.min.js" type="text/javascript"></script>
     <script src="jquery.toc-1.1.4.min.js" type="text/javascript"></script>
     <style>
+table#stattypes td {
+  width: 60px;
+}
     </style>
   </head>
   <body>
@@ -50,7 +53,7 @@
         loading "<em>services</em>", then arranging for them to be called when
         key events occur, such as the arrival of LOOP data. The default install
         of <span class="code">weewx</span> includes the following services: </p>
-      <table class="center" style="width: 80%" summary="Overview of the weewx architecture">
+      <table class="indent" style="width: 80%" summary="Overview of the weewx architecture">
         <tbody>
           <tr>
             <td><strong>Service</strong></td>
@@ -116,7 +119,7 @@
       </p>
       <p>The default distribution of <span class="code">weewx</span> includes
         three reports: </p>
-      <table class="center" style="width: 80%" summary="Standard reports included in weewx">
+      <table class="indent" style="width: 80%" summary="Standard reports included in weewx">
         <tbody>
           <tr>
             <td><strong>Report</strong></td>
@@ -167,7 +170,7 @@
         Generators can also copy files around or FTP/rsync them to remote
         locations. The default install of <span class="code">weewx</span> includes
         the following generators: </p>
-      <table class="center" style="width: 80%" summary="Generators included in weewx">
+      <table class="indent" style="width: 80%" summary="Generators included in weewx">
         <tbody>
           <tr>
             <td><strong>Generator</strong></td>
@@ -548,7 +551,7 @@ $month.outTemp.max</pre>
       <p>The tag <span class="code"><em>optional_formatting</em></span> can be
         used with either current observations or aggregations. It can be one of:
       </p>
-      <table class="center" style="width: 90%" summary="Formatting Options">
+      <table class="indent" style="width: 90%" summary="Formatting Options">
         <tbody>
           <tr>
             <td><strong>Optional Formatting Tag</strong></td>
@@ -607,7 +610,7 @@ $month.outTemp.max</pre>
         </tbody>
       </table>
       <p>Summary: </p>
-      <table class="center" style="width: 80%" summary="Summary of formatting options">
+      <table class="indent" style="width: 80%" summary="Summary of formatting options">
         <tbody>
           <tr>
             <td><strong>Formatting Tag</strong></td>
@@ -661,7 +664,7 @@ $month.outTemp.max</pre>
         </tbody>
       </table>
       <p>Here are some examples with the expected results: </p>
-      <table class="center" summary="Formatting options with expected results">
+      <table class="indent" summary="Formatting options with expected results">
         <tbody>
           <tr>
             <td><strong>Tag</strong></td>
@@ -812,7 +815,7 @@ $month.outTemp.max</pre>
       <h3>Tag <span class="code">$trend</span></h3>
       <p>The tag <span class="code">$trend</span> is available for time trends,
         such as barometer trends. Here are some examples:</p>
-      <table class="center" style="width: 40%" summary="Examples of using unit formats">
+      <table class="indent" style="width: 40%" summary="Examples of using unit formats">
         <tbody>
           <tr>
             <td><strong>Tag</strong></td>
@@ -846,7 +849,7 @@ $month.outTemp.max</pre>
       <h3>Tag <span class="code">$unit</span></h3>
       <p>The unit type, label, and string formats are also available, allowing
         you to do highly customized labels: </p>
-      <table class="center" style="width: 40%" summary="Examples of using unit formats">
+      <table class="indent" style="width: 40%" summary="Examples of using unit formats">
         <tbody>
           <tr>
             <td><strong>Tag</strong></td>
@@ -963,7 +966,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>or </p>
       <pre class="tty">$almanac.next_first_quarter_moon</pre>
       <p>Here is a table of the information that falls into this category:</p>
-      <table align="center" class="code" style="width: 60%">
+      <table class="indent code" style="width: 80%">
         <tbody>
           <tr>
             <td>previous_equinox</td>
@@ -1031,7 +1034,7 @@ Sunrise, sunset: 06:51 19:30</pre>
           class="code"><em>heavenly_body</em></span> tag. All the planets and
         many stars are in the list.</p>
       <p>The <span class="code">attribute</span> tag can be one of </p>
-      <table align="center" class="code" style="width: 60%">
+      <table class="indent code" style="width: 60%">
         <tbody>
           <tr>
             <td>az</td>
@@ -1574,7 +1577,7 @@ outTemp = Outside Temperature</pre>
       <p>This option controls which encoding is to be used for the generated
         output. The encoding can be specified for individual files.  There are
         3 possible choices: </p>
-      <table class="center" style="width: 90%">
+      <table class="indent" style="width: 90%">
         <tbody>
           <tr>
             <td><strong>Encoding</strong></td>
@@ -2140,7 +2143,7 @@ extraTemp1     = Pond Temperature</pre>
       </ul>
       <p>The default install of <span class="code">weewx</span> includes the
         following services, shown in the order they are normally run:</p>
-      <table class="center" style="width: 80%">
+      <table class="indent" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Service</strong></td>
@@ -2555,7 +2558,7 @@ mv weewx.sdb_new weewx.sdb</pre>
       <p>If you wish to use the new type in the templates, it will be available
         using the same syntax as any other type. Here are some other tags that
         might be useful:</p>
-      <table class="center" style="width: 80%">
+      <table class="indent" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Tag</strong></td>
@@ -2661,7 +2664,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         function that yields loop packets, one after another. Don't worry about
         stopping it: the engine will do this when an archive record is due. A
         loop packet is a dictionary. At the very minimum it must contain keys</p>
-      <table class="center" style="width: 60%">
+      <table class="indent" style="width: 60%">
         <tbody>
           <tr>
             <td class="code">dateTime</td>
@@ -2702,7 +2705,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <p>Be careful when reporting pressure. There are three observations
         related to pressure. Some stations report only the station pressure,
         others calculate and report sea level pressures. </p>
-      <table class="center" style="width: 60%">
+      <table class="indent" style="width: 60%">
         <tbody>
           <tr>
             <td class="code">pressure</td>
@@ -2788,7 +2791,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         plot. Note that just because a type appears in the table does not
         necessarily mean that it is available for <em>your</em> station setup.
         That would depend on whether your instrument supports the type. </p>
-      <table class="center" style="width: 80%">
+      <table class="indent" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Archive Type</strong></td>
@@ -3111,7 +3114,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <h1 id="units">Appendix B: Units</h1>
       <p>The table below lists all the unit groups, their members, and which
         units are options for the group. </p>
-      <table class="center" style="width: 60%">
+      <table class="indent" style="width: 60%">
         <tbody>
           <tr>
             <td><strong>Group</strong></td>
@@ -3274,7 +3277,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         supports them and you have specified that it be stored in your stats
         database. See section <span class="code"><a href="usersguide.htm#Stats">[Stats]</a></span>
         in the <span class="code">weewx.conf</span> configuration file). </p>
-      <table style="width: 100%">
+      <table class='indent' id='stattypes'>
         <tbody>
           <tr>
             <td><strong>Type</strong></td>
@@ -3582,7 +3585,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
             Vantage Pro and Pro2 Serial Communications Reference</a></em>
         (available on the Davis website) for more information about these types.
       </p>
-      <table class="center" style="width: 60%">
+      <table class="indent" style="width: 60%">
         <tbody>
           <tr>
             <td><strong>Type</strong></td>

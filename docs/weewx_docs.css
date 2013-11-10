@@ -1,43 +1,23 @@
 /* styles for weewx documentation */
 ﻿/* $Id$ */
 
-body {
-  font: 11pt Verdana,arial,sans-serif;
-  color: black;
-}
-p {
-  font: 11pt Verdana,arial,sans-serif;
-  color: black;
-}
-ol {
-  font: 11pt Verdana,arial,sans-serif;
-  color: black;
-}
-ul {
-  font: 11pt Verdana,arial,sans-serif;
+body, p, ol, ul, li, dl, dt, dd, table, tr, td, div, h1, h2, h3, h4 {
+  font-family: Verdana,arial,sans-serif;
+  font-size: 11pt;
   color: black;
 }
 li {
-  font: 11pt Verdana,arial,sans-serif;
-  color: black;
   margin-right: 10%;
 }
-dl {
-  font: 11pt Verdana,arial,sans-serif;
-  color: black;
-}
 dt {
-  font: 11pt Verdana,arial,sans-serif;
-  color: black;
   margin-top: 10px;
 }
 dd {
-  font: 11pt Verdana,arial,sans-serif;
-  color: black;
   margin-top: 5px;
 }
 h1 {
-  font: bold 160% Verdana, arial, sans-serif;
+  font-size: 160%;
+  font-weight: bold;
   color: #FFFFFF;
   border: 1px solid black;
   background-color: #008080;
@@ -46,35 +26,44 @@ h1 {
   margin-top: 30pt;
 }
 h2 {
-  font: bold 140% Verdana, arial, sans-serif;
+  font-size: 140%;
+  font-weight: bold;
   color: teal;
   margin-top: 20pt;
 }
 h3 {
-  font: bold 120% Verdana, arial, sans-serif;
+  font-size: 120%;
+  font-weight: bold;
   color: teal;
 }
 h4 {
-  font: bold 100% Verdana, arial, sans-serif;
+  font-size: 100%;
+  font-weight: bold;
   color: teal;
 }
 table {
-  font: 11pt Verdana,arial,sans-serif;
-  border: 1px solid #dddddd;
   border-collapse: collapse;
+}
+table.code td {
+  font-family: "Courier New", Courier, monospace;
+}
+table.center {
+  margin-left:auto; 
+  margin-right:auto;
+  text-align:left;
 }
 tr {
   vertical-align: top;
 }
 td {
-  border: 1px solid #dfdfdf;
+  border: 1px solid #dfdfdf; 
   padding: 5px;
 }
 .code {
   font-family: "Courier New", Courier, monospace;
 }
 .symcode {
-  font-family:  "Courier New", Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
   font-style: italic;
 }
 .indent {
@@ -83,11 +72,11 @@ td {
 }
 .tty {
   font-family: "Courier New", Courier, monospace;
+  font-size: 90%;
   margin: 0px 20px 0px 20px;
   background-color: #FFFFe0;
   border: 1px solid #ddddaa;
   padding: 3px;
-  font-size: 90%;
   white-space: pre;
 }
 .title {
@@ -127,11 +116,6 @@ td {
 }
 div#toc ul {
   list-style: none;
-}
-table.center {
-  margin-left:auto; 
-  margin-right:auto;
-  text-align:left;
 }
 .image {
   padding: 5px;
