@@ -1684,7 +1684,17 @@ wx2precip_dict = {
     'Sleet': 'sleet',
     'Freezing Rain': 'frzngrain',
     'Freezing Drizzle': 'frzngdrzl',
-# FIXME: add precip types supported by wu but not nws
+# precip types supported by wu but not nws
+    'Snow Grains': 'snow',
+    'Ice Crystals': 'ice', # FIXME
+    'Hail': 'hail',
+    'Thunderstorm': 'tstms',
+    'Rain Mist': 'rainmist', # FIXME
+    'Ice Pellets': 'iceshwrs', # FIXME
+    'Ice Pellet Showers': 'iceshwrs', # FIXME
+    'Hail Showers': 'hailshwrs', # FIXME
+    'Small Hail': 'hailshwrs', # FIXME
+    'Small Hail Showers': 'hailshwrs', # FIXME
 }
 
 wx2obvis_dict = {
@@ -1697,7 +1707,24 @@ wx2obvis_dict = {
     'Smoke': 'K',
     'Blowing Dust': 'BD',
     'Volcanic Ash': 'AF',
-# FIXME: add obvis types supported by wu but not nws
+# obvis types supported by wu but not nws
+    'Mist': 'M', # FIXME
+    'Fog Patches': 'PF',
+    'Freezing Fog': 'FF', # FIXME
+    'Widespread Dust': 'WD', # FIXME
+    'Sand': 's',
+    'Spray': 'SP',
+    'Dust Whirls': 'DW',
+    'Sandstorm': 'sS',
+    'Low Drifting Snow': 'LDS',
+    'Low Drifting Widespread Dust': 'LDD',
+    'Low Drifting Sand': 'LDs',
+    'Blowing Widespread Dust': 'BD',
+    'Blowing Sand': 'Bs',
+    'Snow Blowing Snow Mist': 'BS',
+    'Patches of Fog': 'PF',
+    'Shallow Fog': 'F', # FIXME
+    'Partial Fog': 'PF', # FIXME
 }
 
 wx2chance_dict = {
@@ -1710,7 +1737,6 @@ wx2chance_dict = {
     'Scattered': 'SC',
     'Numerous': 'NM',
     'Extensive': 'EC',
-# FIXME: add other wu likeliehoods
 }
 
 def wx2pc(s):
@@ -1729,19 +1755,44 @@ def wx2pc(s):
     return None, 0
 
 def wu2precip(period):
-    '''return a dictionary of precipitation with corresponding likeliehoods'''
+    '''return a dictionary of precipitation with corresponding likeliehoods.
+    first try the wx field (NWS forecast) since that is more expressive.  if
+    that is empty use the condition field.'''
+
     p = {}
-    for w in period['wx'].split(','):
-        precip,chance = wx2pc(w.strip())
-        if precip is not None:
-            p[precip] = chance
+    if len(period['wx']) > 0:
+        for w in period['wx'].split(','):
+            precip,chance = wx2pc(w.strip())
+            if precip is not None:
+                p[precip] = chance
+    else:
+        if period['condition'].find(' and ') >= 0:
+            for w in period['condition'].split(' and '):
+                precip,chance = wx2pc(w.strip())
+                if precip is not None:
+                    p[precip] = chance
+        elif period['condition'].find(' with ') >= 0:
+            for w in period['condition'].split(' with '):
+                precip,chance = wx2pc(w.strip())
+                if precip is not None:
+                    p[precip] = chance
+        else:
+            precip,chance = wx2pc(period['condition'])
+            if precip is not None:
+                p[precip] = chance
     return p
 
 def wu2obvis(period):
-    '''return a single obvis type'''
-    for x in [w.strip() for w in period['wx'].split(',')]:
-        if x in wx2obvis_dict:
-            return wx2obvis_dict[x]
+    '''return a single obvis type.  first try to get it from the wx field.
+    if that is empty fallback to the condition field.'''
+
+    if len(period['wx']) > 0:
+        for x in [w.strip() for w in period['wx'].split(',')]:
+            if x in wx2obvis_dict:
+                return wx2obvis_dict[x]
+    else:
+        if period['condition'] in wx2obvis_dict:
+            return wx2obvis_dict[period['condition']]
     return None
 
 def str2int(n, s):

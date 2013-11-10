@@ -4,6 +4,8 @@
 # Copyright 2013 Matthew Wall
 #
 # Revision History
+#  0.5 01nov13
+#   * recognize more restful log output
 #  0.4 12oct13
 #   * recognize more fousb log output
 #   * recognize more ws28xx log output
@@ -116,6 +118,7 @@ while(defined($_ = <STDIN>)) {
              /\*\*\*\*  Registration interval/ ||
              /restful: Registration successful/ ||
              /restful: Attempting to register/ ||
+             /restful: station will register with/ ||
              /stats: Back calculated schema/ ||
              /stats: Backfilling stats database/ ||
              /stats: backfilled \d+ days of statistics/ ||

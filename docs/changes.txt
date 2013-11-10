@@ -7,6 +7,9 @@ Fixed bug in setting of CheetahGenerator options.
 
 Fixed qsf and qpf summary values in forecast module.
 
+Forecast module now looks first to wx field then condition field for precip
+and obvis instead of only the wx field.
+
 
 2.5.0 10/29/13
 
