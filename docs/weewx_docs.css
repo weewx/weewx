@@ -1,8 +1,5 @@
-﻿/*
- * $Revision$
- * $Author$
- * $Date$
- */
+/* styles for weewx documentation */
+﻿/* $Id$ */
 
 body {
     font: 11pt Verdana,arial,sans-serif;
@@ -91,7 +88,6 @@ td {
     white-space: pre;
 }
 .title {
-    text-align: center;
     margin-top: 0px;
 }
 .config_section {
@@ -203,4 +199,8 @@ table.center {
 }
 .version {
     font-size: 60%;
+}
+.logo {
+    width: 48px;
+    padding-right: 10px;
 }
