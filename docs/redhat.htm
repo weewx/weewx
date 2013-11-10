@@ -94,6 +94,7 @@
     <h3>Configure</h3>
     <p>
       The default installation uses Simulator as the <span class='code'>station_type</span>.  This should be changed to the actual weather station type.  Edit the configuration file <span class='code'>/etc/weewx/weewx.conf</span>.  Set at least the following:
+    </p>
       <ul>
         <li>location</li>
         <li>latitude</li>
@@ -101,7 +102,9 @@
         <li>altitude</li>
         <li>station_type</li>
       </ul>
+    <p>
       Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
+    </p>
     <p>
       <span class='code'>weewx</span> must be restarted for configuration file
       changes to take effect.
