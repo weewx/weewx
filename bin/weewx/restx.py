@@ -129,7 +129,11 @@ class StdRESTbase(weewx.wxengine.StdService):
         self.lastpost = time_ts
         
     def process_record(self, record):
-        """Generic processing function that follows the protocol model."""
+        """Generic processing function that follows the protocol model.
+        
+        By overriding the appropriate augmentation and formatting functions,
+        it can work for many protocols without change.
+        """
         # See whether this post should be skipped.
         try:
             self.skip_this_post(record['dateTime'])
@@ -197,9 +201,14 @@ class StdRESTbase(weewx.wxengine.StdService):
         return _datadict
 
     def augment_protocol(self, record):
-        pass
+        """Augment a record with any protocol-specific information. Generally,
+        this information would not be from the database (use augment_from_database
+        for that."""
     
     def format_protocol(self, record):
+        """Given a record, format it according to the protocol specification.
+        This function should generally return something that can be used by
+        one of the weewx RESTful sinks, such as PostRequest or PostTNC.""" 
         raise NotImplementedError("Method 'format_protocol' not implemented")
     
 #===============================================================================
@@ -211,7 +220,7 @@ class Ambient(StdRESTbase):
 
     # Types and formats of the data to be published, using the Ambient notation
     _formats = {'dateTime'    : ('dateutc',
-                                 lambda _v : lambda _v : datetime.datetime.utcfromtimestamp(_v).isoformat(' ')),
+                                 lambda _v : datetime.datetime.utcfromtimestamp(_v).isoformat(' ')),
                 'action'      : ('action', '%s'),
                 'station'     : ('ID', '%s'),
                 'password'    : ('PASSWORD', '%s'),
@@ -441,7 +450,7 @@ class StdWOW(Ambient):
     """
 
     # Types and formats of the data to be published:
-    _formats = {'dateTime'    : ('dateutc', lambda _v : lambda _v : datetime.datetime.utcfromtimestamp(_v).isoformat(' ')),
+    _formats = {'dateTime'    : ('dateutc', lambda _v : datetime.datetime.utcfromtimestamp(_v).isoformat(' ')),
                 'station'     : ('siteid', '%s'),
                 'password'    : ('siteAuthenticationKey', '%s'),
                 'softwaretype': ('softwaretype', '%s'),
@@ -827,6 +836,11 @@ class StdCWOP(StdRESTbase):
         _tnc_packet = self.get_tnc_packet(record)
         
         return (_login, _tnc_packet)
+
+###===========================================================================###
+###              Weewx "Sink" classes --- used as sinks for posts             ###
+###===========================================================================###
+
 
 #===============================================================================
 #                    Class PostRequest
