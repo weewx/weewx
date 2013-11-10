@@ -74,7 +74,7 @@ class StdRESTbase(weewx.wxengine.StdService):
         self.stale         = protocol_dict.get('stale')
         self.post_interval = protocol_dict.get('interval')
         self.protocol      = protocol_dict.get('name', "Unknown")
-        self.lastpost= None
+        self.lastpost = 0
 
     def init_info(self, site_dict):
         """Extract information out of the site dictionary or, if unavailable, the engine's  
@@ -121,9 +121,10 @@ class StdRESTbase(weewx.wxengine.StdService):
                     (timestamp_to_string(time_ts), _how_old, self.stale))
  
         # We don't want to post more often than the post interval
-        if self.lastpost and time_ts - self.lastpost < self.post_interval:
-            raise SkippedPost("record %s wait interval (%d) has not passed." % \
-                    (timestamp_to_string(time_ts), self.post_interval))
+        _how_long = time_ts - self.lastpost
+        if _how_long < self.post_interval:
+            raise SkippedPost("record %s wait interval (%d < %d) has not passed." % \
+                    (timestamp_to_string(time_ts), _how_long, self.post_interval))
     
         self.lastpost = time_ts
         
@@ -812,7 +813,7 @@ class StdCWOP(StdRESTbase):
             _radiation_str = ""
 
         # Station equipment
-        _equipment_str = ".weewx-%s-%s" % (weewx.__version__, self.hardware)
+        _equipment_str = ".weewx-%s-%s" % (weewx.__version__, self.station_type)
 
         _tnc_packet = _prefix + _time_str + _latlon_str + _wt_str + _rain_str + \
                       _baro_str + _humid_str + _radiation_str + _equipment_str + "\r\n"
