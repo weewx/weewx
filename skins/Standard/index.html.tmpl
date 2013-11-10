@@ -492,6 +492,9 @@
           #if $day.radiation.has_data
           <img src="dayradiation.png" alt="Radiation" />
           #end if
+          #if $day.UV.has_data
+          <img src="dayuv.png" alt="UV Index" />
+          #end if
           #if $day.rxCheckPercent.has_data
           <img src="dayrx.png"        alt="day rx percent"/>
           #end if
