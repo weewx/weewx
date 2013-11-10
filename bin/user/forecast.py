@@ -238,6 +238,7 @@ Skin Configuration
             sleet = Ice Pellets
             frzngrain = Freezing Rain
             frzngdrzl = Freezing Drizzle
+            hail = Hail
 
             # codes for sky cover
             CL = Clear
@@ -288,6 +289,18 @@ Skin Configuration
             K = Smoke
             BD = Blowing Dust
             AF = Volcanic Ash
+            M = Mist
+            FF = Freezing Fog
+            DST = Dust
+            SND = Sand
+            SP = Spray
+            DW = Dust Whirls
+            SS = Sand Storm
+            LDS = Low Drifting Snow
+            LDD = Low Drifting Dust
+            LDN = Low Drifting Sand
+            BN = Blowing Sand
+            SF = Shallow Fog
 
             # codes for wind character:
             LT = Light
@@ -436,11 +449,13 @@ def get_int(config_dict, label, default_value):
 #  maxhumidity
 #  minhumidity
 #  feelslike
-#  uvi
-#  mslp
+#  uvi - uv index
+#  mslp - mean sea level pressure
 #  condition
-#  wx
-#  fctcode
+#  wx - imported from us nws forecast
+#  fctcode - forecast code
+# there is overlap between condition, wx, and fctcode.  also, each may contain
+# any combination of precip, obvis, and sky cover.
 
 # FIXME: ensure compatibility with uk met office
 # http://www.metoffice.gov.uk/datapoint/product/uk-3hourly-site-specific-forecast
@@ -483,7 +498,7 @@ def get_int(config_dict, label, default_value):
    desc       - textual description of the forecast
 
    database     nws                    wu-daily           wu-hourly
-   -----------  ---------------------  -----------------  ---------
+   -----------  ---------------------  -----------------  ----------------
 
    hour         3HRLY | 6HRLY          date.hour          FCTTIME.hour
    tempMin      MIN/MAX | MAX/MIN      low.fahrenheit
@@ -499,17 +514,18 @@ def get_int(config_dict, label, default_value):
    pop          POP 12HR               pop                pop
    qpf          QPF 12HR               qpf_allday.in      qpf.english
    qsf          SNOW 12HR              snow_allday.in     qsf.english
-   rain         RAIN                                      wx
-   rainshwrs    RAIN SHWRS                                wx
-   tstms        TSTMS                                     wx
-   drizzle      DRIZZLE                                   wx
-   snow         SNOW                                      wx
-   snowshwrs    SNOW SHWRS                                wx
-   flurries     FLURRIES                                  wx
-   sleet        SLEET                                     wx
-   frzngrain    FRZNG RAIN                                wx
-   frzngdrzl    FRZNG DRZL                                wx
-   obvis        OBVIS                                     wx
+   rain         RAIN                                      wx/condition
+   rainshwrs    RAIN SHWRS                                wx/condition
+   tstms        TSTMS                                     wx/condition
+   drizzle      DRIZZLE                                   wx/condition
+   snow         SNOW                                      wx/condition
+   snowshwrs    SNOW SHWRS                                wx/condition
+   flurries     FLURRIES                                  wx/condition
+   sleet        SLEET                                     wx/condition
+   frzngrain    FRZNG RAIN                                wx/condition
+   frzngdrzl    FRZNG DRZL                                wx/condition
+   hail                                                   wx/condition
+   obvis        OBVIS                                     wx/condition
    windChill    WIND CHILL                                windchill
    heatIndex    HEAT INDEX                                heatindex
    uvIndex                                                uvi
@@ -633,7 +649,7 @@ weather_label_dict = {
     # types of precipitation
     'rain'      : 'Rain',
     'rainshwrs' : 'Rain Showers',
-    'sprinkles' : 'Rain Sprinkles',
+    'sprinkles' : 'Rain Sprinkles',     # FIXME: no db field
     'tstms'     : 'Thunderstorms',
     'drizzle'   : 'Drizzle',
     'snow'      : 'Snow',
@@ -660,7 +676,7 @@ weather_label_dict = {
     'IS' : 'Isolated',           'ISq' : '<20%',
     'SC' : 'Scattered',          'SCq' : '30-50%',
     'NM' : 'Numerous',           'NMq' : '60-70%',
-    'EC' : 'Extensive Coverage', 'ECq' : '80-100%',
+    'EC' : 'Extensive',          'ECq' : '80-100%',
     'PA' : 'Patchy',             'PAq' : '<25%',
     'AR' : 'Areas',              'ARq' : '25-50%',
     'WD' : 'Widespread',         'WDq' : '>50%',
@@ -674,6 +690,18 @@ weather_label_dict = {
     'K'   : 'Smoke',
     'BD'  : 'Blowing Dust',
     'AF'  : 'Volcanic Ash',
+    'M'   : 'Mist',              # WU extension
+    'FF'  : 'Freezing Fog',      # WU extension
+    'DST' : 'Dust',              # WU extension
+    'SND' : 'Sand',              # WU extension
+    'SP'  : 'Spray',             # WU extension
+    'DW'  : 'Dust Whirls',       # WU extension
+    'SS'  : 'Sand Storm',        # WU extension
+    'LDS' : 'Low Drifting Snow', # WU extension
+    'LDD' : 'Low Drifting Dust', # WU extension
+    'LDN' : 'Low Drifting Sand', # WU extension
+    'BN'  : 'Blowing Sand',      # WU extension
+    'SF'  : 'Shallow Fog',       # WU extension
     # codes for wind character
     'LT' : 'Light',
     'GN' : 'Gentle',
@@ -1673,7 +1701,8 @@ def sky2clouds(sky):
         return 'OV'
     return None
 
-wx2precip_dict = {
+str2precip_dict = {
+# nws precip strings
     'Rain': 'rain',
     'Rain Showers': 'rainshwrs',
     'Thunderstorms': 'tstms',
@@ -1684,20 +1713,21 @@ wx2precip_dict = {
     'Sleet': 'sleet',
     'Freezing Rain': 'frzngrain',
     'Freezing Drizzle': 'frzngdrzl',
-# precip types supported by wu but not nws
+# precip strings supported by wu but not nws
     'Snow Grains': 'snow',
-    'Ice Crystals': 'ice', # FIXME
+    'Ice Crystals': 'sleet',
     'Hail': 'hail',
     'Thunderstorm': 'tstms',
-    'Rain Mist': 'rainmist', # FIXME
-    'Ice Pellets': 'iceshwrs', # FIXME
-    'Ice Pellet Showers': 'iceshwrs', # FIXME
-    'Hail Showers': 'hailshwrs', # FIXME
-    'Small Hail': 'hailshwrs', # FIXME
-    'Small Hail Showers': 'hailshwrs', # FIXME
+    'Rain Mist': 'rain',
+    'Ice Pellets': 'sleet',
+    'Ice Pellet Showers': 'sleet',
+    'Hail Showers': 'hail',
+    'Small Hail': 'hail',
+    'Small Hail Showers': 'hail',
 }
 
-wx2obvis_dict = {
+str2obvis_dict = {
+# nws obvis strings
     'Fog': 'F',
     'Patchy Fog': 'PF',
     'Dense Fog': 'F+',
@@ -1707,15 +1737,15 @@ wx2obvis_dict = {
     'Smoke': 'K',
     'Blowing Dust': 'BD',
     'Volcanic Ash': 'AF',
-# obvis types supported by wu but not nws
-    'Mist': 'M', # FIXME
+# obvis strings supported by wu but not nws
+    'Mist': 'M',
     'Fog Patches': 'PF',
-    'Freezing Fog': 'FF', # FIXME
-    'Widespread Dust': 'WD', # FIXME
-    'Sand': 's',
+    'Freezing Fog': 'FF',
+    'Widespread Dust': 'DST',
+    'Sand': 'SND',
     'Spray': 'SP',
     'Dust Whirls': 'DW',
-    'Sandstorm': 'sS',
+    'Sandstorm': 'SS',
     'Low Drifting Snow': 'LDS',
     'Low Drifting Widespread Dust': 'LDD',
     'Low Drifting Sand': 'LDs',
@@ -1723,10 +1753,13 @@ wx2obvis_dict = {
     'Blowing Sand': 'Bs',
     'Snow Blowing Snow Mist': 'BS',
     'Patches of Fog': 'PF',
-    'Shallow Fog': 'F', # FIXME
-    'Partial Fog': 'PF', # FIXME
+    'Shallow Fog': 'SF',
+    'Partial Fog': 'PF',
+    'Blizzard': 'BS',
+    'Rain Mist': 'M',
 }
 
+# mapping from string to probability code
 wx2chance_dict = {
     'Slight Chance': 'S',
     'Chance': 'C',
@@ -1739,60 +1772,91 @@ wx2chance_dict = {
     'Extensive': 'EC',
 }
 
-def wx2pc(s):
+def str2pc(s):
     '''parse a wu wx string for the precipitation type and likeliehood
 
     Slight Chance Light Rain Showers -> rainshwrs,S
     Chance of Light Rain Showers     -> rainshwrs,C
     Isolated Thunderstorms           -> tstms,IS
     '''
-    for x in wx2precip_dict:
+    for x in str2precip_dict:
         if s.endswith(x):
             for y in wx2chance_dict:
                 if s.startswith(y):
-                    return wx2precip_dict[x],wx2chance_dict[y]
-            return wx2precip_dict[x],''
+                    return str2precip_dict[x],wx2chance_dict[y]
+            return str2precip_dict[x],''
     return None, 0
+
+# mapping from wu fctcode to a precipitation,chance tuple
+fct2precip_dict = {
+    '10': ('rainshwrs','C'),
+    '11': ('rainshwrs','L'),
+    '12': ('rain','C'),
+    '13': ('rain','L'),
+    '14': ('tstms','C'),
+    '15': ('tstms','L'),
+    '16': ('flurries','L'),
+    '18': ('snowshwrs','C'),
+    '19': ('snowshwrs','L'),
+    '20': ('snow','C'),
+    '21': ('snow','L'),
+    '22': ('sleet','C'),
+    '23': ('sleet','L'),
+    '24': ('snowshwrs','L'),
+}
 
 def wu2precip(period):
     '''return a dictionary of precipitation with corresponding likeliehoods.
-    first try the wx field (NWS forecast) since that is more expressive.  if
-    that is empty use the condition field.'''
+    precipitation information may be in the fctcode, condition, or wx field,
+    so look at each one and extract precipitation.'''
 
     p = {}
-    if len(period['wx']) > 0:
-        for w in period['wx'].split(','):
-            precip,chance = wx2pc(w.strip())
+    # first try the condition field
+    if period['condition'].find(' and ') >= 0:
+        for w in period['condition'].split(' and '):
+            precip,chance = str2pc(w.strip())
+            if precip is not None:
+                p[precip] = chance
+    elif period['condition'].find(' with ') >= 0:
+        for w in period['condition'].split(' with '):
+            precip,chance = str2pc(w.strip())
             if precip is not None:
                 p[precip] = chance
     else:
-        if period['condition'].find(' and ') >= 0:
-            for w in period['condition'].split(' and '):
-                precip,chance = wx2pc(w.strip())
-                if precip is not None:
-                    p[precip] = chance
-        elif period['condition'].find(' with ') >= 0:
-            for w in period['condition'].split(' with '):
-                precip,chance = wx2pc(w.strip())
-                if precip is not None:
-                    p[precip] = chance
-        else:
-            precip,chance = wx2pc(period['condition'])
+        precip,chance = str2pc(period['condition'])
+        if precip is not None:
+            p[precip] = chance
+    # then augment or possibly override with precip info from the fctcode
+    if period['fctcode'] in fct2precip_dict:
+        precip,chance = fct2precip_dict[period['fctcode']]
+        p[precip] = chance
+    # wx has us nws forecast strings, so trust it the most
+    if len(period['wx']) > 0:
+        for w in period['wx'].split(','):
+            precip,chance = str2pc(w.strip())
             if precip is not None:
                 p[precip] = chance
     return p
 
+# mapping from wu fctcode to obvis code
+fct2obvis_dict = {
+    '5': 'H',
+    '6': 'F',
+    '9': 'BS',
+    '24': 'BS',
+}
+
 def wu2obvis(period):
-    '''return a single obvis type.  first try to get it from the wx field.
-    if that is empty fallback to the condition field.'''
+    '''return a single obvis type.  look in the wx, fctcode, then condition.'''
 
     if len(period['wx']) > 0:
         for x in [w.strip() for w in period['wx'].split(',')]:
-            if x in wx2obvis_dict:
-                return wx2obvis_dict[x]
-    else:
-        if period['condition'] in wx2obvis_dict:
-            return wx2obvis_dict[period['condition']]
+            if x in str2obvis_dict:
+                return str2obvis_dict[x]
+    if period['fctcode'] in fct2obvis_dict:
+        return fct2obvis_dict[period['fctcode']]
+    if period['condition'] in str2obvis_dict:
+        return str2obvis_dict[period['condition']]
     return None
 
 def str2int(n, s):

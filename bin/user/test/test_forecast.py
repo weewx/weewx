@@ -8835,7 +8835,7 @@ WU_INORTHER26_HOURLY = '''
 		"condition": "Chance of Rain",
 		"icon": "chancerain",
 		"icon_url":"http://icons-ak.wxug.com/i/c/k/chancerain.gif",
-		"fctcode": "12",
+		"fctcode": "1",
 		"sky": "29",
 		"wspd": {"english": "9", "metric": "14"},
 		"wdir": {"dir": "WNW", "degrees": "296"},
