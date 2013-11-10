@@ -1,23 +1,30 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <!-- $Id$ -->
-<!-- For some reason, the table of contents generator used in this -->
-<!-- document demands that all heading elements be on one line. -->
 <head>
-<meta http-equiv="content-type"
-  content="application/xhtml+xml; charset=utf-8" />
-<meta content="en-us" http-equiv="Content-Language" />
-<title>weewx: Customization Guide</title>
-<link href="weewx_docs.css" rel="stylesheet" />
-<script src="jquery.min.js" type="text/javascript"></script>
-<script src="jquery.toc-1.1.4.min.js" type="text/javascript"></script>
-<style>
-</style>
+  <meta content="en-us" http-equiv="Content-Language" />
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+  <title>weewx: Customization Guide</title>
+  <link href="weewx_docs.css" rel="stylesheet" />
+  <script src="jquery.min.js" type="text/javascript"></script>
+  <script src="jquery.toc-1.1.4.min.js" type="text/javascript"></script>
+  <style>
+table#stattypes td {
+  width: 60px;
+}
+  </style>
 </head>
 <body>
-  <h1 class="title">
-    Customizing weewx<br /> <span class="version"> Version:
-      2.5.0 </span>
+
+  <a href='http://weewx.com'>
+    <img src='logo-weewx.png' class='logo' align='right' />
+  </a>
+  <h1 class="title">Customizing weewx<br />
+    <span class="version"> Version:
+      2.5.0
+    </span>
+  </h1>
+
     <h1>Table of Contents</h1>
     <div id="toc"></div>
     <div id="technical_content">
@@ -60,7 +67,7 @@
         LOOP data. The default install of <span class="code">
           weewx</span> includes the following services:
       </p>
-      <table class="center" style="width: 80%"
+      <table class="indent" style="width: 80%"
         summary="Overview of the weewx architecture">
         <tbody>
           <tr>
@@ -144,7 +151,7 @@
         The default distribution of <span class="code">weewx</span>
         includes three reports:
       </p>
-      <table class="center" style="width: 80%"
+      <table class="indent" style="width: 80%"
         summary="Standard reports included in weewx">
         <tbody>
           <tr>
@@ -202,13 +209,13 @@
       </p>
       <h3>Generators</h3>
       <p>
-        To create their output, skins rely on one or more <em>Generators,
-        </em> code that actually create useful things such as HTML files or
+        To create their output, skins rely on one or more <em>Generators,</em>
+        code that actually create useful things such as HTML files or
         plot images. Generators can also copy files around or FTP/rsync
         them to remote locations. The default install of <span
           class="code">weewx</span> includes the following generators:
       </p>
-      <table class="center" style="width: 80%"
+      <table class="indent" style="width: 80%"
         summary="Generators included in weewx">
         <tbody>
           <tr>
@@ -698,8 +705,7 @@ $month.outTemp.max</pre>
         can be used with either current observations or aggregations. It
         can be one of:
       </p>
-      <table class="center" style="width: 90%"
-        summary="Formatting Options">
+      <table class="indent" style="width: 90%" summary="Formatting Options">
         <tbody>
           <tr>
             <td><strong>Optional Formatting Tag</strong></td>
@@ -736,7 +742,7 @@ $month.outTemp.max</pre>
             </td>
           </tr>
           <tr>
-            <td class="code">.format(<em>string_format</em>,Â&nbsp;<em>NONE_string</em>)
+            <td class="code">.format(<em>string_format</em>,&nbsp;<em>NONE_string</em>)
             </td>
             <td>Value is returned as a string, using the string
               format specified with <em>string_format</em>. If the value
@@ -751,7 +757,7 @@ $month.outTemp.max</pre>
             </td>
           </tr>
           <tr>
-            <td class="code">.nolabel(string_format,Â&nbsp;NONE_string)</td>
+            <td class="code">.nolabel(string_format,&nbsp;NONE_string)</td>
             <td>Value is returned as a string, using the string
               format specified with <em>string_format</em>. If the value
               is <span class="code">None</span>, the string <span
@@ -776,8 +782,8 @@ $month.outTemp.max</pre>
         </tbody>
       </table>
       <p>Summary:</p>
-      <table class="center" style="width: 80%"
-        summary="Summary of formatting options">
+      <table class="indent" style="width: 80%"
+             summary="Summary of formatting options">
         <tbody>
           <tr>
             <td><strong>Formatting Tag</strong></td>
@@ -831,7 +837,7 @@ $month.outTemp.max</pre>
         </tbody>
       </table>
       <p>Here are some examples with the expected results:</p>
-      <table class="center"
+      <table class="indent"
         summary="Formatting options with expected results">
         <tbody>
           <tr>
@@ -1014,7 +1020,7 @@ $month.outTemp.max</pre>
         The tag <span class="code">$trend</span> is available for time
         trends, such as barometer trends. Here are some examples:
       </p>
-      <table class="center" style="width: 40%"
+      <table class="indent" style="width: 40%"
         summary="Examples of using unit formats">
         <tbody>
           <tr>
@@ -1054,7 +1060,7 @@ $month.outTemp.max</pre>
       </h3>
       <p>The unit type, label, and string formats are also
         available, allowing you to do highly customized labels:</p>
-      <table class="center" style="width: 40%"
+      <table class="indent" style="width: 40%"
         summary="Examples of using unit formats">
         <tbody>
           <tr>
@@ -1192,7 +1198,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <pre class="tty">$almanac.next_first_quarter_moon</pre>
       <p>Here is a table of the information that falls into this
         category:</p>
-      <table align="center" class="code" style="width: 60%">
+      <table class="indent code" style="width: 60%">
         <tbody>
           <tr>
             <td>previous_equinox</td>
@@ -1271,7 +1277,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>
         The <span class="code">attribute</span> tag can be one of
       </p>
-      <table align="center" class="code" style="width: 60%">
+      <table class="indent code" style="width: 60%">
         <tbody>
           <tr>
             <td>az</td>
@@ -1311,9 +1317,9 @@ Sunrise, sunset: 06:51 19:30</pre>
           </tr>
           <tr>
             <td>transit</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
         </tbody>
       </table>
@@ -1343,7 +1349,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <h3>Search list</h3>
       <p>
         The Cheetah template engine (which <span class="code">weewx</span>
-        uses) finds tags by scanning aÂ&nbsp;<em>search list</em>, a
+        uses) finds tags by scanning a <em>search list</em>, a
         Python list of objects. For example, for a tag <span
           class="code">$foo</span>, the engine will scan down the list,
         trying each object <span class="code">obj</span> in turn. First
@@ -1421,7 +1427,7 @@ class MyXSearch(SearchList):                                #1
         search_list_extension = {'alltime'   : all_stats,
                                  'seven_day' : seven_day_stats}               # 8
         
-        return search_list_extension&nbsp;</pre>
+        return search_list_extension</pre>
       <p>Going through the example, line by line:</p>
       <ol>
         <li>Create a new class called <span class="code">MyXSearch</span>,
@@ -1958,7 +1964,7 @@ outTemp = Outside Temperature</pre>
       <p>This option controls which encoding is to be used for the
         generated output. The encoding can be specified for individual
         files. There are 3 possible choices:</p>
-      <table class="center" style="width: 90%">
+      <table class="indent" style="width: 90%">
         <tbody>
           <tr>
             <td><strong>Encoding</strong></td>
@@ -2666,7 +2672,7 @@ extraTemp1     = Pond Temperature</pre>
         the following services, shown in the order they are normally
         run:
       </p>
-      <table class="center" style="width: 80%">
+      <table class="indent" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Service</strong></td>
@@ -3135,9 +3141,9 @@ class AddElectricity(StdService):
 mv weewx.sdb_new weewx.sdb</pre>
       <p>For MySQL:</p>
       <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
-<span class="prompt">mysql&gt;</span> DROP DATABASE weewx;Â&nbsp;Â  # Drops the old database
+<span class="prompt">mysql&gt;</span> DROP DATABASE weewx; # Drops the old database
 <span class="prompt">mysql&gt;</span> CREATE DATABASE weewx; # Create a new one with the same name
-<span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive;Â&nbsp;Â&nbsp;Â&nbsp;# Rename to the nominal name</pre>
+<span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive; # Rename to the nominal name</pre>
       <p>
         5. <strong>Modify the stats database.</strong> At this point,
         you can use the new observation type in the plots. However, if
@@ -3179,7 +3185,7 @@ mv weewx.sdb_new weewx.sdb</pre>
       <p>If you wish to use the new type in the templates, it will
         be available using the same syntax as any other type. Here are
         some other tags that might be useful:</p>
-      <table class="center" style="width: 80%">
+      <table class="indent" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Tag</strong></td>
@@ -3317,7 +3323,7 @@ mv weewx.sdb_new weewx.sdb</pre>
         archive record is due. A loop packet is a dictionary. At the
         very minimum it must contain keys
       </p>
-      <table class="center" style="width: 60%">
+      <table class="indent" style="width: 60%">
         <tbody>
           <tr>
             <td class="code">dateTime</td>
@@ -3368,7 +3374,7 @@ mv weewx.sdb_new weewx.sdb</pre>
         observations related to pressure. Some stations report only the
         station pressure, others calculate and report sea level
         pressures.</p>
-      <table class="center" style="width: 60%">
+      <table class="indent" style="width: 60%">
         <tbody>
           <tr>
             <td class="code">pressure</td>
@@ -3481,7 +3487,7 @@ mv weewx.sdb_new weewx.sdb</pre>
         station setup. That would depend on whether your instrument
         supports the type.
       </p>
-      <table class="center" style="width: 80%">
+      <table class="indent" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Archive Type</strong></td>
@@ -3759,9 +3765,9 @@ mv weewx.sdb_new weewx.sdb</pre>
           </tr>
           <tr>
             <td class="code">windvec</td>
-            <td>Â&nbsp;</td>
+            <td></td>
             <td>X (special vector type)</td>
-            <td>Â&nbsp;</td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">windBatteryStatus</td>
@@ -3804,7 +3810,7 @@ mv weewx.sdb_new weewx.sdb</pre>
       <h1 id="units">Appendix B: Units</h1>
       <p>The table below lists all the unit groups, their members,
         and which units are options for the group.</p>
-      <table class="center" style="width: 60%">
+      <table class="indent" style="width: 60%">
         <tbody>
           <tr>
             <td><strong>Group</strong></td>
@@ -3949,7 +3955,7 @@ mv weewx.sdb_new weewx.sdb</pre>
           href="usersguide.htm#Stats"> [Stats]</a></span> in the <span
           class="code">weewx.conf</span> configuration file).
       </p>
-      <table style="width: 100%">
+      <table class="indent" id="stattypes">
         <tbody>
           <tr>
             <td><strong>Type</strong></td>
@@ -3970,10 +3976,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">inTemp</td>
@@ -3982,10 +3988,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">outTemp</td>
@@ -3994,10 +4000,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">inHumidity</td>
@@ -4006,10 +4012,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">outHumidity</td>
@@ -4018,10 +4024,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">wind</td>
@@ -4030,7 +4036,7 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
+            <td></td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -4043,9 +4049,9 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">dewpoint</td>
@@ -4054,10 +4060,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">windchill</td>
@@ -4066,10 +4072,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">heatindex</td>
@@ -4078,34 +4084,34 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">heatdeg</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">cooldeg</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">ET</td>
@@ -4114,10 +4120,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">radiation</td>
@@ -4126,10 +4132,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">UV</td>
@@ -4138,10 +4144,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">extraTemp1 <br /> extraTemp2 <br />
@@ -4152,10 +4158,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">soilTemp1 <br /> soilTemp2 <br />
@@ -4166,10 +4172,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">leafTemp1 <br /> leafTemp2
@@ -4179,10 +4185,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">extraHumid1 <br /> extraHumid2
@@ -4192,10 +4198,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">soilMoist1 <br /> soilMoist2 <br />
@@ -4206,10 +4212,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">leafWet1 <br /> leafWet2
@@ -4219,10 +4225,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
           <tr>
             <td class="code">rxCheckPercent</td>
@@ -4231,10 +4237,10 @@ mv weewx.sdb_new weewx.sdb</pre>
             <td>X</td>
             <td>X</td>
             <td>X</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
-            <td>Â&nbsp;</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
         </tbody>
       </table>
@@ -4265,7 +4271,7 @@ mv weewx.sdb_new weewx.sdb</pre>
         (available on the Davis website) for more information about
         these types.
       </p>
-      <table class="center" style="width: 60%">
+      <table class="indent" style="width: 60%">
         <tbody>
           <tr>
             <td><strong>Type</strong></td>

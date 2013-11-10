@@ -1,12 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-
-<!-- $Revision$ -->
-<!-- $Author$ -->
-<!-- $Date$ -->
-<!-- For some reason, the table of contents generator used in this -->
-<!-- document demands that all heading elements be on one line. -->
-
+<!-- $Id$ -->
 <head>
   <meta content="en-us" http-equiv="Content-Language" />
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
@@ -27,11 +21,14 @@ function showtab(tab,id) {
   document.getElementById(tab+'-tab-'+id).className = 'tab selected';
 }
   </script>
-  </head>
+</head>
 
 <body>
 
-  <h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System<br />
+  <a href='http://weewx.com'>
+    <img src='logo-weewx.png' class='logo' align='right' />
+  </a>
+  <h1 class="title">User's Guide to the weewx Weather System<br />
     <span class='version'>
 Version: 2.5.0
     </span>
@@ -47,56 +44,18 @@ Version: 2.5.0
   <div id="technical_content">
 
     <h1 id="about">About <span class="code">weewx</span></h1>
-    <p><span class="code"><a href="http://www.weewx.com">weewx</a></span> is a piece of software, written in
-      <a href="http://www.python.org">Python</a>, that interacts with your weather 
-      station to produce plots, reports, and HTML pages. It can optionally upload 
-      the reports to a remote Web server as well as publish to the
+    <p><span class="code"><a href="http://www.weewx.com">weewx</a></span> is
+      software, written in <a href="http://www.python.org">Python</a>, that
+      interacts with a weather station to produce plots, reports, and HTML
+      pages. It can optionally upload the reports to a remote Web server as
+      well as publish to weather services such as
       <a href="http://www.wunderground.com">WeatherUnderground</a> or
-      <a href="http://www.pwsweather.com/">PWSweather.com</a>. It uses modern software 
-      concepts, making it simple, robust, and easy to extend. For an example station 
-      see <a href="http://www.threefools.org/weewx">Hood River West</a>. </p>
-    <p>Key features: </p>
-    <ul>
-      <li>Support for many popular weather stations;</li>
-      <li>Uploads to popular weather sites, such as Weather Underground and CWOP;</li>
-      <li>Uploads to your website using FTP or rsync;</li>
-		<li>Extensive celestial <em>almanac</em>;</li>
-        <li>Ability to create or modify <em>skins</em> (the look and feel of 
-		your weather site);</li>
-		<li>Support for <em>localization</em>;</li>
-      <li>Simple, but extensible templating system;</li>
-      <li>Native support for US or Metric unit systems;</li>
-      <li>Support for sqlite or MySQL databases;</li>
-      <li>Calibration corrections;</li>
-      <li>An easy to understand, simple, extensible micro-kernel architecture;</li>
-      <li>Ability to extend <span class="code">weewx</span> with new services 
-	and reports. </li>
-    </ul>
-    <p>I wrote <span class="code">weewx</span> over the winter of 2008-2009 for 
-      two reasons: it was a wet and miserable winter here in Oregon with not much 
-      else to do, so there was no good reason not to, and because I wanted a simple, 
-      easy-to-understand server to run my Davis VantagePro2 weather station on a Linux 
-      box. I had been using <a href="http://www.wviewweather.com/">wview</a>, which 
-      is a high-performance and feature rich system authored by Mark Teel with lots 
-      of users. Written in C, it is an efficient system that can run on underpowered 
-      boxes. In exchange, it is huge (45,000+ lines of code), tightly integrated 
-      in with its companion library, radlib (another 14,000+ lines), and very complex, 
-      making it difficult to understand and reliably customize. I wanted something 
-      more modern and much, much simpler. </p>
-    <p>Having made a career in C++ and Java, I was also interested in some more 
-      modern languages, so I thought I would try either Python or Ruby (although, 
-      truth be told, the roots of Python are nearly as old as C++!). I ended up picking 
-      Python because its libraries are more mature and there are many mores choices 
-      for third party libraries. </p>
-    <p><span class="code">Weewx</span> is about 8,500 lines of code (plus 2,500 
-	for the experimental driver for the LaCrosse WS28xx series, which was 
-	machine translated), 
-      with another 6,200 comment lines. Because it is pure Python, it requires no 
-      makefiles, no builds, no special installs. It offers very powerful configuration 
-      and templating options, as well as an internally extensible engine, making it 
-      easy to customize. Its internal modular design and use of modern exception handling 
-      make it very robust and difficult to crash. It is also architecturally very 
-      simple and easy to understand.</p>
+      <a href="http://www.pwsweather.com/">PWSweather.com</a>.</p>
+    <p>Initial development began in the winter of 2008-2009, with the first
+      release in 2009.  The SourceForge project was registered in October of
+      2009.</p>
+    <p><span class="code">weewx</span> is small, with under 10,000 lines of
+      code, and well-documented, with over 6000 lines of comments.</p>
 
     <h1 id="hardware">Supported Hardware</h1>
     <p>
@@ -610,10 +569,11 @@ Version: 2.5.0
       <a href='debian.htm'>Installation on Debian Linux systems</a>.</p>
     <h2><a href='redhat.htm'>Installing from RPM package</a></h2>
     <p>For Redhat, CentOS, Fedora operating systems, follow the instructions in
-      <a href='redhat.htm'>Installation on Redhat Linux</a>.  The Redhat
-          RPM will not work on SuSE operating systems.  Instructions for SuSE
-          are similar to Redhat, but using SuSE tools such as zypper instead
-          of Redhat tools such as yum.</p>
+      <a href='redhat.htm'>Installation on Redhat Linux</a>.</p>
+    <p>For SuSE and OpenSUSE, follow the Redhat instructions, but use
+      SuSE tools such as zypper instead of Redhat tools such as yum.</p>
+    <p>There is one RPM for Redhat and a different RPM for SuSE; the Redhat
+      RPM will not work on SuSE operating systems.</p>
     <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
     <p>For all operating systems, follow the instructions in
       <a href='setup.htm'>Installation using
@@ -705,7 +665,7 @@ longitude = -77.0366</pre>
     <p>Set to the type of hardware you are using.</p>
     <pre class="tty">station_type = Simulator</pre>
     <p>Valid options include:</p>
-    <table style="width: 60%" class="center">
+    <table class="indent">
       <tr>
 	<td class="code">Vantage</td>
 	<td>Davis Vantage weather stations</td>
@@ -850,7 +810,7 @@ longitude = -77.0366</pre>
     <p>The time (in seconds) between emitting loop packets. Default is 2.5</p>
     <p class="config_option">mode</p>
     <p>One of either <span class='code'>simulator</span> or <span class='code'>generator</span>.  Default is <span class='code'>simulator</span>.</p>
-    <table class="indent" style="width: 80%">
+    <table class="indent">
       <tr>
 	<td class="code">simulator</td>
 	<td>Real-time simulator. It will sleep between emitting packets.</td>
@@ -1529,14 +1489,14 @@ Pressure offset is now 1.247000</p>
     </p>
     <p>When reading 'live' data, <span class='code'>weewx</span> can read as fast as possible, or at a user-defined period.  This is controlled by the <span class='code'>polling_mode</span> parameter.
     </p>
-    <table>
+    <table class="indent">
       <tr>
         <td width='15%'>Mode</td>
         <td width='30%'><span class='code'>weewx.conf</span></td>
         <td>Notes</td>
       </tr>
       <tr>
-        <td><p>ADAPTIVE</p></td>
+        <td>ADAPTIVE</td>
         <td>
           <p class='tty' style='margin:0'>[FineOffsetUSB]
     polling_mode = ADAPTIVE</p>
@@ -1546,7 +1506,7 @@ Pressure offset is now 1.247000</p>
         </td>
       </tr>
       <tr>
-        <td><p>PERIODIC</p></td>
+        <td>PERIODIC</td>
         <td>
           <p class='tty' style='margin:0'>[FineOffsetUSB]
     polling_mode = PERIODIC
@@ -1554,19 +1514,20 @@ Pressure offset is now 1.247000</p>
         </td>
         <td>
           <p>In this mode, <span class='code'>weewx</span> reads data from the station every <span class='code'>polling_interval</span> seconds.</p>
+          <p>The console reads the sensors every 48 seconds (60 seconds for UV), so setting the <span class='code'>polling_interval</span> to a value less than 48 will result in duplicate readings.</p>
         </td>
       </tr>
     </table>
     <p>To obtain archive records, <span class='code'>weewx</span> can read archive records from the station console, or calculate archive records independent of the station memory.  This is controlled by the <span class='code'>record_generation</span> parameter.
     </p>
-    <table>
+    <table class="indent">
       <tr>
         <td width='15%'>Mode</td>
         <td width='30%'><span class='code'>weewx.conf</span></td>
         <td>Notes</td>
       </tr>
       <tr>
-        <td><p>Read from archive</p></td>
+        <td>Read from archive</td>
         <td>
           <p class='tty' style='margin:0'>[StdArchive]
     archive_interval = 300
@@ -1580,7 +1541,7 @@ Pressure offset is now 1.247000</p>
         </td>
       </tr>
       <tr>
-        <td><p>Calculate from sensors</p></td>
+        <td>Calculate from sensors</td>
         <td>
           <p class='tty' style='margin:0'>[StdArchive]
     archive_interval = 300
@@ -2237,7 +2198,7 @@ port = /dev/cuaU0</pre>
 
     <h2>Terminology</h2>
     <p>This is a glossary of terminology used throughout the code. </p>
-    <table style="width: 95%" class='center'>
+    <table style="width: 95%" class='indent'>
       <tr>
 	<td class="text_highlight"><strong>Name</strong></td>
 	<td><strong>Description</strong></td>

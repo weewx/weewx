@@ -1,206 +1,193 @@
-﻿/*
- * $Revision$
- * $Author$
- * $Date$
- */
+/* styles for weewx documentation */
+﻿/* $Id$ */
 
-body {
-    font: 11pt Verdana,arial,sans-serif;
-    color: black;
-}
-p {
-    font: 11pt Verdana,arial,sans-serif;
-    color: black;
-}
-ol {
-    font: 11pt Verdana,arial,sans-serif;
-    color: black;
-}
-ul {
-    font: 11pt Verdana,arial,sans-serif;
-    color: black;
+body, p, ol, ul, li, dl, dt, dd, table, tr, td, div, h1, h2, h3, h4 {
+  font-family: Verdana,arial,sans-serif;
+  font-size: 11pt;
+  color: black;
 }
 li {
-    font: 11pt Verdana,arial,sans-serif;
-    color: black;
-    margin-right: 10%;
-}
-dl {
-    font: 11pt Verdana,arial,sans-serif;
-    color: black;
+  margin-right: 10%;
 }
 dt {
-    font: 11pt Verdana,arial,sans-serif;
-    color: black;
+  margin-top: 10px;
 }
 dd {
-    font: 11pt Verdana,arial,sans-serif;
-    color: black;
+  margin-top: 5px;
 }
 h1 {
-    font: bold 160% Verdana, arial, sans-serif;
-    color: #FFFFFF;
-    border: 1px solid black;
-    background-color: #008080;
-    padding-left: .5em;
-    padding-right: .5em;
-    margin-top: 30pt;
+  font-size: 160%;
+  font-weight: bold;
+  color: #FFFFFF;
+  border: 1px solid black;
+  background-color: #008080;
+  padding-left: .5em;
+  padding-right: .5em;
+  margin-top: 30pt;
 }
 h2 {
-    font: bold 140% Verdana, arial, sans-serif;
-    color: teal;
-    margin-top: 20pt;
+  font-size: 140%;
+  font-weight: bold;
+  color: teal;
+  margin-top: 20pt;
 }
 h3 {
-    font: bold 120% Verdana, arial, sans-serif;
-    color: teal;
+  font-size: 120%;
+  font-weight: bold;
+  color: teal;
 }
 h4 {
-    font: bold 100% Verdana, arial, sans-serif;
-    color: teal;
-}
-.code {
-    font-family: "Courier New", Courier, monospace;
-}
-.symcode {
-	font-family:  "Courier New", Courier, monospace;
-	font-style: italic;
+  font-size: 100%;
+  font-weight: bold;
+  color: teal;
 }
 table {
-    border: 1px solid #dddddd;
-    border-collapse: collapse;
+  border-collapse: collapse;
+}
+table.code td {
+  font-family: "Courier New", Courier, monospace;
+}
+table.center {
+  margin-left:auto; 
+  margin-right:auto;
+  text-align:left;
 }
 tr {
   vertical-align: top;
 }
 td {
-    border: 1px solid #dddddd;
-    padding: 5px;
+  border: 1px solid #dfdfdf; 
+  padding: 5px;
+}
+.code {
+  font-family: "Courier New", Courier, monospace;
+}
+.symcode {
+  font-family: "Courier New", Courier, monospace;
+  font-style: italic;
 }
 .indent {
-    margin-left: 40px;
-    margin-right: 80px;
+  margin-left: 40px;
+  margin-right: 80px;
 }
 .tty {
-    font-family: "Courier New", Courier, monospace;
-    margin: 0px 20px 0px 20px;
-    background-color: #FFFFe0;
-    border: 1px solid #ddddaa;
-    padding: 3px;
-    font-size: 90%;
-    white-space: pre;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 90%;
+  margin: 0px 20px 0px 20px;
+  background-color: #FFFFe0;
+  border: 1px solid #ddddaa;
+  padding: 3px;
+  white-space: pre;
 }
 .title {
-    text-align: center;
-    margin-top: 0px;
+  margin-top: 0px;
 }
 .config_section {
 }
 .config_option {
-    font-family: "Courier New", Courier, monospace;
-    font-weight: bold;
-    color: black;
-    margin-bottom: -12px;
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+  color: black;
+  margin-bottom: -12px;
 }
 .config_important {
-    font-family: "Courier New", Courier, monospace;
-    font-weight: bold;
-    color: #bb9900;
-    margin-bottom: -12px;
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+  color: #bb9900;
+  margin-bottom: -12px;
 }
 .highlight {
-    background-color: #FFCC99;
+  background-color: #FFCC99;
 }
 .text_highlight {
-    font-weight: bold;
-    background-color: #f0f0f0;
-    padding-left: 10px;
-    padding-right: 10px;
+  font-weight: bold;
+  background-color: #f0f0f0;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 .center {
-    text-align: center;
+  text-align: center;
 }
 .example_output {
-    font-family: "Times New Roman", Times, serif;
-    padding: 5px;
-    border: thin #000000 dotted;
-    margin: 0px 20px 0px 20px;
+  font-family: "Times New Roman", Times, serif;
+  padding: 5px;
+  border: thin #000000 dotted;
+  margin: 0px 20px 0px 20px;
 }
 div#toc ul {
-    list-style: none;
-}
-table.center {
-    margin-left:auto; 
-    margin-right:auto;
-    text-align:left;
+  list-style: none;
 }
 .image {
-    padding: 5px;
+  padding: 5px;
 }
 .image-right {
-    padding-left: 50px;
-    padding-right: 20px;
-    float: right;
+  padding-left: 50px;
+  padding-right: 20px;
+  float: right;
 }
 .caption {
-    font-size: 80%;
-    text-align: center;	
+  font-size: 80%;
+  text-align: center;	
 }
 .warning {
-    background-color: #ffeeee;
-    border: 1px solid #ffdddd;
-    margin: 10px;
-    padding: 5px;
+  background-color: #ffeeee;
+  border: 1px solid #ffdddd;
+  margin: 10px;
+  padding: 5px;
 }
 .copyright {
-    font-style: italic;
-    text-align: right;
-    color: #FFFFFF;
-    border: 1px solid black;
-    background-color: #008080;
-    padding-top: 5px;
-    padding-bottom: 10px;
-    padding-right: 10px;
-    margin-top: 30pt;
+  font-style: italic;
+  text-align: right;
+  color: #FFFFFF;
+  border: 1px solid black;
+  background-color: #008080;
+  padding-top: 5px;
+  padding-bottom: 10px;
+  padding-right: 10px;
+  margin-top: 30pt;
 }
 .prompt {
-    font-weight: bold;
+  font-weight: bold;
 }
 .thumbnail {
-    width: 14px;
+  width: 14px;
 }
 .locations {
-    margin-left: 20px;
-    border: none;
+  margin-left: 20px;
+  border: none;
 }
 .locations tr {
-    border: none;
-    vertical-align: middle;
+  border: none;
+  vertical-align: middle;
 }
 .locations_banner {
-    font-weight: bold;
-    border: 1px solid #447777;
+  font-weight: bold;
+  border: 1px solid #447777;
 }
 .tabs {
-    float: left;
-    margin-left: 20px;
-    margin-right: 20px;
+  float: left;
+  margin-left: 20px;
+  margin-right: 20px;
 }
 .tab {
-    font-size: 80%;
-    font-weight: bold;
-    color: #aaaaaa;
-    margin: 0px;
-    padding: 4px 16px 4px 16px;
-    float: left;
+  font-size: 80%;
+  font-weight: bold;
+  color: #aaaaaa;
+  margin: 0px;
+  padding: 4px 16px 4px 16px;
+  float: left;
 }
 .selected {
-    color: black;
-    border-top: 1px solid #447777;
-    border-left: 1px solid #447777;
-    border-right: 1px solid #447777;
-    background-color: #88bbbb;
+  color: black;
+  border-top: 1px solid #447777;
+  border-left: 1px solid #447777;
+  border-right: 1px solid #447777;
+  background-color: #88bbbb;
 }
 .version {
-    font-size: 60%;
+  font-size: 60%;
+}
+.logo {
+  width: 48px;
+  padding-right: 10px;
 }
