@@ -1,6 +1,20 @@
 weewx change history
 --------------------
 
+2.6.0 MM/DD/YY
+
+Changed the RESTful architecture so RESTful services are now first-class
+weewx services. This should simplify the installation of 3rd party
+extensions that use these services.
+
+Changed the default time and date labels to use locale dependent formatting.
+The defaults should now work in most locales, provided you set the
+environment variable LANG before running weewx.
+
+Added UV plots to the templates. They will be shown automatically if you
+have any UV data.
+
+
 2.5.0 10/29/13
 
 Introduced a new architecture that makes it easier to define search

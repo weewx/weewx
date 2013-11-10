@@ -246,13 +246,16 @@
         <div id="plots">
           <img src="yeartempdew.png" alt="temperatures" />
           <img src="yeartempchill.png" alt="heatchill" />
-          <img src="yearhilow.png" alt="Yearly high/low" />
+          <img src="yearhilow.png" alt="Daily highs and lows for the year" title="Daily highs and lows for the year"/>
           <img src="yearrain.png" alt="rain" />
           <img src="yearwind.png" alt="wind" />
           <img src="yearbarometer.png" alt="barometer"/>
           <img src="yearwinddir.png" alt="Hi Wind" />
           <img src="yearinside.png" alt="Inside" />
           <img src="yearwindvec.png" alt="Wind Vector" />
+          #if $year.UV.has_data
+          <img src="yearUV.png" alt="UV" />
+          #end if
           #if $year.radiation.has_data
           <img src="yearradiation.png" alt="Radiation" />
           #end if

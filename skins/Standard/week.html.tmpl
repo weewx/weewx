@@ -403,6 +403,9 @@
           <img src="weekwinddir.png" alt="Hi Wind" />
           <img src="weekinside.png" alt="Inside" />
           <img src="weekwindvec.png" alt="Wind Vector" />
+          #if $week.UV.has_data
+          <img src="weekUV.png" alt="UV" />
+          #end if
           #if $week.radiation.has_data
           <img src="weekradiation.png" alt="Radiation" />
           #end if
