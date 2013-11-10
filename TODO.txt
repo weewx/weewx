@@ -1,6 +1,10 @@
 TODO before the next release:
 
-Figure out why the heartbeat doesn't work on the WMR200.
+Break up the now giant list service_list into 4 smaller sublists.
 
-Remove contingent FixedList entry in vantage.py
-Change logging priority for disambiguation events back to DEBUG.
+Program setup.py to:
+  o Remove "driver = " for all subsections in [StdRESTful]
+  o Replace weewx.wxengine.StdRESTful with the individual protocols
+  o Refactor service_list into the smaller sublists.
+ 
+  

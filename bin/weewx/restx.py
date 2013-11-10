@@ -712,7 +712,7 @@ class StdCWOP(StdRESTbase):
             
         except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to CWOP")
-            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: no keyword %s" % e)
             return
             
         # If we made it this far, we can post. Everything else is optional.
