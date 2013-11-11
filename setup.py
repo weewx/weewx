@@ -80,6 +80,17 @@ start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.redhat',
                  'util/init.d/weewx.suse']
 
+service_map = {'weewx.wxengine.StdTimeSynch' : 'prep_services', 
+               'weewx.wxengine.StdConvert'   : 'process_services', 
+               'weewx.wxengine.StdCalibrate' : 'process_services', 
+               'weewx.wxengine.StdQC'        : 'process_services', 
+               'weewx.wxengine.StdArchive'   : 'archive_services',
+               'weewx.wxengine.StdPrint'     : 'report_services', 
+               'weewx.wxengine.StdReport'    : 'report_services'}
+
+all_service_groups = ['prep_services', 'process_services', 'archive_services', 
+                      'restful_services', 'report_services']
+
 #==============================================================================
 # weewx_install_lib
 #==============================================================================
@@ -415,6 +426,8 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
 
 def update_config_file(config_dict):
     """Updates a configuration file to reflect any recent changes."""
+    
+    global service_map, all_service_groups, service_lists
 
     # webpath is now station_url
     webpath = config_dict['Station'].get('webpath', None)
@@ -491,6 +504,49 @@ def update_config_file(config_dict):
             config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
     except KeyError:
         pass
+
+    # Remove the no longer needed "driver" option from all the RESTful
+    # services:
+    for section in config_dict['StdRESTful'].sections:
+        config_dict['StdRESTful'][section].pop('driver', None)
+
+    # See if the engine configuration section has the old-style "service_list":
+    if config_dict['Engines']['WxEngine'].has_key('service_list'):
+        # It does. Break it up into five, smaller lists. If a service
+        # does not appear in the dictionary "service_map", meaning we don't
+        # know what it is, then stick it in the last group we've seen. This should
+        # get its position about right.
+        last_group = 'prep_services'
+        
+        # Set up a bunch of empty groups in the right order
+        for group in all_service_groups:
+            config_dict['Engines']['WxEngine'][group] = list()
+
+        # Now map the old service names to the right group
+        for svc_name in config_dict['Engines']['WxEngine']['service_list']:
+            # Skip the no longer needed StdRESTful service:
+            if svc_name == 'weewx.wxengine.StdRESTful':
+                continue
+            # Do we know about this service?
+            if service_map.has_key(svc_name):
+                # Yes. Get which group it belongs to, and put it there
+                group = service_map[svc_name]
+                config_dict['Engines']['WxEngine'][group].append(svc_name)
+                last_group = group
+            else:
+                # No. Put it in the last group.
+                config_dict['Engines']['WxEngine'][last_group].append(svc_name)
+
+        # Now add the restful services
+        for section in config_dict['StdRESTful'].sections:
+            config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.Std' + section)
+            
+        # Depending on how old a version the user has, the station registry may have to be included:
+        if 'weewx.restx.StdStationRegistry' not in config_dict['Engines']['WxEngine']['restful_services']:
+            config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
+        
+        # Get rid of the no longer needed service_list:
+        config_dict['Engines']['WxEngine'].pop('service_list')
 
 def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:

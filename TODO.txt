@@ -1,10 +1,3 @@
 TODO before the next release:
 
-Break up the now giant list service_list into 4 smaller sublists.
-
-Program setup.py to:
-  o Remove "driver = " for all subsections in [StdRESTful]
-  o Replace weewx.wxengine.StdRESTful with the individual protocols
-  o Refactor service_list into the smaller sublists.
- 
-  
+Document the five service lists.

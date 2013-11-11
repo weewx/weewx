@@ -7,7 +7,11 @@
 #    $Author$
 #    $Date$
 #
-"""Publish weather data to RESTful sites such as the Weather Underground or PWSWeather."""
+"""Publish weather data to RESTful sites such as the Weather Underground or PWSWeather.
+
+        THIS MODULE IS NOW OBSOLETE! YOU SHOULD USE MODULE weewx.restx INSTEAD!
+
+"""
 from __future__ import with_statement
 import syslog
 import datetime

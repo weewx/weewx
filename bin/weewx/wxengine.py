@@ -106,24 +106,23 @@ class StdEngine(object):
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""
-        
-        # This will hold the list of services to be run:
+
+        # This will hold the list of objects, after the services has been instantiated:
         self.service_obj = []
 
-        # Get the names of the services to be run:
-        service_names = weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get('service_list'))
-        
         # Wrap the instantiation of the services in a try block, so if an exception
         # occurs, any service that may have started can be shut down in an orderly way.
         try:
-            for svc in service_names:
-                # For each listed service in service_list, instantiates an
-                # instance of the class, passing self and the configuration
-                # dictionary as the arguments:
-                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
-                self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
-                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
-        except:
+            for service_group in ['prep_services', 'process_services', 'archive_services',
+                                  'restful_services', 'report_services']:
+                for svc in weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get(service_group)):
+                    # For each service, instantiates an instance of the class,
+                    # passing self and the configuration dictionary as the
+                    # arguments:
+                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
+                    self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
+                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
+        except Exception:
             # An exception occurred. Shut down any running services, then
             # reraise the exception.
             self.shutDown()
