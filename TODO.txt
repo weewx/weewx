@@ -3,3 +3,5 @@ TODO before the next release:
 Document the five service lists in customizing.htm
 
 Upgrade instructions.
+
+Test what happens if a service group is missing.

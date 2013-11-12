@@ -436,8 +436,9 @@ def update_config_file(config_dict):
         config_dict['Station']['station_url'] = webpath
     config_dict['Station'].pop('webpath', None)
     
-    # Option stats_types is no longer used. Get rid of it.
-    config_dict['StdArchive'].pop('stats_types', None)
+    if config_dict.has_key('StdArchive'):
+        # Option stats_types is no longer used. Get rid of it.
+        config_dict['StdArchive'].pop('stats_types', None)
     
     # --- Davis Vantage series ---
     if config_dict.has_key('Vantage'):
@@ -507,8 +508,9 @@ def update_config_file(config_dict):
 
     # Remove the no longer needed "driver" option from all the RESTful
     # services:
-    for section in config_dict['StdRESTful'].sections:
-        config_dict['StdRESTful'][section].pop('driver', None)
+    if config_dict.has_key('StdRESTful'):
+        for section in config_dict['StdRESTful'].sections:
+            config_dict['StdRESTful'][section].pop('driver', None)
 
     # See if the engine configuration section has the old-style "service_list":
     if config_dict['Engines']['WxEngine'].has_key('service_list'):
@@ -523,7 +525,8 @@ def update_config_file(config_dict):
             config_dict['Engines']['WxEngine'][group] = list()
 
         # Now map the old service names to the right group
-        for svc_name in config_dict['Engines']['WxEngine']['service_list']:
+        for _svc_name in config_dict['Engines']['WxEngine']['service_list']:
+            svc_name = _svc_name.strip()
             # Skip the no longer needed StdRESTful service:
             if svc_name == 'weewx.wxengine.StdRESTful':
                 continue
@@ -566,7 +569,9 @@ if __name__ == "__main__":
     setup(name='weewx',
           version=VERSION,
           description='weather software',
-          long_description="""weewx interacts with a weather station to produce graphs, reports, and HTML pages.  weewx can upload data to the WeatherUnderground, PWSweather.com, or CWOP.""",
+          long_description="weewx interacts with a weather station to produce graphs, "\
+                           "reports, and HTML pages. weewx can upload data to the "\
+                           "WeatherUnderground, PWSweather, or CWOP.",
           author='Tom Keffer',
           author_email='tkeffer@gmail.com',
           url='http://www.weewx.com',
@@ -576,8 +581,7 @@ if __name__ == "__main__":
                          'License :: GPLv3',
                          'Operating System :: OS Independent',
                          'Programming Language :: Python',
-                         'Programming Language :: Python :: 2',
-                         ],
+                         'Programming Language :: Python :: 2'],
           platforms = ['any'],
           package_dir = {'' : 'bin'},
           packages    = ['weedb',
