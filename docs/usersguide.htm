@@ -845,24 +845,50 @@ longitude = -77.0366</pre>
       <a href="http://www.wxqa.com/">CWOP</a>. </p>
 
     <h3 class="config_section">[[Wunderground]]</h3>
-    <p><span class="code">Weewx </span>can send your current data to the
-      <a href="http://www.wunderground.com/">Weather Underground</a>. If you
-      do not wish to do this, leave the <span class='code'>station</span>
-      commented.</p>
+    <p>
+      <span class="code">Weewx</span> can send your current data to the
+      <a href="http://www.wunderground.com/">Weather Underground</a>. If
+      you do not wish to do this, leave the option <span class='code'>station</span>
+      commented.
+    </p>
     <pre class="tty">[StdRestful]
     [[Wunderground]]
         station = 12345678  # Replace with your station number
-        password = xxxxx    # Replace with your password</pre>
-    <p class="config_important">station </p>
-    <p>Set to your Weather Underground station ID (<em>e.g.</em>, <span class="code">KORHOODR3</span>). 
-      Required. </p>
-    <p class="config_important">password </p>
-    <p>Set to your Weather Underground password. Required. </p>
+        password = xxxxx    # Replace with your password
+        rapidfire = False</pre>
+    <p class="config_important">station</p>
+    <p>
+      Set to your Weather Underground station ID (<em>e.g.</em>, <span
+        class="code">KORHOODR3</span>). Required.
+    </p>
+    <p class="config_important">password</p>
+    <p>Set to your Weather Underground password. Required.</p>
+    <p class="config_option">rapidfire</p>
+    <p>
+      Set to <span class="code">True</span> to have <span class="code">weewx</span>
+      post using the <a
+        href="http://www.wunderground.com/weatherstation/rapidfirehelp.asp">Weather
+        Underground's "Rapidfire" protocol</a>. This will send a post to the
+      WU site with every LOOP packet, which can be as often as every 2.5
+      seconds in the case of the Vantage instruments. Optional. Default
+      is <span class="code">False</span>.
+    </p>
+    <p class="config_option">archive_post</p>
+    <p>
+      This option tells <span class="code">weewx</span> to post on every
+      archive record, which is the normal "PWS" mode for the Weather
+      Underground. Because they prefer that you either use their
+      "Rapidfire" protocol, or their PWS mode, but not both, the default
+      for this option is the opposite for whatever you choose above for
+      option <span class="code">rapidfire</span>. However, if for some
+      reason you want to do both, then you may set both options to <span
+      class="code">True</span>.
+    </p>
 
     <h3 class="config_section">[[PWSweather]]</h3>
     <p><span class="code">Weewx </span>can send your current data to the
       <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
-      do not wish to do this, leave the <span class='code'>station</span>
+      do not wish to do this, leave the option <span class='code'>station</span>
       commented.</p>
     <pre class="tty">[StdRestful]
     [[PWSweather]]
@@ -882,8 +908,8 @@ longitude = -77.0366</pre>
       like this:</p>
     <pre class="tty">[StdRestful]
     [[WOW]]
-        station = 12345678  # Replace with your station number
-        password = xxxxx    # Replace with your password</pre>
+        station = 12345678  # Replace with your site ID
+        password = xxxxx    # Replace with your site authentication key</pre>
     <p class="config_important">station </p>
     <p>Set to your WOW station ID. Required. </p>
     <p class="config_important">password </p>
