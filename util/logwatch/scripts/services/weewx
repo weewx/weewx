@@ -6,6 +6,7 @@
 # Revision History
 #  0.6 11nov13
 #   * record unstable reads on fousb
+#   * list upload errors as errors
 #  0.5 01nov13
 #   * recognize more restful log output
 #  0.4 12oct13
@@ -126,6 +127,12 @@ while(defined($_ = <STDIN>)) {
             $key .= ' to site ' . $1;
         }
         $errors{$key} = $errors{$key} ? $errors{$key} + 1 : 1;
+    } elsif (/emoncms: Failed upload to EmonCMS/ ||
+             /seg: Failed upload to SmartEnergyGroups/ ||
+             /cosm: Failed upload to COSM/ ||
+             /awekas: Failed upload to AWEKAS/) {
+        my $key = $_;
+        $errors{$key} = $errors{$key} ? $errors{$key} + 1 : 1;
     } elsif (/reportengine: Running reports for latest time/ ||
              /reportengine: Found configuration file/ ||
              /reportengine: FTP upload not requested/ ||
@@ -171,6 +178,7 @@ while(defined($_ = <STDIN>)) {
              /wxengine: pid file is / ||
              /wxengine: Use LOOP data in/ ||
              /wxengine: Received signal/ ||
+             /cheetahgenerator: Running / ||
              /cheetahgenerator: skip/ ||
              /fousb: found station on USB/ ||
              /fousb: altitude is/ ||
@@ -272,13 +280,10 @@ while(defined($_ = <STDIN>)) {
              /forecast: XTideThread: XTide: tide matrix/ ||
              /forecast: XTideThread: XTide: generating tides/ ||
              /emoncms: Failed upload attempt/ ||
-             /emoncms: Failed upload to EmonCMS/ ||
              /\*\*\*\*  Failed upload to EmonCMS/ ||
              /seg: Failed upload attempt/ ||
-             /seg: Failed upload to SmartEnergyGroups/ ||
              /\*\*\*\*  Failed upload to SmartEnergyGroups/ ||
              /cosm: Failed upload attempt/ ||
-             /cosm: Failed upload to COSM/ ||
              /\*\*\*\*  Failed upload to COSM/) {
         # ignore
     } elsif (! /weewx/) {
