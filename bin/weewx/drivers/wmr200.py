@@ -820,9 +820,9 @@ def decode_pressure(pkt, pkt_data):
                 weewx.wxformulas.altimeter_pressure_Metric\
                 (pressure, pkt.wmr200.altitude)
 
-        record = {'barometer'   : pressure,
-                  'altimeter'   : alt_pressure_console,
-                  'presure'     : alt_pressure_weewx,
+        record = {'barometer'   : alt_pressure_console,
+                  'altimeter'   : pressure,
+                  'pressure'    : alt_pressure_weewx,
                   'forecastIcon': forecast}
 
         if DEBUG_PACKETS_PRESSURE:
@@ -1501,6 +1501,8 @@ class WMR200(weewx.abstractstation.AbstractStation):
                     # This will raise exception if checksum fails.
                     self.pkt.verify_checksum()
                     self.pkt.packet_process()
+                    if DEBUG_PACKETS_COOKED:
+                        self.pkt.print_cooked()
                     if self.pkt.packet_live_data():
                         logdbg('Presenting weewx live packet %d' %
                                PacketLive.pkt_cnt)
@@ -1515,9 +1517,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
                     else:
                         logdbg('Acknowledged control packet cnt:%d' %
                                PacketControl.pkt_cnt)
-
-                    if DEBUG_PACKETS_COOKED:
-                        self.pkt.print_cooked()
 
                 # Reset this packet to get ready for next one
                 self.pkt = None
