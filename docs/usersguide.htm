@@ -775,7 +775,13 @@ longitude = -77.0366</pre>
     <p class="config_important">model</p>
     <p>Set to the station model. For example, WH1080, WS2080, WH3081, etc. </p>
     <p class='config_option'>pressure_offset</p>
-    <p>The offset, in millibars, that is applied to values from the station sensor.  This offset is applied to the station pressure <i>before</i> calculating barometer and altimeter sea level pressures.  Only the raw station pressure is recorded to database, not the station pressure with offset applied.</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure <i>before</i>
+      calculating barometer and altimeter sea level pressures. Only the
+      raw station pressure is recorded to the database, not the station
+      pressure with offset applied.
+    </p>
     <p class='config_option'>polling_mode</p>
     <p>One of <span class='code'>PERIODIC</span> or
       <span class='code'>ADAPTIVE</span>.  In
@@ -801,7 +807,13 @@ longitude = -77.0366</pre>
       either US or EU.  US uses 915 MHz, EU uses 868.3 MHz.  Default is US.
     </p>
     <p class='config_option'>pressure_offset</p>
-    <p>The offset, in millibars, that is applied to values from the station sensor.  This offset is applied to the station pressure <i>before</i> calculating barometer and altimeter sea level pressures.  Only the raw station pressure is recorded to database, not the station pressure with offset applied.</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure <i>before</i>
+      calculating barometer and altimeter sea level pressures. Only the
+      raw station pressure is recorded to the database, not the station
+      pressure with offset applied.
+    </p>
 
     <h3 class="config_section">[Simulator]</h3>
     <p>This section is for options relating to the software weather station simulator 
@@ -840,8 +852,7 @@ longitude = -77.0366</pre>
     <pre class="tty">[StdRestful]
     [[Wunderground]]
         station = 12345678  # Replace with your station number
-        password = xxxxx    # Replace with your password
-        driver = weewx.restful.Ambient</pre>
+        password = xxxxx    # Replace with your password</pre>
     <p class="config_important">station </p>
     <p>Set to your Weather Underground station ID (<em>e.g.</em>, <span class="code">KORHOODR3</span>). 
       Required. </p>
@@ -856,8 +867,7 @@ longitude = -77.0366</pre>
     <pre class="tty">[StdRestful]
     [[PWSweather]]
         station = 12345678  # Replace with your station number
-        password = xxxxx    # Replace with your password
-        driver = weewx.restful.Ambient</pre>
+        password = xxxxx    # Replace with your password</pre>
     <p class="config_important">station </p>
     <p>Set to your PWSweather station ID. Required. </p>
     <p class="config_important">password </p>
@@ -873,8 +883,7 @@ longitude = -77.0366</pre>
     <pre class="tty">[StdRestful]
     [[WOW]]
         station = 12345678  # Replace with your station number
-        password = xxxxx    # Replace with your password
-        driver = weewx.restful.WOW</pre>
+        password = xxxxx    # Replace with your password</pre>
     <p class="config_important">station </p>
     <p>Set to your WOW station ID. Required. </p>
     <p class="config_important">password </p>
@@ -890,8 +899,7 @@ longitude = -77.0366</pre>
         station = 12345678  # Replace with your station number
         passcode = xxxxx    # Replace with your passcode (APRS stations only)
         server = cwop.aprs.net:14580, cwop.aprs.net:23
-        interval = 600  
-        driver = weewx.restful.CWOP</pre>
+        interval = 600</pre>
     <p class="config_important">station </p>
     <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>). Required.
     </p>
@@ -917,19 +925,38 @@ longitude = -77.0366</pre>
       conditions. Optional. Default is 1800 seconds.</p>
 
     <h3 class="config_section">[[StationRegistry]]</h3>
-    <p>A registry of weewx weather stations is maintained at weewx.com.  Stations are displayed on a map and a list at <a href="http://weewx.com/stations.html">http://weewx.com/stations.html</a></p>
-    <p>How does the registry work?  Individual weather stations periodically contact the registry. Each station provides a URL to identify itself, plus other information such as the station type and weewx version. The registry does not keep track of meteorological data; no information about the weather is sent to the registry.</p>
-    <p>To add your station to this list, enable the StationRegistry in weewx.conf. Your station will contact the registry once per week. If your station does not contact the registry for about a month, it will be removed from the list.</p>
+    <p>
+      A registry of weewx weather stations is maintained at <span class="code">weewx.com</span>.
+      Stations are displayed on a map and a list at <a
+        href="http://weewx.com/stations.html">http://weewx.com/stations.html</a>
+    </p>
+    <p>How does the registry work? Individual weather stations
+      periodically contact the registry. Each station provides a URL to
+      identify itself, plus other information such as the station type
+      and weewx version. The registry does not keep track of
+      meteorological data; no information about the weather is sent to
+      the registry.</p>
+    <p>To add your station to this list, enable the StationRegistry
+      in weewx.conf. Your station will contact the registry once per
+      week. If your station does not contact the registry for about a
+      month, it will be removed from the list.</p>
     <pre class="tty">[StdRestful]
     [[StationRegistry]]
-        register_this_station = True
-        driver = weewx.restful.StationRegistry</pre>
+        register_this_station = True</pre>
     <p class="config_option">register_this_station</p>
     <p>Set this to <span class="code">True</span> to register the weather station.</p>
     <p class="config_option">description</p>
-    <p>A description of the station. If no description is specified, the <span class="config_option">location</span> from the <span class="code">[Station]</span> section will be used.</p>
+    <p>
+      A description of the station. If no description is specified, the
+      <span class="config_option">location</span> from the <span
+        class="code">[Station]</span> section will be used.
+    </p>
     <p class="config_option">station_url</p>
-    <p>The URL to the weather station. If no URL is specified, the <span class="config_option">station_url</span> from the <span class="code">[Station]</span> section will be used.</p>
+    <p>
+      The URL to the weather station. If no URL is specified, the <span
+        class="config_option">station_url</span> from the <span
+        class="code">[Station]</span> section will be used.
+    </p>
 
     <h2 class="config_section">[StdReport]</h2>
     <p>This section is for configuring the <span class="code">StdReport</span> service, 
@@ -1052,10 +1079,7 @@ longitude = -77.0366</pre>
       <a href="#StdConvert"><span class="code">StdConvert</span></a> above. It is 
       also important that this service be run before the archiving service
       <span class="code">StdArchive</span>, so that it is the corrected data that 
-      is stored. </p>
-    <p>If you do not wish to apply any calibrations, you can leave it out of
-      <span class="code"><a href="#service_list">service_list</a></span>, the list 
-      of services to be run, and it will not be loaded or run at all. </p>
+      are stored. </p>
     <h3 class="config_section">[[Corrections]]</h3>
     <p>In this section you list all <em>correction expressions</em>. For example, 
       say that you know your outside thermometer reads high by 0.2&deg;F. You could add 
@@ -1081,10 +1105,7 @@ longitude = -77.0366</pre>
       <a href="#StdConvert"><span class="code">StdConvert</span></a>. It is also 
       important that it be run after the calibration service, <span class="code">StdCalibrate
       </span>and before the archiving service <span class="code">StdArchive</span>, 
-      so that it is the calibrated and corrected data that is stored. </p>
-    <p>If you do not wish to use this service, you can leave it out of
-      <span class="code"><a href="#service_list">service_list</a></span>, the list 
-      of services to be run, and it will not be loaded or run. </p>
+      so that it is the calibrated and corrected data that are stored. </p>
     <h3 class="config_section">[[MinMax]]</h3>
     <p>In this section you list the observation types you wish to have checked, 
       along with their minimum and maximum values. The units should be in <em>the 
@@ -1219,21 +1240,63 @@ longitude = -77.0366</pre>
       how to do this can be found in the section <em>
 	<a href="customizing.htm#service_engine">Customizing the 
 	  weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
+
+
     <h3 class="config_section">[[WxEngine]]</h3>
-    <p>This section is for options used by the service engine. </p>
-    <p class="config_option" id="service_list">service_list </p>
-    <p>This option is the list of <em>services</em> that are to be run by the service 
-      engine. After each event (such as the arrival of LOOP data, etc.), they will 
-      be run in the given order. The standard list of services run by weewx is:
+    <p>
+      This section is for options used by the internal <span
+        class="code">weewx</span> service engine.
     </p>
-    <pre class='tty' style='white-space:pre-line'>service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
-    <p>Note that despite how it may or may not read above, this option must be <em>all on one line!</em> </p>
-    <p>You can leave some of these services out if you do not need them. For example, 
-      the bare minimum if you are using a Davis Vantage instrument, storing your data 
-      in US Customary units, doing no data corrections or quality control and running 
-      as a daemon (no printing to console) would be:</p>
-    <pre class="tty" style='white-space:pre-line'>service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
-    <p>However, this will only make a slight difference in execution speed. </p>
+    <p>
+      Internally, <span class="code">weewx</span> consists of many <em>services</em>,
+      each responsible for some aspect of the program's functionality.
+      After an event happens, such as
+      the arrival of a new LOOP packet, any interested service gets a
+      chance to do some useful work on the event. For example, a service
+      might manipulate the packet, print it out, store it in a database,
+      etc. This section controls which services are loaded and in what
+      order they get their opportunity to do that work. Before <span
+        class="code">weewx</span> v2.6, this section held one, looong
+      option called <span class="code">service_list</span>, which held
+      the names of all the services that should be run. Since then, this
+      list has been broken down into five, smaller, lists, given below.
+      They are run in the order given below.
+    </p>
+    <p class="config_option" id="prep_services">prep_services</p>
+    <p>
+      These services get called before any others. They are typically
+      used to prepare the console. For example, the service <span
+        class="code">weewx.wxengine.StdTimeSynch</span>, which is
+      responsible for making sure the console's clock is up to date, is
+      a member of this group.
+    </p>
+    <p class="config_option" id="process_services">process_services</p>
+    <p>Services in this group tend to process any incoming data.
+      They typically do things like quality control, or unit conversion,
+      or sensor calibration.</p>
+    <p class="config_option" id="archive_services">archive_services</p>
+    <p>Once data have been processed, services in this group archive
+      them.</p>
+    <p class="config_option" id="restful_services">restful_services</p>
+    <p>RESTful services, such as the Weather Underground, or CWOP,
+      are in this group. They need processed data that have been
+      archived, hence they are run after the preceeding groups.</p>
+    <p class="config_option" id="report_services">report_services</p>
+    <p>The various reporting services run in this group, including
+      the standard reporting engine.</p>
+    <p>For reference, here is the standard set of services that are
+      run with the default distribution.</p>
+    <pre class="tty">
+prep_services    = weewx.wxengine.StdTimeSynch
+process_services = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC
+archive_services = weewx.wxengine.StdArchive,
+restful_services = weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdStationRegistry
+report_services  = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
+</pre>
+    <p>If you're the type who cleans out your car's trunk after every use, 
+    you can leave some of these services out if you do not need
+      them. However, this will only make a slight difference in execution
+      speed and memory use.</p>
 
     <h1 id="configuring_hardware">Configuring Station Hardware</h1>
     <h2>Davis Vantage</h2>
