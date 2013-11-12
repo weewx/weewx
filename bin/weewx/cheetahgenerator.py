@@ -60,6 +60,8 @@ import os.path
 import syslog
 import time
 
+import configobj
+
 import Cheetah.Template
 import Cheetah.Filters
 
@@ -128,9 +130,16 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         self.teardown()
 
     def setup(self):
-        # Look for my section name, but accept [FileGenerator] for backwards
-        # compatibility:
-        self.gen_dict = self.skin_dict['CheetahGenerator'] if self.skin_dict.has_key('CheetahGenerator') else self.skin_dict['FileGenerator']
+        # Look for options in [CheetahGenerator], but accept options from
+        # [FileGenerator] for backward compatibility.  It is possible that
+        # both sections may have been specified, so get options first from
+        # FileGenerator then merge options from CheetahGenerator.
+        self.gen_dict = configobj.ConfigObj()
+        if self.skin_dict.has_key('FileGenerator'):
+            self.gen_dict.merge(self.skin_dict['FileGenerator'])
+        if self.skin_dict.has_key('CheetahGenerator'):
+            self.gen_dict.merge(self.skin_dict['CheetahGenerator'])
+
         self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }
 
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)

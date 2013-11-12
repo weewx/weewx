@@ -4,6 +4,10 @@
 # Copyright 2013 Matthew Wall
 #
 # Revision History
+#  0.6 11nov13
+#   * record unstable reads on fousb
+#  0.5 01nov13
+#   * recognize more restful log output
 #  0.4 12oct13
 #   * recognize more fousb log output
 #   * recognize more ws28xx log output
@@ -21,6 +25,8 @@
 #  0.1 01jan13
 #   * initial release
 
+# FIXME: break this into modules instead of a single, monolithic blob
+
 use strict;
 
 my $STARTUPS = 'wxengine: startups';
@@ -32,6 +38,7 @@ my $FILES_COPIED = 'reportengine: files copied';
 my $RECORDS_PUBLISHED = 'restful: records published';
 my $RECORDS_SKIPPED = 'restful: records skipped';
 my $FOUSB_UNSTABLE_READS = 'fousb: unstable reads';
+my $FOUSB_MAGIC_NUMBERS = 'fousb: unrecognised magic number';
 my $FOUSB_LOST_LOG_SYNC = 'fousb: lost log sync';
 my $FOUSB_LOST_SYNC = 'fousb: lost sync';
 my $FOUSB_MISSED_DATA = 'fousb: missed data';
@@ -49,6 +56,7 @@ my %counts = (
     $RECORDS_PUBLISHED, 0,
     $RECORDS_SKIPPED, 0,
     $FOUSB_UNSTABLE_READS, 0,
+    $FOUSB_MAGIC_NUMBERS, 0,
     $FOUSB_LOST_LOG_SYNC, 0,
     $FOUSB_LOST_SYNC, 0,
     $FOUSB_MISSED_DATA, 0,
@@ -60,6 +68,11 @@ my %counts = (
 my $RECORDS_FAILED = 'restful: publish failed';
 my %errors;
 my @unmatched = ();
+
+# keep details of fine offset behavior to help debug the consoles
+my @station_status = ();
+my @unstable_reads = ();
+my @magic_numbers = ();
 
 while(defined($_ = <STDIN>)) {
     chomp;
@@ -76,8 +89,14 @@ while(defined($_ = <STDIN>)) {
         $counts{$HUP_RESTARTS} += 1;
     } elsif (/reportengine: copied (\d+) files/) {
         $counts{$FILES_COPIED} += $1;
+    } elsif (/fousb: station status/) {
+        push @station_status, $_;
     } elsif (/fousb: unstable read: blocks differ/) {
+        push @unstable_reads, $_;
         $counts{$FOUSB_UNSTABLE_READS} += 1;
+    } elsif (/fousb: unrecognised magic number/) {
+        push @magic_numbers, $_;
+        $counts{$FOUSB_MAGIC_NUMBERS} += 1;
     } elsif (/fousb: lost log sync/) {
         $counts{$FOUSB_LOST_LOG_SYNC} += 1;
     } elsif (/fousb: lost sync/) {
@@ -116,6 +135,7 @@ while(defined($_ = <STDIN>)) {
              /\*\*\*\*  Registration interval/ ||
              /restful: Registration successful/ ||
              /restful: Attempting to register/ ||
+             /restful: station will register with/ ||
              /stats: Back calculated schema/ ||
              /stats: Backfilling stats database/ ||
              /stats: backfilled \d+ days of statistics/ ||
@@ -247,6 +267,7 @@ while(defined($_ = <STDIN>)) {
              /forecast: .* using table/ ||
              /forecast: .* tstr=/ ||
              /forecast: .* interval=\d+ max_age=/ ||
+             /forecast: .* deleted forecasts/ ||
              /forecast: NWSThread: NWS: forecast matrix/ ||
              /forecast: XTideThread: XTide: tide matrix/ ||
              /forecast: XTideThread: XTide: generating tides/ ||
@@ -267,11 +288,16 @@ while(defined($_ = <STDIN>)) {
     }
 }
 
-print "processing counts:\n";
+print "counts:\n";
 foreach my $k (sort keys %counts) {
     next if $counts{$k} == 0;
     printf("  %-40s %6d\n", $k, $counts{$k});
 }
+
+report("fousb station status", \@station_status) if $#station_status >= 0;
+report("fousb unstable reads", \@unstable_reads) if $#unstable_reads >= 0;
+report("fousb magic numbers", \@magic_numbers) if $#magic_numbers >= 0;
+
 print "\nerrors:\n";
 foreach my $k (keys %errors) {
     printf("  %3d   %s\n", $errors{$k}, $k);

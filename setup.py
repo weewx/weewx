@@ -621,7 +621,6 @@ if __name__ == "__main__":
                            'docs/readme.htm',
                            'docs/redhat.htm',
                            'docs/setup.htm',
-                           'docs/sheeva.htm',
                            'docs/upgrading.htm',
                            'docs/usersguide.htm',
                            'docs/weekgustoverlay.png',

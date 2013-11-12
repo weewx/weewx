@@ -18,6 +18,13 @@ environment variable LANG before running weewx.
 Added UV plots to the templates. They will be shown automatically if you
 have any UV data.
 
+Fixed bug in setting of CheetahGenerator options.
+
+Fixed qsf and qpf summary values in forecast module.
+
+Forecast module now considers the fctcode, condition, and wx fields for
+precipitation and obstructions to visibility.
+
 
 2.5.0 10/29/13
 
