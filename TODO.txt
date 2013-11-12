@@ -5,3 +5,5 @@ Document the five service lists in customizing.htm
 Upgrade instructions.
 
 Test what happens if a service group is missing.
+
+Update examples so they use the new service lists.

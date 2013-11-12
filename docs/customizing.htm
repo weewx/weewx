@@ -131,7 +131,7 @@ table#stattypes td {
           href="#service_engine"> Customizing the weewx service
             engine</a></em>.
       </p>
-      <h2>
+      <h2 id="Standard_reporting_service_StdReport">
         The standard reporting service, <span class="code">StdReport</span>
       </h2>
       <p>
@@ -347,9 +347,7 @@ table#stattypes td {
         distribution (nominally, file <span class="symcode">
           $SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>).
       </p>
-      <h3>
-        Changing options in <span class="code">skin.conf</span>
-      </h3>
+      <h3>Changing options in <span class="code">skin.conf</span></h3>
       <p>
         With this approach, the user edits the skin configuration file
         for the standard skin that comes with <span class="code">weewx</span>,
@@ -419,10 +417,7 @@ table#stattypes td {
 <span class="highlight">        inTemp  = Barn Temperature</span>
         outTemp = Outside Temperature
         ...</pre>
-      <h3>
-        Overriding options in <span class="code">skin.conf</span> from <span
-          class="code">weewx.conf</span>
-      </h3>
+      <h3>Overriding options in <span class="code">skin.conf</span> from <span class="code">weewx.conf</span></h3>
       <p>
         This approach is very similar, except that instead of changing
         the skin configuration file directly, you override its options
@@ -569,9 +564,7 @@ $month.outTemp.max</pre>
         on whether the data is "current", or an aggregation over time.
         However, both versions are similar.</p>
 
-      <h3>
-        Time period <span class="code">$current</span>
-      </h3>
+      <h3>Time period <span class="code">$current</span></h3>
       <p>
         Time period <span class="code">$current</span> represents a <em>current
           observation</em>. An example would be the current barometric
@@ -604,7 +597,7 @@ $month.outTemp.max</pre>
             Options</a></em> below.
       </p>
 
-      <h3>
+      <h3 id="Aggregation_periods_day_etc">
         Aggregation periods <span class="code">$day</span>, <span
           class="code">$week</span>, <span class="code">$month</span>, <span
           class="code">$year</span>, <span class="code">$rainyear</span>
@@ -983,9 +976,7 @@ $month.outTemp.max</pre>
           produce the same results.
         </li>
       </ul>
-      <h3>
-        Type <span class="code">dateTime</span>
-      </h3>
+      <h3>Type <span class="code">dateTime</span></h3>
       <p>
         While not an observation type, in many ways the time of an
         observation, <span class="code">dateTime</span>, can be treated
@@ -1013,9 +1004,7 @@ $month.outTemp.max</pre>
         you don't worry have to worry about handling a <span
           class="code">None</span> value.
       </p>
-      <h3>
-        Tag <span class="code">$trend</span>
-      </h3>
+      <h3>Tag <span class="code">$trend</span></h3>
       <p>
         The tag <span class="code">$trend</span> is available for time
         trends, such as barometer trends. Here are some examples:
@@ -1055,9 +1044,7 @@ $month.outTemp.max</pre>
       <p>would result in</p>
       <p class="example_output">The barometer trend over 3 hrs is
         +.02 inHg.</p>
-      <h3>
-        Tag <span class="code">$unit</span>
-      </h3>
+      <h3>Tag <span class="code">$unit</span></h3>
       <p>The unit type, label, and string formats are also
         available, allowing you to do highly customized labels:</p>
       <table class="indent" style="width: 40%"
@@ -1620,9 +1607,7 @@ class MyXSearch(SearchList):                                #1
         included.
       </p>
 
-      <h3>
-        Extending <span class="code">[Extras]</span>
-      </h3>
+      <h3>Extending <span class="code">[Extras]</span></h3>
       <p>Other tags can be added in a similar manner, including
         sub-sections. For example, say you have added a video camera and
         you would like to add a still image with a hyperlink to a page
@@ -2764,18 +2749,25 @@ class MyPrint(StdPrint):
         You then need to specify that your print service class should be
         loaded instead of the default <span class="code">StdPrint</span>
         service. This is done by substituting your service name for <span
-          class="code">StdPrint</span> in <span class="code">service_list</span>,
-        located in <span class="code"> [Engines][[WxEngine]]</span>:
+        class="code">StdPrint</span> in the list of reporting services,
+        found in option <span class="code">report_services</span>,
+        located in <span class="code"> [Engines][[WxEngine]]</span>. When you're done,
+        it will look something like this:
       </p>
-      <pre class="tty">[Engines]
+      <pre class="tty">
+[Engines]
+    # This section configures the internal weewx engines.
+    # It is for advanced customization.
+
     [[WxEngine]]
-        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, <span
-          class="highlight">user.myprint.MyPrint, </span>weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
-      <p>
-        Note that the <span class="code">service_list</span> must be all
-        on one line. Unfortunately, the parser <span class="code">ConfigObj</span>
-        does not allow options to be continued on to following lines.
-      </p>
+        # The list of services the main weewx engine should run:
+        prep_services = weewx.wxengine.StdTimeSynch
+        process_services = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC
+        archive_services = weewx.wxengine.StdArchive,
+        restful_services = weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdStationRegistry
+        report_services = <span class="highlight">weewx.wxengine.StdPrint, </span>weewx.wxengine.StdReport</pre>
+
+
       <h2>Adding a Service</h2>
       <p>
         Suppose there is no service that can be easily customized for
@@ -2965,19 +2957,28 @@ class MyAlarm(StdService):
       </p>
       <p>
         To make this all work, you must tell the engine to load this new
-        service. This is done by adding your service name to the list <span
-          class="code"> service_list</span>, located in <span
-          class="code">[Engines][[WxEngine]]</span>:
+        service. You must also make sure it gets its events at the right
+        time. Because this is a kind of "reporting" service, that is, it
+        consumes and interprets archived data, it is best put among the
+        other reporting services, specified by option <span class="code">report_services</span>,
+        located in section <span class="code">[Engines][[WxEngine]]</span>.
+        When you're done, that section will look something like this:
       </p>
       <pre class="tty">[Engines]
-   [[WxEngine]]
-	service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport<span
-          class="highlight">, examples.alarm.MyAlarm</span>
-      </pre>
+    # This section configures the internal weewx engines.
+    # It is for advanced customization.
+
+    [[WxEngine]]
+        # The list of services the main weewx engine should run:
+        prep_services = weewx.wxengine.StdTimeSynch
+        process_services = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC
+        archive_services = weewx.wxengine.StdArchive,
+        restful_services = weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdStationRegistry
+        report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport<span class="highlight">, examples.alarm.MyAlarm</span></pre>
       <p>
-        Note that the <span class="code">service_list</span> must be all
-        on one line. Unfortunately, the parser <span class="code">ConfigObj</span>
-        does not allow options to be continued on to following lines.
+        Note that each of these lists must be all on one line.
+        Unfortunately, the parser <span class="code">ConfigObj</span> does
+        not allow options to be continued on to following lines.
       </p>
       <p>
         In addition to the example above, the distribution also includes
@@ -3016,9 +3017,8 @@ class MyAlarm(StdService):
         service. However, when you are done it will look something like
         this:
       </p>
-      <pre class="tty">from weewx.wxengine import StdService
-	
-class AddElectricity(StdService):
+      <p>File <span class="code">user/electricity.py</span>:</p>
+      <pre class="tty">class AddElectricity(StdService):
 
     def new_archive_packet(self, event):
 
@@ -3037,14 +3037,29 @@ class AddElectricity(StdService):
         through a queue.
       </p>
       <p>
-        As usual, you would add your new service to the option <span
-          class="code"> service_list</span> in <span class="code">weewx.conf</span>,
-        making sure it appears before <span class="code">StdArchive</span>
-        so your new value is inserted into the record <em>before</em>
-        the data is archived.
+        As usual, to make sure your new service actually gets run, you
+        must include it in one of the service lists in section <span
+        class="code">[Engine][[WxEngine]]</span> of <span class="code">weewx.conf</span>.
+        Because your service will <em>produce</em> new data, it's
+        important that it be included before the archiving services.
+        Hence, it's best included amongst the other services that produce
+        and process data, in the list <span class="code">process_service</span>.
+        When you're done, the section would look something like this:
       </p>
-      <h3 id="add_archive_type">Adding a new type to the archive
-        database</h3>
+      <pre class="tty">
+[Engines]
+    # This section configures the internal weewx engines.
+    # It is for advanced customization.
+
+    [[WxEngine]]
+        # The list of services the main weewx engine should run:
+        prep_services = weewx.wxengine.StdTimeSynch
+        process_services = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC<span class="highlight">, user.electricity.AddElectricity</span>
+        archive_services = weewx.wxengine.StdArchive,
+        restful_services = weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdStationRegistry
+        report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport</pre>
+
+      <h3 id="add_archive_type">Adding a new type to the archive database</h3>
       <p>
         So, now you have created a new observation type, '<span
           class="code">electricity</span>'. Trouble is, there is no
