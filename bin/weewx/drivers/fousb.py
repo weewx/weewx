@@ -579,7 +579,7 @@ def calculate_rain(newtotal, oldtotal):
             delta = newtotal - oldtotal
         else:
             delta = None
-            logerr('rain counter decrement: new: %s old: %s' % (newtotal, oldtotal))
+            logdbg('ignoring rain counter difference: counter decrement')
     else:
         delta = None
     return delta

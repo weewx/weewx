@@ -6,7 +6,8 @@
 # Revision History
 #  0.6 11nov13
 #   * record unstable reads on fousb
-#   * list upload errors as errors
+#   * list upload errors separately
+#   * detect fousb rain counter
 #  0.5 01nov13
 #   * recognize more restful log output
 #  0.4 12oct13
@@ -40,6 +41,7 @@ my $RECORDS_PUBLISHED = 'restful: records published';
 my $RECORDS_SKIPPED = 'restful: records skipped';
 my $FOUSB_UNSTABLE_READS = 'fousb: unstable reads';
 my $FOUSB_MAGIC_NUMBERS = 'fousb: unrecognised magic number';
+my $FOUSB_RAIN_COUNTER = 'fousb: rain counter decrement';
 my $FOUSB_LOST_LOG_SYNC = 'fousb: lost log sync';
 my $FOUSB_LOST_SYNC = 'fousb: lost sync';
 my $FOUSB_MISSED_DATA = 'fousb: missed data';
@@ -58,6 +60,7 @@ my %counts = (
     $RECORDS_SKIPPED, 0,
     $FOUSB_UNSTABLE_READS, 0,
     $FOUSB_MAGIC_NUMBERS, 0,
+    $FOUSB_RAIN_COUNTER, 0,
     $FOUSB_LOST_LOG_SYNC, 0,
     $FOUSB_LOST_SYNC, 0,
     $FOUSB_MISSED_DATA, 0,
@@ -70,10 +73,14 @@ my $RECORDS_FAILED = 'restful: publish failed';
 my %errors;
 my @unmatched = ();
 
+# track upload errors to help diagnose network/server issues
+my @upload_errors = ();
+
 # keep details of fine offset behavior to help debug the consoles
 my @station_status = ();
 my @unstable_reads = ();
 my @magic_numbers = ();
+my @rain_counter = ();
 
 while(defined($_ = <STDIN>)) {
     chomp;
@@ -98,6 +105,9 @@ while(defined($_ = <STDIN>)) {
     } elsif (/fousb: unrecognised magic number/) {
         push @magic_numbers, $_;
         $counts{$FOUSB_MAGIC_NUMBERS} += 1;
+    } elsif (/fousb: rain counter decrement/) {
+        push @rain_counter, $_;
+        $counts{$FOUSB_RAIN_COUNTER} += 1;
     } elsif (/fousb: lost log sync/) {
         $counts{$FOUSB_LOST_LOG_SYNC} += 1;
     } elsif (/fousb: lost sync/) {
@@ -131,8 +141,7 @@ while(defined($_ = <STDIN>)) {
              /seg: Failed upload to SmartEnergyGroups/ ||
              /cosm: Failed upload to COSM/ ||
              /awekas: Failed upload to AWEKAS/) {
-        my $key = $_;
-        $errors{$key} = $errors{$key} ? $errors{$key} + 1 : 1;
+        push @upload_errors, $_;
     } elsif (/reportengine: Running reports for latest time/ ||
              /reportengine: Found configuration file/ ||
              /reportengine: FTP upload not requested/ ||
@@ -299,14 +308,16 @@ foreach my $k (sort keys %counts) {
     printf("  %-40s %6d\n", $k, $counts{$k});
 }
 
+print "\nerrors:\n";
+foreach my $k (keys %errors) {
+    printf("  %-40s %6d\n", $k, $errors{$k});
+}
+
+report("upload failures", \@upload_errors) if $#upload_errors >= 0;
 report("fousb station status", \@station_status) if $#station_status >= 0;
 report("fousb unstable reads", \@unstable_reads) if $#unstable_reads >= 0;
 report("fousb magic numbers", \@magic_numbers) if $#magic_numbers >= 0;
-
-print "\nerrors:\n";
-foreach my $k (keys %errors) {
-    printf("  %3d   %s\n", $errors{$k}, $k);
-}
+report("fousb rain counter", \@rain_counter) if $#rain_counter >= 0;
 
 report("unmatched lines", \@unmatched) if $#unmatched >= 0;
 
