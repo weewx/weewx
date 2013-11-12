@@ -113,9 +113,13 @@ class StdEngine(object):
         # Wrap the instantiation of the services in a try block, so if an exception
         # occurs, any service that may have started can be shut down in an orderly way.
         try:
+            # Go through each of the service lists one by one:
             for service_group in ['prep_services', 'process_services', 'archive_services',
                                   'restful_services', 'report_services']:
-                for svc in weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get(service_group)):
+                # For each service list, retrieve all the listed services.
+                # Provide a default, empty list in case the service list is
+                # missing completely:
+                for svc in weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get(service_group, [])):
                     # For each service, instantiates an instance of the class,
                     # passing self and the configuration dictionary as the
                     # arguments:

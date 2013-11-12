@@ -1,4 +1,1 @@
 TODO before the next release:
-
-Test what happens if a service group is missing.
-
