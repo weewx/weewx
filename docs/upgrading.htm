@@ -130,6 +130,18 @@ Version: 2.5.0
     <p class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</p>
 
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+    <h2>V2.5 or earlier</h2>
+    <p>Version 2.6 should be 100% backwards compatible with earlier versions, with a couple
+    of small exceptions.</p>
+    <ul>
+    <li>If you have written a custom <span class="code">weewx</span> service, the
+    install routine will try to insert its name into an appropriate place in one of the five new lists
+    of services to be run. You should check section <span class="code">[Engines][[WxEngine]]</span>
+    to make sure it made a reasonable guess.</li>
+    <li>If you have written a custom RESTful service, the architecture for these services has
+    completely changed. They are now first class services, and are treated like any other
+    <span class="code">weewx</span> service. I can help you with the transition.</li>
+    </ul>
     <h2>V2.3 or earlier</h2>
     <p>The option <span class="code">time_length</span> will now be the exact length 
       of the resultant plot. Before, a plot with <span class="code">time_length</span> 

@@ -42,17 +42,18 @@ To avoid a flood of emails, one will only be sent every 3600 seconds (one hour).
 ********************************************************************************
 
 To specify that this new service be loaded and run, it must be added to the
-configuration option service_list, located in sub-section [Engines][[WxEngine]].
+configuration option "report_services", located in sub-section [Engines][[WxEngine]].
 
 [Engines]
   [[WxEngine]]
-    service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.alarm.MyAlarm
+    ...
+    report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport, examples.alarm.MyAlarm
 
 ********************************************************************************
 
 If you wish to use both this example and the lowBattery.py example, simply merge
 the two configuration options together under [Alarm] and add both services to
-the service_list.
+report_services.
 
 ********************************************************************************
 """
