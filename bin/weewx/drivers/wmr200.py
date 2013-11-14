@@ -659,14 +659,17 @@ def decode_wind(pkt, pkt_data):
         # of average speed. Value is in 0.1 m/s
         avg_speed = ((pkt_data[3] >> 4)
                      | ((pkt_data[4] << 4))) / 10.0
-        # Windchill temperature. The value is in degrees F. If no windchill is
-        # available byte 12 is zero.
+        # Windchill temperature. The value is in degrees F.
         if pkt_data[5] != 0:
             windchill = (pkt_data[5] - 32.0) * (5.0 / 9.0)
+
+        if pkt_data[5] != 0 or pkt_data[6] != 0x20:
+            windchill = (((pkt_data[6] << 8) | pkt_data[5]) - 320) \
+                    * (5.0 / 90.0)
         else:
             windchill = None
-            # The console returns wind speeds in m/s. Our metric system requires
-            # kph, so the result needs to be multiplied by 3.6.
+        # The console returns wind speeds in m/s. Our metric system requires
+        # kph, so the result needs to be multiplied by 3.6.
         record = {'windSpeed'         : avg_speed * 3.60,
                   'windDir'           : dir_deg,
                   'usUnits'           : weewx.METRIC,
@@ -1137,6 +1140,7 @@ class PollUsbDevice(threading.Thread):
 
         # Read and discard next data from weather console device.
         buf = self.usb_device.read_device()
+        zero_data_cnt = 0
 
         # Loop indefinitely until main thread indicates time to expire.
         while self.wmr200.poll_usb_device_enable():
@@ -1147,10 +1151,17 @@ class PollUsbDevice(threading.Thread):
                     # Append the list of bytes to this buffer.
                     self._buf.append(buf)
                     self._lock_poll.release()
+                    zero_data_cnt = 0
                 else:
                     # We probably could poke the device after
                     # a read timeout.
                     self.wmr200.ready_to_poke(True)
+                    zero_data_cnt += 1
+                    # If we don't receive any data from the console
+                    # After several attempts, send down a reset.
+                    if zero_data_cnt == 4:
+                        self.reset_console()
+                        zero_data_cnt = 0
 
             except WMR200ProtocolError:
                 logerr('USB overflow')
@@ -1184,8 +1195,7 @@ class PollUsbDevice(threading.Thread):
         buf = [0x20, 0x00, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00]
         try:
             self.usb_device.write_device(buf)
-            if DEBUG_COMM:
-                loginf('Reset device')
+            loginf('Reset device')
             self._reset_sent = True
             time.sleep(1)
             # Tell thread it can proceed
@@ -1210,11 +1220,8 @@ class WMR200(weewx.abstractstation.AbstractStation):
         NAMED ARGUMENTS:
         altitude: The altitude in meters. [Required]
         sensor_status: Print sensor faults or failures to syslog. [Optional]
-          Default is True.
         use_pc_time: Use the console timestamp or the Pc. [Optional]
-          Default is False
         erase_archive:  Erasae archive upon startup.  [Optional]
-          Default is False 
 
         --- User should not typically change anything below here ---
 
@@ -1236,7 +1243,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                                                                 True))
         # Use pc timestamps or weather console timestamps.
         self._use_pc_time = \
-                weeutil.weeutil.tobool(stn_dict.get('use_pc_time', False))
+                weeutil.weeutil.tobool(stn_dict.get('use_pc_time', True))
 
         # Use archive data when possible.
         self._erase_archive = \
