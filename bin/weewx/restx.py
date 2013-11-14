@@ -489,7 +489,7 @@ class StdWOW(Ambient):
             syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
     
 #==============================================================================
-# AWEKAS
+#                            class StdAWEKAS
 #==============================================================================
 class StdAWEKAS(StdRESTbase):
     """Upload to AWEKAS - Automatisches WEtterKArten System
@@ -652,6 +652,7 @@ class StdAWEKAS(StdRESTbase):
         if record['usUnits'] != weewx.METRIC:
             converter = weewx.units.StdUnitConverters[weewx.METRIC]
             record = converter.convertDict(record)
+            record['usUnits'] = weewx.METRIC
         if record.has_key('dayRain') and record['dayRain'] is not None:
             record['dayRain'] = record['dayRain'] * 10
         if record.has_key('rainRate') and record['rainRate'] is not None:
@@ -693,8 +694,8 @@ class StdAWEKAS(StdRESTbase):
 
     def _format(self, record, label):
         if record.has_key(label) and record[label] is not None:
-            if AWEKAS._FORMATS.has_key(label):
-                return AWEKAS._FORMATS[label] % record[label]
+            if StdAWEKAS._FORMATS.has_key(label):
+                return StdAWEKAS._FORMATS[label] % record[label]
             return str(record[label])
         return ''
 
