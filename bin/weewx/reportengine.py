@@ -181,6 +181,7 @@ class FtpGenerator(ReportGenerator):
                                                   password    = self.skin_dict['password'],
                                                   local_root  = local_root,
                                                   remote_root = self.skin_dict['path'],
+                                                  port        = int(self.skin_dict.get('port', 21)),
                                                   name        = self.skin_dict['REPORT_NAME'],
                                                   passive     = bool(self.skin_dict.get('passive', True)),
                                                   max_tries   = int(self.skin_dict.get('max_tries', 3)))

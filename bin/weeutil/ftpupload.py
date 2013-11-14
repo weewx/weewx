@@ -25,6 +25,7 @@ class FtpUpload(object):
     def __init__(self, server, 
                  user, password, 
                  local_root, remote_root, 
+                 port      = 21,
                  name      = "FTP", 
                  passive   = True, 
                  max_tries = 3):
@@ -52,6 +53,7 @@ class FtpUpload(object):
         self.password    = password
         self.local_root  = os.path.normpath(local_root)
         self.remote_root = os.path.normpath(remote_root)
+        self.port        = port
         self.name        = name
         self.passive     = passive
         self.max_tries   = max_tries
@@ -66,7 +68,8 @@ class FtpUpload(object):
 
         n_uploaded = 0
         try:
-            ftp_server = ftplib.FTP(self.server)
+            ftp_server = ftplib.FTP()
+            ftp_server.connect(self.server, self.port)
             #ftp_server.set_debuglevel(1)
             ftp_server.login(self.user, self.password)
             ftp_server.set_pasv(self.passive)
