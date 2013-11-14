@@ -327,6 +327,10 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
         else:
             packet[k] = None
 
+    # track the pointer used to obtain the data
+    if p.has_key('ptr'):
+        packet['ptr'] = int(p['ptr'])
+
     # station status is an integer
     if packet['status'] is not None:
         packet['status'] = int(packet['status'])
@@ -871,6 +875,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 if self.polling_mode.lower() == ADAPTIVE_POLLING.lower():
                     for data,ptr,logged in self.live_data():  # @UnusedVariable
                         nerr = 0
+                        data['ptr'] = ptr
                         yield data
                 elif self.polling_mode.lower() == PERIODIC_POLLING.lower():
                     new_ptr = self.current_pos()
@@ -879,6 +884,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                         raise ObservationError('wrong block length: expected: %d actual: %d' % (reading_len[self.data_format], len(block)))
                     nerr = 0
                     data = _decode(block, reading_format[self.data_format])
+                    data['ptr'] = new_ptr
                     yield data
                     time.sleep(self.polling_interval)
                 else:
