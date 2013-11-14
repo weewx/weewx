@@ -330,6 +330,8 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     # track the pointer used to obtain the data
     if p.has_key('ptr'):
         packet['ptr'] = int(p['ptr'])
+    if p.has_key('delay'):
+        packet['delay'] = int(p['delay'])
 
     # station status is an integer
     if packet['status'] is not None:
