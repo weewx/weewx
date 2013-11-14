@@ -268,6 +268,28 @@ Version: 2.5.0
 	<td>Tested</td>
       </tr>
       <tr>
+	<td class="text_highlight" rowspan="3">Radio Shack</td>
+	<td>63-256</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>WX200</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR200<sup><a href="#wmr200">3</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>63-1016</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>WMR9x8<sup><a href='#wmr9x8'>4</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
 	<td class="text_highlight" rowspan='2'>TFA</td>
 	<td>Primus</td>
 	<td>USB</td>
@@ -1539,7 +1561,7 @@ Mutating actions will request confirmation before proceeding.</p>
                        version: 255
                      wind_coef: None
                      wind_mult: 0</pre>
-    <p><span class="highlight">Highlighted</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
+    <p><span class="highlight">Highlighted&nbsp;</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
 
     <h3>Calibrating the pressure sensor</h3>
     <p>The pressure sensor in Fine Offset stations measures absolute, or station pressure.  The sensor pressure may be off a bit when the station is at sea level, and almost certainly will be off when the station is above sea level.  Stations at sea level are typically off by 1 to 10 millibars, while stations above a few hundred meters may be off by hundreds of millibars.  When reporting weather data, <span class='code'>weewx</span> will calculate the equivalent sea level pressure, but the pressure sensor must be calibrated and an altitude must be specified.</p>
@@ -1646,6 +1668,90 @@ Pressure offset is now 1.247000</p>
     </p>
     <p>If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
     </p>
+
+    <h2>La Crosse WS28xx</h2>
+    <p>The configuration utility <span class='code'>wee_config_ws28xx</span> is
+      designed to diagnose and configure WS28xx stations.</p>
+    <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws28xx --help </pre>
+    <p>This will print out something like:</p>
+    <pre class='tty'>Usage: wee_config_ws28xx [config_file] [options] [--debug]
+
+Configuration utility for WS-28xx weather stations.
+
+Options:
+  -h, --help           show this help message and exit
+  --config=FILE        configuration file
+<span class='highlight'>  --check-transceiver</span>  check USB transceiver
+  --pair               pair the USB transceiver with a station console
+<span class='highlight'>  --info</span>               display weather station configuration
+<span class='highlight'>  --current</span>            get the current weather conditions
+  --history-since=N    display history records since N minutes ago
+  --history=N          display N history records
+  --format=FORMAT      format for history, one of raw, table, or dict
+  --maxtries=MAXTRIES  maximum number of retries, 0 indicates no max
+  --debug              display diagnostic information while running
+
+Mutating actions will request confirmation before proceeding.</pre>
+    <p>The WS28xx driver is still in active development; only the
+      <span class='highlight'>&nbsp;highlighted&nbsp;</span> options
+      are working.</p>
+
+    <h3>Pairing</h3>
+    <p>The console and transceiver must be paired.  Pairing ensures that your
+      transceiver is talking to your console, not your neighbor's console.
+      Pairing should only have to be done once.  You might have to pair again
+      after power cycling the console, for example when you replace the
+      batteries.</p>
+    <p>There are two ways to pair the console and the transceiver:</p>
+    <ol>
+      <li><strong>The WeeWX way.</strong>  With weewx running, press and hold
+        the [v] button on the console until you see 'PC' in the display.  If
+        the console pairs with the transceiver, 'PC' will go away within a
+        second or two.</li>
+      <li><strong>The HeavyWeather way.</strong>  Follow the pairing
+        instructions that came with the station.  You will have to run
+        HeavyWeather on a windows computer with the USB transceiver.  After
+        HeavyWeather indicates the devices are paired, put the USB transceiver
+        in your weewx computer and start weewx.  Do not power cycle the
+        station console or you will have to start over.</li>
+      </ol>
+
+    <p>If the console does not pair, you will see messages in the log such as
+      this:</p>
+    <pre class='tty'>ws28xx: RFComm: message from console contains unknown device ID (id=165a resp=80 req=6)</pre>
+    <p>Either approach to pairing may require multiple attempts.</p>
+
+    <h3>Synchronizing</h3>
+    <p>The transceiver and console must be synchronized in order to
+      communicate.  Synchronization will happen automatically at the top of
+      each hour, or you can force synchronization by pressing the [SET] button
+      momentarily.  Do not press and hold the [SET] button - that
+      modifies the console alarms.</p>
+    <p>When the transceiver and console are synchronized, you will see lots of
+      'ws28xx: RFComm' messages in the log when debug=1.  When the devices are
+      not synchronized, you will see messages like this about every 10
+      minutes:</p>
+      <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no contact with console</pre>
+    <p>If you see this, or if you see an extended gap in the weather data
+      in the weewx plots, press momentarily the [SET] button, or wait until
+      the top of the hour.</p>
+    <p>When the transceiver has not received new data for awhile, you will see
+      messages like this in the log:</p>
+    <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no new weather data</pre>
+    <p>If you see 'no new weather data' messages with the
+      'no contact with console' messages,
+      it simply means that the transceiver has not been able to synchronize
+      with the console.  If you see only the 'no new weather data' messages,
+      then the sensors are not communicating with the console, or the console
+      may be defective.</p>
+
+    <h3>Alarms</h3>
+    <p>Be sure to turn off all alarms in the console.  When an alarm goes off,
+      communication with the transceiver stops.  It is better to create alarms
+      in weewx, and the weewx alarms can do much more than the console alarms
+      anyway.</p>
+
 
     <h1 id="configuring_mysql">Configuring MySQL</h1>
     <p>This section applies only for those using MySQL.</p>

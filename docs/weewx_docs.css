@@ -8,6 +8,10 @@ body, p, ol, ul, li, dl, dt, dd, table, tr, td, div, h1, h2, h3, h4 {
 }
 li {
   margin-right: 10%;
+  margin-top: 10px;
+}
+#toc li {
+  margin-top: 0px;
 }
 dt {
   margin-top: 10px;
