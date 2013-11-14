@@ -24,6 +24,7 @@ import configobj
 import weeutil.weeutil
 import weewx.archive
 import weewx.stats
+from weeutil.weeutil import to_bool
 
 class StdReportEngine(threading.Thread):
     """Reporting engine for weewx.
@@ -183,7 +184,7 @@ class FtpGenerator(ReportGenerator):
                                                   remote_root = self.skin_dict['path'],
                                                   port        = int(self.skin_dict.get('port', 21)),
                                                   name        = self.skin_dict['REPORT_NAME'],
-                                                  passive     = bool(self.skin_dict.get('passive', True)),
+                                                  passive     = to_bool(self.skin_dict.get('passive', True)),
                                                   max_tries   = int(self.skin_dict.get('max_tries', 3)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: FTP upload not requested. Skipped.")
@@ -218,7 +219,7 @@ class RsyncGenerator(ReportGenerator):
                 server      = self.skin_dict['server'],
                 user        = self.skin_dict.get('user', None),
                 port        = self.skin_dict.get('port', None),
-                delete      = bool(self.skin_dict.get('delete', False)))
+                delete      = to_bool(self.skin_dict.get('delete', False)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")
             return

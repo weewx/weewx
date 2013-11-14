@@ -1052,14 +1052,15 @@ longitude = -77.0366</pre>
     <p>Set to the password you use for your FTP connection to your web server. Required. 
       No default. </p>
     <p class="config_important">server </p>
-    <p>Set to the name of your web server (<em>e.g.</em>,
-      <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
-      No default </p>
+    <p>Set to the name of your web server (<em>e.g.</em>, <span class="code">www.threefools.org</span>, 
+    in my case). Required. No default </p>
     <p class="config_important">path </p>
     <p>Set to the path where the weather data will be stored on your webserver (<em>e.g.</em>, <span class="code">/weather</span>). 
       NB: some FTP servers require a leading slash (&#39;<span class="code">/</span>&#39;), 
       some do not. Required. No default. </p>
-    <p class="config_important">passive </p>
+    <p class="config_option">port</p>
+    <p>Set to the port ID of your FTP server. Default is <span class="code">21</span>.</p>
+    <p class="config_option">passive</p>
     <p>Set to 1 if you wish to use the more modern, FTP passive mode, 0 if you wish 
       to use active mode. Passive mode generally works better through firewalls, but 
       not all FTP servers do a good job of supporting it. See
