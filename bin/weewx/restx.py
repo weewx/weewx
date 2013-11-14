@@ -7,6 +7,7 @@
 """Publish weather data to RESTful sites such as the Weather Underground or PWSWeather."""
 import Queue
 import datetime
+import hashlib
 import httplib
 import platform
 import re
@@ -20,6 +21,7 @@ import urllib2
 import weeutil.weeutil
 import weewx.wxengine
 from weeutil.weeutil import to_int, to_bool, timestamp_to_string
+import weewx.units
 
 class ServiceError(Exception):
     """Raised when not enough info is available to start a service."""
@@ -487,7 +489,218 @@ class StdWOW(Ambient):
             syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
     
 #==============================================================================
-#                   class StationRegistry
+# AWEKAS
+#==============================================================================
+class StdAWEKAS(StdRESTbase):
+    """Upload to AWEKAS - Automatisches WEtterKArten System
+
+    The AWEKAS server expects a single string of values delimited by
+    semicolons.  The position of each value matters, for example position 1
+    is the awekas username and position 2 is the awekas password.
+
+    Positions 1-25 are defined for the basic API:
+
+    Pos1: user (awekas username)
+    Pos2: password (awekas password MD5 Hash)
+    Pos3: date (dd.mm.yyyy) (varchar)
+    Pos4: time (hh:mm) (varchar)
+    Pos5: temperature (C) (float)
+    Pos6: humidity (%) (int)
+    Pos7: air pressure (hPa) (float)
+    Pos8: precipitation (rain at this day) (float)
+    Pos9: wind speed (km/h) float)
+    Pos10: wind direction (degree) (int)
+    Pos11: weather condition (int)
+            0=clear warning
+            1=clear
+            2=sunny sky
+            3=partly cloudy
+            4=cloudy
+            5=heavy cloundy
+            6=overcast sky
+            7=fog
+            8=rain showers
+            9=heavy rain showers
+           10=light rain
+           11=rain
+           12=heavy rain
+           13=light snow
+           14=snow
+           15=light snow showers
+           16=snow showers
+           17=sleet
+           18=hail
+           19=thunderstorm
+           20=storm
+           21=freezing rain
+           22=warning
+           23=drizzle
+           24=heavy snow
+           25=heavy snow showers
+    Pos12: warning text (varchar)
+    Pos13: snow high (cm) (int) if no snow leave blank
+    Pos14: language (varchar)
+           de=german; en=english; it=italian; fr=french; nl=dutch
+    Pos15: tendency (int)
+           -2 = high falling
+           -1 = falling
+            0 = steady
+            1 = rising
+            2 = high rising
+    Pos16. wind gust (km/h) (float)
+    Pos17: solar radiation (W/m^2) (float) 
+    Pos18: UV Index (float)
+    Pos19: brightness (LUX) (int)
+    Pos20: sunshine hours today (float)
+    Pos21: soil temperature (degree C) (float)
+    Pos22: rain rate (mm/h) (float)
+    Pos23: software flag NNNN_X.Y, for example, WLIP_2.15
+    Pos24: longitude (float)
+    Pos25: latitude (float)
+
+    positions 26-111 are defined for API2
+    """
+
+    _SERVER_URL = 'http://data.awekas.at/eingabe_pruefung.php'
+    _FORMATS = {'barometer'   : '%.3f',
+                'outTemp'     : '%.1f',
+                'outHumidity' : '%.0f',
+                'windSpeed'   : '%.1f',
+                'windDir'     : '%.0f',
+                'windGust'    : '%.1f',
+                'dewpoint'    : '%.1f',
+                'hourRain'    : '%.2f',
+                'dayRain'     : '%.2f',
+                'radiation'   : '%.2f',
+                'UV'          : '%.2f',
+                'rainRate'    : '%.2f'}
+
+    def __init__(self, engine, config_dict):
+        """Initialize for posting data to AWEKAS.  The following parameters
+        are specified in the AWEKAS section of the configuration.
+
+        username: AWEKAS user name
+        [Required]
+
+        password: AWEKAS password
+        [Required]
+
+        language: Possible values include de, en, it, fr, nl
+        [Optional.  Default is de]
+
+        interval: The interval in seconds between posts.
+        AWEKAS requests that uploads happen no more often than 5 minutes, so
+        this should be set to no less than 300.
+        [Optional.  Default is 300]
+
+        max_tries: Maximum number of tries before giving up
+        [Optional.  Default is 3]
+
+        latitude: Station latitude
+        [Optional.  Default is latitude from the Station section.]
+
+        longitude: Station longitude
+        [Optional.  Default is the longitude from the Station section.]
+        
+        server_url: Base URL for the AWEKAS server
+        [Optional.  Default is http://data.awekas.at/eingabe_pruefung.php]
+        """
+        
+        try:
+            # set up the default dict and let the super have a go
+            awekas_dict=dict(config_dict['StdRESTful']['AWEKAS'])
+            awekas_dict.setdefault('name', 'AWEKAS')
+            awekas_dict.setdefault('interval', 300)
+            awekas_dict.setdefault('stale', None)
+            awekas_dict.setdefault('server_url', StdAWEKAS._SERVER_URL)
+            awekas_dict.setdefault('language', 'de')
+            super(StdAWEKAS, self).__init__(engine, config_dict, **awekas_dict)
+
+            # then grab the bits we must have
+            self.username = awekas_dict['username']
+            self.password = awekas_dict['password']
+            self.server_url = awekas_dict['server_url']
+            self.language = awekas_dict['language']
+            # latitude and longitude are assigned by super
+            # FIXME: i would prefer to explicitly invoke super with args so
+            # that it is obvious which variables are set in the base class
+            # FIXME: this seems convoluted.  first we create defaults that the
+            # super does not care about, then we use them.  too many steps.
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to AWEKAS")
+        except (KeyError, ServiceError), e:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to AWEKAS")
+            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
+            return
+
+        self.init_archive_queue()
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+
+        # Add some more options needed by the PostRequest thread
+        awekas_dict.setdefault('log_success', True)
+        awekas_dict.setdefault('log_failure', True)
+        awekas_dict.setdefault('max_tries',   5)
+        awekas_dict.setdefault('max_backlog', 0)
+        self.archive_thread = PostRequest(self.archive_queue,
+                                          'AWEKAS',
+                                           **awekas_dict)
+        self.archive_thread.start()
+
+    def format_protocol(self, record):
+        """Format data for upload to AWEKAS."""
+
+        # put everything into the units AWEKAS wants
+        if record['usUnits'] != weewx.METRIC:
+            converter = weewx.units.StdUnitConverters[weewx.METRIC]
+            record = converter.convertDict(record)
+        if record.has_key('dayRain') and record['dayRain'] is not None:
+            record['dayRain'] = record['dayRain'] * 10
+        if record.has_key('rainRate') and record['rainRate'] is not None:
+            record['rainRate'] = record['rainRate'] * 10
+
+        # assemble an array of values in the order AWEKAS wants
+        values = [self.username]
+        m = hashlib.md5()
+        m.update(self.password)
+        values.append(m.hexdigest())
+        time_tt = time.gmtime(record['dateTime'])
+        values.append(time.strftime("%d.%m.%Y", time_tt))
+        values.append(time.strftime("%H:%M", time_tt))
+        values.append(self._format(record, 'outTemp')) # C
+        values.append(self._format(record, 'outHumidity')) # %
+        values.append(self._format(record, 'barometer')) # mbar
+        values.append(self._format(record, 'dayRain')) # mm?
+        values.append(self._format(record, 'windSpeed')) # km/h
+        values.append(self._format(record, 'windDir'))
+        values.append('') # weather condition
+        values.append('') # warning text
+        values.append('') # snow high
+        values.append(self.language)
+        values.append('') # tendency
+        values.append(self._format(record, 'windGust')) # km/h
+        values.append(self._format(record, 'radiation')) # W/m^2
+        values.append(self._format(record, 'UV')) # uv index
+        values.append('') # brightness in lux
+        values.append('') # sunshine hours
+        values.append('') # soil temperature
+        values.append(self._format(record, 'rainRate')) # mm/h
+        values.append('weewx_%s' % weewx.__version__)
+        values.append(str(self.longitude))
+        values.append(str(self.latitude))
+        valstr = ';'.join(values)
+        _url = self.server_url + '?val=' + valstr
+        _request = urllib2.Request(_url)
+        return _request
+
+    def _format(self, record, label):
+        if record.has_key(label) and record[label] is not None:
+            if AWEKAS._FORMATS.has_key(label):
+                return AWEKAS._FORMATS[label] % record[label]
+            return str(record[label])
+        return ''
+
+
+#==============================================================================
+# StationRegistry
 #==============================================================================
 
 class StdStationRegistry(StdRESTbase):
@@ -539,30 +752,33 @@ class StdStationRegistry(StdRESTbase):
         [Optional. Default is False]
 
         station_url: URL of the weather station
-        [Required either in this section, or in section [Station] as the option 'station_url']
+        [Required. If not specified in this section, the station_url from the
+        Station section will be used.]
 
         interval: time in seconds between posts
         [Optional.  Default is 604800 (once per week)]
 
         latitude: station latitude
-        [Optional. If not specified, it's taken from section [Station]
+        [Optional. If not specified, the latitude from the Station section
+        will be used.]
 
         longitude: station longitude
-        [Optional. If not specified, it's taken from section [Station]
+        [Optional. If not specified, the longitude from the Station section
+        will be used.]
         
         station_type: The generic type of station.
-        [Optional. If not specified, then the driver section name is used. E.g., 'Vantage']
+        [Optional. If not specified, the driver name is used. E.g., 'Vantage']
 
         station_model: The specific type of hardware.
-        [Optional. If not specified, then the attribute 'hardware' of the console
+        [Optional. If not specified, the attribute 'hardware' of the console
         will be used. E.g., 'VantagePro2']
         
         description: A short description of the station.
-        [Optional. If not specified, then the option 'location' in section [Station] will
-        be used.
+        [Optional. If not specified, the option 'location' in section Station
+        will be used.]
         
         server_url - site at which to register
-        [Optional.  Default is weewx.com]
+        [Optional.  Default is the weewx.com registry.]
 
         max_tries: number of attempts to make before giving up
         [Optional.  Default is 5]
@@ -581,7 +797,8 @@ class StdStationRegistry(StdRESTbase):
             syslog.syslog(syslog.LOG_INFO, "restx: Station registry not requested.")
             return
 
-        # Set any missing options needed by my base class, then initialize the base class:
+        # Set any missing options needed by my base class, then initialize the
+        # base class:
         registry_dict.setdefault('name', 'StationRegistry')
         registry_dict['stale']     = to_int(registry_dict.get('stale'))
         registry_dict['interval']  = to_int(registry_dict.get('interval', 604800))
@@ -594,8 +811,7 @@ class StdStationRegistry(StdRESTbase):
             syslog.syslog(syslog.LOG_INFO, " ****  Reason: key station_url is required.")
             return
         
-        # these are optional
-        self.archive_url  = registry_dict.get('server_url', StdStationRegistry.WEEWX_SERVER_URL)
+        self.archive_url = registry_dict.get('server_url', StdStationRegistry.WEEWX_SERVER_URL)
         self.description = registry_dict.get('description', config_dict['Station'].get('location'))
 
         self.weewx_info = weewx.__version__
@@ -621,7 +837,6 @@ class StdStationRegistry(StdRESTbase):
                                            **registry_dict)
         self.archive_thread.start()
 
-        
     def new_archive_record(self, event):
         time_ts = int(time.time())
         try:
@@ -638,8 +853,7 @@ class StdStationRegistry(StdRESTbase):
         # Put in the queue
         self.archive_queue.put((time_ts, _request))
 
-    def augment_protocol(self, record):
-        
+    def augment_protocol(self, record):        
         record['station_url']   = self.station_url
         record['latitude']      = self.latitude
         record['longitude']     = self.longitude
@@ -652,7 +866,6 @@ class StdStationRegistry(StdRESTbase):
             record['description'] = self.description
             
     def format_protocol(self, record):
-        
         _post_dict = reformat_dict(record, StdStationRegistry._formats)
         # Form the full URL
         _url = self.archive_url + '?' + urllib.urlencode(_post_dict)
@@ -688,6 +901,8 @@ class StdStationRegistry(StdRESTbase):
                 syslog.syslog(syslog.LOG_ERR, '  **** %s' % m)
             return False
         return True
+
+
 #===============================================================================
 #                             class StdCWOP
 #===============================================================================
