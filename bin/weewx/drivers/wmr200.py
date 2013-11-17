@@ -1098,7 +1098,7 @@ class RequestLiveData(threading.Thread):
 
 
 class PollUsbDevice(threading.Thread):
-    """A thread to continually poll for data from a USB device.
+    """A thread continually polls for data with blocking read from a device.
     
     Some devices may overflow buffers if not drained within a timely manner.
     
@@ -1114,9 +1114,11 @@ class PollUsbDevice(threading.Thread):
         # Lock to wrap around the buffer
         self._lock_poll = threading.Lock()
         # Conditional variable to gate thread after reset applied.
+        # We don't want to read previous data, if any, until a reset
+        # has been sent.
         self._cv_poll = threading.Condition()
-        # One thread is created for each reset sequence.
-        self._reset_sent = False
+        # Gates initial entry into reading from device
+        self._ok_to_read = False
         loginf('Created USB polling thread to read block on device')
 
     def run(self):
@@ -1131,47 +1133,60 @@ class PollUsbDevice(threading.Thread):
         up."""
         loginf('Started poll_usb_device thread live data')
 
-        # Wait for a reset to occur from the main thread.
+        # Wait for the main thread to indicate it's safe to read.
         self._cv_poll.acquire()
-        while not self._reset_sent:
+        while not self._ok_to_read:
             self._cv_poll.wait()
         self._cv_poll.release()
-        loginf('USB polling thread started after console reset')
+        loginf('USB polling thread started upon main thread ok')
 
         # Read and discard next data from weather console device.
         buf = self.usb_device.read_device()
-        zero_data_cnt = 0
+        read_timeout_cnt = 0
+        read_reset_cnt = 0
 
         # Loop indefinitely until main thread indicates time to expire.
         while self.wmr200.poll_usb_device_enable():
             try:
                 buf = self.usb_device.read_device()
                 if buf:
-                    self._lock_poll.acquire()
-                    # Append the list of bytes to this buffer.
-                    self._buf.append(buf)
-                    self._lock_poll.release()
-                    zero_data_cnt = 0
+                    self._append_usb_device(buf)
+                    read_timeout_cnt = 0
+                    read_reset_cnt = 0
                 else:
-                    # We probably could poke the device after
-                    # a read timeout.
+                    # We timed out here.  We should poke the device
+                    # after a read timeout, and also prepare for more
+                    # serious measures.
                     self.wmr200.ready_to_poke(True)
-                    zero_data_cnt += 1
+                    read_timeout_cnt += 1
                     # If we don't receive any data from the console
-                    # After several attempts, send down a reset.
-                    if zero_data_cnt == 4:
+                    # after several attempts, send down a reset.
+                    if read_timeout_cnt == 4:
                         self.reset_console()
-                        zero_data_cnt = 0
-
+                        read_timeout_cnt = 0
+                        read_reset_cnt += 1
+                    # If we have sent several resets with no data,
+                    # give up and abort.
+                    if read_reset_cnt == 2:
+                        raise weewx.WeeWxIOError(('Device unresponsive after'
+                                                  'multiple resets'))
             except WMR200ProtocolError:
                 logerr('USB overflow')
         loginf('USB device polling thread exiting')
 
+    def _append_usb_device(self, buf):
+        """Appends data from USB device to shared buffer.
+        Called from child thread."""
+        self._lock_poll.acquire()
+        # Append the list of bytes to this buffer.
+        self._buf.append(buf)
+        self._lock_poll.release()
+
     def read_usb_device(self):
         """Reads the buffered USB device data.
-        
-        Returns a list of bytes.
-        Called from main thread.  """
+        Called from main thread.
+
+        Returns a list of bytes."""
         buf = []
         self._lock_poll.acquire()
         if len(self._buf):
@@ -1189,19 +1204,13 @@ class PollUsbDevice(threading.Thread):
 
     def reset_console(self):
         """Send a reset to wake up the weather console device
-
-        Flush any previous USB device data.
-        Called from main thread."""
+        Called from main thread or child thread."""
         buf = [0x20, 0x00, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00]
         try:
             self.usb_device.write_device(buf)
             loginf('Reset device')
-            self._reset_sent = True
+            self._ok_to_read = True
             time.sleep(1)
-            # Tell thread it can proceed
-            self._cv_poll.acquire()
-            self._cv_poll.notify()
-            self._cv_poll.release()
 
         except usb.USBError, exception:
             logerr(('reset_console() Unable to send USB control'
@@ -1210,6 +1219,12 @@ class PollUsbDevice(threading.Thread):
             # Convert to a Weewx error:
             raise weewx.WakeupError(exception)
 
+    def notify(self):
+        """Gates thread to read of the device.
+        Called from main thread."""
+        self._cv_poll.acquire()
+        self._cv_poll.notify()
+        self._cv_poll.release()
 
 class WMR200(weewx.abstractstation.AbstractStation):
     """Driver for the Oregon Scientific WMR200 station."""
@@ -1313,6 +1328,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
 
         # Send the device a reset
         self._thread_usb_poll.reset_console()
+        self._thread_usb_poll.notify()
 
         # Start the watchdog for live data thread.
         self._thread_watchdog.start()
