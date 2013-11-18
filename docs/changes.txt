@@ -3,6 +3,8 @@ weewx change history
 
 X.X.X XX/XX/XX
 
+Added driver for LaCrosse 2300 series of weather stations.
+
 Fixed bug in setting of CheetahGenerator options.
 
 Fixed qsf and qpf summary values in forecast module.

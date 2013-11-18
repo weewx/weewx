@@ -1,3 +1,6 @@
+weewx (2.6.0a3-1) unstable; urgency=low
+  * added support for lacross 2300 stations
+ -- Matthew Wall <mwall@users.sourceforge.net>  Mon, 18 Nov 2013 11:06:50 -0400
 weewx (2.5.0-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall <mwall@users.sourceforge.net>  Tue, 29 Oct 2013 11:06:50 -0400
