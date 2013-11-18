@@ -25,6 +25,8 @@ Fixed qsf and qpf summary values in forecast module.
 Forecast module now considers the fctcode, condition, and wx fields for
 precipitation and obstructions to visibility.
 
+Added driver for LaCrosse 2300 series of weather stations.
+
 
 2.5.0 10/29/13
 

@@ -216,18 +216,25 @@ Version: 2.6.0a3
 	<td>Tested</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="2">La Crosse</td>
+	<td class="text_highlight" rowspan="3">La Crosse</td>
 	<td>C86234</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+        <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>WS-23XX</td>
+	<td>Serial or USB/Serial</td>
+	<td class="code">pyserial/pyusb</td>
+        <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
 	<td>WS-28XX</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+        <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
@@ -294,14 +301,14 @@ Version: 2.6.0a3
 	<td>Primus</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+        <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
 	<td>Opus</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+        <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
@@ -358,8 +365,11 @@ Version: 2.6.0a3
         Elecsa, Tycon, Maplin, Froggit, Velleman, and others. Tested on the
         <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.
       </li>
-      <li><a id="ws28xx">La Crosse WS-28xx series.</a> This is an experimental version 
-	  &mdash; it may or may not work.  Please report any problems!
+      <li><a id="ws23xx">La Crosse WS-23xx series.</a> This is an experimental
+        version &mdash; it may or may not work.  Please report any problems!
+      </li>
+      <li><a id="ws28xx">La Crosse WS-28xx series.</a> This is an experimental
+        version &mdash; it may or may not work.  Please report any problems!
       </li>
     </ol>
 
@@ -709,6 +719,10 @@ longitude = -77.0366</pre>
 	<td>Fine Offset USB stations</td>
       </tr>
       <tr>
+	<td class="code">WS23xx</td>
+	<td>La Crosse 23xx stations (experimental)</td>
+      </tr>
+      <tr>
 	<td class="code">WS28xx</td>
 	<td>La Crosse 28xx stations</td>
       </tr>
@@ -762,19 +776,22 @@ longitude = -77.0366</pre>
     <p>How many times to try again before giving up. Default is 4. </p>
 
     <h3 class="config_section">[WMR100]</h3>
-    <p>This section is for options relating to the Oregon Scientific WMR100 series
-      of weather stations with USB connectors.</p>
+    <p>This section is for options relating to the Oregon Scientific WMR100
+      series of weather stations with USB connectors.</p>
     <p class="config_option">stale_wind</p>
     <p>How long a wind record can be used to calculate wind chill (in seconds).
       Default is 30.</p>
 
     <h3 class="config_section">[WMR200]</h3>
-    <p>This section is for options relating to the Oregon Scientific WMR200 series
-      of weather stations with USB connectors. This support is experimental. Please
-      report any problems!</p>
-    <p class="config_option">stale_wind</p>
-    <p>How long a wind record can be used to calculate wind chill (in seconds).
-      Default is 30.</p>
+    <p>This section is for options relating to the Oregon Scientific WMR200
+      series of weather stations with USB connectors.</p>
+    <p class="config_option">use_pc_time</p>
+    <p>If True, use the computer time, otherwise use the station time.  Default
+      is False.</p>
+    <p class="config_option">sensor_status</p>
+    <p>If True, emit sensor faults and failures to log.  Default is True.</p>
+    <p class="config_option">erase_archive</p>
+    <p>If True, erase station archive on startup.  Default is False.</p>
 
     <h3 class="config_section">[WMR9x8]</h3>
     <p>This section is for options relating to the Oregon Scientific WMR-918/968
@@ -799,10 +816,10 @@ longitude = -77.0366</pre>
     <p class='config_option'>pressure_offset</p>
     <p>
       The offset, in millibars, that is applied to values from the
-      station sensor. This offset is applied to the station pressure <i>before</i>
-      calculating barometer and altimeter sea level pressures. Only the
-      raw station pressure is recorded to the database, not the station
-      pressure with offset applied.
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
     </p>
     <p class='config_option'>polling_mode</p>
     <p>One of <span class='code'>PERIODIC</span> or
@@ -816,25 +833,47 @@ longitude = -77.0366</pre>
       data to memory.  The default is <span class='code'>PERIODIC</span>.</p>
     <p class='config_option'>polling_interval</p>
     <p>The frequency, in seconds, at which <span class='code'>weewx</span> will
-      poll the console for data.  This setting applies only when the 
-      <span class='code'>polling_mode</span> is
+      poll the console for data.  Default is 60.  This setting applies only
+      when the <span class='code'>polling_mode</span> is
       <span class='code'>PERIODIC</span>.</p>
 
-    <h3 class='config_section'>[WS28xx]</h3>
-    <p>This section is for options relating to the La Crosse WS-28xx series of weather stations.</p>
+    <h3 class="config_section">[WS23xx]</h3>
+    <p>This section is for options relating to the La Crosse WS-23xx series of
+      weather stations.</p>
+    <p class="config_important">port</p>
+    <p>The serial port, e.g., <span class='code'>/dev/ttyS0</span>.  When using
+      a USB-Serial converter, the port will be something like
+      <span class='code'>/dev/ttyUSB0</span>.  Default is
+      <span class='code'>/dev/ttyUSB0</span></p>
     <p class="config_important">model</p>
-    <p>Set to the station model. For example, LaCross WS2810, TFA Primus, etc.</p>
+    <p>Set to the station model. For example, WS-2315, LaCrosse WS2317,
+      etc.  Default is "LaCrosse WS23xx".</p>
+    <p class='config_option'>pressure_offset</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
+    </p>
+
+    <h3 class='config_section'>[WS28xx]</h3>
+    <p>This section is for options relating to the La Crosse WS-28xx series of
+      weather stations.</p>
     <p class="config_important">transceiver_frequency</p>
     <p>Radio frequency to use between USB transceiver and console. Specify
       either US or EU.  US uses 915 MHz, EU uses 868.3 MHz.  Default is US.
     </p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, LaCrosse WS2810, TFA Primus,
+      etc.  Default is "LaCrosse WS28xx".</p>
     <p class='config_option'>pressure_offset</p>
     <p>
       The offset, in millibars, that is applied to values from the
-      station sensor. This offset is applied to the station pressure <i>before</i>
-      calculating barometer and altimeter sea level pressures. Only the
-      raw station pressure is recorded to the database, not the station
-      pressure with offset applied.
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
     </p>
 
     <h3 class="config_section">[Simulator]</h3>
