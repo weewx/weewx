@@ -3,6 +3,9 @@ weewx change history
 
 X.X.X XX/XX/XX
 
+If software is specified for record_generation, do not try to use the stations
+archive interval.
+
 Added driver for LaCrosse 2300 series of weather stations.
 
 Fixed bug in setting of CheetahGenerator options.
