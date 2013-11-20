@@ -898,7 +898,7 @@ longitude = -77.0366</pre>
 	hh:mm</span>. Optional. Default is the present time.</p>
 
     <h2 class="config_section">[StdRESTful]</h2>
-    <p>This section is for configuring the <span class="code">StdRESTful</span> 
+    <p>This section is for configuring the <span class="code">StdRESTful</span>
       service, which uploads to simple
       <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
       servers such as the <a href="http://www.wunderground.com/">Weather Underground</a>,
@@ -909,8 +909,8 @@ longitude = -77.0366</pre>
     <p>
       <span class="code">Weewx</span> can send your current data to the
       <a href="http://www.wunderground.com/">Weather Underground</a>. If
-      you do not wish to do this, leave the option <span class='code'>station</span>
-      commented.
+      you do not wish to do this, leave the option
+      <span class='code'>station</span> commented.
     </p>
     <pre class="tty">[StdRestful]
     [[Wunderground]]
@@ -927,9 +927,8 @@ longitude = -77.0366</pre>
     <p class="config_option">rapidfire</p>
     <p>
       Set to <span class="code">True</span> to have <span class="code">weewx</span>
-      post using the <a
-        href="http://www.wunderground.com/weatherstation/rapidfirehelp.asp">Weather
-        Underground's "Rapidfire" protocol</a>. This will send a post to the
+      post using the <a href="http://www.wunderground.com/weatherstation/rapidfirehelp.asp">Weather Underground's "Rapidfire" protocol</a>.
+      This will send a post to the
       WU site with every LOOP packet, which can be as often as every 2.5
       seconds in the case of the Vantage instruments. Optional. Default
       is <span class="code">False</span>.
@@ -949,8 +948,8 @@ longitude = -77.0366</pre>
     <h3 class="config_section">[[PWSweather]]</h3>
     <p><span class="code">Weewx </span>can send your current data to the
       <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
-      do not wish to do this, leave the option <span class='code'>station</span>
-      commented.</p>
+      do not wish to do this, leave the option
+      <span class='code'>station</span> commented.</p>
     <pre class="tty">[StdRestful]
     [[PWSweather]]
         station = 12345678  # Replace with your station number
@@ -963,18 +962,17 @@ longitude = -77.0366</pre>
     <h3 class="config_section">[[WOW]]</h3>
     <p class="config_section"><span class="code">Weewx</span> can send your 
       current data to the <a href="http://wow.metoffice.gov.uk/">British
-        Weather Observations Website (WOW)</a> service. This section is
-      <em>not</em> included in <span class="code">weewx.conf</span>, so you
-      will have to add it. When you are done, it will look something
-      like this:</p>
+        Weather Observations Website (WOW)</a> service. If you do not wish
+      to do this, leave the <span class='code'>station</span> option
+      commented.</p>
     <pre class="tty">[StdRestful]
     [[WOW]]
         station = 12345678  # Replace with your site ID
         password = xxxxx    # Replace with your site authentication key</pre>
-    <p class="config_important">station </p>
-    <p>Set to your WOW station ID. Required. </p>
-    <p class="config_important">password </p>
-    <p>Set to your WOW password. Required. </p>
+    <p class="config_important">station</p>
+    <p>Set to your WOW station ID. Required.</p>
+    <p class="config_important">password</p>
+    <p>Set to your WOW password. Required.</p>
 
     <h3 class="config_section">[[CWOP]]</h3>
     <p><span class="code">Weewx</span> can send your data to the
@@ -1010,6 +1008,23 @@ longitude = -77.0366</pre>
       air for a long period of time, then <span class="code">weewx</span>
       attempts a catch up, old data could be interpreted as the current
       conditions. Optional. Default is 1800 seconds.</p>
+
+    <h3 class="config_section">[[AWEKAS]]</h3>
+    <p class="config_section"><span class="code">Weewx</span> can send your 
+      current data to the <a href="http://www.awekas.at/">Automatisches
+        Wetterkarten System</a> (AWEKAS).  If you do not wish
+      to do this, leave the <span class='code'>username</span> option
+      commented.</p>
+    <pre class="tty">[StdRestful]
+    [[AWEKAS]]
+        username = joeuser  # Replace with your awekas username
+        password = xxxxx    # Replace with your awekas password</pre>
+    <p class="config_important">username</p>
+    <p>Set to your AWEKAS username. Required.</p>
+    <p class="config_important">password</p>
+    <p>Set to your AWEKAS password. Required.</p>
+    <p class="config_option">language</p>
+    <p>Set to your preferred language. Default is <span class='code'>en</span>.</p>
 
     <h3 class="config_section">[[StationRegistry]]</h3>
     <p>

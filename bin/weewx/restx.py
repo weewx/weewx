@@ -23,9 +23,6 @@ import weewx.wxengine
 from weeutil.weeutil import to_int, to_bool, timestamp_to_string
 import weewx.units
 
-class ServiceError(Exception):
-    """Raised when not enough info is available to start a service."""
-
 class FailedPost(IOError):
     """Raised when a post fails after trying the max number of allowed times"""
 
@@ -35,25 +32,24 @@ class SkippedPost(Exception):
 class BadLogin(StandardError):
     """Raised when login information is bad or missing."""
         
-#===============================================================================
+#==============================================================================
 #                    Class StdRESTbase
-#===============================================================================
+#==============================================================================
 
 class StdRESTbase(weewx.wxengine.StdService):
     """Base class for the RESTful weewx services."""
 
-    #
     # This class implements a generic protocol processing model:
     #
-    # 1. Extract record or packet from the incoming event.
-    # 2. Test whether to post.                                   Function skip_this_post
-    # 3. Augment with data from database, according to protocol. Function augment_from_database
-    # 4. Augment with protocol-specific entries.                 Function augment_protocol
-    # 5. Format and convert to outgoing protocol.                Function format_protocol.
+    # Step:                                               Function:
+    # 1. Extract record or packet from the incoming event
+    # 2. Test whether to post                             skip_this_post
+    # 3. Augment with data from database                  augment_from_database
+    # 4. Augment with protocol-specific entries           augment_protocol
+    # 5. Format and convert to outgoing protocol          format_protocol
     # 6. Post to the appropriate queue
     #
     # All these steps are combined in function process_record.
-    #
 
     def __init__(self, engine, config_dict, **protocol_dict):
         """Initialize StdRESTbase.
@@ -62,8 +58,8 @@ class StdRESTbase(weewx.wxengine.StdService):
         
         stale: If non-None, how "fresh" a post has to be before it is accepted.
         
-        interval: If non-None, how long to wait from the last post before accepting
-        a new post.
+        interval: If non-None, how long to wait from the last post before
+                  accepting a new post.
         
         protocol: A string holding the protocol name I am implementing.
         """
@@ -77,6 +73,10 @@ class StdRESTbase(weewx.wxengine.StdService):
         self.post_interval = protocol_dict.get('interval')
         self.protocol      = protocol_dict.get('name', "Unknown")
         self.lastpost = 0
+
+        # This option is for debugging/diagnostics when you want to ensure the
+        # data are properly formatted but you do not want to upload data.
+        self.skip_posting = protocol_dict.get('skip_posting', False)
 
     def init_info(self, site_dict):
         """Extract information out of the site dictionary or, if unavailable, the engine's  
@@ -105,7 +105,7 @@ class StdRESTbase(weewx.wxengine.StdService):
     def shutDown_thread(q, t):
         """Function to shut down a thread."""
         if q:
-            # Put a None in the queue. This will signal to the thread to shutdown
+            # Put a None in the queue to signal the thread to shutdown
             q.put(None)
             # Wait up to 20 seconds for the thread to exit:
             t.join(20.0)
@@ -142,12 +142,22 @@ class StdRESTbase(weewx.wxengine.StdService):
         except SkippedPost, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: %s %s" % (self.protocol, e))
             return
-        # Extract the record from the event, then augment it with data from the archive:
+        # Extract the record from the event, then augment it with data from
+        # the archive:
         _record = self.augment_from_database(record, self.engine.archive)
         # Then augment it with any protocol-specific data:
         self.augment_protocol(_record)
         # Format and convert to the outgoing protocol
         _request = self.format_protocol(_record)
+        # For debugging, skip posting but log what would be posted
+        if self.skip_posting:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: skipping upload" % self.protocol)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: method: %s" % (self.protocol, _request.get_method()))
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: url: %s" % (self.protocol, _request.get_full_url()))
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: data: %s" % (self.protocol, _request.get_data()))
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: headers: %s" % (self.protocol, _request.header_items()))
+            return
+
         # Stuff it in the archive queue along with the timestamp:
         self.archive_queue.put((_record['dateTime'], _request))
 
@@ -171,10 +181,11 @@ class StdRESTbase(weewx.wxengine.StdService):
         _datadict = dict(record)
         
         if not _datadict.has_key('hourRain'):
-            # CWOP says rain should be "rain that fell in the past hour".  WU says
-            # it should be "the accumulated rainfall in the past 60 min".
-            # Presumably, this is exclusive of the archive record 60 minutes before,
-            # so the SQL statement is exclusive on the left, inclusive on the right.
+            # CWOP says rain should be "rain that fell in the past hour". WU
+            # says it should be "the accumulated rainfall in the past 60 min".
+            # Presumably, this is exclusive of the archive record 60 minutes
+            # before, so the SQL statement is exclusive on the left, inclusive
+            # on the right.
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>? AND dateTime<=?",
                                                    (_time_ts - 3600.0, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
@@ -190,10 +201,11 @@ class StdRESTbase(weewx.wxengine.StdService):
             _datadict['rain24'] = _result[0]
 
         if not _datadict.has_key('dayRain'):
-            # NB: The WU considers the archive with time stamp 00:00 (midnight) as
-            # (wrongly) belonging to the current day (instead of the previous
-            # day). But, it's their site, so we'll do it their way.  That means the
-            # SELECT statement is inclusive on both time ends:
+            # NB: The WU considers the archive with time stamp 00:00
+            # (midnight) as (wrongly) belonging to the current day
+            # (instead of the previous day). But, it's their site,
+            # so we'll do it their way.  That means the SELECT statement
+            # is inclusive on both time ends:
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>=? AND dateTime<=?", 
                                                   (_sod_ts, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
@@ -213,9 +225,9 @@ class StdRESTbase(weewx.wxengine.StdService):
         one of the weewx RESTful sinks, such as PostRequest or PostTNC.""" 
         raise NotImplementedError("Method 'format_protocol' not implemented")
     
-#===============================================================================
+#==============================================================================
 #                    Class Ambient
-#===============================================================================
+#==============================================================================
 
 class Ambient(StdRESTbase):
     """Base class for weather sites that use the Ambient protocol."""
@@ -246,17 +258,21 @@ class Ambient(StdRESTbase):
         format_dict: A dictionary containing the format encodings to be used.
         The default is Ambient._formats
         
-        station: The station ID (eg. KORHOODR3) [Required]
+        station: The station ID (eg. KORHOODR3)
+        [Required]
         
-        password: Password for the station [Required]
+        password: Password for the station
+        [Required]
         
-        name: The name of the site we are posting to. Something 
-        like "Wunderground" will do. [Required]
+        name: The name of the site we are posting to. Something like
+        "Wunderground" will do.
+        [Required]
         
-        rapidfire: Set to true to have every LOOP packet post. Default is False.
+        rapidfire: Set to true to have every LOOP packet post.
+        Default is False.
         
-        archive_post: Set to true to have every archive packet post. Default is 
-        the opposite of rapidfire value.
+        archive_post: Set to true to have every archive packet post.
+        Default is the opposite of rapidfire value.
         
         rapidfire_url: The base URL to be used when posting LOOP packets.
         Required if rapidfire is true.
@@ -264,43 +280,40 @@ class Ambient(StdRESTbase):
         archive_url: The base URL to be used when posting archive records.
         Required if archive_post is true.
         
-        log_success: Set to True if we are to log successful posts to the syslog.
+        log_success: Set to True if we are to log successful posts to syslog.
         Default is false if rapidfire is true, else true.
         
-        log_failure: Set to True if we are to log unsuccessful posts to the syslog.
+        log_failure: Set to True if we are to log unsuccessful posts to syslog.
         Default is false if rapidfire is true, else true.
         
         max_tries: The max number of tries allowed when doing archive posts.
         (Always 1 for rapidfire posts) Default is 3
         
-        max_backlog: The max number of queued posts that will be allowed to accumulate.
-        (Always 0 for rapidfire posts). Default is infinite.
+        max_backlog: The max number of queued posts that will be allowed to
+        accumulate. (Always 0 for rapidfire posts). Default is infinite.
         """
         
         super(Ambient, self).__init__(engine, config_dict,
                                       **ambient_dict)
 
         # Try extracting the required keywords. If this fails, an exception
-        # of type KeyError will be raised. Be prepared to catch it.
-        try:
-            self.station = ambient_dict['station']
-            self.password = ambient_dict['password']
-            site_name = ambient_dict['name']
-        except KeyError, e:
-            # Something was missing. 
-            raise ServiceError("No keyword: %s" % (e,))
+        # of type KeyError will be raised. Derived classes should be prepared
+        # to catch it.
+        self.station = ambient_dict['station']
+        self.password = ambient_dict['password']
+        site_name = ambient_dict['name']
 
         # If we got here, we have the minimum necessary.
         
         # Save the format encoding to be used
         self.format_dict = format_dict
         
-        # It's not actually used by the Ambient protocol, but, for completeness,
-        # initialize the site-specific information:
+        # It's not actually used by the Ambient protocol, but, for
+        # completeness, initialize the site-specific information:
         self.init_info(ambient_dict)
 
-        # The default is not not do an archive post if a rapidfire post has been
-        # specified, but this can be overridden
+        # The default is not not do an archive post if a rapidfire post
+        # has been specified, but this can be overridden
         do_rapidfire_post = to_bool(ambient_dict.get('rapidfire', False))
         do_archive_post   = to_bool(ambient_dict.get('archive_post', not do_rapidfire_post))
 
@@ -328,15 +341,17 @@ class Ambient(StdRESTbase):
     def new_loop_packet(self, event):
         """Process a new LOOP event."""
         # Ambient loop posts can almost follow the standard protocol model.
-        # The only difference is we have to add the keywords 'realtime' and 'rtfreq'.
+        # The only difference is we have to add the keywords 'realtime' and
+        # 'rtfreq'.
         
         try:
             self.skip_this_post(event.packet['dateTime'])
         except SkippedPost, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: %s" % (self.protocol, e))
             return
 
-        # Extract the record from the event, then augment it with data from the archive:
+        # Extract the record from the event, then augment it with data from
+        # the archive:
         _record = self.augment_from_database(event.packet, self.engine.archive)
         # Then augment it with any Ambient-specific data:
         self.augment_protocol(_record)
@@ -388,9 +403,9 @@ class Ambient(StdRESTbase):
         _request = urllib2.Request(_url)
         return _request
 
-#===============================================================================
+#==============================================================================
 #                    Class StdWunderground
-#===============================================================================
+#==============================================================================
 
 class StdWunderground(Ambient):
     """Specialized version of the Ambient protocol for the Weather Underground."""
@@ -401,7 +416,7 @@ class StdWunderground(Ambient):
 
     def __init__(self, engine, config_dict):
         
-        # First extract the required parameters. If one of them is missing,
+        # Extract the required parameters. If one of them is missing,
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the WU options:
@@ -412,13 +427,13 @@ class StdWunderground(Ambient):
             super(StdWunderground, self).__init__(engine, config_dict, 
                                                   **ambient_dict)
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to Wunderground")
-        except (KeyError, ServiceError), e:
+        except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to Wunderground")
-            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: missing parameter %s" % e)
 
-#===============================================================================
+#==============================================================================
 #                    Class StdPWS
-#===============================================================================
+#==============================================================================
 
 class StdPWSweather(Ambient):
     """Specialized version of the Ambient protocol for PWS"""
@@ -435,13 +450,13 @@ class StdPWSweather(Ambient):
             super(StdPWSweather, self).__init__(engine, config_dict,
                                                 **ambient_dict)
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to PWSweather")
-        except (KeyError, ServiceError), e:
+        except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to PWSweather")
-            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: missing parameter %s" % e)
 
-#===============================================================================
+#==============================================================================
 #                    Class StdWOW
-#===============================================================================
+#==============================================================================
 
 class StdWOW(Ambient):
 
@@ -484,9 +499,9 @@ class StdWOW(Ambient):
                                          format_dict=StdWOW._formats, 
                                          **ambient_dict)
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to WOW")
-        except (KeyError, ServiceError), e:
+        except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to WOW")
-            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: missing parameter %s" % e)
     
 #==============================================================================
 #                            class StdAWEKAS
@@ -607,35 +622,34 @@ class StdAWEKAS(StdRESTbase):
         """
         
         try:
-            # set up the default dict and let the super have a go
+            # set up the default dict for awekas
             awekas_dict=dict(config_dict['StdRESTful']['AWEKAS'])
             awekas_dict.setdefault('name', 'AWEKAS')
             awekas_dict.setdefault('interval', 300)
             awekas_dict.setdefault('stale', None)
             awekas_dict.setdefault('server_url', StdAWEKAS._SERVER_URL)
-            awekas_dict.setdefault('language', 'de')
+            awekas_dict.setdefault('language', 'en')
+
+            # let the super have a go to set member data...
             super(StdAWEKAS, self).__init__(engine, config_dict, **awekas_dict)
 
-            # then grab the bits we must have
+            # ...then grab the bits we must have
             self.username = awekas_dict['username']
             self.password = awekas_dict['password']
             self.server_url = awekas_dict['server_url']
             self.language = awekas_dict['language']
+
             # latitude and longitude are assigned by super
-            # FIXME: i would prefer to explicitly invoke super with args so
-            # that it is obvious which variables are set in the base class
-            # FIXME: this seems convoluted.  first we create defaults that the
-            # super does not care about, then we use them.  too many steps.
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to AWEKAS")
-        except (KeyError, ServiceError), e:
+            self.init_info(awekas_dict)
+        except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to AWEKAS")
-            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: missing parameter %s" % e)
             return
 
         self.init_archive_queue()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
-        # Add some more options needed by the PostRequest thread
+        # Add more options needed by the PostRequest thread
         awekas_dict.setdefault('log_success', True)
         awekas_dict.setdefault('log_failure', True)
         awekas_dict.setdefault('max_tries',   5)
@@ -644,6 +658,10 @@ class StdAWEKAS(StdRESTbase):
                                           'AWEKAS',
                                            **awekas_dict)
         self.archive_thread.start()
+        syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to AWEKAS")
+        
+    def new_archive_record(self, event):
+        return self.process_record(event.record)
 
     def format_protocol(self, record):
         """Format data for upload to AWEKAS."""
@@ -786,10 +804,9 @@ class StdStationRegistry(StdRESTbase):
         """
         try:
             registry_dict = dict(config_dict['StdRESTful']['StationRegistry'])
-            # Set lat, lon, station info, etc:
         except KeyError, e:
             syslog.syslog(syslog.LOG_INFO, "restx: Station registry will not be run.")
-            syslog.syslog(syslog.LOG_INFO, " ****  Reason: missing key %s" % (e,))
+            syslog.syslog(syslog.LOG_INFO, " ****  Reason: missing section '%s'" % (e,))
             return
         
         # Should the service be run?
@@ -809,7 +826,7 @@ class StdStationRegistry(StdRESTbase):
         self.init_info(registry_dict)
         if self.station_url is None:
             syslog.syslog(syslog.LOG_INFO, "restx: Station registry will not be run.")
-            syslog.syslog(syslog.LOG_INFO, " ****  Reason: key station_url is required.")
+            syslog.syslog(syslog.LOG_INFO, " ****  Reason: station_url is required.")
             return
         
         self.archive_url = registry_dict.get('server_url', StdStationRegistry.WEEWX_SERVER_URL)
@@ -819,10 +836,8 @@ class StdStationRegistry(StdRESTbase):
         self.python_info = platform.python_version()
         self.platform_info = platform.platform()
 
-        if self._validateParameters():
-            syslog.syslog(syslog.LOG_INFO, 'restx: station will register with %s' % self.archive_url)
-        else:
-            syslog.syslog(syslog.LOG_INFO, 'restx: station will not register with %s' % self.archive_url)
+        if not self._validateParameters():
+            syslog.syslog(syslog.LOG_INFO, 'restx: station will not register')
             return
         
         self.init_archive_queue()
@@ -837,6 +852,7 @@ class StdStationRegistry(StdRESTbase):
                                           'StationRegistry',
                                            **registry_dict)
         self.archive_thread.start()
+        syslog.syslog(syslog.LOG_INFO, 'restx: station will register with %s' % self.archive_url)
 
     def new_archive_record(self, event):
         time_ts = int(time.time())
@@ -897,16 +913,16 @@ class StdStationRegistry(StdRESTbase):
 
         if msgs:
             errmsg = 'One or more unusable parameters.'
-            syslog.syslog(syslog.LOG_ERR, 'restx: %s' % errmsg)
+            syslog.syslog(syslog.LOG_ERR, 'restx: StationRegistry: %s' % errmsg)
             for m in msgs:
                 syslog.syslog(syslog.LOG_ERR, '  **** %s' % m)
             return False
         return True
 
 
-#===============================================================================
+#==============================================================================
 #                             class StdCWOP
-#===============================================================================
+#==============================================================================
 
 class StdCWOP(StdRESTbase):
     """Upload using the CWOP protocol. """
@@ -937,7 +953,7 @@ class StdCWOP(StdRESTbase):
             
         except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to CWOP")
-            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: no keyword %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: missing parameter %s" % e)
             return
             
         # If we made it this far, we can post. Everything else is optional.
@@ -961,7 +977,6 @@ class StdCWOP(StdRESTbase):
                                       **cwop_dict)
         # ... then start it
         self.archive_thread.start()
-
         syslog.syslog(syslog.LOG_DEBUG, "restx: Data will be posted to CWOP station %s" % (self.station,))
         
     def new_archive_record(self, event):
