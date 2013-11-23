@@ -85,7 +85,7 @@ import weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.1'
+DRIVER_VERSION = '0.2'
 
 DEFAULT_PORT = '/dev/ttyUSB0'
 
@@ -256,7 +256,19 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 
     @staticmethod
     def data_to_packet(data, altitude=0, pressure_offset=None, last_rain=None):
-        """convert raw data to format and units required by weewx"""
+        """convert raw data to format and units required by weewx
+
+                        station      weewx (metric)
+        temperature     degree C     degree C
+        humidity        percent      percent
+        uv index        unitless     unitless
+        pressure        mbar         mbar
+        wind speed      m/s          km/h
+        wind gust       m/s          km/h
+        wind dir        degree       degree
+        rain            mm           cm
+        rain rate                    cm/h
+        """
 
         packet = {}
         packet['usUnits'] = weewx.METRIC
@@ -283,13 +295,13 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         else:
             packet['windGustDir'] = None
 
-        packet['rainRate'] = data['rh']
-        if packet['rainRate'] is not None:
-            packet['rainRate'] /= 10 # weewx wants cm/hr
         packet['rainTotal'] = data['rt']
         if packet['rainTotal'] is not None:
             packet['rainTotal'] /= 10 # weewx wants cm
         packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+        packet['rainRate'] = data['rh']
+        if packet['rainRate'] is not None:
+            packet['rainRate'] /= 10 # weewx wants cm/hr
 
         packet['heatindex'] = weewx.wxformulas.heatindexC(
             packet['outTemp'], packet['outHumidity'])
@@ -1552,6 +1564,7 @@ def main():
     if options.port:
         port = options.port
 
+    print "ws23xx driver version %s" % DRIVER_VERSION
     serial_port = LinuxSerialPort(port)
     try:
         data = WS23xx.get_raw_data(serial_port)

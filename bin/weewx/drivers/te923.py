@@ -23,11 +23,15 @@
 These stations were made by Hideki and branded as Honeywell, Meade, IROX Pro X,
 Mebus TE923, and TFA Nexus.
 
-A single bucket tip is between 0.02 and 0.03 in (0.508 to 0.762 mm).
+A single bucket tip is between 0.02 and 0.03 in (0.508 to 0.762 mm).  This
+driver assumes 0.025 in (0.635 mm).
 
 The station has altitude, latitude, longitude, and time.  Read these during
 initialization and indicate any difference with values from weewx.conf.  If
 conflicts, use the values from weewx.conf.
+
+The station appears to average the wind speed rather than returning
+instantaneous values.
 
 Notes from Other Implementations
 
@@ -68,6 +72,7 @@ claimInterface.
 
 # FIXME: add option to calculate windchill instead of using station value
 # FIXME: verify pressure/altimeter
+# FIXME: verify default rain multiplier
 
 from __future__ import with_statement
 import optparse
@@ -79,9 +84,9 @@ import weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.1'
-DEBUG_READ = 1
-DEBUG_DECODE = 1
+DRIVER_VERSION = '0.2'
+DEBUG_READ = 0
+DEBUG_DECODE = 0
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'te923: %s' % msg)
@@ -278,7 +283,20 @@ class TE923(weewx.abstractstation.AbstractStation):
 
     def data_to_packet(self, data, altitude=0, pressure_offset=None,
                        last_rain=None, last_rain_ts=None):
-        """convert raw data to format and units required by weewx"""
+        """convert raw data to format and units required by weewx
+
+                        station      weewx (metric)
+        temperature     degree C     degree C
+        humidity        percent      percent
+        uv index        unitless     unitless
+        pressure        mbar         mbar
+        wind speed      mile/h       km/h
+        wind gust       mile/h       km/h
+        wind dir        degree       degree
+        rain            mm           cm
+        rain rate                    cm/h
+        """
+
         packet = {}
         packet['usUnits'] = weewx.METRIC
         packet['dateTime'] = int(time.time() + 0.5)
@@ -291,10 +309,10 @@ class TE923(weewx.abstractstation.AbstractStation):
         packet['UV'] = data['uv']
         packet['windSpeed'] = data['windspeed']
         if packet['windSpeed'] is not None:
-            packet['windSpeed'] *= 3.6 # weewx wants km/h
+            packet['windSpeed'] *= 1.60934 # speed is mph; weewx wants km/h
         packet['windGust'] = data['windgust']
         if packet['windGust'] is not None:
-            packet['windGust'] *= 3.6 # weewx wants km/h
+            packet['windGust'] *= 1.60934 # speed is mph; weewx wants km/h
 
         if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
             packet['windDir'] = data['winddir']
@@ -836,6 +854,7 @@ def main():
     else:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
+    print "te923 driver version %s" % DRIVER_VERSION
     station = None
     try:
         station = Station()
