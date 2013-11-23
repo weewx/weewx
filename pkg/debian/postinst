@@ -63,11 +63,21 @@ configure_weewxconf() {
             db_get weewx/fousb_model
             sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
         fi
+        if [ "$RET" = "WS23xx" ]; then
+            db_get weewx/ws23xx_model
+            sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            db_get weewx/ws23xx_port
+            sed -i "s%[# ]*port[ ]*=.*%    port = $RET%" $cfgfile
+        fi
         if [ "$RET" = "WS28xx" ]; then
             db_get weewx/ws28xx_model
             sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
             db_get weewx/ws28xx_frequency
             sed -i "s%[# ]*transceiver_frequency[ ]*=.*%    transceiver_frequency = $RET%" $cfgfile
+        fi
+        if [ "$RET" = "TE923" ]; then
+            db_get weewx/te923_model
+            sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
         fi
     fi
 }

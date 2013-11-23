@@ -71,10 +71,16 @@ Template: weewx/ws23xx_model
 Type: string
 Default: LaCrosse WS-2300
 Description: weather station model:
- Specify the station model, for example TFA Dostman, La Crosse WS2817
+ Specify the station model, for example La Crosse WS2817 or C86234
 
-Template: weewx/ws28xx_port
+Template: weewx/ws23xx_port
 Type: string
 Default: /dev/ttyS0
 Description: serial port:
  Specify the serial port on which the station is connected, for example /dev/ttyUSB0, /dev/ttyS0, or COM1.
+
+Template: weewx/te923_model
+Type: string
+Default: TE923
+Description: weather station model:
+ Specify the station model, for example TFA Nexus, La Crosse WS2817
