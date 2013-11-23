@@ -34,7 +34,7 @@ LaCrosse made a number of stations in the 23xx series, including:
 
   WS-2300, WS-2308, WS-2310, WS-2315, WS-2317, WS-2357
 
-The stations were also sold as the TFA Dostman and TechnoLine.
+The stations were also sold as the TFA Dostman and TechnoLine 2350.
 
 Configuration
 
@@ -60,12 +60,15 @@ USB-Serial Converters
 With a USB-serial converter one can connect the station to a computer with
 only USB ports, but not every converter will work properly.  Perhaps the two
 most common converters are based on the Prolific and LTDI chipsets.  Many
-people report better luck with the LTDI-based converters.  Many based on the
-Prolific chipset (PL2303) will work, but not all of them.
+people report better luck with the LTDI-based converters.  Some converters
+that use the Prolific chipset (PL2303) will work, but not all of them.
 
 Known to work: ATEN UC-232A
 
 """
+
+# FIXME: add option to calculate dewpoint instead of using station value
+# FIXME: add option to calculate windchill instead of using station value
 
 import optparse
 import syslog
@@ -225,10 +228,11 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             serial_port = LinuxSerialPort(self.port)
             packet = None
             try:
-                packet = get_observation(serial_port,
-                                         altitude=self.altitude,
-                                         pressure_offset=self.pressure_offset,
-                                         last_rain=self._last_rain)
+                data = WS23xx.get_raw_data(serial_port)
+                packet = WS23xx.data_to_packet(data,
+                                               altitude=self.altitude,
+                                               pressure_offset=self.pressure_offset,
+                                               last_rain=self._last_rain)
                 self._last_rain = packet['rainTotal']
             finally:
                 serial_port.close()
@@ -239,72 +243,66 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 #    def genArchiveRecords(self, since_ts):
 #        pass
 
-def get_observation(serial_port,
-                    altitude=0, pressure_offset=None, last_rain=None):
-    ws = Ws2300(serial_port)
-    measures = [
-        Measure.IDS['it'],
-        Measure.IDS['ih'],
-        Measure.IDS['ot'],
-        Measure.IDS['oh'],
-        Measure.IDS['pa'],
-        Measure.IDS['ws'],
-        Measure.IDS['wsh'],
-        Measure.IDS['w0'],
-        Measure.IDS['rh'],
-        Measure.IDS['rt'],
-        Measure.IDS['dp'],
-        Measure.IDS['wc'],
-        ]
-    raw_data = read_measurements(ws, measures)
-    data = [ m.conv.binary2value(d) for m, d in zip(measures, raw_data) ]
+    @staticmethod
+    def get_raw_data(serial_port):
+        """get raw data from the station, return as dictionary"""
 
-    packet = {}
-    packet['usUnits'] = weewx.METRIC
-    packet['dateTime'] = int(time.time() + 0.5)
-    packet['inTemp'] = data[0]
-    packet['inHumidity'] = data[1]
-    packet['outTemp'] = data[2]
-    packet['outHumidity'] = data[3]
-    packet['pressure'] = data[4]
-    packet['windSpeed'] = data[5] * 3.6 # weewx wants km/h
-    packet['windGust'] = data[5] * 3.6 # weewx wants km/h
+        ws = Ws2300(serial_port)
+        labels = ['it','ih','ot','oh','pa','ws','wsh','w0','rh','rt','dp','wc']
+        measures = [ Measure.IDS[m] for m in labels ]
+        raw_data = read_measurements(ws, measures)
+        data_dict = dict(zip(labels, [ m.conv.binary2value(d) for m, d in zip(measures, raw_data) ]))
+        return data_dict
 
-    if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
-        packet['windDir'] = data[7]
-    else:
-        packet['windDir'] = None
+    @staticmethod
+    def data_to_packet(data, altitude=0, pressure_offset=None, last_rain=None):
+        """convert raw data to format and units required by weewx"""
 
-    if packet['windGust'] is not None and packet['windGust'] > 0:
-        packet['windGustDir'] = data[7]
-    else:
-        packet['windGustDir'] = None
+        packet = {}
+        packet['usUnits'] = weewx.METRIC
+        packet['dateTime'] = int(time.time() + 0.5)
+        packet['inTemp'] = data['it']
+        packet['inHumidity'] = data['ih']
+        packet['outTemp'] = data['ot']
+        packet['outHumidity'] = data['oh']
+        packet['pressure'] = data['pa']
+        packet['windSpeed'] = data['ws']
+        if packet['windSpeed'] is not None:
+            packet['windSpeed'] *= 3.6 # weewx wants km/h
+        packet['windGust'] = data['wsh']
+        if packet['windGust'] is not None:
+            packet['windGust'] *= 3.6 # weewx wants km/h
 
-    packet['rainRate'] = data[8]
-    if packet['rainRate'] is not None:
-        packet['rainRate'] /= 10 # weewx wants cm/hr
-    packet['rainTotal'] = data[9] / 10 # weewx wants cm
-    delta = calculate_rain(packet['rainTotal'], last_rain)
-    packet['rain'] = delta
-    if packet['rain'] is not None:
-        packet['rain'] /= 10 # weewx wants cm
+        if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
+            packet['windDir'] = data['w0']
+        else:
+            packet['windDir'] = None
 
-    packet['heatindex'] = weewx.wxformulas.heatindexC(
-        packet['outTemp'], packet['outHumidity'])
-    packet['dewpoint'] = data[10]
-    #        packet['dewpoint'] = weewx.wxformulas.dewpointC(
-    #            packet['outTemp'], packet['outHumidity'])
-    packet['windchill'] = data[11]
-    #        packet['windchill'] = weewx.wxformulas.windchillC(
-    #            packet['outTemp'], packet['windSpeed'])
+        if packet['windGust'] is not None and packet['windGust'] > 0:
+            packet['windGustDir'] = data['w0']
+        else:
+            packet['windGustDir'] = None
 
-    # station reports gauge pressure, calculate other pressures
-    adjp = packet['pressure']
-    if pressure_offset is not None and adjp is not None:
-        adjp += pressure_offset
-    packet['barometer'] = sp2bp(adjp, altitude, packet['outTemp'])
-    packet['altimeter'] = sp2ap(adjp, altitude)
-    return packet
+        packet['rainRate'] = data['rh']
+        if packet['rainRate'] is not None:
+            packet['rainRate'] /= 10 # weewx wants cm/hr
+        packet['rainTotal'] = data['rt']
+        if packet['rainTotal'] is not None:
+            packet['rainTotal'] /= 10 # weewx wants cm
+        packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+
+        packet['heatindex'] = weewx.wxformulas.heatindexC(
+            packet['outTemp'], packet['outHumidity'])
+        packet['dewpoint'] = data['dp']
+        packet['windchill'] = data['wc']
+
+        # station reports gauge pressure, calculate other pressures
+        adjp = packet['pressure']
+        if pressure_offset is not None and adjp is not None:
+            adjp += pressure_offset
+        packet['barometer'] = sp2bp(adjp, altitude, packet['outTemp'])
+        packet['altimeter'] = sp2ap(adjp, altitude)
+        return packet
 
 
 #==============================================================================
@@ -1556,8 +1554,8 @@ def main():
 
     serial_port = LinuxSerialPort(port)
     try:
-        packet = get_observation(serial_port)
-        print packet
+        data = WS23xx.get_raw_data(serial_port)
+        print data
     finally:
         serial_port.close()
 
