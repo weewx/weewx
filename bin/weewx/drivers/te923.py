@@ -227,8 +227,10 @@ def bp2sp(bp_mbar, elev_meter, t_C, humidity):
     sp - station pressure in millibars
     """
     # FIXME: the conversion should use mean temperature as second temp arg
-    sp = weewx.uwxutils.SeaLevelToStationPressure(bp_mbar, elev_meter,
-                                                  t_C, t_C, humidity)
+    if bp_mbar is None or t_C is None or humidity is None:
+        return None
+    sp = weewx.uwxutils.TWxUtils.SeaLevelToStationPressure(bp_mbar, elev_meter,
+                                                           t_C, t_C, humidity)
     return sp
 
 # FIXME: this goes in weeutil.weeutil or weewx.units
@@ -999,7 +1001,7 @@ def main():
             else:
                 print_readings(data)
         if options.records:
-            for ptr,data in station.get_records(count=10)
+            for ptr,data in station.get_records(count=10):
                 if fmt == FMT_DICT:
                     print_dict(data)
                 else:
