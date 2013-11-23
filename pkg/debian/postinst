@@ -21,7 +21,10 @@ set -e
 cfgfile=/etc/weewx/weewx.conf
 mergeapp=/usr/share/weewx/merge_config.py
 
-# insert any configuration variables into the configuration file
+# insert any configuration variables into the configuration file.
+# many variables occur multiple times, so we use the trailing digit in the sed
+# expressions to change only the one we want.  this means we are tightly
+# coupled to the order in which things are specified in weewx.conf!
 configure_weewxconf() {
     db_get weewx/location
     sed -i "s%location =.*%location = \"$RET\"%" $cfgfile
@@ -39,45 +42,43 @@ configure_weewxconf() {
 
     # FIXME: generalize this so it does not have to be modified every time a
     #        new station type is added or new station options are added.
-    # FIXME: figure out a mechanism to prevent modification of variables with
-    #        same name, e.g., [Vantage].host and [Databases][stats_mysql].host
     db_get weewx/station_type
     if [ "$RET" != "" ]; then
         sed -i "s%station_type[ ]*=.*%station_type = $RET%" $cfgfile
         if [ "$RET" = "Vantage" ]; then
             db_get weewx/vantage_type
-            sed -i "s% type[ ]*=.*% type = $RET%" $cfgfile
+            sed -i "/\[Vantage\]/,/\[.*\]/ s% type[ ]*=.*% type = $RET%" $cfgfile
             if [ "$RET" = "serial" ]; then
                 db_get weewx/vantage_port
-                sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
+                sed -i "/\[Vantage\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
             else
                 db_get weewx/vantage_host
-                sed -i "0,/ host[ ]*=.*/s// host = $RET/" $cfgfile
+                sed -i "/\[Vantage\]/,/\[.*\]/ s% host[ ]*=.*% host = $RET%" $cfgfile
             fi
         fi
         if [ "$RET" = "WMR9x8" ]; then
             db_get weewx/wmr9x8_port
-            sed -i "s% port[ ]*=.*% port = $RET%" $cfgfile
+            sed -i "/\[WMR9x8\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
         fi
         if [ "$RET" = "FineOffsetUSB" ]; then
             db_get weewx/fousb_model
-            sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[FineOffsetUSB\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
         fi
         if [ "$RET" = "WS23xx" ]; then
             db_get weewx/ws23xx_model
-            sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[WS23xx\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
             db_get weewx/ws23xx_port
-            sed -i "s%[# ]*port[ ]*=.*%    port = $RET%" $cfgfile
+            sed -i "/\[WS23xx\]/,/\[.*\]/ s%[# ]*port[ ]*=.*%    port = $RET%" $cfgfile
         fi
         if [ "$RET" = "WS28xx" ]; then
             db_get weewx/ws28xx_model
-            sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[WS28xx\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
             db_get weewx/ws28xx_frequency
-            sed -i "s%[# ]*transceiver_frequency[ ]*=.*%    transceiver_frequency = $RET%" $cfgfile
+            sed -i "/\[WS28xx\]/,/\[.*\]/ s%[# ]*transceiver_frequency[ ]*=.*%    transceiver_frequency = $RET%" $cfgfile
         fi
         if [ "$RET" = "TE923" ]; then
             db_get weewx/te923_model
-            sed -i "s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[TE923\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
         fi
     fi
 }

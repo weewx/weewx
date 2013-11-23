@@ -42,6 +42,7 @@ bin/weewx/filegenerator.py
 bin/weewx/imagegenerator.py
 bin/weewx/reportengine.py
 bin/weewx/restful.py
+bin/weewx/restx.py
 bin/weewx/station.py
 bin/weewx/stats.py
 bin/weewx/units.py
@@ -51,10 +52,12 @@ bin/weewx/wxformulas.py
 bin/weewx/drivers/__init__.py
 bin/weewx/drivers/fousb.py
 bin/weewx/drivers/simulator.py
+bin/weewx/drivers/te923.py
 bin/weewx/drivers/vantage.py
 bin/weewx/drivers/wmr100.py
 bin/weewx/drivers/wmr200.py
 bin/weewx/drivers/wmr9x8.py
+bin/weewx/drivers/ws23xx.py
 bin/weewx/drivers/ws28xx.py
 docs/changes.txt
 docs/copyright.htm
@@ -75,6 +78,7 @@ docs/logo-mint.png
 docs/logo-redhat.png
 docs/logo-suse.png
 docs/logo-ubuntu.png
+docs/logo-weewx.png
 docs/readme.htm
 docs/redhat.htm
 docs/setup.htm

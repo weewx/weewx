@@ -18,7 +18,7 @@ Description: altitude of the weather station:
 
 Template: weewx/station_type
 Type: select
-Choices: Vantage, WMR100, WMR200, WMR9x8, FineOffsetUSB, WS28xx, WS23xx, Simulator
+Choices: Vantage, WMR100, WMR200, WMR9x8, FineOffsetUSB, WS28xx, WS23xx, TE923, Simulator
 Default: Simulator
 Description: weather station type:
  The weather station hardware type.  Specify simulator to run weewx without a weather station.
@@ -34,7 +34,7 @@ Template: weewx/vantage_port
 Type: string
 Default: /dev/ttyS0
 Description: serial port:
- Specify a port for stations with a serial interface, for example /dev/ttyUSB0, /dev/ttyS0, or COM1.  For ethernet stations leave this blank.
+ Specify a port for stations with a serial interface, for example /dev/ttyUSB0 or /dev/ttyS0.  For ethernet stations leave this blank.
 
 Template: weewx/vantage_host
 Type: string
@@ -46,7 +46,7 @@ Template: weewx/wmr9x8_port
 Type: string
 Default: /dev/ttyS0
 Description: serial port:
- Specify the serial port on which the station is connected, for example /dev/ttyUSB0, /dev/ttyS0, or COM1.
+ Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
 Template: weewx/fousb_model
 Type: string
@@ -71,13 +71,13 @@ Template: weewx/ws23xx_model
 Type: string
 Default: LaCrosse WS-2300
 Description: weather station model:
- Specify the station model, for example La Crosse WS2817 or C86234
+ Specify the station model, for example La Crosse WS2317.
 
 Template: weewx/ws23xx_port
 Type: string
 Default: /dev/ttyS0
 Description: serial port:
- Specify the serial port on which the station is connected, for example /dev/ttyUSB0, /dev/ttyS0, or COM1.
+ Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
 Template: weewx/te923_model
 Type: string
