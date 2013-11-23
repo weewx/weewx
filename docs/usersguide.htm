@@ -216,6 +216,22 @@ Version: 2.6.0a3
 	<td>Tested</td>
       </tr>
       <tr>
+	<td class="text_highlight">Hideki</td>
+	<td>TE923</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">IROX</td>
+	<td>Pro X</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
 	<td class="text_highlight" rowspan="3">La Crosse</td>
 	<td>C86234</td>
 	<td>USB</td>
@@ -235,6 +251,22 @@ Version: 2.6.0a3
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">Meade</td>
+	<td>TE923W</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">Mebus</td>
+	<td>TE923</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
@@ -304,15 +336,22 @@ Version: 2.6.0a3
 	<td></td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan='2'>TFA</td>
-	<td>Primus</td>
+	<td class="text_highlight" rowspan='3'>TFA</td>
+	<td>Nexus</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>Opus</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
-	<td>Opus</td>
+	<td>Primus</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
@@ -360,23 +399,29 @@ Version: 2.6.0a3
          dated before 22 April 2002) and &quot;Rev B&quot; versions are supported.
       </li>
       <li><a id="wmr100">Oregon Scientific WMR100 series.</a> Tested on the
-        <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">WMR100N</a>, other stations may work as well.</li>
-      <li><a id="wmr200">Oregon Scientific WMR200 series.</a> This is an experimental version 
-	  &mdash; it may or may not work. Please report any problems!
+        <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">WMR100N</a>.</li>
+      <li><a id="wmr200">Oregon Scientific WMR200 series.</a>  Tested on the
+        <a href="">WMR200</a>.
 	  </li>
       <li><a id="wmr9x8">Oregon Scientific WMR-918/968 series.</a> Tested on the
-        <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR-968</a>, other stations may work as well.
+        <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR-968</a>
       </li>
       <li><a id="fousb">Fine Offset series.</a> These are branded by
         many vendors, including Ambient Weather, National Geographic, Watson,
         Elecsa, Tycon, Maplin, Froggit, Velleman, and others. Tested on the
         <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.
       </li>
-      <li><a id="ws23xx">La Crosse WS-23xx series.</a> This is an experimental
-        version &mdash; it may or may not work.  Please report any problems!
+      <li><a id="ws23xx">La Crosse WS-23xx series.</a> These are branded by
+        other vendors, including TFA.  Tested on the
+        <a href="http://lacrossetechnologies.com/2317/">La Crosse 2317</a>.
       </li>
-      <li><a id="ws28xx">La Crosse WS-28xx series.</a> This is an experimental
-        version &mdash; it may or may not work.  Please report any problems!
+      <li><a id="ws28xx">La Crosse WS-28xx series.</a> These are branded by
+        other vendors, including TFA and Technoline.  Tested on the
+        <a href="http://lacrossetechnologies.com/2814/">La Crosse C86234</a>.
+      </li>
+      <li><a id="te923">Hideki TE923.</a> These are branded by many vendors,
+        including Honeywell, Meade, IROX, Mebus, and TFA.  Tested on the
+       <a href="http://www.ambientweather.com/hotewiwest.html">Meade TE923</a>.
       </li>
     </ol>
 
@@ -733,6 +778,10 @@ longitude = -77.0366</pre>
 	<td class="code">WS28xx</td>
 	<td>La Crosse 28xx stations</td>
       </tr>
+      <tr>
+	<td class="code">TE923</td>
+	<td>Hideki TE923 stations</td>
+      </tr>
     </table>
     
     <p class="config_option"><span class="config_important">station_url</span></p>
@@ -881,6 +930,26 @@ longitude = -77.0366</pre>
       <i>before</i> calculating barometer and altimeter sea level pressures.
       Only the raw station pressure is recorded to the database, not the
       station pressure with offset applied.  Default is None.
+    </p>
+
+    <h3 class="config_section">[TE923]</h3>
+    <p>This section is for options relating to the Hideki TE923 series of
+      weather stations.</p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, Meade TE923W or TFA Nexus.
+      Default is "TE923".</p>
+    <p class='config_option'>pressure_offset</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
+    </p>
+    <p class='config_option'>out_sensor</p>
+    <p>
+      The temperature/humidity sensor from which to read outside temperature
+      and humidity.  Default is 1.
     </p>
 
     <h3 class="config_section">[Simulator]</h3>
