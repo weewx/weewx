@@ -1545,7 +1545,9 @@ def read_measurements(ws2300, read_requests):
 
 
 # define a main entry point for basic testing of the station without weewx
-# engine and service overhead.
+# engine and service overhead.  invoke this as follows from the weewx root dir:
+#
+# PYTHONPATH=bin python bin/weewx/drivers/ws23xx.py
 
 usage = """%prog [options] [--debug] [--help]"""
 
