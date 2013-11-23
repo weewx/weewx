@@ -28,7 +28,7 @@
 # This immplementation copies directly from Russell Stuart's implementation,
 # but only the parts required to read from and write to the weather station.
 
-"""Classes and functions for interfacing with WS-28xx weather stations.
+"""Classes and functions for interfacing with WS-23xx weather stations.
 
 LaCrosse made a number of stations in the 23xx series, including:
 
