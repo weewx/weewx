@@ -47,13 +47,16 @@ It is possible to increase the rate of wireless updates:
 
   http://www.wikihow.com/Modify-a-Lacrosse-Ws2300-for-Frequent-Wireless-Updates
 
-This implementation polls the station.  Use the polling_interval parameter
-to specify how often to poll for data.
+Instruments are connected by unshielded phone cables.  To reduce the number of
+spikes in data, replace with shielded cables.
 
 The station has a serial connection to the computer.
 
-Instruments are connected by unshielded phone cables.  To reduce the number of
-spikes in data, replace with shielded cables.
+This implementation polls the station.  Use the polling_interval parameter
+to specify how often to poll for data.
+
+This driver does not keep the serial port open for long periods.  Instead, the
+driver opens the serial port, reads data, then closes the port.
 
 USB-Serial Converters
 
@@ -67,8 +70,10 @@ Known to work: ATEN UC-232A
 
 """
 
-# FIXME: add option to calculate dewpoint instead of using station value
-# FIXME: add option to calculate windchill instead of using station value
+# TODO: use pyserial instead of LinuxSerialPort
+# TODO: get archive interval
+# TODO: set archive interval
+# TODO: read archive records
 
 import optparse
 import syslog
@@ -85,8 +90,7 @@ import weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.2'
-
+DRIVER_VERSION = '0.3'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -204,17 +208,35 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 
         model: Which station model is this?
         [Optional. Default is 'LaCrosse WS23xx']
+
+        calculate_windchill: Calculate the windchill instead of using the
+        value from the station.
+        [Optional.  Default is False]
+
+        calculate_dewpoint: Calculate the dewpoint instead of using the
+        value from the station.
+        [Optional.  Default is False]
         """
+        self._last_rain = None
 
         self.altitude          = stn_dict['altitude']
         self.port              = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval  = stn_dict.get('polling_interval', 60)
         self.model             = stn_dict.get('model', 'LaCrosse WS23xx')
+        self.calc_windchill    = stn_dict.get('calculate_windchill', False)
+        self.calc_dewpoint     = stn_dict.get('calculate_dewpoint', False)
         self.pressure_offset   = stn_dict.get('pressure_offset', None)
         if self.pressure_offset is not None:
             self.pressure_offset = float(self.pressure_offset)
+        self.max_tries         = int(stn_dict.get('max_tries', 5))
+        self.retry_wait        = int(stn_dict.get('retry_wait', 30))
 
-        self._last_rain = None
+        loginf('serial port is %s' % str(self.port))
+        loginf('pressure offset is %s' % str(self.pressure_offset))
+        loginf('windchill will be %s' %
+               ('calculated' if self.calc_windchill else 'read from station'))
+        loginf('dewpoint will be %s' %
+               ('calculated' if self.calc_dewpoint else 'read from station'))
 
     @property
     def hardware_name(self):
@@ -224,97 +246,142 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 #        pass
 
     def genLoopPackets(self):
-        while True:
-            serial_port = LinuxSerialPort(self.port)
-            packet = None
+        ntries = 0
+        while ntries < self.max_tries:
+            ntries += 1
+            serial_port = None
             try:
-                data = WS23xx.get_raw_data(serial_port)
-                packet = WS23xx.data_to_packet(data,
-                                               altitude=self.altitude,
-                                               pressure_offset=self.pressure_offset,
-                                               last_rain=self._last_rain)
+                serial_port = LinuxSerialPort(self.port)
+                ws = Ws2300(serial_port)
+                data = get_raw_data(ws, SENSOR_IDS)
+                packet = data_to_packet(data,
+                                        altitude=self.altitude,
+                                        pressure_offset=self.pressure_offset,
+                                        last_rain=self._last_rain,
+                                        calc_dewpoint=self.calc_dewpoint,
+                                        calc_windchill=self.calc_windchill)
                 self._last_rain = packet['rainTotal']
-            finally:
-                serial_port.close()
-            if packet is not None:
                 yield packet
-            time.sleep(self.polling_interval)
+                time.sleep(self.polling_interval)
+            except Exception, e:
+                logerr("Failed attempt %d of %d to get LOOP data: %s" %
+                       (ntries, self.max_tries, e))
+                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                time.sleep(self.retry_wait)
+            finally:
+                if serial_port is not None:
+                    serial_port.close()
+                    serial_port = None
+        else:
+            msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
 
 #    def genArchiveRecords(self, since_ts):
 #        pass
 
-    @staticmethod
-    def get_raw_data(serial_port):
-        """get raw data from the station, return as dictionary"""
+    def getConfig(self):
+        serial_port = None
+        try:
+            serial_port = LinuxSerialPort(self.port)
+            ws = Ws2300(serial_port)
+            data = get_raw_data(ws, Measure.IDS.keys())
+            fdata = {}
+            for key in data:
+                fdata[Measure.IDS[key].name] = data[key]
+            return fdata
+        finally:
+            if serial_port is not None:
+                serial_port.close()
+                serial_port = None
 
-        ws = Ws2300(serial_port)
-        labels = ['it','ih','ot','oh','pa','ws','wsh','w0','rh','rt','dp','wc']
-        measures = [ Measure.IDS[m] for m in labels ]
-        raw_data = read_measurements(ws, measures)
-        data_dict = dict(zip(labels, [ m.conv.binary2value(d) for m, d in zip(measures, raw_data) ]))
-        return data_dict
+# ids for current weather conditions
+SENSOR_IDS = ['it','ih','ot','oh','pa', 'ws','wsh','w0','rh','rt','dp','wc']
 
-    @staticmethod
-    def data_to_packet(data, altitude=0, pressure_offset=None, last_rain=None):
-        """convert raw data to format and units required by weewx
+def get_raw_data(ws, labels):
+    """get raw data from the station, return as dictionary"""
+    measures = [ Measure.IDS[m] for m in labels ]
+    raw_data = read_measurements(ws, measures)
+    data_dict = dict(zip(labels, [ m.conv.binary2value(d) for m, d in zip(measures, raw_data) ]))
+    return data_dict
 
-                        station      weewx (metric)
-        temperature     degree C     degree C
-        humidity        percent      percent
-        uv index        unitless     unitless
-        pressure        mbar         mbar
-        wind speed      m/s          km/h
-        wind gust       m/s          km/h
-        wind dir        degree       degree
-        rain            mm           cm
-        rain rate                    cm/h
-        """
+def data_to_packet(data, altitude=0, pressure_offset=None, last_rain=None,
+                   calc_dewpoint=False, calc_windchill=False):
+    """convert raw data to format and units required by weewx
 
-        packet = {}
-        packet['usUnits'] = weewx.METRIC
-        packet['dateTime'] = int(time.time() + 0.5)
-        packet['inTemp'] = data['it']
-        packet['inHumidity'] = data['ih']
-        packet['outTemp'] = data['ot']
-        packet['outHumidity'] = data['oh']
-        packet['pressure'] = data['pa']
-        packet['windSpeed'] = data['ws']
-        if packet['windSpeed'] is not None:
-            packet['windSpeed'] *= 3.6 # weewx wants km/h
-        packet['windGust'] = data['wsh']
-        if packet['windGust'] is not None:
-            packet['windGust'] *= 3.6 # weewx wants km/h
+                    station      weewx (metric)
+    temperature     degree C     degree C
+    humidity        percent      percent
+    uv index        unitless     unitless
+    pressure        mbar         mbar
+    wind speed      m/s          km/h
+    wind gust       m/s          km/h
+    wind dir        degree       degree
+    rain            mm           cm
+    rain rate                    cm/h
+    """
 
-        if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
-            packet['windDir'] = data['w0']
-        else:
-            packet['windDir'] = None
+    packet = {}
+    packet['usUnits'] = weewx.METRIC
+    packet['dateTime'] = int(time.time() + 0.5)
+    packet['inTemp'] = data['it']
+    packet['inHumidity'] = data['ih']
+    packet['outTemp'] = data['ot']
+    packet['outHumidity'] = data['oh']
+    packet['pressure'] = data['pa']
+    packet['windSpeed'] = data['ws']
+    if packet['windSpeed'] is not None:
+        packet['windSpeed'] *= 3.6 # weewx wants km/h
+    packet['windGust'] = data['wsh']
+    if packet['windGust'] is not None:
+        packet['windGust'] *= 3.6 # weewx wants km/h
 
-        if packet['windGust'] is not None and packet['windGust'] > 0:
-            packet['windGustDir'] = data['w0']
-        else:
-            packet['windGustDir'] = None
+    if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
+        packet['windDir'] = data['w0']
+    else:
+        packet['windDir'] = None
 
-        packet['rainTotal'] = data['rt']
-        if packet['rainTotal'] is not None:
-            packet['rainTotal'] /= 10 # weewx wants cm
-        packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
-        packet['rainRate'] = data['rh']
-        if packet['rainRate'] is not None:
-            packet['rainRate'] /= 10 # weewx wants cm/hr
+    if packet['windGust'] is not None and packet['windGust'] > 0:
+        packet['windGustDir'] = data['w0']
+    else:
+        packet['windGustDir'] = None
 
-        packet['heatindex'] = weewx.wxformulas.heatindexC(
+    packet['rainTotal'] = data['rt']
+    if packet['rainTotal'] is not None:
+        packet['rainTotal'] /= 10 # weewx wants cm
+    packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+    packet['rainRate'] = data['rh']
+    if packet['rainRate'] is not None:
+        packet['rainRate'] /= 10 # weewx wants cm/hr
+
+    packet['heatindex'] = weewx.wxformulas.heatindexC(
+        packet['outTemp'], packet['outHumidity'])
+
+    # station has dewpoint, but provide option to calculate
+    if calc_dewpoint:
+        packet['dewpoint'] = weewx.wxformulas.dewpointC(
             packet['outTemp'], packet['outHumidity'])
+        logdbg("dewpoint: calculated=%s station=%s" %
+               (packet['dewpoint'], data['dp']))
+    else:
         packet['dewpoint'] = data['dp']
+
+    # station has windchill, but provide option to calculate
+    if calc_windchill:
+        packet['windchill'] = weewx.wxformulas.windchillC(
+            packet['outTemp'], packet['windSpeed'])
+        logdbg("windchill: calculated=%s station=%s" %
+               (packet['windchill'], data['wc']))
+    else:
         packet['windchill'] = data['wc']
 
-        # station reports gauge pressure, calculate other pressures
-        adjp = packet['pressure']
-        if pressure_offset is not None and adjp is not None:
-            adjp += pressure_offset
-        packet['barometer'] = sp2bp(adjp, altitude, packet['outTemp'])
-        packet['altimeter'] = sp2ap(adjp, altitude)
-        return packet
+    # station reports gauge pressure, calculate other pressures
+    adjp = packet['pressure']
+    if pressure_offset is not None and adjp is not None:
+        adjp += pressure_offset
+    packet['barometer'] = sp2bp(adjp, altitude, packet['outTemp'])
+    packet['altimeter'] = sp2ap(adjp, altitude)
+    return packet
 
 
 #==============================================================================
@@ -1556,23 +1623,46 @@ def main():
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
     port = DEFAULT_PORT
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='display driver version')
     parser.add_option('--debug', dest='debug', action='store_true',
                       help='display diagnostic information while running')
     parser.add_option('--port', dest='port', metavar='PORT',
                       help='the serial port to which the station is connected')
+    parser.add_option('--readings', dest='readings', action='store_true',
+                      help='display sensor readings')
+    parser.add_option('--help-measures', dest='hm', action='store_true',
+                      help='display measure names')
+    parser.add_option('--measure', dest='measure', type=str, metavar="MEASURE",
+                      help='display single measure')
+
     (options, args) = parser.parse_args()
+
+    if options.version:
+        print "ws23xx driver version %s" % DRIVER_VERSION
+        exit(1)
+
     if options.debug is not None:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     if options.port:
         port = options.port
 
-    print "ws23xx driver version %s" % DRIVER_VERSION
-    serial_port = LinuxSerialPort(port)
+    serial_port = None
     try:
-        data = WS23xx.get_raw_data(serial_port)
-        print data
+        serial_port = LinuxSerialPort(port)
+        ws = Ws2300(serial_port)
+        if options.readings:
+            data = get_raw_data(ws, SENSOR_IDS)
+            print data
+        if options.measure:
+            data = get_raw_data(ws, [options.measure])
+            print data
+        if options.hm:
+            for m in Measure.IDS:
+                print "%s\t%s" % (m, Measure.IDS[m].name)
     finally:
-        serial_port.close()
+        if serial_port is not None:
+            serial_port.close()
 
 if __name__ == '__main__':
     main()

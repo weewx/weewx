@@ -27,8 +27,9 @@ sold (sparsely in the US, more commonly in Europe) as of 2013.
 Apparently there are at least two different memory sizes.  One version can
 store about 200 records, a newer version can store about 3300 records.
 
-The firmware of each component can be read by talking to the station (assuming
-that the component has a wireless connection to the station, of course).
+The firmware version of each component can be read by talking to the station,
+assuming that the component has a wireless connection to the station, of
+course.
 
 To force connection between station and sensors, press and hold DOWN button.
 
@@ -52,14 +53,18 @@ From the Meade TE9233W manual (TE923W-M_IM(ENG)_BK_010511.pdf):
   Rain counter resolution: 0.03 in (0.6578 mm)
   Battery status of each sensor is checked every hour
 
-A single bucket tip is between 0.02 and 0.03 in (0.508 to 0.762 mm).  This
-driver uses 0.02589 in (0.6578 mm) per bucket tip.
+This implementation polls the station for data.  Use the polling_interval to
+control the frequency of polling.  Default is 10 seconds.
+
+The manual says that a single bucket tip is 0.03 inches.  In reality, a single
+bucket tip is between 0.02 and 0.03 in (0.508 to 0.762 mm).  This driver uses
+a value of 0.02589 in (0.6578 mm) per bucket tip.
 
 The station has altitude, latitude, longitude, and time.
 
 Notes From/About Other Implementations
 
-It is not clear whether te923tool copied from wview or vice versa.  te923tool
+Apparently te923tool came first, then wview copied a bit from it.  te923tool
 provides more detail about the reason for invalid values, for example, values
 out of range versus no link with sensors.
 
@@ -119,7 +124,6 @@ claimInterface.
                   timeout) # timeout
 """
 
-# TODO: add option to calculate windchill instead of using station value
 # TODO: figure out how to set station time, if possible
 # TODO: figure out how to read altitude from station
 # TODO: figure out how to read station pressure from station
@@ -127,6 +131,11 @@ claimInterface.
 # TODO: figure out how to detect station memory size
 # TODO: figure out how to modify the archive interval
 # TODO: figure out how to read the archive interval
+# TODO: figure out how to read lat/lon from station
+# TODO: clear rain total
+# TODO: get enumeration of usb.USBError codes to handle errors better
+# TODO: consider open/close on each read instead of keeping open
+# TODO: try doing bulkRead instead of interruptRead
 
 from __future__ import with_statement
 import math
@@ -139,9 +148,37 @@ import weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.3'
+DRIVER_VERSION = '0.4'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
+DEBUG_PRESSURE = 0
+
+# map the 5 remote sensors to columns in the database schema
+DEFAULT_SENSOR_MAP = {
+    'outTemp':     't_1',
+    'outHumdity':  'h_1',
+    'extraTemp1':  't_2',
+    'extraHumid1': 'h_2',
+    'extraTemp2':  't_3',
+    'extraHumid2': 'h_3',
+    'extraTemp3':  't_4',
+    # WARNING: the following are not in the default schema
+    'extraHumid3': 'h_4',
+    'extraTemp4':  't_5',
+    'extraHumid4': 'h_5',
+}
+
+DEFAULT_BATTERY_MAP = {
+    'txBatteryStatus':      'batteryUV',
+    'windBatteryStatus':    'batteryWind',
+    'rainBatteryStatus':    'batteryRain',
+    'outTempBatteryStatus': 'battery1',
+    # WARNING: the following are not in the default schema
+    'extraBatteryStatus1':  'battery2',
+    'extraBatteryStatus2':  'battery3',
+    'extraBatteryStatus3':  'battery4',
+    'extraBatteryStatus4':  'battery5',
+}
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'te923: %s' % msg)
@@ -295,15 +332,14 @@ class TE923(weewx.abstractstation.AbstractStation):
         [Required. No default]
 
         polling_interval: How often to poll the station, in seconds.
-        [Optional. Default is 60]
+        [Optional. Default is 10]
 
         model: Which station model is this?
         [Optional. Default is 'TE923']
 
-        out_sensor: Which sensor is the outside sensor?  The station supports
-        up to 5 sensors.  This indicates which should be considered the
-        outside temperature and humidity.
-        [Optional. Default is 1]
+        calculate_windchill: Calculate the windchill instead of using the
+        value from the station.
+        [Optional.  Default is False]
         """
         self._last_rain        = None
         self._last_rain_ts     = None
@@ -312,15 +348,28 @@ class TE923(weewx.abstractstation.AbstractStation):
         DEBUG_READ             = int(stn_dict.get('debug_read', 0))
         global DEBUG_DECODE
         DEBUG_DECODE           = int(stn_dict.get('debug_decode', 0))
+        global DEBUG_PRESSURE
+        DEBUG_PRESSURE         = int(stn_dict.get('debug_pressure', 0))
 
         self.altitude          = stn_dict['altitude']
-        self.polling_interval  = stn_dict.get('polling_interval', 60)
+        self.polling_interval  = stn_dict.get('polling_interval', 10)
         self.model             = stn_dict.get('model', 'TE923')
-        self.out_sensor        = stn_dict.get('out_sensor', '1')
+        self.calc_windchill    = stn_dict.get('calculate_windchill', False)
+        self.sensor_map    = stn_dict.get('sensor_map', DEFAULT_SENSOR_MAP)
+        self.battery_map   = stn_dict.get('battery_map', DEFAULT_BATTERY_MAP)
+        self.max_tries         = int(stn_dict.get('max_tries', 5))
+        self.retry_wait        = int(stn_dict.get('retry_wait', 30))
 
         vendor_id              = int(stn_dict.get('vendor_id',  '0x1130'), 0)
         product_id             = int(stn_dict.get('product_id', '0x6801'), 0)
         device_id              = stn_dict.get('device_id', None)
+
+        loginf('polling interval is %s' % str(self.polling_interval))
+        loginf('windchill will be %s' %
+               ('calculated' if self.calc_windchill else 'read from station'))
+        loginf('sensor map is %s' % self.sensor_map)
+        loginf('battery map is %s' % self.battery_map)
+
         self.station = Station(vendor_id, product_id, device_id)
         self.station.open()
 
@@ -333,109 +382,138 @@ class TE923(weewx.abstractstation.AbstractStation):
         self.station = None
 
     def genLoopPackets(self):
-        while True:
-            data = self.station.get_readings()
-            status = self.station.get_status()
-            packet = self.data_to_packet(data, status=status,
-                                         altitude=self.altitude,
-                                         last_rain=self._last_rain,
-                                         last_rain_ts=self._last_rain_ts)
-            self._last_rain = packet['rainTotal']
-            self._last_rain_ts = packet['dateTime']
-            yield packet
-            time.sleep(self.polling_interval)
-
-    def data_to_packet(self, data, status=None, altitude=0,
-                       last_rain=None, last_rain_ts=None):
-        """convert raw data to format and units required by weewx
-
-                        station      weewx (metric)
-        temperature     degree C     degree C
-        humidity        percent      percent
-        uv index        unitless     unitless
-        slp             mbar         mbar
-        wind speed      mile/h       km/h
-        wind gust       mile/h       km/h
-        wind dir        degree       degree
-        rain            mm           cm
-        rain rate                    cm/h
-        """
-
-        packet = {}
-        packet['usUnits'] = weewx.METRIC
-        packet['dateTime'] = int(time.time() + 0.5)
-
-        packet['inTemp'] = data['t_in'] # T is degree C
-        packet['inHumidity'] = data['h_in'] # H is percent
-        packet['outTemp'] = data['t_%s' % self.out_sensor]
-        packet['outHumidity'] = data['h_%s' % self.out_sensor]
-        packet['UV'] = data['uv']
-        packet['windSpeed'] = data['windspeed']
-        if packet['windSpeed'] is not None:
-            packet['windSpeed'] *= 1.60934 # speed is mph; weewx wants km/h
-        packet['windGust'] = data['windgust']
-        if packet['windGust'] is not None:
-            packet['windGust'] *= 1.60934 # speed is mph; weewx wants km/h
-
-        if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
-            packet['windDir'] = data['winddir']
-            if packet['windDir'] is not None:
-                packet['windDir'] *= 22.5 # weewx wants degrees
+        ntries = 0
+        while ntries < self.max_tries:
+            ntries += 1
+            try:
+                data = self.station.get_readings()
+                status = self.station.get_status()
+                packet = data_to_packet(data, status=status,
+                                        altitude=self.altitude,
+                                        last_rain=self._last_rain,
+                                        last_rain_ts=self._last_rain_ts,
+                                        calc_windchill=self.calc_windchill,
+                                        sensor_map=self.sensor_map,
+                                        battery_map=self.battery_map)
+                self._last_rain = packet['rainTotal']
+                self._last_rain_ts = packet['dateTime']
+                ntries = 0
+                yield packet
+                time.sleep(self.polling_interval)
+            except usb.USBError, e:
+                # FIXME: if 'No such device' we should bail out immediately.
+                # unfortunately there is no reliable way (?) to get the type
+                # of USBError.  so retry on every type.
+                logerr("Failed attempt %d of %d to get LOOP data: %s" %
+                       (ntries, self.max_tries, e))
+                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                time.sleep(self.retry_wait)
         else:
-            packet['windDir'] = None
+            msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
 
-        if packet['windGust'] is not None and packet['windGust'] > 0:
-            packet['windGustDir'] = data['winddir']
-            if packet['windGustDir'] is not None:
-                packet['windGustDir'] *= 22.5 # weewx wants degrees
-        else:
-            packet['windGustDir'] = None
+#    def genArchiveRecords(self, since_ts):
+#        pass
 
-        packet['rainTotal'] = data['rain']
-        if packet['rainTotal'] is not None:
-            packet['rainTotal'] *= 0.6578 # weewx wants cm
-        packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+    def getConfig(self):
+        data = self.station.get_status()
+        return data
 
-        packet['rainRate'] = calculate_rain_rate(packet['rain'],
-                                                 packet['dateTime'],
-                                                 last_rain_ts)
+def data_to_packet(data, status=None, altitude=0,
+                   last_rain=None, last_rain_ts=None, calc_windchill=False,
+                   sensor_map=DEFAULT_SENSOR_MAP,
+                   battery_map=DEFAULT_BATTERY_MAP):
+    """convert raw data to format and units required by weewx
 
-        packet['heatindex'] = weewx.wxformulas.heatindexC(
-            packet['outTemp'], packet['outHumidity'])
-        packet['dewpoint'] = weewx.wxformulas.dewpointC(
-            packet['outTemp'], packet['outHumidity'])
+                    station      weewx (metric)
+    temperature     degree C     degree C
+    humidity        percent      percent
+    uv index        unitless     unitless
+    slp             mbar         mbar
+    wind speed      mile/h       km/h
+    wind gust       mile/h       km/h
+    wind dir        degree       degree
+    rain            mm           cm
+    rain rate                    cm/h
+    """
+
+    packet = {}
+    packet['usUnits'] = weewx.METRIC
+    packet['dateTime'] = int(time.time() + 0.5)
+
+    packet['inTemp'] = data['t_in'] # T is degree C
+    packet['inHumidity'] = data['h_in'] # H is percent
+    packet['outTemp'] = data[sensor_map['outTemp']] \
+        if 'outTemp' in sensor_map else None
+    packet['outHumidity'] = data[sensor_map['outHumidity']] \
+        if 'outHumidity' in sensor_map else None
+    packet['UV'] = data['uv']
+    packet['windSpeed'] = data['windspeed']
+    if packet['windSpeed'] is not None:
+        packet['windSpeed'] *= 1.60934 # speed is mph; weewx wants km/h
+    packet['windGust'] = data['windgust']
+    if packet['windGust'] is not None:
+        packet['windGust'] *= 1.60934 # speed is mph; weewx wants km/h
+
+    if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
+        packet['windDir'] = data['winddir']
+        if packet['windDir'] is not None:
+            packet['windDir'] *= 22.5 # weewx wants degrees
+    else:
+        packet['windDir'] = None
+
+    if packet['windGust'] is not None and packet['windGust'] > 0:
+        packet['windGustDir'] = data['winddir']
+        if packet['windGustDir'] is not None:
+            packet['windGustDir'] *= 22.5 # weewx wants degrees
+    else:
+        packet['windGustDir'] = None
+
+    packet['rainTotal'] = data['rain']
+    if packet['rainTotal'] is not None:
+        packet['rainTotal'] *= 0.6578 # weewx wants cm
+    packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+
+    packet['rainRate'] = calculate_rain_rate(packet['rain'],
+                                             packet['dateTime'],
+                                             last_rain_ts)
+
+    packet['heatindex'] = weewx.wxformulas.heatindexC(
+        packet['outTemp'], packet['outHumidity'])
+    packet['dewpoint'] = weewx.wxformulas.dewpointC(
+        packet['outTemp'], packet['outHumidity'])
+
+    # station has windchill, but provide option to calculate
+    if calc_windchill:
+        packet['windchill'] = weewx.wxformulas.windchillC(
+            packet['outTemp'], packet['windSpeed'])
+        logdbg("windchill: calculated=%s station=%s" %
+               (packet['windchill'], data['windchill']))
+    else:
         packet['windchill'] = data['windchill']
 
-        # station reports baromter (SLP), so we must back-calculate to get
-        # the station pressure.
-        packet['barometer'] = data['slp']
-        packet['pressure'] = bp2sp(packet['barometer'], altitude,
-                                   packet['outTemp'], packet['outHumidity'])
-        packet['altimeter'] = sp2ap(packet['pressure'], altitude)
+    # station reports baromter (SLP), so we must back-calculate to get
+    # the station pressure (gauge).
+    packet['barometer'] = data['slp']
+    packet['pressure'] = bp2sp(packet['barometer'], altitude,
+                               packet['outTemp'], packet['outHumidity'])
+    packet['altimeter'] = sp2ap(packet['pressure'], altitude)
+    if DEBUG_PRESSURE:
+        logdbg("pressures: p=%s b=%s a=%s" % (packet['pressure'],
+                                              packet['barometer'],
+                                              packet['altimeter']))
 
-        # insert values for extra sensors if they are available
-        packet['extraTemp1']  = data['t_2']
-        packet['extraHumid1'] = data['h_2']
-        packet['extraTemp2']  = data['t_3']
-        packet['extraHumid2'] = data['h_3']
-        packet['extraTemp3']  = data['t_4']
-        # WARNING: the following are not in the default schema
-        packet['extraHumid3'] = data['h_4']
-        packet['extraTemp4']  = data['t_5']
-        packet['extraHumid4'] = data['h_5']
+    # insert values for extra sensors if they are available
+    for label in sensor_map:
+        packet[label] = data[sensor_map[label]]
 
-        if status is not None:
-            packet['txBatteryStatus']      = status['batteryUV']
-            packet['windBatteryStatus']    = status['batteryWind']
-            packet['rainBatteryStatus']    = status['batteryRain']
-            packet['outTempBatteryStatus'] = status['battery1']
-            # WARNING: the following are not in the default schema
-            packet['extraBatteryStatus1']  = status['battery2']
-            packet['extraBatteryStatus2']  = status['battery3']
-            packet['extraBatteryStatus3']  = status['battery4']
-            packet['extraBatteryStatus4']  = status['battery5']
+    # insert values for battery status if they are available
+    if status is not None:
+        for label in battery_map:
+            packet[label] = status[battery_map[label]]
 
-        return packet
+    return packet
 
 
 STATE_OK = 'ok'
@@ -776,6 +854,8 @@ class Station(object):
     # the wview implementation, after sending the read command the device will
     # send back 32 bytes of data within 100 ms.  If not, the command was not
     # properly received.
+    #
+    # FIXME: must be a better way to know when there is no more data
     def _raw_read(self, addr, timeout=50):
         reqbuf = [0x05, 0x0AF, 0x00, 0x00, 0x00, 0x00, 0xAF, 0xFE]
         reqbuf[4] = addr / 0x10000
@@ -841,7 +921,7 @@ class Station(object):
 
     def gen_blocks(self):
         """generator that returns consecutive blocks of station memory"""
-        maxmem = 0xffff
+        maxmem = 0x1000
         for x in range(0, maxmem, 32):
             buf = self._read(x)
             yield x, buf[1:]
@@ -926,7 +1006,6 @@ class Station(object):
         return addr,data
 
 
-
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:
 #
@@ -937,8 +1016,6 @@ class Station(object):
 FMT_TE923TOOL = 'te923tool'
 FMT_DICT = 'dict'
 FMT_TABLE = 'table'
-STATE_DICT = { 'ok':'ok',
-               'invalid':'i', 'out_of_range':'o', 'no_link':'n', 'error':'e' }
 
 usage = """%prog [options] [--debug] [--help]"""
 
@@ -1001,7 +1078,7 @@ def main():
             else:
                 print_readings(data)
         if options.records:
-            for ptr,data in station.get_records(count=10):
+            for ptr,data in station.gen_records(count=10):
                 if fmt == FMT_DICT:
                     print_dict(data)
                 else:
@@ -1056,7 +1133,7 @@ def getvalue(data, label, fmt):
     if data[label + '_state'] == STATE_OK:
         return fmt % data[label]
     else:
-        return STATE_DICT[data[label + '_state']]
+        return data[label + '_state'][0]
 
 if __name__ == '__main__':
     main()

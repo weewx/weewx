@@ -1,0 +1,147 @@
+#!/usr/bin/env python
+# $Id$
+#
+# Copyright 2013 Matthew Wall
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+# See http://www.gnu.org/licenses/
+
+"""Command line utility for configuring Hideki TE923 weather stations"""
+
+import optparse
+import syslog
+import time
+
+import weewx.drivers.te923
+import weewx.units
+import weeutil.weeutil
+
+description = """Configuration utility for TE923 weather stations."""
+
+usage = """%prog [config_file] [options] [--debug]"""
+
+epilog = """Mutating actions will request confirmation before proceeding."""
+
+def main():
+    syslog.openlog('wee_config_te923', syslog.LOG_PID|syslog.LOG_CONS)
+
+    # Create a command line parser:
+    parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
+    
+    # Add the various options:
+    parser.add_option("--config", dest="cfgfn", type=str, metavar="FILE",
+                      help="configuration file")
+    parser.add_option("--info", dest="info", action="store_true",
+                      help="display weather station configuration")
+    parser.add_option("--current", dest="current", action="store_true",
+                      help="get the current weather conditions")
+    parser.add_option("--history-since", dest="recmin", type=int, metavar="N",
+                      help="display history records since N minutes ago")
+    parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                      help="display N history records")
+    parser.add_option("--format", dest="format", type=str, metavar="FORMAT",
+                      help="format for history, one of raw, table, or dict")
+    parser.add_option("--debug", dest="debug", action="store_true",
+                      help="display diagnostic information while running")
+
+    # Now we are ready to parse the command line and check the options
+    (options, args) = parser.parse_args()
+    if options.debug is not None:
+        weewx.debug = options.debug
+
+    if options.debug is not None:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    else:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
+    if options.format is None:
+        fmt = 'table'
+    elif (options.format.lower() != 'raw' and
+          options.format.lower() != 'table' and
+          options.format.lower() != 'dict'):
+        print "Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format
+        exit(1)
+    else:
+        fmt = options.format.lower()
+
+    # Load the configuration file
+    config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
+    print 'Using configuration file %s' % config_fn
+
+    # Create a station instance
+    print 'Driver version %s' % weewx.drivers.te923.DRIVER_VERSION
+    altitude_m = weewx.drivers.te923.getaltitudeM(config_dict)
+    station = weewx.drivers.te923.TE923(altitude=altitude_m,
+                                        **config_dict['TE923'])
+
+    # Do what we need to do...
+    if options.current:
+        current(station)
+    elif options.nrecords is not None:
+        history(station, count=options.nrecords, fmt=fmt)
+    elif options.recmin is not None:
+        ts = int(time.time()) - options.recmin * 60
+        history(station, ts=ts, fmt=fmt)
+    else:
+        info(station)
+
+
+def info(station):
+    """Query the station then display the settings."""
+    print 'Querying the station for the configuration...'
+    config = station.getConfig()
+    for key in sorted(config):
+        print '%s: %s' % (key, config[key])
+
+def current(station):
+    """Get current weather observation."""
+    print 'Querying the station for current weather data...'
+    for packet in station.genLoopPackets():
+        print packet
+        break
+
+def history(station, ts=0, count=0, fmt='raw'):
+    """Display the indicated number of records or records since timestamp"""
+    print "Querying the station for historical records..."
+    for i,r in enumerate(station.genArchiveRecords(ts)):
+        if fmt.lower() == 'raw':
+            print_raw(r['datetime'], r['ptr'], r['raw_data'])
+        elif fmt.lower() == 'table':
+            print_table(r['datetime'], r['data'], i==0)
+        else:
+            print r['datetime'], r['data']
+        if count and i > count:
+            break
+
+def print_raw(date, pos, data):
+    print date,
+    print "%04x" % pos,
+    for item in data:
+        print "%02x" % item,
+    print
+
+def print_table(date, data, showlabels=False):
+    if showlabels:
+        print '# date time',
+        for key in data:
+            print key,
+        print
+    print date,
+    for key in data:
+        print data[key],
+    print
+
+def print_dict(data):
+    for key in sorted(data, key=data.get):
+        print '%s: %s' % (key, data[key])
+
+
+if __name__=="__main__" :
+    main()
