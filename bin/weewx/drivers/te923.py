@@ -41,6 +41,7 @@ To reset all station parameters:
  - reinstall batteries
 
 From the Meade TE9233W manual (TE923W-M_IM(ENG)_BK_010511.pdf):
+
   Remote temperature/humidty sampling interval: 10 seconds
   Remote temperature/humidity transmit interval: about 47 seconds
   Indoor temperature/humidity sampling interval: 10 seconds
@@ -148,7 +149,7 @@ import weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.4'
+DRIVER_VERSION = '0.5'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -449,21 +450,21 @@ def data_to_packet(data, status=None, altitude=0,
     packet['outHumidity'] = data[sensor_map['outHumidity']] \
         if 'outHumidity' in sensor_map else None
     packet['UV'] = data['uv']
+
     packet['windSpeed'] = data['windspeed']
     if packet['windSpeed'] is not None:
         packet['windSpeed'] *= 1.60934 # speed is mph; weewx wants km/h
-    packet['windGust'] = data['windgust']
-    if packet['windGust'] is not None:
-        packet['windGust'] *= 1.60934 # speed is mph; weewx wants km/h
-
-    if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
+    if packet['windSpeed']:
         packet['windDir'] = data['winddir']
         if packet['windDir'] is not None:
             packet['windDir'] *= 22.5 # weewx wants degrees
     else:
         packet['windDir'] = None
 
-    if packet['windGust'] is not None and packet['windGust'] > 0:
+    packet['windGust'] = data['windgust']
+    if packet['windGust'] is not None:
+        packet['windGust'] *= 1.60934 # speed is mph; weewx wants km/h
+    if packet['windGust']:
         packet['windGustDir'] = data['winddir']
         if packet['windGustDir'] is not None:
             packet['windGustDir'] *= 22.5 # weewx wants degrees
@@ -474,11 +475,11 @@ def data_to_packet(data, status=None, altitude=0,
     if packet['rainTotal'] is not None:
         packet['rainTotal'] *= 0.6578 # weewx wants cm
     packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
-
     packet['rainRate'] = calculate_rain_rate(packet['rain'],
                                              packet['dateTime'],
                                              last_rain_ts)
 
+    # we must calculate heat index and dewpoint
     packet['heatindex'] = weewx.wxformulas.heatindexC(
         packet['outTemp'], packet['outHumidity'])
     packet['dewpoint'] = weewx.wxformulas.dewpointC(
@@ -919,10 +920,12 @@ class Station(object):
         else:
             raise BadRead("No read after %d attempts" % cnt)
 
-    def gen_blocks(self):
+    def gen_blocks(self, count=None):
         """generator that returns consecutive blocks of station memory"""
-        maxmem = 0x1000
-        for x in range(0, maxmem, 32):
+        # FIXME: figure out maximum for small and large memory configurations
+        if not count:
+            count = 10
+        for x in range(0, count*32, 32):
             buf = self._read(x)
             yield x, buf[1:]
 
@@ -957,7 +960,7 @@ class Station(object):
 
     def gen_records(self, count=None, bigmem=False):
         """return requested records from station"""
-        if count is None:
+        if not count:
             count = 3442 if bigmem else 208
         addr = None
         records = []
@@ -1012,6 +1015,9 @@ class Station(object):
 # PYTHONPATH=bin python bin/weewx/drivers/te923.py
 #
 # by default, output matches that of te923tool
+#    te923con                 display current weather readings
+#    te923con -d              dump 208 memory records
+#    te923con -s              display station status
 
 FMT_TE923TOOL = 'te923tool'
 FMT_DICT = 'dict'
@@ -1030,10 +1036,10 @@ def main():
                       help='display station status')
     parser.add_option('--readings', dest='readings', action='store_true',
                       help='display sensor readings')
-    parser.add_option('--records', dest='records', action='store_true',
-                      help='display station records')
-    parser.add_option('--blocks', dest='blocks', action='store_true',
-                      help='dump station memory')
+    parser.add_option("--records", dest="records", type=int, metavar="N",
+                      help="display N station records, oldest to newest")
+    parser.add_option('--blocks', dest='blocks', type=int, metavar="N",
+                      help='display N 32-byte blocks of station memory')
     parser.add_option("--format", dest="format", type=str, metavar="FORMAT",
                       help="format for output, one of te923tool, table, or dict")
     (options, args) = parser.parse_args()
@@ -1077,14 +1083,14 @@ def main():
                 print_table(data)
             else:
                 print_readings(data)
-        if options.records:
-            for ptr,data in station.gen_records(count=10):
+        if options.records is not None:
+            for ptr,data in station.gen_records(count=options.records):
                 if fmt == FMT_DICT:
                     print_dict(data)
                 else:
                     print_readings(data)
         if options.blocks:
-            for ptr,block in station.gen_blocks():
+            for ptr,block in station.gen_blocks(count=options.blocks):
                 print_hex(ptr, block)
     finally:
         if station is not None:
