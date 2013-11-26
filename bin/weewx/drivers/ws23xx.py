@@ -112,11 +112,11 @@ import select
 import struct
 import tty
 
-import weeutil
+import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.4'
+DRIVER_VERSION = '0.5'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -268,11 +268,10 @@ class WS23xx(weewx.abstractstation.AbstractStation):
     def hardware_name(self):
         return self.model
 
-    # FIXME: do not use archive interval until we can change it
     # weewx wants the archive interval in seconds, but the console uses minutes
-#    @property
-#    def archive_interval(self):
-#        return self.getArchiveInterval() * 60
+    @property
+    def archive_interval(self):
+        return self.getArchiveInterval() * 60
 
 #    def closePort(self):
 #        pass
@@ -370,6 +369,17 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 serial_port.close()
                 serial_port = None
 
+    def setArchiveInterval(self, interval):
+        serial_port = None
+        try:
+            serial_port = LinuxSerialPort(self.port)
+            ws = Ws2300(serial_port)
+            set_archive_interval(ws, interval)
+        finally:
+            if serial_port is not None:
+                serial_port.close()
+                serial_port = None
+
     def getConfig(self):
         serial_port = None
         try:
@@ -380,6 +390,17 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             for key in data:
                 fdata[Measure.IDS[key].name] = data[key]
             return fdata
+        finally:
+            if serial_port is not None:
+                serial_port.close()
+                serial_port = None
+
+    def getRecordCount(self):
+        serial_port = None
+        try:
+            serial_port = LinuxSerialPort(self.port)
+            ws = Ws2300(serial_port)
+            return get_record_count(ws)
         finally:
             if serial_port is not None:
                 serial_port.close()
@@ -398,8 +419,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 
 # ids for current weather conditions and connection type
 SENSOR_IDS = [
-    'it','ih','ot','oh','pa', 'ws','wsh','w0','rh','rt','dp','wc','cn'
-    ]
+    'it','ih','ot','oh','pa', 'ws','wsh','w0','rh','rt','dp','wc','cn' ]
 # polling interval, in seconds, for various connection types
 POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
 
@@ -414,19 +434,41 @@ def set_time(ws, ts):
 
 def get_time(ws):
     """Return station time as unix epoch."""
-    measures = [Measure.IDS['sw']]
-    raw_data = read_measurements(ws, measures)
-    ts = int(measures[0].conv.binary2value(raw_data[0]))
+    data = get_raw_data(ws, ['sw'])
+    ts = int(data['sw'])
     logdbg('station clock is %s' % weeutil.weeutil.timestamp_to_string(ts))
     return ts
 
+def set_archive_interval(ws, interval):
+    """Set the archive interval in minutes."""
+    logdbg('setting hardware archive interval to %s minutes' % interval)
+    for m,v in [(Measure.IDS['hi'],interval), # archive interval
+                (Measure.IDS['hc'],1), # time till next sample
+                (Measure.IDS['hn'],0)]: # number of valid records
+        data = m.conv.value2binary(v)
+        cmd = m.conv.write(data, None)
+        ws.write_safe(m.address, *cmd[1:])
+
 def get_archive_interval(ws):
     """Return archive interval in minutes."""
-    measures = [Measure.IDS['hi']]
-    raw_data = read_measurements(ws, measures)
-    interval = int(measures[0].conv.binary2value(raw_data[0]))
-    logdbg('station archive interval is %s minutes' % interval)
-    return interval
+    data = get_raw_data(ws, ['hi'])
+    x = int(data['hi'])
+    logdbg('station archive interval is %s minutes' % x)
+    return x
+
+def clear_memory(ws):
+    """Clear station memory."""
+    logdbg('clearing console memory')
+    for m,v in [(Measure.IDS['hn'],0)]: # number of valid records
+        data = m.conv.value2binary(v)
+        cmd = m.conv.write(data, None)
+        ws.write_safe(m.address, *cmd[1:])    
+
+def get_record_count(ws):
+    data = get_raw_data(ws, ['hn'])
+    x = int(data['hn'])
+    logdbg('record count is %s' % x)
+    return x
 
 def gen_records(ws, since_ts=None, count=None, use_computer_clock=True):
     """Get latest count records from the station from oldest to newest.  If
@@ -445,11 +487,13 @@ def gen_records(ws, since_ts=None, count=None, use_computer_clock=True):
 
     # FIXME: this is not atomic - if we overlap an interval, data are bogus
 
-    measures = [Measure.IDS['hi'],Measure.IDS['hw'],Measure.IDS['hc']]
+    measures = [ Measure.IDS['hi'], Measure.IDS['hw'],
+                 Measure.IDS['hc'], Measure.IDS['hn'] ]
     raw_data = read_measurements(ws, measures)
     interval = 1 + int(measures[0].conv.binary2value(raw_data[0])) # minutes
     latest_ts = int(measures[1].conv.binary2value(raw_data[1])) # epoch
     time_to_next = int(measures[2].conv.binary2value(raw_data[2])) # minutes
+    numrec = int(measures[3].conv.binary2value(raw_data[3]))
 
     now = int(time.time())
     cstr = 'station'
@@ -466,6 +510,8 @@ def gen_records(ws, since_ts=None, count=None, use_computer_clock=True):
         if count == 0:
             return
 
+    if count and count > numrec:
+        count = numrec
     if count and count > HistoryMeasure.MAX_HISTORY_RECORDS:
         count = HistoryMeasure.MAX_HISTORY_RECORDS
 

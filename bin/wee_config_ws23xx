@@ -16,10 +16,8 @@
 """Command line utility for configuring LaCrosse WS-23xx weather stations"""
 
 # FIXME: set time
-# FIXME: clear station memory
 # FIXME: turn on/off backlight
 # FIXME: turn buzzer on/off
-# FIXME: change archive interval (not possible?)
 # FIXME: can we read/modify DST on the console?
 
 import optparse
@@ -55,6 +53,10 @@ def main():
                       help="display N history records")
     parser.add_option("--set-time", dest="settime", action="store_true",
                       help="set the station clock to the current time")
+    parser.add_option("--set-interval", dest="interval", type=int, metavar="N",
+                      help="set the station archive interval to N minutes")
+    parser.add_option("--clear-memory", dest="clear", action="store_true",
+                      help="clear station memory")
     parser.add_option("-y", dest="noprompt", action="store_true",
                       help="answer yes to every prompt")
     parser.add_option("--debug", dest="debug", action="store_true",
@@ -92,6 +94,10 @@ def main():
         history(station, ts=ts)
     elif options.settime:
         setclock(station, prompt)
+    elif options.interval:
+        setinterval(station, options.interval, prompt)
+    elif options.clear:
+        clearhistory(station, prompt)
     else:
         info(station)
 
@@ -139,6 +145,40 @@ def setclock(station, prompt):
             print "Station clock is now", vstr
         elif ans == 'n':
             print "Set clock cancelled."
+
+def setinterval(station, interval, prompt):
+    v = station.getArchiveInterval()
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Interval is", v
+        if prompt:
+            ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+        else:
+            print "Setting interval to %d minutes" % interval
+            ans = 'y'
+        if ans == 'y' :
+            station.setArchiveInterval(interval)
+            v = station.getArchiveInterval()
+            print "Interval is now", v
+        elif ans == 'n':
+            print "Set interval cancelled."
+
+def clearhistory(station, prompt):
+    ans = None
+    while ans not in ['y', 'n']:
+        v = station.getRecordCount()
+        print "Records in memory:", v
+        if prompt:
+            ans = raw_input("Clear console memory (y/n)? ")
+        else:
+            print 'Clearing console memory'
+            ans = 'y'
+        if ans == 'y' :
+            station.clearHistory()
+            v = station.getRecordCount()
+            print "Records in memory:", v
+        elif ans == 'n':
+            print "Clear memory cancelled."
 
 
 if __name__=="__main__" :
