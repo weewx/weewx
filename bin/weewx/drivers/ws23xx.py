@@ -27,6 +27,9 @@
 #
 # This immplementation copies directly from Russell Stuart's implementation,
 # but only the parts required to read from and write to the weather station.
+#
+# The wview implementation copies from the Open2300 implementation.  It reads
+# each sensor multiple times to avoid spikes in data.
 
 """Classes and functions for interfacing with WS-23xx weather stations.
 
@@ -36,24 +39,49 @@ LaCrosse made a number of stations in the 23xx series, including:
 
 The stations were also sold as the TFA Dostman and TechnoLine 2350.
 
-Configuration
+The WWVB receiver is located in the console.
 
-The station supports both wireless and wired communication between the sensors
-and a station console.  Wired connection updates data every 8 seconds.
+To synchronize the console and sensors, press and hold the PLUS key for 2
+seconds.  When console is not synchronized no data will be received.
+
+To do a factory reset, press and hold PRESSURE and WIND for 5 seconds.
+
+A single bucket tip is 0.0204 in (0.518 mm).
+
+The station has 175 history records.  That is just over 7 days of data with
+the default history recording interval of 60 minutes (59 in the console).
+
+The station supports both wireless and wired communication between the
+sensors and a station console.  Wired connection updates data every 8 seconds.
 Wireless connection updates data in 16 to 128 second intervals, depending on
 wind speed and rain activity.
+
+sensor update frequency:
+
+   32 seconds when wind speed > 22.36 mph (wireless)
+  128 seconds when wind speed < 22.36 mph (wireless)
+   10 minutes (wireless after 5 failed attempts)
+    8 seconds (wired)
+
+console update frequency:
+
+  15 seconds (pressure/temperature)
+  20 seconds (humidity)
 
 It is possible to increase the rate of wireless updates:
 
   http://www.wikihow.com/Modify-a-Lacrosse-Ws2300-for-Frequent-Wireless-Updates
 
+This implementation polls the station.  Use the polling_interval parameter
+to specify how often to poll for data.  If not specified, the polling interval
+will adapt based on connection type and status.
+
 Instruments are connected by unshielded phone cables.  To reduce the number of
 spikes in data, replace with shielded cables.
 
-The station has a serial connection to the computer.
+The connection type can be one of 0=cable, 3=lost, f=wireless
 
-This implementation polls the station.  Use the polling_interval parameter
-to specify how often to poll for data.
+The station has a serial connection to the computer.
 
 This driver does not keep the serial port open for long periods.  Instead, the
 driver opens the serial port, reads data, then closes the port.
@@ -71,9 +99,7 @@ Known to work: ATEN UC-232A
 """
 
 # TODO: use pyserial instead of LinuxSerialPort
-# TODO: get archive interval
-# TODO: set archive interval
-# TODO: read archive records
+# FIXME: unless we can get setTime to work, just ignore the console clock
 
 import optparse
 import syslog
@@ -90,7 +116,7 @@ import weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.3'
+DRIVER_VERSION = '0.4'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -199,7 +225,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         [Required. Default is /dev/ttyS0]
 
         polling_interval: How often to poll the station, in seconds.
-        [Optional. Default is 60]
+        [Optional. Default is 8 (wired) or 30 (wireless)]
 
         pressure_offset: Calibration offset in millibars for the station
         pressure sensor.  This offset is added to the station sensor output
@@ -221,7 +247,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 
         self.altitude          = stn_dict['altitude']
         self.port              = stn_dict.get('port', DEFAULT_PORT)
-        self.polling_interval  = stn_dict.get('polling_interval', 60)
+        self.polling_interval  = stn_dict.get('polling_interval', None)
         self.model             = stn_dict.get('model', 'LaCrosse WS23xx')
         self.calc_windchill    = stn_dict.get('calculate_windchill', False)
         self.calc_dewpoint     = stn_dict.get('calculate_dewpoint', False)
@@ -242,11 +268,19 @@ class WS23xx(weewx.abstractstation.AbstractStation):
     def hardware_name(self):
         return self.model
 
+    # FIXME: do not use archive interval until we can change it
+    # weewx wants the archive interval in seconds, but the console uses minutes
+#    @property
+#    def archive_interval(self):
+#        return self.getArchiveInterval() * 60
+
 #    def closePort(self):
 #        pass
 
     def genLoopPackets(self):
         ntries = 0
+        wait = 60
+        last_cn = None
         while ntries < self.max_tries:
             ntries += 1
             serial_port = None
@@ -254,15 +288,17 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 serial_port = LinuxSerialPort(self.port)
                 ws = Ws2300(serial_port)
                 data = get_raw_data(ws, SENSOR_IDS)
-                packet = data_to_packet(data,
+                packet = data_to_packet(data, int(time.time() + 0.5),
                                         altitude=self.altitude,
                                         pressure_offset=self.pressure_offset,
                                         last_rain=self._last_rain,
                                         calc_dewpoint=self.calc_dewpoint,
                                         calc_windchill=self.calc_windchill)
                 self._last_rain = packet['rainTotal']
+                ntries = 0
                 yield packet
-                time.sleep(self.polling_interval)
+                wait, last_cn = self.get_wait(wait, data['cn'], last_cn)
+                time.sleep(wait)
             except Exception, e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
@@ -277,8 +313,62 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             logerr(msg)
             raise weewx.RetriesExceeded(msg)
 
-#    def genArchiveRecords(self, since_ts):
-#        pass
+    def genArchiveRecords(self, since_ts, count=0):
+        serial_port = None
+        try:
+            last_rain = None
+            serial_port = LinuxSerialPort(self.port)
+            ws = Ws2300(serial_port)
+            interval = get_archive_interval(ws)
+            for ts,data in gen_records(ws, since_ts=since_ts, count=count):
+                record = data_to_packet(data, ts,
+                                        altitude=self.altitude,
+                                        pressure_offset=self.pressure_offset,
+                                        last_rain=last_rain,
+                                        calc_dewpoint=True,
+                                        calc_windchill=True)
+                record['interval'] = interval
+                last_rain = record['rainTotal']
+                yield record
+        finally:
+            if serial_port is not None:
+                serial_port.close()
+                serial_port = None
+
+# FIXME: do not use station time until we can set it
+
+#    def getTime(self) :
+#        serial_port = None
+#        try:
+#            serial_port = LinuxSerialPort(self.port)
+#            ws = Ws2300(serial_port)
+#            return get_time(ws)
+#        finally:
+#            if serial_port is not None:
+#                serial_port.close()
+#                serial_port = None
+
+#    def setTime(self, ts):
+#        serial_port = None
+#        try:
+#            serial_port = LinuxSerialPort(self.port)
+#            ws = Ws2300(serial_port)
+#            set_time(ws, ts)
+#        finally:
+#            if serial_port is not None:
+#                serial_port.close()
+#                serial_port = None
+
+    def getArchiveInterval(self):
+        serial_port = None
+        try:
+            serial_port = LinuxSerialPort(self.port)
+            ws = Ws2300(serial_port)
+            return get_archive_interval(ws)
+        finally:
+            if serial_port is not None:
+                serial_port.close()
+                serial_port = None
 
     def getConfig(self):
         serial_port = None
@@ -295,19 +385,127 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 serial_port.close()
                 serial_port = None
 
-# ids for current weather conditions
-SENSOR_IDS = ['it','ih','ot','oh','pa', 'ws','wsh','w0','rh','rt','dp','wc']
+    def get_wait(self, wait, conn, last_conn):
+        if self.polling_interval is not None:
+            wait = self.polling_interval
+        elif conn != last_conn:
+            poll_time = POLLING_INTERVAL.get(conn, ("unknown",60))
+            loginf("using %s second polling interval for %s connection" % 
+                   (poll_time[1], poll_time[0]))
+            wait = poll_time[1]
+        return wait, conn
+
+
+# ids for current weather conditions and connection type
+SENSOR_IDS = [
+    'it','ih','ot','oh','pa', 'ws','wsh','w0','rh','rt','dp','wc','cn'
+    ]
+# polling interval, in seconds, for various connection types
+POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
+
+def set_time(ws, ts):
+    """Set station time to indicated unix epoch."""
+    logdbg('setting station clock to %s' % 
+           weeutil.weeutil.timestamp_to_string(ts))
+    for m in [Measure.IDS['sd'], Measure.IDS['st']]:
+        data = m.conv.value2binary(ts)
+        cmd = m.conv.write(data, None)
+        ws.write_safe(m.address, *cmd[1:])
+
+def get_time(ws):
+    """Return station time as unix epoch."""
+    measures = [Measure.IDS['sw']]
+    raw_data = read_measurements(ws, measures)
+    ts = int(measures[0].conv.binary2value(raw_data[0]))
+    logdbg('station clock is %s' % weeutil.weeutil.timestamp_to_string(ts))
+    return ts
+
+def get_archive_interval(ws):
+    """Return archive interval in minutes."""
+    measures = [Measure.IDS['hi']]
+    raw_data = read_measurements(ws, measures)
+    interval = int(measures[0].conv.binary2value(raw_data[0]))
+    logdbg('station archive interval is %s minutes' % interval)
+    return interval
+
+def gen_records(ws, since_ts=None, count=None, use_computer_clock=True):
+    """Get latest count records from the station from oldest to newest.  If
+    count is 0 or None, return all records.
+
+    The station has a history interval, and it records when the last history
+    sample was saved.  So as long as the interval does not change between the
+    first and last records, we are safe to infer timestamps for each record.
+    This assumes that if the station loses power then the memory will be
+    cleared.
+
+    There is no timestamp associated with each record - we have to guess.
+    The station tells us the time until the next record and the epoch of the
+    latest record, based on the station's clock.  So we can use that or use
+    the computer clock to guess the timestamp for each record."""
+
+    # FIXME: this is not atomic - if we overlap an interval, data are bogus
+
+    measures = [Measure.IDS['hi'],Measure.IDS['hw'],Measure.IDS['hc']]
+    raw_data = read_measurements(ws, measures)
+    interval = 1 + int(measures[0].conv.binary2value(raw_data[0])) # minutes
+    latest_ts = int(measures[1].conv.binary2value(raw_data[1])) # epoch
+    time_to_next = int(measures[2].conv.binary2value(raw_data[2])) # minutes
+
+    now = int(time.time())
+    cstr = 'station'
+    if use_computer_clock:
+        latest_ts = now - (interval - time_to_next) * 60
+        cstr = 'computer'
+    logdbg("using %s clock with latest_ts of %s" %
+           (cstr, weeutil.weeutil.timestamp_to_string(latest_ts)))
+
+    if since_ts is not None:
+        count = int((now - since_ts) / (interval * 60))
+        logdbg("count is %d to satisfy timestamp of %s" %
+               (count, weeutil.weeutil.timestamp_to_string(since_ts)))
+        if count == 0:
+            return
+
+    if count and count > HistoryMeasure.MAX_HISTORY_RECORDS:
+        count = HistoryMeasure.MAX_HISTORY_RECORDS
+
+    HistoryMeasure.set_constants(ws)
+    recno_s = 0
+    recno_e = count if count else HistoryMeasure.MAX_HISTORY_RECORDS
+    last_ts = latest_ts - (recno_e-1) * interval * 60
+    logdbg("downloading %d records from station" % recno_e)
+
+    measures = [HistoryMeasure(n) for n in range(recno_e-1, recno_s-1, -1)]
+    raw_data = read_measurements(ws, measures)
+    for measure, nybbles in zip(measures, raw_data):
+        value = measure.conv.binary2value(nybbles)
+        data_dict = {
+            'it': value.temp_indoor,
+            'ih': value.humidity_indoor,
+            'ot': value.temp_outdoor,
+            'oh': value.humidity_outdoor,
+            'pa': value.pressure_absolute,
+            'rt': value.rain,
+            'ws': value.wind_speed,
+            'w0': value.wind_direction,
+            'wsh': None, # no gust in history
+            'rh': None, # no rain rate in history
+            'dp': None, # no dewpoint in history
+            'wc': None, # no windchill in history
+            }
+        yield last_ts, data_dict
+        last_ts += interval * 60
 
 def get_raw_data(ws, labels):
-    """get raw data from the station, return as dictionary"""
+    """Get raw data from the station, return as dictionary."""
     measures = [ Measure.IDS[m] for m in labels ]
     raw_data = read_measurements(ws, measures)
     data_dict = dict(zip(labels, [ m.conv.binary2value(d) for m, d in zip(measures, raw_data) ]))
     return data_dict
 
-def data_to_packet(data, altitude=0, pressure_offset=None, last_rain=None,
+def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
                    calc_dewpoint=False, calc_windchill=False):
-    """convert raw data to format and units required by weewx
+    """Convert raw data to format and units required by weewx.
 
                     station      weewx (metric)
     temperature     degree C     degree C
@@ -323,28 +521,22 @@ def data_to_packet(data, altitude=0, pressure_offset=None, last_rain=None,
 
     packet = {}
     packet['usUnits'] = weewx.METRIC
-    packet['dateTime'] = int(time.time() + 0.5)
+    packet['dateTime'] = ts
     packet['inTemp'] = data['it']
     packet['inHumidity'] = data['ih']
     packet['outTemp'] = data['ot']
     packet['outHumidity'] = data['oh']
     packet['pressure'] = data['pa']
+
     packet['windSpeed'] = data['ws']
     if packet['windSpeed'] is not None:
         packet['windSpeed'] *= 3.6 # weewx wants km/h
+    packet['windDir'] = data['w0'] if packet['windSpeed'] else None
+
     packet['windGust'] = data['wsh']
     if packet['windGust'] is not None:
         packet['windGust'] *= 3.6 # weewx wants km/h
-
-    if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
-        packet['windDir'] = data['w0']
-    else:
-        packet['windDir'] = None
-
-    if packet['windGust'] is not None and packet['windGust'] > 0:
-        packet['windGustDir'] = data['w0']
-    else:
-        packet['windGustDir'] = None
+    packet['windGustDir'] = data['w0'] if packet['windGust'] else None
 
     packet['rainTotal'] = data['rt']
     if packet['rainTotal'] is not None:
@@ -358,7 +550,7 @@ def data_to_packet(data, altitude=0, pressure_offset=None, last_rain=None,
         packet['outTemp'], packet['outHumidity'])
 
     # station has dewpoint, but provide option to calculate
-    if calc_dewpoint:
+    if calc_dewpoint or data['dp'] is None:
         packet['dewpoint'] = weewx.wxformulas.dewpointC(
             packet['outTemp'], packet['outHumidity'])
         logdbg("dewpoint: calculated=%s station=%s" %
@@ -367,7 +559,7 @@ def data_to_packet(data, altitude=0, pressure_offset=None, last_rain=None,
         packet['dewpoint'] = data['dp']
 
     # station has windchill, but provide option to calculate
-    if calc_windchill:
+    if calc_windchill or data['wc'] is None:
         packet['windchill'] = weewx.wxformulas.windchillC(
             packet['outTemp'], packet['windSpeed'])
         logdbg("windchill: calculated=%s station=%s" %
@@ -1631,6 +1823,8 @@ def main():
                       help='the serial port to which the station is connected')
     parser.add_option('--readings', dest='readings', action='store_true',
                       help='display sensor readings')
+    parser.add_option("--records", dest="records", type=int, metavar="N",
+                      help="display N station records, oldest to newest")
     parser.add_option('--help-measures', dest='hm', action='store_true',
                       help='display measure names')
     parser.add_option('--measure', dest='measure', type=str, metavar="MEASURE",
@@ -1654,6 +1848,9 @@ def main():
         if options.readings:
             data = get_raw_data(ws, SENSOR_IDS)
             print data
+        if options.records is not None:
+            for ts,record in gen_records(ws, count=options.records):
+                print ts,record
         if options.measure:
             data = get_raw_data(ws, [options.measure])
             print data

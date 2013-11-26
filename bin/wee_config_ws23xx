@@ -15,6 +15,13 @@
 
 """Command line utility for configuring LaCrosse WS-23xx weather stations"""
 
+# FIXME: set time
+# FIXME: clear station memory
+# FIXME: turn on/off backlight
+# FIXME: turn buzzer on/off
+# FIXME: change archive interval (not possible?)
+# FIXME: can we read/modify DST on the console?
+
 import optparse
 import syslog
 import time
@@ -46,8 +53,10 @@ def main():
                       help="display history records since N minutes ago")
     parser.add_option("--history", dest="nrecords", type=int, metavar="N",
                       help="display N history records")
-    parser.add_option("--format", dest="format", type=str, metavar="FORMAT",
-                      help="format for history, one of raw, table, or dict")
+    parser.add_option("--set-time", dest="settime", action="store_true",
+                      help="set the station clock to the current time")
+    parser.add_option("-y", dest="noprompt", action="store_true",
+                      help="answer yes to every prompt")
     parser.add_option("--debug", dest="debug", action="store_true",
                       help="display diagnostic information while running")
 
@@ -61,15 +70,7 @@ def main():
     else:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
-    if options.format is None:
-        fmt = 'table'
-    elif (options.format.lower() != 'raw' and
-          options.format.lower() != 'table' and
-          options.format.lower() != 'dict'):
-        print "Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format
-        exit(1)
-    else:
-        fmt = options.format.lower()
+    prompt = False if options.noprompt else True
 
     # Load the configuration file
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
@@ -85,10 +86,12 @@ def main():
     if options.current:
         current(station)
     elif options.nrecords is not None:
-        history(station, count=options.nrecords, fmt=fmt)
+        history(station, count=options.nrecords)
     elif options.recmin is not None:
         ts = int(time.time()) - options.recmin * 60
-        history(station, ts=ts, fmt=fmt)
+        history(station, ts=ts)
+    elif options.settime:
+        setclock(station, prompt)
     else:
         info(station)
 
@@ -107,40 +110,35 @@ def current(station):
         print packet
         break
 
-def history(station, ts=0, count=0, fmt='raw'):
+def history(station, ts=0, count=0):
     """Display the indicated number of records or records since timestamp"""
     print "Querying the station for historical records..."
-    for i,r in enumerate(station.genArchiveRecords(ts)):
-        if fmt.lower() == 'raw':
-            print_raw(r['datetime'], r['ptr'], r['raw_data'])
-        elif fmt.lower() == 'table':
-            print_table(r['datetime'], r['data'], i==0)
-        else:
-            print r['datetime'], r['data']
+    for i,r in enumerate(station.genArchiveRecords(since_ts=ts, count=count)):
+        print r
         if count and i > count:
             break
 
-def print_raw(date, pos, data):
-    print date,
-    print "%04x" % pos,
-    for item in data:
-        print "%02x" % item,
-    print
-
-def print_table(date, data, showlabels=False):
-    if showlabels:
-        print '# date time',
-        for key in data:
-            print key,
-        print
-    print date,
-    for key in data:
-        print data[key],
-    print
-
-def print_dict(data):
-    for key in sorted(data, key=data.get):
-        print '%s: %s' % (key, data[key])
+def setclock(station, prompt):
+    """Set station clock to current time."""
+    ans = None
+    while ans not in ['y', 'n']:
+        v = station.getTime()
+        vstr = weeutil.weeutil.timestamp_to_string(v)
+        print "Station clock is", vstr
+        now = int(time.time() + 0.5)
+        nstr = weeutil.weeutil.timestamp_to_string(now)
+        if prompt:
+            ans = raw_input("Set station clock to %s (y/n)? " % nstr)
+        else:
+            print "Setting station clock to %s" % nstr
+            ans = 'y'
+        if ans == 'y' :
+            station.setTime(now)
+            v = station.getTime()
+            vstr = weeutil.weeutil.timestamp_to_string(v)
+            print "Station clock is now", vstr
+        elif ans == 'n':
+            print "Set clock cancelled."
 
 
 if __name__=="__main__" :
