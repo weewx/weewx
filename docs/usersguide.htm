@@ -216,7 +216,21 @@ Version: 2.6.0a3
 	<td>Tested</td>
       </tr>
       <tr>
-	<td class="text_highlight">Hideki</td>
+	<td class="text_highlight" rowspan="3">Hideki</td>
+	<td>TE821</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE831</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
 	<td>TE923</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
@@ -254,8 +268,22 @@ Version: 2.6.0a3
 	<td>Experimental</td>
       </tr>
       <tr>
-	<td class="text_highlight">Meade</td>
+	<td class="text_highlight" rowspan="3">Meade</td>
 	<td>TE923W</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE923W-M</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE924W</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>TE923<sup><a href='#te923'>8</a></sup></td>
@@ -388,23 +416,33 @@ Version: 2.6.0a3
         <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
 	<td>Tested</td>
       </tr>
+      <tr>
+	<td class="text_highlight">Ventus</td>
+	<td>W831</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
     </table>
 
     <ol>
-      <li><a id="vantage">Davis &quot;Vantage&quot; series</a> of weather stations, including the
-         <a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">
-	     VantagePro2</a>&trade; and <a href="http://www.vantagevue.com/">VantageVue</a>&trade;, 
-	     using serial, USB, or <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">
-	     WeatherLinkIP</a>&trade; connections. Both the &quot;Rev A&quot; (firmware 
-         dated before 22 April 2002) and &quot;Rev B&quot; versions are supported.
+      <li><a id="vantage">Davis &quot;Vantage&quot; series</a> of weather
+        stations, including the
+         <a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">VantagePro2</a>&trade; and
+         <a href="http://www.vantagevue.com/">VantageVue</a>&trade;, 
+	 using serial, USB, or
+         <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">WeatherLinkIP</a>&trade;
+         connections. Both the &quot;Rev A&quot; (firmware dated before
+         22 April 2002) and &quot;Rev B&quot; versions are supported.
       </li>
-      <li><a id="wmr100">Oregon Scientific WMR100 series.</a> Tested on the
-        <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">WMR100N</a>.</li>
-      <li><a id="wmr200">Oregon Scientific WMR200 series.</a>  Tested on the
-        <a href="">WMR200</a>.
+      <li><a id="wmr100">Oregon Scientific WMR-100 series.</a> Tested on the
+        <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">Oregon Scientific WMR100N</a>.</li>
+      <li><a id="wmr200">Oregon Scientific WMR-200 series.</a>  Tested on the
+        <a href="http://www.oregonscientificstore.com/Oregon-Scientific-WMR200-Bundle-Complete-Weather-Bundle.data">Oregon Scientific WMR200</a>.
 	  </li>
       <li><a id="wmr9x8">Oregon Scientific WMR-918/968 series.</a> Tested on the
-        <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR-968</a>
+        <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR968</a>.
       </li>
       <li><a id="fousb">Fine Offset series.</a> These are branded by
         many vendors, including Ambient Weather, National Geographic, Watson,
@@ -420,7 +458,8 @@ Version: 2.6.0a3
         <a href="http://lacrossetechnologies.com/2814/">La Crosse C86234</a>.
       </li>
       <li><a id="te923">Hideki TE923.</a> These are branded by many vendors,
-        including Honeywell, Meade, IROX, Mebus, and TFA.  Tested on the
+        including Honeywell, Meade, IROX, Mebus, Ventus, and TFA.
+        Tested on the
        <a href="http://www.ambientweather.com/hotewiwest.html">Meade TE923</a>.
       </li>
     </ol>
@@ -938,14 +977,40 @@ longitude = -77.0366</pre>
     <p class="config_important">model</p>
     <p>Set to the station model. For example, Meade TE923W or TFA Nexus.
       Default is "TE923".</p>
-    <p class='config_option'>pressure_offset</p>
-    <p>
-      The offset, in millibars, that is applied to values from the
-      station sensor. This offset is applied to the station pressure
-      <i>before</i> calculating barometer and altimeter sea level pressures.
-      Only the raw station pressure is recorded to the database, not the
-      station pressure with offset applied.  Default is None.
+    <p class="config_option">sensor_map</p>
+    <p>This option defines the mapping between temperature/humidity values in
+      the database and the remote sensors.  Up to 5 remote sensors are
+      supported.  A switch on each sensor determines which of 5 channels that
+      sensor will use.  For example, if the switch on the sensor is set to 3,
+      the temperature from that sensor will be t_3 and the humidity from that
+      sensor will be h_3.
     </p>
+    <p>The default mapping is:
+    </p>
+    <pre class="tty">[[sensor_map]]
+    outTemp =     t_1
+    outHumidity = h_1
+    extraTemp1 =  t_2
+    extraHumid1 = h_2
+    extraTemp2 =  t_3
+    extraHumid2 = h_3
+    extraTemp3 =  t_4
+    extraHumid3 = h_4
+    extraTemp4 =  t_5
+    extraHumid4 = h_5</pre>
+    <p class="config_option">battery_map</p>
+    <p>This option defines the mapping between battery status values in
+      the database and the remote sensors.  The default mapping is:
+    </p>
+    <pre class="tty">[[battery_map]]
+    txBatteryStatus =      batteryUV
+    windBatteryStatus =    batteryWind
+    rainBatteryStatus =    batteryRain
+    outTempBatteryStatus = battery1
+    extraBatteryStatus1 =  battery2
+    extraBatteryStatus2 =  battery3
+    extraBatteryStatus3 =  battery4
+    extraBatteryStatus4 =  battery5</pre>
 
     <h3 class="config_section">[Simulator]</h3>
     <p>This section is for options relating to the software weather station simulator 
