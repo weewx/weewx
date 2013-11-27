@@ -1784,11 +1784,7 @@ Pressure offset is now 1.247000</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-usb</pre>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
-    <h3>Operating modes</h3>
-    <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
-    </p>
-    <p>There are two modes for collecting 'live' sensor readings, adaptive or periodic, and two modes for obtaining archive records, hardware or software.
-    </p>
+    <h3>Polling Interval</h3>
     <p>When reading 'live' data, <span class='code'>weewx</span> can read as fast as possible, or at a user-defined period.  This is controlled by the <span class='code'>polling_mode</span> parameter.
     </p>
     <table class="indent">
@@ -1820,6 +1816,10 @@ Pressure offset is now 1.247000</p>
         </td>
       </tr>
     </table>
+
+    <h3>Archive Record Generation</h3>
+    <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
+    </p>
     <p>To obtain archive records, <span class='code'>weewx</span> can read archive records from the station console, or calculate archive records independent of the station memory.  This is controlled by the <span class='code'>record_generation</span> parameter.
     </p>
     <table class="indent">
@@ -1859,6 +1859,139 @@ Pressure offset is now 1.247000</p>
     </p>
     <p>If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
     </p>
+
+
+    <h2>La Crosse WS23xx</h2>
+    <p>The configuration utility <span class='code'>wee_config_ws23xx</span> is
+      designed to diagnose and configure WS23xx stations.</p>
+    <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --help </pre>
+    <p>This will print out something like:</p>
+    <pre class='tty'>Usage: wee_config_ws23xx [config_file] [options] [--debug]
+
+Configuration utility for WS-23xx weather stations.
+
+Options:
+  -h, --help         show this help message and exit
+  --config=FILE      configuration file
+  --info             display weather station configuration
+  --current          get the current weather conditions
+  --history-since=N  display history records since N minutes ago
+  --history=N        display N history records
+  --set-time         set the station clock to the current time
+  --set-interval=N   set the station archive interval to N minutes
+  --clear-memory     clear station memory
+  -y                 answer yes to every prompt
+  --debug            display diagnostic information while running
+
+Mutating actions will request confirmation before proceeding.</pre>
+    <p>Display the station settings with the <span class='code'>--info</span>
+      option.</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --info </pre>
+    <p>This will result in something like this:</p>
+    <pre class='tty'>Driver version 0.6
+Querying the station for the configuration...
+buzzer: 0
+connection time till connect: 1.5
+connection type: 15
+dew point: 8.88
+dew point max: 18.26
+dew point max alarm: 20.0
+dew point max alarm active: 0
+dew point max alarm set: 0
+dew point max when: 978565200.0
+dew point min: -2.88
+dew point min alarm: 0.0
+dew point min alarm active: 0
+dew point min alarm set: 0
+dew point min when: 978757260.0
+forecast: 0
+history interval: 5.0
+history last record pointer: 8.0
+history last sample when: 1385564760.0
+history number of records: 175.0
+history time till sample: 5.0
+icon alarm active: 0
+in humidity: 48.0
+...</pre>
+
+    <h3>Dumping the console memory</h3>
+    <p>La Crosse 23xx stations store records in a circular buffer - once the buffer fills, the oldest records are replaced by newer records.  The console stores up to 175 records.  The <span class='code'>history number of records</span> indicates how many records are in memory.  The <span class='code'>history interval</span> indicates the number of minutes between records.  <span class='code'>wee_config_ws23xx</span> can display these records.</p>
+    <p>For example, to display the latest 30 records from the console memory:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --history=30</pre>
+    <p>To clear the console memory:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --clear-memory</pre>
+
+    <h3>Polling Interval</h3>
+    <p>The WS23xx console can communicate wirelessly with the sensors, or it
+      can communicate over a wired connection.  When connected with a wire, the
+      console updates sensor data every 8 seconds.  When connected wirelessly,
+      the console updates from 16 to 128 seconds, depending on sensor activity.
+    </p>
+    <p>The <span class="code">polling_interval</span> determines how often
+      <span class="code">weewx</span> will query the station for data.  If no
+      <span class="code">polling_interval</span> is specified (the default),
+      <span class="code">weewx</span> will automatically use a polling interval
+      based on the type of connection (wired or wireless).
+    </p>
+
+    <h3>Archive Record Generation</h3>
+    <p>When <span class='code'>weewx</span> starts up it will attempt to
+      download all records from the console since the last record in the
+      archive database.
+    </p>
+    <p>To obtain archive records, <span class='code'>weewx</span> can read
+      archive records from the station console, or calculate archive records
+      independent of the station memory.  This is controlled by the
+      <span class='code'>record_generation</span> parameter.
+    </p>
+    <table class="indent">
+      <tr>
+        <td width='15%'>Mode</td>
+        <td width='30%'><span class='code'>weewx.conf</span></td>
+        <td>Notes</td>
+      </tr>
+      <tr>
+        <td>Read from archive</td>
+        <td>
+          <p class='tty' style='margin:0'>[StdArchive]
+    archive_interval = 300
+    record_generation = hardware</p>
+        </td>
+        <td>
+          <p>In this mode, archive records are read from the console archive.
+            Each console archive record is an average of live samples over the
+            logging interval, so each record in the weewx archive database will
+            be an average of station sensor readings.
+          </p>
+          <p>The <span class='code'>archive_interval</span> should match the
+            logging interval specified in the console. Use
+            <span class='code'>wee_config_ws23xx</span> to set the console
+            logging interval.
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td>Calculate from sensors</td>
+        <td>
+          <p class='tty' style='margin:0'>[StdArchive]
+    archive_interval = 300
+    record_generation = software</p>
+        </td>
+        <td>
+          <p>In this mode, <span class='code'>weewx</span> calculates archive
+            records based on the live data from the console.  The
+            <span class='code'>archive_interval</span> determines how often an
+            archive record will be calculated.
+          </p>
+        </td>
+      </tr>
+    </table>
+    <p>Since the Ws23xx station does not record wind gust or gust direction in
+      the historical records, a setting of
+      <span class="code">record_generation = software</span> is recommended.
+    </p>
+
 
     <h2>La Crosse WS28xx</h2>
     <p>The configuration utility <span class='code'>wee_config_ws28xx</span> is
