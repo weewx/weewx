@@ -116,7 +116,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.5'
+DRIVER_VERSION = '0.6'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -244,6 +244,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         [Optional.  Default is False]
         """
         self._last_rain = None
+        self._last_cn = None
 
         self.altitude          = stn_dict['altitude']
         self.port              = stn_dict.get('port', DEFAULT_PORT)
@@ -279,7 +280,6 @@ class WS23xx(weewx.abstractstation.AbstractStation):
     def genLoopPackets(self):
         ntries = 0
         wait = 60
-        last_cn = None
         while ntries < self.max_tries:
             ntries += 1
             serial_port = None
@@ -296,7 +296,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 self._last_rain = packet['rainTotal']
                 ntries = 0
                 yield packet
-                wait, last_cn = self.get_wait(wait, data['cn'], last_cn)
+                wait = self.get_wait(wait, data['cn'])
                 time.sleep(wait)
             except Exception, e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
@@ -406,15 +406,19 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 serial_port.close()
                 serial_port = None
 
-    def get_wait(self, wait, conn, last_conn):
+    def get_wait(self, wait, conn):
         if self.polling_interval is not None:
             wait = self.polling_interval
-        elif conn != last_conn:
-            poll_time = POLLING_INTERVAL.get(conn, ("unknown",60))
-            loginf("using %s second polling interval for %s connection" % 
-                   (poll_time[1], poll_time[0]))
-            wait = poll_time[1]
-        return wait, conn
+        if conn != self._last_cn:
+            loginf("connection changed from %s to %s" %
+                   (get_conn_info(self._last_cn)[0], get_conn_info(conn)[0]))
+            if self.polling_interval is None:
+                conn_info = get_conn_info(conn)
+                loginf("using %s second polling interval for %s connection" % 
+                       (conn_info[1], conn_info[0]))
+                wait = conn_info[1]
+            self._last_cn = conn
+        return wait
 
 
 # ids for current weather conditions and connection type
@@ -422,6 +426,9 @@ SENSOR_IDS = [
     'it','ih','ot','oh','pa', 'ws','wsh','w0','rh','rt','dp','wc','cn' ]
 # polling interval, in seconds, for various connection types
 POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
+
+def get_conn_info(conn_type):
+    return POLLING_INTERVAL.get(conn_type, ("unknown",60))
 
 def set_time(ws, ts):
     """Set station time to indicated unix epoch."""

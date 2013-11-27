@@ -4,6 +4,9 @@
 # Copyright 2013 Matthew Wall
 #
 # Revision History
+#  0.7 26nov13
+#   * added patterns for ws23xx
+#   * added patterns for te923
 #  0.6 11nov13
 #   * record unstable reads on fousb
 #   * list upload errors separately
@@ -146,6 +149,7 @@ while(defined($_ = <STDIN>)) {
              /reportengine: Found configuration file/ ||
              /reportengine: FTP upload not requested/ ||
              /reportengine: Running report / ||  # only when debug=1
+             /reportengine: rsync upload not requested/ ||
              /restful: station will register with/ ||
              /restful: Registration interval/ ||
              /\*\*\*\*  Registration interval/ ||
@@ -159,6 +163,7 @@ while(defined($_ = <STDIN>)) {
              /stats: Created schema for statistical database/ ||
              /stats: Schema exists with/ ||
              /\*\*\*\*  \'station\'/ ||
+             /\*\*\*\* required parameter \'\'station\'\'/ ||
              /\*\*\*\*  Waiting 60 seconds then retrying/ ||
              /wxengine: Station does not support reading the time/ ||
              /wxengine: Starting main packet loop/ ||
@@ -277,6 +282,23 @@ while(defined($_ = <STDIN>)) {
              /ws28xx: RFComm: CHistoryDataSet.read/ ||
              /ws28xx: RFComm: testConfigChanged/ ||
              /ws28xx: RFComm: SetTime/ ||
+             /ws23xx: station archive interval is / ||
+             /ws23xx: using computer clock with / ||
+             /ws23xx: using \d+ sec\S* polling interval/ ||
+             /ws23xx: windchill will be / ||
+             /ws23xx: dewpoint will be / ||
+             /ws23xx: pressure offset is / ||
+             /ws23xx: serial port is / ||
+             /ws23xx: downloading \d+ records from station/ ||
+             /ws23xx: count is \d+ to satisfy timestamp/ ||
+             /ws23xx: windchill: / ||
+             /ws23xx: dewpoint: / ||
+             /ws23xx: station clock is / ||
+             /te923: polling interval is / ||
+             /te923: windchill will be / ||
+             /te923: sensor map is / ||
+             /te923: battery map is / ||
+             /te923: Found device on USB/ ||
              /forecast: .* starting thread/ ||
              /forecast: .* terminating thread/ ||
              /forecast: .* not yet time to do the forecast/ ||

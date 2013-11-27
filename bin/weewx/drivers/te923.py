@@ -138,6 +138,15 @@ claimInterface.
 # TODO: consider open/close on each read instead of keeping open
 # TODO: try doing bulkRead instead of interruptRead
 
+# FIXME: speed up transfers: 
+# date;PYTHONPATH=bin python bin/weewx/drivers/te923.py --records 0 > b; date
+# Tue Nov 26 10:37:36 EST 2013
+# Tue Nov 26 10:46:27 EST 2013
+# date; /home/mwall/src/te923tool-0.6.1/te923con -d > a; date
+# Tue Nov 26 10:46:52 EST 2013
+# Tue Nov 26 10:47:45 EST 2013
+
+
 from __future__ import with_statement
 import math
 import optparse
@@ -149,7 +158,7 @@ import weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.5'
+DRIVER_VERSION = '0.6'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -157,7 +166,7 @@ DEBUG_PRESSURE = 0
 # map the 5 remote sensors to columns in the database schema
 DEFAULT_SENSOR_MAP = {
     'outTemp':     't_1',
-    'outHumdity':  'h_1',
+    'outHumidity': 'h_1',
     'extraTemp1':  't_2',
     'extraHumid1': 'h_2',
     'extraTemp2':  't_3',
@@ -360,6 +369,7 @@ class TE923(weewx.abstractstation.AbstractStation):
         self.battery_map   = stn_dict.get('battery_map', DEFAULT_BATTERY_MAP)
         self.max_tries         = int(stn_dict.get('max_tries', 5))
         self.retry_wait        = int(stn_dict.get('retry_wait', 30))
+        self.memory_size       = stn_dict.get('memory_size', 'small')
 
         vendor_id              = int(stn_dict.get('vendor_id',  '0x1130'), 0)
         product_id             = int(stn_dict.get('product_id', '0x6801'), 0)
@@ -371,7 +381,8 @@ class TE923(weewx.abstractstation.AbstractStation):
         loginf('sensor map is %s' % self.sensor_map)
         loginf('battery map is %s' % self.battery_map)
 
-        self.station = Station(vendor_id, product_id, device_id)
+        self.station = Station(vendor_id, product_id, device_id,
+                               memory_size=self.memory_size)
         self.station.open()
 
     @property
@@ -473,7 +484,7 @@ def data_to_packet(data, status=None, altitude=0,
 
     packet['rainTotal'] = data['rain']
     if packet['rainTotal'] is not None:
-        packet['rainTotal'] *= 0.6578 # weewx wants cm
+        packet['rainTotal'] *= 0.06578 # weewx wants cm
     packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
     packet['rainRate'] = calculate_rain_rate(packet['rain'],
                                              packet['dateTime'],
@@ -522,9 +533,6 @@ STATE_INVALID = 'invalid'
 STATE_OUT_OF_RANGE = 'out_of_range'
 STATE_MISSING_LINK = 'no_link'
 STATE_ERROR = 'error'
-BUFLEN = 35
-ENDPOINT_IN = 0x01
-READ_LENGTH = 0x8
 
 forecast_dict = {
     0: 'heavy snow',
@@ -773,24 +781,15 @@ def decode_status(buf):
         logdbg("STT  %s %s" % (data['storm'], data['forecast']))
     return data
 
-class DataRequestFailed(Exception):
-    """USB control message returned unexpected value"""
-
-class BadLength(Exception):
-    """Bogus data length"""
-
-class BadCRC(Exception):
-    """Bogus CRC value while reading from USB"""
-
-class BadLeadingByte(Exception):
-    """Bogus checksum while reading from USB"""
-
 class BadRead(Exception):
-    """No valid response from station"""
+    """Bogus data length, CRC, header block, or other read failure"""
 
 class Station(object):
+    ENDPOINT_IN = 0x01
+    READ_LENGTH = 0x8
+
     def __init__(self, vendor_id=0x1130, product_id=0x6801,
-                 dev_id=None, ifc=None, cfg=None):
+                 dev_id=None, ifc=None, cfg=None, memory_size='small'):
         self.vendor_id = vendor_id
         self.product_id = product_id
         self.device_id = dev_id
@@ -802,6 +801,13 @@ class Station(object):
         self.latitude = None
         self.longitude = None
         self.archive_interval = None
+        self.memory_size = memory_size
+        if memory_size == 'large':
+            self.num_rec = 3442
+            self.num_blk = 3600 # FIXME: this is a guess
+        else:
+            self.num_rec = 208
+            self.num_blk = 256
 
     def _find(self, vendor_id, product_id, device_id):
         """Find the vendor and product ID on the USB."""
@@ -870,14 +876,13 @@ class Station(object):
                                      buffer=reqbuf,
                                      timeout=timeout)
         if ret != 8:
-            msg = 'Unexpected response to data request: %s != 8' % ret
-            logerr(msg)
-            raise DataRequestFailed(msg)
+            raise BadRead('Unexpected response to data request: %s != 8' % ret)
 
         rbuf = []
         time.sleep(0.3)
         try:
-            buf = self.handle.interruptRead(ENDPOINT_IN, READ_LENGTH, timeout)
+            buf = self.handle.interruptRead(self.ENDPOINT_IN,
+                                            self.READ_LENGTH, timeout)
             while buf:
                 nbytes = buf[0]
                 if DEBUG_READ:
@@ -885,23 +890,24 @@ class Station(object):
                     msg += ' '.join(["%02x" % buf[x] for x in range(8)])
                     logdbg(msg)
                 if nbytes > 7 or nbytes > len(buf)-1:
-                    raise BadLength("bogus length during read: %d" % nbytes)
+                    raise BadRead("Bogus length during read: %d" % nbytes)
                 rbuf.extend(buf[1:1+nbytes])
                 time.sleep(0.15)
-                buf = self.handle.interruptRead(ENDPOINT_IN, READ_LENGTH, timeout)
+                buf = self.handle.interruptRead(self.ENDPOINT_IN,
+                                                self.READ_LENGTH, timeout)
         except usb.USBError, e:
             logdbg(e)
 
         if len(rbuf) < 34:
-            raise BadLength("not enough bytes: %d < 34" % len(rbuf))
+            raise BadRead("Not enough bytes: %d < 34" % len(rbuf))
         if rbuf[0] != 0x5a:
-            raise BadLeadingByte("bad byte: %02x != %02x" % (rbuf[0], 0x5a))
+            raise BadRead("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
 
         crc = 0x00
         for x in rbuf[:33]:
             crc = crc ^ x
         if crc != rbuf[33]:
-            raise BadCRC("bad crc: %02x != %02x" % (crc, rbuf[33]))
+            raise BadRead("Bad crc: %02x != %02x" % (crc, rbuf[33]))
         return rbuf
 
     def _read(self, addr, max_tries=100):
@@ -915,32 +921,31 @@ class Station(object):
                 if DEBUG_READ:
                     logdbg("BUF  " + ' '.join(["%02x" % x for x in buf]))
                 return buf
-            except (BadLength, BadLeadingByte, BadCRC), e:
+            except BadRead, e:
                 logdbg(e)
         else:
-            raise BadRead("No read after %d attempts" % cnt)
+            raise BadRead("No data after %d attempts to read" % cnt)
 
     def gen_blocks(self, count=None):
         """generator that returns consecutive blocks of station memory"""
-        # FIXME: figure out maximum for small and large memory configurations
         if not count:
-            count = 10
+            count = self.num_blk
         for x in range(0, count*32, 32):
             buf = self._read(x)
-            yield x, buf[1:]
+            yield x, buf
 
     def get_status(self):
         """get station status"""
         status = {}
 
-        buf = self._read(0x000098)
+        buf = self._read(0x98)
         status['barVer']  = buf[1]
         status['uvVer']   = buf[2]
         status['rccVer']  = buf[3]
         status['windVer'] = buf[4]
         status['sysVer']  = buf[5]
 
-        buf = self._read(0x00004c)
+        buf = self._read(0x4c)
         status['batteryRain'] = True if buf[1] & 0x80 == 0x80 else False
         status['batteryWind'] = True if buf[1] & 0x40 == 0x40 else False
         status['batteryUV']   = True if buf[1] & 0x20 == 0x20 else False
@@ -958,53 +963,54 @@ class Station(object):
         data = decode(buf[1:])
         return data
 
-    def gen_records(self, count=None, bigmem=False):
+    def gen_records(self, count=None):
         """return requested records from station"""
         if not count:
-            count = 3442 if bigmem else 208
+            count = self.num_rec
+        tt = time.localtime(time.time())
         addr = None
         records = []
         for i in range(count):
             logdbg("reading record %d of %d" % (i+1, count))
-            addr,record = self.get_record(addr,bigmem)
+            addr,record = self.get_record(addr, tt.tm_year, tt.tm_mon)
             yield addr,record
 
-    def get_record(self, addr=None, bigmem=False):
+    def get_record(self, addr=None, now_year=None, now_month=None):
         """return a single record from station"""
-        radr = 0x001FBB
-        if bigmem:
-            radr = 0x01ffec
+        if now_year is None or now_month is None:
+            now = int(time.time())
+            tt = time.localtime(now)
+            now_year = tt.tm_year
+            now_month = tt.tm_mon
 
         if addr is None:
-            buf = self._read(0x0000fb)
+            buf = self._read(0xfb)
             addr = (buf[3] * 0x100 + buf[5]) * 0x26 + 0x101
 
         buf = self._read(addr)
-        now = int(time.time())
-        tt = time.localtime(now)
-        year = tt.tm_year
+        year = now_year
         month = buf[1] & 0x0f
-        day = bcd2int(buf[2])
-        if month > tt.tm_mon + 1:
+        if month > now_month:
             year -= 1
+        day = bcd2int(buf[2])
         hour = bcd2int(buf[3])
         minute = bcd2int(buf[4])
+        ts = time.mktime((year, month, day, hour, minute, 0, 0, 0, -1))
 
-        ts = time.mktime((year, month-1, day, hour, minute, 0, 0, 0, -1))
-
-        tmpbuf = BUFLEN*[0]
-        for i,x in enumerate(buf[5:16]):
-            tmpbuf[i] = x
+        tmpbuf = buf[5:16]
         addr += 0x10
         buf = self._read(addr)
-        for i,x in enumerate(buf[1:21]):
-            tmpbuf[11+i] = x
+        tmpbuf.extend(buf[1:22])
+
         data = decode(tmpbuf)
+        data['timestamp'] = int(ts)
+
         addr += 0x16
+        radr = 0x001FBB
+        if self.memory_size == 'large':
+            radr = 0x01ffec
         if addr > radr:
             addr = 0x000101
-
-        data['timestamp'] = int(ts)
 
         return addr,data
 
@@ -1019,13 +1025,13 @@ class Station(object):
 #    te923con -d              dump 208 memory records
 #    te923con -s              display station status
 
-FMT_TE923TOOL = 'te923tool'
-FMT_DICT = 'dict'
-FMT_TABLE = 'table'
-
 usage = """%prog [options] [--debug] [--help]"""
 
 def main():
+    FMT_TE923TOOL = 'te923tool'
+    FMT_DICT = 'dict'
+    FMT_TABLE = 'table'
+
     syslog.openlog('wee_te923', syslog.LOG_PID | syslog.LOG_CONS)
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
@@ -1089,7 +1095,7 @@ def main():
                     print_dict(data)
                 else:
                     print_readings(data)
-        if options.blocks:
+        if options.blocks is not None:
             for ptr,block in station.gen_blocks(count=options.blocks):
                 print_hex(ptr, block)
     finally:
@@ -1123,8 +1129,8 @@ def print_readings(data):
         output.append(getvalue(data, 'h_%d' % i, '%d'))
     output.append(getvalue(data, 'slp', '%0.1f'))
     output.append(getvalue(data, 'uv', '%0.1f'))
-    output.append('%s' % data['forecast'])
-    output.append('%s' % data['storm'])
+    output.append(getvalue(data, 'forecast', '%d'))
+    output.append(getvalue(data, 'storm', '%d'))
     output.append(getvalue(data, 'winddir', '%d'))
     output.append(getvalue(data, 'windspeed', '%0.1f'))
     output.append(getvalue(data, 'windgust', '%0.1f'))
@@ -1136,10 +1142,16 @@ def print_hex(ptr, data):
     print "0x%06x %s" % (ptr, ' '.join(["%02x" % x for x in data]))
 
 def getvalue(data, label, fmt):
-    if data[label + '_state'] == STATE_OK:
-        return fmt % data[label]
+    if label + '_state' in data:
+        if data[label + '_state'] == STATE_OK:
+            return fmt % data[label]
+        else:
+            return data[label + '_state'][0]
     else:
-        return data[label + '_state'][0]
+        if data[label] is None:
+            return 'x'
+        else:
+            return fmt % data[label]
 
 if __name__ == '__main__':
     main()
