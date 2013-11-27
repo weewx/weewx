@@ -13,7 +13,7 @@
 #
 # See http://www.gnu.org/licenses/
 #
-# Thanks to Sebastian John for the te923tool written in C:
+# Thanks to Sebastian John for the te923tool written in C (v0.6.1):
 #   http://te923.fukz.org/
 # Thanks to Mark Teel for the te923 implementation in wview:
 #   http://www.wviewweather.com/
@@ -21,31 +21,90 @@
 """Classes and functions for interfacing with te923 weather stations.
 
 These stations were made by Hideki and branded as Honeywell, Meade, IROX Pro X,
-Mebus TE923, and TFA Nexus.
+Mebus TE923, and TFA Nexus.  They date back to at least 2007 and are still
+sold (sparsely in the US, more commonly in Europe) as of 2013.
 
-A single bucket tip is between 0.02 and 0.03 in (0.508 to 0.762 mm).
+Apparently there are at least two different memory sizes.  One version can
+store about 200 records, a newer version can store about 3300 records.
 
-The station has altitude, latitude, longitude, and time.  Read these during
-initialization and indicate any difference with values from weewx.conf.  If
-conflicts, use the values from weewx.conf.
+The firmware version of each component can be read by talking to the station,
+assuming that the component has a wireless connection to the station, of
+course.
 
-Notes from Other Implementations
+To force connection between station and sensors, press and hold DOWN button.
 
-It is not clear whether te923tool copied from wview or vice versa.  te923tool
+To reset all station parameters:
+ - press and hold SNOOZE and UP for 4 seconds
+ - press SET button; main unit will beep
+ - wait until beeping stops
+ - remove batteries and wait 10 seconds
+ - reinstall batteries
+
+From the Meade TE9233W manual (TE923W-M_IM(ENG)_BK_010511.pdf):
+
+  Remote temperature/humidty sampling interval: 10 seconds
+  Remote temperature/humidity transmit interval: about 47 seconds
+  Indoor temperature/humidity sampling interval: 10 seconds
+  Indoor pressure sampling interval: 20 minutes
+  Rain counter transmitting interval: 183 seconds
+  Wind direction transmitting interval: 33 seconds
+  Wind/Gust speed display update interval: 33 seconds
+  Wind/Gust sampling interval: 11 seconds
+  UV transmitting interval: 300 seconds
+  Rain counter resolution: 0.03 in (0.6578 mm)
+  Battery status of each sensor is checked every hour
+
+This implementation polls the station for data.  Use the polling_interval to
+control the frequency of polling.  Default is 10 seconds.
+
+The manual says that a single bucket tip is 0.03 inches.  In reality, a single
+bucket tip is between 0.02 and 0.03 in (0.508 to 0.762 mm).  This driver uses
+a value of 0.02589 in (0.6578 mm) per bucket tip.
+
+The station has altitude, latitude, longitude, and time.
+
+Notes From/About Other Implementations
+
+Apparently te923tool came first, then wview copied a bit from it.  te923tool
 provides more detail about the reason for invalid values, for example, values
 out of range versus no link with sensors.
 
 There are some disagreements between the wview and te923tool implementations.
 
-There are a few oddities in the te923tool:
+From the te923tool:
 - reading from usb in 8 byte chunks instead of all at once
 - length of buffer is 35, but reads are 32-byte blocks
 - windspeed and windgust state can never be -1
 - index 29 in rain count, also in wind dir
 
-wview does the 8-byte reads using interruptRead as well.
+From wview:
+- wview does the 8-byte reads using interruptRead
+- wview ignores the windchill value from the station
+- wview treats the pressure reading as barometer (SLP), then calculates the
+    station pressure and altimeter pressure
 
-wview ignores the windchill value from the station.
+Memory Map
+
+0x002001 - current readings
+
+0x000098 - firmware versions
+1 - barometer
+2 - uv
+3 - rcc
+4 - wind
+5 - system
+
+0x00004c - battery status
+- rain
+- wind
+- uv
+- 5
+- 4
+- 3
+- 2
+- 1
+
+0x0000fb - records
 
 Random Notes
 
@@ -66,10 +125,30 @@ claimInterface.
                   timeout) # timeout
 """
 
-# FIXME: add option to calculate windchill instead of using station value
-# FIXME: verify pressure/altimeter
+# TODO: figure out how to set station time, if possible
+# TODO: figure out how to read altitude from station
+# TODO: figure out how to read station pressure from station
+# TODO: figure out how to clear station memory
+# TODO: figure out how to detect station memory size
+# TODO: figure out how to modify the archive interval
+# TODO: figure out how to read the archive interval
+# TODO: figure out how to read lat/lon from station
+# TODO: clear rain total
+# TODO: get enumeration of usb.USBError codes to handle errors better
+# TODO: consider open/close on each read instead of keeping open
+# TODO: try doing bulkRead instead of interruptRead
+
+# FIXME: speed up transfers: 
+# date;PYTHONPATH=bin python bin/weewx/drivers/te923.py --records 0 > b; date
+# Tue Nov 26 10:37:36 EST 2013
+# Tue Nov 26 10:46:27 EST 2013
+# date; /home/mwall/src/te923tool-0.6.1/te923con -d > a; date
+# Tue Nov 26 10:46:52 EST 2013
+# Tue Nov 26 10:47:45 EST 2013
+
 
 from __future__ import with_statement
+import math
 import optparse
 import syslog
 import time
@@ -79,9 +158,37 @@ import weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.1'
-DEBUG_READ = 1
-DEBUG_DECODE = 1
+DRIVER_VERSION = '0.6'
+DEBUG_READ = 0
+DEBUG_DECODE = 0
+DEBUG_PRESSURE = 0
+
+# map the 5 remote sensors to columns in the database schema
+DEFAULT_SENSOR_MAP = {
+    'outTemp':     't_1',
+    'outHumidity': 'h_1',
+    'extraTemp1':  't_2',
+    'extraHumid1': 'h_2',
+    'extraTemp2':  't_3',
+    'extraHumid2': 'h_3',
+    'extraTemp3':  't_4',
+    # WARNING: the following are not in the default schema
+    'extraHumid3': 'h_4',
+    'extraTemp4':  't_5',
+    'extraHumid4': 'h_5',
+}
+
+DEFAULT_BATTERY_MAP = {
+    'txBatteryStatus':      'batteryUV',
+    'windBatteryStatus':    'batteryWind',
+    'rainBatteryStatus':    'batteryRain',
+    'outTempBatteryStatus': 'battery1',
+    # WARNING: the following are not in the default schema
+    'extraBatteryStatus1':  'battery2',
+    'extraBatteryStatus2':  'battery3',
+    'extraBatteryStatus3':  'battery4',
+    'extraBatteryStatus4':  'battery5',
+}
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'te923: %s' % msg)
@@ -155,6 +262,24 @@ def sp2bp(sp_mbar, elev_meter, t_C):
     bp_mbar = sp_mbar / pt if pt != 0 else 0
     return bp_mbar
 
+def bp2sp(bp_mbar, elev_meter, t_C, humidity):
+    """Convert sea level pressure to station pressure.
+
+    bp_mbar - seal level pressure (barometer) in millibars
+
+    elev_meter - station elevation in meters
+
+    t_C - temperature in degrees Celsius
+
+    sp - station pressure in millibars
+    """
+    # FIXME: the conversion should use mean temperature as second temp arg
+    if bp_mbar is None or t_C is None or humidity is None:
+        return None
+    sp = weewx.uwxutils.TWxUtils.SeaLevelToStationPressure(bp_mbar, elev_meter,
+                                                           t_C, t_C, humidity)
+    return sp
+
 # FIXME: this goes in weeutil.weeutil or weewx.units
 def getaltitudeM(config_dict):
     altitude_t = weeutil.weeutil.option_as_list(
@@ -217,20 +342,14 @@ class TE923(weewx.abstractstation.AbstractStation):
         [Required. No default]
 
         polling_interval: How often to poll the station, in seconds.
-        [Optional. Default is 60]
-
-        pressure_offset: Calibration offset in millibars for the station
-        pressure sensor.  This offset is added to the station sensor output
-        before barometer and altimeter pressures are calculated.
-        [Optional. No Default]
+        [Optional. Default is 10]
 
         model: Which station model is this?
         [Optional. Default is 'TE923']
 
-        out_sensor: Which sensor is the outside sensor?  The station supports
-        up to 5 sensors.  This indicates which should be considered the
-        outside temperature and humidity.
-        [Optional. Default is 1]
+        calculate_windchill: Calculate the windchill instead of using the
+        value from the station.
+        [Optional.  Default is False]
         """
         self._last_rain        = None
         self._last_rain_ts     = None
@@ -239,20 +358,31 @@ class TE923(weewx.abstractstation.AbstractStation):
         DEBUG_READ             = int(stn_dict.get('debug_read', 0))
         global DEBUG_DECODE
         DEBUG_DECODE           = int(stn_dict.get('debug_decode', 0))
+        global DEBUG_PRESSURE
+        DEBUG_PRESSURE         = int(stn_dict.get('debug_pressure', 0))
 
         self.altitude          = stn_dict['altitude']
-        self.polling_interval  = stn_dict.get('polling_interval', 60)
+        self.polling_interval  = stn_dict.get('polling_interval', 10)
         self.model             = stn_dict.get('model', 'TE923')
-        self.pressure_offset   = stn_dict.get('pressure_offset', None)
-        if self.pressure_offset is not None:
-            self.pressure_offset = float(self.pressure_offset)
-
-        self.out_sensor        = stn_dict.get('out_sensor', '1')
+        self.calc_windchill    = stn_dict.get('calculate_windchill', False)
+        self.sensor_map    = stn_dict.get('sensor_map', DEFAULT_SENSOR_MAP)
+        self.battery_map   = stn_dict.get('battery_map', DEFAULT_BATTERY_MAP)
+        self.max_tries         = int(stn_dict.get('max_tries', 5))
+        self.retry_wait        = int(stn_dict.get('retry_wait', 30))
+        self.memory_size       = stn_dict.get('memory_size', 'small')
 
         vendor_id              = int(stn_dict.get('vendor_id',  '0x1130'), 0)
         product_id             = int(stn_dict.get('product_id', '0x6801'), 0)
         device_id              = stn_dict.get('device_id', None)
-        self.station = Station(vendor_id, product_id, device_id)
+
+        loginf('polling interval is %s' % str(self.polling_interval))
+        loginf('windchill will be %s' %
+               ('calculated' if self.calc_windchill else 'read from station'))
+        loginf('sensor map is %s' % self.sensor_map)
+        loginf('battery map is %s' % self.battery_map)
+
+        self.station = Station(vendor_id, product_id, device_id,
+                               memory_size=self.memory_size)
         self.station.open()
 
     @property
@@ -264,92 +394,155 @@ class TE923(weewx.abstractstation.AbstractStation):
         self.station = None
 
     def genLoopPackets(self):
-        while True:
-            data = self.station.get_readings()
-            packet = self.data_to_packet(data,
-                                         altitude=self.altitude,
-                                         pressure_offset=self.pressure_offset,
-                                         last_rain=self._last_rain,
-                                         last_rain_ts=self._last_rain_ts)
-            self._last_rain = packet['rainTotal']
-            self._last_rain_ts = packet['dateTime']
-            yield packet
-            time.sleep(self.polling_interval)
-
-    def data_to_packet(self, data, altitude=0, pressure_offset=None,
-                       last_rain=None, last_rain_ts=None):
-        """convert raw data to format and units required by weewx"""
-        packet = {}
-        packet['usUnits'] = weewx.METRIC
-        packet['dateTime'] = int(time.time() + 0.5)
-
-        packet['inTemp'] = data['t_in'] # T is degree C
-        packet['inHumidity'] = data['h_in'] # H is percent
-        packet['outTemp'] = data['t_%s' % self.out_sensor]
-        packet['outHumidity'] = data['h_%s' % self.out_sensor]
-        packet['pressure'] = data['pressure']
-        packet['UV'] = data['uv']
-        packet['windSpeed'] = data['windspeed']
-        if packet['windSpeed'] is not None:
-            packet['windSpeed'] *= 3.6 # weewx wants km/h
-        packet['windGust'] = data['windgust']
-        if packet['windGust'] is not None:
-            packet['windGust'] *= 3.6 # weewx wants km/h
-
-        if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
-            packet['windDir'] = data['winddir']
-            if packet['windDir'] is not None:
-                packet['windDir'] *= 22.5 # weewx wants degrees
+        ntries = 0
+        while ntries < self.max_tries:
+            ntries += 1
+            try:
+                data = self.station.get_readings()
+                status = self.station.get_status()
+                packet = data_to_packet(data, status=status,
+                                        altitude=self.altitude,
+                                        last_rain=self._last_rain,
+                                        last_rain_ts=self._last_rain_ts,
+                                        calc_windchill=self.calc_windchill,
+                                        sensor_map=self.sensor_map,
+                                        battery_map=self.battery_map)
+                self._last_rain = packet['rainTotal']
+                self._last_rain_ts = packet['dateTime']
+                ntries = 0
+                yield packet
+                time.sleep(self.polling_interval)
+            except usb.USBError, e:
+                # FIXME: if 'No such device' we should bail out immediately.
+                # unfortunately there is no reliable way (?) to get the type
+                # of USBError.  so retry on every type.
+                logerr("Failed attempt %d of %d to get LOOP data: %s" %
+                       (ntries, self.max_tries, e))
+                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                time.sleep(self.retry_wait)
         else:
-            packet['windDir'] = None
+            msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
 
-        if packet['windGust'] is not None and packet['windGust'] > 0:
-            packet['windGustDir'] = data['winddir']
-            if packet['windGustDir'] is not None:
-                packet['windGustDir'] *= 22.5 # weewx wants degrees
-        else:
-            packet['windGustDir'] = None
+#    def genArchiveRecords(self, since_ts):
+#        pass
 
-        packet['rainTotal'] = data['rain']
-        if packet['rainTotal'] is not None:
-            packet['rainTotal'] *= 0.0635 # weewx wants cm
-        packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+    def getConfig(self):
+        data = self.station.get_status()
+        return data
 
-        packet['rainRate'] = calculate_rain_rate(packet['rain'],
-                                                 packet['dateTime'],
-                                                 last_rain_ts)
+def data_to_packet(data, status=None, altitude=0,
+                   last_rain=None, last_rain_ts=None, calc_windchill=False,
+                   sensor_map=DEFAULT_SENSOR_MAP,
+                   battery_map=DEFAULT_BATTERY_MAP):
+    """convert raw data to format and units required by weewx
 
-        packet['heatindex'] = weewx.wxformulas.heatindexC(
-            packet['outTemp'], packet['outHumidity'])
-        packet['dewpoint'] = weewx.wxformulas.dewpointC(
-            packet['outTemp'], packet['outHumidity'])
+                    station      weewx (metric)
+    temperature     degree C     degree C
+    humidity        percent      percent
+    uv index        unitless     unitless
+    slp             mbar         mbar
+    wind speed      mile/h       km/h
+    wind gust       mile/h       km/h
+    wind dir        degree       degree
+    rain            mm           cm
+    rain rate                    cm/h
+    """
+
+    packet = {}
+    packet['usUnits'] = weewx.METRIC
+    packet['dateTime'] = int(time.time() + 0.5)
+
+    packet['inTemp'] = data['t_in'] # T is degree C
+    packet['inHumidity'] = data['h_in'] # H is percent
+    packet['outTemp'] = data[sensor_map['outTemp']] \
+        if 'outTemp' in sensor_map else None
+    packet['outHumidity'] = data[sensor_map['outHumidity']] \
+        if 'outHumidity' in sensor_map else None
+    packet['UV'] = data['uv']
+
+    packet['windSpeed'] = data['windspeed']
+    if packet['windSpeed'] is not None:
+        packet['windSpeed'] *= 1.60934 # speed is mph; weewx wants km/h
+    if packet['windSpeed']:
+        packet['windDir'] = data['winddir']
+        if packet['windDir'] is not None:
+            packet['windDir'] *= 22.5 # weewx wants degrees
+    else:
+        packet['windDir'] = None
+
+    packet['windGust'] = data['windgust']
+    if packet['windGust'] is not None:
+        packet['windGust'] *= 1.60934 # speed is mph; weewx wants km/h
+    if packet['windGust']:
+        packet['windGustDir'] = data['winddir']
+        if packet['windGustDir'] is not None:
+            packet['windGustDir'] *= 22.5 # weewx wants degrees
+    else:
+        packet['windGustDir'] = None
+
+    packet['rainTotal'] = data['rain']
+    if packet['rainTotal'] is not None:
+        packet['rainTotal'] *= 0.06578 # weewx wants cm
+    packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+    packet['rainRate'] = calculate_rain_rate(packet['rain'],
+                                             packet['dateTime'],
+                                             last_rain_ts)
+
+    # we must calculate heat index and dewpoint
+    packet['heatindex'] = weewx.wxformulas.heatindexC(
+        packet['outTemp'], packet['outHumidity'])
+    packet['dewpoint'] = weewx.wxformulas.dewpointC(
+        packet['outTemp'], packet['outHumidity'])
+
+    # station has windchill, but provide option to calculate
+    if calc_windchill:
+        packet['windchill'] = weewx.wxformulas.windchillC(
+            packet['outTemp'], packet['windSpeed'])
+        logdbg("windchill: calculated=%s station=%s" %
+               (packet['windchill'], data['windchill']))
+    else:
         packet['windchill'] = data['windchill']
 
-        # FIXME: station knows altitude, so 'pressure' might be 'altimeter'
-        adjp = packet['pressure']
-        if pressure_offset is not None and adjp is not None:
-            adjp += pressure_offset
-        packet['barometer'] = sp2bp(adjp, altitude, packet['outTemp'])
-        packet['altimeter'] = sp2ap(adjp, altitude)
+    # station reports baromter (SLP), so we must back-calculate to get
+    # the station pressure (gauge).
+    packet['barometer'] = data['slp']
+    packet['pressure'] = bp2sp(packet['barometer'], altitude,
+                               packet['outTemp'], packet['outHumidity'])
+    packet['altimeter'] = sp2ap(packet['pressure'], altitude)
+    if DEBUG_PRESSURE:
+        logdbg("pressures: p=%s b=%s a=%s" % (packet['pressure'],
+                                              packet['barometer'],
+                                              packet['altimeter']))
 
-#        packet['txBatteryStatus'] = data['batteryUV']
-#        packet['windBatteryStatus'] = data['batteryWind']
-#        packet['rainBatteryStatus'] = data['batteryRain']
-#        packet['outTempBatteryStatus'] = data['battery%s' % self.out_sensor]
+    # insert values for extra sensors if they are available
+    for label in sensor_map:
+        packet[label] = data[sensor_map[label]]
 
-        # battery5, battery4, battery3, battery2, battery1
+    # insert values for battery status if they are available
+    if status is not None:
+        for label in battery_map:
+            packet[label] = status[battery_map[label]]
 
-        return packet
+    return packet
 
 
 STATE_OK = 'ok'
-STATE_INVALID = 'inv'
+STATE_INVALID = 'invalid'
 STATE_OUT_OF_RANGE = 'out_of_range'
 STATE_MISSING_LINK = 'no_link'
 STATE_ERROR = 'error'
-BUFLEN = 35
-ENDPOINT_IN = 0x01
-READ_LENGTH = 0x8
+
+forecast_dict = {
+    0: 'heavy snow',
+    1: 'little snow',
+    2: 'heavy rain',
+    3: 'little rain',
+    4: 'cloudy',
+    5: 'some clouds',
+    6: 'sunny',
+    }
 
 def bcd2int(bcd):
     return int(((bcd & 0xf0) >> 4) * 10) + int(bcd & 0x0f)
@@ -464,19 +657,20 @@ def decode_pressure(buf):
     if DEBUG_DECODE:
         logdbg("PRS  BUF[20]=%02x BUF[21]=%02x" % (buf[20], buf[21]))
     if buf[21] & 0xf0 == 0xf0:
-        data['pressure_state'] = STATE_INVALID
-        data['pressure'] = None
+        data['slp_state'] = STATE_INVALID
+        data['slp'] = None
     else:
-        data['pressure_state'] = STATE_OK
-        data['pressure'] = int(buf[21] * 0x100 + buf[20]) * 0.0625
+        data['slp_state'] = STATE_OK
+        data['slp'] = int(buf[21] * 0x100 + buf[20]) * 0.0625
     if DEBUG_DECODE:
-        logdbg("PRS  %s %s" % (data['pressure'], data['pressure_state']))
+        logdbg("PRS  %s %s" % (data['slp'], data['slp_state']))
     return data
 
-# NB: te923tool divides by 2.23694, wview does not
-#   1 meter/sec = 2.23694 miles/hour
+# NB: te923tool divides speed/gust by 2.23694 (1 meter/sec = 2.23694 mile/hour)
+# NB: wview does not divide speed/gust
 # NB: wview multiplies winddir by 22.5, te923tool does not
 def decode_wind(buf):
+    """decode wind speed, gust, and direction"""
     data = {}
     if DEBUG_DECODE:
         logdbg("WGS  BUF[25]=%02x BUF[26]=%02x" % (buf[25], buf[26]))
@@ -587,24 +781,15 @@ def decode_status(buf):
         logdbg("STT  %s %s" % (data['storm'], data['forecast']))
     return data
 
-class DataRequestFailed(Exception):
-    """USB control message returned unexpected value"""
-
-class BadLength(Exception):
-    """Bogus data length"""
-
-class BadCRC(Exception):
-    """Bogus CRC value while reading from USB"""
-
-class BadLeadingByte(Exception):
-    """Bogus checksum while reading from USB"""
-
 class BadRead(Exception):
-    """No valid response from station"""
+    """Bogus data length, CRC, header block, or other read failure"""
 
 class Station(object):
+    ENDPOINT_IN = 0x01
+    READ_LENGTH = 0x8
+
     def __init__(self, vendor_id=0x1130, product_id=0x6801,
-                 dev_id=None, ifc=None, cfg=None):
+                 dev_id=None, ifc=None, cfg=None, memory_size='small'):
         self.vendor_id = vendor_id
         self.product_id = product_id
         self.device_id = dev_id
@@ -616,6 +801,13 @@ class Station(object):
         self.latitude = None
         self.longitude = None
         self.archive_interval = None
+        self.memory_size = memory_size
+        if memory_size == 'large':
+            self.num_rec = 3442
+            self.num_blk = 3600 # FIXME: this is a guess
+        else:
+            self.num_rec = 208
+            self.num_blk = 256
 
     def _find(self, vendor_id, product_id, device_id):
         """Find the vendor and product ID on the USB."""
@@ -669,6 +861,8 @@ class Station(object):
     # the wview implementation, after sending the read command the device will
     # send back 32 bytes of data within 100 ms.  If not, the command was not
     # properly received.
+    #
+    # FIXME: must be a better way to know when there is no more data
     def _raw_read(self, addr, timeout=50):
         reqbuf = [0x05, 0x0AF, 0x00, 0x00, 0x00, 0x00, 0xAF, 0xFE]
         reqbuf[4] = addr / 0x10000
@@ -682,14 +876,13 @@ class Station(object):
                                      buffer=reqbuf,
                                      timeout=timeout)
         if ret != 8:
-            msg = 'Unexpected response to data request: %s != 8' % ret
-            logerr(msg)
-            raise DataRequestFailed(msg)
+            raise BadRead('Unexpected response to data request: %s != 8' % ret)
 
         rbuf = []
         time.sleep(0.3)
         try:
-            buf = self.handle.interruptRead(ENDPOINT_IN, READ_LENGTH, timeout)
+            buf = self.handle.interruptRead(self.ENDPOINT_IN,
+                                            self.READ_LENGTH, timeout)
             while buf:
                 nbytes = buf[0]
                 if DEBUG_READ:
@@ -697,23 +890,24 @@ class Station(object):
                     msg += ' '.join(["%02x" % buf[x] for x in range(8)])
                     logdbg(msg)
                 if nbytes > 7 or nbytes > len(buf)-1:
-                    raise BadLength("bogus length during read: %d" % nbytes)
+                    raise BadRead("Bogus length during read: %d" % nbytes)
                 rbuf.extend(buf[1:1+nbytes])
                 time.sleep(0.15)
-                buf = self.handle.interruptRead(ENDPOINT_IN, READ_LENGTH, timeout)
+                buf = self.handle.interruptRead(self.ENDPOINT_IN,
+                                                self.READ_LENGTH, timeout)
         except usb.USBError, e:
             logdbg(e)
 
         if len(rbuf) < 34:
-            raise BadLength("not enough bytes: %d < 34" % len(rbuf))
+            raise BadRead("Not enough bytes: %d < 34" % len(rbuf))
         if rbuf[0] != 0x5a:
-            raise BadLeadingByte("bad byte: %02x != %02x" % (rbuf[0], 0x5a))
+            raise BadRead("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
 
         crc = 0x00
         for x in rbuf[:33]:
             crc = crc ^ x
         if crc != rbuf[33]:
-            raise BadCRC("bad crc: %02x != %02x" % (crc, rbuf[33]))
+            raise BadRead("Bad crc: %02x != %02x" % (crc, rbuf[33]))
         return rbuf
 
     def _read(self, addr, max_tries=100):
@@ -727,23 +921,31 @@ class Station(object):
                 if DEBUG_READ:
                     logdbg("BUF  " + ' '.join(["%02x" % x for x in buf]))
                 return buf
-            except (BadLength, BadLeadingByte, BadCRC), e:
+            except BadRead, e:
                 logdbg(e)
         else:
-            raise BadRead("No read after %d attempts" % cnt)
+            raise BadRead("No data after %d attempts to read" % cnt)
+
+    def gen_blocks(self, count=None):
+        """generator that returns consecutive blocks of station memory"""
+        if not count:
+            count = self.num_blk
+        for x in range(0, count*32, 32):
+            buf = self._read(x)
+            yield x, buf
 
     def get_status(self):
         """get station status"""
         status = {}
 
-        buf = self._read(0x000098)
+        buf = self._read(0x98)
         status['barVer']  = buf[1]
         status['uvVer']   = buf[2]
         status['rccVer']  = buf[3]
         status['windVer'] = buf[4]
         status['sysVer']  = buf[5]
 
-        buf = self._read(0x00004c)
+        buf = self._read(0x4c)
         status['batteryRain'] = True if buf[1] & 0x80 == 0x80 else False
         status['batteryWind'] = True if buf[1] & 0x40 == 0x40 else False
         status['batteryUV']   = True if buf[1] & 0x20 == 0x20 else False
@@ -761,80 +963,111 @@ class Station(object):
         data = decode(buf[1:])
         return data
 
-    def get_memory(self, count=208, bigmem=False):
-        if bigmem:
-            count = 3442
+    def gen_records(self, count=None):
+        """return requested records from station"""
+        if not count:
+            count = self.num_rec
+        tt = time.localtime(time.time())
         addr = None
         records = []
         for i in range(count):
             logdbg("reading record %d of %d" % (i+1, count))
-            record,addr = self.get_record(addr,bigmem)
-            records.append(record)
-        return records
+            addr,record = self.get_record(addr, tt.tm_year, tt.tm_mon)
+            yield addr,record
 
-    def get_record(self, addr=None, bigmem=False):
-        """return memory dump from station"""
-        radr = 0x001FBB
-        if bigmem:
-            radr = 0x01ffec
+    def get_record(self, addr=None, now_year=None, now_month=None):
+        """return a single record from station"""
+        if now_year is None or now_month is None:
+            now = int(time.time())
+            tt = time.localtime(now)
+            now_year = tt.tm_year
+            now_month = tt.tm_mon
 
         if addr is None:
-            buf = self._read(0x0000fb)
+            buf = self._read(0xfb)
             addr = (buf[3] * 0x100 + buf[5]) * 0x26 + 0x101
 
         buf = self._read(addr)
-        now = int(time.time())
-        tt = time.localtime(now)
-        year = tt.tm_year
+        year = now_year
         month = buf[1] & 0x0f
-        day = bcd2int(buf[2])
-        if month > tt.tm_mon + 1:
+        if month > now_month:
             year -= 1
+        day = bcd2int(buf[2])
         hour = bcd2int(buf[3])
         minute = bcd2int(buf[4])
+        ts = time.mktime((year, month, day, hour, minute, 0, 0, 0, -1))
 
-        ts = time.mktime((year, month-1, day, hour, minute, 0, 0, 0, -1))
-
-        tmpbuf = BUFLEN*[0]
-        for i,x in enumerate(buf[5:16]):
-            tmpbuf[i] = x
+        tmpbuf = buf[5:16]
         addr += 0x10
         buf = self._read(addr)
-        for i,x in enumerate(buf[1:21]):
-            tmpbuf[11+i] = x
+        tmpbuf.extend(buf[1:22])
+
         data = decode(tmpbuf)
+        data['timestamp'] = int(ts)
+
         addr += 0x16
+        radr = 0x001FBB
+        if self.memory_size == 'large':
+            radr = 0x01ffec
         if addr > radr:
             addr = 0x000101
 
-        data['timestamp'] = int(ts)
-
-        return data, addr
-
+        return addr,data
 
 
 # define a main entry point for basic testing of the station without weewx
-# engine and service overhead.
+# engine and service overhead.  invoke this as follows from the weewx root dir:
+#
+# PYTHONPATH=bin python bin/weewx/drivers/te923.py
+#
+# by default, output matches that of te923tool
+#    te923con                 display current weather readings
+#    te923con -d              dump 208 memory records
+#    te923con -s              display station status
 
 usage = """%prog [options] [--debug] [--help]"""
 
 def main():
+    FMT_TE923TOOL = 'te923tool'
+    FMT_DICT = 'dict'
+    FMT_TABLE = 'table'
+
     syslog.openlog('wee_te923', syslog.LOG_PID | syslog.LOG_CONS)
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='display driver version')
     parser.add_option('--debug', dest='debug', action='store_true',
                       help='display diagnostic information while running')
     parser.add_option('--status', dest='status', action='store_true',
                       help='display station status')
     parser.add_option('--readings', dest='readings', action='store_true',
                       help='display sensor readings')
-    parser.add_option('--memory', dest='memory', action='store_true',
-                      help='dump station memory')
+    parser.add_option("--records", dest="records", type=int, metavar="N",
+                      help="display N station records, oldest to newest")
+    parser.add_option('--blocks', dest='blocks', type=int, metavar="N",
+                      help='display N 32-byte blocks of station memory')
+    parser.add_option("--format", dest="format", type=str, metavar="FORMAT",
+                      help="format for output, one of te923tool, table, or dict")
     (options, args) = parser.parse_args()
+
+    if options.version:
+        print "te923 driver version %s" % DRIVER_VERSION
+        exit(1)
 
     if options.debug is not None:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     else:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
+    if options.format is None:
+        fmt = FMT_TE923TOOL
+    elif (options.format.lower() != FMT_TE923TOOL and
+          options.format.lower() != FMT_TABLE and
+          options.format.lower() != FMT_DICT):
+        print "Unknown format '%s'.  Known formats include 'te923tool', 'table', and 'dict'." % options.format
+        exit(1)
+    else:
+        fmt = options.format.lower()
 
     station = None
     try:
@@ -842,19 +1075,83 @@ def main():
         station.open()
         if options.status:
             data = station.get_status()
-            for key in sorted(data):
-                print "%s: %s" % (key.rjust(16), data[key])
+            if fmt == FMT_DICT:
+                print_dict(data)
+            elif fmt == FMT_TABLE:
+                print_table(data)
+            else:
+                print_status(data)
         if options.readings:
             data = station.get_readings()
-            for key in sorted(data):
-                print "%s: %s" % (key.rjust(16), data[key])
-        if options.memory:
-            data = station.get_memory(count=10)
-            for x in data:
-                print x
+            if fmt == FMT_DICT:
+                print_dict(data)
+            elif fmt == FMT_TABLE:
+                print_table(data)
+            else:
+                print_readings(data)
+        if options.records is not None:
+            for ptr,data in station.gen_records(count=options.records):
+                if fmt == FMT_DICT:
+                    print_dict(data)
+                else:
+                    print_readings(data)
+        if options.blocks is not None:
+            for ptr,block in station.gen_blocks(count=options.blocks):
+                print_hex(ptr, block)
     finally:
         if station is not None:
             station.close()
+
+def print_dict(data):
+    """output entire dictionary contents"""
+    print data
+
+def print_table(data):
+    """output entire dictionary contents in two columns"""
+    for key in sorted(data):
+        print "%s: %s" % (key.rjust(16), data[key])
+
+def print_status(data):
+    """output status fields in te923tool format"""
+    print "0x%x:0x%x:0x%x:0x%x:0x%x:%d:%d:%d:%d:%d:%d:%d:%d" % (
+        data['sysVer'], data['barVer'], data['uvVer'], data['rccVer'],
+        data['windVer'], data['batteryRain'], data['batteryUV'],
+        data['batteryWind'], data['battery5'], data['battery4'],
+        data['battery3'], data['battery2'], data['battery1'])
+
+def print_readings(data):
+    """output sensor readings in te923tool format"""
+    output = [str(data['timestamp'])]
+    output.append(getvalue(data, 't_in', '%0.2f'))
+    output.append(getvalue(data, 'h_in', '%d'))
+    for i in range(1,6):
+        output.append(getvalue(data, 't_%d' % i, '%0.2f'))
+        output.append(getvalue(data, 'h_%d' % i, '%d'))
+    output.append(getvalue(data, 'slp', '%0.1f'))
+    output.append(getvalue(data, 'uv', '%0.1f'))
+    output.append(getvalue(data, 'forecast', '%d'))
+    output.append(getvalue(data, 'storm', '%d'))
+    output.append(getvalue(data, 'winddir', '%d'))
+    output.append(getvalue(data, 'windspeed', '%0.1f'))
+    output.append(getvalue(data, 'windgust', '%0.1f'))
+    output.append(getvalue(data, 'windchill', '%0.1f'))
+    output.append(getvalue(data, 'rain', '%d'))
+    print ':'.join(output)
+
+def print_hex(ptr, data):
+    print "0x%06x %s" % (ptr, ' '.join(["%02x" % x for x in data]))
+
+def getvalue(data, label, fmt):
+    if label + '_state' in data:
+        if data[label + '_state'] == STATE_OK:
+            return fmt % data[label]
+        else:
+            return data[label + '_state'][0]
+    else:
+        if data[label] is None:
+            return 'x'
+        else:
+            return fmt % data[label]
 
 if __name__ == '__main__':
     main()

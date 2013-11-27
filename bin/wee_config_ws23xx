@@ -1,0 +1,185 @@
+#!/usr/bin/env python
+# $Id$
+#
+# Copyright 2013 Matthew Wall
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+# See http://www.gnu.org/licenses/
+
+"""Command line utility for configuring LaCrosse WS-23xx weather stations"""
+
+# FIXME: set time
+# FIXME: turn on/off backlight
+# FIXME: turn buzzer on/off
+# FIXME: can we read/modify DST on the console?
+
+import optparse
+import syslog
+import time
+
+import weewx.drivers.ws23xx
+import weewx.units
+import weeutil.weeutil
+
+description = """Configuration utility for WS-23xx weather stations."""
+
+usage = """%prog [config_file] [options] [--debug]"""
+
+epilog = """Mutating actions will request confirmation before proceeding."""
+
+def main():
+    syslog.openlog('wee_config_ws23xx', syslog.LOG_PID|syslog.LOG_CONS)
+
+    # Create a command line parser:
+    parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
+    
+    # Add the various options:
+    parser.add_option("--config", dest="cfgfn", type=str, metavar="FILE",
+                      help="configuration file")
+    parser.add_option("--info", dest="info", action="store_true",
+                      help="display weather station configuration")
+    parser.add_option("--current", dest="current", action="store_true",
+                      help="get the current weather conditions")
+    parser.add_option("--history-since", dest="recmin", type=int, metavar="N",
+                      help="display history records since N minutes ago")
+    parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                      help="display N history records")
+    parser.add_option("--set-time", dest="settime", action="store_true",
+                      help="set the station clock to the current time")
+    parser.add_option("--set-interval", dest="interval", type=int, metavar="N",
+                      help="set the station archive interval to N minutes")
+    parser.add_option("--clear-memory", dest="clear", action="store_true",
+                      help="clear station memory")
+    parser.add_option("-y", dest="noprompt", action="store_true",
+                      help="answer yes to every prompt")
+    parser.add_option("--debug", dest="debug", action="store_true",
+                      help="display diagnostic information while running")
+
+    # Now we are ready to parse the command line and check the options
+    (options, args) = parser.parse_args()
+    if options.debug is not None:
+        weewx.debug = options.debug
+
+    if options.debug is not None:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    else:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
+    prompt = False if options.noprompt else True
+
+    # Load the configuration file
+    config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
+    print 'Using configuration file %s' % config_fn
+
+    # Create a station instance
+    print 'Driver version %s' % weewx.drivers.ws23xx.DRIVER_VERSION
+    altitude_m = weewx.drivers.ws23xx.getaltitudeM(config_dict)
+    station = weewx.drivers.ws23xx.WS23xx(altitude=altitude_m,
+                                          **config_dict['WS23xx'])
+
+    # Do what we need to do...
+    if options.current:
+        current(station)
+    elif options.nrecords is not None:
+        history(station, count=options.nrecords)
+    elif options.recmin is not None:
+        ts = int(time.time()) - options.recmin * 60
+        history(station, ts=ts)
+    elif options.settime:
+        setclock(station, prompt)
+    elif options.interval:
+        setinterval(station, options.interval, prompt)
+    elif options.clear:
+        clearhistory(station, prompt)
+    else:
+        info(station)
+
+
+def info(station):
+    """Query the station then display the settings."""
+    print 'Querying the station for the configuration...'
+    config = station.getConfig()
+    for key in sorted(config):
+        print '%s: %s' % (key, config[key])
+
+def current(station):
+    """Get current weather observation."""
+    print 'Querying the station for current weather data...'
+    for packet in station.genLoopPackets():
+        print packet
+        break
+
+def history(station, ts=0, count=0):
+    """Display the indicated number of records or records since timestamp"""
+    print "Querying the station for historical records..."
+    for i,r in enumerate(station.genArchiveRecords(since_ts=ts, count=count)):
+        print r
+        if count and i > count:
+            break
+
+def setclock(station, prompt):
+    """Set station clock to current time."""
+    ans = None
+    while ans not in ['y', 'n']:
+        v = station.getTime()
+        vstr = weeutil.weeutil.timestamp_to_string(v)
+        print "Station clock is", vstr
+        now = int(time.time() + 0.5)
+        nstr = weeutil.weeutil.timestamp_to_string(now)
+        if prompt:
+            ans = raw_input("Set station clock to %s (y/n)? " % nstr)
+        else:
+            print "Setting station clock to %s" % nstr
+            ans = 'y'
+        if ans == 'y' :
+            station.setTime(now)
+            v = station.getTime()
+            vstr = weeutil.weeutil.timestamp_to_string(v)
+            print "Station clock is now", vstr
+        elif ans == 'n':
+            print "Set clock cancelled."
+
+def setinterval(station, interval, prompt):
+    v = station.getArchiveInterval()
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Interval is", v
+        if prompt:
+            ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+        else:
+            print "Setting interval to %d minutes" % interval
+            ans = 'y'
+        if ans == 'y' :
+            station.setArchiveInterval(interval)
+            v = station.getArchiveInterval()
+            print "Interval is now", v
+        elif ans == 'n':
+            print "Set interval cancelled."
+
+def clearhistory(station, prompt):
+    ans = None
+    while ans not in ['y', 'n']:
+        v = station.getRecordCount()
+        print "Records in memory:", v
+        if prompt:
+            ans = raw_input("Clear console memory (y/n)? ")
+        else:
+            print 'Clearing console memory'
+            ans = 'y'
+        if ans == 'y' :
+            station.clearHistory()
+            v = station.getRecordCount()
+            print "Records in memory:", v
+        elif ans == 'n':
+            print "Clear memory cancelled."
+
+
+if __name__=="__main__" :
+    main()
