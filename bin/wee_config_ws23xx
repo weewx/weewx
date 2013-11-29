@@ -82,6 +82,7 @@ def main():
     print 'Driver version %s' % weewx.drivers.ws23xx.DRIVER_VERSION
     altitude_m = weewx.drivers.ws23xx.getaltitudeM(config_dict)
     station = weewx.drivers.ws23xx.WS23xx(altitude=altitude_m,
+                                          config_dict=config_dict,
                                           **config_dict['WS23xx'])
 
     # Do what we need to do...

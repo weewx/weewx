@@ -51,6 +51,8 @@ A single bucket tip is 0.0204 in (0.518 mm).
 The station has 175 history records.  That is just over 7 days of data with
 the default history recording interval of 60 minutes (59 in the console).
 
+The connection type can be one of 0=cable, 3=lost, 15=wireless
+
 The station supports both wireless and wired communication between the
 sensors and a station console.  Wired connection updates data every 8 seconds.
 Wireless connection updates data in 16 to 128 second intervals, depending on
@@ -72,26 +74,40 @@ It is possible to increase the rate of wireless updates:
 
   http://www.wikihow.com/Modify-a-Lacrosse-Ws2300-for-Frequent-Wireless-Updates
 
-This implementation polls the station.  Use the polling_interval parameter
-to specify how often to poll for data.  If not specified, the polling interval
-will adapt based on connection type and status.
+Instruments are connected by unshielded phone cables.  RF interference can
+cause random spikes in data, with one symptom being values of 25.5 m/s or
+91.8 km/h for the wind speed.  To reduce the number of spikes in data, replace
+with shielded cables:
 
-Instruments are connected by unshielded phone cables.  To reduce the number of
-spikes in data, replace with shielded cables.
+  http://www.lavrsen.dk/sources/weather/windmod.htm
 
-The connection type can be one of 0=cable, 3=lost, f=wireless
+The station records wind speed and direction, but has no notion of gust.
+
+The station calculates windchill and dewpoint.
+
+Kenneth Lavrson maintains a map of the station memory here:
+
+  http://www.lavrsen.dk/foswiki/bin/view/Open2300/OpenWSMemoryMap
 
 The station has a serial connection to the computer.
 
 This driver does not keep the serial port open for long periods.  Instead, the
 driver opens the serial port, reads data, then closes the port.
 
+This implementation polls the station.  Use the polling_interval parameter
+to specify how often to poll for data.  If not specified, the polling interval
+will adapt based on connection type and status.
+
+There seems to be no indication of the quality of the sensor readings.  For
+example, if the wind instruments are unplugged from the thermo/hygro unit,
+values for wind speed and direction are still reported.
+
 USB-Serial Converters
 
 With a USB-serial converter one can connect the station to a computer with
 only USB ports, but not every converter will work properly.  Perhaps the two
-most common converters are based on the Prolific and LTDI chipsets.  Many
-people report better luck with the LTDI-based converters.  Some converters
+most common converters are based on the Prolific and FTDI chipsets.  Many
+people report better luck with the FTDI-based converters.  Some converters
 that use the Prolific chipset (PL2303) will work, but not all of them.
 
 Known to work: ATEN UC-232A
@@ -100,6 +116,11 @@ Known to work: ATEN UC-232A
 
 # TODO: use pyserial instead of LinuxSerialPort
 # FIXME: unless we can get setTime to work, just ignore the console clock
+# FIXME: detect bogus wind speed/direction
+# i see these when the wind instrument is disconnected:
+# ws 26.399999
+# wsh 21
+# w0 135
 
 import optparse
 import syslog
@@ -116,7 +137,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.6'
+DRIVER_VERSION = '0.8'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -136,7 +157,8 @@ def logerr(msg):
 
 def loader(config_dict, engine):
     altitude_m = getaltitudeM(config_dict)
-    station = WS23xx(altitude=altitude_m, **config_dict['WS23xx'])
+    station = WS23xx(altitude=altitude_m, config_dict=config_dict,
+                     **config_dict['WS23xx'])
     return station
 
 # FIXME: the pressure calculations belong in wxformulas
@@ -264,6 +286,16 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                ('calculated' if self.calc_windchill else 'read from station'))
         loginf('dewpoint will be %s' %
                ('calculated' if self.calc_dewpoint else 'read from station'))
+
+        # FIXME: this is a hack until we modify the driver api to have an
+        # explicit genCatchupRecords method
+        self.force_recgen = weeutil.weeutil.tobool(stn_dict.get('force_software_record_generation', True))
+        if self.force_recgen:
+            config_dict = stn_dict['config_dict']
+            recgen = config_dict['StdArchive']['record_generation']
+            if recgen.lower() != 'software':
+                loginf("forcing record_generation to 'software'")
+                config_dict['StdArchive']['record_generation'] = 'software'
 
     @property
     def hardware_name(self):
@@ -541,7 +573,6 @@ def gen_records(ws, since_ts=None, count=None, use_computer_clock=True):
             'rt': value.rain,
             'ws': value.wind_speed,
             'w0': value.wind_direction,
-            'wsh': None, # no gust in history
             'rh': None, # no rain rate in history
             'dp': None, # no dewpoint in history
             'wc': None, # no windchill in history
@@ -566,8 +597,9 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
     uv index        unitless     unitless
     pressure        mbar         mbar
     wind speed      m/s          km/h
-    wind gust       m/s          km/h
     wind dir        degree       degree
+    wind gust       None
+    wind gust dir   None
     rain            mm           cm
     rain rate                    cm/h
     """
@@ -586,10 +618,8 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
         packet['windSpeed'] *= 3.6 # weewx wants km/h
     packet['windDir'] = data['w0'] if packet['windSpeed'] else None
 
-    packet['windGust'] = data['wsh']
-    if packet['windGust'] is not None:
-        packet['windGust'] *= 3.6 # weewx wants km/h
-    packet['windGustDir'] = data['w0'] if packet['windGust'] else None
+    packet['windGust'] = None
+    packet['windGustDir'] = None
 
     packet['rainTotal'] = data['rt']
     if packet['rainTotal'] is not None:
