@@ -101,6 +101,21 @@ Version: 2.6.0a3
 	<td></td>
       </tr>
       <tr>
+	<td class="text_highlight" rowspan="2">Cresta</td>
+	<td>WRX815</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>PWS720</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
 	<td class="text_highlight" rowspan="3">Davis</td>
 	<td>VantagePro2</td>
 	<td>Serial or USB</td>
@@ -216,7 +231,14 @@ Version: 2.6.0a3
 	<td>Tested</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="3">Hideki</td>
+	<td class="text_highlight" rowspan="4">Hideki</td>
+	<td>DV928</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
 	<td>TE821</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
@@ -236,6 +258,14 @@ Version: 2.6.0a3
 	<td class="code">pyusb</td>
         <td>TE923<sup><a href='#te923'>8</a></sup></td>
 	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">Huger</td>
+	<td>WM918</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>WMR9x8<sup><a href='#wmr9x8'>4</a></sup></td>
+	<td></td>
       </tr>
       <tr>
 	<td class="text_highlight">IROX</td>
@@ -306,12 +336,26 @@ Version: 2.6.0a3
 	<td></td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="5">Oregon Scientific</td>
+	<td class="text_highlight" rowspan="7">Oregon Scientific</td>
+	<td>WMR88</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
 	<td>WMR100N</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
 	<td>Tested</td>
+      </tr>
+      <tr>
+	<td>WMR180</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
       </tr>
       <tr>
 	<td>WMR200</td>
@@ -364,7 +408,14 @@ Version: 2.6.0a3
 	<td></td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan='3'>TFA</td>
+	<td class="text_highlight" rowspan='4'>TFA</td>
+	<td>Matrix</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
 	<td>Nexus</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
@@ -445,9 +496,10 @@ Version: 2.6.0a3
         <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR968</a>.
       </li>
       <li><a id="fousb">Fine Offset series.</a> These are branded by
-        many vendors, including Ambient Weather, National Geographic, Watson,
-        Elecsa, Tycon, Maplin, Froggit, Velleman, and others. Tested on the
-        <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.
+        many vendors, including Ambient Weather, Elecsa, Froggit, Maplin,
+        National Geographic, Tycon, Velleman, Watson, and others.
+        Tested on the
+        <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>.
       </li>
       <li><a id="ws23xx">La Crosse WS-23xx series.</a> These are branded by
         other vendors, including TFA.  Tested on the
@@ -458,7 +510,7 @@ Version: 2.6.0a3
         <a href="http://lacrossetechnologies.com/2814/">La Crosse C86234</a>.
       </li>
       <li><a id="te923">Hideki TE923.</a> These are branded by many vendors,
-        including Honeywell, Meade, IROX, Mebus, Ventus, and TFA.
+        including Cresta, Honeywell, IROX, Meade, Mebus, TFA, and Ventus.
         Tested on the
        <a href="http://www.ambientweather.com/hotewiwest.html">Meade TE923</a>.
       </li>
@@ -807,7 +859,7 @@ longitude = -77.0366</pre>
       </tr>
       <tr>
 	<td class="code">FineOffsetUSB</td>
-	<td>Fine Offset USB stations</td>
+	<td>Fine Offset 10xx, 20xx, and 30xx stations</td>
       </tr>
       <tr>
 	<td class="code">WS23xx</td>
