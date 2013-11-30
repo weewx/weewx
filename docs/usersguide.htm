@@ -1018,6 +1018,16 @@ longitude = -77.0366</pre>
       Only the raw station pressure is recorded to the database, not the
       station pressure with offset applied.  Default is None.
     </p>
+    <p class='config_option'>polling_interval</p>
+    <p>The <span class="code">polling_interval</span> determines how often
+      <span class="code">weewx</span> will query the station for data.  If no
+      <span class="code">polling_interval</span> is specified (the default),
+      <span class="code">weewx</span> will automatically use a polling interval
+      based on the type of connection between the station and the sensors
+      (wired or wireless). When connected with a wire, the console updates
+      sensor data every 8 seconds.  When connected wirelessly, the console
+      updates from 16 to 128 seconds, depending on sensor activity.
+    </p>
 
     <h3 class='config_section'>[WS28xx]</h3>
     <p>This section is for options relating to the La Crosse WS-28xx series of
@@ -1900,9 +1910,7 @@ Pressure offset is now 1.247000</p>
     </p>
     <p>To obtain archive records, <span class='code'>weewx</span> can read archive records from the station console, or calculate archive records independent of the station memory.  This is controlled by the <span class='code'>record_generation</span> parameter.
     </p>
-    <p>The <span class='code'>archive_interval</span> should always be greater than the <span class='code'>polling_interval</span>.  300 (5 minutes) is a typical value for the archive interval.
-    </p>
-    <p>If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
+    <p>The <span class='code'>archive_interval</span> should always be greater than the <span class='code'>polling_interval</span>. If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
     </p>
 
 
@@ -1915,10 +1923,6 @@ Pressure offset is now 1.247000</p>
         or about 14 hours with a recording interval of 5 minutes.</li>
       <li>Changing the recording interval will clear the station memory.</li>
       <li>The station calculates windchill and dewpoint.</li>
-      <li>The station can communicate with the sensors using a wired connection
-        or using a wireless connection.  With a wired connection, data are
-        updated every 8 seconds.  With a wireless connection, data are updated
-        every 16 to 128 seconds, depending on sensor activity.</li>
       <li>The hardware interface is a serial port, but USB-serial converters
         can be used with computers that have no serial port.  Beware that
         not every type of USB-serial converter will work.</li>
@@ -1989,19 +1993,6 @@ in humidity: 48.0
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --history=30</pre>
     <p>To clear the console memory:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --clear-memory</pre>
-
-    <h3>Polling Interval</h3>
-    <p>The WS23xx console can communicate wirelessly with the sensors, or it
-      can communicate over a wired connection.  When connected with a wire, the
-      console updates sensor data every 8 seconds.  When connected wirelessly,
-      the console updates from 16 to 128 seconds, depending on sensor activity.
-    </p>
-    <p>The <span class="code">polling_interval</span> determines how often
-      <span class="code">weewx</span> will query the station for data.  If no
-      <span class="code">polling_interval</span> is specified (the default),
-      <span class="code">weewx</span> will automatically use a polling interval
-      based on the type of connection (wired or wireless).
-    </p>
 
     <h3>Archive Record Generation</h3>
     <p>When <span class='code'>weewx</span> starts up it will attempt to
