@@ -1,3 +1,11 @@
 TODO before the next release:
 
+Include the following uploaders in 2.6:
+ - emoncms (emoncms.org)
+ - seg (smart energy groups)
+ - pachube (aka cosm, aka xively)
+They are available via the wiki for 2.5 and earlier, but the changes to REST
+will break those.  So support will be easier if we include the new versions
+with 2.6.
+
 Figure out why the heartbeat doesn't work on the WMR200.
