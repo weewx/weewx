@@ -298,6 +298,21 @@ Version: 2.6.0a3
 	<td>Experimental</td>
       </tr>
       <tr>
+	<td class="text_highlight" rowspan="2">Maplin</td>
+	<td>N96GY</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>N96FY</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
 	<td class="text_highlight" rowspan="3">Meade</td>
 	<td>TE923W</td>
 	<td>USB</td>
@@ -1740,7 +1755,18 @@ Davis Vantage EEPROM settings:
 	  Because the command dumps <em>all</em> data, it may result in many 
 	  duplicate primary key errors. These can be ignored.</p>
 
-      <h2>Fine Offset</h2>
+    <h2>Fine Offset</h2>
+    <p>The Fine Offset stations have a few quirks:</p>
+    <ul>
+      <li>The 10xx and 20xx stations can save up to 4080 historical readings.
+        That is about 85 days of data with the default recording interval of
+        30 minutes, or about 14 days with a recording interval of 5 minutes.
+      </li>
+      <li>The 30xx stations can save up to 3264 historical readings.</li>
+      <li>The station reads data from the sensors every 48 seconds.</li>
+      <li>The 30xx stations read UV data every 60 seconds.</li>
+    </ul>
+
     <p>The configuration utility <span class='code'>wee_config_fousb</span> is
       designed to diagnose and configure Fine Offset stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -1874,39 +1900,6 @@ Pressure offset is now 1.247000</p>
     </p>
     <p>To obtain archive records, <span class='code'>weewx</span> can read archive records from the station console, or calculate archive records independent of the station memory.  This is controlled by the <span class='code'>record_generation</span> parameter.
     </p>
-    <table class="indent">
-      <tr>
-        <td width='15%'>Mode</td>
-        <td width='30%'><span class='code'>weewx.conf</span></td>
-        <td>Notes</td>
-      </tr>
-      <tr>
-        <td>Read from archive</td>
-        <td>
-          <p class='tty' style='margin:0'>[StdArchive]
-    archive_interval = 300
-    record_generation = hardware</p>
-        </td>
-        <td>
-          <p>In this mode, archive records are read from the console archive.  Each console archive record is an average of live samples over the logging interval, so each record in the weewx archive database will be an average of station sensor readings.
-          </p>
-          <p>The <span class='code'>archive_interval</span> should match the logging interval specified in the console. Use <span class='code'>wee_config_fousb</span> to set the console logging interval.
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td>Calculate from sensors</td>
-        <td>
-          <p class='tty' style='margin:0'>[StdArchive]
-    archive_interval = 300
-    record_generation = software</p>
-        </td>
-        <td>
-          <p>In this mode, <span class='code'>weewx</span> calculates archive records based on the live data from the console.  The <span class='code'>archive_interval</span> determines how often an archive record will be calculated.
-          </p>
-        </td>
-      </tr>
-    </table>
     <p>The <span class='code'>archive_interval</span> should always be greater than the <span class='code'>polling_interval</span>.  300 (5 minutes) is a typical value for the archive interval.
     </p>
     <p>If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
@@ -1914,6 +1907,23 @@ Pressure offset is now 1.247000</p>
 
 
     <h2>La Crosse WS23xx</h2>
+    <p>The La Crosse WS23xx stations have a few quirks:</p>
+    <ul>
+      <li>The station does not record wind gust or wind gust direction.</li>
+      <li>The station has 175 history records.  That is just over 7 days
+        of data with the default history recording interval of 60 minutes, 
+        or about 14 hours with a recording interval of 5 minutes.</li>
+      <li>Changing the recording interval will clear the station memory.</li>
+      <li>The station calculates windchill and dewpoint.</li>
+      <li>The station can communicate with the sensors using a wired connection
+        or using a wireless connection.  With a wired connection, data are
+        updated every 8 seconds.  With a wireless connection, data are updated
+        every 16 to 128 seconds, depending on sensor activity.</li>
+      <li>The hardware interface is a serial port, but USB-serial converters
+        can be used with computers that have no serial port.  Beware that
+        not every type of USB-serial converter will work.</li>
+    </ul>
+
     <p>The configuration utility <span class='code'>wee_config_ws23xx</span> is
       designed to diagnose and configure WS23xx stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -1968,7 +1978,13 @@ in humidity: 48.0
 ...</pre>
 
     <h3>Dumping the console memory</h3>
-    <p>La Crosse 23xx stations store records in a circular buffer - once the buffer fills, the oldest records are replaced by newer records.  The console stores up to 175 records.  The <span class='code'>history number of records</span> indicates how many records are in memory.  The <span class='code'>history interval</span> indicates the number of minutes between records.  <span class='code'>wee_config_ws23xx</span> can display these records.</p>
+    <p>La Crosse 23xx stations store records in a circular buffer - once the
+      buffer fills, the oldest records are replaced by newer records.  The
+      console stores up to 175 records.
+      The <span class='code'>history number of records</span> indicates how
+      many records are in memory.  The
+      <span class='code'>history interval</span> indicates the number of
+      minutes between records.</p>
     <p>For example, to display the latest 30 records from the console memory:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --history=30</pre>
     <p>To clear the console memory:</p>
@@ -1996,52 +2012,6 @@ in humidity: 48.0
       archive records from the station console, or calculate archive records
       independent of the station memory.  This is controlled by the
       <span class='code'>record_generation</span> parameter.
-    </p>
-    <table class="indent">
-      <tr>
-        <td width='15%'>Mode</td>
-        <td width='30%'><span class='code'>weewx.conf</span></td>
-        <td>Notes</td>
-      </tr>
-      <tr>
-        <td>Read from archive</td>
-        <td>
-          <p class='tty' style='margin:0'>[StdArchive]
-    archive_interval = 300
-    record_generation = hardware</p>
-        </td>
-        <td>
-          <p>In this mode, archive records are read from the console archive.
-            Each console archive record is an average of live samples over the
-            logging interval, so each record in the weewx archive database will
-            be an average of station sensor readings.
-          </p>
-          <p>The <span class='code'>archive_interval</span> should match the
-            logging interval specified in the console. Use
-            <span class='code'>wee_config_ws23xx</span> to set the console
-            logging interval.
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td>Calculate from sensors</td>
-        <td>
-          <p class='tty' style='margin:0'>[StdArchive]
-    archive_interval = 300
-    record_generation = software</p>
-        </td>
-        <td>
-          <p>In this mode, <span class='code'>weewx</span> calculates archive
-            records based on the live data from the console.  The
-            <span class='code'>archive_interval</span> determines how often an
-            archive record will be calculated.
-          </p>
-        </td>
-      </tr>
-    </table>
-    <p>Since the Ws23xx station does not record wind gust or gust direction in
-      the historical records, a setting of
-      <span class="code">record_generation = software</span> is recommended.
     </p>
 
 
