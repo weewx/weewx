@@ -72,7 +72,7 @@ console update frequency:
 
 It is possible to increase the rate of wireless updates:
 
-  http://www.wikihow.com/Modify-a-Lacrosse-Ws2300-for-Frequent-Wireless-Updates
+  http://www.wxforum.net/index.php?topic=2196.0
 
 Instruments are connected by unshielded phone cables.  RF interference can
 cause random spikes in data, with one symptom being values of 25.5 m/s or
@@ -137,7 +137,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.8'
+DRIVER_VERSION = '0.9'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -271,17 +271,20 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         self.altitude          = stn_dict['altitude']
         self.port              = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval  = stn_dict.get('polling_interval', None)
+        if self.polling_interval is not None:
+            self.polling_interval = int(self.polling_interval)
         self.model             = stn_dict.get('model', 'LaCrosse WS23xx')
-        self.calc_windchill    = stn_dict.get('calculate_windchill', False)
-        self.calc_dewpoint     = stn_dict.get('calculate_dewpoint', False)
+        self.calc_windchill    = weeutil.weeutil.tobool(stn_dict.get('calculate_windchill', False))
+        self.calc_dewpoint     = weeutil.weeutil.tobool(stn_dict.get('calculate_dewpoint', False))
         self.pressure_offset   = stn_dict.get('pressure_offset', None)
         if self.pressure_offset is not None:
             self.pressure_offset = float(self.pressure_offset)
         self.max_tries         = int(stn_dict.get('max_tries', 5))
         self.retry_wait        = int(stn_dict.get('retry_wait', 30))
 
-        loginf('serial port is %s' % str(self.port))
-        loginf('pressure offset is %s' % str(self.pressure_offset))
+        loginf('serial port is %s' % self.port)
+        loginf('pressure offset is %s' % self.pressure_offset)
+        loginf('polling interval is %s' % self.polling_interval)
         loginf('windchill will be %s' %
                ('calculated' if self.calc_windchill else 'read from station'))
         loginf('dewpoint will be %s' %
