@@ -21,6 +21,10 @@
 #   pylint: disable-msg=W0603
 # suppress weewx driver methods not implemented
 #   pylint: disable-msg=W0223  
+# suppress weewx driver methods non-conforming name
+#   pylint: disable-msg=C0103
+# suppress too many lines in module
+#   pylint: disable-msg=C0302
 """Classes and functions to interfacing with an Oregon Scientific WMR200 station
 
     Oregon Scientific
@@ -147,6 +151,13 @@ def loader(config_dict, engine):
     return station
 
 
+class WMR200ProtocolError(weewx.WeeWxIOError):
+    """Used to signal a protocol error condition"""
+    def __init__(self, msg):
+        super(WMR200ProtocolError, self).__init__()
+        self._msg = msg
+
+
 class UsbDevice(object):
     """General class to handles all access to device via USB bus."""
     def __init__(self):
@@ -181,10 +192,10 @@ class UsbDevice(object):
         except usb.USBError, exception:
             logcrt(('open_device() Unable to open USB interface.'
                     ' Reason: %s' % exception))
-            raise weewx.WeeWxIOError(exception)
+            raise weewx.WakeupError(exception)
         except AttributeError, exception:
             logcrt('open_device() Device not specified.')
-            raise weewx.WeeWxIOError(exception)
+            raise weewx.WakeupError(exception)
 
         # Detach any old claimed interfaces
         try:
@@ -195,9 +206,9 @@ class UsbDevice(object):
         try:
             self.handle.claimInterface(self.interface)
         except usb.USBError, exception:
-            logcrt('open_device() Unable to'
-                   ' claim USB interface. Reason: %s' % exception)
-            raise weewx.WeeWxIOError(exception)
+            logcrt(('open_device() Unable to'
+                    ' claim USB interface. Reason: %s' % exception))
+            raise weewx.WakeupError(exception)
 
     def close_device(self):
         """Closes a device for access."""
@@ -216,9 +227,9 @@ class UsbDevice(object):
         the first byte that are valid protocol bytes.  Only the valid
         protocol bytes are returned.  """
         if not self.handle:
-            logerr(('read_device() No USB handle'
-                                           ' for usb_device Read'))
-            raise weewx.WeeWxIOError('No USB handle for usb_device Read')
+            msg = 'read_device() No USB handle for usb_device Read'
+            logerr(msg)
+            raise weewx.WeeWxIOError(msg)
 
         try:
             report = self.handle.interruptRead(self.in_endpoint,
@@ -227,9 +238,9 @@ class UsbDevice(object):
 
             # I think this value indicates that the buffer has overflowed.
             if report[0] == 8:
-                log_msg = 'USB read_device overflow error'
-                logerr(log_msg)
-                raise WMR200AccessError(log_msg)
+                msg = 'USB read_device overflow error'
+                logerr(msg)
+                raise weewx.WeeWxIOError(msg)
 
             self.byte_cnt_rd += len(report)
             # The first byte is the size of valid data following.
@@ -251,14 +262,14 @@ class UsbDevice(object):
             # have been exhausted.  We have to send a heartbeat command
             # to tell the weather console to start streaming live data
             # again.
-            log_msg = 'read_device() USB Error Reason:%s' % ex
             if ex.args[0].find('No data available') == -1:
-                logerr(log_msg)
-                return None
+                msg = 'read_device() USB Error Reason:%s' % ex
+                logerr(msg)
+                raise weewx.WeeWxIOError(msg)
             else:
                 # No data avail...not an error but probably ok.
-                logdbg('No data received in'
-                              ' %d seconds' % int(self.timeout_read))
+                logdbg(('No data received in'
+                       ' %d seconds' % int(self.timeout_read)))
                 return []
 
     def write_device(self, buf):
@@ -268,9 +279,9 @@ class UsbDevice(object):
         value = 0x00000220
 
         if not self.handle:
-            log_msg = 'No USB handle for usb_device Write'
-            logerr(log_msg)
-            raise weewx.WeeWxIOError(log_msg)
+            msg = 'No USB handle for usb_device Write'
+            logerr(msg)
+            raise weewx.WeeWxIOError(msg)
 
         try:
             if DEBUG_WRITES:
@@ -284,32 +295,11 @@ class UsbDevice(object):
                 0x0000000,                            # index
                 _WMR200_USB_RESET_TIMEOUT)            # timeout
         except usb.USBError, exception:
-            logerr(('write_device() Unable to'
-                          ' send USB control message'))
-            logerr('****  %s' % exception)
+            msg = ('write_device() Unable to'
+                   ' send USB control message %d' % exception)
+            logerr(msg)
             # Convert to a Weewx error:
-            raise weewx.WakeupError(exception)
-
-
-class WMR200ProtocolError(weewx.WeeWxIOError):
-    """Used to signal a protocol error condition"""
-    def __init__(self, msg):
-        super(WMR200ProtocolError, self).__init__()
-        self._msg = msg
-
-
-class WMR200CheckSumError(weewx.WeeWxIOError):
-    """Used to signal a protocol error condition"""
-    def __init__(self, msg):
-        super(WMR200CheckSumError, self).__init__()
-        self._msg = msg
-
-
-class WMR200AccessError(weewx.WeeWxIOError):
-    """Used to signal a USB or device access error condition"""
-    def __init__(self, msg):
-        super(WMR200AccessError, self).__init__()
-        self._msg = msg
+            raise weewx.WeeWxIOError(exception)
 
 
 class Packet(object):
@@ -322,6 +312,7 @@ class Packet(object):
     pkt_cmd = 0
     pkt_name = 'AbstractPacket'
     pkt_len = 0
+    pkt_id = 0
     def __init__(self, wmr200):
         """Initialize base elements of the packet parser."""
         # Keep reference to the wmr200 for any special considerations
@@ -335,6 +326,9 @@ class Packet(object):
         self._bogus_packet = False
         # Add the command byte as the first field
         self.append_data(self.pkt_cmd)
+        # Packet identifier
+        Packet.pkt_id += 1
+        self.pkt_id = Packet.pkt_id
 
     @staticmethod
     def host_timestamp():
@@ -408,9 +402,9 @@ class Packet(object):
             return cksum
 
         except IndexError:
-            str_val = 'Packet too small to compute 16 bit checksum'
-            logerr(str_val)
-            raise WMR200CheckSumError(str_val)
+            msg = 'Packet too small to compute 16 bit checksum'
+            logerr(msg)
+            raise WMR200ProtocolError(msg)
 
     def _checksum_field(self):
         """Returns the checksum field of the current packet.
@@ -420,21 +414,35 @@ class Packet(object):
         try:
             return (self._pkt_data[-1] << 8) | self._pkt_data[-2]
         except IndexError:
-            str_val = 'Packet too small to contain 16 bit checksum'
-            logerr(str_val)
-            raise WMR200CheckSumError(str_val)
+            msg = 'Packet too small to contain 16 bit checksum'
+            logerr(msg)
+            raise WMR200ProtocolError(msg)
 
     def verify_checksum(self):
         """Verifies packet for checksum correctness.
         
-        Raises exception upon checksum failure as this is a catastrophic
-        event."""
-        if self._checksum_calculate() != self._checksum_field():
-            str_val = ('Checksum error act:%x exp:%x'
+        Raises exception upon checksum failure unless configured to drop."""
+        if not self._bogus_packet \
+           and self._checksum_calculate() != self._checksum_field():
+            msg = ('Checksum error act:%x exp:%x'
                         % (self._checksum_calculate(), self._checksum_field()))
-            logerr(str_val)
+            logerr(msg)
             logerr(self.to_string_raw('  packet:'))
-            raise WMR200CheckSumError(str_val)
+            if self.wmr200.ignore_checksum:
+                logerr('Dropping packet')
+                self._bogus_packet = True
+                return
+
+            raise weewx.CRCError(msg)
+
+    def record_timestamp(self):
+        """Returns the epoch timestamp in the record."""
+        try:
+            return self._record['dateTime']
+        except (KeyError, NameError):
+            msg = 'record_timestamp() Timestamp not set in record'
+            logerr(msg)
+            raise weewx.ViolatedPrecondition(msg)
 
     def packet_timestamp(self):
         """Pulls the timestamp from the packet.  
@@ -459,19 +467,23 @@ class Packet(object):
             logerr(log_msg)
             raise WMR200ProtocolError(log_msg)
 
+    def time_drift(self):
+        """Returns the difference between PC time and the packet timestamp.
+        This value is approximate as all timestamps from a given archive
+        interval will be the same while PC time marches onwards."""
+        time_drift = self.host_timestamp() - self.packet_timestamp()
+        loginf('Time drift in seconds between host and console:%d' %
+               time_drift)
+        return time_drift
+
     def timestamp(self):
         """Returns either that timestamp or the PC time based upon
         configuration.  Caches the last timestamp to add to packets that do 
         not provide timestamps."""
         # Calculate the drift between pc time and the console time.
         # Only done first time through.
-        if self.wmr200.time_delta is None:
-            # This value is approximate as all timestamps from a given archive
-            # interval will be the same while host time marches onwards.
-            self.wmr200.time_delta = self.host_timestamp() - \
-                    self.packet_timestamp()
-            loginf('Time drift in seconds between host and console:%d' %
-                   self.wmr200.time_delta)
+        if self.wmr200.time_drift is None:
+            self.wmr200.time_drift = self.time_drift()
 
         if self.wmr200.use_pc_time:
             self.wmr200.last_time_epoch = self.host_timestamp()
@@ -490,14 +502,20 @@ class Packet(object):
         """Debug method method to print the processed packet.
         
         Must be called after the Process() method."""
-        out = ' Packet cooked: '
-        out += '%s ' % self.pkt_name
-        out += '%s ' % weeutil.weeutil.timestamp_to_string\
-                (self.timestamp())
-        out += 'len:%d ' % self.size_actual()
-        out += 'fields:%d ' % len(self._record)
-        out += str(self._record)
-        logdbg(out)
+        try:
+            out = ' Packet cooked: '
+            out += 'id:%d ' % self.pkt_id
+            out += '%s ' % self.pkt_name
+            out += '%s ' % weeutil.weeutil.timestamp_to_string\
+                    (self.record_timestamp())
+            out += 'len:%d ' % self.size_actual()
+            out += 'fields:%d ' % len(self._record)
+            out += str(self._record)
+            logdbg(out)
+        except (KeyError, NameError):
+            msg = 'print_cooked() called before proper setup'
+            logerr(msg)
+            raise weewx.ViolatedPrecondition(msg)
 
 class PacketLive(Packet):
     """Packets with live sensor data from console."""
@@ -543,7 +561,12 @@ class PacketArchive(Packet):
         """Returns a records field to be processed by the weewx engine."""
         super(PacketArchive, self).packet_process()
         self._record.update({'dateTime' : self.packet_timestamp(), })
+        self._record.update({'interval' : \
+                             int(self.wmr200.archive_interval / 60), })
 
+    def timestamp_adjust(self, delta):
+        """Archive records may need time adjustment when using PC time."""
+        self._record['dateTime'] += int(delta)
 
 class PacketControl(Packet):
     """Packets with protocol control info from console."""
@@ -593,9 +616,9 @@ class PacketControl(Packet):
 
 
 class PacketHistoryReady(PacketControl):
-    """Packet parser for archived data is ready to receive."""
+    """Packet parser for control command acknowledge."""
     pkt_cmd = 0xd1
-    pkt_name = 'Archive Avail'
+    pkt_name = 'CmdAck'
     pkt_len = 1
     def __init__(self, wmr200):
         super(PacketHistoryReady, self).__init__(wmr200)
@@ -625,24 +648,31 @@ class PacketHistoryData(PacketArchive):
     def packet_process(self):
         """Returns a records field to be processed by the weewx engine."""
         super(PacketHistoryData, self).packet_process()
+        try:
+            self._record.update(decode_rain(self,     self._pkt_data[ 7:20]))
+            self._record.update(decode_wind(self,     self._pkt_data[20:27]))
+            self._record.update(decode_uvi(self,      self._pkt_data[27:28]))
+            self._record.update(decode_pressure(self, self._pkt_data[28:32]))
+            # Number of sensors starting at zero inclusive.
+            num_sensors = self._pkt_data[32]
+            if DEBUG_PACKETS_ARCHIVE:
+                loginf('Detected temp sensors:%d' % num_sensors)
 
-        self._record.update(decode_rain(self,     self._pkt_data[ 7:20]))
-        self._record.update(decode_wind(self,     self._pkt_data[20:27]))
-        self._record.update(decode_uvi(self,      self._pkt_data[27:28]))
-        self._record.update(decode_pressure(self, self._pkt_data[28:32]))
-        num_sensors = self._pkt_data[32]
-        if DEBUG_PACKETS_ARCHIVE:
-            loginf('Detected temp sensors:%d' % num_sensors)
+            for i in xrange(0, num_sensors+1):
+                base = 33 + i*7
+                self._record.update(decode_temp(self,
+                                                self._pkt_data[base:base+7]))
 
-        for i in xrange(0, num_sensors):
-            base = 33 + i*7
-            self._record.update(decode_temp(self, self._pkt_data[base:base+7]))
+            # Tell wmr200 console we have processed it and can handle more.
+            self.wmr200.request_archive_data()
 
-        # Tell wmr200 console we have processed it and can handle more.
-        self.wmr200.request_archive_data()
+            if DEBUG_PACKETS_ARCHIVE:
+                loginf('  Archive packet')
 
-        if DEBUG_PACKETS_ARCHIVE:
-            loginf('  Archive packet')
+        except IndexError:
+            msg = ('%s decode index failure' % self.pkt_name)
+            logerr(msg)
+            raise WMR200ProtocolError(msg)
 
 
 def decode_wind(pkt, pkt_data):
@@ -672,7 +702,6 @@ def decode_wind(pkt, pkt_data):
         # kph, so the result needs to be multiplied by 3.6.
         record = {'windSpeed'         : avg_speed * 3.60,
                   'windDir'           : dir_deg,
-                  'usUnits'           : weewx.METRIC,
                   'windchill'         : windchill,
                  }
         # Sometimes the station emits a wind gust that is less than the
@@ -688,9 +717,9 @@ def decode_wind(pkt, pkt_data):
         return record
 
     except IndexError:
-        str_val = ('%s decode index failure' % pkt.pkt_name())
-        logerr(str_val)
-        raise WMR200ProtocolError(str_val)
+        msg = ('%s decode index failure' % pkt.pkt_name())
+        logerr(msg)
+        raise WMR200ProtocolError(msg)
 
 class PacketWind(PacketLive):
     """Packet parser for wind."""
@@ -713,23 +742,21 @@ def decode_rain(pkt, pkt_data):
     """Decode the rain portion of a wmr200 packet."""
     try:
         # Bytes 0 and 1: high and low byte of the current rainfall rate
-        # in 0.1 in/h
-        rain_rate = ((pkt_data[1] << 8) | pkt_data[0]) / 100.0
+        # in 0.1 in/h.  Convert into metric.
+        rain_rate = ((pkt_data[1] << 8) | pkt_data[0]) * 25.4
         # Bytes 2 and 3: high and low byte of the last hour rainfall in 0.1in
-        rain_hour = ((pkt_data[3] << 8) | pkt_data[2]) / 100.0
+        # Convert into metric.
+        rain_hour = ((pkt_data[3] << 8) | pkt_data[2]) * 25.4
         # Bytes 4 and 5: high and low byte of the last day rainfall in 0.1in
-        rain_day = ((pkt_data[5] << 8) | pkt_data[4]) / 100.0
+        # Convert into metric.
+        rain_day = ((pkt_data[5] << 8) | pkt_data[4]) * 25.4
         # Bytes 6 and 7: high and low byte of the total rainfall in 0.1in
-        rain_total = ((pkt_data[7] << 8) | pkt_data[6]) / 100.0
-        # NB: in my experiments with the WMR100, it registers in increments of
-        # 0.04 inches. Per Ejeklint's notes have you divide the packet values by
-        # 10, but this would result in an 0.4 inch bucket --- too big. So, I'm
-        # dividing by 100.
+        # Convert into metric.
+        rain_total = ((pkt_data[7] << 8) | pkt_data[6]) * 25.4
         record = {'rainRate'          : rain_rate,
                   'hourRain'          : rain_hour,
                   'dayRain'           : rain_day,
-                  'totalRain'         : rain_total,
-                  'usUnits'           : weewx.US}
+                  'totalRain'         : rain_total}
         if DEBUG_PACKETS_RAIN:
             loginf("  Rain rate:%.02f hour_rain:%.02f day_rain:%.02f" %
                    (rain_rate, rain_hour, rain_day))
@@ -737,9 +764,9 @@ def decode_rain(pkt, pkt_data):
         return record
 
     except IndexError:
-        str_val = ('%s decode index failure' % pkt.pkt_name())
-        logerr(str_val)
-        raise WMR200ProtocolError(str_val)
+        msg = ('%s decode index failure' % pkt.pkt_name())
+        logerr(msg)
+        raise WMR200ProtocolError(msg)
 
 
 class PacketRain(PacketLive):
@@ -783,9 +810,9 @@ def decode_uvi(pkt, pkt_data):
         return record
 
     except IndexError:
-        str_val = ('%s index decode index failure' % pkt.pkt_name())
-        logerr(str_val)
-        raise WMR200ProtocolError(str_val)
+        msg = ('%s index decode index failure' % pkt.pkt_name())
+        logerr(msg)
+        raise WMR200ProtocolError(msg)
 
 
 class PacketUvi(PacketLive):
@@ -840,9 +867,9 @@ def decode_pressure(pkt, pkt_data):
         return record
 
     except IndexError:
-        str_val = ('%s index decode index failure' % pkt.pkt_name())
-        logerr(str_val)
-        raise WMR200ProtocolError(str_val)
+        msg = ('%s index decode index failure' % pkt.pkt_name())
+        logerr(msg)
+        raise WMR200ProtocolError(msg)
 
 
 class PacketPressure(PacketLive):
@@ -869,7 +896,13 @@ def decode_temp(pkt, pkt_data):
         # sensors.
         # Byte 0: low nibble contains sensor ID. 0 for base station.
         sensor_id = pkt_data[0] & 0x0f
+        # '00 Temp steady
+        # '01 Temp rising 
+        # '10 Temp falling 
         temp_trend = (pkt_data[0] >> 6) & 0x3
+        # '00 Humidity steady
+        # '01 Humidity rising 
+        # '10 Humidity falling 
         hum_trend = (pkt_data[0] >> 4) & 0x3
 
         # The high nible contains the sign indicator.
@@ -926,9 +959,9 @@ def decode_temp(pkt, pkt_data):
         return record
 
     except IndexError:
-        str_val = ('%s index decode index failure' % pkt.pkt_name())
-        logerr(str_val)
-        raise WMR200ProtocolError(str_val)
+        msg = ('%s index decode index failure' % pkt.pkt_name())
+        logerr(msg)
+        raise WMR200ProtocolError(msg)
 
 
 class PacketTemperature(PacketLive):
@@ -975,21 +1008,20 @@ class PacketStatus(PacketLive):
                              'rxCheckPercent'       : 1.0 })
 
         # This information is sent to syslog
-        if self.wmr200.sensor_stat:
-            if self._pkt_data[2] & 0x2:
-                logwar('Sensor 1 fault (temp/hum outdoor)')
+        if self._pkt_data[2] & 0x2 and self.wmr200.sensor_stat:
+            logwar('Sensor 1 fault (temp/hum outdoor)')
 
-            if self._pkt_data[2] & 0x1:
-                logwar('Wind sensor fault')
+        if self._pkt_data[2] & 0x1 and self.wmr200.sensor_stat:
+            logwar('Wind sensor fault')
 
-            if self._pkt_data[3] & 0x20:
-                logwar('UV Sensor fault')
+        if self._pkt_data[3] & 0x20 and self.wmr200.sensor_stat:
+            logwar('UV Sensor fault')
 
-            if self._pkt_data[3] & 0x10:
-                logwar('Rain sensor fault')
+        if self._pkt_data[3] & 0x10 and self.wmr200.sensor_stat:
+            logwar('Rain sensor fault')
 
-            if self._pkt_data[5] & 0x20:
-                logwar('UV sensor: Battery low')
+        if self._pkt_data[5] & 0x20 and self.wmr200.sensor_stat:
+            logwar('UV sensor: Battery low')
 
         # This information can be passed up to weewx.
         if self._pkt_data[4] & 0x02:
@@ -1027,8 +1059,12 @@ class PacketFactory(object):
         self.subclass = dict((s.pkt_cmd, s) for s in subclass_list)
         self.skipped_bytes = 0
 
+    def num_packets(self):
+        """Returns the number of packets handled by the factory."""
+        return len(self.subclass)
+
     def get_packet(self, pkt_cmd, wmr200):
-        """Returns an instance of packet parser indexed from packet command.
+        """Returns a protocol packet instance from initial packet command byte.
        
         Returns None if there was no mapping for the protocol command.
 
@@ -1168,10 +1204,14 @@ class PollUsbDevice(threading.Thread):
                     # If we have sent several resets with no data,
                     # give up and abort.
                     if read_reset_cnt == 2:
-                        raise weewx.WeeWxIOError(('Device unresponsive after'
-                                                  'multiple resets'))
-            except WMR200ProtocolError:
-                logerr('USB overflow')
+                        msg = ('Device unresponsive after multiple resets')
+                        logerr(msg)
+                        raise weewx.RetriesExceeded(msg)
+
+            except:
+                logerr('USB device read error')
+                raise
+
         loginf('USB device polling thread exiting')
 
     def _append_usb_device(self, buf):
@@ -1213,11 +1253,11 @@ class PollUsbDevice(threading.Thread):
             time.sleep(1)
 
         except usb.USBError, exception:
-            logerr(('reset_console() Unable to send USB control'
-                           'message'))
-            logerr('****  %s' % exception)
+            msg = ('reset_console() Unable to send USB control'
+                   'message %s' % exception)
+            logerr(msg)
             # Convert to a Weewx error:
-            raise weewx.WakeupError(exception)
+            raise weewx.WeeWxIOError(exception)
 
     def notify(self):
         """Gates thread to read of the device.
@@ -1237,17 +1277,15 @@ class WMR200(weewx.abstractstation.AbstractStation):
         sensor_status: Print sensor faults or failures to syslog. [Optional]
         use_pc_time: Use the console timestamp or the Pc. [Optional]
         erase_archive:  Erasae archive upon startup.  [Optional]
+        archive_interval: Time in seconds between intervals [Optional]
+        ignore_checksum: Ignore checksum failures and drop packet.
 
         --- User should not typically change anything below here ---
 
         vendor_id: The USB vendor ID for the WMR [Optional]
-          Default is 0xfde.
         product_id: The USB product ID for the WM [Optional]
-          Default is 0xca01.
         interface: The USB interface [Optional]
-          Default is 0]
         in_endpoint: The IN USB endpoint used by the WMR [Optional]
-          Default is usb.ENDPOINT_IN + 1]
         """
         super(WMR200, self).__init__()
 
@@ -1264,7 +1302,17 @@ class WMR200(weewx.abstractstation.AbstractStation):
         self._erase_archive = \
                 weeutil.weeutil.tobool(stn_dict.get('erase_archive', False))
 
-        # User configurable options but not recommended
+        # Archive interval in seconds.
+        self._archive_interval = int(stn_dict.get('archive_interval', 60))
+        if self._archive_interval not in [60, 300]:
+            logwar('Unverified archive interval:%d sec'
+                   % self._archive_interval)
+
+        # Ignore checksum errors.
+        self._ignore_checksum = \
+                weeutil.weeutil.tobool(stn_dict.get('ignore_checksum', False))
+
+        # Device specific hardware options.
         vendor_id         = int(stn_dict.get('vendor_id',  '0x0fde'), 0)
         product_id        = int(stn_dict.get('product_id', '0xca01'), 0)
         interface         = int(stn_dict.get('interface', 0))
@@ -1279,10 +1327,10 @@ class WMR200(weewx.abstractstation.AbstractStation):
         self.pkt = None
 
         # Setup the generator to get a byte stream from the console.
-        self.genByte = self._generate_bytestream
+        self.gen_byte = self._generate_bytestream
 
         # Calculate time delta in seconds between host and console.
-        self.time_delta = None
+        self.time_drift = None
 
         # Create USB accessor to communiate with weather console device.
         self.usb_device = UsbDevice()
@@ -1302,8 +1350,16 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # data stream.
         self._rdy_to_poke = True
 
-        # Archived packets.
+        # Archived packet queue.
         self._pkt_archive = []
+
+        # Interval records.  An aggregation of all live packets
+        # for a given interval.
+        self._interval_record = {}
+        self._interval_record_list = []
+
+        # Count of times through generate archive records.
+        self._gen_archive_cnt = 0
 
         # Create the lock to sync between main thread and watchdog thread.
         self._poke_lock = threading.Lock()
@@ -1374,7 +1430,12 @@ class WMR200(weewx.abstractstation.AbstractStation):
             loginf('  Log sensor faults: %s' % self._sensor_stat)
             loginf('  Using PC Time: %s' % self._use_pc_time)
             loginf('  Erase archive data: %s' % self._erase_archive)
+            loginf('  Archive interval: %d' % self._archive_interval)
 
+    @property
+    def hardware_name(self):
+        """weewx api."""
+        return _WMR200_DRIVER_NAME
 
     @property
     def altitude(self):
@@ -1390,6 +1451,16 @@ class WMR200(weewx.abstractstation.AbstractStation):
     def use_pc_time(self):
         """Flag to use pc time rather than weather console time."""
         return self._use_pc_time
+
+    @property
+    def archive_interval(self):
+        """weewx api.  Time in seconds between archive intervals."""
+        return self._archive_interval
+
+    @property
+    def ignore_checksum(self):
+        """Flag to drop rather than fail on checksum errors."""
+        return self._ignore_checksum
 
     def ready_to_poke(self, val):
         """Set info that device is ready to be poked."""
@@ -1414,11 +1485,11 @@ class WMR200(weewx.abstractstation.AbstractStation):
         try:
             self.usb_device.write_device(buf)
         except usb.USBError, exception:
-            msg = ('Write_cmd() Unable to send USB cmd:0x%02x control message' %
-                   cmd)
+            msg = (('_write_cmd() Unable to send USB cmd:0x%02x control'
+                    ' message' % cmd))
             logerr(msg)
             # Convert to a Weewx error:
-            raise weewx.WakeupError(exception)
+            raise weewx.WeeWxIOError(exception)
 
     def _poke_console(self):
         """Send a heartbeat command to the weather console.
@@ -1471,7 +1542,12 @@ class WMR200(weewx.abstractstation.AbstractStation):
         Otherwise add the byte to the current packet.
         Each USB packet may stradle a protocol packet so make sure
         we assign the data appropriately."""
-        for byte in self.genByte():
+        if not self._thread_usb_poll.is_alive():
+            msg = 'USB polling thread unexpectedly terminated'
+            logerr(msg)
+            raise weewx.WeeWxIOError(msg)
+
+        for byte in self.gen_byte():
             if self.pkt:
                 self.pkt.append_data(byte)
             else:
@@ -1515,30 +1591,33 @@ class WMR200(weewx.abstractstation.AbstractStation):
             # not generated from this driver.  e.g. weewx.service.
             if self.pkt is not None and self.pkt.packet_complete():
                 if DEBUG_PACKETS_RAW:
-                    loginf(self.pkt.to_string_raw(' Packet Raw:'))
+                    loginf(self.pkt.to_string_raw(' genLoop() Packet Raw:'))
+
+                # This will raise exception if checksum fails.
+                self.pkt.verify_checksum()
 
                 # Drop any bogus packets.
                 if self.pkt.is_bogus:
-                    logerr(self.pkt.to_string_raw('Discarding bogus packet:'))
+                    logerr(self.pkt.to_string_raw('genLoop() Discarding'
+                                                  ' bogus packet:'))
                 else:
-                    # This will raise exception if checksum fails.
-                    self.pkt.verify_checksum()
                     self.pkt.packet_process()
                     if DEBUG_PACKETS_COOKED:
                         self.pkt.print_cooked()
                     if self.pkt.packet_live_data():
-                        logdbg('Presenting weewx live packet %d' %
+                        logdbg('genLoop() Presenting weewx live packet cnt:%d' %
                                PacketLive.pkt_cnt)
+                        # Add this loop packet to our interval record.
+                        self._interval_record.update(self.pkt.packet_record())
                         yield self.pkt.packet_record()
                     elif self.pkt.packet_archive_data():
                         # Append to archive list for next time weewx engine
                         # requests archived packets.
                         self._pkt_archive.append(self.pkt)
-                        logdbg(('Retrieved archive packet rx:%d cnt:%d' %
-                                (PacketArchive.pkt_cnt,
-                                 len(self._pkt_archive))))
+                        logdbg(('genLoop() Buffering archive packet len:%d'
+                                % len(self._pkt_archive)))
                     else:
-                        logdbg('Acknowledged control packet cnt:%d' %
+                        logdbg('genLoop() Acknowledged control packet cnt:%d' %
                                PacketControl.pkt_cnt)
 
                 # Reset this packet to get ready for next one
@@ -1552,45 +1631,75 @@ class WMR200(weewx.abstractstation.AbstractStation):
             # Pull data from the weather console.
             self._poll_for_data()
 
-    def hardware_name(self):
-        """weewx api."""
-        return _WMR200_DRIVER_NAME
-
-    def XXXgenArchiveRecords(self, since_ts):
-    ##def genArchiveRecords(self, since_ts):
+    def genArchiveRecords(self, since_ts):
         """A generator function to return archive packets from the wmr200.
         
         weewx api to return archive records.
-        since_ts: A timestamp. All data since (but not including) this time
-        will be returned.
+        since_ts: A timestamp in database time. All data since but not 
+        including this time will be returned.
         Pass in None for all data
         
-        yields: a sequence of dictionaries containing the data
-        """
+        yields: a sequence of dictionary records containing the console 
+        data."""
         if since_ts:
-            loginf('genArchiveRecords() Getting archive packets since %s'
+            logdbg('genArchive() Getting archive packets since %s'
                    % weeutil.weeutil.timestamp_to_string(since_ts))
         else :
-            loginf('genArchiveRecords() Getting all archive packets')
+            logdbg('genArchive() Getting all archive packets')
+            since_ts = 0
 
-        cnt = 0
-        loginf(('genArchiveRecords() archive packets:%d' %
-                len(self._pkt_archive)))
-        while len(self._pkt_archive):
-            pkt = self._pkt_archive.pop(0)
-            pkt.print_cooked()
-            cnt += 1
-            if since_ts and pkt.packet_timestamp() > since_ts:
-                loginf(('genArchiveRecords() yielding archive record:%s' %
-                        weeutil.weeutil.timestamp_to_string(
-                            pkt.packet_timestamp())))
-                yield pkt.packet_record()
-            else:
-                loginf(('genArchiveRecords() dropping archive records:%s' %
-                        weeutil.weeutil.timestamp_to_string(
-                            pkt.packet_timestamp())))
-            loginf(('genArchiveRecords() Handled archive record cnt:%d' %
-                    cnt))
+        # Create the current archive record
+        if self._interval_record:
+            self._interval_record.update(
+                {'interval' : int(self.archive_interval / 60), })
+            logdbg(('genArchive() Creating current interval record:%s'
+                    % self._interval_record))
+            # The timestamp is already either pc time or console time
+            # based upon console configuration.
+            self._interval_record_list.append(self._interval_record)
+        self._interval_record = {}
+
+        if len(self._pkt_archive) and self._gen_archive_cnt:
+            # Present the archive packets received from the genLoop()
+            # processing.  If PC time is set, we must have at least one
+            # live packet to calculate timestamps in PC time.
+            loginf(('genArchive() Still receiving archive packets len:%d' %
+                    len(self._pkt_archive)))
+
+            while self._pkt_archive:
+                pkt = self._pkt_archive.pop(0)
+                # If we are using PC time we need to adjust the record timestamp
+                # with the PC drift.
+                if self.use_pc_time:
+                    logdbg(('genArchive() Using pc time so adjusting archive'
+                            ' record time by %d' % self.time_drift))
+                    pkt.timestamp_adjust(self.time_drift)
+                # The archive packets have all been processed already.
+                if DEBUG_PACKETS_COOKED:
+                    pkt.print_cooked()
+                if pkt.record_timestamp() > since_ts:
+                    logdbg(('genArchive() Yielding received archive record'
+                            ' after requested timestamp'))
+                    yield pkt.packet_record()
+                else:
+                    loginf(('genArchive() Ignoring received archive record'
+                            ' before requested timestamp'))
+
+        # We have no archived packets since last time though this callback.
+        # We have a count to ensure we've been here at least once before.
+        # Its safe to assume that the archived packets have been drained.  Now
+        # we can push all our current-archive packets we've accumulated.
+        else:
+            while self._interval_record_list:
+                interval_record = self._interval_record_list.pop(0)
+                # Now yield the current archive records
+                logdbg(('genArchive() Yielding current interval record:%s'
+                        % interval_record))
+                yield interval_record
+
+        # Number of times through this callback.  This is done to allow time
+        # after startup for archive packets to come through if any are avail.
+        self._gen_archive_cnt += 1
 
     def closePort(self):
         """Closes the USB port to the device.
@@ -1603,7 +1712,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         self._poll_device_enable = False
         # Join with the polling thread.
         self._thread_usb_poll.join()
-        if self._thread_usb_poll.isAlive():
+        if self._thread_usb_poll.is_alive():
             logerr('USB polling thread still alive')
         else:
             loginf('USB polling thread expired')
@@ -1612,7 +1721,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         self.sock_wr.send('shutdown')
         # Join with the watchdog thread.
         self._thread_watchdog.join()
-        if self._thread_watchdog.isAlive():
+        if self._thread_watchdog.is_alive():
             logerr('Watchdog thread still alive')
         else:
             loginf('Watchdog thread expired')
