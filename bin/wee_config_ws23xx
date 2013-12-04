@@ -95,7 +95,7 @@ def main():
         history(station, ts=ts)
     elif options.settime:
         setclock(station, prompt)
-    elif options.interval:
+    elif options.interval is not None:
         setinterval(station, options.interval, prompt)
     elif options.clear:
         clearhistory(station, prompt)

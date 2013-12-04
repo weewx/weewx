@@ -115,6 +115,7 @@ Known to work: ATEN UC-232A
 """
 
 # TODO: use pyserial instead of LinuxSerialPort
+# TODO: put the __enter__ and __exit__ scaffolding on serial port, not Station
 # FIXME: unless we can get setTime to work, just ignore the console clock
 # FIXME: detect bogus wind speed/direction
 # i see these when the wind instrument is disconnected:
@@ -137,7 +138,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.10'
+DRIVER_VERSION = '0.11'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -270,18 +271,19 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         self._poll_wait = 60
 
         self.altitude          = stn_dict['altitude']
+        self.model             = stn_dict.get('model', 'LaCrosse WS23xx')
         self.port              = stn_dict.get('port', DEFAULT_PORT)
+        self.max_tries         = int(stn_dict.get('max_tries', 5))
+        self.retry_wait        = int(stn_dict.get('retry_wait', 30))
         self.polling_interval  = stn_dict.get('polling_interval', None)
         if self.polling_interval is not None:
             self.polling_interval = int(self.polling_interval)
-        self.model             = stn_dict.get('model', 'LaCrosse WS23xx')
         self.calc_windchill    = weeutil.weeutil.tobool(stn_dict.get('calculate_windchill', False))
         self.calc_dewpoint     = weeutil.weeutil.tobool(stn_dict.get('calculate_dewpoint', False))
         self.pressure_offset   = stn_dict.get('pressure_offset', None)
         if self.pressure_offset is not None:
             self.pressure_offset = float(self.pressure_offset)
-        self.max_tries         = int(stn_dict.get('max_tries', 5))
-        self.retry_wait        = int(stn_dict.get('retry_wait', 30))
+        self.disable_catchup   = weeutil.weeutil.tobool(stn_dict.get('disable_catchup', False))
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('serial port is %s' % self.port)
@@ -318,11 +320,9 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         ntries = 0
         while ntries < self.max_tries:
             ntries += 1
-            serial_port = None
             try:
-                serial_port = LinuxSerialPort(self.port)
-                ws = Ws2300(serial_port)
-                data = get_raw_data(ws, SENSOR_IDS)
+                s = Station(self.port)
+                data = s.get_raw_data(SENSOR_IDS)
                 packet = data_to_packet(data, int(time.time() + 0.5),
                                         altitude=self.altitude,
                                         pressure_offset=self.pressure_offset,
@@ -351,22 +351,17 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
                 time.sleep(self.retry_wait)
             finally:
-                if serial_port is not None:
-                    serial_port.close()
-                    serial_port = None
+                s.close()
         else:
             msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
             logerr(msg)
             raise weewx.RetriesExceeded(msg)
 
     def genArchiveRecords(self, since_ts, count=0):
-        serial_port = None
-        try:
+        with Station(self.port) as s:
             last_rain = None
-            serial_port = LinuxSerialPort(self.port)
-            ws = Ws2300(serial_port)
-            interval = get_archive_interval(ws)
-            for ts,data in gen_records(ws, since_ts=since_ts, count=count):
+            interval = s.get_archive_interval()
+            for ts,data in s.gen_records(since_ts=since_ts, count=count):
                 record = data_to_packet(data, ts,
                                         altitude=self.altitude,
                                         pressure_offset=self.pressure_offset,
@@ -376,82 +371,34 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 record['interval'] = interval
                 last_rain = record['rainTotal']
                 yield record
-        finally:
-            if serial_port is not None:
-                serial_port.close()
-                serial_port = None
-
-# FIXME: do not use station time until we can set it
 
 #    def getTime(self) :
-#        serial_port = None
-#        try:
-#            serial_port = LinuxSerialPort(self.port)
-#            ws = Ws2300(serial_port)
-#            return get_time(ws)
-#        finally:
-#            if serial_port is not None:
-#                serial_port.close()
-#                serial_port = None
+#        with Station(self.port) as s:
+#            return s.get_time()
 
 #    def setTime(self, ts):
-#        serial_port = None
-#        try:
-#            serial_port = LinuxSerialPort(self.port)
-#            ws = Ws2300(serial_port)
-#            set_time(ws, ts)
-#        finally:
-#            if serial_port is not None:
-#                serial_port.close()
-#                serial_port = None
+#        with Station(self.port) as s:
+#            s.set_time(ts)
 
     def getArchiveInterval(self):
-        serial_port = None
-        try:
-            serial_port = LinuxSerialPort(self.port)
-            ws = Ws2300(serial_port)
-            return get_archive_interval(ws)
-        finally:
-            if serial_port is not None:
-                serial_port.close()
-                serial_port = None
+        with Station(self.port) as s:
+            return s.get_archive_interval()
 
     def setArchiveInterval(self, interval):
-        serial_port = None
-        try:
-            serial_port = LinuxSerialPort(self.port)
-            ws = Ws2300(serial_port)
-            set_archive_interval(ws, interval)
-        finally:
-            if serial_port is not None:
-                serial_port.close()
-                serial_port = None
+        with Station(self.port) as s:
+            s.set_archive_interval(interval)
 
     def getConfig(self):
-        serial_port = None
-        try:
-            serial_port = LinuxSerialPort(self.port)
-            ws = Ws2300(serial_port)
-            data = get_raw_data(ws, Measure.IDS.keys())
+        with Station(self.port) as s:
+            data = s.get_raw_data(Measure.IDS.keys())
             fdata = {}
             for key in data:
                 fdata[Measure.IDS[key].name] = data[key]
             return fdata
-        finally:
-            if serial_port is not None:
-                serial_port.close()
-                serial_port = None
 
     def getRecordCount(self):
-        serial_port = None
-        try:
-            serial_port = LinuxSerialPort(self.port)
-            ws = Ws2300(serial_port)
-            return get_record_count(ws)
-        finally:
-            if serial_port is not None:
-                serial_port.close()
-                serial_port = None
+        with Station(self.port) as s:
+            return s.get_record_count()
 
 
 # ids for current weather conditions and connection type
@@ -462,131 +409,6 @@ POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
 
 def get_conn_info(conn_type):
     return POLLING_INTERVAL.get(conn_type, ("unknown",60))
-
-def set_time(ws, ts):
-    """Set station time to indicated unix epoch."""
-    logdbg('setting station clock to %s' % 
-           weeutil.weeutil.timestamp_to_string(ts))
-    for m in [Measure.IDS['sd'], Measure.IDS['st']]:
-        data = m.conv.value2binary(ts)
-        cmd = m.conv.write(data, None)
-        ws.write_safe(m.address, *cmd[1:])
-
-def get_time(ws):
-    """Return station time as unix epoch."""
-    data = get_raw_data(ws, ['sw'])
-    ts = int(data['sw'])
-    logdbg('station clock is %s' % weeutil.weeutil.timestamp_to_string(ts))
-    return ts
-
-def set_archive_interval(ws, interval):
-    """Set the archive interval in minutes."""
-    logdbg('setting hardware archive interval to %s minutes' % interval)
-    for m,v in [(Measure.IDS['hi'],interval), # archive interval
-                (Measure.IDS['hc'],1), # time till next sample
-                (Measure.IDS['hn'],0)]: # number of valid records
-        data = m.conv.value2binary(v)
-        cmd = m.conv.write(data, None)
-        ws.write_safe(m.address, *cmd[1:])
-
-def get_archive_interval(ws):
-    """Return archive interval in minutes."""
-    data = get_raw_data(ws, ['hi'])
-    x = int(data['hi'])
-    logdbg('station archive interval is %s minutes' % x)
-    return x
-
-def clear_memory(ws):
-    """Clear station memory."""
-    logdbg('clearing console memory')
-    for m,v in [(Measure.IDS['hn'],0)]: # number of valid records
-        data = m.conv.value2binary(v)
-        cmd = m.conv.write(data, None)
-        ws.write_safe(m.address, *cmd[1:])    
-
-def get_record_count(ws):
-    data = get_raw_data(ws, ['hn'])
-    x = int(data['hn'])
-    logdbg('record count is %s' % x)
-    return x
-
-def gen_records(ws, since_ts=None, count=None, use_computer_clock=True):
-    """Get latest count records from the station from oldest to newest.  If
-    count is 0 or None, return all records.
-
-    The station has a history interval, and it records when the last history
-    sample was saved.  So as long as the interval does not change between the
-    first and last records, we are safe to infer timestamps for each record.
-    This assumes that if the station loses power then the memory will be
-    cleared.
-
-    There is no timestamp associated with each record - we have to guess.
-    The station tells us the time until the next record and the epoch of the
-    latest record, based on the station's clock.  So we can use that or use
-    the computer clock to guess the timestamp for each record."""
-
-    # FIXME: this is not atomic - if we overlap an interval, data are bogus
-
-    measures = [ Measure.IDS['hi'], Measure.IDS['hw'],
-                 Measure.IDS['hc'], Measure.IDS['hn'] ]
-    raw_data = read_measurements(ws, measures)
-    interval = 1 + int(measures[0].conv.binary2value(raw_data[0])) # minutes
-    latest_ts = int(measures[1].conv.binary2value(raw_data[1])) # epoch
-    time_to_next = int(measures[2].conv.binary2value(raw_data[2])) # minutes
-    numrec = int(measures[3].conv.binary2value(raw_data[3]))
-
-    now = int(time.time())
-    cstr = 'station'
-    if use_computer_clock:
-        latest_ts = now - (interval - time_to_next) * 60
-        cstr = 'computer'
-    logdbg("using %s clock with latest_ts of %s" %
-           (cstr, weeutil.weeutil.timestamp_to_string(latest_ts)))
-
-    if since_ts is not None:
-        count = int((now - since_ts) / (interval * 60))
-        logdbg("count is %d to satisfy timestamp of %s" %
-               (count, weeutil.weeutil.timestamp_to_string(since_ts)))
-        if count == 0:
-            return
-
-    if count and count > numrec:
-        count = numrec
-    if count and count > HistoryMeasure.MAX_HISTORY_RECORDS:
-        count = HistoryMeasure.MAX_HISTORY_RECORDS
-
-    HistoryMeasure.set_constants(ws)
-    recno_s = 0
-    recno_e = count if count else HistoryMeasure.MAX_HISTORY_RECORDS
-    last_ts = latest_ts - (recno_e-1) * interval * 60
-    logdbg("downloading %d records from station" % recno_e)
-
-    measures = [HistoryMeasure(n) for n in range(recno_e-1, recno_s-1, -1)]
-    raw_data = read_measurements(ws, measures)
-    for measure, nybbles in zip(measures, raw_data):
-        value = measure.conv.binary2value(nybbles)
-        data_dict = {
-            'it': value.temp_indoor,
-            'ih': value.humidity_indoor,
-            'ot': value.temp_outdoor,
-            'oh': value.humidity_outdoor,
-            'pa': value.pressure_absolute,
-            'rt': value.rain,
-            'ws': value.wind_speed,
-            'w0': value.wind_direction,
-            'rh': None, # no rain rate in history
-            'dp': None, # no dewpoint in history
-            'wc': None, # no windchill in history
-            }
-        yield last_ts, data_dict
-        last_ts += interval * 60
-
-def get_raw_data(ws, labels):
-    """Get raw data from the station, return as dictionary."""
-    measures = [ Measure.IDS[m] for m in labels ]
-    raw_data = read_measurements(ws, measures)
-    data_dict = dict(zip(labels, [ m.conv.binary2value(d) for m, d in zip(measures, raw_data) ]))
-    return data_dict
 
 def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
                    calc_dewpoint=False, calc_windchill=False):
@@ -658,6 +480,150 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
     packet['barometer'] = sp2bp(adjp, altitude, packet['outTemp'])
     packet['altimeter'] = sp2ap(adjp, altitude)
     return packet
+
+
+class Station(object):
+    """Wrap the Ws2300 object so we can easily open serial port, read/write,
+    close serial port without all of the try/except/finally scaffolding."""
+
+    def __init__(self, port):
+        self.serial_port = LinuxSerialPort(port)
+        self.ws = Ws2300(self.serial_port)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.ws = None
+        self.close()
+
+    def close(self):
+        self.serial_port.close()
+        self.serial_port = None
+
+    def set_time(self, ts):
+        """Set station time to indicated unix epoch."""
+        logdbg('setting station clock to %s' % 
+               weeutil.weeutil.timestamp_to_string(ts))
+        for m in [Measure.IDS['sd'], Measure.IDS['st']]:
+            data = m.conv.value2binary(ts)
+            cmd = m.conv.write(data, None)
+            self.ws.write_safe(m.address, *cmd[1:])
+
+    def get_time(self):
+        """Return station time as unix epoch."""
+        data = self.get_raw_data(['sw'])
+        ts = int(data['sw'])
+        logdbg('station clock is %s' % weeutil.weeutil.timestamp_to_string(ts))
+        return ts
+
+    def set_archive_interval(self, interval):
+        """Set the archive interval in minutes."""
+        if int(interval) < 1:
+            raise ValueError, 'archive interval must be greater than zero'
+        logdbg('setting hardware archive interval to %s minutes' % interval)
+        for m,v in [(Measure.IDS['hi'],interval), # archive interval
+                    (Measure.IDS['hc'],1), # time till next sample
+                    (Measure.IDS['hn'],0)]: # number of valid records
+            data = m.conv.value2binary(v)
+            cmd = m.conv.write(data, None)
+            self.ws.write_safe(m.address, *cmd[1:])
+
+    def get_archive_interval(self):
+        """Return archive interval in minutes."""
+        data = self.get_raw_data(['hi'])
+        x = int(data['hi'])
+        logdbg('station archive interval is %s minutes' % x)
+        return x
+
+    def clear_memory(self):
+        """Clear station memory."""
+        logdbg('clearing console memory')
+        for m,v in [(Measure.IDS['hn'],0)]: # number of valid records
+            data = m.conv.value2binary(v)
+            cmd = m.conv.write(data, None)
+            self.ws.write_safe(m.address, *cmd[1:])    
+
+    def get_record_count(self):
+        data = self.get_raw_data(['hn'])
+        x = int(data['hn'])
+        logdbg('record count is %s' % x)
+        return x
+
+    def gen_records(self, since_ts=None, count=None, use_computer_clock=True):
+        """Get latest count records from the station from oldest to newest.  If
+        count is 0 or None, return all records.
+
+        The station has a history interval, and it records when the last
+        history sample was saved.  So as long as the interval does not change
+        between the first and last records, we are safe to infer timestamps
+        for each record.  This assumes that if the station loses power then
+        the memory will be cleared.
+
+        There is no timestamp associated with each record - we have to guess.
+        The station tells us the time until the next record and the epoch of
+        the latest record, based on the station's clock.  So we can use that
+        or use the computer clock to guess the timestamp for each record."""
+
+        # FIXME: this is not atomic - if we overlap an interval, data are bogus
+
+        measures = [ Measure.IDS['hi'], Measure.IDS['hw'],
+                     Measure.IDS['hc'], Measure.IDS['hn'] ]
+        raw_data = read_measurements(self.ws, measures)
+        interval = int(measures[0].conv.binary2value(raw_data[0])) # minute
+        latest_ts = int(measures[1].conv.binary2value(raw_data[1])) # epoch
+        time_to_next = int(measures[2].conv.binary2value(raw_data[2])) # minute
+        numrec = int(measures[3].conv.binary2value(raw_data[3]))
+
+        now = int(time.time())
+        cstr = 'station'
+        if use_computer_clock:
+            latest_ts = now - (interval - time_to_next) * 60
+            cstr = 'computer'
+        logdbg("using %s clock with latest_ts of %s" %
+               (cstr, weeutil.weeutil.timestamp_to_string(latest_ts)))
+
+        if not count:
+            count = HistoryMeasure.MAX_HISTORY_RECORDS
+        if count > numrec:
+            count = numrec
+        if since_ts is not None:
+            count = int((now - since_ts) / (interval * 60))
+            logdbg("count is %d to satisfy timestamp of %s" %
+                   (count, weeutil.weeutil.timestamp_to_string(since_ts)))
+        if count == 0:
+            return
+
+        HistoryMeasure.set_constants(self.ws)
+        last_ts = latest_ts - (count-1) * interval * 60
+        logdbg("downloading %d records from station" % count)
+
+        measures = [HistoryMeasure(n) for n in range(count-1, -1, -1)]
+        raw_data = read_measurements(self.ws, measures)
+        for measure, nybbles in zip(measures, raw_data):
+            value = measure.conv.binary2value(nybbles)
+            data_dict = {
+                'it': value.temp_indoor,
+                'ih': value.humidity_indoor,
+                'ot': value.temp_outdoor,
+                'oh': value.humidity_outdoor,
+                'pa': value.pressure_absolute,
+                'rt': value.rain,
+                'ws': value.wind_speed,
+                'w0': value.wind_direction,
+                'rh': None, # no rain rate in history
+                'dp': None, # no dewpoint in history
+                'wc': None, # no windchill in history
+                }
+            yield last_ts, data_dict
+            last_ts += interval * 60
+
+    def get_raw_data(self, labels):
+        """Get raw data from the station, return as dictionary."""
+        measures = [ Measure.IDS[m] for m in labels ]
+        raw_data = read_measurements(self.ws, measures)
+        data_dict = dict(zip(labels, [ m.conv.binary2value(d) for m, d in zip(measures, raw_data) ]))
+        return data_dict
 
 
 #==============================================================================
@@ -1925,25 +1891,19 @@ def main():
     if options.port:
         port = options.port
 
-    serial_port = None
-    try:
-        serial_port = LinuxSerialPort(port)
-        ws = Ws2300(serial_port)
+    with Station(port) as s:
         if options.readings:
-            data = get_raw_data(ws, SENSOR_IDS)
+            data = s.get_raw_data(SENSOR_IDS)
             print data
         if options.records is not None:
-            for ts,record in gen_records(ws, count=options.records):
+            for ts,record in s.gen_records(count=options.records):
                 print ts,record
         if options.measure:
-            data = get_raw_data(ws, [options.measure])
+            data = s.get_raw_data([options.measure])
             print data
         if options.hm:
             for m in Measure.IDS:
                 print "%s\t%s" % (m, Measure.IDS[m].name)
-    finally:
-        if serial_port is not None:
-            serial_port.close()
 
 if __name__ == '__main__':
     main()
