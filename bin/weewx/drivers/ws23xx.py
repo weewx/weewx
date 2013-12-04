@@ -137,7 +137,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.9'
+DRIVER_VERSION = '0.10'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -267,6 +267,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         """
         self._last_rain = None
         self._last_cn = None
+        self._poll_wait = 60
 
         self.altitude          = stn_dict['altitude']
         self.port              = stn_dict.get('port', DEFAULT_PORT)
@@ -282,6 +283,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         self.max_tries         = int(stn_dict.get('max_tries', 5))
         self.retry_wait        = int(stn_dict.get('retry_wait', 30))
 
+        loginf('driver version is %s' % DRIVER_VERSION)
         loginf('serial port is %s' % self.port)
         loginf('pressure offset is %s' % self.pressure_offset)
         loginf('polling interval is %s' % self.polling_interval)
@@ -314,7 +316,6 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 
     def genLoopPackets(self):
         ntries = 0
-        wait = 60
         while ntries < self.max_tries:
             ntries += 1
             serial_port = None
@@ -331,8 +332,19 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 self._last_rain = packet['rainTotal']
                 ntries = 0
                 yield packet
-                wait = self.get_wait(wait, data['cn'])
-                time.sleep(wait)
+
+                if self.polling_interval is not None:
+                    self._poll_wait = self.polling_interval
+                if data['cn'] != self._last_cn:
+                    conn_info = get_conn_info(data['cn'])
+                    loginf("connection changed from %s to %s" %
+                           (get_conn_info(self._last_cn)[0], conn_info[0]))
+                    self._last_cn = data['cn']
+                    if self.polling_interval is None:
+                        loginf("using %s second polling interval for %s connection" % 
+                               (conn_info[1], conn_info[0]))
+                        self._poll_wait = conn_info[1]
+                time.sleep(self._poll_wait)
             except Exception, e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
@@ -440,20 +452,6 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             if serial_port is not None:
                 serial_port.close()
                 serial_port = None
-
-    def get_wait(self, wait, conn):
-        if self.polling_interval is not None:
-            wait = self.polling_interval
-        if conn != self._last_cn:
-            loginf("connection changed from %s to %s" %
-                   (get_conn_info(self._last_cn)[0], get_conn_info(conn)[0]))
-            if self.polling_interval is None:
-                conn_info = get_conn_info(conn)
-                loginf("using %s second polling interval for %s connection" % 
-                       (conn_info[1], conn_info[0]))
-                wait = conn_info[1]
-            self._last_cn = conn
-        return wait
 
 
 # ids for current weather conditions and connection type
