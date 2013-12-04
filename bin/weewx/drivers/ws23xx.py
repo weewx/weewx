@@ -358,6 +358,8 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             raise weewx.RetriesExceeded(msg)
 
     def genArchiveRecords(self, since_ts, count=0):
+        if self.disable_catchup:
+            raise NotImplementedError
         with Station(self.port) as s:
             last_rain = None
             interval = s.get_archive_interval()
