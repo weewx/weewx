@@ -690,24 +690,24 @@ def decode_wind(pkt, pkt_data):
         avg_speed = ((pkt_data[3] >> 4)
                      | ((pkt_data[4] << 4))) / 10.0
         # Windchill temperature. The value is in degrees F.
-        if pkt_data[5] != 0:
-            windchill = (pkt_data[5] - 32.0) * (5.0 / 9.0)
-
+        # Convert to metric for weewx presentation.
         if pkt_data[5] != 0 or pkt_data[6] != 0x20:
             windchill = (((pkt_data[6] << 8) | pkt_data[5]) - 320) \
                     * (5.0 / 90.0)
         else:
             windchill = None
-        # The console returns wind speeds in m/s. Our metric system requires
-        # kph, so the result needs to be multiplied by 3.6.
+        # The console returns wind speeds in m/s. weewx requires
+        # kph, so the speeds needs to be converted.
         record = {'windSpeed'         : avg_speed * 3.60,
+                  'windGust'          : gust_speed * 3.60,
                   'windDir'           : dir_deg,
                   'windchill'         : windchill,
                  }
         # Sometimes the station emits a wind gust that is less than the
-        # average wind.  Ignore it if this is the case.
-        if gust_speed >= record['windSpeed']:
-            record['windGust'] = gust_speed * 3.60
+        # average wind.  weewx requires kph, so the result needs to be 
+        # converted.
+        if gust_speed < avg_speed:
+            record['windGust'] = avg_speed * 3.60
 
         if DEBUG_PACKETS_WIND:
             loginf('  Wind Dir: %s' % (WIND_DIR_MAP[pkt_data[0] & 0x0f]))
