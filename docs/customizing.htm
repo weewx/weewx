@@ -59,16 +59,32 @@ table#stattypes td {
         code or customization you do!
       </p>
       <h2>Overview of the weewx architecture</h2>
-      <p>
-        At a high-level, <span class="code">weewx</span> consists of an
+      <p>A single instance of <span class="code">weewx</span> communicates
+        with a single hardware device.</p>
+      <p>At a high-level, <span class="code">weewx</span> consists of an
         engine class called <span class="code">StdEngine</span>. It is
-        responsible for loading "<em>services</em>", then arranging for
-        them to be called when key events occur, such as the arrival of
-        LOOP data. The default install of <span class="code">
-          weewx</span> includes the following services:
+        responsible for loading the <em>driver</em> for the hardware,
+        then loading <em>services</em>, then arranging for each service to
+        be called when key events occur, such as the arrival of data.</p>
+
+      <h3>Drivers</h3>
+      <p>
+        The driver communicates with a device and converts raw data from the
+        device into a standard set of names and units.  Often a single driver
+        can communicate with a whole family of devices.  For example, since
+        the Vantage, Vantage Pro, Vantage Pro 2, and Vantage Vue use the same
+        communication protocol, the <span class="code">vantage.py</span>
+        driver can communicate with any of them.
       </p>
+
+      <h3>Services</h3>
+
+      <p>The default install of <span class="code">weewx</span> includes the
+        following services:
+      </p>
+
       <table class="indent" style="width: 80%"
-        summary="Overview of the weewx architecture">
+        summary="Overview of the weewx services">
         <tbody>
           <tr>
             <td><strong>Service</strong></td>
@@ -131,6 +147,7 @@ table#stattypes td {
           href="#service_engine"> Customizing the weewx service
             engine</a></em>.
       </p>
+
       <h2 id="Standard_reporting_service_StdReport">
         The standard reporting service, <span class="code">StdReport</span>
       </h2>
@@ -258,6 +275,35 @@ table#stattypes td {
         in section <a href="#generators"><span class="code">
             [Generators]</span></a>.
       </p>
+
+      <h2>Data Flow</h2>
+      <p>Most station hardware provides LOOP data - live readings from the
+        sensors.  Many types of hardware also provide ARCHIVE data - readings
+        that have been saved to the station's memory.  Typically the ARCHIVE
+        data are averages of LOOP data.
+      </p>
+      <p>Most <span class="code">weewx</span> drivers provide at least access
+        to LOOP data.  Some also provide access to the hardware's ARCHIVE data.
+      </p>
+      <p>By default, <span class="code">weewx</span> attempts to use
+        ARCHIVE data from the station, and it also considers LOOP data when
+        calculating highs and lows.  However, not every station has a data
+        logger, and for some stations, LOOP data are more reliable than
+        ARCHIVE data.  So <span class="code">weewx</span> can be configured
+        to read either.
+      </p>
+      <p>The <span class="code">record_generation</span> parameter determines
+        which data <span class="code">weewx</span> will save to database.
+        When set to <span class="code">hardware</span>,
+        <span class="code">weewx</span> will use ARCHIVE data.  When set to
+        <span class="code">software</span>, <span class="code">weewx</span>
+        will use LOOP data.
+      </p>
+      <p>When it starts up, <span class="code">weewx</span> will try to get
+        any ARCHIVE records from the hardware since the latest entry in the
+        <span class="code">weewx</span> database.
+      </p>
+
       <h2>Databases</h2>
       <p>
         There are two databases used by <span class="code">weewx</span>,
