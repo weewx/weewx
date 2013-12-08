@@ -446,7 +446,7 @@ class StdArchive(StdService):
         # data still on the station, but not yet put in the database. Not
         # all consoles can do this, so be prepared to catch the exception:
         try:
-            self._catchup()
+            self._catchup(self.engine.console.genStartupRecords)
         except NotImplementedError:
             pass
                     
@@ -508,7 +508,7 @@ class StdArchive(StdService):
             # be raised if the console does not support it. In that case, fall
             # back to software generation.
             try:
-                self._catchup()
+                self._catchup(self.engine.console.genArchiveRecords)
             except NotImplementedError:
                 self._software_catchup()
         else:
@@ -549,24 +549,26 @@ class StdArchive(StdService):
     def shutDown(self):
         self.archive.close()
         self.statsDb.close()
-        
-    def _catchup(self):
+
+    def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
         
-        If the hardware does not support hardware archives, an exception of type
-        NotImplementedError will be thrown.""" 
+        If the hardware does not support hardware archives, an exception of
+        type NotImplementedError will be thrown.""" 
 
         # Find out when the archive was last updated.
         lastgood_ts = self.archive.lastGoodStamp()
 
         try:
-            # Now ask the console for any new records since then. (Not all consoles
-            # support this feature).
-            for record in self.engine.console.genArchiveRecords(lastgood_ts):
-                self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record, origin='hardware'))
+            # Now ask the console for any new records since then.
+            # (Not all consoles support this feature).
+            for record in generator(lastgood_ts):
+                self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
+                                                      record=record,
+                                                      origin='hardware'))
         except weewx.HardwareError, e:
             syslog.syslog(syslog.LOG_ERR, "wxengine: Internal error detected. Catchup abandoned")
-            syslog.syslog(syslog.LOG_ERR, "****      %s" % e)
+            syslog.syslog(syslog.LOG_ERR, "**** %s" % e)
         
     def _software_catchup(self):
         # Extract a record out of the old accumulator. 

@@ -19,6 +19,9 @@ class AbstractStation(object):
     @property
     def archive_interval(self):
         raise NotImplementedError("Property 'archive_interval' not implemented")
+
+    def genStartupRecords(self, last_ts):
+        return self.genArchiveRecords(last_ts)
     
     def genLoopPackets(self):
         raise NotImplementedError("Method 'genLoopPackets' not implemented")
