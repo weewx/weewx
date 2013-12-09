@@ -34,14 +34,20 @@
 
 use strict;
 
+my %counts;
+my %errors;
+
+# keys for individual counts
 my $STARTUPS = 'wxengine: startups';
 my $HUP_RESTARTS = 'wxengine: restart from HUP';
+my $KBD_INTERRUPTS = 'wxengine: keyboard interrupts';
 my $ARCHIVE_RECORDS_ADDED = 'archive: records added';
 my $IMAGES_GENERATED = 'genimages: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
 my $FILES_COPIED = 'reportengine: files copied';
 my $RECORDS_PUBLISHED = 'restful: records published';
 my $RECORDS_SKIPPED = 'restful: records skipped';
+my $RECORDS_FAILED = 'restful: publish failed';
 my $FOUSB_UNSTABLE_READS = 'fousb: unstable reads';
 my $FOUSB_MAGIC_NUMBERS = 'fousb: unrecognised magic number';
 my $FOUSB_RAIN_COUNTER = 'fousb: rain counter decrement';
@@ -53,29 +59,8 @@ my $WS23XX_CONNECTION_CHANGE = 'ws23xx: connection change';
 my $FORECAST_RECORDS = 'forecast: records generated';
 my $FORECAST_PRUNINGS = 'forecast: prunings';
 my $FORECAST_DOWNLOADS = 'forecast: downloads';
-my %counts = (
-    $STARTUPS, 0,
-    $HUP_RESTARTS, 0,
-    $ARCHIVE_RECORDS_ADDED, 0,
-    $IMAGES_GENERATED, 0,
-    $FILES_GENERATED, 0,
-    $FILES_COPIED, 0,
-    $RECORDS_PUBLISHED, 0,
-    $RECORDS_SKIPPED, 0,
-    $FOUSB_UNSTABLE_READS, 0,
-    $FOUSB_MAGIC_NUMBERS, 0,
-    $FOUSB_RAIN_COUNTER, 0,
-    $FOUSB_LOST_LOG_SYNC, 0,
-    $FOUSB_LOST_SYNC, 0,
-    $FOUSB_MISSED_DATA, 0,
-    $FOUSB_STATION_SYNC, 0,
-    $WS23XX_CONNECTION_CHANGE, 0,
-    $FORECAST_RECORDS, 0,
-    $FORECAST_PRUNINGS, 0,
-    $FORECAST_DOWNLOADS, 0,
-);
-my $RECORDS_FAILED = 'restful: publish failed';
-my %errors;
+
+# any lines that do not match the patterns we define
 my @unmatched = ();
 
 # track upload errors to help diagnose network/server issues
@@ -84,27 +69,51 @@ my @upload_errors = ();
 # keep details of ws23xx behavior
 my @conn_change = ();
 
-# keep details of fine offset behavior to help debug the consoles
+# keep details of fine offset behavior
 my @station_status = ();
 my @unstable_reads = ();
 my @magic_numbers = ();
 my @rain_counter = ();
 
+my %itemized = (
+    'upload failures', \@upload_errors,
+    'fousb station status', \@station_status,
+    'fousb unstable reads', \@unstable_reads,
+    'fousb magic numbers', \@magic_numbers,
+    'fousb rain counter', \@rain_counter,
+    'ws23xx connection changes', \@conn_change,
+    );
+
 while(defined($_ = <STDIN>)) {
     chomp;
-    if (/Archive: added archive record/) {
-        $counts{$ARCHIVE_RECORDS_ADDED} += 1;
-    } elsif (/genimages: Generated (\d+) images/) {
-        $counts{$IMAGES_GENERATED} += $1;
-    } elsif (/filegenerator: generated (\d+)/ ||
-             /cheetahgenerator: generated (\d+)/) {
-        $counts{$FILES_GENERATED} += $1;
-    } elsif (/wxengine: Starting up weewx version/) {
+    if (/wxengine: Starting up weewx version/) {
         $counts{$STARTUPS} += 1;
     } elsif (/wxengine: Received signal HUP/) {
         $counts{$HUP_RESTARTS} += 1;
+    } elsif (/wxengine: Keyboard interrupt/) {
+        $counts{$KBD_INTERRUPTS} += 1;
+    } elsif (/Archive: added archive record/) {
+        $counts{$ARCHIVE_RECORDS_ADDED} += 1;
+    } elsif (/genimages: Generated (\d+) images/) {
+        $counts{$IMAGES_GENERATED} += $1;
+    } elsif (/genimages: aggregate interval required for aggregate type/ ||
+             /genimages: line type \S+ skipped/) {
+        $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
+    } elsif (/filegenerator: generated (\d+)/ ||
+             /cheetahgenerator: generated (\d+)/) {
+        $counts{$FILES_GENERATED} += $1;
     } elsif (/reportengine: copied (\d+) files/) {
         $counts{$FILES_COPIED} += $1;
+    } elsif (/restful: Skipped record/) {
+        $counts{$RECORDS_SKIPPED} += 1;
+    } elsif (/restful: Published record/) {
+        $counts{$RECORDS_PUBLISHED} += 1;
+    } elsif (/restful: Unable to publish record/) {
+        my $key = $RECORDS_FAILED;
+        if (/restful: Unable to publish record \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d \S\S\S \(\d+\) to (\S+)/) {
+            $key .= ' to site ' . $1;
+        }
+        $errors{$key} = $errors{$key} ? $errors{$key} + 1 : 1;
     } elsif (/fousb: station status/) {
         push @station_status, $_;
     } elsif (/fousb: unstable read: blocks differ/) {
@@ -135,19 +144,6 @@ while(defined($_ = <STDIN>)) {
         $counts{$FORECAST_PRUNINGS} += 1;
     } elsif (/forecast: .* downloading forecast/) {
         $counts{$FORECAST_DOWNLOADS} += 1;
-    } elsif (/restful: Skipped record/) {
-        $counts{$RECORDS_SKIPPED} += 1;
-    } elsif (/restful: Published record/) {
-        $counts{$RECORDS_PUBLISHED} += 1;
-    } elsif (/genimages: aggregate interval required for aggregate type/ ||
-             /genimages: line type \S+ skipped/) {
-        $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
-    } elsif (/restful: Unable to publish record/) {
-        my $key = $RECORDS_FAILED;
-        if (/restful: Unable to publish record \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d \S\S\S \(\d+\) to (\S+)/) {
-            $key .= ' to site ' . $1;
-        }
-        $errors{$key} = $errors{$key} ? $errors{$key} + 1 : 1;
     } elsif (/emoncms: Failed upload to EmonCMS/ ||
              /seg: Failed upload to SmartEnergyGroups/ ||
              /cosm: Failed upload to COSM/ ||
@@ -175,7 +171,6 @@ while(defined($_ = <STDIN>)) {
              /\*\*\*\*  Waiting 60 seconds then retrying/ ||
              /wxengine: Station does not support reading the time/ ||
              /wxengine: Starting main packet loop/ ||
-             /wxengine: Keyboard interrupt/ ||
              /wxengine: Shut down StdReport thread/ ||
              /wxengine: Shut down StdRESTful thread/ ||
              /wxengine: Loading service/ ||
@@ -202,6 +197,7 @@ while(defined($_ = <STDIN>)) {
              /wxengine: Received signal/ ||
              /cheetahgenerator: Running / ||
              /cheetahgenerator: skip/ ||
+             /fousb: driver version is/ ||
              /fousb: found station on USB/ ||
              /fousb: altitude is/ ||
              /fousb: archive interval is/ ||
@@ -304,6 +300,7 @@ while(defined($_ = <STDIN>)) {
              /ws23xx: windchill: / ||
              /ws23xx: dewpoint: / ||
              /ws23xx: station clock is / ||
+             /te923: driver version is / ||
              /te923: polling interval is / ||
              /te923: windchill will be / ||
              /te923: sensor map is / ||
@@ -345,12 +342,9 @@ foreach my $k (keys %errors) {
     printf("  %-40s %6d\n", $k, $errors{$k});
 }
 
-report("upload failures", \@upload_errors) if $#upload_errors >= 0;
-report("fousb station status", \@station_status) if $#station_status >= 0;
-report("fousb unstable reads", \@unstable_reads) if $#unstable_reads >= 0;
-report("fousb magic numbers", \@magic_numbers) if $#magic_numbers >= 0;
-report("fousb rain counter", \@rain_counter) if $#rain_counter >= 0;
-report("ws23xx connection changes", \@conn_change) if $#conn_change >= 0;
+foreach my $k (sort keys %itemized) {
+    report($k, $itemized{$k}) if scalar @{$itemized{$k}} > 0;
+}
 
 report("unmatched lines", \@unmatched) if $#unmatched >= 0;
 
