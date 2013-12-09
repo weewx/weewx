@@ -13,6 +13,10 @@ Fixed qsf and qpf summary values in forecast module.
 Forecast module now considers the fctcode, condition, and wx fields for
 precipitation and obstructions to visibility.
 
+Fixes to the Fine Offset driver to eliminate spikes caused by reading from
+memory before the pointer had been updated (not the same thing as an unstable
+read).
+
 Added driver for LaCrosse 2300 series of weather stations.
 
 Added driver for Hideki TE923 series of weather stations.
