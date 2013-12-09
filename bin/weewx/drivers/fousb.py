@@ -220,7 +220,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '1.1'
+DRIVER_VERSION = '1.2'
 
 def loader(config_dict, engine):
     altitude_m = getaltitudeM(config_dict)
@@ -884,7 +884,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                         yield data
                 elif self.polling_mode.lower() == PERIODIC_POLLING.lower():
                     new_ptr = self.current_pos()
-                    if new_ptr == 0:
+                    if new_ptr < data_start:
                         raise ObservationError('bad pointer: 0x%04x' % new_ptr)
                     block = self.get_raw_data(new_ptr, unbuffered=True)
                     if len(block) != reading_len[self.data_format]:
