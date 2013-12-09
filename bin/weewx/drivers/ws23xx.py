@@ -138,7 +138,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.11'
+DRIVER_VERSION = '0.12'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -345,7 +345,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                                (conn_info[1], conn_info[0]))
                         self._poll_wait = conn_info[1]
                 time.sleep(self._poll_wait)
-            except Exception, e:
+            except Ws2300.Ws2300Exception, e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
@@ -405,7 +405,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 
 # ids for current weather conditions and connection type
 SENSOR_IDS = [
-    'it','ih','ot','oh','pa', 'ws','wsh','w0','rh','rt','dp','wc','cn' ]
+    'it','ih','ot','oh','pa', 'ws','w0','wso','wsv','rh','rt','dp','wc','cn' ]
 # polling interval, in seconds, for various connection types
 POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
 
@@ -438,10 +438,15 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
     packet['outHumidity'] = data['oh']
     packet['pressure'] = data['pa']
 
-    packet['windSpeed'] = data['ws']
-    if packet['windSpeed'] is not None:
-        packet['windSpeed'] *= 3.6 # weewx wants km/h
-    packet['windDir'] = data['w0'] if packet['windSpeed'] else None
+    if data['wso'] == 0 and data['wsv'] == 0:
+        packet['windSpeed'] = data['ws']
+        if packet['windSpeed'] is not None:
+            packet['windSpeed'] *= 3.6 # weewx wants km/h
+        packet['windDir'] = data['w0'] if packet['windSpeed'] else None
+    else:
+        logdbg('wind: overflow=%s validity=%s' % (data['wso'], data['wsv']))
+        packet['windSpeed'] = None
+        packet['windDir'] = None
 
     packet['windGust'] = None
     packet['windGustDir'] = None
