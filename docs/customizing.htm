@@ -396,9 +396,9 @@ table#stattypes td {
       <h3>Changing options in <span class="code">skin.conf</span></h3>
       <p>
         With this approach, the user edits the skin configuration file
-        for the standard skin that comes with <span class="code">weewx</span>,
-        located in <span class="symcode"> $SKIN_ROOT</span><span
-          class="code">/Standard/skin.conf</span>, using a text editor.
+        for the standard skin, located in
+        <span class="symcode"> $SKIN_ROOT</span>
+        <span class="code">/Standard/skin.conf</span>, using a text editor.
         For example, suppose you wish to use metric units in the
         presentation layer, instead of the default US Customary Units.
         The section that controls units is <span class="code">[Units][[Groups]]</span>.
@@ -465,15 +465,15 @@ table#stattypes td {
         ...</pre>
       <h3>Overriding options in <span class="code">skin.conf</span> from <span class="code">weewx.conf</span></h3>
       <p>
-        This approach is very similar, except that instead of changing
+        This approach is similar, except that instead of changing
         the skin configuration file directly, you override its options
         by editing the main configuration file, <span class="code">weewx.conf</span>.
-        The advantage of this approach is that you can use the same skin
-        to produce several different output, each with separate options.
+        The advantage of this approach is that you can use a single skin
+        to produce several different reports, each with different options.
       </p>
       <p>
         Revisiting our example, suppose you want two reports, one in US
-        Customary, the other in Metric. The former will go in the
+        Customary units, the other in Metric units. The former will go in the
         directory <span class="symcode"> $HTML_ROOT</span>, the latter
         in a directory, <span class="symcode"> $HTML_ROOT</span><span
           class="code">/metric</span>. If you just simply modify <span
@@ -492,10 +492,6 @@ table#stattypes td {
         would look like:
       </p>
       <pre class="tty">[StdReport]
-    #
-    # This section specifies what reports, using which skins, are to be generated.
-    #
-
     # Where the skins reside, relative to WEEWX_ROOT:
     SKIN_ROOT = skins
 
@@ -512,8 +508,7 @@ table#stattypes td {
         # It is also based on the Standard skin:
         skin = Standard 
         # However, override where the results will go and put them in a directory:
-        HTML_ROOT = public_html/metric
-    
+        HTML_ROOT = public_html/metric    
         # And override the options that were not in metric units
         [[[Units]]]
             [[[[Groups]]]]
@@ -523,19 +518,15 @@ table#stattypes td {
                 group_rainrate    = mm_per_hour
                 group_speed       = meter_per_second
                 group_speed2      = meter_per_second2
-                group_temperature = degree_C
-
-    [[FTP]]
-    ...
-    ... (as before) </pre>
+                group_temperature = degree_C</pre>
       <p>
-        We have done two things different from the stock reports. First
-        (1), we have renamed the first report from <span class="code">StandardReport</span>
-        to <span class="code">USReport</span> for clarity; and (2) we
+        We have done two things. First (1), we have renamed the first report
+        from <span class="code">StandardReport</span>
+        to <span class="code">USReport</span> for clarity; and second (2), we
         have introduced a new report <span class="code">MetricReport</span>,
         just like the first, except it puts its results in a different
-        spot and uses different units. Both use the same skin, the <span
-          class="code">Standard</span> skin.
+        location and uses different units. Both use the same skin, the
+        <span class="code">Standard</span> skin.
       </p>
       <h2 id="templates">Customizing templates</h2>
       <p>
@@ -601,7 +592,7 @@ $month.outTemp.max</pre>
       <p>
         Most of the time, the dot code will "do the right thing" and is
         all you will need. However, <span class="code">weewx</span>
-        offers extensive customization of the generate output for
+        offers extensive customization of the generated output for
         specialized applications such as XML RSS feeds, or ridgidly
         formatted reports (such as the NOAA reports). This section
         specifies the various options available.
@@ -1221,7 +1212,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>We will cover each of these separately.</p>
       <h4>Calendar events</h4>
       <p>
-        "Calendar events" do not require a heavenly body. They cover
+        Calendar events do not require a heavenly body. They cover
         things such as "<span class="code">next_solstice</span>", or "<span
           class="code">next_first_quarter_moon</span>". The syntax here
         is
@@ -1266,7 +1257,7 @@ Sunrise, sunset: 06:51 19:30</pre>
         </tbody>
       </table>
       <h4>Heavenly bodies</h4>
-      <p>The second category does require a heavenly body. This
+      <p>Events in the second category require a heavenly body. This
         covers queries such as, "When does Jupiter rise?" or, "When does
         the sun transit?" Examples are</p>
       <pre class="tty">$almanac.jupiter.rise</pre>
@@ -1399,8 +1390,8 @@ Sunrise, sunset: 06:51 19:30</pre>
       <h3>Extending the list</h3>
       <p>Weewx comes with a number of objects already in the search
         list, but you can extend it. To do so, you should have some
-        familiarity with Python, in particular, how to write new classes
-        and member functions for them.</p>
+        familiarity with Python.  In particular, you need to know how
+        to write new classes and member functions for them.</p>
       <p>
         Let's look at an example. The regular version of <span
           class="code"> weewx</span> offers statistical summaries by
