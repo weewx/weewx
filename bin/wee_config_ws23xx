@@ -148,6 +148,7 @@ def setclock(station, prompt):
             print "Set clock cancelled."
 
 def setinterval(station, interval, prompt):
+    print "Changing the interval will clear the station memory."
     v = station.getArchiveInterval()
     ans = None
     while ans not in ['y', 'n']:

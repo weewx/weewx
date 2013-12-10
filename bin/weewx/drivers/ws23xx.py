@@ -108,14 +108,13 @@ wview, and ws2300 implementations.  Current version numbers are as follows:
 
 History Interval
 
-There is disagreement about the history interval.  The factory default is 60
-minutes, with an actual value of 59 in the console.  ws2300.py reports the
-value directly, whereas open2300 adds one to it.  So on a station with factory
-default of 60 minutes, ws2300.py reports an archive interval of 59 minutes,
-while open2300 reports an archive interval of 60 minutes.
+The factory default is 60 minutes.  The value stored in the console is one
+less than the actual value (in minutes).  So for the factory default of 60,
+the console stores 59.  The minimum interval is 1.
 
-TODO: figure out which is correct
-TODO: the open2300 approach means archive interval must be greater than 1
+ws2300.py reports the actual value from the console, e.g., 59 when the
+interval is 60.  open2300 reports the interval, e.g., 60 when the interval
+is 60.  wview ignores the interval.
 
 Detecting Bogus Sensor Values
 
@@ -244,7 +243,6 @@ Known to work: ATEN UC-232A
 # ws 26.399999
 # wsh 21
 # w0 135
-# FIXME: test archive interval
 
 import optparse
 import syslog
@@ -261,7 +259,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.14'
+DRIVER_VERSION = '0.15'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -485,7 +483,6 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             raise NotImplementedError
         with Station(self.port) as s:
             last_rain = None
-            interval = s.get_archive_interval()
             for ts,data in s.gen_records(since_ts=since_ts, count=count):
                 record = data_to_packet(data, ts,
                                         altitude=self.altitude,
@@ -493,7 +490,6 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                                         last_rain=last_rain,
                                         calc_dewpoint=True,
                                         calc_windchill=True)
-                record['interval'] = interval
                 last_rain = record['rainTotal']
                 yield record
 
@@ -524,6 +520,10 @@ class WS23xx(weewx.abstractstation.AbstractStation):
     def getRecordCount(self):
         with Station(self.port) as s:
             return s.get_record_count()
+
+    def clearHistory(self):
+        with Station(self.port) as s:
+            s.clear_memory()
 
 
 # ids for current weather conditions and connection type
@@ -745,6 +745,7 @@ class Station(object):
         for measure, nybbles in zip(measures, raw_data):
             value = measure.conv.binary2value(nybbles)
             data_dict = {
+                'interval': interval,
                 'it': value.temp_indoor,
                 'ih': value.humidity_indoor,
                 'ot': value.temp_outdoor,
@@ -1705,7 +1706,7 @@ conv_rain = BcdConversion("mm",  6, 2, "rain")
 conv_temp = BcdConversion("C",   4, 2, "temperature",   -3000)
 conv_per2 = BinConversion("s",   2, 1, "time interval",  5)
 conv_per3 = BinConversion("min", 3, 0, "time interval")
-conv_wspd = BcdConversion("m/s", 3, 1, "speed")
+conv_wspd = BinConversion("m/s", 3, 1, "speed")
 conv_wind = WindConversion()
 
 #
