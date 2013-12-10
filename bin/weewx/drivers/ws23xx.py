@@ -28,8 +28,7 @@
 # This immplementation copies directly from Russell Stuart's implementation,
 # but only the parts required to read from and write to the weather station.
 #
-# The wview implementation copies from the Open2300 implementation.  It reads
-# each sensor multiple times to avoid spikes in data.
+# The wview implementation copies from the Open2300 implementation.
 
 """Classes and functions for interfacing with WS-23xx weather stations.
 
@@ -49,7 +48,7 @@ To do a factory reset, press and hold PRESSURE and WIND for 5 seconds.
 A single bucket tip is 0.0204 in (0.518 mm).
 
 The station has 175 history records.  That is just over 7 days of data with
-the default history recording interval of 60 minutes (59 in the console).
+the default history recording interval of 60 minutes.
 
 The connection type can be one of 0=cable, 3=lost, 15=wireless
 
@@ -74,10 +73,10 @@ It is possible to increase the rate of wireless updates:
 
   http://www.wxforum.net/index.php?topic=2196.0
 
-Instruments are connected by unshielded phone cables.  RF interference can
-cause random spikes in data, with one symptom being values of 25.5 m/s or
-91.8 km/h for the wind speed.  To reduce the number of spikes in data, replace
-with shielded cables:
+Sensors are connected by unshielded phone cables.  RF interference can cause
+random spikes in data, with one symptom being values of 25.5 m/s or 91.8 km/h
+for the wind speed.  To reduce the number of spikes in data, replace with
+shielded cables:
 
   http://www.lavrsen.dk/sources/weather/windmod.htm
 
@@ -94,13 +93,136 @@ The station has a serial connection to the computer.
 This driver does not keep the serial port open for long periods.  Instead, the
 driver opens the serial port, reads data, then closes the port.
 
-This implementation polls the station.  Use the polling_interval parameter
-to specify how often to poll for data.  If not specified, the polling interval
-will adapt based on connection type and status.
+This driver polls the station.  Use the polling_interval parameter to specify
+how often to poll for data.  If not specified, the polling interval will adapt
+based on connection type and status.
 
-There seems to be no indication of the quality of the sensor readings.  For
-example, if the wind instruments are unplugged from the thermo/hygro unit,
-values for wind speed and direction are still reported.
+Discrepancies Between Implementations
+
+As of December 2013, there are significant differences between the open2300,
+wview, and ws2300 implementations.  Current version numbers are as follows:
+
+  open2300 1.11
+  ws2300 1.8
+  wview 5.20.2
+
+History Interval
+
+There is disagreement about the history interval.  The factory default is 60
+minutes, with an actual value of 59 in the console.  ws2300.py reports the
+value directly, whereas open2300 adds one to it.  So on a station with factory
+default of 60 minutes, ws2300.py reports an archive interval of 59 minutes,
+while open2300 reports an archive interval of 60 minutes.
+
+TODO: figure out which is correct
+TODO: the open2300 approach means archive interval must be greater than 1
+
+Detecting Bogus Sensor Values
+
+wview queries the station 3 times for each sensor then accepts the value only
+if the three values were close to each other.
+
+open2300 sleeps 10 seconds if a wind measurement indicates invalid or overflow.
+
+The ws2300.py implementation includes overflow and validity flags for values
+from the wind sensors.  It does not retry based on invalid or overflow.
+
+Wind Speed
+
+There is disagreement about how to calculate wind speed and how to determine
+whether the wind speed is valid.
+
+This driver introduces a WindConversion object that uses open2300/wview
+decoding so that wind speeds match that of open2300/wview.  ws2300 1.8
+has a bug in the wind speed decoding.
+
+The memory map indicates the following:
+
+addr  smpl description
+0x527 0    Wind overflow flag: 0 = normal
+0x528 0    Wind minimum code: 0=min, 1=--.-, 2=OFL
+0x529 0    Windspeed: binary nibble 0 [m/s * 10]
+0x52A 0    Windspeed: binary nibble 1 [m/s * 10]
+0x52B 0    Windspeed: binary nibble 2 [m/s * 10]
+0x52C 8    Wind Direction = nibble * 22.5 degrees
+0x52D 8    Wind Direction 1 measurement ago
+0x52E 9    Wind Direction 2 measurement ago
+0x52F 8    Wind Direction 3 measurement ago
+0x530 7    Wind Direction 4 measurement ago
+0x531 7    Wind Direction 5 measurement ago
+0x532 0
+
+wview 5.20.2 implementation (wview apparently copied from open2300):
+
+read 3 bytes starting at 0x527
+
+0x527 x[0]
+0x528 x[1]
+0x529 x[2]
+
+if ((x[0] != 0x00) ||
+    ((x[1] == 0xff) && (((x[2] & 0xf) == 0) || ((x[2] & 0xf) == 1)))) {
+  fail
+} else {
+  dir = (x[2] >> 4) * 22.5
+  speed = ((((x[2] & 0xf) << 8) + (x[1])) / 10.0 * 2.23693629)
+  maxdir = dir
+  maxspeed = speed
+}
+
+open2300 1.10 implementation:
+
+read 6 bytes starting at 0x527
+
+0x527 x[0]
+0x528 x[1]
+0x529 x[2]
+0x52a x[3]
+0x52b x[4]
+0x52c x[5]
+
+if ((x[0] != 0x00) ||
+    ((x[1] == 0xff) && (((x[2] & 0xf) == 0) || ((x[2] & 0xf) == 1)))) {
+  sleep 10
+} else {
+  dir = x[2] >> 4
+  speed = ((((x[2] & 0xf) << 8) + (x[1])) / 10.0)
+  dir0 = (x[2] >> 4) * 22.5
+  dir1 = (x[3] & 0xf) * 22.5
+  dir2 = (x[3] >> 4) * 22.5
+  dir3 = (x[4] & 0xf) * 22.5
+  dir4 = (x[4] >> 4) * 22.5
+  dir5 = (x[5] & 0xf) * 22.5
+}
+
+ws2300.py 1.8 implementation:
+
+read 1 nibble starting at 0x527
+read 1 nibble starting at 0x528
+read 4 nibble starting at 0x529
+read 3 nibble starting at 0x529
+read 1 nibble starting at 0x52c
+read 1 nibble starting at 0x52d
+read 1 nibble starting at 0x52e
+read 1 nibble starting at 0x52f
+read 1 nibble starting at 0x530
+read 1 nibble starting at 0x531
+
+0x527 overflow
+0x528 validity
+0x529 speed[0]
+0x52a speed[1]
+0x52b speed[2]
+0x52c dir[0]
+
+speed:    ((x[2] * 100 + x[1] * 10 + x[0]) % 1000) / 10
+velocity:  (x[2] * 100 + x[1] * 10 + x[0]) / 10
+
+dir = data[0] * 22.5
+speed = (bcd2num(data) % 10**3 + 0) / 10**1
+velocity = (bcd2num(data[:3])/10.0, bin2num(data[3:4]) * 22.5)
+
+bcd2num([a,b,c]) -> c*100+b*10+a
 
 USB-Serial Converters
 
@@ -122,6 +244,7 @@ Known to work: ATEN UC-232A
 # ws 26.399999
 # wsh 21
 # w0 135
+# FIXME: test archive interval
 
 import optparse
 import syslog
@@ -138,7 +261,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.12'
+DRIVER_VERSION = '0.14'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -404,8 +527,8 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 
 
 # ids for current weather conditions and connection type
-SENSOR_IDS = [
-    'it','ih','ot','oh','pa', 'ws','w0','wso','wsv','rh','rt','dp','wc','cn' ]
+SENSOR_IDS = [ 'it','ih','ot','oh','pa', 'wind','rh','rt','dp','wc','cn' ]
+# [ 'it','ih','ot','oh','pa', 'ws','w0','wso','wsv','rh','rt','dp','wc','cn' ]
 # polling interval, in seconds, for various connection types
 POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
 
@@ -438,15 +561,26 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
     packet['outHumidity'] = data['oh']
     packet['pressure'] = data['pa']
 
-    if data['wso'] == 0 and data['wsv'] == 0:
-        packet['windSpeed'] = data['ws']
+    ws,wd,inv = data['wind']
+    if inv == 0:
+        packet['windSpeed'] = ws
         if packet['windSpeed'] is not None:
             packet['windSpeed'] *= 3.6 # weewx wants km/h
-        packet['windDir'] = data['w0'] if packet['windSpeed'] else None
+        packet['windDir'] = wd if packet['windSpeed'] else None
     else:
-        logdbg('wind: overflow=%s validity=%s' % (data['wso'], data['wsv']))
+        loginf('invalid wind reading: %s' % inv)
         packet['windSpeed'] = None
         packet['windDir'] = None
+
+#    if data['wso'] == 0 and data['wsv'] == 0:
+#        packet['windSpeed'] = data['ws']
+#        if packet['windSpeed'] is not None:
+#            packet['windSpeed'] *= 3.6 # weewx wants km/h
+#        packet['windDir'] = data['w0'] if packet['windSpeed'] else None
+#    else:
+#        loginf('wind: overflow=%s validity=%s' % (data['wso'], data['wsv']))
+#        packet['windSpeed'] = None
+#        packet['windDir'] = None
 
     packet['windGust'] = None
     packet['windGustDir'] = None
@@ -529,8 +663,9 @@ class Station(object):
         if int(interval) < 1:
             raise ValueError, 'archive interval must be greater than zero'
         logdbg('setting hardware archive interval to %s minutes' % interval)
-        for m,v in [(Measure.IDS['hi'],interval), # archive interval
-                    (Measure.IDS['hc'],1), # time till next sample
+        interval -= 1
+        for m,v in [(Measure.IDS['hi'],interval), # archive interval in minutes
+                    (Measure.IDS['hc'],1), # time till next sample in minutes
                     (Measure.IDS['hn'],0)]: # number of valid records
             data = m.conv.value2binary(v)
             cmd = m.conv.write(data, None)
@@ -539,7 +674,7 @@ class Station(object):
     def get_archive_interval(self):
         """Return archive interval in minutes."""
         data = self.get_raw_data(['hi'])
-        x = int(data['hi'])
+        x = 1 + int(data['hi'])
         logdbg('station archive interval is %s minutes' % x)
         return x
 
@@ -577,7 +712,7 @@ class Station(object):
         measures = [ Measure.IDS['hi'], Measure.IDS['hw'],
                      Measure.IDS['hc'], Measure.IDS['hn'] ]
         raw_data = read_measurements(self.ws, measures)
-        interval = int(measures[0].conv.binary2value(raw_data[0])) # minute
+        interval = 1+int(measures[0].conv.binary2value(raw_data[0])) # minute
         latest_ts = int(measures[1].conv.binary2value(raw_data[1])) # epoch
         time_to_next = int(measures[2].conv.binary2value(raw_data[2])) # minute
         numrec = int(measures[3].conv.binary2value(raw_data[3]))
@@ -616,8 +751,9 @@ class Station(object):
                 'oh': value.humidity_outdoor,
                 'pa': value.pressure_absolute,
                 'rt': value.rain,
-                'ws': value.wind_speed,
-                'w0': value.wind_direction,
+                'wind': (value.wind_speed, value.wind_direction, 0),
+#                'ws': value.wind_speed,
+#                'w0': value.wind_direction,
                 'rh': None, # no rain rate in history
                 'dp': None, # no dewpoint in history
                 'wc': None, # no windchill in history
@@ -1348,11 +1484,29 @@ class WindVelocityConversion(Conversion):
     def __init__(self):
         Conversion.__init__(self, "ms,d", 4, "wind speed and direction")
     def binary2value(self, data):
-        return (bcd2num(data[:3])/10.0, bin2num(data[3:4]) * 22.5)
+        return (bin2num(data[:3])/10.0, bin2num(data[3:4]) * 22.5)
     def value2binary(self, value):
-        return num2bcd(value[0]*10, 3) + num2bin((value[1] + 11.5) / 22.5, 1)
+        return num2bin(value[0]*10, 3) + num2bin((value[1] + 11.5) / 22.5, 1)
     def str(self, value):
         return "%.1f,%g" % value
+    def parse(self, str):
+        return tuple([float(x) for x in str.split(",")])
+
+# The ws2300 1.8 implementation does not calculate wind speed correctly -
+# it uses bcd2num instead of bin2num.  This conversion object uses bin2num
+# decoding and it reads all wind data in a single transcation so that we do
+# not suffer coherency problems.
+class WindConversion(Conversion):
+    def __init__(self):
+        Conversion.__init__(self, "ms,d,x", 12, "wind speed, dir, validity")
+    def binary2value(self, data):
+        invalid = 0 if data[0] == 0 and data[1] == 0 else 1
+        speed = bin2num(data[2:5]) / 10.0
+        direction = data[5] * 22.5
+#        print "s: %s m/s %s mph" % (speed, speed * 2.23693629)
+        return (speed, direction, invalid)
+    def str(self, value):
+        return "%.1f,%g,%s" % value
     def parse(self, str):
         return tuple([float(x) for x in str.split(",")])
 
@@ -1552,6 +1706,7 @@ conv_temp = BcdConversion("C",   4, 2, "temperature",   -3000)
 conv_per2 = BinConversion("s",   2, 1, "time interval",  5)
 conv_per3 = BinConversion("min", 3, 0, "time interval")
 conv_wspd = BcdConversion("m/s", 3, 1, "speed")
+conv_wind = WindConversion()
 
 #
 # Define a measurement on the Ws2300.  This encapsulates:
@@ -1819,6 +1974,8 @@ Measure(0x6b5, "hc",   conv_per3, "history time till sample")
 Measure(0x6b8, "hw",   conv_stmp, "history last sample when")
 Measure(0x6c2, "hp",   conv_rec2, "history last record pointer",reset=0)
 Measure(0x6c4, "hn",   conv_rec2, "history number of records",	reset=0)
+# get all of the wind info in a single invocation
+Measure(0x527, "wind", conv_wind, "wind")
 
 #
 # Read the requests.
