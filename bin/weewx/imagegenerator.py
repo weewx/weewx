@@ -40,7 +40,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
     def setup(self):
         
         self.image_dict = self.skin_dict['ImageGenerator']
-        self.title_dict = self.skin_dict['Labels']['Generic']
+        self.title_dict = self.skin_dict.get('Labels', {}).get('Generic', {})
         self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.unit_helper= weewx.units.UnitInfoHelper(self.formatter, self.converter)

@@ -6,6 +6,10 @@ X.X.X XX/XX/XX
 If software is specified for record_generation, do not try to use the
 station's archive interval.
 
+Fixed bug when reading cooling_base option.
+
+Default to sane behavior if skin does not define Labels.
+
 Fixed bug in setting of CheetahGenerator options.
 
 Fixed qsf and qpf summary values in forecast module.
