@@ -138,6 +138,9 @@ claimInterface.
 # TODO: consider open/close on each read instead of keeping open
 # TODO: try doing bulkRead instead of interruptRead
 
+# TODO: sensor data use 32 bytes, but each historical record is 38 bytes.  what
+#       do the other 4 bytes represent?
+
 # FIXME: speed up transfers: 
 # date;PYTHONPATH=bin python bin/weewx/drivers/te923.py --records 0 > b; date
 # Tue Nov 26 10:37:36 EST 2013
@@ -158,7 +161,7 @@ import weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.6'
+DRIVER_VERSION = '0.7'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -362,19 +365,20 @@ class TE923(weewx.abstractstation.AbstractStation):
         DEBUG_PRESSURE         = int(stn_dict.get('debug_pressure', 0))
 
         self.altitude          = stn_dict['altitude']
-        self.polling_interval  = stn_dict.get('polling_interval', 10)
         self.model             = stn_dict.get('model', 'TE923')
-        self.calc_windchill    = stn_dict.get('calculate_windchill', False)
-        self.sensor_map    = stn_dict.get('sensor_map', DEFAULT_SENSOR_MAP)
-        self.battery_map   = stn_dict.get('battery_map', DEFAULT_BATTERY_MAP)
         self.max_tries         = int(stn_dict.get('max_tries', 5))
         self.retry_wait        = int(stn_dict.get('retry_wait', 30))
+        self.polling_interval  = int(stn_dict.get('polling_interval', 10))
+        self.calc_windchill    = weeutil.weeutil.tobool(stn_dict.get('calculate_windchill', False))
+        self.sensor_map    = stn_dict.get('sensor_map', DEFAULT_SENSOR_MAP)
+        self.battery_map   = stn_dict.get('battery_map', DEFAULT_BATTERY_MAP)
         self.memory_size       = stn_dict.get('memory_size', 'small')
 
         vendor_id              = int(stn_dict.get('vendor_id',  '0x1130'), 0)
         product_id             = int(stn_dict.get('product_id', '0x6801'), 0)
         device_id              = stn_dict.get('device_id', None)
 
+        loginf('driver version is %s' % DRIVER_VERSION)
         loginf('polling interval is %s' % str(self.polling_interval))
         loginf('windchill will be %s' %
                ('calculated' if self.calc_windchill else 'read from station'))
@@ -593,6 +597,7 @@ def decode_th(buf, i):
             if DEBUG_DECODE > 1:
                 logdbg("TMP%d other error in buffer 0" % i)
             data[tstate] = STATE_INVALID
+    # FIXME: why does debug msg below not correspond to the bit comparison?
     if buf[1+offset] & 0x40 != 0x40 and i > 0:
         if DEBUG_DECODE > 1:
             logdbg("TMP%d buffer 1 bit 6 set" % i)
@@ -864,7 +869,7 @@ class Station(object):
     #
     # FIXME: must be a better way to know when there is no more data
     def _raw_read(self, addr, timeout=50):
-        reqbuf = [0x05, 0x0AF, 0x00, 0x00, 0x00, 0x00, 0xAF, 0xFE]
+        reqbuf = [0x05, 0xAF, 0x00, 0x00, 0x00, 0x00, 0xAF, 0xFE]
         reqbuf[4] = addr / 0x10000
         reqbuf[3] = (addr - (reqbuf[4] * 0x10000)) / 0x100
         reqbuf[2] = addr - (reqbuf[4] * 0x10000) - (reqbuf[3] * 0x100)
@@ -976,7 +981,14 @@ class Station(object):
             yield addr,record
 
     def get_record(self, addr=None, now_year=None, now_month=None):
-        """return a single record from station"""
+        """return a single record from station and address of the next
+
+        Each historical record is 38 bytes (0x26) long.  Records start at
+        memory address 0x101 (257).  The index of the latest record is at
+        address 0xff (255), indicating the offset from the starting address.
+
+        On small memory stations, the last 32 bytes of memory are never used.
+        """
         if now_year is None or now_month is None:
             now = int(time.time())
             tt = time.localtime(now)
@@ -985,6 +997,10 @@ class Station(object):
 
         if addr is None:
             buf = self._read(0xfb)
+#            start = buf[5]
+#            if start == 0:
+#                start = 0xd0 # FIXME: only for small memory model
+#            addr = 0x101 + (buf[5]-1) * 0x26
             addr = (buf[3] * 0x100 + buf[5]) * 0x26 + 0x101
 
         buf = self._read(addr)
