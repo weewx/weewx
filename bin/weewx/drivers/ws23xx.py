@@ -27,8 +27,6 @@
 #
 # This immplementation copies directly from Russell Stuart's implementation,
 # but only the parts required to read from and write to the weather station.
-#
-# The wview implementation copies from the Open2300 implementation.
 
 """Classes and functions for interfacing with WS-23xx weather stations.
 
@@ -36,7 +34,7 @@ LaCrosse made a number of stations in the 23xx series, including:
 
   WS-2300, WS-2308, WS-2310, WS-2315, WS-2317, WS-2357
 
-The stations were also sold as the TFA Dostman and TechnoLine 2350.
+The stations were also sold as the TFA Matrix and TechnoLine 2350.
 
 The WWVB receiver is located in the console.
 
@@ -50,12 +48,12 @@ A single bucket tip is 0.0204 in (0.518 mm).
 The station has 175 history records.  That is just over 7 days of data with
 the default history recording interval of 60 minutes.
 
-The connection type can be one of 0=cable, 3=lost, 15=wireless
-
 The station supports both wireless and wired communication between the
 sensors and a station console.  Wired connection updates data every 8 seconds.
 Wireless connection updates data in 16 to 128 second intervals, depending on
 wind speed and rain activity.
+
+The connection type can be one of 0=cable, 3=lost, 15=wireless
 
 sensor update frequency:
 
@@ -83,10 +81,6 @@ shielded cables:
 The station records wind speed and direction, but has no notion of gust.
 
 The station calculates windchill and dewpoint.
-
-Kenneth Lavrson maintains a map of the station memory here:
-
-  http://www.lavrsen.dk/foswiki/bin/view/Open2300/OpenWSMemoryMap
 
 The station has a serial connection to the computer.
 
@@ -133,7 +127,7 @@ whether the wind speed is valid.
 
 This driver introduces a WindConversion object that uses open2300/wview
 decoding so that wind speeds match that of open2300/wview.  ws2300 1.8
-has a bug in the wind speed decoding.
+incorrectly uses bcd2num instead of bin2num.  This bug is fixed in this driver.
 
 The memory map indicates the following:
 
@@ -259,7 +253,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.15'
+DRIVER_VERSION = '0.16'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -462,7 +456,8 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                            (get_conn_info(self._last_cn)[0], conn_info[0]))
                     self._last_cn = data['cn']
                     if self.polling_interval is None:
-                        loginf("using %s second polling interval for %s connection" % 
+                        loginf("using %s second polling interval"
+                               " for %s connection" % 
                                (conn_info[1], conn_info[0]))
                         self._poll_wait = conn_info[1]
                 time.sleep(self._poll_wait)
@@ -527,8 +522,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 
 
 # ids for current weather conditions and connection type
-SENSOR_IDS = [ 'it','ih','ot','oh','pa', 'wind','rh','rt','dp','wc','cn' ]
-# [ 'it','ih','ot','oh','pa', 'ws','w0','wso','wsv','rh','rt','dp','wc','cn' ]
+SENSOR_IDS = [ 'it','ih','ot','oh','pa','wind','rh','rt','dp','wc','cn' ]
 # polling interval, in seconds, for various connection types
 POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
 
@@ -561,26 +555,17 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
     packet['outHumidity'] = data['oh']
     packet['pressure'] = data['pa']
 
-    ws,wd,inv = data['wind']
-    if inv == 0:
+    ws,wd,wso,wsv = data['wind']
+    if wso == 0 and wsv == 0:
         packet['windSpeed'] = ws
         if packet['windSpeed'] is not None:
             packet['windSpeed'] *= 3.6 # weewx wants km/h
         packet['windDir'] = wd if packet['windSpeed'] else None
     else:
-        loginf('invalid wind reading: %s' % inv)
+        loginf('invalid wind reading: speed=%s dir=%s overflow=%s invalid=%s' %
+               (ws,wd,wso,wsv))
         packet['windSpeed'] = None
         packet['windDir'] = None
-
-#    if data['wso'] == 0 and data['wsv'] == 0:
-#        packet['windSpeed'] = data['ws']
-#        if packet['windSpeed'] is not None:
-#            packet['windSpeed'] *= 3.6 # weewx wants km/h
-#        packet['windDir'] = data['w0'] if packet['windSpeed'] else None
-#    else:
-#        loginf('wind: overflow=%s validity=%s' % (data['wso'], data['wsv']))
-#        packet['windSpeed'] = None
-#        packet['windDir'] = None
 
     packet['windGust'] = None
     packet['windGustDir'] = None
@@ -1499,15 +1484,15 @@ class WindVelocityConversion(Conversion):
 # not suffer coherency problems.
 class WindConversion(Conversion):
     def __init__(self):
-        Conversion.__init__(self, "ms,d,x", 12, "wind speed, dir, validity")
+        Conversion.__init__(self, "ms,d,o,v", 12, "wind speed, dir, validity")
     def binary2value(self, data):
-        invalid = 0 if data[0] == 0 and data[1] == 0 else 1
+        overflow = data[0]
+        validity = data[1]
         speed = bin2num(data[2:5]) / 10.0
         direction = data[5] * 22.5
-#        print "s: %s m/s %s mph" % (speed, speed * 2.23693629)
-        return (speed, direction, invalid)
+        return (speed, direction, overflow, validity)
     def str(self, value):
-        return "%.1f,%g,%s" % value
+        return "%.1f,%g,%s,%s" % value
     def parse(self, str):
         return tuple([float(x) for x in str.split(",")])
 
