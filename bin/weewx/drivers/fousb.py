@@ -220,7 +220,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '1.2'
+DRIVER_VERSION = '1.3'
 
 def loader(config_dict, engine):
     altitude_m = getaltitudeM(config_dict)
@@ -667,7 +667,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         [Optional. Default is 15 seconds]
         
         wait_before_retry: How long to wait after a failure before retrying.
-        [Optional. Default is 10 seconds]
+        [Optional. Default is 30 seconds]
 
         max_tries: How many times to try before giving up.
         [Optional. Default is 3]
@@ -701,7 +701,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.polling_interval  = int(stn_dict.get('polling_interval', 60))
         self.max_rain_rate     = int(stn_dict.get('max_rain_rate', 24))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
-        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 10.0))
+        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 30.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
         self.interface         = int(stn_dict.get('interface', 0))
         self.vendor_id         = int(stn_dict.get('vendor_id',  '0x1941'), 0)
