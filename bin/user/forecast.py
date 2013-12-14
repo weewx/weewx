@@ -744,11 +744,11 @@ class Forecast(StdService):
         self.table = d.get('table', 'archive')
 
         # use single_thread for debugging
-        self.single_thread = d.get('single_thread', False)
+        self.single_thread = weeutil.weeutil.tobool(d.get('single_thread', False))
         self.updating = False
 
         # option to vacuum the sqlite database when pruning
-        self.vacuum = d.get('vacuum', False)
+        self.vacuum = weeutil.weeutil.tobool(d.get('vacuum', False))
 
         self.method_id = fid
         self.last_ts = 0
@@ -1591,6 +1591,7 @@ class WUForecast(Forecast):
         self.api_key = d.get('api_key', None)
         self.location = d.get('location', None)
         self.forecast_type = d.get('forecast_type', 'hourly10day')
+        self.save_failed = weeutil.weeutil.tobool(d.get('save_failed', False))
 
         if self.location is None:
             lat = config_dict['Station'].get('latitude', None)
@@ -1620,7 +1621,8 @@ class WUForecast(Forecast):
             logerr('%s: no forecast data for %s from %s' %
                    (WU_KEY, self.location, self.url))
             return None
-        records = WUParseForecast(text, location=self.location)
+        records = WUParseForecast(text, location=self.location,
+                                  save_failed=self.save_failed)
         loginf('%s: got %d forecast records' % (WU_KEY, len(records)))
         return records
 
@@ -1657,7 +1659,8 @@ def WUDownloadForecast(api_key, location,
         logerr('%s: failed to download forecast' % WU_KEY)
     return None
 
-def WUParseForecast(text, issued_ts=None, now=None, location=None):
+def WUParseForecast(text, issued_ts=None, now=None, location=None,
+                    save_failed=False):
     obj = json.loads(text)
     if not 'response' in obj:
         logerr('%s: unknown format in response' % WU_KEY)
@@ -1678,10 +1681,12 @@ def WUParseForecast(text, issued_ts=None, now=None, location=None):
 
     if 'hourly_forecast' in obj:
         records = WUCreateRecordsFromHourly(obj, issued_ts, now,
-                                            location=location)
+                                            location=location,
+                                            save_failed=save_failed)
     elif 'forecast' in obj:
         records = WUCreateRecordsFromDaily(obj, issued_ts, now,
-                                           location=location)
+                                           location=location,
+                                           save_failed=save_failed)
     else:
         records = []
     return records
@@ -1877,8 +1882,18 @@ def str2float(n, s):
         logerr("%s: conversion error for %s from '%s': %s" % (WU_KEY, n, s, e))
     return None
 
-def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None):
+def save_forecast(fc, msgs):
+    ts = int(time.time())
+    fn = time.strftime('/var/tmp/failure-%Y%m%d.%H%M', time.localtime(ts))
+    with open(fn, 'w') as f:
+        for m in msgs:
+            f.write("%s\n", m)
+        f.write("%s" % fc)
+
+def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None,
+                              save_failed=False):
     '''create from hourly10day'''
+    msgs = []
     records = []
     for period in fc['hourly_forecast']:
         try:
@@ -1907,11 +1922,17 @@ def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None):
                 r['location'] = location
             records.append(r)
         except Exception, e:
-            logerr('%s: failure in hourly forecast: %s' % (WU_KEY, e))
+            msg = '%s: failure in hourly forecast: %s' % (WU_KEY, e)
+            msgs.append(msg)
+            logerr(msg)
+    if msgs and save_failed:
+        save_forecast(fc, msgs)
     return records
 
-def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None):
+def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None,
+                             save_failed=False):
     '''create from forecast10day data'''
+    msgs = []
     records = []
     for period in fc['forecast']['simpleforecast']['forecastday']:
         try:
@@ -1939,7 +1960,11 @@ def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None):
                 r['location'] = location
             records.append(r)
         except Exception, e:
-            logerr('%s: failure in daily forecast: %s' % (WU_KEY, e))
+            msg = '%s: failure in daily forecast: %s' % (WU_KEY, e)
+            msgs.append(msg)
+            logerr(msg)
+    if msgs and save_failed:
+        save_forecast(fc, msgs)
     return records
 
 
