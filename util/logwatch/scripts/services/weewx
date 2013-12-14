@@ -5,6 +5,7 @@
 #
 # Revision History
 #  0.7 08dec13
+#   * added patterns for uploader debug
 #   * added patterns for ws23xx
 #   * added patterns for te923
 #  0.6 11nov13
@@ -144,12 +145,15 @@ while(defined($_ = <STDIN>)) {
         $counts{$FORECAST_PRUNINGS} += 1;
     } elsif (/forecast: .* downloading forecast/) {
         $counts{$FORECAST_DOWNLOADS} += 1;
-    } elsif (/emoncms: Failed upload to EmonCMS/ ||
-             /seg: Failed upload to SmartEnergyGroups/ ||
+    } elsif (/awekas: Failed upload to AWEKAS/ ||
              /cosm: Failed upload to COSM/ ||
-             /awekas: Failed upload to AWEKAS/) {
+             /emoncms: Failed upload to EmonCMS/ ||
+             /owm: Failed upload to OpenWeatherMap/ ||
+             /seg: Failed upload to SmartEnergyGroups/ ||
+             /wbug: Failed upload to WeatherBug/) {
         push @upload_errors, $_;
-    } elsif (/reportengine: Running reports for latest time/ ||
+    } elsif (/last message repeated/ ||
+             /reportengine: Running reports for latest time/ ||
              /reportengine: Found configuration file/ ||
              /reportengine: FTP upload not requested/ ||
              /reportengine: Running report / ||  # only when debug=1
@@ -215,6 +219,7 @@ while(defined($_ = <STDIN>)) {
              /fousb: avoid/ ||
              /fousb: setting sensor clock/ ||
              /fousb: setting station clock/ ||
+             /fousb: estimated log time/ ||
              /fousb: returning archive record/ ||
              /fousb: packet timestamp/ ||
              /fousb: log timestamp/ ||
@@ -222,6 +227,7 @@ while(defined($_ = <STDIN>)) {
              /fousb: get \d+ records since/ ||
              /fousb: synchronised to/ ||
              /fousb: pressures:/ ||
+             /fousb: status / ||
              /ws28xx: MainThread: driver version is/ ||
              /ws28xx: MainThread: frequency is/ ||
              /ws28xx: MainThread: altitude is/ ||
@@ -314,15 +320,42 @@ while(defined($_ = <STDIN>)) {
              /forecast: .* tstr=/ ||
              /forecast: .* interval=\d+ max_age=/ ||
              /forecast: .* deleted forecasts/ ||
+             /forecast: ZambrettiThread: Zambretti: generating/ ||
+             /forecast: ZambrettiThread: Zambretti: pressure/ ||
+             /forecast: ZambrettiThread: Zambretti: code is/ ||
              /forecast: NWSThread: NWS: forecast matrix/ ||
              /forecast: XTideThread: XTide: tide matrix/ ||
              /forecast: XTideThread: XTide: generating tides/ ||
-             /emoncms: Failed upload attempt/ ||
-             /\*\*\*\*  Failed upload to EmonCMS/ ||
-             /seg: Failed upload attempt/ ||
-             /\*\*\*\*  Failed upload to SmartEnergyGroups/ ||
+             /awekas: Failed upload attempt/ ||
+             /awekas: code/ ||
+             /awekas: read/ ||
+             /awekas: url/ ||
+             /awekas: data/ ||
              /cosm: Failed upload attempt/ ||
-             /\*\*\*\*  Failed upload to COSM/) {
+             /cosm: code/ ||
+             /cosm: read/ ||
+             /cosm: url/ ||
+             /cosm: data/ ||
+             /emoncms: Failed upload attempt/ ||
+             /emoncms: code/ ||
+             /emoncms: read/ ||
+             /emoncms: data/ ||
+             /emoncms: url/ ||
+             /owm: Failed upload attempt/ ||
+             /owm: code/ ||
+             /owm: read/ ||
+             /owm: url/ ||
+             /owm: data/ ||
+             /seg: Failed upload attempt/ ||
+             /seg: code/ ||
+             /seg: read/ ||
+             /seg: url/ ||
+             /seg: data/ ||
+             /wbug: Failed upload attempt/ ||
+             /wbug: code/ ||
+             /wbug: read/ ||
+             /wbug: url/ ||
+             /wbug: data/) {
         # ignore
     } elsif (! /weewx/) {
         # ignore
