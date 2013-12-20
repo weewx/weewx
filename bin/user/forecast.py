@@ -402,8 +402,8 @@ import time
 import urllib2
 
 import weewx
-from weewx.wxengine import StdService
 import weeutil.weeutil
+from weewx.wxengine import StdService
 from weewx.cheetahgenerator import SearchList
 
 try:
@@ -749,25 +749,28 @@ class Forecast(StdService):
 
         # option to vacuum the sqlite database when pruning
         self.vacuum = weeutil.weeutil.tobool(d.get('vacuum', False))
+        # how often to retry database failures
+        self.database_max_tries = int(d.get('database_max_tries', 3))
+        # how long to wait between retries, in seconds
+        self.database_retry_wait = int(d.get('database_retry_wait', 10))
 
         self.method_id = fid
         self.last_ts = 0
 
-        # do the database setup here, as a way to check the schema
-        # compatibility between database and software.
-        archive = Forecast.setup_database(self.database,
-                                          self.table, self.method_id,
-                                          self.config_dict, self.schema)
-        dbcol = archive.connection.columnsOf(self.table)
-        memcol = [x[0] for x in self.schema]
-        if dbcol != memcol:
-            raise Exception('%s: schema mismatch: %s != %s' % (self.method_id,
-                                                               dbcol, memcol))
-
-        # find out when the last forecast happened
-        self.last_ts = Forecast.get_last_forecast_ts(archive,
-                                                     self.table,
-                                                     self.method_id)
+        # setup database
+        with Forecast.setup_database(self.database,
+                                     self.table, self.method_id,
+                                     self.config_dict, self.schema) as archive:
+            # ensure schema on disk matches schema in memory
+            dbcol = archive.connection.columnsOf(self.table)
+            memcol = [x[0] for x in self.schema]
+            if dbcol != memcol:
+                raise Exception('%s: schema mismatch: %s != %s' %
+                                (self.method_id, dbcol, memcol))
+            # find out when the last forecast happened
+            self.last_ts = Forecast.get_last_forecast_ts(archive,
+                                                         self.table,
+                                                         self.method_id)
 
         # ensure that the forecast has a chance to update on each new record
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
@@ -775,45 +778,55 @@ class Forecast(StdService):
     def update_forecast(self, event):
         if self.single_thread:
             self.do_forecast(event)
-        else:
-            if self.updating:
-                logdbg('%s: update thread already running' % self.method_id)
-            else:
-                t = ForecastThread(self.do_forecast, event)
-                t.setName(self.method_id + 'Thread')
-                logdbg('%s: starting thread' % self.method_id)
-                t.start()
-
-    def do_forecast(self, event):
-        """do the forecast if it is time, then save to database and prune."""
-        self.updating = True
-        now = time.time()
-        if self.last_ts is None or now - self.interval > self.last_ts:
-            try:
-                fcast = self.get_forecast(event)
-                if fcast is not None:
-                    archive = Forecast.setup_database(self.database,
-                                                      self.table,
-                                                      self.method_id,
-                                                      self.config_dict,
-                                                      self.schema)
-                    Forecast.save_forecast(archive, fcast)
-                    self.last_ts = now
-                    if self.max_age is not None:
-                        Forecast.prune_forecasts(archive,
-                                                 self.table,
-                                                 self.method_id,
-                                                 now - self.max_age,
-                                                 vacuum=self.vacuum)
-            except Exception, e:
-                logerr('%s: forecast failure: %s' % (self.method_id, e))
+        elif self.updating:
+            logdbg('%s: update thread already running' % self.method_id)
+        elif time.time() - self.interval > self.last_ts:
+            t = ForecastThread(self.do_forecast, event)
+            t.setName(self.method_id + 'Thread')
+            logdbg('%s: starting thread' % self.method_id)
+            t.start()
         else:
             logdbg('%s: not yet time to do the forecast' % self.method_id)
-        logdbg('%s: terminating thread' % self.method_id)
-        self.updating = False
+
+    def do_forecast(self, event):
+        self.updating = True
+        try:
+            records = self.get_forecast(event)
+            if records is None:
+                return
+            for count in range(self.database_max_tries):
+                try:
+                    with Forecast.setup_database(self.database,
+                                                 self.table,
+                                                 self.method_id,
+                                                 self.config_dict,
+                                                 self.schema) as archive:
+                        logdbg('%s: saving %d forecast records' %
+                               (self.method_id, len(records)))
+                        archive.addRecord(records, log_level=syslog.LOG_DEBUG)
+                        self.last_ts = int(time.time())
+                        if self.max_age is not None:
+                            Forecast.prune_forecasts(archive,
+                                                     self.table,
+                                                     self.method_id,
+                                                     now - self.max_age,
+                                                     vacuum=self.vacuum)
+                    break
+                except Exception, e:
+                    logerr('%s: save/prune failed (attempt %d of %d): %s' %
+                           (self.method_id, (count+1),
+                            self.database_max_tries, e))
+                    logdbg('%s: waiting %d seconds before retry' %
+                           (self.method_id, self.database_retry_wait))
+                    time.sleep(self.database_retry_wait)
+        except Exception, e:
+            logerr('%s: forecast failure: %s' % (self.method_id, e))
+        finally:
+            logdbg('%s: terminating thread' % self.method_id)
+            self.updating = False
 
     def get_forecast(self, event):
-        """get the forecast, return a forecast record or array of records."""
+        """get the forecast, return an array of forecast records."""
         return None
 
     @staticmethod
@@ -829,21 +842,9 @@ class Forecast(StdService):
         return int(r[0])
 
     @staticmethod
-    def save_forecast(archive, record):
-        """add a forecast record or array of records to the database.
-
-        record - dictionary with keys corresponding to database fields
-        """
-        if record is None:
-            return
-        archive.addRecord(record)
-
-    @staticmethod
     def prune_forecasts(archive, table, method_id, ts, vacuum=False):
-        """remove old forecasts from the database
-
-        ts - timestamp, in seconds.  records older than this will be deleted.
-        """
+        """remove forecasts older than ts from the database"""
+        logdbg('%s: deleting forecasts prior to %d' (method_id, ts))
         sql = "delete from %s where method = '%s' and dateTime < %d" % (table, method_id, ts)
         archive.getSql(sql)
         loginf('%s: deleted forecasts prior to %d' % (method_id, ts))
@@ -854,24 +855,11 @@ class Forecast(StdService):
         # on a mysql database - it will silently fail.
         if vacuum:
             try:
+                logdbg('vacuuming')
                 archive.getSql('vacuum')
             except Exception, e:
                 logdbg('vacuuming failed: %s' % e)
                 pass
-
-    @staticmethod
-    def get_saved_forecasts(archive, table, method_id, since_ts=None):
-        """return saved forecasts since the indicated timestamp
-
-        since_ts - timestamp, in seconds.  a value of None will return all.
-        """
-        sql = "select * from %s where method = '%s'" % (table, method_id)
-        if since_ts is not None:
-            sql += " and dateTime > %d" % since_ts
-        records = []
-        for r in archive.genSql(sql):
-            records.append(r)
-        return records
 
     @staticmethod
     def setup_database(database, table, method_id, config_dict, schema):
@@ -945,7 +933,7 @@ class ZambrettiForecast(Forecast):
         record['event_ts'] = ts
         record['zcode'] = code
         loginf('%s: generated 1 forecast record' % Z_KEY)
-        return record
+        return [record]
 
 zambretti_label_dict = {
     'A' : "Settled fine",
@@ -1882,7 +1870,7 @@ def str2float(n, s):
         logerr("%s: conversion error for %s from '%s': %s" % (WU_KEY, n, s, e))
     return None
 
-def save_forecast(fc, msgs):
+def save_failed_forecast(fc, msgs):
     ts = int(time.time())
     fn = time.strftime('/var/tmp/failure-%Y%m%d.%H%M', time.localtime(ts))
     with open(fn, 'w') as f:
@@ -1926,7 +1914,7 @@ def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None,
             msgs.append(msg)
             logerr(msg)
     if msgs and save_failed:
-        save_forecast(fc, msgs)
+        save_failed_forecast(fc, msgs)
     return records
 
 def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None,
@@ -1964,7 +1952,7 @@ def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None,
             msgs.append(msg)
             logerr(msg)
     if msgs and save_failed:
-        save_forecast(fc, msgs)
+        save_failed_forecast(fc, msgs)
     return records
 
 
@@ -2307,7 +2295,9 @@ class ForecastVariables(SearchList):
         '''
         fd = generator.config_dict.get('Forecast', {})
         sd = generator.skin_dict.get('Forecast', {})
-        db = generator._getArchive(fd['database'])
+
+        self.database = generator._getArchive(fd['database'])
+        self.table = fd.get('table','archive')
 
         self.latitude = generator.stn_info.latitude_f
         self.longitude = generator.stn_info.longitude_f
@@ -2323,8 +2313,8 @@ class ForecastVariables(SearchList):
         self.labels['Weather'] = dict(weather_label_dict.items() + label_dict.get('Weather', {}).items())
         self.labels['Zambretti'] = dict(zambretti_label_dict.items() + label_dict.get('Zambretti', {}).items())
 
-        self.database = db
-        self.table = fd.get('table','archive')
+        self.database_max_tries = 3
+        self.database_retry_wait = 5 # seconds
 
     def get_extension(self, timespan, archivedb, statsdb):
         return {'forecast': self}
@@ -2334,16 +2324,28 @@ class ForecastVariables(SearchList):
         if max_events is not None:
             sql += ' limit %d' % max_events
         records = []
-        for rec in self.database.genSql(sql):
-            r = {}
-            r['dateTime'] = self._create_value(context, rec[0], 'group_time')
-            r['issued_ts'] = self._create_value(context, rec[1], 'group_time')
-            r['event_ts'] = self._create_value(context, rec[2], 'group_time')
-            r['hilo'] = rec[3]
-            r['offset'] = self._create_value(context, rec[4], 'group_altitude',
-                                             unit_system=rec[5])
-            r['location'] = rec[6]
-            records.append(r)
+        for count in range(self.database_max_tries):
+            try:
+                for rec in self.database.genSql(sql):
+                    r = {}
+                    r['dateTime'] = self._create_value(context,
+                                                       rec[0], 'group_time')
+                    r['issued_ts'] = self._create_value(context,
+                                                        rec[1], 'group_time')
+                    r['event_ts'] = self._create_value(context,
+                                                       rec[2], 'group_time')
+                    r['hilo'] = rec[3]
+                    r['offset'] = self._create_value(context,
+                                                     rec[4], 'group_altitude',
+                                                     unit_system=rec[5])
+                    r['location'] = rec[6]
+                    records.append(r)
+            except Exception, e:
+                logerr('get tides failed (attempt %d of %d): %s' %
+                       ((count+1), self.database_max_tries, e))
+                logdbg('waiting %d seconds before retry' %
+                       self.database_retry_wait)
+                time.sleep(self.database_retry_wait)
         return records
 
     def _getRecords(self, fid, from_ts, to_ts, max_events=1):
@@ -2355,12 +2357,20 @@ class ForecastVariables(SearchList):
         if max_events is not None:
             sql += ' limit %d' % max_events
         records = []
-        columns = self.database.connection.columnsOf(self.table)
-        for rec in self.database.genSql(sql):
-            r = {}
-            for i,f in enumerate(columns):
-                r[f] = rec[i]
-            records.append(r)
+        for count in range(self.database_max_tries):
+            try:
+                columns = self.database.connection.columnsOf(self.table)
+                for rec in self.database.genSql(sql):
+                    r = {}
+                    for i,f in enumerate(columns):
+                        r[f] = rec[i]
+                    records.append(r)
+            except Exception, e:
+                logerr('get %s failed (attempt %d of %d): %s' %
+                       (fid, (count+1), self.database_max_tries, e))
+                logdbg('waiting %d seconds before retry' %
+                       self.database_retry_wait)
+                time.sleep(self.database_retry_wait)
         return records
 
     def _create_value(self, context, value_str, group,
@@ -2415,7 +2425,16 @@ class ForecastVariables(SearchList):
         and is good for about 6 hours.  So there is no difference between the
         created timestamp and event timestamp.'''
         sql = "select dateTime,zcode from %s where method = 'Zambretti' order by dateTime desc limit 1" % self.table
-        record = self.database.getSql(sql)
+        record = None
+        for count in range(self.database_max_tries):
+            try:
+                record = self.database.getSql(sql)
+            except Exception, e:
+                logerr('get zambretti failed (attempt %d of %d): %s' %
+                       ((count+1), self.database_max_tries, e))
+                logdbg('waiting %d seconds before retry' %
+                       self.database_retry_wait)
+                time.sleep(self.database_retry_wait)
         if record is None:
             return { 'dateTime' : '', 'issued_ts' : '', 'event_ts' : '',
                      'code' : '', 'text' : '' }
