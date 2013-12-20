@@ -2340,6 +2340,7 @@ class ForecastVariables(SearchList):
                                                      unit_system=rec[5])
                     r['location'] = rec[6]
                     records.append(r)
+                    break
             except Exception, e:
                 logerr('get tides failed (attempt %d of %d): %s' %
                        ((count+1), self.database_max_tries, e))
@@ -2365,6 +2366,7 @@ class ForecastVariables(SearchList):
                     for i,f in enumerate(columns):
                         r[f] = rec[i]
                     records.append(r)
+                break
             except Exception, e:
                 logerr('get %s failed (attempt %d of %d): %s' %
                        (fid, (count+1), self.database_max_tries, e))
@@ -2429,6 +2431,7 @@ class ForecastVariables(SearchList):
         for count in range(self.database_max_tries):
             try:
                 record = self.database.getSql(sql)
+                break
             except Exception, e:
                 logerr('get zambretti failed (attempt %d of %d): %s' %
                        ((count+1), self.database_max_tries, e))
