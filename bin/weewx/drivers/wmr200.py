@@ -690,12 +690,16 @@ def decode_wind(pkt, pkt_data):
         avg_speed = ((pkt_data[3] >> 4)
                      | ((pkt_data[4] << 4))) / 10.0
         # Windchill temperature. The value is in degrees F.
+        # Set default to no windchill as it may not exist.
         # Convert to metric for weewx presentation.
-        if pkt_data[5] != 0 or pkt_data[6] != 0x20:
-            windchill = (((pkt_data[6] << 8) | pkt_data[5]) - 320) \
-                    * (5.0 / 90.0)
-        else:
-            windchill = None
+        windchill = None
+        if pkt_data[6] != 0x20:
+            if pkt_data[6] != 0x80:
+                windchill = (((pkt_data[6] << 8) | pkt_data[5]) - 320) \
+                        * (5.0 / 90.0)
+            elif pkt_data[6] & 0x80:
+                windchill = ((((pkt_data[5])*-1) -320) * (5.0/90.0))
+
         # The console returns wind speeds in m/s. weewx requires
         # kph, so the speeds needs to be converted.
         record = {'windSpeed'         : avg_speed * 3.60,
@@ -742,17 +746,17 @@ def decode_rain(pkt, pkt_data):
     """Decode the rain portion of a wmr200 packet."""
     try:
         # Bytes 0 and 1: high and low byte of the current rainfall rate
-        # in 0.1 in/h.  Convert into metric.
-        rain_rate = ((pkt_data[1] << 8) | pkt_data[0]) * 25.4
-        # Bytes 2 and 3: high and low byte of the last hour rainfall in 0.1in
+        # in 0.01 in/h.  Convert into metric.
+        rain_rate = ((pkt_data[1] << 8) | pkt_data[0]) / 100.0 * 2.54
+        # Bytes 2 and 3: high and low byte of the last hour rainfall in 0.01in
         # Convert into metric.
-        rain_hour = ((pkt_data[3] << 8) | pkt_data[2]) * 25.4
-        # Bytes 4 and 5: high and low byte of the last day rainfall in 0.1in
+        rain_hour = ((pkt_data[3] << 8) | pkt_data[2]) / 100.0 * 2.54
+        # Bytes 4 and 5: high and low byte of the last day rainfall in 0.01in
         # Convert into metric.
-        rain_day = ((pkt_data[5] << 8) | pkt_data[4]) * 25.4
-        # Bytes 6 and 7: high and low byte of the total rainfall in 0.1in
+        rain_day = ((pkt_data[5] << 8) | pkt_data[4]) / 100.0 * 2.54
+        # Bytes 6 and 7: high and low byte of the total rainfall in 0.01in
         # Convert into metric.
-        rain_total = ((pkt_data[7] << 8) | pkt_data[6]) * 25.4
+        rain_total = ((pkt_data[7] << 8) | pkt_data[6]) / 100.0 * 2.54
         record = {'rainRate'          : rain_rate,
                   'hourRain'          : rain_hour,
                   'dayRain'           : rain_day,
