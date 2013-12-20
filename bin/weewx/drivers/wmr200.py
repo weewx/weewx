@@ -747,7 +747,7 @@ def decode_rain(pkt, pkt_data):
     try:
         # Bytes 0 and 1: high and low byte of the current rainfall rate
         # in 0.01 in/h.  Convert into metric.
-        rain_rate = ((pkt_data[1] << 8) | pkt_data[0]) / 100.0 * 2.54
+        rain_rate = (((pkt_data[1] & 0x0f) << 8) | pkt_data[0]) / 100.0 * 2.54
         # Bytes 2 and 3: high and low byte of the last hour rainfall in 0.01in
         # Convert into metric.
         rain_hour = ((pkt_data[3] << 8) | pkt_data[2]) / 100.0 * 2.54
