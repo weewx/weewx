@@ -831,7 +831,7 @@ class Forecast(StdService):
 
     @staticmethod
     def get_last_forecast_ts(archive, table, method_id):
-        sql = "select dateTime,issued_ts from %s where method = '%s' and dateTime = (select dateTime from %s where method = '%s' order by dateTime desc limit 1)" % (table, method_id, table, method_id)
+        sql = "select dateTime,issued_ts from %s where method = '%s' and dateTime = (select dateTime from %s where method = '%s' order by dateTime desc limit 1) limit 1" % (table, method_id, table, method_id)
         r = archive.getSql(sql)
         if r is None:
             return None
@@ -2326,6 +2326,7 @@ class ForecastVariables(SearchList):
         records = []
         for count in range(self.database_max_tries):
             try:
+                records = []
                 for rec in self.database.genSql(sql):
                     r = {}
                     r['dateTime'] = self._create_value(context,
@@ -2340,7 +2341,7 @@ class ForecastVariables(SearchList):
                                                      unit_system=rec[5])
                     r['location'] = rec[6]
                     records.append(r)
-                    break
+                break
             except Exception, e:
                 logerr('get tides failed (attempt %d of %d): %s' %
                        ((count+1), self.database_max_tries, e))
@@ -2360,6 +2361,7 @@ class ForecastVariables(SearchList):
         records = []
         for count in range(self.database_max_tries):
             try:
+                records = []
                 columns = self.database.connection.columnsOf(self.table)
                 for rec in self.database.genSql(sql):
                     r = {}
