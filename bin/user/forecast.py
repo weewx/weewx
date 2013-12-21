@@ -1875,7 +1875,7 @@ def save_failed_forecast(fc, msgs):
     fn = time.strftime('/var/tmp/failure-%Y%m%d.%H%M', time.localtime(ts))
     with open(fn, 'w') as f:
         for m in msgs:
-            f.write("%s\n", m)
+            f.write("%s\n" % m)
         f.write("%s" % fc)
 
 def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None,
