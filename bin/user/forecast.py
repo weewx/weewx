@@ -1870,13 +1870,23 @@ def str2float(n, s):
         logerr("%s: conversion error for %s from '%s': %s" % (WU_KEY, n, s, e))
     return None
 
+last_digest = None
+
 def save_failed_forecast(fc, msgs):
+    fcstr = '%s' % fc
+    import hashlib
+    m = hashlib.md5()
+    m.update(fcstr)
+    digest = m.hexdigest()
+    if last_digest == digest:
+        return
     ts = int(time.time())
     fn = time.strftime('/var/tmp/failure-%Y%m%d.%H%M', time.localtime(ts))
     with open(fn, 'w') as f:
         for m in msgs:
             f.write("%s\n" % m)
-        f.write("%s" % fc)
+        f.write(fcstr)
+        last_digest = digest
 
 def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None,
                               save_failed=False):
