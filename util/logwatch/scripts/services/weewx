@@ -2,34 +2,6 @@
 # $Id$
 # logwatch script to process weewx log files
 # Copyright 2013 Matthew Wall
-#
-# Revision History
-#  0.7 08dec13
-#   * added patterns for uploader debug
-#   * added patterns for ws23xx
-#   * added patterns for te923
-#  0.6 11nov13
-#   * record unstable reads on fousb
-#   * list upload errors separately
-#   * detect fousb rain counter
-#  0.5 01nov13
-#   * recognize more restful log output
-#  0.4 12oct13
-#   * recognize more fousb log output
-#   * recognize more ws28xx log output
-#   * track forecasting counts
-#  0.3 09oct13
-#   * match cheetahgenerator
-#   * match failed restful uploads
-#   * recognize forecast events
-#   * match weewx HUPs
-#   * recognize new driver startup diagnostics
-#   * recognize new weewx wxengine startup diagnostics
-#   * recognize ws28xx driver entries
-#  0.2 03jan13
-#   * better labels for counts
-#  0.1 01jan13
-#   * initial release
 
 # FIXME: break this into modules instead of a single, monolithic blob
 
@@ -312,6 +284,11 @@ while(defined($_ = <STDIN>)) {
              /te923: sensor map is / ||
              /te923: battery map is / ||
              /te923: Found device on USB/ ||
+             /owfs: driver version is / ||
+             /owfs: interface is / ||
+             /owfs: polling interval is / ||
+             /owfs: sensor map is / ||
+             /cmon: cpuinfo: / ||
              /forecast: .* starting thread/ ||
              /forecast: .* terminating thread/ ||
              /forecast: .* not yet time to do the forecast/ ||
