@@ -797,7 +797,7 @@ class Forecast(StdService):
             if records is None:
                 return
             archive = Forecast.setup_database(self.database,
-                                              config_dict['Databases'][self.database],
+                                              self.config_dict['Databases'][self.database],
                                               self.table, self.method_id,
                                               self.schema)
             Forecast.save_forecast(archive, records, self.method_id,
