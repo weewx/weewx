@@ -759,8 +759,9 @@ class Forecast(StdService):
 
         # setup database
         with Forecast.setup_database(self.database,
+                                     config_dict['Databases'][self.database],
                                      self.table, self.method_id,
-                                     self.config_dict, self.schema) as archive:
+                                     self.schema) as archive:
             # ensure schema on disk matches schema in memory
             dbcol = archive.connection.columnsOf(self.table)
             memcol = [x[0] for x in self.schema]
@@ -790,44 +791,44 @@ class Forecast(StdService):
 
     def do_forecast(self, event):
         self.updating = True
+        archive = None
         try:
             records = self.get_forecast(event)
             if records is None:
                 return
-            for count in range(self.database_max_tries):
-                try:
-                    with Forecast.setup_database(self.database,
-                                                 self.table,
-                                                 self.method_id,
-                                                 self.config_dict,
-                                                 self.schema) as archive:
-                        logdbg('%s: saving %d forecast records' %
-                               (self.method_id, len(records)))
-                        archive.addRecord(records, log_level=syslog.LOG_DEBUG)
-                        self.last_ts = int(time.time())
-                        if self.max_age is not None:
-                            Forecast.prune_forecasts(archive,
-                                                     self.table,
-                                                     self.method_id,
-                                                     now - self.max_age,
-                                                     vacuum=self.vacuum)
-                    break
-                except Exception, e:
-                    logerr('%s: save/prune failed (attempt %d of %d): %s' %
-                           (self.method_id, (count+1),
-                            self.database_max_tries, e))
-                    logdbg('%s: waiting %d seconds before retry' %
-                           (self.method_id, self.database_retry_wait))
-                    time.sleep(self.database_retry_wait)
+            archive = Forecast.setup_database(self.database,
+                                              config_dict['Databases'][self.database],
+                                              self.table, self.method_id,
+                                              self.schema)
+            Forecast.save_forecast(archive, records, self.method_id,
+                                   self.database_max_tries,
+                                   self.database_retry_wait)
+            self.last_ts = int(time.time())
+            if self.max_age is not None:
+                Forecast.prune_forecasts(archive, self.table, self.method_id,
+                                         self.last_ts - self.max_age,
+                                         self.database_max_tries,
+                                         self.database_retry_wait)
+            if self.vacuum:
+                Forecast.vacuum_database(archive)
         except Exception, e:
             logerr('%s: forecast failure: %s' % (self.method_id, e))
         finally:
             logdbg('%s: terminating thread' % self.method_id)
+            if archive is not None:
+                archive.close()
             self.updating = False
 
     def get_forecast(self, event):
         """get the forecast, return an array of forecast records."""
         return None
+
+    @staticmethod
+    def setup_database(dbname, dbcfg, table, method_id, schema):
+        archive = weewx.archive.Archive.open_with_create(dbcfg, schema, table)
+        loginf("%s: using table '%s' in database '%s'" %
+               (method_id, table, dbname))
+        return archive
 
     @staticmethod
     def get_last_forecast_ts(archive, table, method_id):
@@ -842,31 +843,56 @@ class Forecast(StdService):
         return int(r[0])
 
     @staticmethod
-    def prune_forecasts(archive, table, method_id, ts, vacuum=False):
-        """remove forecasts older than ts from the database"""
-        logdbg('%s: deleting forecasts prior to %d' (method_id, ts))
-        sql = "delete from %s where method = '%s' and dateTime < %d" % (table, method_id, ts)
-        archive.getSql(sql)
-        loginf('%s: deleted forecasts prior to %d' % (method_id, ts))
+    def save_forecast(archive, records, method_id, max_tries, retry_wait):
+        for count in range(max_tries):
+            try:
+                logdbg('%s: saving %d forecast records' %
+                       (method_id, len(records)))
+                archive.addRecord(records, log_level=syslog.LOG_DEBUG)
+                loginf('%s: saved %d forecast records' %
+                       (method_id, len(records)))
+                break
+            except Exception, e:
+                logerr('%s: save failed (attempt %d of %d): %s' %
+                       (method_id, (count+1), max_tries, e))
+                logdbg('%s: waiting %d seconds before retry' %
+                       (method_id, retry_wait))
+                time.sleep(retry_wait)
+        else:
+            raise Exception('save failed after %d attempts' % max_tries)
 
+    @staticmethod
+    def prune_forecasts(archive, table, method_id, ts, max_tries, retry_wait):
+        """remove forecasts older than ts from the database"""
+
+        sql = "delete from %s where method = '%s' and dateTime < %d" % (
+            table, method_id, ts)
+        for count in range(max_tries):
+            try:
+                logdbg('%s: deleting forecasts prior to %d' (method_id, ts))
+                archive.getSql(sql)
+                loginf('%s: deleted forecasts prior to %d' % (method_id, ts))
+                break
+            except Exception, e:
+                logerr('%s: prune failed (attempt %d of %d): %s' %
+                       (method_id, (count+1), max_tries, e))
+                logdbg('%s: waiting %d seconds before retry' %
+                       (method_id, retry_wait))
+                time.sleep(retry_wait)
+        else:
+            raise Exception('prune failed after %d attemps' % max_tries)
+
+    @staticmethod
+    def vacuum_database(archive):
         # vacuum will only work on sqlite databases.  it will compact the
         # database file.  if we do not do this, the file grows even though
         # we prune records from the database.  it should be ok to run this
         # on a mysql database - it will silently fail.
-        if vacuum:
-            try:
-                logdbg('vacuuming')
-                archive.getSql('vacuum')
-            except Exception, e:
-                logdbg('vacuuming failed: %s' % e)
-                pass
-
-    @staticmethod
-    def setup_database(database, table, method_id, config_dict, schema):
-        archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][database], schema, table)
-        loginf("%s: using table '%s' in database '%s'" %
-               (method_id, table, database))
-        return archive
+        try:
+            logdbg('vacuuming the database')
+            archive.getSql('vacuum')
+        except Exception, e:
+            logdbg('vacuuming failed: %s' % e)
 
 
 # -----------------------------------------------------------------------------
