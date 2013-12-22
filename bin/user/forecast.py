@@ -732,16 +732,15 @@ class Forecast(StdService):
         self.interval = int(d.get('interval', interval))
         self.max_age = get_int(d, 'max_age', max_age)
 
-        dd = config_dict['Forecast'].get(fid, {})
+        dd = d.get(fid, {})
         self.interval = int(dd.get('interval', self.interval))
         self.max_age = get_int(dd, 'max_age', self.max_age)
 
+        self.database = d['database']
+        self.table = d.get('table', 'archive')
         schema_str = d.get('schema', None)
         self.schema = weeutil.weeutil._get_object(schema_str) \
             if schema_str is not None else defaultForecastSchema
-
-        self.database = d['database']
-        self.table = d.get('table', 'archive')
 
         # use single_thread for debugging
         self.single_thread = weeutil.weeutil.tobool(d.get('single_thread', False))
