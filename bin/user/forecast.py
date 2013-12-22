@@ -4,6 +4,12 @@
 
 API_VERSION: 2
 
+Compatibility:
+
+   US National Weather Service (NWS) point forecasts as of July 2013
+   Weather Underground (WU) forecast10day and hourly10day as of July 2013
+   XTide 2.10 (possibly earlier versions as well)
+
 Design
 
    The forecasting module supports various forecast methods for weather and
@@ -123,8 +129,6 @@ Configuration
         #interval = 10800
 
 [Databases]
-    ...
-    # a typical installation will use either sqlite or mysql
 
     [[forecast_sqlite]]
         root = %(WEEWX_ROOT)s
@@ -313,7 +317,13 @@ Skin Configuration
 
 Variables for Templates
 
-  Here are the variables that can be used in template files.
+  This section shows some of the variables that can be used in template files.
+
+Labels
+
+  Labels are grouped by module and identified by key.  For example, specifying
+  $forecast.label('Zambretti', 'C') returns 'Becoming fine', and specifying
+  $forecast.label('Weather', 'temp') returns 'Temperature'.
 
 $forecast.label(module, key)
 
@@ -390,9 +400,32 @@ $summary.obvis           array
 # http://www.surf-forecast.com/
 # http://ocean.peterbrueggeman.com/tidepredict.html
 
-# FIXME: 'method' should be called 'source'
+# FIXME: WU defines the following:
+#  maxhumidity
+#  minhumidity
+#  feelslike
+#  mslp - mean sea level pressure
 
+# FIXME: ensure compatibility with uk met office
+# http://www.metoffice.gov.uk/datapoint/product/uk-3hourly-site-specific-forecast
+# forecast in 3-hour increments for up to 5 days in the future
+# UVIndex (1-11)
+# feels like temperature
+# weather type (0-30)
+# visibility (UN, VP, PO, MO, GO, VG, EX)
+# textual description
+# wind direction is 16-point compass
+# air quality index
+# also see icons used for uk metoffice
+
+# FIXME: add support for openweathermap if/when the api stabilizes
+# FIXME: 'method' should be called 'source'
+# FIXME: obvis should be an array?
+# FIXME: add field for tornado, hurricane/cyclone?
+
+import hashlib
 import httplib
+import os
 import socket
 import string
 import subprocess
@@ -433,8 +466,8 @@ def loginf(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-def get_int(config_dict, label, default_value):
-    value = config_dict.get(label, default_value)
+def toint(label, value, default_value):
+    """convert to integer but also permit a value of None"""
     if isinstance(value, str) and value.lower() == 'none':
         value = None
     if value is not None:
@@ -445,29 +478,28 @@ def get_int(config_dict, label, default_value):
             value = default_value
     return value
 
-# FIXME: WU defines the following:
-#  maxhumidity
-#  minhumidity
-#  feelslike
-#  uvi - uv index
-#  mslp - mean sea level pressure
-#  condition
-#  wx - imported from us nws forecast
-#  fctcode - forecast code
-# there is overlap between condition, wx, and fctcode.  also, each may contain
-# any combination of precip, obvis, and sky cover.
+def mkdir_p(path):
+    """equivalent to 'mkdir -p'"""
+    try:
+        os.makedirs(path)
+    except OSError, e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
-# FIXME: ensure compatibility with uk met office
-# http://www.metoffice.gov.uk/datapoint/product/uk-3hourly-site-specific-forecast
-# forecast in 3-hour increments for up to 5 days in the future
-# UVIndex (1-11)
-# feels like temperature
-# weather type (0-30)
-# visibility (UN, VP, PO, MO, GO, VG, EX)
-# textual description
-# wind direction is 16-point compass
-# air quality index
-# also see icons used for uk metoffice
+def save_fc_data(fc, dirname, basename='forecast-data', msgs=None):
+    """save raw forecast data to disk, typically for diagnostics"""
+    ts = int(time.time())
+    tstr = time.strftime('%Y%m%d.%H%M', time.localtime(ts))
+    mkdir_p(dirname)
+    fn = '%s/%s-%s' % (dirname, basename, tstr)
+    with open(fn, 'w') as f:
+        if msgs is not None:
+            for m in msgs:
+                f.write("%s\n" % m)
+        f.write(fc)
+
 
 """Database Schema
 
@@ -538,9 +570,6 @@ def get_int(config_dict, label, default_value):
 
    zcode        used only by zambretti forecast
 """
-
-# FIXME: obvis should be an array?
-# FIXME: add field for tornado, hurricane/cyclone?
 
 defaultForecastSchema = [('method',     'VARCHAR(10) NOT NULL'),
                          ('usUnits',    'INTEGER NOT NULL'),  # weewx.US
@@ -649,7 +678,7 @@ weather_label_dict = {
     # types of precipitation
     'rain'      : 'Rain',
     'rainshwrs' : 'Rain Showers',
-    'sprinkles' : 'Rain Sprinkles',     # FIXME: no db field
+    'sprinkles' : 'Rain Sprinkles',     # FIXME: no db field for this
     'tstms'     : 'Thunderstorms',
     'drizzle'   : 'Drizzle',
     'snow'      : 'Snow',
@@ -728,39 +757,54 @@ class Forecast(StdService):
                  interval=1800, max_age=604800):
         super(Forecast, self).__init__(engine, config_dict)
 
+        # single database for all forecasts
         d = config_dict.get('Forecast', {})
-        self.interval = int(d.get('interval', interval))
-        self.max_age = get_int(d, 'max_age', max_age)
-
-        dd = d.get(fid, {})
-        self.interval = int(dd.get('interval', self.interval))
-        self.max_age = get_int(dd, 'max_age', self.max_age)
-
         self.database = d['database']
         self.table = d.get('table', 'archive')
         schema_str = d.get('schema', None)
         self.schema = weeutil.weeutil._get_object(schema_str) \
             if schema_str is not None else defaultForecastSchema
 
-        # use single_thread for debugging
-        self.single_thread = weeutil.weeutil.tobool(d.get('single_thread', False))
-        self.updating = False
+        # these options can be different for each forecast method
 
-        # option to vacuum the sqlite database when pruning
-        self.vacuum = weeutil.weeutil.tobool(d.get('vacuum', False))
+        # how often to do the forecast
+        self.interval = self._get_opt(d, fid, 'interval', interval)
+        self.interval = int(self.interval)
+        # how long to keep forecast records
+        self.max_age = self._get_opt(d, fid, 'max_age', max_age)
+        self.max_age = toint('max_age', self.max_age, None)
+        # option to vacuum the sqlite database
+        self.vacuum = self._get_opt(d, fid, 'vacuum', False)
+        self.vacuum = weeutil.weeutil.tobool(self.vacuum)
         # how often to retry database failures
-        self.database_max_tries = int(d.get('database_max_tries', 3))
+        self.db_max_tries = self._get_opt(d, fid, 'database_max_tries', 3)
+        self.db_max_tries = int(self.db_max_tries)
         # how long to wait between retries, in seconds
-        self.database_retry_wait = int(d.get('database_retry_wait', 10))
+        self.db_retry_wait = self._get_opt(d, fid, 'database_retry_wait', 10)
+        self.db_retry_wait = int(self.db_retry_wait)
+        # use single_thread for debugging
+        self.single_thread = self._get_opt(d, fid, 'single_thread', False)
+        self.single_thread = weeutil.weeutil.tobool(self.single_thread)
+        # option to save raw forecast to disk
+        self.save_raw = self._get_opt(d, fid, 'save_raw', False)
+        self.save_raw = weeutil.weeutil.tobool(self.save_raw)
+        # option to save failed foreast to disk for diagnosis
+        self.save_failed = self._get_opt(d, fid, 'save_failed', False)
+        self.save_failed = weeutil.weeutil.tobool(self.save_failed)
+        # where to save the raw forecasts
+        self.diag_dir = self._get_opt(d, fid, 'diagnostic_dir', '/var/tmp/fc')
 
         self.method_id = fid
         self.last_ts = 0
+        self.updating = False
+        self.last_raw_digest = None
+        self.last_fail_digest = None
 
         # setup database
         with Forecast.setup_database(self.database,
                                      config_dict['Databases'][self.database],
-                                     self.table, self.method_id,
-                                     self.schema) as archive:
+                                     self.table, self.schema,
+                                     self.method_id) as archive:
             # ensure schema on disk matches schema in memory
             dbcol = archive.connection.columnsOf(self.table)
             memcol = [x[0] for x in self.schema]
@@ -774,6 +818,31 @@ class Forecast(StdService):
 
         # ensure that the forecast has a chance to update on each new record
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.update_forecast)
+
+    def _get_opt(self, d, fid, label, default_v):
+        """get an option from dict, prefer specialized value if one exists"""
+        v = d.get(label, default_v)
+        dd = d.get(fid, {})
+        v = dd.get(label, v)
+        return v
+
+    def save_raw_forecast(self, fc, basename='raw', msgs=None):
+        m = hashlib.md5()
+        m.update(fc)
+        digest = m.hexdigest()
+        if self.last_raw_digest == digest:
+            return
+        save_fc_data(fc, self.diag_dir, basename=basename, msgs=msgs)
+        self.last_raw_digest = digest
+
+    def save_failed_forecast(self, fc, basename='fail', msgs=None):
+        m = hashlib.md5()
+        m.update(fc)
+        digest = m.hexdigest()
+        if self.last_fail_digest == digest:
+            return
+        save_fc_data(fc, self.diag_dir, basename=basename, msgs=msgs)
+        self.last_fail_digest = digest
 
     def update_forecast(self, event):
         if self.single_thread:
@@ -797,17 +866,15 @@ class Forecast(StdService):
                 return
             archive = Forecast.setup_database(self.database,
                                               self.config_dict['Databases'][self.database],
-                                              self.table, self.method_id,
-                                              self.schema)
+                                              self.table, self.schema,
+                                              self.method_id)
             Forecast.save_forecast(archive, records, self.method_id,
-                                   self.database_max_tries,
-                                   self.database_retry_wait)
+                                   self.db_max_tries, self.db_retry_wait)
             self.last_ts = int(time.time())
             if self.max_age is not None:
                 Forecast.prune_forecasts(archive, self.table, self.method_id,
                                          self.last_ts - self.max_age,
-                                         self.database_max_tries,
-                                         self.database_retry_wait)
+                                         self.db_max_tries, self.db_retry_wait)
             if self.vacuum:
                 Forecast.vacuum_database(archive, self.method_id)
         except Exception, e:
@@ -823,9 +890,9 @@ class Forecast(StdService):
         return None
 
     @staticmethod
-    def setup_database(dbname, dbcfg, table, method_id, schema):
+    def setup_database(dbname, dbcfg, table, schema, method_id='Unknown'):
         archive = weewx.archive.Archive.open_with_create(dbcfg, schema, table)
-        loginf("%s: using table '%s' in database '%s'" %
+        logdbg("%s: using table '%s' in database '%s'" %
                (method_id, table, dbname))
         return archive
 
@@ -842,7 +909,8 @@ class Forecast(StdService):
         return int(r[0])
 
     @staticmethod
-    def save_forecast(archive, records, method_id, max_tries, retry_wait):
+    def save_forecast(archive, records,
+                      method_id='Unknown', max_tries=3, retry_wait=10):
         for count in range(max_tries):
             try:
                 logdbg('%s: saving %d forecast records' %
@@ -861,14 +929,15 @@ class Forecast(StdService):
             raise Exception('save failed after %d attempts' % max_tries)
 
     @staticmethod
-    def prune_forecasts(archive, table, method_id, ts, max_tries, retry_wait):
+    def prune_forecasts(archive, table, method_id, ts,
+                        max_tries=3, retry_wait=10):
         """remove forecasts older than ts from the database"""
 
         sql = "delete from %s where method = '%s' and dateTime < %d" % (
             table, method_id, ts)
         for count in range(max_tries):
             try:
-                logdbg('%s: deleting forecasts prior to %d' (method_id, ts))
+                logdbg('%s: deleting forecasts prior to %d' % (method_id, ts))
                 archive.getSql(sql)
                 loginf('%s: deleted forecasts prior to %d' % (method_id, ts))
                 break
@@ -882,7 +951,7 @@ class Forecast(StdService):
             raise Exception('prune failed after %d attemps' % max_tries)
 
     @staticmethod
-    def vacuum_database(archive, method_id):
+    def vacuum_database(archive, method_id='Unknown'):
         # vacuum will only work on sqlite databases.  it will compact the
         # database file.  if we do not do this, the file grows even though
         # we prune records from the database.  it should be ok to run this
@@ -892,6 +961,21 @@ class Forecast(StdService):
             archive.getSql('vacuum')
         except Exception, e:
             logdbg('%s: vacuuming failed: %s' % (method_id, e))
+
+    # this method is used only by the unit tests
+    @staticmethod
+    def get_saved_forecasts(archive, table, method_id, since_ts=None):
+        """return saved forecasts since the indicated timestamp
+
+        since_ts - timestamp, in seconds.  a value of None will return all.
+        """
+        sql = "select * from %s where method = '%s'" % (table, method_id)
+        if since_ts is not None:
+            sql += " and dateTime > %d" % since_ts
+        records = []
+        for r in archive.genSql(sql):
+            records.append(r)
+        return records
 
 
 # -----------------------------------------------------------------------------
@@ -913,7 +997,7 @@ class ZambrettiForecast(Forecast):
     def __init__(self, engine, config_dict):
         super(ZambrettiForecast, self).__init__(engine, config_dict, Z_KEY,
                                                 interval=600)
-        d = config_dict['Forecast'].get(Z_KEY, {})
+        d = config_dict.get('Forecast', {}).get(Z_KEY, {})
         self.hemisphere = d.get('hemisphere', 'NORTH')
         self.lower_pressure = float(d.get('lower_pressure', 950.0))
         self.upper_pressure = float(d.get('upper_pressure', 1050.0))
@@ -1165,7 +1249,7 @@ class NWSForecast(Forecast):
     def __init__(self, engine, config_dict):
         super(NWSForecast, self).__init__(engine, config_dict, NWS_KEY,
                                           interval=10800)
-        d = config_dict['Forecast'].get(NWS_KEY, {})
+        d = config_dict.get('Forecast', {}).get(NWS_KEY, {})
         self.url = d.get('url', NWS_DEFAULT_PFM_URL)
         self.max_tries = int(d.get('max_tries', 3))
         self.lid = d.get('lid', None)
@@ -1189,6 +1273,8 @@ class NWSForecast(Forecast):
             logerr('%s: no PFM data for %s from %s' %
                    (NWS_KEY, self.foid, self.url))
             return None
+        if self.save_raw:
+            self.save_raw_forecast(text, basename='nws-raw')
         matrix = NWSParseForecast(text, self.lid)
         if matrix is None:
             logerr('%s: no PFM found for %s in forecast from %s' %
@@ -1196,6 +1282,8 @@ class NWSForecast(Forecast):
             return None
         logdbg('%s: forecast matrix: %s' % (NWS_KEY, matrix))
         records = NWSProcessForecast(self.foid, self.lid, matrix)
+        if len(records) == 0 and self.save_failed:
+            self.save_failed_forecast(text, basename='nws-fail')
         msg = 'got %d forecast records' % len(records)
         if 'desc' in matrix or 'location' in matrix:
             msg += ' for %s %s' % (matrix.get('desc',''),
@@ -1448,7 +1536,15 @@ def NWSProcessForecast(foid, lid, matrix):
 #
 # There are two WU forecasts - daily (forecast10day) and hourly (hourly10day)
 #
-# forecast10day
+# A forecast from WU contains a number of fields whose contents may overlap
+# with other fields.  These include:
+#   condition - not well defined
+#   wx - imported from us nws forecast
+#   fctcode - forecast code
+# There is overlap between condition, wx, and fctcode.  Also, each may contain
+# any combination of precip, obvis, and sky cover.
+#
+# forecast10day ---------------------------------------------------------------
 #
 # date
 # period
@@ -1471,7 +1567,7 @@ def NWSProcessForecast(foid, lid, matrix):
 # maxhumidity
 # minhumidity
 #
-# hourly10day
+# hourly10day -----------------------------------------------------------------
 #
 # fcttime
 # dewpoint
@@ -1584,7 +1680,7 @@ WU_SKY_DICT = {
     'sunny':'CL',
     'mostlysunny':'FW',
     'partlysunny':'SC',
-    'FIXME':'BK',
+    'FIXME':'BK', # FIXME: NWS defines BK, but WU has nothing equivalent
     'partlycloudy':'B1',
     'mostlycloudy':'B2',
     'cloudy':'OV',
@@ -1598,13 +1694,12 @@ class WUForecast(Forecast):
     def __init__(self, engine, config_dict):
         super(WUForecast, self).__init__(engine, config_dict, WU_KEY,
                                          interval=10800)
-        d = config_dict['Forecast'].get(WU_KEY, {})
+        d = config_dict.get('Forecast', {}).get(WU_KEY, {})
         self.url = d.get('url', WU_DEFAULT_URL)
         self.max_tries = int(d.get('max_tries', 3))
         self.api_key = d.get('api_key', None)
         self.location = d.get('location', None)
         self.forecast_type = d.get('forecast_type', 'hourly10day')
-        self.save_failed = weeutil.weeutil.tobool(d.get('save_failed', False))
 
         if self.location is None:
             lat = config_dict['Station'].get('latitude', None)
@@ -1623,7 +1718,8 @@ class WUForecast(Forecast):
             raise Exception, '\n'.join(errmsg)
 
         loginf('%s: interval=%s max_age=%s api_key=%s location=%s fc=%s' %
-               (WU_KEY, self.interval, self.max_age, self.api_key,
+               (WU_KEY, self.interval, self.max_age,
+                'X'*(len(self.api_key)-4) + self.api_key[-4:],
                 self.location, self.forecast_type))
 
     def get_forecast(self, event):
@@ -1634,8 +1730,11 @@ class WUForecast(Forecast):
             logerr('%s: no forecast data for %s from %s' %
                    (WU_KEY, self.location, self.url))
             return None
-        records = WUParseForecast(text, location=self.location,
-                                  save_failed=self.save_failed)
+        if self.save_raw:
+            self.save_raw_forecast(text, basename='wu-raw')
+        records,msgs = WUParseForecast(text, location=self.location)
+        if self.save_failed and len(msgs) > 0:
+            self.save_failed_forecast(text, basename='wu-fail', msgs=msgs)
         loginf('%s: got %d forecast records' % (WU_KEY, len(records)))
         return records
 
@@ -1658,7 +1757,12 @@ def WUDownloadForecast(api_key, location,
 
     u = '%s/%s/%s/q/%s.json' % (url, api_key, fc_type, location) \
         if url == WU_DEFAULT_URL else url
-    loginf("%s: downloading forecast from '%s'" % (WU_KEY, u))
+    masked = list(u)
+    idx = u.find(api_key)
+    if idx >= 0:
+        for i in range(len(api_key)-4):
+            masked[idx+i] = 'X'
+    loginf("%s: downloading forecast from '%s'" % (WU_KEY, ''.join(masked)))
     for count in range(max_tries):
         try:
             response = urllib2.urlopen(u)
@@ -1672,18 +1776,18 @@ def WUDownloadForecast(api_key, location,
         logerr('%s: failed to download forecast' % WU_KEY)
     return None
 
-def WUParseForecast(text, issued_ts=None, now=None, location=None,
-                    save_failed=False):
+def WUParseForecast(text, issued_ts=None, now=None, location=None):
     obj = json.loads(text)
     if not 'response' in obj:
-        logerr('%s: unknown format in response' % WU_KEY)
-        return []
+        msg = "%s: no 'response' in json object" % WU_KEY
+        logerr(msg)
+        return [], [msg]
     response = obj['response']
     if 'error' in response:
-        logerr('%s: error in response: %s: %s' %
-               (WU_KEY,
-                response['error']['type'], response['error']['description']))
-        return []
+        msg = '%s: error in response: %s: %s' % (
+            WU_KEY,response['error']['type'],response['error']['description'])
+        logerr(msg)
+        return [], [msg]
 
     if issued_ts is None or now is None:
         n = int(time.time())
@@ -1692,17 +1796,19 @@ def WUParseForecast(text, issued_ts=None, now=None, location=None,
         if now is None:
             now = n
 
+    records = []
+    msgs = []
     if 'hourly_forecast' in obj:
-        records = WUCreateRecordsFromHourly(obj, issued_ts, now,
-                                            location=location,
-                                            save_failed=save_failed)
+        records,msgs = WUCreateRecordsFromHourly(obj, issued_ts, now,
+                                                 location=location)
     elif 'forecast' in obj:
-        records = WUCreateRecordsFromDaily(obj, issued_ts, now,
-                                           location=location,
-                                           save_failed=save_failed)
+        records,msgs = WUCreateRecordsFromDaily(obj, issued_ts, now,
+                                                location=location)
     else:
-        records = []
-    return records
+        msg = "%s: cannot find 'hourly_forecast' or 'forecast'" % WU_KEY
+        logerr(msg)
+        msgs.append(msg)
+    return records,msgs
 
 def sky2clouds(sky):
     if 0 <= sky <= 5:
@@ -1895,26 +2001,7 @@ def str2float(n, s):
         logerr("%s: conversion error for %s from '%s': %s" % (WU_KEY, n, s, e))
     return None
 
-last_digest = None
-
-def save_failed_forecast(fc, msgs):
-    fcstr = '%s' % fc
-    import hashlib
-    m = hashlib.md5()
-    m.update(fcstr)
-    digest = m.hexdigest()
-    if last_digest == digest:
-        return
-    ts = int(time.time())
-    fn = time.strftime('/var/tmp/failure-%Y%m%d.%H%M', time.localtime(ts))
-    with open(fn, 'w') as f:
-        for m in msgs:
-            f.write("%s\n" % m)
-        f.write(fcstr)
-        last_digest = digest
-
-def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None,
-                              save_failed=False):
+def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None):
     '''create from hourly10day'''
     msgs = []
     records = []
@@ -1948,12 +2035,9 @@ def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None,
             msg = '%s: failure in hourly forecast: %s' % (WU_KEY, e)
             msgs.append(msg)
             logerr(msg)
-    if msgs and save_failed:
-        save_failed_forecast(fc, msgs)
-    return records
+    return records, msgs
 
-def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None,
-                             save_failed=False):
+def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None):
     '''create from forecast10day data'''
     msgs = []
     records = []
@@ -1986,9 +2070,7 @@ def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None,
             msg = '%s: failure in daily forecast: %s' % (WU_KEY, e)
             msgs.append(msg)
             logerr(msg)
-    if msgs and save_failed:
-        save_failed_forecast(fc, msgs)
-    return records
+    return records, msgs
 
 
 # -----------------------------------------------------------------------------
@@ -2014,7 +2096,7 @@ class XTideForecast(Forecast):
     def __init__(self, engine, config_dict):
         super(XTideForecast, self).__init__(engine, config_dict, XT_KEY,
                                             interval=1209600, max_age=2419200)
-        d = config_dict['Forecast'].get(XT_KEY, {})
+        d = config_dict.get('Forecast', {}).get(XT_KEY, {})
         self.tideprog = d.get('prog', XT_PROG)
         self.tideargs = d.get('args', XT_ARGS)
         self.location = d['location']
@@ -2348,8 +2430,8 @@ class ForecastVariables(SearchList):
         self.labels['Weather'] = dict(weather_label_dict.items() + label_dict.get('Weather', {}).items())
         self.labels['Zambretti'] = dict(zambretti_label_dict.items() + label_dict.get('Zambretti', {}).items())
 
-        self.database_max_tries = 3
-        self.database_retry_wait = 5 # seconds
+        self.db_max_tries = 3
+        self.db_retry_wait = 5 # seconds
 
     def get_extension(self, timespan, archivedb, statsdb):
         return {'forecast': self}
@@ -2358,8 +2440,7 @@ class ForecastVariables(SearchList):
         sql = "select dateTime,issued_ts,event_ts,hilo,offset,usUnits,location from %s where method = 'XTide' and dateTime = (select dateTime from %s where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc" % (self.table, self.table, from_ts)
         if max_events is not None:
             sql += ' limit %d' % max_events
-        records = []
-        for count in range(self.database_max_tries):
+        for count in range(self.db_max_tries):
             try:
                 records = []
                 for rec in self.database.genSql(sql):
@@ -2376,14 +2457,14 @@ class ForecastVariables(SearchList):
                                                      unit_system=rec[5])
                     r['location'] = rec[6]
                     records.append(r)
-                break
+                return records
             except Exception, e:
                 logerr('get tides failed (attempt %d of %d): %s' %
-                       ((count+1), self.database_max_tries, e))
+                       ((count+1), self.db_max_tries, e))
                 logdbg('waiting %d seconds before retry' %
-                       self.database_retry_wait)
-                time.sleep(self.database_retry_wait)
-        return records
+                       self.db_retry_wait)
+                time.sleep(self.db_retry_wait)
+        return []
 
     def _getRecords(self, fid, from_ts, to_ts, max_events=1):
         '''get the latest requested forecast of indicated type for the
@@ -2393,8 +2474,7 @@ class ForecastVariables(SearchList):
         sql = "select * from %s where method = '%s' and event_ts >= %d and event_ts <= %d and dateTime = (select dateTime from %s where method = '%s' order by dateTime desc limit 1) order by event_ts asc" % (self.table, fid, from_ts, to_ts, self.table, fid)
         if max_events is not None:
             sql += ' limit %d' % max_events
-        records = []
-        for count in range(self.database_max_tries):
+        for count in range(self.db_max_tries):
             try:
                 records = []
                 columns = self.database.connection.columnsOf(self.table)
@@ -2403,14 +2483,14 @@ class ForecastVariables(SearchList):
                     for i,f in enumerate(columns):
                         r[f] = rec[i]
                     records.append(r)
-                break
+                return records
             except Exception, e:
                 logerr('get %s failed (attempt %d of %d): %s' %
-                       (fid, (count+1), self.database_max_tries, e))
+                       (fid, (count+1), self.db_max_tries, e))
                 logdbg('waiting %d seconds before retry' %
-                       self.database_retry_wait)
-                time.sleep(self.database_retry_wait)
-        return records
+                       self.db_retry_wait)
+                time.sleep(self.db_retry_wait)
+        return []
 
     def _create_value(self, context, value_str, group,
                       units=None, unit_system=weewx.US):
@@ -2464,25 +2544,24 @@ class ForecastVariables(SearchList):
         and is good for about 6 hours.  So there is no difference between the
         created timestamp and event timestamp.'''
         sql = "select dateTime,zcode from %s where method = 'Zambretti' order by dateTime desc limit 1" % self.table
-        record = None
-        for count in range(self.database_max_tries):
+        for count in range(self.db_max_tries):
             try:
                 record = self.database.getSql(sql)
-                break
+                if record is not None:
+                    th = self._create_value('zambretti', record[0], 'group_time')
+                    code = record[1]
+                    text = self.labels['Zambretti'].get(code, code)
+                    return { 'dateTime' : th, 'issued_ts' : th,
+                             'event_ts' : th,
+                             'code' : code, 'text' : text, }
             except Exception, e:
                 logerr('get zambretti failed (attempt %d of %d): %s' %
-                       ((count+1), self.database_max_tries, e))
+                       ((count+1), self.db_max_tries, e))
                 logdbg('waiting %d seconds before retry' %
-                       self.database_retry_wait)
-                time.sleep(self.database_retry_wait)
-        if record is None:
-            return { 'dateTime' : '', 'issued_ts' : '', 'event_ts' : '',
-                     'code' : '', 'text' : '' }
-        th = self._create_value('zambretti', record[0], 'group_time')
-        code = record[1]
-        text = self.labels['Zambretti'].get(code, code)
-        return { 'dateTime' : th, 'issued_ts' : th, 'event_ts' : th,
-                 'code' : code, 'text' : text, }
+                       self.db_retry_wait)
+                time.sleep(self.db_retry_wait)
+        return { 'dateTime' : '', 'issued_ts' : '', 'event_ts' : '',
+                 'code' : '', 'text' : '' }
 
     def weather_periods(self, fid, from_ts=None, to_ts=None, max_events=240):
         '''Returns forecast records for the indicated source from the 

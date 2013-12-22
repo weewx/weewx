@@ -299,6 +299,7 @@ class FakeData(object):
     def gen_fake_zambretti_data():
         ts = int(time.mktime((2013,8,22,12,0,0,0,0,-1)))
         codes = ['A', 'B', 'C', 'D', 'E', 'F', 'A', 'A', 'A']
+        records = []
         for code in codes:
             record = {}
             record['method'] = 'Zambretti'
@@ -308,7 +309,8 @@ class FakeData(object):
             record['event_ts'] = ts
             record['zcode'] = code
             ts += 300
-            yield record
+            records.append(record)
+        return records
 
     @staticmethod
     def gen_fake_nws_data():
@@ -15162,17 +15164,17 @@ class ForecastTest(unittest.TestCase):
         # next record gives us a trend
         event.record = {'barometer': 29.834685721179159, 'usUnits': 1, 'dateTime': 1378143900, 'windDir': 90.0}
         record = zf.get_forecast(event)
-        self.assertEqual(record, {'event_ts': 1378143900, 'dateTime': 1378143900, 'zcode': 'C', 'issued_ts': 1378143900, 'method': 'Zambretti', 'usUnits': 1})
+        self.assertEqual(record, [{'event_ts': 1378143900, 'dateTime': 1378143900, 'zcode': 'C', 'issued_ts': 1378143900, 'method': 'Zambretti', 'usUnits': 1}])
 
         # now the pressure goes up slightly
         event.record = {'barometer': 29.835649151484603, 'usUnits': 1, 'dateTime': 1378144200, 'windDir': 90.0}
         record = zf.get_forecast(event)
-        self.assertEqual(record, {'event_ts': 1378144200, 'dateTime': 1378144200, 'zcode': 'K', 'issued_ts': 1378144200, 'method': 'Zambretti', 'usUnits': 1})
+        self.assertEqual(record, [{'event_ts': 1378144200, 'dateTime': 1378144200, 'zcode': 'K', 'issued_ts': 1378144200, 'method': 'Zambretti', 'usUnits': 1}])
 
         # now the pressure drops
         event.record = {'barometer': 29.0, 'usUnits': 1, 'dateTime': 1378144500, 'windDir': 90.0}
         record = zf.get_forecast(event)
-        self.assertEqual(record, {'event_ts': 1378144500, 'dateTime': 1378144500, 'zcode': 'L', 'issued_ts': 1378144500, 'method': 'Zambretti', 'usUnits': 1})
+        self.assertEqual(record, [{'event_ts': 1378144500, 'dateTime': 1378144500, 'zcode': 'L', 'issued_ts': 1378144500, 'method': 'Zambretti', 'usUnits': 1}])
 
     def test_zambretti_units(self):
         '''ensure that zambretti works with both US and METRIC'''
@@ -15193,12 +15195,12 @@ class ForecastTest(unittest.TestCase):
         # next record gives us a trend
         event.record = {'barometer': 1010.20245852, 'usUnits': weewx.METRIC, 'dateTime': 1378143900, 'windDir': 90.0}
         record = zf.get_forecast(event)
-        self.assertEqual(record, {'event_ts': 1378143900, 'dateTime': 1378143900, 'zcode': 'C', 'issued_ts': 1378143900, 'method': 'Zambretti', 'usUnits': 1})
+        self.assertEqual(record, [{'event_ts': 1378143900, 'dateTime': 1378143900, 'zcode': 'C', 'issued_ts': 1378143900, 'method': 'Zambretti', 'usUnits': 1}])
 
         # now the pressure goes up slightly
         event.record = {'barometer': 1010.23508027, 'usUnits': weewx.METRIC, 'dateTime': 1378144200, 'windDir': 90.0}
         record = zf.get_forecast(event)
-        self.assertEqual(record, {'event_ts': 1378144200, 'dateTime': 1378144200, 'zcode': 'K', 'issued_ts': 1378144200, 'method': 'Zambretti', 'usUnits': 1})
+        self.assertEqual(record, [{'event_ts': 1378144200, 'dateTime': 1378144200, 'zcode': 'K', 'issued_ts': 1378144200, 'method': 'Zambretti', 'usUnits': 1}])
 
     def test_zambretti_bogus_values(self):
         '''confirm behavior when we get bogus values'''
@@ -15230,7 +15232,7 @@ class ForecastTest(unittest.TestCase):
         event.record['windDir'] = 180
         event.record['dateTime'] = 1368303780
         c = f.get_forecast(event)
-        self.assertEqual(c, {'event_ts': 1368303780, 'dateTime': 1368303780, 'zcode': 'C', 'issued_ts': 1368303780, 'method': 'Zambretti', 'usUnits': 1})
+        self.assertEqual(c, [{'event_ts': 1368303780, 'dateTime': 1368303780, 'zcode': 'C', 'issued_ts': 1368303780, 'method': 'Zambretti', 'usUnits': 1}])
         event.record['barometer'] = 1030
         event.record['windDir'] = None
         event.record['dateTime'] = 1368304080
@@ -15492,7 +15494,7 @@ SW
             (WU_API_KEY, WU_LOCATION))
         fcast = forecast.WUDownloadForecast(WU_API_KEY, WU_LOCATION, url=url)
         print fcast
-        records = forecast.WUParseForecast(fcast)
+        records,msgs = forecast.WUParseForecast(fcast)
         print records
 
     def xtest_wu_forecast_from_file(self):
@@ -15503,7 +15505,7 @@ SW
         for line in f:
             lines.append(line)
         f.close()
-        records = forecast.WUParseForecast(''.join(lines))
+        records,msgs = forecast.WUParseForecast(''.join(lines))
         print records
 
     def xtest_wu_download_daily(self):
@@ -15522,7 +15524,8 @@ SW
 
     def test_wu_parse_forecast_daily(self):
         ts = 1377298279
-        records = forecast.WUParseForecast(WU_BOS_DAILY, issued_ts=ts, now=ts)
+        records,msgs = forecast.WUParseForecast(WU_BOS_DAILY,
+                                                issued_ts=ts, now=ts)
         self.assertEqual(records[0:2], [
                 {'clouds': 'B2', 'temp': 61.5, 'hour': 23, 'event_ts': 1368673200, 'qpf': 0.10000000000000001, 'windSpeed': 15.0, 'pop': 50, 'dateTime': 1377298279, 'windDir': u'SSW', 'tempMin': 55.0, 'qsf': 0.0, 'windGust': 19.0, 'duration': 86400, 'humidity': 69, 'issued_ts': 1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 68.0},
                 {'clouds': 'FW', 'temp': 65.5, 'hour': 23, 'event_ts': 1368759600, 'qpf': 0.0, 'windSpeed': 19.0, 'pop': 10, 'dateTime': 1377298279, 'windDir': 'W', 'tempMin': 54.0, 'qsf': 0.0, 'windGust': 23.0, 'duration': 86400, 'humidity': 42, 'issued_ts': 1377298279, 'method': 'WU', 'usUnits': 1, 'tempMax': 77.0}
@@ -15530,7 +15533,8 @@ SW
 
     def test_wu_parse_forecast_hourly(self):
         ts = 1378215570
-        records = forecast.WUParseForecast(WU_BOS_HOURLY, issued_ts=ts, now=ts)
+        records,msgs = forecast.WUParseForecast(WU_BOS_HOURLY,
+                                                issued_ts=ts, now=ts)
         self.assertEqual(records[0:2], [
                 {'windDir': u'S', 'clouds': 'OV', 'temp': 72.0, 'hour': 22, 'event_ts': 1378173600, 'uvIndex': 0, 'qpf': None, 'pop': 100, 'dateTime': 1378215570, 'dewpoint': 69.0, 'windSpeed': 3.0, 'obvis': None, 'rainshwrs': 'C', 'duration': 3600, 'tstms': 'S', 'humidity': 90, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1, 'qsf': None},
                 {'windDir': u'S', 'clouds': 'OV', 'temp': 72.0, 'hour': 23, 'event_ts': 1378177200, 'uvIndex': 0, 'qpf': 0.040000000000000001, 'pop': 80, 'dateTime': 1378215570, 'dewpoint': 68.0, 'windSpeed': 1.0, 'obvis': 'PF', 'rainshwrs': 'C', 'duration': 3600, 'tstms': 'S', 'humidity': 87, 'issued_ts': 1378215570, 'method': 'WU', 'usUnits': 1, 'qsf': None}
@@ -15545,14 +15549,14 @@ SW
 
     def test_wu_detect_download_errors(self):
         '''ensure proper behavior when server replies with error'''
-        records = forecast.WUParseForecast(WU_ERROR_NOKEY)
+        records,msgs = forecast.WUParseForecast(WU_ERROR_NOKEY)
         self.assertEqual(records, [])
 
     def test_wu_template_periods_daily(self):
         '''verify the period behavior'''
-        records = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
-                                           issued_ts=1378090800,
-                                           now=1378090800)
+        records,msgs = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
+                                                issued_ts=1378090800,
+                                                now=1378090800)
         template = create_template(PERIODS_TEMPLATE, 'WU', '1378090800')
         self.runTemplateTest('test_wu_template_periods_daily',
                              'user.forecast.WUForecast', records, template,
@@ -15574,9 +15578,9 @@ SW
 
     def test_wu_template_summary_daily(self):
         '''verify the summary behavior'''
-        records = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
-                                           issued_ts=1378090800,
-                                           now=1378090800)
+        records,msgs = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
+                                                issued_ts=1378090800,
+                                                now=1378090800)
         template = create_template(SUMMARY_TEMPLATE, 'WU', '1378090800')
         self.runTemplateTest('test_wu_template_summary_daily',
                              'user.forecast.WUForecast', records, template,
@@ -15613,9 +15617,9 @@ SSW
 
     def test_wu_template_summary_daily_metric(self):
         '''verify the summary behavior'''
-        records = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
-                                           issued_ts=1378090800,
-                                           now=1378090800)
+        records,msgs = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
+                                                issued_ts=1378090800,
+                                                now=1378090800)
         template = create_template(SUMMARY_TEMPLATE, 'WU', '1378090800')
         self.runTemplateTest('test_wu_template_summary_daily_metric',
                              'user.forecast.WUForecast', records, template,
@@ -15652,9 +15656,9 @@ SSW
 
     def test_wu_template_summary_periods_daily(self):
         '''verify the summary behavior using periods'''
-        records = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
-                                           issued_ts=1378090800,
-                                           now=1378090800)
+        records,msgs = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
+                                                issued_ts=1378090800,
+                                                now=1378090800)
         template = create_template(SUMMARY_PERIODS_TEMPLATE,'WU','1378090800')
         self.runTemplateTest('test_wu_template_summary_periods_daily',
                              'user.forecast.WUForecast', records, template,
@@ -15676,9 +15680,9 @@ forecast for  for the day 01-Sep-2013 00:00 as of 01-Sep-2013 23:00
 
     def test_wu_template_summary_periods_daily_metric(self):
         '''verify the summary behavior using periods'''
-        records = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
-                                           issued_ts=1378090800,
-                                           now=1378090800)
+        records,msgs = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
+                                                issued_ts=1378090800,
+                                                now=1378090800)
         template = create_template(SUMMARY_PERIODS_TEMPLATE,'WU','1378090800')
         self.runTemplateTest('test_wu_template_summary_periods_daily_metric',
                              'user.forecast.WUForecast', records, template,
@@ -15700,9 +15704,9 @@ forecast for  for the day 01-Sep-2013 00:00 as of 01-Sep-2013 23:00
 
     def test_wu_template_table_daily(self):
         '''exercise the period and summary template elements'''
-        records = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
-                                           issued_ts=1378090800,
-                                           now=1378090800)
+        records,msgs = forecast.WUParseForecast(WU_TENANTS_HARBOR_DAILY,
+                                                issued_ts=1378090800,
+                                                now=1378090800)
         template = create_template(TABLE_TEMPLATE, 'WU', '1378090800')
         self.runTemplateLineTest('test_wu_template_table_daily',
                                  'user.forecast.WUForecast', records, template,
@@ -15710,9 +15714,9 @@ forecast for  for the day 01-Sep-2013 00:00 as of 01-Sep-2013 23:00
 
     def test_wu_template_periods_hourly(self):
         '''verify the period behavior for hourly'''
-        records = forecast.WUParseForecast(WU_BOS_HOURLY,
-                                           issued_ts=1378173600,
-                                           now=1378173600)
+        records,msgs = forecast.WUParseForecast(WU_BOS_HOURLY,
+                                                issued_ts=1378173600,
+                                                now=1378173600)
         template = create_template(PERIODS_TEMPLATE, 'WU', '1378173600')
         self.runTemplateTest('test_wu_template_periods_hourly',
                              'user.forecast.WUForecast', records, template,
@@ -15744,9 +15748,9 @@ forecast for  for the day 01-Sep-2013 00:00 as of 01-Sep-2013 23:00
 
     def test_wu_template_summary_hourly(self):
         '''verify the summary behavior for hourly'''
-        records = forecast.WUParseForecast(WU_BOS_HOURLY,
-                                           issued_ts=1378173600,
-                                           now=1378173600)
+        records,msgs = forecast.WUParseForecast(WU_BOS_HOURLY,
+                                                issued_ts=1378173600,
+                                                now=1378173600)
         template = create_template(SUMMARY_TEMPLATE, 'WU', '1378173600')
         self.runTemplateTest('test_wu_template_summary_hourly',
                              'user.forecast.WUForecast', records, template,
@@ -15786,9 +15790,9 @@ S
 
     def test_wu_template_table_hourly(self):
         '''exercise the period and summary template elements for hourly'''
-        records = forecast.WUParseForecast(WU_BOS_HOURLY,
-                                           issued_ts=1378173600,
-                                           now=1378173600)
+        records,msgs = forecast.WUParseForecast(WU_BOS_HOURLY,
+                                                issued_ts=1378173600,
+                                                now=1378173600)
         template = create_template(TABLE_TEMPLATE, 'WU', '1378173600')
         self.runTemplateLineTest('test_wu_template_table_hourly',
                                  'user.forecast.WUForecast', records, template,
@@ -15796,22 +15800,24 @@ S
 
     def test_wu_template_table(self):
         '''exercise the period and summary template elements'''
-        records = forecast.WUParseForecast(WU_BOS_HOURLY,
-                                           issued_ts=1378173600,
-                                           now=1378173600)
+        records,msgs = forecast.WUParseForecast(WU_BOS_HOURLY,
+                                                issued_ts=1378173600,
+                                                now=1378173600)
         template = create_template(TABLE_TEMPLATE, 'WU', '1378173600')
-        template = template.replace('period.event_ts.raw', 'period.event_ts.raw, periods=$periods')
+        template = template.replace('period.event_ts.raw',
+                                    'period.event_ts.raw, periods=$periods')
         self.runTemplateLineTest('test_wu_template_table',
                                  'user.forecast.WUForecast', records, template,
                                  514)
 
     def test_wu_inorther26(self):
         '''test forecast for inorther26'''
-        records = forecast.WUParseForecast(WU_INORTHER26_HOURLY,
-                                           issued_ts=1384053615,
-                                           now=1384053615)
+        records,msgs = forecast.WUParseForecast(WU_INORTHER26_HOURLY,
+                                                issued_ts=1384053615,
+                                                now=1384053615)
         template = create_template(TABLE_TEMPLATE, 'WU', '1384053615')
-        template = template.replace('period.event_ts.raw', 'period.event_ts.raw, periods=$periods')
+        template = template.replace('period.event_ts.raw',
+                                    'period.event_ts.raw, periods=$periods')
         self.runTemplateLineTest('test_wu_inorther26',
                                  'user.forecast.WUForecast', records, template,
                                  493)
@@ -16106,9 +16112,9 @@ $ts $a.sunrise $a.sunset $gmstr
         config_dict = create_config(tdir, 'user.forecast.ZambrettiForecast')
         method_id = 'Zambretti'
         table = 'archive'
-        dbspec = config_dict['Forecast']['database']
-        archive = forecast.Forecast.setup_database(dbspec, table, method_id,
-                                                   config_dict,
+        archive = forecast.Forecast.setup_database('forecast_sqlite',
+                                                   config_dict['Databases']['forecast_sqlite'],
+                                                   table,
                                                    forecast.defaultForecastSchema)
 
         # create a zambretti forecaster and simulator with which to test
@@ -16170,7 +16176,8 @@ $ts $a.sunrise $a.sunset $gmstr
         size1 = os.path.getsize(dbfile)
 
         # there should be one remaining after a prune
-        forecast.Forecast.prune_forecasts(archive, table, method_id, ts, True)
+        forecast.Forecast.prune_forecasts(archive, table, method_id, ts)
+        forecast.Forecast.vacuum_database(archive, method_id)
         records = forecast.Forecast.get_saved_forecasts(archive, table,
                                                         method_id)
         self.assertEqual(len(records), 1)
