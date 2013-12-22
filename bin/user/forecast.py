@@ -810,7 +810,7 @@ class Forecast(StdService):
                                          self.database_max_tries,
                                          self.database_retry_wait)
             if self.vacuum:
-                Forecast.vacuum_database(archive)
+                Forecast.vacuum_database(archive, self.method_id)
         except Exception, e:
             logerr('%s: forecast failure: %s' % (self.method_id, e))
         finally:
@@ -883,16 +883,16 @@ class Forecast(StdService):
             raise Exception('prune failed after %d attemps' % max_tries)
 
     @staticmethod
-    def vacuum_database(archive):
+    def vacuum_database(archive, method_id):
         # vacuum will only work on sqlite databases.  it will compact the
         # database file.  if we do not do this, the file grows even though
         # we prune records from the database.  it should be ok to run this
         # on a mysql database - it will silently fail.
         try:
-            logdbg('vacuuming the database')
+            logdbg('%s: vacuuming the database' % method_id)
             archive.getSql('vacuum')
         except Exception, e:
-            logdbg('vacuuming failed: %s' % e)
+            logdbg('%s: vacuuming failed: %s' % (method_id, e))
 
 
 # -----------------------------------------------------------------------------
