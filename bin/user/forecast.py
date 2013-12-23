@@ -425,7 +425,7 @@ $summary.obvis           array
 
 import hashlib
 import httplib
-import os
+import os, errno
 import socket
 import string
 import subprocess
@@ -491,7 +491,7 @@ def mkdir_p(path):
 def save_fc_data(fc, dirname, basename='forecast-data', msgs=None):
     """save raw forecast data to disk, typically for diagnostics"""
     ts = int(time.time())
-    tstr = time.strftime('%Y%m%d.%H%M', time.localtime(ts))
+    tstr = time.strftime('%Y%m%d%H%M', time.localtime(ts))
     mkdir_p(dirname)
     fn = '%s/%s-%s' % (dirname, basename, tstr)
     with open(fn, 'w') as f:
@@ -1811,17 +1811,21 @@ def WUParseForecast(text, issued_ts=None, now=None, location=None):
     return records,msgs
 
 def sky2clouds(sky):
-    if 0 <= sky <= 5:
+    try:
+        v = int(sky)
+    except ValueError, e:
+        return None
+    if 0 <= v <= 5:
         return 'CL'
-    elif 5 < sky <= 25:
+    elif 5 < v <= 25:
         return 'FW'
-    elif 25 < sky <= 50:
+    elif 25 < v <= 50:
         return 'SC'
-    elif 50 < sky <= 69:
+    elif 50 < v <= 69:
         return 'B1'
-    elif 69 < sky <= 87:
+    elif 69 < v <= 87:
         return 'B2'
-    elif 87 < sky <= 100:
+    elif 87 < v <= 100:
         return 'OV'
     return None
 
@@ -2005,8 +2009,10 @@ def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None):
     '''create from hourly10day'''
     msgs = []
     records = []
+    cnt = 0
     for period in fc['hourly_forecast']:
         try:
+            cnt += 1
             r = {}
             r['method'] = WU_KEY
             r['usUnits'] = weewx.US
@@ -2015,7 +2021,7 @@ def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None):
             r['event_ts'] = str2int('epoch', period['FCTTIME']['epoch'])
             r['hour'] = str2int('hour', period['FCTTIME']['hour'])
             r['duration'] = 3600
-            r['clouds'] = sky2clouds(int(period['sky']))
+            r['clouds'] = sky2clouds(period['sky'])
             r['temp'] = str2float('temp', period['temp']['english'])
             r['dewpoint'] = str2float('dewpoint',period['dewpoint']['english'])
             r['humidity'] = str2int('humidity', period['humidity'])
@@ -2032,7 +2038,8 @@ def WUCreateRecordsFromHourly(fc, issued_ts, now, location=None):
                 r['location'] = location
             records.append(r)
         except Exception, e:
-            msg = '%s: failure in hourly forecast: %s' % (WU_KEY, e)
+            msg = '%s: failure in hourly forecast period %d: %s' % (
+                WU_KEY, cnt, e)
             msgs.append(msg)
             logerr(msg)
     return records, msgs
@@ -2041,8 +2048,10 @@ def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None):
     '''create from forecast10day data'''
     msgs = []
     records = []
+    cnt = 0
     for period in fc['forecast']['simpleforecast']['forecastday']:
         try:
+            cnt += 1
             r = {}
             r['method'] = WU_KEY
             r['usUnits'] = weewx.US
@@ -2067,7 +2076,8 @@ def WUCreateRecordsFromDaily(fc, issued_ts, now, location=None):
                 r['location'] = location
             records.append(r)
         except Exception, e:
-            msg = '%s: failure in daily forecast: %s' % (WU_KEY, e)
+            msg = '%s: failure in daily forecast period %d: %s' % (
+                WU_KEY, cnt, e)
             msgs.append(msg)
             logerr(msg)
     return records, msgs
