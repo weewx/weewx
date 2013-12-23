@@ -297,6 +297,7 @@ while(defined($_ = <STDIN>)) {
              /forecast: .* tstr=/ ||
              /forecast: .* interval=\d+ max_age=/ ||
              /forecast: .* deleted forecasts/ ||
+             /forecast: .* saved \d+ forecast records/ ||
              /forecast: ZambrettiThread: Zambretti: generating/ ||
              /forecast: ZambrettiThread: Zambretti: pressure/ ||
              /forecast: ZambrettiThread: Zambretti: code is/ ||
