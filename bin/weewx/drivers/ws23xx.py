@@ -253,7 +253,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.16'
+DRIVER_VERSION = '0.17'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -613,17 +613,22 @@ class Station(object):
     close serial port without all of the try/except/finally scaffolding."""
 
     def __init__(self, port):
+        logdbg('create LinuxSerialPort')
         self.serial_port = LinuxSerialPort(port)
+        logdbg('create Ws2300')
         self.ws = Ws2300(self.serial_port)
 
     def __enter__(self):
+        logdbg('station enter')
         return self
 
     def __exit__(self, type, value, traceback):
+        logdbg('station exit')
         self.ws = None
         self.close()
 
     def close(self):
+        logdbg('close LinuxSerialPort')
         self.serial_port.close()
         self.serial_port = None
 
@@ -690,10 +695,15 @@ class Station(object):
         There is no timestamp associated with each record - we have to guess.
         The station tells us the time until the next record and the epoch of
         the latest record, based on the station's clock.  So we can use that
-        or use the computer clock to guess the timestamp for each record."""
+        or use the computer clock to guess the timestamp for each record.
 
-        # FIXME: this is not atomic - if we overlap an interval, data are bogus
+        To ensure accurate data, the first record must be read within one
+        minute of the initial read and the remaining records must be read
+        within numrec * interval minutes.
+        """
 
+        logdbg("gen_records: since_ts=%s count=%s clock=%s" % 
+               (since_ts, count, use_computer_clock))
         measures = [ Measure.IDS['hi'], Measure.IDS['hw'],
                      Measure.IDS['hc'], Measure.IDS['hn'] ]
         raw_data = read_measurements(self.ws, measures)
@@ -721,6 +731,10 @@ class Station(object):
         if count == 0:
             return
 
+        # station is about to overwrite first record, so skip it
+        if time_to_next <= 1 and count == HistoryMeasure.MAX_HISTORY_RECORDS:
+            count -= 1
+
         HistoryMeasure.set_constants(self.ws)
         last_ts = latest_ts - (count-1) * interval * 60
         logdbg("downloading %d records from station" % count)
@@ -737,7 +751,7 @@ class Station(object):
                 'oh': value.humidity_outdoor,
                 'pa': value.pressure_absolute,
                 'rt': value.rain,
-                'wind': (value.wind_speed, value.wind_direction, 0),
+                'wind': (value.wind_speed, value.wind_direction, 0, 0),
 #                'ws': value.wind_speed,
 #                'w0': value.wind_direction,
                 'rh': None, # no rain rate in history
@@ -755,9 +769,9 @@ class Station(object):
         return data_dict
 
 
-#==============================================================================
+# =============================================================================
 # The following code was adapted from ws2300.py by Russell Stuart
-#==============================================================================
+# =============================================================================
 
 VERSION = "1.8 2013-08-26"
 
