@@ -77,7 +77,9 @@ install: build
 	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
 	ln -s ../share/weewx/wee_config_database $(DST)/usr/bin/wee_config_database
 	ln -s ../share/weewx/wee_config_fousb $(DST)/usr/bin/wee_config_fousb
+	ln -s ../share/weewx/wee_config_te923 $(DST)/usr/bin/wee_config_te923
 	ln -s ../share/weewx/wee_config_vantage $(DST)/usr/bin/wee_config_vantage
+	ln -s ../share/weewx/wee_config_ws23xx $(DST)/usr/bin/wee_config_ws23xx
 	ln -s ../share/weewx/wee_config_ws28xx $(DST)/usr/bin/wee_config_ws28xx
 
 # keep lintian happy
