@@ -109,7 +109,9 @@ ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
 ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
 ln -s ../share/weewx/wee_config_database %{buildroot}%{_bindir}/wee_config_database
 ln -s ../share/weewx/wee_config_fousb %{buildroot}%{_bindir}/wee_config_fousb
+ln -s ../share/weewx/wee_config_te923 %{buildroot}%{_bindir}/wee_config_te923
 ln -s ../share/weewx/wee_config_vantage %{buildroot}%{_bindir}/wee_config_vantage
+ln -s ../share/weewx/wee_config_ws23xx %{buildroot}%{_bindir}/wee_config_ws23xx
 ln -s ../share/weewx/wee_config_ws28xx %{buildroot}%{_bindir}/wee_config_ws28xx
 
 # pre-compile the python code
@@ -158,7 +160,9 @@ rm -rf %{buildroot}
 %{_bindir}/wee_reports
 %{_bindir}/wee_config_database
 %{_bindir}/wee_config_fousb
+%{_bindir}/wee_config_te923
 %{_bindir}/wee_config_vantage
+%{_bindir}/wee_config_ws23xx
 %{_bindir}/wee_config_ws28xx
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/

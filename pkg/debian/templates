@@ -83,4 +83,4 @@ Template: weewx/te923_model
 Type: string
 Default: TE923
 Description: weather station model:
- Specify the station model, for example TFA Nexus, La Crosse WS2817
+ Specify the station model, for example TFA Nexus, IROX Pro X, or Meade TE923W.
