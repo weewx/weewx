@@ -91,6 +91,16 @@ This driver polls the station.  Use the polling_interval parameter to specify
 how often to poll for data.  If not specified, the polling interval will adapt
 based on connection type and status.
 
+USB-Serial Converters
+
+With a USB-serial converter one can connect the station to a computer with
+only USB ports, but not every converter will work properly.  Perhaps the two
+most common converters are based on the Prolific and FTDI chipsets.  Many
+people report better luck with the FTDI-based converters.  Some converters
+that use the Prolific chipset (PL2303) will work, but not all of them.
+
+Known to work: ATEN UC-232A
+
 Discrepancies Between Implementations
 
 As of December 2013, there are significant differences between the open2300,
@@ -217,16 +227,6 @@ velocity = (bcd2num(data[:3])/10.0, bin2num(data[3:4]) * 22.5)
 
 bcd2num([a,b,c]) -> c*100+b*10+a
 
-USB-Serial Converters
-
-With a USB-serial converter one can connect the station to a computer with
-only USB ports, but not every converter will work properly.  Perhaps the two
-most common converters are based on the Prolific and FTDI chipsets.  Many
-people report better luck with the FTDI-based converters.  Some converters
-that use the Prolific chipset (PL2303) will work, but not all of them.
-
-Known to work: ATEN UC-232A
-
 """
 
 # TODO: use pyserial instead of LinuxSerialPort
@@ -253,7 +253,7 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.17'
+DRIVER_VERSION = '0.18'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -349,6 +349,37 @@ def calculate_rain(newtotal, oldtotal):
     else:
         delta = None
     return delta
+
+# FIXME: this goes in weeutil.weeutil
+def calculate_rain_rate(delta, curr_ts, last_ts):
+    """Calculate the rain rate based on the time between two rain readings.
+
+    delta: rainfall since last reading, in units of x
+
+    curr_ts: timestamp of current reading, in seconds
+
+    last_ts: timestamp of last reading, in seconds
+
+    return: rain rate in x per hour
+
+    If the period between readings is zero, ignore the rainfall since there
+    is no way to calculate a rate with no period."""
+
+    if curr_ts is None:
+        return None
+    if last_ts is None:
+        last_ts = curr_ts
+    if delta is not None:
+        period = curr_ts - last_ts
+        if period != 0:
+            rate = 3600 * delta / period
+        else:
+            rate = None
+            if delta != 0:
+                loginf('rain rate period is zero, ignoring rainfall of %f' % delta)
+    else:
+        rate = None
+    return rate
 
 class WS23xx(weewx.abstractstation.AbstractStation):
     """Driver for LaCrosse WS23xx stations."""
@@ -485,6 +516,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                                         last_rain=last_rain,
                                         calc_dewpoint=True,
                                         calc_windchill=True)
+                record['interval'] = data['interval']
                 last_rain = record['rainTotal']
                 yield record
 
@@ -722,27 +754,31 @@ class Station(object):
 
         if not count:
             count = HistoryMeasure.MAX_HISTORY_RECORDS
-        if count > numrec:
-            count = numrec
         if since_ts is not None:
             count = int((now - since_ts) / (interval * 60))
             logdbg("count is %d to satisfy timestamp of %s" %
                    (count, weeutil.weeutil.timestamp_to_string(since_ts)))
         if count == 0:
             return
+        if count > numrec:
+            count = numrec
+        if count > HistoryMeasure.MAX_HISTORY_RECORDS:
+            count = HistoryMeasure.MAX_HISTORY_RECORDS
 
         # station is about to overwrite first record, so skip it
         if time_to_next <= 1 and count == HistoryMeasure.MAX_HISTORY_RECORDS:
             count -= 1
 
-        HistoryMeasure.set_constants(self.ws)
-        last_ts = latest_ts - (count-1) * interval * 60
         logdbg("downloading %d records from station" % count)
-
+        HistoryMeasure.set_constants(self.ws)
         measures = [HistoryMeasure(n) for n in range(count-1, -1, -1)]
         raw_data = read_measurements(self.ws, measures)
+        last_ts = latest_ts - (count-1) * interval * 60
+        last_rain = None
         for measure, nybbles in zip(measures, raw_data):
             value = measure.conv.binary2value(nybbles)
+            delta = calculate_rain(value.rain, last_rain)
+            rainrate = calculate_rain_rate(delta, last_ts, last_ts-interval*60)
             data_dict = {
                 'interval': interval,
                 'it': value.temp_indoor,
@@ -752,14 +788,13 @@ class Station(object):
                 'pa': value.pressure_absolute,
                 'rt': value.rain,
                 'wind': (value.wind_speed, value.wind_direction, 0, 0),
-#                'ws': value.wind_speed,
-#                'w0': value.wind_direction,
-                'rh': None, # no rain rate in history
+                'rh': rainrate,
                 'dp': None, # no dewpoint in history
                 'wc': None, # no windchill in history
                 }
             yield last_ts, data_dict
             last_ts += interval * 60
+            last_rain = value.rain
 
     def get_raw_data(self, labels):
         """Get raw data from the station, return as dictionary."""
