@@ -7,7 +7,9 @@ weewx.conf
 bin/daemon.py
 bin/wee_config_database
 bin/wee_config_fousb
+bin/wee_config_te923
 bin/wee_config_vantage
+bin/wee_config_ws23xx
 bin/wee_config_ws28xx
 bin/wee_reports
 bin/weewxd
@@ -51,10 +53,12 @@ bin/weewx/wxformulas.py
 bin/weewx/drivers/__init__.py
 bin/weewx/drivers/fousb.py
 bin/weewx/drivers/simulator.py
+bin/weewx/drivers/te923.py
 bin/weewx/drivers/vantage.py
 bin/weewx/drivers/wmr100.py
 bin/weewx/drivers/wmr200.py
 bin/weewx/drivers/wmr9x8.py
+bin/weewx/drivers/ws23xx.py
 bin/weewx/drivers/ws28xx.py
 docs/changes.txt
 docs/copyright.htm
@@ -75,6 +79,7 @@ docs/logo-mint.png
 docs/logo-redhat.png
 docs/logo-suse.png
 docs/logo-ubuntu.png
+docs/logo-weewx.png
 docs/readme.htm
 docs/redhat.htm
 docs/setup.htm
