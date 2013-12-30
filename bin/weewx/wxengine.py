@@ -406,20 +406,22 @@ class StdArchive(StdService):
         syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be attempted in '%s'" % (self.record_generation,))
 
         # Get the archive interval from the configuration file
-        self.archive_interval = config_dict['StdArchive'].as_int('archive_interval')
+        software_interval = config_dict['StdArchive'].as_int('archive_interval')
 
-        if self.record_generation == 'hardware':
-            # If the station supports a hardware archive interval, use that.
-            # Warn if it is different than what is in config.
-            try:
-                if self.archive_interval != self.engine.console.archive_interval:
-                    syslog.syslog(syslog.LOG_ERR, "wxengine: The archive interval in the configuration file (%d)"\
-                                      " does not match the station hardware interval (%d)." % \
-                                      (self.archive_interval, self.engine.console.archive_interval))
-                    self.archive_interval = self.engine.console.archive_interval
-            except NotImplementedError:
-                pass
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d" % self.archive_interval)
+        # If the station supports a hardware archive interval, use that.
+        # Warn if it is different than what is in config.
+        try:
+            if software_interval != self.engine.console.archive_interval:
+                syslog.syslog(syslog.LOG_ERR,
+                              "wxengine: The archive interval in the"
+                              " configuration file (%d) does not match the"
+                              " station hardware interval (%d)." %
+                              (software_interval,
+                               self.engine.console.archive_interval))
+            self.archive_interval = self.engine.console.archive_interval
+        except NotImplementedError:
+            self.archive_interval = software_interval
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d seconds" % self.archive_interval)
 
         self.archive_delay = config_dict['StdArchive'].as_int('archive_delay')
         if self.archive_delay <= 0:
