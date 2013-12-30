@@ -64,7 +64,7 @@ Version: 2.5.0
       Many types of station hardware are supported.  In addition to hardware support, <span class="code">weewx</span> 
       comes with a software simulator, useful for testing and evaluation.
     </p>
-    <table style="width: 90%" class="center">
+    <table class="indent">
       <tr>
 	<td><strong>Vendor</strong></td>
 	<td><strong>Model</strong></td>
@@ -72,6 +72,21 @@ Version: 2.5.0
 	<td><strong>Required<br/>Package</strong></td>
         <td><strong>Station<br/>Driver</strong></td>
 	<td><strong>Maturity</strong></td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="2">Aercus</td>
+	<td>WS2083</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>WS3083</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
+	<td></td>
       </tr>
       <tr>
 	<td class="text_highlight" rowspan="4">Ambient Weather</td>
@@ -101,6 +116,21 @@ Version: 2.5.0
 	<td class="code">pyusb</td>
         <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
 	<td></td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="2">Cresta</td>
+	<td>WRX815</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>PWS720</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
       </tr>
       <tr>
 	<td class="text_highlight" rowspan="3">Davis</td>
@@ -218,18 +248,115 @@ Version: 2.5.0
 	<td>Tested</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="2">La Crosse</td>
+	<td class="text_highlight" rowspan="4">Hideki</td>
+	<td>DV928</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE821</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE831</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE923</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">Huger</td>
+	<td>WM918</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>WMR9x8<sup><a href='#wmr9x8'>4</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td class="text_highlight">IROX</td>
+	<td>Pro X</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="3">La Crosse</td>
 	<td>C86234</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+        <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>WS-23XX</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
 	<td>WS-28XX</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+        <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="2">Maplin</td>
+	<td>N96GY</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>N96FY</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="3">Meade</td>
+	<td>TE923W</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE923W-M</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE924W</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight">Mebus</td>
+	<td>TE923</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
@@ -241,12 +368,26 @@ Version: 2.5.0
 	<td></td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="5">Oregon Scientific</td>
+	<td class="text_highlight" rowspan="7">Oregon Scientific</td>
+	<td>WMR88</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
 	<td>WMR100N</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
 	<td>Tested</td>
+      </tr>
+      <tr>
+	<td>WMR180</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
       </tr>
       <tr>
 	<td>WMR200</td>
@@ -277,18 +418,91 @@ Version: 2.5.0
 	<td>Tested</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan='2'>TFA</td>
-	<td>Primus</td>
+	<td class="text_highlight" rowspan="3">Radio Shack</td>
+	<td>63-256</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>WX200</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR200<sup><a href="#wmr200">3</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>63-1016</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>WMR9x8<sup><a href='#wmr9x8'>4</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="2">Sinometer</td>
+	<td>WS1080 / WS1081</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>WS3100 / WS3101</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan='2'>TechnoLine</td>
+	<td>WS-2300</td>
+	<td>USB</td>
+	<td class="code">pyserial</td>
+        <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>WS-2350</td>
+	<td>USB</td>
+	<td class="code">pyserial</td>
+        <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan='5'>TFA</td>
+	<td>Matrix</td>
+	<td>USB</td>
+	<td class="code">pyserial</td>
+        <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>Nexus</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
 	<td>Opus</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
-        <td>WS28xx<sup><a href='#ws28xx'>6</a></sup></td>
+        <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>Primus</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>Sinus</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
@@ -322,31 +536,46 @@ Version: 2.5.0
         <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
 	<td>Tested</td>
       </tr>
+      <tr>
+	<td class="text_highlight">Ventus</td>
+	<td>W831</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
     </table>
 
     <ol>
-      <li><a id="vantage">Davis &quot;Vantage&quot; series</a> of weather stations, including the
-         <a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">
-	     VantagePro2</a>&trade; and <a href="http://www.vantagevue.com/">VantageVue</a>&trade;, 
-	     using serial, USB, or <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">
-	     WeatherLinkIP</a>&trade; connections. Both the &quot;Rev A&quot; (firmware 
-         dated before 22 April 2002) and &quot;Rev B&quot; versions are supported.
+      <li><a id="vantage">Davis &quot;Vantage&quot; series</a> of weather
+        stations, including the
+         <a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">VantagePro2</a>&trade; and
+         <a href="http://www.vantagevue.com/">VantageVue</a>&trade;, 
+	 using serial, USB, or
+         <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">WeatherLinkIP</a>&trade;
+         connections. Both the &quot;Rev A&quot; (firmware dated before
+         22 April 2002) and &quot;Rev B&quot; versions are supported.
       </li>
-      <li><a id="wmr100">Oregon Scientific WMR100 series.</a> Tested on the
-        <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">WMR100N</a>, other stations may work as well.</li>
-      <li><a id="wmr200">Oregon Scientific WMR200 series.</a> This is an experimental version 
-	  &mdash; it may or may not work. Please report any problems!
+      <li><a id="wmr100">Oregon Scientific WMR-100 series.</a> Tested on the
+        <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">Oregon Scientific WMR100N</a>.</li>
+      <li><a id="wmr200">Oregon Scientific WMR-200 series.</a>  Tested on the
+        <a href="http://www.oregonscientificstore.com/Oregon-Scientific-WMR200-Bundle-Complete-Weather-Bundle.data">Oregon Scientific WMR200</a>.
 	  </li>
       <li><a id="wmr9x8">Oregon Scientific WMR-918/968 series.</a> Tested on the
-        <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR-968</a>, other stations may work as well.
+        <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR968</a>.
       </li>
-      <li><a id="fousb">Fine Offset series.</a> These are branded by
-        many vendors, including Ambient Weather, National Geographic, Watson,
-        Elecsa, Tycon, Maplin, Froggit, Velleman, and others. Tested on the
-        <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>, other stations may work as well.
+      <li><a id="fousb">Fine Offset 10xx, 20xx, and 30xx series.</a>
+        Tested on the
+        <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>.
       </li>
-      <li><a id="ws28xx">La Crosse WS-28xx series.</a> This is an experimental version 
-	  &mdash; it may or may not work.  Please report any problems!
+      <li><a id="ws23xx">La Crosse WS-23xx series.</a> Tested on the
+        <a href="http://lacrossetechnologies.com/2317/">La Crosse 2317</a>.
+      </li>
+      <li><a id="ws28xx">La Crosse WS-28xx series.</a> Tested on the
+        <a href="http://lacrossetechnologies.com/2814/">La Crosse C86234</a>.
+      </li>
+      <li><a id="te923">Hideki Professional Weather Stations.</a> Tested on the
+       <a href="http://www.ambientweather.com/hotewiwest.html">Meade TE923</a>.
       </li>
     </ol>
 
@@ -374,6 +603,34 @@ Version: 2.5.0
     <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work.</p>
 
     <h1 id="installing">Installing <span class="code">weewx</span></h1>
+
+    <h2>Required skills</h2>
+    <p>
+      In the world of open-source hobbyist software, 
+      <span class="code"> weewx</span> is pretty easy to install and
+      configure. There are not many package dependencies, the
+      configuration is simple, and this guide includes extensive
+      instructions.
+      There are thousands of people who have successfully done an
+      install. However, there is no "point-and-click" interface, so
+      you have to do some manual configuring.
+    </p>
+    <p>You should have the following skills:</p>
+    <ul>
+      <li>The patience to read and follow this guide;</li>
+      <li>Willingness and ability to edit a configuration file;</li>
+      <li>Some familiarity with Linux or other Unix derivatives;</li>
+      <li>Ability to do simple Unix tasks such as changing file
+        permissions and running commands;</li>
+      <li>No programming experience is necessary unless you wish
+        to extend weewx. In this case, you should have some
+        familiarity with Python.</li>
+    </ul>
+    <p>If you get stuck, there is a very active <a href="https://groups.google.com/forum/#!forum/weewx-user">User's Group</a> to
+      help, but please at least try to solve the problem yourself before posting.
+    </p>
+
+    <h2>Installation methods</h2>
     <p>
       <span class='code'>weewx</span> can be installed using the standard
       Python utility <span class='code'>setup.py</span> or it can be installed
@@ -573,17 +830,17 @@ Version: 2.5.0
 
     <br/>
     
-    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
+    <h3><a href='debian.htm'>Installing from DEB package</a></h3>
     <p>For Debian, Ubuntu, Mint operating systems, follow the instruction in 
       <a href='debian.htm'>Installation on Debian Linux systems</a>.</p>
-    <h2><a href='redhat.htm'>Installing from RPM package</a></h2>
+    <h3><a href='redhat.htm'>Installing from RPM package</a></h3>
     <p>For Redhat, CentOS, Fedora operating systems, follow the instructions in
       <a href='redhat.htm'>Installation on Redhat Linux</a>.</p>
     <p>For SuSE and OpenSUSE, follow the Redhat instructions, but use
       SuSE tools such as zypper instead of Redhat tools such as yum.</p>
     <p>There is one RPM for Redhat and a different RPM for SuSE; the Redhat
       RPM will not work on SuSE operating systems.</p>
-    <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
+    <h3><a href='setup.htm'>Installing using the Python tool setup.py</a></h3>
     <p>For all operating systems, follow the instructions in
       <a href='setup.htm'>Installation using
         <span class="code">setup.py</span></a>.</p>
@@ -685,19 +942,27 @@ longitude = -77.0366</pre>
       </tr>
       <tr>
 	<td class="code">WMR200</td>
-	<td>Oregon Scientific WMR200 series stations (experimental)</td>
+	<td>Oregon Scientific WMR200 series stations</td>
       </tr>
       <tr>
 	<td class="code">WMR9x8</td>
-	<td>Oregon Scientific WMR-918/968 series station</td>
+	<td>Oregon Scientific WMR-918/968 series stations</td>
       </tr>
       <tr>
 	<td class="code">FineOffsetUSB</td>
-	<td>Fine Offset USB stations</td>
+	<td>Fine Offset 10xx, 20xx, and 30xx stations</td>
+      </tr>
+      <tr>
+	<td class="code">WS23xx</td>
+	<td>La Crosse 23xx stations</td>
       </tr>
       <tr>
 	<td class="code">WS28xx</td>
 	<td>La Crosse 28xx stations</td>
+      </tr>
+      <tr>
+	<td class="code">TE923</td>
+	<td>Hideki TE923 stations</td>
       </tr>
     </table>
     
@@ -749,19 +1014,22 @@ longitude = -77.0366</pre>
     <p>How many times to try again before giving up. Default is 4. </p>
 
     <h3 class="config_section">[WMR100]</h3>
-    <p>This section is for options relating to the Oregon Scientific WMR100 series
-      of weather stations with USB connectors.</p>
+    <p>This section is for options relating to the Oregon Scientific WMR100
+      series of weather stations with USB connectors.</p>
     <p class="config_option">stale_wind</p>
     <p>How long a wind record can be used to calculate wind chill (in seconds).
       Default is 30.</p>
 
     <h3 class="config_section">[WMR200]</h3>
-    <p>This section is for options relating to the Oregon Scientific WMR200 series
-      of weather stations with USB connectors. This support is experimental. Please
-      report any problems!</p>
-    <p class="config_option">stale_wind</p>
-    <p>How long a wind record can be used to calculate wind chill (in seconds).
-      Default is 30.</p>
+    <p>This section is for options relating to the Oregon Scientific WMR200
+      series of weather stations with USB connectors.</p>
+    <p class="config_option">use_pc_time</p>
+    <p>If True, use the computer time, otherwise use the station time.  Default
+      is False.</p>
+    <p class="config_option">sensor_status</p>
+    <p>If True, emit sensor faults and failures to log.  Default is True.</p>
+    <p class="config_option">erase_archive</p>
+    <p>If True, erase station archive on startup.  Default is False.</p>
 
     <h3 class="config_section">[WMR9x8]</h3>
     <p>This section is for options relating to the Oregon Scientific WMR-918/968
@@ -784,7 +1052,13 @@ longitude = -77.0366</pre>
     <p class="config_important">model</p>
     <p>Set to the station model. For example, WH1080, WS2080, WH3081, etc. </p>
     <p class='config_option'>pressure_offset</p>
-    <p>The offset, in millibars, that is applied to values from the station sensor.  This offset is applied to the station pressure <i>before</i> calculating barometer and altimeter sea level pressures.  Only the raw station pressure is recorded to database, not the station pressure with offset applied.</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
+    </p>
     <p class='config_option'>polling_mode</p>
     <p>One of <span class='code'>PERIODIC</span> or
       <span class='code'>ADAPTIVE</span>.  In
@@ -797,20 +1071,99 @@ longitude = -77.0366</pre>
       data to memory.  The default is <span class='code'>PERIODIC</span>.</p>
     <p class='config_option'>polling_interval</p>
     <p>The frequency, in seconds, at which <span class='code'>weewx</span> will
-      poll the console for data.  This setting applies only when the 
-      <span class='code'>polling_mode</span> is
+      poll the console for data.  Default is 60.  This setting applies only
+      when the <span class='code'>polling_mode</span> is
       <span class='code'>PERIODIC</span>.</p>
 
-    <h3 class='config_section'>[WS28xx]</h3>
-    <p>This section is for options relating to the La Crosse WS-28xx series of weather stations.</p>
+    <h3 class="config_section">[WS23xx]</h3>
+    <p>This section is for options relating to the La Crosse WS-23xx series of
+      weather stations.</p>
+    <p class="config_important">port</p>
+    <p>The serial port, e.g., <span class='code'>/dev/ttyS0</span>.  When using
+      a USB-Serial converter, the port will be something like
+      <span class='code'>/dev/ttyUSB0</span>.  Default is
+      <span class='code'>/dev/ttyUSB0</span></p>
     <p class="config_important">model</p>
-    <p>Set to the station model. For example, LaCross WS2810, TFA Primus, etc.</p>
+    <p>Set to the station model. For example, WS-2315, LaCrosse WS2317,
+      etc.  Default is "LaCrosse WS23xx".</p>
+    <p class='config_option'>pressure_offset</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
+    </p>
+    <p class='config_option'>polling_interval</p>
+    <p>The <span class="code">polling_interval</span> determines how often
+      <span class="code">weewx</span> will query the station for data.  If no
+      <span class="code">polling_interval</span> is specified (the default),
+      <span class="code">weewx</span> will automatically use a polling interval
+      based on the type of connection between the station and the sensors
+      (wired or wireless). When connected with a wire, the console updates
+      sensor data every 8 seconds.  When connected wirelessly, the console
+      updates from 16 to 128 seconds, depending on sensor activity.
+    </p>
+
+    <h3 class='config_section'>[WS28xx]</h3>
+    <p>This section is for options relating to the La Crosse WS-28xx series of
+      weather stations.</p>
     <p class="config_important">transceiver_frequency</p>
     <p>Radio frequency to use between USB transceiver and console. Specify
       either US or EU.  US uses 915 MHz, EU uses 868.3 MHz.  Default is US.
     </p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, LaCrosse WS2810, TFA Primus,
+      etc.  Default is "LaCrosse WS28xx".</p>
     <p class='config_option'>pressure_offset</p>
-    <p>The offset, in millibars, that is applied to values from the station sensor.  This offset is applied to the station pressure <i>before</i> calculating barometer and altimeter sea level pressures.  Only the raw station pressure is recorded to database, not the station pressure with offset applied.</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
+    </p>
+
+    <h3 class="config_section">[TE923]</h3>
+    <p>This section is for options relating to the Hideki TE923 series of
+      weather stations.</p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, Meade TE923W or TFA Nexus.
+      Default is "TE923".</p>
+    <p class="config_option">sensor_map</p>
+    <p>This option defines the mapping between temperature/humidity values in
+      the database and the remote sensors.  Up to 5 remote sensors are
+      supported.  A switch on each sensor determines which of 5 channels that
+      sensor will use.  For example, if the switch on the sensor is set to 3,
+      the temperature from that sensor will be t_3 and the humidity from that
+      sensor will be h_3.
+    </p>
+    <p>The default mapping is:
+    </p>
+    <pre class="tty">[[sensor_map]]
+    outTemp =     t_1
+    outHumidity = h_1
+    extraTemp1 =  t_2
+    extraHumid1 = h_2
+    extraTemp2 =  t_3
+    extraHumid2 = h_3
+    extraTemp3 =  t_4
+    extraHumid3 = h_4
+    extraTemp4 =  t_5
+    extraHumid4 = h_5</pre>
+    <p class="config_option">battery_map</p>
+    <p>This option defines the mapping between battery status values in
+      the database and the remote sensors.  The default mapping is:
+    </p>
+    <pre class="tty">[[battery_map]]
+    txBatteryStatus =      batteryUV
+    windBatteryStatus =    batteryWind
+    rainBatteryStatus =    batteryRain
+    outTempBatteryStatus = battery1
+    extraBatteryStatus1 =  battery2
+    extraBatteryStatus2 =  battery3
+    extraBatteryStatus3 =  battery4
+    extraBatteryStatus4 =  battery5</pre>
 
     <h3 class="config_section">[Simulator]</h3>
     <p>This section is for options relating to the software weather station simulator 
@@ -926,9 +1279,21 @@ longitude = -77.0366</pre>
       conditions. Optional. Default is 1800 seconds.</p>
 
     <h3 class="config_section">[[StationRegistry]]</h3>
-    <p>A registry of weewx weather stations is maintained at weewx.com.  Stations are displayed on a map and a list at <a href="http://weewx.com/stations.html">http://weewx.com/stations.html</a></p>
-    <p>How does the registry work?  Individual weather stations periodically contact the registry. Each station provides a URL to identify itself, plus other information such as the station type and weewx version. The registry does not keep track of meteorological data; no information about the weather is sent to the registry.</p>
-    <p>To add your station to this list, enable the StationRegistry in weewx.conf. Your station will contact the registry once per week. If your station does not contact the registry for about a month, it will be removed from the list.</p>
+    <p>
+      A registry of weewx weather stations is maintained at <span class="code">weewx.com</span>.
+      Stations are displayed on a map and a list at <a
+        href="http://weewx.com/stations.html">http://weewx.com/stations.html</a>
+    </p>
+    <p>How does the registry work? Individual weather stations
+      periodically contact the registry. Each station provides a URL to
+      identify itself, plus other information such as the station type
+      and weewx version. The registry does not keep track of
+      meteorological data; no information about the weather is sent to
+      the registry.</p>
+    <p>To add your station to this list, enable the StationRegistry
+      in weewx.conf. Your station will contact the registry once per
+      week. If your station does not contact the registry for about a
+      month, it will be removed from the list.</p>
     <pre class="tty">[StdRestful]
     [[StationRegistry]]
         register_this_station = True
@@ -936,9 +1301,17 @@ longitude = -77.0366</pre>
     <p class="config_option">register_this_station</p>
     <p>Set this to <span class="code">True</span> to register the weather station.</p>
     <p class="config_option">description</p>
-    <p>A description of the station. If no description is specified, the <span class="config_option">location</span> from the <span class="code">[Station]</span> section will be used.</p>
+    <p>
+      A description of the station. If no description is specified, the
+      <span class="config_option">location</span> from the <span
+        class="code">[Station]</span> section will be used.
+    </p>
     <p class="config_option">station_url</p>
-    <p>The URL to the weather station. If no URL is specified, the <span class="config_option">station_url</span> from the <span class="code">[Station]</span> section will be used.</p>
+    <p>
+      The URL to the weather station. If no URL is specified, the <span
+        class="config_option">station_url</span> from the <span
+        class="code">[Station]</span> section will be used.
+    </p>
 
     <h2 class="config_section">[StdReport]</h2>
     <p>This section is for configuring the <span class="code">StdReport</span> service, 
@@ -986,9 +1359,8 @@ longitude = -77.0366</pre>
     <p>Set to the password you use for your FTP connection to your web server. Required. 
       No default. </p>
     <p class="config_important">server </p>
-    <p>Set to the name of your web server (<em>e.g.</em>,
-      <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required. 
-      No default </p>
+    <p>Set to the name of your web server (<em>e.g.</em>, <span class="code">www.threefools.org</span>, 
+    in my case). Required. No default </p>
     <p class="config_important">path </p>
     <p>Set to the path where the weather data will be stored on your webserver (<em>e.g.</em>, <span class="code">/weather</span>). 
       NB: some FTP servers require a leading slash (&#39;<span class="code">/</span>&#39;), 
@@ -1395,7 +1767,7 @@ Davis Vantage EEPROM settings:
 	  Because the command dumps <em>all</em> data, it may result in many 
 	  duplicate primary key errors. These can be ignored.</p>
 
-      <h2>Fine Offset</h2>
+    <h2>Fine Offset</h2>
     <p>The configuration utility <span class='code'>wee_config_fousb</span> is
       designed to diagnose and configure Fine Offset stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -1459,7 +1831,7 @@ Mutating actions will request confirmation before proceeding.</p>
                        version: 255
                      wind_coef: None
                      wind_mult: 0</pre>
-    <p><span class="highlight">Highlighted</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
+    <p><span class="highlight">Highlighted&nbsp;</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
 
     <h3>Calibrating the pressure sensor</h3>
     <p>The pressure sensor in Fine Offset stations measures absolute, or station pressure.  The sensor pressure may be off a bit when the station is at sea level, and almost certainly will be off when the station is above sea level.  Stations at sea level are typically off by 1 to 10 millibars, while stations above a few hundred meters may be off by hundreds of millibars.  When reporting weather data, <span class='code'>weewx</span> will calculate the equivalent sea level pressure, but the pressure sensor must be calibrated and an altitude must be specified.</p>
@@ -1491,11 +1863,7 @@ Pressure offset is now 1.247000</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-usb</pre>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
-    <h3>Operating modes</h3>
-    <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
-    </p>
-    <p>There are two modes for collecting 'live' sensor readings, adaptive or periodic, and two modes for obtaining archive records, hardware or software.
-    </p>
+    <h3>Polling Interval</h3>
     <p>When reading 'live' data, <span class='code'>weewx</span> can read as fast as possible, or at a user-defined period.  This is controlled by the <span class='code'>polling_mode</span> parameter.
     </p>
     <table class='indent'>
@@ -1527,45 +1895,206 @@ Pressure offset is now 1.247000</p>
         </td>
       </tr>
     </table>
+
+    <h3>Archive Record Generation</h3>
+    <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
+    </p>
     <p>To obtain archive records, <span class='code'>weewx</span> can read archive records from the station console, or calculate archive records independent of the station memory.  This is controlled by the <span class='code'>record_generation</span> parameter.
     </p>
-    <table class='indent'>
-      <tr>
-        <td width='15%'>Mode</td>
-        <td width='30%'><span class='code'>weewx.conf</span></td>
-        <td>Notes</td>
-      </tr>
-      <tr>
-        <td>Read from archive</td>
-        <td>
-          <p class='tty' style='margin:0'>[StdArchive]
-    archive_interval = 300
-    record_generation = hardware</p>
-        </td>
-        <td>
-          <p>In this mode, archive records are read from the console archive.  Each console archive record is an average of live samples over the logging interval, so each record in the weewx archive database will be an average of station sensor readings.
-          </p>
-          <p>The <span class='code'>archive_interval</span> should match the logging interval specified in the console. Use <span class='code'>wee_config_fousb</span> to set the console logging interval.
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td>Calculate from sensors</td>
-        <td>
-          <p class='tty' style='margin:0'>[StdArchive]
-    archive_interval = 300
-    record_generation = software</p>
-        </td>
-        <td>
-          <p>In this mode, <span class='code'>weewx</span> calculates archive records based on the live data from the console.  The <span class='code'>archive_interval</span> determines how often an archive record will be calculated.
-          </p>
-        </td>
-      </tr>
-    </table>
-    <p>The <span class='code'>archive_interval</span> should always be greater than the <span class='code'>polling_interval</span>.  300 (5 minutes) is a typical value for the archive interval.
+    <p>The <span class='code'>archive_interval</span> should always be greater than the <span class='code'>polling_interval</span>. If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
     </p>
-    <p>If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
+
+    <h3>Station Characteristics</h3>
+    <ul>
+      <li>The 10xx and 20xx stations can save up to 4080 historical readings.
+        That is about 85 days of data with the default recording interval of
+        30 minutes, or about 14 days with a recording interval of 5 minutes.
+      </li>
+      <li>The 30xx stations can save up to 3264 historical readings.</li>
+      <li>The station reads data from the sensors every 48 seconds.</li>
+      <li>The 30xx stations read UV data every 60 seconds.</li>
+    </ul>
+
+
+
+    <h2>La Crosse WS23xx</h2>
+    <p>The configuration utility <span class='code'>wee_config_ws23xx</span> is
+      designed to diagnose and configure WS23xx stations.</p>
+    <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --help </pre>
+    <p>This will print out something like:</p>
+    <pre class='tty'>Usage: wee_config_ws23xx [config_file] [options] [--debug]
+
+Configuration utility for WS-23xx weather stations.
+
+Options:
+  -h, --help         show this help message and exit
+  --config=FILE      configuration file
+  --info             display weather station configuration
+  --current          get the current weather conditions
+  --history-since=N  display history records since N minutes ago
+  --history=N        display N history records
+  --set-time         set the station clock to the current time
+  --set-interval=N   set the station archive interval to N minutes
+  --clear-memory     clear station memory
+  -y                 answer yes to every prompt
+  --debug            display diagnostic information while running
+
+Mutating actions will request confirmation before proceeding.</pre>
+    <p>Display the station settings with the <span class='code'>--info</span>
+      option.</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --info </pre>
+    <p>This will result in something like this:</p>
+    <pre class='tty'>Driver version 0.6
+Querying the station for the configuration...
+buzzer: 0
+connection time till connect: 1.5
+connection type: 15
+dew point: 8.88
+dew point max: 18.26
+dew point max alarm: 20.0
+dew point max alarm active: 0
+dew point max alarm set: 0
+dew point max when: 978565200.0
+dew point min: -2.88
+dew point min alarm: 0.0
+dew point min alarm active: 0
+dew point min alarm set: 0
+dew point min when: 978757260.0
+forecast: 0
+history interval: 5.0
+history last record pointer: 8.0
+history last sample when: 1385564760.0
+history number of records: 175.0
+history time till sample: 5.0
+icon alarm active: 0
+in humidity: 48.0
+...</pre>
+
+    <h3>Dumping the console memory</h3>
+    <p>La Crosse 23xx stations store records in a circular buffer - once the
+      buffer fills, the oldest records are replaced by newer records.  The
+      console stores up to 175 records.
+      The <span class='code'>history number of records</span> indicates how
+      many records are in memory.  The
+      <span class='code'>history interval</span> indicates the number of
+      minutes between records.</p>
+    <p>For example, to display the latest 30 records from the console memory:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --history=30</pre>
+    <p>To clear the console memory:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --clear-memory</pre>
+
+    <h3>Archive Record Generation</h3>
+    <p>When <span class='code'>weewx</span> starts up it will attempt to
+      download all records from the console since the last record in the
+      archive database.
     </p>
+    <p>To obtain archive records, <span class='code'>weewx</span> can read
+      archive records from the station console, or calculate archive records
+      independent of the station memory.  This is controlled by the
+      <span class='code'>record_generation</span> parameter.
+    </p>
+
+    <h3>Station Characteristics</h3>
+    <ul>
+      <li>The station does not record wind gust or wind gust direction.</li>
+      <li>The station has 175 history records.  That is just over 7 days
+        of data with the default history recording interval of 60 minutes, 
+        or about 14 hours with a recording interval of 5 minutes.</li>
+      <li>Changing the recording interval will clear the station memory.</li>
+      <li>The station calculates windchill and dewpoint.  The WS23xx driver
+        includes options to calculate windchill and dewpoint in weewx, since
+        the hardware algorithms may be antiquated.</li>
+      <li>The hardware interface is a serial port, but USB-serial converters
+        can be used with computers that have no serial port.  Beware that
+        not every type of USB-serial converter will work.  Converters based
+        on ATEN UC-232A chipset are known to work.</li>
+    </ul>
+
+
+    <h2>La Crosse WS28xx</h2>
+    <p>The configuration utility <span class='code'>wee_config_ws28xx</span> is
+      designed to diagnose and configure WS28xx stations.</p>
+    <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws28xx --help </pre>
+    <p>This will print out something like:</p>
+    <pre class='tty'>Usage: wee_config_ws28xx [config_file] [options] [--debug]
+
+Configuration utility for WS-28xx weather stations.
+
+Options:
+  -h, --help           show this help message and exit
+  --config=FILE        configuration file
+<span class='highlight'>  --check-transceiver</span>  check USB transceiver
+  --pair               pair the USB transceiver with a station console
+<span class='highlight'>  --info</span>               display weather station configuration
+<span class='highlight'>  --current</span>            get the current weather conditions
+  --history-since=N    display history records since N minutes ago
+  --history=N          display N history records
+  --format=FORMAT      format for history, one of raw, table, or dict
+  --maxtries=MAXTRIES  maximum number of retries, 0 indicates no max
+  --debug              display diagnostic information while running
+
+Mutating actions will request confirmation before proceeding.</pre>
+    <p>The WS28xx driver is still in active development; only the
+      <span class='highlight'>&nbsp;highlighted&nbsp;</span> options
+      are working.</p>
+
+    <h3>Pairing</h3>
+    <p>The console and transceiver must be paired.  Pairing ensures that your
+      transceiver is talking to your console, not your neighbor's console.
+      Pairing should only have to be done once.  You might have to pair again
+      after power cycling the console, for example when you replace the
+      batteries.</p>
+    <p>There are two ways to pair the console and the transceiver:</p>
+    <ol>
+      <li><strong>The WeeWX way.</strong>  With weewx running, press and hold
+        the [v] button on the console until you see 'PC' in the display.  If
+        the console pairs with the transceiver, 'PC' will go away within a
+        second or two.</li>
+      <li><strong>The HeavyWeather way.</strong>  Follow the pairing
+        instructions that came with the station.  You will have to run
+        HeavyWeather on a windows computer with the USB transceiver.  After
+        HeavyWeather indicates the devices are paired, put the USB transceiver
+        in your weewx computer and start weewx.  Do not power cycle the
+        station console or you will have to start over.</li>
+      </ol>
+
+    <p>If the console does not pair, you will see messages in the log such as
+      this:</p>
+    <pre class='tty'>ws28xx: RFComm: message from console contains unknown device ID (id=165a resp=80 req=6)</pre>
+    <p>Either approach to pairing may require multiple attempts.</p>
+
+    <h3>Synchronizing</h3>
+    <p>The transceiver and console must be synchronized in order to
+      communicate.  Synchronization will happen automatically at the top of
+      each hour, or you can force synchronization by pressing the [SET] button
+      momentarily.  Do not press and hold the [SET] button - that
+      modifies the console alarms.</p>
+    <p>When the transceiver and console are synchronized, you will see lots of
+      'ws28xx: RFComm' messages in the log when debug=1.  When the devices are
+      not synchronized, you will see messages like this about every 10
+      minutes:</p>
+      <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no contact with console</pre>
+    <p>If you see this, or if you see an extended gap in the weather data
+      in the weewx plots, press momentarily the [SET] button, or wait until
+      the top of the hour.</p>
+    <p>When the transceiver has not received new data for awhile, you will see
+      messages like this in the log:</p>
+    <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no new weather data</pre>
+    <p>If you see 'no new weather data' messages with the
+      'no contact with console' messages,
+      it simply means that the transceiver has not been able to synchronize
+      with the console.  If you see only the 'no new weather data' messages,
+      then the sensors are not communicating with the console, or the console
+      may be defective.</p>
+
+    <h3>Alarms</h3>
+    <p>Be sure to turn off all alarms in the console.  When an alarm goes off,
+      communication with the transceiver stops.  It is better to create alarms
+      in weewx, and the weewx alarms can do much more than the console alarms
+      anyway.</p>
+
 
     <h1 id="configuring_mysql">Configuring MySQL</h1>
     <p>This section applies only for those using MySQL.</p>
