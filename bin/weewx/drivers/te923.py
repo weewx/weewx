@@ -586,35 +586,22 @@ def decode_th(buf, i):
                (i, 0+offset, buf[0+offset], 1+offset, buf[1+offset],
                 2+offset, buf[2+offset]))
     if bcd2int(buf[0+offset] & 0x0f) > 9:
-        if DEBUG_DECODE > 1:
-            logdbg("TMP%d buffer 0 & 0x0f > 9" % i)
-        # FIXME: wview uses 0x0c || 0x0b instead of 0x06 || 0x0b
+        # FIXME: wview uses 0x0c || 0x0b instead of 0x06 || 0x0b for invalid
         if buf[0+offset] & 0x0f == 0x06 or buf[0+offset] & 0x0f == 0x0b:
-            if DEBUG_DECODE > 1:
-                logdbg("TMP%d buffer 0 & 0x0f = 0x0c or 0x0b" % i)
             data[tstate] = STATE_OUT_OF_RANGE
         else:
-            if DEBUG_DECODE > 1:
-                logdbg("TMP%d other error in buffer 0" % i)
             data[tstate] = STATE_INVALID
-    # FIXME: why does debug msg below not correspond to the bit comparison?
     if buf[1+offset] & 0x40 != 0x40 and i > 0:
-        if DEBUG_DECODE > 1:
-            logdbg("TMP%d buffer 1 bit 6 set" % i)
         data[tstate] = STATE_OUT_OF_RANGE
     # FIXME: what about missing link for temperature?
 
     if data[tstate] == STATE_OK:
         data[tlabel] = bcd2int(buf[0+offset]) / 10.0 \
             + bcd2int(buf[1+offset] & 0x0f) * 10.0
-        if DEBUG_DECODE > 1:
-            logdbg("TMP%d before is %0.2f" % (i, data[tlabel]))
         if buf[1+offset] & 0x20 == 0x20:
             data[tlabel] += 0.05
         if buf[1+offset] & 0x80 != 0x80:
             data[tlabel] *= -1
-        if DEBUG_DECODE > 1:
-            logdbg("TMP%d after is %0.2f" % (i, data[tlabel]))
     else:
         data[tlabel] = None
 
@@ -775,7 +762,7 @@ def decode_windchill(buf):
 def decode_status(buf):
     data = {}
     if DEBUG_DECODE:
-        logdbg("STT  BUFF[22]=%02x" % buf[22])
+        logdbg("STT  BUF[22]=%02x" % buf[22])
     if buf[22] & 0x0f == 0x0f:
         data['storm'] = None
         data['forecast'] = None
@@ -883,25 +870,23 @@ class Station(object):
         if ret != 8:
             raise BadRead('Unexpected response to data request: %s != 8' % ret)
 
+        time.sleep(0.1)  # te923tool is 0.3
+        start_ts = time.time()
         rbuf = []
-        time.sleep(0.3)
         try:
-            buf = self.handle.interruptRead(self.ENDPOINT_IN,
-                                            self.READ_LENGTH, timeout)
-            while buf:
-                nbytes = buf[0]
-                if DEBUG_READ:
-                    msg = 'raw: '
-                    msg += ' '.join(["%02x" % buf[x] for x in range(8)])
-                    logdbg(msg)
-                if nbytes > 7 or nbytes > len(buf)-1:
-                    raise BadRead("Bogus length during read: %d" % nbytes)
-                rbuf.extend(buf[1:1+nbytes])
-                time.sleep(0.15)
+            while time.time() - start_ts < 5:
                 buf = self.handle.interruptRead(self.ENDPOINT_IN,
                                                 self.READ_LENGTH, timeout)
+                if buf:
+                    nbytes = buf[0]
+                    if nbytes > 7 or nbytes > len(buf)-1:
+                        raise BadRead("Bogus length during read: %d" % nbytes)
+                    rbuf.extend(buf[1:1+nbytes])
+                else:
+                    break
+                time.sleep(0.009)  # te923tool is 0.15
         except usb.USBError, e:
-            logdbg(e)
+            logdbg('usb error while reading: %s' % e)
 
         if len(rbuf) < 34:
             raise BadRead("Not enough bytes: %d < 34" % len(rbuf))
@@ -918,18 +903,16 @@ class Station(object):
     def _read(self, addr, max_tries=100):
         if DEBUG_READ:
             logdbg("reading station at address 0x%06x" % addr)
-        cnt = 0
-        while cnt < max_tries:
-            cnt += 1
+        for cnt in range(max_tries):
             try:
                 buf = self._raw_read(addr)
                 if DEBUG_READ:
                     logdbg("BUF  " + ' '.join(["%02x" % x for x in buf]))
                 return buf
             except BadRead, e:
-                logdbg(e)
+                logdbg("Bad read (attempt %d of %d): %s" % (cnt+1,max_tries,e))
         else:
-            raise BadRead("No data after %d attempts to read" % cnt)
+            raise BadRead("No data after %d read attempts" % max_tries)
 
     def gen_blocks(self, count=None):
         """generator that returns consecutive blocks of station memory"""
