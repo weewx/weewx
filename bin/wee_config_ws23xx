@@ -82,6 +82,7 @@ def main():
     print 'Driver version %s' % weewx.drivers.ws23xx.DRIVER_VERSION
     altitude_m = weewx.drivers.ws23xx.getaltitudeM(config_dict)
     station = weewx.drivers.ws23xx.WS23xx(altitude=altitude_m,
+                                          config_dict=config_dict,
                                           **config_dict['WS23xx'])
 
     # Do what we need to do...
@@ -94,7 +95,7 @@ def main():
         history(station, ts=ts)
     elif options.settime:
         setclock(station, prompt)
-    elif options.interval:
+    elif options.interval is not None:
         setinterval(station, options.interval, prompt)
     elif options.clear:
         clearhistory(station, prompt)
@@ -116,7 +117,7 @@ def current(station):
         print packet
         break
 
-def history(station, ts=0, count=0):
+def history(station, ts=None, count=0):
     """Display the indicated number of records or records since timestamp"""
     print "Querying the station for historical records..."
     for i,r in enumerate(station.genArchiveRecords(since_ts=ts, count=count)):
@@ -147,6 +148,7 @@ def setclock(station, prompt):
             print "Set clock cancelled."
 
 def setinterval(station, interval, prompt):
+    print "Changing the interval will clear the station memory."
     v = station.getArchiveInterval()
     ans = None
     while ans not in ['y', 'n']:

@@ -220,6 +220,8 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.wxformulas
 
+DRIVER_VERSION = '1.4'
+
 def loader(config_dict, engine):
     altitude_m = getaltitudeM(config_dict)
     station = FineOffsetUSB(altitude=altitude_m,**config_dict['FineOffsetUSB'])
@@ -328,10 +330,8 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
             packet[k] = None
 
     # track the pointer used to obtain the data
-    if p.has_key('ptr'):
-        packet['ptr'] = int(p['ptr'])
-    if p.has_key('delay'):
-        packet['delay'] = int(p['delay'])
+    packet['ptr'] = int(p['ptr']) if p.has_key('ptr') else None
+    packet['delay'] = int(p['delay']) if p.has_key('delay') else None
 
     # station status is an integer
     if packet['status'] is not None:
@@ -359,18 +359,21 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     packet['altimeter'] = sp2ap(adjp, altitude)
 
     # calculate the rain increment from the rain total
-    # watch for spurious rain counter decrement.  if small decrement then it
-    # is a sensor glitch.  if decrement is significant, then it is a counter
-    # wraparound.
+    # watch for spurious rain counter decrement.  if decrement is significant
+    # then it is a counter wraparound.  a small decrement is either a sensor
+    # glitch or a read from a previous record.
     total = packet['rain']
     packet['rainTotal'] = packet['rain']
     if packet['rain'] is not None and last_rain is not None:
         if packet['rain'] < last_rain:
+            pstr = '0x%04x' % packet['ptr'] if packet['ptr'] is not None else 'None'
             if last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
-                loginf('ignoring spurious rain counter decrement: new: %s old: %s' % (packet['rain'], last_rain))
+                loginf('ignoring spurious rain counter decrement (%s): '
+                       'new: %s old: %s' % (pstr, packet['rain'], last_rain))
                 packet['rainTotal'] = last_rain
             else:
-                loginf('rain counter wraparound detected: new: %s old: %s' % (packet['rain'], last_rain))
+                loginf('rain counter wraparound detected (%s): '
+                       'new: %s old: %s' % (pstr, packet['rain'], last_rain))
                 total += rain_max * 0.3
     packet['rain'] = calculate_rain(total, last_rain)
 
@@ -381,13 +384,19 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     # report rainfall in log to diagnose rain counter issues
     if weewx.debug:
         if packet['rain'] is not None and packet['rain'] > 0:
-            logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' % (packet['rain'], packet['rainTotal'], last_rain))
+            logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
+                   (packet['rain'], packet['rainTotal'], last_rain))
         if packet['rainRate'] is not None and packet['rainRate'] > 0:
-            logdbg('calculated rainrate of %.2f cm/hr (%.2f cm in %d seconds)' % (packet['rainRate'], packet['rain'], int(ts - last_rain_ts)))
+            logdbg('calculated rainrate of %.2f cm/hr '
+                   '(%.2f cm in %d seconds)' % (packet['rainRate'],
+                                                packet['rain'],
+                                                int(ts - last_rain_ts)))
 
     # if the rain rate is bogus, ignore the rain and rainRate values
     if packet['rainRate'] is not None and packet['rainRate'] > max_rain_rate:
-        logerr('maximum rain rate exceeded: max: %.2f rate: %.2f cm/hr (%.2f cm in %d s)' % (max_rain_rate, packet['rainRate'], packet['rain'], int(ts - last_rain_ts)))
+        logerr('maximum rain rate exceeded: max: %.2f rate: %.2f cm/hr '
+               '(%.2f cm in %d s)' % (max_rain_rate, packet['rainRate'],
+                                      packet['rain'], int(ts - last_rain_ts)))
         packet['rain'] = None
         packet['rainRate'] = None
 
@@ -667,7 +676,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         [Optional. Default is 15 seconds]
         
         wait_before_retry: How long to wait after a failure before retrying.
-        [Optional. Default is 5 seconds]
+        [Optional. Default is 30 seconds]
 
         max_tries: How many times to try before giving up.
         [Optional. Default is 3]
@@ -701,7 +710,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.polling_interval  = int(stn_dict.get('polling_interval', 60))
         self.max_rain_rate     = int(stn_dict.get('max_rain_rate', 24))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
-        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 60.0))
+        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 30.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
         self.interface         = int(stn_dict.get('interface', 0))
         self.vendor_id         = int(stn_dict.get('vendor_id',  '0x1941'), 0)
@@ -738,8 +747,16 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self._magic_numbers = ['55aa']
         self._last_magic = None
 
+        # FIXME: get last_rain_arc and last_rain_ts_arc from database
+
+        loginf('driver version is %s' % DRIVER_VERSION)
+        loginf('polling mode is %s' % self.polling_mode)
+        if self.polling_mode.lower() == PERIODIC_POLLING.lower():
+            loginf('polling interval is %s' % self.polling_interval)
+        loginf('altitude is %s meters' % str(self.altitude))
+        loginf('pressure offset is %s' % str(self.pressure_offset))
+
         self.openPort()
-        self._setup()
 
     # Unfortunately there is no provision to obtain the model from the station
     # itself, so use what is specified from the configuration file.
@@ -796,14 +813,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                         return dev
         return None
 
-    # FIXME: get last_rain_arc and last_rain_ts_arc from database on startup
-    def _setup(self):
-        loginf('polling mode is %s' % self.polling_mode)
-        if self.polling_mode.lower() == PERIODIC_POLLING.lower():
-            loginf('polling interval is %s' % self.polling_interval)
-        loginf('altitude is %s meters' % str(self.altitude))
-        loginf('pressure offset is %s' % str(self.pressure_offset))
-
 # There is no point in using the station clock since it cannot be trusted and
 # since we cannot synchronize it with the computer clock.
 
@@ -852,6 +861,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
             data['interval'] = r['interval']
+            data['ptr'] = r['ptr']
             self._last_rain_arc = data['rainTotal']
             self._last_rain_ts_arc = ts
             logdbg('returning archive record %s' % ts)
@@ -872,6 +882,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         If we get USB read failures, retry until we get something valid.
         """
         nerr = 0
+        old_ptr = None
+        interval = self._archive_interval_minutes()
         while True:
             try:
                 if self.polling_mode.lower() == ADAPTIVE_POLLING.lower():
@@ -881,12 +893,20 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                         yield data
                 elif self.polling_mode.lower() == PERIODIC_POLLING.lower():
                     new_ptr = self.current_pos()
+                    if new_ptr < data_start:
+                        raise ObservationError('bad pointer: 0x%04x' % new_ptr)
                     block = self.get_raw_data(new_ptr, unbuffered=True)
                     if len(block) != reading_len[self.data_format]:
                         raise ObservationError('wrong block length: expected: %d actual: %d' % (reading_len[self.data_format], len(block)))
-                    nerr = 0
                     data = _decode(block, reading_format[self.data_format])
+                    delay = data.get('delay', None)
+                    if delay is None:
+                        raise ObservationError('no delay found in observation')
+                    if new_ptr != old_ptr and delay >= interval:
+                        raise ObservationError('ignoring suspected bogus data from 0x%04x (delay=%s interval=%s)' % (new_ptr, delay, interval))
+                    old_ptr = new_ptr
                     data['ptr'] = new_ptr
+                    nerr = 0
                     yield data
                     time.sleep(self.polling_interval)
                 else:

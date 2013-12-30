@@ -504,8 +504,10 @@ class Stats(SearchList):
     as $day.outTemp.max"""
 
     def get_extension(self, timespan, archivedb, statsdb):
-        heatbase = self.generator.skin_dict['Units']['DegreeDays'].get('heating_base')
-        coolbase = self.generator.skin_dict['Units']['DegreeDays'].get('heating_base')
+        units_dict = self.generator.skin_dict.get('Units', {})
+        dd_dict = units_dict.get('DegreeDays', {})
+        heatbase = dd_dict.get('heating_base', None)
+        coolbase = dd_dict.get('cooling_base', None)
         heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature") if heatbase else default_heatbase
         coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature") if coolbase else default_coolbase
 

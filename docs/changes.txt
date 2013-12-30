@@ -21,12 +21,27 @@ have any UV data.
 If software is specified for record_generation, do not try to use the stations
 archive interval.
 
+Fixed bug when reading cooling_base option.
+
+Default to sane behavior if skin does not define Labels.
+
 Fixed bug in setting of CheetahGenerator options.
 
 Fixed qsf and qpf summary values in forecast module.
 
+Fixed handling of empty sky cover fields in WU forecasts.
+
 Forecast module now considers the fctcode, condition, and wx fields for
 precipitation and obstructions to visibility.
+
+Added options to forecast module to help diagnose parsing failures and new
+forecast formats.
+
+Added retries when saving forecast to database and when reading from database.
+
+Fixes to the Fine Offset driver to eliminate spikes caused by reading from
+memory before the pointer had been updated (not the same thing as an unstable
+read).
 
 Added driver for LaCrosse 2300 series of weather stations.
 

@@ -57,7 +57,7 @@ SCRIPTNAME=/etc/init.d/$NAME
 # check using ps not the pid file.  pid file could be leftover.
 do_start()
 {
-    NPROC=`ps ax | grep $WEEWX_BIN | grep weewx.pid | wc -l`
+    NPROC=`ps ax | grep $WEEWX_BIN | grep $NAME.pid | wc -l`
     if [ $NPROC != 0 ]; then
 	return 1
     fi
@@ -105,7 +105,7 @@ case "$1" in
 	esac
 	;;
     status)
-        NPROC=`ps ax | grep $WEEWX_BIN | grep weewx.pid | wc -l`
+        NPROC=`ps ax | grep $WEEWX_BIN | grep $NAME.pid | wc -l`
         if [ $NPROC -gt 1 ]; then
             MSG="running multiple times"
 	elif [ $NPROC = 1 ]; then

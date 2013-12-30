@@ -2,93 +2,91 @@
 # $Id$
 # logwatch script to process weewx log files
 # Copyright 2013 Matthew Wall
-#
-# Revision History
-#  0.6 11nov13
-#   * record unstable reads on fousb
-#  0.5 01nov13
-#   * recognize more restful log output
-#  0.4 12oct13
-#   * recognize more fousb log output
-#   * recognize more ws28xx log output
-#   * track forecasting counts
-#  0.3 09oct13
-#   * match cheetahgenerator
-#   * match failed restful uploads
-#   * recognize forecast events
-#   * match weewx HUPs
-#   * recognize new driver startup diagnostics
-#   * recognize new weewx wxengine startup diagnostics
-#   * recognize ws28xx driver entries
-#  0.2 03jan13
-#   * better labels for counts
-#  0.1 01jan13
-#   * initial release
 
 # FIXME: break this into modules instead of a single, monolithic blob
 
 use strict;
 
+my %counts;
+my %errors;
+
+# keys for individual counts
 my $STARTUPS = 'wxengine: startups';
 my $HUP_RESTARTS = 'wxengine: restart from HUP';
+my $KBD_INTERRUPTS = 'wxengine: keyboard interrupts';
 my $ARCHIVE_RECORDS_ADDED = 'archive: records added';
 my $IMAGES_GENERATED = 'genimages: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
 my $FILES_COPIED = 'reportengine: files copied';
 my $RECORDS_PUBLISHED = 'restful: records published';
 my $RECORDS_SKIPPED = 'restful: records skipped';
+my $RECORDS_FAILED = 'restful: publish failed';
 my $FOUSB_UNSTABLE_READS = 'fousb: unstable reads';
 my $FOUSB_MAGIC_NUMBERS = 'fousb: unrecognised magic number';
+my $FOUSB_RAIN_COUNTER = 'fousb: rain counter decrement';
 my $FOUSB_LOST_LOG_SYNC = 'fousb: lost log sync';
 my $FOUSB_LOST_SYNC = 'fousb: lost sync';
 my $FOUSB_MISSED_DATA = 'fousb: missed data';
 my $FOUSB_STATION_SYNC = 'fousb: station sync';
+my $WS23XX_CONNECTION_CHANGE = 'ws23xx: connection change';
 my $FORECAST_RECORDS = 'forecast: records generated';
 my $FORECAST_PRUNINGS = 'forecast: prunings';
 my $FORECAST_DOWNLOADS = 'forecast: downloads';
-my %counts = (
-    $STARTUPS, 0,
-    $HUP_RESTARTS, 0,
-    $ARCHIVE_RECORDS_ADDED, 0,
-    $IMAGES_GENERATED, 0,
-    $FILES_GENERATED, 0,
-    $FILES_COPIED, 0,
-    $RECORDS_PUBLISHED, 0,
-    $RECORDS_SKIPPED, 0,
-    $FOUSB_UNSTABLE_READS, 0,
-    $FOUSB_MAGIC_NUMBERS, 0,
-    $FOUSB_LOST_LOG_SYNC, 0,
-    $FOUSB_LOST_SYNC, 0,
-    $FOUSB_MISSED_DATA, 0,
-    $FOUSB_STATION_SYNC, 0,
-    $FORECAST_RECORDS, 0,
-    $FORECAST_PRUNINGS, 0,
-    $FORECAST_DOWNLOADS, 0,
-);
-my $RECORDS_FAILED = 'restful: publish failed';
-my %errors;
+
+# any lines that do not match the patterns we define
 my @unmatched = ();
 
-# keep details of fine offset behavior to help debug the consoles
+# track upload errors to help diagnose network/server issues
+my @upload_errors = ();
+
+# keep details of ws23xx behavior
+my @conn_change = ();
+
+# keep details of fine offset behavior
 my @station_status = ();
 my @unstable_reads = ();
 my @magic_numbers = ();
+my @rain_counter = ();
+
+my %itemized = (
+    'upload failures', \@upload_errors,
+    'fousb station status', \@station_status,
+    'fousb unstable reads', \@unstable_reads,
+    'fousb magic numbers', \@magic_numbers,
+    'fousb rain counter', \@rain_counter,
+    'ws23xx connection changes', \@conn_change,
+    );
 
 while(defined($_ = <STDIN>)) {
     chomp;
-    if (/Archive: added archive record/) {
-        $counts{$ARCHIVE_RECORDS_ADDED} += 1;
-    } elsif (/genimages: Generated (\d+) images/) {
-        $counts{$IMAGES_GENERATED} += $1;
-    } elsif (/filegenerator: generated (\d+)/ ||
-             /cheetahgenerator: generated (\d+)/) {
-        $counts{$FILES_GENERATED} += $1;
-    } elsif (/wxengine: Starting up weewx version/) {
+    if (/wxengine: Starting up weewx version/) {
         $counts{$STARTUPS} += 1;
     } elsif (/wxengine: Received signal HUP/) {
         $counts{$HUP_RESTARTS} += 1;
+    } elsif (/wxengine: Keyboard interrupt/) {
+        $counts{$KBD_INTERRUPTS} += 1;
+    } elsif (/Archive: added archive record/) {
+        $counts{$ARCHIVE_RECORDS_ADDED} += 1;
+    } elsif (/genimages: Generated (\d+) images/) {
+        $counts{$IMAGES_GENERATED} += $1;
+    } elsif (/genimages: aggregate interval required for aggregate type/ ||
+             /genimages: line type \S+ skipped/) {
+        $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
+    } elsif (/filegenerator: generated (\d+)/ ||
+             /cheetahgenerator: generated (\d+)/) {
+        $counts{$FILES_GENERATED} += $1;
     } elsif (/reportengine: copied (\d+) files/) {
         $counts{$FILES_COPIED} += $1;
+    } elsif (/restful: Skipped record/) {
+        $counts{$RECORDS_SKIPPED} += 1;
+    } elsif (/restful: Published record/) {
+        $counts{$RECORDS_PUBLISHED} += 1;
+    } elsif (/restful: Unable to publish record/) {
+        my $key = $RECORDS_FAILED;
+        if (/restful: Unable to publish record \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d \S\S\S \(\d+\) to (\S+)/) {
+            $key .= ' to site ' . $1;
+        }
+        $errors{$key} = $errors{$key} ? $errors{$key} + 1 : 1;
     } elsif (/fousb: station status/) {
         push @station_status, $_;
     } elsif (/fousb: unstable read: blocks differ/) {
@@ -97,6 +95,9 @@ while(defined($_ = <STDIN>)) {
     } elsif (/fousb: unrecognised magic number/) {
         push @magic_numbers, $_;
         $counts{$FOUSB_MAGIC_NUMBERS} += 1;
+    } elsif (/fousb: rain counter decrement/) {
+        push @rain_counter, $_;
+        $counts{$FOUSB_RAIN_COUNTER} += 1;
     } elsif (/fousb: lost log sync/) {
         $counts{$FOUSB_LOST_LOG_SYNC} += 1;
     } elsif (/fousb: lost sync/) {
@@ -105,6 +106,9 @@ while(defined($_ = <STDIN>)) {
         $counts{$FOUSB_MISSED_DATA} += 1;
     } elsif (/fousb: synchronising to the weather station/) {
         $counts{$FOUSB_STATION_SYNC} += 1;
+    } elsif (/ws23xx: connection changed from/) {
+        push @conn_change, $_;
+        $counts{$WS23XX_CONNECTION_CHANGE} += 1;
     } elsif (/forecast: .* generated 1 forecast record/) {
         $counts{$FORECAST_RECORDS} += 1;
     } elsif (/forecast: .* got (\d+) forecast records/) {
@@ -113,23 +117,19 @@ while(defined($_ = <STDIN>)) {
         $counts{$FORECAST_PRUNINGS} += 1;
     } elsif (/forecast: .* downloading forecast/) {
         $counts{$FORECAST_DOWNLOADS} += 1;
-    } elsif (/restful: Skipped record/) {
-        $counts{$RECORDS_SKIPPED} += 1;
-    } elsif (/restful: Published record/) {
-        $counts{$RECORDS_PUBLISHED} += 1;
-    } elsif (/genimages: aggregate interval required for aggregate type/ ||
-             /genimages: line type \S+ skipped/) {
-        $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
-    } elsif (/restful: Unable to publish record/) {
-        my $key = $RECORDS_FAILED;
-        if (/restful: Unable to publish record \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d \S\S\S \(\d+\) to (\S+)/) {
-            $key .= ' to site ' . $1;
-        }
-        $errors{$key} = $errors{$key} ? $errors{$key} + 1 : 1;
-    } elsif (/reportengine: Running reports for latest time/ ||
+    } elsif (/awekas: Failed upload to AWEKAS/ ||
+             /cosm: Failed upload to COSM/ ||
+             /emoncms: Failed upload to EmonCMS/ ||
+             /owm: Failed upload to OpenWeatherMap/ ||
+             /seg: Failed upload to SmartEnergyGroups/ ||
+             /wbug: Failed upload to WeatherBug/) {
+        push @upload_errors, $_;
+    } elsif (/last message repeated/ ||
+             /reportengine: Running reports for latest time/ ||
              /reportengine: Found configuration file/ ||
              /reportengine: FTP upload not requested/ ||
              /reportengine: Running report / ||  # only when debug=1
+             /reportengine: rsync upload not requested/ ||
              /restful: station will register with/ ||
              /restful: Registration interval/ ||
              /\*\*\*\*  Registration interval/ ||
@@ -143,10 +143,10 @@ while(defined($_ = <STDIN>)) {
              /stats: Created schema for statistical database/ ||
              /stats: Schema exists with/ ||
              /\*\*\*\*  \'station\'/ ||
+             /\*\*\*\* required parameter \'\'station\'\'/ ||
              /\*\*\*\*  Waiting 60 seconds then retrying/ ||
              /wxengine: Station does not support reading the time/ ||
              /wxengine: Starting main packet loop/ ||
-             /wxengine: Keyboard interrupt/ ||
              /wxengine: Shut down StdReport thread/ ||
              /wxengine: Shut down StdRESTful thread/ ||
              /wxengine: Loading service/ ||
@@ -171,7 +171,9 @@ while(defined($_ = <STDIN>)) {
              /wxengine: pid file is / ||
              /wxengine: Use LOOP data in/ ||
              /wxengine: Received signal/ ||
+             /cheetahgenerator: Running / ||
              /cheetahgenerator: skip/ ||
+             /fousb: driver version is/ ||
              /fousb: found station on USB/ ||
              /fousb: altitude is/ ||
              /fousb: archive interval is/ ||
@@ -189,6 +191,7 @@ while(defined($_ = <STDIN>)) {
              /fousb: avoid/ ||
              /fousb: setting sensor clock/ ||
              /fousb: setting station clock/ ||
+             /fousb: estimated log time/ ||
              /fousb: returning archive record/ ||
              /fousb: packet timestamp/ ||
              /fousb: log timestamp/ ||
@@ -196,6 +199,7 @@ while(defined($_ = <STDIN>)) {
              /fousb: get \d+ records since/ ||
              /fousb: synchronised to/ ||
              /fousb: pressures:/ ||
+             /fousb: status / ||
              /ws28xx: MainThread: driver version is/ ||
              /ws28xx: MainThread: frequency is/ ||
              /ws28xx: MainThread: altitude is/ ||
@@ -260,6 +264,31 @@ while(defined($_ = <STDIN>)) {
              /ws28xx: RFComm: CHistoryDataSet.read/ ||
              /ws28xx: RFComm: testConfigChanged/ ||
              /ws28xx: RFComm: SetTime/ ||
+             /ws23xx: driver version is / ||
+             /ws23xx: polling interval is / ||
+             /ws23xx: station archive interval is / ||
+             /ws23xx: using computer clock with / ||
+             /ws23xx: using \d+ sec\S* polling interval/ ||
+             /ws23xx: windchill will be / ||
+             /ws23xx: dewpoint will be / ||
+             /ws23xx: pressure offset is / ||
+             /ws23xx: serial port is / ||
+             /ws23xx: downloading \d+ records from station/ ||
+             /ws23xx: count is \d+ to satisfy timestamp/ ||
+             /ws23xx: windchill: / ||
+             /ws23xx: dewpoint: / ||
+             /ws23xx: station clock is / ||
+             /te923: driver version is / ||
+             /te923: polling interval is / ||
+             /te923: windchill will be / ||
+             /te923: sensor map is / ||
+             /te923: battery map is / ||
+             /te923: Found device on USB/ ||
+             /owfs: driver version is / ||
+             /owfs: interface is / ||
+             /owfs: polling interval is / ||
+             /owfs: sensor map is / ||
+             /cmon: cpuinfo: / ||
              /forecast: .* starting thread/ ||
              /forecast: .* terminating thread/ ||
              /forecast: .* not yet time to do the forecast/ ||
@@ -268,18 +297,43 @@ while(defined($_ = <STDIN>)) {
              /forecast: .* tstr=/ ||
              /forecast: .* interval=\d+ max_age=/ ||
              /forecast: .* deleted forecasts/ ||
+             /forecast: .* saved \d+ forecast records/ ||
+             /forecast: ZambrettiThread: Zambretti: generating/ ||
+             /forecast: ZambrettiThread: Zambretti: pressure/ ||
+             /forecast: ZambrettiThread: Zambretti: code is/ ||
              /forecast: NWSThread: NWS: forecast matrix/ ||
              /forecast: XTideThread: XTide: tide matrix/ ||
              /forecast: XTideThread: XTide: generating tides/ ||
-             /emoncms: Failed upload attempt/ ||
-             /emoncms: Failed upload to EmonCMS/ ||
-             /\*\*\*\*  Failed upload to EmonCMS/ ||
-             /seg: Failed upload attempt/ ||
-             /seg: Failed upload to SmartEnergyGroups/ ||
-             /\*\*\*\*  Failed upload to SmartEnergyGroups/ ||
+             /awekas: Failed upload attempt/ ||
+             /awekas: code/ ||
+             /awekas: read/ ||
+             /awekas: url/ ||
+             /awekas: data/ ||
              /cosm: Failed upload attempt/ ||
-             /cosm: Failed upload to COSM/ ||
-             /\*\*\*\*  Failed upload to COSM/) {
+             /cosm: code/ ||
+             /cosm: read/ ||
+             /cosm: url/ ||
+             /cosm: data/ ||
+             /emoncms: Failed upload attempt/ ||
+             /emoncms: code/ ||
+             /emoncms: read/ ||
+             /emoncms: data/ ||
+             /emoncms: url/ ||
+             /owm: Failed upload attempt/ ||
+             /owm: code/ ||
+             /owm: read/ ||
+             /owm: url/ ||
+             /owm: data/ ||
+             /seg: Failed upload attempt/ ||
+             /seg: code/ ||
+             /seg: read/ ||
+             /seg: url/ ||
+             /seg: data/ ||
+             /wbug: Failed upload attempt/ ||
+             /wbug: code/ ||
+             /wbug: read/ ||
+             /wbug: url/ ||
+             /wbug: data/) {
         # ignore
     } elsif (! /weewx/) {
         # ignore
@@ -294,13 +348,13 @@ foreach my $k (sort keys %counts) {
     printf("  %-40s %6d\n", $k, $counts{$k});
 }
 
-report("fousb station status", \@station_status) if $#station_status >= 0;
-report("fousb unstable reads", \@unstable_reads) if $#unstable_reads >= 0;
-report("fousb magic numbers", \@magic_numbers) if $#magic_numbers >= 0;
-
 print "\nerrors:\n";
 foreach my $k (keys %errors) {
-    printf("  %3d   %s\n", $errors{$k}, $k);
+    printf("  %-40s %6d\n", $k, $errors{$k});
+}
+
+foreach my $k (sort keys %itemized) {
+    report($k, $itemized{$k}) if scalar @{$itemized{$k}} > 0;
 }
 
 report("unmatched lines", \@unmatched) if $#unmatched >= 0;

@@ -5,10 +5,12 @@
   compress
   delaycompress
   notifempty
-  create 644 root adm
+#  create 644 root adm
+  create 644 syslog adm
   sharedscripts
   postrotate
-    /etc/init.d/rsyslog stop
-    /etc/init.d/rsyslog start
+    reload rsyslog > /dev/null 2>&1
+#    /etc/init.d/rsyslog stop
+#    /etc/init.d/rsyslog start
   endscript
 }
