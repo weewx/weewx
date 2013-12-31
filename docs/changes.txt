@@ -29,6 +29,9 @@ Added driver for LaCrosse 2300 series of weather stations.
 
 Added driver for Hideki TE923 series of weather stations.
 
+Added Vantage types stormRain and windSpeed10 to the list of observation
+types.
+
 
 2.5.0 10/29/13
 
