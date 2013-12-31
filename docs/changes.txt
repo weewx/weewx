@@ -15,11 +15,11 @@ Changed the default time and date labels to use locale dependent formatting.
 The defaults should now work in most locales, provided you set the
 environment variable LANG before running weewx.
 
+
+2.5.1 12/30/13
+
 Added UV plots to the templates. They will be shown automatically if you
 have any UV data.
-
-If software is specified for record_generation, do not try to use the stations
-archive interval.
 
 Fixed bug when reading cooling_base option.
 
