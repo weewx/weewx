@@ -1,10 +1,7 @@
 weewx change history
 --------------------
 
-X.X.X XX/XX/XX
-
-If software is specified for record_generation, do not try to use the
-station's archive interval.
+2.5.1 12/30/13
 
 Fixed bug when reading cooling_base option.
 
