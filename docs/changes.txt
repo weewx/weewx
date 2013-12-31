@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+X.X.X XX/XX/XX
+
+Added Vantage types stormRain and windSpeed10 to the list of observation
+types.
+
+
 2.5.1 12/30/13
 
 Fixed bug when reading cooling_base option.
@@ -28,9 +34,6 @@ read).
 Added driver for LaCrosse 2300 series of weather stations.
 
 Added driver for Hideki TE923 series of weather stations.
-
-Added Vantage types stormRain and windSpeed10 to the list of observation
-types.
 
 
 2.5.0 10/29/13
