@@ -3,14 +3,12 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__="2.6.0a3"
+__version__="2.6.0a4"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'

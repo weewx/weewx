@@ -7,7 +7,9 @@ weewx.conf
 bin/daemon.py
 bin/wee_config_database
 bin/wee_config_fousb
+bin/wee_config_te923
 bin/wee_config_vantage
+bin/wee_config_ws23xx
 bin/wee_config_ws28xx
 bin/wee_reports
 bin/weewxd
