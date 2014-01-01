@@ -1,8 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-
 <!-- $Id$ -->
-
 <head>
   <meta content="en-us" http-equiv="Content-Language" />
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
@@ -58,6 +56,31 @@ Version: 2.5.1
       2009.</p>
     <p><span class="code">weewx</span> is small, with under 10,000 lines of
       code, and well-documented, with over 6000 lines of comments.</p>
+
+    <p>
+      In the world of open-source hobbyist software, 
+      <span class="code"> weewx</span> is pretty easy to install and
+      configure. There are not many package dependencies, the
+      configuration is simple, and this guide includes extensive
+      instructions.
+      There are thousands of people who have successfully done an
+      install. However, there is no "point-and-click" interface, so
+      you have to do some manual configuring.
+    </p>
+    <p>You should have the following skills:</p>
+    <ul>
+      <li>The patience to read and follow this guide;</li>
+      <li>Willingness and ability to edit a configuration file;</li>
+      <li>Some familiarity with Linux or other Unix derivatives;</li>
+      <li>Ability to do simple Unix tasks such as changing file
+        permissions and running commands;</li>
+      <li>No programming experience is necessary unless you wish
+        to extend weewx. In this case, you should have some
+        familiarity with Python.</li>
+    </ul>
+    <p>If you get stuck, there is a very active <a href="https://groups.google.com/forum/#!forum/weewx-user">User's Group</a> to
+      help, but please at least try to solve the problem yourself before posting.
+    </p>
 
     <h1 id="hardware">Supported Hardware</h1>
     <p>
@@ -248,7 +271,7 @@ Version: 2.5.1
 	<td>Tested</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="4">Hideki</td>
+	<td class="text_highlight" rowspan="5">Hideki</td>
 	<td>DV928</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
@@ -257,6 +280,13 @@ Version: 2.5.1
       </tr>
       <tr>
 	<td>TE821</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE827</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>TE923<sup><a href='#te923'>8</a></sup></td>
@@ -368,8 +398,15 @@ Version: 2.5.1
 	<td></td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="7">Oregon Scientific</td>
+	<td class="text_highlight" rowspan="9">Oregon Scientific</td>
 	<td>WMR88</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>WMR100</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
@@ -384,6 +421,13 @@ Version: 2.5.1
       </tr>
       <tr>
 	<td>WMR180</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>WMRS200</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
@@ -537,8 +581,15 @@ Version: 2.5.1
 	<td>Tested</td>
       </tr>
       <tr>
-	<td class="text_highlight">Ventus</td>
+	<td class="text_highlight" rowspan="2">Ventus</td>
 	<td>W831</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>W928</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>TE923<sup><a href='#te923'>8</a></sup></td>
@@ -603,34 +654,6 @@ Version: 2.5.1
     <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work.</p>
 
     <h1 id="installing">Installing <span class="code">weewx</span></h1>
-
-    <h2>Required skills</h2>
-    <p>
-      In the world of open-source hobbyist software, 
-      <span class="code"> weewx</span> is pretty easy to install and
-      configure. There are not many package dependencies, the
-      configuration is simple, and this guide includes extensive
-      instructions.
-      There are thousands of people who have successfully done an
-      install. However, there is no "point-and-click" interface, so
-      you have to do some manual configuring.
-    </p>
-    <p>You should have the following skills:</p>
-    <ul>
-      <li>The patience to read and follow this guide;</li>
-      <li>Willingness and ability to edit a configuration file;</li>
-      <li>Some familiarity with Linux or other Unix derivatives;</li>
-      <li>Ability to do simple Unix tasks such as changing file
-        permissions and running commands;</li>
-      <li>No programming experience is necessary unless you wish
-        to extend weewx. In this case, you should have some
-        familiarity with Python.</li>
-    </ul>
-    <p>If you get stuck, there is a very active <a href="https://groups.google.com/forum/#!forum/weewx-user">User's Group</a> to
-      help, but please at least try to solve the problem yourself before posting.
-    </p>
-
-    <h2>Installation methods</h2>
     <p>
       <span class='code'>weewx</span> can be installed using the standard
       Python utility <span class='code'>setup.py</span> or it can be installed
@@ -830,17 +853,19 @@ Version: 2.5.1
 
     <br/>
     
-    <h3><a href='debian.htm'>Installing from DEB package</a></h3>
+    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
     <p>For Debian, Ubuntu, Mint operating systems, follow the instruction in 
       <a href='debian.htm'>Installation on Debian Linux systems</a>.</p>
-    <h3><a href='redhat.htm'>Installing from RPM package</a></h3>
+
+    <h2><a href='redhat.htm'>Installing from Redhat RPM package</a></h2>
     <p>For Redhat, CentOS, Fedora operating systems, follow the instructions in
-      <a href='redhat.htm'>Installation on Redhat Linux</a>.</p>
-    <p>For SuSE and OpenSUSE, follow the Redhat instructions, but use
-      SuSE tools such as zypper instead of Redhat tools such as yum.</p>
-    <p>There is one RPM for Redhat and a different RPM for SuSE; the Redhat
-      RPM will not work on SuSE operating systems.</p>
-    <h3><a href='setup.htm'>Installing using the Python tool setup.py</a></h3>
+      <a href='redhat.htm'>Installation on Redhat Linux systems</a>.</p>
+
+    <h2><a href='suse.htm'>Installing from SuSE RPM package</a></h2>
+    <p>For SuSE and OpenSUSE, follow the instructions in
+      <a href='suse.htm'>Installation on SuSE Linux systems</a>.</p>
+
+    <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
     <p>For all operating systems, follow the instructions in
       <a href='setup.htm'>Installation using
         <span class="code">setup.py</span></a>.</p>
@@ -1833,6 +1858,17 @@ Mutating actions will request confirmation before proceeding.</p>
                      wind_mult: 0</pre>
     <p><span class="highlight">Highlighted&nbsp;</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
 
+    <h3>Changing the archive interval</h3>
+    <p>Fine Offset stations ship from the factory with an archive interval
+      (read_period) of 30 minutes (1800 seconds).  The default archive interval
+      in <span class='code'>weewx</span>, specified in weewx.conf, is 300
+      seconds (5 minutes). To change the station's interval to 5 minutes, do
+      the following:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --set-interval=5</p>
+    <p><em>Choose your archiving interval carefully! </em>Once chosen, it
+      cannot be changed without messing up your statistics (highs and lows
+      will be OK, but averages and rms wind speed will be wrong). </p>
+
     <h3>Calibrating the pressure sensor</h3>
     <p>The pressure sensor in Fine Offset stations measures absolute, or station pressure.  The sensor pressure may be off a bit when the station is at sea level, and almost certainly will be off when the station is above sea level.  Stations at sea level are typically off by 1 to 10 millibars, while stations above a few hundred meters may be off by hundreds of millibars.  When reporting weather data, <span class='code'>weewx</span> will calculate the equivalent sea level pressure, but the pressure sensor must be calibrated and an altitude must be specified.</p>
     <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  If you do not know what the offset should be, use the <span class='code'>wee_config_fousb</span> 
@@ -1845,7 +1881,7 @@ Mutating actions will request confirmation before proceeding.</p>
 Pressure offset is None
 Set pressure offset to 1.247000 hPa (y/n)? y
 Pressure offset is now 1.247000</p>
-    <p>For those using Imperial units, to convert inHg to hPa (mbar), multiply by 33.86389</p>
+    <p>To convert inHg to hPa (mbar), multiply by 33.86389</p>
     <p><span class='code'>weewx</span> does not use the <i>relative pressure</i> in the Fine Offset console.</p>
     <p>To display sensor, relative, and calculated pressures:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-pressures</pre>
@@ -1971,8 +2007,19 @@ icon alarm active: 0
 in humidity: 48.0
 ...</pre>
 
+    <h3>Changing the archive interval</h3>
+    <p>WS23xx stations ship from the factory with an archive interval of 60
+      minutes (3600 seconds).  The default archive interval
+      in <span class='code'>weewx</span>, specified in weewx.conf, is 300
+      seconds (5 minutes). To change the station's interval to 5 minutes, do
+      the following:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --set-interval=5</p>
+    <p><em>Choose your archiving interval carefully! </em>Once chosen, it
+      cannot be changed without messing up your statistics (highs and lows
+      will be OK, but averages and rms wind speed will be wrong). </p>
+
     <h3>Dumping the console memory</h3>
-    <p>La Crosse 23xx stations store records in a circular buffer - once the
+    <p>WS23xx stations store records in a circular buffer - once the
       buffer fills, the oldest records are replaced by newer records.  The
       console stores up to 175 records.
       The <span class='code'>history number of records</span> indicates how
@@ -2621,22 +2668,47 @@ Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </p>
 [StdQC]
     [[MinMax]]
         barometer = 28, 32.5</pre>
-    <p>The problem is that you are requiring the barometer data to be between 28 
-      and 32.5, but with the unit system set to <span class="code">METRIC</span>, 
-      the data will be in the range 990 to 1050 or so!</p>
+    <p>The problem is that you are requiring the barometer data to be between
+      28 and 32.5, but with the unit system set to
+      <span class="code">METRIC</span>, the data will be in the range 990 to
+      1050 or so!</p>
+
     <h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
     <p>If you get errors of the sort: </p>
     <p class='tty'>Apr 12 05:12:32 raven reportengine[3074]: filegenerator: Caught exception &quot;&lt;class &#39;NameMapper.NotFound&#39;&gt;&quot; 
 Apr 12 05:12:32 raven reportengine[3074]:   ****  Message: &quot;cannot find &#39;fubar&#39; in template /home/weewx/skins/Standard/index.html.tmpl&quot;
 Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continuing.</p>
-    <p>you have a tag in your template that <span class="code">weewx</span> does 
-      not recognize (in this example, it is the tag <span class="code">$fubar</span> 
-      in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
+    <p>you have a tag in your template that <span class="code">weewx</span>
+      does not recognize.  In this example, it is the tag
+      <span class="code">$fubar</span> in the template
+      <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
     </p>
 
+    <h3 id='dots_in_plots'>Dots in the Plots</h3>
+    <p>If you see dots instead of lines in the daily plots, you might want to
+      adjust the station's archive interval or change the graphing options.
+      Check the log file for an entry like this soon after
+      <span class='code'>weewx</span> starts up:</p>
+    <p class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300) does not match the station hardware interval (1800).
+Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
+    <p>In this example, the station interval is 30 minutes, but the interval
+      in weewx.conf is 5 minutes.  When the interval in weewx.conf does not
+      match the station's hardware interval, weewx defers to the station's
+      interval.</p>
+    <p>The factory default for Fine Offset stations is 30 minutes.  The factory
+      default for LaCrosse WS23XX stations is 60 minutes. The default
+      archive_interval in weewx.conf is 300 seconds (5 minutes).</p>
+    <p>In a default configuration, a time period greater than 1% of the
+      displayed timespan is considered to be a gap in data.  So when the
+      interval is greater than about 10 minutes, the daily plots show dots
+      instead of connected points.  </p>
+    <p>Change the <span class='code'>line_gap_fraction</span> in skin.conf
+      to control how much time is considered a break in data.</p>
+    <p>Use the wee_config_XXX utility to change the station's interval.</p>
+
     <h3>FreeBSD</h3>
-    <p>User Fabian reports that the following had to be done to get the VantagePro2 
-      working under FreeBSD:</p>
+    <p>User Fabian reports that the following had to be done to get the
+      VantagePro2 working under FreeBSD:</p>
     <pre class="tty">I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
 Loading the Driver:
 Put uslcom_load=&quot;YES&quot; in /boot/loader.conf (to load it as module).
@@ -2647,7 +2719,8 @@ port = /dev/cuaU0</pre>
 
 
     <h1 id="architecture">Architectural Notes</h1>
-    <p>This section is not needed to get started. </p>
+    <p>This section is not required to get started, but it should help you
+      understand a bit more about how weewx works. </p>
     <h2>Goals</h2>
     <p>The primary design goals of <span class="code">weewx </span>are: </p>
     <ul>
@@ -2844,9 +2917,12 @@ port = /dev/cuaU0</pre>
     <p>In general, there are three different areas where the unit system makes a 
       difference.: </p>
     <ol>
-      <li>On the weather station. As far as I know, the Davis Vantage series supports 
-	only U.S. Customary units internally. The Oregon Scientific WMR-USB series 
-	uses an odd mix of US and metric.</li>
+      <li>On the weather station. As far as I know, the Davis Vantage series
+        supports only U.S. Customary units internally. The Oregon Scientific
+        stations use an odd mix of US and metric. The Fine Offset
+        stations are metric.  The LaCrosse stations are metric.  The
+        Hideki stations are a mix of US and metric.  One-wire devices
+        can be either US or metric.</li>
       <li>In the database. Either US or Metric can be used.</li>
       <li>In the presentation (i.e., html and image files). </li>
     </ol>

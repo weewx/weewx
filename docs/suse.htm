@@ -4,7 +4,7 @@
   <head>
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <title>Installation on Redhat Linux</title>
+    <title>Installation on SuSE Linux</title>
     <link href="weewx_docs.css" rel="stylesheet" />
     <style type="text/css">
 .os-icons {
@@ -20,14 +20,13 @@
     </style>
   </head>
   <body>
-    <h1 class="title">weewx: Installation on Redhat Linux</h1>
+    <h1 class="title">weewx: Installation on SuSE Linux</h1>
     <p class='os-icons'>      
-      <img class='logo' src='logo-redhat.png'/>
-      <img class='logo' src='logo-centos.png'/>
-      <img class='logo' src='logo-fedora.png'/>
+      <img class='logo' src='logo-suse.png'/>
+      <img class='logo' src='logo-opensuse.png'/>
     </p>
     <p>
-      This is a guide to install <span class='code'>weewx</span> from RPM package on systems such as Redhat, CentOS or Fedora.  The installation will result in the following layout:
+      This is a guide to install <span class='code'>weewx</span> from RPM package on systems such as SuSE or OpenSUSE.  The installation will result in the following layout:
     </p>
     <table class='locations'>
       <tr>
@@ -65,12 +64,11 @@
     <p>
       Install pre-requisites:
     </p>
-    <p class='tty'>sudo yum install python-configobj
-      sudo yum install python-cheetah
-      sudo yum install python-imaging
-      sudo yum install python-setuptools
-      sudo easy_install pyserial
-      sudo easy_install pyusb
+    <p class='tty'>sudo zypper install python-configobj
+      sudo zypper install python-cheetah
+      sudo zypper install python-imaging
+      sudo zypper install python-serial
+      sudo zypper install python-usb
     </p>
     <p>
       Install by double-clicking the .rpm file, or via command line:
