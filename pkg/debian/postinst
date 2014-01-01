@@ -119,7 +119,7 @@ configure)
         #python -m compileall /usr/share/weewx
 
         # configure for system startup
-        update-rc.d weewx defaults > /dev/null
+        update-rc.d weewx defaults 98 > /dev/null
 
         # start the weewx daemon
         invoke-rc.d weewx start
