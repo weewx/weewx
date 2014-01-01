@@ -2625,13 +2625,37 @@ Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 
 	  be the one to figure it out?!</p>
 	
     <h2>Software problems</h2>
+
+    <h3>Nothing in the log file</h3>
+    <p>The location of the system's log output and the type of information
+      that are emitted is controlled by the system's
+      <span class='code'>syslog</span> or <span class='code'>rsyslog</span>
+      configuration.
+    </p>
+    <p>As described in the <a href='#monitoring'>monitoring</a> section, the
+      status from <span class='code'>weewx</span> typically this ends up in a
+      file called /var/log/syslog, but this varies from one system to another.
+      Also, some systems default to saving only warning or critical
+      information, so the 'info' messages from weewx will not appear.</p>
+    <p>Messages from <span class='code'>weewx</span> should look something
+      like this:</p>
+    <p class='tty'>-DATE- --TIME-- HOST weewx[-PID-]: LOG_MESSAGE
+
+Jan  1 09:46:32 saga weewx[15292]: wxengine: Initializing weewx version 2.5.1
+Jan  1 09:46:32 saga weewx[15292]: wxengine: Using Python 2.6.6 (r266:84292, Dec 27 2010, 21:57:32) #012[GCC 4.4.5 20100902 (prerelease)]
+Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</p>
+    <p>If these do not show up in your system's log, check the syslog
+      configuration.  On Debian systems, look in /etc/rsyslog.conf.  On Redhat
+      systems, look in /etc/syslog.conf.</p>
+
     <h3><span class="code">configobj</span> errors</h3>
-    <p>These are errors in the configuration file. Two are very common. Incidentally, 
-      these errors are far easier to diagnose when <span class="code">weewx</span> 
-      is run from the command line. </p>
+    <p>These are errors in the configuration file. Two are very common.
+      Incidentally, these errors are far easier to diagnose when
+      <span class="code">weewx</span> is run from the command line. </p>
     <h4><span class="code">configobj.DuplicateError</span> exception</h4>
-    <p>This error is caused by using an identifier more than once in the configuration 
-      file. For example, you may have inadvertently listed your FTP server twice:
+    <p>This error is caused by using an identifier more than once in the
+      configuration file. For example, you may have inadvertently listed
+      your FTP server twice:
     </p>
     <p class='tty'>[Reports]
     [[FTP]]
@@ -2642,8 +2666,8 @@ Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 
         server = ftp.myhost.com  # OOPS! Listed it twice!
         path = /weather
         ... </p>
-    <p>Generally, if you encounter this error, the log file will give you the line 
-      number it happened in: </p>
+    <p>Generally, if you encounter this error, the log file will give you the
+      line number it happened in: </p>
     <p class='tty'>Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
 Apr 24 12:09:15 raven weewx[11480]: wxengine: Unable to initialize main loop:
 Apr 24 12:09:15 raven weewx[11480]:     ****  Duplicate keyword name at line 254.
