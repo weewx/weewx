@@ -48,6 +48,11 @@ my @unstable_reads = ();
 my @magic_numbers = ();
 my @rain_counter = ();
 
+my $clocksum = 0;
+my $clockmin = 0;
+my $clockmax = 0;
+my $clockcount = 0;
+
 my %itemized = (
     'upload failures', \@upload_errors,
     'fousb station status', \@station_status,
@@ -65,6 +70,11 @@ while(defined($_ = <STDIN>)) {
         $counts{$HUP_RESTARTS} += 1;
     } elsif (/wxengine: Keyboard interrupt/) {
         $counts{$KBD_INTERRUPTS} += 1;
+    } elsif (/wxengine: Clock error is ([0-9,.-]+)/) {
+        $clocksum += $1;
+        $clockmin = $1 if $1 < $clockmin;
+        $clockmax = $1 if $1 > $clockmax;
+        $clockcount += 1;
     } elsif (/Archive: added archive record/) {
         $counts{$ARCHIVE_RECORDS_ADDED} += 1;
     } elsif (/genimages: Generated (\d+) images/) {
@@ -340,6 +350,13 @@ while(defined($_ = <STDIN>)) {
     } else {
         push @unmatched, $_;
     }
+}
+
+if($clockcount > 0) {
+    my $clockskew = $clocksum / $clockcount;
+    print "average station clock skew: $clockskew\n";
+    print "  min: $clockmin max: $clockmax samples: $clockcount\n";
+    print "\n";
 }
 
 print "counts:\n";
