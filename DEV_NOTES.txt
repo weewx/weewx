@@ -29,12 +29,57 @@ checklist for doing a release:
 15. Run a backup on condor
 16. Run Microsoft Expression Web on the PC.
      1. Copy all the new docs to the weewx web folder, subdirectory docs.
-     2. Add to the "What's New" section on the front page.
+     2. Add to the news page.
      3. Upload everything to the web server.
 17. Announce the release to the weewx user's group.
 
 
 
+release process by command: ---------------------------------------------------
+
+# on any host, do a fresh checkout, set the version and update changelogs
+svn checkout https://.../trunk weewx
+vi bin/weewx/__init__.py
+make version
+make deb-changelog
+make rpm-changelog
+vi docs/changes.txt        # as needed
+vi docs/upgrading.htm      # as needed
+svn commit -m "release x.y.z"
+
+# generate the readme then upload it to development_versions
+make readme upload-readme
+
+# on debian host, build src and deb, upload to development_versions
+rm -rf build dist
+make src-package deb-package upload-src deb-package
+
+# on redhat host, build the redhat rpm package, upload to development_versions
+rm -rf build dist
+make rpm-package upload-rpm
+
+# on suse host, build the suse rpm package, upload to development_versions
+rm -rf build dist
+make rpm-package upload-rpm
+
+# do final install test with each package on a virgin system
+# do final upgrade test with each package
+
+# tag the release
+svn copy https://.../trunk https://.../tags/vX.Y.Z
+
+# upload the docs
+svn checkout https://.../website website
+make upload-docs
+
+# at sourceforge, move the new files into position
+mv development_versions/weewx-x.y.z* .
+mv development_versions/README.txt .
+
+
+
+
+notes -------------------------------------------------------------------------
 
 create README.txt for sourceforge:
   make readme
