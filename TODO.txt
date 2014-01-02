@@ -6,11 +6,7 @@ updated by rpm and deb.  either move it into bin/weewx or modify setup.py
 to explicitly update forecast.py
 
 Sign the rpm and deb packages?
-
-Add section to userguide about how to eliminate dots by changing station
-archive interval.  Useful for fine offset and ws23xx stations since they
-default to 30 and 60 minute intervals, respectively.
-
+N
 Include the following uploaders in 2.6?:
  - emoncms (emoncms.org)
  - seg (smart energy groups)

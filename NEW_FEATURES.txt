@@ -40,39 +40,7 @@ Consider breaking the rule that reporting can only be done through the
 databases and, instead, offer up the last record when the reporting thread
 starts.
 
-A QC "Spike" detector.  Possible options include:
-
-option 1: maximum delta relative to previous value.  if the difference between
-candidate value x1 and previous value x0 is greater than d, reject the
-candidate value and use None instead.  if there are no previous points
-(e.g. at first sensor sampling during initial startup), then the delta
-qc is not applied.  the configuration would look something like this:
-
-[StdQC]
-    ...
-    [[Delta]]
-        outTemp = 10 # temperature change over 10 F will be replaced with None
-        pressure = 0.2 # pressure change over 0.2 inHg will be replaced with None
-
-option 2: maximum percentage change over previous N values.  if the delta
-between the candidate value and the average of the N previous samples is
-greater than some value (measured as a percentage), reject the candidate
-value and use None instead.
-
-[StdQC]
-    ...
-    [[PercentChange]]
-        number_of_samples = 3 # use 3 samples for calculations
-        outTemp = 2 # change greater than 2% will be replaced by None
-        pressure = 1 # pressure change greater than 1% will be replaced by None
-
-Option 3: max outlier delta. The idea here is that a jump in value is allowed
-  (maybe a front went through?), but not a jump up, then down.
-
-[StdQC]
-  [[MaxOutlier]]
-    outTemp = 0.5
-    barometer = 0.2
+A QC "Spike" detector.
 
 Harden up the MySQL database connection.
 
