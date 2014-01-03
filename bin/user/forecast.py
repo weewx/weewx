@@ -2,8 +2,6 @@
 # Copyright 2013 Matthew Wall
 """weewx module that provides forecasts
 
-API_VERSION: 2
-
 Compatibility:
 
    US National Weather Service (NWS) point forecasts as of July 2013
@@ -453,6 +451,8 @@ except Exception, e:
         except Exception, e:
             json = None
 
+VERSION = 2
+
 def logmsg(level, msg):
     syslog.syslog(level, 'forecast: %s: %s' % 
                   (threading.currentThread().getName(), msg))
@@ -898,7 +898,7 @@ class Forecast(StdService):
 
     @staticmethod
     def get_last_forecast_ts(archive, table, method_id):
-        sql = "select dateTime,issued_ts from %s where method = '%s' and dateTime = (select dateTime from %s where method = '%s' order by dateTime desc limit 1) limit 1" % (table, method_id, table, method_id)
+        sql = "select dateTime,issued_ts from %s where method = '%s' and dateTime = (select max(dateTime) from %s where method = '%s') limit 1" % (table, method_id, table, method_id)
         r = archive.getSql(sql)
         if r is None:
             return None
@@ -2124,50 +2124,9 @@ class XTideForecast(Forecast):
         return records
 
     def generate_tide(self, sts=None, ets=None):
-        '''Generate tide information from the indicated period.  If no start
-        and end time are specified, start with the start of the day of the 
-        current time and end at twice the interval.'''
-        if sts is None:
-            sts = weeutil.weeutil.startOfDay(int(time.time()))
-        if ets is None:
-            ets = sts + 2 * self.interval
-        st = time.strftime('%Y-%m-%d %H:%M', time.localtime(sts))
-        et = time.strftime('%Y-%m-%d %H:%M', time.localtime(ets))
-        cmd = "%s %s -l'%s' -b'%s' -e'%s'" % (
-            self.tideprog, self.tideargs, self.location, st, et)
-        try:
-            loginf('%s: generating tides for %s days' %
-                   (XT_KEY, self.interval / (24*3600)))
-            logdbg("%s: running command '%s'" % (XT_KEY, cmd))
-            p = subprocess.Popen(cmd, shell=True,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-            rc = p.returncode
-            if rc is not None:
-                logerr('%s: generate tide failed: code=%s' % (XT_KEY, -rc))
-                return None
-            out = []
-            for line in p.stdout:
-                if string.find(line, self.location) >= 0:
-                    out.append(line)
-            if out:
-                return out
-            err = []
-            for line in p.stderr:
-                line = string.rstrip(line)
-                err.append(line)
-            errmsg = ' '.join(err)
-            idx = errmsg.find('XTide Error:')
-            if idx >= 0:
-                errmsg = errmsg[idx:]
-            idx = errmsg.find('XTide Fatal Error:')
-            if idx >= 0:
-                errmsg = errmsg[idx:]
-            logerr('%s: generate tide failed: %s' % (XT_KEY, errmsg))
-            return None
-        except OSError, e:
-            logerr('%s: generate tide failed: %s' % (XT_KEY, e))
-        return None
+        return XTideGenerateForecast(self.location,
+                                     sts=sts, ets=ets, interval=self.interval,
+                                     prog=self.tideprog, args=self.tideargs)
 
     def parse_forecast(self, lines, now=None):
         '''Convert the text output into an array of records.'''
@@ -2200,6 +2159,54 @@ class XTideForecast(Forecast):
                 records.append(record)
         return records
 
+def XTideGenerateForecast(location,
+                          sts=None, ets=None, interval=None,
+                          prog=XT_PROG, args=XT_ARGS):
+    '''Generate tide information from the indicated period.  If no start
+    and end time are specified, start with the start of the day of the 
+    current time and end at twice the interval.'''
+    if interval is None:
+        interval = 1209600
+    if sts is None:
+        sts = weeutil.weeutil.startOfDay(int(time.time()))
+    if ets is None:
+        ets = sts + 2 * interval
+    st = time.strftime('%Y-%m-%d %H:%M', time.localtime(sts))
+    et = time.strftime('%Y-%m-%d %H:%M', time.localtime(ets))
+    cmd = "%s %s -l'%s' -b'%s' -e'%s'" % (prog, args, location, st, et)
+    try:
+        loginf('%s: generating tides for %s days' %
+               (XT_KEY, interval / (24*3600)))
+        logdbg("%s: running command '%s'" % (XT_KEY, cmd))
+        p = subprocess.Popen(cmd, shell=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        rc = p.returncode
+        if rc is not None:
+            logerr('%s: generate tide failed: code=%s' % (XT_KEY, -rc))
+            return None
+        out = []
+        for line in p.stdout:
+            if string.find(line, location) >= 0:
+                out.append(line)
+        if out:
+            return out
+        err = []
+        for line in p.stderr:
+            line = string.rstrip(line)
+            err.append(line)
+        errmsg = ' '.join(err)
+        idx = errmsg.find('XTide Error:')
+        if idx >= 0:
+            errmsg = errmsg[idx:]
+        idx = errmsg.find('XTide Fatal Error:')
+        if idx >= 0:
+            errmsg = errmsg[idx:]
+        logerr('%s: generate tide failed: %s' % (XT_KEY, errmsg))
+        return None
+    except OSError, e:
+        logerr('%s: generate tide failed: %s' % (XT_KEY, e))
+    return None
 
 
 # -----------------------------------------------------------------------------
@@ -2447,7 +2454,7 @@ class ForecastVariables(SearchList):
         return {'forecast': self}
 
     def _getTides(self, context, from_ts=int(time.time()), max_events=1):
-        sql = "select dateTime,issued_ts,event_ts,hilo,offset,usUnits,location from %s where method = 'XTide' and dateTime = (select dateTime from %s where method = 'XTide' order by dateTime desc limit 1) and event_ts >= %d order by dateTime asc" % (self.table, self.table, from_ts)
+        sql = "select dateTime,issued_ts,event_ts,hilo,offset,usUnits,location from %s where method = 'XTide' and dateTime = (select max(dateTime) from %s where method = 'XTide') and event_ts >= %d order by dateTime asc" % (self.table, self.table, from_ts)
         if max_events is not None:
             sql += ' limit %d' % max_events
         for count in range(self.db_max_tries):
@@ -2455,14 +2462,14 @@ class ForecastVariables(SearchList):
                 records = []
                 for rec in self.database.genSql(sql):
                     r = {}
-                    r['dateTime'] = self._create_value(context,
+                    r['dateTime'] = self._create_value(context, 'dateTime',
                                                        rec[0], 'group_time')
-                    r['issued_ts'] = self._create_value(context,
+                    r['issued_ts'] = self._create_value(context, 'issued_ts',
                                                         rec[1], 'group_time')
-                    r['event_ts'] = self._create_value(context,
+                    r['event_ts'] = self._create_value(context, 'event_ts',
                                                        rec[2], 'group_time')
                     r['hilo'] = rec[3]
-                    r['offset'] = self._create_value(context,
+                    r['offset'] = self._create_value(context, 'offset',
                                                      rec[4], 'group_altitude',
                                                      unit_system=rec[5])
                     r['location'] = rec[6]
@@ -2481,7 +2488,7 @@ class ForecastVariables(SearchList):
         indicated period of time, limiting to max_events records'''
         # NB: this query assumes that forecasting is deterministic, i.e., two
         # queries to a single forecast will always return the same results.
-        sql = "select * from %s where method = '%s' and event_ts >= %d and event_ts <= %d and dateTime = (select dateTime from %s where method = '%s' order by dateTime desc limit 1) order by event_ts asc" % (self.table, fid, from_ts, to_ts, self.table, fid)
+        sql = "select * from %s where method = '%s' and event_ts >= %d and event_ts <= %d and dateTime = (select max(dateTime) from %s where method = '%s') order by event_ts asc" % (self.table, fid, from_ts, to_ts, self.table, fid)
         if max_events is not None:
             sql += ' limit %d' % max_events
         for count in range(self.db_max_tries):
@@ -2502,8 +2509,8 @@ class ForecastVariables(SearchList):
                 time.sleep(self.db_retry_wait)
         return []
 
-    def _create_value(self, context, value_str, group,
-                      units=None, unit_system=weewx.US):
+    def _create_value(self, context, label, value_str, group,
+                      fid='', units=None, unit_system=weewx.US):
         '''create a value with units from the specified string'''
         v = None
         if value_str is not None:
@@ -2513,7 +2520,8 @@ class ForecastVariables(SearchList):
                 else:
                     v = float(value_str)
             except Exception, e:
-                logerr("cannot create value from '%s': %s" % (value_str,e))
+                logerr("cannot create value for %s from '%s' (%s:%s): %s" %
+                       (label, value_str, fid, context, e))
         if units is None:
             units = DEFAULT_UNITS[unit_system][group]
         vt = weewx.units.ValueTuple(v, units, group)
@@ -2558,7 +2566,8 @@ class ForecastVariables(SearchList):
             try:
                 record = self.database.getSql(sql)
                 if record is not None:
-                    th = self._create_value('zambretti', record[0], 'group_time')
+                    th = self._create_value('zambretti', 'dateTime',
+                                            record[0], 'group_time')
                     code = record[1]
                     text = self.labels['Zambretti'].get(code, code)
                     return { 'dateTime' : th, 'issued_ts' : th,
@@ -2599,8 +2608,8 @@ class ForecastVariables(SearchList):
             r['qsf'],r['qsfMin'],r['qsfMax'] = _parse_precip_qty(r['qsf'])
             for f in PERIOD_FIELDS_WITH_UNITS:
                 r[f] = self._create_value('weather_periods',
-                                          r[f], UNIT_GROUPS[f],
-                                          unit_system=r['usUnits'])
+                                          f, r[f], UNIT_GROUPS[f],
+                                          fid=fid, unit_system=r['usUnits'])
             r['precip'] = {}
             for p in precip_types:
                 v = r.get(p, None)
@@ -2716,8 +2725,8 @@ class ForecastVariables(SearchList):
 
         for f in SUMMARY_FIELDS_WITH_UNITS:
             rec[f] = self._create_value('weather_summary',
-                                        rec[f], UNIT_GROUPS[f],
-                                        unit_system=rec['usUnits'])
+                                        f, rec[f], UNIT_GROUPS[f],
+                                        fid=fid, unit_system=rec['usUnits'])
         rec['clouds']   = _create_from_histogram(outlook_histogram)
         rec['windDir']  = _create_from_histogram(rec['windDirs'])
         rec['windChar'] = _create_from_histogram(rec['windChars'])
@@ -2732,3 +2741,62 @@ class ForecastVariables(SearchList):
                                      self.altitude,
                                      moon_phases=self.moon_phases,
                                      formatter=self.formatter)
+
+
+# simple interface for manual downloads and diagnostics
+#
+# cd /home/weewx
+# PYTHONPATH=bin python bin/user/forecast.py --help
+# PYTHONPATH=bin python bin/user/forecast.py --fid=nws --foid=box --lid=maz014
+# PYTHONPATH=bin python bin/user/forecast.py --fid=wu --api-key=X --loc=02139
+# PYTHONPATH=bin python bin/user/forecast.py --fid=xtide --loc=Boston
+
+usage = """%prog [options] [--help] [--debug]"""
+
+def main():
+    import optparse
+    syslog.openlog('wee_forecast', syslog.LOG_PID | syslog.LOG_CONS)
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='display the version')
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      help='display diagnostic information while running')
+    parser.add_option("--fid", dest="fid", type=str, metavar="FID",
+                      help="specify the forecast ID, e.g., NWS or WU")
+    parser.add_option("--foid", dest="foid", type=str, metavar="FOID",
+                      help="specify the forecast office ID, e.g., BOX")
+    parser.add_option("--lid", dest="lid", type=str, metavar="LID",
+                      help="specify the location ID, e.g., MAZ014")
+    parser.add_option("--loc", dest="location", type=str, metavar="LOC",
+                      help="specify the location")
+    parser.add_option("--api-key", dest="api_key", type=str, metavar="KEY",
+                      help="specify the WU api key")
+    (options, args) = parser.parse_args()
+
+    if options.version:
+        print "forecast version %s" % VERSION
+        exit(1)
+
+    if options.debug:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    else:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
+    if options.fid:
+        if options.fid.lower() == 'nws':
+            fcast = NWSDownloadForecast(options.foid)
+            lines = NWSExtractLocation(fcast, options.lid)
+            for line in lines:
+                print line
+        elif options.fid.lower() == 'wu':
+            fcast = WUDownloadForecast(options.api_key, options.location)
+            print fcast
+        elif options.fid.lower() == 'xtide':
+            lines = XTideGenerateForecast(options.location)
+            for line in lines:
+                print line
+        else:
+            print 'unsupported forecast method %s' % options.fid
+
+if __name__=="__main__":
+    main()
