@@ -607,22 +607,22 @@ Version: 2.5.1
          connections. Both the &quot;Rev A&quot; (firmware dated before
          22 April 2002) and &quot;Rev B&quot; versions are supported.
       </li>
-      <li><a id="wmr100">Oregon Scientific WMR-100 series.</a> Tested on the
+      <li><a id="wmr100">Oregon Scientific WMR-100 stations.</a> Tested on the
         <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">Oregon Scientific WMR100N</a>.</li>
-      <li><a id="wmr200">Oregon Scientific WMR-200 series.</a>  Tested on the
+      <li><a id="wmr200">Oregon Scientific WMR-200 stations.</a>  Tested on the
         <a href="http://www.oregonscientificstore.com/Oregon-Scientific-WMR200-Bundle-Complete-Weather-Bundle.data">Oregon Scientific WMR200</a>.
 	  </li>
-      <li><a id="wmr9x8">Oregon Scientific WMR-918/968 series.</a> Tested on the
+      <li><a id="wmr9x8">Oregon Scientific WMR-9x8 stations.</a> Tested on the
         <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR968</a>.
       </li>
-      <li><a id="fousb">Fine Offset 10xx, 20xx, and 30xx series.</a>
+      <li><a id="fousb">Fine Offset 10xx, 20xx, and 30xx stations.</a>
         Tested on the
         <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>.
       </li>
-      <li><a id="ws23xx">La Crosse WS-23xx series.</a> Tested on the
+      <li><a id="ws23xx">La Crosse WS-23xx stations.</a> Tested on the
         <a href="http://lacrossetechnologies.com/2317/">La Crosse 2317</a>.
       </li>
-      <li><a id="ws28xx">La Crosse WS-28xx series.</a> Tested on the
+      <li><a id="ws28xx">La Crosse WS-28xx stations.</a> Tested on the
         <a href="http://lacrossetechnologies.com/2814/">La Crosse C86234</a>.
       </li>
       <li><a id="te923">Hideki Professional Weather Stations.</a> Tested on the
@@ -1868,10 +1868,8 @@ Mutating actions will request confirmation before proceeding.</p>
 
     <h3>Changing the archive interval</h3>
     <p>Fine Offset stations ship from the factory with an archive interval
-      (read_period) of 30 minutes (1800 seconds).  The default archive interval
-      in <span class='code'>weewx</span>, specified in <span class='code'>weewx.conf</span>, is 300
-      seconds (5 minutes). To change the station's interval to 5 minutes, do
-      the following:</p>
+      (read_period) of 30 minutes (1800 seconds).  To change the station's
+      interval to 5 minutes, do the following:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --set-interval=5</p>
     <p><em>Choose your archiving interval carefully! </em>Once chosen, it
       cannot be changed without messing up your statistics (highs and lows
@@ -1944,12 +1942,8 @@ Pressure offset is now 1.247000</p>
       </tr>
     </table>
 
-    <h3>Archive record generation</h3>
+    <h3>Catchup</h3>
     <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
-    </p>
-    <p>To obtain archive records, <span class='code'>weewx</span> can read archive records from the station console, or calculate archive records independent of the station memory.  This is controlled by the <span class='code'>record_generation</span> parameter.
-    </p>
-    <p>The <span class='code'>archive_interval</span> should always be greater than the <span class='code'>polling_interval</span>. If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
     </p>
 
     <h3>Station characteristics</h3>
@@ -1962,7 +1956,6 @@ Pressure offset is now 1.247000</p>
       <li>The station reads data from the sensors every 48 seconds.</li>
       <li>The 30xx stations read UV data every 60 seconds.</li>
     </ul>
-
 
 
     <h2 id="wee_config_ws23xx">La Crosse WS23xx</h2>
@@ -2021,10 +2014,8 @@ in humidity: 48.0
 
     <h3>Changing the archive interval</h3>
     <p>WS23xx stations ship from the factory with an archive interval of 60
-      minutes (3600 seconds).  The default archive interval
-      in <span class='code'>weewx</span>, specified in <span class="code">weewx.conf</span>, is 300
-      seconds (5 minutes). To change the station's interval to 5 minutes, do
-      the following:</p>
+      minutes (3600 seconds).  To change the station's interval to 5 minutes,
+      do the following:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --set-interval=5</p>
     <p><em>Choose your archiving interval carefully! </em>Once chosen, it
       cannot be changed without messing up your statistics (highs and lows
@@ -2043,15 +2034,10 @@ in humidity: 48.0
     <p>To clear the console memory:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --clear-memory</pre>
 
-    <h3>Archive record generation</h3>
+    <h3>Catchup</h3>
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.
-    </p>
-    <p>To obtain archive records, <span class='code'>weewx</span> can read
-      archive records from the station console, or calculate archive records
-      independent of the station memory.  This is controlled by the
-      <span class='code'>record_generation</span> parameter.
     </p>
 
     <h3>Station characteristics</h3>
@@ -2724,25 +2710,23 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
 
     <h3 id='dots_in_plots'>Dots in the plots</h3>
     <p>If you see dots instead of lines in the daily plots, you might want to
-      adjust the station's archive interval or change the graphing options.
-      Check the log file for an entry like this soon after
-      <span class='code'>weewx</span> starts up:</p>
-    <p class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300) does not match the station hardware interval (1800).
-Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
-    <p>In this example, the station interval is 30 minutes, but the interval
-      in <span class="code">weewx.conf</span> is 5 minutes.  When the interval in <span class="code">weewx.conf</span> does not
-      match the station's hardware interval, <span class="code">weewx</span> defers to the station's
-      interval.</p>
-    <p>The factory default for Fine Offset stations is 30 minutes.  The factory
-      default for LaCrosse WS23XX stations is 60 minutes. The default
-      <span class="code">archive_interval</span> in <span class="code">weewx.conf</span> is 300 seconds (5 minutes).</p>
+      change the graphing options or adjust the station's archive interval.
     <p>In a default configuration, a time period greater than 1% of the
       displayed timespan is considered to be a gap in data.  So when the
-      interval is greater than about 10 minutes, the daily plots show dots
-      instead of connected points.  </p>
+      interval between data points is greater than about 10 minutes, the
+      daily plots show dots instead of connected points.  </p>
     <p>Change the <a href="customizing.htm#line_gap_fraction"><span class='code'>line_gap_fraction</span></a> 
       option in <span class="code">skin.conf</span>
       to control how much time is considered a break in data.</p>
+    <p>As for the archive interval, check the log file for an entry like this
+      soon after <span class='code'>weewx</span> starts up:</p>
+    <p class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300) does not match the station hardware interval (1800).
+Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
+    <p>In this example, interval in <span class="code">weewx.conf</span> is 5
+      minutes, but the station interval is 30 minutes.  When the interval 
+      in <span class="code">weewx.conf</span> does not match the station's
+      hardware interval, <span class="code">weewx</span> defers to the
+      station's interval.</p>
     <p>Use the appropriate <a href="#configuring_hardware"><span class="code">wee_config_XXX</span></a> utility to change the station's interval.</p>
 
     <h3>FreeBSD</h3>
