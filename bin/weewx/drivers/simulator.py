@@ -95,6 +95,7 @@ class Simulator(weewx.abstractstation.AbstractStation):
         self.observations = {'outTemp'    : Observation(magnitude=20.0,  average= 50.0, period=24.0, phase_lag=14.0, start=start_ts),
                              'inTemp'     : Observation(magnitude=5.0,   average= 68.0, period=24.0, phase_lag=12.0, start=start_ts),
                              'barometer'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
+                             'pressure'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
                              'windSpeed'  : Observation(magnitude=10.0,  average=  5.0, period=48.0, phase_lag=24.0, start=start_ts),
                              'windDir'    : Observation(magnitude=360.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
                              'windGust'   : Observation(magnitude=12.0,  average=  6.0, period=48.0, phase_lag=24.0, start=start_ts),
@@ -135,6 +136,7 @@ class Simulator(weewx.abstractstation.AbstractStation):
                 _packet[obs_type] = self.observations[obs_type].value_at(avg_time)
 
             _packet['windchill'] = weewx.wxformulas.windchillF(_packet['outTemp'], _packet['windSpeed'])
+            _packet['dewpoint']  = weewx.wxformulas.dewpointF(_packet['outTemp'], _packet['outHumidity'])
             _packet['heatindex'] = weewx.wxformulas.heatindexF(_packet['outTemp'], _packet['outHumidity']) 
             yield _packet
 
