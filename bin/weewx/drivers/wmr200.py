@@ -1733,14 +1733,19 @@ class WMR200(weewx.abstractstation.AbstractStation):
                        % pkt.pkt_id)
                 yield pkt.packet_record()
 
-    def genArchiveRecords(self, since_ts = 0):
+    def XXXgenArchiveRecords(self, since_ts = 0):
         """A generator function to return archive packets from the wmr200.
         
         weewx api to return archive records.
         since_ts: A timestamp in database time. All data since but not 
         including this time will be returned.
         Pass in None for all data
-        
+       
+        NOTE: This API is disabled so that the weewx engine will default
+        to using sofware archive generation.  There may be a way
+        to use hardware generation if one plays with not poking the console
+        which would allow archive packets to be created.
+
         yields: a sequence of dictionary records containing the console 
         data."""
         logdbg('genArchive() phase getting archive packets since %s'
