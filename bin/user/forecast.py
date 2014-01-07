@@ -2141,20 +2141,22 @@ class XTideForecast(Forecast):
                 tt = time.strptime(s, '%Y.%m.%d %H:%M')
                 ts = time.mktime(tt)
                 ofields = string.split(fields[3], ' ')
+                if ofields[1] == 'ft':
+                    offset = ofields[0]
+                elif ofields[1] == 'm':
+                    vt = (float(ofields[0]), 'meter', 'group_altitude')
+                    offset = weewx.units.convertStd(vt, weewx.US)[0]
+                else:
+                    logerr("%s: unknown units '%s'" % (XT_KEY, ofields[1]))
+                    continue
                 record = {}
                 record['method'] = XT_KEY
-                if ofields[1] == 'ft':
-                    record['usUnits'] = weewx.US
-                elif ofields[1] == 'm':
-                    record['usUnits'] = weewx.METRIC
-                else:
-                    record['usUnits'] = None
-                    logerr("%s: unknown units '%s'" % (XT_KEY, ofields[1]))
+                record['usUnits'] = weewx.US
                 record['dateTime'] = int(now)
                 record['issued_ts'] = int(now)
                 record['event_ts'] = int(ts)
                 record['hilo'] = XT_HILO[fields[4]]
-                record['offset'] = ofields[0]
+                record['offset'] = offset
                 record['location'] = self.location
                 records.append(record)
         return records

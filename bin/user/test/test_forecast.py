@@ -16023,6 +16023,80 @@ $forecast.xtide(-1, from_ts=1377043837).dateTime
 ''')
 
 
+    def test_xtide_metric(self):
+        tdir = get_testdir('test_xtide')
+        rmtree(tdir)
+
+        config_dict = create_config(tdir, 'user.forecast.XTideForecast')
+        config_dict['Forecast']['XTide'] = {}
+        config_dict['Forecast']['XTide']['location'] = 'Bangor, Northern Ireland'
+
+        # create a simulator with which to test
+        e = wxengine.StdEngine(config_dict)
+        f = forecast.XTideForecast(e, config_dict)
+
+        # check a regular set of tides
+        st = '2013-08-20 12:00'
+        tt = time.strptime(st, '%Y-%m-%d %H:%M')
+        sts = time.mktime(tt)
+        et = '2013-08-22 12:00'
+        tt = time.strptime(et, '%Y-%m-%d %H:%M')
+        ets = time.mktime(tt)
+        lines = f.generate_tide(sts=sts, ets=ets)
+        if lines is None:
+            return
+
+        expect = '''Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.20,17:07,0.62 m,Low Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.20,19:56,,Moonrise
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.20,20:42,,Sunset
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.20,23:24,3.58 m,High Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,02:45,,Full Moon
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,05:45,0.27 m,Low Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,06:09,,Sunrise
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,06:47,,Moonset
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,11:53,3.34 m,High Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,17:52,0.55 m,Low Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,20:21,,Moonrise
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,20:40,,Sunset
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.22,00:09,3.65 m,High Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.22,06:11,,Sunrise
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.22,06:29,0.24 m,Low Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.22,08:10,,Moonset
+'''
+        self.assertEqual(''.join(lines), expect)
+
+        # verify that records are created properly
+        expect = [{'event_ts': 1377032820, 'dateTime': 1377043837,
+                   'location': 'Bangor, Northern Ireland',
+                   'hilo': 'L', 'offset': 2.0341207379999999,
+                   'issued_ts': 1377043837, 'method': 'XTide', 'usUnits': 1},
+                  {'event_ts': 1377055440, 'dateTime': 1377043837,
+                   'location': 'Bangor, Northern Ireland',
+                   'hilo': 'H', 'offset': 11.745406842000001,
+                   'issued_ts': 1377043837, 'method': 'XTide', 'usUnits': 1},
+                  {'event_ts': 1377078300, 'dateTime': 1377043837,
+                   'location': 'Bangor, Northern Ireland',
+                   'hilo': 'L', 'offset': 0.88582677300000012,
+                   'issued_ts': 1377043837, 'method': 'XTide', 'usUnits': 1},
+                  {'event_ts': 1377100380, 'dateTime': 1377043837,
+                   'location': 'Bangor, Northern Ireland',
+                   'hilo': 'H', 'offset': 10.958005266000001,
+                   'issued_ts': 1377043837, 'method': 'XTide', 'usUnits': 1},
+                  {'event_ts': 1377121920, 'dateTime': 1377043837,
+                   'location': 'Bangor, Northern Ireland',
+                   'hilo': 'L', 'offset': 1.8044619450000001,
+                   'issued_ts': 1377043837, 'method': 'XTide', 'usUnits': 1},
+                  {'event_ts': 1377144540, 'dateTime': 1377043837,
+                   'location': 'Bangor, Northern Ireland',
+                   'hilo': 'H', 'offset': 11.975065635,
+                   'issued_ts': 1377043837, 'method': 'XTide', 'usUnits': 1},
+                  {'event_ts': 1377167340, 'dateTime': 1377043837,
+                   'location': 'Bangor, Northern Ireland',
+                   'hilo': 'L', 'offset': 0.78740157600000005,
+                   'issued_ts': 1377043837, 'method': 'XTide', 'usUnits': 1}]
+        records = f.parse_forecast(lines, now=1377043837)
+        self.assertEqual(records, expect)
+
     # -------------------------------------------------------------------------
     # astronomy tests
     # -------------------------------------------------------------------------
