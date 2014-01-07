@@ -6,7 +6,11 @@ X.X.X XX/XX/XX
 Added Vantage types stormRain and windSpeed10 to the list of observation
 types.
 
+Simulator now generates types dewpoint and pressure.
+
 Fixed parsing of locations in the xtide forecast.
+
+Changed default QC barometric low from 28 to 26.
 
 
 2.5.1 12/30/13
