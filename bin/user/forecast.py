@@ -2203,12 +2203,17 @@ def XTideGenerateForecast(location,
                 loginf("%s: location mismatch: '%s' != '%s'" %
                        (XT_KEY, location, loc))
             return out
+        loginf("%s: got no tidal events" % XT_KEY)
 
-        # we got no recognizable output, so try to make sense of the error
+        # we got no recognizable output, so try to make sense of any errors
         err = []
+        preamble = True
         for line in p.stderr:
-            line = string.rstrip(line)
-            err.append(line)
+            if line.startswith('Indexing'):
+                preamble = False
+            if not line.startswith('Indexing') and not preamble:
+                line = string.rstrip(line)
+                err.append(line)
         errmsg = ' '.join(err)
         idx = errmsg.find('XTide Error:')
         if idx >= 0:
@@ -2216,7 +2221,9 @@ def XTideGenerateForecast(location,
         idx = errmsg.find('XTide Fatal Error:')
         if idx >= 0:
             errmsg = errmsg[idx:]
-        logerr('%s: generate tide failed: %s' % (XT_KEY, errmsg))
+        if len(errmsg):
+            logerr('%s: generate tide failed: %s' % (XT_KEY, errmsg))
+
         return None
     except OSError, e:
         logerr('%s: generate tide failed: %s' % (XT_KEY, e))
