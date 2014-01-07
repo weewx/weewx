@@ -15893,6 +15893,37 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
         records = f.parse_forecast(lines, now=1377043837)
         self.assertEqual(records, expect)
 
+    def test_xtide_nonfree(self):
+        tdir = get_testdir('test_xtide_nonfree')
+        rmtree(tdir)
+
+        st = '2013-08-20 12:00'
+        tt = time.strptime(st, '%Y-%m-%d %H:%M')
+        sts = time.mktime(tt)
+        et = '2013-08-22 12:00'
+        tt = time.strptime(et, '%Y-%m-%d %H:%M')
+        ets = time.mktime(tt)
+        lines = forecast.XTideGenerateForecast('Bangor, Northern Ireland',
+                                               sts=sts, ets=ets)
+        expect = '''Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.20,17:07,0.62 m,Low Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.20,19:56,,Moonrise
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.20,20:42,,Sunset
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.20,23:24,3.58 m,High Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,02:45,,Full Moon
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,05:45,0.27 m,Low Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,06:09,,Sunrise
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,06:47,,Moonset
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,11:53,3.34 m,High Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,17:52,0.55 m,Low Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,20:21,,Moonrise
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.21,20:40,,Sunset
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.22,00:09,3.65 m,High Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.22,06:11,,Sunrise
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.22,06:29,0.24 m,Low Tide
+Bangor| Northern Ireland - READ flaterco.com/pol.html,2013.08.22,08:10,,Moonset
+'''
+        self.assertEqual(''.join(lines), expect)
+
     def test_xtide_error_handling(self):
         tdir = get_testdir('test_xtide_error_handling')
         rmtree(tdir)

@@ -6,6 +6,8 @@ X.X.X XX/XX/XX
 Added Vantage types stormRain and windSpeed10 to the list of observation
 types.
 
+Fixed parsing of locations in the xtide forecast.
+
 
 2.5.1 12/30/13
 

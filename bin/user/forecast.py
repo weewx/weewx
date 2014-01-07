@@ -2183,14 +2183,28 @@ def XTideGenerateForecast(location,
                              stderr=subprocess.PIPE)
         rc = p.returncode
         if rc is not None:
-            logerr('%s: generate tide failed: code=%s' % (XT_KEY, -rc))
+            logerr("%s: generate tide failed: loc='%s' code=%s" %
+                   (XT_KEY, location, -rc))
             return None
+
+        # look for comma-delimited output.  we expect lines like this:
+        #   location,YYYY-MM-DD,HH:MM xM xxx,offset,description
+        # xtide replaces commas in the location with |
         out = []
         for line in p.stdout:
-            if string.find(line, location) >= 0:
+            if string.count(line, ',') == 4:
                 out.append(line)
         if out:
+            logdbg("%s: got %d lines of output" % (XT_KEY, len(out)))
+            fields = string.split(out[0], ',')
+            loc = string.replace(fields[0], '|', ',')
+            loc = string.replace(loc, ' - READ flaterco.com/pol.html', '')
+            if loc != location:
+                loginf("%s: location mismatch: '%s' != '%s'" %
+                       (XT_KEY, location, loc))
             return out
+
+        # we got no recognizable output, so try to make sense of the error
         err = []
         for line in p.stderr:
             line = string.rstrip(line)
