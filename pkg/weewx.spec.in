@@ -80,7 +80,6 @@ cp -r util/rsyslog.d %{buildroot}%{dst_cfg_dir}
 # copy the setup script so we can do config file merges if necessary
 cp weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
 cp setup.py %{buildroot}%{dst_bin_dir}
-cp merge_config.py %{buildroot}%{dst_bin_dir}
 
 # remove stuff that should not go out
 rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/butterfly.jpg
@@ -127,14 +126,14 @@ elif [ "$1" = "2" ]; then
   # this is an upgrade
   # merge changes to weewx.conf
   if [ -f %{cfg_file}.dist ]; then
-    NEWVER=`/usr/share/weewx/merge_config.py --version`
+    NEWVER=`/usr/share/weewx/setup.py --version`
     OLDVER=`grep version %{cfg_file} | sed -e 's/\s*version\s*=\s*//'`
     echo saving previous config file as %{cfg_file}-$OLDVER
     mv %{cfg_file} %{cfg_file}-$OLDVER
     echo saving distribution config file as %{cfg_file}-$NEWVER
     cp -p %{cfg_file}.dist %{cfg_file}-$NEWVER
     echo merging previous and distribution into %{cfg_file}
-    /usr/share/weewx/merge_config.py --install-dir / --a %{cfg_file}-$NEWVER --b %{cfg_file}-$OLDVER --c %{cfg_file}
+    /usr/share/weewx/setup.py --merge-config --install-dir / --a %{cfg_file}-$NEWVER --b %{cfg_file}-$OLDVER --c %{cfg_file}
   fi
   # do a full restart not just a HUP
   %{initdir}/weewx stop

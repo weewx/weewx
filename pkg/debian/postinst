@@ -19,7 +19,7 @@ set -e
 . /usr/share/debconf/confmodule
 
 cfgfile=/etc/weewx/weewx.conf
-mergeapp=/usr/share/weewx/merge_config.py
+mergeapp=/usr/share/weewx/setup.py
 
 # insert any configuration variables into the configuration file
 configure_weewxconf() {
@@ -86,7 +86,7 @@ merge_weewxconf() {
                 echo saving distribution config file as $cfgfile-$NEWVER
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
                 echo merging previous and distribution into $cfgfile
-                $mergeapp --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
+                $mergeapp --merge-config --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
             else
                 echo distribution config file is wrong version for merging
             fi
