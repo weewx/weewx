@@ -48,7 +48,6 @@ install: build
 # copy the setup script so we can do config file merges if necessary
 	cp $(SRC)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 	cp $(SRC)/setup.py $(DST_BINDIR)
-	cp $(SRC)/merge_config.py $(DST_BINDIR)
 
 # remove stuff that should not go out
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/butterfly.jpg

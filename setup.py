@@ -92,7 +92,7 @@ all_service_groups = ['prep_services', 'process_services', 'archive_services',
                       'restful_services', 'report_services']
 
 #==============================================================================
-# weewx_install_lib
+# install_lib
 #==============================================================================
 
 class weewx_install_lib(install_lib):
@@ -564,7 +564,67 @@ def get_version():
 #==============================================================================
 # setup
 #==============================================================================
+
+def printdict(d, indent=0):
+    for k in d.keys():
+        if type(d[k]) is configobj.Section:
+            for _i in range(indent):
+                print ' ',
+            print k
+            printdict(d[k], indent=indent+1)
+        else:
+            for _i in range(indent):
+                print ' ',
+            print k, '=', d[k]
+
+def do_merge():
+    import optparse
+    description = "merge weewx configuration file"
+    usage = "%prog --merge-config --install-dir dir --a file --b file --c file"
+    parser = optparse.OptionParser(description=description, usage=usage)
+    parser.add_option('--merge-config', dest='mc', action='store_true',
+                      help='merge configuration files')
+    parser.add_option('--install-dir', dest='idir', type=str,metavar='DIR',
+                      help='installation directory DIR')
+    parser.add_option('--a', dest='filea', type=str, metavar='FILE',
+                      help='first file FILE')
+    parser.add_option('--b', dest='fileb', type=str, metavar='FILE',
+                      help='second file FILE')
+    parser.add_option('--c', dest='filec', type=str, metavar='FILE',
+                      help='merged file FILE')
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      help='display contents of merged file to stdout')
+    (options, _args) = parser.parse_args()
+    errmsg = []
+    if options.idir is None:
+        errmsg.append('no installation directory specified')
+    if options.filea is None:
+        errmsg.append('no first filename specified')
+    if options.fileb is None:
+        errmsg.append('no second filename specified')
+    if options.filec is None:
+        errmsg.append('no merged filename specified')
+    if len(errmsg) > 0:
+        print '\n'.join(errmsg)
+        return 1
+    merged_cfg = merge_config_files(options.filea, options.fileb, options.idir)
+    if options.debug:
+        printdict(merged_cfg)
+    else:
+        tmpfile = tempfile.NamedTemporaryFile("w", 1)
+        merged_cfg.write(tmpfile)
+        if os.path.exists(options.filec):
+            _bup_cfg = save_path(options.filec)
+        shutil.copyfile(tmpfile.name, options.filec)
+    return 0
+
+
+#==============================================================================
+# main entry point
+#==============================================================================
 if __name__ == "__main__":
+    if '--erge-config' in sys.argv:
+        exit(do_merge())
 
     setup(name='weewx',
           version=VERSION,
