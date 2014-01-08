@@ -57,6 +57,31 @@ Version: 2.6.0a4
     <p><span class="code">weewx</span> is small, with under 10,000 lines of
       code, and well-documented, with over 6000 lines of comments.</p>
 
+    <p>
+      In the world of open-source hobbyist software, 
+      <span class="code">weewx</span> is pretty easy to install and
+      configure. There are not many package dependencies, the
+      configuration is simple, and this guide includes extensive
+      instructions.
+      There are thousands of people who have successfully done an
+      install. However, there is no "point-and-click" interface, so
+      you have to do some manual configuring.
+    </p>
+    <p>You should have the following skills:</p>
+    <ul>
+      <li>The patience to read and follow this guide;</li>
+      <li>Willingness and ability to edit a configuration file;</li>
+      <li>Some familiarity with Linux or other Unix derivatives;</li>
+      <li>Ability to do simple Unix tasks such as changing file
+        permissions and running commands;</li>
+      <li>No programming experience is necessary unless you wish
+        to extend <span class="code">weewx</span>. In this case, you should have some
+        familiarity with Python.</li>
+    </ul>
+    <p>If you get stuck, there is a very active <a href="https://groups.google.com/forum/#!forum/weewx-user">User's Group</a> to
+      help, but please at least try to solve the problem yourself before posting.
+    </p>
+
     <h1 id="hardware">Supported Hardware</h1>
     <p>
       Many types of station hardware are supported.  In addition to hardware support, <span class="code">weewx</span> 
@@ -246,7 +271,7 @@ Version: 2.6.0a4
 	<td>Tested</td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="4">Hideki</td>
+	<td class="text_highlight" rowspan="5">Hideki</td>
 	<td>DV928</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
@@ -255,6 +280,13 @@ Version: 2.6.0a4
       </tr>
       <tr>
 	<td>TE821</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>TE827</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>TE923<sup><a href='#te923'>8</a></sup></td>
@@ -366,8 +398,15 @@ Version: 2.6.0a4
 	<td></td>
       </tr>
       <tr>
-	<td class="text_highlight" rowspan="7">Oregon Scientific</td>
+	<td class="text_highlight" rowspan="9">Oregon Scientific</td>
 	<td>WMR88</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>WMR100</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
@@ -382,6 +421,13 @@ Version: 2.6.0a4
       </tr>
       <tr>
 	<td>WMR180</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
+	<td>WMRS200</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
@@ -535,8 +581,15 @@ Version: 2.6.0a4
 	<td>Tested</td>
       </tr>
       <tr>
-	<td class="text_highlight">Ventus</td>
+	<td class="text_highlight" rowspan="2">Ventus</td>
 	<td>W831</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>TE923<sup><a href='#te923'>8</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>W928</td>
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>TE923<sup><a href='#te923'>8</a></sup></td>
@@ -582,10 +635,10 @@ Version: 2.6.0a4
     <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
       Geode processor and 512 MB of memory. Configured this way, it
       consumes about 5% of the CPU and about 50MB of total memory. </p>
-    <p>On a Marvel 500MHz ARM CPU with 512MB RAM, weewx uses 63MB virtual and
+    <p>On a Marvel 500MHz ARM CPU with 512MB RAM, <span class="code">weewx</span> uses 63MB virtual and
       40MB real memory when configured to generate 3 different standard
       reports.  The CPU use is typically less than 0.5%, maxxing out at
-      90% for less than a minute every 5 minutes when weewx generates
+      90% for less than a minute every 5 minutes when <span class="code">weewx</span> generates
       reports.</p>
 
     <h2>Time</h2>
@@ -1315,18 +1368,18 @@ longitude = -77.0366</pre>
 
     <h3 class="config_section">[[StationRegistry]]</h3>
     <p>
-      A registry of weewx weather stations is maintained at <span class="code">weewx.com</span>.
+      A registry of <span class="code">weewx</span> weather stations is maintained at <span class="code">weewx.com</span>.
       Stations are displayed on a map and a list at <a
         href="http://weewx.com/stations.html">http://weewx.com/stations.html</a>
     </p>
     <p>How does the registry work? Individual weather stations
       periodically contact the registry. Each station provides a URL to
       identify itself, plus other information such as the station type
-      and weewx version. The registry does not keep track of
+      and <span class="code">weewx</span> version. The registry does not keep track of
       meteorological data; no information about the weather is sent to
       the registry.</p>
     <p>To add your station to this list, enable the StationRegistry
-      in weewx.conf. Your station will contact the registry once per
+      in <span class="code">weewx.conf</span>. Your station will contact the registry once per
       week. If your station does not contact the registry for about a
       month, it will be removed from the list.</p>
     <pre class="tty">[StdRestful]
@@ -1424,7 +1477,7 @@ longitude = -77.0366</pre>
       No default </p>
     <p class="config_important">user </p>
     <p>Set to the ssh username you use for your rsync connection to your web server. 
-      The local user that weewx runs as must have passwordless ssh configured for 
+      The local user that <span class="code">weewx</span> runs as must have passwordless ssh configured for 
       user@server. Required. No default. </p>
     <p class="config_important">path </p>
     <p>Set to the path where the weather data will be stored on your webserver (<em>e.g.</em>, <span class="code">/weather</span>). 
@@ -1689,7 +1742,15 @@ report_services  = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
       speed and memory use.</p>
 
     <h1 id="configuring_hardware">Configuring Station Hardware</h1>
-    <h2>Davis Vantage</h2>
+    <p>This section describes how to configure some of the more popular station hardware, using 
+      configuration utilities supplied with weewx. Directions follow for<p>
+    <ul>
+      <li><a href="#wee_config_vantage">Davis Vantage stations</a></li>
+      <li><a href="#wee_config_fousb">Fine Offset stations</a></li>
+      <li><a href="#wee_config_ws23xx">La Crosse WS23xx stations</a></li>
+      <li><a href="#wee_config_ws28xx">La Crosse WS28xx stations</a></li>
+    </ul>
+    <h2 id="wee_config_vantage">Davis Vantage</h2>
     <p>Weewx comes with a configuration utlity, <span class="code">wee_config_vantage</span>, 
       that can set many of the on-board EEPROM constants in the Davis Vantage stations, 
       such as its archive interval, altitude, rain bucket type, <em>etc.</em> </p>
@@ -1839,7 +1900,7 @@ Davis Vantage EEPROM settings:
 	  Because the command dumps <em>all</em> data, it may result in many 
 	  duplicate primary key errors. These can be ignored.</p>
 
-    <h2>Fine Offset</h2>
+    <h2 id="wee_config_fousb">Fine Offset</h2>
     <p>The configuration utility <span class='code'>wee_config_fousb</span> is
       designed to diagnose and configure Fine Offset stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -1905,8 +1966,23 @@ Mutating actions will request confirmation before proceeding.</p>
                      wind_mult: 0</pre>
     <p><span class="highlight">Highlighted&nbsp;</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
 
+    <h3>Changing the archive interval</h3>
+    <p>Fine Offset stations ship from the factory with an archive interval
+      (read_period) of 30 minutes (1800 seconds).  The default archive interval
+      in <span class='code'>weewx</span>, specified in <span class='code'>weewx.conf</span>, is 300
+      seconds (5 minutes). To change the station's interval to 5 minutes, do
+      the following:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --set-interval=5</p>
+    <p><em>Choose your archiving interval carefully! </em>Once chosen, it
+      cannot be changed without messing up your statistics (highs and lows
+      will be OK, but averages and rms wind speed will be wrong). </p>
+
     <h3>Calibrating the pressure sensor</h3>
-    <p>The pressure sensor in Fine Offset stations measures absolute, or station pressure.  The sensor pressure may be off a bit when the station is at sea level, and almost certainly will be off when the station is above sea level.  Stations at sea level are typically off by 1 to 10 millibars, while stations above a few hundred meters may be off by hundreds of millibars.  When reporting weather data, <span class='code'>weewx</span> will calculate the equivalent sea level pressure, but the pressure sensor must be calibrated and an altitude must be specified.</p>
+    <p>The pressure sensor in the Fine Offset stations measures absolute, or gauge pressure. 
+       The absolute pressure may be off a bit when the station is at sea level (1 to 10 millibars), 
+       but it will definitely be way off when the station is above sea level (as much as hundreds of millibars). 
+       <span class='code'>Weewx</span> will compensate for the effects of altitude, but to do so, 
+       it needs not only the altitude, but a calibrated station pressure.</p>
     <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  If you do not know what the offset should be, use the <span class='code'>wee_config_fousb</span> 
 	utility to calculate this offset given the station altitude and a valid 
 	sea-level pressure from a nearby known-correct station.</p>
@@ -1918,12 +1994,12 @@ Pressure offset is None
 Set pressure offset to 1.247000 hPa (y/n)? y
 Pressure offset is now 1.247000</p>
     <p>For those using Imperial units, to convert inHg to hPa (mbar), multiply by 33.86389</p>
-    <p><span class='code'>weewx</span> does not use the <i>relative pressure</i> in the Fine Offset console.</p>
     <p>To display sensor, relative, and calculated pressures:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-pressures</pre>
+    <p>Note that <span class='code'>weewx</span> does not use the <i>relative pressure</i> displayed on the Fine Offset console.</p>
 
     <h3>Dumping the console memory</h3>
-    <p>Fine Offset stations store records in a circular buffer - once the buffer fills, the oldest records are replaced by newer records.  The 1080 and 2080 consoles store up to 4080 records.  The 3080 consoles store up to 3264 records.  The <span class='code'>data_count</span> indicates how many records are in memory.  The <span class='code'>read_period</span> indicates the number of minutes between records.  <span class='code'>wee_config_fousb</span> can display these records in space-delimited, raw bytes, or dictionary format.</p>
+    <p>Fine Offset stations store records in a circular buffer &mdash; once the buffer fills, the oldest records are replaced by newer records.  The 1080 and 2080 consoles store up to 4080 records.  The 3080 consoles store up to 3264 records.  The <span class='code'>data_count</span> indicates how many records are in memory.  The <span class='code'>read_period</span> indicates the number of minutes between records.  <span class='code'>wee_config_fousb</span> can display these records in space-delimited, raw bytes, or dictionary format.</p>
     <p>For example, to display the most recent 30 records from the console memory:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --history=30</pre>
     <p>To clear the console memory:</p>
@@ -1935,7 +2011,7 @@ Pressure offset is now 1.247000</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-usb</pre>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
-    <h3>Polling Interval</h3>
+    <h3>Polling interval</h3>
     <p>When reading 'live' data, <span class='code'>weewx</span> can read as fast as possible, or at a user-defined period.  This is controlled by the <span class='code'>polling_mode</span> parameter.
     </p>
     <table class='indent'>
@@ -1968,7 +2044,7 @@ Pressure offset is now 1.247000</p>
       </tr>
     </table>
 
-    <h3>Archive Record Generation</h3>
+    <h3>Archive record generation</h3>
     <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
     </p>
     <p>To obtain archive records, <span class='code'>weewx</span> can read archive records from the station console, or calculate archive records independent of the station memory.  This is controlled by the <span class='code'>record_generation</span> parameter.
@@ -1976,7 +2052,7 @@ Pressure offset is now 1.247000</p>
     <p>The <span class='code'>archive_interval</span> should always be greater than the <span class='code'>polling_interval</span>. If the <span class='code'>polling_mode</span> is <span class='code'>PERIODIC</span> and the <span class='code'>polling_interval</span> is greater than the <span class='code'>archive_interval</span>, the archive records will be collected/calculated at every polling interval, not at every archive interval.
     </p>
 
-    <h3>Station Characteristics</h3>
+    <h3>Station characteristics</h3>
     <ul>
       <li>The 10xx and 20xx stations can save up to 4080 historical readings.
         That is about 85 days of data with the default recording interval of
@@ -1989,7 +2065,7 @@ Pressure offset is now 1.247000</p>
 
 
 
-    <h2>La Crosse WS23xx</h2>
+    <h2 id="wee_config_ws23xx">La Crosse WS23xx</h2>
     <p>The configuration utility <span class='code'>wee_config_ws23xx</span> is
       designed to diagnose and configure WS23xx stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -2043,6 +2119,17 @@ icon alarm active: 0
 in humidity: 48.0
 ...</pre>
 
+    <h3>Changing the archive interval</h3>
+    <p>WS23xx stations ship from the factory with an archive interval of 60
+      minutes (3600 seconds).  The default archive interval
+      in <span class='code'>weewx</span>, specified in <span class="code">weewx.conf</span>, is 300
+      seconds (5 minutes). To change the station's interval to 5 minutes, do
+      the following:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --set-interval=5</p>
+    <p><em>Choose your archiving interval carefully! </em>Once chosen, it
+      cannot be changed without messing up your statistics (highs and lows
+      will be OK, but averages and rms wind speed will be wrong). </p>
+
     <h3>Dumping the console memory</h3>
     <p>La Crosse 23xx stations store records in a circular buffer - once the
       buffer fills, the oldest records are replaced by newer records.  The
@@ -2056,7 +2143,7 @@ in humidity: 48.0
     <p>To clear the console memory:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --clear-memory</pre>
 
-    <h3>Archive Record Generation</h3>
+    <h3>Archive record generation</h3>
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.
@@ -2067,7 +2154,7 @@ in humidity: 48.0
       <span class='code'>record_generation</span> parameter.
     </p>
 
-    <h3>Station Characteristics</h3>
+    <h3>Station characteristics</h3>
     <ul>
       <li>The station does not record wind gust or wind gust direction.</li>
       <li>The station has 175 history records.  That is just over 7 days
@@ -2075,7 +2162,7 @@ in humidity: 48.0
         or about 14 hours with a recording interval of 5 minutes.</li>
       <li>Changing the recording interval will clear the station memory.</li>
       <li>The station calculates windchill and dewpoint.  The WS23xx driver
-        includes options to calculate windchill and dewpoint in weewx, since
+        includes options to calculate windchill and dewpoint in <span class="code">weewx</span>, since
         the hardware algorithms may be antiquated.</li>
       <li>The hardware interface is a serial port, but USB-serial converters
         can be used with computers that have no serial port.  Beware that
@@ -2084,7 +2171,7 @@ in humidity: 48.0
     </ul>
 
 
-    <h2>La Crosse WS28xx</h2>
+    <h2 id="wee_config_ws28xx">La Crosse WS28xx</h2>
     <p>The configuration utility <span class='code'>wee_config_ws28xx</span> is
       designed to diagnose and configure WS28xx stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -2120,7 +2207,7 @@ Mutating actions will request confirmation before proceeding.</pre>
       batteries.</p>
     <p>There are two ways to pair the console and the transceiver:</p>
     <ol>
-      <li><strong>The WeeWX way.</strong>  With weewx running, press and hold
+      <li><strong>The Weewx way.</strong>  With <span class="code">weewx</span> running, press and hold
         the [v] button on the console until you see 'PC' in the display.  If
         the console pairs with the transceiver, 'PC' will go away within a
         second or two.</li>
@@ -2128,7 +2215,7 @@ Mutating actions will request confirmation before proceeding.</pre>
         instructions that came with the station.  You will have to run
         HeavyWeather on a windows computer with the USB transceiver.  After
         HeavyWeather indicates the devices are paired, put the USB transceiver
-        in your weewx computer and start weewx.  Do not power cycle the
+        in your <span class="code">weewx</span> computer and start weewx.  Do not power cycle the
         station console or you will have to start over.</li>
       </ol>
 
@@ -2144,12 +2231,12 @@ Mutating actions will request confirmation before proceeding.</pre>
       momentarily.  Do not press and hold the [SET] button - that
       modifies the console alarms.</p>
     <p>When the transceiver and console are synchronized, you will see lots of
-      'ws28xx: RFComm' messages in the log when debug=1.  When the devices are
+      '<span class="code">ws28xx: RFComm</span>' messages in the log when <span class="code">debug=1</span>.  When the devices are
       not synchronized, you will see messages like this about every 10
       minutes:</p>
       <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no contact with console</pre>
     <p>If you see this, or if you see an extended gap in the weather data
-      in the weewx plots, press momentarily the [SET] button, or wait until
+      in the <span class="code">weewx</span> plots, press momentarily the [SET] button, or wait until
       the top of the hour.</p>
     <p>When the transceiver has not received new data for awhile, you will see
       messages like this in the log:</p>
@@ -2164,7 +2251,7 @@ Mutating actions will request confirmation before proceeding.</pre>
     <h3>Alarms</h3>
     <p>Be sure to turn off all alarms in the console.  When an alarm goes off,
       communication with the transceiver stops.  It is better to create alarms
-      in weewx, and the weewx alarms can do much more than the console alarms
+      in weewx, and the <span class="code">weewx</span> alarms can do much more than the console alarms
       anyway.</p>
 
 
@@ -2650,6 +2737,31 @@ Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 
 	  be the one to figure it out?!</p>
 	
     <h2>Software problems</h2>
+    
+    <p>This section covers some common software configuration problems.</p>
+
+    <h3>Nothing in the log file</h3>
+    <p>As it is running, <span class='code'>weewx</span> periodically sends
+      status information, failures, and other things to your system's logging
+      facility. They typically look something like this:</p>
+    <pre class='tty'>-DATE- --TIME-- HOST weewx[-PID-]: LOG_MESSAGE
+
+Jan  1 09:46:32 saga weewx[15292]: wxengine: Initializing weewx version 2.5.1
+Jan  1 09:46:32 saga weewx[15292]: wxengine: Using Python 2.6.6 (r266:84292, Dec 27 2010, 21:57:32) #012[GCC 4.4.5 20100902 (prerelease)]
+Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</pre>
+
+    <p>The location of this logging file varies from system to system,
+      but it is typically
+      in <span class="code">/var/log/syslog</span>, or something
+      similar.</p>
+    <p>However, some systems default to saving only warning or
+      critical information, so the '<span class="code">info</span>'
+      messages from <span class="code">weewx</span> may not appear.
+      If this happens to you, check your system logging configuration.
+      On Debian systems, look
+      in <span class="code">/etc/rsyslog.conf</span>.  On Redhat
+      systems, look in <span class="code">/etc/syslog.conf</span>.</p>
+
     <h3><span class="code">configobj</span> errors</h3>
     <p>These are errors in the configuration file. Two are very common. Incidentally, 
       these errors are far easier to diagnose when <span class="code">weewx</span> 
@@ -2706,6 +2818,29 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       in the template <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
     </p>
 
+    <h3 id='dots_in_plots'>Dots in the plots</h3>
+    <p>If you see dots instead of lines in the daily plots, you might want to
+      adjust the station's archive interval or change the graphing options.
+      Check the log file for an entry like this soon after
+      <span class='code'>weewx</span> starts up:</p>
+    <p class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300) does not match the station hardware interval (1800).
+Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
+    <p>In this example, the station interval is 30 minutes, but the interval
+      in <span class="code">weewx.conf</span> is 5 minutes.  When the interval in <span class="code">weewx.conf</span> does not
+      match the station's hardware interval, <span class="code">weewx</span> defers to the station's
+      interval.</p>
+    <p>The factory default for Fine Offset stations is 30 minutes.  The factory
+      default for LaCrosse WS23XX stations is 60 minutes. The default
+      <span class="code">archive_interval</span> in <span class="code">weewx.conf</span> is 300 seconds (5 minutes).</p>
+    <p>In a default configuration, a time period greater than 1% of the
+      displayed timespan is considered to be a gap in data.  So when the
+      interval is greater than about 10 minutes, the daily plots show dots
+      instead of connected points.  </p>
+    <p>Change the <a href="customizing.htm#line_gap_fraction"><span class='code'>line_gap_fraction</span></a> 
+      option in <span class="code">skin.conf</span>
+      to control how much time is considered a break in data.</p>
+    <p>Use the appropriate <a href="#configuring_hardware"><span class="code">wee_config_XXX</span></a> utility to change the station's interval.</p>
+
     <h3>FreeBSD</h3>
     <p>User Fabian reports that the following had to be done to get the VantagePro2 
       working under FreeBSD:</p>
@@ -2714,12 +2849,13 @@ Loading the Driver:
 Put uslcom_load=&quot;YES&quot; in /boot/loader.conf (to load it as module).
 Which gives here an output like:
 uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
-And put in weewx.conf:
+And put in <span class="code">weewx.conf</span>:
 port = /dev/cuaU0</pre>
 
 
     <h1 id="architecture">Architectural Notes</h1>
-    <p>This section is not needed to get started. </p>
+    <p>This section is not required to get started, but it should help you
+      understand a bit more about how <span class="code">weewx</span> works. </p>
     <h2>Goals</h2>
     <p>The primary design goals of <span class="code">weewx </span>are: </p>
     <ul>

@@ -180,6 +180,7 @@ div#toc ul {
   margin: 0px;
   padding: 4px 16px 4px 16px;
   float: left;
+  cursor: pointer;
 }
 .selected {
   color: black;
