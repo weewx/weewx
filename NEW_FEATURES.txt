@@ -6,6 +6,18 @@ one can simply put the generator_list in weewx.conf as part of the report
 definition.  A report with no skin.conf should run with sane defaults.
 Templates should also be "drop in." If they appear in the directory, they
 get used.
+
+Minor cleanup to the Standard skin:
+ - anything using wmr100 reports wmr100n as hardware type
+ - improve layout, possibly like http://www.kanonbra.com/veret/
+ - punt the buttons for week/month/year, use regular html links instead
+ - include a table instead of duplicating html code for stats
+ - make the info section easier to grok with a structured layout, perhaps
+    similar to weather display or cumulus default templates
+ - default to no radar image instead of oregon?
+
+Add hardware model as weewx.conf option for all drivers that cannot get the
+info from the hardware (everything other than vantage?)
                     
 The weewx service would support dependencies or, at least, be grouped into
 like services. This would make it easier to install new services by
