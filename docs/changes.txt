@@ -3,6 +3,8 @@ weewx change history
 
 X.X.X XX/XX/XX
 
+Consolidated pressure calculation code in ws23xx, ws28xx, te923, and fousb.
+
 Added Vantage types stormRain and windSpeed10 to the list of observation
 types.
 

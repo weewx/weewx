@@ -96,7 +96,8 @@ def main():
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
     print 'Using configuration file %s' % config_fn
 
-    altitude_m = weewx.drivers.fousb.getaltitudeM(config_dict)
+    print 'Driver version %s' % weewx.drivers.fousb.DRIVER_VERSION
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = weewx.drivers.fousb.FineOffsetUSB(altitude=altitude_m,
                                         **config_dict['FineOffsetUSB'])
 

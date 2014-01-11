@@ -77,7 +77,7 @@ def main():
 
     # Create a station instance
     print 'Driver version %s' % weewx.drivers.te923.DRIVER_VERSION
-    altitude_m = weewx.drivers.te923.getaltitudeM(config_dict)
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = weewx.drivers.te923.TE923(altitude=altitude_m,
                                         **config_dict['TE923'])
 

@@ -136,7 +136,6 @@ claimInterface.
 # TODO: clear rain total
 # TODO: get enumeration of usb.USBError codes to handle errors better
 # TODO: consider open/close on each read instead of keeping open
-# TODO: try doing bulkRead instead of interruptRead
 
 # TODO: sensor data use 32 bytes, but each historical record is 38 bytes.  what
 #       do the other 4 bytes represent?
@@ -159,9 +158,10 @@ import usb
 
 import weeutil
 import weewx.abstractstation
+import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.7'
+DRIVER_VERSION = '0.8'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -209,62 +209,11 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    altitude_m = getaltitudeM(config_dict)
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = TE923(altitude=altitude_m, **config_dict['TE923'])
     return station
 
-# FIXME: the pressure calculations belong in wxformulas
-
-# noaa definitions for station pressure, altimeter setting, and sea level
-# http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
-
-# implementation copied from wview
-def sp2ap(sp_mbar, elev_meter):
-    """Convert station pressure to sea level pressure.
-    http://www.wrh.noaa.gov/slc/projects/wxcalc/formulas/altimeterSetting.pdf
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    ap - sea level pressure (altimeter) in millibars
-    """
-
-    if sp_mbar is None or sp_mbar <= 0.3 or elev_meter is None:
-        return None
-    N = 0.190284
-    slp = 1013.25
-    ct = (slp ** N) * 0.0065 / 288
-    vt = elev_meter / ((sp_mbar - 0.3) ** N)
-    ap_mbar = (sp_mbar - 0.3) * ((ct * vt + 1) ** (1/N))
-    return ap_mbar
-
-# implementation copied from wview
-def etterm(elev_meter, t_C):
-    """Calculate elevation/temperature term for sea level calculation."""
-    if elev_meter is None or t_C is None:
-        return None
-    t_K = t_C + 273.15
-    return math.exp( - elev_meter / (t_K * 29.263))
-
-def sp2bp(sp_mbar, elev_meter, t_C):
-    """Convert station pressure to sea level pressure.
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    t_C - temperature in degrees Celsius
-
-    bp - sea level pressure (barometer) in millibars
-    """
-
-    pt = etterm(elev_meter, t_C)
-    if sp_mbar is None or pt is None:
-        return None
-    bp_mbar = sp_mbar / pt if pt != 0 else 0
-    return bp_mbar
-
+# FIXME: the conversion should use mean temperature as second temp arg
 def bp2sp(bp_mbar, elev_meter, t_C, humidity):
     """Convert sea level pressure to station pressure.
 
@@ -276,64 +225,11 @@ def bp2sp(bp_mbar, elev_meter, t_C, humidity):
 
     sp - station pressure in millibars
     """
-    # FIXME: the conversion should use mean temperature as second temp arg
     if bp_mbar is None or t_C is None or humidity is None:
         return None
     sp = weewx.uwxutils.TWxUtils.SeaLevelToStationPressure(bp_mbar, elev_meter,
                                                            t_C, t_C, humidity)
     return sp
-
-# FIXME: this goes in weeutil.weeutil or weewx.units
-def getaltitudeM(config_dict):
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    return altitude_m
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain(newtotal, oldtotal):
-    """Calculate the rain differential given two cumulative measurements."""
-    if newtotal is not None and oldtotal is not None:
-        if newtotal >= oldtotal:
-            delta = newtotal - oldtotal
-        else:
-            delta = None
-            logdbg('ignoring rain counter difference: counter decrement')
-    else:
-        delta = None
-    return delta
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain_rate(delta, curr_ts, last_ts):
-    """Calculate the rain rate based on the time between two rain readings.
-
-    delta_cm: rainfall since last reading, in cm
-
-    curr_ts: timestamp of current reading, in seconds
-
-    last_ts: timestamp of last reading, in seconds
-
-    return: rain rate in X per hour
-
-    If the period between readings is zero, ignore the rainfall since there
-    is no way to calculate a rate with no period."""
-
-    if curr_ts is None:
-        return None
-    if last_ts is None:
-        last_ts = curr_ts
-    if delta is not None:
-        period = curr_ts - last_ts
-        if period != 0:
-            rate = 3600 * delta / period
-        else:
-            rate = None
-            if delta != 0:
-                loginf('rain rate period is zero, ignoring rainfall of %f' % delta)
-    else:
-        rate = None
-    return rate
 
 class TE923(weewx.abstractstation.AbstractStation):
     """Driver for Hideki TE923 stations."""
@@ -489,10 +385,10 @@ def data_to_packet(data, status=None, altitude=0,
     packet['rainTotal'] = data['rain']
     if packet['rainTotal'] is not None:
         packet['rainTotal'] *= 0.06578 # weewx wants cm
-    packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
-    packet['rainRate'] = calculate_rain_rate(packet['rain'],
-                                             packet['dateTime'],
-                                             last_rain_ts)
+    packet['rain'] = weewx.wxformulas.calculate_rain(
+        packet['rainTotal'], last_rain)
+    packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
+        packet['rain'], packet['dateTime'], last_rain_ts)
 
     # we must calculate heat index and dewpoint
     packet['heatindex'] = weewx.wxformulas.heatindexC(
@@ -514,7 +410,8 @@ def data_to_packet(data, status=None, altitude=0,
     packet['barometer'] = data['slp']
     packet['pressure'] = bp2sp(packet['barometer'], altitude,
                                packet['outTemp'], packet['outHumidity'])
-    packet['altimeter'] = sp2ap(packet['pressure'], altitude)
+    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
+        packet['pressure'], altitude, algorithm='aaNOAA')
     if DEBUG_PRESSURE:
         logdbg("pressures: p=%s b=%s a=%s" % (packet['pressure'],
                                               packet['barometer'],

@@ -38,17 +38,8 @@ import weewx.units
 import weewx.wxformulas
 
 def loader(config_dict, engine):
-
-    # The WMR driver needs the altitude in meters. Get it from the Station data
-    # and do any necessary conversions.
-    altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
-    # Form a value-tuple:
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    # Now convert to meters, using only the first element of the returned value-tuple:
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    
-    station = WMR_USB(altitude=altitude_m, **config_dict['WMR100'])
-    
+    altitude_m = weewx.units.getAltitudeM(config_dict)
+    station = WMR_USB(altitude=altitude_m, **config_dict['WMR100'])    
     return station
         
 class WMR_USB(weewx.abstractstation.AbstractStation):

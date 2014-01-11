@@ -146,15 +146,7 @@ def logcrt(msg):
 
 def loader(config_dict, engine):
     """Used to load the driver."""
-    # The driver needs the altitude in meters. Get it from the Station data
-    # and do any necessary conversions.
-    altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get(
-        'altitude', (None, None)))
-    # Form a value-tuple
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], 'group_altitude')
-    # Now convert to meters, using only the first element of the returned
-    # value-tuple.
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = WMR200(altitude=altitude_m, **config_dict['WMR200'])
     return station
 

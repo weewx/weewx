@@ -218,12 +218,13 @@ import usb
 
 import weeutil.weeutil
 import weewx.abstractstation
+import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '1.4'
+DRIVER_VERSION = '1.5'
 
 def loader(config_dict, engine):
-    altitude_m = getaltitudeM(config_dict)
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = FineOffsetUSB(altitude=altitude_m,**config_dict['FineOffsetUSB'])
     return station
 
@@ -355,8 +356,10 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     adjp = packet['pressure']
     if pressure_offset is not None and adjp is not None:
         adjp += pressure_offset
-    packet['barometer'] = sp2bp(adjp, altitude, packet['outTemp'])
-    packet['altimeter'] = sp2ap(adjp, altitude)
+    packet['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
+        adjp, altitude, packet['outTemp'])
+    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
+        adjp, altitude, algorithm='aaNOAA')
 
     # calculate the rain increment from the rain total
     # watch for spurious rain counter decrement.  if decrement is significant
@@ -375,11 +378,11 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
                 loginf('rain counter wraparound detected (%s): '
                        'new: %s old: %s' % (pstr, packet['rain'], last_rain))
                 total += rain_max * 0.3
-    packet['rain'] = calculate_rain(total, last_rain)
+    packet['rain'] = weewx.wxformulas.calculate_rain(total, last_rain)
 
     # calculate the rain rate
-    packet['rainRate'] = calculate_rain_rate(packet['rain'],
-                                             packet['dateTime'], last_rain_ts)
+    packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
+        packet['rain'], packet['dateTime'], last_rain_ts)
 
     # report rainfall in log to diagnose rain counter issues
     if weewx.debug:
@@ -525,110 +528,6 @@ def logerr(msg):
 
 def logcrt(msg):
     logmsg(syslog.LOG_CRIT, msg)
-
-# FIXME: the pressure calculations belong in wxformulas
-
-# noaa definitions for station pressure, altimeter setting, and sea level
-# http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
-
-# implementation copied from wview
-def sp2ap(sp_mbar, elev_meter):
-    """Convert station pressure to sea level pressure.
-    http://www.wrh.noaa.gov/slc/projects/wxcalc/formulas/altimeterSetting.pdf
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    ap - sea level pressure (altimeter) in millibars
-    """
-
-    if sp_mbar is None or sp_mbar <= 0.3 or elev_meter is None:
-        return None
-    N = 0.190284
-    slp = 1013.25
-    ct = (slp ** N) * 0.0065 / 288
-    vt = elev_meter / ((sp_mbar - 0.3) ** N)
-    ap_mbar = (sp_mbar - 0.3) * ((ct * vt + 1) ** (1/N))
-    return ap_mbar
-
-# implementation copied from wview
-def etterm(elev_meter, t_C):
-    """Calculate elevation/temperature term for sea level calculation."""
-    if elev_meter is None or t_C is None:
-        return None
-    t_K = t_C + 273.15
-    return math.exp( - elev_meter / (t_K * 29.263))
-
-def sp2bp(sp_mbar, elev_meter, t_C):
-    """Convert station pressure to sea level pressure.
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    t_C - temperature in degrees Celsius
-
-    bp - sea level pressure (barometer) in millibars
-    """
-
-    pt = etterm(elev_meter, t_C)
-    if sp_mbar is None or pt is None:
-        return None
-    bp_mbar = sp_mbar / pt if pt != 0 else 0
-    return bp_mbar
-
-# FIXME: this goes in weeutil.weeutil or weewx.units
-def getaltitudeM(config_dict):
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    return altitude_m
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain(newtotal, oldtotal):
-    """Calculate the rain differential given two cumulative measurements."""
-    if newtotal is not None and oldtotal is not None:
-        if newtotal >= oldtotal:
-            delta = newtotal - oldtotal
-        else:
-            delta = None
-            logdbg('ignoring rain counter difference: counter decrement')
-    else:
-        delta = None
-    return delta
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain_rate(delta_cm, curr_ts, last_ts):
-    """Calculate the rain rate based on the time between two rain readings.
-
-    delta_cm: rainfall since last reading, in cm
-
-    curr_ts: timestamp of current reading, in seconds
-
-    last_ts: timestamp of last reading, in seconds
-
-    return: rain rate in cm per hour
-
-    If the period between readings is zero, ignore the rainfall since there
-    is no way to calculate a rate with no period."""
-
-    if curr_ts is None:
-        return None
-    if last_ts is None:
-        last_ts = curr_ts
-    if delta_cm is not None:
-        period = curr_ts - last_ts
-        if period != 0:
-            rate = 3600 * delta_cm / period
-        else:
-            rate = None
-            if delta_cm != 0:
-                loginf('rain rate period is zero, ignoring rainfall of %f cm' % delta_cm)
-    else:
-        rate = None
-    return rate
 
 class ObservationError(Exception):
     pass
