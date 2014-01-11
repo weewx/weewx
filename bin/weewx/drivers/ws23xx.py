@@ -1958,52 +1958,54 @@ def read_measurements(ws2300, read_requests):
 #
 # PYTHONPATH=bin python bin/weewx/drivers/ws23xx.py
 
-usage = """%prog [options] [--debug] [--help]"""
+if __name__ == '__main__':
 
-def main():
-    syslog.openlog('ws23xx', syslog.LOG_PID | syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
-    port = DEFAULT_PORT
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--version', dest='version', action='store_true',
-                      help='display driver version')
-    parser.add_option('--debug', dest='debug', action='store_true',
-                      help='display diagnostic information while running')
-    parser.add_option('--port', dest='port', metavar='PORT',
-                      help='the serial port to which the station is connected')
-    parser.add_option('--readings', dest='readings', action='store_true',
-                      help='display sensor readings')
-    parser.add_option("--records", dest="records", type=int, metavar="N",
-                      help="display N station records, oldest to newest")
-    parser.add_option('--help-measures', dest='hm', action='store_true',
-                      help='display measure names')
-    parser.add_option('--measure', dest='measure', type=str, metavar="MEASURE",
-                      help='display single measure')
+    usage = """%prog [options] [--debug] [--help]"""
 
-    (options, args) = parser.parse_args()
+    def main():
+        syslog.openlog('ws23xx', syslog.LOG_PID | syslog.LOG_CONS)
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        port = DEFAULT_PORT
+        parser = optparse.OptionParser(usage=usage)
+        parser.add_option('--version', dest='version', action='store_true',
+                          help='display driver version')
+        parser.add_option('--debug', dest='debug', action='store_true',
+                          help='display diagnostic information while running')
+        parser.add_option('--port', dest='port', metavar='PORT',
+                          help='serial port to which the station is connected')
+        parser.add_option('--readings', dest='readings', action='store_true',
+                          help='display sensor readings')
+        parser.add_option("--records", dest="records", type=int, metavar="N",
+                          help="display N station records, oldest to newest")
+        parser.add_option('--help-measures', dest='hm', action='store_true',
+                          help='display measure names')
+        parser.add_option('--measure', dest='measure', type=str,
+                          metavar="MEASURE", help='display single measure')
 
-    if options.version:
-        print "ws23xx driver version %s" % DRIVER_VERSION
-        exit(1)
+        (options, args) = parser.parse_args()
 
-    if options.debug is not None:
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-    if options.port:
-        port = options.port
+        if options.version:
+            print "ws23xx driver version %s" % DRIVER_VERSION
+            exit(1)
 
-    with Station(port) as s:
-        if options.readings:
-            data = s.get_raw_data(SENSOR_IDS)
-            print data
-        if options.records is not None:
-            for ts,record in s.gen_records(count=options.records):
-                print ts,record
-        if options.measure:
-            data = s.get_raw_data([options.measure])
-            print data
-        if options.hm:
-            for m in Measure.IDS:
-                print "%s\t%s" % (m, Measure.IDS[m].name)
+        if options.debug is not None:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+        if options.port:
+            port = options.port
+
+        with Station(port) as s:
+            if options.readings:
+                data = s.get_raw_data(SENSOR_IDS)
+                print data
+            if options.records is not None:
+                for ts,record in s.gen_records(count=options.records):
+                    print ts,record
+            if options.measure:
+                data = s.get_raw_data([options.measure])
+                print data
+            if options.hm:
+                for m in Measure.IDS:
+                    print "%s\t%s" % (m, Measure.IDS[m].name)
 
 if __name__ == '__main__':
     main()

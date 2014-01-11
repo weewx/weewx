@@ -670,7 +670,7 @@ def decode_status(buf):
         logdbg("STT  %s %s" % (data['storm'], data['forecast']))
     return data
 
-class BadRead(Exception):
+class BadRead(weewx.WeeWxIOError):
     """Bogus data length, CRC, header block, or other read failure"""
 
 class Station(object):
@@ -921,133 +921,135 @@ class Station(object):
 #    te923con -d              dump 208 memory records
 #    te923con -s              display station status
 
-usage = """%prog [options] [--debug] [--help]"""
+if __name__ == '__main__':
 
-def main():
-    FMT_TE923TOOL = 'te923tool'
-    FMT_DICT = 'dict'
-    FMT_TABLE = 'table'
+    usage = """%prog [options] [--debug] [--help]"""
 
-    syslog.openlog('wee_te923', syslog.LOG_PID | syslog.LOG_CONS)
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--version', dest='version', action='store_true',
-                      help='display driver version')
-    parser.add_option('--debug', dest='debug', action='store_true',
-                      help='display diagnostic information while running')
-    parser.add_option('--status', dest='status', action='store_true',
-                      help='display station status')
-    parser.add_option('--readings', dest='readings', action='store_true',
-                      help='display sensor readings')
-    parser.add_option("--records", dest="records", type=int, metavar="N",
-                      help="display N station records, oldest to newest")
-    parser.add_option('--blocks', dest='blocks', type=int, metavar="N",
-                      help='display N 32-byte blocks of station memory')
-    parser.add_option("--format", dest="format", type=str, metavar="FORMAT",
-                      help="format for output, one of te923tool, table, or dict")
-    (options, args) = parser.parse_args()
+    def main():
+        FMT_TE923TOOL = 'te923tool'
+        FMT_DICT = 'dict'
+        FMT_TABLE = 'table'
 
-    if options.version:
-        print "te923 driver version %s" % DRIVER_VERSION
-        exit(1)
+        syslog.openlog('wee_te923', syslog.LOG_PID | syslog.LOG_CONS)
+        parser = optparse.OptionParser(usage=usage)
+        parser.add_option('--version', dest='version', action='store_true',
+                          help='display driver version')
+        parser.add_option('--debug', dest='debug', action='store_true',
+                          help='display diagnostic information while running')
+        parser.add_option('--status', dest='status', action='store_true',
+                          help='display station status')
+        parser.add_option('--readings', dest='readings', action='store_true',
+                          help='display sensor readings')
+        parser.add_option("--records", dest="records", type=int, metavar="N",
+                          help="display N station records, oldest to newest")
+        parser.add_option('--blocks', dest='blocks', type=int, metavar="N",
+                          help='display N 32-byte blocks of station memory')
+        parser.add_option("--format", dest="format", type=str,metavar="FORMAT",
+                          help="format for output: te923tool, table, or dict")
+        (options, args) = parser.parse_args()
 
-    if options.debug is not None:
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-    else:
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        if options.version:
+            print "te923 driver version %s" % DRIVER_VERSION
+            exit(1)
 
-    if options.format is None:
-        fmt = FMT_TE923TOOL
-    elif (options.format.lower() != FMT_TE923TOOL and
-          options.format.lower() != FMT_TABLE and
-          options.format.lower() != FMT_DICT):
-        print "Unknown format '%s'.  Known formats include 'te923tool', 'table', and 'dict'." % options.format
-        exit(1)
-    else:
-        fmt = options.format.lower()
+        if options.debug is not None:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+        else:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
-    station = None
-    try:
-        station = Station()
-        station.open()
-        if options.status:
-            data = station.get_status()
-            if fmt == FMT_DICT:
-                print_dict(data)
-            elif fmt == FMT_TABLE:
-                print_table(data)
-            else:
-                print_status(data)
-        if options.readings:
-            data = station.get_readings()
-            if fmt == FMT_DICT:
-                print_dict(data)
-            elif fmt == FMT_TABLE:
-                print_table(data)
-            else:
-                print_readings(data)
-        if options.records is not None:
-            for ptr,data in station.gen_records(count=options.records):
+        if options.format is None:
+            fmt = FMT_TE923TOOL
+        elif (options.format.lower() != FMT_TE923TOOL and
+              options.format.lower() != FMT_TABLE and
+              options.format.lower() != FMT_DICT):
+            print "Unknown format '%s'.  Known formats include 'te923tool', 'table', and 'dict'." % options.format
+            exit(1)
+        else:
+            fmt = options.format.lower()
+
+        station = None
+        try:
+            station = Station()
+            station.open()
+            if options.status:
+                data = station.get_status()
                 if fmt == FMT_DICT:
                     print_dict(data)
+                elif fmt == FMT_TABLE:
+                    print_table(data)
+                else:
+                    print_status(data)
+            if options.readings:
+                data = station.get_readings()
+                if fmt == FMT_DICT:
+                    print_dict(data)
+                elif fmt == FMT_TABLE:
+                    print_table(data)
                 else:
                     print_readings(data)
-        if options.blocks is not None:
-            for ptr,block in station.gen_blocks(count=options.blocks):
-                print_hex(ptr, block)
-    finally:
-        if station is not None:
-            station.close()
+            if options.records is not None:
+                for ptr,data in station.gen_records(count=options.records):
+                    if fmt == FMT_DICT:
+                        print_dict(data)
+                    else:
+                        print_readings(data)
+            if options.blocks is not None:
+                for ptr,block in station.gen_blocks(count=options.blocks):
+                    print_hex(ptr, block)
+        finally:
+            if station is not None:
+                station.close()
 
-def print_dict(data):
-    """output entire dictionary contents"""
-    print data
+    def print_dict(data):
+        """output entire dictionary contents"""
+        print data
 
-def print_table(data):
-    """output entire dictionary contents in two columns"""
-    for key in sorted(data):
-        print "%s: %s" % (key.rjust(16), data[key])
+    def print_table(data):
+        """output entire dictionary contents in two columns"""
+        for key in sorted(data):
+            print "%s: %s" % (key.rjust(16), data[key])
 
-def print_status(data):
-    """output status fields in te923tool format"""
-    print "0x%x:0x%x:0x%x:0x%x:0x%x:%d:%d:%d:%d:%d:%d:%d:%d" % (
-        data['sysVer'], data['barVer'], data['uvVer'], data['rccVer'],
-        data['windVer'], data['batteryRain'], data['batteryUV'],
-        data['batteryWind'], data['battery5'], data['battery4'],
-        data['battery3'], data['battery2'], data['battery1'])
+    def print_status(data):
+        """output status fields in te923tool format"""
+        print "0x%x:0x%x:0x%x:0x%x:0x%x:%d:%d:%d:%d:%d:%d:%d:%d" % (
+            data['sysVer'], data['barVer'], data['uvVer'], data['rccVer'],
+            data['windVer'], data['batteryRain'], data['batteryUV'],
+            data['batteryWind'], data['battery5'], data['battery4'],
+            data['battery3'], data['battery2'], data['battery1'])
 
-def print_readings(data):
-    """output sensor readings in te923tool format"""
-    output = [str(data['timestamp'])]
-    output.append(getvalue(data, 't_in', '%0.2f'))
-    output.append(getvalue(data, 'h_in', '%d'))
-    for i in range(1,6):
-        output.append(getvalue(data, 't_%d' % i, '%0.2f'))
-        output.append(getvalue(data, 'h_%d' % i, '%d'))
-    output.append(getvalue(data, 'slp', '%0.1f'))
-    output.append(getvalue(data, 'uv', '%0.1f'))
-    output.append(getvalue(data, 'forecast', '%d'))
-    output.append(getvalue(data, 'storm', '%d'))
-    output.append(getvalue(data, 'winddir', '%d'))
-    output.append(getvalue(data, 'windspeed', '%0.1f'))
-    output.append(getvalue(data, 'windgust', '%0.1f'))
-    output.append(getvalue(data, 'windchill', '%0.1f'))
-    output.append(getvalue(data, 'rain', '%d'))
-    print ':'.join(output)
+    def print_readings(data):
+        """output sensor readings in te923tool format"""
+        output = [str(data['timestamp'])]
+        output.append(getvalue(data, 't_in', '%0.2f'))
+        output.append(getvalue(data, 'h_in', '%d'))
+        for i in range(1,6):
+            output.append(getvalue(data, 't_%d' % i, '%0.2f'))
+            output.append(getvalue(data, 'h_%d' % i, '%d'))
+        output.append(getvalue(data, 'slp', '%0.1f'))
+        output.append(getvalue(data, 'uv', '%0.1f'))
+        output.append(getvalue(data, 'forecast', '%d'))
+        output.append(getvalue(data, 'storm', '%d'))
+        output.append(getvalue(data, 'winddir', '%d'))
+        output.append(getvalue(data, 'windspeed', '%0.1f'))
+        output.append(getvalue(data, 'windgust', '%0.1f'))
+        output.append(getvalue(data, 'windchill', '%0.1f'))
+        output.append(getvalue(data, 'rain', '%d'))
+        print ':'.join(output)
 
-def print_hex(ptr, data):
-    print "0x%06x %s" % (ptr, ' '.join(["%02x" % x for x in data]))
+    def print_hex(ptr, data):
+        print "0x%06x %s" % (ptr, ' '.join(["%02x" % x for x in data]))
 
-def getvalue(data, label, fmt):
-    if label + '_state' in data:
-        if data[label + '_state'] == STATE_OK:
-            return fmt % data[label]
+    def getvalue(data, label, fmt):
+        if label + '_state' in data:
+            if data[label + '_state'] == STATE_OK:
+                return fmt % data[label]
+            else:
+                return data[label + '_state'][0]
         else:
-            return data[label + '_state'][0]
-    else:
-        if data[label] is None:
-            return 'x'
-        else:
-            return fmt % data[label]
+            if data[label] is None:
+                return 'x'
+            else:
+                return fmt % data[label]
 
 if __name__ == '__main__':
     main()
