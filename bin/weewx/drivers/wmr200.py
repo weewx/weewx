@@ -1362,6 +1362,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         
         NAMED ARGUMENTS:
         altitude: The altitude in meters. [Required]
+        model: Which station model is this? [Optional]
         sensor_status: Print sensor faults or failures to syslog. [Optional]
         use_pc_time: Use the console timestamp or the Pc. [Optional]
         erase_archive:  Erasae archive upon startup.  [Optional]
@@ -1380,6 +1381,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
 
         ## User configurable options
         self._altitude     = stn_dict['altitude']
+        self._model        = stn_dict.get('model', 'WMR200')
         # Provide sensor faults in syslog.
         self._sensor_stat = weeutil.weeutil.tobool(stn_dict.get('sensor_status',
                                                                 True))
@@ -1516,7 +1518,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
     @property
     def hardware_name(self):
         """weewx api."""
-        return _WMR200_DRIVER_NAME
+        return self._model
 
     @property
     def altitude(self):

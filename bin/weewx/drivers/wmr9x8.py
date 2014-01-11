@@ -114,7 +114,11 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
 
         NAMED ARGUMENTS:
 
-        port: The serial port of the WM918/WMR918/WMR968. [Required if serial communication]
+        model: Which station model is this?
+        [Optional. Default is 'WMR968']
+
+        port: The serial port of the WM918/WMR918/WMR968.
+        [Required if serial communication]
 
         baudrate: Baudrate of the port. [Optional. Default 9600]
 
@@ -123,6 +127,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         """
 
         self.altitude       = stn_dict['altitude']
+        self.model          = stn_dict.get('model', 'WMR968')
         self.last_totalRain = None
 
         # Create the specified port
@@ -130,6 +135,10 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
 
         # Open it up:
         self.port.openPort()
+
+    @property
+    def hardware_name(self):
+        return self._model
 
     def openPort(self):
         """Open up the connection to the console"""

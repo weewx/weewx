@@ -39,19 +39,22 @@ import weewx.wxformulas
 
 def loader(config_dict, engine):
     altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = WMR_USB(altitude=altitude_m, **config_dict['WMR100'])    
+    station = WMR100(altitude=altitude_m, **config_dict['WMR100'])    
     return station
         
-class WMR_USB(weewx.abstractstation.AbstractStation):
-    """Driver for the WMR_USB station."""
+class WMR100(weewx.abstractstation.AbstractStation):
+    """Driver for the WMR100 station."""
     
     def __init__(self, **stn_dict) :
-        """Initialize an object of type WMR_USB.
+        """Initialize an object of type WMR100.
         
         NAMED ARGUMENTS:
         
         altitude: The altitude in meters. Required.
         
+        model: Which station model is this?
+        [Optional. Default is 'WMR100']
+
         stale_wind: Max time wind speed can be used to calculate wind chill
         before being declared unusable. [Optional. Default is 30 seconds]
         
@@ -74,6 +77,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
         """
         
         self.altitude          = stn_dict['altitude']
+        self.model             = stn_dict.get('model', 'WMR100')
         # TODO: Consider changing this so these go in the driver loader instead:
         self.record_generation = stn_dict.get('record_generation', 'software')
         self.stale_wind        = float(stn_dict.get('stale_wind', 30.0))
@@ -124,8 +128,8 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
         
         for _packet in self.genPackets():
             _packet_type = _packet[1]
-            if _packet_type in WMR_USB._dispatch_dict:
-                _record = WMR_USB._dispatch_dict[_packet_type](self, _packet)
+            if _packet_type in WMR100._dispatch_dict:
+                _record = WMR100._dispatch_dict[_packet_type](self, _packet)
                 if _record is not None : 
                     yield _record
                 
@@ -176,7 +180,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
              
     @property
     def hardware_name(self):
-        return "WMR100"
+        return self.model
         
     #===============================================================================
     #                         USB functions
