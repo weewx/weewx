@@ -8,13 +8,11 @@ Templates should also be "drop in." If they appear in the directory, they
 get used.
 
 Minor cleanup to the Standard skin:
- - anything using wmr100 reports wmr100n as hardware type
  - improve layout, possibly like http://www.kanonbra.com/veret/
  - punt the buttons for week/month/year, use regular html links instead
  - include a table instead of duplicating html code for stats
  - make the info section easier to grok with a structured layout, perhaps
     similar to weather display or cumulus default templates
- - default to no radar image instead of oregon?
 
 Add hardware model as weewx.conf option for all drivers that cannot get the
 info from the hardware (everything other than vantage?)
