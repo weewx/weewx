@@ -664,7 +664,7 @@ def decode_status(buf):
         data['storm'] = None
         data['forecast'] = None
     else:
-        data['storm'] = True if buf[22] & 0x08 == 0x08 else False
+        data['storm'] = buf[22] & 0x08 == 0x08
         data['forecast'] = int(buf[22] & 0x07)
     if DEBUG_DECODE:
         logdbg("STT  %s %s" % (data['storm'], data['forecast']))
@@ -831,14 +831,14 @@ class Station(object):
         status['sysVer']  = buf[5]
 
         buf = self._read(0x4c)
-        status['batteryRain'] = True if buf[1] & 0x80 == 0x80 else False
-        status['batteryWind'] = True if buf[1] & 0x40 == 0x40 else False
-        status['batteryUV']   = True if buf[1] & 0x20 == 0x20 else False
-        status['battery5']    = True if buf[1] & 0x10 == 0x10 else False
-        status['battery4']    = True if buf[1] & 0x08 == 0x08 else False
-        status['battery3']    = True if buf[1] & 0x04 == 0x04 else False
-        status['battery2']    = True if buf[1] & 0x02 == 0x02 else False
-        status['battery1']    = True if buf[1] & 0x01 == 0x01 else False
+        status['batteryRain'] = buf[1] & 0x80 == 0x80
+        status['batteryWind'] = buf[1] & 0x40 == 0x40
+        status['batteryUV']   = buf[1] & 0x20 == 0x20
+        status['battery5']    = buf[1] & 0x10 == 0x10
+        status['battery4']    = buf[1] & 0x08 == 0x08
+        status['battery3']    = buf[1] & 0x04 == 0x04
+        status['battery2']    = buf[1] & 0x02 == 0x02
+        status['battery1']    = buf[1] & 0x01 == 0x01
         
         return status
 
