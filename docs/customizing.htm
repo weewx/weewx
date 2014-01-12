@@ -1318,18 +1318,49 @@ class MyXSearch(SearchList):                                #1
 
       <h3>An Example: the Standard skin</h3>
       <p>As an example, the Standard <span class="code">skin.conf</span>
-        file includes two options: <span class="code">radar_url</span>, which
-        is available as tag <span class="code">$Extras.radar_url</span>, and
-        <span class="code">googleAnalyticsId</span>, available as tag
-        <span class="code">$Extras.googleAnalyticsId</span>.
-        If you take a look at the template
-        <span class="code">index.html.tmpl</span> you will see examples of
-        testing for these tags (search the file for the string
-        <span class="code">radar_url</span> or
-        <span class="code">googleAnalyticsId</span> to find them). </p>
-      <p class="config_option">radar_url </p>
-      <p>If set, the NOAA radar image will be displayed. If commented out, no
-        image will be displayed. </p>
+        file includes three options: </p>
+      <table class="indent" style="width:50%" summary="Tag Extras">
+        <tr>
+          <td><strong>Skin option</strong></td>
+          <td><strong>Template tag</strong></td>
+        </tr>
+        <tr>
+          <td><span class="code">radar_img</span></td>
+          <td><span class="code">$Extras.radar_img</span></td>
+        </tr>
+        <tr>
+          <td><span class="code">radar_url</span></td>
+          <td><span class="code">$Extras.radar_url</span></td>
+        </tr>
+        <tr>
+          <td><span class="code">googleAnalyticsId</span></td>
+          <td><span class="code">$Extras.googleAnalyticsId</span></td>
+        </tr>
+      </table>
+      <p>If you take a look at the template
+        <span class="code">index.html.tmpl</span> you will see
+        examples of testing for these tags (search the file for the
+        string <span class="code">radar_img</span> to find them).
+      </p>
+      <p class="config_option">radar_img</p>
+      <p>Set to an URL to show a local radar image for you.</p>
+      <p class="config_option">radar_url</p>
+      <p>If the above radar image is clicked, the browser will go to
+       this URL. This is usually used to show a more detailed,
+       close-up, radar picture.
+      </p>
+      <p>For me in Oregon, setting the above two options to:</p>
+      <pre class="tty">
+[Extras]
+    radar_img = http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif
+    radar_url = http://radar.weather.gov/ridge/radar.php?product=NCR&rid=RTX&loop=yes</pre>
+      <p>results in a nice image of a radar centered on Portland,
+        Oregon. When you click on it, it gives you a detailed, animated view.
+        Take a look at
+        the <a href="http://radar.weather.gov/">NOAA radar website</a>
+        to find a nice one for you in the USA. In other countries, you
+        will have to consult your local weather service.
+      </p>
       <p class="config_option">googleAnalyticsId </p>
       <p>If you have a <a href="http://www.google.com/analytics/">Google
           Analytics ID</a>, you can set it here. The Google Analytics
