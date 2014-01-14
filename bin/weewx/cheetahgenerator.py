@@ -225,9 +225,10 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                     _yr_str = "%4d" % timespan_start_tt[0]
                     if period == 'SummaryByMonth':
                         _mo_str = "%02d" % timespan_start_tt[1]
-                        self.outputted_dict['SummaryByMonth'].append("%s-%s" % (_yr_str, _mo_str))
-                    if period == 'SummaryByYear':
-                        self.outputted_dict['SummaryByYear'].append(_yr_str)
+                        if _mo_str not in self.outputted_dict[period]:
+                            self.outputted_dict[period].append("%s-%s" % (_yr_str, _mo_str))
+                    if period == 'SummaryByYear' and _yr_str not in self.outputted_dict[period]:
+                        self.outputted_dict[period].append(_yr_str)
 
                 # figure out the filename for this template
                 _filename = self._getFileName(template, timespan)

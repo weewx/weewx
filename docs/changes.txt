@@ -3,6 +3,9 @@ weewx change history
 
 X.X.X XX/XX/XX
 
+Fixed bug in SummaryByMonth and SummaryByYear that would result in duplicate
+month/year entries when generating from multiple ByMonth or ByYear templates.
+
 Consolidated pressure calculation code in ws23xx, ws28xx, te923, and fousb.
 
 Added Vantage types stormRain and windSpeed10 to the list of observation
