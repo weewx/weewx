@@ -1169,8 +1169,15 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
         # track the signal strength and battery levels
         laststat = self._service.getLastStat()
-        packet['signal'] = laststat.LastLinkQuality
-        packet['battery'] = laststat.LastBatteryStatus
+        packet['rxCheckPercent'] = laststat.LastLinkQuality
+        packet['windBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'wind')
+        packet['rainBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'rain')
+        packet['outTempBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'th')
+        packet['inTempBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'console')
 
         return packet
 
@@ -1194,6 +1201,8 @@ class WS28xx(weewx.abstractstation.AbstractStation):
     def get_transceiver_id(self):
         return self._service.DataStore.getDeviceID()
 
+    def get_battery(status, hardware):
+        return 0
 
 # The following classes and methods are adapted from the implementation by
 # eddie de pieri, which is in turn based on the HeavyWeather implementation.
@@ -1395,6 +1404,20 @@ def getFrequencyStandard(frequency):
         return EFrequency.fsEU
     logerr("unknown frequency '%s', using US" % frequency)
     return EFrequency.fsUS
+
+# HWPro presents battery flags as WS/TH/RAIN/WIND
+# 0 - wind
+# 1 - rain
+# 2 - thermo-hygro
+# 3 - console
+
+batterybits = { 'wind':0, 'rain':1, 'th':2, 'console':3 }
+
+def getBatteryStatus(status, flag):
+    bit = batterybits.get(flag)
+    if bit is not None:
+        return BitHandling.testBit(status, bit)
+    return None
 
 class CWeatherTraits(object):
     windDirMap = {
@@ -2712,16 +2735,6 @@ class CDataStore(object):
         if quality is not None:
             self.LastStat.LastLinkQuality = quality
         if battery is not None:
-            # HWPro presents as WS/TH/RAIN/WIND
-            # 0 - wind
-            # 1 - rain
-            # 2 - thermo-hygro
-            # 3 - console
-#            logdbg('setLastStatCache: WS=%d WIND=%d RAIN=%d TH=%d' %
-#                   (BitHandling.testBit(battery,3),
-#                    BitHandling.testBit(battery,0),
-#                    BitHandling.testBit(battery,1),
-#                    BitHandling.testBit(battery,2)))
             self.LastStat.LastBatteryStatus = battery
         if weather_ts is not None:
             self.LastStat.last_weather_ts = weather_ts
