@@ -1103,27 +1103,20 @@ class PacketStatus(PacketLive):
         to make it fit."""
         super(PacketStatus, self).packet_process()
         # Setup defaults as good status.
-        self._record.update({'inTempBatteryStatus'  : 1.0,
-                             'OutTempBatteryStatus' : 1.0,
+        self._record.update({'outTempBatteryStatus' : 1.0,
                              'rainBatteryStatus'    : 1.0,
                              'windBatteryStatus'    : 1.0,
                              'uvBatteryStatus'      : 1.0,
-                             'txBatteryStatus'      : 1.0,
-                             'rxCheckPercent'       : 1.0,
                              'windFault'            : 0,
                              'rainFault'            : 0,
-                             'baroFault'            : 0,
                              'uvFault'              : 0,
-                             'inTempFault'          : 0,
                              'outTempFault'         : 0,
                             })
-
+        # This information may be sent to syslog
         msg_status = []
-
-        # This information is sent to syslog
         if self._pkt_data[2] & 0x02:
-            msg_status.append('Sensor 1 fault (temp/hum outdoor)')
-            self._record['inTempFault'] = 1
+            msg_status.append('Temp outdoor sensor fault')
+            self._record['outTempFault'] = 1
 
         if self._pkt_data[2] & 0x01:
             msg_status.append('Wind sensor fault')
@@ -1137,17 +1130,17 @@ class PacketStatus(PacketLive):
             msg_status.append('Rain sensor fault')
             self._record['rainFault'] = 1
 
-        if self._pkt_data[5] & 0x20:
-            msg_status.append('UV sensor: Battery low')
-            self._record['uvBatteryStatus'] = 0.0
-
         if self._pkt_data[4] & 0x02:
-            msg_status.append('Sensor 1: Battery low')
+            msg_status.append('Temp outdoor sensor: Battery low')
             self._record['outTempBatteryStatus'] = 0.0
 
         if self._pkt_data[4] & 0x01:
             msg_status.append('Wind sensor: Battery low')
             self._record['windBatteryStatus'] = 0.0
+
+        if self._pkt_data[5] & 0x20:
+            msg_status.append('UV sensor: Battery low')
+            self._record['uvBatteryStatus'] = 0.0
 
         if self._pkt_data[5] & 0x10:
             msg_status.append('Rain sensor: Battery low')
