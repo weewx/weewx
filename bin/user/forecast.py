@@ -777,7 +777,7 @@ class Forecast(StdService):
         self.vacuum = self._get_opt(d, fid, 'vacuum', False)
         self.vacuum = weeutil.weeutil.tobool(self.vacuum)
         # how often to retry database failures
-        self.db_max_tries = self._get_opt(d, fid, 'database_max_tries', 3)
+        self.db_max_tries = self._get_opt(d, fid, 'database_max_tries', 1)
         self.db_max_tries = int(self.db_max_tries)
         # how long to wait between retries, in seconds
         self.db_retry_wait = self._get_opt(d, fid, 'database_retry_wait', 10)
