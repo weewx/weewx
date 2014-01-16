@@ -1103,14 +1103,15 @@ class PacketStatus(PacketLive):
         to make it fit."""
         super(PacketStatus, self).packet_process()
         # Setup defaults as good status.
-        self._record.update({'outTempBatteryStatus' : 1.0,
-                             'rainBatteryStatus'    : 1.0,
+        self._record.update({'outTempFault'         : 0,
+                             'windFault'            : 0,
+                             'uvFault'              : 0,
+                             'rainFault'            : 0,
+                             'clockUnsynchronized'  : 0,
+                             'outTempBatteryStatus' : 1.0,
                              'windBatteryStatus'    : 1.0,
                              'uvBatteryStatus'      : 1.0,
-                             'windFault'            : 0,
-                             'rainFault'            : 0,
-                             'uvFault'              : 0,
-                             'outTempFault'         : 0,
+                             'rainBatteryStatus'    : 1.0,
                             })
         # This information may be sent to syslog
         msg_status = []
@@ -1129,6 +1130,10 @@ class PacketStatus(PacketLive):
         if self._pkt_data[3] & 0x10:
             msg_status.append('Rain sensor fault')
             self._record['rainFault'] = 1
+
+        if self._pkt_data[4] & 0x80:
+            msg_status.append('Clock time unsynchronized')
+            self._record['clockUnsynchronized'] = 0.0
 
         if self._pkt_data[4] & 0x02:
             msg_status.append('Temp outdoor sensor: Battery low')
