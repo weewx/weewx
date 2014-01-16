@@ -1133,7 +1133,7 @@ class PacketStatus(PacketLive):
 
         if self._pkt_data[4] & 0x80:
             msg_status.append('Clock time unsynchronized')
-            self._record['clockUnsynchronized'] = 0.0
+            self._record['clockUnsynchronized'] = 1
 
         if self._pkt_data[4] & 0x02:
             msg_status.append('Temp outdoor sensor: Battery low')
