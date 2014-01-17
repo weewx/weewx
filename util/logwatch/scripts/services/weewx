@@ -24,11 +24,13 @@ my $RECORDS_FAILED = 'restful: publish failed';
 my $FOUSB_UNSTABLE_READS = 'fousb: unstable reads';
 my $FOUSB_MAGIC_NUMBERS = 'fousb: unrecognised magic number';
 my $FOUSB_RAIN_COUNTER = 'fousb: rain counter decrement';
+my $FOUSB_SUSPECTED_BOGUS = 'fousb: suspected bogus data';
 my $FOUSB_LOST_LOG_SYNC = 'fousb: lost log sync';
 my $FOUSB_LOST_SYNC = 'fousb: lost sync';
 my $FOUSB_MISSED_DATA = 'fousb: missed data';
 my $FOUSB_STATION_SYNC = 'fousb: station sync';
 my $WS23XX_CONNECTION_CHANGE = 'ws23xx: connection change';
+my $WS23XX_INVALID_WIND = 'ws23xx: invalid wind reading';
 my $FORECAST_RECORDS = 'forecast: records generated';
 my $FORECAST_PRUNINGS = 'forecast: prunings';
 my $FORECAST_DOWNLOADS = 'forecast: downloads';
@@ -41,12 +43,14 @@ my @upload_errors = ();
 
 # keep details of ws23xx behavior
 my @conn_change = ();
+my @invalid_wind = ();
 
 # keep details of fine offset behavior
 my @station_status = ();
 my @unstable_reads = ();
 my @magic_numbers = ();
 my @rain_counter = ();
+my @suspected_bogus = ();
 
 my $clocksum = 0;
 my $clockmin = 0;
@@ -59,7 +63,9 @@ my %itemized = (
     'fousb unstable reads', \@unstable_reads,
     'fousb magic numbers', \@magic_numbers,
     'fousb rain counter', \@rain_counter,
+    'fousb suspected bogus data', \@suspected_bogus,
     'ws23xx connection changes', \@conn_change,
+    'ws23xx invalid wind', \@invalid_wind,
     );
 
 while(defined($_ = <STDIN>)) {
@@ -108,6 +114,9 @@ while(defined($_ = <STDIN>)) {
     } elsif (/fousb: rain counter decrement/) {
         push @rain_counter, $_;
         $counts{$FOUSB_RAIN_COUNTER} += 1;
+    } elsif (/fousb:.*ignoring suspected bogus data/) {
+        push @suspected_bogus, $_;
+        $counts{$FOUSB_SUSPECTED_BOGUS} += 1;
     } elsif (/fousb: lost log sync/) {
         $counts{$FOUSB_LOST_LOG_SYNC} += 1;
     } elsif (/fousb: lost sync/) {
@@ -119,6 +128,9 @@ while(defined($_ = <STDIN>)) {
     } elsif (/ws23xx: connection changed from/) {
         push @conn_change, $_;
         $counts{$WS23XX_CONNECTION_CHANGE} += 1;
+    } elsif (/ws23xx: invalid wind reading/) {
+        push @invalid_wind, $_;
+        $counts{$WS23XX_INVALID_WIND} += 1;
     } elsif (/forecast: .* generated 1 forecast record/) {
         $counts{$FORECAST_RECORDS} += 1;
     } elsif (/forecast: .* got (\d+) forecast records/) {
