@@ -805,9 +805,19 @@ class ValueDict(object):
         
     def __getitem__(self, obs_type):
         """Look up an observation type (eg, 'outTemp') and return it as a DictBinder."""
+        # The following is to keep the Python version of Cheetah's NameMapper happy:
+        if obs_type not in self.dictionary:
+            raise AttributeError(obs_type)
         return DictBinder(obs_type, self.dictionary, context=self.context, 
                           formatter=self.formatter, converter=self.converter)
-    
+
+    def __getattr__(self, obs_type):
+        """Look up an observation type (eg, 'outTemp') and return it as a DictBinder."""
+        # The following is to keep the Python version of Cheetah's NameMapper happy:
+        if obs_type not in self.dictionary:
+            raise AttributeError(obs_type)
+        return DictBinder(obs_type, self.dictionary, context=self.context, 
+                          formatter=self.formatter, converter=self.converter)
 
 class DictBinder(ValueOutputter):
     

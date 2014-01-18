@@ -17,6 +17,8 @@ environment variable LANG before running weewx.
 
 Now caches font handles in order to work around a memory leak in PIL.
 
+Now works with the pure Python version of Cheetah's NameMapper.
+
 
 2.5.1 12/30/13
 
