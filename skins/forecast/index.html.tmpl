@@ -1,0 +1,53 @@
+#errorCatcher Echo
+## forecast sampler skin for weewx - Copyright 2014 Matthew Wall
+## $Id$
+#encoding UTF-8
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <title>Forecast Sampler</title>
+  </head>
+  <body>
+
+<p>
+This skin illustrates the use of data from the forecasting module.
+</p>
+
+#if $varExists('forecast')
+
+<h1>Forecast Table</h1>
+#include forecast.inc
+
+<h1>Weather Underground</h1>
+#set $periods = $forecast.weather_periods('WU',max_events=6)
+#for $period in $periods
+$period.event_ts $forecast.label('Weather', $period.clouds)<br/>
+#end for 
+
+<h1>U.S. National Weather Service</h1>
+#set $periods = $forecast.weather_periods('NWS',max_events=6)
+#for $period in $periods
+$period.event_ts $forecast.label('Weather', $period.clouds)<br/>
+#end for 
+
+#if $varExists('forecast.zambretti')
+<h1>Zambretti</h1>
+The forecast is $forecast.label('Zambretti', $forecast.zambretti.code)
+#end if
+
+#set $tides = $forecast.xtides
+#if len($tides) > 0
+<h1>Tides</h1>
+  #for $tide in $tides
+$tide.event_ts $tide.hilo $tide.offset<br/>
+  #end for
+#end if
+
+#else
+
+<p>The Forecast search list extension is not installed.</p>
+
+#end if
+
+  </body>
+</html>
