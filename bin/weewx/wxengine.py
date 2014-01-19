@@ -370,16 +370,28 @@ class StdQC(StdService):
         # dictionary, then an exception will get thrown and nothing will be
         # done.
         try:
-            min_max_dict = config_dict['StdQC']['MinMax']
+            mm_dict = config_dict['StdQC']['MinMax']
         except KeyError:
-            syslog.syslog(syslog.LOG_NOTICE, "wxengine: No QC information in config file. Ignored.")
+            syslog.syslog(syslog.LOG_NOTICE, "wxengine: No QC information in config file.")
             return
 
         self.min_max_dict = {}
 
-        for obs_type in min_max_dict.scalars:
-            self.min_max_dict[obs_type] = (float(min_max_dict[obs_type][0]),
-                                           float(min_max_dict[obs_type][1]))
+        target_unit_name = config_dict['StdConvert']['target_unit']
+        target_unit = weewx.units.unit_constants[target_unit_name.upper()]
+        converter = weewx.units.StdUnitConverters[target_unit]
+
+        for obs_type in mm_dict.scalars:
+            if len(mm_dict[obs_type]) == 3:
+                group = weewx.units._getUnitGroup(obs_type)
+                vt = (float(mm_dict[obs_type][0]), mm_dict[obs_type][2], group)
+                minval = converter.convert(vt)[0]
+                vt = (float(mm_dict[obs_type][1]), mm_dict[obs_type][2], group)
+                maxval = converter.convert(vt)[0]
+            else:
+                minval = float(mm_dict[obs_type][0])
+                maxval = float(mm_dict[obs_type][1])
+            self.min_max_dict[obs_type] = (minval, maxval)
         
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
