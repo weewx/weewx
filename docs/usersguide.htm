@@ -2841,6 +2841,33 @@ Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
       to control how much time is considered a break in data.</p>
     <p>Use the appropriate <a href="#configuring_hardware"><span class="code">wee_config_XXX</span></a> utility to change the station's interval.</p>
 
+    <h3 id="many_loop_read_errors">Many LOOP read errors with Davis Vantage</h3>
+    <p>The symptom is many LOOP errors and unreliable downloading of archive records. 
+      Your log may look like this:
+    <pre class="tty">
+Jan 18 20:38:52 raspberrypi weewx[6024]: VantagePro: Opened up serial port /dev/ttyUSB0, baudrate 19200
+Jan 18 20:38:53 raspberrypi weewx[5977]: VantagePro: LOOP #12; read error. Try #1
+Jan 18 20:38:53 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 0 instead
+Jan 18 20:38:58 raspberrypi weewx[7543]: VantagePro: LOOP #13; read error. Try #1
+Jan 18 20:38:58 raspberrypi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
+Jan 18 20:39:03 raspberrypi weewx[7543]: VantagePro: LOOP #14; read error. Try #2
+Jan 18 20:39:03 raspberrypi weewx[7543]:       ****  Expected to read 99 chars; got 0 instead
+Jan 18 20:39:03 raspberrypi weewx[5977]: VantagePro: LOOP #13; read error. Try #2
+Jan 18 20:39:03 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 4 instead
+Jan 18 20:39:08 raspberrypi weewx[7543]: VantagePro: LOOP #15; read error. Try #3
+Jan 18 20:39:08 raspberrypi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
+Jan 18 20:39:09 raspberrypi weewx[5977]: VantagePro: LOOP #14; read error. Try #3
+Jan 18 20:39:09 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead
+Jan 18 20:39:14 raspberrypi weewx[5977]: VantagePro: LOOP #15; read error. Try #4
+Jan 18 20:39:14 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead</pre>
+    <p>If you look closely at the log above, you'll see that there are
+      multiple instances of <span class="code">weewx</span> running
+      simultaneously (process IDs 5977, 6024, and 7543). They are
+      contending with each other for control of the console, resulting
+      in missed packets and records.
+    </p>
+    <p>The cure is simple: kill all but one of them.</p>
+
     <h3>FreeBSD</h3>
     <p>User Fabian reports that the following had to be done to get the VantagePro2 
       working under FreeBSD:</p>
