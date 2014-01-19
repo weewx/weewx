@@ -9,6 +9,7 @@ get used.
 
 
 Minor cleanup to the Standard skin:
+ - anything using wmr100 reports wmr100n as hardware type
  - improve layout, possibly like http://www.kanonbra.com/veret/
  - punt the buttons for week/month/year, use regular html links instead
  - include a table instead of duplicating html code for stats
