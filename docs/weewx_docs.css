@@ -10,6 +10,9 @@ li {
   margin-right: 10%;
   margin-top: 10px;
 }
+#toc li {
+  margin-top: 0px;
+}
 dt {
   margin-top: 10px;
 }

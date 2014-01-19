@@ -21,10 +21,7 @@ set -e
 cfgfile=/etc/weewx/weewx.conf
 mergeapp=/usr/share/weewx/setup.py
 
-# insert any configuration variables into the configuration file.
-# many variables occur multiple times, so we use the trailing digit in the sed
-# expressions to change only the one we want.  this means we are tightly
-# coupled to the order in which things are specified in weewx.conf!
+# insert any configuration variables into the configuration file
 configure_weewxconf() {
     db_get weewx/location
     sed -i "s%location =.*%location = \"$RET\"%" $cfgfile

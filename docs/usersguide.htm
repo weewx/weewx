@@ -870,7 +870,7 @@ Version: 2.5.1
     <p>For Debian, Ubuntu, Mint operating systems, follow the instruction in 
       <a href='debian.htm'>Installation on Debian Linux systems</a>.</p>
 
-    <h3><a href='redhat.htm'>Installing from RPM package</a></h3>
+    <h3><a href='redhat.htm'>Installing from Redhat RPM package</a></h3>
     <p>For Redhat, CentOS, Fedora operating systems, follow the instructions in
       <a href='redhat.htm'>Installation on Redhat Linux systems</a>.</p>
 
@@ -1975,7 +1975,7 @@ Mutating actions will request confirmation before proceeding.</p>
 Pressure offset is None
 Set pressure offset to 1.247000 hPa (y/n)? y
 Pressure offset is now 1.247000</p>
-    <p>For those using U.S. Customary units, to convert inHg to hPa (mbar), multiply by 33.86389</p>
+    <p>To convert inHg to hPa (mbar), multiply by 33.86389</p>
     <p>To display sensor, relative, and calculated pressures:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-pressures</pre>
     <p>Note that <span class='code'>weewx</span> does not use the <i>relative pressure</i> displayed on the Fine Offset console.</p>
@@ -2025,10 +2025,6 @@ Pressure offset is now 1.247000</p>
         </td>
       </tr>
     </table>
-
-    <h3>Archive record generation</h3>
-    <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
-    </p>
 
     <h3>Catchup</h3>
     <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
@@ -2126,11 +2122,6 @@ in humidity: 48.0
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.
-    </p>
-    <p>To obtain archive records, <span class='code'>weewx</span> can read
-      archive records from the station console, or calculate archive records
-      independent of the station memory.  This is controlled by the
-      <span class='code'>record_generation</span> parameter.
     </p>
 
     <h3>Station characteristics</h3>
