@@ -678,7 +678,7 @@ class StationRegistry(REST):
             except (urllib2.URLError, socket.error,
                     httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and try again
-                syslog.syslog(syslog.LOG_ERR, 'restful: Failed attempt %d of %d: %e' % (_count+1, self.max_tries, e))
+                syslog.syslog(syslog.LOG_ERR, 'restful: Failed attempt %d of %d: %s' % (_count+1, self.max_tries, e))
             else:
                 # Check for the server response
                 for line in _response:
