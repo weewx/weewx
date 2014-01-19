@@ -15,29 +15,29 @@
     </a>
     <h1 class="title">Upgrading <span class="code">weewx</span><br/>
       <span class='version'>
-Version: 2.5.1
+Version: 2.6.0a4
       </span>
     </h1>
 
-    <p>This document has three sections:</p>
+    <p>This document contains the following sections:</p>
       <ul>
         <li><a href="#Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></li>
-        <li><a href="#Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM package</a></li>
-        <li><a href="#Instructions_for_specific_versions">Instructions for specific 
-		versions</a></li>
+        <li><a href="#Upgrading_using_DEB_package">Upgrading using DEB package</a></li>
+        <li><a href="#Upgrading_using_RPM_package">Upgrading using RPM package</a></li>
+        <li><a href="#Instructions_for_specific_versions">Instructions for specific versions</a></li>
       </ul>
-    <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for 
-	  Specific Versions</a></em> applies to both installation methods.</p>
-      <p class="warning"><strong>Warning!</strong><br/>
-        You must use the same upgrade technique as your initial install!<br/>
-        <br/>
-        For example, if you used <span class="code">setup.py</span> to install
-        <span class='code'>weewx</span>, you should use
-        <span class="code">setup.py</span> to upgrade.<br/>
-        <br/>
-        If you used a DEB or RPM package to install, then you should upgrade
-        using the same package type.
-      </p>
+    <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></em> applies to each installation method.</p>
+
+    <p class="warning"><strong>Warning!</strong><br/>
+      You must use the same upgrade technique as your initial install!<br/>
+      <br/>
+      For example, if you used <span class="code">setup.py</span> to install
+      <span class='code'>weewx</span>, you should use
+      <span class="code">setup.py</span> to upgrade.<br/>
+      <br/>
+      If you used a DEB or RPM package to install, then you should upgrade
+      using the same package type.
+    </p>
 
     <h1><a name="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
     <p>Before upgrading <span class="code">weewx</span>, check the section <em>
@@ -76,8 +76,7 @@ Version: 2.5.1
 	one does not already exist. </li>
     </ul>
 
-    <h1><a name="Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM package</a></h1>
-    <h2>DEB Package</h2>
+    <h1><a name="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
     <p>Upgrade to X.Y.Z like this:</p>
     <p class='tty'>sudo dpkg -i weewx_X.Y.Z-R.deb</p>
     <p>The upgrade process will not modify the <span class='code'>weewx</span>
@@ -113,7 +112,8 @@ Version: 2.5.1
       <span class='code'>/etc/weewx/weewx.conf</span>
     </p>
 
-    <h2>RPM Package</h2>
+
+    <h1><a name="Upgrading_using_RPM_package">Upgrading using RPM package</a></h1>
     <p>Upgrade to X.Y.Z like this:</p>
     <p class='tty'>sudo rpm -U weewx-X.Y.Z-R.rpm</p>
     <p>The upgrade process will not modify the <span class='code'>weewx</span>
@@ -130,6 +130,18 @@ Version: 2.5.1
     <p class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</p>
 
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+    <h2>V2.5 or earlier</h2>
+    <p>Version 2.6 should be 100% backwards compatible with earlier versions, with a couple
+    of small exceptions.</p>
+    <ul>
+    <li>If you have written a custom <span class="code">weewx</span> service, the
+    install routine will try to insert its name into an appropriate place in one of the five new lists
+    of services to be run. You should check section <span class="code">[Engines][[WxEngine]]</span>
+    to make sure it made a reasonable guess.</li>
+    <li>If you have written a custom RESTful service, the architecture for these services has
+    completely changed. They are now first class services, and are treated like any other
+    <span class="code">weewx</span> service. I can help you with the transition.</li>
+    </ul>
     <h2>V2.3 or earlier</h2>
     <p>The option <span class="code">time_length</span> will now be the exact length 
       of the resultant plot. Before, a plot with <span class="code">time_length</span> 

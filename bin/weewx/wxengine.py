@@ -106,24 +106,27 @@ class StdEngine(object):
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""
-        
-        # This will hold the list of services to be run:
+
+        # This will hold the list of objects, after the services has been instantiated:
         self.service_obj = []
 
-        # Get the names of the services to be run:
-        service_names = weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get('service_list'))
-        
         # Wrap the instantiation of the services in a try block, so if an exception
         # occurs, any service that may have started can be shut down in an orderly way.
         try:
-            for svc in service_names:
-                # For each listed service in service_list, instantiates an
-                # instance of the class, passing self and the configuration
-                # dictionary as the arguments:
-                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
-                self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
-                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
-        except:
+            # Go through each of the service lists one by one:
+            for service_group in ['prep_services', 'process_services', 'archive_services',
+                                  'restful_services', 'report_services']:
+                # For each service list, retrieve all the listed services.
+                # Provide a default, empty list in case the service list is
+                # missing completely:
+                for svc in weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get(service_group, [])):
+                    # For each service, instantiates an instance of the class,
+                    # passing self and the configuration dictionary as the
+                    # arguments:
+                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
+                    self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
+                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
+        except Exception:
             # An exception occurred. Shut down any running services, then
             # reraise the exception.
             self.shutDown()
@@ -225,7 +228,15 @@ class StdEngine(object):
             return self.console.getTime()
         except NotImplementedError:
             return int(time.time()+0.5)
-        
+
+    # The following getter and setter allow an open Archive object
+    # to be attached to the engine.
+    @property
+    def archive(self):
+        return self.archive_db
+    @archive.setter
+    def archive(self, archive_db):
+        self.archive_db = archive_db
         
 #===============================================================================
 #                    Class StdService
@@ -528,9 +539,11 @@ class StdArchive(StdService):
         archive_schema_str = config_dict['StdArchive'].get('archive_schema', 'user.schemas.defaultArchiveSchema')
         archive_schema = weeutil.weeutil._get_object(archive_schema_str)
         archive_db = config_dict['StdArchive']['archive_database']
-        # This will create the database if it doesn't exist, the return an
-        # opened instance of Archive:
-        self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], archive_schema)
+        # This will create the database if it doesn't exist, then return an
+        # opened instance of Archive. It also attaches a reference to the engine, so other
+        # services can use it.
+        self.archive = self.engine.archive = \
+            weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], archive_schema)
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (archive_db,))
 
     def setupStatsDatabase(self, config_dict):
@@ -722,7 +735,7 @@ class StdRESTful(StdService):
                 obj = weeutil.weeutil._get_object(site_dict['driver'])(site, **site_dict)
             except KeyError, e:
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
-                syslog.syslog(syslog.LOG_DEBUG, "    **** required parameter '%s' is not specified" % e)
+                syslog.syslog(syslog.LOG_DEBUG, "    ****  required parameter '%s' is not specified" % e)
             else:
                 obj_list.append(obj)
                 syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will be posted to %s" % (site,))

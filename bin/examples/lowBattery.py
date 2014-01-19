@@ -45,17 +45,18 @@ sending out an alarm if the battery is only occasionally being signaled as bad.
 ********************************************************************************
 
 To specify that this new service be loaded and run, it must be added to the
-configuration option service_list, located in sub-section [Engines][[WxEngine]]:
+configuration option "report_services", located in sub-section [Engines][[WxEngine]].
 
 [Engines]
   [[WxEngine]]
-    service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport, examples.lowBattery.BatteryAlarm
+    ...
+    report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport, examples.lowBattery.BatteryAlarm
 
 ********************************************************************************
 
 If you wish to use both this example and the alarm.py example, simply merge the
-two configuration options together under [Alarm] and add both services to the
-service_list.
+two configuration options together under [Alarm] and add both services to
+report_services.
 
 *****************************************************************************
 """

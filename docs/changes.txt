@@ -1,10 +1,23 @@
 weewx change history
 --------------------
 
-X.X.X XX/XX/XX
+2.6.0 MM/DD/YY
 
-Fixed bug in SummaryByMonth and SummaryByYear that would result in duplicate
-month/year entries when generating from multiple ByMonth or ByYear templates.
+Changed the RESTful architecture so RESTful services are now first-class
+weewx services. This should simplify the installation of 3rd party
+extensions that use these services.
+
+Broke up service_list, the very long list of services to be run, into
+five separate lists. This will allow services to be grouped together,
+according to when they should be run.
+
+Changed the default time and date labels to use locale dependent formatting.
+The defaults should now work in most locales, provided you set the
+environment variable LANG before running weewx.
+
+Now caches font handles in order to work around a memory leak in PIL.
+
+Now works with the pure Python version of Cheetah's NameMapper.
 
 Consolidated pressure calculation code in ws23xx, ws28xx, te923, and fousb.
 
@@ -23,6 +36,140 @@ Minor cleanup to Standard skin for better out-of-the-box behavior:
  - not every WMR100 is a WMR100N
 
 2.5.1 12/30/13
+
+Fixed bug when reading cooling_base option.
+
+Default to sane behavior if skin does not define Labels.
+
+Fixed bug in setting of CheetahGenerator options.
+
+Fixed qsf and qpf summary values in forecast module.
+
+Fixed handling of empty sky cover fields in WU forecasts.
+
+Forecast module now considers the fctcode, condition, and wx fields for
+precipitation and obstructions to visibility.
+
+Added options to forecast module to help diagnose parsing failures and new
+forecast formats.
+
+Added retries when saving forecast to database and when reading from database.
+
+Fixes to the Fine Offset driver to eliminate spikes caused by reading from
+memory before the pointer had been updated (not the same thing as an unstable
+read).
+
+Added driver for LaCrosse 2300 series of weather stations.
+
+Added driver for Hideki TE923 series of weather stations.
+
+
+2.5.0 10/29/13
+2.6.0 MM/DD/YY
+
+Changed the RESTful architecture so RESTful services are now first-class
+weewx services. This should simplify the installation of 3rd party
+extensions that use these services.
+
+Broke up service_list, the very long list of services to be run, into
+five separate lists. This will allow services to be grouped together,
+according to when they should be run.
+
+Changed the default time and date labels to use locale dependent formatting.
+The defaults should now work in most locales, provided you set the
+environment variable LANG before running weewx.
+
+Now caches font handles in order to work around a memory leak in PIL.
+
+Now works with the pure Python version of Cheetah's NameMapper.
+
+Consolidated pressure calculation code in ws23xx, ws28xx, te923, and fousb.
+
+Added Vantage types stormRain and windSpeed10 to the list of observation
+types.
+
+Simulator now generates types dewpoint and pressure.
+
+Fixed parsing of locations in the xtide forecast.
+
+Changed default QC barometric low from 28 to 26. Added inTemp,
+inHumidity, and rain.
+
+Minor cleanup to Standard skin for better out-of-the-box behavior:
+ - default to no radar image instead of having every station point to Oregon
+ - not every WMR100 is a WMR100N
+
+2.5.1 12/30/13
+
+Added UV plots to the templates. They will be shown automatically if you
+have any UV data.
+
+Fixed bug when reading cooling_base option.
+
+Default to sane behavior if skin does not define Labels.
+
+Fixed bug in setting of CheetahGenerator options.
+
+Fixed qsf and qpf summary values in forecast module.
+
+Fixed handling of empty sky cover fields in WU forecasts.
+
+Forecast module now considers the fctcode, condition, and wx fields for
+precipitation and obstructions to visibility.
+
+Added options to forecast module to help diagnose parsing failures and new
+forecast formats.
+
+Added retries when saving forecast to database and when reading from database.
+
+Fixes to the Fine Offset driver to eliminate spikes caused by reading from
+memory before the pointer had been updated (not the same thing as an unstable
+read).
+
+Added driver for LaCrosse 2300 series of weather stations.
+
+Added driver for Hideki TE923 series of weather stations.
+
+
+2.5.0 10/29/13
+2.6.0 MM/DD/YY
+
+Changed the RESTful architecture so RESTful services are now first-class
+weewx services. This should simplify the installation of 3rd party
+extensions that use these services.
+
+Broke up service_list, the very long list of services to be run, into
+five separate lists. This will allow services to be grouped together,
+according to when they should be run.
+
+Changed the default time and date labels to use locale dependent formatting.
+The defaults should now work in most locales, provided you set the
+environment variable LANG before running weewx.
+
+Now caches font handles in order to work around a memory leak in PIL.
+
+Now works with the pure Python version of Cheetah's NameMapper.
+
+Consolidated pressure calculation code in ws23xx, ws28xx, te923, and fousb.
+
+Added Vantage types stormRain and windSpeed10 to the list of observation
+types.
+
+Simulator now generates types dewpoint and pressure.
+
+Fixed parsing of locations in the xtide forecast.
+
+Changed default QC barometric low from 28 to 26. Added inTemp,
+inHumidity, and rain.
+
+Minor cleanup to Standard skin for better out-of-the-box behavior:
+ - default to no radar image instead of having every station point to Oregon
+ - not every WMR100 is a WMR100N
+
+2.5.1 12/30/13
+
+Added UV plots to the templates. They will be shown automatically if you
+have any UV data.
 
 Fixed bug when reading cooling_base option.
 

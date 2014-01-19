@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010-2014 Tom Keffer <tkeffer@gmail.com>
+#
+#    Copyright (c) 2010-2014 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
 # $Id$
 """Data structures and functions for dealing with units."""
 
@@ -817,9 +821,19 @@ class ValueDict(object):
     def __getitem__(self, obs_type):
         """Look up an observation type (eg, 'outTemp') and return it as
         a DictBinder."""
+        # The following is to keep the Python version of Cheetah's NameMapper happy:
+        if obs_type not in self.dictionary:
+            raise AttributeError(obs_type)
         return DictBinder(obs_type, self.dictionary, context=self.context, 
                           formatter=self.formatter, converter=self.converter)
-    
+
+    def __getattr__(self, obs_type):
+        """Look up an observation type (eg, 'outTemp') and return it as a DictBinder."""
+        # The following is to keep the Python version of Cheetah's NameMapper happy:
+        if obs_type not in self.dictionary:
+            raise AttributeError(obs_type)
+        return DictBinder(obs_type, self.dictionary, context=self.context, 
+                          formatter=self.formatter, converter=self.converter)
 
 class DictBinder(ValueOutputter):
     

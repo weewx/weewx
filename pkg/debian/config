@@ -49,16 +49,20 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
                 db_input high weewx/fousb_model || true
             fi
 
+            if [ "$RET" = "WS23xx" ]; then
+                db_input high weewx/ws23xx_model || true
+                db_go
+                db_input high weewx/ws23xx_port || true
+            fi
+
             if [ "$RET" = "WS28xx" ]; then
                 db_input high weewx/ws28xx_model || true
                 db_go
                 db_input high weewx/ws28xx_frequency || true
             fi
 
-            if [ "$RET" = "WS23xx" ]; then
-                db_input high weewx/ws23xx_model || true
-                db_go
-                db_input high weewx/ws23xx_port || true
+            if [ "$RET" = "TE923" ]; then
+                db_input high weewx/te923_model || true
             fi
             ;;
     esac

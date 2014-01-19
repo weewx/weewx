@@ -72,7 +72,7 @@
                 <td class="stats_data">$current.barometer</td>
               </tr>
               <tr>
-                <td class="stats_label">Barometer trend ($trend.time_delta.hour.format("%.0f"))</td>
+                <td class="stats_label">Barometer Trend ($trend.time_delta.hour.format("%.0f"))</td>
                 <td class="stats_data">$trend.barometer</td>
               </tr>
               <tr>
@@ -480,6 +480,9 @@
           <img src="daywinddir.png"   alt="Hi Wind" />
           <img src="dayinside.png"    alt="Inside" />
           <img src="daywindvec.png"   alt="Wind Vector" />
+          #if $day.UV.has_data
+          <img src="dayuv.png" alt="UV Index" />
+          #end if
           #if $day.radiation.has_data
           <img src="dayradiation.png" alt="Radiation" />
           #end if

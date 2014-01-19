@@ -1,4 +1,8 @@
-# Copyright (c) 2010-2014 Tom Keffer <tkeffer@gmail.com>
+#
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
 # $Id$
 """Various weather related formulas and utilities."""
 

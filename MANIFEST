@@ -43,6 +43,7 @@ bin/weewx/filegenerator.py
 bin/weewx/imagegenerator.py
 bin/weewx/reportengine.py
 bin/weewx/restful.py
+bin/weewx/restx.py
 bin/weewx/station.py
 bin/weewx/stats.py
 bin/weewx/units.py

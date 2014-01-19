@@ -483,7 +483,9 @@ def pickLabelFormat(increment):
     return "%%.%df" % decimal_places
 
 def get_font_handle(fontpath, *args):
-    
+    font_key = (fontpath, args)
+    if font_key in get_font_handle.fontCache:
+        return get_font_handle.fontCache[font_key]
     font = None
     if fontpath is not None :
         try :
@@ -496,8 +498,10 @@ def get_font_handle(fontpath, *args):
     
     if font is None :
         font = ImageFont.load_default()
-        
+    if font is not None :
+        get_font_handle.fontCache[font_key] = font
     return font 
+get_font_handle.fontCache={}
 
 def _rel_approx_equal(x, y, rel=1e-7):
     """Relative test for equality.

@@ -21,7 +21,7 @@ function showtab(tab,id) {
   document.getElementById(tab+'-tab-'+id).className = 'tab selected';
 }
   </script>
-  </head>
+</head>
 
 <body>
 
@@ -55,32 +55,7 @@ Version: 2.5.1
       release in 2009.  The SourceForge project was registered in October of
       2009.</p>
     <p><span class="code">weewx</span> is small, with under 10,000 lines of
-      code, and well-documented, with over 6000 lines of comments.</p>
-
-    <p>
-      In the world of open-source hobbyist software, 
-      <span class="code">weewx</span> is pretty easy to install and
-      configure. There are not many package dependencies, the
-      configuration is simple, and this guide includes extensive
-      instructions.
-      There are thousands of people who have successfully done an
-      install. However, there is no "point-and-click" interface, so
-      you have to do some manual configuring.
-    </p>
-    <p>You should have the following skills:</p>
-    <ul>
-      <li>The patience to read and follow this guide;</li>
-      <li>Willingness and ability to edit a configuration file;</li>
-      <li>Some familiarity with Linux or other Unix derivatives;</li>
-      <li>Ability to do simple Unix tasks such as changing file
-        permissions and running commands;</li>
-      <li>No programming experience is necessary unless you wish
-        to extend <span class="code">weewx</span>. In this case, you should have some
-        familiarity with Python.</li>
-    </ul>
-    <p>If you get stuck, there is a very active <a href="https://groups.google.com/forum/#!forum/weewx-user">User's Group</a> to
-      help, but please at least try to solve the problem yourself before posting.
-    </p>
+      code, and well-documented, with over 6,000 lines of comments.</p>
 
     <h1 id="hardware">Supported Hardware</h1>
     <p>
@@ -664,6 +639,34 @@ Version: 2.5.1
     <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work.</p>
 
     <h1 id="installing">Installing <span class="code">weewx</span></h1>
+
+    <h2>Required skills</h2>
+    <p>
+      In the world of open-source hobbyist software, 
+      <span class="code"> weewx</span> is pretty easy to install and
+      configure. There are not many package dependencies, the
+      configuration is simple, and this guide includes extensive
+      instructions.
+      There are thousands of people who have successfully done an
+      install. However, there is no "point-and-click" interface, so
+      you have to do some manual configuring.
+    </p>
+    <p>You should have the following skills:</p>
+    <ul>
+      <li>The patience to read and follow this guide;</li>
+      <li>Willingness and ability to edit a configuration file;</li>
+      <li>Some familiarity with Linux or other Unix derivatives;</li>
+      <li>Ability to do simple Unix tasks such as changing file
+        permissions and running commands;</li>
+      <li>No programming experience is necessary unless you wish
+        to extend weewx. In this case, you should have some
+        familiarity with Python.</li>
+    </ul>
+    <p>If you get stuck, there is a very active <a href="https://groups.google.com/forum/#!forum/weewx-user">User's Group</a> to
+      help, but please at least try to solve the problem yourself before posting.
+    </p>
+
+    <h2>Installation methods</h2>
     <p>
       <span class='code'>weewx</span> can be installed using the standard
       Python utility <span class='code'>setup.py</span> or it can be installed
@@ -863,11 +866,11 @@ Version: 2.5.1
 
     <br/>
     
-    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
+    <h3><a href='debian.htm'>Installing from DEB package</a></h3>
     <p>For Debian, Ubuntu, Mint operating systems, follow the instruction in 
       <a href='debian.htm'>Installation on Debian Linux systems</a>.</p>
 
-    <h2><a href='redhat.htm'>Installing from Redhat RPM package</a></h2>
+    <h3><a href='redhat.htm'>Installing from RPM package</a></h3>
     <p>For Redhat, CentOS, Fedora operating systems, follow the instructions in
       <a href='redhat.htm'>Installation on Redhat Linux systems</a>.</p>
 
@@ -1219,7 +1222,7 @@ longitude = -77.0366</pre>
 	hh:mm</span>. Optional. Default is the present time.</p>
 
     <h2 class="config_section">[StdRESTful]</h2>
-    <p>This section is for configuring the <span class="code">StdRESTful</span> 
+    <p>This section is for configuring the <span class="code">StdRESTful</span>
       service, which uploads to simple
       <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
       servers such as the <a href="http://www.wunderground.com/">Weather Underground</a>,
@@ -1227,31 +1230,54 @@ longitude = -77.0366</pre>
       <a href="http://www.wxqa.com/">CWOP</a>. </p>
 
     <h3 class="config_section">[[Wunderground]]</h3>
-    <p><span class="code">Weewx </span>can send your current data to the
-      <a href="http://www.wunderground.com/">Weather Underground</a>. If you
-      do not wish to do this, leave the <span class='code'>station</span>
-      commented.</p>
+    <p>
+      <span class="code">Weewx</span> can send your current data to the
+      <a href="http://www.wunderground.com/">Weather Underground</a>. If
+      you do not wish to do this, leave the option
+      <span class='code'>station</span> commented.
+    </p>
     <pre class="tty">[StdRestful]
     [[Wunderground]]
         station = 12345678  # Replace with your station number
         password = xxxxx    # Replace with your password
-        driver = weewx.restful.Ambient</pre>
-    <p class="config_important">station </p>
-    <p>Set to your Weather Underground station ID (<em>e.g.</em>, <span class="code">KORHOODR3</span>). 
-      Required. </p>
-    <p class="config_important">password </p>
-    <p>Set to your Weather Underground password. Required. </p>
+        rapidfire = False</pre>
+    <p class="config_important">station</p>
+    <p>
+      Set to your Weather Underground station ID (<em>e.g.</em>, <span
+        class="code">KORHOODR3</span>). Required.
+    </p>
+    <p class="config_important">password</p>
+    <p>Set to your Weather Underground password. Required.</p>
+    <p class="config_option">rapidfire</p>
+    <p>
+      Set to <span class="code">True</span> to have <span class="code">weewx</span>
+      post using the <a href="http://www.wunderground.com/weatherstation/rapidfirehelp.asp">Weather Underground's "Rapidfire" protocol</a>.
+      This will send a post to the
+      WU site with every LOOP packet, which can be as often as every 2.5
+      seconds in the case of the Vantage instruments. Optional. Default
+      is <span class="code">False</span>.
+    </p>
+    <p class="config_option">archive_post</p>
+    <p>
+      This option tells <span class="code">weewx</span> to post on every
+      archive record, which is the normal "PWS" mode for the Weather
+      Underground. Because they prefer that you either use their
+      "Rapidfire" protocol, or their PWS mode, but not both, the default
+      for this option is the opposite for whatever you choose above for
+      option <span class="code">rapidfire</span>. However, if for some
+      reason you want to do both, then you may set both options to <span
+      class="code">True</span>.
+    </p>
 
     <h3 class="config_section">[[PWSweather]]</h3>
     <p><span class="code">Weewx </span>can send your current data to the
       <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
-      do not wish to do this, leave the <span class='code'>station</span>
-      commented.</p>
+      do not wish to do this, leave the option
+      <span class='code'>station</span> commented.</p>
     <pre class="tty">[StdRestful]
     [[PWSweather]]
         station = 12345678  # Replace with your station number
-        password = xxxxx    # Replace with your password
-        driver = weewx.restful.Ambient</pre>
+        password = xxxxx    # Replace with your password</pre>
     <p class="config_important">station </p>
     <p>Set to your PWSweather station ID. Required. </p>
     <p class="config_important">password </p>
@@ -1260,19 +1286,17 @@ longitude = -77.0366</pre>
     <h3 class="config_section">[[WOW]]</h3>
     <p class="config_section"><span class="code">Weewx</span> can send your 
       current data to the <a href="http://wow.metoffice.gov.uk/">British
-        Weather Observations Website (WOW)</a> service. This section is
-      <em>not</em> included in <span class="code">weewx.conf</span>, so you
-      will have to add it. When you are done, it will look something
-      like this:</p>
+        Weather Observations Website (WOW)</a> service. If you do not wish
+      to do this, leave the <span class='code'>station</span> option
+      commented.</p>
     <pre class="tty">[StdRestful]
     [[WOW]]
-        station = 12345678  # Replace with your station number
-        password = xxxxx    # Replace with your password
-        driver = weewx.restful.WOW</pre>
-    <p class="config_important">station </p>
-    <p>Set to your WOW station ID. Required. </p>
-    <p class="config_important">password </p>
-    <p>Set to your WOW password. Required. </p>
+        station = 12345678  # Replace with your site ID
+        password = xxxxx    # Replace with your site authentication key</pre>
+    <p class="config_important">station</p>
+    <p>Set to your WOW station ID. Required.</p>
+    <p class="config_important">password</p>
+    <p>Set to your WOW password. Required.</p>
 
     <h3 class="config_section">[[CWOP]]</h3>
     <p><span class="code">Weewx</span> can send your data to the
@@ -1284,8 +1308,7 @@ longitude = -77.0366</pre>
         station = 12345678  # Replace with your station number
         passcode = xxxxx    # Replace with your passcode (APRS stations only)
         server = cwop.aprs.net:14580, cwop.aprs.net:23
-        interval = 600  
-        driver = weewx.restful.CWOP</pre>
+        interval = 600</pre>
     <p class="config_important">station </p>
     <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>). Required.
     </p>
@@ -1310,6 +1333,23 @@ longitude = -77.0366</pre>
       attempts a catch up, old data could be interpreted as the current
       conditions. Optional. Default is 1800 seconds.</p>
 
+    <h3 class="config_section">[[AWEKAS]]</h3>
+    <p class="config_section"><span class="code">Weewx</span> can send your 
+      current data to the <a href="http://www.awekas.at/">Automatisches
+        Wetterkarten System</a> (AWEKAS).  If you do not wish
+      to do this, leave the <span class='code'>username</span> option
+      commented.</p>
+    <pre class="tty">[StdRestful]
+    [[AWEKAS]]
+        username = joeuser  # Replace with your awekas username
+        password = xxxxx    # Replace with your awekas password</pre>
+    <p class="config_important">username</p>
+    <p>Set to your AWEKAS username. Required.</p>
+    <p class="config_important">password</p>
+    <p>Set to your AWEKAS password. Required.</p>
+    <p class="config_option">language</p>
+    <p>Set to your preferred language. Default is <span class='code'>en</span>.</p>
+
     <h3 class="config_section" id="station_registry">[[StationRegistry]]</h3>
     <p>
       A registry of <span class="code">weewx</span> weather stations is maintained at <span class="code">weewx.com</span>.
@@ -1328,8 +1368,7 @@ longitude = -77.0366</pre>
       month, it will be removed from the list.</p>
     <pre class="tty">[StdRestful]
     [[StationRegistry]]
-        register_this_station = True
-        driver = weewx.restful.StationRegistry</pre>
+        register_this_station = True</pre>
     <p class="config_option">register_this_station</p>
     <p>Set this to <span class="code">True</span> to register the weather station.</p>
     <p class="config_option">description</p>
@@ -1397,7 +1436,9 @@ longitude = -77.0366</pre>
     <p>Set to the path where the weather data will be stored on your webserver (<em>e.g.</em>, <span class="code">/weather</span>). 
       NB: some FTP servers require a leading slash (&#39;<span class="code">/</span>&#39;), 
       some do not. Required. No default. </p>
-    <p class="config_important">passive </p>
+    <p class="config_option">port</p>
+    <p>Set to the port ID of your FTP server. Default is <span class="code">21</span>.</p>
+    <p class="config_option">passive</p>
     <p>Set to 1 if you wish to use the more modern, FTP passive mode, 0 if you wish 
       to use active mode. Passive mode generally works better through firewalls, but 
       not all FTP servers do a good job of supporting it. See
@@ -1465,10 +1506,7 @@ longitude = -77.0366</pre>
       <a href="#StdConvert"><span class="code">StdConvert</span></a> above. It is 
       also important that this service be run before the archiving service
       <span class="code">StdArchive</span>, so that it is the corrected data that 
-      is stored. </p>
-    <p>If you do not wish to apply any calibrations, you can leave it out of
-      <span class="code"><a href="#service_list">service_list</a></span>, the list 
-      of services to be run, and it will not be loaded or run at all. </p>
+      are stored. </p>
     <h3 class="config_section">[[Corrections]]</h3>
     <p>In this section you list all <em>correction expressions</em>. For example, 
       say that you know your outside thermometer reads high by 0.2&deg;F. You could add 
@@ -1494,10 +1532,7 @@ longitude = -77.0366</pre>
       <a href="#StdConvert"><span class="code">StdConvert</span></a>. It is also 
       important that it be run after the calibration service, <span class="code">StdCalibrate
       </span>and before the archiving service <span class="code">StdArchive</span>, 
-      so that it is the calibrated and corrected data that is stored. </p>
-    <p>If you do not wish to use this service, you can leave it out of
-      <span class="code"><a href="#service_list">service_list</a></span>, the list 
-      of services to be run, and it will not be loaded or run. </p>
+      so that it is the calibrated and corrected data that are stored. </p>
     <h3 class="config_section">[[MinMax]]</h3>
     <p>In this section you list the observation types you wish to have checked, 
       along with their minimum and maximum values. The units should be in <em>the 
@@ -1632,21 +1667,63 @@ longitude = -77.0366</pre>
       how to do this can be found in the section <em>
 	<a href="customizing.htm#service_engine">Customizing the 
 	  weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
+
+
     <h3 class="config_section">[[WxEngine]]</h3>
-    <p>This section is for options used by the service engine. </p>
-    <p class="config_option" id="service_list">service_list </p>
-    <p>This option is the list of <em>services</em> that are to be run by the service 
-      engine. After each event (such as the arrival of LOOP data, etc.), they will 
-      be run in the given order. The standard list of services run by <span class="code">weewx</span> is:
+    <p>
+      This section is for options used by the internal <span
+        class="code">weewx</span> service engine.
     </p>
-    <pre class='tty' style='white-space:pre-line'>service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine, StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
-    <p>Note that despite how it may or may not read above, this option must be <em>all on one line!</em> </p>
-    <p>You can leave some of these services out if you do not need them. For example, 
-      the bare minimum if you are using a Davis Vantage instrument, storing your data 
-      in US Customary units, doing no data corrections or quality control and running 
-      as a daemon (no printing to console) would be:</p>
-    <pre class="tty" style='white-space:pre-line'>service_list = weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
-    <p>However, this will only make a slight difference in execution speed. </p>
+    <p>
+      Internally, <span class="code">weewx</span> consists of many <em>services</em>,
+      each responsible for some aspect of the program's functionality.
+      After an event happens, such as
+      the arrival of a new LOOP packet, any interested service gets a
+      chance to do some useful work on the event. For example, a service
+      might manipulate the packet, print it out, store it in a database,
+      etc. This section controls which services are loaded and in what
+      order they get their opportunity to do that work. Before <span
+        class="code">weewx</span> v2.6, this section held one, looong
+      option called <span class="code">service_list</span>, which held
+      the names of all the services that should be run. Since then, this
+      list has been broken down into five, smaller, lists, given below.
+      They are run in the order given below.
+    </p>
+    <p class="config_option" id="prep_services">prep_services</p>
+    <p>
+      These services get called before any others. They are typically
+      used to prepare the console. For example, the service <span
+        class="code">weewx.wxengine.StdTimeSynch</span>, which is
+      responsible for making sure the console's clock is up to date, is
+      a member of this group.
+    </p>
+    <p class="config_option" id="process_services">process_services</p>
+    <p>Services in this group tend to process any incoming data.
+      They typically do things like quality control, or unit conversion,
+      or sensor calibration.</p>
+    <p class="config_option" id="archive_services">archive_services</p>
+    <p>Once data have been processed, services in this group archive
+      them.</p>
+    <p class="config_option" id="restful_services">restful_services</p>
+    <p>RESTful services, such as the Weather Underground, or CWOP,
+      are in this group. They need processed data that have been
+      archived, hence they are run after the preceeding groups.</p>
+    <p class="config_option" id="report_services">report_services</p>
+    <p>The various reporting services run in this group, including
+      the standard reporting engine.</p>
+    <p>For reference, here is the standard set of services that are
+      run with the default distribution.</p>
+    <pre class="tty">
+prep_services    = weewx.wxengine.StdTimeSynch
+process_services = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC
+archive_services = weewx.wxengine.StdArchive,
+restful_services = weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdStationRegistry
+report_services  = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
+</pre>
+    <p>If you're the type who cleans out your car's trunk after every use, 
+    you can leave some of these services out if you do not need
+      them. However, this will only make a slight difference in execution
+      speed and memory use.</p>
 
     <h1 id="configuring_hardware">Configuring Station Hardware</h1>
     <p>This section describes how to configure some of the more popular station hardware, using 
@@ -1898,7 +1975,7 @@ Mutating actions will request confirmation before proceeding.</p>
 Pressure offset is None
 Set pressure offset to 1.247000 hPa (y/n)? y
 Pressure offset is now 1.247000</p>
-    <p>To convert inHg to hPa (mbar), multiply by 33.86389</p>
+    <p>For those using U.S. Customary units, to convert inHg to hPa (mbar), multiply by 33.86389</p>
     <p>To display sensor, relative, and calculated pressures:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-pressures</pre>
     <p>Note that <span class='code'>weewx</span> does not use the <i>relative pressure</i> displayed on the Fine Offset console.</p>
@@ -1948,6 +2025,10 @@ Pressure offset is now 1.247000</p>
         </td>
       </tr>
     </table>
+
+    <h3>Archive record generation</h3>
+    <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
+    </p>
 
     <h3>Catchup</h3>
     <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
@@ -2045,6 +2126,11 @@ in humidity: 48.0
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.
+    </p>
+    <p>To obtain archive records, <span class='code'>weewx</span> can read
+      archive records from the station console, or calculate archive records
+      independent of the station memory.  This is controlled by the
+      <span class='code'>record_generation</span> parameter.
     </p>
 
     <h3>Station characteristics</h3>
@@ -2735,6 +2821,33 @@ Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
       hardware interval, <span class="code">weewx</span> defers to the
       station's interval.</p>
     <p>Use the appropriate <a href="#configuring_hardware"><span class="code">wee_config_XXX</span></a> utility to change the station's interval.</p>
+
+    <h3 id="many_loop_read_errors">Many LOOP read errors with Davis Vantage</h3>
+    <p>The symptom is many LOOP errors and unreliable downloading of archive records. 
+      Your log may look like this:
+    <pre class="tty">
+Jan 18 20:38:52 raspberrypi weewx[6024]: VantagePro: Opened up serial port /dev/ttyUSB0, baudrate 19200
+Jan 18 20:38:53 raspberrypi weewx[5977]: VantagePro: LOOP #12; read error. Try #1
+Jan 18 20:38:53 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 0 instead
+Jan 18 20:38:58 raspberrypi weewx[7543]: VantagePro: LOOP #13; read error. Try #1
+Jan 18 20:38:58 raspberrypi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
+Jan 18 20:39:03 raspberrypi weewx[7543]: VantagePro: LOOP #14; read error. Try #2
+Jan 18 20:39:03 raspberrypi weewx[7543]:       ****  Expected to read 99 chars; got 0 instead
+Jan 18 20:39:03 raspberrypi weewx[5977]: VantagePro: LOOP #13; read error. Try #2
+Jan 18 20:39:03 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 4 instead
+Jan 18 20:39:08 raspberrypi weewx[7543]: VantagePro: LOOP #15; read error. Try #3
+Jan 18 20:39:08 raspberrypi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
+Jan 18 20:39:09 raspberrypi weewx[5977]: VantagePro: LOOP #14; read error. Try #3
+Jan 18 20:39:09 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead
+Jan 18 20:39:14 raspberrypi weewx[5977]: VantagePro: LOOP #15; read error. Try #4
+Jan 18 20:39:14 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead</pre>
+    <p>If you look closely at the log above, you'll see that there are
+      multiple instances of <span class="code">weewx</span> running
+      simultaneously (process IDs 5977, 6024, and 7543). They are
+      contending with each other for control of the console, resulting
+      in missed packets and records.
+    </p>
+    <p>The cure is simple: kill all but one of them.</p>
 
     <h3>FreeBSD</h3>
     <p>User Fabian reports that the following had to be done to get the
