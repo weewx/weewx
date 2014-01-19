@@ -251,9 +251,10 @@ import tty
 
 import weeutil.weeutil
 import weewx.abstractstation
+import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.18'
+DRIVER_VERSION = '0.19'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -272,114 +273,10 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    altitude_m = getaltitudeM(config_dict)
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = WS23xx(altitude=altitude_m, config_dict=config_dict,
                      **config_dict['WS23xx'])
     return station
-
-# FIXME: the pressure calculations belong in wxformulas
-
-# noaa definitions for station pressure, altimeter setting, and sea level
-# http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
-
-# implementation copied from wview
-def sp2ap(sp_mbar, elev_meter):
-    """Convert station pressure to sea level pressure.
-    http://www.wrh.noaa.gov/slc/projects/wxcalc/formulas/altimeterSetting.pdf
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    ap - sea level pressure (altimeter) in millibars
-    """
-
-    if sp_mbar is None or sp_mbar <= 0.3 or elev_meter is None:
-        return None
-    N = 0.190284
-    slp = 1013.25
-    ct = (slp ** N) * 0.0065 / 288
-    vt = elev_meter / ((sp_mbar - 0.3) ** N)
-    ap_mbar = (sp_mbar - 0.3) * ((ct * vt + 1) ** (1/N))
-    return ap_mbar
-
-# implementation copied from wview
-def etterm(elev_meter, t_C):
-    """Calculate elevation/temperature term for sea level calculation."""
-    if elev_meter is None or t_C is None:
-        return None
-    t_K = t_C + 273.15
-    return math.exp( - elev_meter / (t_K * 29.263))
-
-def sp2bp(sp_mbar, elev_meter, t_C):
-    """Convert station pressure to sea level pressure.
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    t_C - temperature in degrees Celsius
-
-    bp - sea level pressure (barometer) in millibars
-    """
-
-    pt = etterm(elev_meter, t_C)
-    if sp_mbar is None or pt is None:
-        return None
-    bp_mbar = sp_mbar / pt if pt != 0 else 0
-    return bp_mbar
-
-# FIXME: this goes in weeutil.weeutil or weewx.units
-def getaltitudeM(config_dict):
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    return altitude_m
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain(newtotal, oldtotal):
-    """Calculate the rain differential given two cumulative measurements."""
-    if newtotal is not None and oldtotal is not None:
-        if newtotal >= oldtotal:
-            delta = newtotal - oldtotal
-        else:
-            delta = None
-            logdbg('ignoring rain counter difference: counter decrement')
-    else:
-        delta = None
-    return delta
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain_rate(delta, curr_ts, last_ts):
-    """Calculate the rain rate based on the time between two rain readings.
-
-    delta: rainfall since last reading, in units of x
-
-    curr_ts: timestamp of current reading, in seconds
-
-    last_ts: timestamp of last reading, in seconds
-
-    return: rain rate in x per hour
-
-    If the period between readings is zero, ignore the rainfall since there
-    is no way to calculate a rate with no period."""
-
-    if curr_ts is None:
-        return None
-    if last_ts is None:
-        last_ts = curr_ts
-    if delta is not None:
-        period = curr_ts - last_ts
-        if period != 0:
-            rate = 3600 * delta / period
-        else:
-            rate = None
-            if delta != 0:
-                loginf('rain rate period is zero, ignoring rainfall of %f' % delta)
-    else:
-        rate = None
-    return rate
 
 class WS23xx(weewx.abstractstation.AbstractStation):
     """Driver for LaCrosse WS23xx stations."""
@@ -605,7 +502,8 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
     packet['rainTotal'] = data['rt']
     if packet['rainTotal'] is not None:
         packet['rainTotal'] /= 10 # weewx wants cm
-    packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+    packet['rain'] = weewx.wxformulas.calculate_rain(
+        packet['rainTotal'], last_rain)
     packet['rainRate'] = data['rh']
     if packet['rainRate'] is not None:
         packet['rainRate'] /= 10 # weewx wants cm/hr
@@ -635,8 +533,10 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
     adjp = packet['pressure']
     if pressure_offset is not None and adjp is not None:
         adjp += pressure_offset
-    packet['barometer'] = sp2bp(adjp, altitude, packet['outTemp'])
-    packet['altimeter'] = sp2ap(adjp, altitude)
+    packet['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
+        adjp, altitude, packet['outTemp'])
+    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
+        adjp, altitude, algorithm='aaNOAA')
     return packet
 
 
@@ -777,8 +677,9 @@ class Station(object):
         last_rain = None
         for measure, nybbles in zip(measures, raw_data):
             value = measure.conv.binary2value(nybbles)
-            delta = calculate_rain(value.rain, last_rain)
-            rainrate = calculate_rain_rate(delta, last_ts, last_ts-interval*60)
+            delta = weewx.wxformulas.calculate_rain(value.rain, last_rain)
+            rainrate = weewx.wxformulas.calculate_rain_rate(
+                delta, last_ts, last_ts-interval*60)
             data_dict = {
                 'interval': interval,
                 'it': value.temp_indoor,
@@ -2057,52 +1958,54 @@ def read_measurements(ws2300, read_requests):
 #
 # PYTHONPATH=bin python bin/weewx/drivers/ws23xx.py
 
-usage = """%prog [options] [--debug] [--help]"""
+if __name__ == '__main__':
 
-def main():
-    syslog.openlog('ws23xx', syslog.LOG_PID | syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
-    port = DEFAULT_PORT
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--version', dest='version', action='store_true',
-                      help='display driver version')
-    parser.add_option('--debug', dest='debug', action='store_true',
-                      help='display diagnostic information while running')
-    parser.add_option('--port', dest='port', metavar='PORT',
-                      help='the serial port to which the station is connected')
-    parser.add_option('--readings', dest='readings', action='store_true',
-                      help='display sensor readings')
-    parser.add_option("--records", dest="records", type=int, metavar="N",
-                      help="display N station records, oldest to newest")
-    parser.add_option('--help-measures', dest='hm', action='store_true',
-                      help='display measure names')
-    parser.add_option('--measure', dest='measure', type=str, metavar="MEASURE",
-                      help='display single measure')
+    usage = """%prog [options] [--debug] [--help]"""
 
-    (options, args) = parser.parse_args()
+    def main():
+        syslog.openlog('ws23xx', syslog.LOG_PID | syslog.LOG_CONS)
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        port = DEFAULT_PORT
+        parser = optparse.OptionParser(usage=usage)
+        parser.add_option('--version', dest='version', action='store_true',
+                          help='display driver version')
+        parser.add_option('--debug', dest='debug', action='store_true',
+                          help='display diagnostic information while running')
+        parser.add_option('--port', dest='port', metavar='PORT',
+                          help='serial port to which the station is connected')
+        parser.add_option('--readings', dest='readings', action='store_true',
+                          help='display sensor readings')
+        parser.add_option("--records", dest="records", type=int, metavar="N",
+                          help="display N station records, oldest to newest")
+        parser.add_option('--help-measures', dest='hm', action='store_true',
+                          help='display measure names')
+        parser.add_option('--measure', dest='measure', type=str,
+                          metavar="MEASURE", help='display single measure')
 
-    if options.version:
-        print "ws23xx driver version %s" % DRIVER_VERSION
-        exit(1)
+        (options, args) = parser.parse_args()
 
-    if options.debug is not None:
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-    if options.port:
-        port = options.port
+        if options.version:
+            print "ws23xx driver version %s" % DRIVER_VERSION
+            exit(1)
 
-    with Station(port) as s:
-        if options.readings:
-            data = s.get_raw_data(SENSOR_IDS)
-            print data
-        if options.records is not None:
-            for ts,record in s.gen_records(count=options.records):
-                print ts,record
-        if options.measure:
-            data = s.get_raw_data([options.measure])
-            print data
-        if options.hm:
-            for m in Measure.IDS:
-                print "%s\t%s" % (m, Measure.IDS[m].name)
+        if options.debug is not None:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+        if options.port:
+            port = options.port
+
+        with Station(port) as s:
+            if options.readings:
+                data = s.get_raw_data(SENSOR_IDS)
+                print data
+            if options.records is not None:
+                for ts,record in s.gen_records(count=options.records):
+                    print ts,record
+            if options.measure:
+                data = s.get_raw_data([options.measure])
+                print data
+            if options.hm:
+                for m in Measure.IDS:
+                    print "%s\t%s" % (m, Measure.IDS[m].name)
 
 if __name__ == '__main__':
     main()

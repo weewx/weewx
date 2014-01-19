@@ -70,8 +70,8 @@ def main():
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
     print 'Using configuration file %s' % config_fn
 
-    print 'Using ws28xx driver %s' % weewx.drivers.ws28xx.DRIVER_VERSION
-    altitude_m = weewx.drivers.ws28xx.getaltitudeM(config_dict)
+    print 'Driver version %s' % weewx.drivers.ws28xx.DRIVER_VERSION
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = weewx.drivers.ws28xx.WS28xx(altitude=altitude_m,
                                           **config_dict['WS28xx'])
 

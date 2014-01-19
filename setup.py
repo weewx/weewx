@@ -561,10 +561,6 @@ def save_path(filepath):
 def get_version():
     return VERSION
 
-#==============================================================================
-# setup
-#==============================================================================
-
 def printdict(d, indent=0):
     for k in d.keys():
         if type(d[k]) is configobj.Section:
@@ -622,16 +618,15 @@ def do_merge():
 #==============================================================================
 # main entry point
 #==============================================================================
+
 if __name__ == "__main__":
-    if '--erge-config' in sys.argv:
+    if '--merge-config' in sys.argv:
         exit(do_merge())
 
     setup(name='weewx',
           version=VERSION,
           description='weather software',
-          long_description="weewx interacts with a weather station to produce graphs, "\
-                           "reports, and HTML pages. weewx can upload data to the "\
-                           "WeatherUnderground, PWSweather, or CWOP.",
+          long_description="""weewx interacts with a weather station to produce graphs, reports, and HTML pages.  weewx can upload data to the WeatherUnderground, PWSweather.com, or CWOP.""",
           author='Tom Keffer',
           author_email='tkeffer@gmail.com',
           url='http://www.weewx.com',
@@ -641,7 +636,8 @@ if __name__ == "__main__":
                          'License :: GPLv3',
                          'Operating System :: OS Independent',
                          'Programming Language :: Python',
-                         'Programming Language :: Python :: 2'],
+                         'Programming Language :: Python :: 2',
+                         ],
           platforms = ['any'],
           package_dir = {'' : 'bin'},
           packages    = ['weedb',

@@ -1,6 +1,5 @@
 LICENSE.txt
 README
-merge_config.py
 setup.cfg
 setup.py
 weewx.conf
@@ -77,6 +76,7 @@ docs/logo-debian.png
 docs/logo-fedora.png
 docs/logo-linux.png
 docs/logo-mint.png
+docs/logo-opensuse.png
 docs/logo-redhat.png
 docs/logo-suse.png
 docs/logo-ubuntu.png
@@ -84,6 +84,7 @@ docs/logo-weewx.png
 docs/readme.htm
 docs/redhat.htm
 docs/setup.htm
+docs/suse.htm
 docs/upgrading.htm
 docs/usersguide.htm
 docs/weekgustoverlay.png

@@ -15900,7 +15900,7 @@ Tenants Harbor| Maine,2013.08.22,07:40,,Moonset
         # we need a barebones config
         config_dict = create_config(tdir, 'user.forecast.XTideForecast')
         config_dict['Forecast']['XTide'] = {}
-        config_dict['Forecast']['XTide']['location'] = 'FooBar'
+        config_dict['Forecast']['XTide']['location'] = ['Bangor','North']
 
         # create a simulator with which to test
         e = wxengine.StdEngine(config_dict)

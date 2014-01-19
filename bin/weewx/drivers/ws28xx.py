@@ -871,8 +871,9 @@ import weeutil.weeutil
 import weewx.abstractstation
 import weewx.units
 import weewx.wxengine
+import weewx.wxformulas
 
-DRIVER_VERSION = '0.23'
+DRIVER_VERSION = '0.24'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
@@ -935,78 +936,8 @@ def calc_checksum(buf, start, end=None):
         cs += buf[0][i+start]
     return cs
 
-# noaa definitions for station pressure, altimeter setting, and sea level
-# http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
-
-# FIXME: this goes in wxformulas
-# implementation copied from wview
-def sp2ap(sp_mbar, elev_meter):
-    """Convert station pressure to sea level pressure.
-    http://www.wrh.noaa.gov/slc/projects/wxcalc/formulas/altimeterSetting.pdf
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    ap - sea level pressure (altimeter) in millibars
-    """
-
-    if sp_mbar is None or elev_meter is None:
-        return None
-    N = 0.190284
-    slp = 1013.25
-    ct = (slp ** N) * 0.0065 / 288
-    vt = elev_meter / ((sp_mbar - 0.3) ** N)
-    ap_mbar = (sp_mbar - 0.3) * ((ct * vt + 1) ** (1/N))
-    return ap_mbar
-
-# FIXME: this goes in wxformulas
-# implementation copied from wview
-def sp2bp(sp_mbar, elev_meter, t_C):
-    """Convert station pressure to sea level pressure.
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    t_C - temperature in degrees Celsius
-
-    bp - sea level pressure (barometer) in millibars
-    """
-
-    if sp_mbar is None or elev_meter is None or t_C is None:
-        return None
-    t_K = t_C + 273.15
-    pt = math.exp( - elev_meter / (t_K * 29.263))
-    bp_mbar = sp_mbar / pt if pt != 0 else 0
-    return bp_mbar
-
-# FIXME: this goes in weeutil.weeutil or weewx.units
-def getaltitudeM(config_dict):
-    # The driver needs the altitude in meters in order to calculate relative
-    # pressure. Get it from the Station data and do any necessary conversions.
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    return altitude_m
-
-# FIXME: this goes in weeutil.weeutil
-# let QC handle rainfall that is too big
-def calculate_rain(newtotal, oldtotal):
-    """Calculate the rain differential given two cumulative measurements."""
-    if newtotal is not None and oldtotal is not None:
-        if newtotal >= oldtotal:
-            delta = newtotal - oldtotal
-        else:  # wraparound
-            logerr('rain counter wraparound detected: new: %s old: %s' % (newtotal, oldtotal))
-            delta = None
-    else:
-        delta = None
-    return delta
-
 def loader(config_dict, engine):
-    altitude_m = getaltitudeM(config_dict)
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = WS28xx(altitude=altitude_m, **config_dict['WS28xx'])
     return station
 
@@ -1214,7 +1145,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         if packet['rainRate'] is not None:
             packet['rainRate'] /= 10 # weewx wants cm/hr
         rain_total = get_datum_match(data._RainTotal, CWeatherTraits.RainNP())
-        delta = calculate_rain(rain_total, self._last_rain)
+        delta = weewx.wxformulas.calculate_rain(rain_total, self._last_rain)
         self._last_rain = rain_total
         packet['rain'] = delta
         if packet['rain'] is not None:
@@ -1231,13 +1162,22 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         adjp = packet['pressure']
         if self.pressure_offset is not None and adjp is not None:
             adjp += self.pressure_offset
-        packet['barometer'] = sp2bp(adjp, self.altitude, packet['outTemp'])
-        packet['altimeter'] = sp2ap(adjp, self.altitude)
+        packet['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
+            adjp, self.altitude, packet['outTemp'])
+        packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
+            adjp, self.altitude, algorithm='aaNOAA')
 
         # track the signal strength and battery levels
         laststat = self._service.getLastStat()
-        packet['signal'] = laststat.LastLinkQuality
-        packet['battery'] = laststat.LastBatteryStatus
+        packet['rxCheckPercent'] = laststat.LastLinkQuality
+        packet['windBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'wind')
+        packet['rainBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'rain')
+        packet['outTempBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'th')
+        packet['inTempBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'console')
 
         return packet
 
@@ -1261,6 +1201,8 @@ class WS28xx(weewx.abstractstation.AbstractStation):
     def get_transceiver_id(self):
         return self._service.DataStore.getDeviceID()
 
+    def get_battery(status, hardware):
+        return 0
 
 # The following classes and methods are adapted from the implementation by
 # eddie de pieri, which is in turn based on the HeavyWeather implementation.
@@ -1462,6 +1404,20 @@ def getFrequencyStandard(frequency):
         return EFrequency.fsEU
     logerr("unknown frequency '%s', using US" % frequency)
     return EFrequency.fsUS
+
+# HWPro presents battery flags as WS/TH/RAIN/WIND
+# 0 - wind
+# 1 - rain
+# 2 - thermo-hygro
+# 3 - console
+
+batterybits = { 'wind':0, 'rain':1, 'th':2, 'console':3 }
+
+def getBatteryStatus(status, flag):
+    bit = batterybits.get(flag)
+    if bit is not None:
+        return BitHandling.testBit(status, bit)
+    return None
 
 class CWeatherTraits(object):
     windDirMap = {
@@ -2779,16 +2735,6 @@ class CDataStore(object):
         if quality is not None:
             self.LastStat.LastLinkQuality = quality
         if battery is not None:
-            # HWPro presents as WS/TH/RAIN/WIND
-            # 0 - wind
-            # 1 - rain
-            # 2 - thermo-hygro
-            # 3 - console
-#            logdbg('setLastStatCache: WS=%d WIND=%d RAIN=%d TH=%d' %
-#                   (BitHandling.testBit(battery,3),
-#                    BitHandling.testBit(battery,0),
-#                    BitHandling.testBit(battery,1),
-#                    BitHandling.testBit(battery,2)))
             self.LastStat.LastBatteryStatus = battery
         if weather_ts is not None:
             self.LastStat.last_weather_ts = weather_ts

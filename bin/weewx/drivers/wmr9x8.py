@@ -62,14 +62,7 @@ def wm918_registerpackettype(typecode, size):
     return wrap
 
 def loader(config_dict, engine):
-    # The WMR driver needs the altitude in meters. Get it from the Station data
-    # and do any necessary conversions.
-    altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
-    # Form a value-tuple:
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    # Now convert to meters, using only the first element of the returned value-tuple:
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     return WMR9x8(altitude=altitude_m, **config_dict['WMR9x8'])
 
 class SerialWrapper(object):
@@ -121,7 +114,11 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
 
         NAMED ARGUMENTS:
 
-        port: The serial port of the WM918/WMR918/WMR968. [Required if serial communication]
+        model: Which station model is this?
+        [Optional. Default is 'WMR968']
+
+        port: The serial port of the WM918/WMR918/WMR968.
+        [Required if serial communication]
 
         baudrate: Baudrate of the port. [Optional. Default 9600]
 
@@ -130,6 +127,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         """
 
         self.altitude       = stn_dict['altitude']
+        self.model          = stn_dict.get('model', 'WMR968')
         self.last_totalRain = None
 
         # Create the specified port
@@ -137,6 +135,10 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
 
         # Open it up:
         self.port.openPort()
+
+    @property
+    def hardware_name(self):
+        return self._model
 
     def openPort(self):
         """Open up the connection to the console"""

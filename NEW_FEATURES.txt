@@ -6,6 +6,17 @@ one can simply put the generator_list in weewx.conf as part of the report
 definition.  A report with no skin.conf should run with sane defaults.
 Templates should also be "drop in." If they appear in the directory, they
 get used.
+
+
+Minor cleanup to the Standard skin:
+ - improve layout, possibly like http://www.kanonbra.com/veret/
+ - punt the buttons for week/month/year, use regular html links instead
+ - include a table instead of duplicating html code for stats
+ - make the info section easier to grok with a structured layout, perhaps
+    similar to weather display or cumulus default templates
+
+Add hardware model as weewx.conf option for all drivers that cannot get the
+info from the hardware (everything other than vantage?)
                     
 The weewx service would support dependencies or, at least, be grouped into
 like services. This would make it easier to install new services by
@@ -74,3 +85,32 @@ Port to Windows.
 
 Allow variable y-axis labelling. Right now it's hardwired to every other major
 tick mark.
+
+Make units extensible.
+
+Graphing system feature requests:
+
+  - user suggestions are here:
+    https://groups.google.com/forum/#!topic/weewx-user/0hGKjHwD3J0
+
+  - image background for plots - useful when overlaying a wind rose on a
+    satellite image of the earth, for example.
+
+  - wind direction plot over time (e.g., as in weather display)
+    http://jaxweather.net/WeatherImages/WD/dirplot.gif
+
+  - multiple y scales
+
+  - "current wind dial"
+    http://www.hasslosa.se/weather/wd/wx3.php
+
+  - other wind rose variants
+    http://en.wikipedia.org/wiki/Wind_rose
+    http://www.therodericks.id.au/saratoga/wxtrends.php
+
+  - add ability to specify start date as well as time length on plots
+
+  - compound graphs such as forecast graphs from yr.no
+
+  - wind summary graphs such as those from windfinder
+       http://www.windfinder.com/windstats/windstatistic_raa.htm

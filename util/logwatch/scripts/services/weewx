@@ -284,6 +284,17 @@ while(defined($_ = <STDIN>)) {
              /te923: sensor map is / ||
              /te923: battery map is / ||
              /te923: Found device on USB/ ||
+             /te923: TMP\d / ||
+             /te923: UVX / ||
+             /te923: PRS / ||
+             /te923: WGS / ||
+             /te923: WSP / ||
+             /te923: WDR / ||
+             /te923: RAIN / ||
+             /te923: WCL / ||
+             /te923: STT / ||
+             /te923: Bad read \(attempt \d of/ ||   # normal when debugging
+             /te923: usb error.* No data available/ || # normal when debug=1
              /owfs: driver version is / ||
              /owfs: interface is / ||
              /owfs: polling interval is / ||

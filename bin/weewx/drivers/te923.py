@@ -136,7 +136,6 @@ claimInterface.
 # TODO: clear rain total
 # TODO: get enumeration of usb.USBError codes to handle errors better
 # TODO: consider open/close on each read instead of keeping open
-# TODO: try doing bulkRead instead of interruptRead
 
 # TODO: sensor data use 32 bytes, but each historical record is 38 bytes.  what
 #       do the other 4 bytes represent?
@@ -159,9 +158,10 @@ import usb
 
 import weeutil
 import weewx.abstractstation
+import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.7'
+DRIVER_VERSION = '0.8'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -209,62 +209,11 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    altitude_m = getaltitudeM(config_dict)
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = TE923(altitude=altitude_m, **config_dict['TE923'])
     return station
 
-# FIXME: the pressure calculations belong in wxformulas
-
-# noaa definitions for station pressure, altimeter setting, and sea level
-# http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
-
-# implementation copied from wview
-def sp2ap(sp_mbar, elev_meter):
-    """Convert station pressure to sea level pressure.
-    http://www.wrh.noaa.gov/slc/projects/wxcalc/formulas/altimeterSetting.pdf
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    ap - sea level pressure (altimeter) in millibars
-    """
-
-    if sp_mbar is None or sp_mbar <= 0.3 or elev_meter is None:
-        return None
-    N = 0.190284
-    slp = 1013.25
-    ct = (slp ** N) * 0.0065 / 288
-    vt = elev_meter / ((sp_mbar - 0.3) ** N)
-    ap_mbar = (sp_mbar - 0.3) * ((ct * vt + 1) ** (1/N))
-    return ap_mbar
-
-# implementation copied from wview
-def etterm(elev_meter, t_C):
-    """Calculate elevation/temperature term for sea level calculation."""
-    if elev_meter is None or t_C is None:
-        return None
-    t_K = t_C + 273.15
-    return math.exp( - elev_meter / (t_K * 29.263))
-
-def sp2bp(sp_mbar, elev_meter, t_C):
-    """Convert station pressure to sea level pressure.
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    t_C - temperature in degrees Celsius
-
-    bp - sea level pressure (barometer) in millibars
-    """
-
-    pt = etterm(elev_meter, t_C)
-    if sp_mbar is None or pt is None:
-        return None
-    bp_mbar = sp_mbar / pt if pt != 0 else 0
-    return bp_mbar
-
+# FIXME: the conversion should use mean temperature as second temp arg
 def bp2sp(bp_mbar, elev_meter, t_C, humidity):
     """Convert sea level pressure to station pressure.
 
@@ -276,64 +225,11 @@ def bp2sp(bp_mbar, elev_meter, t_C, humidity):
 
     sp - station pressure in millibars
     """
-    # FIXME: the conversion should use mean temperature as second temp arg
     if bp_mbar is None or t_C is None or humidity is None:
         return None
     sp = weewx.uwxutils.TWxUtils.SeaLevelToStationPressure(bp_mbar, elev_meter,
                                                            t_C, t_C, humidity)
     return sp
-
-# FIXME: this goes in weeutil.weeutil or weewx.units
-def getaltitudeM(config_dict):
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    return altitude_m
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain(newtotal, oldtotal):
-    """Calculate the rain differential given two cumulative measurements."""
-    if newtotal is not None and oldtotal is not None:
-        if newtotal >= oldtotal:
-            delta = newtotal - oldtotal
-        else:
-            delta = None
-            logdbg('ignoring rain counter difference: counter decrement')
-    else:
-        delta = None
-    return delta
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain_rate(delta, curr_ts, last_ts):
-    """Calculate the rain rate based on the time between two rain readings.
-
-    delta_cm: rainfall since last reading, in cm
-
-    curr_ts: timestamp of current reading, in seconds
-
-    last_ts: timestamp of last reading, in seconds
-
-    return: rain rate in X per hour
-
-    If the period between readings is zero, ignore the rainfall since there
-    is no way to calculate a rate with no period."""
-
-    if curr_ts is None:
-        return None
-    if last_ts is None:
-        last_ts = curr_ts
-    if delta is not None:
-        period = curr_ts - last_ts
-        if period != 0:
-            rate = 3600 * delta / period
-        else:
-            rate = None
-            if delta != 0:
-                loginf('rain rate period is zero, ignoring rainfall of %f' % delta)
-    else:
-        rate = None
-    return rate
 
 class TE923(weewx.abstractstation.AbstractStation):
     """Driver for Hideki TE923 stations."""
@@ -489,10 +385,10 @@ def data_to_packet(data, status=None, altitude=0,
     packet['rainTotal'] = data['rain']
     if packet['rainTotal'] is not None:
         packet['rainTotal'] *= 0.06578 # weewx wants cm
-    packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
-    packet['rainRate'] = calculate_rain_rate(packet['rain'],
-                                             packet['dateTime'],
-                                             last_rain_ts)
+    packet['rain'] = weewx.wxformulas.calculate_rain(
+        packet['rainTotal'], last_rain)
+    packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
+        packet['rain'], packet['dateTime'], last_rain_ts)
 
     # we must calculate heat index and dewpoint
     packet['heatindex'] = weewx.wxformulas.heatindexC(
@@ -514,7 +410,8 @@ def data_to_packet(data, status=None, altitude=0,
     packet['barometer'] = data['slp']
     packet['pressure'] = bp2sp(packet['barometer'], altitude,
                                packet['outTemp'], packet['outHumidity'])
-    packet['altimeter'] = sp2ap(packet['pressure'], altitude)
+    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
+        packet['pressure'], altitude, algorithm='aaNOAA')
     if DEBUG_PRESSURE:
         logdbg("pressures: p=%s b=%s a=%s" % (packet['pressure'],
                                               packet['barometer'],
@@ -767,13 +664,13 @@ def decode_status(buf):
         data['storm'] = None
         data['forecast'] = None
     else:
-        data['storm'] = True if buf[22] & 0x08 == 0x08 else False
+        data['storm'] = buf[22] & 0x08 == 0x08
         data['forecast'] = int(buf[22] & 0x07)
     if DEBUG_DECODE:
         logdbg("STT  %s %s" % (data['storm'], data['forecast']))
     return data
 
-class BadRead(Exception):
+class BadRead(weewx.WeeWxIOError):
     """Bogus data length, CRC, header block, or other read failure"""
 
 class Station(object):
@@ -934,14 +831,14 @@ class Station(object):
         status['sysVer']  = buf[5]
 
         buf = self._read(0x4c)
-        status['batteryRain'] = True if buf[1] & 0x80 == 0x80 else False
-        status['batteryWind'] = True if buf[1] & 0x40 == 0x40 else False
-        status['batteryUV']   = True if buf[1] & 0x20 == 0x20 else False
-        status['battery5']    = True if buf[1] & 0x10 == 0x10 else False
-        status['battery4']    = True if buf[1] & 0x08 == 0x08 else False
-        status['battery3']    = True if buf[1] & 0x04 == 0x04 else False
-        status['battery2']    = True if buf[1] & 0x02 == 0x02 else False
-        status['battery1']    = True if buf[1] & 0x01 == 0x01 else False
+        status['batteryRain'] = buf[1] & 0x80 == 0x80
+        status['batteryWind'] = buf[1] & 0x40 == 0x40
+        status['batteryUV']   = buf[1] & 0x20 == 0x20
+        status['battery5']    = buf[1] & 0x10 == 0x10
+        status['battery4']    = buf[1] & 0x08 == 0x08
+        status['battery3']    = buf[1] & 0x04 == 0x04
+        status['battery2']    = buf[1] & 0x02 == 0x02
+        status['battery1']    = buf[1] & 0x01 == 0x01
         
         return status
 
@@ -1024,133 +921,135 @@ class Station(object):
 #    te923con -d              dump 208 memory records
 #    te923con -s              display station status
 
-usage = """%prog [options] [--debug] [--help]"""
+if __name__ == '__main__':
 
-def main():
-    FMT_TE923TOOL = 'te923tool'
-    FMT_DICT = 'dict'
-    FMT_TABLE = 'table'
+    usage = """%prog [options] [--debug] [--help]"""
 
-    syslog.openlog('wee_te923', syslog.LOG_PID | syslog.LOG_CONS)
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--version', dest='version', action='store_true',
-                      help='display driver version')
-    parser.add_option('--debug', dest='debug', action='store_true',
-                      help='display diagnostic information while running')
-    parser.add_option('--status', dest='status', action='store_true',
-                      help='display station status')
-    parser.add_option('--readings', dest='readings', action='store_true',
-                      help='display sensor readings')
-    parser.add_option("--records", dest="records", type=int, metavar="N",
-                      help="display N station records, oldest to newest")
-    parser.add_option('--blocks', dest='blocks', type=int, metavar="N",
-                      help='display N 32-byte blocks of station memory')
-    parser.add_option("--format", dest="format", type=str, metavar="FORMAT",
-                      help="format for output, one of te923tool, table, or dict")
-    (options, args) = parser.parse_args()
+    def main():
+        FMT_TE923TOOL = 'te923tool'
+        FMT_DICT = 'dict'
+        FMT_TABLE = 'table'
 
-    if options.version:
-        print "te923 driver version %s" % DRIVER_VERSION
-        exit(1)
+        syslog.openlog('wee_te923', syslog.LOG_PID | syslog.LOG_CONS)
+        parser = optparse.OptionParser(usage=usage)
+        parser.add_option('--version', dest='version', action='store_true',
+                          help='display driver version')
+        parser.add_option('--debug', dest='debug', action='store_true',
+                          help='display diagnostic information while running')
+        parser.add_option('--status', dest='status', action='store_true',
+                          help='display station status')
+        parser.add_option('--readings', dest='readings', action='store_true',
+                          help='display sensor readings')
+        parser.add_option("--records", dest="records", type=int, metavar="N",
+                          help="display N station records, oldest to newest")
+        parser.add_option('--blocks', dest='blocks', type=int, metavar="N",
+                          help='display N 32-byte blocks of station memory')
+        parser.add_option("--format", dest="format", type=str,metavar="FORMAT",
+                          help="format for output: te923tool, table, or dict")
+        (options, args) = parser.parse_args()
 
-    if options.debug is not None:
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-    else:
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        if options.version:
+            print "te923 driver version %s" % DRIVER_VERSION
+            exit(1)
 
-    if options.format is None:
-        fmt = FMT_TE923TOOL
-    elif (options.format.lower() != FMT_TE923TOOL and
-          options.format.lower() != FMT_TABLE and
-          options.format.lower() != FMT_DICT):
-        print "Unknown format '%s'.  Known formats include 'te923tool', 'table', and 'dict'." % options.format
-        exit(1)
-    else:
-        fmt = options.format.lower()
+        if options.debug is not None:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+        else:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
-    station = None
-    try:
-        station = Station()
-        station.open()
-        if options.status:
-            data = station.get_status()
-            if fmt == FMT_DICT:
-                print_dict(data)
-            elif fmt == FMT_TABLE:
-                print_table(data)
-            else:
-                print_status(data)
-        if options.readings:
-            data = station.get_readings()
-            if fmt == FMT_DICT:
-                print_dict(data)
-            elif fmt == FMT_TABLE:
-                print_table(data)
-            else:
-                print_readings(data)
-        if options.records is not None:
-            for ptr,data in station.gen_records(count=options.records):
+        if options.format is None:
+            fmt = FMT_TE923TOOL
+        elif (options.format.lower() != FMT_TE923TOOL and
+              options.format.lower() != FMT_TABLE and
+              options.format.lower() != FMT_DICT):
+            print "Unknown format '%s'.  Known formats include 'te923tool', 'table', and 'dict'." % options.format
+            exit(1)
+        else:
+            fmt = options.format.lower()
+
+        station = None
+        try:
+            station = Station()
+            station.open()
+            if options.status:
+                data = station.get_status()
                 if fmt == FMT_DICT:
                     print_dict(data)
+                elif fmt == FMT_TABLE:
+                    print_table(data)
+                else:
+                    print_status(data)
+            if options.readings:
+                data = station.get_readings()
+                if fmt == FMT_DICT:
+                    print_dict(data)
+                elif fmt == FMT_TABLE:
+                    print_table(data)
                 else:
                     print_readings(data)
-        if options.blocks is not None:
-            for ptr,block in station.gen_blocks(count=options.blocks):
-                print_hex(ptr, block)
-    finally:
-        if station is not None:
-            station.close()
+            if options.records is not None:
+                for ptr,data in station.gen_records(count=options.records):
+                    if fmt == FMT_DICT:
+                        print_dict(data)
+                    else:
+                        print_readings(data)
+            if options.blocks is not None:
+                for ptr,block in station.gen_blocks(count=options.blocks):
+                    print_hex(ptr, block)
+        finally:
+            if station is not None:
+                station.close()
 
-def print_dict(data):
-    """output entire dictionary contents"""
-    print data
+    def print_dict(data):
+        """output entire dictionary contents"""
+        print data
 
-def print_table(data):
-    """output entire dictionary contents in two columns"""
-    for key in sorted(data):
-        print "%s: %s" % (key.rjust(16), data[key])
+    def print_table(data):
+        """output entire dictionary contents in two columns"""
+        for key in sorted(data):
+            print "%s: %s" % (key.rjust(16), data[key])
 
-def print_status(data):
-    """output status fields in te923tool format"""
-    print "0x%x:0x%x:0x%x:0x%x:0x%x:%d:%d:%d:%d:%d:%d:%d:%d" % (
-        data['sysVer'], data['barVer'], data['uvVer'], data['rccVer'],
-        data['windVer'], data['batteryRain'], data['batteryUV'],
-        data['batteryWind'], data['battery5'], data['battery4'],
-        data['battery3'], data['battery2'], data['battery1'])
+    def print_status(data):
+        """output status fields in te923tool format"""
+        print "0x%x:0x%x:0x%x:0x%x:0x%x:%d:%d:%d:%d:%d:%d:%d:%d" % (
+            data['sysVer'], data['barVer'], data['uvVer'], data['rccVer'],
+            data['windVer'], data['batteryRain'], data['batteryUV'],
+            data['batteryWind'], data['battery5'], data['battery4'],
+            data['battery3'], data['battery2'], data['battery1'])
 
-def print_readings(data):
-    """output sensor readings in te923tool format"""
-    output = [str(data['timestamp'])]
-    output.append(getvalue(data, 't_in', '%0.2f'))
-    output.append(getvalue(data, 'h_in', '%d'))
-    for i in range(1,6):
-        output.append(getvalue(data, 't_%d' % i, '%0.2f'))
-        output.append(getvalue(data, 'h_%d' % i, '%d'))
-    output.append(getvalue(data, 'slp', '%0.1f'))
-    output.append(getvalue(data, 'uv', '%0.1f'))
-    output.append(getvalue(data, 'forecast', '%d'))
-    output.append(getvalue(data, 'storm', '%d'))
-    output.append(getvalue(data, 'winddir', '%d'))
-    output.append(getvalue(data, 'windspeed', '%0.1f'))
-    output.append(getvalue(data, 'windgust', '%0.1f'))
-    output.append(getvalue(data, 'windchill', '%0.1f'))
-    output.append(getvalue(data, 'rain', '%d'))
-    print ':'.join(output)
+    def print_readings(data):
+        """output sensor readings in te923tool format"""
+        output = [str(data['timestamp'])]
+        output.append(getvalue(data, 't_in', '%0.2f'))
+        output.append(getvalue(data, 'h_in', '%d'))
+        for i in range(1,6):
+            output.append(getvalue(data, 't_%d' % i, '%0.2f'))
+            output.append(getvalue(data, 'h_%d' % i, '%d'))
+        output.append(getvalue(data, 'slp', '%0.1f'))
+        output.append(getvalue(data, 'uv', '%0.1f'))
+        output.append(getvalue(data, 'forecast', '%d'))
+        output.append(getvalue(data, 'storm', '%d'))
+        output.append(getvalue(data, 'winddir', '%d'))
+        output.append(getvalue(data, 'windspeed', '%0.1f'))
+        output.append(getvalue(data, 'windgust', '%0.1f'))
+        output.append(getvalue(data, 'windchill', '%0.1f'))
+        output.append(getvalue(data, 'rain', '%d'))
+        print ':'.join(output)
 
-def print_hex(ptr, data):
-    print "0x%06x %s" % (ptr, ' '.join(["%02x" % x for x in data]))
+    def print_hex(ptr, data):
+        print "0x%06x %s" % (ptr, ' '.join(["%02x" % x for x in data]))
 
-def getvalue(data, label, fmt):
-    if label + '_state' in data:
-        if data[label + '_state'] == STATE_OK:
-            return fmt % data[label]
+    def getvalue(data, label, fmt):
+        if label + '_state' in data:
+            if data[label + '_state'] == STATE_OK:
+                return fmt % data[label]
+            else:
+                return data[label + '_state'][0]
         else:
-            return data[label + '_state'][0]
-    else:
-        if data[label] is None:
-            return 'x'
-        else:
-            return fmt % data[label]
+            if data[label] is None:
+                return 'x'
+            else:
+                return fmt % data[label]
 
 if __name__ == '__main__':
     main()

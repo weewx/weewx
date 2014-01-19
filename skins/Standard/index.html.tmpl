@@ -283,7 +283,8 @@
 
         #if $Extras.has_key('radar_img')
         <div id="radar_img">
-              <a  href="$Extras.radar_url"><img src="$Extras.radar_img" alt="Radar" /></a>
+          <a  href="$Extras.radar_url">
+            <img src="$Extras.radar_img" alt="Radar" /></a>
           <p>Click image for expanded radar loop</p>
         </div>
         #end if
@@ -311,21 +312,11 @@
             </tr>
           </table>
           <p>
-            #if $station.hardware[0:7] == 'Vantage'
-            	This station uses a <a href="http://davisnet.com/weather/products/professional-home-weather-stations.asp">
-                Davis $station.hardware</a> weather station,
-            #elif $station.hardware == 'VantageIP'
-            	with a <a href="http://davisnet.com/weather/products/weather_product.asp?pnum=06555">
-            	WeatherLinkIP connection</a>, 
-            #elif $station.hardware == 'WMR100'
-            	This station uses an <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">
-            	Oregon Scientific WMR100N</a> weather station,
-            #else
-                This station uses a $station.hardware weather station,
-            #end if
-            controlled by <a href="http://www.weewx.com">'weewx'</a>, an
-            experimental weather software system written in Python. Weewx was designed to be simple,
-            fast, and easy to understand by leveraging modern software concepts.
+            This station uses a $station.hardware, controlled by
+            <a href="http://www.weewx.com">'weewx'</a>, an experimental
+            weather software system written in Python. Weewx
+            was designed to be simple, fast, and easy to understand by
+            leveraging modern software concepts.
           </p>
           <p><a href="RSS/weewx_rss.xml">RSS feed</a></p>
           <p><a href="mobile.html">Mobile formatted</a></p>
