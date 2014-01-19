@@ -35,6 +35,8 @@ Minor cleanup to Standard skin for better out-of-the-box behavior:
  - default to no radar image instead of having every station point to Oregon
  - not every WMR100 is a WMR100N
 
+Fixed bug in setting of CheetahGenerator options.
+
 2.5.1 12/30/13
 
 Added UV plots to the templates. They will be shown automatically if you
