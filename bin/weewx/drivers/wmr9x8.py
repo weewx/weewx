@@ -31,7 +31,7 @@ import weewx.units
 import weewx.wxformulas
 from math import exp
 
-class WMRx8ProtocolError(weewx.WeeWxIOError):
+class WMR9x8ProtocolError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
 
 # Dictionary that maps a measurement code, to a function that can decode it:
@@ -95,7 +95,7 @@ class SerialWrapper(object):
     def openPort(self):
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, **self.serialconfig)
-        syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Opened up serial port %s" % (self.port))
+        syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Opened up serial port %s" % (self.port))
 
     def closePort(self):
         self.serial_port.close()
@@ -168,7 +168,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Received WMR9x8 data packet.")
+                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WMR9x8 data packet.")
                     payload = pdata[2:-1]
                     _record = wmr9x8_packet_type_decoder_map[ptype](self, payload)
                     if _record is not None:
@@ -176,7 +176,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Invalid data packet (%s)." % pdata)
+                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             # WM-918 packets have no framing
@@ -190,7 +190,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Received WM-918 data packet.")
+                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WM-918 data packet.")
                     payload = pdata[0:-1]  #send all of packet but crc
                     _record = wm918_packet_type_decoder_map[ptype](self, payload)
                     if _record is not None:
@@ -198,11 +198,11 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Invalid data packet (%s)." % pdata)
+                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             else:
-                syslog.syslog(syslog.LOG_DEBUG, "WMR9x8: Advancing buffer by one for the next potential packet")
+                syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Advancing buffer by one for the next potential packet")
                 buf.pop(0)
 
     #===========================================================================
@@ -611,5 +611,5 @@ def channel_decoder(chan):
     elif chan==4:
         outchan = 3
     else:
-        raise WMRx8ProtocolError("Bad channel number %d" % chan)
+        raise WMR9x8ProtocolError("Bad channel number %d" % chan)
     return outchan

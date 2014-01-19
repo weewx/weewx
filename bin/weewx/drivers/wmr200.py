@@ -860,9 +860,17 @@ def adjust_rain(pkt, packet_name):
         rain_total_last = rain_total
     # The amount of rain occurring since last poll time.
     rain_interval = rain_total - rain_total_last
+    # NOTE(CMM) This may go negative but we cannot allow that.
+    if rain_interval < 0.0:
+        logwar('rain interval went negative:%f\n' % rain_interval)
+        rain_interval = 0.0
     rain_total_last = rain_total
     # Adjust the amount of rain since driver started up.  
     rain_total -= rain_total_last
+    # NOTE(CMM) This may go negative but we cannot allow that.
+    if rain_total < 0.0:
+        logwar('rain total went negative:%f\n' % rain_total)
+        rain_total = 0.0
     pkt.record_set('totalRain', rain_total)
 
     packet_name.rain_total_last = rain_total_last
@@ -1103,14 +1111,15 @@ class PacketStatus(PacketLive):
         to make it fit."""
         super(PacketStatus, self).packet_process()
         # Setup defaults as good status.
-        self._record.update({'outTempBatteryStatus' : 1.0,
-                             'rainBatteryStatus'    : 1.0,
+        self._record.update({'outTempFault'         : 0,
+                             'windFault'            : 0,
+                             'uvFault'              : 0,
+                             'rainFault'            : 0,
+                             'clockUnsynchronized'  : 0,
+                             'outTempBatteryStatus' : 1.0,
                              'windBatteryStatus'    : 1.0,
                              'uvBatteryStatus'      : 1.0,
-                             'windFault'            : 0,
-                             'rainFault'            : 0,
-                             'uvFault'              : 0,
-                             'outTempFault'         : 0,
+                             'rainBatteryStatus'    : 1.0,
                             })
         # This information may be sent to syslog
         msg_status = []
@@ -1129,6 +1138,10 @@ class PacketStatus(PacketLive):
         if self._pkt_data[3] & 0x10:
             msg_status.append('Rain sensor fault')
             self._record['rainFault'] = 1
+
+        if self._pkt_data[4] & 0x80:
+            msg_status.append('Clock time unsynchronized')
+            self._record['clockUnsynchronized'] = 1
 
         if self._pkt_data[4] & 0x02:
             msg_status.append('Temp outdoor sensor: Battery low')
@@ -1901,6 +1914,8 @@ class WMR200(weewx.abstractstation.AbstractStation):
                            % (cnt,
                               weeutil.weeutil.timestamp_to_string\
                               (pkt.timestamp_record())))
+                    if DEBUG_PACKETS_COOKED:
+                        pkt.print_cooked()
                     yield pkt.packet_record()
                 else:
                     loginf(('genStartup() Ignoring received archive'
