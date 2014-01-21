@@ -120,6 +120,9 @@ class StdEngine(object):
                 # Provide a default, empty list in case the service list is
                 # missing completely:
                 for svc in weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get(service_group, [])):
+                    if svc == '':
+                        syslog.syslog(syslog.LOG_DEBUG, "wxengine: No services in service group %s" % service_group)
+                        continue
                     # For each service, instantiates an instance of the class,
                     # passing self and the configuration dictionary as the
                     # arguments:
