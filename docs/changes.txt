@@ -15,6 +15,10 @@ Changed the default time and date labels to use locale dependent formatting.
 The defaults should now work in most locales, provided you set the
 environment variable LANG before running weewx.
 
+Ranges in MinMax QC can now include units.
+
+Moved the forecast module from bin/user to bin/forecast
+
 Now caches font handles in order to work around a memory leak in PIL.
 
 Now works with the pure Python version of Cheetah's NameMapper.

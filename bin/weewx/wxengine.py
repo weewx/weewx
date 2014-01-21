@@ -382,15 +382,14 @@ class StdQC(StdService):
         converter = weewx.units.StdUnitConverters[target_unit]
 
         for obs_type in mm_dict.scalars:
+            minval = float(mm_dict[obs_type][0])
+            maxval = float(mm_dict[obs_type][1])
             if len(mm_dict[obs_type]) == 3:
                 group = weewx.units._getUnitGroup(obs_type)
-                vt = (float(mm_dict[obs_type][0]), mm_dict[obs_type][2], group)
+                vt = (minval, mm_dict[obs_type][2], group)
                 minval = converter.convert(vt)[0]
-                vt = (float(mm_dict[obs_type][1]), mm_dict[obs_type][2], group)
+                vt = (maxval, mm_dict[obs_type][2], group)
                 maxval = converter.convert(vt)[0]
-            else:
-                minval = float(mm_dict[obs_type][0])
-                maxval = float(mm_dict[obs_type][1])
             self.min_max_dict[obs_type] = (minval, maxval)
         
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)

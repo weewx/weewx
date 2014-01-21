@@ -134,7 +134,9 @@ deb-changelog:
 DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
 DEBPKG=weewx_$(VERSION)-$(DEBREVISION)_$(DEBARCH).deb
+ifndef SIGN
 DPKG_OPT=-us -uc
+endif
 deb-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
 	cp $(DSTDIR)/$(SRCPKG) $(BLDDIR)
@@ -195,8 +197,10 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
 	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER)$(RPMOS).src.rpm $(DSTDIR)
-#	rpm --addsign $(DSTDIR)/$(RPMPKG)
-#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
+ifdef SIGN
+	rpm --addsign $(DSTDIR)/$(RPMPKG)
+	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
+endif
 
 # run rpmlint on the redhat package
 check-rpm:
