@@ -148,17 +148,17 @@ class TWxUtils(object):
         elif algorithm == 'aaMADIS':
             # from MADIS API by NOAA Forecast Systems Lab
             # http://madis.noaa.gov/madis_api.html
-            k1 = 0.190284        # discrepency with calculated k1 probably
-                                 # because Smithsonian used less precise gas
-                                 # constant and gravity values
+            k1 = 0.190284   # discrepency with calculated k1 probably
+                            # because Smithsonian used less precise gas
+                            # constant and gravity values
             k2 = 8.4184960528E-5 # (stdLapseRate / stdTempK) * (Power(stdSLP, k1)
             Result = Power(Power(pressureHPa - 0.3, k1) + (k2 * elevationM), 1/k1)
 
         elif algorithm == 'aaNOAA':
             # http://www.srh.noaa.gov/elp/wxclc/formulas/altimeterSetting.html
-            k1 = 0.190284      # discrepency with k1 probably because
-                               # Smithsonian used less precise gas constant
-                               # and gravity values
+            k1 = 0.190284   # discrepency with k1 probably because
+                            # Smithsonian used less precise gas constant
+                            # and gravity values
             k2 = 8.42288069E-5 # (stdLapseRate / 288) * (Power(stdSLP, k1SMT)
             Result = (pressureHPa - 0.3) * Power(1 + (k2 * (elevationM / Power(pressureHPa - 0.3, k1))), 1/k1)
 
@@ -358,12 +358,12 @@ class TWxUtilsUS(object):
     def StationToSeaLevelPressure(pressureIn, elevationFt,
                                   currentTempF, meanTempF, humidity,
                                   algorithm='paManBar'):
-        Result = pressureIn * TWxUtils.PressureReductionRatio(pressureIn,
-                                                              elevationFt,
-                                                              currentTempF,
-                                                              meanTempF,
-                                                              humidity,
-                                                              algorithm)
+        Result = pressureIn * TWxUtilsUS.PressureReductionRatio(pressureIn,
+                                                                elevationFt,
+                                                                currentTempF,
+                                                                meanTempF,
+                                                                humidity,
+                                                                algorithm)
         return Result
 
     @staticmethod
@@ -406,7 +406,7 @@ class TWxUtilsUS(object):
 
     @staticmethod
     def ActualVaporPressure(tempF, humidity, algorithm='vaBolton'):
-        Result = (humidity * TWxUtils.SaturationVaporPressure(tempF, algorithm)) / 100
+        Result = (humidity * TWxUtilsUS.SaturationVaporPressure(tempF, algorithm)) / 100
         return Result
 
     @staticmethod
