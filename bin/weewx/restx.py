@@ -95,33 +95,35 @@ class StdWunderground(StdRESTbase):
             _url           = _ambient_dict.get('url', StdWunderground.archive_url)
             _log_success   = to_bool(_ambient_dict.get('log_success', True))
             _log_failure   = to_bool(_ambient_dict.get('log_failure', True))
-            _max_tries     = int(_ambient_dict.get('max_tries', 3))
             _max_backlog   = int(_ambient_dict.get('max_backlog', sys.maxint))
+            _max_tries     = int(_ambient_dict.get('max_tries', 3))
             _stale         = int(_ambient_dict.get('stale', 0))
             _post_interval = int(_ambient_dict.get('interval', 0))
             self.archive_queue = Queue.Queue()
-            self.archive_thread = AmbientThread(self.archive_queue, "Wunderground - PWS",
-                                                _station, _password, _database_dict, _url, 
-                                                _log_success, _log_failure, _max_tries, _max_backlog,
-                                                _stale, _post_interval)
+            self.archive_thread = AmbientThread(self.archive_queue, _station, _password, _database_dict, 
+                                                _url, 
+                                                _log_success, _log_failure, _max_backlog,
+                                                "Wunderground - PWS", _max_tries, _stale, _post_interval)
             self.archive_thread.start()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+            syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to WUnderground-PWS station %s" % _station)
 
         if do_rapidfire_post:
             _url           = _ambient_dict.get('url', StdWunderground.rapidfire_url)
             _log_success   = to_bool(_ambient_dict.get('log_success', False))
             _log_failure   = to_bool(_ambient_dict.get('log_failure', False))
-            _max_tries     = int(_ambient_dict.get('max_tries', 1))
             _max_backlog   = int(_ambient_dict.get('max_backlog', sys.maxint))
+            _max_tries     = int(_ambient_dict.get('max_tries', 1))
             _stale         = int(_ambient_dict.get('stale', 0))
             _post_interval = int(_ambient_dict.get('interval', 0))
             self.loop_queue = Queue.Queue()
-            self.loop_thread = AmbientLoopThread(self.loop_queue, "Wunderground - Rapidfire",
-                                                _station, _password, _database_dict, _url, 
-                                                _log_success, _log_failure, _max_tries, _max_backlog,
-                                                _stale, _post_interval)
+            self.loop_thread = AmbientLoopThread(self.archive_queue, _station, _password, _database_dict, 
+                                                _url, 
+                                                _log_success, _log_failure, _max_backlog,
+                                                "Wunderground - Rapidfire", _max_tries, _stale, _post_interval)
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+            syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to WUnderground-Rapidfire station %s" % _station)
 
     def new_loop_packet(self, event):
         self.loop_queue.put(event.packet)
@@ -148,12 +150,13 @@ class StdCWOP(StdRESTbase):
         try:
             # Extract a copy of the dictionary with the WU options:
             _cwop_dict=dict(config_dict['StdRESTful']['CWOP'])
-            # Extract the station and (if necessary) passcode
+            # Extract the station ID and (if necessary) passcode
             _station = _cwop_dict['station'].upper()
             if _station[0:2] in StdCWOP.valid_prefixes:
                 _passcode = "-1"
             else:
                 _passcode = _cwop_dict['passcode']
+            _station_type  = _cwop_dict.get('station_type', config_dict['Station']['station_type'])
         except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to CWOP")
             syslog.syslog(syslog.LOG_DEBUG, "****   Reason: missing option %s" % e)
@@ -165,19 +168,22 @@ class StdCWOP(StdRESTbase):
             _server_list = weeutil.weeutil.option_as_list(_cwop_dict['server'])
         else:
             _server_list = StdCWOP.default_servers
+        _latitude      = float(_cwop_dict.get('latitude',  self.engine.stn_info.latitude_f))
+        _longitude     = float(_cwop_dict.get('longitude', self.engine.stn_info.longitude_f))
         _log_success   = to_bool(_cwop_dict.get('log_success', True))
         _log_failure   = to_bool(_cwop_dict.get('log_failure', True))
-        _max_tries     = int(_cwop_dict.get('max_tries', 3))
         _max_backlog   = int(_cwop_dict.get('max_backlog', sys.maxint))
+        _max_tries     = int(_cwop_dict.get('max_tries', 3))
         _stale         = int(_cwop_dict.get('stale', 1800))
         _post_interval = int(_cwop_dict.get('interval', 600))
         self.archive_queue = Queue.Queue()
-        self.archive_thread = CWOPThread(self.archive_queue, "CWOP",
-                                         _station, _passcode, _database_dict, _server_list,
-                                         _log_success, _log_failure, _max_tries, _max_backlog,
-                                         _stale, _post_interval)
+        self.archive_thread = CWOPThread(self.archive_queue, _station, _passcode, _database_dict,
+                                         _server_list, _latitude, _longitude, _station_type,
+                                         _log_success, _log_failure, _max_backlog,
+                                         'CWOP', _max_tries, _stale, _post_interval)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to CWOP station %s" % _station)
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -188,7 +194,16 @@ class StdCWOP(StdRESTbase):
 
 class RESTThread(threading.Thread):
     """Abstract base class for RESTful protocols."""
-    
+
+    def __init__(self, restful_site, max_tries, stale, post_interval):
+        threading.Thread.__init__(self, name=restful_site)
+        self.restful_site = restful_site
+        self.max_tries = max_tries
+        self.stale = stale
+        self.post_interval = post_interval
+        
+        self.lastpost = 0
+            
     def get_record(self, archive, record):
         """Augment record data with additional data from the archive.
         Returns results in the same units as the record and the database.
@@ -271,15 +286,15 @@ class RESTThread(threading.Thread):
                 if e.code == 403:
                     raise BadLogin(e)
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.restful_site))
                     syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.restful_site))
                 syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
             else:
                 if _response.code != 200:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.name))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.restful_site))
                     syslog.syslog(syslog.LOG_DEBUG, " ****  Response code: %d" % (_response.code,))
                 else:
                     # No exception thrown and we got a good response code, but we're still not done.
@@ -298,35 +313,50 @@ class RESTThread(threading.Thread):
         else:
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Log it.
-            raise FailedPost("Failed upload to site %s after %d tries" % (self.name, self.max_tries))
+            raise FailedPost("Failed upload to site %s after %d tries" % (self.restful_site, self.max_tries))
+
+    def skip_this_post(self, time_ts):
+        """Check whether the post is current"""
+        # Don't post if this record is too old
+        if self.stale:
+            _how_old = time.time() - time_ts
+            if _how_old > self.stale:
+                syslog.syslog(syslog.LOG_DEBUG, "restx: record %s is stale (%d > %d)." % \
+                        (timestamp_to_string(time_ts), _how_old, self.stale))
+                return True
+ 
+        # We don't want to post more often than the post interval
+        _how_long = time_ts - self.lastpost
+        if _how_long < self.post_interval:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: record %s wait interval (%d < %d) has not passed." % \
+                    (timestamp_to_string(time_ts), _how_long, self.post_interval))
+            return True
+    
+        self.lastpost = time_ts
+        return False
 
 #==============================================================================
 #                    Class AmbientThread
 #==============================================================================
 
 class AmbientThread(RESTThread):
+    """Concrete class for threads posting from the archive queue."""
+    
+    def __init__(self, queue, station, password, database_dict, 
+                 url=None,
+                 log_success=True, log_failure=True, max_backlog=0,
+                 restful_site='', max_tries=3, stale=0, post_interval=0):
 
-    def __init__(self, queue, restful_site,
-                 station, password, database_dict, url=None,
-                 log_success=True, log_failure=True, max_tries=3, max_backlog=0,
-                 stale=0, post_interval=0):
-
-        threading.Thread.__init__(self, name=restful_site)
-
+        super(AmbientThread, self).__init__(restful_site, max_tries, stale, post_interval)
+        
         self.queue         = queue
-        self.restful_site  = restful_site
         self.station       = station
         self.password      = password
         self.database_dict = database_dict
         self.url           = url
         self.log_success   = log_success
         self.log_failure   = log_failure
-        self.max_tries     = max_tries
         self.max_backlog   = max_backlog
-        self.stale         = stale
-        self.post_interval = post_interval
-
-        self.lastpost      = 0
 
     def run(self):
         # Open up the archive. Use a 'with' statement. This will automatically close the
@@ -354,11 +384,17 @@ class AmbientThread(RESTThread):
                     syslog.syslog(syslog.LOG_ERR, "restx: Bad login for %s; waiting 60 minutes then retrying" % self.restful_site)
                     time.sleep(3600)
                 except FailedPost, e:
-                    syslog.syslog(syslog.LOG_ERR, "restx: Failed post")
-                    syslog.syslog(syslog.LOG_ERR, "****   %s" % e)
+                    if self.log_failure:
+                        _time_str = timestamp_to_string(_record['dateTime'])
+                        syslog.syslog(syslog.LOG_ERR, "restx: Failed to publish record %s to %s" (_time_str, self.restful_site))
+                        syslog.syslog(syslog.LOG_ERR, "****   Reason: %s" % e)
                 except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "restx: Thread for %s exiting" % self.restful_site)
                     syslog.syslog(syslog.LOG_CRIT, "****   Reason: %s" % e)
+                else:
+                    if self.log_success:
+                        _time_str = timestamp_to_string(_record['dateTime'])
+                        syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.restful_site))
 
     def process_record(self, archive, record):
         # Get the full record by querying the database ...
@@ -413,26 +449,6 @@ class AmbientThread(RESTThread):
         _url = "%s?%s" % (self.url, _urlquery)
         return _url
                 
-    def skip_this_post(self, time_ts):
-        """Check whether the post is current"""
-        # Don't post if this record is too old
-        if self.stale:
-            _how_old = time.time() - time_ts
-            if _how_old > self.stale:
-                syslog.syslog(syslog.LOG_DEBUG, "restx: record %s is stale (%d > %d)." % \
-                        (timestamp_to_string(time_ts), _how_old, self.stale))
-                return True
- 
-        # We don't want to post more often than the post interval
-        _how_long = time_ts - self.lastpost
-        if _how_long < self.post_interval:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: record %s wait interval (%d < %d) has not passed." % \
-                    (timestamp_to_string(time_ts), _how_long, self.post_interval))
-            return True
-    
-        self.lastpost = time_ts
-        return False
-
 #==============================================================================
 #                    Class AmbientLoopThread
 #==============================================================================
@@ -456,16 +472,19 @@ class AmbientLoopThread(AmbientThread):
 
 class CWOPThread(AmbientThread):
 
-    def __init__(self, queue, restful_site,
-                 station, password, database_dict, server_list,
-                 log_success=True, log_failure=True, max_tries=3, max_backlog=0,
-                 stale=0, post_interval=0):
+    def __init__(self, queue, station, password, database_dict,
+                 server_list, latitude, longitude, _station_type,
+                 log_success=True, log_failure=True, max_backlog=0,
+                 restful_site='', max_tries=3, stale=0, post_interval=0):
 
         self.server_list = server_list
-        super(CWOPThread, self).__init__(queue, restful_site,
-                                         station, password, database_dict, None,
-                                         log_success, log_failure, max_tries, max_backlog,
-                                         stale, post_interval)
+        self.latitude = latitude
+        self.longitude = longitude
+        self.station_type = _station_type
+        super(CWOPThread, self).__init__(queue, station, password, database_dict, 
+                                         None,
+                                         log_success, log_failure, max_backlog,
+                                         restful_site, max_tries, stale, post_interval)
 
     def process_record(self, archive, record):
         # Get the full record by querying the database ...
