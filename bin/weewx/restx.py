@@ -37,7 +37,10 @@ class BadLogin(StandardError):
 #==============================================================================
 
 class StdRESTbase(weewx.wxengine.StdService):
+    """Abstract base class for RESTful weewx services.
     
+    Offers a few common bits of functionality."""
+        
     def shutDown(self):
         """Shut down any threads"""
         if hasattr(self, 'loop_queue') and hasattr(self, 'loop_thread'):
@@ -63,6 +66,7 @@ class StdRESTbase(weewx.wxengine.StdService):
 #==============================================================================
 
 class StdWunderground(StdRESTbase):
+    """Specialized version of the Ambient protocol for the Weather Underground."""
     
     # The URLs used by the WU:
     rapidfire_url = "http://rtupdate.wunderground.com/weatherstation/updateweatherstation.php"
@@ -132,11 +136,60 @@ class StdWunderground(StdRESTbase):
         self.archive_queue.put(event.record)
                 
 #==============================================================================
+#                    Class StdPWSWeather
+#==============================================================================
+
+class StdPWSWeather(StdRESTbase):
+    """Specialized version of the Ambient protocol for PWS"""
+    
+    # The URL used by PWS:
+    archive_url = "http://www.pwsweather.com/pwsupdate/pwsupdate.php"
+
+    def __init__(self, engine, config_dict):
+        
+        super(StdPWSWeather, self).__init__(engine, config_dict)
+        
+        # Extract the required parameters. If one of them is missing,
+        # a KeyError exception will occur. Be prepared to catch it.
+        try:
+            # Extract a copy of the dictionary with the WU options:
+            _ambient_dict=dict(config_dict['StdRESTful']['PWSweather'])
+            _station = _ambient_dict['station']
+            _password = _ambient_dict['password']
+        except KeyError, e:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to PWSWeather")
+            syslog.syslog(syslog.LOG_DEBUG, "****   Reason: missing option %s" % e)
+            return
+
+        _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+        
+        _url           = _ambient_dict.get('url', StdPWSWeather.archive_url)
+        _log_success   = to_bool(_ambient_dict.get('log_success', True))
+        _log_failure   = to_bool(_ambient_dict.get('log_failure', True))
+        _max_backlog   = int(_ambient_dict.get('max_backlog', sys.maxint))
+        _max_tries     = int(_ambient_dict.get('max_tries', 3))
+        _stale         = int(_ambient_dict.get('stale', 0))
+        _post_interval = int(_ambient_dict.get('interval', 0))
+        self.archive_queue = Queue.Queue()
+        self.archive_thread = AmbientThread(self.archive_queue, _station, _password, _database_dict, 
+                                            _url, 
+                                            _log_success, _log_failure, _max_backlog,
+                                            "PWSWeather", _max_tries, _stale, _post_interval)
+        self.archive_thread.start()
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to PWSWeather station %s" % _station)
+
+    def new_archive_record(self, event):
+        self.archive_queue.put(event.record)
+
+#==============================================================================
 #                    Class StdCWOP
 #==============================================================================
 
 class StdCWOP(StdRESTbase):
+    """Weewx service for posting using the CWOP protocol.
     
+    Manages a separate thread CWOPThread"""
     # Station IDs must start with one of these:
     valid_prefixes = ['CW', 'DW', 'EW']
     default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
@@ -193,7 +246,9 @@ class StdCWOP(StdRESTbase):
 #==============================================================================
 
 class RESTThread(threading.Thread):
-    """Abstract base class for RESTful protocols."""
+    """Abstract base class for RESTful protocol threads.
+    
+    Offers a few bits of common functionality."""
 
     def __init__(self, restful_site, max_tries, stale, post_interval):
         threading.Thread.__init__(self, name=restful_site)
@@ -371,7 +426,8 @@ class RESTThread(threading.Thread):
 #==============================================================================
 
 class AmbientThread(RESTThread):
-    """Concrete class for threads posting from the archive queue."""
+    """Concrete class for threads posting from the archive queue,
+    using the Ambient PWS protocol."""
     
     def __init__(self, queue, station, password, database_dict, 
                  url=None,
@@ -447,6 +503,7 @@ class AmbientThread(RESTThread):
 #==============================================================================
 
 class AmbientLoopThread(AmbientThread):
+    """Version used for the LOOP thread, that is for the Rapidfire protocol."""
 
     def get_record(self, archive, record):
         """Prepare a record for the Rapidfire protocol."""
@@ -464,6 +521,8 @@ class AmbientLoopThread(AmbientThread):
 #==============================================================================
 
 class CWOPThread(RESTThread):
+    """Concrete class for threads posting from the archive queue,
+    using the CWOP protocol."""
 
     def __init__(self, queue, station, password, database_dict,
                  server_list, latitude, longitude, _station_type,
