@@ -2579,19 +2579,24 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
       <span class="code">ttyUSB1</span>, the symbolic link will follow it. You just 
       specify port <span class="code">/dev/vpro</span> in the configuration file
       <span class="code">weewx.conf</span> and be done with it. </p>
-    <p>Here's how: </p>
-    <h4>Installing a udev script</h4>
-    <p>I have installed a file <span class="code">/etc/udev/rules.d/vpro.rules</span> 
+
+    <h3 id='udev_script'>Installing a udev script</h3>
+    <p>Use a udev rule to ensure that a USB device always appears at the same
+      location such as <span class='code'>/dev/vpro</span> instead of
+      <span class='code'>/dev/ttyUSB2</span></p>
+    <p>For example, for my VantagePro2 weather station, I have installed a file
+      <span class="code">/etc/udev/rules.d/vpro.rules</span> 
       on my fit-PC that looks like this: </p>
     <p class='tty'># Automount the VantagePro2 to port /dev/vpro.
 # Install in /etc/udev/rules.d/vpro.rules
 #
 ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</p>
-    <p>What this rule says is that when the USB port is plugged in (action
+    <p>This rule says that when the USB port is plugged in (action
       <span class="code">add</span>), and it has an attribute with name
-      <span class="code">interface</span> that is equal to &quot;<span class="code">CP2102 
-	USB to UART Bridge Controller</span>&quot;, then add a symbolic link for its 
-      physical port to <span class="code">/dev/vpro</span>. </p>
+      <span class="code">interface</span> that is equal to
+      &quot;<span class="code">CP2102 to UART Bridge Controller</span>&quot;,
+      then add a symbolic link for its physical port to
+      <span class="code">/dev/vpro</span>. </p>
     <p>Here is a rule that works for my Serial-to-USB cable, made by Prolific 
       Technology, Inc.:</p>
     <p class='tty'># Automount Serial-to-USB cable to port /dev/vpro
@@ -2606,17 +2611,19 @@ ACTION==&quot;add&quot;, ATTRS{product}==&quot;USB-Serial Controller&quot;, SYML
       than the newer <span class="code">udevadm</span> command.) In particular, run 
       the command </p>
     <p class='tty'># udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </p>
-    <p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute your 
-      real USB port) the VP2 is attached to. It will print out various identifiers 
-      that can be useful in identifying your VP2 to <span class="code">udev</span>. 
+    <p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute
+      your real USB port) the weather station is attached to. It will print
+      out various identifiers that can be useful in identifying your weather
+      station to <span class="code">udev</span>. 
       While the first example script above used a rule that matched attribute
-      <span class="code">interface</span>, others are possible. For example, the second 
-      example, for the serial-to-USB cable, chose to match the attribute
-      <span class="code">product</span>. </p>
-    <p>Once you have installed your <span class="code">udev</span> rule, you can 
-      then set <span class="code">port=/dev/vpro</span> in <span class="code">weewx.conf</span>, 
-      confident that it will always point to your VantagePro2, no matter which USB 
-      port it is actually attached to! </p>
+      <span class="code">interface</span>, others are possible. For example,
+      the second example, for the serial-to-USB cable, chose to match the
+      attribute <span class="code">product</span>. </p>
+    <p>Once you have installed your <span class="code">udev</span> rule, you
+      can then set <span class="code">port=/dev/vpro</span> in
+      <span class="code">weewx.conf</span>, confident that it will always point
+      to your weather station, no matter which USB port it is actually
+      attached to! </p>
     <p>I have tested this system many times. You can yank the USB port out of the 
       machine and then plug it back in while also pulling out the network connection 
       in the middle of an FTP upload: <span class="code">weewx</span> will recover.
