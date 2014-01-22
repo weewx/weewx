@@ -49,7 +49,8 @@ class StationInfo(object):
 
         self.latitude_f      = float(stn_dict['latitude'])
         self.longitude_f     = float(stn_dict['longitude'])
-        self.location        = stn_dict.get('location', 'Unknown')
+        # Locations frequently have commas in them. Guard against ConfigObj turning it into a list:
+        self.location        = weeutil.weeutil.list_as_string(stn_dict.get('location', 'Unknown'))
         self.week_start      = int(stn_dict.get('week_start', 6))
         self.station_url     = stn_dict.get('station_url', None)
         # For backwards compatibility:

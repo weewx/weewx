@@ -60,6 +60,13 @@ def option_as_list(option):
         return option
     return [option]
 
+def list_as_string(option):
+    if option is None: return None
+    if hasattr(option, '__iter__'):
+        return ', '.join(option)
+    else:
+        return option
+
 def stampgen(startstamp, stopstamp, interval):
     """Generator function yielding a sequence of timestamps, spaced interval apart.
     
