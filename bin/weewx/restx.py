@@ -40,15 +40,15 @@ class StdRESTbase(weewx.wxengine.StdService):
     
     def shutDown(self):
         """Shut down any threads"""
-        if hasattr(self, 'loop_queue'):
+        if hasattr(self, 'loop_queue') and hasattr(self, 'loop_thread'):
             StdRESTbase.shutDown_thread(self.loop_queue, self.loop_thread)
-        if hasattr(self, 'archive_queue'):
+        if hasattr(self, 'archive_queue') and hasattr(self, 'archive_thread'):
             StdRESTbase.shutDown_thread(self.archive_queue, self.archive_thread)
 
     @staticmethod
     def shutDown_thread(q, t):
         """Function to shut down a thread."""
-        if q:
+        if q and t.isAlive():
             # Put a None in the queue to signal the thread to shutdown
             q.put(None)
             # Wait up to 20 seconds for the thread to exit:
@@ -257,20 +257,51 @@ class RESTThread(threading.Thread):
             
         return _datadict
 
-    def to_US(self, datadict):    
-        """Convert units to US Customary."""
-        if datadict['usUnits'] == weewx.US:
-            # It's already in US units.
-            return datadict
-        else:
-            # It's in something else. Perform the conversion
-            _datadict_us = weewx.units.StdUnitConverters[weewx.US].convertDict(datadict)
-            # Add the new unit system
-            _datadict_us['usUnits'] = weewx.US
-            return _datadict_us
-    
+    def run(self):
+        """General run() version. It depends on a specializing method "process_record" to
+        post a record in accordance with the actual protocol."""
+        
+        # Open up the archive. Use a 'with' statement. This will automatically close the
+        # archive in the case of an exception:
+        with weewx.archive.Archive.open(self.database_dict) as _archive:
+
+            while True :
+                while True:
+                    # This will block until something appears in the queue:
+                    _record = self.queue.get()
+                    # A None record is our signal to exit:
+                    if _record is None:
+                        return
+                    # If packets have backed up in the queue, trim it until it's no bigger
+                    # than the max allowed backlog:
+                    if self.queue.qsize() <= self.max_backlog:
+                        break
+
+                if self.skip_this_post(_record['dateTime']):
+                    continue
+
+                try:
+                    # Process the record, using whatever method the specializing class provides
+                    self.process_record(_archive, _record)
+                except BadLogin, e:
+                    syslog.syslog(syslog.LOG_ERR, "restx: Bad login for %s; waiting 60 minutes then retrying" % self.restful_site)
+                    time.sleep(3600)
+                except FailedPost, e:
+                    if self.log_failure:
+                        _time_str = timestamp_to_string(_record['dateTime'])
+                        syslog.syslog(syslog.LOG_ERR, "restx: Failed to publish record %s to %s" (_time_str, self.restful_site))
+                        syslog.syslog(syslog.LOG_ERR, "****   Reason: %s" % e)
+                except Exception, e:
+                    syslog.syslog(syslog.LOG_CRIT, "restx: Thread for %s exiting" % self.restful_site)
+                    syslog.syslog(syslog.LOG_CRIT, "****   Reason: %s" % e)
+                    return
+                else:
+                    if self.log_success:
+                        _time_str = timestamp_to_string(_record['dateTime'])
+                        syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.restful_site))
+
     def post_request(self, request):
-        """Post a request.
+        """Post a request, using an HTTP GET
         
         request: An instance of urllib2.Request
         """
@@ -358,50 +389,11 @@ class AmbientThread(RESTThread):
         self.log_failure   = log_failure
         self.max_backlog   = max_backlog
 
-    def run(self):
-        # Open up the archive. Use a 'with' statement. This will automatically close the
-        # archive in the case of an exception:
-        with weewx.archive.Archive.open(self.database_dict) as _archive:
-
-            while True :
-                while True:
-                    # This will block until something appears in the queue:
-                    _record = self.queue.get()
-                    # A None record is our signal to exit:
-                    if _record is None:
-                        return
-                    # If packets have backed up in the queue, trim it until it's no bigger
-                    # than the max allowed backlog:
-                    if self.queue.qsize() <= self.max_backlog:
-                        break
-
-                if self.skip_this_post(_record['dateTime']):
-                    continue
-
-                try:
-                    self.process_record(_archive, _record)
-                except BadLogin, e:
-                    syslog.syslog(syslog.LOG_ERR, "restx: Bad login for %s; waiting 60 minutes then retrying" % self.restful_site)
-                    time.sleep(3600)
-                except FailedPost, e:
-                    if self.log_failure:
-                        _time_str = timestamp_to_string(_record['dateTime'])
-                        syslog.syslog(syslog.LOG_ERR, "restx: Failed to publish record %s to %s" (_time_str, self.restful_site))
-                        syslog.syslog(syslog.LOG_ERR, "****   Reason: %s" % e)
-                except Exception, e:
-                    syslog.syslog(syslog.LOG_CRIT, "restx: Thread for %s exiting" % self.restful_site)
-                    syslog.syslog(syslog.LOG_CRIT, "****   Reason: %s" % e)
-                    return
-                else:
-                    if self.log_success:
-                        _time_str = timestamp_to_string(_record['dateTime'])
-                        syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.restful_site))
-
     def process_record(self, archive, record):
         # Get the full record by querying the database ...
         _full_record = self.get_record(archive, record)
         # ... convert to US if necessary ...
-        _us_record = self.to_US(_full_record)
+        _us_record = to_US(_full_record)
         # ... format the URL, using the Ambient protocol ...
         _url = self.format_url(_us_record)
         # ... convert to a Request object ...
@@ -471,32 +463,41 @@ class AmbientLoopThread(AmbientThread):
 #                    Class CWOPThread
 #==============================================================================
 
-class CWOPThread(AmbientThread):
+class CWOPThread(RESTThread):
 
     def __init__(self, queue, station, password, database_dict,
                  server_list, latitude, longitude, _station_type,
                  log_success=True, log_failure=True, max_backlog=0,
                  restful_site='', max_tries=3, stale=0, post_interval=0):
 
-        self.server_list = server_list
-        self.latitude = latitude
-        self.longitude = longitude
-        self.station_type = _station_type
-        super(CWOPThread, self).__init__(queue, station, password, database_dict, 
-                                         None,
-                                         log_success, log_failure, max_backlog,
-                                         restful_site, max_tries, stale, post_interval)
+        # Initialize my superclass
+        super(CWOPThread, self).__init__(restful_site, max_tries, stale, post_interval)
+
+        self.queue         = queue
+        self.station       = station
+        self.password      = password
+        self.database_dict = database_dict
+        self.server_list   = server_list
+        self.latitude      = latitude
+        self.longitude     = longitude
+        self.station_type  = _station_type
+        self.log_success   = log_success
+        self.log_failure   = log_failure
+        self.max_backlog   = max_backlog
 
     def process_record(self, archive, record):
+        """Process a record in accordance with the CWOP protocol."""
+        
         # Get the full record by querying the database ...
         _full_record = self.get_record(archive, record)
         # ... convert to US if necessary ...
-        _us_record = self.to_US(_full_record)
+        _us_record = to_US(_full_record)
 
         # Get the login and packet strings:
         _login = self.get_login_string()
         _tnc_packet = self.get_tnc_packet(record)
 
+        # Then post them:
         self.send_packet(_login, _tnc_packet)
 
     def get_login_string(self):
@@ -628,3 +629,20 @@ class CWOPThread(AmbientThread):
             # This is executed only if the loop terminates normally, meaning
             # the send failed max_tries times. Log it.
             raise FailedPost, "Failed upload to site %s after %d tries" % (self.restful_site, self.max_tries)
+
+#==============================================================================
+#                    Utility functions
+#==============================================================================
+
+def to_US(datadict):
+    """Convert units to US Customary."""
+    if datadict['usUnits'] == weewx.US:
+        # It's already in US units.
+        return datadict
+    else:
+        # It's in something else. Perform the conversion
+        _datadict_us = weewx.units.StdUnitConverters[weewx.US].convertDict(datadict)
+        # Add the new unit system
+        _datadict_us['usUnits'] = weewx.US
+        return _datadict_us
+    

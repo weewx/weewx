@@ -21,15 +21,6 @@ The weewx service would support dependencies or, at least, be grouped into
 like services. This would make it easier to install new services by
 3rd parties.
 
-RESTful services should become 1st class weewx services. This would make it
-easy to implement something like the Rapidfire protocol.
-
-Fixes to REST base class:
- - eliminate requirement that derived must define site (or make it ctor arg)
- - eliminate requirement that derived must have station member
- - make extractRecordFrom extensible (allow override of archive_types and
-     possibly sql_select)
-
 Offer tags to support JSON. In particular, vectors. A tag like
 $day.outTemp.vector would offer a vector of temperatures for the day.
 Aggregation would be nice.
@@ -64,8 +55,6 @@ New observation types would have their unit group attached as a suffix.
 E.g., _energy.
 
 Offer a more "weather friendly" Metric unit system.
-
-Support the WU "RapidFire" protocol.
 
 Offer "cumulative" as an aggregation type.
 
