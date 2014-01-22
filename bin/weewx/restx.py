@@ -391,6 +391,7 @@ class AmbientThread(RESTThread):
                 except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "restx: Thread for %s exiting" % self.restful_site)
                     syslog.syslog(syslog.LOG_CRIT, "****   Reason: %s" % e)
+                    return
                 else:
                     if self.log_success:
                         _time_str = timestamp_to_string(_record['dateTime'])
@@ -561,27 +562,23 @@ class CWOPThread(AmbientThread):
 
         # Station equipment
         _equipment_str = ".weewx-%s-%s" % (weewx.__version__, self.station_type)
-
-        _tnc_packet = _prefix + _time_str + _latlon_str + _wt_str + _rain_str + \
-                      _baro_str + _humid_str + _radiation_str + _equipment_str + "\r\n"
+        
+        _tnc_packet = ''.join([_prefix, _time_str, _latlon_str, _wt_str, _rain_str,
+                               _baro_str, _humid_str, _radiation_str, _equipment_str, "\r\n"])
 
         return _tnc_packet
 
     def send_packet(self, login, tnc_packet):
         
-        print "Sending packet login", login
-        print "sending tnc packet", tnc_packet
-        return
-
         # Get a socket connection:
         _sock = self._get_connect()
 
         try:
-            # Send the login:
+            # Send the login ...
             self._send(_sock, login)
-
-            # And then the packet
+            # ... and then the packet
             self._send(_sock, tnc_packet)
+            
         finally:
             _sock.close()
 
@@ -589,7 +586,7 @@ class CWOPThread(AmbientThread):
 
         # Go through the list of known server:ports, looking for
         # a connection that works:
-        for _serv_addr_str in self.server:
+        for _serv_addr_str in self.server_list:
             _server, _port_str = _serv_addr_str.split(":")
             _port = int(_port_str)
             for _count in range(self.max_tries):
@@ -598,10 +595,10 @@ class CWOPThread(AmbientThread):
                     _sock.connect((_server, _port))
                 except socket.error, e:
                     # Unsuccessful. Log it and try again
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: Connection attempt #%d failed to %s server %s:%d" % (_count + 1, self.name, _server, _port))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: Connection attempt #%d failed to %s server %s:%d" % (_count + 1, self.restful_site, _server, _port))
                     syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: Connected to %s server %s:%d" % (self.name, _server, _port))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: Connected to %s server %s:%d" % (self.restful_site, _server, _port))
                     return _sock
                 # Couldn't connect on this attempt. Close it, try again.
                 try:
@@ -609,10 +606,10 @@ class CWOPThread(AmbientThread):
                 except:
                     pass
             # If we got here, that server didn't work. Log it and go on to the next one.
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Unable to connect to %s server %s:%d" % (self.name, _server, _port))
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Unable to connect to %s server %s:%d" % (self.restful_site, _server, _port))
 
         # If we got here. None of the servers worked. Raise an exception
-        raise IOError, "Unable to obtain a socket connection to %s" % (self.name,)
+        raise FailedPost, "Unable to obtain a socket connection to %s" % (self.restful_site,)
 
     def _send(self, sock, msg):
 
@@ -622,7 +619,7 @@ class CWOPThread(AmbientThread):
                 sock.send(msg)
             except (IOError, socket.error), e:
                 # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: Attempt #%d failed to send to %s" % (_count + 1, self.name))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: Attempt #%d failed to send to %s" % (_count + 1, self.restful_site))
                 syslog.syslog(syslog.LOG_DEBUG, "  ***  Reason: %s" % (e,))
             else:
                 _resp = sock.recv(1024)
@@ -630,4 +627,4 @@ class CWOPThread(AmbientThread):
         else:
             # This is executed only if the loop terminates normally, meaning
             # the send failed max_tries times. Log it.
-            raise FailedPost, "Failed upload to site %s after %d tries" % (self.name, self.max_tries)
+            raise FailedPost, "Failed upload to site %s after %d tries" % (self.restful_site, self.max_tries)
