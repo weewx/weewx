@@ -9,10 +9,8 @@
 from __future__ import with_statement
 import Queue
 import datetime
-import hashlib
 import httplib
 import platform
-import re
 import socket
 import sys
 import syslog
@@ -278,10 +276,10 @@ class StdWunderground(StdRESTbase):
             _server_url    = _ambient_dict.get('server_url', StdWunderground.archive_url)
             _log_success   = to_bool(_ambient_dict.get('log_success', True))
             _log_failure   = to_bool(_ambient_dict.get('log_failure', True))
-            _max_backlog   = int(_ambient_dict.get('max_backlog', sys.maxint))
-            _max_tries     = int(_ambient_dict.get('max_tries', 3))
-            _stale         = int(_ambient_dict.get('stale', 0))
-            _post_interval = int(_ambient_dict.get('interval', 0))
+            _max_backlog   = to_int(_ambient_dict.get('max_backlog', sys.maxint))
+            _max_tries     = to_int(_ambient_dict.get('max_tries', 3))
+            _stale         = to_int(_ambient_dict.get('stale'))
+            _post_interval = to_int(_ambient_dict.get('interval', 0))
             self.archive_queue = Queue.Queue()
             self.archive_thread = AmbientThread(self.archive_queue, _station, _password, _database_dict, 
                                                 _server_url, 
@@ -295,10 +293,10 @@ class StdWunderground(StdRESTbase):
             _server_url    = _ambient_dict.get('server_url', StdWunderground.rapidfire_url)
             _log_success   = to_bool(_ambient_dict.get('log_success', False))
             _log_failure   = to_bool(_ambient_dict.get('log_failure', False))
-            _max_backlog   = int(_ambient_dict.get('max_backlog', sys.maxint))
-            _max_tries     = int(_ambient_dict.get('max_tries', 1))
-            _stale         = int(_ambient_dict.get('stale', 0))
-            _post_interval = int(_ambient_dict.get('interval', 0))
+            _max_backlog   = to_int(_ambient_dict.get('max_backlog', sys.maxint))
+            _max_tries     = to_int(_ambient_dict.get('max_tries', 1))
+            _stale         = to_int(_ambient_dict.get('stale'))
+            _post_interval = to_int(_ambient_dict.get('interval', 0))
             self.loop_queue = Queue.Queue()
             self.loop_thread = AmbientLoopThread(self.archive_queue, _station, _password, _database_dict, 
                                                 _server_url, 
@@ -341,10 +339,10 @@ class StdPWSWeather(StdRESTbase):
         _server_url    = _ambient_dict.get('server_url', StdPWSWeather.archive_url)
         _log_success   = to_bool(_ambient_dict.get('log_success', True))
         _log_failure   = to_bool(_ambient_dict.get('log_failure', True))
-        _max_backlog   = int(_ambient_dict.get('max_backlog', sys.maxint))
-        _max_tries     = int(_ambient_dict.get('max_tries', 3))
-        _stale         = int(_ambient_dict.get('stale', 0))
-        _post_interval = int(_ambient_dict.get('interval', 0))
+        _max_backlog   = to_int(_ambient_dict.get('max_backlog', sys.maxint))
+        _max_tries     = to_int(_ambient_dict.get('max_tries', 3))
+        _stale         = to_int(_ambient_dict.get('stale'))
+        _post_interval = to_int(_ambient_dict.get('interval', 0))
         self.archive_queue = Queue.Queue()
         self.archive_thread = AmbientThread(self.archive_queue, _station, _password, _database_dict, 
                                             _server_url, 
@@ -389,10 +387,10 @@ class StdWOW(StdRESTbase):
         _server_url    = _ambient_dict.get('server_url', StdWOW.archive_url)
         _log_success   = to_bool(_ambient_dict.get('log_success', True))
         _log_failure   = to_bool(_ambient_dict.get('log_failure', True))
-        _max_backlog   = int(_ambient_dict.get('max_backlog', sys.maxint))
-        _max_tries     = int(_ambient_dict.get('max_tries', 3))
-        _stale         = int(_ambient_dict.get('stale', 0))
-        _post_interval = int(_ambient_dict.get('interval', 0))
+        _max_backlog   = to_int(_ambient_dict.get('max_backlog', sys.maxint))
+        _max_tries     = to_int(_ambient_dict.get('max_tries', 3))
+        _stale         = to_int(_ambient_dict.get('stale'))
+        _post_interval = to_int(_ambient_dict.get('interval', 0))
         self.archive_queue = Queue.Queue()
         self.archive_thread = WOWThread(self.archive_queue, _station, _password, _database_dict, 
                                             _server_url, 
@@ -573,10 +571,10 @@ class StdCWOP(StdRESTbase):
         _longitude     = float(_cwop_dict.get('longitude', self.engine.stn_info.longitude_f))
         _log_success   = to_bool(_cwop_dict.get('log_success', True))
         _log_failure   = to_bool(_cwop_dict.get('log_failure', True))
-        _max_backlog   = int(_cwop_dict.get('max_backlog', sys.maxint))
-        _max_tries     = int(_cwop_dict.get('max_tries', 3))
-        _stale         = int(_cwop_dict.get('stale', 1800))
-        _post_interval = int(_cwop_dict.get('interval', 600))
+        _max_backlog   = to_int(_cwop_dict.get('max_backlog', sys.maxint))
+        _max_tries     = to_int(_cwop_dict.get('max_tries', 3))
+        _stale         = to_int(_cwop_dict.get('stale', 1800))
+        _post_interval = to_int(_cwop_dict.get('interval', 600))
         self.archive_queue = Queue.Queue()
         self.archive_thread = CWOPThread(self.archive_queue, _station, _passcode, _database_dict,
                                          _server_list, _latitude, _longitude, _station_type,
@@ -817,10 +815,10 @@ class StdStationRegistry(StdRESTbase):
         _server_url    = _registry_dict.get('server_url', StdStationRegistry.archive_url)
         _log_success   = to_bool(_registry_dict.get('log_success', True))
         _log_failure   = to_bool(_registry_dict.get('log_failure', True))
-        _max_backlog   = int(_registry_dict.get('max_backlog', 0))
-        _max_tries     = int(_registry_dict.get('max_tries', 3))
-        _stale         = int(_registry_dict.get('stale', 0))
-        _post_interval = int(_registry_dict.get('interval', 604800))
+        _max_backlog   = to_int(_registry_dict.get('max_backlog', 0))
+        _max_tries     = to_int(_registry_dict.get('max_tries', 3))
+        _stale         = to_int(_registry_dict.get('stale'))
+        _post_interval = to_int(_registry_dict.get('interval', 604800))
         self.archive_queue = Queue.Queue()
         self.archive_thread = StationRegistryThread(self.archive_queue,
                                                     _station_url, _description, _latitude, _longitude,
