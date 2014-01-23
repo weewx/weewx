@@ -95,12 +95,14 @@ class Simulator(weewx.abstractstation.AbstractStation):
         self.observations = {'outTemp'    : Observation(magnitude=20.0,  average= 50.0, period=24.0, phase_lag=14.0, start=start_ts),
                              'inTemp'     : Observation(magnitude=5.0,   average= 68.0, period=24.0, phase_lag=12.0, start=start_ts),
                              'barometer'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
-                             'pressure'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
-                             'windSpeed'  : Observation(magnitude=10.0,  average=  5.0, period=48.0, phase_lag=24.0, start=start_ts),
-                             'windDir'    : Observation(magnitude=360.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
-                             'windGust'   : Observation(magnitude=12.0,  average=  6.0, period=48.0, phase_lag=24.0, start=start_ts),
-                             'windGustDir': Observation(magnitude=360.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
+                             'pressure'   : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
+                             'windSpeed'  : Observation(magnitude=5.0,   average=  5.0, period=48.0, phase_lag=24.0, start=start_ts),
+                             'windDir'    : Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
+                             'windGust'   : Observation(magnitude=6.0,   average=  6.0, period=48.0, phase_lag=24.0, start=start_ts),
+                             'windGustDir': Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
                              'outHumidity': Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts),
+                             'radiation'  : Solar(magnitude=1000.0, solar_start=6.0, solar_length=12.0),
+                             'UV'         : Solar(magnitude=14,     solar_start=6.0, solar_length=12.0),
                              'rain'       : Rain(rain_start=0, rain_length=3, total_rain=0.2, loop_interval=self.loop_interval)}
 
     def genLoopPackets(self):
@@ -200,6 +202,31 @@ class Rain(object):
         return amt
         
 
+class Solar(object):
+    
+    def __init__(self, magnitude=10, solar_start=6, solar_length=12):
+        """Initialize a solar simulator
+            Simulated ob will follow a single wave sine function starting at 0 and ending at 0.
+            The solar day starts at time solar_start and finishes after solar_length hours.
+                             
+            magnitude:      the value at max, the range will be twice this value
+            solar_start:    decimal hour of day that obs start (6.75=6:45am, 6:20=6:12am)
+            solar_length:   length of day in decimal hours (10.75=10hr 45min, 10:10=10hr 6min)
+        """
+        
+        self.magnitude = magnitude
+        self.solar_start = 3600 * solar_start
+        self.solar_end = self.solar_start + 3600 * solar_length
+        self.solar_length = 3600 * solar_length
+        
+    def value_at(self, time_ts):
+        time_tt = time.localtime(time_ts)
+        secs_since_midnight = time_tt.tm_hour * 3600 + time_tt.tm_min * 60.0 + time_tt.tm_sec
+        if self.solar_start < secs_since_midnight <= self.solar_end:
+            amt = self.magnitude * (1 + math.cos(math.pi * (1 + 2.0 * ((secs_since_midnight - self.solar_start) / self.solar_length - 1))))/2
+        else:
+            amt = 0
+        return amt
 
 if __name__ == "__main__":
 
