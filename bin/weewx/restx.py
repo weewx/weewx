@@ -128,8 +128,11 @@ class RESTThread(threading.Thread):
         return _datadict
 
     def run(self):
-        """General run() version. It depends on a specializing method "process_record" to
-        post a record in accordance with the actual protocol."""
+        """General run() version. 
+        
+        It simply opens up the database, then calls run_loop(). If a specializing RESTful
+        service does not need the database, then it can specialize this function and not
+        open up the database."""
         
         # Open up the archive. Use a 'with' statement. This will automatically close the
         # archive in the case of an exception:
@@ -137,60 +140,60 @@ class RESTThread(threading.Thread):
             self.run_loop(_archive)
 
     def run_loop(self, archive=None):
-            while True :
-                while True:
-                    # This will block until something appears in the queue:
-                    _record = self.queue.get()
-                    # A None record is our signal to exit:
-                    if _record is None:
-                        return
-                    # If packets have backed up in the queue, trim it until it's no bigger
-                    # than the max allowed backlog:
-                    if self.queue.qsize() <= self.max_backlog:
-                        break
-
-                if self.skip_this_post(_record['dateTime']):
-                    continue
-
-                try:
-                    # Process the record, using whatever method the specializing class provides
-                    self.process_record(_record, archive)
-                except BadLogin, e:
-                    syslog.syslog(syslog.LOG_ERR, "restx: Bad login for %s; waiting 60 minutes then retrying" % self.restful_site)
-                    time.sleep(3600)
-                except FailedPost, e:
-                    if self.log_failure:
-                        _time_str = timestamp_to_string(_record['dateTime'])
-                        syslog.syslog(syslog.LOG_ERR, "restx: Failed to publish record %s to %s" % (_time_str, self.restful_site))
-                        syslog.syslog(syslog.LOG_ERR, "****   Reason: %s" % e)
-                except Exception, e:
-                    syslog.syslog(syslog.LOG_CRIT, "restx: Thread for %s exiting" % self.restful_site)
-                    syslog.syslog(syslog.LOG_CRIT, "****   Reason: %s" % e)
+        """Runs a continuous loop, waiting for records to appear in the queue, then processing
+        them.
+        """
+        
+        while True :
+            while True:
+                # This will block until something appears in the queue:
+                _record = self.queue.get()
+                # A None record is our signal to exit:
+                if _record is None:
                     return
-                else:
-                    if self.log_success:
-                        _time_str = timestamp_to_string(_record['dateTime'])
-                        syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.restful_site))
+                # If packets have backed up in the queue, trim it until it's no bigger
+                # than the max allowed backlog:
+                if self.queue.qsize() <= self.max_backlog:
+                    break
+    
+            if self.skip_this_post(_record['dateTime']):
+                continue
+    
+            try:
+                # Process the record, using whatever method the specializing class provides
+                self.process_record(_record, archive)
+            except BadLogin, e:
+                syslog.syslog(syslog.LOG_ERR, "restx: Bad login for %s; waiting 60 minutes then retrying" % self.restful_site)
+                time.sleep(3600)
+            except FailedPost, e:
+                if self.log_failure:
+                    _time_str = timestamp_to_string(_record['dateTime'])
+                    syslog.syslog(syslog.LOG_ERR, "restx: Failed to publish record %s to %s" % (_time_str, self.restful_site))
+                    syslog.syslog(syslog.LOG_ERR, "****   Reason: %s" % e)
+            except Exception, e:
+                syslog.syslog(syslog.LOG_CRIT, "restx: Thread for %s exiting" % self.restful_site)
+                syslog.syslog(syslog.LOG_CRIT, "****   Reason: %s" % e)
+                return
+            else:
+                if self.log_success:
+                    _time_str = timestamp_to_string(_record['dateTime'])
+                    syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.restful_site))
 
     def post_request(self, request):
         """Post a request, using an HTTP GET
+        
+        Attempts to post the request object up to max_tries times. 
+        Catches a set of generic exceptions.
         
         request: An instance of urllib2.Request
         """
 
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
-            # Now use urllib2 to post the data. Wrap in a try block
-            # in case there's a network problem.
             try:
-                _response = urllib2.urlopen(request)
-            except urllib2.HTTPError, e:
-                # WOW signals a bad login with a HTML Error 403 code:
-                if e.code == 403:
-                    raise BadLogin(e)
-                else:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.restful_site))
-                    syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
+                # Do a single post. The function post_once() can be specialized by a RESTful service
+                # to catch any unusual exceptions.
+                _response = self.post_once(request)
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and go around again for another try
                 syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.restful_site))
@@ -201,23 +204,20 @@ class RESTThread(threading.Thread):
                     syslog.syslog(syslog.LOG_DEBUG, " ****  Response code: %d" % (_response.code,))
                 else:
                     # No exception thrown and we got a good response code, but we're still not done.
-                    # We have to also check for a bad station ID or password.
-                    # It will have the error encoded in the return message:
-                    for line in _response:
-                        # PWSweather signals with 'ERROR', WU with 'INVALID':
-                        if line.startswith('ERROR') or line.startswith('INVALID'):
-                            # Bad login. No reason to retry. Raise an exception.
-                            raise BadLogin(line)
-                        # Station registry indicates something is malformed by signalling "FAIL"
-                        elif line.startswith('FAIL'):
-                            raise FailedPost(line)
-                    # Does not seem to be an error. We're done.
-                    return
+                    # Some protocols encode a bad station ID or password in the return message.
+                    self.check_response(_response)
         else:
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Log it.
             raise FailedPost("Failed upload to site %s after %d tries" % (self.restful_site, self.max_tries))
 
+    def post_once(self, request):
+        _response = urllib2.urlopen(request)
+        return _response
+
+    def check_response(self, response):
+        pass
+    
     def skip_this_post(self, time_ts):
         """Check whether the post is current"""
         # Don't post if this record is too old
@@ -475,6 +475,14 @@ class AmbientThread(RESTThread):
         _url = "%s?%s" % (self.server_url, _urlquery)
         return _url
                 
+    def check_response(self, response):
+        """Check the HTTP response code for an Ambient related error."""
+        for line in response:
+            # PWSweather signals with 'ERROR', WU with 'INVALID':
+            if line.startswith('ERROR') or line.startswith('INVALID'):
+                # Bad login. No reason to retry. Raise an exception.
+                raise BadLogin(line)
+        
 class AmbientLoopThread(AmbientThread):
     """Version used for the LOOP thread, that is for the Rapidfire protocol."""
 
@@ -528,6 +536,18 @@ class WOWThread(AmbientThread):
         _url = "%s?%s" % (self.server_url, _urlquery)
         return _url
 
+    def post_once(self, request):
+        """Version of post_once() for the WOW protocol, which
+        uses a response error code to signal a bad login."""
+        try:
+            _response = urllib2.urlopen(request)
+        except urllib2.HTTPError, e:
+            # WOW signals a bad login with a HTML Error 400 or 403 code:
+            if e.code == 400 or e.code == 403:
+                raise BadLogin(e)
+            else:
+                raise
+        
 #==============================================================================
 #                    CWOP
 #==============================================================================
@@ -905,6 +925,14 @@ class StationRegistryThread(RESTThread):
         _url = "%s?%s" % (self.server_url, _urlquery)
         return _url
     
+    def check_response(self, response):
+        """Check the response from a Station Registry post."""
+        for line in response:
+            # Station Registry signals a bad post with a line starting with "FAIL"
+            if line.startswith('FAIL'):
+                raise FailedPost(line)
+
+        
 #==============================================================================
 #                    Utility functions
 #==============================================================================
