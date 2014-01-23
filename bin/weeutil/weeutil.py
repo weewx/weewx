@@ -61,6 +61,17 @@ def option_as_list(option):
     return [option]
 
 def list_as_string(option):
+    """Returns the argument as a string.
+    
+    Useful for insuring that ConfigObj options are always returned
+    as a string, despite the presence of a comma in the middle.
+    
+    Example:
+    >>> print list_as_string('a string')
+    a string
+    >>> print list_as_string(['a', 'string'])
+    a, string
+    """
     if option is None: return None
     if hasattr(option, '__iter__'):
         return ', '.join(option)
