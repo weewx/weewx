@@ -179,8 +179,8 @@ class RESTThread(threading.Thread):
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.restful_site))
 
-    def post_request(self, request):
-        """Post a request, using an HTTP GET
+    def post_with_retries(self, request):
+        """Post a request, retrying if necessary
         
         Attempts to post the request object up to max_tries times. 
         Catches a set of generic exceptions.
@@ -191,9 +191,9 @@ class RESTThread(threading.Thread):
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
             try:
-                # Do a single post. The function post_once() can be specialized by a RESTful service
+                # Do a single post. The function post_request() can be specialized by a RESTful service
                 # to catch any unusual exceptions.
-                _response = self.post_once(request)
+                _response = self.post_request(request)
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and go around again for another try
                 syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.restful_site))
@@ -211,11 +211,13 @@ class RESTThread(threading.Thread):
             # the upload failed max_tries times. Log it.
             raise FailedPost("Failed upload to site %s after %d tries" % (self.restful_site, self.max_tries))
 
-    def post_once(self, request):
+    def post_request(self, request):
+        """Post a request object. This version does not catch any exceptions."""
         _response = urllib2.urlopen(request)
         return _response
 
     def check_response(self, response):
+        """Check the response from a HTTP post. This version does nothing."""
         pass
     
     def skip_this_post(self, time_ts):
@@ -432,7 +434,7 @@ class AmbientThread(RESTThread):
         # ... convert to a Request object ...
         _request = urllib2.Request(_url)
         # ... then, finally, post it
-        self.post_request(_request)
+        self.post_with_retries(_request)
 
     # Types and formats of the data to be published:
     _formats = {'dateTime'    : 'dateutc=%s',
@@ -536,8 +538,8 @@ class WOWThread(AmbientThread):
         _url = "%s?%s" % (self.server_url, _urlquery)
         return _url
 
-    def post_once(self, request):
-        """Version of post_once() for the WOW protocol, which
+    def post_request(self, request):
+        """Version of post_request() for the WOW protocol, which
         uses a response error code to signal a bad login."""
         try:
             _response = urllib2.urlopen(request)
@@ -876,7 +878,7 @@ class StationRegistryThread(RESTThread):
         self.max_backlog   = max_backlog
         
     def run(self):
-        
+        # This version of run() does not open the archive database.
         self.run_loop()
         
     def process_record(self, record, archive):
@@ -887,7 +889,7 @@ class StationRegistryThread(RESTThread):
         # ... convert to a Request object ...
         _request = urllib2.Request(_url)
         # ... then, finally, post it
-        self.post_request(_request)
+        self.post_with_retries(_request)
 
     def get_record(self, dummy_record, dummy_archive):
         _record = {}
@@ -931,7 +933,6 @@ class StationRegistryThread(RESTThread):
             # Station Registry signals a bad post with a line starting with "FAIL"
             if line.startswith('FAIL'):
                 raise FailedPost(line)
-
         
 #==============================================================================
 #                    Utility functions
