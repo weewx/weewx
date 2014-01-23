@@ -357,6 +357,54 @@ class StdPWSWeather(StdRESTbase):
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
 
+class StdWOW(StdRESTbase):
+
+    """Upload using the UK Met Office's WOW protocol. 
+    
+    For details of the WOW upload protocol, see 
+    http://wow.metoffice.gov.uk/support/dataformats#dataFileUpload
+    """
+
+    # The URL used by WOW:
+    archive_url = "http://wow.metoffice.gov.uk/automaticreading"
+
+    def __init__(self, engine, config_dict):
+        
+        super(StdWOW, self).__init__(engine, config_dict)
+        
+        # Extract the required parameters. If one of them is missing,
+        # a KeyError exception will occur. Be prepared to catch it.
+        try:
+            # Extract a copy of the dictionary with the WU options:
+            _ambient_dict=dict(config_dict['StdRESTful']['WOW'])
+            _station = _ambient_dict['station']
+            _password = _ambient_dict['password']
+        except KeyError, e:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to WOW")
+            syslog.syslog(syslog.LOG_DEBUG, "****   Reason: missing option %s" % e)
+            return
+
+        _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+        
+        _server_url    = _ambient_dict.get('server_url', StdWOW.archive_url)
+        _log_success   = to_bool(_ambient_dict.get('log_success', True))
+        _log_failure   = to_bool(_ambient_dict.get('log_failure', True))
+        _max_backlog   = int(_ambient_dict.get('max_backlog', sys.maxint))
+        _max_tries     = int(_ambient_dict.get('max_tries', 3))
+        _stale         = int(_ambient_dict.get('stale', 0))
+        _post_interval = int(_ambient_dict.get('interval', 0))
+        self.archive_queue = Queue.Queue()
+        self.archive_thread = WOWThread(self.archive_queue, _station, _password, _database_dict, 
+                                            _server_url, 
+                                            _log_success, _log_failure, _max_backlog,
+                                            "WOW", _max_tries, _stale, _post_interval)
+        self.archive_thread.start()
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to WOW station %s" % _station)
+        
+    def new_archive_record(self, event):
+        self.archive_queue.put(event.record)
+
 class AmbientThread(RESTThread):
     """Concrete class for threads posting from the archive queue,
     using the Ambient PWS protocol."""
@@ -442,6 +490,45 @@ class AmbientLoopThread(AmbientThread):
         _record['rtfreq'] = '2.5'
 
         return _record
+
+class WOWThread(AmbientThread):
+    """Class for posting to the WOW variant of the Ambient protocol."""
+    
+    # Types and formats of the data to be published:
+    _formats = {'dateTime'    : 'dateutc=%s',
+                'barometer'   : 'baromin=%.1f',
+                'outTemp'     : 'tempf=%.1f',
+                'outHumidity' : 'humidity=%.0f',
+                'windSpeed'   : 'windspeedmph=%.0f',
+                'windDir'     : 'winddir=%.0f',
+                'windGust'    : 'windgustmph=%.0f',
+                'windGustDir' : 'windgustdir=%.0f',
+                'dewpoint'    : 'dewptf=%.1f',
+                'hourRain'    : 'rainin=%.2f',
+                'dayRain'     : 'dailyrainin=%.2f'}
+    
+    def format_url(self, record):
+        """Return an URL for posting using WOW's version of the Ambient protocol."""
+
+        _liststr = ["action=updateraw",
+                    "siteid=%s" % self.station,
+                    "siteAuthenticationKey=%s" % self.password,
+                    "softwaretype=weewx-%s" % weewx.__version__]
+
+        # Go through each of the supported types, formatting it, then adding to _liststr:
+        for _key in WOWThread._formats:
+            v = record[_key]
+            # Check to make sure the type is not null
+            if v is not None :
+                if _key == 'dateTime':
+                    v = urllib.quote_plus(datetime.datetime.utcfromtimestamp(v).isoformat(' '))
+                # Format the value, and accumulate in _liststr:
+                _liststr.append(WOWThread._formats[_key] % v)
+        # Now stick all the little pieces together with an ampersand between them:
+        _urlquery = '&'.join(_liststr)
+        # This will be the complete URL for the HTTP GET:
+        _url = "%s?%s" % (self.server_url, _urlquery)
+        return _url
 
 #==============================================================================
 #                    CWOP
