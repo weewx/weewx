@@ -494,6 +494,11 @@ def _decode(raw, fmt):
             result = raw[pos] + ((raw[pos+1] & 0xF0) << 4)
             if result == 0xFFF:
                 result = None
+        elif typ == 'wd':
+            # wind direction - check bit 7 for invalid
+            result = raw[pos]
+            if result & 0x80:
+                result = None
         elif typ == 'bf':
             # bit field - 'scale' is a list of bit names
             result = {}
@@ -1405,7 +1410,7 @@ reading_format['1080'] = {
     'abs_pressure' : (7, 'us', 0.1),
     'wind_ave'     : (9, 'wa', 0.1),
     'wind_gust'    : (10, 'wg', 0.1),
-    'wind_dir'     : (12, 'ub', None),
+    'wind_dir'     : (12, 'wd', None),
     'rain'         : (13, 'us', 0.3),
     'status'       : (15, 'pb', None),
     }
