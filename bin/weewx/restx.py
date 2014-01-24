@@ -5,7 +5,58 @@
 #
 #    $Id$
 #
-"""Publish weather data to RESTful sites such as the Weather Underground or PWSWeather."""
+"""Publish weather data to RESTful sites such as the Weather Underground or PWSWeather.
+
+                            GENERAL ARCHITECTURE
+
+Each protocol uses two classes:
+ o A weewx service, that runs in the main thread. Call this the "controlling object"
+ o A separate "threading" class that runs in its own thread. Call this the "posting object".
+ 
+Communication between the two is via an instance of Queue.Queue. New loop
+packets or archive records are put into the queue by the controlling object
+and received by the posting object. Details below.
+ 
+The controlling object should inherit from StdRESTbase. It is responsible for
+unpacking any configuration information from weewx.conf, and supplying any
+defaults. It sets up the queue. It arranges for any new LOOP or archive records
+to be put in the queue. It then launches the thread for the posting object.
+ 
+When a new LOOP or record arrives, the controlling object puts it in the queue,
+to be received by the posting object. The controlling object can tell the posting
+object to terminate by putting a 'None' in the queue.
+ 
+The posting object should inherit from class RESTThread. It monitors the queue
+and blocks until a new record arrives.
+
+The base class RESTThread has a lot of functionality, so specializing classes
+should only have to implement a few functions. In particular, 
+
+ - format_url(self, record). This function takes a record dictionary as an
+   argument. It is responsible for formatting it as an appropriate URL. 
+   For example, the station registry's version emits strings such as
+   http://weewx.com/register/register.cgi?python_info=2.7.5%2B&weewx_info=2.6.0a5 ...
+   
+ - skip_this_post(self, time_ts). If this function returns True, then the
+   post will be skipped. Otherwise, it is done. The default version does two
+   checks. First, it sees how old the record is. If it is older than the value
+   'stale', then the post is skipped. Second, it will not allow posts more often
+   than 'post_interval'. Both of these can be set in the constructor of
+   RESTThread.
+   
+ - post_request(self, request). This function takes a urllib2.Request object
+   and is responsible for the HTTP post. The default version simply uses
+   urllib2.urlopen(request) and returns the result. If the post could raise
+   an unusual exception, override this function and catch the exception. See
+   the WOWThread implementation for an example.
+   
+ - check_response(). After an HTTP request gets posted, the webserver sends back
+   a "response." This response may contain clues as to whether the post worked.
+   By overriding check_response() you can look for those clues. For example,
+   the station registry checks all lines in the response, looking for any that
+   start with the string "FAIL". If it finds one, it raises a FailedPost exception,
+   signalling that the post did not work. 
+"""
 from __future__ import with_statement
 import Queue
 import datetime
@@ -64,13 +115,14 @@ class RESTThread(threading.Thread):
     
     Offers a few bits of common functionality."""
 
-    def __init__(self, queue, restful_site, max_tries, stale, post_interval):
+    def __init__(self, queue, restful_site, max_tries, stale, post_interval, timeout=10):
         threading.Thread.__init__(self, name=restful_site)
         self.queue = queue
         self.restful_site = restful_site
         self.max_tries = max_tries
         self.stale = stale
         self.post_interval = post_interval
+        self.timeout = 10
         
         self.lastpost = 0
             
@@ -189,8 +241,6 @@ class RESTThread(threading.Thread):
         _us_record = to_US(_full_record)
         # ... format the URL, using the relevant protocol ...
         _url = self.format_url(_us_record)
-        print _url
-        return
         # ... convert to a Request object ...
         _request = urllib2.Request(_url)
         # ... then, finally, post it
@@ -229,8 +279,11 @@ class RESTThread(threading.Thread):
             raise FailedPost("Failed upload after %d tries" % (self.max_tries,))
 
     def post_request(self, request):
-        """Post a request object. This version does not catch any exceptions."""
-        _response = urllib2.urlopen(request)
+        """Post a request object. This version does not catch any HTTP exceptions."""
+        try:
+            _response = urllib2.urlopen(request, timeout=self.timeout)
+        except TypeError:
+            _response = urllib2.urlopen(request)
         return _response
 
     def check_response(self, response):
@@ -544,14 +597,19 @@ class WOWThread(AmbientThread):
         """Version of post_request() for the WOW protocol, which
         uses a response error code to signal a bad login."""
         try:
-            _response = urllib2.urlopen(request)
+            try:
+                _response = urllib2.urlopen(request, timeout=self.timeout)
+            except TypeError:
+                _response = urllib2.urlopen(request)
         except urllib2.HTTPError, e:
             # WOW signals a bad login with a HTML Error 400 or 403 code:
             if e.code == 400 or e.code == 403:
                 raise BadLogin(e)
             else:
                 raise
-        
+        else:
+            return _response
+
 #==============================================================================
 #                    CWOP
 #==============================================================================
