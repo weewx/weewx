@@ -21,6 +21,8 @@ Moved the forecast module from bin/user to bin/forecast
 
 Now caches font handles in order to work around a memory leak in PIL.
 
+Image margins now scale with image and font sizes.
+
 Now works with the pure Python version of Cheetah's NameMapper.
 
 Fixed bug in SummaryByMonth and SummaryByYear that would result in duplicate

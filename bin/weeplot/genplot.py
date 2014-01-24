@@ -37,13 +37,6 @@ class GeneralPlot(object):
         self.xscale = None
         self.yscale = None
         
-        self.lmargin = 35
-        self.rmargin = 20
-        self.bmargin = 30
-        self.tmargin = 20
-        self.tbandht = 12
-        self.padding =  3
-
         self.image_width            = int(config_dict.get('image_width',  300))
         self.image_height           = int(config_dict.get('image_height', 180))
         self.image_background_color = weeplot.utilities.tobgr(config_dict.get('image_background_color', '0xf5f5f5'))
@@ -78,6 +71,14 @@ class GeneralPlot(object):
         self.x_label_format         = config_dict.get('x_label_format', None)
         self.y_label_format         = config_dict.get('y_label_format', None)
         
+        # Calculate sensible margins for the given image and font sizes.
+        self.lmargin = int(4.0 * self.axis_label_font_size)
+        self.rmargin = int(0.1 * self.image_width)
+        self.bmargin = int(1.2 * (self.bottom_label_font_size + self.axis_label_font_size) + 0.5)
+        self.tmargin = int(2.0 * self.top_label_font_size + 0.5)
+        self.tbandht = int(1.2 * self.top_label_font_size + 0.5)
+        self.padding =  3
+
         self.render_rose            = False
         # Rose width and height are hardwired to 21x21:
         self.rose_width             = 21
