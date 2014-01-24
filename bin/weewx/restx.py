@@ -177,6 +177,25 @@ class RESTThread(threading.Thread):
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_INFO, "restx: %s: Published record %s" % (self.restful_site, _time_str))
 
+    def process_record(self, record, archive):
+        """Default version of process_record.
+        
+        This version should work for many protocols, but it can always be replaced by
+        a specializing class."""
+        
+        # Get the full record by querying the database ...
+        _full_record = self.get_record(record, archive)
+        # ... convert to US if necessary ...
+        _us_record = to_US(_full_record)
+        # ... format the URL, using the relevant protocol ...
+        _url = self.format_url(_us_record)
+        print _url
+        return
+        # ... convert to a Request object ...
+        _request = urllib2.Request(_url)
+        # ... then, finally, post it
+        self.post_with_retries(_request)
+
     def post_with_retries(self, request):
         """Post a request, retrying if necessary
         
@@ -418,18 +437,6 @@ class AmbientThread(RESTThread):
         self.log_success   = log_success
         self.log_failure   = log_failure
         self.max_backlog   = max_backlog
-
-    def process_record(self, record, archive):
-        # Get the full record by querying the database ...
-        _full_record = self.get_record(record, archive)
-        # ... convert to US if necessary ...
-        _us_record = to_US(_full_record)
-        # ... format the URL, using the Ambient protocol ...
-        _url = self.format_url(_us_record)
-        # ... convert to a Request object ...
-        _request = urllib2.Request(_url)
-        # ... then, finally, post it
-        self.post_with_retries(_request)
 
     # Types and formats of the data to be published:
     _formats = {'dateTime'    : 'dateutc=%s',
@@ -872,16 +879,6 @@ class StationRegistryThread(RESTThread):
         # This version of run() does not open the archive database.
         self.run_loop()
         
-    def process_record(self, record, archive):
-        # Get the full record by querying the database ...
-        _full_record = self.get_record(record, archive)
-        # ... format the URL ...
-        _url = self.format_url(_full_record)
-        # ... convert to a Request object ...
-        _request = urllib2.Request(_url)
-        # ... then, finally, post it
-        self.post_with_retries(_request)
-
     def get_record(self, dummy_record, dummy_archive):
         _record = {}
         _record['station_url']   = self.station_url
@@ -893,6 +890,7 @@ class StationRegistryThread(RESTThread):
         _record['python_info']   = platform.python_version()
         _record['platform_info'] = platform.platform()
         _record['weewx_info']    = weewx.__version__
+        _record['usUnits']       = weewx.US
         
         return _record
         

@@ -15,6 +15,9 @@ Changed the default time and date labels to use locale dependent formatting.
 The defaults should now work in most locales, provided you set the
 environment variable LANG before running weewx.
 
+Changed default QC barometric low from 28 to 26. Added inTemp,
+inHumidity, and rain.
+
 Ranges in MinMax QC can now include units.
 
 Moved the forecast module from bin/user to bin/forecast
@@ -33,12 +36,9 @@ Consolidated pressure calculation code in ws23xx, ws28xx, te923, and fousb.
 Added Vantage types stormRain and windSpeed10 to the list of observation
 types.
 
-Simulator now generates types dewpoint and pressure.
+Simulator now generates types dewpoint, pressure, radiation, and UV.
 
 Fixed parsing of locations in the xtide forecast.
-
-Changed default QC barometric low from 28 to 26. Added inTemp,
-inHumidity, and rain.
 
 Minor cleanup to Standard skin for better out-of-the-box behavior:
  - default to no radar image instead of having every station point to Oregon
