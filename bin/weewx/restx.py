@@ -163,21 +163,19 @@ class RESTThread(threading.Thread):
                 # Process the record, using whatever method the specializing class provides
                 self.process_record(_record, archive)
             except BadLogin, e:
-                syslog.syslog(syslog.LOG_ERR, "restx: Bad login for %s; waiting 60 minutes then retrying" % self.restful_site)
+                syslog.syslog(syslog.LOG_ERR, "restx: |%s| bad login; waiting 60 minutes then retrying" % self.restful_site)
                 time.sleep(3600)
             except FailedPost, e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_ERR, "restx: Failed to publish record %s to %s" % (_time_str, self.restful_site))
-                    syslog.syslog(syslog.LOG_ERR, "****   Reason: %s" % e)
+                    syslog.syslog(syslog.LOG_ERR, "restx: |%s| Failed to publish record %s: %s" % (self.restful_site, _time_str, e))
             except Exception, e:
-                syslog.syslog(syslog.LOG_CRIT, "restx: Thread for %s exiting" % self.restful_site)
-                syslog.syslog(syslog.LOG_CRIT, "****   Reason: %s" % e)
+                syslog.syslog(syslog.LOG_CRIT, "restx: |%s| Thread exiting: %s" % (self.restful_site, e))
                 return
             else:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_INFO, "restx: Published record %s to %s" % (_time_str, self.restful_site))
+                    syslog.syslog(syslog.LOG_INFO, "restx: |%s| Published record %s" % (self.restful_site, _time_str))
 
     def post_with_retries(self, request):
         """Post a request, retrying if necessary
@@ -196,20 +194,20 @@ class RESTThread(threading.Thread):
                 _response = self.post_request(request)
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.restful_site))
-                syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: |%s| Failed upload attempt #%d: Exception %s" % (self.restful_site, _count+1, e))
             else:
                 if _response.code != 200:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: Failed attempt #%d to upload to %s" % (_count+1, self.restful_site))
-                    syslog.syslog(syslog.LOG_DEBUG, " ****  Response code: %d" % (_response.code,))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: |%s| Failed upload attempt #%d: Code %s" % (self.restful_site, _count+1, _response.code))
                 else:
                     # No exception thrown and we got a good response code, but we're still not done.
                     # Some protocols encode a bad station ID or password in the return message.
                     self.check_response(_response)
+                    # Does not seem to be an error. We're done.
+                    return
         else:
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Log it.
-            raise FailedPost("Failed upload to site %s after %d tries" % (self.restful_site, self.max_tries))
+            raise FailedPost("Failed upload after %d tries" % (self.max_tries,))
 
     def post_request(self, request):
         """Post a request object. This version does not catch any exceptions."""
@@ -226,14 +224,14 @@ class RESTThread(threading.Thread):
         if self.stale:
             _how_old = time.time() - time_ts
             if _how_old > self.stale:
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s record %s is stale (%d > %d)." % \
+                syslog.syslog(syslog.LOG_DEBUG, "restx: |%s| record %s is stale (%d > %d)." % \
                         (self.restful_site, timestamp_to_string(time_ts), _how_old, self.stale))
                 return True
  
         # We don't want to post more often than the post interval
         _how_long = time_ts - self.lastpost
         if _how_long < self.post_interval:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: %s record %s wait interval (%d < %d) has not passed." % \
+            syslog.syslog(syslog.LOG_DEBUG, "restx: |%s| record %s wait interval (%d < %d) has not passed." % \
                     (self.restful_site, timestamp_to_string(time_ts), _how_long, self.post_interval))
             return True
     
@@ -263,8 +261,7 @@ class StdWunderground(StdRESTbase):
             _station = _ambient_dict['station']
             _password = _ambient_dict['password']
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to Wunderground")
-            syslog.syslog(syslog.LOG_DEBUG, "****   Reason: missing option %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: |Wunderground| Data will not be posted: Missing option %s" % e)
             return
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
@@ -286,10 +283,10 @@ class StdWunderground(StdRESTbase):
             self.archive_thread = AmbientThread(self.archive_queue, _station, _password, _database_dict, 
                                                 _server_url, 
                                                 _log_success, _log_failure, _max_backlog,
-                                                "Wunderground - PWS", _max_tries, _stale, _post_interval)
+                                                "Wunderground-PWS", _max_tries, _stale, _post_interval)
             self.archive_thread.start()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-            syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to WUnderground-PWS station %s" % _station)
+            syslog.syslog(syslog.LOG_INFO, "restx: |Wunderground-PWS| Data for station %s will be posted" % _station)
 
         if do_rapidfire_post:
             _server_url    = _ambient_dict.get('server_url', StdWunderground.rapidfire_url)
@@ -303,10 +300,10 @@ class StdWunderground(StdRESTbase):
             self.loop_thread = AmbientLoopThread(self.archive_queue, _station, _password, _database_dict, 
                                                 _server_url, 
                                                 _log_success, _log_failure, _max_backlog,
-                                                "Wunderground - Rapidfire", _max_tries, _stale, _post_interval)
+                                                "Wunderground-RF", _max_tries, _stale, _post_interval)
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-            syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to WUnderground-Rapidfire station %s" % _station)
+            syslog.syslog(syslog.LOG_INFO, "restx: |Wunderground-RF| Data for station %s will be posted" % _station)
 
     def new_loop_packet(self, event):
         self.loop_queue.put(event.packet)
@@ -332,8 +329,7 @@ class StdPWSWeather(StdRESTbase):
             _station = _ambient_dict['station']
             _password = _ambient_dict['password']
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to PWSWeather")
-            syslog.syslog(syslog.LOG_DEBUG, "****   Reason: missing option %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: |PWSWeather| Data will not be posted: Missing option %s" % e)
             return
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
@@ -352,7 +348,7 @@ class StdPWSWeather(StdRESTbase):
                                             "PWSWeather", _max_tries, _stale, _post_interval)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to PWSWeather station %s" % _station)
+        syslog.syslog(syslog.LOG_INFO, "restx: |PWSWeather| Data for station %s will be posted" % _station)
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -380,8 +376,7 @@ class StdWOW(StdRESTbase):
             _station = _ambient_dict['station']
             _password = _ambient_dict['password']
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to WOW")
-            syslog.syslog(syslog.LOG_DEBUG, "****   Reason: missing option %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: |WOW| Data will not be posted: Missing option %s" % e)
             return
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
@@ -400,7 +395,7 @@ class StdWOW(StdRESTbase):
                                             "WOW", _max_tries, _stale, _post_interval)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to WOW station %s" % _station)
+        syslog.syslog(syslog.LOG_INFO, "restx: |WOW| Data for station %s will be posted" % _station)
         
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -579,8 +574,7 @@ class StdCWOP(StdRESTbase):
                 _passcode = _cwop_dict['passcode']
             _station_type  = _cwop_dict.get('station_type', config_dict['Station']['station_type'])
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to CWOP")
-            syslog.syslog(syslog.LOG_DEBUG, "****   Reason: missing option %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: |CWOP| Data will not be posted. Missing option: %s" % e)
             return
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
@@ -604,7 +598,7 @@ class StdCWOP(StdRESTbase):
                                          'CWOP', _max_tries, _stale, _post_interval)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: Data will be posted to CWOP station %s" % _station)
+        syslog.syslog(syslog.LOG_INFO, "restx: |CWOP| Data for station %s will be posted" % _station)
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -743,10 +737,9 @@ class CWOPThread(RESTThread):
                     _sock.connect((_server, _port))
                 except socket.error, e:
                     # Unsuccessful. Log it and try again
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: Connection attempt #%d failed to %s server %s:%d" % (_count + 1, self.restful_site, _server, _port))
-                    syslog.syslog(syslog.LOG_DEBUG, " ****  Reason: %s" % (e,))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: |%s| Connection attempt #%d failed to server %s:%d: %s" % (_count + 1, self.restful_site, _server, _port, e))
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: Connected to %s server %s:%d" % (self.restful_site, _server, _port))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: |%s| Connected to server %s:%d" % (self.restful_site, _server, _port))
                     return _sock
                 # Couldn't connect on this attempt. Close it, try again.
                 try:
@@ -754,10 +747,10 @@ class CWOPThread(RESTThread):
                 except:
                     pass
             # If we got here, that server didn't work. Log it and go on to the next one.
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Unable to connect to %s server %s:%d" % (self.restful_site, _server, _port))
+            syslog.syslog(syslog.LOG_DEBUG, "restx: |%s| Unable to connect to server %s:%d" % (self.restful_site, _server, _port))
 
         # If we got here. None of the servers worked. Raise an exception
-        raise FailedPost, "Unable to obtain a socket connection to %s" % (self.restful_site,)
+        raise FailedPost, "Unable to obtain a socket connection"
 
     def _send(self, sock, msg):
 
@@ -767,15 +760,14 @@ class CWOPThread(RESTThread):
                 sock.send(msg)
             except (IOError, socket.error), e:
                 # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: Attempt #%d failed to send to %s" % (_count + 1, self.restful_site))
-                syslog.syslog(syslog.LOG_DEBUG, "  ***  Reason: %s" % (e,))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: |%s| Attempt #%d failed: %s" % (_count + 1, self.restful_site, e))
             else:
                 _resp = sock.recv(1024)
                 return _resp
         else:
             # This is executed only if the loop terminates normally, meaning
             # the send failed max_tries times. Log it.
-            raise FailedPost, "Failed upload to site %s after %d tries" % (self.restful_site, self.max_tries)
+            raise FailedPost, "Failed upload after %d tries" % (self.max_tries,)
 
 #==============================================================================
 #                    Station Registry
@@ -818,13 +810,12 @@ class StdStationRegistry(StdRESTbase):
             # Extract a copy of the dictionary with the WU options:
             _registry_dict = dict(config_dict['StdRESTful']['StationRegistry'])
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Data will not be posted to PWSWeather")
-            syslog.syslog(syslog.LOG_DEBUG, "****   Reason: missing option %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: |StationRegistry| Data will not be posted. Missing option %s" % e)
             return
 
         # Should the service be run?
         if not to_bool(_registry_dict.get('register_this_station', False)):
-            syslog.syslog(syslog.LOG_INFO, "restx: Station registry not requested.")
+            syslog.syslog(syslog.LOG_INFO, "restx: |StationRegistry| Registration not requested.")
             return
 
         _station_url   = _registry_dict.get('station_url',  self.engine.stn_info.station_url)
@@ -850,7 +841,7 @@ class StdStationRegistry(StdRESTbase):
                                                     "StationRegistry", _max_tries, _stale, _post_interval)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: Station will be registered.")
+        syslog.syslog(syslog.LOG_INFO, "restx: |StationRegistry| Station will be registered.")
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
