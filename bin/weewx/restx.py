@@ -480,6 +480,9 @@ class StdPWSWeather(StdRESTbase):
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
 
+# For backwards compatibility with early alpha versions:
+StdPWSweather = StdPWSWeather
+
 class StdWOW(StdRESTbase):
 
     """Upload using the UK Met Office's WOW protocol. 
