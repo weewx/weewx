@@ -551,6 +551,12 @@ def update_config_file(config_dict):
         # Get rid of the no longer needed service_list:
         config_dict['Engines']['WxEngine'].pop('service_list')
 
+        if config_dict.has_key('StdRESTful') and config_dict['StdRESTful'].has_key('CWOP'):
+            if config_dict['StdRESTful']['CWOP'].has_key('interval'):
+                # Name has changed to "post_interval"
+                config_dict['StdRESTful']['CWOP']['post_interval'] = config_dict['StdRESTful']['CWOP']['interval']
+                config_dict['StdRESTful']['CWOP'].pop('interval')
+
 def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:
     filepath = os.path.normpath(filepath)

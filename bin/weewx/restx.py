@@ -10,6 +10,7 @@
                             GENERAL ARCHITECTURE
 
 Each protocol uses two classes:
+
  o A weewx service, that runs in the main thread. Call this the "controlling object"
  o A separate "threading" class that runs in its own thread. Call this the "posting object".
  
@@ -17,10 +18,11 @@ Communication between the two is via an instance of Queue.Queue. New loop
 packets or archive records are put into the queue by the controlling object
 and received by the posting object. Details below.
  
-The controlling object should inherit from StdRESTbase. It is responsible for
-unpacking any configuration information from weewx.conf, and supplying any
-defaults. It sets up the queue. It arranges for any new LOOP or archive records
-to be put in the queue. It then launches the thread for the posting object.
+The controlling object should inherit from StdRESTbase. The controlling object
+is responsible for unpacking any configuration information from weewx.conf, and
+supplying any defaults. It sets up the queue. It arranges for any new LOOP or
+archive records to be put in the queue. It then launches the thread for the
+posting object.
  
 When a new LOOP or record arrives, the controlling object puts it in the queue,
 to be received by the posting object. The controlling object can tell the posting
@@ -35,7 +37,7 @@ should only have to implement a few functions. In particular,
  - format_url(self, record). This function takes a record dictionary as an
    argument. It is responsible for formatting it as an appropriate URL. 
    For example, the station registry's version emits strings such as
-   http://weewx.com/register/register.cgi?python_info=2.7.5%2B&weewx_info=2.6.0a5 ...
+     http://weewx.com/register/register.cgi?python_info=2.7.5%2B&weewx_info=2.6.0a5 ...
    
  - skip_this_post(self, time_ts). If this function returns True, then the
    post will be skipped. Otherwise, it is done. The default version does two
@@ -45,17 +47,17 @@ should only have to implement a few functions. In particular,
    RESTThread.
    
  - post_request(self, request). This function takes a urllib2.Request object
-   and is responsible for the HTTP post. The default version simply uses
+   and is responsible for performing the HTTP GET or POST. The default version simply uses
    urllib2.urlopen(request) and returns the result. If the post could raise
    an unusual exception, override this function and catch the exception. See
    the WOWThread implementation for an example.
    
  - check_response(). After an HTTP request gets posted, the webserver sends back
    a "response." This response may contain clues as to whether the post worked.
-   By overriding check_response() you can look for those clues. For example,
+   By overriding check_response() you can look for these clues. For example,
    the station registry checks all lines in the response, looking for any that
    start with the string "FAIL". If it finds one, it raises a FailedPost exception,
-   signalling that the post did not work. 
+   signaling that the post did not work. 
 """
 from __future__ import with_statement
 import Queue
@@ -72,7 +74,7 @@ import urllib2
 
 import weeutil.weeutil
 import weewx.wxengine
-from weeutil.weeutil import to_int, to_bool, timestamp_to_string
+from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string
 import weewx.units
 
 class FailedPost(IOError):
@@ -115,14 +117,52 @@ class RESTThread(threading.Thread):
     
     Offers a few bits of common functionality."""
 
-    def __init__(self, queue, restful_site, max_tries, stale, post_interval, timeout=10):
-        threading.Thread.__init__(self, name=restful_site)
-        self.queue = queue
-        self.restful_site = restful_site
-        self.max_tries = max_tries
-        self.stale = stale
-        self.post_interval = post_interval
-        self.timeout = 10
+    def __init__(self, queue, protocol_name, 
+                 log_success=True, log_failure=True, 
+                 max_backlog=sys.maxint, max_tries=3, stale=None, 
+                 post_interval=None, timeout=10):
+        """Initializer for the class RESTThread
+        Required parameters:
+
+          queue: An instance of Queue.Queue where the records will appear.
+
+          protocol_name: A string holding the name of the protocol.
+          
+        Optional parameters:
+        
+          log_success: If True, log a successful post in the system log.
+          Default is True.
+          
+          log_failure: If True, log an unsuccessful post in the system log.
+          Default is True.
+          
+          max_backlog: How many records are allowed to accumulate in the queue
+          before the queue is trimmed.
+          Default is sys.maxint (essentially, allow any number).
+          
+          max_tries: How many times to try the post before giving up.
+          Default is 3
+          
+          stale: How old a record can be and still considered useful.
+          Default is None (never becomes too old).
+          
+          post_interval: How long to wait between posts.
+          Default is None (post every record).
+          
+          timeout: How long to wait for the server to respond before giving up.
+          Default is 10 seconds."""    
+        # Initialize my superclass:
+        threading.Thread.__init__(self, name=protocol_name)
+
+        self.queue         = queue
+        self.protocol_name = protocol_name
+        self.log_success   = to_bool(log_success)
+        self.log_failure   = to_bool(log_failure)
+        self.max_backlog   = to_int(max_backlog)
+        self.max_tries     = to_int(max_tries)
+        self.stale         = to_int(stale)
+        self.post_interval = to_int(post_interval)
+        self.timeout       = to_int(timeout)
         
         self.lastpost = 0
             
@@ -215,19 +255,19 @@ class RESTThread(threading.Thread):
                 # Process the record, using whatever method the specializing class provides
                 self.process_record(_record, archive)
             except BadLogin, e:
-                syslog.syslog(syslog.LOG_ERR, "restx: %s: bad login; waiting 60 minutes then retrying" % self.restful_site)
+                syslog.syslog(syslog.LOG_ERR, "restx: %s: bad login; waiting 60 minutes then retrying" % self.protocol_name)
                 time.sleep(3600)
             except FailedPost, e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_ERR, "restx: %s: Failed to publish record %s: %s" % (self.restful_site, _time_str, e))
+                    syslog.syslog(syslog.LOG_ERR, "restx: %s: Failed to publish record %s: %s" % (self.protocol_name, _time_str, e))
             except Exception, e:
-                syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting: %s" % (self.restful_site, e))
+                syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting: %s" % (self.protocol_name, e))
                 return
             else:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_INFO, "restx: %s: Published record %s" % (self.restful_site, _time_str))
+                    syslog.syslog(syslog.LOG_INFO, "restx: %s: Published record %s" % (self.protocol_name, _time_str))
 
     def process_record(self, record, archive):
         """Default version of process_record.
@@ -263,10 +303,10 @@ class RESTThread(threading.Thread):
                 _response = self.post_request(request)
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Exception %s" % (self.restful_site, _count+1, e))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Exception %s" % (self.protocol_name, _count+1, e))
             else:
                 if _response.code != 200:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Code %s" % (self.restful_site, _count+1, _response.code))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Code %s" % (self.protocol_name, _count+1, _response.code))
                 else:
                     # No exception thrown and we got a good response code, but we're still not done.
                     # Some protocols encode a bad station ID or password in the return message.
@@ -293,19 +333,20 @@ class RESTThread(threading.Thread):
     def skip_this_post(self, time_ts):
         """Check whether the post is current"""
         # Don't post if this record is too old
-        if self.stale:
+        if self.stale is not None:
             _how_old = time.time() - time_ts
             if _how_old > self.stale:
                 syslog.syslog(syslog.LOG_DEBUG, "restx: %s: record %s is stale (%d > %d)." % \
-                        (self.restful_site, timestamp_to_string(time_ts), _how_old, self.stale))
+                        (self.protocol_name, timestamp_to_string(time_ts), _how_old, self.stale))
                 return True
  
-        # We don't want to post more often than the post interval
-        _how_long = time_ts - self.lastpost
-        if _how_long < self.post_interval:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: record %s wait interval (%d < %d) has not passed." % \
-                    (self.restful_site, timestamp_to_string(time_ts), _how_long, self.post_interval))
-            return True
+        if self.post_interval is not None:
+            # We don't want to post more often than the post interval
+            _how_long = time_ts - self.lastpost
+            if _how_long < self.post_interval:
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: record %s wait interval (%d < %d) has not passed." % \
+                        (self.protocol_name, timestamp_to_string(time_ts), _how_long, self.post_interval))
+                return True
     
         self.lastpost = time_ts
         return False
@@ -344,35 +385,25 @@ class StdWunderground(StdRESTbase):
         do_archive_post   = to_bool(_ambient_dict.get('archive_post', not do_rapidfire_post))
         
         if do_archive_post:
-            _server_url    = _ambient_dict.get('server_url', StdWunderground.archive_url)
-            _log_success   = to_bool(_ambient_dict.get('log_success', True))
-            _log_failure   = to_bool(_ambient_dict.get('log_failure', True))
-            _max_backlog   = to_int(_ambient_dict.get('max_backlog', sys.maxint))
-            _max_tries     = to_int(_ambient_dict.get('max_tries', 3))
-            _stale         = to_int(_ambient_dict.get('stale'))
-            _post_interval = to_int(_ambient_dict.get('interval', 0))
+            _ambient_dict.setdefault('server_url', StdWunderground.archive_url)
             self.archive_queue = Queue.Queue()
-            self.archive_thread = AmbientThread(self.archive_queue, _station, _password, _database_dict, 
-                                                _server_url, 
-                                                _log_success, _log_failure, _max_backlog,
-                                                "Wunderground-PWS", _max_tries, _stale, _post_interval)
+            self.archive_thread = AmbientThread(self.archive_queue, _database_dict,
+                                                protocol_name="Wunderground-PWS",
+                                                **_ambient_dict) 
             self.archive_thread.start()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
             syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-PWS: Data for station %s will be posted" % _station)
 
         if do_rapidfire_post:
-            _server_url    = _ambient_dict.get('server_url', StdWunderground.rapidfire_url)
-            _log_success   = to_bool(_ambient_dict.get('log_success', False))
-            _log_failure   = to_bool(_ambient_dict.get('log_failure', False))
-            _max_backlog   = to_int(_ambient_dict.get('max_backlog', sys.maxint))
-            _max_tries     = to_int(_ambient_dict.get('max_tries', 1))
-            _stale         = to_int(_ambient_dict.get('stale'))
-            _post_interval = to_int(_ambient_dict.get('interval', 0))
+            _ambient_dict.setdefault('server_url', StdWunderground.rapidfire_url)
+            _ambient_dict.setdefault('log_success', False)
+            _ambient_dict.setdefault('log_failure', False)
+            _ambient_dict.setdefault('max_backlog', 0)
+            _ambient_dict.setdefault('max_tries', 1)
             self.loop_queue = Queue.Queue()
-            self.loop_thread = AmbientLoopThread(self.archive_queue, _station, _password, _database_dict, 
-                                                _server_url, 
-                                                _log_success, _log_failure, _max_backlog,
-                                                "Wunderground-RF", _max_tries, _stale, _post_interval)
+            self.loop_thread = AmbientLoopThread(self.archive_queue, _database_dict,
+                                                 protocol_name="Wunderground-RF",
+                                                 **_ambient_dict) 
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
             syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-RF: Data for station %s will be posted" % _station)
@@ -406,18 +437,11 @@ class StdPWSWeather(StdRESTbase):
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
         
-        _server_url    = _ambient_dict.get('server_url', StdPWSWeather.archive_url)
-        _log_success   = to_bool(_ambient_dict.get('log_success', True))
-        _log_failure   = to_bool(_ambient_dict.get('log_failure', True))
-        _max_backlog   = to_int(_ambient_dict.get('max_backlog', sys.maxint))
-        _max_tries     = to_int(_ambient_dict.get('max_tries', 3))
-        _stale         = to_int(_ambient_dict.get('stale'))
-        _post_interval = to_int(_ambient_dict.get('interval', 0))
+        _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
         self.archive_queue = Queue.Queue()
-        self.archive_thread = AmbientThread(self.archive_queue, _station, _password, _database_dict, 
-                                            _server_url, 
-                                            _log_success, _log_failure, _max_backlog,
-                                            "PWSWeather", _max_tries, _stale, _post_interval)
+        self.archive_thread = AmbientThread(self.archive_queue, _database_dict,
+                                            protocol_name="PWSWeather",
+                                            **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         syslog.syslog(syslog.LOG_INFO, "restx: PWSWeather: Data for station %s will be posted" % _station)
@@ -443,7 +467,7 @@ class StdWOW(StdRESTbase):
         # Extract the required parameters. If one of them is missing,
         # a KeyError exception will occur. Be prepared to catch it.
         try:
-            # Extract a copy of the dictionary with the WU options:
+            # Extract a copy of the dictionary with the WOW options:
             _ambient_dict=dict(config_dict['StdRESTful']['WOW'])
             _station = _ambient_dict['station']
             _password = _ambient_dict['password']
@@ -453,18 +477,11 @@ class StdWOW(StdRESTbase):
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
         
-        _server_url    = _ambient_dict.get('server_url', StdWOW.archive_url)
-        _log_success   = to_bool(_ambient_dict.get('log_success', True))
-        _log_failure   = to_bool(_ambient_dict.get('log_failure', True))
-        _max_backlog   = to_int(_ambient_dict.get('max_backlog', sys.maxint))
-        _max_tries     = to_int(_ambient_dict.get('max_tries', 3))
-        _stale         = to_int(_ambient_dict.get('stale'))
-        _post_interval = to_int(_ambient_dict.get('interval', 0))
+        _ambient_dict.setdefault('server_url', StdWOW.archive_url)
         self.archive_queue = Queue.Queue()
-        self.archive_thread = WOWThread(self.archive_queue, _station, _password, _database_dict, 
-                                            _server_url, 
-                                            _log_success, _log_failure, _max_backlog,
-                                            "WOW", _max_tries, _stale, _post_interval)
+        self.archive_thread = WOWThread(self.archive_queue, _database_dict, 
+                                        protocol_name="WOW",
+                                        **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         syslog.syslog(syslog.LOG_INFO, "restx: WOW: Data for station %s will be posted" % _station)
@@ -474,22 +491,68 @@ class StdWOW(StdRESTbase):
 
 class AmbientThread(RESTThread):
     """Concrete class for threads posting from the archive queue,
-    using the Ambient PWS protocol."""
+       using the Ambient PWS protocol."""
     
-    def __init__(self, queue, station, password, database_dict, 
-                 server_url,
-                 log_success=True, log_failure=True, max_backlog=0,
-                 restful_site='', max_tries=3, stale=None, post_interval=0):
-
-        super(AmbientThread, self).__init__(queue, restful_site, max_tries, stale, post_interval)
+    def __init__(self, queue, database_dict,
+                 station, password, server_url,
+                 protocol_name="Unknown-Ambient",
+                 log_success=True, log_failure=True,
+                 max_backlog=sys.maxint, max_tries=3, stale=None, 
+                 post_interval=None, timeout=10):
+        """
+        Initializer for the AmbientThread class.
         
+        Required parameters:
+
+          queue: An instance of Queue.Queue where the records will appear.
+          
+          database_dict: A dictionary holding the weedb database connection
+          information. It will be used to open a connection to the archive 
+          database.
+          
+          station: The name of the station. For example, for the WU, this
+          would be something like "KORHOODR3".
+          
+          password: Password used for the station.
+          
+          server_url: An url where the server for this protocol can be found.
+
+        Optional parameters:
+        
+          protocol_name: A string holding the name of the protocol.
+          Default is "Unknown-Ambient"
+          
+          log_success: If True, log a successful post in the system log.
+          Default is True.
+          
+          log_failure: If True, log an unsuccessful post in the system log.
+          Default is True.
+          
+          max_backlog: How many records are allowed to accumulate in the queue
+          before the queue is trimmed.
+          Default is sys.maxint (essentially, allow any number).
+          
+          max_tries: How many times to try the post before giving up.
+          Default is 3
+          
+          stale: How old a record can be and still considered useful.
+          Default is None (never becomes too old).
+          
+          post_interval: How long to wait between posts.
+          Default is None (post every record).
+          
+          timeout: How long to wait for the server to respond before giving up.
+          Default is 10 seconds.        
+        """
+        super(AmbientThread, self).__init__(queue, protocol_name,
+                                            log_success=log_success, log_failure=log_failure,
+                                            max_backlog=max_backlog, max_tries=max_tries, stale=stale,
+                                            post_interval=post_interval, timeout=timeout)
+        
+        self.database_dict = database_dict
         self.station       = station
         self.password      = password
-        self.database_dict = database_dict
         self.server_url    = server_url
-        self.log_success   = log_success
-        self.log_failure   = log_failure
-        self.max_backlog   = max_backlog
 
     # Types and formats of the data to be published:
     _formats = {'dateTime'    : 'dateutc=%s',
@@ -515,17 +578,17 @@ class AmbientThread(RESTThread):
         
         # Go through each of the supported types, formatting it, then adding to _liststr:
         for _key in AmbientThread._formats:
-            v = record[_key]
+            _v = record[_key]
             # Check to make sure the type is not null
-            if v is not None :
+            if _v is not None :
                 if _key == 'dateTime':
                     # For dates, convert from time stamp to a string, using what
                     # the Weather Underground calls "MySQL format." I've fiddled
                     # with formatting, and it seems that escaping the colons helps
                     # its reliability. But, I could be imagining things.
-                    v = urllib.quote(datetime.datetime.utcfromtimestamp(v).isoformat('+'), '-+')
+                    _v = urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(AmbientThread._formats[_key] % v)
+                _liststr.append(AmbientThread._formats[_key] % _v)
         # Now stick all the little pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
@@ -580,13 +643,13 @@ class WOWThread(AmbientThread):
 
         # Go through each of the supported types, formatting it, then adding to _liststr:
         for _key in WOWThread._formats:
-            v = record[_key]
+            _v = record[_key]
             # Check to make sure the type is not null
-            if v is not None :
+            if _v is not None :
                 if _key == 'dateTime':
-                    v = urllib.quote_plus(datetime.datetime.utcfromtimestamp(v).isoformat(' '))
+                    _v = urllib.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(WOWThread._formats[_key] % v)
+                _liststr.append(WOWThread._formats[_key] % _v)
         # Now stick all the little pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
@@ -643,24 +706,12 @@ class StdCWOP(StdRESTbase):
             return
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
-        
-        if _cwop_dict.has_key('server'):
-            _server_list = weeutil.weeutil.option_as_list(_cwop_dict['server'])
-        else:
-            _server_list = StdCWOP.default_servers
-        _latitude      = float(_cwop_dict.get('latitude',  self.engine.stn_info.latitude_f))
-        _longitude     = float(_cwop_dict.get('longitude', self.engine.stn_info.longitude_f))
-        _log_success   = to_bool(_cwop_dict.get('log_success', True))
-        _log_failure   = to_bool(_cwop_dict.get('log_failure', True))
-        _max_backlog   = to_int(_cwop_dict.get('max_backlog', sys.maxint))
-        _max_tries     = to_int(_cwop_dict.get('max_tries', 3))
-        _stale         = to_int(_cwop_dict.get('stale', 1800))
-        _post_interval = to_int(_cwop_dict.get('interval', 600))
+
+        _cwop_dict.setdefault('latitude',  self.engine.stn_info.latitude_f)
+        _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
         self.archive_queue = Queue.Queue()
-        self.archive_thread = CWOPThread(self.archive_queue, _station, _passcode, _database_dict,
-                                         _server_list, _latitude, _longitude, _station_type,
-                                         _log_success, _log_failure, _max_backlog,
-                                         'CWOP', _max_tries, _stale, _post_interval)
+        self.archive_thread = CWOPThread(self.archive_queue, _database_dict,
+                                         **_cwop_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         syslog.syslog(syslog.LOG_INFO, "restx: CWOP: Data for station %s will be posted" % _station)
@@ -672,24 +723,80 @@ class CWOPThread(RESTThread):
     """Concrete class for threads posting from the archive queue,
     using the CWOP protocol."""
 
-    def __init__(self, queue, station, password, database_dict,
-                 server_list, latitude, longitude, _station_type,
-                 log_success=True, log_failure=True, max_backlog=0,
-                 restful_site='', max_tries=3, stale=None, post_interval=0):
+    def __init__(self, queue, database_dict, 
+                 station, passcode,
+                 latitude, longitude, station_type,
+                 server_list=StdCWOP.default_servers,
+                 protocol_name="CWOP",
+                 log_success=True, log_failure=True,
+                 max_backlog=sys.maxint, max_tries=3, stale=1800,
+                 post_interval=600, timeout=10):
 
+        """
+        Initializer for the CWOPThread class.
+        
+        Required parameters:
+
+          queue: An instance of Queue.Queue where the records will appear.
+          
+          database_dict: A dictionary holding the weedb database connection
+          information. It will be used to open a connection to the archive 
+          database.
+          
+          station: The name of the station. Something like "DW1234".
+          
+          passcode: Some stations require a passcode.
+          
+          latitude: Latitude of the station in decimal degrees.
+          
+          longitude: Longitude of the station in decimal degrees.
+          
+          station_type: The type of station. Generally, this is the driver
+          symbolic name, such as "Vantage".
+          
+        Optional parameters:
+        
+          server_list: A list of strings holding the CWOP server name and
+          port. Default is ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
+        
+          protocol_name: A string holding the name of the protocol.
+          Default is "CWOP"
+          
+          log_success: If True, log a successful post in the system log.
+          Default is True.
+          
+          log_failure: If True, log an unsuccessful post in the system log.
+          Default is True.
+          
+          max_backlog: How many records are allowed to accumulate in the queue
+          before the queue is trimmed.
+          Default is sys.maxint (essentially, allow any number).
+          
+          max_tries: How many times to try the post before giving up.
+          Default is 3
+          
+          stale: How old a record can be and still considered useful.
+          Default is 1800 (a half hour).
+          
+          post_interval: How long to wait between posts.
+          Default is 600 (every 10 minutes).
+          
+          timeout: How long to wait for the server to respond before giving up.
+          Default is 10 seconds.        
+        """        
         # Initialize my superclass
-        super(CWOPThread, self).__init__(queue, restful_site, max_tries, stale, post_interval)
+        super(CWOPThread, self).__init__(queue, protocol_name=protocol_name,
+                                         log_success=log_success, log_failure=log_failure,
+                                         max_backlog=max_backlog, max_tries=max_tries, stale=stale,
+                                         post_interval=post_interval, timeout=timeout)
 
-        self.station       = station
-        self.password      = password
         self.database_dict = database_dict
+        self.station       = station
+        self.passcode      = passcode
         self.server_list   = server_list
-        self.latitude      = latitude
-        self.longitude     = longitude
-        self.station_type  = _station_type
-        self.log_success   = log_success
-        self.log_failure   = log_failure
-        self.max_backlog   = max_backlog
+        self.latitude      = to_float(latitude)
+        self.longitude     = to_float(longitude)
+        self.station_type  = station_type
 
     def process_record(self, record, archive):
         """Process a record in accordance with the CWOP protocol."""
@@ -707,7 +814,7 @@ class CWOPThread(RESTThread):
         self.send_packet(_login, _tnc_packet)
 
     def get_login_string(self):
-        _login = "user %s pass %s vers weewx %s\r\n" % (self.station, self.password, weewx.__version__)
+        _login = "user %s pass %s vers weewx %s\r\n" % (self.station, self.passcode, weewx.__version__)
         return _login
 
     def get_tnc_packet(self, record):
@@ -802,9 +909,9 @@ class CWOPThread(RESTThread):
                     _sock.connect((_server, _port))
                 except socket.error, e:
                     # Unsuccessful. Log it and try again
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connection attempt #%d failed to server %s:%d: %s" % (_count + 1, self.restful_site, _server, _port, e))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connection attempt #%d failed to server %s:%d: %s" % (_count + 1, self.protocol_name, _server, _port, e))
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connected to server %s:%d" % (self.restful_site, _server, _port))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connected to server %s:%d" % (self.protocol_name, _server, _port))
                     return _sock
                 # Couldn't connect on this attempt. Close it, try again.
                 try:
@@ -812,7 +919,7 @@ class CWOPThread(RESTThread):
                 except:
                     pass
             # If we got here, that server didn't work. Log it and go on to the next one.
-            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Unable to connect to server %s:%d" % (self.restful_site, _server, _port))
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Unable to connect to server %s:%d" % (self.protocol_name, _server, _port))
 
         # If we got here. None of the servers worked. Raise an exception
         raise FailedPost, "Unable to obtain a socket connection"
@@ -825,7 +932,7 @@ class CWOPThread(RESTThread):
                 sock.send(msg)
             except (IOError, socket.error), e:
                 # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Attempt #%d failed: %s" % (_count + 1, self.restful_site, e))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Attempt #%d failed: %s" % (_count + 1, self.protocol_name, e))
             else:
                 _resp = sock.recv(1024)
                 return _resp
@@ -872,8 +979,11 @@ class StdStationRegistry(StdRESTbase):
         # Extract the required parameters. If one of them is missing,
         # a KeyError exception will occur. Be prepared to catch it.
         try:
-            # Extract a copy of the dictionary with the WU options:
+            # Extract a copy of the dictionary with the registry options:
             _registry_dict = dict(config_dict['StdRESTful']['StationRegistry'])
+            _registry_dict.setdefault('station_url',  self.engine.stn_info.station_url)
+            if _registry_dict['station_url'] is None:
+                raise KeyError("station_url")
         except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: StationRegistry: Data will not be posted. Missing option %s" % e)
             return
@@ -883,27 +993,14 @@ class StdStationRegistry(StdRESTbase):
             syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: Registration not requested.")
             return
 
-        _station_url   = _registry_dict.get('station_url',  self.engine.stn_info.station_url)
-        _description   = _registry_dict.get('description', self.engine.stn_info.location)
-        _latitude      = float(_registry_dict.get('latitude',  self.engine.stn_info.latitude_f))
-        _longitude     = float(_registry_dict.get('longitude', self.engine.stn_info.longitude_f))
-        _station_type  = _registry_dict.get('station_type', config_dict['Station']['station_type'])
-        _station_model = _registry_dict.get('station_model', self.engine.stn_info.hardware)
+        _registry_dict.setdefault('station_type', config_dict['Station'].get('station_type', 'Unknown'))
+        _registry_dict.setdefault('description',   self.engine.stn_info.location)
+        _registry_dict.setdefault('latitude',      self.engine.stn_info.latitude_f)
+        _registry_dict.setdefault('longitude',     self.engine.stn_info.longitude_f)
+        _registry_dict.setdefault('station_model', self.engine.stn_info.hardware)
 
-        _server_url    = _registry_dict.get('server_url', StdStationRegistry.archive_url)
-        _log_success   = to_bool(_registry_dict.get('log_success', True))
-        _log_failure   = to_bool(_registry_dict.get('log_failure', True))
-        _max_backlog   = to_int(_registry_dict.get('max_backlog', 0))
-        _max_tries     = to_int(_registry_dict.get('max_tries', 3))
-        _stale         = to_int(_registry_dict.get('stale'))
-        _post_interval = to_int(_registry_dict.get('interval', 604800))
         self.archive_queue = Queue.Queue()
-        self.archive_thread = StationRegistryThread(self.archive_queue,
-                                                    _station_url, _description, _latitude, _longitude,
-                                                    _station_type, _station_model,
-                                                    _server_url,
-                                                    _log_success, _log_failure, _max_backlog,
-                                                    "StationRegistry", _max_tries, _stale, _post_interval)
+        self.archive_thread = StationRegistryThread(self.archive_queue, "StationRegistry", **_registry_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: Station will be registered.")
@@ -912,26 +1009,80 @@ class StdStationRegistry(StdRESTbase):
         self.archive_queue.put(event.record)
         
 class StationRegistryThread(RESTThread):
+    """Concrete threaded class for posting to the weewx station registry."""
     
-    def __init__(self, queue,
-                 station_url, description, latitude, longitude,
-                 station_type, station_model,
-                 server_url,
+    def __init__(self, queue, station_url, latitude, longitude,
+                 server_url=StdStationRegistry.archive_url,
+                 description="Unknown",
+                 station_type="Unknown", station_model="Unknown",
+                 protocol_name="StationRegistry",
                  log_success=True, log_failure=True, max_backlog=0,
-                 restful_site='', max_tries=3, stale=None, post_interval=0):
+                 max_tries=3, stale=None, post_interval=604800, timeout=10):
+        """Initialize an instance of StationRegistryThread.
+        
+        Required parameters:
 
-        super(StationRegistryThread, self).__init__(queue, restful_site, max_tries, stale, post_interval)
+          queue: An instance of Queue.Queue where the records will appear.
 
+          station_url: An URL used to identify the station. This will be used as the
+          key in the registry.
+          
+          latitude: Latitude of the staion
+          
+          longitude: Longitude of the station
+          
+        Optional parameters:
+        
+          server_url: The URL of the registry server. 
+          Default is 'http://weewx.com/register/register.cgi'
+          
+          description: A brief description of the station. 
+          Default is 'Unknown'
+          
+          station_type: The type of station. Generally, this is the driver used
+          by the station. 
+          Default is 'Unknown'
+          
+          station_model: The hardware model. 
+          Default is 'Unknown'.
+          
+          protocol_name: A string holding the name of the protocol.
+          Default is 'StationRegistry'.
+          
+          log_success: If True, log a successful post in the system log.
+          Default is True.
+          
+          log_failure: If True, log an unsuccessful post in the system log.
+          Default is True.
+          
+          max_backlog: How many records are allowed to accumulate in the queue
+          before the queue is trimmed.
+          Default is zero (no backlog at all).
+          
+          max_tries: How many times to try the post before giving up.
+          Default is 3
+          
+          stale: How old a record can be and still considered useful.
+          Default is None (never becomes too old).
+          
+          post_interval: How long to wait between posts.
+          Default is 604800 seconds (1 week).
+          
+          timeout: How long to wait for the server to respond before giving up.
+          Default is 10 seconds.
+        """
+
+        super(StationRegistryThread, self).__init__(queue, protocol_name=protocol_name,
+                                                    log_success=log_success, log_failure=log_failure,
+                                                    max_backlog=max_backlog, max_tries=max_tries, stale=stale,
+                                                    post_interval=post_interval, timeout=timeout)
         self.station_url   = station_url
+        self.latitude      = to_float(latitude)
+        self.longitude     = to_float(longitude)
+        self.server_url    = server_url
         self.description   = description
-        self.latitude      = latitude
-        self.longitude     = longitude
         self.station_type  = station_type
         self.station_model = station_model
-        self.server_url    = server_url
-        self.log_success   = log_success
-        self.log_failure   = log_failure
-        self.max_backlog   = max_backlog
         
     def run(self):
         # This version of run() does not open the archive database.
