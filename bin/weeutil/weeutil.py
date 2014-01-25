@@ -637,24 +637,25 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     returns: indication of whether the period from start to first transition
     is day or night, plus array of transitions (UTC).
     """
-    first = 'day'
+    first = None
     values = []
-    for t in range(start_ts, end_ts+1, 3600*24):
+    for t in range(start_ts-3600*24, end_ts+3600*24+1, 3600*24):
         x = startOfDayUTC(t)
         x_tt = time.gmtime(x)
         y, m, d = x_tt[:3]
         (sunrise_utc, sunset_utc) = Sun.sunRiseSet(y, m, d, lon, lat)
-        sunrise_tt = utc_to_local_tt(y, m, d, sunrise_utc)
-        sunset_tt = utc_to_local_tt(y, m, d, sunset_utc)
-        sunrise_ts = time.mktime(sunrise_tt)
-        sunset_ts = time.mktime(sunset_tt)
+        daystart_ts = calendar.timegm((y,m,d,0,0,0,0,0,-1))
+        sunrise_ts = int(daystart_ts + sunrise_utc * 3600.0 + 0.5)
+        sunset_ts = int(daystart_ts + sunset_utc * 3600.0 + 0.5)
 
         if start_ts < sunrise_ts < end_ts:
             values.append(sunrise_ts)
+            if first is None:
+                first = 'night'
         if start_ts < sunset_ts < end_ts:
             values.append(sunset_ts)
-        if t == start_ts and (start_ts < sunrise_ts or sunset_ts < start_ts):
-            first = 'night'
+            if first is None:
+                first = 'day'
     return first, values
     
 def secs_to_string(secs):
