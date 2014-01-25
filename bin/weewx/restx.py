@@ -265,12 +265,6 @@ class RESTThread(threading.Thread):
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_ERR, "restx: %s: Failed to publish record %s: %s" % (self.protocol_name, _time_str, e))
             except Exception, e:
-                print "Exception in run_loop. %s, type: %s" %(e, type(e))
-                sys.stdout.flush()
-                print "run_loop", sys.exc_info()
-                sys.stdout.flush()
-                print "run_loop2", traceback.print_exc()
-                sys.stdout.flush()
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting: %s" % (self.protocol_name, e))
                 return
             else:
@@ -290,8 +284,6 @@ class RESTThread(threading.Thread):
         _us_record = to_US(_full_record)
         # ... format the URL, using the relevant protocol ...
         _url = self.format_url(_us_record)
-        print "URL=", _url
-        sys.stdout.flush()
         # ... convert to a Request object ...
         _request = urllib2.Request(_url)
         # ... then, finally, post it
@@ -326,12 +318,6 @@ class RESTThread(threading.Thread):
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and go around again for another try
                 syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Exception %s" % (self.protocol_name, _count+1, e))
-            except:
-                print "Exception in post_with_retries", sys.exc_info()
-                sys.stdout.flush()
-                print "traceback", traceback.print_exc()
-                sys.stdout.flush()
-                raise
         else:
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Log it.
@@ -341,15 +327,11 @@ class RESTThread(threading.Thread):
         """Post a request object. This version does not catch any HTTP exceptions."""
         try:
             # Python 2.5 and earlier do not have a "timeout" parameter.
-            # Be prepared to catch the TypeError exception.
-            print "Before urlopen"
-            sys.stdout.flush()
+            # Including one could cause a TypeError exception. Be prepared
+            # to catch it.
             _response = urllib2.urlopen(request, timeout=self.timeout)
-            print "After urlopen; type of response is", type(_response)
-            sys.stdout.flush()
-            print "After urlopen; it's hierarchy is", inspect.getmro(_response.__class__)
-            sys.stdout.flush()
         except TypeError:
+            # Must be Python 2.5 or early. Use a simple, unadorned request
             _response = urllib2.urlopen(request)
         return _response
 
@@ -719,15 +701,14 @@ class StdCWOP(StdRESTbase):
         # Extract the required parameters. If one of them is missing,
         # a KeyError exception will occur. Be prepared to catch it.
         try:
-            # Extract a copy of the dictionary with the WU options:
+            # Extract a copy of the dictionary with the CWOP options:
             _cwop_dict=dict(config_dict['StdRESTful']['CWOP'])
-            # Extract the station ID and (if necessary) passcode
-            _station = _cwop_dict['station'].upper()
-            if _station[0:2] in StdCWOP.valid_prefixes:
-                _passcode = "-1"
-            else:
-                _passcode = _cwop_dict['passcode']
-            _station_type  = _cwop_dict.get('station_type', config_dict['Station']['station_type'])
+            _cwop_dict['station'] = _cwop_dict['station'].upper()
+            
+            if _cwop_dict['station'][0:2] in StdCWOP.valid_prefixes:
+                _cwop_dict.setdefault('passcode', '-1')
+            elif not _cwop_dict.has_key('passcode'):
+                raise KeyError('passcode')
         except KeyError, e:
             syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP: Data will not be posted. Missing option: %s" % e)
             return
@@ -736,12 +717,13 @@ class StdCWOP(StdRESTbase):
 
         _cwop_dict.setdefault('latitude',  self.engine.stn_info.latitude_f)
         _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
+        _cwop_dict.setdefault('station_type', config_dict['Station'].get('station_type', 'Unknown'))
         self.archive_queue = Queue.Queue()
         self.archive_thread = CWOPThread(self.archive_queue, _database_dict,
                                          **_cwop_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: CWOP: Data for station %s will be posted" % _station)
+        syslog.syslog(syslog.LOG_INFO, "restx: CWOP: Data for station %s will be posted" % _cwop_dict['station'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -832,12 +814,10 @@ class CWOPThread(RESTThread):
         _full_record = self.get_record(record, archive)
         # ... convert to US if necessary ...
         _us_record = to_US(_full_record)
-
-        # Get the login and packet strings:
+        # ... get the login and packet strings...
         _login = self.get_login_string()
-        _tnc_packet = self.get_tnc_packet(record)
-
-        # Then post them:
+        _tnc_packet = self.get_tnc_packet(_us_record)
+        # ... then post them:
         self.send_packet(_login, _tnc_packet)
 
     def get_login_string(self):

@@ -552,10 +552,14 @@ def update_config_file(config_dict):
         config_dict['Engines']['WxEngine'].pop('service_list')
 
         if config_dict.has_key('StdRESTful') and config_dict['StdRESTful'].has_key('CWOP'):
+            # Option "interval" has changed to "post_interval"
             if config_dict['StdRESTful']['CWOP'].has_key('interval'):
-                # Name has changed to "post_interval"
                 config_dict['StdRESTful']['CWOP']['post_interval'] = config_dict['StdRESTful']['CWOP']['interval']
                 config_dict['StdRESTful']['CWOP'].pop('interval')
+            # Option "server" has become "server_list". It is also no longer included in
+            # the default weewx.conf, so just pop it.
+            config_dict['StdRESTful']['CWOP'].pop('server')
+
 
 def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:

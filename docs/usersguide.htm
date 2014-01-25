@@ -1304,8 +1304,7 @@ longitude = -77.0366</pre>
     [[CWOP]]
         station = 12345678  # Replace with your station number
         passcode = xxxxx    # Replace with your passcode (APRS stations only)
-        server = cwop.aprs.net:14580, cwop.aprs.net:23
-        interval = 600</pre>
+        post_interval = 600</pre>
     <p class="config_important">station </p>
     <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>). Required.
     </p>
@@ -1313,9 +1312,6 @@ longitude = -77.0366</pre>
     <p>This is used for APRS (amateur radio) stations only. Set to the
       passcode given to you by the CWOP operators. Otherwise, leave this
       option commented. Required for APRS stations, ignored for others.</p>
-    <p class="config_option">server </p>
-    <p>A comma separated list of servers:ports to try. Unless you have a good
-      reason to change this, use the servers listed. Required.</p>
     <p class="config_option">post_interval </p>
     <p>The interval in seconds between posts. Because CWOP is heavily used, the
       operators discourage very frequent posts. Every 5 minutes (300 seconds)

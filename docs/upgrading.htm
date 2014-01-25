@@ -134,13 +134,23 @@ Version: 2.6.0a4
     <p>Version 2.6 should be 100% backwards compatible with earlier versions, with a couple
     of small exceptions.</p>
     <ul>
-    <li>If you have written a custom <span class="code">weewx</span> service, the
-    install routine will try to insert its name into an appropriate place in one of the five new lists
-    of services to be run. You should check section <span class="code">[Engines][[WxEngine]]</span>
-    to make sure it made a reasonable guess.</li>
-    <li>If you have written a custom RESTful service, the architecture for these services has
-    completely changed. They are now first class services, and are treated like any other
-    <span class="code">weewx</span> service. I can help you with the transition.</li>
+      <li>If you have written a custom <span class="code">weewx</span>
+      service, the install routine will try to insert its name into
+      an appropriate place in one of the five new lists of services
+      to be run. You should check
+      section <span class="code">[Engines][[WxEngine]]</span> to
+      make sure it made a reasonable guess.</li>
+      <li>If you have written a custom RESTful service, the
+      architecture for these services has completely changed. They
+      are now first class services, and are treated like any other
+      <span class="code">weewx</span> service. There are some guides
+      to writing RESTful services using the new architecture at the
+      top of the file <span class='code'>bin/weewx/restx.py</span>. 
+      I can also help you with the transition.</li>
+      <li>Option <span class='code'>interval</span> in the CWOP
+      configuration section has become option 
+      <span class='code'>post_interval</span>. This change
+      should be done automatically by the install routine. </li>
     </ul>
     <h2>V2.3 or earlier</h2>
     <p>The option <span class="code">time_length</span> will now be the exact length 
