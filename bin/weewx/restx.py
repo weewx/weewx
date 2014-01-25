@@ -57,11 +57,16 @@ should only have to implement a few functions. In particular,
    By overriding check_response() you can look for these clues. For example,
    the station registry checks all lines in the response, looking for any that
    start with the string "FAIL". If it finds one, it raises a FailedPost exception,
-   signaling that the post did not work. 
+   signaling that the post did not work.
+   
+In unusual cases, you might also have to implement the following:
+  
+ - process_record(). The default version is for HTTP GET posts, but if you wish
+   to do a POST or use a socket, you may need to provide a specialized version.
+   See the CWOP version, CWOPThread.process_record(), for an example that
+   uses sockets. 
 """
 from __future__ import with_statement
-import traceback
-import inspect
 import Queue
 import datetime
 import httplib
@@ -171,7 +176,7 @@ class RESTThread(threading.Thread):
             
     def get_record(self, record, archive):
         """Augment record data with additional data from the archive.
-        Returns results in the same units as the record and the database.
+        Should return results in the same units as the record and the database.
         
         This is a general version that works for:
           - WeatherUnderground
@@ -265,6 +270,7 @@ class RESTThread(threading.Thread):
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_ERR, "restx: %s: Failed to publish record %s: %s" % (self.protocol_name, _time_str, e))
             except Exception, e:
+                # Some unknown exception occurred. This is probably a serious problem. Exit.
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting: %s" % (self.protocol_name, e))
                 return
             else:
@@ -275,13 +281,13 @@ class RESTThread(threading.Thread):
     def process_record(self, record, archive):
         """Default version of process_record.
         
-        This version should work for many protocols, but it can always be replaced by
-        a specializing class."""
+        This version uses HTTP GETs to do the post, which should work for
+        many protocols, but it can always be replaced by a specializing class."""
         
         # Get the full record by querying the database ...
         _full_record = self.get_record(record, archive)
         # ... convert to US if necessary ...
-        _us_record = to_US(_full_record)
+        _us_record = weewx.units.to_US(_full_record)
         # ... format the URL, using the relevant protocol ...
         _url = self.format_url(_us_record)
         # ... convert to a Request object ...
@@ -314,17 +320,23 @@ class RESTThread(threading.Thread):
                     # Does not seem to be an error. We're done.
                     return
                 else:
+                    # We got a bad response code. Log it and try again.
                     syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Code %s" % (self.protocol_name, _count+1, _response.code))
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
-                # Unsuccessful. Log it and go around again for another try
+                # An exception was thrown. Log it and go around again for another try
                 syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Exception %s" % (self.protocol_name, _count+1, e))
         else:
             # This is executed only if the loop terminates normally, meaning
-            # the upload failed max_tries times. Log it.
+            # the upload failed max_tries times. Raise an exception. Caller
+            # can decide what to do with it.
             raise FailedPost("Failed upload after %d tries" % (self.max_tries,))
 
     def post_request(self, request):
-        """Post a request object. This version does not catch any HTTP exceptions."""
+        """Post a request object. This version does not catch any HTTP exceptions.
+        
+        Specializing versions can can catch any unusual exceptions that might
+        get raised by their protocol.
+        """
         try:
             # Python 2.5 and earlier do not have a "timeout" parameter.
             # Including one could cause a TypeError exception. Be prepared
@@ -380,10 +392,12 @@ class StdWunderground(StdRESTbase):
         try:
             # Extract a copy of the dictionary with the WU options:
             _ambient_dict=dict(config_dict['StdRESTful']['Wunderground'])
-            _station = _ambient_dict['station']
-            _password = _ambient_dict['password']
+            # A convenient way to check for missing required key words.
+            _ambient_dict['station']
+            _ambient_dict['password']
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Wunderground: Data will not be posted: Missing option %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, 
+                          "restx: Wunderground: Data will not be posted: Missing option %s" % e)
             return
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
@@ -401,7 +415,8 @@ class StdWunderground(StdRESTbase):
                                                 **_ambient_dict) 
             self.archive_thread.start()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-            syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-PWS: Data for station %s will be posted" % _station)
+            syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-PWS: Data for station %s will be posted" % 
+                          _ambient_dict['station'])
 
         if do_rapidfire_post:
             _ambient_dict.setdefault('server_url', StdWunderground.rapidfire_url)
@@ -415,18 +430,21 @@ class StdWunderground(StdRESTbase):
                                                  **_ambient_dict) 
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-            syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-RF: Data for station %s will be posted" % _station)
+            syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-RF: Data for station %s will be posted" % 
+                          _ambient_dict['station'])
 
     def new_loop_packet(self, event):
+        """Puts new LOOP packets in the loop queue"""
         self.loop_queue.put(event.packet)
 
     def new_archive_record(self, event):
+        """Puts new archive records in the archive queue"""
         self.archive_queue.put(event.record)
                 
 class StdPWSWeather(StdRESTbase):
-    """Specialized version of the Ambient protocol for PWS"""
+    """Specialized version of the Ambient protocol for PWSWeather"""
     
-    # The URL used by PWS:
+    # The URL used by PWSWeather:
     archive_url = "http://www.pwsweather.com/pwsupdate/pwsupdate.php"
 
     def __init__(self, engine, config_dict):
@@ -438,10 +456,13 @@ class StdPWSWeather(StdRESTbase):
         try:
             # Extract a copy of the dictionary with the WU options:
             _ambient_dict=dict(config_dict['StdRESTful']['PWSweather'])
-            _station = _ambient_dict['station']
-            _password = _ambient_dict['password']
+            # A convenient way to check for missing required key words.
+            _ambient_dict['station']
+            _ambient_dict['password']
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: PWSWeather: Data will not be posted: Missing option %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, 
+                          "restx: PWSWeather: Data will not be posted: "
+                          "Missing option %s" % e)
             return
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
@@ -453,7 +474,8 @@ class StdPWSWeather(StdRESTbase):
                                             **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: PWSWeather: Data for station %s will be posted" % _station)
+        syslog.syslog(syslog.LOG_INFO, "restx: PWSWeather: Data for station %s will be posted" % 
+                      _ambient_dict['station'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -478,10 +500,12 @@ class StdWOW(StdRESTbase):
         try:
             # Extract a copy of the dictionary with the WOW options:
             _ambient_dict=dict(config_dict['StdRESTful']['WOW'])
-            _station = _ambient_dict['station']
-            _password = _ambient_dict['password']
+            # A convenient way to check for missing required key words.
+            _ambient_dict['station']
+            _ambient_dict['password']
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: Data will not be posted: Missing option %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: Data will not be posted: "
+                          "Missing option %s" % e)
             return
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
@@ -493,7 +517,8 @@ class StdWOW(StdRESTbase):
                                         **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: WOW: Data for station %s will be posted" % _station)
+        syslog.syslog(syslog.LOG_INFO, "restx: WOW: Data for station %s will be posted" % 
+                      _ambient_dict['station'])
         
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -613,7 +638,7 @@ class AmbientThread(RESTThread):
                 raise BadLogin(line)
         
 class AmbientLoopThread(AmbientThread):
-    """Version used for the LOOP thread, that is for the Rapidfire protocol."""
+    """Version used for the Rapidfire protocol."""
 
     def get_record(self, record, archive):
         """Prepare a record for the Rapidfire protocol."""
@@ -710,7 +735,8 @@ class StdCWOP(StdRESTbase):
             elif not _cwop_dict.has_key('passcode'):
                 raise KeyError('passcode')
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP: Data will not be posted. Missing option: %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP: Data will not be posted. "
+                          "Missing option: %s" % e)
             return
 
         _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
@@ -723,7 +749,8 @@ class StdCWOP(StdRESTbase):
                                          **_cwop_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: CWOP: Data for station %s will be posted" % _cwop_dict['station'])
+        syslog.syslog(syslog.LOG_INFO, "restx: CWOP: Data for station %s will be posted" % 
+                      _cwop_dict['station'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -813,7 +840,7 @@ class CWOPThread(RESTThread):
         # Get the full record by querying the database ...
         _full_record = self.get_record(record, archive)
         # ... convert to US if necessary ...
-        _us_record = to_US(_full_record)
+        _us_record = weewx.units.to_US(_full_record)
         # ... get the login and packet strings...
         _login = self.get_login_string()
         _tnc_packet = self.get_tnc_packet(_us_record)
@@ -992,7 +1019,8 @@ class StdStationRegistry(StdRESTbase):
             if _registry_dict['station_url'] is None:
                 raise KeyError("station_url")
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: StationRegistry: Data will not be posted. Missing option %s" % e)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: StationRegistry: "
+                          "Data will not be posted. Missing option %s" % e)
             return
 
         # Should the service be run?
@@ -1139,18 +1167,3 @@ class StationRegistryThread(RESTThread):
             if line.startswith('FAIL'):
                 raise FailedPost(line)
         
-#==============================================================================
-#                    Utility functions
-#==============================================================================
-
-def to_US(datadict):
-    """Convert units to US Customary."""
-    if datadict['usUnits'] == weewx.US:
-        # It's already in US units.
-        return datadict
-    else:
-        # It's in something else. Perform the conversion
-        _datadict_us = weewx.units.StdUnitConverters[weewx.US].convertDict(datadict)
-        # Add the new unit system
-        _datadict_us['usUnits'] = weewx.US
-        return _datadict_us

@@ -1090,6 +1090,17 @@ def getAltitudeM(config_dict):
     altitude_m = convert(altitude_vt, 'meter')[0]
     return altitude_m
 
+def to_US(datadict):
+    """Convert the units used in a dictionary to US Customary."""
+    if datadict['usUnits'] == weewx.US:
+        # It's already in US units.
+        return datadict
+    else:
+        # It's in something else. Perform the conversion
+        _datadict_us = StdUnitConverters[weewx.US].convertDict(datadict)
+        # Add the new unit system
+        _datadict_us['usUnits'] = weewx.US
+        return _datadict_us
 
 if __name__ == "__main__":
     
