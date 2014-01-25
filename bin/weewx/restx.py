@@ -60,6 +60,8 @@ should only have to implement a few functions. In particular,
    signaling that the post did not work. 
 """
 from __future__ import with_statement
+import traceback
+import inspect
 import Queue
 import datetime
 import httplib
@@ -153,6 +155,7 @@ class RESTThread(threading.Thread):
           Default is 10 seconds."""    
         # Initialize my superclass:
         threading.Thread.__init__(self, name=protocol_name)
+        self.setDaemon(True)
 
         self.queue         = queue
         self.protocol_name = protocol_name
@@ -262,6 +265,12 @@ class RESTThread(threading.Thread):
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_ERR, "restx: %s: Failed to publish record %s: %s" % (self.protocol_name, _time_str, e))
             except Exception, e:
+                print "Exception in run_loop. %s, type: %s" %(e, type(e))
+                sys.stdout.flush()
+                print "run_loop", sys.exc_info()
+                sys.stdout.flush()
+                print "run_loop2", traceback.print_exc()
+                sys.stdout.flush()
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting: %s" % (self.protocol_name, e))
                 return
             else:
@@ -281,6 +290,8 @@ class RESTThread(threading.Thread):
         _us_record = to_US(_full_record)
         # ... format the URL, using the relevant protocol ...
         _url = self.format_url(_us_record)
+        print "URL=", _url
+        sys.stdout.flush()
         # ... convert to a Request object ...
         _request = urllib2.Request(_url)
         # ... then, finally, post it
@@ -301,18 +312,26 @@ class RESTThread(threading.Thread):
                 # Do a single post. The function post_request() can be specialized by a RESTful service
                 # to catch any unusual exceptions.
                 _response = self.post_request(request)
-            except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
-                # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Exception %s" % (self.protocol_name, _count+1, e))
-            else:
-                if _response.code != 200:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Code %s" % (self.protocol_name, _count+1, _response.code))
-                else:
+                if _response.code == 200:
                     # No exception thrown and we got a good response code, but we're still not done.
                     # Some protocols encode a bad station ID or password in the return message.
+                    # Give any interested protocols a chance to examine it. This must also
+                    # be inside the try block because some implementations defer hitting the socket
+                    # until the response is used.
                     self.check_response(_response)
                     # Does not seem to be an error. We're done.
                     return
+                else:
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Code %s" % (self.protocol_name, _count+1, _response.code))
+            except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
+                # Unsuccessful. Log it and go around again for another try
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Exception %s" % (self.protocol_name, _count+1, e))
+            except:
+                print "Exception in post_with_retries", sys.exc_info()
+                sys.stdout.flush()
+                print "traceback", traceback.print_exc()
+                sys.stdout.flush()
+                raise
         else:
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Log it.
@@ -321,7 +340,15 @@ class RESTThread(threading.Thread):
     def post_request(self, request):
         """Post a request object. This version does not catch any HTTP exceptions."""
         try:
+            # Python 2.5 and earlier do not have a "timeout" parameter.
+            # Be prepared to catch the TypeError exception.
+            print "Before urlopen"
+            sys.stdout.flush()
             _response = urllib2.urlopen(request, timeout=self.timeout)
+            print "After urlopen; type of response is", type(_response)
+            sys.stdout.flush()
+            print "After urlopen; it's hierarchy is", inspect.getmro(_response.__class__)
+            sys.stdout.flush()
         except TypeError:
             _response = urllib2.urlopen(request)
         return _response
@@ -381,8 +408,8 @@ class StdWunderground(StdRESTbase):
         
         # The default is to not do an archive post if a rapidfire post
         # has been specified, but this can be overridden
-        do_rapidfire_post = to_bool(_ambient_dict.get('rapidfire', False))
-        do_archive_post   = to_bool(_ambient_dict.get('archive_post', not do_rapidfire_post))
+        do_rapidfire_post = to_bool(_ambient_dict.pop('rapidfire', False))
+        do_archive_post   = to_bool(_ambient_dict.pop('archive_post', not do_rapidfire_post))
         
         if do_archive_post:
             _ambient_dict.setdefault('server_url', StdWunderground.archive_url)
@@ -401,7 +428,7 @@ class StdWunderground(StdRESTbase):
             _ambient_dict.setdefault('max_backlog', 0)
             _ambient_dict.setdefault('max_tries', 1)
             self.loop_queue = Queue.Queue()
-            self.loop_thread = AmbientLoopThread(self.archive_queue, _database_dict,
+            self.loop_thread = AmbientLoopThread(self.loop_queue, _database_dict,
                                                  protocol_name="Wunderground-RF",
                                                  **_ambient_dict) 
             self.loop_thread.start()
@@ -989,7 +1016,7 @@ class StdStationRegistry(StdRESTbase):
             return
 
         # Should the service be run?
-        if not to_bool(_registry_dict.get('register_this_station', False)):
+        if not to_bool(_registry_dict.pop('register_this_station', False)):
             syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: Registration not requested.")
             return
 
@@ -1000,7 +1027,7 @@ class StdStationRegistry(StdRESTbase):
         _registry_dict.setdefault('station_model', self.engine.stn_info.hardware)
 
         self.archive_queue = Queue.Queue()
-        self.archive_thread = StationRegistryThread(self.archive_queue, "StationRegistry", **_registry_dict)
+        self.archive_thread = StationRegistryThread(self.archive_queue, **_registry_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: Station will be registered.")
@@ -1017,7 +1044,7 @@ class StationRegistryThread(RESTThread):
                  station_type="Unknown", station_model="Unknown",
                  protocol_name="StationRegistry",
                  log_success=True, log_failure=True, max_backlog=0,
-                 max_tries=3, stale=None, post_interval=604800, timeout=10):
+                 max_tries=3, stale=None, post_interval=604800, timeout=20):
         """Initialize an instance of StationRegistryThread.
         
         Required parameters:
@@ -1069,7 +1096,7 @@ class StationRegistryThread(RESTThread):
           Default is 604800 seconds (1 week).
           
           timeout: How long to wait for the server to respond before giving up.
-          Default is 10 seconds.
+          Default is 20 seconds.
         """
 
         super(StationRegistryThread, self).__init__(queue, protocol_name=protocol_name,
