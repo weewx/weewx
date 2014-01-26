@@ -1723,11 +1723,11 @@ longitude = -77.0366</pre>
     <p>For reference, here is the standard set of services that are
       run with the default distribution.</p>
     <pre class="tty">
-prep_services    = weewx.wxengine.StdTimeSynch
+prep_services = weewx.wxengine.StdTimeSynch
 process_services = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC
-archive_services = weewx.wxengine.StdArchive,
-restful_services = weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdStationRegistry
-report_services  = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
+archive_services = weewx.wxengine.StdArchive
+restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW
+report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
 </pre>
     <p>If you're the type who cleans out your car's trunk after every use, 
     you can leave some of these services out if you do not need
