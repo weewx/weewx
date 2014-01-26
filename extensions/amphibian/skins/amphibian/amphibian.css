@@ -1,0 +1,148 @@
+/* css for the amphibian skin */
+/* Copyright 2012-2013 Matthew Wall */
+/* $Id$ */
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10pt;
+  color: #8d7641;
+}	
+h1 {
+  font-size: 110%;
+}
+h2 {
+  font-size: 100%;
+}
+a { color: #8D7641; }
+A:link {text-decoration: none}
+A:visited {text-decoration: none}
+A:active {text-decoration: none}
+A:hover {text-decoration: underline;}
+.value {
+    color: #007000;
+}
+.bordered {
+    border: 1px solid tan;
+}
+.cell {
+    margin: 3px;
+    padding: 6px;
+    float: left;
+}
+.headerNoPad {
+    margin: 3px;
+    padding-left: 6px;
+    padding-right: 6px;            
+    margin-bottom: 0px; 
+    float: left;
+}
+.pad {
+    padding: 6px;
+    padding-top: 10px;
+    padding-bottom: 2px;
+}
+.smallpad {
+    padding: 4px;
+    padding-bottom: 2px;
+}
+.line {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+.header {
+    margin: 3px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 10px;    
+    padding-bottom: 2px;                 
+    float: left;            
+}
+.headerContent {
+    height: 64px;    
+    float: left;        
+}
+.wide {
+    width: 95%;
+}
+.leftCell {
+    float: left;
+}
+.rightAlign {
+    text-align: right;
+}
+.rightCell {
+    position: relative;
+    right: 0px;
+    text-align: right;
+}
+.leftpad {
+    padding-left: 5px;
+}
+.bigger {
+    font-size: 140%;
+}
+.tabPane {
+    width: 95%;
+    margin: 3px;
+    padding-top: 3px;
+    padding-bottom: 0px;
+    clear: both;
+    height: 21px;
+    border-bottom: 1px solid tan;
+}
+.history {
+    width: 95%;
+    border: 1px solid tan;
+    background: yellow;
+    margin: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    padding-right: 6px;
+    clear: both;
+    float: left;
+}
+.tab {
+    margin-bottom:3px;
+    margin-left: 3px;
+    margin-right: 3px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    float: left;
+    height: 16px;
+    background: wheat;
+    border-bottom: 1px solid wheat;
+}
+.rightTab {
+    margin-bottom:3px;
+    margin-left: 3px;
+    margin-right: 3px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    float: right;
+    height: 16px;
+    background: wheat;
+    border-bottom: 1px solid wheat;
+}
+.selected {
+    background: white;
+    border-right: 1px solid tan;
+    border-top: 1px solid tan;
+    border-left: 1px solid tan;
+    border-bottom: 1px solid white;
+}
+.symbol {
+    font-size:120%;
+}
+.graph {
+    line-height:18px;
+}
+.units {
+    position: relative;
+    right: 0px;
+    text-align: right;
+}

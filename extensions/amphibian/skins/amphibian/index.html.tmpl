@@ -1,0 +1,26 @@
+## amphibian for weewx - Copyright 2012-2013 Matthew Wall
+## $Id$
+#errorCatcher Echo
+#encoding UTF-8
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head profile="http://www.w3.org/2005/10/profile">
+    <!-- amphibian for weewx - Copyright Matthew Wall -->
+    #if $encoding == 'utf8'
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    #end if    
+    <title>$station.location Current Weather Conditions</title>
+    <link rel="stylesheet" type="text/css" href="amphibian.css"/>
+    <link rel="icon" type="image/png" href="favicon.ico" />
+    <script src="amphibian.js"></script>
+  </head>
+
+  <body>
+    #include $Extras.header
+    #include $Extras.charts
+    #include $Extras.footer
+    <script>
+      setURLs('hour','charts');
+    </script>
+  </body>
+</html>

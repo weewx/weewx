@@ -1,0 +1,22 @@
+0.6 13oct2013
+* punt the superfluous RSS directory
+
+0.5 07oct2013
+* fixed packaging to include readme.txt and changelog
+* forgot to include charts.inc in distribution
+
+0.4 03oct2013
+* better link behavior when switching tabs
+* consolidate charts to single include
+* automatic detection of included charts - just modify charts.inc
+* added almanac
+
+0.3 03oct2013
+* added tabular data
+
+0.2 20jul2013
+* fixed NONE variable in skin.conf
+* make month graphs wide to better display data
+
+0.1 29dec2012
+* initial implementation
