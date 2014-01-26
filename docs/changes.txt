@@ -20,8 +20,6 @@ inHumidity, and rain.
 
 Ranges in MinMax QC can now include units.
 
-Moved the forecast module from bin/user to bin/forecast
-
 Now caches font handles in order to work around a memory leak in PIL.
 
 Image margins now scale with image and font sizes.
@@ -32,6 +30,8 @@ Fixed bug in SummaryByMonth and SummaryByYear that would result in duplicate
 month/year entries when generating from multiple ByMonth or ByYear templates.
 
 Consolidated pressure calculation code in ws23xx, ws28xx, te923, and fousb.
+
+Catch USB failures when reading Fine Offset archive interval.
 
 Added Vantage types stormRain and windSpeed10 to the list of observation
 types.

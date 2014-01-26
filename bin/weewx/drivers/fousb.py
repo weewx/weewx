@@ -633,7 +633,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         # minimum interval between polling for data change
         self.min_pause = 0.5
 
-        self._archive_interval = None
+        self._arcint = None
         self._last_rain_loop = None
         self._last_rain_ts_loop = None
         self._last_rain_arc = None
@@ -675,9 +675,17 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         return self._archive_interval_minutes() * 60
 
     def _archive_interval_minutes(self):
-        if self._archive_interval is None:
-            self._archive_interval = self.get_fixed_block(['read_period'])
-        return self._archive_interval
+        if self._arcint is None:
+            for i in range(self.max_tries):
+                try:
+                    self._arcint = self.get_fixed_block(['read_period'])
+                    break
+                except usb.USBError, e:
+                    logcrt("get archive interval failed attempt %d of %d: %s"
+                           % (i+1, self.max_tries, e))
+            else:
+                raise weewx.WeeWxIOError("Unable to read archive interval after %d tries" % self.max_tries)
+        return self._arcint
 
     def openPort(self):
         dev = self._find_device()
