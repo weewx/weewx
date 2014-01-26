@@ -2,12 +2,12 @@
 # installer for the forecast extension
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return ForecastInstaller()
 
-class ForecastInstaller(Installer):
+class ForecastInstaller(ExtensionInstaller):
     def __init__(self):
         super(ForecastInstaller, self).__init__(
             version="0.2",
@@ -31,8 +31,7 @@ class ForecastInstaller(Installer):
                         'api_key': 'INSERT_WU_API_KEY_HERE'}},
                 'Databases': {
                     'forecast_sqlite': {
-                        'root': '%(SQLITE_ROOT)s',
-                        'database': 'archive/forecast.sdb',
+                        'database': 'forecast.sdb',
                         'driver': 'weedb.sqlite'}},
                 'StdReport': {
                     'forecast': {

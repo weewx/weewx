@@ -2,12 +2,12 @@
 # installer for wetter.com
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return WetterInstaller()
 
-class WetterInstaller(Installer):
+class WetterInstaller(ExtensionInstaller):
     def __init__(self):
         super(WetterInstaller, self).__init__(
             version="0.1",

@@ -2,12 +2,12 @@
 # installer for seg
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return SEGInstaller()
 
-class SEGInstaller(Installer):
+class SEGInstaller(ExtensionInstaller):
     def __init__(self):
         super(SEGInstaller, self).__init__(
             version="0.1",

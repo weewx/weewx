@@ -2,12 +2,12 @@
 # installer for WeatherBug
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return WeatherBugInstaller()
 
-class WeatherBugInstaller(Installer):
+class WeatherBugInstaller(ExtensionInstaller):
     def __init__(self):
         super(WeatherBugInstaller, self).__init__(
             version="0.1",

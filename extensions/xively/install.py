@@ -2,12 +2,12 @@
 # installer for Xively
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return XivelyInstaller()
 
-class XivelyInstaller(Installer):
+class XivelyInstaller(ExtensionInstaller):
     def __init__(self):
         super(XivelyInstaller, self).__init__(
             version="0.1",

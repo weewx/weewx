@@ -2,12 +2,12 @@
 # installer for EmonCMS
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return EmonCMSInstaller()
 
-class EmonCMSInstaller(Installer):
+class EmonCMSInstaller(ExtensionInstaller):
     def __init__(self):
         super(EmonCMSInstaller, self).__init__(
             version="0.1",

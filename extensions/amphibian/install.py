@@ -2,12 +2,12 @@
 # installer for amphibian
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return AmphibianInstaller()
 
-class AmphibianInstaller(Installer):
+class AmphibianInstaller(ExtensionInstaller):
     def __init__(self):
         super(AmphibianInstaller, self).__init__(
             version="0.8",

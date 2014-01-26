@@ -2,12 +2,12 @@
 # installer for OpenWeatherMap
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return OWMInstaller()
 
-class OWMInstaller(Installer):
+class OWMInstaller(ExtensionInstaller):
     def __init__(self):
         super(OWMInstaller, self).__init__(
             version="0.1",

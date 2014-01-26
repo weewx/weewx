@@ -2,12 +2,12 @@
 # installer for awekas
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return AWEKASInstaller()
 
-class AWEKASInstaller(Installer):
+class AWEKASInstaller(ExtensionInstaller):
     def __init__(self):
         super(AWEKASInstaller, self).__init__(
             version="0.1",

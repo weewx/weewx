@@ -2,12 +2,12 @@
 # installer for cmon
 # Copyright 2014 Matthew Wall
 
-from setup import Installer
+from setup import ExtensionInstaller
 
 def loader():
     return ComputerMonitorInstaller()
 
-class ComputerMonitorInstaller(Installer):
+class ComputerMonitorInstaller(ExtensionInstaller):
     def __init__(self):
         super(ComputerMonitorInstaller, self).__init__(
             version="0.1",
@@ -22,7 +22,6 @@ class ComputerMonitorInstaller(Installer):
                     'max_age': '2592000'},
                 'Databases': {
                     'computer_sqlite': {
-                        'root': '%(SQLITE_ROOT)s',
                         'database': 'computer.sdb',
                         'driver': 'weedb.sqlite'}},
                 'StdReport': {
