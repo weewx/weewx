@@ -1001,10 +1001,14 @@ longitude = -77.0366</pre>
       </tr>
     </table>
     
-    <p class="config_option"><span class="config_important">station_url</span></p>
+    <p id="station_url" class="config_option"><span class="config_important">station_url</span></p>
     <p>If you have a website, you may optionally specify an URL for
-      its HTML server. Example (this is mine):</p>
-	  <pre class="tty">station_url = http://www.threefools.org</pre>
+      its HTML server. It will be included in the RSS file generated
+      by weewx and, if you choose to opt into the <a href="#station_registry">station
+      registry</a>, it will also be included in the 
+      <a href="http://weewx.com/stations.html">map of weewx stations</a>.</p>
+    <p>Example (this is mine):</p>
+    <pre class="tty">station_url = http://www.threefools.org</pre>
 
     <h3 class="config_section">[Vantage]</h3>
     <p>This section is for options relating to the Davis Vantage series of hardware 
@@ -1226,6 +1230,51 @@ longitude = -77.0366</pre>
       <a href="http://www.pwsweather.com/">PWSweather.com</a>, or
       <a href="http://www.wxqa.com/">CWOP</a>. </p>
 
+    <h3 class="config_section" id="station_registry">[[StationRegistry]]</h3>
+    <p> A registry of <span class="code">weewx</span> weather stations
+        is maintained at <span class="code">weewx.com</span>. Stations are
+        displayed on a map and a list at
+        <a  href="http://weewx.com/stations.html">http://weewx.com/stations.html</a>
+    </p>
+
+    <p>How does the registry work? Individual weather stations
+        periodically contact the registry. Each station provides a URL to
+        identify itself, plus other information such as the station type and
+        <span class="code">weewx</span> version. The registry does not keep
+        track of meteorological data; no information about the weather is sent
+        to the registry.</p>
+
+    <p>To add your station to this list, you must do two things:</p>
+    <ol>
+        <li>Enable the StationRegistry in <span class="code">weewx.conf</span>
+	  by setting the option <span class="code">register_this_station</span>
+	  to <span class="code">True</span>. Your station will contact the registry once
+            per week. If your station does not contact the registry for about a
+            month, it will be removed from the list.
+        </li>
+        <li>Provide either <span class="code">station_url</span> in section
+	  <a href="#station_url"><span class='code'>[Station]</span> above</a>, or
+            in this section.
+        </li>
+    </ol>
+    <pre class="tty">[StdRestful]
+    [[StationRegistry]]
+        register_this_station = True</pre>
+    <p class="config_important">register_this_station</p>
+    <p>Set this to <span class="code">True</span> to register the weather station.</p>
+    <p class="config_option">description</p>
+    <p>
+      A description of the station. If no description is specified, the
+      <span class="config_option">location</span> from the <span
+        class="code">[Station]</span> section will be used.
+    </p>
+    <p class="config_option">station_url</p>
+    <p>
+      The URL to the weather station. If no URL is specified, the <span
+        class="config_option">station_url</span> from the <span
+        class="code">[Station]</span> section will be used.
+    </p>
+
     <h3 class="config_section">[[Wunderground]]</h3>
     <p>
       <span class="code">Weewx</span> can send your current data to the
@@ -1280,21 +1329,6 @@ longitude = -77.0366</pre>
     <p class="config_important">password </p>
     <p>Set to your PWSweather password. Required. </p>
 
-    <h3 class="config_section">[[WOW]]</h3>
-    <p class="config_section"><span class="code">Weewx</span> can send your 
-      current data to the <a href="http://wow.metoffice.gov.uk/">British
-        Weather Observations Website (WOW)</a> service. If you do not wish
-      to do this, leave the <span class='code'>station</span> option
-      commented.</p>
-    <pre class="tty">[StdRestful]
-    [[WOW]]
-        station = 12345678  # Replace with your site ID
-        password = xxxxx    # Replace with your site authentication key</pre>
-    <p class="config_important">station</p>
-    <p>Set to your WOW station ID. Required.</p>
-    <p class="config_important">password</p>
-    <p>Set to your WOW password. Required.</p>
-
     <h3 class="config_section">[[CWOP]]</h3>
     <p><span class="code">Weewx</span> can send your data to the
       <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If
@@ -1326,6 +1360,21 @@ longitude = -77.0366</pre>
       attempts a catch up, old data could be interpreted as the current
       conditions. Optional. Default is 1800 seconds.</p>
 
+    <h3 class="config_section">[[WOW]]</h3>
+    <p class="config_section"><span class="code">Weewx</span> can send your 
+      current data to the <a href="http://wow.metoffice.gov.uk/">British
+        Weather Observations Website (WOW)</a> service. If you do not wish
+      to do this, leave the <span class='code'>station</span> option
+      commented.</p>
+    <pre class="tty">[StdRestful]
+    [[WOW]]
+        station = 12345678  # Replace with your site ID
+        password = xxxxx    # Replace with your site authentication key</pre>
+    <p class="config_important">station</p>
+    <p>Set to your WOW station ID. Required.</p>
+    <p class="config_important">password</p>
+    <p>Set to your WOW password. Required.</p>
+
     <h3 class="config_section">[[AWEKAS]]</h3>
     <p class="config_section"><span class="code">Weewx</span> can send your 
       current data to the <a href="http://www.awekas.at/">Automatisches
@@ -1343,39 +1392,6 @@ longitude = -77.0366</pre>
     <p class="config_option">language</p>
     <p>Set to your preferred language. Default is <span class='code'>en</span>.</p>
 
-    <h3 class="config_section" id="station_registry">[[StationRegistry]]</h3>
-    <p>
-      A registry of <span class="code">weewx</span> weather stations is maintained at <span class="code">weewx.com</span>.
-      Stations are displayed on a map and a list at <a
-        href="http://weewx.com/stations.html">http://weewx.com/stations.html</a>
-    </p>
-    <p>How does the registry work? Individual weather stations
-      periodically contact the registry. Each station provides a URL to
-      identify itself, plus other information such as the station type
-      and <span class="code">weewx</span> version. The registry does not keep track of
-      meteorological data; no information about the weather is sent to
-      the registry.</p>
-    <p>To add your station to this list, enable the StationRegistry
-      in <span class="code">weewx.conf</span>. Your station will contact the registry once per
-      week. If your station does not contact the registry for about a
-      month, it will be removed from the list.</p>
-    <pre class="tty">[StdRestful]
-    [[StationRegistry]]
-        register_this_station = True</pre>
-    <p class="config_option">register_this_station</p>
-    <p>Set this to <span class="code">True</span> to register the weather station.</p>
-    <p class="config_option">description</p>
-    <p>
-      A description of the station. If no description is specified, the
-      <span class="config_option">location</span> from the <span
-        class="code">[Station]</span> section will be used.
-    </p>
-    <p class="config_option">station_url</p>
-    <p>
-      The URL to the weather station. If no URL is specified, the <span
-        class="config_option">station_url</span> from the <span
-        class="code">[Station]</span> section will be used.
-    </p>
 
     <h2 class="config_section">[StdReport]</h2>
     <p>This section is for configuring the <span class="code">StdReport</span> service, 
