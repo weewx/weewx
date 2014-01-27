@@ -54,7 +54,6 @@ import sys
 import tempfile
 import time
 import configobj
-import tarfile
 from subprocess import Popen, PIPE
 
 from distutils.core import setup
@@ -588,7 +587,16 @@ def save_path(filepath):
 # FIXME: need to prune required sections in skin.conf
 # FIXME: delete .pyc files on uninstall
 
-class Extension(object):
+class Logger(object):
+    def __init__(self, verbosity=0):
+        self.verbosity = verbosity
+    def log(self, msg, level=0):
+        if self.verbosity >= level:
+            print msg
+    def set_verbosity(self, verbosity):
+        self.verbosity = verbosity
+
+class Extension(Logger):
     """Encapsulation of a weewx extension package.  Knows how to verify,
     extract, load, and run the extension installer, then cleanup when done."""
 
@@ -607,35 +615,38 @@ class Extension(object):
             }
         }
 
-    def __init__(self, filename, tmpdir, dryrun=False, verbosity=0):
+    def __init__(self, filename, layout_type=None, tmpdir='/var/tmp'):
         self.filename = filename # could be dir, tarball, or extname
-        self.tmpdir = '/var/tmp' if tmpdir is None else tmpdir
+        self.tmpdir = tmpdir
+        self.layout_type = layout_type
+        self.dryrun = False
         self.installer = None
         self.extdir = None
         self.archive = None
         self.basename = None
         self.layout = None
+
+    def set_dryrun(self, dryrun):
         self.dryrun = dryrun
-        self.verbosity = verbosity
 
     def install(self):
-        self.layout = self.verify_layout()
+        self.layout_type = self.guess_type(self.layout_type)
+        self.layout = self.verify_layout(self.layout_type)
         (self.archive, self.basename, self.extdir) = \
             self.verify_installer(self.filename, self.tmpdir)
         self.verify_src(self.extdir)
         # everything is ok, so use the extdir
         self.layout['EXTRACT_ROOT'] = self.extdir
-        self.load(self.extdir, self.basename, self.layout,
-                  self.dryrun, self.verbosity)
+        self.load(self.extdir, self.basename, self.layout)
         self.installer.install()
         self.cleanup()
 
     def uninstall(self):
-        self.layout = self.verify_layout()
+        self.layout_type = self.guess_type(self.layout_type)
+        self.layout = self.verify_layout(self.layout_type)
         self.hisdir = self.verify_uninstaller(self.layout, self.filename)
         self.basename = self.filename
-        self.load(self.hisdir, self.basename, self.layout,
-                  self.dryrun, self.verbosity)
+        self.load(self.hisdir, self.basename, self.layout)
         self.installer.uninstall()
 
     def verify_installer(self, filename, tmpdir):
@@ -656,40 +667,51 @@ class Extension(object):
         d = os.path.join(d, basename)
         return d
 
-    def verify_layout(self):
-        '''ensure that everything is where we expect it to be'''
+    def guess_type(self, layout_type):
+        '''figure out what kind of installation this is'''
 
-        install_type = None
+        # FIXME: bail out if multiple installation types on a single system
 
-        # is this a debian install?
-        if install_type is None:
+        # is this a debian installation?
+        if layout_type is None:
             try:
-                cmd = 'dpkg-query -s weewxx'
+                cmd = 'dpkg-query -s weewx'
                 p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
                 (o,e) = p.communicate()
                 for line in o.split('\n'):
                     if line.startswith('Package: weewx'):
-                        install_type = 'deb'
-                        layout = dict(self._layouts['pkg'])
+                        layout_type = 'deb'
             except:
                 pass
 
-        # is this a redhat/suse install?
-        if install_type is None:
+        # is this a redhat/suse installation?
+        if layout_type is None:
             try:
                 cmd = 'rpm -q weewx'
                 p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
                 (o,e) = p.communicate()
                 for line in o.split('\n'):
-                    if line.find('is installed') >= 0:
-                        install_type = 'rpm'
-                        layout = dict(self._layouts['pkg'])
+                    if line.find('weewx') >= 0:
+                        layout_type = 'rpm'
             except:
                 pass
 
-        # it must be a setup install
-        if install_type is None:
-            install_type = 'setup'
+        # it must be a setup installation
+        if layout_type is None:
+            layout_type = 'setup'
+
+        self.log("layout type is %s" % layout_type)
+
+        return layout_type
+
+    def verify_layout(self, layout_type):
+        errors = []
+
+        if layout_type == 'deb':
+            layout = dict(self._layouts['pkg'])
+        elif layout_type == 'rpm':
+            layout = dict(self._layouts['pkg'])
+        elif layout_type == 'setup':
             layout = dict(self._layouts['setup'])
             # be sure we get the installed location, not the source location
             fn = os.path.join(this_dir, 'setup.cfg')
@@ -704,9 +726,10 @@ class Extension(object):
             for f in layout:
                 layout[f] = os.path.join(weewx_root, layout[f])
             layout['WEEWX_ROOT'] = weewx_root
+        else:
+            errors.append("unknown layout type '%s'" % layout_type)
 
         # be sure each destination directory exists
-        errors = []
         for x in layout:
             if not os.path.isdir(layout[x]):
                 errors.append("no directory %s" % x)
@@ -723,6 +746,7 @@ class Extension(object):
 
     def verify_tarball(self, filename):
         '''do some basic checks on the tarball'''
+        import tarfile
         archive = tarfile.open(filename, mode='r')
         root = None
         has_install = False
@@ -754,19 +778,21 @@ class Extension(object):
 
     def extract_tarball(self, archive, tmpdir, basename):
         '''extract the tarball contents, return path to the extracted files'''
+        self.log("extracting tarball", level=2)
         archive.extractall(path=tmpdir)
         return os.path.join(tmpdir, basename)
 
-    def load(self, dirname, basename, layout, dryrun, verbosity):
+    def load(self, dirname, basename, layout):
         '''load the extension's installer'''
         sys.path.append(dirname)
         ifile = 'install'
+        self.log("import install.py from %s" % dirname, level=2)
         __import__(ifile)
         module = sys.modules[ifile]
         loader = getattr(module, 'loader')
         self.installer = loader()
-        self.installer.set_verbosity(verbosity)
-        self.installer.set_dryrun(dryrun)
+        self.installer.set_verbosity(self.verbosity)
+        self.installer.set_dryrun(self.dryrun)
         self.installer.set_layout(layout)
         self.installer.set_basename(basename)
 
@@ -777,7 +803,7 @@ class Extension(object):
             except:
                 pass
 
-class ExtensionInstaller(object):
+class ExtensionInstaller(Logger):
     """Base class for extension installers."""
 
     # extension components can be installed to these locations
@@ -794,28 +820,26 @@ class ExtensionInstaller(object):
         self.author_email = kwargs.get('author_email')
         self.files = kwargs.get('files', [])
         self.config = kwargs.get('config', {})
-        self.restful_services = kwargs.get('restful_services', None)
+        self.services = {}
+        global all_service_groups
+        for sg in all_service_groups:
+            v = kwargs.get(sg, [])
+            if not isinstance(v, list):
+                v = [v]
+            self.services[sg] = v
         self.layout = None
         self.basename = None
-        self.doit = False
-        self.verbosity = 0
-
-    def set_layout(self, layout):
-        self._log("layout is %s" % layout, level=2)
-        self.layout = layout
+        self.doit = True
 
     def set_dryrun(self, dryrun):
         self.doit = not dryrun
 
-    def set_verbosity(self, verbosity):
-        self.verbosity = verbosity
+    def set_layout(self, layout):
+        self.log("layout is %s" % layout, level=2)
+        self.layout = layout
 
     def set_basename(self, basename):
         self.basename = basename
-
-    def _log(self, msg, level=0):
-        if self.verbosity >= level:
-            print msg
 
     def install(self):
         self.install_files()
@@ -827,7 +851,7 @@ class ExtensionInstaller(object):
         self.unmerge_config_options()
         self.uninstall_history()
 
-    def prepend_path(self, path):
+    def prepend_layout_path(self, path):
         '''prepend installed path to local path'''
         for d in self.dirs:
             if path.startswith(d):
@@ -836,107 +860,146 @@ class ExtensionInstaller(object):
 
     def install_files(self):
         '''copy files from extracted package, make backup if already exist'''
-        self._log("install_files", level=1)
+        self.log("install_files", level=1)
         for t in self.files:
-            dstdir = self.prepend_path(t[0])
+            dstdir = self.prepend_layout_path(t[0])
             try:
-                self._log("  mkdir %s" % dstdir, level=2)
+                self.log("  mkdir %s" % dstdir, level=2)
                 if self.doit:
                     os.makedirs(dstdir)
             except:
                 pass
             for f in t[1]:
                 src = os.path.join(self.layout['EXTRACT_ROOT'], f)
-                dst = self.prepend_path(f)
+                dst = self.prepend_layout_path(f)
                 if os.path.exists(dst):
-                    self._log("  save existing file %s" % dst, level=2)
+                    self.log("  save existing file %s" % dst, level=2)
                     if self.doit:
                         save_path(dst)
-                self._log("  copy %s to %s" % (src, dst), level=2)
+                self.log("  copy %s to %s" % (src, dst), level=2)
                 if self.doit:
                     distutils.file_util.copy_file(src, dst)
 
     def uninstall_files(self):
         '''delete files that were installed for this extension'''
-        self._log("uninstall_files", level=1)
+        self.log("uninstall_files", level=1)
         for t in self.files:
-            dstdir = self.prepend_path(t[0])
+            dstdir = self.prepend_layout_path(t[0])
             for f in t[1]:
-                dst = self.prepend_path(f)
+                dst = self.prepend_layout_path(f)
                 if os.path.exists(dst):
-                    self._log("  delete file %s" % dst, level=2)
+                    self.log("  delete file %s" % dst, level=2)
                     if self.doit:
                         os.remove(dst)
                 else:
-                    self._log("  missing file %s" % dst, level=2)
+                    self.log("  missing file %s" % dst, level=2)
             # if the directory is empty, delete it
             try:
                 if empty(dstdir):
-                    self._log("  delete directory %s" % dstdir, level=2)
+                    self.log("  delete directory %s" % dstdir, level=2)
                     if self.doit:
                         shutil.rmtree(dstdir, True)
                 else:
-                    self._log("  directory not empty: %s" % dstdir, level=2)
+                    self.log("  directory not empty: %s" % dstdir, level=2)
             except:
                 pass
 
     def merge_config_options(self):
-        self._log("merge_config_options", level=1)
+        self.log("merge_config_options", level=1)
+
+        # make a copy of the new config
+        cfg = dict(self.config)
+
+        # get the old config
         fn = os.path.join(self.layout['CONFIG_ROOT'], 'weewx.conf')
         config = configobj.ConfigObj(fn)
-        config.merge(self.config)
-        if self.restful_services is not None:
-            config['Engines']['WxEngine']['restful_services'].append(self.restful_services)
-        self._log("  merged configuration:", level=3)
-        self._log('\n'.join(formatdict(config)), level=3)
-        self._log("  save new config %s" % fn, level=2)
-        if self.doit:
-            config.write()
+
+        # prepend any html paths with existing HTML_ROOT
+        prepend_path(cfg, 'HTML_ROOT', config['StdReport']['HTML_ROOT'])
+
+        # merge the new options into the old config
+        config.merge(cfg)
+
+        # append services to appropriate lists
+        global all_service_groups
+        for sg in all_service_groups:
+            for s in self.services[sg]:
+                if not isinstance(config['Engines']['WxEngine'][sg], list):
+                    config['Engines']['WxEngine'][sg] = [config['Engines']['WxEngine'][sg]]
+                config['Engines']['WxEngine'][sg].append(s)
+
+        self.log("  merged configuration:", level=3)
+        self.log('\n'.join(formatdict(config)), level=3)
+
+        self.save_config(config)
 
     def unmerge_config_options(self):
-        self._log("unmerge_config_options", level=1)
+        self.log("unmerge_config_options", level=1)
+
+        # get the old config
         fn = os.path.join(self.layout['CONFIG_ROOT'], 'weewx.conf')
         config = configobj.ConfigObj(fn)
-        config.merge(self.config)
-        if self.restful_services is not None:
-            newlist = []
-            for s in config['Engines']['WxEngine']['restful_services']:
-                if s != self.restful_services:
-                    newlist.append(s)
-            config['Engines']['WxEngine']['restful_services'] = newlist
-        self._log("  unmerged configuration:", level=3)
-        self._log('\n'.join(formatdict(config)), level=3)
-        self._log("  save new config %s" % fn, level=2)
+
+        # remove any services we added
+        global all_service_groups
+        for sg in all_service_groups:
+            if self.services[sg]:
+                newlist = []
+                for s in config['Engines']['WxEngine'][sg]:
+                    if s not in self.services[sg]:
+                        newlist.append(s)
+                config['Engines']['WxEngine'][sg] = newlist
+
+        self.log("  unmerged configuration:", level=3)
+        self.log('\n'.join(formatdict(config)), level=3)
+
+        self.save_config(config)
+
+    def save_config(self, config):
+        # backup the old configuration
+        self.log("  save old configuration", level=2)
+        if self.doit:
+            bup = save_path(config.filename)
+
+        # save the new configuration
+        self.log("  save new config %s" % config.filename, level=2)
         if self.doit:
             config.write()
 
     def install_history(self):
         '''copy the installer to a location where we can find it later'''
-        self._log("install_history", level=1)
+        self.log("install_history", level=1)
         dstdir = os.path.join(self.layout['BIN_ROOT'], 'user')
         dstdir = os.path.join(dstdir, 'installer')
         dstdir = os.path.join(dstdir, self.basename)
-        self._log("  mkdir %s" % dstdir, level=2)
+        self.log("  mkdir %s" % dstdir, level=2)
         if self.doit:
             os.makedirs(dstdir)
         src = os.path.join(self.layout['EXTRACT_ROOT'], 'install.py')
-        self._log("  copy %s to %s" % (src, dstdir), level=2)
+        self.log("  copy %s to %s" % (src, dstdir), level=2)
         if self.doit:
             distutils.file_util.copy_file(src, dstdir)
 
     def uninstall_history(self):
         '''remove the installer cache'''
-        self._log("uninstall_history", level=1)
+        self.log("uninstall_history", level=1)
         dstdir = os.path.join(self.layout['BIN_ROOT'], 'user')
         dstdir = os.path.join(dstdir, 'installer')
         dstdir = os.path.join(dstdir, self.basename)
-        self._log("  delete %s" % dstdir, level=2)
+        self.log("  delete %s" % dstdir, level=2)
         if self.doit:
             shutil.rmtree(dstdir, True)
 
+def prepend_path(d, label, value):
+    '''prepend the value to every instance of the label in config_dict'''
+    for k in d.keys():
+        if isinstance(d[k], dict):
+            prepend_path(d[k], label, value)
+        elif k == label:
+            d[k] = os.path.join(value, d[k])    
+
 def do_ext():
     import optparse
-    import tarfile
     description = "install weewx extension"
     usage = "%prog (--install-extension [filename|directory] | --uninstall-extension extname)"
     parser = optparse.OptionParser(description=description, usage=usage)
@@ -944,6 +1007,8 @@ def do_ext():
                       metavar="FILE_OR_DIR", help='install extension')
     parser.add_option('--uninstall-extension', dest='u_ext', type=str,
                       metavar="NAME", help='uninstall extension')
+    parser.add_option('--layout', dest='layout', type=str,
+                      metavar='LAYOUT', help='specify the type of install')
     parser.add_option('--tmpdir', dest='tmpdir', type=str,
                       metavar="DIR", help='temporary directory')
     parser.add_option('--dryrun', dest='dryrun', action='store_true',
@@ -953,10 +1018,14 @@ def do_ext():
     (options, _args) = parser.parse_args()
 
     if options.i_ext:
-        ext = Extension(options.i_ext, options.tmpdir, options.dryrun, options.verbosity)
+        ext = Extension(options.i_ext, options.layout, options.tmpdir)
+        ext.set_verbosity(options.verbosity)
+        ext.set_dryrun(options.dryrun)
         ext.install()
     elif options.u_ext:
-        ext = Extension(options.u_ext, options.tmpdir, options.dryrun, options.verbosity)
+        ext = Extension(options.u_ext, options.layout, options.tmpdir)
+        ext.set_verbosity(options.verbosity)
+        ext.set_dryrun(options.dryrun)
         ext.uninstall()
     return 0
 
