@@ -607,7 +607,7 @@ class Extension(Logger):
             'CONFIG_ROOT': '/etc/weewx',
             'SKIN_ROOT':   '/etc/weewx/skins',
             },
-        'setup': {
+        'py': {
             'WEEWX_ROOT':  '/home/weewx',
             'BIN_ROOT':    'bin',
             'CONFIG_ROOT': '',
@@ -698,7 +698,7 @@ class Extension(Logger):
 
         # it must be a setup installation
         if layout_type is None:
-            layout_type = 'setup'
+            layout_type = 'py'
 
         self.log("layout type is %s" % layout_type, level=2)
 
@@ -711,8 +711,8 @@ class Extension(Logger):
             layout = dict(self._layouts['pkg'])
         elif layout_type == 'rpm':
             layout = dict(self._layouts['pkg'])
-        elif layout_type == 'setup':
-            layout = dict(self._layouts['setup'])
+        elif layout_type == 'py':
+            layout = dict(self._layouts['py'])
             # be sure we get the installed location, not the source location
             fn = os.path.join(this_dir, 'setup.cfg')
             try:
