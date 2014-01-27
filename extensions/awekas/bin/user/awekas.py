@@ -16,7 +16,9 @@
 #     username = AWEKAS_USERNAME
 #     password = AWEKAS_PASSWORD
 
+import Queue
 import hashlib
+import sys
 import syslog
 import time
 import urllib2
@@ -108,21 +110,6 @@ class AWEKAS(weewx.restx.StdRESTbase):
     positions 26-111 are defined for API2
         """
 
-    _VERSION = 0.5
-    _SERVER_URL = 'http://data.awekas.at/eingabe_pruefung.php'
-    _FORMATS = {'barometer'   : '%.3f',
-                'outTemp'     : '%.1f',
-                'outHumidity' : '%.0f',
-                'windSpeed'   : '%.1f',
-                'windDir'     : '%.0f',
-                'windGust'    : '%.1f',
-                'dewpoint'    : '%.1f',
-                'hourRain'    : '%.2f',
-                'dayRain'     : '%.2f',
-                'radiation'   : '%.2f',
-                'UV'          : '%.2f',
-                'rainRate'    : '%.2f'}
-
     def __init__(self, engine, config_dict):
         """Initialize for posting data to AWEKAS.
 
@@ -187,6 +174,7 @@ class AWEKAS(weewx.restx.StdRESTbase):
         site_dict.setdefault('latitude', engine.stn_info.latitude_f)
         site_dict.setdefault('longitude', engine.stn_info.longitude_f)
         site_dict.setdefault('language', 'de')
+        site_dict.setdefault('database_dict', config_dict['Databases'][config_dict['StdArchive']['archive_database']])
 
         self.archive_queue = Queue.Queue()
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
@@ -198,13 +186,29 @@ class AWEKAS(weewx.restx.StdRESTbase):
         self.archive_queue.put(event.record)
 
 class AWEKASThread(weewx.restx.RESTThread):
+
+    _SERVER_URL = 'http://data.awekas.at/eingabe_pruefung.php'
+    _FORMATS = {'barometer'   : '%.3f',
+                'outTemp'     : '%.1f',
+                'outHumidity' : '%.0f',
+                'windSpeed'   : '%.1f',
+                'windDir'     : '%.0f',
+                'windGust'    : '%.1f',
+                'dewpoint'    : '%.1f',
+                'hourRain'    : '%.2f',
+                'dayRain'     : '%.2f',
+                'radiation'   : '%.2f',
+                'UV'          : '%.2f',
+                'rainRate'    : '%.2f'}
+
     def __init__(self, queue, username, password, latitude, longitude,
-                 language='de', server_url=AWEKAS._SERVER_URL,
-                 skip_upload=False,
-                 log_success=True, log_failure=True, max_backlog=0,
+                 database_dict,
+                 language='de', server_url=_SERVER_URL, skip_upload=False,
+                 log_success=True, log_failure=True, max_backlog=sys.maxint,
                  stale=None, max_tries=3, post_interval=300, timeout=60):
         super(AWEKASThread, self).__init__(queue,
                                            protocol_name='AWEKAS',
+                                           database_dict=database_dict,
                                            log_success=log_success,
                                            log_failure=log_failure,
                                            max_backlog=max_backlog,
@@ -214,23 +218,26 @@ class AWEKASThread(weewx.restx.RESTThread):
                                            timeout=timeout)
         self.username = username
         self.password = password
-        self.latitude = latitude
-        self.longitude = longitue
+        self.latitude = float(latitude)
+        self.longitude = float(longitude)
         self.language = language
         self.server_url = server_url
-        self.skip_upload = skip_upload
+        self.skip_upload = to_bool(skip_upload)
 
-    def augment_record(self, record, archive):
+    def get_record(self, record, archive):
         """Add rainRate to the record."""
-        r = RESTThread.augment_record(record, archive)
-        ts = r['dateTime']
+        r = super(AWEKASThread, self).get_record(record, archive)
+        # FIXME: for some reason this returns an array of 10 items instead
+        # of a single record.  why?
         rr = archive.getSql('select rainRate from archive where dateTime=?',
-                            (ts,))
-        r['rainRate'] = rr
+                            (r['dateTime'],))
+        datadict = dict(zip(['rainRate'], rr))
+        if datadict.has_key('rainRate'):
+            r['rainRate'] = datadict['rainRate']
         return r
 
     def process_record(self, record, archive):
-        r = self.augment_record(record, archive)
+        r = self.get_record(record, archive)
         url = self.get_url(r)
         if self.skip_upload:
             logdbg("skipping upload")
@@ -290,7 +297,7 @@ class AWEKASThread(weewx.restx.RESTThread):
 
     def _format(self, record, label):
         if record.has_key(label) and record[label] is not None:
-            if AWEKAS._FORMATS.has_key(label):
-                return AWEKAS._FORMATS[label] % record[label]
+            if self._FORMATS.has_key(label):
+                return self._FORMATS[label] % record[label]
             return str(record[label])
         return ''

@@ -16,6 +16,8 @@
 #     username = USERNAME
 #     password = PASSWORD
 
+import Queue
+import sys
 import syslog
 import time
 import urllib
@@ -38,18 +40,8 @@ def loginf(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-class Wetter(StdRESTbase):
+class Wetter(weewx.restx.StdRESTbase):
     """Upload using the wetter.com protocol."""
-
-    _VERSION = 0.3
-    _SERVER_URL = 'http://www.wetterarchiv.de/interface/http/input.php'
-    _DATA_MAP = {'windrichtung': ('windDir',     '%.0f', 1.0), # degrees
-                 'windstaerke':  ('windSpeed',   '%.1f', 0.2777777777), # m/s
-                 'temperatur':   ('outTemp',     '%.1f', 1.0), # C
-                 'feuchtigkeit': ('outHumidity', '%.0f', 1.0), # percent
-                 'luftdruck':    ('barometer',   '%.3f', 1.0), # mbar?
-                 'niederschlagsmenge': ('hourRain',    '%.2f', 10.0), # mm
-                 }
 
     def __init__(self, engine, config_dict):
         """Initialize for posting data to wetter.com.
@@ -98,6 +90,7 @@ class Wetter(StdRESTbase):
         except KeyError, e:
             logerr("Data will not be posted: Missing option %s" % e)
             return
+        site_dict.setdefault('database_dict', config_dict['Databases'][config_dict['StdArchive']['archive_database']])
 
         self.archive_queue = Queue.Queue()
         self.archive_thread = WetterThread(self.archive_queue, **site_dict)
@@ -108,13 +101,24 @@ class Wetter(StdRESTbase):
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
 
-class WetterThread(RESTThread):
-    def __init__(self, queue, username, password,
-                 server_url=Wetter._SERVER_URL, skip_upload=False,
-                 log_success=True, log_failure=True, max_backlog=0,
+class WetterThread(weewx.restx.RESTThread):
+
+    _SERVER_URL = 'http://www.wetterarchiv.de/interface/http/input.php'
+    _DATA_MAP = {'windrichtung': ('windDir',     '%.0f', 1.0), # degrees
+                 'windstaerke':  ('windSpeed',   '%.1f', 0.2777777777), # m/s
+                 'temperatur':   ('outTemp',     '%.1f', 1.0), # C
+                 'feuchtigkeit': ('outHumidity', '%.0f', 1.0), # percent
+                 'luftdruck':    ('barometer',   '%.3f', 1.0), # mbar?
+                 'niederschlagsmenge': ('hourRain',    '%.2f', 10.0), # mm
+                 }
+
+    def __init__(self, queue, username, password, database_dict,
+                 server_url=_SERVER_URL, skip_upload=False,
+                 log_success=True, log_failure=True, max_backlog=sys.maxint,
                  stale=None, max_tries=3, post_interval=None, timeout=60):
         super(WetterThread, self).__init__(queue,
                                            protocol_name='Wetter',
+                                           database_dict=database_dict,
                                            log_success=log_success,
                                            log_failure=log_failure,
                                            max_backlog=max_backlog,
@@ -125,7 +129,7 @@ class WetterThread(RESTThread):
         self.username = username
         self.password = password
         self.server_url = server_url
-        self.skip_upload = skip_upload
+        self.skip_upload = to_bool(skip_upload)
 
     def process_record(self, record, archive):
         r = self.get_record(record, archive)
@@ -141,7 +145,7 @@ class WetterThread(RESTThread):
     def check_response(self, response):
         txt = response.read()
         if not txt.startswith('status=SUCCESS'):
-            raise FailedPost("Server returned '%s'" % txt)
+            raise weewx.restx.FailedPost("Server returned '%s'" % txt)
 
     def get_data(self, record):
         # put everything into the right units

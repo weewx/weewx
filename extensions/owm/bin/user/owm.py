@@ -19,6 +19,7 @@
 #     password = OWM_PASSWORD
 #     station_name = STATION_NAME
 
+import Queue
 import base64
 import syslog
 import urllib
@@ -42,29 +43,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 class OpenWeatherMap(weewx.restx.StdRESTbase):
-    """Upload using the OpenWeatherMap protocol.
-
-    The OpenWeatherMap api does not include timestamp, so we can only upload
-    the latest observation.
-    """
-
-    _VERSION = 0.3
-    _SERVER_URL = 'http://openweathermap.org/data/post'
-    _DATA_MAP = {
-        'wind_dir':   ('windDir',     '%.0f', 1.0, 0.0), # degrees
-        'wind_speed': ('windSpeed',   '%.1f', 0.2777777777, 0.0), # m/s
-        'wind_gust':  ('windGust',    '%.1f', 0.2777777777, 0.0), # m/s
-        'temp':       ('outTemp',     '%.1f', 1.0, 0.0), # C
-        'humidity':   ('outHumidity', '%.0f', 1.0, 0.0), # percent
-        'pressure':   ('barometer',   '%.3f', 1.0, 0.0), # mbar?
-        'rain_1h':    ('hourRain',    '%.2f', 10.0, 0.0), # mm
-        'rain_24h':   ('rain24',      '%.2f', 10.0, 0.0), # mm
-        'rain_today': ('dayRain',     '%.2f', 10.0, 0.0), # mm
-        'snow':       ('snow',        '%.2f', 10.0, 0.0), # mm
-        'lum':        ('radiation',   '%.2f', 1.0, 0.0), # W/m^2
-        'dewpoint':   ('dewpoint',    '%.1f', 1.0, 273.15), # K
-        'uv':         ('UV',          '%.2f', 1.0, 0.0),
-        }
+    """Upload using the OpenWeatherMap protocol."""
     
     def __init__(self, engine, config_dict):
         """Initialize for posting data.
@@ -90,7 +69,7 @@ class OpenWeatherMap(weewx.restx.StdRESTbase):
         Default is None.
 
         server_url: URL of the server
-        Default is the emoncms.org site
+        Default is the OpenWeatherMap site
         
         log_success: If True, log a successful post in the system log.
         Default is True.
@@ -100,7 +79,7 @@ class OpenWeatherMap(weewx.restx.StdRESTbase):
 
         max_backlog: How many records are allowed to accumulate in the queue
         before the queue is trimmed.
-        Default is sys.maxint (essentially, allow any number).
+        Default is 0
 
         max_tries: How many times to try the post before giving up.
         Default is 3
@@ -132,6 +111,7 @@ class OpenWeatherMap(weewx.restx.StdRESTbase):
         site_dict.setdefault('latitude', engine.stn_info.latitude_f)
         site_dict.setdefault('longitude', engine.stn_info.longitude_f)
         site_dict.setdefault('altitude', engine.stn_info.altitude_vt[0])
+        site_dict.setdefault('database_dict', config_dict['Databases'][config_dict['StdArchive']['archive_database']])
 
         self.archive_queue = Queue.Queue()
         self.archive_thread = OpenWeatherMapThread(self.archive_queue,
@@ -144,29 +124,51 @@ class OpenWeatherMap(weewx.restx.StdRESTbase):
         self.archive_queue.put(event.record)
 
 class OpenWeatherMapThread(weewx.restx.RESTThread):
+    """The OpenWeatherMap api does not include timestamp, so we can only
+    upload the latest observation.
+    """
+
+    _SERVER_URL = 'http://openweathermap.org/data/post'
+    _DATA_MAP = {
+        'wind_dir':   ('windDir',     '%.0f', 1.0, 0.0), # degrees
+        'wind_speed': ('windSpeed',   '%.1f', 0.2777777777, 0.0), # m/s
+        'wind_gust':  ('windGust',    '%.1f', 0.2777777777, 0.0), # m/s
+        'temp':       ('outTemp',     '%.1f', 1.0, 0.0), # C
+        'humidity':   ('outHumidity', '%.0f', 1.0, 0.0), # percent
+        'pressure':   ('barometer',   '%.3f', 1.0, 0.0), # mbar?
+        'rain_1h':    ('hourRain',    '%.2f', 10.0, 0.0), # mm
+        'rain_24h':   ('rain24',      '%.2f', 10.0, 0.0), # mm
+        'rain_today': ('dayRain',     '%.2f', 10.0, 0.0), # mm
+        'snow':       ('snow',        '%.2f', 10.0, 0.0), # mm
+        'lum':        ('radiation',   '%.2f', 1.0, 0.0), # W/m^2
+        'dewpoint':   ('dewpoint',    '%.1f', 1.0, 273.15), # K
+        'uv':         ('UV',          '%.2f', 1.0, 0.0),
+        }
+
     def __init__(self, queue,
                  username, password, latitude, longitude, altitude,
-                 station_name,
-                 server_url=OpenWeatherMap._SERVER_URL, skip_upload=False,
-                 log_success=True, log_failure=True, max_backlog=sys.maxint,
+                 station_name, database_dict,
+                 server_url=_SERVER_URL, skip_upload=False,
+                 log_success=True, log_failure=True, max_backlog=0,
                  stale=None, max_tries=3, post_interval=None, timeout=60):
         super(OpenWeatherMapThread, self).__init__(queue,
-                                                   protocol_name='EmonCMS',
+                                                   protocol_name='OWM',
+                                                   database_dict=database_dict,
                                                    log_success=log_success,
                                                    log_failure=log_failure,
                                                    max_backlog=max_backlog,
                                                    stale=stale,
                                                    max_tries=max_tries,
                                                    post_interval=post_interval,
-                                                   timeout=timeout):
+                                                   timeout=timeout)
         self.username = username
         self.password = password
-        self.latitude = latitude
-        self.longitude = longitude
-        self.altitude = altitude
+        self.latitude = float(latitude)
+        self.longitude = float(longitude)
+        self.altitude = float(altitude)
         self.station_name = station_name
         self.server_url = server_url
-        self.skip_upload = skip_upload
+        self.skip_upload = to_bool(skip_upload)
 
     def process_record(self, record, archive):
         r = self.get_record(record, archive)

@@ -15,6 +15,8 @@
 #     station_number = WEATHERBUG_STATION_NUMBER
 #     password = WEATHERBUG_PASSWORD
 
+import Queue
+import sys
 import syslog
 import time
 import urllib
@@ -39,22 +41,6 @@ def logerr(msg):
 
 class WeatherBug(weewx.restx.StdRESTbase):
     """Upload using the WeatherBug protocol."""
-
-    _VERSION = 0.3
-    _SERVER_URL = 'http://data.backyard2.weatherbug.com/data/livedata.aspx'
-    _DATA_MAP = {'tempf':         ('outTemp',     '%.1f'), # F
-                 'humidity':      ('outHumidity', '%.0f'), # percent
-                 'winddir':       ('windDir',     '%.0f'), # degree
-                 'windspeedmph':  ('windSpeed',   '%.1f'), # mph
-                 'windgustmph':   ('windGust',    '%.1f'), # mph
-                 'baromin':       ('barometer',   '%.3f'), # inHg
-                 'rainin':        ('rain',        '%.2f'), # in
-                 'dailyRainin':   ('dayRain',     '%.2f'), # in
-                 'monthlyrainin': ('monthRain',   '%.2f'), # in
-                 'tempfhi':       ('outTempMax',  '%.1f'), # F
-                 'tempflo':       ('outTempMin',  '%.1f'), # F
-                 'Yearlyrainin':  ('yearRain',    '%.2f'), # in
-                 'dewptf':        ('dewpoint',    '%.1f')} # F
 
     def __init__(self, engine, config_dict):
         """Initialize for upload to WeatherBug.
@@ -114,6 +100,7 @@ class WeatherBug(weewx.restx.StdRESTbase):
             return
         site_dict.setdefault('latitude', engine.stn_info.latitude_f)
         site_dict.setdefault('longitude', engine.stn_info.longitude_f)
+        site_dict.setdefault('database_dict', config_dict['Databases'][config_dict['StdArchive']['archive_database']])
 
         self.archive_queue = Queue.Queue()
         self.archive_thread = WeatherBugThread(self.archive_queue, **site_dict)
@@ -125,13 +112,31 @@ class WeatherBug(weewx.restx.StdRESTbase):
         self.archive_queue.put(event.record)
 
 class WeatherBugThread(weewx.restx.RESTThread):
+
+    _SERVER_URL = 'http://data.backyard2.weatherbug.com/data/livedata.aspx'
+    _DATA_MAP = {'tempf':         ('outTemp',     '%.1f'), # F
+                 'humidity':      ('outHumidity', '%.0f'), # percent
+                 'winddir':       ('windDir',     '%.0f'), # degree
+                 'windspeedmph':  ('windSpeed',   '%.1f'), # mph
+                 'windgustmph':   ('windGust',    '%.1f'), # mph
+                 'baromin':       ('barometer',   '%.3f'), # inHg
+                 'rainin':        ('rain',        '%.2f'), # in
+                 'dailyRainin':   ('dayRain',     '%.2f'), # in
+                 'monthlyrainin': ('monthRain',   '%.2f'), # in
+                 'tempfhi':       ('outTempMax',  '%.1f'), # F
+                 'tempflo':       ('outTempMin',  '%.1f'), # F
+                 'Yearlyrainin':  ('yearRain',    '%.2f'), # in
+                 'dewptf':        ('dewpoint',    '%.1f')} # F
+
     def __init__(self, queue,
-                 publisher_id, station_name, password, latitude, longitude,
-                 server_url=WeatherBugThread._SERVER_URL, skip_upload=False,
-                 log_success=True, log_failure=True, max_backlog=0,
+                 publisher_id, station_number, password, latitude, longitude,
+                 database_dict,
+                 server_url=_SERVER_URL, skip_upload=False,
+                 log_success=True, log_failure=True, max_backlog=sys.maxint,
                  stale=None, max_tries=3, post_interval=None, timeout=60):
         super(WeatherBugThread, self).__init__(queue,
                                                protocol_name='WeatherBug',
+                                               database_dict=database_dict,
                                                log_success=log_success,
                                                log_failure=log_failure,
                                                max_backlog=max_backlog,
@@ -140,24 +145,15 @@ class WeatherBugThread(weewx.restx.RESTThread):
                                                post_interval=post_interval,
                                                timeout=timeout)
         self.publisher_id = publisher_id
-        self.station_name = station_name
+        self.station_number = station_number
         self.password = password
-        self.latitude = latitude
-        self.longitude = longitude
+        self.latitude = float(latitude)
+        self.longitude = float(longitude)
         self.server_url = server_url
-        self.skip_upload = skip_upload
-
-    def augment_record(self, record, archive):
-        """Add rainRate to the record."""
-        r = RESTThread.augment_record(record, archive)
-        ts = r['dateTime']
-        rr = archive.getSql('select rainRate from archive where dateTime=?',
-                            (ts,))
-        r['rainRate'] = rr
-        return r
+        self.skip_upload = to_bool(skip_upload)
 
     def process_record(self, record, archive):
-        r = self.augment_record(record, archive)
+        r = self.get_record(record, archive)
         url = self.get_url(r)
         if self.skip_upload:
             logdbg("skipping upload")
@@ -166,8 +162,9 @@ class WeatherBugThread(weewx.restx.RESTThread):
         self.post_with_retries(req)
 
     def check_response(self, response):
-        if not line.startswith('Successfully Received'):
-            raise weewx.restx.FailedPost("Server response: %s" % line)
+        for line in response:
+            if not line.startswith('Successfully Received'):
+                raise weewx.restx.FailedPost("Server response: %s" % line)
 
     def get_url(self, record):
         # put everything into the right units and scaling

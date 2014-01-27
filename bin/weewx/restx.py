@@ -5,14 +5,16 @@
 #
 #    $Id$
 #
-"""Publish weather data to RESTful sites such as the Weather Underground or PWSWeather.
+"""Publish weather data to RESTful sites such as the Weather Underground.
 
                             GENERAL ARCHITECTURE
 
 Each protocol uses two classes:
 
- o A weewx service, that runs in the main thread. Call this the "controlling object"
- o A separate "threading" class that runs in its own thread. Call this the "posting object".
+ o A weewx service, that runs in the main thread. Call this the
+    "controlling object"
+ o A separate "threading" class that runs in its own thread. Call this the
+    "posting object".
  
 Communication between the two is via an instance of Queue.Queue. New loop
 packets or archive records are put into the queue by the controlling object
@@ -25,8 +27,8 @@ archive records to be put in the queue. It then launches the thread for the
 posting object.
  
 When a new LOOP or record arrives, the controlling object puts it in the queue,
-to be received by the posting object. The controlling object can tell the posting
-object to terminate by putting a 'None' in the queue.
+to be received by the posting object. The controlling object can tell the
+posting object to terminate by putting a 'None' in the queue.
  
 The posting object should inherit from class RESTThread. It monitors the queue
 and blocks until a new record arrives.
@@ -42,22 +44,22 @@ should only have to implement a few functions. In particular,
  - skip_this_post(self, time_ts). If this function returns True, then the
    post will be skipped. Otherwise, it is done. The default version does two
    checks. First, it sees how old the record is. If it is older than the value
-   'stale', then the post is skipped. Second, it will not allow posts more often
-   than 'post_interval'. Both of these can be set in the constructor of
+   'stale', then the post is skipped. Second, it will not allow posts more
+   often than 'post_interval'. Both of these can be set in the constructor of
    RESTThread.
    
  - post_request(self, request). This function takes a urllib2.Request object
-   and is responsible for performing the HTTP GET or POST. The default version simply uses
-   urllib2.urlopen(request) and returns the result. If the post could raise
-   an unusual exception, override this function and catch the exception. See
-   the WOWThread implementation for an example.
+   and is responsible for performing the HTTP GET or POST. The default version
+   simply uses urllib2.urlopen(request) and returns the result. If the post
+   could raise an unusual exception, override this function and catch the
+   exception. See the WOWThread implementation for an example.
    
- - check_response(). After an HTTP request gets posted, the webserver sends back
-   a "response." This response may contain clues as to whether the post worked.
-   By overriding check_response() you can look for these clues. For example,
-   the station registry checks all lines in the response, looking for any that
-   start with the string "FAIL". If it finds one, it raises a FailedPost exception,
-   signaling that the post did not work.
+ - check_response(). After an HTTP request gets posted, the webserver sends
+   back a "response." This response may contain clues as to whether the post
+   worked.  By overriding check_response() you can look for these clues. For
+   example, the station registry checks all lines in the response, looking for
+   any that start with the string "FAIL". If it finds one, it raises a
+   FailedPost exception, signaling that the post did not work.
    
 In unusual cases, you might also have to implement the following:
   
@@ -124,10 +126,10 @@ class RESTThread(threading.Thread):
     
     Offers a few bits of common functionality."""
 
-    def __init__(self, queue, protocol_name, 
+    def __init__(self, queue, protocol_name, database_dict=None,
                  log_success=True, log_failure=True, 
                  max_backlog=sys.maxint, max_tries=3, stale=None, 
-                 post_interval=None, timeout=10):
+                 post_interval=None, timeout=10, retry_wait=5):
         """Initializer for the class RESTThread
         Required parameters:
 
@@ -157,13 +159,18 @@ class RESTThread(threading.Thread):
           Default is None (post every record).
           
           timeout: How long to wait for the server to respond before giving up.
-          Default is 10 seconds."""    
+          Default is 10 seconds.
+
+          retry_wait: How long to wait between retries when failures.
+          Default is 5 seconds.
+          """    
         # Initialize my superclass:
         threading.Thread.__init__(self, name=protocol_name)
         self.setDaemon(True)
 
         self.queue         = queue
         self.protocol_name = protocol_name
+        self.database_dict = database_dict
         self.log_success   = to_bool(log_success)
         self.log_failure   = to_bool(log_failure)
         self.max_backlog   = to_int(max_backlog)
@@ -171,7 +178,7 @@ class RESTThread(threading.Thread):
         self.stale         = to_int(stale)
         self.post_interval = to_int(post_interval)
         self.timeout       = to_int(timeout)
-        
+        self.retry_wait    = to_int(retry_wait)
         self.lastpost = 0
             
     def get_record(self, record, archive):
@@ -228,20 +235,21 @@ class RESTThread(threading.Thread):
         return _datadict
 
     def run(self):
-        """General run() version. 
+        """If there is a database specified, open the database, then call
+        run_loop() with the database.  If no database is specified, simply
+        call run_loop()."""
         
-        It simply opens up the database, then calls run_loop(). If a specializing RESTful
-        service does not need the database, then it can specialize this function and not
-        open up the database."""
-        
-        # Open up the archive. Use a 'with' statement. This will automatically close the
-        # archive in the case of an exception:
-        with weewx.archive.Archive.open(self.database_dict) as _archive:
-            self.run_loop(_archive)
+        # Open up the archive. Use a 'with' statement. This will automatically
+        # close the archive in the case of an exception:
+        if self.database_dict is not None:
+            with weewx.archive.Archive.open(self.database_dict) as _archive:
+                self.run_loop(_archive)
+        else:
+            self.run_loop()
 
     def run_loop(self, archive=None):
-        """Runs a continuous loop, waiting for records to appear in the queue, then processing
-        them.
+        """Runs a continuous loop, waiting for records to appear in the queue,
+        then processing them.
         """
         
         while True :
@@ -251,8 +259,8 @@ class RESTThread(threading.Thread):
                 # A None record is our signal to exit:
                 if _record is None:
                     return
-                # If packets have backed up in the queue, trim it until it's no bigger
-                # than the max allowed backlog:
+                # If packets have backed up in the queue, trim it until it's
+                # no bigger than the max allowed backlog:
                 if self.queue.qsize() <= self.max_backlog:
                     break
     
@@ -260,7 +268,8 @@ class RESTThread(threading.Thread):
                 continue
     
             try:
-                # Process the record, using whatever method the specializing class provides
+                # Process the record, using whatever method the specializing
+                # class provides
                 self.process_record(_record, archive)
             except BadLogin, e:
                 syslog.syslog(syslog.LOG_ERR, "restx: %s: bad login; waiting 60 minutes then retrying" % self.protocol_name)
@@ -270,7 +279,8 @@ class RESTThread(threading.Thread):
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_ERR, "restx: %s: Failed to publish record %s: %s" % (self.protocol_name, _time_str, e))
             except Exception, e:
-                # Some unknown exception occurred. This is probably a serious problem. Exit.
+                # Some unknown exception occurred. This is probably a serious
+                # problem. Exit.
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting: %s" % (self.protocol_name, e))
                 return
             else:
@@ -281,8 +291,8 @@ class RESTThread(threading.Thread):
     def process_record(self, record, archive):
         """Default version of process_record.
         
-        This version uses HTTP GETs to do the post, which should work for
-        many protocols, but it can always be replaced by a specializing class."""
+        This version uses HTTP GETs to do the post, which should work for many
+        protocols, but it can always be replaced by a specializing class."""
         
         # Get the full record by querying the database ...
         _full_record = self.get_record(record, archive)
@@ -307,24 +317,28 @@ class RESTThread(threading.Thread):
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
             try:
-                # Do a single post. The function post_request() can be specialized by a RESTful service
-                # to catch any unusual exceptions.
+                # Do a single post. The function post_request() can be
+                # specialized by a RESTful service to catch any unusual
+                # exceptions.
                 _response = self.post_request(request)
                 if _response.code == 200:
-                    # No exception thrown and we got a good response code, but we're still not done.
-                    # Some protocols encode a bad station ID or password in the return message.
-                    # Give any interested protocols a chance to examine it. This must also
-                    # be inside the try block because some implementations defer hitting the socket
-                    # until the response is used.
+                    # No exception thrown and we got a good response code, but
+                    # we're still not done.  Some protocols encode a bad
+                    # station ID or password in the return message.
+                    # Give any interested protocols a chance to examine it.
+                    # This must also be inside the try block because some
+                    # implementations defer hitting the socket until the
+                    # response is used.
                     self.check_response(_response)
                     # Does not seem to be an error. We're done.
                     return
                 else:
                     # We got a bad response code. Log it and try again.
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Code %s" % (self.protocol_name, _count+1, _response.code))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt %d: Code %s" % (self.protocol_name, _count+1, _response.code))
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
-                # An exception was thrown. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt #%d: Exception %s" % (self.protocol_name, _count+1, e))
+                # An exception was thrown. Log it and go around for another try
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt %d: Exception %s" % (self.protocol_name, _count+1, e))
+            time.sleep(self.retry_wait)
         else:
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Raise an exception. Caller
@@ -410,7 +424,8 @@ class StdWunderground(StdRESTbase):
         if do_archive_post:
             _ambient_dict.setdefault('server_url', StdWunderground.archive_url)
             self.archive_queue = Queue.Queue()
-            self.archive_thread = AmbientThread(self.archive_queue, _database_dict,
+            self.archive_thread = AmbientThread(self.archive_queue,
+                                                _database_dict,
                                                 protocol_name="Wunderground-PWS",
                                                 **_ambient_dict) 
             self.archive_thread.start()
@@ -425,7 +440,8 @@ class StdWunderground(StdRESTbase):
             _ambient_dict.setdefault('max_backlog', 0)
             _ambient_dict.setdefault('max_tries', 1)
             self.loop_queue = Queue.Queue()
-            self.loop_thread = AmbientLoopThread(self.loop_queue, _database_dict,
+            self.loop_thread = AmbientLoopThread(self.loop_queue,
+                                                 _database_dict,
                                                  protocol_name="Wunderground-RF",
                                                  **_ambient_dict) 
             self.loop_thread.start()
@@ -582,11 +598,14 @@ class AmbientThread(RESTThread):
           Default is 10 seconds.        
         """
         super(AmbientThread, self).__init__(queue, protocol_name,
-                                            log_success=log_success, log_failure=log_failure,
-                                            max_backlog=max_backlog, max_tries=max_tries, stale=stale,
-                                            post_interval=post_interval, timeout=timeout)
+                                            database_dict=database_dict,
+                                            log_success=log_success,
+                                            log_failure=log_failure,
+                                            max_backlog=max_backlog,
+                                            max_tries=max_tries, stale=stale,
+                                            post_interval=post_interval,
+                                            timeout=timeout)
         
-        self.database_dict = database_dict
         self.station       = station
         self.password      = password
         self.server_url    = server_url
@@ -824,12 +843,16 @@ class CWOPThread(RESTThread):
           Default is 10 seconds.        
         """        
         # Initialize my superclass
-        super(CWOPThread, self).__init__(queue, protocol_name=protocol_name,
-                                         log_success=log_success, log_failure=log_failure,
-                                         max_backlog=max_backlog, max_tries=max_tries, stale=stale,
-                                         post_interval=post_interval, timeout=timeout)
-
-        self.database_dict = database_dict
+        super(CWOPThread, self).__init__(queue,
+                                         database_dict=database_dict,
+                                         protocol_name=protocol_name,
+                                         log_success=log_success,
+                                         log_failure=log_failure,
+                                         max_backlog=max_backlog,
+                                         max_tries=max_tries,
+                                         stale=stale,
+                                         post_interval=post_interval,
+                                         timeout=timeout)
         self.station       = station
         self.passcode      = passcode
         self.server_list   = server_list
@@ -1121,10 +1144,6 @@ class StationRegistryThread(RESTThread):
         self.description   = description
         self.station_type  = station_type
         self.station_model = station_model
-        
-    def run(self):
-        # This version of run() does not open the archive database.
-        self.run_loop()
         
     def get_record(self, dummy_record, dummy_archive):
         _record = {}
