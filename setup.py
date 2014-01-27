@@ -637,7 +637,7 @@ class Extension(Logger):
         self.verify_src(self.extdir)
         # everything is ok, so use the extdir
         self.layout['EXTRACT_ROOT'] = self.extdir
-        self.load(self.extdir, self.basename, self.layout)
+        self.load_installer(self.extdir, self.basename, self.layout)
         self.installer.install()
         self.cleanup()
 
@@ -646,7 +646,7 @@ class Extension(Logger):
         self.layout = self.verify_layout(self.layout_type)
         self.hisdir = self.verify_uninstaller(self.layout, self.filename)
         self.basename = self.filename
-        self.load(self.hisdir, self.basename, self.layout)
+        self.load_installer(self.hisdir, self.basename, self.layout)
         self.installer.uninstall()
 
     def verify_installer(self, filename, tmpdir):
@@ -700,7 +700,7 @@ class Extension(Logger):
         if layout_type is None:
             layout_type = 'setup'
 
-        self.log("layout type is %s" % layout_type)
+        self.log("layout type is %s" % layout_type, level=2)
 
         return layout_type
 
@@ -736,6 +736,8 @@ class Extension(Logger):
         if errors:
             raise Exception, '\n'.join(errors)
 
+        self.log("layout is %s" % layout, level=3)
+
         return layout
 
     def verify_src(self, extdir):
@@ -746,6 +748,7 @@ class Extension(Logger):
 
     def verify_tarball(self, filename):
         '''do some basic checks on the tarball'''
+        self.log("verify tarball", level=2)
         import tarfile
         archive = tarfile.open(filename, mode='r')
         root = None
@@ -782,11 +785,11 @@ class Extension(Logger):
         archive.extractall(path=tmpdir)
         return os.path.join(tmpdir, basename)
 
-    def load(self, dirname, basename, layout):
+    def load_installer(self, dirname, basename, layout):
         '''load the extension's installer'''
+        self.log("import install.py from %s" % dirname, level=2)
         sys.path.append(dirname)
         ifile = 'install'
-        self.log("import install.py from %s" % dirname, level=2)
         __import__(ifile)
         module = sys.modules[ifile]
         loader = getattr(module, 'loader')
@@ -798,6 +801,7 @@ class Extension(Logger):
 
     def cleanup(self):
         if self.archive is not None:
+            self.log("clean up files extracted from archive", level=2)
             try:
                 shutil.rmtree(self.extdir)
             except:
@@ -835,7 +839,6 @@ class ExtensionInstaller(Logger):
         self.doit = not dryrun
 
     def set_layout(self, layout):
-        self.log("layout is %s" % layout, level=2)
         self.layout = layout
 
     def set_basename(self, basename):
@@ -916,6 +919,22 @@ class ExtensionInstaller(Logger):
 
         # prepend any html paths with existing HTML_ROOT
         prepend_path(cfg, 'HTML_ROOT', config['StdReport']['HTML_ROOT'])
+
+        # massage the database dictionaries for this extension
+        try:
+            sqlitecfg = config['Databases'].get('archive_sqlite', None)
+            mysqlcfg = config['Databases'].get('archive_mysql', None)
+            for k in cfg['Databases']:
+                db = cfg['Databases'][k]
+                if db['driver'] == 'weedb.sqlite' and sqlitecfg:
+                    db['database'] = os.path.join(os.path.dirname(sqlitecfg['database']), db['database'])
+                    db['root'] = sqlitecfg['root']
+                elif db['driver'] == 'weedb.mysql' and mysqlcfg:
+                    db['host'] = mysqlcfg['host']
+                    db['user'] = mysqlcfg['user']
+                    db['password'] = mysqlcfg['password']
+        except:
+            pass
 
         # merge the new options into the old config
         config.merge(cfg)
