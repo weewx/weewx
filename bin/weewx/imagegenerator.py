@@ -100,7 +100,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                 plot.setXScaling((minstamp, maxstamp, timeinc))
                 
                 # Set the y-scaling, using any user-supplied hints: 
-                plot.setYScaling(weeutil.weeutil.convertToFloat(plot_options.get('yscale')))
+                plot.setYScaling(weeutil.weeutil.convertToFloat(plot_options.get('yscale', ['None', 'None', 'None'])))
                 
                 # Get a suitable bottom label:
                 bottom_label_format = plot_options.get('bottom_label_format', '%m/%d/%y %H:%M')
