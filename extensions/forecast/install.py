@@ -10,7 +10,7 @@ def loader():
 class ForecastInstaller(ExtensionInstaller):
     def __init__(self):
         super(ForecastInstaller, self).__init__(
-            version="0.2",
+            version="0.3",
             name='forecast',
             description='Generate and display weather and tide forecasts.',
             author="Matthew Wall",
@@ -36,7 +36,9 @@ class ForecastInstaller(ExtensionInstaller):
                 'StdReport': {
                     'forecast': {
                         'skin':'forecast',
-                        'HTML_ROOT':'forecast' }}},
+                        'HTML_ROOT':'forecast',
+                        'Extras': {
+                            'forecast_table':'%(WEEWX_ROOT)s%(SKIN_ROOT)s/forecast/forecast_table.inc'}}}},
             files=[('bin/user',
                     ['bin/user/forecast.py']),
                    ('skins/forecast',

@@ -48,37 +48,10 @@
   font-size: 85%;
 }
     </style>
-    <script type="text/javascript">
-      function openURL(urlname) {
-        window.location = urlname;
-      }
-      function openNoaaFile(date) {
-        window.location = "NOAA/NOAA-" + date + ".txt";
-      }
-    </script>
   </head>
 
   <body>
     #include $Extras.header
-
-    <div class='selectors'>
-      <p>Monthly Summary:&nbsp;
-        <select name='noaaselect' onchange="openNoaaFile(value)">
-          #for $monthYear in $SummaryByMonth
-          <option value="$monthYear">$monthYear</option>
-          #end for
-	  <option selected>-Select month-</option>
-        </select>
-        <br/>
-        Yearly Summary:&nbsp;
-        <select name='noaaselect' onchange="openNoaaFile(value)">
-          #for $y in $SummaryByYear
-          <option value="$y">$y</option>
-          #end for
-	  <option selected>-Select year-</option>
-        </select>
-      </p>
-    </div>
 
     <div id='observation_title'>
       <p>Almanac Data</p>

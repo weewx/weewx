@@ -29,6 +29,9 @@
 #set $show_precip = 1
 #set $show_obvis = 1
 
+#set $wlog = ''
+#set $wts = ''
+
 ## These are the styles used by the forecast display.  Putting the styles
 ## like this works (in page, not in head), but it is not good practice.
 <style>
@@ -499,7 +502,9 @@ function toggle(control, id) {
 #if $wloc is not None and $wloc != ''
  for $wloc
 #end if
- issued on $wts<br/>
+#if $wts is not None and $wts != ''
+ issued on $wts
+#end if
     </p>
   </div>
 

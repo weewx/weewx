@@ -16,19 +16,23 @@ This skin illustrates the use of data from the forecasting module.
 #if $varExists('forecast')
 
 <h1>Forecast Table</h1>
-#include forecast.inc
+#include $Extras.forecast_table
 
-<h1>Weather Underground</h1>
 #set $periods = $forecast.weather_periods('WU',max_events=6)
+#if len($periods) > 0
+<h1>Weather Underground</h1>
 #for $period in $periods
 $period.event_ts $forecast.label('Weather', $period.clouds)<br/>
-#end for 
+#end for
+#end if
 
-<h1>U.S. National Weather Service</h1>
 #set $periods = $forecast.weather_periods('NWS',max_events=6)
+#if len($periods) > 0
+<h1>U.S. National Weather Service</h1>
 #for $period in $periods
 $period.event_ts $forecast.label('Weather', $period.clouds)<br/>
-#end for 
+#end for
+#end if
 
 #if $varExists('forecast.zambretti')
 <h1>Zambretti</h1>

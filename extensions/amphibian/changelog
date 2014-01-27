@@ -1,3 +1,7 @@
+0.8 27jan2014
+* package for distribution in weewx
+* punt NOAA reports
+
 0.6 13oct2013
 * punt the superfluous RSS directory
 

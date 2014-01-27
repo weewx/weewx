@@ -18,11 +18,11 @@ Installation instructions:
 1) expand the tarball:
 
 cd /var/tmp
-tar xvfz ~/Downloads/forecast-for-weewx.tgz
+tar xvfz ~/Downloads/weewx-forecast.tgz
 
 2) copy files
 
-cd /var/tmp/forecast-for-weewx
+cd /var/tmp/weewx-forecast
 # copy the forecast module to your weewx installation:
 cp bin/user/forecast.py /home/weewx/bin/user
 # copy the sample forecast template files to the skin directory:
@@ -35,6 +35,8 @@ cp -r skins/forecast /home/weewx/skins
     [[forecast]]
         skin = forecast
         HTML_ROOT = public_html/forecast
+        [[[Extras]]]
+            forecast_table = /home/weewx/skins/forecast/forecast_table.inc
 
 # add the forecast configuration
 [Forecast]
@@ -43,24 +45,25 @@ cp -r skins/forecast /home/weewx/skins
         lid = MAZ014
         foid = BOX
     [[WU]]
-        location = 02141
         api_key = XXXXXXXXXXXXXXXX
     [[XTide]]
         location = Boston
+    [[Zambretti]]
+        hemisphere = NORTH
 
 # add the forecast database configuration
 [Databases]
     [[forecast_sqlite]]
         root = %(WEEWX_ROOT)s
-        database = /var/lib/weewx-ws2080/forecast.sdb
+        database = archive/forecast.sdb
         driver = weedb.sqlite
 
 # add the desired foreasts to the service list
 [Engines]
     [[WxEngine]]
-        service_list = ..., user.forecast.ZambrettiForecast, user.forecast.NWSForecast, user.forecast.WUForecast, user.forecast.XTideForecast
+        process_services = ..., user.forecast.ZambrettiForecast, user.forecast.NWSForecast, user.forecast.WUForecast, user.forecast.XTideForecast
 
-4) modify forecast.inc to indicate which data should be displayed (optional)
+4) modify forecast_table.inc to indicate which data should be displayed
 
 5) restart weewx
 
