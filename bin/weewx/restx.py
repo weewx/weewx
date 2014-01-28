@@ -1162,7 +1162,7 @@ class StationRegistryThread(RESTThread):
         self.latitude      = to_float(latitude)
         self.longitude     = to_float(longitude)
         self.server_url    = server_url
-        self.description   = description
+        self.description   = weeutil.weeutil.list_as_string(description)
         self.station_type  = station_type
         self.station_model = station_model
         
