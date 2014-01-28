@@ -1,3 +1,6 @@
+weewx (2.6.0a6-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 28 Jan 2014 12:49:17 -0500
 weewx (2.5.1-1) unstable; urgency=low
   * added ws23xx and te923 drivers
  -- Matthew Wall <mwall@users.sourceforge.net>  Mon, 30 Dec 2013 18:43:18 -0500
