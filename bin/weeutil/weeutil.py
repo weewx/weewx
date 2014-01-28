@@ -37,6 +37,12 @@ def accumulateLeaves(d):
     then having them overridden in the leaf nodes of a ConfigObj.
     
     d: instance of a configobj.Section (i.e., a section of a ConfigObj)
+    
+    Example: Supply a default color=blue, size=10. The section "dayimage" overrides the former:
+    
+    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red"}});
+    >>> print accumulateLeaves(c["dayimage"])
+    {'color': 'red', 'size': 10}
     """
     
     # Use recursion. If I am the root object, then there is nothing above 
