@@ -59,9 +59,29 @@ Version: 2.6.0a6
 
     <h1 id="hardware">Supported Hardware</h1>
     <p>
-      Many types of station hardware are supported.  In addition to hardware support, <span class="code">weewx</span> 
-      comes with a software simulator, useful for testing and evaluation.
+      Many types of station hardware are supported.  In addition to hardware
+      support, <span class="code">weewx</span> comes with a software
+      simulator, useful for testing and evaluation.
     </p>
+
+    <p>The following table enumerates many of the weather stations that
+      are known to work with <span class='code'>weewx</span>.  If your
+      station is not in the table, check the pictures at the
+      <a href="http://weewx.com/hardware.html">supported hardware page</a> -
+      it could be a variation of one of the supported models.  You can also
+      check the <a href="http://weewx.com/hwcmp.html">station comparison</a>
+      table.
+    </p>
+    <p>The maturity column indicates the degree of confidence in the
+      driver.  For stations marked "<span class="code">Tested</span>",
+      the station is routinely tested as part of the release process
+      and should work as documented.  For stations not marked at all,
+      they are "known to work" using the indicated driver, but are not
+      routinely tested. For stations marked
+      "<span class="code">Experimental</span>", we are still working
+      on the driver. There can be problems.
+    </p>
+
     <table class="indent">
       <tr>
 	<td><strong>Vendor</strong></td>
@@ -173,7 +193,7 @@ Version: 2.6.0a6
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
-	<td>Tested</td>
+	<td></td>
       </tr>
       <tr>
 	<td>WH1081</td>
@@ -194,7 +214,7 @@ Version: 2.6.0a6
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
-	<td>Tested</td>
+	<td></td>
       </tr>
       <tr>
 	<td>WS1080</td>
@@ -243,7 +263,7 @@ Version: 2.6.0a6
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
-	<td>Tested</td>
+	<td></td>
       </tr>
       <tr>
 	<td class="text_highlight" rowspan="5">Hideki</td>
@@ -553,7 +573,7 @@ Version: 2.6.0a6
 	<td>USB</td>
 	<td class="code">pyusb</td>
         <td>FineOffsetUSB<sup><a href='#fousb'>5</a></sup></td>
-	<td>Tested</td>
+	<td></td>
       </tr>
       <tr>
 	<td class="text_highlight" rowspan="2">Ventus</td>
@@ -572,16 +592,6 @@ Version: 2.6.0a6
       </tr>
     </table>
 
-    <p><b>Key</b></p>
-    <p>The maturity column indicates the degree of confidence in the
-      driver.  For stations marked "<span class="code">Tested</span>",
-      the station is routinely tested as part of the release process
-      and should work as documented.  For stations not marked at all,
-      they are "known to work" using the indicated driver, but are not
-      routinely tested. For stations marked
-      "<span class="code">Experimental</span>", we are still working
-      on the driver. There can be problems.
-    </p>
     <ol>
       <li><a id="vantage">Davis &quot;Vantage&quot; series</a> of weather
         stations, including the
