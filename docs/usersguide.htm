@@ -2941,10 +2941,26 @@ ImportError: The _imagingft C module is not installed</pre>
 This is because your installed version of PIL was compiled without
 libfreetype, which is needed for the FreeType fonts used in the
 generated images. You can either change the font type (look in
-file <span class='code'>skin.conf</span>), or supply the missing library. I was able
-to do the latter on my system with the following:
+file <span class='code'>skin.conf</span>), or supply the missing library. Note: if you are missing
+the freetype library, you may be missing others as well. This is what worked on my system. YMMV.
 <pre class="tty">
-sudo apt-get install libfreetype6-dev</pre>
+# Install the Freetype library:
+sudo apt-get install libfreetype6-dev
+# Make sure it, and the zlib library, are visible to easy_install
+sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib
+sudo ln -s /usr/lib/x86_64-linux-gnu/libz.so /usr/lib
+# Remove the PIL paths
+sudo easy_install -m PIL
+# Remove PIL itself:
+sudo rm -r /usr/lib/python2.5/site-packages/PIL*
+# Now rebuild PIL, this time with the right libraries
+sudo easy_install PIL
+</pre>
+You may have to fiddle with the exact path used in the symbolic link. A helpful tool
+is the Unix tool "<span class='code'>find</span>". For example, the following
+uncovered where my freetype library was hiding:
+<pre class="tty">
+find /usr/lib -name "libfreetype*" -print</pre>
       </li>
     </ul>
 
