@@ -199,10 +199,10 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
-	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER)$(RPMOS).src.rpm $(DSTDIR)
+#	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER)$(RPMOS).src.rpm $(DSTDIR)
 ifdef SIGN
 	rpm --addsign $(DSTDIR)/$(RPMPKG)
-	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
+#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
 endif
 
 # run rpmlint on the redhat package
