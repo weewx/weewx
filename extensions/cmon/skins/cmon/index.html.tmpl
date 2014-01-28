@@ -8,7 +8,11 @@
     <!-- cmon for weewx - Copyright Matthew Wall -->
     <title>cmon</title>
     <script>
-var metrics = [ 'rx','battery','cpu','load','disk','mem','net','ups','upstemp','upstime' ];
+var metrics = [
+  'rx','battery',
+  'cpu','load','disk','mem','net',
+/* 'ups', 'upstemp','upstime' */
+];
 var periods = [ 'day','week','month' ];
 
 function setup() {

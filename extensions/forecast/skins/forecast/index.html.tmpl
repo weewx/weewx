@@ -6,6 +6,16 @@
 <html>
   <head>
     <title>Forecast Sampler</title>
+    <style>
+body {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 10pt;
+  background-color: #ffffff;
+}
+h1 {
+  font-size: 110%;
+}
+    </style>
   </head>
   <body>
 
@@ -16,6 +26,9 @@ This skin illustrates the use of data from the forecasting module.
 #if $varExists('forecast')
 
 <h1>Forecast Table</h1>
+<p>The table of forecast data is displayed automatically by including a single
+file called forecast_table.inc.  Modify the first part of that file to control
+which data are shown in the table.</p>
 #include $Extras.forecast_table
 
 #set $periods = $forecast.weather_periods('WU',max_events=6)
