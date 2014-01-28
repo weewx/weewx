@@ -82,6 +82,7 @@ import time
 import urllib
 import urllib2
 
+import weedb
 import weeutil.weeutil
 import weewx.wxengine
 from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string
@@ -1431,14 +1432,17 @@ class AWEKASThread(RESTThread):
 
     def get_record(self, record, archive):
         """Add rainRate to the record."""
+        # Get the record from my superclass
         r = super(AWEKASThread, self).get_record(record, archive)
-        # FIXME: for some reason this returns an array of 10 items instead
-        # of a single record.  why?
-        rr = archive.getSql('select rainRate from archive where dateTime=?',
-                            (r['dateTime'],))
-        datadict = dict(zip(['rainRate'], rr))
-        if datadict.has_key('rainRate'):
-            r['rainRate'] = datadict['rainRate']
+        # Now augment with rainRate, which AWEKAS expects. If the archive does not
+        # have rainRate, an exception will be raised. Prepare to catch it.
+        try:
+            rr = archive.getSql('select rainRate from archive where dateTime=?',
+                                (r['dateTime'],))
+        except weedb.OperationalError:
+            pass
+        else:
+            r['rainRate'] = rr[0]
         return r
 
     def process_record(self, record, archive):
@@ -1452,14 +1456,14 @@ class AWEKASThread(RESTThread):
 
     def check_response(self, response):
         for line in response:
-            if not line.startswith('OK'):
+            if line.startswith("Benutzer/Passwort Fehler"):
+                raise BadLogin(line)
+            elif not line.startswith('OK'):
                 raise FailedPost("server returned '%s'" % line)
 
-    def get_url(self, record):
+    def get_url(self, in_record):
         # put everything into the right units and scaling
-        if record['usUnits'] != weewx.METRIC:
-            converter = weewx.units.StdUnitConverters[weewx.METRIC]
-            record = converter.convertDict(record)
+        record = weewx.units.to_METRIC(in_record)
         if record.has_key('dayRain') and record['dayRain'] is not None:
             record['dayRain'] = record['dayRain'] * 10
         if record.has_key('rainRate') and record['rainRate'] is not None:
