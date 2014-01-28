@@ -233,13 +233,13 @@ class StdEngine(object):
             return int(time.time()+0.5)
 
     # The following getter and setter allow an open Archive object
-    # to be attached to the engine.
-    @property
-    def archive(self):
+    # to be attached to the engine. This rather ancient syntax is
+    # necessary to get it to work with Python 2.5
+    def get_archive(self):
         return self.archive_db
-    @archive.setter
-    def archive(self, archive_db):
-        self.archive_db = archive_db
+    def set_archive(self, archive):
+        self.archive_db = archive
+    archive = property(get_archive, set_archive)
         
 #===============================================================================
 #                    Class StdService

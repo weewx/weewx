@@ -207,18 +207,22 @@ class RESTThread(threading.Thread):
             # Presumably, this is exclusive of the archive record 60 minutes
             # before, so the SQL statement is exclusive on the left, inclusive
             # on the right.
-            _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>? AND dateTime<=?",
+            _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
+                                     "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 3600.0, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
-                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % (_result[1], _result[2], record['usUnits']))
+                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % 
+                                 (_result[1], _result[2], record['usUnits']))
             _datadict['hourRain'] = _result[0]
 
         if not _datadict.has_key('rain24'):
             # Similar issue, except for last 24 hours:
-            _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>? AND dateTime<=?",
+            _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
+                                     "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 24*3600.0, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
-                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % (_result[1], _result[2], record['usUnits']))
+                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % 
+                                 (_result[1], _result[2], record['usUnits']))
             _datadict['rain24'] = _result[0]
 
         if not _datadict.has_key('dayRain'):
@@ -227,10 +231,12 @@ class RESTThread(threading.Thread):
             # (instead of the previous day). But, it's their site,
             # so we'll do it their way.  That means the SELECT statement
             # is inclusive on both time ends:
-            _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>=? AND dateTime<=?", 
+            _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
+                                     "WHERE dateTime>=? AND dateTime<=?", 
                                      (_sod_ts, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
-                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % (_result[1], _result[2], record['usUnits']))
+                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % 
+                                 (_result[1], _result[2], record['usUnits']))
             _datadict['dayRain'] = _result[0]
             
         return _datadict
@@ -273,21 +279,25 @@ class RESTThread(threading.Thread):
                 # class provides
                 self.process_record(_record, archive)
             except BadLogin, e:
-                syslog.syslog(syslog.LOG_ERR, "restx: %s: bad login; waiting 60 minutes then retrying" % self.protocol_name)
+                syslog.syslog(syslog.LOG_ERR, "restx: %s: bad login; "
+                              "waiting 60 minutes then retrying" % self.protocol_name)
                 time.sleep(3600)
             except FailedPost, e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_ERR, "restx: %s: Failed to publish record %s: %s" % (self.protocol_name, _time_str, e))
+                    syslog.syslog(syslog.LOG_ERR, "restx: %s: Failed to publish record %s: %s" 
+                                  % (self.protocol_name, _time_str, e))
             except Exception, e:
                 # Some unknown exception occurred. This is probably a serious
                 # problem. Exit.
-                syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting: %s" % (self.protocol_name, e))
+                syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting: %s" % 
+                              (self.protocol_name, e))
                 return
             else:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_INFO, "restx: %s: Published record %s" % (self.protocol_name, _time_str))
+                    syslog.syslog(syslog.LOG_INFO, "restx: %s: Published record %s" % 
+                                  (self.protocol_name, _time_str))
 
     def process_record(self, record, archive):
         """Default version of process_record.
@@ -335,10 +345,12 @@ class RESTThread(threading.Thread):
                     return
                 else:
                     # We got a bad response code. Log it and try again.
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt %d: Code %s" % (self.protocol_name, _count+1, _response.code))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt %d: Code %s" % 
+                                  (self.protocol_name, _count+1, _response.code))
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # An exception was thrown. Log it and go around for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt %d: Exception %s" % (self.protocol_name, _count+1, e))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Failed upload attempt %d: Exception %s" % 
+                              (self.protocol_name, _count+1, e))
             time.sleep(self.retry_wait)
         else:
             # This is executed only if the loop terminates normally, meaning
@@ -374,15 +386,18 @@ class RESTThread(threading.Thread):
             _how_old = time.time() - time_ts
             if _how_old > self.stale:
                 syslog.syslog(syslog.LOG_DEBUG, "restx: %s: record %s is stale (%d > %d)." %
-                              (self.protocol_name, timestamp_to_string(time_ts), _how_old, self.stale))
+                              (self.protocol_name, timestamp_to_string(time_ts), 
+                               _how_old, self.stale))
                 return True
  
         if self.post_interval is not None:
             # We don't want to post more often than the post interval
             _how_long = time_ts - self.lastpost
             if _how_long < self.post_interval:
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: record %s wait interval (%d < %d) has not passed." % 
-                              (self.protocol_name, timestamp_to_string(time_ts), _how_long, self.post_interval))
+                syslog.syslog(syslog.LOG_DEBUG, 
+                              "restx: %s: record %s wait interval (%d < %d) has not passed." % 
+                              (self.protocol_name, 
+                               timestamp_to_string(time_ts), _how_long, self.post_interval))
                 return True
     
         self.lastpost = time_ts
@@ -433,8 +448,8 @@ class StdWunderground(StdRESTbase):
                                                 **_ambient_dict) 
             self.archive_thread.start()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-            syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-PWS: Data for station %s will be posted" % 
-                          _ambient_dict['station'])
+            syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-PWS: "
+                          "Data for station %s will be posted" % _ambient_dict['station'])
 
         if do_rapidfire_post:
             _ambient_dict.setdefault('server_url', StdWunderground.rapidfire_url)
@@ -449,7 +464,8 @@ class StdWunderground(StdRESTbase):
                                                  **_ambient_dict) 
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-            syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-RF: Data for station %s will be posted" % 
+            syslog.syslog(syslog.LOG_INFO, 
+                          "restx: Wunderground-RF: Data for station %s will be posted" %
                           _ambient_dict['station'])
 
     def new_loop_packet(self, event):
@@ -600,7 +616,7 @@ class AmbientThread(RESTThread):
           timeout: How long to wait for the server to respond before giving up.
           Default is 10 seconds.        
         """
-        super(AmbientThread, self).__init__(queue, protocol_name,
+        super(AmbientThread, self).__init__(queue, protocol_name=protocol_name,
                                             database_dict=database_dict,
                                             log_success=log_success,
                                             log_failure=log_failure,
@@ -850,8 +866,8 @@ class CWOPThread(RESTThread):
         """        
         # Initialize my superclass
         super(CWOPThread, self).__init__(queue,
-                                         database_dict=database_dict,
                                          protocol_name=protocol_name,
+                                         database_dict=database_dict,
                                          log_success=log_success,
                                          log_failure=log_failure,
                                          max_backlog=max_backlog,
@@ -980,9 +996,12 @@ class CWOPThread(RESTThread):
                     _sock.connect((_server, _port))
                 except socket.error, e:
                     # Unsuccessful. Log it and try again
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connection attempt #%d failed to server %s:%d: %s" % (_count + 1, self.protocol_name, _server, _port, e))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connection attempt #%d failed to "
+                                  "server %s:%d: %s" % (_count + 1, self.protocol_name, 
+                                                        _server, _port, e))
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connected to server %s:%d" % (self.protocol_name, _server, _port))
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connected to server %s:%d" % 
+                                  (self.protocol_name, _server, _port))
                     return _sock
                 # Couldn't connect on this attempt. Close it, try again.
                 try:
@@ -991,7 +1010,8 @@ class CWOPThread(RESTThread):
                     pass
             # If we got here, that server didn't work. Log it and go on to
             # the next one.
-            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Unable to connect to server %s:%d" % (self.protocol_name, _server, _port))
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Unable to connect to server %s:%d" % 
+                          (self.protocol_name, _server, _port))
 
         # If we got here. None of the servers worked. Raise an exception
         raise FailedPost, "Unable to obtain a socket connection"
@@ -1004,7 +1024,8 @@ class CWOPThread(RESTThread):
                 sock.send(msg)
             except (IOError, socket.error), e:
                 # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Attempt #%d failed: %s" % (_count + 1, self.protocol_name, e))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Attempt #%d failed: %s" % 
+                              (_count + 1, self.protocol_name, e))
             else:
                 _resp = sock.recv(1024)
                 return _resp

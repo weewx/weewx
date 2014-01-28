@@ -2900,6 +2900,44 @@ sqlite> update archive set outTemp=NULL where outTemp > 1000;</p>
       <li>start <span class='code'>weewx</span></li>
     </ol>
 
+    <h3>Python 2.5</h3>
+    <p>Weewx should work with Python version 2.5, but it may take some fiddling
+      with your environment. Later versions of Python come with pysqlite and
+      with PIL already installed. You may have to do this yourself. Here is
+      how to do it with <a href="https://pypi.python.org/pypi/setuptools#python-2-4-and-python-2-5-support">
+      <span class='code'>easy_install</span></a>, but you may be
+      able to use <span class='code'>apt-get</span> or other tools, depending on 
+      your operating system.</p>
+    <pre class="tty">
+sudo easy_install pysqlite
+sudo easy_install PIL</pre>
+    <p>Various possible complications:</p>
+    <ul>
+      <li>You may have to install the development environment of sqlite in
+	order to get <span class='code'>pysqlite</span> to install. This worked on my system:
+<pre class="tty">
+apt-get install libsqlite3-dev</pre>
+Then rerun the installation of <span class='code'>pysqlite</span>.
+      </li>
+      <li>When you run <span class='code'>weewx</span>, you may get an error that looks like this
+<pre class="tty">
+File "/usr/lib/python2.5/site-packages/PIL-1.1.7-py2.5-linux-x86_64.egg/ImageFont.py", line 218, in truetype
+     return FreeTypeFont(filename, size, index, encoding)
+File "/usr/lib/python2.5/site-packages/PIL-1.1.7-py2.5-linux-x86_64.egg/ImageFont.py", line 134, in __init__
+     self.font = core.getfont(file, size, index, encoding)
+File "/usr/lib/python2.5/site-packages/PIL-1.1.7-py2.5-linux-x86_64.egg/ImageFont.py", line 34, in __getattr__
+     raise ImportError("The _imagingft C module is not installed")
+ImportError: The _imagingft C module is not installed</pre>
+This is because your installed version of PIL was compiled without
+libfreetype, which is needed for the FreeType fonts used in the
+generated images. You can either change the font type (look in
+file <span class='code'>skin.conf</span>), or supply the missing library. I was able
+to do the latter on my system with the following:
+<pre class="tty">
+sudo apt-get install libfreetype6-dev</pre>
+      </li>
+    </ul>
+
     <h3>FreeBSD</h3>
     <p>User Fabian reports that the following had to be done to get the
       VantagePro2 working under FreeBSD:</p>
