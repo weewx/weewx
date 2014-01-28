@@ -2796,6 +2796,16 @@ Apr 24 12:09:15 raven weewx[11480]:     ****  Exiting. </p>
       28 and 32.5, but with the unit system set to
       <span class="code">METRIC</span>, the data will be in the range 990 to
       1050 or so!</p>
+    <p>The solution is to change the values to match the units in StdConvert,
+      or specify the units in MinMax, regardless of the units in StdConvert.
+      For example:</p>
+    <pre class="tty">[StdConvert]
+    target_unit = US
+    ...
+
+[StdQC]
+    [[MinMax]]
+        barometer = 950, 1100, mbar</pre>
 
     <h3><span class="code">Cheetah.NameMapper.NotFound</span> errors</h3>
     <p>If you get errors of the sort: </p>
@@ -2860,11 +2870,13 @@ Jan 18 20:39:14 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; 
     <p>Occasionally you may see anomalous readings, typically manifested as
       spikes in the graphs.  The source could be a flaky serial/USB connection,
       radio or other interference, a cheap USB-Serial adapter, low-quality
-      sensors, or simply an anomalous reading.  It is not unusual for low-end
-      hardware to report odd sensor readings occasionally (once every few
-      days).  Some sensors, such as solar radiation/UV, have a limited lifespan
-      of about 5 years.  If you frequently see anomalous data, first check
-      the hardware.</p>
+      sensors, or simply an anomalous reading.</p>
+    <p>Sensor quality matters.  It is not unusual for some low-end hardware
+      to report odd sensor readings occasionally (once every few days).  Some
+      sensors, such as solar radiation/UV, have a limited lifespan of about
+      5 years.  The (analog) humidity sensors on older Vantage stations are
+      known to deteriorate after a few years in wet environments.</p>
+    <p>If you frequently see anomalous data, first check the hardware.</p>
     <p>To keep bad data from the database, add a quality control (QC) rule
       such as Min/Max bounds.  See the <a href="#StdQC">QC</a> section for
       details.</p>

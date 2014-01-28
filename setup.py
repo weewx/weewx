@@ -580,12 +580,20 @@ def save_path(filepath):
 # extension components must be in a single directory
 # extension must have same layout as weewx source tree
 # extension must have an install.py
+#
+# There are no tests for prerequisites, so each extension should fail
+# gracefully if it does not have what it needs to run.
+#
+# Each extension should include a readme that explains how the extension
+# operates and how to manually install the extension.  The readme is not
+# copied from the extension source.  Additional documentation may be included
+# in a docs directory in the extension source, but it will not be copied into
+# the weewx weewx installation.
 #==============================================================================
 
-# FIXME: how to handle documentation for the extension?
-# FIXME: how to check for pre-requisites?
-# FIXME: need to prune from weewx.conf on uninstall
+# FIXME: need to prune from weewx.conf on uninstall: skin, service
 # FIXME: delete .pyc files on uninstall
+# FIXME: do not overwrite fields in weewx.conf if they already exist
 
 class Logger(object):
     def __init__(self, verbosity=0):

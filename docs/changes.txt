@@ -20,6 +20,7 @@ Added extensions to the weewx source distribution, including:
   uploader for smart energy groups
   cmon computer health monitor
   amphibian skin
+  forecasting
 
 Changed the default time and date labels to use locale dependent formatting.
 The defaults should now work in most locales, provided you set the
@@ -30,7 +31,9 @@ inHumidity, and rain.
 
 Ranges in MinMax QC can now include units.
 
-Now caches font handles in order to work around a memory leak in PIL.
+When QC rejects values it now logs the rejection.
+
+Font handles are now cached in order to work around a memory leak in PIL.
 
 Image margins now scale with image and font sizes.
 

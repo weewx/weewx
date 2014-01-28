@@ -1,3 +1,10 @@
 TODO before the next release:
 
+verify gpg signatures on rpm packages using redhat/suse tools
+
+extension installer/uninstaller:
+  need to prune from weewx.conf on uninstall: skin, service
+  delete .pyc files on uninstall
+  do not overwrite fields in weewx.conf if they already exist
+
 Figure out why the heartbeat doesn't work on the WMR200.
