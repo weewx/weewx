@@ -4,16 +4,18 @@
 #
 # this makefile controls the build and packaging of weewx
 
-# extract strings from setup.py to be inserted into package control files
+# if you do not want to sign the packages, set SIGN to 0
+SIGN=1
+
+# destination for uploading everything
+RELDIR=frs.sourceforge.net:/home/frs/project/weewx/development_versions
+
+# extract version to be used in package controls and labels
 VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
 
 CWD = $(shell pwd)
 BLDDIR=build
 DSTDIR=dist
-RELDIR=frs.sourceforge.net:/home/frs/project/weewx/development_versions
-
-# if you do not want to sign the packages, comment this line:
-SIGN=1
 
 all: help
 
@@ -137,7 +139,7 @@ deb-changelog:
 DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
 DEBPKG=weewx_$(VERSION)-$(DEBREVISION)_$(DEBARCH).deb
-ifndef SIGN
+ifeq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
 deb-package: $(DSTDIR)/$(SRCPKG)
@@ -200,7 +202,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
 #	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER)$(RPMOS).src.rpm $(DSTDIR)
-ifdef SIGN
+ifeq ("$(SIGN)","1")
 	rpm --addsign $(DSTDIR)/$(RPMPKG)
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
 endif
