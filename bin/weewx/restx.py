@@ -39,7 +39,7 @@ should only have to implement a few functions. In particular,
  - format_url(self, record). This function takes a record dictionary as an
    argument. It is responsible for formatting it as an appropriate URL. 
    For example, the station registry's version emits strings such as
-     http://weewx.com/register/register.cgi?python_info=2.7.5%2B&weewx_info=2.6.0a5 ...
+     http://weewx.com/register/register.cgi?weewx_info=2.6.0a5&python_info= ...
    
  - skip_this_post(self, time_ts). If this function returns True, then the
    post will be skipped. Otherwise, it is done. The default version does two
@@ -71,6 +71,7 @@ In unusual cases, you might also have to implement the following:
 from __future__ import with_statement
 import Queue
 import datetime
+import hashlib
 import httplib
 import platform
 import socket
@@ -207,7 +208,7 @@ class RESTThread(threading.Thread):
             # before, so the SQL statement is exclusive on the left, inclusive
             # on the right.
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>? AND dateTime<=?",
-                                                   (_time_ts - 3600.0, _time_ts))
+                                     (_time_ts - 3600.0, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
                 raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % (_result[1], _result[2], record['usUnits']))
             _datadict['hourRain'] = _result[0]
@@ -215,7 +216,7 @@ class RESTThread(threading.Thread):
         if not _datadict.has_key('rain24'):
             # Similar issue, except for last 24 hours:
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>? AND dateTime<=?",
-                                                 (_time_ts - 24*3600.0, _time_ts))
+                                     (_time_ts - 24*3600.0, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
                 raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % (_result[1], _result[2], record['usUnits']))
             _datadict['rain24'] = _result[0]
@@ -227,7 +228,7 @@ class RESTThread(threading.Thread):
             # so we'll do it their way.  That means the SELECT statement
             # is inclusive on both time ends:
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>=? AND dateTime<=?", 
-                                                  (_sod_ts, _time_ts))
+                                     (_sod_ts, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
                 raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % (_result[1], _result[2], record['usUnits']))
             _datadict['dayRain'] = _result[0]
@@ -346,7 +347,8 @@ class RESTThread(threading.Thread):
             raise FailedPost("Failed upload after %d tries" % (self.max_tries,))
 
     def post_request(self, request):
-        """Post a request object. This version does not catch any HTTP exceptions.
+        """Post a request object. This version does not catch any HTTP
+        exceptions.
         
         Specializing versions can can catch any unusual exceptions that might
         get raised by their protocol.
@@ -371,16 +373,16 @@ class RESTThread(threading.Thread):
         if self.stale is not None:
             _how_old = time.time() - time_ts
             if _how_old > self.stale:
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: record %s is stale (%d > %d)." % \
-                        (self.protocol_name, timestamp_to_string(time_ts), _how_old, self.stale))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: record %s is stale (%d > %d)." %
+                              (self.protocol_name, timestamp_to_string(time_ts), _how_old, self.stale))
                 return True
  
         if self.post_interval is not None:
             # We don't want to post more often than the post interval
             _how_long = time_ts - self.lastpost
             if _how_long < self.post_interval:
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: record %s wait interval (%d < %d) has not passed." % \
-                        (self.protocol_name, timestamp_to_string(time_ts), _how_long, self.post_interval))
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: record %s wait interval (%d < %d) has not passed." % 
+                              (self.protocol_name, timestamp_to_string(time_ts), _how_long, self.post_interval))
                 return True
     
         self.lastpost = time_ts
@@ -391,7 +393,8 @@ class RESTThread(threading.Thread):
 #==============================================================================
 
 class StdWunderground(StdRESTbase):
-    """Specialized version of the Ambient protocol for the Weather Underground."""
+    """Specialized version of the Ambient protocol for the Weather Underground.
+    """
     
     # The URLs used by the WU:
     rapidfire_url = "http://rtupdate.wunderground.com/weatherstation/updateweatherstation.php"
@@ -605,7 +608,6 @@ class AmbientThread(RESTThread):
                                             max_tries=max_tries, stale=stale,
                                             post_interval=post_interval,
                                             timeout=timeout)
-        
         self.station       = station
         self.password      = password
         self.server_url    = server_url
@@ -632,20 +634,22 @@ class AmbientThread(RESTThread):
                     "PASSWORD=%s" % self.password,
                     "softwaretype=weewx-%s" % weewx.__version__]
         
-        # Go through each of the supported types, formatting it, then adding to _liststr:
+        # Go through each of the supported types, formatting it, then adding
+        # to _liststr:
         for _key in AmbientThread._formats:
             _v = record[_key]
             # Check to make sure the type is not null
             if _v is not None :
                 if _key == 'dateTime':
-                    # For dates, convert from time stamp to a string, using what
-                    # the Weather Underground calls "MySQL format." I've fiddled
-                    # with formatting, and it seems that escaping the colons helps
-                    # its reliability. But, I could be imagining things.
+                    # For dates, convert from time stamp to a string, using
+                    # what the Weather Underground calls "MySQL format." I've
+                    # fiddled with formatting, and it seems that escaping the
+                    # colons helps its reliability. But, I could be imagining
+                    # things.
                     _v = urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')
                 # Format the value, and accumulate in _liststr:
                 _liststr.append(AmbientThread._formats[_key] % _v)
-        # Now stick all the little pieces together with an ampersand between them:
+        # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
@@ -690,14 +694,16 @@ class WOWThread(AmbientThread):
                 'dayRain'     : 'dailyrainin=%.2f'}
     
     def format_url(self, record):
-        """Return an URL for posting using WOW's version of the Ambient protocol."""
+        """Return an URL for posting using WOW's version of the Ambient
+        protocol."""
 
         _liststr = ["action=updateraw",
                     "siteid=%s" % self.station,
                     "siteAuthenticationKey=%s" % self.password,
                     "softwaretype=weewx-%s" % weewx.__version__]
 
-        # Go through each of the supported types, formatting it, then adding to _liststr:
+        # Go through each of the supported types, formatting it, then adding
+        # to _liststr:
         for _key in WOWThread._formats:
             _v = record[_key]
             # Check to make sure the type is not null
@@ -706,7 +712,7 @@ class WOWThread(AmbientThread):
                     _v = urllib.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
                 _liststr.append(WOWThread._formats[_key] % _v)
-        # Now stick all the little pieces together with an ampersand between them:
+        # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
@@ -874,7 +880,8 @@ class CWOPThread(RESTThread):
         self.send_packet(_login, _tnc_packet)
 
     def get_login_string(self):
-        _login = "user %s pass %s vers weewx %s\r\n" % (self.station, self.passcode, weewx.__version__)
+        _login = "user %s pass %s vers weewx %s\r\n" % (
+            self.station, self.passcode, weewx.__version__)
         return _login
 
     def get_tnc_packet(self, record):
@@ -888,8 +895,10 @@ class CWOPThread(RESTThread):
         _time_str = time.strftime("@%d%H%Mz", _time_tt)
 
         # Position:
-        _lat_str = weeutil.weeutil.latlon_string(self.latitude, ('N', 'S'), 'lat')
-        _lon_str = weeutil.weeutil.latlon_string(self.longitude, ('E', 'W'), 'lon')
+        _lat_str = weeutil.weeutil.latlon_string(self.latitude,
+                                                 ('N', 'S'), 'lat')
+        _lon_str = weeutil.weeutil.latlon_string(self.longitude,
+                                                 ('E', 'W'), 'lon')
         _latlon_str = '%s%s%s/%s%s%s' % (_lat_str + _lon_str)
 
         # Wind and temperature
@@ -911,9 +920,10 @@ class CWOPThread(RESTThread):
         if _baro is None:
             _baro_str = "b....."
         else:
-            # While everything else in the CWOP protocol is in US Customary, they
-            # want the barometer in millibars.
-            _baro_vt = weewx.units.convert((_baro, 'inHg', 'group_pressure'), 'mbar')
+            # While everything else in the CWOP protocol is in US Customary,
+            # they want the barometer in millibars.
+            _baro_vt = weewx.units.convert((_baro, 'inHg', 'group_pressure'),
+                                           'mbar')
             _baro_str = "b%05d" % (_baro_vt[0] * 10.0)
 
         # Humidity:
@@ -937,8 +947,9 @@ class CWOPThread(RESTThread):
         # Station equipment
         _equipment_str = ".weewx-%s-%s" % (weewx.__version__, self.station_type)
         
-        _tnc_packet = ''.join([_prefix, _time_str, _latlon_str, _wt_str, _rain_str,
-                               _baro_str, _humid_str, _radiation_str, _equipment_str, "\r\n"])
+        _tnc_packet = ''.join([_prefix, _time_str, _latlon_str, _wt_str,
+                               _rain_str, _baro_str, _humid_str,
+                               _radiation_str, _equipment_str, "\r\n"])
 
         return _tnc_packet
 
@@ -978,7 +989,8 @@ class CWOPThread(RESTThread):
                     _sock.close()
                 except:
                     pass
-            # If we got here, that server didn't work. Log it and go on to the next one.
+            # If we got here, that server didn't work. Log it and go on to
+            # the next one.
             syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Unable to connect to server %s:%d" % (self.protocol_name, _server, _port))
 
         # If we got here. None of the servers worked. Raise an exception
@@ -1008,26 +1020,25 @@ class CWOPThread(RESTThread):
 class StdStationRegistry(StdRESTbase):
     """Class for phoning home to register a weewx station.
 
+    To enable this module, add the following to weewx.conf:
+
+    [StdRESTful]
+        [[StationRegistry]]
+            register_this_station = True
+
     This will periodically do a http GET with the following information:
 
         station_url      Should be world-accessible. Used as key.
         description      Brief synopsis of the station
         latitude         Station latitude in decimal
         longitude        Station longitude in decimal
-        station_type     Generally, the driver type. For example Vantage, FineOffsetUSB
-        station_model    hardware_name property from the driver
+        station_type     The driver name, for example Vantage, FineOffsetUSB
+        station_model    The hardware_name property from the driver
         weewx_info       weewx version
         python_info
         platform_info
 
     The station_url is the unique key by which a station is identified.
-
-    To enable this module, add the following to weewx.conf:
-
- [StdRESTful]
-     ...
-     [[StationRegistry]]
-         register_this_station = True
     """
 
     archive_url = 'http://weewx.com/register/register.cgi'
@@ -1041,7 +1052,8 @@ class StdStationRegistry(StdRESTbase):
         try:
             # Extract a copy of the dictionary with the registry options:
             _registry_dict = dict(config_dict['StdRESTful']['StationRegistry'])
-            _registry_dict.setdefault('station_url',  self.engine.stn_info.station_url)
+            _registry_dict.setdefault('station_url',
+                                      self.engine.stn_info.station_url)
             if _registry_dict['station_url'] is None:
                 raise KeyError("station_url")
         except KeyError, e:
@@ -1051,7 +1063,8 @@ class StdStationRegistry(StdRESTbase):
 
         # Should the service be run?
         if not to_bool(_registry_dict.pop('register_this_station', False)):
-            syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: Registration not requested.")
+            syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: "
+                          "Registration not requested.")
             return
 
         _registry_dict.setdefault('station_type', config_dict['Station'].get('station_type', 'Unknown'))
@@ -1061,10 +1074,12 @@ class StdStationRegistry(StdRESTbase):
         _registry_dict.setdefault('station_model', self.engine.stn_info.hardware)
 
         self.archive_queue = Queue.Queue()
-        self.archive_thread = StationRegistryThread(self.archive_queue, **_registry_dict)
+        self.archive_thread = StationRegistryThread(self.archive_queue,
+                                                    **_registry_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: Station will be registered.")
+        syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: "
+                      "Station will be registered.")
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -1085,8 +1100,8 @@ class StationRegistryThread(RESTThread):
 
           queue: An instance of Queue.Queue where the records will appear.
 
-          station_url: An URL used to identify the station. This will be used as the
-          key in the registry.
+          station_url: An URL used to identify the station. This will be
+          used as the unique key in the registry to identify each station.
           
           latitude: Latitude of the staion
           
@@ -1100,11 +1115,12 @@ class StationRegistryThread(RESTThread):
           description: A brief description of the station. 
           Default is 'Unknown'
           
-          station_type: The type of station. Generally, this is the driver used
-          by the station. 
+          station_type: The type of station. Generally, this is the name of
+          the driver used by the station. 
           Default is 'Unknown'
           
-          station_model: The hardware model. 
+          station_model: The hardware model, typically the hardware_name
+          property provided by the driver.
           Default is 'Unknown'.
           
           protocol_name: A string holding the name of the protocol.
@@ -1133,10 +1149,15 @@ class StationRegistryThread(RESTThread):
           Default is 20 seconds.
         """
 
-        super(StationRegistryThread, self).__init__(queue, protocol_name=protocol_name,
-                                                    log_success=log_success, log_failure=log_failure,
-                                                    max_backlog=max_backlog, max_tries=max_tries, stale=stale,
-                                                    post_interval=post_interval, timeout=timeout)
+        super(StationRegistryThread, self).__init__(queue,
+                                                    protocol_name=protocol_name,
+                                                    log_success=log_success,
+                                                    log_failure=log_failure,
+                                                    max_backlog=max_backlog,
+                                                    max_tries=max_tries,
+                                                    stale=stale,
+                                                    post_interval=post_interval,
+                                                    timeout=timeout)
         self.station_url   = station_url
         self.latitude      = to_float(latitude)
         self.longitude     = to_float(longitude)
@@ -1177,7 +1198,8 @@ class StationRegistryThread(RESTThread):
         for _key in StationRegistryThread._formats:
             v = record[_key]
             if v is not None:
-                _liststr.append(urllib.quote_plus(StationRegistryThread._formats[_key] % v, '='))
+                _liststr.append(urllib.quote_plus(
+                        StationRegistryThread._formats[_key] % v, '='))
         _urlquery = '&'.join(_liststr)
         _url = "%s?%s" % (self.server_url, _urlquery)
         return _url
@@ -1185,7 +1207,281 @@ class StationRegistryThread(RESTThread):
     def check_response(self, response):
         """Check the response from a Station Registry post."""
         for line in response:
-            # Station Registry signals a bad post with a line starting with "FAIL"
+            # the server replies to a bad post with a line starting with "FAIL"
             if line.startswith('FAIL'):
                 raise FailedPost(line)
+
+#==============================================================================
+# AWEKAS
+#==============================================================================
+
+class AWEKAS(StdRESTbase):
+    """Upload data to AWEKAS - Automatisches WEtterKArten System
+    http://www.awekas.at
+
+    To enable this module, add the following to weewx.conf:
+
+    [StdRESTful]
+        [[AWEKAS]]
+            username = AWEKAS_USERNAME
+            password = AWEKAS_PASSWORD
+    
+    The AWEKAS server expects a single string of values delimited by
+    semicolons.  The position of each value matters, for example position 1
+    is the awekas username and position 2 is the awekas password.
+
+    Positions 1-25 are defined for the basic API:
+
+    Pos1: user (awekas username)
+    Pos2: password (awekas password MD5 Hash)
+    Pos3: date (dd.mm.yyyy) (varchar)
+    Pos4: time (hh:mm) (varchar)
+    Pos5: temperature (C) (float)
+    Pos6: humidity (%) (int)
+    Pos7: air pressure (hPa) (float)
+    Pos8: precipitation (rain at this day) (float)
+    Pos9: wind speed (km/h) float)
+    Pos10: wind direction (degree) (int)
+    Pos11: weather condition (int)
+            0=clear warning
+            1=clear
+            2=sunny sky
+            3=partly cloudy
+            4=cloudy
+            5=heavy cloundy
+            6=overcast sky
+            7=fog
+            8=rain showers
+            9=heavy rain showers
+           10=light rain
+           11=rain
+           12=heavy rain
+           13=light snow
+           14=snow
+           15=light snow showers
+           16=snow showers
+           17=sleet
+           18=hail
+           19=thunderstorm
+           20=storm
+           21=freezing rain
+           22=warning
+           23=drizzle
+           24=heavy snow
+           25=heavy snow showers
+    Pos12: warning text (varchar)
+    Pos13: snow high (cm) (int) if no snow leave blank
+    Pos14: language (varchar)
+           de=german; en=english; it=italian; fr=french; nl=dutch
+    Pos15: tendency (int)
+           -2 = high falling
+           -1 = falling
+            0 = steady
+            1 = rising
+            2 = high rising
+    Pos16. wind gust (km/h) (float)
+    Pos17: solar radiation (W/m^2) (float) 
+    Pos18: UV Index (float)
+    Pos19: brightness (LUX) (int)
+    Pos20: sunshine hours today (float)
+    Pos21: soil temperature (degree C) (float)
+    Pos22: rain rate (mm/h) (float)
+    Pos23: software flag NNNN_X.Y, for example, WLIP_2.15
+    Pos24: longitude (float)
+    Pos25: latitude (float)
+
+    positions 26-111 are defined for API2
+    """
+
+    def __init__(self, engine, config_dict):
+        super(AWEKAS, self).__init__(engine, config_dict)
+        try:
+            site_dict = dict(config_dict['StdRESTful']['AWEKAS'])
+            site_dict['username']
+            site_dict['password']
+        except KeyError, e:
+            syslog.syslog(syslog.LOG_ERR, "restx: AWEKAS: "
+                          "Data will not be posted: Missing option %s" % e)
+            return
+        site_dict.setdefault('latitude', engine.stn_info.latitude_f)
+        site_dict.setdefault('longitude', engine.stn_info.longitude_f)
+        site_dict.setdefault('language', 'de')
+        site_dict.setdefault('database_dict', config_dict['Databases'][config_dict['StdArchive']['archive_database']])
+
+        self.archive_queue = Queue.Queue()
+        self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
+        self.archive_thread.start()
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        syslog.syslog(syslog.LOG_INFO, "restx: AWEKAS: Data will be uploaded.")
+
+    def new_archive_record(self, event):
+        self.archive_queue.put(event.record)
+
+class AWEKASThread(RESTThread):
+
+    _SERVER_URL = 'http://data.awekas.at/eingabe_pruefung.php'
+    _FORMATS = {'barometer'   : '%.3f',
+                'outTemp'     : '%.1f',
+                'outHumidity' : '%.0f',
+                'windSpeed'   : '%.1f',
+                'windDir'     : '%.0f',
+                'windGust'    : '%.1f',
+                'dewpoint'    : '%.1f',
+                'hourRain'    : '%.2f',
+                'dayRain'     : '%.2f',
+                'radiation'   : '%.2f',
+                'UV'          : '%.2f',
+                'rainRate'    : '%.2f'}
+
+    def __init__(self, queue, username, password, latitude, longitude,
+                 database_dict,
+                 language='de', server_url=_SERVER_URL, skip_upload=False,
+                 log_success=True, log_failure=True, max_backlog=sys.maxint,
+                 stale=None, max_tries=3, post_interval=300, timeout=60):
+        """Initialize an instances of AWEKASThread.
+
+        Required parameters:
+
+        username: AWEKAS user name
+
+        password: AWEKAS password
+
+        language: Possible values include de, en, it, fr, nl
+        Default is de
+
+        latitude: Station latitude in decimal degrees
+        Default is station latitude
+
+        longitude: Station longitude in decimal degrees
+        Default is station longitude
+
+        Optional parameters:
         
+        station: station identifier
+        Default is None.
+
+        server_url: URL of the server
+        Default is the AWEKAS site
+        
+        log_success: If True, log a successful post in the system log.
+        Default is True.
+
+        log_failure: If True, log an unsuccessful post in the system log.
+        Default is True.
+
+        max_backlog: How many records are allowed to accumulate in the queue
+        before the queue is trimmed.
+        Default is sys.maxint (essentially, allow any number).
+
+        max_tries: How many times to try the post before giving up.
+        Default is 3
+
+        stale: How old a record can be and still considered useful.
+        Default is None (never becomes too old).
+
+        post_interval: The interval in seconds between posts.
+        AWEKAS requests that uploads happen no more often than 5 minutes, so
+        this should be set to no less than 300.
+        Default is 300
+
+        timeout: How long to wait for the server to respond before giving up.
+        Default is 60 seconds
+
+        skip_upload: debugging option to display data but do not upload
+        Default is False
+        """
+        super(AWEKASThread, self).__init__(queue,
+                                           protocol_name='AWEKAS',
+                                           database_dict=database_dict,
+                                           log_success=log_success,
+                                           log_failure=log_failure,
+                                           max_backlog=max_backlog,
+                                           stale=stale,
+                                           max_tries=max_tries,
+                                           post_interval=post_interval,
+                                           timeout=timeout)
+        self.username = username
+        self.password = password
+        self.latitude = float(latitude)
+        self.longitude = float(longitude)
+        self.language = language
+        self.server_url = server_url
+        self.skip_upload = to_bool(skip_upload)
+
+    def get_record(self, record, archive):
+        """Add rainRate to the record."""
+        r = super(AWEKASThread, self).get_record(record, archive)
+        # FIXME: for some reason this returns an array of 10 items instead
+        # of a single record.  why?
+        rr = archive.getSql('select rainRate from archive where dateTime=?',
+                            (r['dateTime'],))
+        datadict = dict(zip(['rainRate'], rr))
+        if datadict.has_key('rainRate'):
+            r['rainRate'] = datadict['rainRate']
+        return r
+
+    def process_record(self, record, archive):
+        r = self.get_record(record, archive)
+        url = self.get_url(r)
+        if self.skip_upload:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: AWEKAS: skipping upload")
+            return
+        req = urllib2.Request(url)
+        self.post_with_retries(req)
+
+    def check_response(self, response):
+        for line in response:
+            if not line.startswith('OK'):
+                raise FailedPost("server returned '%s'" % line)
+
+    def get_url(self, record):
+        # put everything into the right units and scaling
+        if record['usUnits'] != weewx.METRIC:
+            converter = weewx.units.StdUnitConverters[weewx.METRIC]
+            record = converter.convertDict(record)
+        if record.has_key('dayRain') and record['dayRain'] is not None:
+            record['dayRain'] = record['dayRain'] * 10
+        if record.has_key('rainRate') and record['rainRate'] is not None:
+            record['rainRate'] = record['rainRate'] * 10
+
+        # assemble an array of values in the proper order
+        values = [self.username]
+        m = hashlib.md5()
+        m.update(self.password)
+        values.append(m.hexdigest())
+        time_tt = time.gmtime(record['dateTime'])
+        values.append(time.strftime("%d.%m.%Y", time_tt))
+        values.append(time.strftime("%H:%M", time_tt))
+        values.append(self._format(record, 'outTemp')) # C
+        values.append(self._format(record, 'outHumidity')) # %
+        values.append(self._format(record, 'barometer')) # mbar
+        values.append(self._format(record, 'dayRain')) # mm?
+        values.append(self._format(record, 'windSpeed')) # km/h
+        values.append(self._format(record, 'windDir'))
+        values.append('') # weather condition
+        values.append('') # warning text
+        values.append('') # snow high
+        values.append(self.language)
+        values.append('') # tendency
+        values.append(self._format(record, 'windGust')) # km/h
+        values.append(self._format(record, 'radiation')) # W/m^2
+        values.append(self._format(record, 'UV')) # uv index
+        values.append('') # brightness in lux
+        values.append('') # sunshine hours
+        values.append('') # soil temperature
+        values.append(self._format(record, 'rainRate')) # mm/h
+        values.append('weewx_%s' % weewx.__version__)
+        values.append(str(self.longitude))
+        values.append(str(self.latitude))
+
+        valstr = ';'.join(values)
+        url = self.server_url + '?val=' + valstr
+        syslog.syslog(syslog.LOG_DEBUG, 'restx: AWEKAS: url: %s' % url)
+        return url
+
+    def _format(self, record, label):
+        if record.has_key(label) and record[label] is not None:
+            if self._FORMATS.has_key(label):
+                return self._FORMATS[label] % record[label]
+            return str(record[label])
+        return ''
