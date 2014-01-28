@@ -2856,6 +2856,38 @@ Jan 18 20:39:14 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; 
     </p>
     <p>The cure is simple: kill all but one of them.</p>
 
+    <h3 id='spikes'>Spikes in the graphs</h3>
+    <p>Occasionally you may see anomalous readings, typically manifested as
+      spikes in the graphs.  The source could be a flaky serial/USB connection,
+      radio or other interference, a cheap USB-Serial adapter, low-quality
+      sensors, or simply an anomalous reading.  It is not unusual for low-end
+      hardware to report odd sensor readings occasionally (once every few
+      days).  Some sensors, such as solar radiation/UV, have a limited lifespan
+      of about 5 years.  If you frequently see anomalous data, first check
+      the hardware.</p>
+    <p>To keep bad data from the database, add a quality control (QC) rule
+      such as Min/Max bounds.  See the <a href="#StdQC">QC</a> section for
+      details.</p>
+    <p>To remove bad data from the database, you will have to do some basic
+      SQL commands.  For example, let's say the station emitted some very
+      high temperatures and wind speeds for one or two readings.  This is
+      how to remove them:</p>
+    <ol>
+      <li>stop <span class='code'>weewx</span></li>
+      <li>Make a copy of the archive database</li>
+      <p class='tty'>cp $SQLITE_ROOT/weewx.sdb $SQLITE_ROOT/weewx-YYMMDD.sdb</p>
+      <li>Verify the bad data exist where you think they exist</li>
+      <p class='tty'>sqlite3 $SQLITE_ROOT/weewx.sdb
+sqlite> select dateTime,outTemp from archive where outTemp > 1000;</p>
+      <li>See whether the bad temperature and wind data happened at the same time</li>
+      <p class='tty'>sqlite> select dateTime,outTemp,windSpeed from archive where outTemp > 1000;</p>
+      <li>Remove the bad data by setting to NULL</li>
+      <p class='tty'>sqlite> update archive set windSpeed=NULL where outTemp > 1000;
+sqlite> update archive set outTemp=NULL where outTemp > 1000;</p>
+      <li>Delete the statistics database so that <span class='code'>weewx</span> can regenerate it without the anomalies</li>
+      <li>start <span class='code'>weewx</span></li>
+    </ol>
+
     <h3>FreeBSD</h3>
     <p>User Fabian reports that the following had to be done to get the
       VantagePro2 working under FreeBSD:</p>

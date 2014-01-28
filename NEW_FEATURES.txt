@@ -14,13 +14,6 @@ Minor cleanup to the Standard skin:
  - make the info section easier to grok with a structured layout, perhaps
     similar to weather display or cumulus default templates
 
-Add hardware model as weewx.conf option for all drivers that cannot get the
-info from the hardware (everything other than vantage?)
-                    
-The weewx service would support dependencies or, at least, be grouped into
-like services. This would make it easier to install new services by
-3rd parties.
-
 Offer tags to support JSON. In particular, vectors. A tag like
 $day.outTemp.vector would offer a vector of temperatures for the day.
 Aggregation would be nice.

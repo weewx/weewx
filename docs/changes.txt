@@ -12,7 +12,6 @@ five separate lists. This will allow services to be grouped together,
 according to when they should be run.
 
 Added extensions to the weewx source distribution, including:
-  uploader for awekas
   uploader for open weather map
   uploader for weatherbug
   uploader for wetter.com

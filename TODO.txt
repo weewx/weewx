@@ -1,22 +1,3 @@
 TODO before the next release:
 
-resolve the updating of the forecast module.  putting forecast.py in the user
-directory means that it does not get updated by setup.py, but it does get
-updated by rpm and deb.  either move it into bin/weewx or modify setup.py
-to explicitly update forecast.py
-
-Sign the rpm and deb packages?
-N
-Include the following uploaders in 2.6?:
- - emoncms (emoncms.org)
- - seg (smart energy groups)
- - pachube (aka cosm, aka xively)
- - weatherbug
- - openweathermap
- - wetter.com
- - awekas
-They are available via the wiki for 2.5 and earlier, but the changes to REST
-will break those.  So support will be easier if we include the new versions
-with 2.6.
-
 Figure out why the heartbeat doesn't work on the WMR200.
