@@ -104,20 +104,23 @@ how to build redhat package:
   svn commit -m "update rpm changelog"
   make rpm-package
 
-to generate gpg key used for signing packages:
-  gpg --gen-key
-  gpg --list-keys
+to display debconf variables:
+  sudo debconf-show weewx
 
-for signing rpm packages:
+to manually purge debconf variables:
+  sudo echo PURGE | debconf-communicate weewx
+
+to sign rpm packages you need .rpmmacros in your home directory:
 ~/.rpmmacros
   %_signature gpg
   %_gpg_name  Matthew Wall
 
-to display debconf variables:
-sudo debconf-show weewx
+to generate gpg key used for signing packages:
+  gpg --gen-key
+  gpg --list-keys
 
-to manually purge debconf variables:
-sudo echo PURGE | debconf-communicate weewx
+to export the text version of a public key:
+  gpg --export -a "Matthew Wall" > mwall.gpg.key
 
 
 notes:

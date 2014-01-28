@@ -1,10 +1,11 @@
 TODO before the next release:
 
-verify gpg signatures on rpm packages using redhat/suse tools
-
 extension installer/uninstaller:
   need to prune from weewx.conf on uninstall: skin, service
   delete .pyc files on uninstall
   do not overwrite fields in weewx.conf if they already exist
+  decide where to put extension sources in rpm package/installation
+  decide where to put extension sources in deb package/installation
+  make wee_setup a symlink to setup.py on deb and rpm
 
 Figure out why the heartbeat doesn't work on the WMR200.

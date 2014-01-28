@@ -12,6 +12,9 @@ BLDDIR=build
 DSTDIR=dist
 RELDIR=frs.sourceforge.net:/home/frs/project/weewx/development_versions
 
+# if you do not want to sign the packages, comment this line:
+SIGN=1
+
 all: help
 
 help: info
