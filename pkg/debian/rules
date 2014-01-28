@@ -38,6 +38,7 @@ install: build
 
 # copy files from the source tree
 	cp -r $(SRC)/bin/* $(DST_BINDIR)
+	cp -r $(SRC)/extensions $(DST_BINDIR)
 	cp -r $(SRC)/docs/* $(DST_DOCDIR)
 	cp -r $(SRC)/skins $(DST_CFGDIR)
 	cp -r $(SRC)/util/apache $(DST_CFGDIR)
@@ -72,6 +73,7 @@ install: build
 	chmod 755 $(DST_INITDIR)/weewx
 
 # create symlinks to the code entry points
+	ln -s ../share/weewx/setup.py $(DST)/usr/bin/wee_setup
 	ln -s ../share/weewx/weewxd $(DST)/usr/bin/weewxd
 	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
 	ln -s ../share/weewx/wee_config_database $(DST)/usr/bin/wee_config_database

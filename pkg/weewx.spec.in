@@ -26,7 +26,7 @@
 %define platform redhat
 %define initdir %{_initrddir}
 # on redhat, must install serial and/or usb using easy_install or pip
-%define deps , python-setuptools
+#%define deps , python-setuptools
 %endif
 
 %global relnum 1
@@ -45,7 +45,8 @@ Group: Applications/Science
 Source: %{name}-%{version}.tar.gz
 URL: http://www.weewx.com
 License: GPLv3
-Requires: python, python-configobj, python-cheetah, python-imaging, %{deps}
+Requires: python, python-configobj
+#Requires: python, python-configobj, python-cheetah, python-imaging, %{deps}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildArch: noarch
 BuildRequires: python, python-configobj
@@ -70,6 +71,7 @@ mkdir -p %{buildroot}%{initdir}
 
 # copy files from the source tree
 cp -r bin/* %{buildroot}%{dst_bin_dir}
+cp -r extensions %{buildroot}%{dst_bin_dir}
 cp -r docs/* %{buildroot}%{dst_doc_dir}
 cp -r skins %{buildroot}%{dst_cfg_dir}
 cp -r util/apache %{buildroot}%{dst_cfg_dir}
@@ -104,6 +106,7 @@ cat util/init.d/weewx.%{platform} | sed \
 chmod 755 %{buildroot}%{initdir}/weewx
 
 # create symlinks to the code entry points
+ln -s ../share/weewx/setup.py %{buildroot}%{_bindir}/wee_setup
 ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
 ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
 ln -s ../share/weewx/wee_config_database %{buildroot}%{_bindir}/wee_config_database
