@@ -94,7 +94,7 @@ class EmonCMS(weewx.restx.StdRESTbase):
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         loginf("Data will be uploaded using token %s" %
-               'X'*(len(site_dict['token'])-4) + site_dict['token'][-4:])
+               ('X'*(len(site_dict['token'])-4) + site_dict['token'][-4:]))
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
