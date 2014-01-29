@@ -38,6 +38,10 @@ my $FORECAST_DOWNLOADS = 'forecast: downloads';
 # any lines that do not match the patterns we define
 my @unmatched = ();
 
+# track individual publishing counts
+my %publish_counts = ();
+my %publish_fails = ();
+
 # track upload errors to help diagnose network/server issues
 my @upload_errors = ();
 
@@ -58,7 +62,7 @@ my $clockmax = 0;
 my $clockcount = 0;
 
 my %itemized = (
-    'upload failures', \@upload_errors,
+    'upload errors', \@upload_errors,
     'fousb station status', \@station_status,
     'fousb unstable reads', \@unstable_reads,
     'fousb magic numbers', \@magic_numbers,
@@ -81,7 +85,7 @@ while(defined($_ = <STDIN>)) {
         $clockmin = $1 if $1 < $clockmin;
         $clockmax = $1 if $1 > $clockmax;
         $clockcount += 1;
-    } elsif (/Archive: added archive record/) {
+    } elsif (/Archive: added archive record/ || /archive: added to table/) {
         $counts{$ARCHIVE_RECORDS_ADDED} += 1;
     } elsif (/genimages: Generated (\d+) images/) {
         $counts{$IMAGES_GENERATED} += $1;
@@ -98,11 +102,18 @@ while(defined($_ = <STDIN>)) {
     } elsif (/restful: Published record/) {
         $counts{$RECORDS_PUBLISHED} += 1;
     } elsif (/restful: Unable to publish record/) {
-        my $key = $RECORDS_FAILED;
         if (/restful: Unable to publish record \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d \S\S\S \(\d+\) to (\S+)/) {
-            $key .= ' to site ' . $1;
+            $publish_fails{$1} += 1;
         }
-        $errors{$key} = $errors{$key} ? $errors{$key} + 1 : 1;
+        $counts{$RECORDS_FAILED} += 1;
+        push @upload_errors, $_;
+    } elsif (/restx: ([^:]*): Published record/) {
+        $publish_counts{$1} += 1;
+        $counts{$RECORDS_PUBLISHED} += 1;
+    } elsif (/restx: ([^:]*): Failed to publish/) {
+        $publish_fails{$1} += 1;
+        $counts{$RECORDS_FAILED} += 1;
+        push @upload_errors, $_;
     } elsif (/fousb: station status/) {
         push @station_status, $_;
     } elsif (/fousb: unstable read: blocks differ/) {
@@ -139,14 +150,16 @@ while(defined($_ = <STDIN>)) {
         $counts{$FORECAST_PRUNINGS} += 1;
     } elsif (/forecast: .* downloading forecast/) {
         $counts{$FORECAST_DOWNLOADS} += 1;
-    } elsif (/awekas: Failed upload to AWEKAS/ ||
-             /cosm: Failed upload to COSM/ ||
-             /emoncms: Failed upload to EmonCMS/ ||
-             /owm: Failed upload to OpenWeatherMap/ ||
-             /seg: Failed upload to SmartEnergyGroups/ ||
-             /wbug: Failed upload to WeatherBug/) {
+    } elsif (/awekas: Failed upload to (AWEKAS)/ ||
+             /cosm: Failed upload to (COSM)/ ||
+             /emoncms: Failed upload to (EmonCMS)/ ||
+             /owm: Failed upload to (OpenWeatherMap)/ ||
+             /seg: Failed upload to (SmartEnergyGroups)/ ||
+             /wbug: Failed upload to (WeatherBug)/) {
+        $publish_fails{$1} += 1;
         push @upload_errors, $_;
     } elsif (/last message repeated/ ||
+             /archive: Created and initialized/ ||
              /reportengine: Running reports for latest time/ ||
              /reportengine: Found configuration file/ ||
              /reportengine: FTP upload not requested/ ||
@@ -157,7 +170,9 @@ while(defined($_ = <STDIN>)) {
              /\*\*\*\*  Registration interval/ ||
              /restful: Registration successful/ ||
              /restful: Attempting to register/ ||
-             /restful: station will register with/ ||
+             /restx: StationRegistry: Station will/ ||
+             /restx: .*Data will be uploaded/ ||
+             /restx: .*wait interval/ ||
              /stats: Back calculated schema/ ||
              /stats: Backfilling stats database/ ||
              /stats: backfilled \d+ days of statistics/ ||
@@ -337,32 +352,33 @@ while(defined($_ = <STDIN>)) {
              /forecast: NWSThread: NWS: forecast matrix/ ||
              /forecast: XTideThread: XTide: tide matrix/ ||
              /forecast: XTideThread: XTide: generating tides/ ||
-             /awekas: Failed upload attempt/ ||
+             /restx: AWEKAS: url/ ||
              /awekas: code/ ||
              /awekas: read/ ||
              /awekas: url/ ||
              /awekas: data/ ||
-             /cosm: Failed upload attempt/ ||
+             /restx: Xively: data/ ||
+             /restx: Xively: url/ ||
              /cosm: code/ ||
              /cosm: read/ ||
              /cosm: url/ ||
              /cosm: data/ ||
-             /emoncms: Failed upload attempt/ ||
+             /restx: EmonCMS: url/ ||
              /emoncms: code/ ||
              /emoncms: read/ ||
              /emoncms: data/ ||
              /emoncms: url/ ||
-             /owm: Failed upload attempt/ ||
+             /restx: OWM: data/ ||
              /owm: code/ ||
              /owm: read/ ||
              /owm: url/ ||
              /owm: data/ ||
-             /seg: Failed upload attempt/ ||
+             /restx: SEG: data/ ||
              /seg: code/ ||
              /seg: read/ ||
              /seg: url/ ||
              /seg: data/ ||
-             /wbug: Failed upload attempt/ ||
+             /restx: WeatherBug: url/ ||
              /wbug: code/ ||
              /wbug: read/ ||
              /wbug: url/ ||
@@ -385,12 +401,24 @@ if($clockcount > 0) {
 print "counts:\n";
 foreach my $k (sort keys %counts) {
     next if $counts{$k} == 0;
-    printf("  %-40s %6d\n", $k, $counts{$k});
+    printf("  %-45s %6d\n", $k, $counts{$k});
+}
+
+print "\nuploads:\n";
+foreach my $k (sort keys %publish_counts) {
+    next if $publish_counts{$k} == 0;
+    printf("  %-45s %6d\n", $k, $publish_counts{$k});
+}
+
+print "\nupload failures:\n";
+foreach my $k (sort keys %publish_fails) {
+    next if $publish_fails{$k} == 0;
+    printf("  %-45s %6d\n", $k, $publish_fails{$k});
 }
 
 print "\nerrors:\n";
 foreach my $k (keys %errors) {
-    printf("  %-40s %6d\n", $k, $errors{$k});
+    printf("  %-45s %6d\n", $k, $errors{$k});
 }
 
 foreach my $k (sort keys %itemized) {

@@ -396,9 +396,10 @@ class RESTThread(threading.Thread):
             _how_long = time_ts - self.lastpost
             if _how_long < self.post_interval:
                 syslog.syslog(syslog.LOG_DEBUG, 
-                              "restx: %s: record %s wait interval (%d < %d) has not passed." % 
-                              (self.protocol_name, 
-                               timestamp_to_string(time_ts), _how_long, self.post_interval))
+                              "restx: %s: wait interval (%d < %d) has not passed for record %s" % 
+                              (self.protocol_name,
+                               _how_long, self.post_interval,
+                               timestamp_to_string(time_ts)))
                 return True
     
         self.lastpost = time_ts
