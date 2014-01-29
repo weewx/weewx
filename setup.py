@@ -508,18 +508,12 @@ def update_config_file(config_dict):
     except KeyError:
         pass
 
-    # Remove the no longer needed "driver" option from all the RESTful
-    # services:
-    if config_dict.has_key('StdRESTful'):
-        for section in config_dict['StdRESTful'].sections:
-            config_dict['StdRESTful'][section].pop('driver', None)
-
     # See if the engine configuration section has the old-style "service_list":
     if config_dict['Engines']['WxEngine'].has_key('service_list'):
         # It does. Break it up into five, smaller lists. If a service
-        # does not appear in the dictionary "service_map", meaning we don't
-        # know what it is, then stick it in the last group we've seen. This should
-        # get its position about right.
+        # does not appear in the dictionary "service_map", meaning we
+        # do not know what it is, then stick it in the last group we
+        # have seen. This should get its position about right.
         last_group = 'prep_services'
         
         # Set up a bunch of empty groups in the right order
@@ -542,11 +536,19 @@ def update_config_file(config_dict):
                 # No. Put it in the last group.
                 config_dict['Engines']['WxEngine'][last_group].append(svc_name)
 
-        # Now add the restful services
+        # Now add the restful services, using the old driver name to help us
         for section in config_dict['StdRESTful'].sections:
-            config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.Std' + section)
-            
-        # Depending on how old a version the user has, the station registry may have to be included:
+            svc = config_dict['StdRESTful'][section]['driver']
+            # weewx.restful has changed to weewx.restx
+            if svc.startswith('weewx.restful'):
+                svc = 'weewx.restx.Std' + section
+            # awekas is in weewx.restx since 2.6
+            if svc == 'user.awekas.AWEKAS':
+                svc = 'weewx.restx.AWEKAS'
+            config_dict['Engines']['WxEngine']['restful_services'].append(svc)
+
+        # Depending on how old a version the user has, the station registry
+        # may have to be included:
         if 'weewx.restx.StdStationRegistry' not in config_dict['Engines']['WxEngine']['restful_services']:
             config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
         
@@ -562,6 +564,10 @@ def update_config_file(config_dict):
         # the default weewx.conf, so just pop it.
         config_dict['StdRESTful']['CWOP'].pop('server')
 
+    # Remove the no longer needed "driver" from all the RESTful services:
+    if config_dict.has_key('StdRESTful'):
+        for section in config_dict['StdRESTful'].sections:
+            config_dict['StdRESTful'][section].pop('driver', None)
 
 
 def save_path(filepath):
