@@ -96,7 +96,7 @@ class Wetter(weewx.restx.StdRESTbase):
         self.archive_thread = WetterThread(self.archive_queue, **site_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        loginf("Data will be uploaded for username %s" % site_dict['username'])
+        loginf("Data will be uploaded for user id %s" % site_dict['username'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -146,7 +146,9 @@ class WetterThread(weewx.restx.RESTThread):
 
     def check_response(self, response):
         txt = response.read()
-        if not txt.startswith('status=SUCCESS'):
+        if txt.find('Zugangsdaten%3A+Benutzerdaten+falsch') >= 0:
+            raise weewx.restx.BadLogin(txt)
+        elif not txt.startswith('status=SUCCESS'):
             raise weewx.restx.FailedPost("Server returned '%s'" % txt)
 
     def get_data(self, in_record):
