@@ -1465,8 +1465,12 @@ class AWEKASThread(RESTThread):
 
     def get_url(self, in_record):
 
-        # Convert to Metric:
-        record = weewx.units.to_METRICWX(in_record)
+        # Convert to units required by awekas
+        record = weewx.units.to_METRIC(in_record)
+        if record.has_key('dayRain') and record['dayRain'] is not None:
+            record['dayRain'] = record['dayRain'] * 10
+        if record.has_key('rainRate') and record['rainRate'] is not None:
+            record['rainRate'] = record['rainRate'] * 10
 
         # assemble an array of values in the proper order
         values = [self.username]
@@ -1479,7 +1483,7 @@ class AWEKASThread(RESTThread):
         values.append(self._format(record, 'outTemp')) # C
         values.append(self._format(record, 'outHumidity')) # %
         values.append(self._format(record, 'barometer')) # mbar
-        values.append(self._format(record, 'dayRain')) # mm?
+        values.append(self._format(record, 'dayRain')) # mm
         values.append(self._format(record, 'windSpeed')) # km/h
         values.append(self._format(record, 'windDir'))
         values.append('') # weather condition
