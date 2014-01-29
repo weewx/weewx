@@ -188,3 +188,6 @@ class SEGThread(weewx.restx.RESTThread):
         data = ''.join(elements)
         logdbg('data: %s' % data)
         return data
+
+# for backward compatibility
+SmartEnergyGroups = SEG

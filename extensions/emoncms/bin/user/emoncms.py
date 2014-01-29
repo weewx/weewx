@@ -89,6 +89,11 @@ class EmonCMS(weewx.restx.StdRESTbase):
             return
         site_dict.setdefault('database_dict', config_dict['Databases'][config_dict['StdArchive']['archive_database']])
 
+        # for backward compatibility, use url as server_url if it is specified
+        if site_dict.has_key('url') and not site_dict.has_key('server_url'):
+            site_dict.setdefault('server_url', site_dict['url'])
+            site_dict.pop('url')
+
         self.archive_queue = Queue.Queue()
         self.archive_thread = EmonCMSThread(self.archive_queue, **site_dict)
         self.archive_thread.start()
