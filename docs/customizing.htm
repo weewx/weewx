@@ -317,8 +317,8 @@ table#stattypes td {
         group_uv          = uv_index 
         group_volt        = volt</pre>
       <p>The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>.
-        Details of the various unit options are given in <em><a href="#units">Appendix
-            B: Units</a></em>. </p>
+        Details of the various unit options are given in the Appendix <em><a href="#units">
+            Units</a></em>. </p>
       <p>Other options are available, such as changing the text label for
         various observation types. For example, suppose your weather console is
         actually located in a barn, not indoors, and you want the plot for the
@@ -467,7 +467,7 @@ $month.outTemp.max</pre>
       <p>Where: </p>
       <p class="indent"><span class="code"><em>obstype</em></span> is an
         observation type, such as <span class="code">barometer</span>. See <em>
-          <a href="#archive_types">Appendix A, Archive Types</a></em> for a
+          Appendix <a href="#archive_types">Archive Types</a></em> for a
         table of observation types valid for time period <span class="code">current.</span>
       </p>
       <p class="indent"><span class="code">optional_unit_conversion</span> is an
@@ -499,14 +499,14 @@ $month.outTemp.max</pre>
           class="code">day</span>, <span class="code">week</span>, <span class="code">month</span>,
         <span class="code">year</span>, <span class="code">rainyear</span>. </p>
       <p class="indent"><span class="code"><em>statstype</em></span> is a
-        statistical type. See <em><a href="#statistical_types">Appendix C,
+        statistical type. See the Appendix <em><a href="#statistical_types">
             Statistical Types</a></em>, for a table of statistical types. </p>
       <p class="indent"><span class="code"><em>aggregation</em></span> is an
         aggregation type. This is something like '<span class="code">min</span>',
         '<span class="code">sum</span>', '<span class="code">mintime</span>'. If
         you ask for <span class="code">$month.outTemp.avg</span> you are asking
         for the <em>average</em> outside temperature for the month. The table <em>
-          <a href="#statistical_types">Appendix C: Statistical Types</a></em>
+          <a href="#statistical_types">Statistical Types</a></em>
         shows what aggregation types are available for which types. </p>
       <p class="indent"><span class="code">optional_unit_conversion</span> is an
         optional unit conversion tag. If provided, the results will be converted
@@ -2640,7 +2640,10 @@ mv weewx.sdb_new weewx.sdb</pre>
           a New Type to the ArchiveDatabase</a>, described above.</p>
       <ol>
         <li>Modify <span class="code">weewx.conf</span> to reflect your choice
-          of the new unit system to use.</li>
+          of the new unit system to use. Your choices are <span class='code'>US</span>,
+	  <span class="code">METRIC</span>, or <span class="code">METRICWX</span>.
+	  See the Appendix <a href="#units">Units</a> for the exact differences
+	  between these three choices.</li>
         <li>Make sure you have the necessary permissions to create the new
           database.</li>
         <li>Populate it with data from the old database.</li>
@@ -2654,7 +2657,7 @@ mv weewx.sdb_new weewx.sdb</pre>
         to reflect your choice. If you are switching to metric units, the option
         will look like</p>
       <pre class="tty">[StdConvert]
-    target_unit = METRIC</pre>
+    target_unit = METRICWX  # Alternative: METRIC</pre>
       <p>2. <strong>Check permissions.</strong> The reconfiguration utility
         will create a new database with the same name as the old, except with
         the suffix '<span class="code">_new</span>' attached to the end. Make
@@ -2704,9 +2707,11 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
           <tr>
             <td class="code">usUnits</td>
             <td>The unit system used. <span class="code">weewx.US</span> for US
-              customary, <span class="code">weewx.METRIC</span> for metric. See
+              customary, <span class="code">weewx.METRICWX</span>, or 
+	      <span class="code">weewx.METRIC</span> for metric. See
               the file <span class="code">units.py</span>, dictionaries <span
-                class="code">USUnits</span> and <span class="code">MetricUnits</span>
+                class="code">USUnits</span>, <span class="code">MetricWXUnits</span>,
+	      and <span class="code">MetricUnits</span>
               for the exact definition of each.</td>
           </tr>
         </tbody>
@@ -2800,7 +2805,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <p>Naturally, there are a lot of subtleties that I've glossed over in this
         high-level description. If you're game, give it a try — I'm happy to
         help you out!</p>
-      <h1 id="archive_types">Appendix A: Archive Types</h1>
+      <h1 id="archive_types">Appendix: Archive Types</h1>
       <p><em>Archive types</em> are weather observations that have come from
         your instrument and been stored in the <em>archive database</em>, a SQL
         database. They represent the <em>current conditions</em> as of some
@@ -3142,115 +3147,155 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
           </tr>
         </tbody>
       </table>
-      <h1 id="units">Appendix B: Units</h1>
-      <p>The table below lists all the unit groups, their members, and which
-        units are options for the group. </p>
-      <table class="indent" style="width: 60%">
+      <h1 id="units">Appendix: Units</h1>
+      <p>The table below lists all the unit groups, their members, which
+        units are options for the group, and what the defaults are
+	for each standard unit system. </p>
+      <table class="indent" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Group</strong></td>
             <td><strong>Members</strong></td>
             <td><strong>Unit options</strong></td>
+	    <td><strong>US</strong></td>
+	    <td><strong>METRICWX</strong></td>
+	    <td><strong>METRIC</strong></td>
           </tr>
           <tr>
             <td class="code">group_altitude</td>
             <td class="code">altitude</td>
             <td class="code">foot <br />
               meter</td>
+	    <td class="code">foot</td>
+	    <td class="code">meter</td>
+	    <td class="code">meter</td>
           </tr>
           <tr class="code">
-            <td>group_degree_day</td>
-            <td>cooldeg<br />
+            <td class="code">group_degree_day</td>
+            <td class="code">cooldeg<br />
               heatdeg</td>
-            <td>degree_F_day<br />
+            <td class="code">degree_F_day<br />
               degree_C_day</td>
+	    <td class="code">degree_F_day</td>
+	    <td class="code">degree_C_day</td>
+	    <td class="code">degree_C_day</td>
           </tr>
           <tr class="code">
-            <td>group_direction</td>
-            <td>gustdir <br />
+            <td class="code">group_direction</td>
+            <td class="code">gustdir <br />
               vecdir <br />
               windDir <br />
               windGustDir</td>
-            <td>degree_compass</td>
+            <td class="code">degree_compass</td>
+	    <td class="code">degree_compass</td>
+	    <td class="code">degree_compass</td>
+	    <td class="code">degree_compass</td>
           </tr>
           <tr class="code">
-            <td>group_interval</td>
-            <td>interval</td>
-            <td>minute</td>
+            <td class="code">group_interval</td>
+            <td class="code">interval</td>
+            <td class="code">minute</td>
+            <td class="code">minute</td>
+            <td class="code">minute</td>
+            <td class="code">minute</td>
           </tr>
           <tr class="code">
-            <td>group_moisture</td>
-            <td>soilMoist1 <br />
+            <td class="code">group_moisture</td>
+            <td class="code">soilMoist1 <br />
               soilMoist2 <br />
               soilMoist3 <br />
               soilMoist4</td>
-            <td>centibar</td>
+            <td class="code">centibar</td>
+            <td class="code">centibar</td>
+            <td class="code">centibar</td>
+            <td class="code">centibar</td>
           </tr>
           <tr class="code">
-            <td>group_percent</td>
-            <td>extraHumid1 <br />
+            <td class="code">group_percent</td>
+            <td class="code">extraHumid1 <br />
               extraHumid2 <br />
               inHumidity <br />
               outHumidity <br />
               rxCheckPercent</td>
-            <td>percent</td>
+            <td class="code">percent</td>
+            <td class="code">percent</td>
+            <td class="code">percent</td>
+            <td class="code">percent</td>
           </tr>
           <tr class="code">
-            <td>group_pressure</td>
-            <td>barometer <br />
+            <td class="code">group_pressure</td>
+            <td class="code">barometer <br />
               altimeter <br />
               pressure</td>
-            <td>inHg <br />
+            <td class="code">inHg <br />
               mbar <br />
               hPa</td>
+	    <td class="code">inHg</td>
+	    <td class="code">mbar</td>
+	    <td class="code">mbar</td>
           </tr>
           <tr class="code">
-            <td>group_radiation</td>
-            <td>UV <br />
+            <td class="code">group_radiation</td>
+            <td class="code">UV <br />
               radiation</td>
-            <td>watt_per_meter_squared</td>
+            <td class="code">watt_per_meter_squared</td>
+            <td class="code">watt_per_meter_squared</td>
+            <td class="code">watt_per_meter_squared</td>
+            <td class="code">watt_per_meter_squared</td>
           </tr>
           <tr class="code">
-            <td>group_rain</td>
-            <td>rain <br />
+            <td class="code">group_rain</td>
+            <td class="code">rain <br />
               ET <br />
               hail</td>
-            <td>in <br />
+            <td class="code">inch <br />
               cm <br />
               mm</td>
+	    <td class="code">inch</td>
+	    <td class="code">mm</td>
+	    <td class="code">cm</td>
           </tr>
           <tr class="code">
-            <td>group_rainrate</td>
-            <td>rainRate <br />
+            <td class="code">group_rainrate</td>
+            <td class="code">rainRate <br />
               hailRate</td>
-            <td>in_per_hour <br />
+            <td class="code">inch_per_hour <br />
               cm_per_hour <br />
               mm_per_hour</td>
+	    <td class="code">inch_per_hour</td>
+	    <td class="code">mm_per_hour</td>
+	    <td class="code">cm_per_hour</td>
           </tr>
           <tr class="code">
-            <td>group_speed</td>
-            <td>wind <br />
+            <td class="code">group_speed</td>
+            <td class="code">wind <br />
               windGust <br />
               windSpeed <br />
               windgustvec <br />
               windvec</td>
-            <td>mile_per_hour <br />
+            <td class="code">mile_per_hour <br />
               km_per_hour <br />
               knot <br />
               meter_per_second</td>
+	    <td class="code">mile_per_hour</td>
+	    <td class="code">km_per_hour</td>
+	    <td class="code">meter_per_second</td>
           </tr>
           <tr class="code">
-            <td>group_speed2</td>
-            <td>rms <br />
+            <td class="code">group_speed2</td>
+            <td class="code">rms <br />
               vecavg</td>
-            <td>mile_per_hour2 <br />
+            <td class="code">mile_per_hour2 <br />
               km_per_hour2 <br />
               knot2 <br />
               meter_per_second2</td>
+	    <td class="code">mile_per_hour2</td>
+	    <td class="code">km_per_hour2</td>
+	    <td class="code">meter_per_second2</td>
           </tr>
           <tr class="code">
-            <td>group_temperature</td>
-            <td>dewpoint <br />
+            <td class="code">group_temperature</td>
+            <td class="code">dewpoint <br />
               extraTemp1 <br />
               extraTemp2 <br />
               extraTemp3 <br />
@@ -3265,36 +3310,51 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
               soilTemp3 <br />
               soilTemp4 <br />
               windchill</td>
-            <td>degree_F <br />
+            <td class="code">degree_F <br />
               degree_C</td>
+	    <td class="code">degree_F</td>
+	    <td class="code">degree_C</td>
+	    <td class="code">degree_C</td>
           </tr>
           <tr class="code">
-            <td>group_time</td>
-            <td>dateTime</td>
-            <td>unix_epoch <br />
+            <td class="code">group_time</td>
+            <td class="code">dateTime</td>
+            <td class="code">unix_epoch <br />
               dublin_jd</td>
+	    <td class="code">unix_epoch</td>
+	    <td class="code">unix_epoch</td>
+	    <td class="code">unix_epoch</td>
           </tr>
           <tr class="code">
-            <td>group_uv</td>
-            <td>UV</td>
-            <td>uv_index</td>
+            <td class="code">group_uv</td>
+            <td class="code">UV</td>
+            <td class="code">uv_index</td>
+            <td class="code">uv_index</td>
+            <td class="code">uv_index</td>
+            <td class="code">uv_index</td>
           </tr>
           <tr class="code">
-            <td>group_volt</td>
-            <td>consBatteryVoltage <br />
+            <td class="code">group_volt</td>
+            <td class="code">consBatteryVoltage <br />
               heatingVoltage <br />
               referenceVoltage <br />
               supplyVoltage</td>
-            <td>volt</td>
+            <td class="code">volt</td>
+            <td class="code">volt</td>
+            <td class="code">volt</td>
+            <td class="code">volt</td>
           </tr>
           <tr class="code">
-            <td>group_NONE</td>
-            <td>NONE</td>
-            <td>NONE</td>
+            <td class="code">group_NONE</td>
+            <td class="code">NONE</td>
+            <td class="code">NONE</td>
+            <td class="code">NONE</td>
+            <td class="code">NONE</td>
+            <td class="code">NONE</td>
           </tr>
         </tbody>
       </table>
-      <h1 id="statistical_types">Appendix C: Statistical Types</h1>
+      <h1 id="statistical_types">Appendix: Statistical Types</h1>
       <p>Most of the templates are devoted to reporting <em>statistical types</em>,
         such as temperature, wind, or rainfall, using various <em>aggregates</em>,
         such as min, max, or sum. These are called <em>aggregations</em>,
@@ -3595,755 +3655,6 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
             <td> </td>
             <td> </td>
             <td> </td>
-          </tr>
-        </tbody>
-      </table>
-      <h1 id="packet_types">Appendix D: Packet Types</h1>
-      <p><em>Packets</em> are the raw data coming off the instrument (as opposed
-        to <em>records</em>, which are stored on the database). The observation
-        types available in a packet are useful when setting <em><a href="usersguide.htm#StdQC">quality
-            control rules</a></em> and when doing <em> <a href="usersguide.htm#Calibrate">calibrations</a></em>.
-      </p>
-      <p>They may also be useful if you are writing your own custom service. In
-        particular, for subclasses of <span class="code">StdService</span>,
-        member function <span class="code">newLoopPacket</span> is called when
-        new LOOP packets arrive, and member function <span class="code">newArchivePacket</span>
-        is called when new archive packets arrive. For both functions, the only
-        argument (besides <span class="code">self</span>) is a dictionary,
-        where the key is the type listed below, and the value is the observation
-        value. </p>
-      <p>See the guide from <em> <a href="http://www.davisnet.com/support/weather/download/VantageSerialProtocolDocs_v250.pdf">
-            Vantage Pro and Pro2 Serial Communications Reference</a></em>
-        (available on the Davis website) for more information about these types.
-      </p>
-      <table class="indent" style="width: 60%">
-        <tbody>
-          <tr>
-            <td><strong>Type</strong></td>
-            <td><strong>Loop packet</strong></td>
-            <td><strong>Archive Packet</strong></td>
-            <td width="15%"><strong>US</strong></td>
-            <td width="15%"><strong>METRIC</strong></td>
-          </tr>
-          <tr>
-            <td><span class="code">barometer</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">consBatteryVoltage</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>volt</td>
-            <td>volt</td>
-          </tr>
-          <tr>
-            <td><span class="code">dateTime</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">dayET</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">dayRain</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>in</td>
-            <td>cm</td>
-          </tr>
-          <tr>
-            <td><span class="code">dewpoint</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">ET</span> (hourly)</td>
-            <td><br />
-            </td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">extraAlarm1</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">extraAlarm2</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">extraAlarm3</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">extraAlarm4</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">extraAlarm5</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">extraAlarm6</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">extraAlarm7</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">extraAlarm8</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">extraHumid1</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraHumid2</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraHumid3</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraHumid4</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraHumid5</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraHumid6</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraHumid7</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraTemp1</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraTemp2</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraTemp3</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraTemp4</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraTemp5</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraTemp6</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">extraTemp7</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">forecastIcon</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">forecastRule</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">heatIndex</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">highOutTemp</span></td>
-            <td><br />
-            </td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">highRadiation</span></td>
-            <td><br />
-            </td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">highUV</span></td>
-            <td><br />
-            </td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">inHumidity</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">inTemp</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">interval</span></td>
-            <td><br />
-            </td>
-            <td>X</td>
-            <td>minute</td>
-            <td>minute</td>
-          </tr>
-          <tr>
-            <td><span class="code">insideAlarm</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">leafTemp1</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">leafTemp2</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">leafTemp3</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">leafTemp4</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">leafWet1</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">leafWet2</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">leafWet3</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">leafWet4</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">lowOutTemp</span></td>
-            <td><br />
-            </td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">monthET</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">monthRain</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>in</td>
-            <td>cm</td>
-          </tr>
-          <tr>
-            <td><span class="code">outHumidity</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">outTemp</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">outsideAlarm1</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">outsideAlarm2</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">radiation</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">rain</span></td>
-            <td><br />
-            </td>
-            <td>X</td>
-            <td>in</td>
-            <td>cm</td>
-          </tr>
-          <tr>
-            <td><span class="code">rainAlarm</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">rainRate</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td>in/hr</td>
-            <td>cm/hr</td>
-          </tr>
-          <tr>
-            <td><span class="code">rxCheckPercent</span></td>
-            <td><br />
-            </td>
-            <td>X</td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">soilLeafAlarm1</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">soilLeafAlarm2</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">soilLeafAlarm3</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">soilLeafAlarm4</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">soilMoist1</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">soilMoist2</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">soilMoist3</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">soilMoist4</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>%</td>
-            <td>%</td>
-          </tr>
-          <tr>
-            <td><span class="code">soilTemp1</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">soilTemp2</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">soilTemp3</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">soilTemp4</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">stormRain</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">stormStart</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">sunrise</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">sunset</span></td>
-            <td>X</td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-            <td><br />
-            </td>
-          </tr>
-          <tr>
-            <td><span class="code">txBatteryStatus</span></td>
-            <td>X</td>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td><span class="code">usUnits</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>US</td>
-            <td>METRIC</td>
-          </tr>
-          <tr>
-            <td><span class="code">UV</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td><span class="code">windChill</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>F</td>
-            <td>C</td>
-          </tr>
-          <tr>
-            <td><span class="code">windDir</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td><span class="code">windGust</span></td>
-            <td></td>
-            <td>X</td>
-            <td>mph</td>
-            <td>km/h</td>
-          </tr>
-          <tr>
-            <td><span class="code">windGustDir</span></td>
-            <td></td>
-            <td>X</td>
-            <td></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td><span class="code">windSpeed10</span></td>
-            <td>X</td>
-            <td></td>
-            <td>mph</td>
-            <td>km/h</td>
-          </tr>
-          <tr>
-            <td><span class="code">windSpeed</span></td>
-            <td>X</td>
-            <td>X</td>
-            <td>mph</td>
-            <td>km/h</td>
-          </tr>
-          <tr>
-            <td><span class="code">yearET</span></td>
-            <td>X</td>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td><span class="code">yearRain</span></td>
-            <td>X</td>
-            <td></td>
-            <td>in</td>
-            <td>cm</td>
           </tr>
         </tbody>
       </table>

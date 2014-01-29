@@ -24,8 +24,9 @@ IO_ERROR     = 4
 DB_ERROR     = 5
 
 # Constants used to indicate a unit system:
-METRIC = 0x10
-US     = 0x01
+METRIC   = 0x10
+METRICWX = 0x11
+US       = 0x01
 
 #===============================================================================
 #           Define possible exceptions that could get thrown.

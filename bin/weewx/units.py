@@ -14,11 +14,13 @@ import syslog
 import weewx
 import weeutil.weeutil
 
-unit_constants = {'US'     : weewx.US,
-                  'METRIC' : weewx.METRIC}
+unit_constants = {'US'       : weewx.US,
+                  'METRIC'   : weewx.METRIC,
+                  'METRICWX' : weewx.METRICWX}
 
-unit_nicknames = {weewx.US     : 'US',
-                  weewx.METRIC : 'METRIC'}
+unit_nicknames = {weewx.US       : 'US',
+                  weewx.METRIC   : 'METRIC',
+                  weewx.METRICWX : 'METRICWX'}
 
 # This data structure maps observation types to a "unit group"
 obs_group_dict = {"altitude"           : "group_altitude",
@@ -140,6 +142,16 @@ MetricUnits = {"group_altitude"    : "meter",
                "group_time"        : "unix_epoch",
                "group_uv"          : "uv_index",
                "group_volt"        : "volt"}
+
+# This dictionary maps unit groups to a standard unit type in the 
+# "Metric WX" unit system. It's the same as the "Metric" system,
+# except for rain and speed:
+MetricWXUnits = dict(MetricUnits)
+MetricWXUnits['group_rain']     = "mm"
+MetricWXUnits['group_rainrate'] = "mm_per_hour"
+MetricWXUnits['group_speed']    = "meter_per_second"
+MetricWXUnits['group_speed2']   = "meter_per_second2"
+
 
 # Conversion functions to go from one unit type to another.
 conversionDict = {
@@ -630,8 +642,9 @@ class Converter(object):
 #==============================================================================
 
 # This dictionary holds converters for the standard unit conversion systems. 
-StdUnitConverters = {weewx.US     : Converter(USUnits),
-                     weewx.METRIC : Converter(MetricUnits)}
+StdUnitConverters = {weewx.US       : Converter(USUnits),
+                     weewx.METRIC   : Converter(MetricUnits),
+                     weewx.METRICWX : Converter(MetricWXUnits)}
 
 #==============================================================================
 #                        class FixedConverter
@@ -998,20 +1011,23 @@ def convertStd(val_t, target_std_unit_system):
     val_t: A value tuple.
     
     target_std_unit_system: A standardized unit system
-                            (weewx.US or weewx.METRIC)
+                            (weewx.US, weewx.METRIC, or weewx.METRICWX)
     
     Returns: A value tuple in the given standardized unit system.
     
     Example:
     >>> value_t = (30.02, 'inHg', 'group_pressure')
-    >>> print convertStd(value_t, weewx.METRIC)
-    (1016.4771999999999, 'mbar', 'group_pressure')
+    >>> print "(%.2f, %s, %s)" % convertStd(value_t, weewx.METRIC)
+    (1016.48, mbar, group_pressure)
+    >>> value_t = (1.2, 'inch', 'group_rain')
+    >>> print "(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX)
+    (30.48, mm, group_rain)
     """
     return StdUnitConverters[target_std_unit_system].convert(val_t)
 
 def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
-    """Given a standard unit system (weewx.US or weewx.METRIC), an observation
-    type, and an aggregation type, what units would it be in?
+    """Given a standard unit system (weewx.US, weewx.METRIC, weewx.METRICWX),
+    an observation type, and an aggregation type, what units would it be in?
     
     target_std_unit_system: A standardized unit system. If None, then
     the the output units are indeterminate, so (None, None) is returned. 
@@ -1097,6 +1113,10 @@ def to_US(datadict):
 def to_METRIC(datadict):
     """Convert the units used in a dictionary to Metric."""
     return _to_std_system(datadict, weewx.METRIC)
+
+def to_METRICWX(datadict):
+    """Convert the units used in a dictionary to MetricWX."""
+    return _to_std_system(datadict, weewx.METRICWX)
 
 def _to_std_system(datadict, unit_system):
     """Convert the units used in a dictionary to a target unit system."""

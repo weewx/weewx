@@ -1462,12 +1462,9 @@ class AWEKASThread(RESTThread):
                 raise FailedPost("server returned '%s'" % line)
 
     def get_url(self, in_record):
-        # put everything into the right units and scaling
-        record = weewx.units.to_METRIC(in_record)
-        if record.has_key('dayRain') and record['dayRain'] is not None:
-            record['dayRain'] = record['dayRain'] * 10
-        if record.has_key('rainRate') and record['rainRate'] is not None:
-            record['rainRate'] = record['rainRate'] * 10
+
+        # Convert to Metric:
+        record = weewx.units.to_METRICWX(in_record)
 
         # assemble an array of values in the proper order
         values = [self.username]

@@ -279,7 +279,7 @@ class StdConvert(StdService):
 
         # Get the target unit nickname (something like 'US' or 'METRIC'):
         target_unit_nickname = config_dict['StdConvert']['target_unit']
-        # Get the target unit. This will be weewx.US or weewx.METRIC
+        # Get the target unit. This will be weewx.US, weewx.METRIC, weewx.METRICWX
         self.target_unit = weewx.units.unit_constants[target_unit_nickname.upper()]
         # Bind self.converter to the appropriate standard converter
         self.converter = weewx.units.StdUnitConverters[self.target_unit]

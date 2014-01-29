@@ -1514,7 +1514,14 @@ longitude = -77.0366</pre>
 	<a href="#StdCalibrate">[StdCalibrate]</a></span> and <span class="code">
 	<a href="#StdQC">[StdQC]</a></span> below, and change the units there as well!</p>
     <p class="config_option">target_unit</p>
-    <p>Set to either <span class="code">US</span> or <span class="code">METRIC</span>. 
+    <p>Set to either <span class="code">US</span>, <span class="code">METRICWX</span>,
+      or <span class="code">METRIC</span>. The difference between 
+      <span class="code">METRICWX</span>, and <span class="code">METRIC</span> is that
+      the former uses <span class="code">mm</span> instead of <span class="code">cm</span>
+      for rain, and <span class="code">m/s</span> instead of 
+      <span class="code">km/hr</span> for wind. See the Appendix <a href="customizing.htm#units">
+      Units</a> in the Customizing Guide for the exact differences beween 
+      these three choices.
       Default is <span class="code">US</span>.</p>
     <h2 class="config_section" id="StdCalibrate">[StdCalibrate]</h2>
     <p>This section is for configuring the <span class="code">StdCalibrate</span> 
