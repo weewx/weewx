@@ -33,11 +33,16 @@ Ranges in MinMax QC can now include units.
 
 When QC rejects values it now logs the rejection.
 
+Introduced a new unit system, METRICWX. Similar to METRIC, it uses
+mm for rain, mm/hr for rain rate, and m/s for speed.
+
 Font handles are now cached in order to work around a memory leak in PIL.
 
 Image margins now scale with image and font sizes.
 
 Now works with the pure Python version of Cheetah's NameMapper.
+
+Fixed bug that prevented weewx from working with Python v2.5.
 
 Fixed bug in SummaryByMonth and SummaryByYear that would result in duplicate
 month/year entries when generating from multiple ByMonth or ByYear templates.
