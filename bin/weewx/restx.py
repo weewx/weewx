@@ -95,19 +95,23 @@ class BadLogin(StandardError):
     """Raised when login information is bad or missing."""
 
 def get_dict(config_dict, svc):
-    """set defaults on site_dict using values from rest base"""
+    """Create a site_dict using values from the StdRESTful section of the
+    configuration, but only if they are specified.  Do not supply default
+    values - that is left to the derived classes since their defaults vary."""
+
     site_dict = dict(config_dict['StdRESTful'][svc])
-    set_default(site_dict, config_dict, svc, 'log_success', True)
-    set_default(site_dict, config_dict, svc, 'log_failure', True)
-    set_default(site_dict, config_dict, svc, 'timeout', 10)
-    set_default(site_dict, config_dict, svc, 'max_tries', 3)
-    set_default(site_dict, config_dict, svc, 'retry_wait', 5)
+    set_default(site_dict, config_dict, svc, 'log_success')
+    set_default(site_dict, config_dict, svc, 'log_failure')
+    set_default(site_dict, config_dict, svc, 'timeout')
+    set_default(site_dict, config_dict, svc, 'max_tries')
+    set_default(site_dict, config_dict, svc, 'retry_wait')
     return site_dict
 
-def set_default(site_dict, config_dict, svc, option, dflt):
-    v = config_dict['StdRESTful'].get(option, dflt)
-    v = config_dict['StdRESTful'][svc].get(option, v)
-    site_dict.setdefault(option, v)
+def set_default(site_dict, config_dict, svc, option):
+    if config_dict['StdRESTful'].has_key(option):
+        site_dict.setdefault(option, config_dict['StdRESTful'][option])
+    if config_dict['StdRESTful'][svc].has_key(option):
+        site_dict.setdefault(option, config_dict['StdRESTful'][svc][option])
         
 #==============================================================================
 #                    Abstract base classes
@@ -1130,7 +1134,7 @@ class StationRegistryThread(RESTThread):
                  station_type="Unknown", station_model="Unknown",
                  post_interval=604800, max_backlog=0, stale=None,
                  log_success=True, log_failure=True,
-                 timeout=20, max_tries=3, retry_wait=5):
+                 timeout=60, max_tries=3, retry_wait=5):
         """Initialize an instance of StationRegistryThread.
         
         Required parameters:
@@ -1180,7 +1184,7 @@ class StationRegistryThread(RESTThread):
           Default is 604800 seconds (1 week).
           
           timeout: How long to wait for the server to respond before giving up.
-          Default is 20 seconds.
+          Default is 60 seconds.
         """
 
         super(StationRegistryThread, self).__init__(queue,

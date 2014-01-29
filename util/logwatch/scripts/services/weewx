@@ -173,6 +173,7 @@ while(defined($_ = <STDIN>)) {
              /restx: StationRegistry: Station will/ ||
              /restx: .*Data will be uploaded/ ||
              /restx: .*wait interval/ ||
+             /restx: Shut down/ ||
              /stats: Back calculated schema/ ||
              /stats: Backfilling stats database/ ||
              /stats: backfilled \d+ days of statistics/ ||
@@ -337,6 +338,7 @@ while(defined($_ = <STDIN>)) {
              /owfs: polling interval is / ||
              /owfs: sensor map is / ||
              /cmon: cpuinfo: / ||
+             /cmon: Skipping record/ ||
              /forecast: .* starting thread/ ||
              /forecast: .* terminating thread/ ||
              /forecast: .* not yet time to do the forecast/ ||
