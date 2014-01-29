@@ -599,9 +599,8 @@ def save_path(filepath):
 # the weewx weewx installation.
 #==============================================================================
 
-# FIXME: need to prune from weewx.conf on uninstall: skin, service
-# FIXME: delete .pyc files on uninstall
-# FIXME: do not overwrite fields in weewx.conf if they already exist
+# FIXME: consider start/stop of weewx as part of the process
+# FIXME: design something to handle paths for included files in skins
 
 class Logger(object):
     def __init__(self, verbosity=0):
@@ -662,6 +661,7 @@ class Extension(Logger):
         self.layout = self.verify_layout(self.layout_type)
         self.hisdir = self.verify_uninstaller(self.layout, self.filename)
         self.basename = self.filename
+        self.verify_src(self.hisdir)
         self.load_installer(self.hisdir, self.basename, self.layout)
         self.installer.uninstall()
 
@@ -765,7 +765,7 @@ class Extension(Logger):
         if errors:
             raise Exception, '\n'.join(errors)
 
-        self.log("layout is %s" % layout, level=1)
+        self.log("layout is \n  %s" % '\n  '.join(formatdict(layout)), level=1)
 
         return layout
 
@@ -919,22 +919,29 @@ class ExtensionInstaller(Logger):
             dstdir = self.prepend_layout_path(t[0])
             for f in t[1]:
                 dst = self.prepend_layout_path(f)
-                if os.path.exists(dst):
-                    self.log("delete file %s" % dst, level=2)
-                    if self.doit:
-                        os.remove(dst)
-                else:
-                    self.log("missing file %s" % dst, level=2)
+                self.delete_file(dst)
+                # if it is python source, delete any pyc and pyo as well
+                if dst.endswith(".py"):
+                    self.delete_file(dst.replace('.py','.pyc'))
+                    self.delete_file(dst.replace('.py','.pyo'))
             # if the directory is empty, delete it
             try:
-                if empty(dstdir):
+                if not os.listdir(dstdir):
                     self.log("delete directory %s" % dstdir, level=2)
                     if self.doit:
                         shutil.rmtree(dstdir, True)
                 else:
                     self.log("directory not empty: %s" % dstdir, level=2)
-            except:
-                pass
+            except OSError, e:
+                self.log("delete failed: %s" % e, level=2)
+
+    def delete_file(self, filename):
+        try:
+            self.log("delete file %s" % filename, level=2)
+            if self.doit:
+                os.remove(filename)
+        except OSError, e:
+            self.log("delete failed: %s" % e, level=2)
 
     def merge_config_options(self):
         self.log("merge_config_options", level=1)
