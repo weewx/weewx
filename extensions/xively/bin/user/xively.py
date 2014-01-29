@@ -40,7 +40,7 @@ except Exception, e:
         import json
 
 def logmsg(level, msg):
-    syslog.syslog(level, 'xively: %s' % msg)
+    syslog.syslog(level, 'restx: Xively: %s' % msg)
 
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
@@ -108,7 +108,7 @@ class Xively(weewx.restx.StdRESTbase):
         self.archive_thread = XivelyThread(self.archive_queue, **site_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        loginf("Data will be uploaded to Xively")
+        loginf("Data will be uploaded to feed %s" % site_dict['feed'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)

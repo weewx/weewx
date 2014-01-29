@@ -31,7 +31,7 @@ import weewx.units
 from weeutil.weeutil import to_bool
 
 def logmsg(level, msg):
-    syslog.syslog(level, 'owm: %s' % msg)
+    syslog.syslog(level, 'restx: OWM: %s' % msg)
 
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
@@ -99,12 +99,9 @@ class OpenWeatherMap(weewx.restx.StdRESTbase):
         super(OpenWeatherMap, self).__init__(engine, config_dict)        
         try:
             site_dict = dict(config_dict['StdRESTful']['OpenWeatherMap'])
-            if site_dict['username'] is None:
-                raise KeyError('username')
-            if site_dict['password'] is None:
-                raise KeyError('password')
-            if site_dict['station_name'] is None:
-                raise KeyError('station_name')
+            site_dict['username']
+            site_dict['password']
+            site_dict['station_name']
         except KeyError, e:
             logerr("Data will not be posted: Missing option %s" % e)
             return
@@ -118,7 +115,8 @@ class OpenWeatherMap(weewx.restx.StdRESTbase):
                                                    **site_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        loginf("Data will be uploaded to OpenWeatherMap")
+        loginf("Data will be uploaded for station %s" %
+               site_dict['station_name'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)

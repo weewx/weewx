@@ -26,7 +26,7 @@ import weewx.restx
 from weeutil.weeutil import to_bool
 
 def logmsg(level, msg):
-    syslog.syslog(level, 'emoncms: %s' % msg)
+    syslog.syslog(level, 'restx: EmonCMS: %s' % msg)
 
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
@@ -93,7 +93,8 @@ class EmonCMS(weewx.restx.StdRESTbase):
         self.archive_thread = EmonCMSThread(self.archive_queue, **site_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        loginf("Data will be uploaded to EmonCMS")
+        loginf("Data will be uploaded using token %s" %
+               'X'*(len(site_dict['token'])-4) + site_dict['token'][-4:])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)

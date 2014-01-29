@@ -29,7 +29,7 @@ import weewx.units
 from weeutil.weeutil import to_bool
 
 def logmsg(level, msg):
-    syslog.syslog(level, 'wetter: %s' % msg)
+    syslog.syslog(level, 'restx: Wetter: %s' % msg)
 
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
@@ -96,7 +96,7 @@ class Wetter(weewx.restx.StdRESTbase):
         self.archive_thread = WetterThread(self.archive_queue, **site_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        loginf("Data will be uploaded to wetter.com")
+        loginf("Data will be uploaded for username %s" % site_dict['username'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
