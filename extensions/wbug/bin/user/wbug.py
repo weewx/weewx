@@ -91,7 +91,7 @@ class WeatherBug(weewx.restx.StdRESTbase):
         """
         super(WeatherBug, self).__init__(engine, config_dict)
         try:
-            site_dict = dict(config_dict['StdRESTful']['WeatherBug'])
+            site_dict = weewx.restx.get_dict(config_dict, 'WeatherBug')
             site_dict['publisher_id']
             site_dict['station_number']
             site_dict['password']
@@ -133,18 +133,20 @@ class WeatherBugThread(weewx.restx.RESTThread):
                  publisher_id, station_number, password, latitude, longitude,
                  database_dict,
                  server_url=_SERVER_URL, skip_upload=False,
-                 log_success=True, log_failure=True, max_backlog=sys.maxint,
-                 stale=None, max_tries=3, post_interval=None, timeout=60):
+                 post_interval=None, max_backlog=sys.maxint, stale=None,
+                 log_success=True, log_failure=True,
+                 timeout=60, max_tries=3, retry_wait=5):
         super(WeatherBugThread, self).__init__(queue,
                                                protocol_name='WeatherBug',
                                                database_dict=database_dict,
-                                               log_success=log_success,
-                                               log_failure=log_failure,
+                                               post_interval=post_interval,
                                                max_backlog=max_backlog,
                                                stale=stale,
+                                               log_success=log_success,
+                                               log_failure=log_failure,
                                                max_tries=max_tries,
-                                               post_interval=post_interval,
-                                               timeout=timeout)
+                                               timeout=timeout,
+                                               retry_wait=retry_wait)
         self.publisher_id = publisher_id
         self.station_number = station_number
         self.password = password

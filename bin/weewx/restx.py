@@ -93,6 +93,21 @@ class FailedPost(IOError):
 
 class BadLogin(StandardError):
     """Raised when login information is bad or missing."""
+
+def get_dict(config_dict, svc):
+    """set defaults on site_dict using values from rest base"""
+    site_dict = dict(config_dict['StdRESTful'][svc])
+    set_default(site_dict, config_dict, svc, 'log_success', True)
+    set_default(site_dict, config_dict, svc, 'log_failure', True)
+    set_default(site_dict, config_dict, svc, 'timeout', 10)
+    set_default(site_dict, config_dict, svc, 'max_tries', 3)
+    set_default(site_dict, config_dict, svc, 'retry_wait', 5)
+    return site_dict
+
+def set_default(site_dict, config_dict, svc, option, dflt):
+    v = config_dict['StdRESTful'].get(option, dflt)
+    v = config_dict['StdRESTful'][svc].get(option, v)
+    site_dict.setdefault(option, v)
         
 #==============================================================================
 #                    Abstract base classes
@@ -129,9 +144,9 @@ class RESTThread(threading.Thread):
     Offers a few bits of common functionality."""
 
     def __init__(self, queue, protocol_name, database_dict=None,
+                 post_interval=None, max_backlog=sys.maxint, stale=None, 
                  log_success=True, log_failure=True, 
-                 max_backlog=sys.maxint, max_tries=3, stale=None, 
-                 post_interval=None, timeout=10, retry_wait=5):
+                 timeout=10, max_tries=3, retry_wait=5):
         """Initializer for the class RESTThread
         Required parameters:
 
@@ -182,7 +197,7 @@ class RESTThread(threading.Thread):
         self.timeout       = to_int(timeout)
         self.retry_wait    = to_int(retry_wait)
         self.lastpost = 0
-            
+
     def get_record(self, record, archive):
         """Augment record data with additional data from the archive.
         Should return results in the same units as the record and the database.
@@ -425,7 +440,7 @@ class StdWunderground(StdRESTbase):
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the WU options:
-            _ambient_dict=dict(config_dict['StdRESTful']['Wunderground'])
+            _ambient_dict = get_dict(config_dict, 'Wunderground')
             # A convenient way to check for missing required key words.
             _ambient_dict['station']
             _ambient_dict['password']
@@ -492,7 +507,7 @@ class StdPWSWeather(StdRESTbase):
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the WU options:
-            _ambient_dict=dict(config_dict['StdRESTful']['PWSweather'])
+            _ambient_dict = get_dict(config_dict, 'PWSweather')
             # A convenient way to check for missing required key words.
             _ambient_dict['station']
             _ambient_dict['password']
@@ -539,7 +554,7 @@ class StdWOW(StdRESTbase):
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the WOW options:
-            _ambient_dict=dict(config_dict['StdRESTful']['WOW'])
+            _ambient_dict = get_dict(config_dict, 'WOW')
             # A convenient way to check for missing required key words.
             _ambient_dict['station']
             _ambient_dict['password']
@@ -570,9 +585,9 @@ class AmbientThread(RESTThread):
     def __init__(self, queue, database_dict,
                  station, password, server_url,
                  protocol_name="Unknown-Ambient",
+                 post_interval=None, max_backlog=sys.maxint, stale=None, 
                  log_success=True, log_failure=True,
-                 max_backlog=sys.maxint, max_tries=3, stale=None, 
-                 post_interval=None, timeout=10):
+                 timeout=10, max_tries=3, retry_wait=5):
         """
         Initializer for the AmbientThread class.
         
@@ -618,14 +633,17 @@ class AmbientThread(RESTThread):
           timeout: How long to wait for the server to respond before giving up.
           Default is 10 seconds.        
         """
-        super(AmbientThread, self).__init__(queue, protocol_name=protocol_name,
+        super(AmbientThread, self).__init__(queue,
+                                            protocol_name=protocol_name,
                                             database_dict=database_dict,
+                                            post_interval=post_interval,
+                                            max_backlog=max_backlog,
+                                            stale=stale,
                                             log_success=log_success,
                                             log_failure=log_failure,
-                                            max_backlog=max_backlog,
-                                            max_tries=max_tries, stale=stale,
-                                            post_interval=post_interval,
-                                            timeout=timeout)
+                                            timeout=timeout,
+                                            max_tries=max_tries,
+                                            retry_wait=retry_wait)
         self.station       = station
         self.password      = password
         self.server_url    = server_url
@@ -773,7 +791,7 @@ class StdCWOP(StdRESTbase):
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the CWOP options:
-            _cwop_dict=dict(config_dict['StdRESTful']['CWOP'])
+            _cwop_dict = get_dict(config_dict, 'CWOP')
             _cwop_dict['station'] = _cwop_dict['station'].upper()
             
             if _cwop_dict['station'][0:2] in StdCWOP.valid_prefixes:
@@ -806,13 +824,11 @@ class CWOPThread(RESTThread):
     using the CWOP protocol."""
 
     def __init__(self, queue, database_dict, 
-                 station, passcode,
-                 latitude, longitude, station_type,
+                 station, passcode, latitude, longitude, station_type,
                  server_list=StdCWOP.default_servers,
-                 protocol_name="CWOP",
+                 post_interval=600, max_backlog=sys.maxint, stale=1800,
                  log_success=True, log_failure=True,
-                 max_backlog=sys.maxint, max_tries=3, stale=1800,
-                 post_interval=600, timeout=10):
+                 timeout=10, max_tries=3, retry_wait=5):
 
         """
         Initializer for the CWOPThread class.
@@ -840,9 +856,6 @@ class CWOPThread(RESTThread):
         
           server_list: A list of strings holding the CWOP server name and
           port. Default is ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
-        
-          protocol_name: A string holding the name of the protocol.
-          Default is "CWOP"
           
           log_success: If True, log a successful post in the system log.
           Default is True.
@@ -868,15 +881,16 @@ class CWOPThread(RESTThread):
         """        
         # Initialize my superclass
         super(CWOPThread, self).__init__(queue,
-                                         protocol_name=protocol_name,
+                                         protocol_name="CWOP",
                                          database_dict=database_dict,
+                                         post_interval=post_interval,
+                                         max_backlog=max_backlog,
+                                         stale=stale,
                                          log_success=log_success,
                                          log_failure=log_failure,
-                                         max_backlog=max_backlog,
+                                         timeout=timeout,
                                          max_tries=max_tries,
-                                         stale=stale,
-                                         post_interval=post_interval,
-                                         timeout=timeout)
+                                         retry_wait=retry_wait)
         self.station       = station
         self.passcode      = passcode
         self.server_list   = server_list
@@ -1074,7 +1088,7 @@ class StdStationRegistry(StdRESTbase):
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the registry options:
-            _registry_dict = dict(config_dict['StdRESTful']['StationRegistry'])
+            _registry_dict = get_dict(config_dict, 'StationRegistry')
             _registry_dict.setdefault('station_url',
                                       self.engine.stn_info.station_url)
             if _registry_dict['station_url'] is None:
@@ -1114,9 +1128,9 @@ class StationRegistryThread(RESTThread):
                  server_url=StdStationRegistry.archive_url,
                  description="Unknown",
                  station_type="Unknown", station_model="Unknown",
-                 protocol_name="StationRegistry",
-                 log_success=True, log_failure=True, max_backlog=0,
-                 max_tries=3, stale=None, post_interval=604800, timeout=20):
+                 post_interval=604800, max_backlog=0, stale=None,
+                 log_success=True, log_failure=True,
+                 timeout=20, max_tries=3, retry_wait=5):
         """Initialize an instance of StationRegistryThread.
         
         Required parameters:
@@ -1146,9 +1160,6 @@ class StationRegistryThread(RESTThread):
           property provided by the driver.
           Default is 'Unknown'.
           
-          protocol_name: A string holding the name of the protocol.
-          Default is 'StationRegistry'.
-          
           log_success: If True, log a successful post in the system log.
           Default is True.
           
@@ -1173,14 +1184,15 @@ class StationRegistryThread(RESTThread):
         """
 
         super(StationRegistryThread, self).__init__(queue,
-                                                    protocol_name=protocol_name,
+                                                    protocol_name='StationRegistry',
+                                                    post_interval=post_interval,
+                                                    max_backlog=max_backlog,
+                                                    stale=stale,
                                                     log_success=log_success,
                                                     log_failure=log_failure,
-                                                    max_backlog=max_backlog,
+                                                    timeout=timeout,
                                                     max_tries=max_tries,
-                                                    stale=stale,
-                                                    post_interval=post_interval,
-                                                    timeout=timeout)
+                                                    retry_wait=retry_wait)
         self.station_url   = station_url
         self.latitude      = to_float(latitude)
         self.longitude     = to_float(longitude)
@@ -1319,7 +1331,7 @@ class AWEKAS(StdRESTbase):
     def __init__(self, engine, config_dict):
         super(AWEKAS, self).__init__(engine, config_dict)
         try:
-            site_dict = dict(config_dict['StdRESTful']['AWEKAS'])
+            site_dict = get_dict(config_dict, 'AWEKAS')
             site_dict['username']
             site_dict['password']
         except KeyError, e:
@@ -1361,8 +1373,9 @@ class AWEKASThread(RESTThread):
     def __init__(self, queue, username, password, latitude, longitude,
                  database_dict,
                  language='de', server_url=_SERVER_URL, skip_upload=False,
-                 log_success=True, log_failure=True, max_backlog=sys.maxint,
-                 stale=None, max_tries=3, post_interval=300, timeout=60):
+                 post_interval=300, max_backlog=sys.maxint, stale=None,
+                 log_success=True, log_failure=True, 
+                 timeout=60, max_tries=3, retry_wait=5):
         """Initialize an instances of AWEKASThread.
 
         Required parameters:
@@ -1418,13 +1431,14 @@ class AWEKASThread(RESTThread):
         super(AWEKASThread, self).__init__(queue,
                                            protocol_name='AWEKAS',
                                            database_dict=database_dict,
-                                           log_success=log_success,
-                                           log_failure=log_failure,
+                                           post_interval=post_interval,
                                            max_backlog=max_backlog,
                                            stale=stale,
+                                           log_success=log_success,
+                                           log_failure=log_failure,
+                                           timeout=timeout,
                                            max_tries=max_tries,
-                                           post_interval=post_interval,
-                                           timeout=timeout)
+                                           retry_wait=retry_wait)
         self.username = username
         self.password = password
         self.latitude = float(latitude)

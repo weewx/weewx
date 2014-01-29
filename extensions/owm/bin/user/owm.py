@@ -98,7 +98,7 @@ class OpenWeatherMap(weewx.restx.StdRESTbase):
         """
         super(OpenWeatherMap, self).__init__(engine, config_dict)        
         try:
-            site_dict = dict(config_dict['StdRESTful']['OpenWeatherMap'])
+            site_dict = weewx.restx.get_dict(config_dict, 'OpenWeatherMap')
             site_dict['username']
             site_dict['password']
             site_dict['station_name']
@@ -147,18 +147,20 @@ class OpenWeatherMapThread(weewx.restx.RESTThread):
                  username, password, latitude, longitude, altitude,
                  station_name, database_dict,
                  server_url=_SERVER_URL, skip_upload=False,
-                 log_success=True, log_failure=True, max_backlog=0,
-                 stale=None, max_tries=3, post_interval=None, timeout=60):
+                 post_interval=None, max_backlog=0, stale=None,
+                 log_success=True, log_failure=True,
+                 timeout=60, max_tries=3, retry_wait=5):
         super(OpenWeatherMapThread, self).__init__(queue,
                                                    protocol_name='OWM',
                                                    database_dict=database_dict,
-                                                   log_success=log_success,
-                                                   log_failure=log_failure,
+                                                   post_interval=post_interval,
                                                    max_backlog=max_backlog,
                                                    stale=stale,
+                                                   log_success=log_success,
+                                                   log_failure=log_failure,
+                                                   timeout=timeout,
                                                    max_tries=max_tries,
-                                                   post_interval=post_interval,
-                                                   timeout=timeout)
+                                                   retry_wait=retry_wait)
         self.username = username
         self.password = password
         self.latitude = float(latitude)

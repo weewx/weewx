@@ -82,7 +82,7 @@ class EmonCMS(weewx.restx.StdRESTbase):
         """
         super(EmonCMS, self).__init__(engine, config_dict)        
         try:
-            site_dict = dict(config_dict['StdRESTful']['EmonCMS'])
+            site_dict = weewx.restx.get_dict(config_dict, 'EmonCMS')
             site_dict['token']
         except KeyError, e:
             logerr("Data will not be posted: Missing option %s" % e)
@@ -124,18 +124,20 @@ class EmonCMSThread(weewx.restx.RESTThread):
 
     def __init__(self, queue, token, database_dict,
                  station=None, server_url=_SERVER_URL, skip_upload=False,
-                 log_success=True, log_failure=True, max_backlog=sys.maxint,
-                 stale=None, max_tries=3, post_interval=None, timeout=60):
+                 post_interval=None, max_backlog=sys.maxint, stale=None,
+                 log_success=True, log_failure=True,
+                 timeout=60, max_tries=3, retry_wait=5):
         super(EmonCMSThread, self).__init__(queue,
                                             protocol_name='EmonCMS',
                                             database_dict=database_dict,
-                                            log_success=log_success,
-                                            log_failure=log_failure,
+                                            post_interval=post_interval,
                                             max_backlog=max_backlog,
                                             stale=stale,
+                                            log_success=log_success,
+                                            log_failure=log_failure,
                                             max_tries=max_tries,
-                                            post_interval=post_interval,
-                                            timeout=timeout)
+                                            timeout=timeout,
+                                            retry_wait=retry_wait)
         self.token = token
         self.station = station
         self.server_url = server_url
