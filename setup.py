@@ -543,7 +543,7 @@ def update_config_file(config_dict):
             if svc.startswith('weewx.restful'):
                 svc = 'weewx.restx.Std' + section
             # awekas is in weewx.restx since 2.6
-            if svc == 'user.awekas.AWEKAS':
+            if svc.endswith('AWEKAS'):
                 svc = 'weewx.restx.AWEKAS'
             config_dict['Engines']['WxEngine']['restful_services'].append(svc)
 
