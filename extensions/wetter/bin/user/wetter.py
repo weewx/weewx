@@ -147,11 +147,9 @@ class WetterThread(weewx.restx.RESTThread):
         if not txt.startswith('status=SUCCESS'):
             raise weewx.restx.FailedPost("Server returned '%s'" % txt)
 
-    def get_data(self, record):
+    def get_data(self, in_record):
         # put everything into the right units
-        if record['usUnits'] != weewx.METRIC:
-            converter = weewx.units.StdUnitConverters[weewx.METRIC]
-            record = converter.convertDict(record)
+        record = weewx.units.to_METRIC(in_record)
 
         # put data into expected scaling, structure, and format
         values = {}

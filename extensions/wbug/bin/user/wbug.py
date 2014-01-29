@@ -167,11 +167,9 @@ class WeatherBugThread(weewx.restx.RESTThread):
             if not line.startswith('Successfully Received'):
                 raise weewx.restx.FailedPost("Server response: %s" % line)
 
-    def get_url(self, record):
+    def get_url(self, in_record):
         # put everything into the right units and scaling
-        if record['usUnits'] != weewx.US:
-            converter = weewx.units.StdUnitConverters[weewx.US]
-            record = converter.convertDict(record)
+        record = weewx.units.to_US(in_record)
 
         # put data into expected structure and format
         values = { 'action':'live' }
