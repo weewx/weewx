@@ -1,13 +1,9 @@
 TODO before the next release:
 
-figure out how to prevent setup.py from scrambling comments in weewx.conf
-
-extension installer/uninstaller:
-  need to prune from weewx.conf on uninstall: skin, service
-  delete .pyc/.pyo files on uninstall
-  do not overwrite fields in weewx.conf if they already exist
-  restart weewx after extension is installed?
-
 Figure out why the heartbeat doesn't work on the WMR200.
 
-Need to document the ability to specify a unit in StdQC.
+trailing comma in the services lists after upgrade
+
+add documentation for each extension and the extension installer.
+
+add upgrading notes for extensions from 2.5 to 2.6

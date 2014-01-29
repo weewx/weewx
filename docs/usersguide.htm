@@ -876,11 +876,11 @@ Version: 2.6.0a6
 
     <br/>
     
-    <h3><a href='debian.htm'>Installing from DEB package</a></h3>
+    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
     <p>For Debian, Ubuntu, Mint operating systems, follow the instruction in 
       <a href='debian.htm'>Installation on Debian Linux systems</a>.</p>
 
-    <h3><a href='redhat.htm'>Installing from Redhat RPM package</a></h3>
+    <h2><a href='redhat.htm'>Installing from Redhat RPM package</a></h2>
     <p>For Redhat, CentOS, Fedora operating systems, follow the instructions in
       <a href='redhat.htm'>Installation on Redhat Linux systems</a>.</p>
 
@@ -1065,6 +1065,8 @@ longitude = -77.0366</pre>
     <h3 class="config_section">[WMR100]</h3>
     <p>This section is for options relating to the Oregon Scientific WMR100
       series of weather stations with USB connectors.</p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, WMR100 or WMRS200.</p>
     <p class="config_option">stale_wind</p>
     <p>How long a wind record can be used to calculate wind chill (in seconds).
       Default is 30.</p>
@@ -1072,6 +1074,8 @@ longitude = -77.0366</pre>
     <h3 class="config_section">[WMR200]</h3>
     <p>This section is for options relating to the Oregon Scientific WMR200
       series of weather stations with USB connectors.</p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, WMR200 or WMR200A.</p>
     <p class="config_option">use_pc_time</p>
     <p>If True, use the computer time, otherwise use the station time.  Default
       is False.</p>
@@ -1091,6 +1095,8 @@ longitude = -77.0366</pre>
       <span class="code">/dev/ttyUSB0</span> is a common location for USB
       ports, <span class="code">/dev/ttyS0</span> for serial ports.
       No default. </p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, WMR968 or WMR918.</p>
 
     <h3 class="config_section">[FineOffsetUSB]</h3>
     <p>This section is for options relating to the Fine Offset series of
@@ -1258,15 +1264,19 @@ longitude = -77.0366</pre>
     <ol>
         <li>Enable the StationRegistry in <span class="code">weewx.conf</span>
 	  by setting the option <span class="code">register_this_station</span>
-	  to <span class="code">True</span>. Your station will contact the registry once
-            per week. If your station does not contact the registry for about a
-            month, it will be removed from the list.
+	  to <span class="code">True</span>. Your station will contact the
+          registry once per week. If your station does not contact the
+          registry for about a month, it will be removed from the list.
         </li>
-        <li>Provide either <span class="code">station_url</span> in section
-	  <a href="#station_url"><span class='code'>[Station]</span> above</a>, or
-            in this section.
+        <li>Provide a <span class="code">station_url</span>, either in section
+	  <a href="#station_url"><span class='code'>[Station]</span></a>, or
+            in the <span class='code'>[[StationRegistry]]</span> section.
         </li>
     </ol>
+    <p>The <span class='code'>station_url</span> is used to uniquely identify
+      each station, so choose it carefully before you set
+      <span class='code'>register_this_station</span> to
+      <span class='code'>True</span>.</p>
     <pre class="tty">[StdRestful]
     [[StationRegistry]]
         register_this_station = True</pre>
@@ -1519,7 +1529,7 @@ longitude = -77.0366</pre>
       <span class="code">METRICWX</span>, and <span class="code">METRIC</span> is that
       the former uses <span class="code">mm</span> instead of <span class="code">cm</span>
       for rain, and <span class="code">m/s</span> instead of 
-      <span class="code">km/hr</span> for wind. See the Appendix <a href="customizing.htm#units">
+      <span class="code">km/hr</span> for wind speed. See the Appendix <a href="customizing.htm#units">
       Units</a> in the Customizing Guide for the exact differences beween 
       these three choices.
       Default is <span class="code">US</span>.</p>
@@ -1560,27 +1570,41 @@ longitude = -77.0366</pre>
       </span>and before the archiving service <span class="code">StdArchive</span>, 
       so that it is the calibrated and corrected data that are stored. </p>
     <h3 class="config_section">[[MinMax]]</h3>
-    <p>In this section you list the observation types you wish to have checked, 
-      along with their minimum and maximum values. The units should be in <em>the 
-	same unit system as specified in section <span class="code">
-	  <a href="#StdConvert">StdConvert</a></span> above</em>. </p>
-    <p>Example, </p>
+    <p>In this section you list the observation types you wish to have checked,
+      along with their minimum and maximum values. If not specified, the units
+      should are in <em>the same unit system as specified in section
+        <span class="code"><a href="#StdConvert">StdConvert</a></span></em>.
+    </p>
+    <p>For example, </p>
     <pre class="tty">[[MinMax]]
     outTemp = -40, 120
     barometer = 28, 32.5
     outHumidity = 0, 100 </pre>
-    <p>In this example, if a temperature should fall outside of the inclusive range 
-      -40 &deg;F through 120 &deg;F, then it will be set to the null value,
-      <span class="code">None</span>, and ignored. In a similar manner, the acceptable 
-      values for barometric pressure would be 28 through 32.5 inHg, for humidity 0 
-      through 100%. </p>
+    <p>With <span class='code'>target_unit = US</span> (the default), if a
+      temperature should fall outside of the inclusive
+      range -40 &deg;F through 120 &deg;F, then it will be set to the null
+      value, <span class="code">None</span>, and ignored. In a similar manner,
+      the acceptable values for barometric pressure would be 28 through 32.5
+      inHg, for humidity 0 through 100%. </p>
+    <p>You can also specify units.</p>
+    <p>For example, </p>
+    <pre class="tty">[[MinMax]]
+    outTemp = -40, 60, degree_C
+    barometer = 28, 32.5, inHg</pre>
+    <p>In this example, if a temperature should fall outside of the inclusive
+      range -40 &deg;C through 60 &deg;C, then it will be set to the null
+      value, <span class="code">None</span>, and ignored. In a similar manner,
+      the acceptable values for barometric pressure would be 28 through 32.5
+      inHg.  Since the units are specified, these values apply no matter what
+      the <span class='code'>target_unit</span>.</p>
     <p>Both LOOP and archive data will be checked. </p>
-    <p>Knowing the details of how your hardware encodes data helps to minimize the 
-      number of observations that need to be checked. For example, the VP2 devotes 
-      only one unsigned byte to storing wind speed, and even then
-      <span class="code">0xff</span> is devoted to a bad value, so the only possible 
-      values that could appear are 0 through 126 mph, a reasonable range. So, for 
-      the VP2, there is no real point in checking wind speed. </p>
+    <p>Knowing the details of how your hardware encodes data helps to minimize
+      the number of observations that need to be checked. For example, the VP2
+      devotes only one unsigned byte to storing wind speed, and even then
+      <span class="code">0xff</span> is devoted to a bad value, so the only
+      possible values that could appear are 0 through 126 mph, a reasonable
+      range. So, for the VP2, there is no real point in checking wind speed.
+    </p>
     <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
     <p>This section is for configuring <span class="code">StdArchive</span>, the 
       service that stores data in the databases. Options allow choosing which database 
@@ -2282,7 +2306,7 @@ Mutating actions will request confirmation before proceeding.</pre>
       permissions:</p>
     <pre class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
-mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost</pre>
+mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</pre>
     <p>In addition to configuring MySQL, you will also need to indicate to
       <span class="code">weewx</span> that you intend to use the configured 
 	  database. See section <span class="code"><a href="#StdArchive">
