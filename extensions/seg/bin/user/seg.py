@@ -111,8 +111,8 @@ class SEGThread(weewx.restx.RESTThread):
     _FORMATS = {'barometer'   : 'barometric_pressure %.3f', # inHg   mbar
                 'outTemp'     : 'temperature %.1f',         # F      C
                 'outHumidity' : 'relative_humidity %.0f',   # %      %
-#                'inTemp'      : 'temperature_in %.1f',     # F      C
-#                'inHumidity'  : 'humidity_in %03.0f',      # %      %
+                'inTemp'      : 'temperature_in %.1f',      # F      C
+                'inHumidity'  : 'humidity_in %03.0f',       # %      %
                 'windSpeed'   : 'wind_speed %.2f',          # mph    m/s
                 'windDir'     : 'wind_direction %03.0f',    # compass degree
                 'windGust'    : 'wind_gust %.2f',           # mph    m/s

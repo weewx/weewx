@@ -119,8 +119,8 @@ class XivelyThread(weewx.restx.RESTThread):
     _FORMATS = {'barometer'   : 'barometer %.3f',        # inHg
                 'outTemp'     : 'temperature_out %.1f',  # F
                 'outHumidity' : 'humidity_out %03.0f',   # %
-#                'inTemp'      : 'temperature_in %.1f',  # F
-#                'inHumidity'  : 'humidity_in %03.0f',   # %
+                'inTemp'      : 'temperature_in %.1f',   # F
+                'inHumidity'  : 'humidity_in %03.0f',    # %
                 'windSpeed'   : 'windSpeed %.2f',        # mph
                 'windDir'     : 'windDir %03.0f',        # compass degree
                 'windGust'    : 'windGust %.2f',         # mph
