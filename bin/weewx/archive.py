@@ -179,7 +179,7 @@ class Archive(object):
                 sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table, k_str, q_str) 
                 try:
                     cursor.execute(sql_insert_stmt, value_list)
-                    syslog.syslog(log_level, "archive: added to table '%s' of database '%s' a record with timestamp %s" % (self.table, weeutil.weeutil.timestamp_to_string(record['dateTime'])))
+                    syslog.syslog(log_level, "archive: added to table '%s' of database '%s' a record with timestamp %s" % (self.table, self.connection.database, weeutil.weeutil.timestamp_to_string(record['dateTime'])))
                 except Exception, e:
                     syslog.syslog(syslog.LOG_ERR, "archive: unable to add archive record %s: %s" % (weeutil.weeutil.timestamp_to_string(record['dateTime']), e))
 
