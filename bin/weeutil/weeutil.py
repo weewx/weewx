@@ -863,9 +863,9 @@ def tobool(x):
     """
 
     try:
-        if x.lower() == 'true':
+        if x.lower() in ['true', 'yes']:
             return True
-        elif x.lower() == 'false':
+        elif x.lower() in ['false', 'no']:
             return False
     except AttributeError:
         pass

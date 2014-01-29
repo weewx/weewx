@@ -19,6 +19,7 @@ if not hasattr(sqlite3.Connection, "__exit__"):
     from pysqlite2 import dbapi2 as sqlite3 #@Reimport @UnresolvedImport
 
 import weedb
+from weeutil.weeutil import to_bool
 
 def connect(database='', root='', driver='', **argv):
     """Factory function, to keep things compatible with DBAPI. """
@@ -87,13 +88,19 @@ class Connection(weedb.Connection):
             table_list.append(str(row[0]))
         return table_list
                 
+    def genSchemaOf(self, table):
+        """Return a summary of the schema of the specified table.
+        
+        If the table does not exist, an exception of type weedb.OperationalError is raised."""
+        for row in self.connection.execute("""PRAGMA table_info(%s);""" % table):
+            yield (row[0], str(row[1]), str(row[2]), not to_bool(row[3]), row[4], to_bool(row[5]))
+        
     def columnsOf(self, table):
         """Return a list of columns in the specified table. If the table does not exist,
         None is returned."""
-        column_list = list()
 
-        for row in self.connection.execute("""PRAGMA table_info(%s);""" % table):
-            # Append this column to the list of columns. 
+        column_list = list()
+        for row in self.genSchemaOf(table):
             column_list.append(str(row[1]))
 
         # If there are no columns (which means the table did not exist) raise an exceptional

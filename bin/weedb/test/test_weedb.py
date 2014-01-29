@@ -17,6 +17,16 @@ import weedb
 sqlite_db_dict = {'database': '/tmp/test.sdb', 'driver':'weedb.sqlite'}
 mysql_db_dict  = {'database': 'test', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
 
+# Schema summary:
+# (col_number, col_name, col_type, can_be_null, default_value, part_of_primary)
+schema = [(0, 'dateTime', 'INTEGER', False, None, True),
+          (1, 'min',      'REAL',    True,  None, False),
+          (2, 'mintime',  'INTEGER', True,  None, False),
+          (3, 'max',      'REAL',    True,  None, False),
+          (4, 'maxtime',  'INTEGER', True,  None, False),
+          (5, 'sum',      'REAL',    True,  None, False),
+          (6, 'count',    'INTEGER', True,  None, False)]
+
 class Common(unittest.TestCase):
     
     def setUp(self):
@@ -68,6 +78,10 @@ class Common(unittest.TestCase):
         self.assertItemsEqual(_connect.tables(), ['test1', 'test2'])
         self.assertEqual(_connect.columnsOf('test1'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count'])
         self.assertEqual(_connect.columnsOf('test2'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count'])
+        for icol, col in enumerate(_connect.genSchemaOf('test1')):
+            self.assertEqual(schema[icol], col)
+        for icol, col in enumerate(_connect.genSchemaOf('test2')):
+            self.assertEqual(schema[icol], col)
         _connect.close()
         
     def test_bad_table(self):

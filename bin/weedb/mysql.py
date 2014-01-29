@@ -14,6 +14,7 @@ import decimal
 import MySQLdb
 import _mysql_exceptions
 
+from weeutil.weeutil import to_bool
 import weedb
 
 def connect(host='localhost', user='', password='', database='', driver='', **kwargs):
@@ -109,12 +110,12 @@ class Connection(weedb.Connection):
         finally:
             cursor.close()
         return table_list
-                
-    def columnsOf(self, table):
-        """Return a list of columns in the specified table. 
+    
+    def genSchemaOf(self, table):
+        """Return a summary of the schema of the specified table.
         
         If the table does not exist, an exception of type weedb.OperationalError is raised."""
-        column_list = list()
+        
         try:
             # Get a cursor directly from MySQL:
             cursor = self.connection.cursor()
@@ -125,14 +126,30 @@ class Connection(weedb.Connection):
             except _mysql_exceptions.ProgrammingError, e:
                 # Table does not exist. Change the exception type:
                 raise weedb.OperationalError(e)
+            irow = 0
             while True:
                 row = cursor.fetchone()
                 if row is None: break
                 # Append this column to the list of columns.
-                column_list.append(str(row[0]))
+                colname = str(row[0])
+                if row[1]=='double':
+                    coltype = 'REAL'
+                elif row[1].startswith('int'):
+                    coltype = 'INTEGER'
+                is_primary = True if row[3] == 'PRI' else False
+                yield (irow, colname, coltype, to_bool(row[2]), row[4], is_primary)
+                irow += 1
         finally:
             cursor.close()
-
+            
+                
+    def columnsOf(self, table):
+        """Return a list of columns in the specified table. 
+        
+        If the table does not exist, an exception of type weedb.OperationalError is raised."""
+        column_list = list()
+        for row in self.genSchemaOf(table):
+            column_list.append(row[1])
         return column_list
     
     def begin(self):
