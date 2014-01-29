@@ -1334,7 +1334,9 @@ class AWEKAS(StdRESTbase):
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: AWEKAS: Data will be uploaded.")
+        syslog.syslog(syslog.LOG_INFO, "restx: AWEKAS: "
+                      "Data will be uploaded for user %s" %
+                      site_dict['username'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)

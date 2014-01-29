@@ -10,6 +10,7 @@
 """Classes and functions for interfacing with a weewx archive."""
 from __future__ import with_statement
 import math
+import os.path
 import syslog
 
 from weewx.units import ValueTuple
@@ -179,7 +180,7 @@ class Archive(object):
                 sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table, k_str, q_str) 
                 try:
                     cursor.execute(sql_insert_stmt, value_list)
-                    syslog.syslog(log_level, "archive: added to table '%s' of database '%s' a record with timestamp %s" % (self.table, self.connection.database, weeutil.weeutil.timestamp_to_string(record['dateTime'])))
+                    syslog.syslog(log_level, "archive: added to table '%s' of database '%s' a record with timestamp %s" % (self.table, os.path.basename(self.connection.database), weeutil.weeutil.timestamp_to_string(record['dateTime'])))
                 except Exception, e:
                     syslog.syslog(syslog.LOG_ERR, "archive: unable to add archive record %s: %s" % (weeutil.weeutil.timestamp_to_string(record['dateTime']), e))
 
@@ -578,10 +579,10 @@ class Archive(object):
                 _cursor.execute("CREATE TABLE %s (%s);" % (table, _sqltypestr))
         except Exception, e:
             _connect.close()
-            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create table '%s' in database '%s': %s" % (table, archive_db_dict['database'], e))
+            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create table '%s' in database '%s': %s" % (table, os.path.basename(archive_db_dict['database']), e))
             raise
     
-        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized table '%s' in database '%s'" % (table, archive_db_dict['database']))
+        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized table '%s' in database '%s'" % (table, os.path.basename(archive_db_dict['database'])))
 
         return _connect
     
