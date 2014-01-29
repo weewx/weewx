@@ -555,14 +555,16 @@ def update_config_file(config_dict):
         # Get rid of the no longer needed service_list:
         config_dict['Engines']['WxEngine'].pop('service_list')
 
+    # Clean up the CWOP configuration
     if config_dict.has_key('StdRESTful') and config_dict['StdRESTful'].has_key('CWOP'):
         # Option "interval" has changed to "post_interval"
         if config_dict['StdRESTful']['CWOP'].has_key('interval'):
             config_dict['StdRESTful']['CWOP']['post_interval'] = config_dict['StdRESTful']['CWOP']['interval']
             config_dict['StdRESTful']['CWOP'].pop('interval')
-        # Option "server" has become "server_list". It is also no longer included in
-        # the default weewx.conf, so just pop it.
-        config_dict['StdRESTful']['CWOP'].pop('server')
+        # Option "server" has become "server_list". It is also no longer
+        # included in the default weewx.conf, so just pop it.
+        if config_dict['StdRESTful']['CWOP'].has_key('server'):
+            config_dict['StdRESTful']['CWOP'].pop('server')
 
     # Remove the no longer needed "driver" from all the RESTful services:
     if config_dict.has_key('StdRESTful'):
@@ -606,7 +608,7 @@ class Logger(object):
         self.verbosity = verbosity
     def log(self, msg, level=0):
         if self.verbosity >= level:
-            print msg
+            print "%s%s" % ('  '*(level-1), msg)
     def set_verbosity(self, verbosity):
         self.verbosity = verbosity
 
@@ -714,7 +716,7 @@ class Extension(Logger):
         if layout_type is None:
             layout_type = 'py'
 
-        self.log("layout type is %s" % layout_type, level=2)
+        self.log("layout type is %s" % layout_type, level=1)
 
         return layout_type
 
@@ -747,10 +749,23 @@ class Extension(Logger):
         for x in layout:
             if not os.path.isdir(layout[x]):
                 errors.append("no directory %s" % x)
+
+        # be sure weewx.conf exists and has the new service lists
+        fn = os.path.join(layout['CONFIG_ROOT'], 'weewx.conf')
+        if os.path.exists(fn):
+            config = configobj.ConfigObj(fn)
+            for sg in all_service_groups:
+                try:
+                    config['Engines']['WxEngine'][sg]
+                except Exception, e:
+                    errors.append("missing key: %s" % e)
+        else:
+            errors.append("no weewx.conf at %s" % fn)
+
         if errors:
             raise Exception, '\n'.join(errors)
 
-        self.log("layout is %s" % layout, level=3)
+        self.log("layout is %s" % layout, level=1)
 
         return layout
 
@@ -762,7 +777,7 @@ class Extension(Logger):
 
     def verify_tarball(self, filename):
         '''do some basic checks on the tarball'''
-        self.log("verify tarball", level=2)
+        self.log("verify tarball", level=1)
         import tarfile
         archive = tarfile.open(filename, mode='r')
         root = None
@@ -795,13 +810,13 @@ class Extension(Logger):
 
     def extract_tarball(self, archive, tmpdir, basename):
         '''extract the tarball contents, return path to the extracted files'''
-        self.log("extracting tarball", level=2)
+        self.log("extracting tarball", level=1)
         archive.extractall(path=tmpdir)
         return os.path.join(tmpdir, basename)
 
     def load_installer(self, dirname, basename, layout):
         '''load the extension's installer'''
-        self.log("import install.py from %s" % dirname, level=2)
+        self.log("import install.py from %s" % dirname, level=1)
         sys.path.append(dirname)
         ifile = 'install'
         __import__(ifile)
@@ -815,7 +830,7 @@ class Extension(Logger):
 
     def cleanup(self):
         if self.archive is not None:
-            self.log("clean up files extracted from archive", level=2)
+            self.log("clean up files extracted from archive", level=1)
             try:
                 shutil.rmtree(self.extdir)
             except:
@@ -881,7 +896,7 @@ class ExtensionInstaller(Logger):
         for t in self.files:
             dstdir = self.prepend_layout_path(t[0])
             try:
-                self.log("  mkdir %s" % dstdir, level=2)
+                self.log("mkdir %s" % dstdir, level=2)
                 if self.doit:
                     os.makedirs(dstdir)
             except:
@@ -890,10 +905,10 @@ class ExtensionInstaller(Logger):
                 src = os.path.join(self.layout['EXTRACT_ROOT'], f)
                 dst = self.prepend_layout_path(f)
                 if os.path.exists(dst):
-                    self.log("  save existing file %s" % dst, level=2)
+                    self.log("save existing file %s" % dst, level=2)
                     if self.doit:
                         save_path(dst)
-                self.log("  copy %s to %s" % (src, dst), level=2)
+                self.log("copy %s to %s" % (src, dst), level=2)
                 if self.doit:
                     distutils.file_util.copy_file(src, dst)
 
@@ -905,19 +920,19 @@ class ExtensionInstaller(Logger):
             for f in t[1]:
                 dst = self.prepend_layout_path(f)
                 if os.path.exists(dst):
-                    self.log("  delete file %s" % dst, level=2)
+                    self.log("delete file %s" % dst, level=2)
                     if self.doit:
                         os.remove(dst)
                 else:
-                    self.log("  missing file %s" % dst, level=2)
+                    self.log("missing file %s" % dst, level=2)
             # if the directory is empty, delete it
             try:
                 if empty(dstdir):
-                    self.log("  delete directory %s" % dstdir, level=2)
+                    self.log("delete directory %s" % dstdir, level=2)
                     if self.doit:
                         shutil.rmtree(dstdir, True)
                 else:
-                    self.log("  directory not empty: %s" % dstdir, level=2)
+                    self.log("directory not empty: %s" % dstdir, level=2)
             except:
                 pass
 
@@ -950,8 +965,10 @@ class ExtensionInstaller(Logger):
         except:
             pass
 
-        # merge the new options into the old config
-        config.merge(cfg)
+        # merge the new options into the old config.  we cannot simply do
+        # config.merge(cfg) because that would overwrite any existing fields.
+        # so do a conditional merge instead.
+        conditional_merge(config, cfg)
 
         # append services to appropriate lists
         global all_service_groups
@@ -961,7 +978,7 @@ class ExtensionInstaller(Logger):
                     config['Engines']['WxEngine'][sg] = [config['Engines']['WxEngine'][sg]]
                 config['Engines']['WxEngine'][sg].append(s)
 
-        self.log("  merged configuration:", level=3)
+        self.log("merged configuration:", level=3)
         self.log('\n'.join(formatdict(config)), level=3)
 
         self.save_config(config)
@@ -983,19 +1000,22 @@ class ExtensionInstaller(Logger):
                         newlist.append(s)
                 config['Engines']['WxEngine'][sg] = newlist
 
-        self.log("  unmerged configuration:", level=3)
+        # remove any sections we added
+        remove_and_prune(config, self.config)
+
+        self.log("unmerged configuration:", level=3)
         self.log('\n'.join(formatdict(config)), level=3)
 
         self.save_config(config)
 
     def save_config(self, config):
         # backup the old configuration
-        self.log("  save old configuration", level=2)
+        self.log("save old configuration", level=2)
         if self.doit:
             bup = save_path(config.filename)
 
         # save the new configuration
-        self.log("  save new config %s" % config.filename, level=2)
+        self.log("save new config %s" % config.filename, level=2)
         if self.doit:
             config.write()
 
@@ -1005,11 +1025,11 @@ class ExtensionInstaller(Logger):
         dstdir = os.path.join(self.layout['BIN_ROOT'], 'user')
         dstdir = os.path.join(dstdir, 'installer')
         dstdir = os.path.join(dstdir, self.basename)
-        self.log("  mkdir %s" % dstdir, level=2)
+        self.log("mkdir %s" % dstdir, level=2)
         if self.doit:
             os.makedirs(dstdir)
         src = os.path.join(self.layout['EXTRACT_ROOT'], 'install.py')
-        self.log("  copy %s to %s" % (src, dstdir), level=2)
+        self.log("copy %s to %s" % (src, dstdir), level=2)
         if self.doit:
             distutils.file_util.copy_file(src, dstdir)
 
@@ -1019,9 +1039,30 @@ class ExtensionInstaller(Logger):
         dstdir = os.path.join(self.layout['BIN_ROOT'], 'user')
         dstdir = os.path.join(dstdir, 'installer')
         dstdir = os.path.join(dstdir, self.basename)
-        self.log("  delete %s" % dstdir, level=2)
+        self.log("delete %s" % dstdir, level=2)
         if self.doit:
             shutil.rmtree(dstdir, True)
+
+def conditional_merge(a, b):
+    '''merge fields from b into a, but only if they do not yet exist in a'''
+    for k in b:
+        if isinstance(b[k], dict):
+            if not a.has_key(k):
+                a[k] = {}
+            conditional_merge(a[k], b[k])
+        elif not a.has_key(k):
+            a[k] = b[k]
+
+def remove_and_prune(a, b):
+    '''remove fields from a that are present in b'''
+    for k in b:
+        if isinstance(b[k], dict):
+            if a.has_key(k) and type(a[k]) is configobj.Section:
+                remove_and_prune(a[k], b[k])
+                if not a[k].sections:
+                    a.pop(k)
+        elif a.has_key(k):
+            a.pop(k)
 
 def prepend_path(d, label, value):
     '''prepend the value to every instance of the label in config_dict'''
