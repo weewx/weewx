@@ -1339,7 +1339,7 @@ class AWEKAS(StdRESTbase):
             site_dict['username']
             site_dict['password']
         except KeyError, e:
-            syslog.syslog(syslog.LOG_ERR, "restx: AWEKAS: "
+            syslog.syslog(syslog.LOG_DEBUG, "restx: AWEKAS: "
                           "Data will not be posted: Missing option %s" % e)
             return
         site_dict.setdefault('latitude', engine.stn_info.latitude_f)
