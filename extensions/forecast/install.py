@@ -43,7 +43,7 @@ class ForecastInstaller(ExtensionInstaller):
                     ['bin/user/forecast.py']),
                    ('skins/forecast',
                     ['skins/forecast/skin.conf',
-                     'skins/forecast/forecast.inc',
+                     'skins/forecast/forecast_table.inc',
                      'skins/forecast/index.html.tmpl']),
                    ('skins/forecast/icons',
                     ['skins/forecast/icons/AF.png',
