@@ -158,6 +158,7 @@ rm -rf %{buildroot}
 %attr(755,root,root) %{initdir}/weewx
 %{dst_bin_dir}/
 %{_bindir}/weewxd
+%{_bindir}/wee_setup
 %{_bindir}/wee_reports
 %{_bindir}/wee_config_database
 %{_bindir}/wee_config_fousb
