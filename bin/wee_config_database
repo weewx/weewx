@@ -29,7 +29,8 @@ add or drop data types from the database schema or change unit systems."""
  
 usage="""%prog: [config_path] [--help]
                               [--create-database] [--create-stats]
-                              [--reconfigure] [--backfill-stats] """
+                              [--reconfigure] [--backfill-stats] 
+                              [--string-check]"""
 
 epilog="""If you are using the MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
@@ -57,6 +58,8 @@ def main():
                           """The new database will have the same name as the old database, with a '_new' on the end.""")
     parser.add_option("--backfill-stats", dest="backfill_stats", action='store_true',
                       help="Backfill the statistical database using the archive database")
+    parser.add_option("--string-check", dest="string_check", action="store_true",
+                      help="Check the archive database for strings in it.")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -74,6 +77,9 @@ def main():
 
     if options.backfill_stats:
         backfillStatsDatabase(config_dict)
+        
+    if options.string_check:
+        string_check(config_dict)
 
 def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
@@ -180,6 +186,32 @@ def backfillStatsDatabase(config_dict):
             nrecs = statsDb.backfillFrom(archive)
 
     print "Backfilled %d records from the archive database '%s' into the statistical database '%s'" % (nrecs, archive.database, statsDb.database)
+    
+def string_check(config_dict):
+    print "Checking archive database for strings..."
+    archive_db = config_dict['StdArchive']['archive_database']
+    archive_db_dict = config_dict['Databases'][archive_db]
+
+    # Open up the main database archive
+    with weewx.archive.Archive.open(archive_db_dict) as archive:
+        
+        obs_type_list = []
+        obs_list = []
+        for column in archive.connection.genSchemaOf('archive'):
+            schema_type = column[2]
+            if column[2] == 'INTEGER':
+                schema_type = int
+            elif column[2] == 'REAL':
+                schema_type = float
+            elif column[2] == 'STR':
+                schema_type = str
+            obs_list.append(column[1])
+            obs_type_list.append(schema_type)
+            
+        for record in archive.genBatchRows():
+            for icol in range(len(record)):
+                if record[icol] is not None and not isinstance(record[icol], obs_type_list[icol]):
+                    print weeutil.weeutil.timestamp_to_string(record['dateTime']), obs_list[icol], "; value=", record[icol] 
     
 if __name__=="__main__" :
     main()

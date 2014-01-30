@@ -184,9 +184,9 @@ class Archive(object):
                 except Exception, e:
                     syslog.syslog(syslog.LOG_ERR, "archive: unable to add archive record %s: %s" % (weeutil.weeutil.timestamp_to_string(record['dateTime']), e))
 
-    def genBatchRecords(self, startstamp=None, stopstamp=None):
-        """Generator function that yields records with timestamps within an
-        interval.
+    def genBatchRows(self, startstamp=None, stopstamp=None):
+        """Generator function that yields raw rows from the archive database
+        with timestamps within an interval.
         
         startstamp: Exclusive start of the interval in epoch time. If 'None',
         then start at earliest archive record.
@@ -194,9 +194,7 @@ class Archive(object):
         stopstamp: Inclusive end of the interval in epoch time. If 'None', then
         end at last archive record.
         
-        yields: A dictionary record for each database record within the time
-        interval """
-        
+        yields: A list with the data records"""
         _cursor = self.connection.cursor()
         try:
             if startstamp is None:
@@ -211,9 +209,25 @@ class Archive(object):
                     _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ? AND dateTime <= ?" % (self.table,), (startstamp, stopstamp))
             
             for _row in _gen :
-                yield dict(zip(self.sqlkeys, _row)) if _row else None
+                yield _row
         finally:
             _cursor.close()
+        
+    def genBatchRecords(self, startstamp=None, stopstamp=None):
+        """Generator function that yields records with timestamps within an
+        interval.
+        
+        startstamp: Exclusive start of the interval in epoch time. If 'None',
+        then start at earliest archive record.
+        
+        stopstamp: Inclusive end of the interval in epoch time. If 'None', then
+        end at last archive record.
+        
+        yields: A dictionary where key is the observation type (eg, 'outTemp')
+        and the value is the observation value"""
+        
+        for _row in self.genBatchRows(startstamp, stopstamp):            
+            yield dict(zip(self.sqlkeys, _row)) if _row else None
         
     def getRecord(self, timestamp, max_delta=None):
         """Get a single archive record with a given epoch time stamp.
