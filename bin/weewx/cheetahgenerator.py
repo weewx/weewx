@@ -271,6 +271,11 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                     weeutil.weeutil.log_traceback("****  ")
                 else:
                     ngen += 1
+                finally:
+                    try:
+                        os.unlink(tmpname)
+                    except:
+                        pass
 
         elapsed_time = time.time() - t1
         loginf("generated %d '%s' files for %s in %.2f seconds" %
