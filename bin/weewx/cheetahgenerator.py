@@ -259,17 +259,18 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
                                                  searchList=searchList,
                                                  filter=encoding,
                                                  filtersLib=weewx.cheetahgenerator)
-
-                with open(_fullname, mode='w') as _file:
-                    try:
+                tmpname = _fullname + '.tmp'
+                try:
+                    with open(tmpname, mode='w') as _file:
                         print >> _file, text
-                    except Exception, e:
-                        logerr("generate failed with exception '%s'" % type(e))
-                        logerr("**** ignoring template %s" % template)
-                        logerr("**** reason: %s" % e)
-                        weeutil.weeutil.log_traceback("****  ")
-                    else:
-                        ngen += 1
+                    os.rename(tmpname, _fullname)
+                except Exception, e:
+                    logerr("generate failed with exception '%s'" % type(e))
+                    logerr("**** ignoring template %s" % template)
+                    logerr("**** reason: %s" % e)
+                    weeutil.weeutil.log_traceback("****  ")
+                else:
+                    ngen += 1
 
         elapsed_time = time.time() - t1
         loginf("generated %d '%s' files for %s in %.2f seconds" %
