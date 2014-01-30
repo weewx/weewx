@@ -337,11 +337,11 @@ class Archive(object):
         
         aggregate_interval: None if no aggregation is desired, otherwise
         this is the time interval over which a result will be aggregated.
+        Required if aggregate_type is non-None.
         Default: None (no aggregation)
         
         aggregate_type: None if no aggregation is desired, otherwise the
-        type of aggregation (e.g., 'sum', 'avg', etc.)  Required if
-        aggregate_interval is non-None. Default: None (no aggregation)
+        type of aggregation (e.g., 'sum', 'avg', etc.)  
 
         returns: a 2-way tuple of value tuples: 
           (time_vec_value_tuple, data_vec_value_tuple)
@@ -359,9 +359,9 @@ class Archive(object):
         _cursor=self.connection.cursor()
         try:
     
-            if aggregate_interval :
-                if not aggregate_type:
-                    raise weewx.ViolatedPrecondition, "Aggregation type missing"
+            if aggregate_type :
+                if not aggregate_interval:
+                    raise weewx.ViolatedPrecondition, "Aggregation interval missing"
                 sql_str = 'SELECT MAX(dateTime), %s(%s), usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % (aggregate_type, sql_type, self.table)
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                     _cursor.execute(sql_str, stamp)
@@ -421,11 +421,11 @@ class Archive(object):
         
         aggregate_interval: None if no aggregation is desired, otherwise
         this is the time interval over which a result will be aggregated.
+        Required if aggregate_type is non-None. 
         Default: None (no aggregation)
         
         aggregate_type: None if no aggregation is desired, otherwise the type
-        of aggregation (e.g., 'sum', 'avg', etc.)  Required if
-        aggregate_interval is non-None. Default: None (no aggregation)
+        of aggregation (e.g., 'sum', 'avg', etc.)  Default: None (no aggregation)
         
         returns: a 2-way tuple of value tuples: 
           (time_vec_value_tuple, data_vec_value_tuple)
@@ -455,7 +455,9 @@ class Archive(object):
         try:
     
             # Is aggregation requested?
-            if aggregate_interval :
+            if aggregate_type:
+                if not aggregate_interval:
+                    raise weewx.ViolatedPrecondition, "Aggregation interval missing"
                 # Aggregation is requested.
                 # The aggregation should happen over the x- and y-components.
                 # Because they do not appear in the database (only the

@@ -334,7 +334,7 @@ class GeneralPlot(object):
                     if ibox > 0:
                         xleft = this_line.x[ibox-1]
                     else:
-                        xleft = x - this_line.interval
+                        xleft = x - this_line.bar_width
                     if maxdx is not None and x - xleft > maxdx:
                         continue
                     sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=fill_color, outline=color)
@@ -517,11 +517,11 @@ class GeneralPlot(object):
             xlinemin = min(line.x)
             xlinemax = max(line.x)
             assert(xlinemin is not None and xlinemax is not None)
-            # If the line represents a bar chart (interval not None),
+            # If the line represents a bar chart,
             # then the actual minimum has to be adjusted for the
-            # interval length
-            if line.interval is not None:
-                xlinemin = xlinemin - line.interval
+            # bar width
+            if line.plot_type == 'bar':
+                xlinemin = xlinemin - line.bar_width
             xmin = min(xlinemin, xmin) if xmin is not None else xlinemin
             xmax = max(xlinemax, xmax) if xmax is not None else xlinemax
         return (xmin, xmax)
@@ -551,7 +551,7 @@ class PlotLine(object):
     """
     def __init__(self, x, y, label='', color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
-                 interval=None, vector_rotate = None, gap_fraction=None):
+                 bar_width=None, vector_rotate = None, gap_fraction=None):
         self.x           = x
         self.y           = y
         self.label       = label
@@ -562,7 +562,7 @@ class PlotLine(object):
         self.color       = color
         self.fill_color  = color
         self.width       = width
-        self.interval    = interval
+        self.bar_width   = bar_width
         self.vector_rotate = vector_rotate
         self.gap_fraction = gap_fraction
 

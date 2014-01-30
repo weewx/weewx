@@ -22,6 +22,7 @@ import weeplot.utilities
 import weeutil.weeutil
 import weewx.reportengine
 import weewx.units
+from weeutil.weeutil import to_bool, to_int
 
 #===============================================================================
 #                    Class ImageGenerator
@@ -109,7 +110,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
 
                 # Set day/night display
                 plot.setLocation(self.stn_info.latitude_f, self.stn_info.longitude_f)
-                plot.setDayNight(weeutil.weeutil.tobool(plot_options.get('show_daynight', False)),
+                plot.setDayNight(to_bool(plot_options.get('show_daynight', False)),
                                  weeplot.utilities.tobgr(plot_options.get('daynight_day_color', '0xffffff')),
                                  weeplot.utilities.tobgr(plot_options.get('daynight_night_color', '0xf0f0f0')),
                                  weeplot.utilities.tobgr(plot_options.get('daynight_edge_color', '0xefefef')))
@@ -148,8 +149,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                     if color is not None: color = weeplot.utilities.tobgr(color)
                     
                     # Get the line width, if explicitly requested.
-                    width = line_options.get('width')
-                    if width is not None: width = int(width)
+                    width = to_int(line_options.get('width'))
                     
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line')
@@ -165,16 +165,16 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                     if line_type.strip().lower() in ['', 'none']:
                         line_type = None
                         
-                    marker_type  = line_options.get('marker_type')
-                    marker_size = line_options.get('marker_size')
-                    if marker_size is not None: marker_size = int(marker_size)
+                    marker_type = line_options.get('marker_type')
+                    marker_size = to_int(line_options.get('marker_size'))
                     
                     # Look for aggregation type:
                     aggregate_type = line_options.get('aggregate_type')
                     if aggregate_type in (None, '', 'None', 'none'):
                         # No aggregation specified.
                         aggregate_type     = None
-                        aggregate_interval = None
+                        # Set the aggregate interval to the nominal archive interval:
+                        aggregate_interval = self._getArchiveInterval(archivedb)
                     else :
                         try:
                             # Aggregation specified. Get the interval.
@@ -212,7 +212,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                                                           line_type     = line_type,
                                                           marker_type   = marker_type,
                                                           marker_size   = marker_size,
-                                                          interval      = aggregate_interval,
+                                                          bar_width     = aggregate_interval,
                                                           vector_rotate = vector_rotate,
                                                           gap_fraction  = gap_fraction))
                     
@@ -226,6 +226,12 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
         
         syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
 
+
+    def _getArchiveInterval(self, archive):
+        if not hasattr(self, 'archive_interval'):
+            _row = archive.getSql("SELECT MIN(`interval`) FROM %s" % archive.table)
+            self.archive_interval = _row[0] if _row else None
+        return self.archive_interval
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
     """A plot can be skipped if it was generated recently and has not changed.
@@ -245,3 +251,4 @@ def skipThisPlot(time_ts, aggregate_interval, img_file):
     time_dt = datetime.datetime.fromtimestamp(time_ts)
     tdiff = time_dt -  time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
     return abs(tdiff.seconds % aggregate_interval) > 1
+
