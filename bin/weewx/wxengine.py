@@ -411,7 +411,7 @@ class StdQC(StdService):
         for obs_type in self.min_max_dict:
             if event.record.has_key(obs_type) and event.record[obs_type] is not None:
                 if not self.min_max_dict[obs_type][0] <= event.record[obs_type] <= self.min_max_dict[obs_type][1]:
-                    syslog.syslog(syslog.LOG_NOTICE, "wxengine: ignoring %s value of %s, limits are (%s, %s)" % (obs_type, event.packet[obs_type], self.min_max_dict[obs_type[0]], self.min_max_dict[obs_type[1]]))
+                    syslog.syslog(syslog.LOG_NOTICE, "wxengine: ignoring %s value of %s, limits are (%s, %s)" % (obs_type, event.record[obs_type], self.min_max_dict[obs_type[0]], self.min_max_dict[obs_type[1]]))
                     event.record[obs_type] = None
 
 #===============================================================================
