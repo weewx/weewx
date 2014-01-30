@@ -13,6 +13,7 @@ from __future__ import with_statement
 
 import optparse
 import syslog
+import sys
 
 import user.extensions      #@UnusedImport
 import weedb
@@ -30,7 +31,7 @@ add or drop data types from the database schema or change unit systems."""
 usage="""%prog: [config_path] [--help]
                               [--create-database] [--create-stats]
                               [--reconfigure] [--backfill-stats] 
-                              [--string-check]"""
+                              [--string-check] [--fix]"""
 
 epilog="""If you are using the MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
@@ -59,7 +60,9 @@ def main():
     parser.add_option("--backfill-stats", dest="backfill_stats", action='store_true',
                       help="Backfill the statistical database using the archive database")
     parser.add_option("--string-check", dest="string_check", action="store_true",
-                      help="Check the archive database for strings in it.")
+                      help="Check a sqlite version of the archive database for embedded strings in it.")
+    parser.add_option("--fix", dest="fix", action="store_true",
+                      help="If a string is found, fix it.")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -79,7 +82,7 @@ def main():
         backfillStatsDatabase(config_dict)
         
     if options.string_check:
-        string_check(config_dict)
+        string_check(config_dict, options.fix)
 
 def createMainDatabase(config_dict):
     """Create the main weewx archive database"""
@@ -187,7 +190,7 @@ def backfillStatsDatabase(config_dict):
 
     print "Backfilled %d records from the archive database '%s' into the statistical database '%s'" % (nrecs, archive.database, statsDb.database)
     
-def string_check(config_dict):
+def string_check(config_dict, fix=False):
     print "Checking archive database for strings..."
     archive_db = config_dict['StdArchive']['archive_database']
     archive_db_dict = config_dict['Databases'][archive_db]
@@ -195,23 +198,44 @@ def string_check(config_dict):
     # Open up the main database archive
     with weewx.archive.Archive.open(archive_db_dict) as archive:
         
-        obs_type_list = []
+        obs_pytype_list = []
         obs_list = []
+        
+        # Get the schema and extract the Python type each observation type should be
         for column in archive.connection.genSchemaOf('archive'):
             schema_type = column[2]
-            if column[2] == 'INTEGER':
+            if schema_type == 'INTEGER':
                 schema_type = int
-            elif column[2] == 'REAL':
+            elif schema_type == 'REAL':
                 schema_type = float
-            elif column[2] == 'STR':
+            elif schema_type == 'STR':
                 schema_type = str
+            # Save the observation type for this column (eg, 'outTemp'):
             obs_list.append(column[1])
-            obs_type_list.append(schema_type)
-            
+            # Save the Python type for this column (eg, 'int'):
+            obs_pytype_list.append(schema_type)
+        
+        # Cycle through each row in the database
         for record in archive.genBatchRows():
+            # Now examine each column
             for icol in range(len(record)):
-                if record[icol] is not None and not isinstance(record[icol], obs_type_list[icol]):
-                    print weeutil.weeutil.timestamp_to_string(record['dateTime']), obs_list[icol], "; value=", record[icol] 
-    
+                # Check to see if this column is an instance of the correct Python type
+                if record[icol] is not None and not isinstance(record[icol], obs_pytype_list[icol]):
+                    # Oops. Found a bad one. Print it out
+                    sys.stdout.write("Timestamp = %s; record['%s']= %r; ... " % (record[0], obs_list[icol], record[icol]))
+                    
+                    if fix:
+                        # Cooerce to the correct type. If it can't be done, then set it to None
+                        try:
+                            corrected_value = obs_pytype_list[icol](record[icol])
+                        except ValueError:
+                            corrected_value = None
+                        # Update the database with the new value
+                        archive.updateValue(record[0], obs_list[icol], corrected_value)
+                        # Inform the user
+                        sys.stdout.write("changed to %r\n" % corrected_value)
+                    else:
+                        sys.stdout.write("ignored.\n")
+                    
 if __name__=="__main__" :
     main()

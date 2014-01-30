@@ -9,6 +9,7 @@
 #
 """Driver for sqlite"""
 
+from __future__ import with_statement
 import os.path
 
 # Import sqlite3. If it does not support the 'with' statement, then
@@ -77,6 +78,13 @@ class Connection(weedb.Connection):
     def cursor(self):
         """Return a cursor object."""
         return Cursor(self.connection)
+    
+    def execute(self, sql_string, sql_tuple=() ):
+        """Execute a sql statement. This specialized version takes advantage
+        of sqlite's ability to do an execute without a cursor."""
+        
+        with self.connection:
+            self.connection.execute(sql_string, sql_tuple)
     
     def tables(self):
         """Returns a list of tables in the database."""

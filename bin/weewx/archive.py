@@ -254,6 +254,11 @@ class Archive(object):
         finally:
             _cursor.close()
 
+    def updateValue(self, timestamp, obs_type, new_value):
+        """Update (replace) a single value in the database."""
+        
+        self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" % (self.table, obs_type), (new_value, timestamp))
+
     def getSql(self, sql, sqlargs=()):
         """Executes an arbitrary SQL statement on the database.
         

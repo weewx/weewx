@@ -2439,6 +2439,7 @@ class MyAlarm(StdService):
         low-battery alarm (<span class="code">lowBattery.py</span>), which is
         similar, except that it intercepts LOOP events (instead of
         archiving events). </p>
+
       <h1 id ="archive_database">Customizing the archive database</h1>
       <p>For most users the default database will work just fine. It has the
         added advantage of being compatible with the wview database.
@@ -2446,9 +2447,44 @@ class MyAlarm(StdService):
         type to your database, or change its unit system. This section shows you
         how to do this, using the utility <span class="symcode">$BIN_ROOT</span><span
           class="code">/wee_config_database</span>.</p>
+      <p>This utility also has the ability to check a sqlite version of the archive
+	database for embedded strings (where a float is expected).<p>
       <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
         flag to see how it is used:</p>
       <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --help</pre>
+      <p>This will result in an output that looks something like this:</p>
+      <pre class="tty">
+Usage: wee_config_database: [config_path] [--help]
+                              [--create-database] [--create-stats]
+                              [--reconfigure] [--backfill-stats] 
+                              [--string-check] [--fix]
+
+Configure the weewx databases. Most of these functions are handled
+automatically by weewx, but they may be useful as a utility in special cases.
+In particular, the 'reconfigure' option can be useful if you decide to add or
+drop data types from the database schema or change unit systems.
+
+Options:
+  -h, --help        show this help message and exit
+  --config=FILE     use configuration file FILE
+  --create-archive  Create the archive database.
+  --create-stats    Create the statistical database.
+  --reconfigure     Create a new archive database using configuration
+                    information found in the configuration file. In
+                    particular, the new database will use the unit system
+                    found in option [StdConvert][target_unit]. It will use the
+                    schema found in './bin/user/schemas.py'. The new database
+                    will have the same name as the old database, with a '_new'
+                    on the end.
+  --backfill-stats  Backfill the statistical database using the archive
+                    database
+  --string-check    Check a sqlite version of the archive database for 
+                    embedded strings in it.
+  --fix             If a string is found, fix it.
+
+If you are using the MySQL database it is assumed that you have the
+appropriate permissions for the requested operation.</pre>
+
       <h2>Adding a new observation type</h2>
       <p>Suppose you have installed an electric meter at your house and you wish
         to correlate electrical usage with the weather. The meter has some sort
@@ -2622,6 +2658,7 @@ mv weewx.sdb_new weewx.sdb</pre>
           </tr>
         </tbody>
       </table>
+
       <h2 id="Changing_the_unit_system">Changing the unit system</h2>
       <p>Normally, data is stored in the databases using US Customary units and,
         normally, you don't care --- data can always be displayed using any
@@ -2679,6 +2716,48 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <p>5. <strong>Recreate the stats database.</strong> Delete the stats
         database, then let <span class="code">weewx</span> regenerate it. It
         will use the new unit system.</p>
+
+      <h2>Checking for embedded strings</h2>
+      <p>If you edit your sqlite archive database using an editing tool, occasionally
+	strings will get embedded in it, causing weewx to raise an exception. <strong>
+	This is only a problem with sqlite</strong>. There is no analogous problem
+	with MySQL databases. The symptom will look something like this:</p>
+      <pre class='tty'>
+Dec 31 16:55:09 arm weewx[18141]: wxengine: Record generation will be attempted in 'hardware' 
+Dec 31 16:55:09 arm weewx[18141]: wxengine: Using archive database: archive_sqlite 
+Dec 31 16:55:10 arm weewx[18141]: stats: Created schema for statistical database 
+Dec 31 17:01:06 arm weewx[18141]: wxengine: Caught unrecoverable exception in wxengine: 
+Dec 31 17:01:06 arm weewx[18141]: **** unsupported operand type(s) for +=: 'float' and 'unicode' 
+Dec 31 17:01:06 arm weewx[18141]: **** Traceback (most recent call last): 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 886, in main 
+Dec 31 17:01:06 arm weewx[18141]: **** engine = EngineClass(config_dict) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 70, in __init__ 
+Dec 31 17:01:06 arm weewx[18141]: **** self.loadServices(config_dict) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 124, in loadServices 
+Dec 31 17:01:06 arm weewx[18141]: **** self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict)) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 432, in __init__ 
+Dec 31 17:01:06 arm weewx[18141]: **** self.setupStatsDatabase(config_dict) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 543, in setupStatsDatabase 
+Dec 31 17:01:06 arm weewx[18141]: **** self.statsDb.backfillFrom(self.archive) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/stats.py", line 461, in backfillFrom 
+Dec 31 17:01:06 arm weewx[18141]: **** _statsDict.addRecord(_rec) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/accum.py", line 305, in addRecord 
+Dec 31 17:01:06 arm weewx[18141]: **** self._add_value(record[obs_type], obs_type, record['dateTime'], add_hilo) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/accum.py", line 264, in _add_value 
+Dec 31 17:01:06 arm weewx[18141]: **** self[obs_type].addSum(val) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/accum.py", line 81, in addSum 
+Dec 31 17:01:06 arm weewx[18141]: **** self.sum += val 
+Dec 31 17:01:06 arm weewx[18141]: **** TypeError: unsupported operand type(s) for +=: 'float' and 'unicode' 
+Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
+      <p>The problem is that a unicode null string <span class='code'>u''</span>
+	got entered where a <span class='code'>NULL</span> should be. The
+	utility <span class='code'>wee_config_database</span> can fix this.
+	Run it with the option <span class='code'>--string-check</span> to
+	search for these embedded strings. Add the option <span class='code'>--fix</span>
+	to have the utility fix them:</p>
+      <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span
+class="symcode">$CONFIG_ROOT</span>/weewx.conf --string-check --fix</pre>
+
       <h1 id="porting">Porting to new weather station hardware</h1>
       <p>Naturally, this is an advanced topic but, nevertheless, I'd really
         like to encourage any Python wizards out there to give it a try. Of

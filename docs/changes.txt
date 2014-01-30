@@ -36,6 +36,9 @@ When QC rejects values it now logs the rejection.
 Introduced a new unit system, METRICWX. Similar to METRIC, it uses
 mm for rain, mm/hr for rain rate, and m/s for speed.
 
+Added an option --string-check and --fix to the utility wee_config_database
+to fix embedded strings found in the sqlite archive database.
+
 Font handles are now cached in order to work around a memory leak in PIL.
 
 Image margins now scale with image and font sizes.
