@@ -18,6 +18,7 @@ import sys
 import syslog
 import threading
 import time
+import traceback
 
 import configobj
 
@@ -137,6 +138,7 @@ class StdReportEngine(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
+                    traceback.print_exc()
                     
                 finally:
                     obj.finalize()
