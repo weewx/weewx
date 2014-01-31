@@ -596,14 +596,18 @@ def save_path(filepath):
 # operates and how to manually install the extension.  The readme is not
 # copied from the extension source.  Additional documentation may be included
 # in a docs directory in the extension source, but it will not be copied into
-# the weewx weewx installation.
+# the weewx installation.
+#
+# The installer copies the install.py file from the extension to a directory
+# bin/user/installer/EXTNAME/install.py so it can be used to uninstall the
+# extension at some later time.
 #==============================================================================
 
 # FIXME: consider start/stop of weewx as part of the process
 # FIXME: design something to handle paths for included files in skins
 
 class Logger(object):
-    def __init__(self, verbosity=0):
+    def __init__(self, verbosity=2):
         self.verbosity = verbosity
     def log(self, msg, level=0):
         if self.verbosity >= level:
@@ -630,7 +634,7 @@ class Extension(Logger):
             }
         }
 
-    def __init__(self, filename, layout_type=None, tmpdir='/var/tmp'):
+    def __init__(self, filename, layout_type=None, tmpdir=tempfile.tempdir):
         self.filename = filename # could be dir, tarball, or extname
         self.tmpdir = tmpdir
         self.layout_type = layout_type
@@ -730,9 +734,9 @@ class Extension(Logger):
         elif layout_type == 'py':
             layout = dict(self._layouts['py'])
             # be sure we get the installed location, not the source location
-            fn = os.path.join(this_dir, 'setup.cfg')
             try:
                 # if there is a setup.cfg we are running from source
+                fn = os.path.join(this_dir, 'setup.cfg')
                 config = configobj.ConfigObj(fn)
                 weewx_root = config['install']['home']
             except:
@@ -1072,7 +1076,7 @@ def remove_and_prune(a, b):
             a.pop(k)
 
 def prepend_path(d, label, value):
-    '''prepend the value to every instance of the label in config_dict'''
+    '''prepend the value to every instance of the label in dict d'''
     for k in d.keys():
         if isinstance(d[k], dict):
             prepend_path(d[k], label, value)
