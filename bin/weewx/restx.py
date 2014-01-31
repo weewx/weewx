@@ -1254,7 +1254,7 @@ class StationRegistryThread(RESTThread):
 # AWEKAS
 #==============================================================================
 
-class AWEKAS(StdRESTbase):
+class StdAWEKAS(StdRESTbase):
     """Upload data to AWEKAS - Automatisches WEtterKArten System
     http://www.awekas.at
 
@@ -1333,7 +1333,7 @@ class AWEKAS(StdRESTbase):
     """
 
     def __init__(self, engine, config_dict):
-        super(AWEKAS, self).__init__(engine, config_dict)
+        super(StdAWEKAS, self).__init__(engine, config_dict)
         try:
             site_dict = get_dict(config_dict, 'AWEKAS')
             site_dict['username']
@@ -1357,6 +1357,9 @@ class AWEKAS(StdRESTbase):
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
+
+# For compatibility with some early alpha versions:
+AWEKAS = StdAWEKAS
 
 class AWEKASThread(RESTThread):
 
