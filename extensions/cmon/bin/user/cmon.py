@@ -25,6 +25,59 @@ Add the following to weewx.conf:
 [Engines]
     [[WxEngine]]
         service_list = ..., user.cmon.ComputerMonitor
+
+
+Schema
+
+The default schema is defined in this file.  If you prefer to maintain a schema
+different than the default, specify the desired schema in the configuration.
+For example, this would be a schema that stores only memory and network data,
+and uses eth1 instead of the default eth0:
+
+[ComputerMonitor]
+    database = computer_sqlite
+    [[schema]]
+        dateTime = INTEGER NOT NULL PRIMARY KEY
+        usUnits = INTEGER
+        mem_total = INTEGER
+        mem_free = INTEGER
+        mem_used = INTEGER
+        swap_total = INTEGER
+        swap_free = INTEGER
+        swap_used = INTEGER
+        net_eth1_rbytes = INTEGER
+        net_eth1_rpackets = INTEGER
+        net_eth1_rerrs = INTEGER
+        net_eth1_rdrop = INTEGER
+        net_eth1_tbytes = INTEGER
+        net_eth1_tpackets = INTEGER
+        net_eth1_terrs = INTEGER
+        net_eth1_tdrop = INTEGER
+
+Another approach to maintaining a custom schema is to define the schema in the
+file user/schemas.py as cmonSchema:
+
+cmonSchema = [
+    ('dateTime', 'INTEGER NOT NULL PRIMARY KEY'),
+    ('usUnits', 'INTEGER'),
+    ('mem_total','INTEGER'),
+    ('mem_free','INTEGER'),
+    ('mem_used','INTEGER'),
+    ('net_eth1_rbytes','INTEGER'),
+    ('net_eth1_rpackets','INTEGER'),
+    ('net_eth1_rerrs','INTEGER'),
+    ('net_eth1_rdrop','INTEGER'),
+    ('net_eth1_tbytes','INTEGER'),
+    ('net_eth1_tpackets','INTEGER'),
+    ('net_eth1_terrs','INTEGER'),
+    ('net_eth1_tdrop','INTEGER'),
+    ]
+
+then load it using this configuration:
+
+[ComputerMonitor]
+    database = computer_sqlite
+    schema = user.schemas.cmonSchema
 """
 
 # FIXME: make these methods platform-independent instead of linux-specific
@@ -40,6 +93,7 @@ import time
 from subprocess import Popen, PIPE
 
 import weewx
+import weeutil.weeutil
 from weewx.wxengine import StdService
 
 def logmsg(level, msg):
@@ -53,18 +107,6 @@ def loginf(msg):
 
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
-
-def get_int(config_dict, label, default_value):
-    value = config_dict.get(label, default_value)
-    if isinstance(value, str) and value.lower() == 'none':
-        value = None
-    if value is not None:
-        try:
-            value = int(value)
-        except Exception, e:
-            logerr("bad value '%s' for %s" % (value, label))
-            value = default_value
-    return value
 
 def _readproc_line(filename):
     """read single line proc file, return the string"""
@@ -122,6 +164,9 @@ defaultSchema = [
     ('cpu_temp3','REAL'), # degree C
     ('cpu_temp4','REAL'), # degree C
 
+# measure gpu temperature (not all platforms support this)
+#    ('gpu_temp','REAL'), # degree C
+
 # the default interface on most linux systems is eth0
     ('net_eth0_rbytes','INTEGER'),
     ('net_eth0_rpackets','INTEGER'),
@@ -131,6 +176,16 @@ defaultSchema = [
     ('net_eth0_tpackets','INTEGER'),
     ('net_eth0_terrs','INTEGER'),
     ('net_eth0_tdrop','INTEGER'),
+
+# some systems have a wireless interface as wlan0
+    ('net_wlan0_rbytes','INTEGER'),
+    ('net_wlan0_rpackets','INTEGER'),
+    ('net_wlan0_rerrs','INTEGER'),
+    ('net_wlan0_rdrop','INTEGER'),
+    ('net_wlan0_tbytes','INTEGER'),
+    ('net_wlan0_tpackets','INTEGER'),
+    ('net_wlan0_terrs','INTEGER'),
+    ('net_wlan0_tdrop','INTEGER'),
 
 # if the computer is an openvpn server, track the tunnel traffic
 #    ('net_tun0_rbytes','INTEGER'),
@@ -146,9 +201,10 @@ defaultSchema = [
     ('disk_root_total','INTEGER'),
     ('disk_root_free','INTEGER'),
     ('disk_root_used','INTEGER'),
-#    ('disk_home_total','INTEGER'),
-#    ('disk_home_free','INTEGER'),
-#    ('disk_home_used','INTEGER'),
+# separate partition for home is not uncommon
+    ('disk_home_total','INTEGER'),
+    ('disk_home_free','INTEGER'),
+    ('disk_home_used','INTEGER'),
 #    ('disk_var_weewx_total','INTEGER'),
 #    ('disk_var_weewx_free','INTEGER'),
 #    ('disk_var_weewx_used','INTEGER'),
@@ -198,14 +254,37 @@ class ComputerMonitor(StdService):
         self.hardware = d.get('hardware', [None])
         if not isinstance(self.hardware, list):
             self.hardware = [self.hardware]
-        self.max_age = get_int(d, 'max_age', 2592000)
+        self.max_age = weeutil.weeutil.to_int(d.get('max_age', 2592000))
 
         # get the database parameters we need to function
         self.database = d['database']
-        schema_str = d.get('schema', None)
-        schema = weeutil.weeutil._get_object(schema_str) \
-            if schema_str is not None else defaultSchema
         self.table = d.get('table', 'archive')
+
+        # first look for a python path to a schema definition.  if none
+        # specified, look for name-value pairs in the configuration.  if none
+        # specified, fallback to the default schema definition.
+        schema = None
+        schema_str = d.get('schema', None)
+        if isinstance(schema_str, str):
+            logdbg("trying schema from %s" % schema_str)
+            schema = weeutil.weeutil._get_object(schema_str)
+        if schema is None and d.has_key('schema'):
+            logdbg("trying schema from configuration")
+            try:
+                dt = d['schema']['dateTime']
+                units = d['schema']['usUnits']
+                schema = []
+                for k in d['schema']:
+                    schema.append((k, d['schema'][k]))
+            except KeyError, e:
+                logdbg("schema is missing required field: %s" % e)
+                schema = None
+            except Exception, e:
+                logerr("unknown problem with schema definition: %s" % e)
+                schema = None
+        if schema is None:
+            logdbg("using default schema")
+            schema = defaultSchema
 
         # configure the database
         self.archive = weewx.archive.Archive.open_with_create(config_dict['Databases'][self.database], schema, self.table)
@@ -220,6 +299,7 @@ class ComputerMonitor(StdService):
         self.system = platform.system()
 
         # provide info about the system on which we are running
+        loginf('sysinfo: %s' % ' '.join(os.uname()))
         if self.system == 'Linux':
             cpuinfo = _readproc_dict('/proc/cpuinfo')
             for key in cpuinfo:
@@ -331,6 +411,8 @@ class ComputerMonitor(StdService):
 
         # read cpu temperature
         tdir = '/sys/class/hwmon/hwmon0/device'
+        # rpi keeps cpu temperature in a different location
+        tfile = '/sys/class/thermal/thermal_zone0/temp'
         if os.path.exists(tdir):
             for f in os.listdir(tdir):
                 if f.endswith('_input'):
@@ -340,6 +422,10 @@ class ComputerMonitor(StdService):
                         tC = int(s) / 1000 # degree C
                         tF = 32.0 + tC * 9.0 / 5.0
                         record['cpu_' + n] = tC
+        elif os.path.exists(tfile):
+            s = _readproc_line(tfile)
+            tC = int(s) / 1000 # degree C
+            record['cpu_temp'] = tC
 
         # get stats on mounted filesystems
         disks = []
@@ -409,7 +495,7 @@ class ComputerMonitor(StdService):
             cmd = '/opt/vc/bin/vcgencmd measure_temp'
             p = Popen(cmd, shell=True, stdout=PIPE)
             o = p.communicate()[0]
-            record['cpu_temp'] = float(o.replace("'C\n", '').partition('=')[2])
+            record['gpu_temp'] = float(o.replace("'C\n", '').partition('=')[2])
         except (ValueError, IOError, KeyError), e:
             logerr('rpi_info failed: %s' % e)
         return record
