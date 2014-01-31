@@ -73,7 +73,7 @@ class GeneralPlot(object):
         
         # Calculate sensible margins for the given image and font sizes.
         self.lmargin = int(4.0 * self.axis_label_font_size)
-        self.rmargin = int(0.1 * self.image_width)
+        self.rmargin = min(int(0.1 * self.image_width), self.lmargin)
         self.bmargin = int(1.2 * (self.bottom_label_font_size + self.axis_label_font_size) + 0.5)
         self.tmargin = int(2.0 * self.top_label_font_size + 0.5)
         self.tbandht = int(1.2 * self.top_label_font_size + 0.5)
