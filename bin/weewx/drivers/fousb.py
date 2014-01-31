@@ -364,7 +364,10 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     # calculate the rain increment from the rain total
     # watch for spurious rain counter decrement.  if decrement is significant
     # then it is a counter wraparound.  a small decrement is either a sensor
-    # glitch or a read from a previous record.
+    # glitch or a read from a previous record.  if the small decrement persists
+    # across multiple samples, it was probably a firmware glitch rather than
+    # a sensor glitch or old read.  a spurious increment will be filtered by
+    # the bogus rain rate check.
     total = packet['rain']
     packet['rainTotal'] = packet['rain']
     if packet['rain'] is not None and last_rain is not None:
@@ -373,7 +376,6 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
             if last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
                 loginf('ignoring spurious rain counter decrement (%s): '
                        'new: %s old: %s' % (pstr, packet['rain'], last_rain))
-                packet['rainTotal'] = last_rain
             else:
                 loginf('rain counter wraparound detected (%s): '
                        'new: %s old: %s' % (pstr, packet['rain'], last_rain))
