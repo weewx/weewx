@@ -890,6 +890,8 @@ def to_int(x):
     >>> print to_int(None)
     None
     """
+    if isinstance(x, str) and x.lower() == 'none':
+        x = None
     return int(x) if x is not None else None
 
 def to_float(x):
@@ -903,6 +905,8 @@ def to_float(x):
     >>> print to_float(None)
     None
     """
+    if isinstance(x, str) and x.lower() == 'none':
+        x = None
     return float(x) if x is not None else None
 
 def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
