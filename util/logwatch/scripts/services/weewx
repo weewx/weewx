@@ -34,6 +34,7 @@ my $WS23XX_INVALID_WIND = 'ws23xx: invalid wind reading';
 my $FORECAST_RECORDS = 'forecast: records generated';
 my $FORECAST_PRUNINGS = 'forecast: prunings';
 my $FORECAST_DOWNLOADS = 'forecast: downloads';
+my $FORECAST_SAVED = 'forecast: records saved';
 
 # any lines that do not match the patterns we define
 my @unmatched = ();
@@ -41,6 +42,23 @@ my @unmatched = ();
 # track individual publishing counts
 my %publish_counts = ();
 my %publish_fails = ();
+
+# track individual forecast stats
+my %forecast_records = ();
+my %forecast_prunings = ();
+my %forecast_downloads = ();
+my %forecast_saved = ();
+
+my %summaries = (
+    'counts', \%counts,
+    'errors', \%errors,
+    'uploads', \%publish_counts,
+    'upload failures', \%publish_fails,
+    'forecast records generated', \%forecast_records,
+    'forecast prunings', \%forecast_prunings,
+    'forecast downloads', \%forecast_downloads,
+    'forecast records saved', \%forecast_saved
+    );
 
 # track upload errors to help diagnose network/server issues
 my @upload_errors = ();
@@ -56,11 +74,6 @@ my @magic_numbers = ();
 my @rain_counter = ();
 my @suspected_bogus = ();
 
-my $clocksum = 0;
-my $clockmin = 0;
-my $clockmax = 0;
-my $clockcount = 0;
-
 my %itemized = (
     'upload errors', \@upload_errors,
     'fousb station status', \@station_status,
@@ -71,6 +84,11 @@ my %itemized = (
     'ws23xx connection changes', \@conn_change,
     'ws23xx invalid wind', \@invalid_wind,
     );
+
+my $clocksum = 0;
+my $clockmin = 0;
+my $clockmax = 0;
+my $clockcount = 0;
 
 while(defined($_ = <STDIN>)) {
     chomp;
@@ -122,7 +140,8 @@ while(defined($_ = <STDIN>)) {
     } elsif (/fousb: unrecognised magic number/) {
         push @magic_numbers, $_;
         $counts{$FOUSB_MAGIC_NUMBERS} += 1;
-    } elsif (/fousb: rain counter decrement/) {
+    } elsif (/fousb: rain counter decrement/ ||
+             /fousb: ignoring spurious rain counter decrement/) {
         push @rain_counter, $_;
         $counts{$FOUSB_RAIN_COUNTER} += 1;
     } elsif (/fousb:.*ignoring suspected bogus data/) {
@@ -142,14 +161,21 @@ while(defined($_ = <STDIN>)) {
     } elsif (/ws23xx: invalid wind reading/) {
         push @invalid_wind, $_;
         $counts{$WS23XX_INVALID_WIND} += 1;
-    } elsif (/forecast: .* generated 1 forecast record/) {
+    } elsif (/forecast: .*Thread: ([^:]+): generated 1 forecast record/) {
+        $forecast_records{$1} += 1;
         $counts{$FORECAST_RECORDS} += 1;
-    } elsif (/forecast: .* got (\d+) forecast records/) {
-        $counts{$FORECAST_RECORDS} += $1;
-    } elsif (/forecast: .* deleted forecasts/) {
+    } elsif (/forecast: .*Thread: ([^:]+): got (\d+) forecast records/) {
+        $forecast_records{$1} += $2;
+        $counts{$FORECAST_RECORDS} += $2;
+    } elsif (/forecast: .*Thread: ([^:]+): deleted forecasts/) {
+        $forecast_prunings{$1} += 1;
         $counts{$FORECAST_PRUNINGS} += 1;
-    } elsif (/forecast: .* downloading forecast/) {
+    } elsif (/forecast: .*Thread: ([^:]+): downloading forecast/) {
+        $forecast_downloads{$1} += 1;
         $counts{$FORECAST_DOWNLOADS} += 1;
+    } elsif (/forecast: .*Thread: ([^:]+): saving (\d+) forecast records/) {
+        $forecast_saved{$1} += $2;
+        $counts{$FORECAST_SAVED} += $2;
     } elsif (/awekas: Failed upload to (AWEKAS)/ ||
              /cosm: Failed upload to (COSM)/ ||
              /emoncms: Failed upload to (EmonCMS)/ ||
@@ -355,32 +381,32 @@ while(defined($_ = <STDIN>)) {
              /forecast: XTideThread: XTide: tide matrix/ ||
              /forecast: XTideThread: XTide: generating tides/ ||
              /restx: AWEKAS: url/ ||
+             /restx: EmonCMS: url/ ||
+             /restx: OWM: data/ ||
+             /restx: SEG: data/ ||
+             /restx: WeatherBug: url/ ||
+             /restx: Xively: data/ ||
+             /restx: Xively: url/ ||
              /awekas: code/ ||
              /awekas: read/ ||
              /awekas: url/ ||
              /awekas: data/ ||
-             /restx: Xively: data/ ||
-             /restx: Xively: url/ ||
              /cosm: code/ ||
              /cosm: read/ ||
              /cosm: url/ ||
              /cosm: data/ ||
-             /restx: EmonCMS: url/ ||
              /emoncms: code/ ||
              /emoncms: read/ ||
              /emoncms: data/ ||
              /emoncms: url/ ||
-             /restx: OWM: data/ ||
              /owm: code/ ||
              /owm: read/ ||
              /owm: url/ ||
              /owm: data/ ||
-             /restx: SEG: data/ ||
              /seg: code/ ||
              /seg: read/ ||
              /seg: url/ ||
              /seg: data/ ||
-             /restx: WeatherBug: url/ ||
              /wbug: code/ ||
              /wbug: read/ ||
              /wbug: url/ ||
@@ -400,27 +426,16 @@ if($clockcount > 0) {
     print "\n";
 }
 
-print "counts:\n";
-foreach my $k (sort keys %counts) {
-    next if $counts{$k} == 0;
-    printf("  %-45s %6d\n", $k, $counts{$k});
-}
-
-print "\nuploads:\n";
-foreach my $k (sort keys %publish_counts) {
-    next if $publish_counts{$k} == 0;
-    printf("  %-45s %6d\n", $k, $publish_counts{$k});
-}
-
-print "\nupload failures:\n";
-foreach my $k (sort keys %publish_fails) {
-    next if $publish_fails{$k} == 0;
-    printf("  %-45s %6d\n", $k, $publish_fails{$k});
-}
-
-print "\nerrors:\n";
-foreach my $k (keys %errors) {
-    printf("  %-45s %6d\n", $k, $errors{$k});
+foreach my $slabel (sort keys %summaries) {
+    my $s = $summaries{$slabel};
+    if(scalar(keys %$s)) {
+        print "$slabel:\n";
+        foreach my $k (sort keys %$s) {
+            next if $s->{$k} == 0;
+            printf("  %-45s %6d\n", $k, $s->{$k});
+        }
+        print "\n";
+    }
 }
 
 foreach my $k (sort keys %itemized) {
