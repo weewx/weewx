@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2012, 2013, 2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -547,11 +547,11 @@ class TimePlot(GeneralPlot) :
             (xmin, xmax) = self._calcXMinMax()
             delta = xmax - xmin
             if delta > 30*24*3600:
-                self.x_label_format = "%m/%d"
+                self.x_label_format = "%x"
             elif delta > 24*3600:
-                self.x_label_format = '%d'
+                self.x_label_format = '%x %X'
             else:
-                self.x_label_format = '%H:%M'
+                self.x_label_format = '%X'
         
     def _genXLabel(self, x):
         time_tuple = time.localtime(x)
