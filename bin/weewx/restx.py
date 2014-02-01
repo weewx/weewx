@@ -677,7 +677,7 @@ class AmbientThread(RESTThread):
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
         for _key in AmbientThread._formats:
-            _v = record[_key]
+            _v = record.get(_key)
             # Check to make sure the type is not null
             if _v is not None :
                 if _key == 'dateTime':
