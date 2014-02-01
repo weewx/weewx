@@ -73,16 +73,16 @@ class GeneralPlot(object):
         
         # Calculate sensible margins for the given image and font sizes.
         self.lmargin = int(4.0 * self.axis_label_font_size)
-        self.rmargin = min(int(0.1 * self.image_width), self.lmargin)
-        self.bmargin = int(1.2 * (self.bottom_label_font_size + self.axis_label_font_size) + 0.5)
-        self.tmargin = int(2.0 * self.top_label_font_size + 0.5)
+        self.rmargin = 20
+        self.bmargin = int(1.5 * (self.bottom_label_font_size + self.axis_label_font_size) + 0.5)
+        self.tmargin = int(1.5 * self.top_label_font_size + 0.5)
         self.tbandht = int(1.2 * self.top_label_font_size + 0.5)
         self.padding =  3
 
         self.render_rose            = False
-        # Rose width and height are hardwired to 21x21:
-        self.rose_width             = 21
-        self.rose_height            = 21
+        self.rose_width             = int(config_dict.get('rose_width', 21))
+        self.rose_height            = int(config_dict.get('rose_height', 21))
+        self.rose_diameter          = int(config_dict.get('rose_diameter', 10))
         self.rose_position          = (self.lmargin + self.padding + 5, self.image_height - self.bmargin - self.padding - self.rose_height)
         self.rose_rotation          = None
         self.rose_label             = config_dict.get('rose_label', 'N')
@@ -424,7 +424,11 @@ class GeneralPlot(object):
         # And the right barb:
         rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)), width = 1, fill = fill_color)
         
-        rose_draw.ellipse(((rose_center_x - 4, rose_center_y - 4), (rose_center_x + 4, rose_center_y + 4)), outline = fill_color)
+        rose_draw.ellipse(((rose_center_x - self.rose_diameter/2,
+                            rose_center_y - self.rose_diameter/2),
+                           (rose_center_x + self.rose_diameter/2,
+                            rose_center_y + self.rose_diameter/2)),
+                          outline = fill_color)
 
         # Rotate if necessary:
         if self.rose_rotation:
@@ -436,8 +440,8 @@ class GeneralPlot(object):
         rose_label_size = draw.textsize(self.rose_label, font=rose_label_font)
         
         # Draw the label in the middle of the (possibly) rotated arrow
-        rose_draw.text((rose_center_x - rose_label_size[0]/2, 
-                        rose_center_y - rose_label_size[1]/2),
+        rose_draw.text((rose_center_x - rose_label_size[0]/2 - 1, 
+                        rose_center_y - rose_label_size[1]/2 - 1),
                         self.rose_label,
                         fill = add_alpha(self.rose_label_font_color),
                         font = rose_label_font)
