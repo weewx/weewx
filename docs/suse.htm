@@ -74,6 +74,13 @@
       Install by double-clicking the .rpm file, or via command line:
     </p>
     <p class='tty'>sudo rpm -i weewx-X.Y.Z-R.rpm</p>
+    <p>
+      If you see errors about untrusted signature, or MISSING KEYS, you can
+      either install the <a href="http://weewx.com/keys.html">weewx GPG keys</a>:
+    </p>
+    <p class='tty'>sudo rpm --import http://weewx.com/keys.html</p>
+    <p>or tell rpm to ignore the signature:</p>
+    <p class='tty'>sudo rpm -i --nosignature weewx-X.Y.Z-R.rpm</p>
 
     <h3>Verify</h3>
     <p>

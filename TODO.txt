@@ -9,3 +9,5 @@ add documentation for each extension and the extension installer.
 add upgrading notes for extensions from 2.5 to 2.6
 
 Add --fix option to wee_config_database
+
+figure out how to run extension unit tests
