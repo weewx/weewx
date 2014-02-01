@@ -440,7 +440,7 @@ class GeneralPlot(object):
         rose_label_size = draw.textsize(self.rose_label, font=rose_label_font)
         
         # Draw the label in the middle of the (possibly) rotated arrow
-        rose_draw.text((rose_center_x - rose_label_size[0]/2 - 1, 
+        rose_draw.text((rose_center_x - rose_label_size[0]/2 - 1,
                         rose_center_y - rose_label_size[1]/2 - 1),
                         self.rose_label,
                         fill = add_alpha(self.rose_label_font_color),
@@ -536,13 +536,22 @@ class TimePlot(GeneralPlot) :
     """
     
     def _calcXScaling(self):
-        """Specialized version for time plots.
-        
-        """
+        """Specialized version for time plots."""
         if self.xscale is None :
             (xmin, xmax) = self._calcXMinMax()
-                
             self.xscale = weeplot.utilities.scaletime(xmin, xmax)
+
+    def _calcXLabelFormat(self):
+        """Specialized version for time plots."""
+        if self.x_label_format is None:
+            (xmin, xmax) = self._calcXMinMax()
+            delta = xmax - xmin
+            if delta > 30*24*3600:
+                self.x_label_format = "%m/%d"
+            elif delta > 24*3600:
+                self.x_label_format = '%d'
+            else:
+                self.x_label_format = '%H:%M'
         
     def _genXLabel(self, x):
         time_tuple = time.localtime(x)
