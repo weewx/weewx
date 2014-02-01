@@ -11,17 +11,6 @@ Broke up service_list, the very long list of services to be run, into
 five separate lists. This will allow services to be grouped together,
 according to when they should be run.
 
-Added extensions to the weewx source distribution, including:
-  uploader for open weather map
-  uploader for weatherbug
-  uploader for wetter.com
-  uploader for emoncms
-  uploader for xively (cosm/pachube)
-  uploader for smart energy groups
-  cmon computer health monitor
-  amphibian skin
-  forecasting
-
 Changed the default time and date labels to use locale dependent formatting.
 The defaults should now work in most locales, provided you set the
 environment variable LANG before running weewx.

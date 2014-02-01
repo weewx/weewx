@@ -2,12 +2,8 @@ TODO before the next release:
 
 Figure out why the heartbeat doesn't work on the WMR200.
 
-trailing comma in the services lists after upgrade
+setup.py left a trailing comma in the services lists after upgrade
 
-add documentation for each extension and the extension installer.
-
-add upgrading notes for extensions from 2.5 to 2.6
+add documentation for the extension installer and extension packaging.
 
 Add --fix option to wee_config_database
-
-figure out how to run extension unit tests
