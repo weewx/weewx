@@ -428,8 +428,6 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
 
 def update_config_file(config_dict):
     """Updates a configuration file to reflect any recent changes."""
-    
-    global service_map, all_service_groups, service_lists
 
     # webpath is now station_url
     webpath = config_dict['Station'].get('webpath', None)
@@ -634,7 +632,7 @@ class Extension(Logger):
             }
         }
 
-    def __init__(self, filename, layout_type=None, tmpdir='/var/tmp'):
+    def __init__(self, filename=None, layout_type=None, tmpdir='/var/tmp'):
         self.filename = filename # could be dir, tarball, or extname
         self.tmpdir = tmpdir
         self.layout_type = layout_type
@@ -643,14 +641,34 @@ class Extension(Logger):
         self.extdir = None
         self.basename = None
         self.layout = None
+        self.delete_extdir = False
+
+    def set_extension(self, filename):
+        self.filename = filename
 
     def set_dryrun(self, dryrun):
         self.dryrun = dryrun
 
+    def enumerate_extensions(self):
+        self.layout_type = self.guess_type(self.layout_type)        
+        self.layout = self.verify_layout(self.layout_type)
+        d = self.get_cache_dir(self.layout)
+        try:
+            exts = os.listdir(d)
+            if exts:
+                for f in exts:
+                    self.log(f, level=0)
+            else:
+                self.log("no extensions installed", level=0)
+                self.log("extension cache is %s" % d, level=2)
+        except OSError, e:
+            self.log("listdir failed: %s" % e, level=2)
+        
+
     def install(self):
         self.layout_type = self.guess_type(self.layout_type)
         self.layout = self.verify_layout(self.layout_type)
-        (self.basename, self.extdir) = \
+        (self.basename, self.extdir, self.delete_extdir) = \
             self.verify_installer(self.filename, self.tmpdir)
         self.verify_src(self.extdir)
         # everything is ok, so use the extdir
@@ -662,8 +680,8 @@ class Extension(Logger):
     def uninstall(self):
         self.layout_type = self.guess_type(self.layout_type)
         self.layout = self.verify_layout(self.layout_type)
-        self.hisdir = self.verify_uninstaller(self.layout, self.filename)
         self.basename = self.filename
+        self.hisdir = self.get_uninstaller_dir(self.layout, self.basename)
         self.verify_src(self.hisdir)
         self.load_installer(self.hisdir, self.basename, self.layout)
         self.installer.uninstall()
@@ -672,15 +690,21 @@ class Extension(Logger):
         if os.path.isdir(filename):
             basename = os.path.basename(filename)
             extdir = filename
+            delete_when_finished = False
         elif os.path.isfile(filename):
             (basename, extdir) = self.extract_tarball(filename, tmpdir)
+            delete_when_finished = True
         else:
             raise Exception, "cannot install from %s" % filename
-        return (basename, extdir)
+        return (basename, extdir, delete_when_finished)
 
-    def verify_uninstaller(self, layout, basename):
+    def get_cache_dir(self, layout):
         d = os.path.join(layout['BIN_ROOT'], 'user')
         d = os.path.join(d, 'installer')
+        return d
+
+    def get_uninstaller_dir(self, layout, basename):
+        d = self.get_cache_dir(layout)
         d = os.path.join(d, basename)
         return d
 
@@ -744,12 +768,12 @@ class Extension(Logger):
                 layout[f] = os.path.join(weewx_root, layout[f])
             layout['WEEWX_ROOT'] = weewx_root
         else:
-            errors.append("unknown layout type '%s'" % layout_type)
+            raise Exception, "unknown layout type '%s'" % layout_type
 
         # be sure each destination directory exists
         for x in layout:
             if not os.path.isdir(layout[x]):
-                errors.append("no directory %s" % x)
+                errors.append("missing directory %s (%s)" % (x, layout[x]))
 
         # be sure weewx.conf exists and has the new service lists
         fn = os.path.join(layout['CONFIG_ROOT'], 'weewx.conf')
@@ -759,12 +783,12 @@ class Extension(Logger):
                 try:
                     config['Engines']['WxEngine'][sg]
                 except Exception, e:
-                    errors.append("missing key: %s" % e)
+                    errors.append("[Engines][WxEngine] is missing key %s" % e)
         else:
             errors.append("no weewx.conf at %s" % fn)
 
         if errors:
-            raise Exception, '\n'.join(errors)
+            raise Exception, "verify layout failed:\n%s" % '\n'.join(errors)
 
         self.log("layout is \n  %s" % '\n  '.join(formatdict(layout)), level=1)
 
@@ -806,9 +830,9 @@ class Extension(Logger):
         if not has_install:
             errors.append("package has no install.py")
         if errors:
-            raise Exception, "\n".join(errors)
+            raise Exception, "verify tarball failed: %s" % '\n'.join(errors)
 
-        self.log("extracting tarball", level=1)
+        self.log("extracting tarball %s" % filename, level=1)
         archive.extractall(path=tmpdir)
         archive.close()
         return (root, os.path.join(tmpdir, root))
@@ -828,11 +852,12 @@ class Extension(Logger):
         self.installer.set_basename(basename)
 
     def cleanup(self):
-        self.log("clean up files extracted from archive", level=1)
-        try:
-            shutil.rmtree(self.extdir)
-        except:
-            pass
+        if self.delete_extdir:
+            self.log("clean up files extracted from archive", level=1)
+            try:
+                shutil.rmtree(self.extdir)
+            except:
+                pass
 
 class ExtensionInstaller(Logger):
     """Base class for extension installers."""
@@ -852,7 +877,6 @@ class ExtensionInstaller(Logger):
         self.files = kwargs.get('files', [])
         self.config = kwargs.get('config', {})
         self.services = {}
-        global all_service_groups
         for sg in all_service_groups:
             v = kwargs.get(sg, [])
             if not isinstance(v, list):
@@ -942,6 +966,7 @@ class ExtensionInstaller(Logger):
             if report_errors:
                 self.log("delete failed: %s" % e, level=2)
 
+    # FIXME: guard against weewx.conf that has no StdReport or HTML_ROOT
     def merge_config_options(self):
         self.log("merge_config_options", level=1)
 
@@ -955,7 +980,12 @@ class ExtensionInstaller(Logger):
         # prepend any html paths with existing HTML_ROOT
         prepend_path(cfg, 'HTML_ROOT', config['StdReport']['HTML_ROOT'])
 
+        # if any variable begins with SKIN_DIR, replace with effective skin
+        # directory (absolute or relative) from weewx.conf
+        replace_string(cfg, 'SKIN_DIR', get_skin_dir(config))
+
         # massage the database dictionaries for this extension
+        # FIXME: use parameterized root if possible
         try:
             sqlitecfg = config['Databases'].get('archive_sqlite', None)
             mysqlcfg = config['Databases'].get('archive_mysql', None)
@@ -977,7 +1007,6 @@ class ExtensionInstaller(Logger):
         conditional_merge(config, cfg)
 
         # append services to appropriate lists
-        global all_service_groups
         for sg in all_service_groups:
             for s in self.services[sg]:
                 if not isinstance(config['Engines']['WxEngine'][sg], list):
@@ -997,7 +1026,6 @@ class ExtensionInstaller(Logger):
         config = configobj.ConfigObj(fn)
 
         # remove any services we added
-        global all_service_groups
         for sg in all_service_groups:
             if self.services[sg]:
                 newlist = []
@@ -1078,34 +1106,53 @@ def prepend_path(d, label, value):
         elif k == label:
             d[k] = os.path.join(value, d[k])    
 
+def replace_string(d, label, value):
+    for k in d.keys():
+        if isinstance(d[k], dict):
+            replace_string(d[k], label, value)
+        else:
+            d[k].replace(label, value)
+
+def get_skin_dir(config):
+    '''figure out the effective SKIN_DIR from a weewx configuration'''
+    html_root = config['StdReport']['HTML_ROOT']
+    skin_root = config['StdReport']['SKIN_ROOT']
+    return os.path.join(html_root, skin_root)
+
 def do_ext():
     import optparse
-    description = "install weewx extension"
-    usage = "%prog (--install-extension [filename|directory] | --uninstall-extension extname)"
+    description = "install/remove/list extensions to weewx"
+    usage = """%prog --extension --install (filename|directory)
+                            --uninstall extension_name
+                            --list"""
     parser = optparse.OptionParser(description=description, usage=usage)
-    parser.add_option('--install-extension', dest='i_ext', type=str,
-                      metavar="FILE_OR_DIR", help='install extension')
-    parser.add_option('--uninstall-extension', dest='u_ext', type=str,
+    parser.add_option('--extension', dest='ext', action='store_true')
+    parser.add_option('--install', dest='i_ext', type=str, metavar="NAME",
+                      help='install extension from file or directory')
+    parser.add_option('--uninstall', dest='u_ext', type=str,
                       metavar="NAME", help='uninstall extension')
+    parser.add_option('--list', dest='list_ext', action='store_true',
+                      help='list installed extensions')
     parser.add_option('--layout', dest='layout', type=str, default=None,
-                      metavar='LAYOUT', help='specify the type of install')
+                      metavar='LAYOUT', help='layout is deb, rpm, or py')
     parser.add_option('--tmpdir', dest='tmpdir', type=str, default='/var/tmp',
                       metavar="DIR", help='temporary directory')
     parser.add_option('--dryrun', dest='dryrun', action='store_true',
                       help='print what would happen but do not do it')
-    parser.add_option('--verbosity', dest='verbosity', type=int, default=2,
+    parser.add_option('--verbosity', dest='verbosity', type=int, default=1,
                       metavar="N", help='how much status to spew, 0-3')
     (options, _args) = parser.parse_args()
 
-    if options.i_ext:
-        ext = Extension(options.i_ext, options.layout, options.tmpdir)
-        ext.set_verbosity(options.verbosity)
-        ext.set_dryrun(options.dryrun)
+    ext = Extension(layout_type=options.layout, tmpdir=options.tmpdir)
+    ext.set_verbosity(options.verbosity)
+    ext.set_dryrun(options.dryrun)
+    if options.list_ext:
+        ext.enumerate_extensions()
+    elif options.i_ext:
+        ext.set_extension(options.i_ext)
         ext.install()
     elif options.u_ext:
-        ext = Extension(options.u_ext, options.layout, options.tmpdir)
-        ext.set_verbosity(options.verbosity)
-        ext.set_dryrun(options.dryrun)
+        ext.set_extension(options.u_ext)
         ext.uninstall()
     return 0
 
@@ -1192,10 +1239,16 @@ def do_merge():
 if __name__ == "__main__":
     if '--merge-config' in sys.argv:
         exit(do_merge())
-    if '--install-extension' in sys.argv:
+    if '--extension' in sys.argv:
         exit(do_ext())
-    if '--uninstall-extension' in sys.argv:
-        exit(do_ext())
+    if '--help' in sys.argv:
+        print "Commands for installing/removing/listing weewx extensions:"
+        print ""
+        print "  setup.py --extension --list"
+        print "  setup.py --extension --install forecast.tar.gz"
+        print "  setup.py --extension --uninstall forecast"
+        print "  setup.py --help --extension"
+        print ""
 
     setup(name='weewx',
           version=VERSION,
