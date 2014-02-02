@@ -333,6 +333,7 @@ class RESTThread(threading.Thread):
         _url = self.format_url(_us_record)
         # ... convert to a Request object ...
         _request = urllib2.Request(_url)
+        _request.add_header("User-Agent", "weewx/%s" % weewx.__version__)
         # ... then, finally, post it
         self.post_with_retries(_request)
 
@@ -1476,6 +1477,7 @@ class AWEKASThread(RESTThread):
             syslog.syslog(syslog.LOG_DEBUG, "restx: AWEKAS: skipping upload")
             return
         req = urllib2.Request(url)
+        req.add_header("User-Agent", "weewx/%s" % weewx.__version__)
         self.post_with_retries(req)
 
     def check_response(self, response):
