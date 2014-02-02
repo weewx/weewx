@@ -607,7 +607,7 @@ def save_path(filepath):
 # FIXME: design something to handle paths for included files in skins
 
 class Logger(object):
-    def __init__(self, verbosity=2):
+    def __init__(self, verbosity=0):
         self.verbosity = verbosity
     def log(self, msg, level=0):
         if self.verbosity >= level:
@@ -634,14 +634,13 @@ class Extension(Logger):
             }
         }
 
-    def __init__(self, filename, layout_type=None, tmpdir=tempfile.tempdir):
+    def __init__(self, filename, layout_type=None, tmpdir='/var/tmp'):
         self.filename = filename # could be dir, tarball, or extname
         self.tmpdir = tmpdir
         self.layout_type = layout_type
         self.dryrun = False
         self.installer = None
         self.extdir = None
-        self.archive = None
         self.basename = None
         self.layout = None
 
@@ -651,7 +650,7 @@ class Extension(Logger):
     def install(self):
         self.layout_type = self.guess_type(self.layout_type)
         self.layout = self.verify_layout(self.layout_type)
-        (self.archive, self.basename, self.extdir) = \
+        (self.basename, self.extdir) = \
             self.verify_installer(self.filename, self.tmpdir)
         self.verify_src(self.extdir)
         # everything is ok, so use the extdir
@@ -671,15 +670,13 @@ class Extension(Logger):
 
     def verify_installer(self, filename, tmpdir):
         if os.path.isdir(filename):
-            archive = None
             basename = os.path.basename(filename)
             extdir = filename
         elif os.path.isfile(filename):
-            (archive, basename) = self.verify_tarball(filename)
-            extdir = self.extract_tarball(archive, tmpdir, basename)
+            (basename, extdir) = self.extract_tarball(filename, tmpdir)
         else:
             raise Exception, "cannot install from %s" % filename
-        return (archive, basename, extdir)
+        return (basename, extdir)
 
     def verify_uninstaller(self, layout, basename):
         d = os.path.join(layout['BIN_ROOT'], 'user')
@@ -779,14 +776,14 @@ class Extension(Logger):
         if not os.path.exists(ifile):
             raise Exception, "no install.py found in %s" % extdir
 
-    def verify_tarball(self, filename):
-        '''do some basic checks on the tarball'''
-        self.log("verify tarball", level=1)
+    def extract_tarball(self, filename, tmpdir):
+        '''do some basic checks on the tarball then extract it'''
+        self.log("verify tarball %s" % filename, level=1)
         import tarfile
-        archive = tarfile.open(filename, mode='r')
         root = None
         has_install = False
         errors = []
+        archive = tarfile.open(filename, mode='r')
         for f in archive.getmembers():
             if f.name.endswith('install.py'):
                 has_install = True
@@ -810,13 +807,11 @@ class Extension(Logger):
             errors.append("package has no install.py")
         if errors:
             raise Exception, "\n".join(errors)
-        return (archive, root)
 
-    def extract_tarball(self, archive, tmpdir, basename):
-        '''extract the tarball contents, return path to the extracted files'''
         self.log("extracting tarball", level=1)
         archive.extractall(path=tmpdir)
-        return os.path.join(tmpdir, basename)
+        archive.close()
+        return (root, os.path.join(tmpdir, root))
 
     def load_installer(self, dirname, basename, layout):
         '''load the extension's installer'''
@@ -833,12 +828,11 @@ class Extension(Logger):
         self.installer.set_basename(basename)
 
     def cleanup(self):
-        if self.archive is not None:
-            self.log("clean up files extracted from archive", level=1)
-            try:
-                shutil.rmtree(self.extdir)
-            except:
-                pass
+        self.log("clean up files extracted from archive", level=1)
+        try:
+            shutil.rmtree(self.extdir)
+        except:
+            pass
 
 class ExtensionInstaller(Logger):
     """Base class for extension installers."""
@@ -926,8 +920,8 @@ class ExtensionInstaller(Logger):
                 self.delete_file(dst)
                 # if it is python source, delete any pyc and pyo as well
                 if dst.endswith(".py"):
-                    self.delete_file(dst.replace('.py','.pyc'))
-                    self.delete_file(dst.replace('.py','.pyo'))
+                    self.delete_file(dst.replace('.py','.pyc'), False)
+                    self.delete_file(dst.replace('.py','.pyo'), False)
             # if the directory is empty, delete it
             try:
                 if not os.listdir(dstdir):
@@ -939,13 +933,14 @@ class ExtensionInstaller(Logger):
             except OSError, e:
                 self.log("delete failed: %s" % e, level=2)
 
-    def delete_file(self, filename):
+    def delete_file(self, filename, report_errors=True):
         try:
             self.log("delete file %s" % filename, level=2)
             if self.doit:
                 os.remove(filename)
         except OSError, e:
-            self.log("delete failed: %s" % e, level=2)
+            if report_errors:
+                self.log("delete failed: %s" % e, level=2)
 
     def merge_config_options(self):
         self.log("merge_config_options", level=1)
@@ -1092,13 +1087,13 @@ def do_ext():
                       metavar="FILE_OR_DIR", help='install extension')
     parser.add_option('--uninstall-extension', dest='u_ext', type=str,
                       metavar="NAME", help='uninstall extension')
-    parser.add_option('--layout', dest='layout', type=str,
+    parser.add_option('--layout', dest='layout', type=str, default=None,
                       metavar='LAYOUT', help='specify the type of install')
-    parser.add_option('--tmpdir', dest='tmpdir', type=str,
+    parser.add_option('--tmpdir', dest='tmpdir', type=str, default='/var/tmp',
                       metavar="DIR", help='temporary directory')
     parser.add_option('--dryrun', dest='dryrun', action='store_true',
                       help='print what would happen but do not do it')
-    parser.add_option('--verbosity', dest='verbosity', type=int,
+    parser.add_option('--verbosity', dest='verbosity', type=int, default=2,
                       metavar="N", help='how much status to spew, 0-3')
     (options, _args) = parser.parse_args()
 
