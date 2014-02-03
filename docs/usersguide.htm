@@ -689,20 +689,24 @@ Version: 2.6.0a6
       It will put everything in a single directory, making it easy to modify.
       If the user installing <span class='code'>weewx</span> has permission
       to write to the directory, root privileges will not be required to
-      install, run, or modify <span class='code'>weewx</span>.
-    </p>
+      install, run, or modify <span class='code'>weewx</span>.</p>
     <p>
       By contrast, the package approach is somewhat simpler, but it requires 
       root privileges and will install the bits and pieces of 
       <span class="code">weewx</span> in standard operating system
-      locations across the file system instead of in a single directory. The net effect is that
-      configuration files, templates, and code will all be installed in
-      separate locations, most of which will require root privileges to
-      modify.</p>
-	  <p>
+      locations across the file system instead of in a single directory.
+      The net effect is that configuration files, templates, and code will
+      all be installed in separate locations, most of which will require
+      root privileges to modify.</p>
+    <p>
+      When installing using <span class='code'>setup.py</span>, the
+      installation location is specified by the <span class='code'>home</span>
+      parameter in the <span class='code'>setup.cfg</span> file.  This file is
+      not used by the other installation methods.</p>
+    <p>
       Here is a summary of the layout for the different install methods, along 
-	  with the symbolic names used for each role. These names are used 
-	  throughout the documentation. </p>
+      with the symbolic names used for each role. These names are used 
+      throughout the documentation. </p>
 
     <div class='tabs' style='padding-top:1em'>
       <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
@@ -3006,7 +3010,7 @@ uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
 And put in <span class="code">weewx.conf</span>:
 port = /dev/cuaU0</pre>
 
-    <h3>Apple OSX 1.9 (Mavericks)</h3>
+    <h3>Apple OSX 10.9 (Mavericks)</h3>
     <p>User Mike has written a 
       <a href='http://www.cougar.eu.com/useful-guides/weewx-installation-on-osx.html'>
 	very nice guide</a> on how to install <span class='code'>
