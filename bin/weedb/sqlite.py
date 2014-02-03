@@ -101,15 +101,17 @@ class Connection(weedb.Connection):
         
         If the table does not exist, an exception of type weedb.OperationalError is raised."""
         for row in self.connection.execute("""PRAGMA table_info(%s);""" % table):
-            yield (row[0], str(row[1]), str(row[2]), not to_bool(row[3]), row[4], to_bool(row[5]))
+            if row[2].upper().startswith('CHAR'):
+                coltype = 'STR'
+            else:
+                coltype = str(row[2]).upper()
+            yield (row[0], str(row[1]), coltype, not to_bool(row[3]), row[4], to_bool(row[5]))
         
     def columnsOf(self, table):
         """Return a list of columns in the specified table. If the table does not exist,
         None is returned."""
 
-        column_list = list()
-        for row in self.genSchemaOf(table):
-            column_list.append(str(row[1]))
+        column_list = [row[1] for row in self.genSchemaOf(table)]
 
         # If there are no columns (which means the table did not exist) raise an exceptional
         if not column_list:

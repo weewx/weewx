@@ -25,7 +25,8 @@ schema = [(0, 'dateTime', 'INTEGER', False, None, True),
           (3, 'max',      'REAL',    True,  None, False),
           (4, 'maxtime',  'INTEGER', True,  None, False),
           (5, 'sum',      'REAL',    True,  None, False),
-          (6, 'count',    'INTEGER', True,  None, False)]
+          (6, 'count',    'INTEGER', True,  None, False),
+          (7, 'descript', 'STR',     True,  None, False)]
 
 class Common(unittest.TestCase):
     
@@ -46,10 +47,10 @@ class Common(unittest.TestCase):
         self.assertRaises(weedb.DatabaseExists, weedb.create, self.db_dict)
         _connect = weedb.connect(self.db_dict)
         with weedb.Transaction(_connect) as _cursor:
-            _cursor.execute("""CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
-                      """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);""")
-            _cursor.execute("""CREATE TABLE test2 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
-                      """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);""")
+            _cursor.execute("""CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY,
+                      min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, descript CHAR(20));""")
+            _cursor.execute("""CREATE TABLE test2 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY,
+                      min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, descript CHAR(20));""")
             for irec in range(20):
                 _cursor.execute("INSERT INTO test1 (dateTime, min, mintime) VALUES (?, ?, ?)", (irec, 10*irec, irec))
         _connect.close()
@@ -70,14 +71,15 @@ class Common(unittest.TestCase):
         _connect = weedb.connect(self.db_dict)
         self.assertEqual(_connect.tables(), [])
         self.assertRaises(weedb.OperationalError, _connect.columnsOf, 'test1')
+        self.assertRaises(weedb.OperationalError, _connect.columnsOf, 'foo')
         _connect.close()
         
     def test_create(self):
         self.populate_db()
         _connect = weedb.connect(self.db_dict)
         self.assertItemsEqual(_connect.tables(), ['test1', 'test2'])
-        self.assertEqual(_connect.columnsOf('test1'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count'])
-        self.assertEqual(_connect.columnsOf('test2'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count'])
+        self.assertEqual(_connect.columnsOf('test1'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'descript'])
+        self.assertEqual(_connect.columnsOf('test2'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'descript'])
         for icol, col in enumerate(_connect.genSchemaOf('test1')):
             self.assertEqual(schema[icol], col)
         for icol, col in enumerate(_connect.genSchemaOf('test2')):

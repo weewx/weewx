@@ -132,10 +132,14 @@ class Connection(weedb.Connection):
                 if row is None: break
                 # Append this column to the list of columns.
                 colname = str(row[0])
-                if row[1]=='double':
+                if row[1].upper()=='DOUBLE':
                     coltype = 'REAL'
-                elif row[1].startswith('int'):
+                elif row[1].upper().startswith('INT'):
                     coltype = 'INTEGER'
+                elif row[1].upper().startswith('CHAR'):
+                    coltype = 'STR'
+                else:
+                    coltype = str(row[1]).upper()
                 is_primary = True if row[3] == 'PRI' else False
                 yield (irow, colname, coltype, to_bool(row[2]), row[4], is_primary)
                 irow += 1
@@ -147,9 +151,7 @@ class Connection(weedb.Connection):
         """Return a list of columns in the specified table. 
         
         If the table does not exist, an exception of type weedb.OperationalError is raised."""
-        column_list = list()
-        for row in self.genSchemaOf(table):
-            column_list.append(row[1])
+        column_list = [row[1] for row in self.genSchemaOf(table)]
         return column_list
     
     def begin(self):
