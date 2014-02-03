@@ -15,7 +15,7 @@ import os.path
 # Import sqlite3. If it does not support the 'with' statement, then
 # import pysqlite2, which might...
 import sqlite3
-if not hasattr(sqlite3.Connection, "__exit__"):
+if not hasattr(sqlite3.Connection, "__exit__"):  # @UndefinedVariable
     del sqlite3
     from pysqlite2 import dbapi2 as sqlite3 #@Reimport @UnresolvedImport
 

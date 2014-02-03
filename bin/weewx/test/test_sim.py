@@ -21,7 +21,7 @@ import configobj
 import weeutil.weeutil
 import weewx.wxengine
 import weedb
-import weewx.simulator
+import weewx.drivers.simulator
 
 run_length = 48.0      # How long to run the simulator in hours.
 # The types to actually test:
@@ -141,7 +141,7 @@ def calc_stats(config_dict, start_ts, stop_ts):
     sim_start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%d %H:%M")
     sim_start_ts = time.mktime(sim_start_tt)
             
-    simulator = weewx.simulator.Simulator(loop_interval=config_dict['Simulator'].as_int('loop_interval'),
+    simulator = weewx.drivers.simulator.Simulator(loop_interval=config_dict['Simulator'].as_int('loop_interval'),
                                           mode='generator',
                                           start_time=sim_start_ts,
                                           resume_time=start_ts)
