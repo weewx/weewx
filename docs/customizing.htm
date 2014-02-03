@@ -2886,38 +2886,49 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf --string-check --fix</pre>
         help you out!</p>
 
       <h1 id="extensions">Extensions</h1>
-      <p>As you may have noticed, <span class='code'>weewx</span> can be
-        customized in many ways.  Customizations typically fall into one of
-        these categories:</p>
+      <p>Now that you have made some customizations, you migh want to share
+        those changes with other <span class='code'>weewx</span> users.  Put
+        your customizations into an extension to make installation, removal,
+        and distribution easier.</p>
+      <p>Customizations typically fall into one of these categories:</p>
       <ul>
         <li>search list extension</li>
+        <li>template</li>
         <li>skin</li>
         <li>service</li>
+        <li>generator</li>
         <li>driver</li>
       </ul>
       <p>Extensions are a way to package one or more customizations so they
         can be installed and distributed as a functional group.</p>
 
-      <h2>Packaging extensions</h2>
-      <p>Now that you have made some customizations, you migh want to share
-        those changes with other <span class='code'>weewx</span> users.  Put
-        your customizations into an extension to make installation, removal,
-        and distribution easier.</p>
+      <h2>Extension guidelines</h2>
+      <p>Here are a few guidelines for creating extensions:</p>
+      <ul>
+        <li>An extension should include its own, standalone skin to illustrate
+          any templates, search list extension, or generator features.</li>
+        <li>Extensions should not modify or depend upon existing skins.</li>
+        <li>Extensions should not modify the
+          <span class='code'>archive_database</span> or
+          <span class='code'>stats_database</span> schemas.</li>
+      </ul>
+
+      <h2>How to package an extension</h2>
       <p>The structure of an extension mirrors that of
         <span class='code'>weewx</span> itself.  If the customizations include
         a skin, the extension will have a skins directory.  If the
-        customizations include python code, the extension will have a bin/user
-        directory.  Each extension also includes:</p>
+        customizations include python code, the extension will have a
+        <span class='code'>bin/user</span> directory.
+      </p>
+      <p>Each extension should also include:</p>
       <ul>
         <li><span class='code'>readme.txt</span> - a summary of
           what the extension does, list of pre-requisites (if any), and
-          instructions for installing the extension manually (without the
-          help of the <span class='code'>weewx</span> ExtensionInstaller)</li>
+          instructions for installing the extension manually</li>
         <li><span class='code'>changelog</span> - an enumeration of
           changes in each release</li>
-        <li><span class='code'>install.py</span> - python code that
-          used by the <span class='code'>weewx</span> ExtensionInstaller to
-          install the extension.</li>
+        <li><span class='code'>install.py</span> - python code used by the
+          <span class='code'>weewx</span> ExtensionInstaller</li>
       </ul>
       <p>For example, here is the structure of a skin called
         <span class='code'>basic</span>:</p>
@@ -2942,13 +2953,13 @@ xstats/readme.txt
 xstats/bin/
 xstats/bin/user/
 xstats/bin/user/xstats.py</p>
-      <p>Here are a few guidelines for creating extensions:</p>
-      <ul>
-        <li>Extensions should not modify or depend upon existing skins.</li>
-        <li>If possible, extensions should not modify the database schema.</li>
-      </ul>
       <p>See the <span class='code'>extensions</span> directory of the
         <span class='code'>weewx</span> source for examples.</p>
+      <p>To distribute an extension, simply create a compressed archive
+        of the extension directory.</p>
+      <p>For example, create the compressed archive for the
+        <span class='code'>basic</span> skin like this:</p>
+      <p class='tty'>tar cvfz basic.tar.gz basic</p>
 
       <h2>The extension installer/uninstaller</h2>
       <p>The ExtensionInstaller is built in to
@@ -2956,7 +2967,7 @@ xstats/bin/user/xstats.py</p>
         uninstall installed extensions, or enumerate installed extensions.</p>
       <p>To install an extension:</p>
       <p class='tty'>./setup.py --extension --install extensions/basic
-./setup.py --extension --install forecast.tar.gz</p>
+./setup.py --extension --install basic.tar.gz</p>
       <p>To uninstall an extension:</p>
       <p class='tty'>./setup.py --extension --uninstall basic</p>
       <p>To list installed extensions:</p>
@@ -2981,16 +2992,26 @@ Options:
   --dryrun          print what would happen but do not do it
   --verbosity=N     how much status to spew, 0-3
 </p>
-      <p>The ExtensionInstaller saves a copy of any file or directory that it
+      <p>The ExtensionInstaller will make only the following changes:</p>
+      <ul>
+        <li>Modifications to <span class='code'>weewx.conf</span></li>
+        <li>Add/Remove directories in <span class='code'>skins</span></li>
+        <li>Add/Remove directories in <span class='code'>user</span></li>
+      </ul>
+      <p>The ExtensionInstaller makes a copy of any file or directory that it
         modifies or replaces.</p>
-      <p>If <span class='code'>weewx</span> was installed using setup.py,
-        the ExtensionInstaller depends upon setup.cfg to locate the
+      <p>If <span class='code'>weewx</span> was installed using
+        <span class='code'>setup.py</span>,
+        the ExtensionInstaller depends upon 
+        <span class='code'>setup.cfg</span> to locate the
         <span class='code'>weewx</span> installation.  If
         <span class='code'>weewx</span> was installed using a DEB or RPM
-        package, setup.cfg is not used.</p>
+        package,
+        <span class='code'>setup.cfg</span> is not used.</p>
       <p>The ExtensionInstaller creates a directory called
         <span class='code'>installer</span> in the
-        <span class='code'>user</span>.  The contents of this directory are
+        <span class='code'>user</span> directory.  The contents of the
+        <span class='code'>installer</span> directory are
         used to enumerate and uninstall extensions.</p>
 
       <h1 id="archive_types">Appendix: Archive Types</h1>
