@@ -70,7 +70,8 @@ Version: 2.6.0a6
       <a href="http://weewx.com/hardware.html">supported hardware page</a> -
       it could be a variation of one of the supported models.  You can also
       check the <a href="http://weewx.com/hwcmp.html">station comparison</a>
-      table.
+      table - sometimes new models use the same communication protocols
+      as older hardware.
     </p>
     <p>The maturity column indicates the degree of confidence in the
       driver.  For stations marked "<span class="code">Tested</span>",
@@ -2863,27 +2864,6 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
       <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
     </p>
 
-    <h3 id='dots_in_plots'>Dots in the plots</h3>
-    <p>If you see dots instead of lines in the daily plots, you might want to
-      change the graphing options or adjust the station's archive interval.
-    <p>In a default configuration, a time period greater than 1% of the
-      displayed timespan is considered to be a gap in data.  So when the
-      interval between data points is greater than about 10 minutes, the
-      daily plots show dots instead of connected points.  </p>
-    <p>Change the <a href="customizing.htm#line_gap_fraction"><span class='code'>line_gap_fraction</span></a> 
-      option in <span class="code">skin.conf</span>
-      to control how much time is considered a break in data.</p>
-    <p>As for the archive interval, check the log file for an entry like this
-      soon after <span class='code'>weewx</span> starts up:</p>
-    <p class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300) does not match the station hardware interval (1800).
-Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
-    <p>In this example, interval in <span class="code">weewx.conf</span> is 5
-      minutes, but the station interval is 30 minutes.  When the interval 
-      in <span class="code">weewx.conf</span> does not match the station's
-      hardware interval, <span class="code">weewx</span> defers to the
-      station's interval.</p>
-    <p>Use the appropriate <a href="#configuring_hardware"><span class="code">wee_config_XXX</span></a> utility to change the station's interval.</p>
-
     <h3 id="many_loop_read_errors">Many LOOP read errors with Davis Vantage</h3>
     <p>The symptom is many LOOP errors and unreliable downloading of archive records. 
       Your log may look like this:
@@ -2910,6 +2890,27 @@ Jan 18 20:39:14 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; 
       in missed packets and records.
     </p>
     <p>The cure is simple: kill all but one of them.</p>
+
+    <h3 id='dots_in_plots'>Dots in the plots</h3>
+    <p>If you see dots instead of lines in the daily plots, you might want to
+      change the graphing options or adjust the station's archive interval.
+    <p>In a default configuration, a time period greater than 1% of the
+      displayed timespan is considered to be a gap in data.  So when the
+      interval between data points is greater than about 10 minutes, the
+      daily plots show dots instead of connected points.  </p>
+    <p>Change the <a href="customizing.htm#line_gap_fraction"><span class='code'>line_gap_fraction</span></a> 
+      option in <span class="code">skin.conf</span>
+      to control how much time is considered a break in data.</p>
+    <p>As for the archive interval, check the log file for an entry like this
+      soon after <span class='code'>weewx</span> starts up:</p>
+    <p class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300) does not match the station hardware interval (1800).
+Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
+    <p>In this example, interval in <span class="code">weewx.conf</span> is 5
+      minutes, but the station interval is 30 minutes.  When the interval 
+      in <span class="code">weewx.conf</span> does not match the station's
+      hardware interval, <span class="code">weewx</span> defers to the
+      station's interval.</p>
+    <p>Use the appropriate <a href="#configuring_hardware"><span class="code">wee_config_XXX</span></a> utility to change the station's interval.</p>
 
     <h3 id='spikes'>Spikes in the graphs</h3>
     <p>Occasionally you may see anomalous readings, typically manifested as
@@ -2944,6 +2945,48 @@ sqlite> update archive set outTemp=NULL where outTemp > 1000;</p>
       <li>Delete the statistics database so that <span class='code'>weewx</span> can regenerate it without the anomalies</li>
       <li>start <span class='code'>weewx</span></li>
     </ol>
+
+    <h3>Strings in the database</h3>
+    <p>If you modify the sqlite archive database using an editing tool,
+      occasionally strings will get embedded in it, causing
+      <span class='code'>weewx</span> to raise
+      an exception. <strong>This is only a problem with sqlite</strong>.
+      There is no analogous problem with MySQL databases. The symptom will
+      look something like this:</p>
+    <pre class='tty'>
+Dec 31 16:55:09 arm weewx[18141]: wxengine: Record generation will be attempted in 'hardware' 
+Dec 31 16:55:09 arm weewx[18141]: wxengine: Using archive database: archive_sqlite 
+Dec 31 16:55:10 arm weewx[18141]: stats: Created schema for statistical database 
+Dec 31 17:01:06 arm weewx[18141]: wxengine: Caught unrecoverable exception in wxengine: 
+Dec 31 17:01:06 arm weewx[18141]: **** unsupported operand type(s) for +=: 'float' and 'unicode' 
+Dec 31 17:01:06 arm weewx[18141]: **** Traceback (most recent call last): 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 886, in main 
+Dec 31 17:01:06 arm weewx[18141]: **** engine = EngineClass(config_dict) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 70, in __init__ 
+Dec 31 17:01:06 arm weewx[18141]: **** self.loadServices(config_dict) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 124, in loadServices 
+Dec 31 17:01:06 arm weewx[18141]: **** self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict)) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 432, in __init__ 
+Dec 31 17:01:06 arm weewx[18141]: **** self.setupStatsDatabase(config_dict) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 543, in setupStatsDatabase 
+Dec 31 17:01:06 arm weewx[18141]: **** self.statsDb.backfillFrom(self.archive) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/stats.py", line 461, in backfillFrom 
+Dec 31 17:01:06 arm weewx[18141]: **** _statsDict.addRecord(_rec) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/accum.py", line 305, in addRecord 
+Dec 31 17:01:06 arm weewx[18141]: **** self._add_value(record[obs_type], obs_type, record['dateTime'], add_hilo) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/accum.py", line 264, in _add_value 
+Dec 31 17:01:06 arm weewx[18141]: **** self[obs_type].addSum(val) 
+Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/accum.py", line 81, in addSum 
+Dec 31 17:01:06 arm weewx[18141]: **** self.sum += val 
+Dec 31 17:01:06 arm weewx[18141]: **** TypeError: unsupported operand type(s) for +=: 'float' and 'unicode' 
+Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
+    <p>The problem is that a unicode null string <span class='code'>u''</span>
+      got entered where a <span class='code'>NULL</span> should be. The
+      utility <span class='code'>wee_config_database</span> can fix this.
+      Run it with the option <span class='code'>--string-check</span> to
+      search for these embedded strings. Add the option
+      <span class='code'>--fix</span> to have the utility fix them:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --string-check --fix</pre>
 
     <h3>Python 2.5</h3>
     <p>Weewx should work with Python version 2.5, but it may take some fiddling
@@ -3014,8 +3057,7 @@ port = /dev/cuaU0</pre>
     <p>User Mike has written a 
       <a href='http://www.cougar.eu.com/useful-guides/weewx-installation-on-osx.html'>
 	very nice guide</a> on how to install <span class='code'>
-	weewx</span> on Apple's Mavericks operating sytem.<p>
-
+	weewx</span> on Apple's Mavericks operating sytem.</p>
 
     <h1 id="architecture">Architectural Notes</h1>
     <p>This section is not required to get started, but it should help you
