@@ -982,7 +982,7 @@ class ExtensionInstaller(Logger):
 
         # if any variable begins with SKIN_DIR, replace with effective skin
         # directory (absolute or relative) from weewx.conf
-        replace_string(cfg, 'SKIN_DIR', get_skin_dir(config))
+        replace_string(cfg, 'INST_SKIN_ROOT', get_skin_dir(config))
 
         # massage the database dictionaries for this extension
         # FIXME: use parameterized root if possible
@@ -1111,13 +1111,13 @@ def replace_string(d, label, value):
         if isinstance(d[k], dict):
             replace_string(d[k], label, value)
         else:
-            d[k].replace(label, value)
+            d[k] = d[k].replace(label, value)
 
 def get_skin_dir(config):
     '''figure out the effective SKIN_DIR from a weewx configuration'''
-    html_root = config['StdReport']['HTML_ROOT']
+    weewx_root = config['WEEWX_ROOT']
     skin_root = config['StdReport']['SKIN_ROOT']
-    return os.path.join(html_root, skin_root)
+    return os.path.join(weewx_root, skin_root)
 
 def do_ext():
     import optparse

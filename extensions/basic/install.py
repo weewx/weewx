@@ -21,8 +21,8 @@ class BasicInstaller(ExtensionInstaller):
                         'skin':'basic',
                         'HTML_ROOT':'basic',
                         'Extras': {
-                            'current':'SKIN_DIR/basic/current.inc',
-                            'hilo':'SKIN_DIR/basic/hilo.inc'}}}},
+                            'current':'INST_SKIN_ROOT/basic/current.inc',
+                            'hilo':'INST_SKIN_ROOT/basic/hilo.inc'}}}},
             files=[('skins/basic',
                     ['skins/basic/basic.css',
                      'skins/basic/current.inc',
