@@ -44,6 +44,7 @@ install: build
 	cp -r $(SRC)/util/logrotate.d $(DST_CFGDIR)
 	cp -r $(SRC)/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
+	cp -r $(SRC)/extensions $(DST_BINDIR)
 
 # copy the setup script so we can do config file merges if necessary
 	cp $(SRC)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist

@@ -76,6 +76,7 @@ cp -r util/apache %{buildroot}%{dst_cfg_dir}
 cp -r util/logrotate.d %{buildroot}%{dst_cfg_dir}
 cp -r util/logwatch %{buildroot}%{dst_cfg_dir}
 cp -r util/rsyslog.d %{buildroot}%{dst_cfg_dir}
+cp -r extensions %{buildroot}%{dst_bin_dir}
 
 # copy the setup script so we can do config file merges if necessary
 cp weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
