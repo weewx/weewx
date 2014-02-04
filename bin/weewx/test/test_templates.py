@@ -129,8 +129,7 @@ class TestMySQL(Common):
     
 def suite():
     tests = ['test_report_engine']
-#     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
-    return unittest.TestSuite(map(TestSqlite, tests) )
+    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
