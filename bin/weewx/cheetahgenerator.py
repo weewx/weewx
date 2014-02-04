@@ -566,6 +566,7 @@ class Current(SearchList):
     def get_extension(self, timespan, archivedb, statsdb):
 
         # Get current record, and one from the beginning of the trend period.
+        # They should be ValueTupleDicts.
         current_vtd = self.generator._getRecord(archivedb, timespan.stop)
         former_vtd  = self.generator._getRecord(archivedb, timespan.stop - self.time_delta, 
                                                 max_delta=self.time_grace)

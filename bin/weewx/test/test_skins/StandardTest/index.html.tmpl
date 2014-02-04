@@ -70,13 +70,13 @@
       <td>Outside Temperature (normal formatting)</td>
       <td>$current.outTemp</td>
     </tr>
-	<tr>
-	  <td>Outside Temperature (explicit unit conversion to Celsius)</td>
-	  <td>$current.outTemp.degree_C</td>
-	</tr>
-	<tr>
-	  <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
-	  <td>$current.outTemp.degree_F</td>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Celsius)</td>
+      <td>$current.outTemp.degree_C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
+      <td>$current.outTemp.degree_F</td>
     </tr>
     <tr>
       <td>Outside Temperature (explicit unit conversion to Celsius, plus formatting)</td>
@@ -86,17 +86,18 @@
       <td>Outside Temperature (explicit unit conversion to Fahrenheit, plus formatting)</td>
       <td>$current.outTemp.degree_F.format("%.3f")</td>
     </tr>
-	<tr>
-	  <td>Outside Temperature trend ($trend.time_delta.hour.format("%.0f"))</td>
-	  <td>$trend.outTemp</td>
+    <tr>
+      <td>Outside Temperature trend ($trend.time_delta.hour.format("%.0f"))</td>
+      <td>$trend.outTemp</td>
+    </tr>
     <tr>
       <td>Barometer (normal)</td>
       <td>$current.barometer</td>
     </tr>
-	<tr>
-	  <td>Barometer trend ($trend.time_delta.hour.format("%.0f"))</td>
-	  <td>$trend.barometer</td>
     <tr>
+      <td>Barometer trend ($trend.time_delta.hour.format("%.0f"))</td>
+      <td>$trend.barometer</td>
+    </tr>
     <tr>
       <td>Wind Chill (normal)</td>
       <td>$current.windchill</td>
@@ -164,6 +165,11 @@
     #else
       <td>FAIL</td>
     #end if
+    </tr>
+    <tr>
+      <td>Test for a bad attribute on a tag</td>
+      <td>$current.foobar</td>
+    </tr>
   </table>
 
   <hr/>
@@ -267,7 +273,7 @@
     <tr>
       <td>Rainyear total</td>
       <td>$rainyear.rain.sum</td>
-    <tr>
+    </tr>
   </table>
     
   <hr/>

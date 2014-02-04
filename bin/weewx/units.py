@@ -14,6 +14,14 @@ import syslog
 import weewx
 import weeutil.weeutil
 
+class UnknownType(object):
+    """Indicates that the observation type is unknown."""
+    def __init__(self, obs_type):
+        self.obs_type = obs_type
+
+    def __str__(self):
+        return "?%s?" % self.obs_type
+
 unit_constants = {'US'       : weewx.US,
                   'METRIC'   : weewx.METRIC,
                   'METRICWX' : weewx.METRICWX}
@@ -662,23 +670,57 @@ class FixedConverter(object):
         return convert(val_t, self.target_units)
     
 #==============================================================================
-#                      class ValueOutputter
+#                      class ValueHelper
 #==============================================================================
 
-class ValueOutputter(object):
-    """Abstract base class used to convert value tuples to a string, honoring
-    unit conversion and formatting along the way. Derived classes must
-    supply a method "getTuple()", which returns the value tuple to be turned
-    into a string."""
-    def __init__(self, context, formatter, converter):
+class ValueHelper(object):
+    """A helper class that binds a value tuple together with everything needed to do a
+    context sensitive formatting
+    
+    Example:
+    
+    >>> value_t = (68.01, "degree_F", "group_temperature")
+    >>> # Use the default converter and formatter:
+    >>> vh = ValueHelper(value_t)
+    >>> print vh
+    68.0°F
+    
+    Do it again, but using an explicit converter:
+    
+    >>> vh = ValueHelper(value_t, converter=Converter(MetricUnits))
+    >>> print vh
+    20.0°C
+    """
+    def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
+        """Initialize a ValueHelper.
+        
+        value_t: A value tuple holding the datum.
+        
+        context: The time context. Something like 'current', 'day', 'week'.
+        [Optional. If not given, context 'current' will be used.]
+        
+        formatter: An instance of class Formatter.
+        [Optional. If not given, then the default Formatter() will be used]
+        
+        converter: An instance of class Converter.
+        [Optional. If not given, then the default Converter() will be used,
+        which will convert to US units]
+        """
+        self.value_t   = value_t
         self.context   = context
         self.formatter = formatter
         self.converter = converter
             
     def toString(self, addLabel=True, useThisFormat=None, NONE_string=None):
+        """Convert my internally held ValueTuple to a string, using the supplied
+        converter and formatter."""
+        # If the type is unknown, then just return the error string 
+        # supplied by UnknownType
+        if isinstance(self.value_t, UnknownType):
+            return self.value_t
         # Get the value tuple in the target units:
         vtx = self._raw_value_tuple
-        # Then the format conversion:
+        # Then do the format conversion:
         s = self.formatter.toString(vtx, self.context, addLabel=addLabel, useThisFormat=useThisFormat, NONE_string=NONE_string)
         return s
         
@@ -720,58 +762,11 @@ class ValueOutputter(object):
     @property    
     def _raw_value_tuple(self):
         """Return a value tuple in the target units."""
-        # Get the value tuple from my superclass ...
-        vt = self.getValueTuple()
-        # ... do the unit conversion ...
-        vtx = self.converter.convert(vt)
+        # ... Do the unit conversion ...
+        vtx = self.converter.convert(self.value_t)
         # ... and then return it
         return vtx
 
-#==============================================================================
-#                        class ValueHelper
-#==============================================================================
-    
-class ValueHelper(ValueOutputter):
-    """A helper class that binds a value tuple together with everything needed to do a
-    context sensitive formatting
-    
-    Example:
-    
-    >>> value_t = (68.01, "degree_F", "group_temperature")
-    >>> # Use the default converter and formatter:
-    >>> vh = ValueHelper(value_t)
-    >>> print vh
-    68.0°F
-    
-    Do it again, but using an explicit converter:
-    
-    >>> vh = ValueHelper(value_t, converter=Converter(MetricUnits))
-    >>> print vh
-    20.0°C
-    """
-    
-    def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
-        """Initialize a ValueHelper.
-        
-        value_t: A value tuple holding the datum.
-        
-        context: The time context. Something like 'current', 'day', 'week'.
-        [Optional. If not given, context 'current' will be used.]
-        
-        formatter: An instance of class Formatter.
-        [Optional. If not given, then the default Formatter() will be used]
-        
-        converter: An instance of class Converter.
-        [Optional. If not given, then the default Converter() will be used,
-        which will convert to US units]
-        """
-        self.value_t = value_t
-        ValueOutputter.__init__(self, context, formatter, converter)
-
-    # Supply getValueTuple:
-    def getValueTuple(self):
-        return self.value_t
-    
     def __getattr__(self, target_unit):
         """Convert to a new unit type.
         
@@ -786,16 +781,22 @@ class ValueHelper(ValueOutputter):
             raise AttributeError, "Unit type \"%s\" unknown."%(target_unit,)
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
     
+    def exists(self):
+        return not isinstance(self.value_t, UnknownType)
+    
+    def has_data(self):
+        return self.exits and self.value_t[0] is not None
+    
 #==============================================================================
 #                            class ValueDict
 #==============================================================================
 
 class ValueDict(object):
-    """A dictionary that returns contents as a DictBinder.
+    """A dictionary that returns values as ValueHelper.
     
-    This dictionary is like any other dictionary except, when keyed, it
-    returns a DictBinder object that wraps around the returned value. It
-    can then be used for context sensitive formatting. 
+    This dictionary holds a dictionary that returns ValueTuples.
+    Then, when it is keyed, it wraps the returned ValueTuples in a 
+    ValueHelper, which can then be used for context sensitive formatting. 
     
     Example:
     >>> vd = ValueDict({'outTemp'   : (20.3, 'degree_C', 'group_temperature'),\
@@ -832,57 +833,28 @@ class ValueDict(object):
         self.converter = converter
         
     def __getitem__(self, obs_type):
-        """Look up an observation type (eg, 'outTemp') and return it as
-        a DictBinder."""
-        # The following is to keep the Python version of Cheetah's NameMapper happy:
-        if obs_type not in self.dictionary:
-            raise AttributeError(obs_type)
-        return DictBinder(obs_type, self.dictionary, context=self.context, 
-                          formatter=self.formatter, converter=self.converter)
+        """Look up an observation type (eg, 'outTemp') and return it as a ValueHelper.
+        
+        obs_type: The key.
+        
+        Returns: A ValueHelper, or an object of type UnknownType if the key does
+        not appear in the dictionary.
+        """
+        vt = self.dictionary.get(obs_type, UnknownType(obs_type))
+        return ValueHelper(vt, context=self.context, formatter=self.formatter,
+                           converter=self.converter)
 
     def __getattr__(self, obs_type):
-        """Look up an observation type (eg, 'outTemp') and return it as a DictBinder."""
-        # The following is to keep the Python version of Cheetah's NameMapper happy:
-        if obs_type not in self.dictionary:
-            raise AttributeError(obs_type)
-        return DictBinder(obs_type, self.dictionary, context=self.context, 
-                          formatter=self.formatter, converter=self.converter)
-
-class DictBinder(ValueOutputter):
-    
-    def __init__(self, obs_type, valuedict, context, formatter, converter):
-        self.obs_type  = obs_type
-        self.valuedict = valuedict
-        self.context   = context
-        self.formatter = formatter
-        self.converter = converter
+        """Look up an observation type (eg, 'outTemp') and return it as a ValueHelper.
         
-    def getValueTuple(self):
-        # Get the value tuple from the underlying dictionary:
-        vt = self.valuedict[self.obs_type]
-        return vt
-
-    def __getattr__(self, target_unit):
-        """Convert to a new unit type.
+        obs_type: An attribute
         
-        target_unit: The new target unit. 
-        
-        returns: A DictBinder with a FixedConverter that converts to the
-        specified units."""
-
-        # See if this is a valid unit type. If not, throw an AttributeError
-        # exception:
-        if target_unit not in allPossibleUnitTypes:
-            raise AttributeError, "Unit type %s unknown."%(target_unit,)
-        return DictBinder(self.obs_type, self.valuedict, self.context, self.formatter, FixedConverter(target_unit))
-    
-    @property
-    def exists(self):
-        return self.valuedict.has_key(self.obs_type)
-    
-    @property
-    def has_data(self):
-        return self.exists and self.getValueTuple()[0] is not None
+        Returns: A ValueHelper, or an object of type UnknownType if the key does
+        not appear in the dictionary.
+        """
+        vt = self.dictionary.get(obs_type, UnknownType(obs_type))
+        return ValueHelper(vt, context=self.context, formatter=self.formatter,
+                           converter=self.converter)
     
 #==============================================================================
 #                             class ValueTupleDict
@@ -890,7 +862,8 @@ class DictBinder(ValueOutputter):
 
 class ValueTupleDict(dict):
     """A dictionary like any other dictionary, except that when keyed, it
-    returns its results as a ValueTuple.
+    returns its results as a ValueTuple. It is useful to be fed into
+    ValudDict above.
     
     Example:
     >>> vtd = ValueTupleDict({'usUnits' : 1, 'outTemp' : 68.0})
