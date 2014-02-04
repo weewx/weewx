@@ -30,6 +30,8 @@ to fix embedded strings found in the sqlite archive database.
 
 Font handles are now cached in order to work around a memory leak in PIL.
 
+Now does garbage collection every 10th time through the main loop.
+
 Image margins now scale with image and font sizes.
 
 Now works with the pure Python version of Cheetah's NameMapper, albeit very

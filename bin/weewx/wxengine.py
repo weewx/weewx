@@ -12,6 +12,7 @@
 
 # Python imports
 import Queue
+import gc
 import os.path
 import signal
 import socket
@@ -149,8 +150,15 @@ class StdEngine(object):
             
             syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
 
+            flight = 0
+
             # This is the outer loop. 
             while True:
+
+                # Garbage collect every 10th time through
+                flight += 1
+                if not flight % 10:
+                    gc.collect()
 
                 # First, let any interested services know the packet LOOP is about to start
                 self.dispatchEvent(weewx.Event(weewx.PRE_LOOP))
