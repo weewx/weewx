@@ -5,6 +5,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 # $Id$
+#
 """Data structures and functions for dealing with units."""
 
 import locale
@@ -852,6 +853,10 @@ class ValueDict(object):
         Returns: A ValueHelper, or an object of type UnknownType if the key does
         not appear in the dictionary.
         """
+        # The following is so the Python version of Cheetah's NameMapper does not
+        # think I'm a functor or real dictionary.
+        if obs_type in ['__call__', 'has_key']:
+            raise AttributeError(obs_type)
         vt = self.dictionary.get(obs_type, UnknownType(obs_type))
         return ValueHelper(vt, context=self.context, formatter=self.formatter,
                            converter=self.converter)

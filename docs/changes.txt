@@ -32,7 +32,8 @@ Font handles are now cached in order to work around a memory leak in PIL.
 
 Image margins now scale with image and font sizes.
 
-Now works with the pure Python version of Cheetah's NameMapper.
+Now works with the pure Python version of Cheetah's NameMapper, albeit very
+slowly.
 
 Fixed bug that prevented weewx from working with Python v2.5.
 
