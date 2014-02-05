@@ -139,7 +139,7 @@ deb-changelog:
 DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
 DEBPKG=weewx_$(VERSION)-$(DEBREVISION)_$(DEBARCH).deb
-ifeq ("$(SIGN)","1")
+ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
 deb-package: $(DSTDIR)/$(SRCPKG)
