@@ -20,7 +20,7 @@ Communication between the two is via an instance of Queue.Queue. New loop
 packets or archive records are put into the queue by the controlling object
 and received by the posting object. Details below.
  
-The controlling object should inherit from StdRESTbase. The controlling object
+The controlling object should inherit from StdRESTful. The controlling object
 is responsible for unpacking any configuration information from weewx.conf, and
 supplying any defaults. It sets up the queue. It arranges for any new LOOP or
 archive records to be put in the queue. It then launches the thread for the
@@ -117,7 +117,7 @@ def set_default(site_dict, config_dict, svc, option):
 #                    Abstract base classes
 #==============================================================================
 
-class StdRESTbase(weewx.wxengine.StdService):
+class StdRESTful(weewx.wxengine.StdService):
     """Abstract base class for RESTful weewx services.
     
     Offers a few common bits of functionality."""
@@ -125,9 +125,9 @@ class StdRESTbase(weewx.wxengine.StdService):
     def shutDown(self):
         """Shut down any threads"""
         if hasattr(self, 'loop_queue') and hasattr(self, 'loop_thread'):
-            StdRESTbase.shutDown_thread(self.loop_queue, self.loop_thread)
+            StdRESTful.shutDown_thread(self.loop_queue, self.loop_thread)
         if hasattr(self, 'archive_queue') and hasattr(self, 'archive_thread'):
-            StdRESTbase.shutDown_thread(self.archive_queue, self.archive_thread)
+            StdRESTful.shutDown_thread(self.archive_queue, self.archive_thread)
 
     @staticmethod
     def shutDown_thread(q, t):
@@ -141,6 +141,9 @@ class StdRESTbase(weewx.wxengine.StdService):
                 syslog.syslog(syslog.LOG_ERR, "restx: Unable to shut down %s thread" % t.name)
             else:
                 syslog.syslog(syslog.LOG_DEBUG, "restx: Shut down %s thread." % t.name)
+
+# For backwards compatibility with early v2.6 alphas:
+StdRESTbase = StdRESTful
 
 class RESTThread(threading.Thread):
     """Abstract base class for RESTful protocol threads.
@@ -429,7 +432,7 @@ class RESTThread(threading.Thread):
 #                    Ambient protocols
 #==============================================================================
 
-class StdWunderground(StdRESTbase):
+class StdWunderground(StdRESTful):
     """Specialized version of the Ambient protocol for the Weather Underground.
     """
     
@@ -498,7 +501,7 @@ class StdWunderground(StdRESTbase):
         """Puts new archive records in the archive queue"""
         self.archive_queue.put(event.record)
                 
-class StdPWSWeather(StdRESTbase):
+class StdPWSWeather(StdRESTful):
     """Specialized version of the Ambient protocol for PWSWeather"""
     
     # The URL used by PWSWeather:
@@ -540,7 +543,7 @@ class StdPWSWeather(StdRESTbase):
 # For backwards compatibility with early alpha versions:
 StdPWSweather = StdPWSWeather
 
-class StdWOW(StdRESTbase):
+class StdWOW(StdRESTful):
 
     """Upload using the UK Met Office's WOW protocol. 
     
@@ -780,7 +783,7 @@ class WOWThread(AmbientThread):
 #                    CWOP
 #==============================================================================
 
-class StdCWOP(StdRESTbase):
+class StdCWOP(StdRESTful):
     """Weewx service for posting using the CWOP protocol.
     
     Manages a separate thread CWOPThread"""
@@ -1059,7 +1062,7 @@ class CWOPThread(RESTThread):
 #                    Station Registry
 #==============================================================================
 
-class StdStationRegistry(StdRESTbase):
+class StdStationRegistry(StdRESTful):
     """Class for phoning home to register a weewx station.
 
     To enable this module, add the following to weewx.conf:
@@ -1255,7 +1258,7 @@ class StationRegistryThread(RESTThread):
 # AWEKAS
 #==============================================================================
 
-class StdAWEKAS(StdRESTbase):
+class StdAWEKAS(StdRESTful):
     """Upload data to AWEKAS - Automatisches WEtterKArten System
     http://www.awekas.at
 
