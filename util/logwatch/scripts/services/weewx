@@ -237,6 +237,17 @@ while(defined($_ = <STDIN>)) {
              /wxengine: Received signal/ ||
              /cheetahgenerator: Running / ||
              /cheetahgenerator: skip/ ||
+             /VantagePro: Catch up complete/ ||
+             /VantagePro: successfully woke up console/ ||
+             /VantagePro: Getting archive packets since/ ||
+             /VantagePro: Retrieving/ ||
+             /VantagePro: DMPAFT complete/ ||
+             /VantagePro: Requesting \d+ LOOP packets/ ||
+             /VantagePro: Clock set to/ ||
+             /VantagePro: Opened up serial port/ ||
+             /owfss: interface is/ ||
+             /owfss: sensor map is/ ||
+             /owfss: sensor type map is/ ||
              /fousb: driver version is/ ||
              /fousb: found station on USB/ ||
              /fousb: altitude is/ ||
