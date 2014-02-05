@@ -686,11 +686,18 @@ class ValueHelper(object):
     >>> print vh
     68.0°F
     
-    Do it again, but using an explicit converter:
+    Try explicit unit conversion:
+    >>> print vh.degree_C
+    20.0°C
     
+    Do it again, but using a converter:
     >>> vh = ValueHelper(value_t, converter=Converter(MetricUnits))
     >>> print vh
     20.0°C
+    
+    Extract just the raw value:
+    >>> print "%.1f" % vh.raw
+    20.0
     """
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
         """Initialize a ValueHelper.

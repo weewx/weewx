@@ -57,6 +57,9 @@ class StdEngine(object):
         # Set a default socket time out, in case FTP or HTTP hang:
         timeout = int(config_dict.get('socket_timeout', 20))
         socket.setdefaulttimeout(timeout)
+        
+        # Default garbage collection is every 3 hours:
+        self.gc_interval = int(config_dict.get('gc_interval', 3*3600))
 
         # Set up the callback dictionary:
         self.callbacks = dict()
@@ -150,15 +153,16 @@ class StdEngine(object):
             
             syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
 
-            flight = 0
+            last_gc = int(time.time())
 
             # This is the outer loop. 
             while True:
 
-                # Garbage collect every 10th time through
-                flight += 1
-                if not flight % 10:
-                    gc.collect()
+                # See if garbage collection is scheduled:
+                if int(time.time()) - last_gc > self.gc_interval:
+                    ngc = gc.collect()
+                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: garbage collectioned %d objects" % ngc)
+                    last_gc = int(time.time())
 
                 # First, let any interested services know the packet LOOP is about to start
                 self.dispatchEvent(weewx.Event(weewx.PRE_LOOP))
