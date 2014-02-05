@@ -125,7 +125,7 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
     def run(self):
         self.setup()
         for time_period in self.gen_dict.sections:
-            logdbg("Running %s report for time period %s" % (self.skin_dict['REPORT_NAME'], time_period))
+            logdbg("Running report %s for time period %s" % (self.skin_dict['REPORT_NAME'], time_period))
             self.generate(time_period, self.gen_ts)
         self.teardown()
 
@@ -179,6 +179,15 @@ class CheetahGenerator(weewx.reportengine.CachedReportGenerator):
         in a period is a report.  A report has one or more templates.
 
         The periods SummaryByMonth and SummaryByYear get special treatment."""
+
+        # Change directory to the skin subdirectory.  We use absolute paths
+        # for cheetah, so the directory change is not necessary for generating
+        # files.  However, changing to the skin directory provides a known
+        # location so that calls to os.getcwd() in any templates will return
+        # a predictable result.
+        os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
+                              self.skin_dict['SKIN_ROOT'],
+                              self.skin_dict['skin']))
 
         # break the period into time spans as necessary.
         # SummaryByMonth and SummaryByYear have spans plus special meaning.
