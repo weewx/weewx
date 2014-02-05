@@ -153,7 +153,8 @@ class Archive(object):
                 if self.std_unit_system:
                     if record['usUnits'] != self.std_unit_system:
                         raise ValueError("Unit system of incoming record (0x%x) "\
-                                         "differs from the archive database (0x%x)" % (record['usUnits'], self.std_unit_system))
+                                         "differs from the archive database (0x%x)" % 
+                                         (record['usUnits'], self.std_unit_system))
                 else:
                     # This is the first record. Remember the unit system to
                     # check against subsequent records:
@@ -180,9 +181,15 @@ class Archive(object):
                 sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table, k_str, q_str) 
                 try:
                     cursor.execute(sql_insert_stmt, value_list)
-                    syslog.syslog(log_level, "archive: added to table '%s' of database '%s' a record with timestamp %s" % (self.table, os.path.basename(self.connection.database), weeutil.weeutil.timestamp_to_string(record['dateTime'])))
+                    syslog.syslog(log_level, "archive: added record %s to database '%s'; table '%s'" % 
+                                  (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
+                                   os.path.basename(self.connection.database),
+                                   self.table))
                 except Exception, e:
-                    syslog.syslog(syslog.LOG_ERR, "archive: unable to add archive record %s: %s" % (weeutil.weeutil.timestamp_to_string(record['dateTime']), e))
+                    syslog.syslog(syslog.LOG_ERR, "archive: unable to add record %s to database '%s': %s" %
+                                  (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
+                                   os.path.basename(self.connection.database),
+                                   e))
 
     def genBatchRows(self, startstamp=None, stopstamp=None):
         """Generator function that yields raw rows from the archive database
@@ -199,14 +206,18 @@ class Archive(object):
         try:
             if startstamp is None:
                 if stopstamp is None:
-                    _gen = _cursor.execute("SELECT * FROM %s" % (self.table,))
+                    _gen = _cursor.execute("SELECT * FROM %s" % 
+                                           (self.table,))
                 else:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime <= ?" % (self.table,), (stopstamp,))
+                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime <= ?" % 
+                                           (self.table,), (stopstamp,))
             else:
                 if stopstamp is None:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ?" % (self.table,), (startstamp,))
+                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ?" % 
+                                           (self.table,), (startstamp,))
                 else:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ? AND dateTime <= ?" % (self.table,), (startstamp, stopstamp))
+                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ? AND dateTime <= ?" %
+                                           (self.table,), (startstamp, stopstamp))
             
             for _row in _gen :
                 yield _row
@@ -244,7 +255,8 @@ class Archive(object):
             if max_delta:
                 time_start_ts = timestamp - max_delta
                 time_stop_ts  = timestamp + max_delta
-                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? ORDER BY ABS(dateTime-?) ASC LIMIT 1" % (self.table,),
+                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? "\
+                                "ORDER BY ABS(dateTime-?) ASC LIMIT 1" % (self.table,),
                                 (time_start_ts, time_stop_ts, timestamp))
             else:
                 _cursor.execute("SELECT * FROM %s WHERE dateTime=?" %
@@ -257,7 +269,8 @@ class Archive(object):
     def updateValue(self, timestamp, obs_type, new_value):
         """Update (replace) a single value in the database."""
         
-        self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" % (self.table, obs_type), (new_value, timestamp))
+        self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" % 
+                                (self.table, obs_type), (new_value, timestamp))
 
     def getSql(self, sql, sqlargs=()):
         """Executes an arbitrary SQL statement on the database.
@@ -361,8 +374,9 @@ class Archive(object):
     
             if aggregate_type :
                 if not aggregate_interval:
-                    raise weewx.ViolatedPrecondition, "Aggregation interval missing"
-                sql_str = 'SELECT MAX(dateTime), %s(%s), usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % (aggregate_type, sql_type, self.table)
+                    raise weewx.ViolatedPrecondition("Aggregation interval missing")
+                sql_str = "SELECT MAX(dateTime), %s(%s), usUnits FROM %s "\
+                    "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type, self.table)
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                     _cursor.execute(sql_str, stamp)
                     _rec = _cursor.fetchone()
@@ -374,19 +388,22 @@ class Archive(object):
                         if _rec[0] is not None:
                             if std_unit_system:
                                 if std_unit_system != _rec[2]:
-                                    raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                                    raise weewx.UnsupportedFeature("Unit type cannot change "\
+                                                                   "within a time interval.")
                             else:
                                 std_unit_system = _rec[2]
                             time_vec.append(_rec[0])
                             data_vec.append(_rec[1])
             else:
-                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime >= ? AND dateTime <= ?' % (sql_type, self.table)
+                sql_str = "SELECT dateTime, %s, usUnits FROM %s "\
+                            "WHERE dateTime >= ? AND dateTime <= ?" % (sql_type, self.table)
                 for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
                     time_vec.append(_rec[0])
                     data_vec.append(_rec[1])
                     if std_unit_system:
                         if std_unit_system != _rec[2]:
-                            raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                            raise weewx.UnsupportedFeature("Unit type cannot change "\
+                                                           "within a time interval.")
                     else:
                         std_unit_system = _rec[2]
         finally:
@@ -443,7 +460,8 @@ class Archive(object):
         if ext_type not in windvec_types:
             # The type is not one of the extended wind types. Use the regular
             # version:
-            return self.getSqlVectors(ext_type, startstamp, stopstamp, aggregate_interval, aggregate_type)
+            return self.getSqlVectors(ext_type, startstamp, stopstamp, 
+                                      aggregate_interval, aggregate_type)
 
         # It is an extended wind type. Prepare the lists that will hold the
         # final results.
@@ -468,7 +486,8 @@ class Archive(object):
                     raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
                 
                 # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % (windvec_types[ext_type], self.table)
+                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \
+                    (windvec_types[ext_type], self.table)
                 # Go through each aggregation interval, calculating the
                 # aggregation.
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
@@ -490,7 +509,8 @@ class Archive(object):
                             _last_time  = _rec[0]
                             if std_unit_system:
                                 if std_unit_system != _rec[3]:
-                                    raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                                    raise weewx.UnsupportedFeature("Unit type cannot change "\
+                                                                   "within a time interval.")
                             else:
                                 std_unit_system = _rec[3]
                             
@@ -538,14 +558,16 @@ class Archive(object):
                 # No aggregation desired. It's a lot simpler. Go get the
                 # data in the requested time period
                 # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime >= ? AND dateTime <= ?' % (windvec_types[ext_type], self.table)
+                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime >= ? AND dateTime <= ?' % \
+                        (windvec_types[ext_type], self.table)
                 
                 for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
                     # Record the time:
                     time_vec.append(_rec[0])
                     if std_unit_system:
                         if std_unit_system != _rec[3]:
-                            raise weewx.UnsupportedFeature, "Unit type cannot change within a time interval."
+                            raise weewx.UnsupportedFeature("Unit type cannot change "\
+                                                           "within a time interval.")
                     else:
                         std_unit_system = _rec[3]
                     # Break the mag and dir down into x- and y-components.
@@ -566,7 +588,8 @@ class Archive(object):
 
         (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
         (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
-        return (weewx.units.ValueTuple(time_vec, time_type, time_group), weewx.units.ValueTuple(data_vec, data_type, data_group))
+        return (weewx.units.ValueTuple(time_vec, time_type, time_group),
+                weewx.units.ValueTuple(data_vec, data_type, data_group))
 
     @staticmethod
     def _create_table(archive_db_dict, archiveSchema, table):
@@ -600,10 +623,12 @@ class Archive(object):
                 _cursor.execute("CREATE TABLE %s (%s);" % (table, _sqltypestr))
         except Exception, e:
             _connect.close()
-            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create table '%s' in database '%s': %s" % (table, os.path.basename(archive_db_dict['database']), e))
+            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create table '%s' in database '%s': %s" % 
+                          (table, os.path.basename(archive_db_dict['database']), e))
             raise
     
-        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized table '%s' in database '%s'" % (table, os.path.basename(archive_db_dict['database'])))
+        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized table '%s' in database '%s'" % 
+                      (table, os.path.basename(archive_db_dict['database'])))
 
         return _connect
     

@@ -742,7 +742,9 @@ class TestAccum(StdService):
 
 class StdRESTful(StdService):
     """Launches a thread that will monitor a queue of new data, which is to be
-    posted to RESTful websites. Then, put new data in the queue. """
+    posted to RESTful websites. Then, put new data in the queue. 
+    
+    OBSOLETE! USE THE SERVICES IN MODULE weewx.restx INSTEAD! """
 
     def __init__(self, engine, config_dict):
         super(StdRESTful, self).__init__(engine, config_dict)
