@@ -60,6 +60,11 @@ Minor cleanup to Standard skin for better out-of-the-box behavior:
 Failure to set an archive interval when using bar plots no longer results
 in an exception.
 
+Change to skin directory before invoking cheetah on any templates.
+
+Defined a structure for packaging customizations into extensions, and added
+an installer for those extensions to setup.py.
+
 
 2.5.1 12/30/13
 
