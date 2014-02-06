@@ -24,16 +24,6 @@ function showtab(tab,id) {
 }
   </script>
 
-  <script>
-  $(function(){
-    $(document).tooltip({
-      content: function() {
-        return $(this).prop('title');
-      }
-    });
-  });
-  </script>
-
 </head>
 
 <body>
@@ -915,10 +905,12 @@ Version: 2.6.0b2
         <span class="code">setup.py</span></a>.</p>
 
     <h1 id="configuring">Configuring <span class="code">weewx</span></h1>
-    <p>This section covers
-      configuring <span class="code">weewx</span>, in particular the
-      configuration file
-      <a href="#dir-layout-table" title="Note that we have used the notation
+
+    <p>This section covers configuring <span class="code">weewx</span>, in particular the
+      configuration file <a href="#" id="config-root-description-target">
+      <span class="symcode">$CONFIG_ROOT</span></a><span class="code"><em>/weewx.conf</em></span>.</p>
+
+    <div id="config-root-description" title="$CONFIG_ROOT"><p>Note that we have used the notation
       <span class='code'>$CONFIG_ROOT</span> to
       symbolically indicate the directory where this file is located. The exact
       location will depend on your installation method and operating
@@ -926,9 +918,21 @@ Version: 2.6.0b2
       method, then the symbol <span class='code'>$CONFIG_ROOT</span> will represent
       <span class='code'>/home/weewx</span>, and so your configuration
       file will be located in <span class='code'>/home/weewx/weewx.conf</span>. For other
-      configurations, consult the table in the previous section.">
-      <span class="symcode">$CONFIG_ROOT</span></a><span class="code"><em>/weewx.conf</em></span>.
-      </p>
+      configurations, consult the <a href="#dir-layout-table">table</a> in the previous section.</p></div>
+    <script type="text/javascript">
+      $(document).ready(function(){
+         $("#config-root-description").dialog({
+          autoOpen : false,
+          position: {my: "left top", at:"right bottom", of:"#config-root-description-target"}
+        });
+        $("#config-root-description-target").click(
+          function () {
+            $("#config-root-description").dialog("open");
+            return false; // Insures that the "link" isn't followed
+          })
+      });
+    </script>
+
     <p class='warning'>Note that there is another configuration file, <span class="code">skin.conf</span>,
       for presentation-specific options, which is described in the
       <a href="customizing.htm">Customizing Guide</a>, under section <em>
