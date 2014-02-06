@@ -6,8 +6,10 @@
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
   <title>weewx: User's Guide</title>
   <link href="weewx_docs.css" rel="stylesheet" />
+  <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
   <script src="jquery.min.js" type="text/javascript"></script>
   <script src="jquery.toc-1.1.4.min.js" type="text/javascript"></script>
+  <script src="jquery-ui-1.10.4.custom.min.js"></script>
   <script>
 function showtab(tab,id) {
   document.getElementById(tab+'-deb').style.display = 'none';
@@ -21,6 +23,17 @@ function showtab(tab,id) {
   document.getElementById(tab+'-tab-'+id).className = 'tab selected';
 }
   </script>
+
+  <script>
+  $(function(){
+    $(document).tooltip({
+      content: function() {
+        return $(this).prop('title');
+      }
+    });
+  });
+  </script>
+
 </head>
 
 <body>
@@ -905,36 +918,34 @@ Version: 2.6.0b2
     <p>This section covers
       configuring <span class="code">weewx</span>, in particular the
       configuration file
-      <span class="symcode">$CONFIG_ROOT</span><span class="code"><em>/weewx.conf</em></span>.
-      Note that we have used the notation <span class="symcode">$CONFIG_ROOT</span> to
+      <a href="#dir-layout-table" title="Note that we have used the notation
+      <span class='code'>$CONFIG_ROOT</span> to
       symbolically indicate the directory where this file is located. The exact
       location will depend on your installation method and operating
-      system. For example, if you used the <span class="code">setup.py</span> 
-      method, then the symbol <span class='symcode'>$CONFIG_ROOT</span> will represent
+      system. For example, if you used the <span class='code'>setup.py</span>
+      method, then the symbol <span class='code'>$CONFIG_ROOT</span> will represent
       <span class='code'>/home/weewx</span>, and so your configuration
       file will be located in <span class='code'>/home/weewx/weewx.conf</span>. For other
-      configurations, consult the <a href="#dir-layout-table">table in
-      the last section</a>.</p>
+      configurations, consult the table in the previous section.">
+      <span class="symcode">$CONFIG_ROOT</span></a><span class="code"><em>/weewx.conf</em></span>.
+      </p>
     <p class='warning'>Note that there is another configuration file, <span class="code">skin.conf</span>,
       for presentation-specific options, which is described in the
-      <a href="customizing.htm">Customizing Guide</a> under section <em>
+      <a href="customizing.htm">Customizing Guide</a>, under section <em>
       <a href="customizing.htm#standard_skin">Reference: The 
       standard skin configuration file</a></em>.</p>
-    <p>Most of the important options in <span class='code'>weewx.conf</span>
-      are up near the top of the file. They are
-      all documented in this section, although you can safely ignore most of
-      them. The truly important ones, the ones you are likely to have to
-      customize for your station, are
-      <span class="config_important">highlighted</span>.
-    </p>
-    <p>Default values are provided for many of them, meaning that if they are
+    <p>This section is the definitive guide to the configuration options
+      available in <span class='code'>weewx.conf</span>. <em>It documents
+      way more options than you are likely to need!</em> &mdash; 
+      you can safely ignore most of them. The truly important ones, the ones 
+      you are likely to have to customize for your station, are
+      <span class="config_important">highlighted like this</span>.</p>
+    <p>Default values are provided for many options, meaning that if they are
       not listed in the configuration file <em>at all</em>,
       <span class="code">weewx</span> will pick sensible values. When the
       documentation below gives a &quot;default value&quot; this is what it
-      means. However, all options have been given values in the configuration
-      file that ships with <span class="code">weewx</span>, so you can see
-      what they look like. The value given in this shipped configuration 
-      file is not necessarily the same as the &quot;default value&quot;. </p>
+      means.</p>
+
     <p>What follows is organized by the different sections of the
       configuration file. </p>
 
@@ -956,6 +967,9 @@ Version: 2.6.0b2
       used when using FTP to send data to a web server or when sending data
       to the Weather Underground. Twenty (20) seconds is reasonable. Default
       is 20. </p>
+    <p class='config_option'>gc_interval</p>
+    <p>Set to how often garbage collection should be performed by the Python
+      runtime engine. Default is every 10,800 seconds (3 hours).<p>
 
     <h2 class="config_section">[Station]</h2>
     <p>This section covers options relating to your weather station setup. </p>
@@ -994,35 +1008,39 @@ longitude = -77.0366</pre>
     <p>Valid options include:</p>
     <table class="indent">
       <tr>
-	<td class="code">Vantage</td>
+	<td class="text_highlight"><i>Option:</i></td>
+	<td><i>Description:</i></td>
+      </tr>
+      <tr>
+	<td class="code text_highlight">Vantage</td>
 	<td>Davis Vantage weather stations</td>
       </tr>
       <tr>
-	<td class="code">WMR100</td>
+	<td class="code text_highlight">WMR100</td>
 	<td>Oregon Scientific WMR100 series stations</td>
       </tr>
       <tr>
-	<td class="code">WMR200</td>
+	<td class="code text_highlight">WMR200</td>
 	<td>Oregon Scientific WMR200 series stations</td>
       </tr>
       <tr>
-	<td class="code">WMR9x8</td>
+	<td class="code text_highlight">WMR9x8</td>
 	<td>Oregon Scientific WMR-918/968 series stations</td>
       </tr>
       <tr>
-	<td class="code">FineOffsetUSB</td>
+	<td class="code text_highlight">FineOffsetUSB</td>
 	<td>Fine Offset 10xx, 20xx, and 30xx stations</td>
       </tr>
       <tr>
-	<td class="code">WS23xx</td>
+	<td class="code text_highlight">WS23xx</td>
 	<td>La Crosse 23xx stations</td>
       </tr>
       <tr>
-	<td class="code">WS28xx</td>
+	<td class="code text_highlight">WS28xx</td>
 	<td>La Crosse 28xx stations</td>
       </tr>
       <tr>
-	<td class="code">TE923</td>
+	<td class="code text_highlight">TE923</td>
 	<td>Hideki TE923 stations</td>
       </tr>
     </table>
@@ -1309,6 +1327,10 @@ longitude = -77.0366</pre>
         class="config_option">station_url</span> from the <span
         class="code">[Station]</span> section will be used.
     </p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. This is the default.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log. This is the default.</p>
 
     <h3 class="config_section">[[Wunderground]]</h3>
     <p>
@@ -1349,6 +1371,14 @@ longitude = -77.0366</pre>
       reason you want to do both, then you may set both options to <span
       class="code">True</span>.
     </p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. The default is
+      <span class='code'>False</span> for Rapidfire mode, True for PWS
+      mode.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log.  The default is
+      <span class='code'>False</span> for Rapidfire mode, True for PWS
+      mode.</p>
 
     <h3 class="config_section">[[PWSweather]]</h3>
     <p><span class="code">Weewx </span>can send your current data to the
@@ -1363,6 +1393,10 @@ longitude = -77.0366</pre>
     <p>Set to your PWSweather station ID. Required. </p>
     <p class="config_important">password </p>
     <p>Set to your PWSweather password. Required. </p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. This is the default.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log. This is the default.</p>
 
     <h3 class="config_section">[[CWOP]]</h3>
     <p><span class="code">Weewx</span> can send your data to the
@@ -1394,6 +1428,10 @@ longitude = -77.0366</pre>
       air for a long period of time, then <span class="code">weewx</span>
       attempts a catch up, old data could be interpreted as the current
       conditions. Optional. Default is 1800 seconds.</p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. This is the default.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log. This is the default.</p>
 
     <h3 class="config_section">[[WOW]]</h3>
     <p class="config_section"><span class="code">Weewx</span> can send your 
@@ -1409,6 +1447,10 @@ longitude = -77.0366</pre>
     <p>Set to your WOW station ID. Required.</p>
     <p class="config_important">password</p>
     <p>Set to your WOW password. Required.</p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. This is the default.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log. This is the default.</p>
 
     <h3 class="config_section">[[AWEKAS]]</h3>
     <p class="config_section"><span class="code">Weewx</span> can send your 
@@ -1426,6 +1468,10 @@ longitude = -77.0366</pre>
     <p>Set to your AWEKAS password. Required.</p>
     <p class="config_option">language</p>
     <p>Set to your preferred language. Default is <span class='code'>en</span>.</p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. This is the default.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log. This is the default.</p>
 
 
     <h2 class="config_section">[StdReport]</h2>
