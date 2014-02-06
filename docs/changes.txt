@@ -51,7 +51,7 @@ types.
 
 Simulator now generates types dewpoint, pressure, radiation, and UV.
 
-Fixed parsing of locations in the xtide forecast.
+The forecast extension is once again distributed separately from weewx.
 
 Minor cleanup to Standard skin for better out-of-the-box behavior:
  - default to no radar image instead of having every station point to Oregon
