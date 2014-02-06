@@ -49,13 +49,14 @@ Version: 2.6.0b2
       interacts with a weather station to produce plots, reports, and HTML
       pages. It can optionally upload the reports to a remote Web server as
       well as publish to weather services such as
-      <a href="http://www.wunderground.com">WeatherUnderground</a> or
+      <a href="http://www.wunderground.com">WeatherUnderground</a>,
+      <a href="http://wxqa.com">CWOP</a>, or
       <a href="http://www.pwsweather.com/">PWSweather.com</a>.</p>
     <p>Initial development began in the winter of 2008-2009, with the first
       release in 2009.  The SourceForge project was registered in October of
       2009.</p>
-    <p><span class="code">weewx</span> is small, with under 10,000 lines of
-      code, and well-documented, with over 6,000 lines of comments.</p>
+    <p><span class="code">weewx</span> is about 8,000 lines of code, plus
+      another 8,000 for the many drivers used by the supported hardware. </p>
 
     <h1 id="hardware">Supported Hardware</h1>
     <p>
@@ -630,7 +631,8 @@ Version: 2.6.0b2
 
     <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
       Geode processor and 512 MB of memory. Configured this way, it
-      consumes about 5% of the CPU and about 50MB of total memory. </p>
+      consumes about 5% of the CPU and about 65MB of virtual memory
+      and about 20MB of real memory. </p>
     <p>On a Marvel 500MHz ARM CPU with 512MB RAM, <span class="code">weewx</span> uses 63MB virtual and
       40MB real memory when configured to generate 3 different standard
       reports.  The CPU use is typically less than 0.5%, maxxing out at
@@ -660,7 +662,7 @@ Version: 2.6.0b2
       instructions.
       There are thousands of people who have successfully done an
       install. However, there is no "point-and-click" interface, so
-      you have to do some manual configuring.
+      you will have to do some manual configuring.
     </p>
     <p>You should have the following skills:</p>
     <ul>
@@ -673,8 +675,9 @@ Version: 2.6.0b2
         to extend weewx. In this case, you should have some
         familiarity with Python.</li>
     </ul>
-    <p>If you get stuck, there is a very active <a href="https://groups.google.com/forum/#!forum/weewx-user">User's Group</a> to
-      help, but please at least try to solve the problem yourself before posting.
+    <p>If you get stuck, there is a very active 
+      <a href="https://groups.google.com/forum/#!forum/weewx-user">User's Group</a> to
+      help, but, please, try to solve the problem yourself before posting.
     </p>
 
     <h2>Installation methods</h2>
@@ -687,7 +690,7 @@ Version: 2.6.0b2
       Installation using <span class="code">setup.py</span> is the recommended
       method for those who plan to write custom services and reports for
       <span class='code'>weewx</span>.
-      It will put everything in a single directory, making it easy to modify.
+      It will put everything in a single directory, making it easier to modify.
       If the user installing <span class='code'>weewx</span> has permission
       to write to the directory, root privileges will not be required to
       install, run, or modify <span class='code'>weewx</span>.</p>
@@ -709,7 +712,7 @@ Version: 2.6.0b2
       with the symbolic names used for each role. These names are used 
       throughout the documentation. </p>
 
-    <div class='tabs' style='padding-top:1em'>
+    <div id='dir-layout-table' class='tabs' style='padding-top:1em'>
       <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">Debian <img src='logo-debian.png' class='thumbnail' /> <img src='logo-ubuntu.png' class='thumbnail' /> <img src='logo-mint.png' class='thumbnail' /></div>
       <div id='layout-tab-rpm' class='tab' onclick="showtab('layout','rpm')">Redhat <img src='logo-redhat.png' class='thumbnail' /> <img src='logo-centos.png' class='thumbnail' /> <img src='logo-fedora.png' class='thumbnail' /></div>
       <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
@@ -899,19 +902,26 @@ Version: 2.6.0b2
         <span class="code">setup.py</span></a>.</p>
 
     <h1 id="configuring">Configuring <span class="code">weewx</span></h1>
-    <p>This section covers configuring <span class="code">weewx</span>,
-      in particular the configuration files
-      <span class="code">weewx.conf</span> and
-      <span class="code">skin.conf</span>. </p>
-
-    <p>Station specific information is set in the configuration file 
+    <p>This section covers
+      configuring <span class="code">weewx</span>, in particular the
+      configuration file
       <span class="symcode">$CONFIG_ROOT</span><span class="code"><em>/weewx.conf</em></span>.
-      (There is another configuration file <span class="code">skin.conf</span>
+      Note that we have used the notation <span class="symcode">$CONFIG_ROOT</span> to
+      symbolically indicate the directory where this file is located. The exact
+      location will depend on your installation method and operating
+      system. For example, if you used the <span class="code">setup.py</span> 
+      method, then the symbol <span class='symcode'>$CONFIG_ROOT</span> will represent
+      <span class='code'>/home/weewx</span>, and so your configuration
+      file will be located in <span class='code'>/home/weewx/weewx.conf</span>. For other
+      configurations, consult the <a href="#dir-layout-table">table in
+      the last section</a>.</p>
+    <p class='warning'>Note that there is another configuration file, <span class="code">skin.conf</span>,
       for presentation-specific options, which is described in the
       <a href="customizing.htm">Customizing Guide</a> under section <em>
-	<a href="customizing.htm#standard_skin">Reference: The 
-	  standard skin configuration file</a></em>.) </p>
-    <p>Most of the important options are up near the top of the file. They are
+      <a href="customizing.htm#standard_skin">Reference: The 
+      standard skin configuration file</a></em>.</p>
+    <p>Most of the important options in <span class='code'>weewx.conf</span>
+      are up near the top of the file. They are
       all documented in this section, although you can safely ignore most of
       them. The truly important ones, the ones you are likely to have to
       customize for your station, are
@@ -932,7 +942,8 @@ Version: 2.6.0b2
     <p>The options declared at the top are not actually part of any section.</p>
     <p class="config_option">debug </p>
     <p>Set to 1 to have the program perform extra debug checks, as well as
-      emit extra information in the log file. Otherwise, set to 0. Default
+      emit extra information in the log file. This is strongly recommended
+      if you are having trouble. Otherwise, set to 0. Default
       is 0 (no debug).
     </p>
     <p class="config_option">WEEWX_ROOT </p>
@@ -952,7 +963,7 @@ Version: 2.6.0b2
     <p>The station location should be a UTF-8 string that describes the
       geography of where your weather station is located. Required.
       No default.</p>
-      <pre class="tty">location = A small ranch in Kentucky</pre>
+      <pre class="tty">location = "A small ranch in Kentucky"</pre>
     <p class="config_important">latitude <br />
       longitude </p>
     <p>The lat/lon should be set in decimal degrees, negative for southern and
@@ -1245,7 +1256,7 @@ longitude = -77.0366</pre>
 
     <h2 class="config_section">[StdRESTful]</h2>
     <p>This section is for configuring the <span class="code">StdRESTful</span>
-      service, which uploads to simple
+      services, which upload to simple
       <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> 
       servers such as the <a href="http://www.wunderground.com/">Weather Underground</a>,
       <a href="http://www.pwsweather.com/">PWSweather.com</a>, or
@@ -1261,9 +1272,8 @@ longitude = -77.0366</pre>
     <p>How does the registry work? Individual weather stations
         periodically contact the registry. Each station provides a URL to
         identify itself, plus other information such as the station type and
-        <span class="code">weewx</span> version. The registry does not keep
-        track of meteorological data; no information about the weather is sent
-        to the registry.</p>
+        <span class="code">weewx</span> version. No personal information, nor
+	any meteorological data, is sent.</p>
 
     <p>To add your station to this list, you must do two things:</p>
     <ol>
