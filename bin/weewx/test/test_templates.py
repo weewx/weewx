@@ -107,7 +107,7 @@ class Common(unittest.TestCase):
                 expected_line = expected.readline()
                 if actual_line == '' or expected_line == '':
                     break
-                self.assertEqual(actual_line, expected_line, "Line %d: %r vs %r" % (n, actual_line, expected_line))
+                self.assertEqual(actual_line, expected_line, "%s[%d]:\n%r vs\n%r" % (actual_file, n, actual_line, expected_line))
             
             print "Checked %d lines" % (n,)
 

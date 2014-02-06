@@ -20,9 +20,6 @@ class UnknownType(object):
     def __init__(self, obs_type):
         self.obs_type = obs_type
 
-    def __str__(self):
-        return "?%s?" % self.obs_type
-
 unit_constants = {'US'       : weewx.US,
                   'METRIC'   : weewx.METRIC,
                   'METRICWX' : weewx.METRICWX}
@@ -722,10 +719,9 @@ class ValueHelper(object):
     def toString(self, addLabel=True, useThisFormat=None, NONE_string=None):
         """Convert my internally held ValueTuple to a string, using the supplied
         converter and formatter."""
-        # If the type is unknown, then just return the error string 
-        # supplied by UnknownType
+        # If the type is unknown, then just return an error string: 
         if isinstance(self.value_t, UnknownType):
-            return self.value_t
+            return "?'%s'?" % self.value_t.obs_type 
         # Get the value tuple in the target units:
         vtx = self._raw_value_tuple
         # Then do the format conversion:
@@ -793,7 +789,7 @@ class ValueHelper(object):
         return not isinstance(self.value_t, UnknownType)
     
     def has_data(self):
-        return self.exits and self.value_t[0] is not None
+        return self.exists() and self.value_t[0] is not None
     
 #==============================================================================
 #                            class ValueDict

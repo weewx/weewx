@@ -128,23 +128,27 @@
       <td>   N/A</td>
     </tr>
     <tr>
-      <td>Test tag "exists" for an existent type:</td>
+      <td>Test tag "exists" for an existent type: $current.outTemp.exists</td>
       <td>PASS</td>
     </tr> 
     <tr>
-      <td>Test tag "exists" for a nonsense type:</td>
+      <td>Test tag "exists" for a nonsense type: $current.nonsense.exists</td>
       <td>PASS</td>
     </tr> 
     <tr>
-      <td>Test tag "has_data" for existent type with no data:</td>
-      <td>PASS</td>
-    </tr> 
-    <tr>
-      <td>Test tag "has_data" for an existing type</td>
+      <td>Test tag "has_data" for an existing type with data: $current.outTemp.has_data</td>
       <td>PASS</td>
     </tr>
     <tr>
-      <td>Test for a bad attribute on a tag</td>
+      <td>Test tag "has_data" for an existing type without data: $current.hail.has_data</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for a nonsense type: $current.nonsense.has_data</td>
+      <td>PASS</td>
+    </tr> 
+    <tr>
+      <td>Test for a bad attribute on a tag: $current.foobar</td>
       <td>?'foobar'?</td>
     </tr>
   </table>

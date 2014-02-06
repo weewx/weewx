@@ -135,7 +135,7 @@
       <td>$current.inTemp</td>
     </tr>
     <tr>
-      <td>Test tag "exists" for an existent type:</td>
+      <td>Test tag "exists" for an existent type: \$current.outTemp.exists</td>
     #if $current.outTemp.exists
       <td>PASS</td>
     #else
@@ -143,7 +143,7 @@
     #end if
     </tr> 
     <tr>
-      <td>Test tag "exists" for a nonsense type:</td>
+      <td>Test tag "exists" for a nonsense type: \$current.nonsense.exists</td>
     #if $current.nonsense.exists
       <td>FAIL</td>
     #else
@@ -151,15 +151,7 @@
     #end if
     </tr> 
     <tr>
-      <td>Test tag "has_data" for existent type with no data:</td>
-    #if $current.foo.has_data
-      <td>FAIL</td>
-    #else
-      <td>PASS</td>
-    #end if
-    </tr> 
-    <tr>
-      <td>Test tag "has_data" for an existing type</td>
+      <td>Test tag "has_data" for an existing type with data: \$current.outTemp.has_data</td>
     #if $current.outTemp.has_data
       <td>PASS</td>
     #else
@@ -167,7 +159,23 @@
     #end if
     </tr>
     <tr>
-      <td>Test for a bad attribute on a tag</td>
+      <td>Test tag "has_data" for an existing type without data: \$current.hail.has_data</td>
+    #if $current.hail.has_data
+      <td>FAIL</td>
+    #else
+      <td>PASS</td>
+    #end if
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for a nonsense type: \$current.nonsense.has_data</td>
+    #if $current.nonsense.has_data
+      <td>FAIL</td>
+    #else
+      <td>PASS</td>
+    #end if
+    </tr> 
+    <tr>
+      <td>Test for a bad attribute on a tag: \$current.foobar</td>
       <td>$current.foobar</td>
     </tr>
   </table>
