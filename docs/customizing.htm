@@ -6,8 +6,10 @@
     <meta content="en-us" http-equiv="Content-Language" />
     <title>weewx: Customization Guide</title>
     <link href="css/weewx_docs.css" rel="stylesheet" />
+    <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
     <script src="js/jquery.min.js" type="text/javascript"></script>
     <script src="js/jquery.toc-1.1.4.min.js" type="text/javascript"></script>
+    <script src="js/jquery-ui-1.10.4.custom.min.js"></script>
     <style>
 table#stattypes td {
   width: 60px;
@@ -56,46 +58,52 @@ table#stattypes td {
       <table class="indent" style="width: 80%" summary="Overview of the weewx architecture">
         <tbody>
           <tr>
-            <td><strong>Service</strong></td>
-            <td><strong>Function</strong></td>
+            <td><i><strong>Service</strong></i></td>
+            <td><i><strong>Function</strong></i></td>
           </tr>
           <tr>
-            <td class="code">weewx.wxengine.StdConvert</td>
-            <td>Converts the units of the input to a target unit system (such as
-              US or Metric).</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdCalibrate</td>
-            <td>Adjust new LOOP and archive packets using calibration
-              expressions.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdQC</td>
-            <td>Check quality of incoming data, making sure values fall within a
-              specified range.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdArchive</td>
-            <td>Archive any new data to the SQL databases.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdTimeSynch</td>
+            <td class="code text_highlight">weewx.wxengine.StdTimeSynch</td>
             <td>Arrange to have the clock on the station synchronized at regular
               intervals.</td>
           </tr>
           <tr>
-            <td class="code">weewx.wxengine.StdPrint</td>
+            <td class="code text_highlight">weewx.wxengine.StdConvert</td>
+            <td>Converts the units of the input to a target unit system (such as
+              US or Metric).</td>
+          </tr>
+          <tr>
+            <td class="code text_highlight">weewx.wxengine.StdCalibrate</td>
+            <td>Adjust new LOOP and archive packets using calibration
+              expressions.</td>
+          </tr>
+          <tr>
+            <td class="code text_highlight">weewx.wxengine.StdQC</td>
+            <td>Check quality of incoming data, making sure values fall within a
+              specified range.</td>
+          </tr>
+          <tr>
+            <td class="code text_highlight">weewx.wxengine.StdArchive</td>
+            <td>Archive any new data to the SQL databases.</td>
+          </tr>
+	  <tr>
+	    <td class="code text_highlight">weewx.restx.StdStationRegistry<br/>
+	      weewx.restx.StdWunderground<br/>
+	      weewx.restx.StdPWSweather<br/>
+	      weewx.restx.StdCWOP<br/>
+	      weewx.restx.StdWOW<br/>weewx.restx.StdAWEKAS
+	    </td>
+	    <td>Various <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
+		RESTful services</a> (simple stateless client-server protocols), 
+	      such as the Weather Underground, CWOP, etc. Each launches its own, independent
+	      thread, which manages the post.
+	    </td>
+	  </tr>
+          <tr>
+            <td class="code text_highlight">weewx.wxengine.StdPrint</td>
             <td>Print out new LOOP and archive packets on the console.</td>
           </tr>
           <tr>
-            <td class="code">weewx.wxengine.StdRESTful</td>
-            <td>Start a thread to manage <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
-                RESTful</a> (simple stateless client-server protocols)
-              connections; such as those used by the Weather Underground or
-              CWOP.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdReport</td>
+            <td class="code text_highlight">weewx.wxengine.StdReport</td>
             <td>Launch a new thread to do report processing after a new archive
               record arrives. Reports do things such as generate HTML files,
               generate images, or FTP/rsync files to a web server. New reports
@@ -111,7 +119,7 @@ table#stattypes td {
       <h2>The standard reporting service, <span class="code">StdReport</span></h2>
       <p>For the moment, let us focus on the last service, <span class="code">weewx.wxengine.StdReport</span>,
         the standard service for creating reports. This will be what most users
-        will want to customize even if it means changing just a few options. </p>
+        will want to customize even if it means just changing a few options. </p>
       <h3>Reports</h3>
       <p>The Standard Report Service runs zero or more <em>Reports.</em> The
         specific reports which get run are set in the configuration file <span
@@ -122,22 +130,22 @@ table#stattypes td {
       <table class="indent" style="width: 80%" summary="Standard reports included in weewx">
         <tbody>
           <tr>
-            <td><strong>Report</strong></td>
-            <td><strong>Default functionality</strong></td>
+            <td><i><strong>Report</strong></i></td>
+            <td><i><strong>Default functionality</strong></i></td>
           </tr>
           <tr>
-            <td class="code">StandardReport</td>
+            <td class="code text_highlight">StandardReport</td>
             <td>Generates day, week, month and year "to-date" summaries in HTML,
               as well as the plot images to go along with them. Also generates
               NOAA monthly and yearly summaries. </td>
           </tr>
           <tr>
-            <td class="code">FTP</td>
+            <td class="code text_highlight">FTP</td>
             <td>Arranges to upload everything in the <span class="symcode">$HTML_ROOT</span>
               directory up to a remote webserver.</td>
           </tr>
           <tr>
-            <td class="code">RSYNC</td>
+            <td class="code text_highlight">RSYNC</td>
             <td>Like FTP, but uses rsync for transferring files to a remote
               webserver.</td>
           </tr>
@@ -162,8 +170,30 @@ table#stattypes td {
         configuration file <span class="code">skin.conf</span>. </p>
       <p>Like all reports, the FTP and RSYNC "Reports" also use a skin, and
         include a skin configuration file, although they are quite minimal. </p>
-      <p>Skins live in their own directory located in <span class="symcode">$SKIN_ROOT</span>.
+      <p>Skins live in their own directory located in <a href="#" id="skin-root-description-target">
+	  <span class="symcode">$SKIN_ROOT</span></a>.
       </p>
+
+      <div id="skin-root-description" title="$SKIN_ROOT"><p>The symbol <span class='code'>
+          $SKIN_ROOT</span> is a symbolic name to the location of the directory where
+	  your skins are located. It is not to be taken literally. Consult the
+	  <a href="usersguide.htm#dir-layout-table">directory layout table</a> in 
+	  the User's Guide for its exact location, dependent
+	  on how you installed weewx and what operating system you are using</p></div>
+      <script type="text/javascript">
+	$(document).ready(function(){
+          $("#skin-root-description").dialog({
+            autoOpen : false,
+            position: {my: "left top", at:"right bottom", of:"#skin-root-description-target"}
+          });
+          $("#skin-root-description-target").click(
+            function () {
+              $("#skin-root-description").dialog("open");
+              return false; // Insures that the "link" isn't followed
+            })
+        });
+      </script>
+
       <h3>Generators</h3>
       <p>To create their output, skins rely on one or more <em>Generators, </em>code
         that actually create useful things such as HTML files or plot images.
@@ -173,28 +203,28 @@ table#stattypes td {
       <table class="indent" style="width: 80%" summary="Generators included in weewx">
         <tbody>
           <tr>
-            <td><strong>Generator</strong></td>
-            <td><strong>Function</strong></td>
+            <td><i><strong>Generator</strong></i></td>
+            <td><i><strong>Function</strong></i></td>
           </tr>
           <tr>
-            <td class="code">weewx.cheetahgenerator.CheetahGenerator</td>
+            <td class="code text_highlight">weewx.cheetahgenerator.CheetahGenerator</td>
             <td>Generates files from templates, using the Cheetah template engine. Used to generate HTML and text
               files.</td>
           </tr>
           <tr>
-            <td class="code">weewx.imagegenerator.ImageGenerator</td>
+            <td class="code text_highlight">weewx.imagegenerator.ImageGenerator</td>
             <td>Generates graph plots.</td>
           </tr>
           <tr>
-            <td class="code">weewx.reportengine.FtpGenerator</td>
+            <td class="code text_highlight">weewx.reportengine.FtpGenerator</td>
             <td>Uploads data to a remote server using FTP.</td>
           </tr>
           <tr>
-            <td class="code">weewx.reportengine.RsyncGenerator</td>
+            <td class="code text_highlight">weewx.reportengine.RsyncGenerator</td>
             <td>Uploads data to a remote server using rsync.</td>
           </tr>
           <tr>
-            <td class="code">weewx.reportengine.CopyGenerator</td>
+            <td class="code text_highlight">weewx.reportengine.CopyGenerator</td>
             <td>Copies files locally.</td>
           </tr>
         </tbody>
@@ -541,10 +571,15 @@ $month.outTemp.max</pre>
       <p>The ordinal abbreviations that are used are set by option <span class="code">directions</span>
         in the skin configuration file <span class="code">skin.conf</span>.</p>
       <h4>Illegal conversions</h4>
-      <p>If an inappropriate conversion is asked for, <em>e.g.</em>, </p>
-      <pre class="tty">Today's average pressure=$day.barometer.degree_C </pre>
-      <p>then the offending tag will be put in the output: </p>
-      <p class="example_output">Today's average pressure=$day.barometer.degree_C
+      <p>If an inappropriate or nonsense conversion is asked for, <em>e.g.</em>, </p>
+      <pre class="tty">Today's minimum pressure in mbars: $day.barometer.min.mbar
+or in degrees C: $day.barometer.min.degree_C
+or in foobar units: $day.barometer.min.foobar
+</pre>
+      <p>then the offending tag(s) will be put in the output: </p>
+      <p class="example_output">Today's minimum pressure in mbars: 1015.3<br/>
+or in degrees C: $day.barometer.min.degree_C<br/>
+or in foobar units: $day.barometer.min.foobar
       </p>
 
       <h3 id="formatting_options">Formatting options</h3>
