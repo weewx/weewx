@@ -53,7 +53,17 @@ configure_weewxconf() {
                 sed -i "/\[Vantage\]/,/\[.*\]/ s% host[ ]*=.*% host = $RET%" $cfgfile
             fi
         fi
+        if [ "$RET" = "WMR100" ]; then
+            db_get weewx/wmr100_model
+            sed -i "/\[WMR100\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+        fi
+        if [ "$RET" = "WMR200" ]; then
+            db_get weewx/wmr200_model
+            sed -i "/\[WMR200\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+        fi
         if [ "$RET" = "WMR9x8" ]; then
+            db_get weewx/wmr9x8_model
+            sed -i "/\[WMR9x8\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
             db_get weewx/wmr9x8_port
             sed -i "/\[WMR9x8\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
         fi

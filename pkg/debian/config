@@ -41,7 +41,17 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
                 fi
             fi
 
+            if [ "$RET" = "WMR100" ]; then
+                db_input high weewx/wmr100_model || true
+            fi
+
+            if [ "$RET" = "WMR200" ]; then
+                db_input high weewx/wmr200_model || true
+            fi
+
             if [ "$RET" = "WMR9x8" ]; then
+                db_input high weewx/wmr9x8_model || true
+                db_go
                 db_input high weewx/wmr9x8_port || true
             fi
 

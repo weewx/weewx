@@ -42,6 +42,24 @@ Default: 192.168.0.10
 Description: weather station hostname or IP address:
  Specify the IP address (e.g. 192.168.0.10) or hostname (e.g. console or console.example.com) for stations with an ethernet interface.  For serial stations leave this blank.
 
+Template: weewx/wmr100_model
+Type: string
+Default: WMR100
+Description: weather station model:
+ Specify the station model, for example WMR100, WMR100A, WMRS200.
+
+Template: weewx/wmr200_model
+Type: string
+Default: WMR200
+Description: weather station model:
+ Specify the station model, for example WMR200, WMR200A.
+
+Template: weewx/wmr9x8_model
+Type: string
+Default: WMR968
+Description: weather station model:
+ Specify the station model, for example WMR918, WMR968, Radio Shack 63-1016.
+
 Template: weewx/wmr9x8_port
 Type: string
 Default: /dev/ttyS0
