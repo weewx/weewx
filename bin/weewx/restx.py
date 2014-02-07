@@ -74,6 +74,7 @@ import datetime
 import hashlib
 import httplib
 import platform
+import re
 import socket
 import sys
 import syslog
@@ -787,8 +788,12 @@ class StdCWOP(StdRESTful):
     """Weewx service for posting using the CWOP protocol.
     
     Manages a separate thread CWOPThread"""
-    # Station IDs must start with one of these:
-    valid_prefixes = ['CW', 'DW', 'EW']
+
+    # A regular expression that matches CWOP stations that
+    # don't need a passcode. This will match CW1234, etc.
+    valid_prefix_re = re.compile('[A-Z]W+[0-9]+')
+    
+    # Default list of CWOP servers to try:
     default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
 
     def __init__(self, engine, config_dict):
@@ -802,7 +807,8 @@ class StdCWOP(StdRESTful):
             _cwop_dict = get_dict(config_dict, 'CWOP')
             _cwop_dict['station'] = _cwop_dict['station'].upper()
             
-            if _cwop_dict['station'][0:2] in StdCWOP.valid_prefixes:
+            # See if this station requires a passcode:
+            if re.match(StdCWOP.valid_prefix_re, _cwop_dict['station']):
                 _cwop_dict.setdefault('passcode', '-1')
             elif not _cwop_dict.has_key('passcode'):
                 raise KeyError('passcode')
