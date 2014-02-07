@@ -791,7 +791,7 @@ class StdCWOP(StdRESTful):
 
     # A regular expression that matches CWOP stations that
     # don't need a passcode. This will match CW1234, etc.
-    valid_prefix_re = re.compile('[A-Z]W+[0-9]+')
+    valid_prefix_re = re.compile('[C-Z]W+[0-9]+')
     
     # Default list of CWOP servers to try:
     default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
