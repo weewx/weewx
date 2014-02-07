@@ -49,13 +49,14 @@ table#stattypes td {
         <span class="code">weewx</span> is still an experimental system and, as
         such, its internal design is subject to change. Be prepared to do
         updates to any code or customization you do! </p>
+
       <h2>Overview of the weewx architecture</h2>
       <p>At a high-level, <span class="code">weewx</span> consists of an engine
         class called <span class="code">StdEngine</span>. It is responsible for
         loading "<em>services</em>", then arranging for them to be called when
         key events occur, such as the arrival of LOOP data. The default install
         of <span class="code">weewx</span> includes the following services: </p>
-      <table class="indent" style="width: 80%" summary="Overview of the weewx architecture">
+      <table id='default_services' class="indent" style="width: 80%" summary="Overview of the weewx architecture">
         <tbody>
           <tr>
             <td><i><strong>Service</strong></i></td>
@@ -174,23 +175,17 @@ table#stattypes td {
 	  <span class="symcode">$SKIN_ROOT</span></a>.
       </p>
 
-      <div id="skin-root-description" title="$SKIN_ROOT"><p>The symbol <span class='code'>
+      <div id="skin-root-description" title="$SKIN_ROOT" style="display:none"><p>The symbol <span class='code'>
           $SKIN_ROOT</span> is a symbolic name to the location of the directory where
 	  your skins are located. It is not to be taken literally. Consult the
 	  <a href="usersguide.htm#dir-layout-table">directory layout table</a> in 
 	  the User's Guide for its exact location, dependent
 	  on how you installed weewx and what operating system you are using</p></div>
       <script type="text/javascript">
-	$(document).ready(function(){
-          $("#skin-root-description").dialog({
-            autoOpen : false,
-            position: {my: "left top", at:"right bottom", of:"#skin-root-description-target"}
-          });
-          $("#skin-root-description-target").click(
-            function () {
-              $("#skin-root-description").dialog("open");
-              return false; // Insures that the "link" isn't followed
-            })
+        $("#skin-root-description-target").click(
+          function () {
+            $("#skin-root-description").dialog({position: {my:"left top", at:"right bottom", of: "#skin-root-description-target"}});
+            return false; // Insures that the "link" isn't followed
         });
       </script>
 
@@ -438,7 +433,7 @@ table#stattypes td {
         or write your own. </p>
       <p>Template modifications are preserved across upgrades (indeed,
         everything in the <span class="code">./skins</span> directory is
-        preserved), so you don't have to worry about losing changes.</p>
+        preserved), so you don't have to worry about losing changes after an upgrade.</p>
       <p>Template generation is done using the <a href="http://www.cheetahtemplate.org/">Cheetah</a>
         templating engine. This is a very powerful engine, which essentially
         lets you have the full semantics of Python available in your templates.
@@ -480,7 +475,7 @@ $current.outTemp</pre>
 $month.outTemp.max</pre>
       <p>Most of the time, the dot code will "do the right thing" and is all you
         will need. However, <span class="code">weewx</span> offers extensive
-        customization of the generate output for specialized applications such
+        customization of the generated output for specialized applications such
         as XML RSS feeds, or ridgidly formatted reports (such as the NOAA
         reports). This section specifies the various options available. </p>
       <p>There are two different versions of the dot code, depending on whether
@@ -568,7 +563,7 @@ $month.outTemp.max</pre>
       <pre class="tty">Current wind direction is $current.windDir ($current.windDir.ordinal_compass)</pre>
       <p>would result in:</p>
       <p class="example_output">Current wind direction is 138° (SW)</p>
-      <p>The ordinal abbreviations that are used are set by option <span class="code">directions</span>
+      <p>The ordinal abbreviations are set by option <span class="code">directions</span>
         in the skin configuration file <span class="code">skin.conf</span>.</p>
       <h4>Illegal conversions</h4>
       <p>If an inappropriate or nonsense conversion is asked for, <em>e.g.</em>, </p>
@@ -586,61 +581,68 @@ or in foobar units: $day.barometer.min.foobar
       <p>The tag <span class="code"><em>optional_formatting</em></span> can be
         used with either current observations or aggregations. It can be one of:
       </p>
-      <table class="indent" style="width: 90%" summary="Formatting Options">
+      <table class="indent" style="width: 80%" summary="Formatting Options">
         <tbody>
           <tr>
-            <td><strong>Optional Formatting Tag</strong></td>
-            <td><strong>Comment</strong></td>
+            <td><i><strong>Optional formatting tag</strong></i></td>
+            <td><i><strong>Comment</strong></i></td>
           </tr>
           <tr>
-            <td> <em>(no tag)</em> </td>
+            <td class='text_highlight'> <em>(no tag)</em> </td>
             <td>Value is returned as a string, formatted using an appropriate
               string format from <span class="code">skin.conf</span>. A unit
-              label from <span class="code">skin.conf</span> is also attached
-              at the end. </td>
+              label (e.g., <span class='code'>&deg;F</span>) from <span class="code">skin.conf</span> is also attached
+              at the end.
+	    </td>
           </tr>
           <tr>
-            <td class="code">.string(<em>NONE_string</em>)</td>
+            <td class="code text_highlight">.string(<em>NONE_string</em>)</td>
             <td>Value is returned as a string, formatted using an appropriate
               string format from <span class="code">skin.conf</span>. If the
               value is <span class="code">None</span>, the string <span class="code">NONE_string</span>
               will be substituted if given, otherwise the value for <span class="code">NONE</span>
               in <span class="code"> <a href="#Units_StringFormats">[Units][[StringFormats]]</a>
-              </span> will be used. A unit label from <span class="code">skin.conf</span>
-              will be attached at the end. </td>
+              </span> will be used. A unit label (e.g., <span class='code'>&deg;F</span>) 
+	      from <span class="code">skin.conf</span> will be attached at the end.
+	    </td>
           </tr>
           <tr>
-            <td class="code"><span class="code">.formatted</span></td>
+            <td class="code text_highlight"><span class="code">.formatted</span></td>
             <td>Value is returned as a string, formatted using an appropriate
               string format and <span class="code">None</span> value from <span
-                class="code">skin.conf</span>. No label.</td>
+                class="code">skin.conf</span>. No unit label will be attached.
+	    </td>
           </tr>
           <tr>
-            <td class="code">.format(<em>string_format</em>, <em>NONE_string</em>)</td>
+            <td class="code text_highlight">.format(<em>string_format</em>, <em>NONE_string</em>)</td>
             <td>Value is returned as a string, using the string format specified
               with <em>string_format</em>. If the value is <span class="code">None</span>,
               the string <span class="code">NONE_string</span> will be
               substituted if given, otherwise the value for <span class="code">NONE</span>
               in <span class="code"> <a href="#Units_StringFormats">[Units][[StringFormats]]</a>
-              </span> will be used. A unit label from <span class="code">skin.conf</span>
-              will be attached at the end. </td>
+              </span> will be used. A unit label (e.g., <span class='code'>&deg;F</span>) 
+	      from <span class="code">skin.conf</span> will be attached at the end.
+	    </td>
           </tr>
           <tr>
-            <td class="code">.nolabel(string_format, NONE_string)</td>
+            <td class="code text_highlight">.nolabel(string_format, NONE_string)</td>
             <td>Value is returned as a string, using the string format specified
               with <em>string_format</em>. If the value is <span class="code">None</span>,
               the string <span class="code">NONE_string</span> will be
               substituted if given, otherwise the value for <span class="code">NONE</span>
               in <span class="code"> <a href="#Units_StringFormats">[Units][[StringFormats]]</a>
-              </span> will be used. No label will be attached at the end.</td>
+              </span> will be used. No unit label will be attached at the end.
+	    </td>
           </tr>
           <tr>
-            <td class="code"> <span class="code">.raw</span> </td>
+            <td class="code text_highlight"> <span class="code">.raw</span> </td>
             <td>Value is returned "as is" without being converted to a string
-              and without any formatting applied. You must be prepared to deal
+              and without any formatting applied. This can be useful for doing 
+	      arithmetic directly within the templates. You must be prepared to deal
               with a <span class="code">None</span> value unless the value is
               converted directly to a string. In this case, it will be converted
-              to the empty string (<span class="code">''</span>)</td>
+              to the empty string (<span class="code">''</span>)
+	    </td>
           </tr>
         </tbody>
       </table>
@@ -648,11 +650,11 @@ or in foobar units: $day.barometer.min.foobar
       <table class="indent" style="width: 80%" summary="Summary of formatting options">
         <tbody>
           <tr>
-            <td><strong>Formatting Tag</strong></td>
-            <td><strong>Format Used</strong></td>
-            <td><strong>Label Used</strong></td>
-            <td><strong>NONE String</strong></td>
-            <td><strong>Returned Value</strong></td>
+            <td><i><strong>Formatting Tag</strong></i></td>
+            <td><i><strong>Format Used</strong></i></td>
+            <td><i><strong>Label Used</strong></i></td>
+            <td><i><strong>NONE String</strong></i></td>
+            <td><i><strong>Returned Value</strong></i></td>
           </tr>
           <tr>
             <td><em>(no tag)</em></td>
@@ -699,12 +701,12 @@ or in foobar units: $day.barometer.min.foobar
         </tbody>
       </table>
       <p>Here are some examples with the expected results: </p>
-      <table class="indent" summary="Formatting options with expected results">
+      <table class="indent" style="width: 80%" summary="Formatting options with expected results">
         <tbody>
           <tr>
-            <td><strong>Tag</strong></td>
-            <td><strong>Result</strong></td>
-            <td><strong>Comment</strong></td>
+            <td><i><strong>Tag</strong></i></td>
+            <td><i><strong>Result</strong></i></td>
+            <td><i><strong>Comment</strong></i></td>
           </tr>
           <tr>
             <td class="code">$current.outTemp </td>
@@ -837,7 +839,7 @@ or in foobar units: $day.barometer.min.foobar
         explicit formats can be specified, except that they require a <a href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">
           strftime() <em>time format</em></a>, rather than a <em>string
           format:</em> </p>
-      <pre class="tty">$month.dateTime.format("%B %Y)</pre>
+      <pre class="tty">$month.dateTime.format("%B %Y")</pre>
       <p>produces </p>
       <pre class="tty">January 2010</pre>
       <p>The returned string value will always be in <em>local time</em>. </p>
@@ -1499,7 +1501,7 @@ inch     = %.2f</pre>
       <p>would specify that the given string formats are to be used when
         formatting any temperature measured in degrees Celsius or any
         precipitation amount measured in inches, respectively. The <a href="http://docs.python.org/library/string.html#format-specification-mini-language">
-          formatting codes are those used by Python</a>, a, and are very similar
+          formatting codes are those used by Python</a>, and are very similar
         to C's <span class="code">sprintf()</span> codes. </p>
       <p>You can also specify what string to use for an invalid or unavailable
         measurement (value '<span class="code">None</span>'). For example, </p>
@@ -1516,21 +1518,55 @@ inch     = ' in'</pre>
         if you cut-and-paste from a character map. Labels used in plot images
         will be converted to Latin-1 first (this is all the Python Imaging
         Library can handle). </p>
+
       <h3 class="config_section" id="Units_TimeFormats">[[TimeFormats]]</h3>
       <p>This sub-section is used for time labels. It uses <a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a>
-        formats. For example </p>
-      <pre class="tty">week  = %H:%M on %A
-month = %d-%b-%Y %H:%M</pre>
-      <p>would specify that week data should use a format such as "<span class="code">15:20
-          on Sunday</span>", while month data should look like "<span class="code">06-Oct-2009
-          15:20</span>" </p>
-      <p>It also allows the formatting to be set for almanac times: </p>
-      <pre class="tty">ephem_day  = %H:%M
-ephem_year = %d-%b-%Y %H:%M</pre>
-      <p>The first of these, <span class="code">ephem_day</span>, is used for
-        almanac times within the day, such as sunrise or sunset. The second, <span
-          class="code">ephem_year</span>, is used for almanac times within the
+        formats. The default looks like this:</p>
+      <pre class='tty'>
+    [[TimeFormats]]
+        # This section sets the string format to be used for
+        # each time scale.
+
+        day        = %X
+        week       = %X (%A)
+        month      = %x %X
+        year       = %x %X
+        rainyear   = %x %X
+        current    = %x %X
+        ephem_day  = %X
+        ephem_year = %x %X</pre>
+
+      <p>The specifiers <span class='code'>%x</span>, <span class='code'>%X</span>,
+	and <span class='code'>%A</span>
+	code locale dependent date, time, and weekday names, respectively.
+	Hence, if you set an appropriate environment variable <span class='code'>LANG</span>,
+	then the date and times should follow local conventions (see section
+	<a href="#environment_variable_LANG">Environment variable LANG</a> 
+	below for details on how to do this). However, they will not look particularly pretty
+	and you may want to change them. For example, I use this in the U.S.:
+      </p>
+      <pre class="tty">
+    [[TimeFormats]]
+        #
+        # This section sets the string format to be used
+        # each time scale.
+        #
+        day        = %H:%M
+        week       = %H:%M on %A
+        month      = %d-%b-%Y %H:%M
+        year       = %d-%b-%Y %H:%M
+        rainyear   = %d-%b-%Y %H:%M
+        current    = %d-%b-%Y %H:%M
+        ephem_day  = %H:%M
+        ephem_year = %d-%b-%Y %H:%M</pre>
+
+      <p>The last two formats, <span class='code'>ephem_day</span> and
+	<span class='code'>ephem_year</span> allow the formatting to be set for almanac times
+	The first, <span class="code">ephem_day</span>, is used for
+        almanac times within the day, such as sunrise or sunset. The second, 
+	<span class="code">ephem_year</span>, is used for almanac times within the
         year, such as the next equinox or full moon. </p>
+
       <h3 class="config_section">[[Ordinates]]</h3>
       <p class="config_option">directions</p>
       <p>Set to the abbreviations to be used for ordinal directions. By default,
@@ -1567,11 +1603,11 @@ cooling_base = 20.0, degree_C</pre>
 		<p>This allows you to decide whether or not you want leading zeroes. The 
 		default includes leading zeroes and is &quot;%02d&quot;, &quot;%03d&quot;, &quot;%05.2f&quot;</p>
       <h3 class="config_section">[[Generic]]</h3>
-      <p>This sub-section specifies default labels to be used for each SQL
+      <p>This sub-section specifies default labels to be used for each observation
         type. For example, options </p>
       <pre class="tty">inTemp = Temperature inside the house
 outTemp = Outside Temperature</pre>
-      <p>would cause the given labels to be used for plots involving SQL types <span
+      <p>would cause the given labels to be used for plots of <span
           class="code">inTemp</span> and <span class="code">outTemp</span>. </p>
       <h2 class="config_section">[Almanac]</h2>
       <p>This section controls what text to use for the almanac. It consists of
@@ -1611,8 +1647,8 @@ outTemp = Outside Temperature</pre>
       <p>There can be only one <span class="config_option">template</span> in
         each block.  In most cases, the block name does not matter - it is
         used only to isolate each template.  However, there are two block names
-        that have speacial meaning:  SummaryByMonth and SummaryByYear.  These
-        are described below.</p>
+        that have special meaning:  <span class='code'>SummaryByMonth</span> and 
+	<span class='code'>SummaryByYear</span>.  These are described below.</p>
       <p>The file generator runs on each new archive record.  In a default
         weewx installation, that would be every 5 minutes.</p>
       <p>Cheetah processes each template to generate a file.  Cheetah follows
@@ -1643,7 +1679,7 @@ outTemp = Outside Temperature</pre>
       <p>This option controls which encoding is to be used for the generated
         output. The encoding can be specified for individual files.  There are
         3 possible choices: </p>
-      <table class="indent" style="width: 90%">
+      <table class="indent" style="width: 80%">
         <tbody>
           <tr>
             <td><strong>Encoding</strong></td>
@@ -1698,7 +1734,7 @@ outTemp = Outside Temperature</pre>
       <p>The best way to customization file generation is to make a copy of
         a working report/skin, then make incremental changes.</p>
       <p>When there is an error during template generation, the error will
-        show up in the log file.  Many errors are obvious - Cheetah will
+        show up in the log file.  Many errors are obvious &mdash; Cheetah will
         display a line number and list the template file in which the error
         occurred.  In some cases the error reporting is rather obscure.  So
         make small changes and tests often.  Use
@@ -1887,11 +1923,11 @@ outTemp = Outside Temperature</pre>
       <div class="center" style="width:80%;margin:0 auto;">
         <div style="float:left"> <img width="334" height="197" src="day-gap-not-shown.png"
             alt="Gap not shown" />
-          <p class="caption"> No <span class="code">line_gap_fraction</span>
+          <p class="image_caption"> No <span class="code">line_gap_fraction</span>
             specified</p>
         </div>
         <div> <img width="334" height="197" src="day-gap-showing.png" alt="Gap showing" />
-          <p class="caption"> With <span class="code">line_gap_fraction=0.01</span></p>
+          <p class="image_caption"> With <span class="code">line_gap_fraction=0.01</span></p>
         </div>
       </div>
       <div style="clear:both"></div>
@@ -2007,7 +2043,7 @@ outTemp = Outside Temperature</pre>
         unless overridden: </p>
       <pre class="tty">[ImageGenerator]
     ...
-    image_width=300
+    image_width = 300
     image_height = 180</pre>
       <p>The standard plot of barometric pressure will appear in <span class="code">daybarometer.png</span>:
       </p>
@@ -2126,46 +2162,27 @@ outTemp = Outside Temperature</pre>
           Weather Conditions</span>" will need to be translated.</p>
       <h2>Modify skin.conf to reflect local conventions</h2>
       <p>Next, you will need to go through <span class="code">skin.conf</span>
-        and modify options to follow local conventions. This includes dates and
-        labels.</p>
-      <h3>Dates</h3>
-      <p>Date formats may need to be changed. For example, if you wish to follow
-        the European convention Day/Month/Year, rather than the US convention of
-        Month/Day/Year, then several lines in the <span class="code">[[TimeFormats]]</span>
-        section may have to be changed. Note that the format for '<span class="code">week</span>'
-        also includes the preposition '<span class="code">on</span>', which may
-        have to be translated to your language.</p>
-      <pre class="tty">    [[TimeFormats]]
-        #
-        # This section sets the string format to be used
-        # each time scale.
-        #
-        day        = %H:%M
-        week       = %H:%M on %A
-        month      = %d-%b-%Y %H:%M
-        year       = %d-%b-%Y %H:%M
-        rainyear   = %d-%b-%Y %H:%M
-        current    = %d-%b-%Y %H:%M
-        ephem_day  = %H:%M
-        ephem_year = %d-%b-%Y %H:%M</pre>
-      <p>The bottom label format used in plots may need to be changed from</p>
-      <pre class="tty">bottom_label_format = %m/%d/%y</pre>
-      <p>to</p>
-      <pre class="tty">bottom_label_format = %d/%m/%y</pre>
-      <h3>Labels</h3>
-      <p>There are several almanac labels that may need to be changed. These
-        include:</p>
+        and modify any labels to follow local conventions.
+      </p>
+      <p>The hemisphere abbreviations may have to be changed: </p>
       <pre class="tty">hemisphere = N, S, E, W</pre>
-      <p>and</p>
-      <pre class="tty">moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</pre>
+      <p>The wind ordinal directions may have to be changed: </p>
+      <pre class='tty'>
+    [[Ordinates]]    
+        # The ordinal directions. The last one should be for no wind direction
+        directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A </pre>
+      <p>Don't forget the moon phases:</p>
+      <pre class="tty">
+moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</pre>
       <p>Most of the unit labels either follow ISO conventions, or are unlikely 
 	  to be used outside English speaking countries (an example would be 
 	  &quot;foot&quot;). But, there are two exceptions:</p>
 		<pre class="tty">hour           = &quot; hrs&quot;
 second         = &quot; secs&quot;</pre>
-		<p>You will also have to change the generic labels given to your weather
-        observations:</p>
-      <pre class="tty">barometer      = Barometer
+      <p>You will probably want to change the generic labels used for the
+	observation types:</p>
+      <pre class="tty">
+barometer      = Barometer
 dewpoint       = Dew Point
 heatindex      = Heat Index
 inHumidity     = Inside Humidity
@@ -2184,13 +2201,15 @@ windchill      = Wind Chill
 windgustvec    = Gust Vector
 windvec        = Wind Vector
 extraTemp1     = Pond Temperature</pre>
-      <h2>Environment variable <span class="code">LANG</span></h2>
+
+      <h2 id="environment_variable_LANG">Environment variable <span class="code">LANG</span></h2>
       <p>Finally, you will need to set the environment variable <span class="code">LANG</span>
         to reflect your locale. For example, assuming you set</p>
       <pre class="tty">$ export LANG=es_ES.UTF-8</pre>
       <p>before running <span class="code">weewx</span>, then the local Spanish
         names for days of the week and months of the year will be used. The
         decimal point for numbers will also be modified appropriately.</p>
+
       <h1 id="service_engine">Customizing the <span class="code">weewx</span> service engine</h1>
       <p>This is an advanced topic intended for those who wish to try their hand
         at extending the internal engine in weewx. You should have a passing
@@ -2207,57 +2226,9 @@ extraTemp1     = Pond Temperature</pre>
         <li>Customize a service </li>
         <li>Add a service </li>
       </ul>
-      <p>The default install of <span class="code">weewx</span> includes the
-        following services, shown in the order they are normally run:</p>
-      <table class="indent" style="width: 80%">
-        <tbody>
-          <tr>
-            <td><strong>Service</strong></td>
-            <td><strong>Function</strong></td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdConvert</td>
-            <td>Converts the units of the input to a target unit system (such as
-              US or Metric).</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdCalibrate</td>
-            <td>Adjust new LOOP and archive packets using calibration
-              expressions.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdQC</td>
-            <td>Check that observation values fall within a specified range.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdArchive</td>
-            <td>Archive any new data to the SQL databases.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdTimeSynch</td>
-            <td>Arrange to have the clock on the console synchronized at regular
-              intervals.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdPrint</td>
-            <td>Print out new LOOP and archive packets on the console.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdRESTful</td>
-            <td>Start a thread to manage <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
-                RESTful</a> (simple stateless client-server protocols)
-              connections; such as those used by the Weather Underground or
-              PWSweather.</td>
-          </tr>
-          <tr>
-            <td class="code">weewx.wxengine.StdReport</td>
-            <td>Launch a new thread to do report processing after a new archive
-              record arrives. Reports do things such as generate HTML files,
-              generate images, or FTP/rsync files to a web server. New reports
-              can be added easily by the user.</td>
-          </tr>
-        </tbody>
-      </table>
+      <p>See the table <a href="#default_services">Default services</a> above for a list
+	of the services that are normally run.</p>
+
       <h2>Customizing a Service</h2>
       <p>The service <span class="code">weewx.wxengine.StdPrint</span> prints
         out new LOOP and archive packets to the console when they arrive. By

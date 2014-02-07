@@ -920,16 +920,10 @@ Version: 2.6.0b2
       file will be located in <span class='code'>/home/weewx/weewx.conf</span>. For other
       configurations, consult the <a href="#dir-layout-table">table</a> in the previous section.</p></div>
     <script type="text/javascript">
-      $(document).ready(function(){
-         $("#config-root-description").dialog({
-          autoOpen : false,
-          position: {my: "left top", at:"right bottom", of:"#config-root-description-target"}
-        });
-        $("#config-root-description-target").click(
-          function () {
-            $("#config-root-description").dialog("open");
-            return false; // Insures that the "link" isn't followed
-          })
+      $("#config-root-description-target").click(
+        function () {
+          $("#config-root-description").dialog({position: {my:"left top", at:"right bottom", of: "#config-root-description-target"}});
+          return false; // Insures that the "link" isn't followed
       });
     </script>
 
@@ -2642,7 +2636,7 @@ sudo /etc/init.d/apache2 restart</p>
     <p class='image-right' style='width:205px'>
       <a href="ferrites.jpg"><img src="ferrites.jpg" width='200' border='1' alt="Ferrite coils" longdesc="Cable connection looped through a ferrite coil" /></a>
       <br/>
-      <span class='caption'>Ferrite coils on a Davis Envoy.  There are two
+      <span class='image_caption'>Ferrite coils on a Davis Envoy.  There are two
         coils, one on the USB connection (top wire) and one on the power
         supply. Both have loops.</span>
     </p>
