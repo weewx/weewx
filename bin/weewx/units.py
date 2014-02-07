@@ -785,7 +785,7 @@ class ValueHelper(object):
             try:
                 conversionDict[self.value_t[1]][target_unit]
             except KeyError:
-                raise AttributeError, "Illegal conversion from '%s' to %s'"%(self.value_t[1], target_unit)
+                raise AttributeError, "Illegal conversion from '%s' to '%s'"%(self.value_t[1], target_unit)
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
     
     def exists(self):
