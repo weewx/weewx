@@ -61,7 +61,7 @@ Version: 2.6.0b2
     <p><span class="code">weewx</span> is about 8,000 lines of code, plus
       another 8,000 for the many drivers used by the supported hardware. </p>
 
-    <h1 id="hardware">Supported Hardware</h1>
+    <h1 id="hardware">Supported hardware</h1>
     <p>
       Many types of station hardware are supported.  In addition to hardware
       support, <span class="code">weewx</span> comes with a software
@@ -88,13 +88,14 @@ Version: 2.6.0b2
     </p>
 
     <table class="indent">
-      <tr>
-	<td><strong>Vendor</strong></td>
-	<td><strong>Model</strong></td>
-	<td><strong>Link</strong></td>
-	<td><strong>Required<br/>Package</strong></td>
-        <td><strong>Station<br/>Driver</strong></td>
-	<td><strong>Maturity</strong></td>
+      <caption>Weather hardware supported by <span class='code'>weewx</span></caption>
+      <tr class="first_row">
+	<td>Vendor</td>
+	<td>Model</td>
+	<td>Link</td>
+	<td>Required<br/>Package</td>
+        <td>Station<br/>Driver</td>
+	<td>Maturity</td>
       </tr>
       <tr>
 	<td class="text_highlight" rowspan="2">Aercus</td>
@@ -630,7 +631,7 @@ Version: 2.6.0b2
       </li>
     </ol>
 
-    <h1 id="prerequisites">System Requirements</h1>
+    <h1 id="prerequisites">System requirements</h1>
 
     <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
       Geode processor and 512 MB of memory. Configured this way, it
@@ -727,10 +728,10 @@ Version: 2.6.0b2
           <tr class='selected'>
             <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
           </tr>
-          <tr>
-          	<td><strong>Role</strong></td>
-          	<td><strong>Symbolic Name</strong></td>
-          	<td><strong>Nominal Location</strong></td>
+          <tr class="first_row" style="background-color: inherit">
+          	<td>Role</td>
+          	<td>Symbolic Name</td>
+          	<td>Nominal Location</td>
           	</tr>
           <tr>
             <td>Executables</td>
@@ -779,10 +780,10 @@ Version: 2.6.0b2
           <tr class='selected'>
             <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
           </tr>
-          <tr>
-          	<td><strong>Role</strong></td>
-          	<td><strong>Symbolic Name</strong></td>
-          	<td><strong>Nominal Location</strong></td>
+          <tr class="first_row" style="background-color: inherit">
+          	<td>Role</td>
+          	<td>Symbolic Name</td>
+          	<td>Nominal Location</td>
           	</tr>
           <tr>
             <td>Executables</td>
@@ -831,10 +832,10 @@ Version: 2.6.0b2
           <tr class='selected'>
             <td colspan='3' class='locations_banner'>Application layout for install using <span class='code'>setup.py</span></td>
           </tr>
-          <tr>
-          	<td><strong>Role</strong></td>
-          	<td><strong>Symbolic Name</strong></td>
-          	<td><strong>Nominal Location</strong></td>
+          <tr class="first_row" style="background-color: inherit">
+          	<td>Role</td>
+          	<td>Symbolic Name</td>
+          	<td>Nominal Location</td>
           </tr>
           <tr>
           	<td><span class='code'>weewx</span> root directory</td>
@@ -1004,8 +1005,9 @@ longitude = -77.0366</pre>
     <p>Set to the type of hardware you are using.</p>
     <pre class="tty">station_type = Simulator</pre>
     <p>Valid options include:</p>
-    <table class="indent">
-      <tr>
+    <table class="indent" style="width:50%">
+      <caption>Valid values for option <span class='code'>station_type</span></caption>
+      <tr class="first_row">
 	<td class="text_highlight"><i>Option:</i></td>
 	<td><i>Description:</i></td>
       </tr>
@@ -1256,7 +1258,7 @@ longitude = -77.0366</pre>
     <p>The time (in seconds) between emitting loop packets. Default is 2.5</p>
     <p class="config_option">mode</p>
     <p>One of either <span class='code'>simulator</span> or <span class='code'>generator</span>.  Default is <span class='code'>simulator</span>.</p>
-    <table class="indent">
+    <table class="indent" style="width:50%">
       <tr>
 	<td class="code">simulator</td>
 	<td>Real-time simulator. It will sleep between emitting packets.</td>
@@ -1834,7 +1836,7 @@ report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
       them. However, this will only make a slight difference in execution
       speed and memory use.</p>
 
-    <h1 id="configuring_hardware">Configuring Station Hardware</h1>
+    <h1 id="configuring_hardware">Configuring station hardware</h1>
     <p>This section describes how to configure some of the more popular station hardware, using 
       configuration utilities supplied with weewx. Directions follow for<p>
     <ul>
@@ -1960,7 +1962,8 @@ Davis Vantage EEPROM settings:
     <p class="warning">You can set either the time zone code <em>or</em> the 
 	time zone offset, but not both. </p>
 	  <p>Other parameters can be set in a similar manner.</p>
-    <h3>Archive Interval</h3>
+
+    <h3>Archive interval</h3>
     <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
       if you are ftp&#39;ing lots of files to a server, setting it to 60 seconds may 
       not give enough time to have them all uploaded before the next archive record 
@@ -2102,11 +2105,12 @@ Pressure offset is now 1.247000</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-usb</pre>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
-    <h3>Polling interval</h3>
+    <h3>Polling mode and the polling interval</h3>
     <p>When reading 'live' data, <span class='code'>weewx</span> can read as fast as possible, or at a user-defined period.  This is controlled by the <span class='code'>polling_mode</span> parameter.
     </p>
     <table class='indent'>
-      <tr>
+      <caption>Polling modes for Fine Offset stations</caption>
+      <tr class="first_row">
         <td width='15%'>Mode</td>
         <td width='30%'><span class='code'>weewx.conf</span></td>
         <td>Notes</td>
@@ -2401,6 +2405,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
     <p>Note that this <em>only</em> rereads the configuration file. It will not 
       reload any code.</p>
+
     <h2>Running as a daemon</h2>
     <p>For unattended operations it is best to have <span class="code">weewx</span> 
       run as a daemon, started automatically when the server is rebooted. </p>
@@ -2408,7 +2413,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
       done automatically. You can ignore this section.</p>
     <p>Start by selecting the appropriate run script. They can be found under
       <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/</span>. </p>
-    <table class="locations center" style="width: 90%">
+    <table class="locations" style="width:40%">
       <tr>
 	<td >Debian/Ubuntu/Mint:</td>
 	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian</span></td>
@@ -2427,7 +2432,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
 	<span class="code">weewx</span> installation (it should have been set to the correct value automatically 
       by the install process, but it is worth checking). </p>
     <p>Copy it to the proper location for your system: </p>
-    <table class="locations center" style="width: 90%">
+    <table class="locations" style="width:40%">
       <tr>
 	<td>Debian/Ubuntu/Mint:</td>
 	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian /etc/init.d/weewx</span></td>
@@ -2442,7 +2447,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
       </tr>
     </table>
     <p>Make sure the script is executable: </p>
-    <table class="locations center" style="width: 90%">
+    <table class="locations" style="width:40%">
       <tr>
 	<td >Debian/Ubuntu/Mint:</td>
 	<td class='tty'>chmod +x /etc/init.d/weewx</td>
@@ -2457,7 +2462,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
       </tr>
     </table>
     <p>Create symbolic links in the run level directories: </p>
-    <table class="locations center" style="width: 90%">
+    <table class="locations" style="width:40%">
       <tr>
 	<td >Debian/Ubuntu/Mint:</td>
 	<td class='tty'>update-rc.d weewx defaults 98</td>
@@ -3205,9 +3210,10 @@ port = /dev/cuaU0</pre>
     <h2>Terminology</h2>
     <p>This is a glossary of terminology used throughout the code. </p>
     <table style="width: 95%" class='indent'>
-      <tr>
-	<td class="text_highlight"><strong>Name</strong></td>
-	<td><strong>Description</strong></td>
+      <caption>Terminology used in weewx</caption>
+      <tr class="first_row">
+	<td class="text_highlight">Name</td>
+	<td>Description</td>
       </tr>
       <tr>
 	<td class="text_highlight">archive record</td>

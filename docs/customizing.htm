@@ -56,11 +56,12 @@ table#stattypes td {
         loading "<em>services</em>", then arranging for them to be called when
         key events occur, such as the arrival of LOOP data. The default install
         of <span class="code">weewx</span> includes the following services: </p>
-      <table id='default_services' class="indent" style="width: 80%" summary="Overview of the weewx architecture">
+      <table id='default_services' class="indent" summary="Overview of the weewx architecture">
+	<caption>The standard weewx services</caption>
         <tbody>
-          <tr>
-            <td><i><strong>Service</strong></i></td>
-            <td><i><strong>Function</strong></i></td>
+          <tr class="first_row">
+            <td>Service</td>
+            <td>Function</td>
           </tr>
           <tr>
             <td class="code text_highlight">weewx.wxengine.StdTimeSynch</td>
@@ -128,11 +129,11 @@ table#stattypes td {
       </p>
       <p>The default distribution of <span class="code">weewx</span> includes
         three reports: </p>
-      <table class="indent" style="width: 80%" summary="Standard reports included in weewx">
+      <table class="indent" summary="Standard reports included in weewx">
         <tbody>
-          <tr>
-            <td><i><strong>Report</strong></i></td>
-            <td><i><strong>Default functionality</strong></i></td>
+          <tr class="first_row">
+            <td>Report</td>
+            <td>Default functionality</td>
           </tr>
           <tr>
             <td class="code text_highlight">StandardReport</td>
@@ -195,11 +196,11 @@ table#stattypes td {
         Generators can also copy files around or FTP/rsync them to remote
         locations. The default install of <span class="code">weewx</span> includes
         the following generators: </p>
-      <table class="indent" style="width: 80%" summary="Generators included in weewx">
+      <table class="indent" summary="Generators included in weewx">
         <tbody>
-          <tr>
-            <td><i><strong>Generator</strong></i></td>
-            <td><i><strong>Function</strong></i></td>
+          <tr class="first_row">
+            <td>Generator</td>
+            <td>Function</td>
           </tr>
           <tr>
             <td class="code text_highlight">weewx.cheetahgenerator.CheetahGenerator</td>
@@ -581,11 +582,12 @@ or in foobar units: $day.barometer.min.foobar
       <p>The tag <span class="code"><em>optional_formatting</em></span> can be
         used with either current observations or aggregations. It can be one of:
       </p>
-      <table class="indent" style="width: 80%" summary="Formatting Options">
+      <table class="indent" summary="Formatting Options">
+	<caption>Optional formatting tags</caption>
         <tbody>
-          <tr>
-            <td><i><strong>Optional formatting tag</strong></i></td>
-            <td><i><strong>Comment</strong></i></td>
+          <tr class="first_row">
+            <td>Optional formatting tag</td>
+            <td>Comment</td>
           </tr>
           <tr>
             <td class='text_highlight'> <em>(no tag)</em> </td>
@@ -647,52 +649,53 @@ or in foobar units: $day.barometer.min.foobar
         </tbody>
       </table>
       <p>Summary: </p>
-      <table class="indent" style="width: 80%" summary="Summary of formatting options">
+      <table class="indent" summary="Summary of formatting options">
+	<caption>Summary of formatting options</caption>
         <tbody>
-          <tr>
-            <td><i><strong>Formatting Tag</strong></i></td>
-            <td><i><strong>Format Used</strong></i></td>
-            <td><i><strong>Label Used</strong></i></td>
-            <td><i><strong>NONE String</strong></i></td>
-            <td><i><strong>Returned Value</strong></i></td>
+          <tr class="first_row">
+            <td>Formatting Tag</td>
+            <td>Format Used</td>
+            <td>Label Used</td>
+            <td>NONE String</td>
+            <td>Returned Value</td>
           </tr>
           <tr>
-            <td><em>(no tag)</em></td>
+            <td class="first_col"><em>(no tag)</em></td>
             <td>From <span class="code">skin.conf</span></td>
             <td>From <span class="code">skin.conf</span></td>
             <td>From <span class="code">skin.conf</span></td>
             <td>string</td>
           </tr>
           <tr>
-            <td class="code">.string</td>
+            <td class="code first_col">.string</td>
             <td>From <span class="code">skin.conf</span></td>
             <td>From <span class="code">skin.conf</span></td>
             <td>Optional user-supplied</td>
             <td>string</td>
           </tr>
           <tr>
-            <td class="code">.formatted</td>
+            <td class="code first_col">.formatted</td>
             <td>From <span class="code">skin.conf</span></td>
             <td>No label</td>
             <td>From <span class="code">skin.conf</span></td>
             <td>string</td>
           </tr>
           <tr>
-            <td class="code">.format</td>
+            <td class="code first_col">.format</td>
             <td>User-supplied</td>
             <td>From <span class="code">skin.conf</span></td>
             <td>Optional user-supplied</td>
             <td>string</td>
           </tr>
           <tr>
-            <td class="code">.nolabel</td>
+            <td class="code first_col">.nolabel</td>
             <td>User-supplied</td>
             <td>No label</td>
             <td>Optional user-supplied</td>
             <td>string</td>
           </tr>
           <tr>
-            <td class="code">.raw</td>
+            <td class="code first_col">.raw</td>
             <td>None</td>
             <td>No label</td>
             <td>None</td>
@@ -701,25 +704,26 @@ or in foobar units: $day.barometer.min.foobar
         </tbody>
       </table>
       <p>Here are some examples with the expected results: </p>
-      <table class="indent" style="width: 80%" summary="Formatting options with expected results">
+      <table class="indent" summary="Formatting options with expected results">
+	<caption>Formatting options with expected results</caption>
         <tbody>
-          <tr>
-            <td><i><strong>Tag</strong></i></td>
-            <td><i><strong>Result</strong></i></td>
-            <td><i><strong>Comment</strong></i></td>
+          <tr class="first_row">
+            <td>Tag</td>
+            <td>Result</td>
+            <td>Comment</td>
           </tr>
           <tr>
-            <td class="code">$current.outTemp </td>
+            <td class="code first_col">$current.outTemp </td>
             <td class="code">45.2°F </td>
             <td>String formatting and label from <span class="code">skin.conf</span></td>
           </tr>
           <tr>
-            <td class="code">$current.outTemp.string</td>
+            <td class="code first_col">$current.outTemp.string</td>
             <td class="code">45.2°F</td>
             <td>String formatting and label from <span class="code">skin.conf</span></td>
           </tr>
           <tr>
-            <td class="code">$current.UV.string</td>
+            <td class="code first_col">$current.UV.string</td>
             <td class="code">N/A</td>
             <td>This example assumes that the instrument has no UV sensor,
               resulting in a <span class="code">None</span> value. The string
@@ -728,60 +732,60 @@ or in foobar units: $day.barometer.min.foobar
               is substituted.</td>
           </tr>
           <tr>
-            <td class="code">$current.UV.string("No UV")</td>
+            <td class="code first_col">$current.UV.string("No UV")</td>
             <td class="code">No UV</td>
             <td>This example assumes that the instrument has no UV sensor,
               resulting in a <span class="code">None</span> value. The string
               supplied by the user is substituted.</td>
           </tr>
           <tr>
-            <td class="code">$current.outTemp.formatted </td>
+            <td class="code first_col">$current.outTemp.formatted </td>
             <td class="code">45.2</td>
             <td>String formatting from <span class="code">skin.conf</span>; no
               label</td>
           </tr>
           <tr>
-            <td class="code">$current.outTemp.format("%.3f") </td>
+            <td class="code first_col">$current.outTemp.format("%.3f") </td>
             <td class="code">45.200°F</td>
             <td>Specified string format used; label from <span class="code">skin.conf</span>.</td>
           </tr>
           <tr>
-            <td class="code">$current.dateTime</td>
+            <td class="code first_col">$current.dateTime</td>
             <td class="code">02-Apr-2010 16:25</td>
             <td>Time formatting and label from <span class="code">skin.conf</span></td>
           </tr>
           <tr>
-            <td class="code">$current.dateTime.format("%H:%M")</td>
+            <td class="code first_col">$current.dateTime.format("%H:%M")</td>
             <td class="code">16:25</td>
             <td>Specified time format used; label from <span class="code">skin.conf</span>.</td>
           </tr>
           <tr>
-            <td class="code">$current.dateTime.raw</td>
+            <td class="code first_col">$current.dateTime.raw</td>
             <td class="code">1270250700</td>
             <td>Unix epoch time, converted to string by template engine.</td>
           </tr>
           <tr>
-            <td class="code">$current.outTemp.raw</td>
+            <td class="code first_col">$current.outTemp.raw</td>
             <td class="code">45.2</td>
             <td>Float returned, converted to string by template engine.</td>
           </tr>
           <tr>
-            <td class="code">$month.dateTime</td>
+            <td class="code first_col">$month.dateTime</td>
             <td class="code">01-Apr-2010 00:00</td>
             <td>Time formatting and label from <span class="code">skin.conf</span></td>
           </tr>
           <tr>
-            <td class="code">$month.outTemp.avg </td>
+            <td class="code first_col">$month.outTemp.avg </td>
             <td class="code">40.8°F</td>
             <td>String formatting and label from <span class="code">skin.conf</span></td>
           </tr>
           <tr>
-            <td class="code">$month.outTemp.avg.string</td>
+            <td class="code first_col">$month.outTemp.avg.string</td>
             <td class="code">40.8°F</td>
             <td>Time formatting and label from <span class="code">skin.conf</span></td>
           </tr>
           <tr>
-            <td class="code">$month.UV.avg.string</td>
+            <td class="code first_col">$month.UV.avg.string</td>
             <td class="code">N/A</td>
             <td>This example assumes that the instrument has no UV sensor,
               resulting in a <span class="code">None</span> value. The string
@@ -790,30 +794,30 @@ or in foobar units: $day.barometer.min.foobar
               is substituted.</td>
           </tr>
           <tr>
-            <td class="code">$month.UV.avg.string("No UV")</td>
+            <td class="code first_col">$month.UV.avg.string("No UV")</td>
             <td class="code">No UV</td>
             <td>This example assumes that the instrument has no UV sensor,
               resulting in a <span class="code">None</span> value. The string
               supplied by the user is substituted.</td>
           </tr>
           <tr>
-            <td class="code">$month.outTemp.avg.formatted </td>
+            <td class="code first_col">$month.outTemp.avg.formatted </td>
             <td class="code">40.8</td>
             <td>String formatting from <span class="code">skin.conf</span>; no
               label</td>
           </tr>
           <tr>
-            <td class="code">$month.outTemp.avg.format("%.3f")</td>
+            <td class="code first_col">$month.outTemp.avg.format("%.3f")</td>
             <td class="code">40.759°F</td>
             <td>Specified string format used; no label</td>
           </tr>
           <tr>
-            <td class="code">$month.outTemp.avg.raw </td>
+            <td class="code first_col">$month.outTemp.avg.raw </td>
             <td class="code">40.7589690722</td>
             <td>Float returned, converted to string by template engine</td>
           </tr>
           <tr>
-            <td class="code">$month.UV.avg.raw</td>
+            <td class="code first_col">$month.UV.avg.raw</td>
             <td class="code"><em>(empty)</em></td>
             <td><span class="code">None</span> value converted to empty string
               by template engine.</td>
@@ -854,9 +858,9 @@ or in foobar units: $day.barometer.min.foobar
         such as barometer trends. Here are some examples:</p>
       <table class="indent" style="width: 40%" summary="Examples of using unit formats">
         <tbody>
-          <tr>
-            <td><strong>Tag</strong></td>
-            <td><strong>Results</strong></td>
+          <tr class="first_row">
+            <td>Tag</td>
+            <td>Results</td>
           </tr>
           <tr>
             <td class="code">$trend.barometer</td>
@@ -888,9 +892,9 @@ or in foobar units: $day.barometer.min.foobar
         you to do highly customized labels: </p>
       <table class="indent" style="width: 40%" summary="Examples of using unit formats">
         <tbody>
-          <tr>
-            <td><strong>Tag</strong></td>
-            <td><strong>Results</strong></td>
+          <tr class="first_row">
+            <td>Tag</td>
+            <td>Results</td>
           </tr>
           <tr>
             <td class="code">$unit.unit_type.outTemp</td>
@@ -1003,8 +1007,9 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>or </p>
       <pre class="tty">$almanac.next_first_quarter_moon</pre>
       <p>Here is a table of the information that falls into this category:</p>
-      <table class="indent code" style="width: 80%">
-        <tbody>
+      <table class="indent" style="width:60%">
+	<caption>Calendar events</caption>
+        <tbody class="code">
           <tr>
             <td>previous_equinox</td>
             <td>next_equinox</td>
@@ -1071,8 +1076,9 @@ Sunrise, sunset: 06:51 19:30</pre>
           class="code"><em>heavenly_body</em></span> tag. All the planets and
         many stars are in the list.</p>
       <p>The <span class="code">attribute</span> tag can be one of </p>
-      <table class="indent code" style="width: 60%">
-        <tbody>
+      <table class="indent" style="width: 60%">
+	<caption>Attributes that can be used with heavenly bodies</caption>
+        <tbody class="code">
           <tr>
             <td>az</td>
             <td>alt</td>
@@ -1357,9 +1363,9 @@ class MyXSearch(SearchList):                                #1
       <p>As an example, the Standard <span class="code">skin.conf</span>
         file includes three options: </p>
       <table class="indent" style="width:50%" summary="Tag Extras">
-        <tr>
-          <td><strong>Skin option</strong></td>
-          <td><strong>Template tag</strong></td>
+        <tr class="first_row">
+          <td>Skin option</td>
+          <td>Template tag</td>
         </tr>
         <tr>
           <td><span class="code">radar_img</span></td>
@@ -1679,11 +1685,11 @@ outTemp = Outside Temperature</pre>
       <p>This option controls which encoding is to be used for the generated
         output. The encoding can be specified for individual files.  There are
         3 possible choices: </p>
-      <table class="indent" style="width: 80%">
+      <table class="indent" style="width:60%">
         <tbody>
-          <tr>
-            <td><strong>Encoding</strong></td>
-            <td><strong>Comments</strong></td>
+          <tr class="first_row">
+            <td>Encoding</td>
+            <td>Comments</td>
           </tr>
           <tr>
             <td class="code">html_entities</td>
@@ -2631,11 +2637,11 @@ mv weewx.sdb_new weewx.sdb</pre>
       <p>If you wish to use the new type in the templates, it will be available
         using the same syntax as any other type. Here are some other tags that
         might be useful:</p>
-      <table class="indent" style="width: 80%">
+      <table class="indent">
         <tbody>
-          <tr>
-            <td><strong>Tag</strong></td>
-            <td><strong>Meaning</strong></td>
+          <tr class="first_row">
+            <td>Tag</td>
+            <td>Meaning</td>
           </tr>
           <tr>
             <td class="code">$day.electricity.sum</td>
@@ -2743,6 +2749,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         stopping it: the engine will do this when an archive record is due. A
         loop packet is a dictionary. At the very minimum it must contain keys</p>
       <table class="indent" style="width: 60%">
+	<caption>Required keys</caption>
         <tbody>
           <tr>
             <td class="code">dateTime</td>
@@ -2786,6 +2793,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         related to pressure. Some stations report only the station pressure,
         others calculate and report sea level pressures. </p>
       <table class="indent" style="width: 60%">
+	<caption>Pressure types</caption>
         <tbody>
           <tr>
             <td class="code">pressure</td>
@@ -3001,16 +3009,17 @@ Options:
         plot. Note that just because a type appears in the table does not
         necessarily mean that it is available for <em>your</em> station setup.
         That would depend on whether your instrument supports the type. </p>
-      <table class="indent" style="width: 80%">
+      <table class="indent">
+	<caption>Archive types</caption>
         <tbody>
-          <tr>
-            <td><strong>Archive Type</strong></td>
-            <td style="width: 200px"><strong>SQL Type</strong> <br />
+          <tr class="first_row">
+            <td>Archive Type</td>
+            <td style="width: 200px">SQL Type<br />
               <span style="font-size:80%">(appears in archive database)</span></td>
-            <td><strong>Can be used <br />
-                in plots</strong></td>
-            <td><strong>Can be used <br />
-                in tag <span class="code">$current</span></strong></td>
+            <td>Can be used <br />
+                in plots</td>
+            <td>Can be used <br />
+                in tag <span class="code">$current</span></td>
           </tr>
           <tr>
             <td class="code">altimeter</td>
@@ -3326,150 +3335,151 @@ Options:
         units are options for the group, and what the defaults are
 	for each standard unit system. </p>
       <table class="indent" style="width: 80%">
-        <tbody>
-          <tr>
-            <td><strong>Group</strong></td>
-            <td><strong>Members</strong></td>
-            <td><strong>Unit options</strong></td>
-	    <td><strong>US</strong></td>
-	    <td><strong>METRICWX</strong></td>
-	    <td><strong>METRIC</strong></td>
+	<caption>Unit groups, members and options</caption>
+        <tbody class="code">
+          <tr class="first_row">
+            <td>Group</td>
+            <td>Members</td>
+            <td>Unit options</td>
+	    <td>US</td>
+	    <td>METRICWX</td>
+	    <td>METRIC</td>
           </tr>
           <tr>
-            <td class="code">group_altitude</td>
-            <td class="code">altitude</td>
-            <td class="code">foot <br />
+            <td class="first_col">group_altitude</td>
+            <td>altitude</td>
+            <td>foot <br />
               meter</td>
-	    <td class="code">foot</td>
-	    <td class="code">meter</td>
-	    <td class="code">meter</td>
+	    <td>foot</td>
+	    <td>meter</td>
+	    <td>meter</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_degree_day</td>
-            <td class="code">cooldeg<br />
+          <tr>
+            <td class="first_col">group_degree_day</td>
+            <td>cooldeg<br />
               heatdeg</td>
-            <td class="code">degree_F_day<br />
+            <td>degree_F_day<br />
               degree_C_day</td>
-	    <td class="code">degree_F_day</td>
-	    <td class="code">degree_C_day</td>
-	    <td class="code">degree_C_day</td>
+	    <td>degree_F_day</td>
+	    <td>degree_C_day</td>
+	    <td>degree_C_day</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_direction</td>
-            <td class="code">gustdir <br />
+          <tr>
+            <td class="first_col">group_direction</td>
+            <td>gustdir <br />
               vecdir <br />
               windDir <br />
               windGustDir</td>
-            <td class="code">degree_compass</td>
-	    <td class="code">degree_compass</td>
-	    <td class="code">degree_compass</td>
-	    <td class="code">degree_compass</td>
+            <td>degree_compass</td>
+	    <td>degree_compass</td>
+	    <td>degree_compass</td>
+	    <td>degree_compass</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_interval</td>
-            <td class="code">interval</td>
-            <td class="code">minute</td>
-            <td class="code">minute</td>
-            <td class="code">minute</td>
-            <td class="code">minute</td>
+          <tr>
+            <td class="first_col">group_interval</td>
+            <td>interval</td>
+            <td>minute</td>
+            <td>minute</td>
+            <td>minute</td>
+            <td>minute</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_moisture</td>
-            <td class="code">soilMoist1 <br />
+          <tr>
+            <td class="first_col">group_moisture</td>
+            <td>soilMoist1 <br />
               soilMoist2 <br />
               soilMoist3 <br />
               soilMoist4</td>
-            <td class="code">centibar</td>
-            <td class="code">centibar</td>
-            <td class="code">centibar</td>
-            <td class="code">centibar</td>
+            <td>centibar</td>
+            <td>centibar</td>
+            <td>centibar</td>
+            <td>centibar</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_percent</td>
-            <td class="code">extraHumid1 <br />
+          <tr>
+            <td class="first_col">group_percent</td>
+            <td>extraHumid1 <br />
               extraHumid2 <br />
               inHumidity <br />
               outHumidity <br />
               rxCheckPercent</td>
-            <td class="code">percent</td>
-            <td class="code">percent</td>
-            <td class="code">percent</td>
-            <td class="code">percent</td>
+            <td>percent</td>
+            <td>percent</td>
+            <td>percent</td>
+            <td>percent</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_pressure</td>
-            <td class="code">barometer <br />
+          <tr>
+            <td class="first_col">group_pressure</td>
+            <td>barometer <br />
               altimeter <br />
               pressure</td>
-            <td class="code">inHg <br />
+            <td>inHg <br />
               mbar <br />
               hPa</td>
-	    <td class="code">inHg</td>
-	    <td class="code">mbar</td>
-	    <td class="code">mbar</td>
+	    <td>inHg</td>
+	    <td>mbar</td>
+	    <td>mbar</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_radiation</td>
-            <td class="code">UV <br />
+          <tr>
+            <td class="first_col">group_radiation</td>
+            <td>UV <br />
               radiation</td>
-            <td class="code">watt_per_meter_squared</td>
-            <td class="code">watt_per_meter_squared</td>
-            <td class="code">watt_per_meter_squared</td>
-            <td class="code">watt_per_meter_squared</td>
+            <td>watt_per_meter_squared</td>
+            <td>watt_per_meter_squared</td>
+            <td>watt_per_meter_squared</td>
+            <td>watt_per_meter_squared</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_rain</td>
-            <td class="code">rain <br />
+          <tr>
+            <td class="first_col">group_rain</td>
+            <td>rain <br />
               ET <br />
               hail</td>
-            <td class="code">inch <br />
+            <td>inch <br />
               cm <br />
               mm</td>
-	    <td class="code">inch</td>
-	    <td class="code">mm</td>
-	    <td class="code">cm</td>
+	    <td>inch</td>
+	    <td>mm</td>
+	    <td>cm</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_rainrate</td>
-            <td class="code">rainRate <br />
+          <tr>
+            <td class="first_col">group_rainrate</td>
+            <td>rainRate <br />
               hailRate</td>
-            <td class="code">inch_per_hour <br />
+            <td>inch_per_hour <br />
               cm_per_hour <br />
               mm_per_hour</td>
-	    <td class="code">inch_per_hour</td>
-	    <td class="code">mm_per_hour</td>
-	    <td class="code">cm_per_hour</td>
+	    <td>inch_per_hour</td>
+	    <td>mm_per_hour</td>
+	    <td>cm_per_hour</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_speed</td>
-            <td class="code">wind <br />
+          <tr>
+            <td class="first_col">group_speed</td>
+            <td>wind <br />
               windGust <br />
               windSpeed <br />
               windgustvec <br />
               windvec</td>
-            <td class="code">mile_per_hour <br />
+            <td>mile_per_hour <br />
               km_per_hour <br />
               knot <br />
               meter_per_second</td>
-	    <td class="code">mile_per_hour</td>
-	    <td class="code">meter_per_second</td>
-	    <td class="code">km_per_hour</td>
+	    <td>mile_per_hour</td>
+	    <td>meter_per_second</td>
+	    <td>km_per_hour</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_speed2</td>
-            <td class="code">rms <br />
+          <tr>
+            <td class="first_col">group_speed2</td>
+            <td>rms <br />
               vecavg</td>
-            <td class="code">mile_per_hour2 <br />
+            <td>mile_per_hour2 <br />
               km_per_hour2 <br />
               knot2 <br />
               meter_per_second2</td>
-	    <td class="code">mile_per_hour2</td>
-	    <td class="code">meter_per_second2</td>
-	    <td class="code">km_per_hour2</td>
+	    <td>mile_per_hour2</td>
+	    <td>meter_per_second2</td>
+	    <td>km_per_hour2</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_temperature</td>
-            <td class="code">dewpoint <br />
+          <tr>
+            <td class="first_col">group_temperature</td>
+            <td>dewpoint <br />
               extraTemp1 <br />
               extraTemp2 <br />
               extraTemp3 <br />
@@ -3484,51 +3494,51 @@ Options:
               soilTemp3 <br />
               soilTemp4 <br />
               windchill</td>
-            <td class="code">degree_F <br />
+            <td>degree_F <br />
               degree_C</td>
-	    <td class="code">degree_F</td>
-	    <td class="code">degree_C</td>
-	    <td class="code">degree_C</td>
+	    <td>degree_F</td>
+	    <td>degree_C</td>
+	    <td>degree_C</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_time</td>
-            <td class="code">dateTime</td>
-            <td class="code">unix_epoch <br />
+          <tr>
+            <td class="first_col">group_time</td>
+            <td>dateTime</td>
+            <td>unix_epoch <br />
               dublin_jd</td>
-	    <td class="code">unix_epoch</td>
-	    <td class="code">unix_epoch</td>
-	    <td class="code">unix_epoch</td>
+	    <td>unix_epoch</td>
+	    <td>unix_epoch</td>
+	    <td>unix_epoch</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_uv</td>
-            <td class="code">UV</td>
-            <td class="code">uv_index</td>
-            <td class="code">uv_index</td>
-            <td class="code">uv_index</td>
-            <td class="code">uv_index</td>
+          <tr>
+            <td class="first_col">group_uv</td>
+            <td>UV</td>
+            <td>uv_index</td>
+            <td>uv_index</td>
+            <td>uv_index</td>
+            <td>uv_index</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_volt</td>
-            <td class="code">consBatteryVoltage <br />
+          <tr>
+            <td class="first_col">group_volt</td>
+            <td>consBatteryVoltage <br />
               heatingVoltage <br />
               referenceVoltage <br />
               supplyVoltage</td>
-            <td class="code">volt</td>
-            <td class="code">volt</td>
-            <td class="code">volt</td>
-            <td class="code">volt</td>
+            <td>volt</td>
+            <td>volt</td>
+            <td>volt</td>
+            <td>volt</td>
           </tr>
-          <tr class="code">
-            <td class="code">group_NONE</td>
-            <td class="code">NONE</td>
-            <td class="code">NONE</td>
-            <td class="code">NONE</td>
-            <td class="code">NONE</td>
-            <td class="code">NONE</td>
+          <tr>
+            <td class="first_col">group_NONE</td>
+            <td>NONE</td>
+            <td>NONE</td>
+            <td>NONE</td>
+            <td>NONE</td>
+            <td>NONE</td>
           </tr>
         </tbody>
       </table>
-      <h1 id="statistical_types">Appendix: Statistical Types</h1>
+      <h1 id="statistical_types">Appendix: Statistical types</h1>
       <p>Most of the templates are devoted to reporting <em>statistical types</em>,
         such as temperature, wind, or rainfall, using various <em>aggregates</em>,
         such as min, max, or sum. These are called <em>aggregations</em>,
@@ -3543,33 +3553,22 @@ Options:
         database. See section <span class="code"><a href="usersguide.htm#Stats">[Stats]</a></span>
         in the <span class="code">weewx.conf</span> configuration file). </p>
       <table class='indent' id='stattypes'>
-        <tbody>
-          <tr>
-            <td><strong>Type</strong></td>
-            <td class="code">min</td>
-            <td class="code">mintime</td>
-            <td class="code">max</td>
-            <td class="code">maxtime</td>
-            <td class="code">avg</td>
-            <td class="code">sum</td>
-            <td class="code">rms</td>
-            <td class="code">vecavg</td>
-            <td class="code">vecdir</td>
+	<caption>Statistical types</caption>
+        <tbody class="code">
+          <tr class="first_row">
+            <td style="font-family:inherit">Type</td>
+            <td>min</td>
+            <td>mintime</td>
+            <td>max</td>
+            <td>maxtime</td>
+            <td>avg</td>
+            <td>sum</td>
+            <td>rms</td>
+            <td>vecavg</td>
+            <td>vecdir</td>
           </tr>
           <tr>
-            <td class="code">barometer</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td> </td>
-            <td> </td>
-            <td> </td>
-            <td> </td>
-          </tr>
-          <tr>
-            <td class="code">inTemp</td>
+            <td class="first_col">barometer</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3581,7 +3580,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">outTemp</td>
+            <td class="first_col">inTemp</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3593,7 +3592,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">inHumidity</td>
+            <td class="first_col">outTemp</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3605,7 +3604,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">outHumidity</td>
+            <td class="first_col">inHumidity</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3617,31 +3616,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">wind</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td> </td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-          </tr>
-          <tr>
-            <td class="code">rain</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td>X</td>
-            <td> </td>
-            <td> </td>
-            <td> </td>
-          </tr>
-          <tr>
-            <td class="code">dewpoint</td>
+            <td class="first_col">outHumidity</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3653,7 +3628,31 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">windchill</td>
+            <td class="first_col">wind</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td> </td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+          </tr>
+          <tr>
+            <td class="first_col">rain</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+          </tr>
+          <tr>
+            <td class="first_col">dewpoint</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3665,7 +3664,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">heatindex</td>
+            <td class="first_col">windchill</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3677,31 +3676,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">heatdeg</td>
-            <td> </td>
-            <td> </td>
-            <td> </td>
-            <td> </td>
-            <td>X</td>
-            <td>X</td>
-            <td> </td>
-            <td> </td>
-            <td> </td>
-          </tr>
-          <tr>
-            <td class="code">cooldeg</td>
-            <td> </td>
-            <td> </td>
-            <td> </td>
-            <td> </td>
-            <td>X</td>
-            <td>X</td>
-            <td> </td>
-            <td> </td>
-            <td> </td>
-          </tr>
-          <tr>
-            <td class="code">ET</td>
+            <td class="first_col">heatindex</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3713,7 +3688,31 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">radiation</td>
+            <td class="first_col">heatdeg</td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+            <td>X</td>
+            <td>X</td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+          </tr>
+          <tr>
+            <td class="first_col">cooldeg</td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+            <td>X</td>
+            <td>X</td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+          </tr>
+          <tr>
+            <td class="first_col">ET</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3725,7 +3724,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">UV</td>
+            <td class="first_col">radiation</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
@@ -3737,7 +3736,19 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">extraTemp1 <br />
+            <td class="first_col">UV</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+          </tr>
+          <tr>
+            <td class="first_col">extraTemp1 <br />
               extraTemp2 <br />
               extraTemp3</td>
             <td>X</td>
@@ -3751,7 +3762,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">soilTemp1 <br />
+            <td class="first_col">soilTemp1 <br />
               soilTemp2 <br />
               soilTemp3</td>
             <td>X</td>
@@ -3765,7 +3776,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">leafTemp1 <br />
+            <td class="first_col">leafTemp1 <br />
               leafTemp2</td>
             <td>X</td>
             <td>X</td>
@@ -3778,7 +3789,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">extraHumid1 <br />
+            <td class="first_col">extraHumid1 <br />
               extraHumid2</td>
             <td>X</td>
             <td>X</td>
@@ -3791,7 +3802,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">soilMoist1 <br />
+            <td class="first_col">soilMoist1 <br />
               soilMoist2 <br />
               soilMoist3 <br />
               soilMoist4</td>
@@ -3806,7 +3817,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">leafWet1 <br />
+            <td class="first_col">leafWet1 <br />
               leafWet2</td>
             <td>X</td>
             <td>X</td>
@@ -3819,7 +3830,7 @@ Options:
             <td> </td>
           </tr>
           <tr>
-            <td class="code">rxCheckPercent</td>
+            <td class="first_col">rxCheckPercent</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>
