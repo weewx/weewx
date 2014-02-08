@@ -1963,7 +1963,7 @@ Davis Vantage EEPROM settings:
 	time zone offset, but not both. </p>
 	  <p>Other parameters can be set in a similar manner.</p>
 
-    <h3>Archive interval</h3>
+    <h3 id="vantage_archive_interval">Archive interval</h3>
     <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
       if you are ftp&#39;ing lots of files to a server, setting it to 60 seconds may 
       not give enough time to have them all uploaded before the next archive record 
@@ -1975,12 +1975,14 @@ Davis Vantage EEPROM settings:
     <p><em>Choose your archiving interval carefully! </em>Once chosen, it cannot 
       be changed without messing up your statistics (highs and lows will be OK, but 
       averages and rms wind speed will be wrong). </p>
-    <h3>Rain bucket type</h3>
+
+    <h3 id="vantage_rain_bucket_type">Rain bucket type</h3>
     <p>Normally, this is set by Davis, but if you have replaced your bucket with 
       a different kind, you might want to reconfigure. For example, to change to a 
       0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-bucket=2</pre>
-    <h3>Dumping the logger memory</h3>
+
+    <h3 id="vantage_dumping_the_logger_memory">Dumping the logger memory</h3>
 	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
 	  records from the on-board logger in the Vantage. However, occasionally the 
 	  memory in the Vantage will get corrupted, making this impossible. See the 
@@ -2062,7 +2064,7 @@ Mutating actions will request confirmation before proceeding.</p>
                      wind_mult: 0</pre>
     <p><span class="highlight">Highlighted&nbsp;</span> values can be modified with the <span class='code'>wee_config_fousb</span> utility.</p>
 
-    <h3>Changing the archive interval</h3>
+    <h3 id="fo_changing_the_archive_interval">Changing the archive interval</h3>
     <p>Fine Offset stations ship from the factory with an archive interval
       (read_period) of 30 minutes (1800 seconds).  To change the station's
       interval to 5 minutes, do the following:</p>
@@ -2092,7 +2094,7 @@ Pressure offset is now 1.247000</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-pressures</pre>
     <p>Note that <span class='code'>weewx</span> does not use the <i>relative pressure</i> displayed on the Fine Offset console.</p>
 
-    <h3>Dumping the console memory</h3>
+    <h3 id="fo_dumping_the_console_memory">Dumping the console memory</h3>
     <p>Fine Offset stations store records in a circular buffer &mdash; once the buffer fills, the oldest records are replaced by newer records.  The 1080 and 2080 consoles store up to 4080 records.  The 3080 consoles store up to 3264 records.  The <span class='code'>data_count</span> indicates how many records are in memory.  The <span class='code'>read_period</span> indicates the number of minutes between records.  <span class='code'>wee_config_fousb</span> can display these records in space-delimited, raw bytes, or dictionary format.</p>
     <p>For example, to display the most recent 30 records from the console memory:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --history=30</pre>
@@ -2139,11 +2141,11 @@ Pressure offset is now 1.247000</p>
       </tr>
     </table>
 
-    <h3>Catchup</h3>
+    <h3 id="fo_catchup">Catchup</h3>
     <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
     </p>
 
-    <h3>Station characteristics</h3>
+    <h3 id="fo_station_characteristics">Station characteristics</h3>
     <ul>
       <li>The 10xx and 20xx stations can save up to 4080 historical readings.
         That is about 85 days of data with the default recording interval of
@@ -2209,7 +2211,7 @@ icon alarm active: 0
 in humidity: 48.0
 ...</pre>
 
-    <h3>Changing the archive interval</h3>
+    <h3 id="ws23xx_changing_the_archive_interval">Changing the archive interval</h3>
     <p>WS23xx stations ship from the factory with an archive interval of 60
       minutes (3600 seconds).  To change the station's interval to 5 minutes,
       do the following:</p>
@@ -2218,7 +2220,7 @@ in humidity: 48.0
       cannot be changed without messing up your statistics (highs and lows
       will be OK, but averages and rms wind speed will be wrong). </p>
 
-    <h3>Dumping the console memory</h3>
+    <h3 id="ws23xx_dumping_the_console_memory">Dumping the console memory</h3>
     <p>WS23xx stations store records in a circular buffer - once the
       buffer fills, the oldest records are replaced by newer records.  The
       console stores up to 175 records.
@@ -2231,13 +2233,13 @@ in humidity: 48.0
     <p>To clear the console memory:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --clear-memory</pre>
 
-    <h3>Catchup</h3>
+    <h3 id="ws23xx_catchup">Catchup</h3>
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.
     </p>
 
-    <h3>Station characteristics</h3>
+    <h3 id="ws23xx_station_characteristics">Station characteristics</h3>
     <ul>
       <li>The station does not record wind gust or wind gust direction.</li>
       <li>The station has 175 history records.  That is just over 7 days
