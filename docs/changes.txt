@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-2.6.0 MM/DD/YY
+2.6.0 02/08/14
 
 Changed the RESTful architecture so RESTful services are now first-class
 weewx services. This should simplify the installation of 3rd party
@@ -10,6 +10,9 @@ extensions that use these services.
 Broke up service_list, the very long list of services to be run, into
 five separate lists. This will allow services to be grouped together,
 according to when they should be run.
+
+Defined a structure for packaging customizations into extensions, and added
+an installer for those extensions to setup.py.
 
 Changed the default time and date labels to use locale dependent formatting.
 The defaults should now work in most locales, provided you set the
@@ -30,7 +33,7 @@ to fix embedded strings found in the sqlite archive database.
 
 Font handles are now cached in order to work around a memory leak in PIL.
 
-Now does garbage collection every 10th time through the main loop.
+Now does garbage collection every 3 hours through the main loop.
 
 Image margins now scale with image and font sizes.
 
@@ -60,10 +63,7 @@ Minor cleanup to Standard skin for better out-of-the-box behavior:
 Failure to set an archive interval when using bar plots no longer results
 in an exception.
 
-Change to skin directory before invoking cheetah on any templates.
-
-Defined a structure for packaging customizations into extensions, and added
-an installer for those extensions to setup.py.
+Change to skin directory before invoking Cheetah on any templates.
 
 
 2.5.1 12/30/13
