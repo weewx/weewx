@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-2,6.1 02/08/14
+2.6.1 02/08/14
 
 Fixed bug that crashed main thread if a StdQC value fell out of range.
 
