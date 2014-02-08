@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+2,6.1 02/08/14
+
+Fixed bug that crashed main thread if a StdQC value fell out of range.
+
+
 2.6.0 02/08/14
 
 Changed the RESTful architecture so RESTful services are now first-class
