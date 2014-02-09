@@ -62,7 +62,7 @@ Simulator now generates types dewpoint, pressure, radiation, and UV.
 The forecast extension is once again distributed separately from weewx.
 
 Minor cleanup to Standard skin for better out-of-the-box behavior:
- - default to no radar image instead of having every station point to Oregon
+ - default to no radar image instead of pointing every station to Oregon
  - not every WMR100 is a WMR100N
  
 Failure to set an archive interval when using bar plots no longer results

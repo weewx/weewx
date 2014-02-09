@@ -47,23 +47,23 @@ h4 {
 }
 table {
   border-collapse: collapse;
-  border: 1p solid gray;
+  border: 1px solid #cccccc;
   width: 80%
 }
 tr {
   vertical-align: top;
 }
 td {
-  border: 1px solid gray;
+  border: 1px solid #cccccc;
   padding: 5px;
 }
 caption {
-    background-color: #88bbbb;
-    margin: 0;
-    border: 1px solid gray;
-    border-bottom: none;
-    padding: 6px 16px;
-    font-weight: bold;
+  background-color: #aacccc;
+  margin: 0;
+  margin-bottom: 8px;
+  border: 1px solid #888888;
+  padding: 6px 16px;
+  font-weight: bold;
 }
 .code {
   font-family: "Courier New", Courier, monospace;
@@ -107,14 +107,13 @@ caption {
 }
 .text_highlight, .first_col{
   font-weight: bold;
-  background-color: #88bbbb;
+  background-color: #eef0f0;
   padding-left: 10px;
   padding-right: 10px;
 }
 table .first_row {
   font-weight: bold;
-  font-style: italic;
-  background-color: #88bbbb;
+  background-color: #ddefef;
   padding-left: 10px;
   padding-right: 10px;
 }
@@ -142,11 +141,21 @@ div#toc ul {
   font-size: 80%;
   text-align: center;	
 }
+.note {
+  background-color: #cce0d0;
+  border: 1px solid #aac0b0;
+  margin: 10px;
+  margin-left: 30px;
+  padding: 12px;
+  width: 80%;
+}
 .warning {
   background-color: #ffeeee;
   border: 1px solid #ffdddd;
   margin: 10px;
-  padding: 5px;
+  margin-left: 30px;
+  padding: 12px;
+  width: 80%;
 }
 .copyright {
   font-style: italic;
@@ -196,7 +205,7 @@ div#toc ul {
   border-top: 1px solid #447777;
   border-left: 1px solid #447777;
   border-right: 1px solid #447777;
-  background-color: #88bbbb;
+  background-color: #aacccc;
   //background-color: #FFFFe0;
 }
 .version {
@@ -205,4 +214,11 @@ div#toc ul {
 .logo {
   width: 48px;
   padding-right: 10px;
+}
+.popup-note {
+  font-size: 80%;
+}
+div .ui-widget-header {
+  border: 1px solid black;
+  background: #aacccc;
 }
