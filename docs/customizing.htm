@@ -648,7 +648,7 @@ or in foobar units: $day.barometer.min.foobar
           </tr>
         </tbody>
       </table>
-      <p>Summary: </p>
+      <p>&nbsp;</p>
       <table class="indent" summary="Summary of formatting options">
 	<caption>Summary of formatting options</caption>
         <tbody>
@@ -1075,7 +1075,8 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>PyEphem offers an extensive list of objects that can be used for the <span
           class="code"><em>heavenly_body</em></span> tag. All the planets and
         many stars are in the list.</p>
-      <p>The <span class="code">attribute</span> tag can be one of </p>
+      <p>The possible values for the <span class="code">attribute</span> tag
+        are listed in the following table:</p>
       <table class="indent" style="width: 60%">
 	<caption>Attributes that can be used with heavenly bodies</caption>
         <tbody class="code">
@@ -1685,7 +1686,7 @@ outTemp = Outside Temperature</pre>
       <p>This option controls which encoding is to be used for the generated
         output. The encoding can be specified for individual files.  There are
         3 possible choices: </p>
-      <table class="indent" style="width:60%">
+      <table class="indent" style="width:80%">
         <tbody>
           <tr class="first_row">
             <td>Encoding</td>
@@ -2747,7 +2748,8 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <p><span class="code">genLoopPackets</span>: This should be a generator
         function that yields loop packets, one after another. Don't worry about
         stopping it: the engine will do this when an archive record is due. A
-        loop packet is a dictionary. At the very minimum it must contain keys</p>
+        loop packet is a dictionary. At the very minimum it must contain keys
+        for the observation time and units.</p>
       <table class="indent" style="width: 60%">
 	<caption>Required keys</caption>
         <tbody>

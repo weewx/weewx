@@ -92,7 +92,7 @@ Version: 2.6.1
       <tr class="first_row">
 	<td>Vendor</td>
 	<td>Model</td>
-	<td>Link</td>
+	<td>Hardware<br/>Interface</td>
 	<td>Required<br/>Package</td>
         <td>Station<br/>Driver</td>
 	<td>Maturity</td>
@@ -911,25 +911,31 @@ Version: 2.6.1
       configuration file <a href="#" id="config-root-description-target">
       <span class="symcode">$CONFIG_ROOT</span></a><span class="code"><em>/weewx.conf</em></span>.</p>
 
-    <div id="config-root-description" title="$CONFIG_ROOT"><p>Note that we have used the notation
-      <span class='code'>$CONFIG_ROOT</span> to
-      symbolically indicate the directory where this file is located. The exact
-      location will depend on your installation method and operating
-      system. For example, if you used the <span class='code'>setup.py</span>
-      method, then the symbol <span class='code'>$CONFIG_ROOT</span> will represent
-      <span class='code'>/home/weewx</span>, and so your configuration
-      file will be located in <span class='code'>/home/weewx/weewx.conf</span>. For other
-      configurations, consult the <a href="#dir-layout-table">table</a> in the previous section.</p></div>
+    <div id="config-root-description" title="$CONFIG_ROOT" style='display:none' class='popup-note'>
+      <p>We have used the notation
+        <span class='code'>$CONFIG_ROOT</span> to
+        symbolically indicate the directory where this file is located. The
+        exact location will depend on your installation method and operating
+        system. For example, if you used the
+        <span class='code'>setup.py</span>
+        method, then the symbol <span class='code'>$CONFIG_ROOT</span> will
+        represent <span class='code'>/home/weewx</span>, and so your
+        configuration file will be located in
+        <span class='code'>/home/weewx/weewx.conf</span>. For other
+        configurations, consult the
+        <a href="#dir-layout-table">application layout table</a> in the
+        'Installation methods' section.</p>
+    </div>
     <script type="text/javascript">
       $("#config-root-description-target").click(
         function () {
-          $("#config-root-description").dialog({position: {my:"left top", at:"right bottom", of: "#config-root-description-target"}});
-          return false; // Insures that the "link" isn't followed
+          $("#config-root-description").dialog({position: {my:"left top", at:"right bottom", of: "#config-root-description-target" }});
+          return false; // Ensures that the "link" isn't followed
       });
     </script>
 
-    <p class='warning'>Note that there is another configuration file, <span class="code">skin.conf</span>,
-      for presentation-specific options, which is described in the
+    <p class='note'>There is another configuration file, <span class="code">skin.conf</span>,
+      for presentation-specific options.  It is described in the
       <a href="customizing.htm">Customizing Guide</a>, under section <em>
       <a href="customizing.htm#standard_skin">Reference: The 
       standard skin configuration file</a></em>.</p>
@@ -938,7 +944,7 @@ Version: 2.6.1
       way more options than you are likely to need!</em> &mdash; 
       you can safely ignore most of them. The truly important ones, the ones 
       you are likely to have to customize for your station, are
-      <span class="config_important">highlighted like this</span>.</p>
+      <span class="config_important">highlighted</span>.</p>
     <p>Default values are provided for many options, meaning that if they are
       not listed in the configuration file <em>at all</em>,
       <span class="code">weewx</span> will pick sensible values. When the
@@ -1006,10 +1012,9 @@ longitude = -77.0366</pre>
     <pre class="tty">station_type = Simulator</pre>
     <p>Valid options include:</p>
     <table class="indent" style="width:50%">
-      <caption>Valid values for option <span class='code'>station_type</span></caption>
       <tr class="first_row">
-	<td class="text_highlight"><i>Option:</i></td>
-	<td><i>Description:</i></td>
+	<td>Option</td>
+	<td>Description</td>
       </tr>
       <tr>
 	<td class="code text_highlight">Vantage</td>
