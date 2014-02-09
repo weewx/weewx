@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -161,7 +161,7 @@ class StdEngine(object):
                 # See if garbage collection is scheduled:
                 if int(time.time()) - last_gc > self.gc_interval:
                     ngc = gc.collect()
-                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: garbage collectioned %d objects" % ngc)
+                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: garbage collected %d objects" % ngc)
                     last_gc = int(time.time())
 
                 # First, let any interested services know the packet LOOP is about to start
@@ -446,7 +446,8 @@ class StdArchive(StdService):
 
         # See how we are supposed to generate archive records
         self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be attempted in '%s'" % (self.record_generation,))
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be attempted in '%s'" % 
+                      (self.record_generation,))
 
         # Get the archive interval from the configuration file
         software_interval = config_dict['StdArchive'].as_int('archive_interval')
@@ -464,16 +465,19 @@ class StdArchive(StdService):
             self.archive_interval = self.engine.console.archive_interval
         except NotImplementedError:
             self.archive_interval = software_interval
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d seconds" % self.archive_interval)
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d seconds" % 
+                      self.archive_interval)
 
         self.archive_delay = config_dict['StdArchive'].as_int('archive_delay')
         if self.archive_delay <= 0:
-            raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % (self.archive_delay,))
+            raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % 
+                                             (self.archive_delay,))
 
         # Get whether to use LOOP data in the high/low statistics (or just
         # archive data):
         self.loop_hilo = weeutil.weeutil.tobool(config_dict['StdArchive'].get('loop_hilo', True))
-        syslog.syslog(syslog.LOG_DEBUG, "wxengine: Use LOOP data in hi/low calculations: %d" % self.loop_hilo)
+        syslog.syslog(syslog.LOG_DEBUG, "wxengine: Use LOOP data in hi/low calculations: %d" % 
+                      (self.loop_hilo,))
         
         self.setupArchiveDatabase(config_dict)
         self.setupStatsDatabase(config_dict)
@@ -500,7 +504,8 @@ class StdArchive(StdService):
         
         # The only thing that needs to be done is to calculate the end of the
         # archive period, and the end of the archive delay period.
-        self.end_archive_period_ts = (int(self.engine._get_console_time() / self.archive_interval) + 1) * self.archive_interval
+        self.end_archive_period_ts = \
+            (int(self.engine._get_console_time() / self.archive_interval) + 1) * self.archive_interval
         self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
 
     def new_loop_packet(self, event):
@@ -591,7 +596,8 @@ class StdArchive(StdService):
         # stats database is already up-to-date.
         self.statsDb.backfillFrom(self.archive)
 
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using stats database: %s" % (config_dict['StdArchive']['stats_database'],))
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Using stats database: %s" % 
+                      (config_dict['StdArchive']['stats_database'],))
         
     def shutDown(self):
         self.archive.close()
@@ -730,7 +736,8 @@ class TestAccum(StdService):
                 if timestamp==stn_record['dateTime']:
                 
                     for obs_type in sorted(accum_record.keys()):
-                        print "%10s, %10s, %10s" % (obs_type, accum_record[obs_type], stn_record.get(obs_type, 'N/A'))
+                        print "%10s, %10s, %10s" % (obs_type, accum_record[obs_type], 
+                                                    stn_record.get(obs_type, 'N/A'))
     
                     accum_set = set(accum_record.keys())
                     stn_set   = set(stn_record.keys())
