@@ -235,7 +235,7 @@ class RESTThread(threading.Thread):
                                      "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 3600.0, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
-                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % 
+                raise ValueError("Inconsistent units or units change in database %s vs %s vs %s" % 
                                  (_result[1], _result[2], record['usUnits']))
             _datadict['hourRain'] = _result[0]
 
@@ -245,7 +245,7 @@ class RESTThread(threading.Thread):
                                      "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 24*3600.0, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
-                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % 
+                raise ValueError("Inconsistent units or units change in database %s vs %s vs %s" % 
                                  (_result[1], _result[2], record['usUnits']))
             _datadict['rain24'] = _result[0]
 
@@ -259,7 +259,7 @@ class RESTThread(threading.Thread):
                                      "WHERE dateTime>=? AND dateTime<=?", 
                                      (_sod_ts, _time_ts))
             if not _result[1] == _result[2] == record['usUnits']:
-                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % 
+                raise ValueError("Inconsistent units or units change in database %s vs %s vs %s" % 
                                  (_result[1], _result[2], record['usUnits']))
             _datadict['dayRain'] = _result[0]
             
