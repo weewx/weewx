@@ -13,6 +13,12 @@ import time
 import weeutil.weeutil
 import weewx.units
 
+# For MacOS:
+try:
+    from Quartz.QuartzCore import CACurrentMediaTime
+except ImportError:
+    pass
+
 class StationInfo(object):
     """Readonly class with static station information. It has no formatting information. Just a POS.
     
@@ -80,12 +86,21 @@ class Station(object):
         self.rain_year_str = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
         self.uptime = weeutil.weeutil.secs_to_string(time.time() - weewx.launchtime_ts) if weewx.launchtime_ts else ''
         self.version = weewx.__version__
-        # The following works on Linux only:
+
+        # Get the uptime. Because this is highly operating system dependent, several
+        # different strategies may have to be tried:
+        os_uptime_secs = None
         try:
+            # For Linux:
             os_uptime_secs = float(open("/proc/uptime").read().split()[0])
-            self.os_uptime = weeutil.weeutil.secs_to_string(int(os_uptime_secs + 0.5))
         except (IOError, KeyError):
-            self.os_uptime = ''
+            try:
+                # For MacOs:
+                os_uptime_secs = CACurrentMediaTime()
+            except NameError:
+                pass
+        if os_uptime_secs:
+            self.os_uptime = weeutil.weeutil.secs_to_string(int(os_uptime_secs + 0.5))
 
     def __getattr__(self, name):
         # For anything that is not an explicit attribute of me, try
