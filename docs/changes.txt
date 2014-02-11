@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+2.7.0 02/11/14
+
+Fixed bug that can crash RESTful threads if there is missing rain data.
+
+
 2.6.1 02/08/14
 
 Fixed bug that crashed main thread if a StdQC value fell out of range.

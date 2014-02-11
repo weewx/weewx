@@ -191,17 +191,21 @@ class StatsDb(object):
         
     #--------------------------- STATIC METHODS -----------------------------------
     
-    @staticmethod
-    def open(stats_db_dict):
+    @classmethod
+    def open(cls, stats_db_dict):
         """Helper function to return an opened StatsDb object.
         
         stats_db_dict: A dictionary passed on to weedb. It should hold
-        the keywords necessary to open the database."""
-        connection = weedb.connect(stats_db_dict)
-        return StatsDb(connection)
+        the keywords necessary to open the database.
 
-    @staticmethod
-    def open_with_create(stats_db_dict, stats_schema):
+        Returns:
+        An instance of the calling class.
+        """
+        connection = weedb.connect(stats_db_dict)
+        return cls(connection)
+
+    @classmethod
+    def open_with_create(cls, stats_db_dict, stats_schema):
         """Open a StatsDb database, creating and initializing it if necessary.
         
         stats_db_dict: A dictionary passed on to weedb. It should hold
@@ -213,21 +217,21 @@ class StatsDb(object):
         for only the given types.
         
         Returns:
-        An instance of StatsDb"""
+        An instance of the calling class"""
 
         # If the database exists and has been initialized, then
         # this will be successful. If not, an exception will be thrown.
         try:
-            stats = StatsDb.open(stats_db_dict)
+            stats = cls.open(stats_db_dict)
             # The database exists and has been initialized. Return it.
             return stats
         except (weedb.OperationalError, weewx.UninitializedDatabase):
             pass
         
         # The database does not exist. Initialize and return it.
-        _connect = StatsDb._init_db(stats_db_dict, stats_schema)
+        _connect = cls._init_db(stats_db_dict, stats_schema)
         
-        return StatsDb(_connect)
+        return cls(_connect)
 
     @staticmethod
     def _init_db(stats_db_dict, stats_schema):
@@ -311,7 +315,7 @@ class StatsDb(object):
         # Then save the results:
         self._setDayStats(_stats_dict, record['dateTime'])
         
-    def getAggregate(self, timespan, stats_type, aggregateType, val=None):
+    def getAggregate(self, timespan, stats_type, aggregateType, **option_dict):
         """Returns an aggregation of a statistical type for a given time period.
         
         timespan: An instance of weeutil.Timespan with the time period over which
@@ -323,7 +327,7 @@ class StatsDb(object):
         aggregateType: The type of aggregation to be done. The keys in the dictionary
         sqlDict above are the possible aggregation types. 
         
-        val: Some aggregations require a value. Specify it here as a value tuple.
+        option_dict: Some aggregations require optional values
         
         returns: A value tuple. First element is the aggregation value,
         or None if not enough data was available to calculate it, or if the aggregation
@@ -340,7 +344,10 @@ class StatsDb(object):
         if stats_type not in self.statsTypes:
             raise AttributeError, "Unknown stats type %s" % (stats_type,)
 
-        if val is not None:
+        val = option_dict.get('val')
+        if val is None:
+            target_val = None
+        else:
             # The following is for backwards compatibility when ValueTuples had
             # just two members. This hack avoids breaking old skins.
             if len(val) == 2:
@@ -349,9 +356,7 @@ class StatsDb(object):
                 elif val[1] in ['inch', 'mm', 'cm']:
                     val += ("group_rain",)
             target_val = weewx.units.convertStd(val, self.std_unit_system)[0]
-        else:
-            target_val = None
-            
+
         # This dictionary is used for interpolating the SQL statement.
         interDict = {'start'         : weeutil.weeutil.startOfDay(timespan.start),
                      'stop'          : timespan.stop,
@@ -405,6 +410,17 @@ class StatsDb(object):
         # Form the value tuple and return it:
         return weewx.units.ValueTuple(_result, t, g)
         
+    def exists(self, stats_type):
+        """Checks whether the observation type exists in the database."""
+
+        # Check to see if this is a valid stats type:
+        return stats_type in self.statsTypes
+
+    def has_data(self, stats_type, timespan):
+        """Checks whether the observation type exists in the database and whether it has any data."""
+
+        return self.exists(stats_type) and self.getAggregate(timespan, stats_type, 'count')[0] != 0
+
     def backfillFrom(self, archiveDb, start_ts = None, stop_ts = None):
         """Fill the statistical database from an archive database.
         
