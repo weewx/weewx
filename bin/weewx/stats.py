@@ -926,19 +926,19 @@ class StatsTypeHelper(object):
         self.option_dict = option_dict
     
     def max_ge(self, val):
-        result = self.db.getAggregate(self.timespan, self.stats_type, 'max_ge', val)
+        result = self.db.getAggregate(self.timespan, self.stats_type, 'max_ge', val=val)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
 
     def max_le(self, val):
-        result = self.db.getAggregate(self.timespan, self.stats_type, 'max_le', val)
+        result = self.db.getAggregate(self.timespan, self.stats_type, 'max_le', val=val)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
     
     def min_le(self, val):
-        result = self.db.getAggregate(self.timespan, self.stats_type, 'min_le', val)
+        result = self.db.getAggregate(self.timespan, self.stats_type, 'min_le', val=val)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
     
     def sum_ge(self, val):
-        result = self.db.getAggregate(self.timespan, self.stats_type, 'sum_ge', val)
+        result = self.db.getAggregate(self.timespan, self.stats_type, 'sum_ge', val=val)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
     
     def __getattr__(self, aggregateType):
@@ -958,10 +958,12 @@ class StatsTypeHelper(object):
         if aggregateType == 'exists':
             return self.stats_type in self.db.statsTypes
         elif aggregateType == 'has_data':
-            return self.stats_type in self.db.statsTypes and self.db.getAggregate(self.timespan, self.stats_type, 'count')[0] != 0
+            return self.stats_type in self.db.statsTypes and self.db.getAggregate(self.timespan,
+                                                                                  self.stats_type, 'count')[0] != 0
         elif self.stats_type in ['heatdeg', 'cooldeg']:
             # Heating and cooling degree days use a different entry point into Stats:
-            result = get_heat_cool(self.db, self.timespan, self.stats_type, aggregateType, self.option_dict['heatbase'], self.option_dict['coolbase'])
+            result = get_heat_cool(self.db, self.timespan, self.stats_type, aggregateType,
+                                   self.option_dict['heatbase'], self.option_dict['coolbase'])
         else:
             result = self.db.getAggregate(self.timespan, self.stats_type, aggregateType)
         # Wrap the result in a ValueHelper:
