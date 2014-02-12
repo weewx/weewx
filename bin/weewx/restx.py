@@ -234,22 +234,26 @@ class RESTThread(threading.Thread):
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
                                      "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 3600.0, _time_ts))
-            if _result is not None:
+            if _result is None:
+                _datadict['hourRain'] = None
+            else:
                 if not _result[1] == _result[2] == record['usUnits']:
                     raise ValueError("Inconsistent units or units change in database %s vs %s vs %s" %
                                      (_result[1], _result[2], record['usUnits']))
-            _datadict['hourRain'] = _result[0]
+                _datadict['hourRain'] = _result[0]
 
         if not _datadict.has_key('rain24'):
             # Similar issue, except for last 24 hours:
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
                                      "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 24*3600.0, _time_ts))
-            if _result is not None:
+            if _result is None:
+                _datadict['rain24'] = None
+            else:
                 if not _result[1] == _result[2] == record['usUnits']:
                     raise ValueError("Inconsistent units or units change in database %s vs %s vs %s" %
                                      (_result[1], _result[2], record['usUnits']))
-            _datadict['rain24'] = _result[0]
+                _datadict['rain24'] = _result[0]
 
         if not _datadict.has_key('dayRain'):
             # NB: The WU considers the archive with time stamp 00:00
@@ -260,7 +264,9 @@ class RESTThread(threading.Thread):
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
                                      "WHERE dateTime>=? AND dateTime<=?", 
                                      (_sod_ts, _time_ts))
-            if _result is not None:
+            if _result is None:
+                _datadict['dayRain'] = None
+            else:
                 if not _result[1] == _result[2] == record['usUnits']:
                     raise ValueError("Inconsistent units or units change in database %s vs %s vs %s" %
                                      (_result[1], _result[2], record['usUnits']))
