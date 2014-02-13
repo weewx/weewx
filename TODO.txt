@@ -1,9 +1,6 @@
 TODO before the next release:
 
-Figure out why the heartbeat doesn't work on the WMR200.
+The return value of getAggregate() has changed. Check any clients.
 
-setup.py left a trailing comma in the services lists after upgrade
+Consider moving the database bindings out of StdArchive and into [Databases]
 
-add documentation for the extension installer and extension packaging.
-
-Add --fix option to wee_config_database

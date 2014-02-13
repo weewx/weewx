@@ -456,7 +456,7 @@ class Packet(object):
         """Returns the epoch timestamp in the record."""
         try:
             return self._record['dateTime']
-        except (KeyError, NameError):
+        except KeyError:
             msg = 'timestamp_record() Timestamp not set in record'
             logerr(msg)
             raise weewx.ViolatedPrecondition(msg)
@@ -516,7 +516,7 @@ class Packet(object):
             out += 'fields:%d ' % len(self._record)
             out += str(self._record)
             logdbg(out)
-        except (KeyError, NameError):
+        except KeyError:
             msg = 'print_cooked() called before proper setup'
             logerr(msg)
             raise weewx.ViolatedPrecondition(msg)
@@ -712,7 +712,7 @@ class PacketArchiveData(PacketArchive):
                         weewx.wxformulas.windchillC(
                             self._record['outTemp'],
                             self._record['windSpeed'])
-        except NameError:
+        except KeyError:
             # We may not have all the required records.
             pass
 
@@ -805,7 +805,7 @@ class PacketWind(PacketLive):
                         weewx.wxformulas.windchillC(
                             self.wmr200.last_temp_record['outTemp'],
                             self._record['windSpeed'])
-        except (AttributeError, KeyError, NameError):
+        except KeyError:
             # We may not have a last temp record yet so ignore for now.
             pass
 
