@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+2.6.2 MM/DD/YY
+
+Fixed bug that crashes WMR200 driver if outTemp is missing.
+
+
 2.6.1 02/08/14
 
 Fixed bug that crashed main thread if a StdQC value fell out of range.
