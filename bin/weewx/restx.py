@@ -1064,7 +1064,7 @@ class CWOPThread(RESTThread):
             except (IOError, socket.error), e:
                 # Unsuccessful. Log it and go around again for another try
                 syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Attempt #%d failed: %s" % 
-                              (_count + 1, self.protocol_name, e))
+                              (self.protocol_name, _count + 1, e))
             else:
                 _resp = sock.recv(1024)
                 return _resp
