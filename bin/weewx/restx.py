@@ -234,20 +234,26 @@ class RESTThread(threading.Thread):
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
                                      "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 3600.0, _time_ts))
-            if not _result[1] == _result[2] == record['usUnits']:
-                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % 
-                                 (_result[1], _result[2], record['usUnits']))
-            _datadict['hourRain'] = _result[0]
+            if _result is None:
+                _datadict['hourRain'] = None
+            else:
+                if not _result[1] == _result[2] == record['usUnits']:
+                    raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for hourRain" %
+                                     (_result[1], _result[2], record['usUnits']))
+                _datadict['hourRain'] = _result[0]
 
         if not _datadict.has_key('rain24'):
             # Similar issue, except for last 24 hours:
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
                                      "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 24*3600.0, _time_ts))
-            if not _result[1] == _result[2] == record['usUnits']:
-                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % 
-                                 (_result[1], _result[2], record['usUnits']))
-            _datadict['rain24'] = _result[0]
+            if _result is None:
+                _datadict['rain24'] = None
+            else:
+                if not _result[1] == _result[2] == record['usUnits']:
+                    raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for rain24" %
+                                     (_result[1], _result[2], record['usUnits']))
+                _datadict['rain24'] = _result[0]
 
         if not _datadict.has_key('dayRain'):
             # NB: The WU considers the archive with time stamp 00:00
@@ -258,10 +264,13 @@ class RESTThread(threading.Thread):
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
                                      "WHERE dateTime>=? AND dateTime<=?", 
                                      (_sod_ts, _time_ts))
-            if not _result[1] == _result[2] == record['usUnits']:
-                raise ValueError("Inconsistent units or units change in database %d vs %d vs %d" % 
-                                 (_result[1], _result[2], record['usUnits']))
-            _datadict['dayRain'] = _result[0]
+            if _result is None:
+                _datadict['dayRain'] = None
+            else:
+                if not _result[1] == _result[2] == record['usUnits']:
+                    raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for dayRain" %
+                                     (_result[1], _result[2], record['usUnits']))
+                _datadict['dayRain'] = _result[0]
             
         return _datadict
 
@@ -1027,7 +1036,7 @@ class CWOPThread(RESTThread):
                 except socket.error, e:
                     # Unsuccessful. Log it and try again
                     syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connection attempt #%d failed to "
-                                  "server %s:%d: %s" % (_count + 1, self.protocol_name, 
+                                  "server %s:%d: %s" % (self.protocol_name, _count + 1, 
                                                         _server, _port, e))
                 else:
                     syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connected to server %s:%d" % 
@@ -1055,7 +1064,7 @@ class CWOPThread(RESTThread):
             except (IOError, socket.error), e:
                 # Unsuccessful. Log it and go around again for another try
                 syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Attempt #%d failed: %s" % 
-                              (_count + 1, self.protocol_name, e))
+                              (self.protocol_name, _count + 1, e))
             else:
                 _resp = sock.recv(1024)
                 return _resp

@@ -20,7 +20,7 @@ if not hasattr(sqlite3.Connection, "__exit__"):  # @UndefinedVariable
     from pysqlite2 import dbapi2 as sqlite3 #@Reimport @UnresolvedImport
 
 import weedb
-from weeutil.weeutil import to_bool
+from weeutil.weeutil import to_bool, to_int
 
 def connect(database='', root='', driver='', **argv):
     """Factory function, to keep things compatible with DBAPI. """
@@ -38,7 +38,9 @@ def create(database='', root='', driver='', **argv):
         fileDirectory = os.path.dirname(file_path)
         if not os.path.exists(fileDirectory):
             os.makedirs(fileDirectory)
-        connection = sqlite3.connect(file_path, **argv)
+        timeout = to_int(argv.get('timeout', 5))
+        isolation_level = argv.get('isolation_level')
+        connection = sqlite3.connect(file_path, timeout=timeout, isolation_level=isolation_level)
         connection.close()
 
 def drop(database='', root='', driver='', **argv):
@@ -67,8 +69,10 @@ class Connection(weedb.Connection):
         self.file_path = os.path.join(root, database)
         if not os.path.exists(self.file_path):
             raise weedb.OperationalError("Attempt to open a non-existent database %s" % database)
+        timeout = to_int(argv.get('timeout', 5))
+        isolation_level = argv.get('isolation_level')
         try:
-            connection = sqlite3.connect(self.file_path, **argv)
+            connection = sqlite3.connect(self.file_path, timeout=timeout, isolation_level=isolation_level)
         except sqlite3.OperationalError:
             # The Pysqlite driver does not include the database file path.
             # Include it in case it might be useful.

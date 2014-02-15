@@ -5,6 +5,15 @@ weewx change history
 
 Fixed bug that crashes WMR200 driver if outTemp is missing.
 
+Fixed bug that can crash RESTful threads if there is missing rain data.
+
+Sqlite connections can now explicitly specify a timeout and 
+isolation_level.
+
+Added 'timeout' and 'isolation_level' options for sqlite connections.
+
+Server uptime now reported for MacOS
+
 
 2.6.1 02/08/14
 

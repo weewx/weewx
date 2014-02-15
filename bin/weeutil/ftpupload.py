@@ -107,7 +107,8 @@ class FtpUpload(object):
                             ftp_server.storbinary(STOR_cmd, fd)
                         except (ftplib.all_errors, IOError), e:
                             # Unsuccessful. Log it and go around again.
-                            syslog.syslog(syslog.LOG_ERR, "ftpupload: attempt #%d. Failed uploading %s. Reason: %s" % (count+1, full_remote_path, e))
+                            syslog.syslog(syslog.LOG_ERR, "ftpupload: attempt #%d. Failed uploading %s to %s. Reason: %s" %
+                                                          (count+1, full_remote_path, self.server, e))
                             ftp_server.set_pasv(self.passive)
                         else:
                             # Success. Log it, break out of the loop

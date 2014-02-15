@@ -8,7 +8,7 @@
 #    $Author$
 #    $Date$
 #
-"""For uploading files to a remove server via FTP"""
+"""For uploading files to a remove server via Rsync"""
 
 import os
 import errno
@@ -83,7 +83,7 @@ class RsyncUpload(object):
         
             stdout = rsynccmd.communicate()[0]
             stroutput = stdout.encode("utf-8")
-            syslog.syslog(syslog.LOG_DEBUG, "rsyncupload: rsync reported:\n%s" % stroutput)
+            syslog.syslog(syslog.LOG_DEBUG, "rsyncupload: rsync reported: %s" % stroutput)
         except OSError, e:
             if e.errno == errno.ENOENT:
                 syslog.syslog(syslog.LOG_ERR, "rsyncupload: rsync does not appear to be installed on this system. (errno %d, \"%s\")" % (e.errno, e.strerror))

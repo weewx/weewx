@@ -161,7 +161,7 @@ class StdEngine(object):
                 # See if garbage collection is scheduled:
                 if int(time.time()) - last_gc > self.gc_interval:
                     ngc = gc.collect()
-                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: garbage collected %d objects" % ngc)
+                    syslog.syslog(syslog.LOG_INFO, "wxengine: garbage collected %d objects" % ngc)
                     last_gc = int(time.time())
 
                 # First, let any interested services know the packet LOOP is about to start
