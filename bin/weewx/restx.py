@@ -1036,7 +1036,7 @@ class CWOPThread(RESTThread):
                 except socket.error, e:
                     # Unsuccessful. Log it and try again
                     syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connection attempt #%d failed to "
-                                  "server %s:%d: %s" % (_count + 1, self.protocol_name, 
+                                  "server %s:%d: %s" % (self.protocol_name, _count + 1, 
                                                         _server, _port, e))
                 else:
                     syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connected to server %s:%d" % 
