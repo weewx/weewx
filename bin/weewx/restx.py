@@ -678,7 +678,9 @@ class AmbientThread(RESTThread):
                 'hourRain'    : 'rainin=%.2f',
                 'dayRain'     : 'dailyrainin=%.2f',
                 'radiation'   : 'solarradiation=%.2f',
-                'UV'          : 'UV=%.2f'}
+                'UV'          : 'UV=%.2f',
+                'realtime'    : 'realtime=%s',
+                'rtfreq'      : 'rtfreq=%s'}
     
     def format_url(self, record):
         """Return an URL for posting using the Ambient protocol."""

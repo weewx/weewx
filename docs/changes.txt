@@ -10,9 +10,9 @@ Fixed bug that can crash RESTful threads if there is missing rain data.
 Sqlite connections can now explicitly specify a timeout and 
 isolation_level.
 
-Added 'timeout' and 'isolation_level' options for sqlite connections.
-
 Server uptime now reported for MacOS
+
+Fixed bug that prevented Rapidfire posts from being identified as such.
 
 
 2.6.1 02/08/14
