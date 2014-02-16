@@ -1,3 +1,6 @@
+weewx (2.6.2-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sun, 16 Feb 2014 06:18:40 -0500
 weewx (2.6.1-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 08 Feb 2014 13:02:03 -0500

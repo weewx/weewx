@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-2.6.2 MM/DD/YY
+2.6.2 02/16/14
 
 Fixed bug that crashes WMR200 driver if outTemp is missing.
 
