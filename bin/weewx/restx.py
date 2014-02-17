@@ -219,13 +219,23 @@ class RESTThread(threading.Thread):
 
         returns: A dictionary of weather values"""
         
+        #
+        # In theory, the unit system used in the incoming record should be the same
+        # as that used in the database. But, that depends on externalities to restx.py.
+        # In the code below, we do not make that assumption and, instead, do an explicit
+        # conversion from whatever unit system is used in the database to the unit
+        # system used in the record.
+        #
+        
         _time_ts = record['dateTime']
         _sod_ts = weeutil.weeutil.startOfDay(_time_ts)
         
-        # Make a copy of the record, then start adding to it:
-        _datadict = dict(record)
+        # This will hold results from the queries:
+        _raindict = {}        
+        # This will hold all the units seen in the querying:
+        _unitset = set()
         
-        if not _datadict.has_key('hourRain'):
+        if not record.has_key('hourRain'):
             # CWOP says rain should be "rain that fell in the past hour". WU
             # says it should be "the accumulated rainfall in the past 60 min".
             # Presumably, this is exclusive of the archive record 60 minutes
@@ -235,27 +245,25 @@ class RESTThread(threading.Thread):
                                      "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 3600.0, _time_ts))
             if _result is None:
-                _datadict['hourRain'] = None
+                _raindict['hourRain'] = None
             else:
-                if not _result[1] == _result[2] == record['usUnits']:
-                    raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for hourRain" %
-                                     (_result[1], _result[2], record['usUnits']))
-                _datadict['hourRain'] = _result[0]
+                _raindict['hourRain'] = _result[0]
+                _unitset.add(_result[1])
+                _unitset.add(_result[2])
 
-        if not _datadict.has_key('rain24'):
+        if not record.has_key('rain24'):
             # Similar issue, except for last 24 hours:
             _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
                                      "WHERE dateTime>? AND dateTime<=?",
                                      (_time_ts - 24*3600.0, _time_ts))
             if _result is None:
-                _datadict['rain24'] = None
+                _raindict['rain24'] = None
             else:
-                if not _result[1] == _result[2] == record['usUnits']:
-                    raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for rain24" %
-                                     (_result[1], _result[2], record['usUnits']))
-                _datadict['rain24'] = _result[0]
+                _raindict['rain24'] = _result[0]
+                _unitset.add(_result[1])
+                _unitset.add(_result[2])
 
-        if not _datadict.has_key('dayRain'):
+        if not record.has_key('dayRain'):
             # NB: The WU considers the archive with time stamp 00:00
             # (midnight) as (wrongly) belonging to the current day
             # (instead of the previous day). But, it's their site,
@@ -265,14 +273,24 @@ class RESTThread(threading.Thread):
                                      "WHERE dateTime>=? AND dateTime<=?", 
                                      (_sod_ts, _time_ts))
             if _result is None:
-                _datadict['dayRain'] = None
+                _raindict['dayRain'] = None
             else:
-                if not _result[1] == _result[2] == record['usUnits']:
-                    raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for dayRain" %
-                                     (_result[1], _result[2], record['usUnits']))
-                _datadict['dayRain'] = _result[0]
-            
-        return _datadict
+                _raindict['dayRain'] = _result[0]
+                _unitset.add(_result[1])
+                _unitset.add(_result[2])
+
+        # Check and make sure that only one unit type has been seen:
+        if len(_unitset) > 1:
+            raise ValueError("More than one unit type in archive")
+
+        # Get the unit system used in the database...
+        _raindict['usUnits'] = _unitset.pop()
+        # ... convert the rain dictionary to the same units as the incoming record...
+        _target_dict = weewx.units.to_std_system(_raindict, record['usUnits'])
+        # ... then merge them. By merging into _target_dict, we effectively make a copy
+        _target_dict.update(record)
+        # Return the merged copy:
+        return _target_dict
 
     def run(self):
         """If there is a database specified, open the database, then call

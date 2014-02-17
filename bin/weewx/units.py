@@ -1092,27 +1092,27 @@ def getAltitudeM(config_dict):
 
 def to_US(datadict):
     """Convert the units used in a dictionary to US Customary."""
-    return _to_std_system(datadict, weewx.US)
+    return to_std_system(datadict, weewx.US)
 
 def to_METRIC(datadict):
     """Convert the units used in a dictionary to Metric."""
-    return _to_std_system(datadict, weewx.METRIC)
+    return to_std_system(datadict, weewx.METRIC)
 
 def to_METRICWX(datadict):
     """Convert the units used in a dictionary to MetricWX."""
-    return _to_std_system(datadict, weewx.METRICWX)
+    return to_std_system(datadict, weewx.METRICWX)
 
-def _to_std_system(datadict, unit_system):
+def to_std_system(datadict, unit_system):
     """Convert the units used in a dictionary to a target unit system."""
     if datadict['usUnits'] == unit_system:
         # It's already in the unit system.
         return datadict
     else:
         # It's in something else. Perform the conversion
-        _datadict_us = StdUnitConverters[unit_system].convertDict(datadict)
+        _datadict_target = StdUnitConverters[unit_system].convertDict(datadict)
         # Add the new unit system
-        _datadict_us['usUnits'] = unit_system
-        return _datadict_us
+        _datadict_target['usUnits'] = unit_system
+        return _datadict_target
 
     
 if __name__ == "__main__":
