@@ -127,11 +127,14 @@ class WMR100(weewx.abstractstation.AbstractStation):
         # observation type.
         
         for _packet in self.genPackets():
-            _packet_type = _packet[1]
-            if _packet_type in WMR100._dispatch_dict:
-                _record = WMR100._dispatch_dict[_packet_type](self, _packet)
-                if _record is not None : 
-                    yield _record
+            try:
+                _packet_type = _packet[1]
+                if _packet_type in WMR100._dispatch_dict:
+                    _record = WMR100._dispatch_dict[_packet_type](self, _packet)
+                    if _record is not None : 
+                        yield _record
+            except IndexError:
+                syslog.syslog(syslog.LOG_ERR, "wmr100: Malformed packet. %s" % _packet)
                 
     def genPackets(self):
         """Generate measurement packets. These are 8 to 17 byte long packets containing
