@@ -111,6 +111,7 @@ DEBUG_CONFIG_DATA = 0
 # Print all writes to weather console.
 DEBUG_WRITES = 0
 DEBUG_READS = 0
+DEBUG_CHECKSUM = 0
 
 def logmsg(dst, msg):
     """Base syslog helper"""
@@ -447,6 +448,11 @@ class Packet(object):
 
             raise weewx.CRCError(msg)
 
+        # Debug test to force checksum recovery testing.
+        if DEBUG_CHECKSUM and (self.pkt_id % DEBUG_CHECKSUM) == 0:
+            msg = ('Debug forced checksum error')
+            raise weewx.CRCError(msg)
+
     @staticmethod
     def timestamp_host():
         """Returns the host epoch timestamp"""
@@ -478,7 +484,8 @@ class Packet(object):
             raise WMR200ProtocolError(log_msg)
 
         except (OverflowError, ValueError), exception:
-            log_msg = ('Packet timestamp with bogus fields %s' % exception)
+            log_msg = ('Packet timestamp with bogus fields %s raw:%s' %
+                       (exception, self.to_string_raw()))
             logerr(log_msg)
             raise WMR200ProtocolError(log_msg)
 
@@ -805,7 +812,7 @@ class PacketWind(PacketLive):
                         weewx.wxformulas.windchillC(
                             self.wmr200.last_temp_record['outTemp'],
                             self._record['windSpeed'])
-        except KeyError:
+        except (KeyError, AttributeError, TypeError):
             # We may not have a last temp record yet so ignore for now.
             pass
 
@@ -1168,6 +1175,10 @@ class PacketStatus(PacketLive):
         if DEBUG_PACKETS_STATUS:
             logdbg(self.to_string_raw(' Sensor packet:'))
 
+    def calc_time_drift(self):
+        """Returns the difference between PC time and the packet timestamp.
+        This packet has no timestamp so cannot be used to calculate."""
+        loginf('Time drift unset but received status packet')
 
 class PacketEraseAcknowledgement(PacketControl):
     """Packet parser for archived data is ready to receive."""
@@ -1406,6 +1417,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
         use_calc_windchill: Use a calculated windchill over console data.  [Optional]
         erase_archive:  Erasae archive upon startup.  [Optional]
         archive_interval: Time in seconds between intervals [Optional]
+        archive_threshold: Max time in seconds between valid archive packets [Optional]
         ignore_checksum: Ignore checksum failures and drop packet.
         archive_startup: Time after startup to await archive data draining.
 
@@ -1445,6 +1457,10 @@ class WMR200(weewx.abstractstation.AbstractStation):
         if self._archive_interval not in [60, 300]:
             logwar('Unverified archive interval:%d sec'
                    % self._archive_interval)
+
+        # Archive threshold in seconds between archive packets before dropping.
+        self._archive_threshold = int(stn_dict.get('archive_threshold',
+                                                   3600*24*7))
 
         # Ignore checksum errors.
         self._ignore_checksum = \
@@ -1553,6 +1569,9 @@ class WMR200(weewx.abstractstation.AbstractStation):
         DEBUG_PACKETS_STATUS = int(stn_dict.get('debug_packets_status', 0))
         global DEBUG_PACKETS_PRESSURE
         DEBUG_PACKETS_PRESSURE = int(stn_dict.get('debug_packets_pressure', 0))
+        global DEBUG_CHECKSUM
+        DEBUG_CHECKSUM = int(stn_dict.get('debug_checksum', 0))
+
 
         if DEBUG_CONFIG_DATA:
             logdbg('Configuration setup')
@@ -1565,6 +1584,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                    % self._use_calc_windchill)
             logdbg('  Erase archive data: %s' % self._erase_archive)
             logdbg('  Archive interval: %d' % self._archive_interval)
+            logdbg('  Archive threshold: %d' % self._archive_threshold)
 
     @property
     def hardware_name(self):
@@ -1861,8 +1881,10 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # likely no more archive packets left to drain.
         timestamp_last_archive_rx = int(time.time() + 0.5)
 
+        # Statisics to calculate time in this phase.
         timestamp_packet_first = None
         timestamp_packet_current = None
+        timestamp_packet_previous = None
         cnt = 0
 
         while True:
@@ -1895,7 +1917,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                     break
 
                 loginf(('genStartup() Still receiving archive packets'
-                        ' len:%d') % len(PacketArchive.pkt_queue))
+                        ' cnt:%d len:%d') % (cnt, len(PacketArchive.pkt_queue)))
 
                 pkt = PacketArchive.pkt_queue.pop(0)
                 # If we are using PC time we need to adjust the
@@ -1903,25 +1925,48 @@ class WMR200(weewx.abstractstation.AbstractStation):
                 if self.use_pc_time:
                     pkt.timestamp_adjust_drift()
 
+                # Statisics indicating packets sent in this phase.
                 if timestamp_packet_first is None:
                     timestamp_packet_first = pkt.timestamp_record()
+                if timestamp_packet_previous is None:
+                    if since_ts == 0:
+                        timestamp_packet_previous = pkt.timestamp_record()
+                    else:
+                        timestamp_packet_previous = since_ts
+
                 timestamp_packet_current = pkt.timestamp_record()
 
-                if pkt.timestamp_record() > since_ts:
+                # Calculate time interval between archive packets.
+                timestamp_packet_interval = timestamp_packet_current \
+                        - timestamp_packet_previous
+
+                if pkt.timestamp_record() > (timestamp_packet_previous \
+                                             + self._archive_threshold):
+                    loginf(('genStartup() Discarding received archive'
+                            ' record exceeding archive interval cnt:%d'
+                            ' threshold:%d timestamp:%s')
+                           % (cnt, self._archive_threshold,
+                              weeutil.weeutil.timestamp_to_string\
+                              (pkt.timestamp_record())))
+                elif pkt.timestamp_record() > since_ts:
+                    timestamp_packet_previous = timestamp_packet_current
                     cnt += 1
                     logdbg(('genStartup() Yielding received archive'
-                            ' record cnt:%d after requested timestamp pkt:%s')
-                           % (cnt,
+                            ' record cnt:%d after requested timestamp'
+                            ':%d pkt_interval:%d pkt:%s')
+                           % (cnt, since_ts, timestamp_packet_interval,
                               weeutil.weeutil.timestamp_to_string\
                               (pkt.timestamp_record())))
                     if DEBUG_PACKETS_COOKED:
                         pkt.print_cooked()
                     yield pkt.packet_record()
                 else:
-                    loginf(('genStartup() Ignoring received archive'
-                            ' record before requested timestamp %s')
-                           % weeutil.weeutil.timestamp_to_string\
-                           (since_ts))
+                    timestamp_packet_previous = timestamp_packet_current
+                    loginf(('genStartup() Discarding received archive'
+                            ' record before time requested cnt:%d'
+                            ' timestamp:%s')
+                           % (cnt, weeutil.weeutil.timestamp_to_string\
+                              (since_ts)))
 
             # Return if we receive not more archive packets in a given time
             # interval.
