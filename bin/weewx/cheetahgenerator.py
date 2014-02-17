@@ -474,7 +474,7 @@ class Almanac(SearchList):
         if not celestial_ts:
             celestial_ts = archivedb.lastGoodStamp()
 
-        if not celestial_ts:
+        if celestial_ts:
             # Look for the record closest in time. Up to one hour off is fine:            
             rec = archivedb.getRecord(celestial_ts, max_delta=3600)
         else:
