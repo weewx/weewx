@@ -130,10 +130,8 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                     # TODO: Allow multiple unit labels, one for each plot line?
                     unit_label = line_options.get('y_label',
                                                   self.unit_helper.label.get(var_type, ''))
-                    # PIL cannot handle UTF-8. So, convert to Latin1. Also, strip off
-                    # any leading and trailing whitespace so it's easy to center
-                    unit_label = weeutil.weeutil.utf8_to_latin1(unit_label).strip()
-                    plot.setUnitLabel(unit_label)
+                    # Strip off any leading and trailing whitespace so it's easy to center
+                    plot.setUnitLabel(unit_label.strip())
                     
                     # See if a line label has been explicitly requested:
                     label = line_options.get('label')
@@ -141,8 +139,6 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                         # No explicit label. Is there a generic one? 
                         # If not, then the SQL type will be used instead
                         label = self.title_dict.get(var_type, var_type)
-                    # Convert to Latin-1
-                    label = weeutil.weeutil.utf8_to_latin1(label)
     
                     # See if a color has been explicitly requested.
                     color = line_options.get('color')

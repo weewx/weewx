@@ -104,13 +104,13 @@ class GeneralPlot(object):
         """Set the label to be put at the bottom of the plot.
         
         """
-        self.bottom_label = bottom_label
+        self.bottom_label = unicode(bottom_label, 'utf8')
         
     def setUnitLabel(self, unit_label):
         """Set the label to be used to show the units of the plot.
         
         """
-        self.unit_label = unit_label
+        self.unit_label = unicode(unit_label, 'utf8')
         
     def setXScaling(self, xscale):
         """Set the X scaling.
@@ -567,7 +567,7 @@ class PlotLine(object):
                  bar_width=None, vector_rotate = None, gap_fraction=None):
         self.x           = x
         self.y           = y
-        self.label       = label
+        self.label       = unicode(label, 'utf8')
         self.plot_type   = plot_type
         self.line_type   = line_type
         self.marker_type = marker_type

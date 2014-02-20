@@ -756,10 +756,6 @@ def latlon_string(ll, hemi, which, format_list=None):
         format_list = ["%02d", "%03d", "%05.2f"]
     return ((format_list[0] if which == 'lat' else format_list[1]) % (deg,), format_list[2] % (minutes,), hemi[0] if ll >= 0 else hemi[1])
 
-def utf8_to_latin1(instring):
-    """Convert from UTF-8 to Latin-1 encoding."""
-    return unicode(instring, "utf8").encode("latin1")
-
 def log_traceback(prefix=''):
     """Log the stack traceback into syslog."""
     sfd = StringIO.StringIO()
