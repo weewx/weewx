@@ -212,7 +212,12 @@ class UsbDevice(object):
             raise weewx.WakeupError(exception)
 
     def close_device(self):
-        """Closes a device for access."""
+        """Close a device for access.
+
+        NOTE(CMM) There is no busses[].devices[].close() so under linux the
+        file descriptor will remain open for the life of the process.
+        An OS independant mechanism is required so 'lsof' and friends will
+        not be cross platform."""
         try:
             self.handle.releaseInterface()
         except usb.USBError, exception:
@@ -853,35 +858,36 @@ def decode_rain(pkt, pkt_data):
         raise WMR200ProtocolError(msg)
 
 
-def adjust_rain(pkt, packet_name):
+def adjust_rain(pkt, packet):
     """Calculate rainfall per poll interval.
     Because the WMR does not offer anything like bucket tips, we must
     calculate it by looking for the change in total rain.
     After driver startup we need to initialize the total rain presented 
     by the console."""
+    record = {}
+
+    # Get the total current rain field from the console.
     rain_total = pkt.record_get('totalRain')
 
-    rain_total_last = packet_name.rain_total_last
-
-    if rain_total_last is None:
-        rain_total_last = rain_total
-    # The amount of rain occurring since last poll time.
-    rain_interval = rain_total - rain_total_last
-    # NOTE(CMM) This may go negative but we cannot allow that.
-    if rain_interval < 0.0:
-        logwar('rain interval went negative:%f\n' % rain_interval)
+    # Calculate the amount of rain occurring for this interval.
+    try:
+        rain_interval = rain_total - packet.rain_total_last
+    except TypeError:
         rain_interval = 0.0
-    rain_total_last = rain_total
-    # Adjust the amount of rain since driver started up.  
-    rain_total -= rain_total_last
-    # NOTE(CMM) This may go negative but we cannot allow that.
-    if rain_total < 0.0:
-        logwar('rain total went negative:%f\n' % rain_total)
-        rain_total = 0.0
-    pkt.record_set('totalRain', rain_total)
 
-    packet_name.rain_total_last = rain_total_last
-    return {'rain'              : rain_interval}
+    record['rain'] = rain_interval
+    record['totalRainLast'] = packet.rain_total_last
+
+    try:
+        logdbg('  adjust_rain rain_total:%.02f %s.rain_total_last:%.02f'
+               ' rain_interval:%.02f' % (rain_total, packet.pkt_name,
+                                         packet.rain_total_last, rain_interval))
+    except TypeError:
+        logdbg('  Initializing %s.rain_total_last to %.02f' %
+               (packet.pkt_name, rain_total))
+
+    packet.rain_total_last = rain_total
+    return record
 
 class PacketRain(PacketLive):
     """Packet parser for rain."""
@@ -1178,7 +1184,7 @@ class PacketStatus(PacketLive):
     def calc_time_drift(self):
         """Returns the difference between PC time and the packet timestamp.
         This packet has no timestamp so cannot be used to calculate."""
-        loginf('Time drift unset but received status packet')
+        pass
 
 class PacketEraseAcknowledgement(PacketControl):
     """Packet parser for archived data is ready to receive."""
