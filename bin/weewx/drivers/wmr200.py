@@ -394,18 +394,26 @@ class Packet(object):
         return self._record
 
     def record_get(self, key):
-        """Returns the record indexed by the key"""
+        """Returns the record indexed by the key."""
         try:
             return self._record[key]
         except KeyError:
-            logerr('key not found in record key:%s' % key)
+            logerr('Record get key not found in record key:%s' % key)
 
     def record_set(self, key, val):
-        """Sets a record indexed by the key"""
+        """Sets the record indexed by the key."""
         try:
             self._record[key] = val
         except KeyError:
-            logerr('key not found in record key:%s val:%s' % (key, val))
+            logerr('Record set key not found in record key:%s val:%s'
+                   % (key, val))
+
+    def record_update(self, record):
+        """Updates record dictionary with additional dictionary."""
+        try:
+            self._record.update(record)
+        except (TypeError, KeyError):
+            logerr('Record update failed to apply record:%s' % record)
 
     def _checksum_calculate(self):
         """Returns the calculated checksum of the current packet.
@@ -709,9 +717,6 @@ class PacketArchiveData(PacketArchive):
                 base = 33 + i*7
                 self._record.update(decode_temp(self,
                                                 self._pkt_data[base:base+7]))
-            # Calculate the rain accumulation between archive packets.
-            self._record.update(adjust_rain(self, PacketArchiveData))
-
         except IndexError:
             msg = ('%s decode index failure' % self.pkt_name)
             logerr(msg)
@@ -1955,6 +1960,10 @@ class WMR200(weewx.abstractstation.AbstractStation):
                               weeutil.weeutil.timestamp_to_string\
                               (pkt.timestamp_record())))
                 elif pkt.timestamp_record() > since_ts:
+                    # Calculate the rain accumulation between valid archive 
+                    # packets.
+                    pkt.record_update(adjust_rain(pkt, PacketArchiveData))
+
                     timestamp_packet_previous = timestamp_packet_current
                     cnt += 1
                     logdbg(('genStartup() Yielding received archive'
