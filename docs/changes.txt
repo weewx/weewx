@@ -8,6 +8,9 @@ The plot images can now use UTF-8 characters.
 Fixed a problem where the Ambient threads could crash if there were
 no rain database entries.
 
+Battery status values txBatteryStatus and consBatteryVoltage now appear in
+the archive record. The last LOOP value seen is used.  
+
 
 
 2.6.2 02/16/14

@@ -1,11 +1,9 @@
 #
-#    Copyright (c) 2009, 2010, 2011, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision: 1459 $
-#    $Author: mwall $
-#    $Date: 2013-10-08 17:44:50 -0700 (Tue, 08 Oct 2013) $
+#    $Id$
 #
 """Classes and functions for interfacing with a Davis VantagePro, VantagePro2, or VantageVue weather station"""
 
@@ -1433,6 +1431,9 @@ class VantageService(Vantage, weewx.wxengine.StdService):
         self.max_loop_gust = 0.0
         self.max_loop_gustdir = None
         
+        self.loop_data = {'txBatteryStatus': None,
+                          'consBatteryVoltage' : None}
+        
     def closePort(self):
         # Close the archive database. In case it doesn't exist yet, enclose
         # the attempt in a try block:
@@ -1463,6 +1464,10 @@ class VantageService(Vantage, weewx.wxengine.StdService):
         event.packet['windGust'] = self.max_loop_gust
         event.packet['windGustDir'] = self.max_loop_gustdir
         
+        # Save the battery statuses:
+        for k in self.loop_data:
+            self.loop_data[k] = event.packet[k]
+        
     def end_archive_period(self, event):
         """Zero out the max gust seen since the start of the record"""
         self.max_loop_gust = 0.0
@@ -1476,6 +1481,9 @@ class VantageService(Vantage, weewx.wxengine.StdService):
                                                      event.record['outHumidity'])
         event.record['pressure']  = pressureIn
         event.record['altimeter'] = altimeterIn
+        
+        # Add the last battery status:
+        event.record.update(self.loop_data)
         
     def get_temperature_12(self, time_ts):
         """Get the temperature 12 hours ago from the database.
