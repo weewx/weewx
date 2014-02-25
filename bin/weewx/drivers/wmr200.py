@@ -1898,6 +1898,12 @@ class WMR200(weewx.abstractstation.AbstractStation):
         timestamp_packet_previous = None
         cnt = 0
 
+        # If no previous database this parameter gets passed as None.
+        # Convert to a numerical value representing start of unix epoch.
+        if since_ts is None:
+            loginf('genStartup() Database initialization')
+            since_ts = 0
+
         while True:
             # Loop through indefinitely generating archive records to the
             # weewx engine.  This loop may resume at the yield()
