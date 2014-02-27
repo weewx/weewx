@@ -29,13 +29,13 @@ configure_weewxconf() {
     db_get weewx/latlon
     lat=$(echo $RET | cut -d, -f1)
     lon=$(echo $RET | cut -d, -f2)
-    sed -i "s%latitude[ ]*=.*%latitude = $lat%" $cfgfile
-    sed -i "s%longitude[ ]*=.*%longitude = $lon%" $cfgfile
+    sed -i "s% latitude[ ]*=.*% latitude = $lat%" $cfgfile
+    sed -i "s% longitude[ ]*=.*% longitude = $lon%" $cfgfile
 
     db_get weewx/altitude
     a=$(echo $RET | cut -d, -f1)
     u=$(echo $RET | cut -d, -f2)
-    sed -i "s%altitude[ ]*=.*%altitude = $a, $u%" $cfgfile
+    sed -i "s% altitude[ ]*=.*% altitude = $a, $u%" $cfgfile
 
     # FIXME: generalize this so it does not have to be modified every time a
     #        new station type is added or new station options are added.
