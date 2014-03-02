@@ -690,6 +690,9 @@ class AmbientThread(RESTThread):
     
     def format_url(self, record):
         """Return an URL for posting using the Ambient protocol."""
+        
+        if weewx.debug:
+            assert(record['usUnits'] == weewx.US)
     
         _liststr = ["action=updateraw", 
                     "ID=%s" % self.station,
