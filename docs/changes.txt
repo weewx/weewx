@@ -11,6 +11,9 @@ no rain database entries.
 Battery status values txBatteryStatus and consBatteryVoltage now appear in
 the archive record. The last LOOP value seen is used.  
 
+Fixed pressure calculation in wee_config_fousb.
+
+Prevent failures in imagegenerator when no unicode-capable fonts are installed.
 
 
 2.6.2 02/16/14

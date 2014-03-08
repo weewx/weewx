@@ -373,9 +373,16 @@ class GeneralPlot(object):
         # Put the units in the upper left corner
         unit_label_font = weeplot.utilities.get_font_handle(self.unit_label_font_path, self.unit_label_font_size)
         if self.unit_label:
-            draw.text(self.unit_label_position,
-                      self.unit_label,
-                      fill=self.unit_label_font_color, font=unit_label_font)
+            try:
+                draw.text(self.unit_label_position,
+                          self.unit_label,
+                          fill=self.unit_label_font_color,
+                          font=unit_label_font)
+            except UnicodeEncodeError:
+                draw.text(self.unit_label_position,
+                          self.unit_label.encode("utf-8"),
+                          fill=self.unit_label_font_color,
+                          font=unit_label_font)
 
         top_label_font = weeplot.utilities.get_font_handle(self.top_label_font_path, self.top_label_font_size)
         
