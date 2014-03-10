@@ -14,6 +14,7 @@ my %errors;
 my $STARTUPS = 'wxengine: startups';
 my $HUP_RESTARTS = 'wxengine: restart from HUP';
 my $KBD_INTERRUPTS = 'wxengine: keyboard interrupts';
+my $RESTARTS = 'wxengine: restarts';
 my $ARCHIVE_RECORDS_ADDED = 'archive: records added';
 my $IMAGES_GENERATED = 'genimages: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
@@ -98,12 +99,14 @@ while(defined($_ = <STDIN>)) {
         $counts{$HUP_RESTARTS} += 1;
     } elsif (/wxengine: Keyboard interrupt/) {
         $counts{$KBD_INTERRUPTS} += 1;
+    } elsif (/wxengine: retrying/) {
+        $counts{$RESTARTS} += 1;
     } elsif (/wxengine: Clock error is ([0-9,.-]+)/) {
         $clocksum += $1;
         $clockmin = $1 if $1 < $clockmin;
         $clockmax = $1 if $1 > $clockmax;
         $clockcount += 1;
-    } elsif (/archive: added/) {
+    } elsif (/archive: added/ || /Archive: added archive record/) {
         $counts{$ARCHIVE_RECORDS_ADDED} += 1;
     } elsif (/genimages: Generated (\d+) images/) {
         $counts{$IMAGES_GENERATED} += $1;
@@ -227,7 +230,6 @@ while(defined($_ = <STDIN>)) {
              /wxengine: Data will be posted to / ||
              /wxengine: Started thread for RESTful upload sites./ ||
              /wxengine: No RESTful upload sites/ ||
-             /wxengine: retrying/ ||
              /wxengine: Loading station type/ ||
              /wxengine: Initializing weewx version/ ||
              /wxengine: Using Python/ ||
