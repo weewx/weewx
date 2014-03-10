@@ -329,7 +329,9 @@ class RESTThread(threading.Thread):
             except Exception, e:
                 # Some unknown exception occurred. This is probably a serious
                 # problem. Exit.
-                syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting: %s" % 
+                syslog.syslog(syslog.LOG_CRIT, "restx: %s: Unexpected exception of type %s" % 
+                              (self.protocol_name, e.__class__.__name__))
+                syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting. Reason: %s" % 
                               (self.protocol_name, e))
                 return
             else:
