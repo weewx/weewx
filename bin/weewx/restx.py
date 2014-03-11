@@ -95,6 +95,12 @@ class FailedPost(IOError):
 class BadLogin(StandardError):
     """Raised when login information is bad or missing."""
 
+class ConnectError(IOError):
+    """Raised when unable to get a socket connection."""
+    
+class SendError(IOError):
+    """Raised when unable to send through a socket."""
+    
 def get_dict(config_dict, svc):
     """Create a site_dict using values from the StdRESTful section of the
     configuration, but only if they are specified.  Do not supply default
@@ -330,7 +336,7 @@ class RESTThread(threading.Thread):
                 # Some unknown exception occurred. This is probably a serious
                 # problem. Exit.
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Unexpected exception of type %s" % 
-                              (self.protocol_name, e.__class__.__name__))
+                              (self.protocol_name, type(e)))
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting. Reason: %s" % 
                               (self.protocol_name, e))
                 return
@@ -1022,69 +1028,74 @@ class CWOPThread(RESTThread):
         return _tnc_packet
 
     def send_packet(self, login, tnc_packet):
-        
-        # Get a socket connection:
-        _sock = self._get_connect()
-
-        try:
-            # Send the login ...
-            self._send(_sock, login)
-            # ... and then the packet
-            self._send(_sock, tnc_packet)
-            
-        finally:
-            _sock.close()
-
-    def _get_connect(self):
 
         # Go through the list of known server:ports, looking for
         # a connection that works:
         for _serv_addr_str in self.server_list:
+            
             _server, _port_str = _serv_addr_str.split(":")
             _port = int(_port_str)
+            
+            # Try each combination up to max_tries times:
             for _count in range(self.max_tries):
                 try:
-                    _sock = socket.socket()
-                    _sock.connect((_server, _port))
-                except socket.error, e:
-                    # Unsuccessful. Log it and try again
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connection attempt #%d failed to "
-                                  "server %s:%d: %s" % (self.protocol_name, _count + 1, 
-                                                        _server, _port, e))
-                else:
+                    # Get a socket connection:
+                    _sock = self._get_connect(_server, _port)
                     syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connected to server %s:%d" % 
                                   (self.protocol_name, _server, _port))
-                    return _sock
-                # Couldn't connect on this attempt. Close it, try again.
-                try:
-                    _sock.close()
-                except:
-                    pass
-            # If we got here, that server didn't work. Log it and go on to
-            # the next one.
-            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Unable to connect to server %s:%d" % 
-                          (self.protocol_name, _server, _port))
+            
+                    try:
+                        # Send the login ...
+                        self._send(_sock, login, 'login')
+                        # ... and then the packet
+                        self._send(_sock, tnc_packet, 'packet')
+                        return
+                        
+                    finally:
+                        _sock.close()
+                except ConnectError, e:
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Attempt #%d to %s:%d. Connection error: %s" %
+                                  (self.protocol_name, _count+1, _server, _port, e))
+                except SendError, e:
+                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Attempt #%d to %s:%d. Socket send error: %s" %
+                                  (self.protocol_name, _count+1, _server, _port, e))
+        
+        # If we get here, the loop terminated normally, meaning we failed all tries
+        raise FailedPost("Tried %d servers %d times each" % (len(self.server_list), self.max_tries))
 
-        # If we got here. None of the servers worked. Raise an exception
-        raise FailedPost, "Unable to obtain a socket connection"
+    def _get_connect(self, server, port):
+        """Get a socket connection to a specific server and port."""
 
-    def _send(self, sock, msg):
-
-        for _count in range(self.max_tries):
-
+        try:
+            _sock = socket.socket()
+            _sock.connect((server, port))
+        except IOError, e:
+            # Unsuccessful. Close it in case it was open:
             try:
-                sock.send(msg)
-            except (IOError, socket.error), e:
-                # Unsuccessful. Log it and go around again for another try
-                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Attempt #%d failed: %s" % 
-                              (self.protocol_name, _count + 1, e))
-            else:
+                _sock.close()
+            except:
+                pass
+            raise ConnectError(e)
+        
+        return _sock
+
+    def _send(self, sock, msg, dbg_msg):
+        """Send a message to a specific socket."""
+
+        try:
+            sock.send(msg)
+        except IOError, e:
+            # Unsuccessful. Log it and go around again for another try
+            raise SendError("Packet %s; Error %s" % (dbg_msg, e))
+        else:
+            # Success. Look for response from the server.
+            try:
                 _resp = sock.recv(1024)
                 return _resp
-        else:
-            # This is executed only if the loop terminates normally, meaning
-            # the send failed max_tries times. Log it.
-            raise FailedPost, "Failed upload after %d tries" % (self.max_tries,)
+            except IOError, e:
+                syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Exception %s (%s) when looking for response to %s packet" %
+                              (self.protocol_name, type(e), e, dbg_msg))
+                return
 
 #==============================================================================
 #                    Station Registry
