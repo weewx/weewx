@@ -873,7 +873,7 @@ import weewx.units
 import weewx.wxengine
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.24'
+DRIVER_VERSION = '0.25'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
@@ -1070,6 +1070,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
                     msg = 'no contact with console'
                     if ts is not None:
                         msg += ' after %d seconds' % (now - ts)
+                    msg += ': press [SET] to sync'
                     loginf(msg)
                     self._last_contact_log_ts = now
 
@@ -1098,9 +1099,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
     def transceiver_is_paired(self):
         return self._service.transceiverIsRegistered()
-
-    def pair_transceiver(self, timeout):
-        self._service.pairTransceiver(timeout)
 
     def get_observation(self):
         data = self._service.getWeatherData()
@@ -2103,7 +2101,6 @@ class CWeatherStationConfig(object):
         self.cache_file = cache_file
         self._InBufCS = 0  # checksum of received config
         self._OutBufCS = 0 # calculated config checksum from outbuf config
-        self._DeviceCS = 0 # config checksum received via messages
         self._ClockMode = 0
         self._TemperatureFormat = 0
         self._PressureFormat = 0
@@ -2226,10 +2223,6 @@ class CWeatherStationConfig(object):
              
     def getInBufCS(self):
         return self._InBufCS
-    
-    def setDeviceCS(self, cs):
-        logdbg('setDeviceCS: %04x' % cs)
-        self._DeviceCS = cs
     
     def setResetMinMaxFlags(self, resetMinMaxFlags):
         logdbg('setResetMinMaxFlags: %s' % resetMinMaxFlags)
@@ -2369,7 +2362,8 @@ class CWeatherStationConfig(object):
         #Reset PresRelMin     00 00 01                 
         """
 
-        ###logdbg('Preset Config data')
+        if DEBUG_CONFIG_DATA > 0:
+            logdbg('Preset Config data')
         """
         setTemps(self,TempFormat,InTempLo,InTempHi,OutTempLo,OutTempHi) 
         setHums(self,InHumLo,InHumHi,OutHumLo,OutHumHi)
@@ -2429,10 +2423,12 @@ class CWeatherStationConfig(object):
         nbuf[0][43] = (self._OutBufCS >> 0) & 0xFF
         buf[0] = nbuf[0]   
         if self._OutBufCS == self._InBufCS and self._ResetMinMaxFlags  == 0:
-            logdbg('testConfigChanged: checksum not changed: OutBufCS=%04x' % self._OutBufCS)
+            if DEBUG_CONFIG_DATA > 0:
+                logdbg('testConfigChanged: checksum not changed: OutBufCS=%04x' % self._OutBufCS)
             changed = 0
         else:
-            logdbg('testConfigChanged: checksum or resetMinMaxFlags changed: OutBufCS=%04x InBufCS=%04x _ResetMinMaxFlags=%06x' % (self._OutBufCS, self._InBufCS, self._ResetMinMaxFlags))
+            if DEBUG_CONFIG_DATA > 0:
+                logdbg('testConfigChanged: checksum or resetMinMaxFlags changed: OutBufCS=%04x InBufCS=%04x _ResetMinMaxFlags=%06x' % (self._OutBufCS, self._InBufCS, self._ResetMinMaxFlags))
             if DEBUG_CONFIG_DATA > 1:
                 self.logConfigData()
             self.write()
@@ -2442,7 +2438,6 @@ class CWeatherStationConfig(object):
     def logConfigData(self):
         logdbg('OutBufCS=             %04x' % self._OutBufCS)
         logdbg('InBufCS=              %04x' % self._InBufCS)
-        logdbg('DeviceCS=             %04x' % self._DeviceCS)
         logdbg('ClockMode=            %s' % self._ClockMode)
         logdbg('TemperatureFormat=    %s' % self._TemperatureFormat)
         logdbg('PressureFormat=       %s' % self._PressureFormat)
@@ -2474,7 +2469,6 @@ class CWeatherStationConfig(object):
     def asConfigObj(self):
         config = ConfigObj()
         config['Station'] = {}
-        config['Station']['DeviceCS'] = str(self._DeviceCS)
         config['Station']['ClockMode'] = str(self._ClockMode)
         config['Station']['TemperatureFormat'] = str(self._TemperatureFormat)
         config['Station']['PressureFormat'] = str(self._PressureFormat)
@@ -2508,7 +2502,6 @@ class CWeatherStationConfig(object):
         return {
             'checksum_in': self._InBufCS,
             'checksum_out': self._OutBufCS,
-            'checksum_device': self._DeviceCS,
             'format_clock': self._ClockMode,
             'format_temperature': self._TemperatureFormat,
             'format_pressure': self._PressureFormat,
@@ -2728,8 +2721,9 @@ class CDataStore(object):
                          weather_ts=None,
                          history_ts=None,
                          config_ts=None):
-        logdbg('setLastStatCache: seen=%s quality=%s battery=%s weather=%s history=%s config=%s' %
-               (seen_ts, quality, battery, weather_ts, history_ts, config_ts))
+        if DEBUG_COMM > 0:
+            logdbg('setLastStatCache: seen=%s quality=%s battery=%s weather=%s history=%s config=%s' %
+                   (seen_ts, quality, battery, weather_ts, history_ts, config_ts))
         if seen_ts is not None:
             self.LastStat.last_seen_ts = seen_ts
         if quality is not None:
@@ -2753,7 +2747,8 @@ class CDataStore(object):
         return self.LastStat.LastHistoryIndex
 
     def setCurrentWeather(self, data):
-        logdbg('setCurrentWeather')
+        if DEBUG_WEATHER_DATA > 0:
+            logdbg('setCurrentWeather')
         self.CurrentWeather = data
 
     def setHistoryData(self, data):
@@ -2771,7 +2766,8 @@ class CDataStore(object):
         return self.Request.Type
 
     def setRequestType(self, val):
-        logdbg('setRequestType to %s' % val)
+        if DEBUG_COMM > 0:
+            logdbg('setRequestType to %s' % val)
         self.Request.Type = val
 
     def getCommModeInterval(self):
@@ -3007,6 +3003,8 @@ class sHID(object):
         buf[2] = 0x01
         buf[3] = data
         buf[4] = 0x00
+        if DEBUG_COMM > 0:
+            self.dump('writeReg', buf, fmt=DEBUG_DUMP_FORMAT)
         self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
                              request=0x0000009,
                              buffer=buf,
@@ -3032,7 +3030,7 @@ class sHID(object):
         buf[0] = 0xd8
         buf[1] = pattern
         if DEBUG_COMM > 0:
-            self.dump('setPreamPattern', buf, fmt=DEBUG_DUMP_FORMAT)
+            self.dump('setPreamble', buf, fmt=DEBUG_DUMP_FORMAT)
         self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
                              request=0x0000009,
                              buffer=buf,
@@ -3241,7 +3239,7 @@ class CCommunicationService(object):
         # when last weather is stale, change action to get current weather
         now = int(time.time())
         age = now - self.DataStore.LastStat.last_weather_ts
-        if action != EAction.aGetCurrent and age >= 30:
+        if action != EAction.aGetCurrent and age >= 30 and newBuffer[0][1] != 0xF0:
             logdbg('morphing action from %d to 5 (age=%s)' % (action, age))
             action = EAction.aGetCurrent
         # FIXME: for now, never ask for historical records
@@ -3281,14 +3279,13 @@ class CCommunicationService(object):
         newBuffer[0] = Buffer[0]
         newLength = [0]
         now = int(time.time())
+        self.DataStore.StationConfig.read(newBuffer)
         self.DataStore.setLastStatCache(seen_ts=now,
                                         quality=(Buffer[0][3] & 0x7f), 
-                                        battery=(Buffer[0][2] & 0xf))
-        self.DataStore.StationConfig.read(newBuffer)
+                                        battery=(Buffer[0][2] & 0xf),
+                                        config_ts=now)
         idx = self.DataStore.getLastHistoryIndex()
         cs = newBuffer[0][47] | (newBuffer[0][46] << 8)
-        self.DataStore.StationConfig.setDeviceCS(cs)
-        self.DataStore.setLastStatCache(config_ts=now)
         self.DataStore.setRequestType(ERequestType.rtGetCurrent)
         self.setSleep(0.380,0.200)
         newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetCurrent, cs, idx)
@@ -3297,7 +3294,8 @@ class CCommunicationService(object):
         Length[0] = newLength[0]
 
     def handleCurrentData(self,Buffer,Length):
-        logdbg('handleCurrentData: %s' % self.timing())
+        if DEBUG_COMM > 0:
+            logdbg('handleCurrentData: %s' % self.timing())
 
         now = int(time.time())
 
@@ -3321,7 +3319,6 @@ class CCommunicationService(object):
         newLength = [0]
 
         cs = newBuffer[0][5] | (newBuffer[0][4] << 8)
-        self.DataStore.StationConfig.setDeviceCS(cs)
 
         cfgBuffer = [0]
         cfgBuffer[0] = [0]*44
@@ -3355,19 +3352,15 @@ class CCommunicationService(object):
         data = CHistoryDataSet()
         data.read(newBuffer)
         cs = newBuffer[0][5] | (newBuffer[0][4] << 8)
-        self.DataStore.StationConfig.setDeviceCS(cs)
-        self.DataStore.setLastStatCache(seen_ts=now,
-                                        quality=(Buffer[0][3] & 0x7f),
-                                        battery=(Buffer[0][2] & 0xf))
-        LatestHistoryAddres = ((((Buffer[0][6] & 0xF) << 8) | Buffer[0][7]) << 8) | Buffer[0][8]
-        ThisHistoryAddres = ((((Buffer[0][9] & 0xF) << 8) | Buffer[0][10]) << 8) | Buffer[0][11]
-        ThisHistoryIndex = (ThisHistoryAddres - 415) / 18
-        LatestHistoryIndex = (LatestHistoryAddres - 415) / 18
+        latestAddr = ((((Buffer[0][6] & 0xF) << 8) | Buffer[0][7]) << 8) | Buffer[0][8]
+        thisAddr = ((((Buffer[0][9] & 0xF) << 8) | Buffer[0][10]) << 8) | Buffer[0][11]
+        thisIndex = (thisAddr - 415) / 18
+        latestIndex = (latestAddr - 415) / 18
 
-        if ( LatestHistoryIndex >= ThisHistoryIndex ):
-            self.DifHis = LatestHistoryIndex - ThisHistoryIndex
+        if ( latestIndex >= thisIndex ):
+            self.DifHis = latestIndex - thisIndex
         else:
-            self.DifHis = LatestHistoryIndex + 1797 - ThisHistoryIndex
+            self.DifHis = latestIndex + 1797 - thisIndex
 
         if self.DifHis > 0:
             logdbg('handleHistoryData: Time=%s OutstandingHistorySets=%4i' %
@@ -3375,20 +3368,22 @@ class CCommunicationService(object):
 
         if self.DifHis > 0:
             # FIXME: for now skip the history records
-            ThisHistoryIndex = LatestHistoryIndex
+            thisIndex = latestIndex
             self.DifHis = 0
             self.setSleep(0.300,0.020)
-            self.DataStore.setLastHistoryIndex(ThisHistoryIndex)
+            self.DataStore.setLastHistoryIndex(thisIndex)
         else:
             self.setSleep(0.380,0.200)
-            if ThisHistoryIndex == self.DataStore.getLastHistoryIndex():
-                pass
-            else:
+            if thisIndex != self.DataStore.getLastHistoryIndex():
                 self.DataStore.setHistoryData(data)
-                self.DataStore.setLastHistoryIndex(ThisHistoryIndex)
-        self.DataStore.setLastStatCache(history_ts=now)
+                self.DataStore.setLastHistoryIndex(thisIndex)
 
-        if ThisHistoryIndex == LatestHistoryIndex:
+        self.DataStore.setLastStatCache(seen_ts=now,
+                                        quality=(Buffer[0][3] & 0x7f),
+                                        battery=(Buffer[0][2] & 0xf),
+                                        history_ts=now)
+
+        if thisIndex == latestIndex:
             self.TimeDifSec = (data.Time - datetime.fromtimestamp(now)).seconds
             if self.TimeDifSec > 43200:
                 self.TimeDifSec = self.TimeDifSec - 86400 + 1
@@ -3399,7 +3394,7 @@ class CCommunicationService(object):
                    data.Time)
 
         self.DataStore.setRequestType(ERequestType.rtGetCurrent)
-        idx = ThisHistoryIndex
+        idx = thisIndex
         newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetCurrent, cs, idx)
 
         Length[0] = newLength[0]
@@ -3414,7 +3409,6 @@ class CCommunicationService(object):
         self.DataStore.setLastStatCache(seen_ts=int(time.time()),
                                         quality=(Buffer[0][3] & 0x7f))
         cs = newBuffer[0][5] | (newBuffer[0][4] << 8)
-        self.DataStore.StationConfig.setDeviceCS(cs)
         if (Buffer[0][2] & 0xEF) == EResponseType.rtReqFirstConfig:
             logdbg('handleNextAction: a1 (first-time config)')
             newLength[0] = self.buildFirstConfigFrame(newBuffer, cs)
@@ -3438,7 +3432,8 @@ class CCommunicationService(object):
         Buffer[0] = newBuffer[0]
 
     def generateResponse(self, Buffer, Length):
-        logdbg('generateResponse: %s' % self.timing())
+        if DEBUG_COMM > 0:
+            logdbg('generateResponse: %s' % self.timing())
         newBuffer = [0]
         newBuffer[0] = Buffer[0]
         newLength = [0]
@@ -3449,15 +3444,16 @@ class CCommunicationService(object):
 
         bufferID = (Buffer[0][0] <<8) | Buffer[0][1]
         respType = (Buffer[0][2] & 0xE0)
-        logdbg("generateResponse: id=%04x resp=%x req=%x length=%x" %
-               (bufferID, respType, reqType, Length[0]))
+        if DEBUG_COMM > 0:
+            logdbg("generateResponse: id=%04x resp=%x req=%x length=%x" %
+                   (bufferID, respType, reqType, Length[0]))
         deviceID = self.DataStore.getDeviceID()
-        self.DataStore.setRegisteredDeviceID(bufferID)
+        if bufferID != 0xF0F0:
+            self.DataStore.setRegisteredDeviceID(bufferID)
 
         if bufferID == 0xF0F0:
             loginf('generateResponse: console not paired, attempting to pair to 0x%04x' % deviceID)
-            #    00000000: dd 0a 01 fe 18 f6 aa 01 2a a2 4d 00 00 87 16
-            newLength[0] = self.buildACKFrame(newBuffer, EAction.aReqSetConfig, deviceID, 0xFFFF)
+            newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetConfig, deviceID, 0xFFFF)
         elif bufferID == deviceID:
             if respType == EResponseType.rtDataWritten:
                 #    00000000: 00 00 06 00 32 20
@@ -3616,8 +3612,8 @@ class CCommunicationService(object):
 
         self.shid.execute(5)
         self.shid.setPreamblePattern(0xaa)
-        self.shid.setState(0x1e)
-        time.sleep(1) # FIXME: is this necessary?
+        self.shid.setState(0)
+        time.sleep(1)
         self.shid.setRX()
 
     def setup(self, frequency_standard,
@@ -3654,11 +3650,6 @@ class CCommunicationService(object):
     def transceiverIsRegistered(self):
         return self.DataStore.getDeviceRegistered()
 
-    # FIXME: implement pairTransceiver
-    def pairTransceiver(self):
-#        self.DataStore.firstTimeConfig(timeout)
-        pass
-
     def startRFThread(self):
         if self.child is not None:
             return
@@ -3684,6 +3675,8 @@ class CCommunicationService(object):
 
     def doRF(self):
         try:
+            logdbg('setting up rf communication')
+            self.doRFStartup()
             logdbg('starting rf communication')
             while self.running:
                 self.doRFCommunication()
@@ -3695,6 +3688,13 @@ class CCommunicationService(object):
             raise
         finally:
             logdbg('stopping rf communication')
+
+    def doRFStartup(self):
+        self.shid.setPreamblePattern(0xaa)
+        self.shid.setState(0x1e)
+        time.sleep(1)
+        self.shid.setRX()
+        self.setSleep(0.085,0.005)
 
     def doRFCommunication(self):
         time.sleep(self.firstSleep)
@@ -3729,6 +3729,7 @@ class CCommunicationService(object):
         self.firstSleep = firstsleep
         self.nextSleep = nextsleep
 
+    # FIXME: are these values needed now?
     # comm_interval  first  next
     # 3              3.980  0.020
     # 5              5.980  0.020

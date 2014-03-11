@@ -126,6 +126,7 @@ def check_transceiver(station, maxtries):
 def pair(station, maxtries):
     """Pair the transceiver with the station console."""
     print 'Pairing transceiver with console...'
+    maxwait = 90 # how long to wait between button presses, in seconds
     ntries = 0
     try:
         while ntries < maxtries or maxtries == 0:
@@ -133,13 +134,16 @@ def pair(station, maxtries):
                 print 'Transceiver is paired to console'
                 break
             ntries += 1
-            msg = 'Press and hold the [v] key on station console'
+            msg = 'Press and hold the [v] key until "PC" appears'
             if maxtries > 0:
                 msg += ' (attempt %d of %d)' % (ntries, maxtries)
             else:
                 msg += ' (attempt %d)' % ntries
             print msg
-            station.pair_transceiver(30000) # milliseconds
+            now = start_ts = int(time.time())
+            while now - start_ts < maxwait and not station.transceiver_is_paired():
+                time.sleep(5)
+                now = int(time.time())
         else:
             print 'Transceiver not paired to console.'
     except Exception, e:
@@ -151,7 +155,7 @@ def info(station, maxtries):
     start_ts = None
     ntries = 0
     try:
-        while ntries < maxtries:
+        while ntries < maxtries or maxtries == 0:
             config = station.get_config()
             if config is not None:
                 print_dict(config)
@@ -171,7 +175,7 @@ def current(station, maxtries):
     start_ts = None
     ntries = 0
     try:
-        while ntries < maxtries:
+        while ntries < maxtries or maxtries == 0:
             packet = station.get_observation()
             if packet is not None:
                 print_dict(packet)
@@ -193,7 +197,7 @@ def history(station, maxtries, ts=0, count=0, fmt='raw'):
     start_ts = None
     ntries = 0
     try:
-        while ntries < maxtries:
+        while ntries < maxtries or maxtries == 0:
             records = station.get_history(since_ts=ts, num_rec=count)
             if records is not None:
                 break

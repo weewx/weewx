@@ -15,6 +15,8 @@ Fixed pressure calculation in wee_config_fousb.
 
 Prevent failures in imagegenerator when no unicode-capable fonts are installed.
 
+Provide explicit pairing feedback using wee_config_ws28xx
+
 Count wxengine restarts in logwatch.
 
 
