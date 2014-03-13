@@ -161,7 +161,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.8'
+DRIVER_VERSION = '0.9'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -678,13 +678,11 @@ class Station(object):
     READ_LENGTH = 0x8
 
     def __init__(self, vendor_id=0x1130, product_id=0x6801,
-                 dev_id=None, ifc=None, cfg=None, memory_size='small'):
+                 dev_id=None, memory_size='small'):
         self.vendor_id = vendor_id
         self.product_id = product_id
         self.device_id = dev_id
-        self.interface = ifc
-        self.configuration = cfg
-        self.handle = None
+        self.devh = None
 
         self.elevation = None
         self.latitude = None
@@ -708,62 +706,56 @@ class Station(object):
                         return dev
         return None
 
-    def open(self):
+    def open(self, interface=0):
         dev = self._find(self.vendor_id, self.product_id, self.device_id)
         if not dev:
             logcrt("Cannot find USB device with VendorID=0x%04x ProductID=0x%04x DeviceID=%s" % (self.vendor_id, self.product_id, self.device_id))
-            raise weewx.WeeWxIOError("Unable to find station on USB")
+            raise weewx.WeeWxIOError('Unable to find station on USB')
 
-        if self.configuration is None:
-            self.configuration = dev.configurations[0]
-        if self.interface is None:
-            self.interface = self.configuration.interfaces[0][0]
-        self.handle = dev.open()
+        self.devh = dev.open()
+        if not self.devh:
+            raise weewx.WeeWxIOError('Open USB device failed')
 
+        # be sure kernel does not claim the interface
         try:
-            self.handle.detachKernelDriver(self.interface)
-        except Exception:
-            pass
+            self.devh.detachKernelDriver(interface)
+        except Exception, e:
+            loginf('Detach kernel driver failed: %s' % e)
 
+        # attempt to claim the interface
         try:
-            self.handle.setConfiguration(self.configuration)
-            self.handle.claimInterface(self.interface)
-            self.handle.setAltInterface(self.interface)
+            self.devh.claimInterface(interface)
+            self.devh.setAltInterface(interface)
         except usb.USBError, e:
             self.close()
-            logcrt("Unable to claim USB interface %s of configuration %s: %s" %
-                   (self.interface, self.configuration, e))
+            logcrt("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
 
     def close(self):
         try:
-            self.handle.releaseInterface()
+            self.devh.releaseInterface()
         except Exception:
             pass
-        try:
-            self.handle.detachKernelDriver(iface)
-        except Exception:
-            pass
-        self.handle = None
+        self.devh = None
 
     # The te923tool does reads in chunks with pause between.  According to
     # the wview implementation, after sending the read command the device will
     # send back 32 bytes of data within 100 ms.  If not, the command was not
     # properly received.
     #
-    # FIXME: must be a better way to know when there is no more data
+    # FIXME: must be a better way to know when there are no more data
     def _raw_read(self, addr, timeout=50):
         reqbuf = [0x05, 0xAF, 0x00, 0x00, 0x00, 0x00, 0xAF, 0xFE]
         reqbuf[4] = addr / 0x10000
         reqbuf[3] = (addr - (reqbuf[4] * 0x10000)) / 0x100
         reqbuf[2] = addr - (reqbuf[4] * 0x10000) - (reqbuf[3] * 0x100)
         reqbuf[5] = (reqbuf[1] ^ reqbuf[2] ^ reqbuf[3] ^ reqbuf[4])
-        ret = self.handle.controlMsg(requestType=0x21,
-                                     request=usb.REQ_SET_CONFIGURATION,
-                                     value=0x0200,
-                                     index=0x0000,
-                                     buffer=reqbuf,
-                                     timeout=timeout)
+        ret = self.devh.controlMsg(requestType=0x21,
+                                   request=usb.REQ_SET_CONFIGURATION,
+                                   value=0x0200,
+                                   index=0x0000,
+                                   buffer=reqbuf,
+                                   timeout=timeout)
         if ret != 8:
             raise BadRead('Unexpected response to data request: %s != 8' % ret)
 
@@ -772,8 +764,8 @@ class Station(object):
         rbuf = []
         try:
             while time.time() - start_ts < 5:
-                buf = self.handle.interruptRead(self.ENDPOINT_IN,
-                                                self.READ_LENGTH, timeout)
+                buf = self.devh.interruptRead(self.ENDPOINT_IN,
+                                              self.READ_LENGTH, timeout)
                 if buf:
                     nbytes = buf[0]
                     if nbytes > 7 or nbytes > len(buf)-1:

@@ -21,6 +21,8 @@ Provide explicit pairing feedback using wee_config_ws28xx
 
 Count wxengine restarts in logwatch.
 
+Cleaned up USB initialization for fousb, ws28xx, and te923 drivers.
+
 
 2.6.2 02/16/14
 

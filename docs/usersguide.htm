@@ -2274,20 +2274,20 @@ Configuration utility for WS-28xx weather stations.
 Options:
   -h, --help           show this help message and exit
   --config=FILE        configuration file
-<span class='highlight'>  --check-transceiver</span>  check USB transceiver
+  --check-transceiver  check USB transceiver
   --pair               pair the USB transceiver with a station console
-<span class='highlight'>  --info</span>               display weather station configuration
-<span class='highlight'>  --current</span>            get the current weather conditions
-  --history-since=N    display history records since N minutes ago
-  --history=N          display N history records
+  --info               display weather station configuration
+  --current            get the current weather conditions
+<span class='highlight'>  --history-since=N    display history records since N minutes ago</span>
+<span class='highlight'>  --history=N          display N history records</span>
   --format=FORMAT      format for history, one of raw, table, or dict
   --maxtries=MAXTRIES  maximum number of retries, 0 indicates no max
   --debug              display diagnostic information while running
 
 Mutating actions will request confirmation before proceeding.</pre>
-    <p>The WS28xx driver is still in active development; only the
+    <p>The WS28xx driver is still in active development; the
       <span class='highlight'>&nbsp;highlighted&nbsp;</span> options
-      are working.</p>
+      are not yet working.</p>
 
     <h3>Pairing</h3>
     <p>The console and transceiver must be paired.  Pairing ensures that your
@@ -2297,16 +2297,17 @@ Mutating actions will request confirmation before proceeding.</pre>
       batteries.</p>
     <p>There are two ways to pair the console and the transceiver:</p>
     <ol>
-      <li><strong>The Weewx way.</strong>  With <span class="code">weewx</span> running, press and hold
-        the [v] button on the console until you see 'PC' in the display.  If
-        the console pairs with the transceiver, 'PC' will go away within a
-        second or two.</li>
+      <li><strong>The Weewx way.</strong>  With <span class="code">weewx</span>
+        running, press and hold the [v] button on the console until you see
+        'PC' in the display.  If the console pairs with the transceiver, 'PC'
+        will go away within a second or two.</li>
       <li><strong>The HeavyWeather way.</strong>  Follow the pairing
         instructions that came with the station.  You will have to run
         HeavyWeather on a windows computer with the USB transceiver.  After
         HeavyWeather indicates the devices are paired, put the USB transceiver
-        in your <span class="code">weewx</span> computer and start weewx.  Do not power cycle the
-        station console or you will have to start over.</li>
+        in your <span class="code">weewx</span> computer and start weewx.
+        Do not power cycle the station console or you will have to start
+        over.</li>
       </ol>
 
     <p>If the console does not pair, you will see messages in the log such as

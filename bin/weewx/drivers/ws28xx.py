@@ -873,7 +873,7 @@ import weewx.units
 import weewx.wxengine
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.25'
+DRIVER_VERSION = '0.26'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
@@ -982,6 +982,12 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         each will have a unique device identifier.  Use this identifier
         to indicate which device should be used.
         [Optional. Default is None]
+
+        serial: The transceiver serial number.  If there are multiple
+        devices with the same vendor and product IDs on the bus, each will
+        have a unique serial number.  Use the serial number to indicate which
+        transceiver should be used.
+        [Optional. Default is None]
         """
 
         self.altitude          = stn_dict['altitude']
@@ -993,6 +999,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         self.vendor_id         = int(stn_dict.get('vendor_id',  '0x6666'), 0)
         self.product_id        = int(stn_dict.get('product_id', '0x5555'), 0)
         self.device_id         = stn_dict.get('device_id', None)
+        self.serial            = stn_dict.get('serial', None)
         self.pressure_offset   = stn_dict.get('pressure_offset', None)
         if self.pressure_offset is not None:
             self.pressure_offset = float(self.pressure_offset)
@@ -1086,7 +1093,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         self._service = CCommunicationService(self.cache_file)
         self._service.setup(self.frequency,
                             self.vendor_id, self.product_id, self.device_id,
-                            comm_interval=self.comm_interval)
+                            self.serial, comm_interval=self.comm_interval)
         self._service.startRFThread()
 
     def shutDown(self):
@@ -1198,9 +1205,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
     def get_transceiver_id(self):
         return self._service.DataStore.getDeviceID()
-
-    def get_battery(status, hardware):
-        return 0
 
 # The following classes and methods are adapted from the implementation by
 # eddie de pieri, which is in turn based on the HeavyWeather implementation.
@@ -2794,42 +2798,72 @@ class sHID(object):
         self.timeout = 1000
         self.last_dump = None
 
-    def open(self, vid, pid, did):
-        device = self._find_device(vid, pid, did)
+    def open(self, vid, pid, did, serial):
+        device = self._find_device(vid, pid, did, serial)
         if device is None:
-            logcrt('Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s' % (vid, pid, did))
-            raise weewx.WeeWxIOError('Unable to find USB device')
+            logcrt('Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s Serial=%s' % (vid, pid, did, serial))
+            raise weewx.WeeWxIOError('Unable to find transceiver on USB')
         self._open_device(device)
 
     def close(self):
         self._close_device()
 
-    def _find_device(self, vid, pid, did):
+    def _find_device(self, vid, pid, did, serial):
         for bus in usb.busses():
             for dev in bus.devices:
                 if dev.idVendor == vid and dev.idProduct == pid:
                     if did is None or dev.filename == did:
-                        loginf('found transceiver on USB bus=%s device=%s' % (bus.dirname, dev.filename))
-                        return dev
+                        if serial is None:
+                            loginf('found transceiver at bus=%s device=%s' %
+                                   (bus.dirname, dev.filename))
+                            return dev
+                        else:
+                            handle = dev.open()
+                            try:
+                                buf = shid.readCfg(handle, 0x1F9, 7)
+                                sn  = str("%02d"%(buf[0]))
+                                sn += str("%02d"%(buf[1]))
+                                sn += str("%02d"%(buf[2]))
+                                sn += str("%02d"%(buf[3]))
+                                sn += str("%02d"%(buf[4]))
+                                sn += str("%02d"%(buf[5]))
+                                sn += str("%02d"%(buf[6]))
+                                if str(serial) == sn:
+                                    loginf('found transceiver at bus=%s device=%s serial=%s' % (bus.dirname, dev.filename, sn))
+                                    return dev
+                                else:
+                                    loginf('skipping transceiver with serial %s (looking for %s)' % (sn, serial))
+                            finally:
+                                del handle
         return None
 
-    def _open_device(self, device, interface=0, configuration=1):
-        self._device = device
-        self._configuration = device.configurations[0]
-        self._interface = self._configuration.interfaces[0][0]
-        self._endpoint = self._interface.endpoints[0]
-        self.devh = device.open()
-        loginf('manufacturer: %s' % self.devh.getString(device.iManufacturer,30))
-        loginf('product: %s' % self.devh.getString(device.iProduct,30))
-        loginf('interface: %d' % self._interface.interfaceNumber)
+    def _open_device(self, dev, interface=0):
+        self.devh = dev.open()
+        if not self.devh:
+            raise weewx.WeeWxIOError('Open USB device failed')
 
-        # detach any old claimed interfaces
+        loginf('manufacturer: %s' % self.devh.getString(dev.iManufacturer,30))
+        loginf('product: %s' % self.devh.getString(dev.iProduct,30))
+        loginf('interface: %d' % interface)
+
+        # be sure kernel does not claim the interface
         try:
-            self.devh.detachKernelDriver(self._interface.interfaceNumber)
-        except Exception:
-            pass
+            self.devh.detachKernelDriver(interface)
+        except Exception, e:
+            loginf('Detach kernel driver failed: %s' % e)
+
+        # attempt to claim the interface
+        try:
+            logdbg('claiming USB interface %d' % interface)
+            self.devh.claimInterface(interface)
+            self.devh.setAltInterface(interface)
+        except usb.USBError, e:
+            self._close_device()
+            logcrt('Unable to claim USB interface %s: %s' % (interface, e))
+            raise weewx.WeeWxIOError(e)
 
         # FIXME: this seems to be specific to ws28xx?
+        # FIXME: check return values
         usbWait = 0.05
         self.devh.getDescriptor(0x1, 0, 0x12)
         time.sleep(usbWait)
@@ -2837,39 +2871,19 @@ class sHID(object):
         time.sleep(usbWait)
         self.devh.getDescriptor(0x2, 0, 0x22)
         time.sleep(usbWait)
-
-        # attempt to claim the interface
-        try:
-            if platform.system() is 'Windows':
-                loginf('set USB device configuration to %d' % configuration)
-                self.devh.setConfiguration(configuration)
-            logdbg('claiming USB interface %d' % interface)
-            self.devh.claimInterface(interface)
-            self.devh.setAltInterface(interface)
-        except usb.USBError, e:
-            self._close_device()
-            raise weewx.WeeWxIOError(e)
-
-        # FIXME: this seems to be specific to ws28xx?
-        # FIXME: check return value
-        self.devh.controlMsg(
-            usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-            0x000000a, [], 0x0000000, 0x0000000, 1000)
-        time.sleep(0.05)
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             0xa, [], 0x0, 0x0, 1000)
+        time.sleep(usbWait)
         self.devh.getDescriptor(0x22, 0, 0x2a9)
         time.sleep(usbWait)
 
     def _close_device(self):
         try:
-            logdbg('release USB interface')
+            logdbg('releasing USB interface')
             self.devh.releaseInterface()
         except Exception:
             pass
-        try:
-            logdbg('detach kernel driver')
-            self.devh.detachKernelDriver(self._interface.interfaceNumber)
-        except Exception:
-            pass
+        self.devh = None
 
     def setTX(self):
         buf = [0]*0x15
@@ -3073,6 +3087,38 @@ class sHID(object):
         else:
             logdbg('%s: %s%s' % (cmd, pad, strbuf))
             self.last_dump = None
+
+    def readCfg(self, handle, addr, numBytes):
+        while numBytes:
+            buf=[0xcc]*0x0f #0x15
+            buf[0] = 0xdd
+            buf[1] = 0x0a
+            buf[2] = (addr >>8) & 0xFF
+            buf[3] = (addr >>0) & 0xFF
+            handle.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                              request=0x0000009,
+                              buffer=buf,
+                              value=0x00003dd,
+                              index=0x0000000,
+                              timeout=1000)
+            buf = handle.controlMsg(requestType=usb.TYPE_CLASS |
+                                    usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
+                                    request=usb.REQ_CLEAR_FEATURE,
+                                    buffer=0x15,
+                                    value=0x00003dc,
+                                    index=0x0000000,
+                                    timeout=1000)
+            new_data=[0]*0x15
+            if numBytes < 16:
+                for i in xrange(0, numBytes):
+                    new_data[i] = buf[i+4]
+                numBytes = 0
+            else:
+                for i in xrange(0, 16):
+                    new_data[i] = buf[i+4]
+                numBytes -= 16
+                addr += 16
+        return new_data
 
 class CCommunicationService(object):
 
@@ -3326,7 +3372,7 @@ class CCommunicationService(object):
         changed = self.DataStore.StationConfig.testConfigChanged(cfgBuffer)
         inBufCS = self.DataStore.StationConfig.getInBufCS()
         if inBufCS == 0 or inBufCS != cs:
-            logdbg('handleCurrentData: inBufCS of station not actual')
+            logdbg('handleCurrentData: inBufCS of station does not match')
             self.DataStore.setRequestType(ERequestType.rtGetConfig)
             self.setSleep(0.400,0.400)
             newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetConfig, cs, idx)
@@ -3610,18 +3656,11 @@ class CCommunicationService(object):
         for r in self.reg_names:
             self.shid.writeReg(r, self.reg_names[r])
 
-        self.shid.execute(5)
-        self.shid.setPreamblePattern(0xaa)
-        self.shid.setState(0)
-        time.sleep(1)
-        self.shid.setRX()
-
     def setup(self, frequency_standard,
-              vendor_id, product_id, device_id,
+              vendor_id, product_id, device_id, serial,
               comm_interval=3):
         self.DataStore.setCommModeInterval(comm_interval)
-        self.firstSleep, self.nextSleep = self.getSleep(comm_interval)
-        self.shid.open(vendor_id, product_id, device_id)
+        self.shid.open(vendor_id, product_id, device_id, serial)
         self.initTransceiver(frequency_standard)
         self.DataStore.setTransceiverPresent(True)
 
@@ -3676,7 +3715,7 @@ class CCommunicationService(object):
     def doRF(self):
         try:
             logdbg('setting up rf communication')
-            self.doRFStartup()
+            self.doRFSetup()
             logdbg('starting rf communication')
             while self.running:
                 self.doRFCommunication()
@@ -3689,7 +3728,17 @@ class CCommunicationService(object):
         finally:
             logdbg('stopping rf communication')
 
-    def doRFStartup(self):
+    # it is probably not necessary to have two setPreamblePattern invocations.
+    # however, HeavyWeatherPro seems to do it this way on a first time config.
+    # doing it this way makes configuration easier during a factory reset and
+    # when re-establishing communication with the station sensors.
+    def doRFSetup(self):
+        self.shid.execute(5)
+        self.shid.setPreamblePattern(0xaa)
+        self.shid.setState(0)
+        time.sleep(1)
+        self.shid.setRX()
+
         self.shid.setPreamblePattern(0xaa)
         self.shid.setState(0x1e)
         time.sleep(1)
@@ -3728,15 +3777,6 @@ class CCommunicationService(object):
     def setSleep(self, firstsleep, nextsleep):
         self.firstSleep = firstsleep
         self.nextSleep = nextsleep
-
-    # FIXME: are these values needed now?
-    # comm_interval  first  next
-    # 3              3.980  0.020
-    # 5              5.980  0.020
-    def getSleep(self, comInt):
-        if comInt == 3:
-            return 3.980,0.020
-        return 5.980, 0.020
 
     def timing(self):
         s = self.firstSleep + self.nextSleep * (self.pollCount - 1)

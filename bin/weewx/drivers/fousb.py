@@ -221,7 +221,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '1.5'
+DRIVER_VERSION = '1.6'
 
 def loader(config_dict, engine):
     altitude_m = weewx.units.getAltitudeM(config_dict)
@@ -587,27 +587,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         max_tries: How many times to try before giving up.
         [Optional. Default is 3]
 
-        data_format: Format for data from the station
-        [Optional. Default is 1080, automatically changes to 3080 as needed]
-        
-        vendor_id: The USB vendor ID for the station.
-        [Optional. Default is 1941]
-        
-        product_id: The USB product ID for the station.
-        [Optional. Default is 8021]
-
         device_id: The USB device ID for the station.  Specify this if there
         are multiple devices of the same type on the bus.
         [Optional. No default]
-
-        interface: The USB interface.
-        [Optional. Default is 0]
-
-        usb_endpoint: The IN_endpoint for reading from USB.
-        [Optional. Default is 0x81]
-        
-        usb_read_size: Number of bytes to read from USB.
-        [Optional. Default is 32 and is the same for all FineOffset devices]
         """
 
         self.altitude          = stn_dict['altitude']
@@ -618,16 +600,17 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 30.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
-        self.interface         = int(stn_dict.get('interface', 0))
-        self.vendor_id         = int(stn_dict.get('vendor_id',  '0x1941'), 0)
-        self.product_id        = int(stn_dict.get('product_id', '0x8021'), 0)
         self.device_id         = stn_dict.get('device_id', None)
-        self.usb_endpoint      = int(stn_dict.get('usb_endpoint', '0x81'), 0)
-        self.usb_read_size     = int(stn_dict.get('usb_read_size', '0x20'), 0)
-        self.data_format       = stn_dict.get('data_format', '1080')
         self.pressure_offset   = stn_dict.get('pressure_offset', None)
         if self.pressure_offset is not None:
             self.pressure_offset = float(self.pressure_offset)
+
+        self.data_format   ='1080'
+        self.vendor_id     = 0x1941
+        self.product_id    = 0x8021
+        self.usb_interface = 0
+        self.usb_endpoint  = 0x81
+        self.usb_read_size = 0x20
 
         # avoid USB activity this many seconds each side of the time when
         # console is believed to be writing to memory.
@@ -694,17 +677,24 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         if not dev:
             logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s" % (self.vendor_id, self.product_id, self.device_id))
             raise weewx.WeeWxIOError("Unable to find USB device")
+
         self.devh = dev.open()
-        # Detach any old claimed interfaces
+        if not self.devh:
+            raise weewx.WeeWxIOError("Open USB device failed")
+
+        # be sure kernel does not claim the interface
         try:
-            self.devh.detachKernelDriver(self.interface)
-        except:
-            pass
+            self.devh.detachKernelDriver(self.usb_interface)
+        except Exception, e:
+            loginf('Detach kernel driver failed: %s' % e)
+
+        # attempt to claim the interface
         try:
-            self.devh.claimInterface(self.interface)
+            self.devh.claimInterface(self.usb_interface)
         except usb.USBError, e:
             self.closePort()
-            logcrt("Unable to claim USB interface: %s" % e)
+            logcrt("Unable to claim USB interface %s: %s" %
+                   (self.usb_interface, e))
             raise weewx.WeeWxIOError(e)
         
     def closePort(self):
@@ -712,10 +702,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             self.devh.releaseInterface()
         except:
             pass
-        try:
-            self.devh.detachKernelDriver(self.interface)
-        except:
-            pass
+        self.devh = None
                                
     def _find_device(self):
         """Find the vendor and product ID on the USB."""
