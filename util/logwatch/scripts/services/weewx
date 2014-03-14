@@ -15,6 +15,7 @@ my $STARTUPS = 'wxengine: startups';
 my $HUP_RESTARTS = 'wxengine: restart from HUP';
 my $KBD_INTERRUPTS = 'wxengine: keyboard interrupts';
 my $RESTARTS = 'wxengine: restarts';
+my $GARBAGE = 'wxengine: garbage collected';
 my $ARCHIVE_RECORDS_ADDED = 'archive: records added';
 my $IMAGES_GENERATED = 'genimages: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
@@ -101,6 +102,8 @@ while(defined($_ = <STDIN>)) {
         $counts{$KBD_INTERRUPTS} += 1;
     } elsif (/wxengine: retrying/) {
         $counts{$RESTARTS} += 1;
+    } elsif (/wxengine: garbage collected (\d+) objects/) {
+        $counts{$GARBAGE} += $1;
     } elsif (/wxengine: Clock error is ([0-9,.-]+)/) {
         $clocksum += $1;
         $clockmin = $1 if $1 < $clockmin;
