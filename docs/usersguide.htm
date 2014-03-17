@@ -1882,7 +1882,7 @@ Options:
                         correct value in inches of mercury. Specify 0 (zero)
                         to have the console pick a sensible value.
   --set-bucket=CODE     Set the type of rain bucket. Specify '0' for 0.01
-                        inches; '1' for 0.2 MM; '2' for 0.1 MM
+                        inches; '1' for 0.2 mm; '2' for 0.1 mm
   --set-rain-year-start=MM
                         Set the rain year start (1=Jan, 2=Feb, etc.).
   --set-time            Set the onboard clock to the current time.
@@ -1977,14 +1977,14 @@ Davis Vantage EEPROM settings:
     <p>I have found that a five minute (300 seconds) archive interval works well 
       for the Vantage stations. Because of the large amount of onboard memory they carry, 
       going to a larger interval does not have any real advantages. </p>
-    <p><em>Choose your archiving interval carefully! </em>Once chosen, it cannot 
-      be changed without messing up your statistics (highs and lows will be OK, but 
-      averages and rms wind speed will be wrong). </p>
+    <p class="warning"><b>Choose the archive interval carefully! </b>Once
+      chosen, it cannot be changed without messing up the statistics (highs
+      and lows will be OK, but averages and RMS wind speed will be wrong). </p>
 
     <h3 id="vantage_rain_bucket_type">Rain bucket type</h3>
     <p>Normally, this is set by Davis, but if you have replaced your bucket with 
       a different kind, you might want to reconfigure. For example, to change to a 
-      0.1MM bucket (bucket code &quot;2&quot;), use the following:</p>
+      0.1 mm bucket (bucket code &quot;2&quot;), use the following:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-bucket=2</pre>
 
     <h3 id="vantage_dumping_the_logger_memory">Dumping the logger memory</h3>
@@ -2074,16 +2074,19 @@ Mutating actions will request confirmation before proceeding.</p>
       (read_period) of 30 minutes (1800 seconds).  To change the station's
       interval to 5 minutes, do the following:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --set-interval=5</p>
-    <p><em>Choose your archiving interval carefully! </em>Once chosen, it
-      cannot be changed without messing up your statistics (highs and lows
-      will be OK, but averages and rms wind speed will be wrong). </p>
+    <p class="warning"><b>Choose the archive interval carefully! </b>Once
+      chosen, it cannot be changed without messing up the statistics (highs
+      and lows will be OK, but averages and RMS wind speed will be wrong). </p>
 
     <h3>Calibrating the pressure sensor</h3>
-    <p>The pressure sensor in the Fine Offset stations measures absolute, or gauge pressure. 
-       The absolute pressure may be off a bit when the station is at sea level (1 to 10 millibars), 
-       but it will definitely be way off when the station is above sea level (as much as hundreds of millibars). 
-       <span class='code'>Weewx</span> will compensate for the effects of altitude, but to do so, 
-       it needs not only the altitude, but a calibrated station pressure.</p>
+    <p>The pressure sensor in the Fine Offset stations measures absolute, or
+      gauge pressure, but most weather services require a pressure adjusted to
+      sea level.  The absolute pressure may be off a bit (1 to 10 millibars)
+      when the station is at sea level, but it will definitely be way off
+      (as much as hundreds of millibars) when the station is above sea level.
+      <span class='code'>Weewx</span> will compensate for the effects of
+      altitude, but to do so, it needs not only the altitude, but a calibrated
+      station pressure.</p>
     <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  If you do not know what the offset should be, use the <span class='code'>wee_config_fousb</span> 
 	utility to calculate this offset given the station altitude and a valid 
 	sea-level pressure from a nearby known-correct station.</p>
@@ -2221,9 +2224,9 @@ in humidity: 48.0
       minutes (3600 seconds).  To change the station's interval to 5 minutes,
       do the following:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --set-interval=5</p>
-    <p><em>Choose your archiving interval carefully! </em>Once chosen, it
-      cannot be changed without messing up your statistics (highs and lows
-      will be OK, but averages and rms wind speed will be wrong). </p>
+    <p class="warning"><b>Choose the archive interval carefully! </b>Once
+      chosen, it cannot be changed without messing up the statistics (highs
+      and lows will be OK, but averages and RMS wind speed will be wrong). </p>
 
     <h3 id="ws23xx_dumping_the_console_memory">Dumping the console memory</h3>
     <p>WS23xx stations store records in a circular buffer - once the
@@ -2384,11 +2387,13 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	  [StdArchive]</a></span> for details.</p>
 
     <h1 id="running">Running <span class="code">weewx</span></h1>
-    <p><span class="code">Weewx</span> can be run either from the command line (useful 
-      for diagnostic purposes because it will print out a summary of every LOOP data), 
-      or as a daemon. When first trying <span class="code">weewx</span>, it is 
-      probably best to run it from the command line because you will be able to see 
-      command line diagnostics, as well as log messages. </p>
+    <p><span class="code">Weewx</span> can be run either from the command line
+      (useful for diagnostic purposes because it will print out a summary of
+      every LOOP data), or as a daemon. When first trying
+      <span class="code">weewx</span>, it is best to run it from the command
+      line because you will be able to see command line diagnostics, as well
+      as log messages.  Once everything is working properly, run it as a
+      daemon.</p>
     <h2>Running from the command line</h2>
     <p><span class="code">Weewx</span> can easily be run from the command line. 
       Start by making sure you have appropriate permissions to the serial port your 
@@ -2421,9 +2426,9 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
       done automatically. You can ignore this section.</p>
     <p>Start by selecting the appropriate run script. They can be found under
       <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/</span>. </p>
-    <table class="locations" style="width:40%">
+    <table class="locations" style='width:70%'>
       <tr>
-	<td >Debian/Ubuntu/Mint:</td>
+	<td style='width:30%'>Debian/Ubuntu/Mint:</td>
 	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian</span></td>
       </tr>
       <tr>
@@ -2431,7 +2436,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
 	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat</span></td>
       </tr>
       <tr>
-	<td style="width: 25%">SuSE:</td>
+	<td>SuSE:</td>
 	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse</span></td>
       </tr>
     </table>
@@ -2440,9 +2445,9 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
 	<span class="code">weewx</span> installation (it should have been set to the correct value automatically 
       by the install process, but it is worth checking). </p>
     <p>Copy it to the proper location for your system: </p>
-    <table class="locations" style="width:40%">
+    <table class="locations" style="width:70%">
       <tr>
-	<td>Debian/Ubuntu/Mint:</td>
+	<td style="width: 30%">Debian/Ubuntu/Mint:</td>
 	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian /etc/init.d/weewx</span></td>
       </tr>
       <tr>
@@ -2450,14 +2455,14 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
 	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</span></td>
       </tr>
       <tr>
-	<td style="width: 25%">SuSE:</td>
+	<td>SuSE:</td>
 	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse /etc/init.d/weewx</span></td>
       </tr>
     </table>
     <p>Make sure the script is executable: </p>
-    <table class="locations" style="width:40%">
+    <table class="locations" style="width:70%">
       <tr>
-	<td >Debian/Ubuntu/Mint:</td>
+	<td style="width: 30%">Debian/Ubuntu/Mint:</td>
 	<td class='tty'>chmod +x /etc/init.d/weewx</td>
       </tr>
       <tr>
@@ -2465,14 +2470,14 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
 	<td class='tty'>chmod +x /etc/init.d/rc.d/weewx</td>
       </tr>
       <tr>
-	<td style="width: 25%">SuSE:</td>
+	<td>SuSE:</td>
 	<td class='tty'>chmod +x /etc/init.d/weewx</td>
       </tr>
     </table>
     <p>Create symbolic links in the run level directories: </p>
-    <table class="locations" style="width:40%">
+    <table class="locations" style="width:70%">
       <tr>
-	<td >Debian/Ubuntu/Mint:</td>
+	<td style="width: 30%">Debian/Ubuntu/Mint:</td>
 	<td class='tty'>update-rc.d weewx defaults 98</td>
       </tr>
       <tr>
@@ -2480,7 +2485,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
 	<td class='tty'>chkconfig weewx on</td>
       </tr>
       <tr>
-	<td style="width: 25%">SuSE:</td>
+	<td>SuSE:</td>
 	<td class='tty'>/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
       </tr>
     </table>
@@ -2630,17 +2635,22 @@ sudo /etc/init.d/apache2 restart</p>
 
     <h2>Hardware problems</h2>
     <h3>Establishing connectivity</h3>
-    <p>If you are unable to get anything out of <span class="code">weewx</span>, first 
-      check that you have connectivity to your weather station. For the Davis stations, 
-      you can use a terminal emulator (I like <span class="code">minicom</span> because 
-      it can be run from through a simple TTY connection) to run a simple test. Set 
-      it up to communicate using the appropriate port and baudrate. For example</p>
+    <p>If you are unable to get anything out of <span class="code">weewx</span>
+      first check that you have connectivity to your weather station. For the
+      Davis stations, you can use a terminal emulator to run a simple test.
+      Set it up to communicate using the appropriate port and baudrate.  I
+      like <span class="code">minicom</span> because it can be run from
+      through a simple TTY connection. The utility
+      <span class="code">screen</span> also works well. For example:</p>
     <pre class="tty">minicom -b 19200 -D /dev/ttyUSB0</pre>
-    <p>Then type in <span class="code">TEST</span>, all in capital letters. It will 
-      not echo the characters. Then hit the <span class="code">&lt;enter&gt;</span> 
+    <p>or, using <span class='code'>screen</span>:</p>
+    <pre class="tty">screen /dev/ttyUSB0 19200</pre>
+    <p>Then type in <span class="code">TEST</span>, all in capital letters. It
+      will not echo the characters. Then hit the
+      <span class="code">&lt;enter&gt;</span> 
       key. It should echo back <span class="code">TEST</span>.</p>
-    <p>If this works, then you have established connectivity with the Davis and 
-      the problem must lie elsewhere.</p>
+    <p>If this works, then you have established connectivity with the Davis
+      and the problem must lie elsewhere.</p>
 
     <h3>Tips on making a system reliable</h3>
     <p>If you are having problems keeping your weather station up for long
