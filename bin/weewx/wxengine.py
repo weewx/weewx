@@ -502,11 +502,12 @@ class StdArchive(StdService):
     def pre_loop(self, event):
         """Called before the main packet loop is entered."""
         
-        # The only thing that needs to be done is to calculate the end of the
-        # archive period, and the end of the archive delay period.
-        self.end_archive_period_ts = \
-            (int(self.engine._get_console_time() / self.archive_interval) + 1) * self.archive_interval
-        self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
+        # If this the the initial time through the loop, then the end of the archive
+        # and delay periods need to be primed:
+        if not hasattr(self, 'end_archive_period_ts'):
+            self.end_archive_period_ts = \
+                (int(self.engine._get_console_time() / self.archive_interval) + 1) * self.archive_interval
+            self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
 
     def new_loop_packet(self, event):
         """Called when A new LOOP record has arrived."""
@@ -525,14 +526,14 @@ class StdArchive(StdService):
             # Shuffle accumulators:
             (self.old_accumulator, self.accumulator) = (self.accumulator, self._new_accumulator(the_time))
             # Add the LOOP packet to the new accumulator:
-            self.accumulator.addRecord(event.packet)
+            self.accumulator.addRecord(event.packet, self.loop_hilo)
 
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
         to break the main loop by throwing an exception."""
         # Is this the end of the archive period? If so, dispatch an END_ARCHIVE_PERIOD event
         if event.packet['dateTime'] > self.end_archive_period_ts:
-            self.engine.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD, packet=event))
+            self.engine.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD, packet=event.packet))
             self.end_archive_period_ts += self.archive_interval
             
         # Has the end of the archive delay period ended? If so, break the loop.
@@ -548,22 +549,25 @@ class StdArchive(StdService):
         try:
             self.statsDb.updateHiLo(self.old_accumulator)
         except AttributeError:
-            return
-        
-        # If the user has requested software generation, then do that:
-        if self.record_generation == 'software':
-            self._software_catchup()
-        elif self.record_generation == 'hardware':
-            # Otherwise, try to honor hardware generation. An exception will
-            # be raised if the console does not support it. In that case, fall
-            # back to software generation.
-            try:
-                self._catchup(self.engine.console.genArchiveRecords)
-            except NotImplementedError:
-                self._software_catchup()
+            pass
         else:
-            raise ValueError("Unknown station record generation value %s" % self.record_generation)
+            # If the user has requested software generation, then do that:
+            if self.record_generation == 'software':
+                self._software_catchup()
+            elif self.record_generation == 'hardware':
+                # Otherwise, try to honor hardware generation. An exception will
+                # be raised if the console does not support it. In that case, fall
+                # back to software generation.
+                try:
+                    self._catchup(self.engine.console.genArchiveRecords)
+                except NotImplementedError:
+                    self._software_catchup()
+            else:
+                raise ValueError("Unknown station record generation value %s" % self.record_generation)
 
+        # Set the time of the next break loop:
+        self.end_archive_delay_ts = self.end_archive_period_ts + self.archive_delay
+        
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
         Put it in the archive database."""
@@ -928,24 +932,25 @@ def main(options, args, EngineClass=StdEngine) :
 
     while True:
 
+        os.chdir(cwd)
+
+        config_path = os.path.abspath(args[0])
+        config_dict = getConfiguration(config_path)
+
+        # Look for the debug flag. If set, ask for extra logging
+        weewx.debug = int(config_dict.get('debug', 0))
+        if weewx.debug:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+        else:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
+        # Create and initialize the engine
+        engine = EngineClass(config_dict)
+
+        # Start the engine
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s" % weewx.__version__)
+
         try:
-    
-            os.chdir(cwd)
-
-            config_path = os.path.abspath(args[0])
-            config_dict = getConfiguration(config_path)
-    
-            # Look for the debug flag. If set, ask for extra logging
-            weewx.debug = int(config_dict.get('debug', 0))
-            if weewx.debug:
-                syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-            else:
-                syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
-
-            # Create and initialize the engine
-            engine = EngineClass(config_dict)
-            # Start the engine
-            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s" % weewx.__version__)
             engine.run()
     
         # Catch any recoverable weewx I/O errors:
