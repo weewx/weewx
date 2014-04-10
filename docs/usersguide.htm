@@ -2821,30 +2821,46 @@ Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Generator terminated...
 Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</pre>
     <p>See the section on option <span class="code">
 	<a href="#record_generation">record_generation</a></span>.</p>
-	<h3>Raspberry Pi</h3>
-	  <p>Running <span class="code">weewx</span> on a Raspberry Pi has become 
-	  very popular. You'll have to look elsewhere for instructions on setting up 
-	  your RPi (I don't own one), but there is one very common problem with 
-	  them.</p>
-	  <p class="warning">You must run NTP on your RPi, and you must make sure it 
-	  starts and updates the time <em>before</em> <span class="code">weewx</span> 
-	  runs.</p>
-	  <p>The reason is that the RPi does not have an onboard clock. If you lose 
-	  power and, say, an hour later it comes back, your RPi will simply pick up 
-	  where it left off — one hour behind. The symptom that something is amiss 
-	  is that everything will appear to be running normally, but your webpage 
-	  will not get updated (at least, until the length of the power failure has 
-	  elapsed).
-	  <a href="https://groups.google.com/forum/#!searchin/weewx-user/clock/weewx-user/tmbrOC6-UiM/1xohs9WUAW8J">
-	  Here's one user's nice analysis of the problem.</a></p>
-	  <p>What this means is that it is not enough to simply run the 
-	  <span class="code">weewx</span> 
-	  daemon. You need some way of delaying its start until NTP is not only up 
-	  and running, but has contacted a time server and corrected the RPi's 
-	  clock. </p>
-	  <p>Several users are working on a solution to this problem. Perhaps you'll 
-	  be the one to figure it out?!</p>
-	
+        <h3>Raspberry Pi</h3>
+          <p>Running <span class="code">weewx</span> on a Raspberry Pi has become 
+          very popular. You'll have to look elsewhere for instructions on setting up 
+          your RPi (I don't own one), but there are a few very common problems with 
+          setting them up.</p>
+          <h4>NTP</h4>
+          <p class="warning">You must run NTP on your RPi, and you must make sure it 
+          starts and updates the time <em>before</em> <span class="code">weewx</span> 
+          runs.</p>
+          <p>The reason is that the RPi does not have an onboard clock. If you lose 
+          power and, say, an hour later it comes back, your RPi will simply pick up 
+          where it left off — one hour behind. The symptom that something is amiss 
+          is that everything will appear to be running normally, but your webpage 
+          will not get updated (at least, until the length of the power failure has 
+          elapsed).
+          <a href="https://groups.google.com/forum/#!searchin/weewx-user/clock/weewx-user/tmbrOC6-UiM/1xohs9WUAW8J">
+          Here's one user's nice analysis of the problem.</a></p>
+          <p>What this means is that it is not enough to simply run the 
+          <span class="code">weewx</span> 
+          daemon. You need some way of delaying its start until NTP is not only up 
+          and running, but has contacted a time server and corrected the RPi's 
+          clock. </p>
+          <p>Several users are working on a solution to this problem. Perhaps you'll 
+          be the one to figure it out?!</p>
+          <h4>Use a high-quality SD card</h4>
+          <p>The SD card supplied with most RPis seems to be of very low quality. Make sure
+          you use a good, Class 10 card. User William Phelps reports, "You can usually spot
+          a failing card by watching the kernel I/O wait time. Once the card starts to go, the
+          I/O wait time will increase significantly."</p>
+          <h4>FTP</h4>
+          <p>Many Raspbian versions of Debian do not seem to include an FTP client. You may have
+          to install this if you plan on using FTP.</p>
+<pre class="tty">
+sudo apt-get install ftp
+</pre>
+          <h4>Use a powered hub</h4>
+          <p>Many weather stations draw more
+          current than the minimal amount the RPi can supply through its USB ports. Use a powered
+          hub to get around this problem.</p>
+        
     <h2>Software problems</h2>
     
     <p>This section covers some common software configuration problems.</p>
