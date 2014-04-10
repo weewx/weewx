@@ -478,17 +478,26 @@ class Vantage(weewx.abstractstation.AbstractStation):
         # Save the last good time:
         _last_good_ts = since_ts if since_ts else 0
         
-        # Wake up the console...
-        self.port.wakeup_console(self.max_tries, self.wait_before_retry)
-        # ... request a dump...
-        self.port.send_data('DMPAFT\n')
-        # ... from the designated date (allow only one try because that's all the console allows):
-        self.port.send_data_with_crc16(_datestr, max_tries=1)
-        
-        # Get the response with how many pages and starting index and decode it. Again, allow only one try:
-        _buffer = self.port.get_data_with_crc16(6, max_tries=1)
-        (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
+        # Try to retrieve the starting page and index:
+        for n in range(self.max_tries):
+            try:
+                # Wake up the console...
+                self.port.wakeup_console(self.max_tries, self.wait_before_retry)
+                # ... request a dump...
+                self.port.send_data('DMPAFT\n')
+                # ... from the designated date (allow only one try because that's all the console allows):
+                self.port.send_data_with_crc16(_datestr, max_tries=1)
+                
+                # Get the response with how many pages and starting index and decode it. Again, allow only one try:
+                _buffer = self.port.get_data_with_crc16(6, max_tries=1)
+                break
+            except weewx.WeeWxIOError, e:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: Failed attempt %d receiving starting page. Error %s" % (n+1, e))
+                if n >= self.max_tries-1:
+                    syslog.syslog(syslog.LOG_ERR, "vantage: Unable to retrieve starting page")
+                    raise
       
+        (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
         syslog.syslog(syslog.LOG_DEBUG, "vantage: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
         
         # Cycle through the pages...
