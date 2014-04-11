@@ -45,7 +45,7 @@ Group: Applications/Science
 Source: %{name}-%{version}.tar.gz
 URL: http://www.weewx.com
 License: GPLv3
-Requires: python, python-configobj, python-cheetah, python-imaging, %{deps}, ftp, rsync
+Requires: python, python-configobj, python-cheetah, python-imaging, %{deps}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildArch: noarch
 BuildRequires: python, python-configobj

@@ -7,8 +7,8 @@ Homepage: http://www.weewx.com
 
 Package: weewx
 Architecture: all
-Depends: debconf, python (>=2.5), python-configobj(>=4.5), python-cheetah(>=2.0), python-imaging(>=1.1.6), python-serial(>=2.3), python-usb (>=0.4), ftp, rsync
-Recommends: python-dev(>=2.5), python-pip(>=0.7), apache2
+Depends: debconf, python (>=2.5), python-configobj(>=4.5), python-cheetah(>=2.0), python-imaging(>=1.1.6), python-serial(>=2.3), python-usb (>=0.4)
+Recommends: python-dev(>=2.5), python-pip(>=0.7), apache2, ftp, rsync
 Description: weather software
  weewx interacts with a weather station to produce graphs, reports, and HTML
  pages. weewx can upload data to weather services such as WeatherUnderground,
