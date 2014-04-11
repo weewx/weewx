@@ -1,6 +1,8 @@
 weewx change history
 --------------------
 
+2.6.3 04/10/14
+
 Hardened the WMR100 driver against malformed packets.
 
 The plot images can now use UTF-8 characters.
